@@ -13,6 +13,7 @@ export const ENRICHMENT_KINDS = [
   "auto-categorization",
   "nutrition-estimation",
   "recipe-provenance",
+  "ingredient-linking",
 ] as const;
 
 export type RecipeEnrichmentKind = (typeof ENRICHMENT_KINDS)[number];

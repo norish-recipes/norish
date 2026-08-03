@@ -186,6 +186,7 @@ describe("admin procedures", () => {
           autoCategorization: false,
           nutritionEstimation: false,
           recipeProvenance: false,
+          ingredientLinking: false,
         },
       };
 

@@ -74,6 +74,8 @@
     "autoCategorizing": "Automatisch categoriseren…",
     "inferProvenance": "Herkomst bepalen",
     "inferringProvenance": "Herkomst bepalen…",
+    "linkIngredients": "Ingrediënten aan stappen koppelen",
+    "linkingIngredients": "Ingrediënten koppelen…",
     "enrichmentFailed": "Laatste poging mislukt"
   },
   "sharePanel": {
@@ -307,7 +309,8 @@
       "allergy-detection": "Allergiedetectie",
       "auto-categorization": "Automatisch categoriseren",
       "nutrition-estimation": "Voedingswaarde schatten",
-      "recipe-provenance": "Receptherkomst"
+      "recipe-provenance": "Receptherkomst",
+      "ingredient-linking": "Ingrediëntkoppeling"
     }
   },
   "provenance": {

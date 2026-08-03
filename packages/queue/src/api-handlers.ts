@@ -35,6 +35,34 @@ export interface QueueProvenanceInference {
   cuisineIds: string[];
 }
 
+/** One step's inferred Step Ingredients, in row-order space, system-agnostic. */
+export interface QueueStepIngredientLinks {
+  stepOrder: number;
+  refs: { ingredientOrder: number; share: number; order: number }[];
+}
+
+export interface QueueIngredientLinkingInference {
+  links: QueueStepIngredientLinks[];
+}
+
+export interface QueueLinkableIngredientLine {
+  order: number;
+  text: string;
+  isHeading: boolean;
+}
+
+export interface QueueLinkableStep {
+  order: number;
+  text: string;
+  isHeading: boolean;
+}
+
+export interface QueueRecipeForIngredientLinking {
+  title: string;
+  ingredients: QueueLinkableIngredientLine[];
+  steps: QueueLinkableStep[];
+}
+
 export interface QueueSyncResult {
   uid: string;
   isNew: boolean;
@@ -82,6 +110,9 @@ export interface QueueApiHandlers {
     allergiesToDetect: string[]
   ): Promise<AIResult<string[]>>;
   inferRecipeProvenance(recipe: QueueRecipeSummary): Promise<AIResult<QueueProvenanceInference>>;
+  inferStepIngredients(
+    recipe: QueueRecipeForIngredientLinking
+  ): Promise<AIResult<QueueIngredientLinkingInference>>;
   syncPlannedItem(
     userId: string,
     itemId: string,

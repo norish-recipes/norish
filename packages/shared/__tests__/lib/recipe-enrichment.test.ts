@@ -14,13 +14,14 @@ import {
 } from "@norish/shared/lib/recipe-enrichment";
 
 describe("ENRICHMENT_KINDS", () => {
-  it("names the five independent enrichment kinds", () => {
+  it("names the six independent enrichment kinds", () => {
     expect([...ENRICHMENT_KINDS]).toEqual([
       "auto-tagging",
       "allergy-detection",
       "auto-categorization",
       "nutrition-estimation",
       "recipe-provenance",
+      "ingredient-linking",
     ]);
   });
 });

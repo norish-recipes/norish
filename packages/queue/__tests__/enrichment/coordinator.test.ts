@@ -45,15 +45,17 @@ const ALL_ON = {
   autoCategorization: true,
   nutritionEstimation: true,
   recipeProvenance: true,
+  ingredientLinking: true,
 };
 
-const KIND_COUNT = 5;
+const KIND_COUNT = 6;
 
 function recipe(overrides: Record<string, unknown> = {}) {
   return {
     id: "recipe-1",
     name: "Test",
     recipeIngredients: [{ ingredientName: "flour" }],
+    steps: [{ step: "Mix the flour in.", systemUsed: "metric", order: 0 }],
     categories: [],
     calories: null,
     fat: null,
@@ -140,6 +142,29 @@ describe("automatic enrollment", () => {
     expect(results.every((r) => r.status === "skipped" && r.reason === "insufficient-input")).toBe(
       true
     );
+  });
+
+  it("skips Ingredient Linking as insufficient input when the recipe has no steps", async () => {
+    getRecipeFull.mockResolvedValue(recipe({ steps: [] }));
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    // Steps are this kind's raw material; the other kinds are unaffected.
+    expect(outcome(results, "ingredient-linking")).toEqual({
+      kind: "ingredient-linking",
+      status: "skipped",
+      reason: "insufficient-input",
+    });
+    expect(outcome(results, "auto-tagging")?.status).toBe("queued");
+  });
+
+  it("never applies supplied-data suppression to Ingredient Linking", async () => {
+    // A recipe whose steps already carry links at recipe level is not this
+    // coordinator's business: the per-step check in the repository write is
+    // the suppression, at the only granularity where it is true.
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "ingredient-linking")?.status).toBe("queued");
   });
 
   it("skips allergy detection when the household has no configured allergies", async () => {
@@ -330,6 +355,7 @@ describe("manual enrollment", () => {
     ["autoCategorization", "auto-categorization"],
     ["nutritionEstimation", "nutrition-estimation"],
     ["recipeProvenance", "recipe-provenance"],
+    ["ingredientLinking", "ingredient-linking"],
   ] as const)("ignores the %s automatic switch", async (setting, kind) => {
     getAutomaticEnrichmentConfig.mockResolvedValue({ ...ALL_ON, [setting]: false });
 

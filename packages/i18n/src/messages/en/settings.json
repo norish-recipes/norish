@@ -582,7 +582,9 @@
         "nutritionEstimation": "Nutrition Estimation",
         "nutritionEstimationDescription": "Estimate calories, fat, carbs, and protein for new recipes that supply none",
         "recipeProvenance": "Recipe Provenance",
-        "recipeProvenanceDescription": "Work out the country, region, Cuisines, and a short note for new recipes that have none"
+        "recipeProvenanceDescription": "Work out the country, region, Cuisines, and a short note for new recipes that have none",
+        "ingredientLinking": "Ingredient Linking",
+        "ingredientLinkingDescription": "Link each step to the ingredient lines it uses, for steps that have none"
       },
       "tagStrategy": "Tag Strategy",
       "tagStrategyDescription": "Which tags auto-tagging may use, whether it runs automatically or manually",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Enter the auto-tagging prompt...",
       "recipeProvenance": "Recipe Provenance Prompt",
       "recipeProvenanceDescription": "This prompt is used to work out where a recipe comes from. The note it produces is written in the language of the recipe itself. Available variables: recipeName, description, ingredients",
+      "ingredientLinking": "Ingredient Linking Prompt",
+      "ingredientLinkingPlaceholder": "Prompt for linking ingredients to steps...",
+      "ingredientLinkingDescription": "Used when linking each step to the ingredient lines it uses",
       "recipeProvenancePlaceholder": "Enter the Recipe Provenance prompt..."
     },
     "unsavedChanges": "Unsaved changes",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Recipe provenance",
+        "ingredient-linking": "Ingredient linking",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

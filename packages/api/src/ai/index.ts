@@ -130,6 +130,13 @@ export {
   type RecipeForProvenance,
 } from "./provenance-inferrer";
 
+// Ingredient Linking
+export {
+  inferStepIngredients,
+  type IngredientLinkingInference,
+  type RecipeForIngredientLinking,
+} from "./ingredient-linking-inferrer";
+
 // Transcription
 export { transcribeAudio } from "./transcriber";
 
@@ -140,6 +147,10 @@ export { transcribeAudio } from "./transcriber";
 export { recipeExtractionSchema } from "./schemas/recipe.schema";
 export { nutritionEstimationSchema } from "./schemas/nutrition.schema";
 export { buildProvenanceSchema, type ProposedProvenance } from "./schemas/provenance.schema";
+export {
+  ingredientLinkingSchema,
+  type ProposedIngredientLinks,
+} from "./schemas/ingredient-linking.schema";
 export { conversionSchema } from "@norish/shared-server/ai/schemas/conversion.schema";
 export { autoTaggingSchema } from "./schemas/auto-tagging.schema";
 

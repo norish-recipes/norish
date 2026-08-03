@@ -582,7 +582,9 @@
         "nutritionEstimation": "Estimativa nutricional",
         "nutritionEstimationDescription": "Estima calorias, gorduras, carboidratos e proteínas em novas receitas sem valores informados",
         "recipeProvenance": "Procedência da receita",
-        "recipeProvenanceDescription": "Deduzir o país, a região, as culinárias e uma nota curta para receitas novas que não os tenham"
+        "recipeProvenanceDescription": "Deduzir o país, a região, as culinárias e uma nota curta para receitas novas que não os tenham",
+        "ingredientLinking": "Vinculação de ingredientes",
+        "ingredientLinkingDescription": "Vincula cada etapa às linhas de ingredientes que ela usa, para etapas sem vínculos"
       },
       "tagStrategy": "Estratégia de tags",
       "tagStrategyDescription": "Quais tags a marcação automática pode usar, seja executada automática ou manualmente",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Insira o prompt de marcação automática...",
       "recipeProvenance": "Prompt de procedência da receita",
       "recipeProvenanceDescription": "Este prompt deduz de onde vem uma receita. A nota produzida é escrita no idioma da própria receita. Variáveis disponíveis: recipeName, description, ingredients",
+      "ingredientLinking": "Prompt de vinculação de ingredientes",
+      "ingredientLinkingPlaceholder": "Prompt para vincular ingredientes às etapas...",
+      "ingredientLinkingDescription": "Usado ao vincular cada etapa às linhas de ingredientes que utiliza",
       "recipeProvenancePlaceholder": "Insira o prompt de procedência da receita..."
     },
     "unsavedChanges": "Alterações não salvas",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Procedência da receita",
+        "ingredient-linking": "Vinculação de ingredientes",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

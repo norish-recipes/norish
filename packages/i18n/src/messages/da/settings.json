@@ -582,7 +582,9 @@
         "nutritionEstimation": "Estimering af næringsindhold",
         "nutritionEstimationDescription": "Estimér kalorier, fedt, kulhydrater og protein for nye opskrifter uden angivne værdier",
         "recipeProvenance": "Opskriftens oprindelse",
-        "recipeProvenanceDescription": "Udled land, region, køkkener og en kort note for nye opskrifter uden dem"
+        "recipeProvenanceDescription": "Udled land, region, køkkener og en kort note for nye opskrifter uden dem",
+        "ingredientLinking": "Ingredienstilknytning",
+        "ingredientLinkingDescription": "Tilknytter hvert trin de ingredienslinjer, det bruger — kun for trin uden tilknytninger"
       },
       "tagStrategy": "Tagstrategi",
       "tagStrategyDescription": "Hvilke tags automatisk tagging må bruge, uanset om den kører automatisk eller manuelt",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Indtast prompt til auto-tagging...",
       "recipeProvenance": "Prompt til opskriftens oprindelse",
       "recipeProvenanceDescription": "Denne prompt bestemmer, hvor en opskrift kommer fra. Noten skrives på opskriftens eget sprog. Tilgængelige variabler: recipeName, description, ingredients",
+      "ingredientLinking": "Prompt til ingredienstilknytning",
+      "ingredientLinkingPlaceholder": "Prompt til at tilknytte ingredienser til trin...",
+      "ingredientLinkingDescription": "Bruges når hvert trin tilknyttes de ingredienslinjer, det bruger",
       "recipeProvenancePlaceholder": "Indtast prompten til opskriftens oprindelse ..."
     },
     "unsavedChanges": "Ugemte ændringer",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Opskriftens oprindelse",
+        "ingredient-linking": "Ingredienstilknytning",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

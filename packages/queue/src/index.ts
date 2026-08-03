@@ -76,6 +76,10 @@ export {
   startRecipeProvenanceWorker,
   stopRecipeProvenanceWorker,
 } from "./recipe-provenance/worker";
+export {
+  startIngredientLinkingWorker,
+  stopIngredientLinkingWorker,
+} from "./ingredient-linking/worker";
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
 

@@ -21,6 +21,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   const [nutritionEstimation, setNutritionEstimation] = useState("");
   const [autoTagging, setAutoTagging] = useState("");
   const [recipeProvenance, setRecipeProvenance] = useState("");
+  const [ingredientLinking, setIngredientLinking] = useState("");
   const [saving, setSaving] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -35,6 +36,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       // Config stored before Recipe Provenance shipped has no prompt; the
       // loader falls back to the shipped file until an administrator saves one.
       setRecipeProvenance(prompts.recipeProvenance ?? "");
+      setIngredientLinking(prompts.ingredientLinking ?? "");
     }
   }, [prompts]);
 
@@ -46,7 +48,8 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         unitConversion !== prompts.unitConversion ||
         nutritionEstimation !== prompts.nutritionEstimation ||
         autoTagging !== prompts.autoTagging ||
-        recipeProvenance !== (prompts.recipeProvenance ?? "");
+        recipeProvenance !== (prompts.recipeProvenance ?? "") ||
+        ingredientLinking !== (prompts.ingredientLinking ?? "");
 
       setHasChanges(changed);
     }
@@ -56,6 +59,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
     nutritionEstimation,
     autoTagging,
     recipeProvenance,
+    ingredientLinking,
     prompts,
   ]);
   useEffect(() => {
@@ -69,6 +73,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       nutritionEstimation,
       autoTagging,
       recipeProvenance,
+      ingredientLinking,
     }).finally(() => {
       setSaving(false);
     });
@@ -131,6 +136,14 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
           <Label>{t("recipeProvenance")}</Label>
           <TextArea placeholder={t("recipeProvenancePlaceholder")} rows={6} variant="secondary" />
           <Description>{t("recipeProvenanceDescription")}</Description>
+        </TextField>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <TextField value={ingredientLinking} onChange={setIngredientLinking}>
+          <Label>{t("ingredientLinking")}</Label>
+          <TextArea placeholder={t("ingredientLinkingPlaceholder")} rows={6} variant="secondary" />
+          <Description>{t("ingredientLinkingDescription")}</Description>
         </TextField>
       </div>
 

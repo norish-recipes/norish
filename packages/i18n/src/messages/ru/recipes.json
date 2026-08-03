@@ -74,6 +74,8 @@
     "autoCategorizing": "Категоризация…",
     "inferProvenance": "Определить происхождение",
     "inferringProvenance": "Определяем происхождение…",
+    "linkIngredients": "Связать ингредиенты с шагами",
+    "linkingIngredients": "Связывание ингредиентов…",
     "enrichmentFailed": "Последняя попытка не удалась"
   },
   "sharePanel": {
@@ -307,7 +309,8 @@
       "allergy-detection": "Определение аллергенов",
       "auto-categorization": "Автоматическая категоризация",
       "nutrition-estimation": "Оценка пищевой ценности",
-      "recipe-provenance": "Происхождение рецепта"
+      "recipe-provenance": "Происхождение рецепта",
+      "ingredient-linking": "Связывание ингредиентов"
     }
   },
   "provenance": {

@@ -74,6 +74,8 @@
     "autoCategorizing": "Categorizzazione…",
     "inferProvenance": "Deduci la provenienza",
     "inferringProvenance": "Deduzione della provenienza…",
+    "linkIngredients": "Collega gli ingredienti ai passaggi",
+    "linkingIngredients": "Collegamento degli ingredienti…",
     "enrichmentFailed": "Ultimo tentativo non riuscito"
   },
   "sharePanel": {
@@ -307,7 +309,8 @@
       "allergy-detection": "Rilevamento allergie",
       "auto-categorization": "Categorizzazione automatica",
       "nutrition-estimation": "Stima nutrizionale",
-      "recipe-provenance": "Provenienza della ricetta"
+      "recipe-provenance": "Provenienza della ricetta",
+      "ingredient-linking": "Collegamento degli ingredienti"
     }
   },
   "provenance": {

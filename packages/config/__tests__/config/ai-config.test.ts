@@ -24,6 +24,8 @@ describe("AIConfigSchema automatic enrichment", () => {
       autoCategorization: false,
       nutritionEstimation: false,
       recipeProvenance: false,
+      // A new kind ships off: an upgrade must not silently spend AI.
+      ingredientLinking: false,
     });
     expect(config.automaticEnrichment).toEqual(DEFAULT_AUTOMATIC_ENRICHMENT);
   });
@@ -49,6 +51,7 @@ describe("AIConfigSchema automatic enrichment", () => {
         autoCategorization: true,
         nutritionEstimation: true,
         recipeProvenance: true,
+        ingredientLinking: true,
       },
     });
 
@@ -59,6 +62,7 @@ describe("AIConfigSchema automatic enrichment", () => {
       autoCategorization: true,
       nutritionEstimation: true,
       recipeProvenance: true,
+      ingredientLinking: true,
     });
   });
 

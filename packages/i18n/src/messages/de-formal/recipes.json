@@ -74,6 +74,8 @@
     "autoCategorizing": "Kategorisierung läuft…",
     "inferProvenance": "Herkunft ermitteln",
     "inferringProvenance": "Herkunft wird ermittelt …",
+    "linkIngredients": "Zutaten mit Schritten verknüpfen",
+    "linkingIngredients": "Zutaten werden verknüpft…",
     "enrichmentFailed": "Letzter Versuch fehlgeschlagen"
   },
   "sharePanel": {
@@ -307,7 +309,8 @@
       "allergy-detection": "Allergieerkennung",
       "auto-categorization": "Automatische Kategorisierung",
       "nutrition-estimation": "Nährwertschätzung",
-      "recipe-provenance": "Rezept-Herkunft"
+      "recipe-provenance": "Rezept-Herkunft",
+      "ingredient-linking": "Zutatenverknüpfung"
     }
   },
   "provenance": {

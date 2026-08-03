@@ -582,7 +582,9 @@
         "nutritionEstimation": "Estimación nutricional",
         "nutritionEstimationDescription": "Estima calorías, grasas, carbohidratos y proteínas en recetas nuevas sin datos",
         "recipeProvenance": "Procedencia de la receta",
-        "recipeProvenanceDescription": "Deducir el país, la región, las cocinas y una nota breve para recetas nuevas que no los tengan"
+        "recipeProvenanceDescription": "Deducir el país, la región, las cocinas y una nota breve para recetas nuevas que no los tengan",
+        "ingredientLinking": "Vinculación de ingredientes",
+        "ingredientLinkingDescription": "Vincula cada paso a las líneas de ingredientes que usa, para pasos sin vínculos"
       },
       "tagStrategy": "Estrategia de etiquetas",
       "tagStrategyDescription": "Qué etiquetas puede usar el etiquetado automático, se ejecute automática o manualmente",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Introduce el prompt de etiquetado automático...",
       "recipeProvenance": "Prompt de procedencia de la receta",
       "recipeProvenanceDescription": "Este prompt deduce de dónde viene una receta. La nota resultante se escribe en el idioma de la propia receta. Variables disponibles: recipeName, description, ingredients",
+      "ingredientLinking": "Prompt de vinculación de ingredientes",
+      "ingredientLinkingPlaceholder": "Prompt para vincular ingredientes a los pasos...",
+      "ingredientLinkingDescription": "Se usa al vincular cada paso a las líneas de ingredientes que utiliza",
       "recipeProvenancePlaceholder": "Introduce el prompt de procedencia de la receta..."
     },
     "unsavedChanges": "Cambios sin guardar",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Procedencia de la receta",
+        "ingredient-linking": "Vinculación de ingredientes",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

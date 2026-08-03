@@ -60,6 +60,7 @@ export const JOB_PIPELINES: Record<QueueName, string[]> = {
   [QUEUE_NAMES.AUTO_CATEGORIZATION]: ["ai-request", "saving"],
   [QUEUE_NAMES.ALLERGY_DETECTION]: ["ai-request", "saving"],
   [QUEUE_NAMES.RECIPE_PROVENANCE]: ["ai-request", "saving"],
+  [QUEUE_NAMES.INGREDIENT_LINKING]: ["ai-request", "saving"],
   // CalDAV runs either a sync or a delete flow; no fixed sequence
   [QUEUE_NAMES.CALDAV_SYNC]: [],
   [QUEUE_NAMES.SCHEDULED_TASKS]: ["running"],

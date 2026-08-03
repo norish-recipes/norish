@@ -74,6 +74,8 @@
     "autoCategorizing": "분류 중…",
     "inferProvenance": "출처 알아보기",
     "inferringProvenance": "출처를 알아보는 중…",
+    "linkIngredients": "재료를 단계에 연결",
+    "linkingIngredients": "재료 연결 중…",
     "enrichmentFailed": "마지막 실행 실패"
   },
   "sharePanel": {
@@ -307,7 +309,8 @@
       "allergy-detection": "알레르기 감지",
       "auto-categorization": "자동 분류",
       "nutrition-estimation": "영양 정보 추정",
-      "recipe-provenance": "레시피 출처"
+      "recipe-provenance": "레시피 출처",
+      "ingredient-linking": "재료 연결"
     }
   },
   "provenance": {

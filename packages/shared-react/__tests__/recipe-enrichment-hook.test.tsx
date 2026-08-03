@@ -31,6 +31,8 @@ function idleStatus(): RecipeEnrichmentStatusDto {
       { kind: "allergy-detection", state: "idle", origin: null, runId: null, runSequence: null },
       { kind: "auto-categorization", state: "idle", origin: null, runId: null, runSequence: null },
       { kind: "nutrition-estimation", state: "idle", origin: null, runId: null, runSequence: null },
+      { kind: "recipe-provenance", state: "idle", origin: null, runId: null, runSequence: null },
+      { kind: "ingredient-linking", state: "idle", origin: null, runId: null, runSequence: null },
     ],
   };
 }
@@ -134,6 +136,7 @@ describe("useRecipeEnrichment", () => {
       "auto-categorization": "idle",
       "nutrition-estimation": "idle",
       "recipe-provenance": "idle",
+      "ingredient-linking": "idle",
     });
   });
 

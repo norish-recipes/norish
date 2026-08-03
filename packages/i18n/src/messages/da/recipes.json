@@ -74,6 +74,8 @@
     "autoCategorizing": "Kategoriserer…",
     "inferProvenance": "Find oprindelsen",
     "inferringProvenance": "Finder oprindelsen …",
+    "linkIngredients": "Tilknyt ingredienser til trin",
+    "linkingIngredients": "Tilknytter ingredienser…",
     "enrichmentFailed": "Sidste forsøg mislykkedes"
   },
   "sharePanel": {
@@ -307,7 +309,8 @@
       "allergy-detection": "Allergiregistrering",
       "auto-categorization": "Automatisk kategorisering",
       "nutrition-estimation": "Estimering af næringsindhold",
-      "recipe-provenance": "Opskriftens oprindelse"
+      "recipe-provenance": "Opskriftens oprindelse",
+      "ingredient-linking": "Ingredienstilknytning"
     }
   },
   "provenance": {

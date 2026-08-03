@@ -582,7 +582,9 @@
         "nutritionEstimation": "영양 정보 추정",
         "nutritionEstimationDescription": "값이 없는 새 레시피의 칼로리, 지방, 탄수화물, 단백질을 추정합니다",
         "recipeProvenance": "레시피 출처",
-        "recipeProvenanceDescription": "정보가 없는 새 레시피의 국가, 지역, 요리와 짧은 설명을 추론합니다"
+        "recipeProvenanceDescription": "정보가 없는 새 레시피의 국가, 지역, 요리와 짧은 설명을 추론합니다",
+        "ingredientLinking": "재료 연결",
+        "ingredientLinkingDescription": "연결이 없는 단계에 한해, 각 단계를 사용하는 재료 줄에 연결합니다"
       },
       "tagStrategy": "태그 전략",
       "tagStrategyDescription": "자동 또는 수동 실행 여부와 관계없이 자동 태그 지정이 사용할 수 있는 태그",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "자동 태그 추가 프롬프트를 입력하세요...",
       "recipeProvenance": "레시피 출처 프롬프트",
       "recipeProvenanceDescription": "이 프롬프트는 레시피의 출처를 추론합니다. 생성된 설명은 레시피 자체의 언어로 작성됩니다. 사용 가능한 변수: recipeName, description, ingredients",
+      "ingredientLinking": "재료 연결 프롬프트",
+      "ingredientLinkingPlaceholder": "재료를 단계에 연결하기 위한 프롬프트...",
+      "ingredientLinkingDescription": "각 단계를 사용하는 재료 줄에 연결할 때 사용됩니다",
       "recipeProvenancePlaceholder": "레시피 출처 프롬프트를 입력하세요..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "레시피 유래",
+        "ingredient-linking": "재료 연결",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },
