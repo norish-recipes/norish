@@ -64,6 +64,10 @@ _Avoid_: disconnected (that is the WebSocket status, a narrower thing)
 The state in which the web client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
 _Avoid_: online (ambiguous with general internet connectivity)
 
+**Reachability Deadline**:
+The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launching page navigation observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
+_Avoid_: Network timeout (a mechanism, not the meaning), Launch timeout (the deadline is shared, not launch-specific)
+
 **App Shell**:
 The static assets (HTML, JS, CSS, fonts, icons) required to boot the web app without any backend response.
 
