@@ -132,7 +132,15 @@ export function createMockFullRecipe(overrides: Partial<FullRecipeDTO> = {}): Fu
         order: 0,
       },
     ],
-    steps: [{ step: "Mix all ingredients", systemUsed: "metric", order: 0, images: [] }],
+    steps: [
+      {
+        step: "Mix all ingredients",
+        systemUsed: "metric",
+        order: 0,
+        images: [],
+        stepIngredients: [],
+      },
+    ],
     author: { id: "test-user-id", name: "Test User", image: null },
     images: [],
     videos: [],

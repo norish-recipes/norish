@@ -12,6 +12,7 @@ export type * from "./dto/groceries";
 export type * from "./dto/recurring-groceries";
 export type * from "./dto/stores";
 export type * from "./dto/recipe-ingredient";
+export type * from "./dto/step-ingredients";
 export type * from "./dto/caldav-config";
 export type * from "./dto/caldav-sync-status";
 export type * from "./dto/caldav";

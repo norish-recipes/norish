@@ -4,6 +4,7 @@ import z from "zod";
 import { steps } from "@norish/db-schema/schema";
 
 import { StepImageOutputSchema, StepImageSchema } from "./step-images";
+import { StepIngredientOutputSchema, StepIngredientSchema } from "./step-ingredients";
 
 export const StepSelectBaseSchema = createSelectSchema(steps);
 export const StepInsertBaseSchema = createInsertSchema(steps)
@@ -25,6 +26,9 @@ export const StepStepSchema = StepSelectBaseSchema.pick({
   order: z.coerce.number(),
   version: z.number().int().positive().optional(),
   images: z.array(StepImageSchema).optional().default([]),
+  // Step Ingredients ride the step payload the same way images do, so the
+  // editor's recreate-on-save behaviour costs nothing.
+  stepIngredients: z.array(StepIngredientSchema).optional().default([]),
 });
 
 export const StepOutputSchema = z.object({
@@ -33,6 +37,7 @@ export const StepOutputSchema = z.object({
   order: z.coerce.number(),
   version: z.number(),
   images: z.array(StepImageOutputSchema).optional().default([]),
+  stepIngredients: z.array(StepIngredientOutputSchema).optional().default([]),
 });
 
 export const StepSelectWithoutId = StepSelectBaseSchema.omit({

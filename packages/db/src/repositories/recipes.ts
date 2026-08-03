@@ -52,7 +52,11 @@ import {
 } from "./ingredients";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { getConfig } from "./server-config";
-import { createManyRecipeStepsTx } from "./steps";
+import {
+  createManyRecipeStepsTx,
+  loadIngredientLineIdsByOrderTx,
+  syncStepIngredientsTx,
+} from "./steps";
 import { attachTagsToRecipeByInputTx } from "./tags";
 
 type RecipeViewPolicy = RecipePermissionPolicy["view"];
@@ -887,6 +891,13 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
             columns: { id: true, image: true, order: true, version: true },
             orderBy: (images, { asc }) => [asc(images.order)],
           },
+          stepIngredients: {
+            columns: { share: true, order: true },
+            // The reference resolves by the line's order within the step's
+            // system; the join carries just enough to say which line.
+            with: { recipeIngredient: { columns: { order: true } } },
+            orderBy: (stepIngredients, { asc }) => [asc(stepIngredients.order)],
+          },
         },
         orderBy: (steps, { asc }) => [asc(steps.order)],
       },
@@ -957,6 +968,17 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         order: Number(img.order) || 0,
         version: img.version,
       })),
+      stepIngredients: (s.stepIngredients ?? []).flatMap((ref: any) =>
+        ref.recipeIngredient
+          ? [
+              {
+                ingredientOrder: Number(ref.recipeIngredient.order) || 0,
+                share: Number(ref.share) || 1,
+                order: Number(ref.order) || 0,
+              },
+            ]
+          : []
+      ),
     })),
     createdAt: full.createdAt,
     updatedAt: full.updatedAt,
@@ -1023,12 +1045,14 @@ export async function addStepsAndIngredientsToRecipeByInput(
     let createdSteps: StepDto[] = [];
     let createdIngredients: RecipeIngredientsDto[] = [];
 
-    if (steps?.length) {
-      createdSteps = await createManyRecipeStepsTx(tx, steps);
-    }
-
+    // Ingredients before steps, so step payloads that carry Step Ingredient
+    // references can land them on the lines this same call creates.
     if (ingredients?.length) {
       createdIngredients = await attachIngredientsToRecipeByInputTx(tx, ingredients);
+    }
+
+    if (steps?.length) {
+      createdSteps = await createManyRecipeStepsTx(tx, steps);
     }
 
     return {
@@ -1168,6 +1192,10 @@ async function syncRecipeStepsTx(
     .from(stepsTable)
     .where(and(eq(stepsTable.recipeId, recipeId), eq(stepsTable.systemUsed, systemUsed)))
     .orderBy(asc(stepsTable.order));
+  // The ingredient sync has already run (updateRecipeWithRefs orders it
+  // first), so the payload's by-order Step Ingredient references resolve
+  // against the lines exactly as this save left them.
+  const lineIdByOrder = await loadIngredientLineIdsByOrderTx(tx, recipeId, systemUsed);
 
   for (const [index, step] of normalized.entries()) {
     const existingStep = existing[index];
@@ -1184,6 +1212,7 @@ async function syncRecipeStepsTx(
         .set({ ...values, version: sql`${stepsTable.version} + 1` })
         .where(eq(stepsTable.id, existingStep.id));
       await syncStepImagesTx(tx, existingStep.id, step.images ?? []);
+      await syncStepIngredientsTx(tx, existingStep.id, step.stepIngredients ?? [], lineIdByOrder);
       continue;
     }
 
@@ -1194,6 +1223,7 @@ async function syncRecipeStepsTx(
 
     if (insertedStep) {
       await syncStepImagesTx(tx, insertedStep.id, step.images ?? []);
+      await syncStepIngredientsTx(tx, insertedStep.id, step.stepIngredients ?? [], lineIdByOrder);
     }
   }
 

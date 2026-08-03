@@ -92,6 +92,7 @@ describe("recipes procedures", () => {
           systemUsed: "metric",
           order: 0,
           images: [],
+          stepIngredients: [],
           version: 1,
         },
       ],
