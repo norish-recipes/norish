@@ -399,6 +399,22 @@ test("cooking mode showing the step's ingredients", async () => {
   await page.keyboard.press("Escape");
 });
 
+test("the editable Prompts panel in admin settings", async () => {
+  await page.goto("/settings?tab=admin");
+
+  const trigger = page.getByRole("button", { name: /^Prompts/ }).first();
+
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.click();
+  await expect(page.getByRole("textbox", { name: "Recipe Extraction Prompt" }).first()).toBeVisible(
+    { timeout: 30_000 }
+  );
+
+  // Anchored on the Prompts heading: the first prompts of the nine, enough to
+  // show that every feature's prompt is listed and editable in one place.
+  await shootRegion(trigger, "admin-prompts", 560);
+});
+
 test("the Cuisine vocabulary in admin settings", async () => {
   await page.goto("/settings?tab=admin");
 

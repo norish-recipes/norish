@@ -611,6 +611,29 @@
             Preference is dropped at runtime. Rejects maintaining a table of model ids.
           </p>
         </li>
+        <li>
+          <a href="ai/0015-norish-issues-every-model-request-through-one-runtime.md"
+            >ADR-0015 — Norish issues every model request through one runtime</a
+          >
+          <p>
+            <b>Accepted and implemented.</b> The caller-less executor is deleted and rebuilt as
+            the AI Runtime: one seam for structured generation and transcription, typed thrown
+            errors carrying retryability, enrichment features in shared-server, extraction with
+            the parser. Rejects adopting the executor, a dedicated AI package, and a result
+            union.
+          </p>
+        </li>
+        <li>
+          <a href="ai/0016-prompts-are-appended-to-never-interpolated.md"
+            >ADR-0016 — Prompts are appended to, never interpolated</a
+          >
+          <p>
+            <b>Accepted and implemented.</b> The runtime accepts a prompt name plus appended
+            sections, never a finished string, so a hardcoded prompt is unrepresentable; new
+            input arrives appended so customised prompts survive upgrades. Rejects placeholder
+            templates for new content and image extraction's string surgery.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

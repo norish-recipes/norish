@@ -141,10 +141,30 @@ creating a near-duplicate. The list itself is managed under
 `AI_ENABLED=false` (or the global switch in the admin settings) suppresses every
 enrichment, automatic and manual. No AI request can bypass it.
 
+## Prompts
+
+![The Prompts panel in admin settings](/img/screenshots/admin-prompts.png)
+
+Every AI feature runs from an administrator-editable prompt — nine in total,
+listed together under **Settings → Admin → AI & Processing → Prompts**:
+recipe extraction, image extraction, unit conversion, nutrition estimation,
+auto-tagging, auto-categorization, allergy detection, Recipe Provenance, and
+Ingredient Linking. What you see there is exactly what is tunable; there are no
+hardcoded prompts behind it.
+
+Each feature appends its own input — the recipe under analysis, your
+household's allergens, the webpage text — *after* your prompt rather than
+filling placeholders inside it, so a customised prompt keeps working across
+upgrades and editing one prompt never changes what a different feature sends.
+A prompt left empty falls back to the shipped default, and **Restore defaults**
+brings all nine back at once.
+
 ## Video import
 
 Video import downloads the clip with `yt-dlp`, transcribes the audio, and uses
-the AI provider to extract the recipe. It requires AI to be enabled.
+the AI provider to extract the recipe. It requires AI to be enabled: a video
+import is refused immediately when AI is off, before anything is downloaded or
+a transcription is billed.
 
 | Variable                   | Description                                                                                  | Default                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------- |
@@ -191,3 +211,9 @@ Transcription turns the video's audio into text for the AI step.
 | `TRANSCRIPTION_ENDPOINT` | Transcription endpoint (local/custom providers) | (empty)     |
 | `TRANSCRIPTION_API_KEY`  | Transcription API key                           | (empty)     |
 | `TRANSCRIPTION_MODEL`    | Transcription model                             | `whisper-1` |
+
+When the endpoint or API key is left empty, transcription falls back to the AI
+configuration's endpoint and key — and it follows `AI_TIMEOUT_MS` the same way.
+There is no separate transcription timeout: the one number you tuned for your
+model applies here too, so a hung transcription endpoint gives up instead of
+holding a video import worker until the server is restarted.
