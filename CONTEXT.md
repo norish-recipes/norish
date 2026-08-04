@@ -54,6 +54,20 @@ _Avoid_: Ingredient Link (suggests a hyperlink in the text rather than a usage r
 **Ingredient Linking**:
 The Recipe Enrichment kind that infers Step Ingredients. It is a gap-filler in every case — automatic or manual, it only ever adds links to steps that have none, so it can never replace or remove what a person attached and needs no supplied-data suppression: a step that already has Step Ingredients is simply not its business. Heading rows are never linked. A step that genuinely uses nothing stays bare and may be examined again by later runs.
 
+### Imports & AI
+
+**Generation Preference**:
+A generation parameter Norish asks a model for — temperature today — that the model is free to refuse. Norish never claims to know in advance which parameters a model accepts, because a self-hoster chooses the model. A refused preference is dropped and the request answered without it, so a preference is never the reason a feature fails (ADR-0014).
+_Avoid_: Model Capability (claims foreknowledge Norish does not have), Generation Setting (a setting is honoured, a preference may be declined)
+
+**Unclassified Post**:
+A post whose source gave no evidence either way about a video stream. It is not a post without video: reading that silence as absence is what sent reels down the caption-only path, losing the video and the creator.
+_Avoid_: Unknown post
+
+**yt-dlp Version**:
+The release of the downloader binary a server is actually running. A report, not a setting: production fixes it by image and development by first download, and no Norish setting changes it.
+_Avoid_: Configured yt-dlp version
+
 ### Connectivity & Offline
 
 **Offline**:
