@@ -1,5 +1,8 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  // The gate matrix is read back by a test, so a workflow edit has to invalidate
+  // the cache — otherwise the run meant to check the edit replays a stale pass.
+  "globalDependencies": [".github/workflows/**", "pnpm-workspace.yaml"],
   "globalPassThroughEnv": [
     "NODE_ENV",
     "CI",

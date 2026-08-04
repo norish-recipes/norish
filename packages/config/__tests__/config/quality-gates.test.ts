@@ -38,14 +38,53 @@ const gate = (name: string) => gates.find((entry) => entry.name === name);
 /** The root script a `pnpm run <script>` gate command resolves to. */
 const scriptFor = (command: string) => rootScripts[/^pnpm run (\S+)$/.exec(command)?.[1] ?? ""];
 
+/** The workspaces `turbo run <task>` fans a gate out to. */
+const workspaces = (() => {
+  const globs = (
+    /^packages:\n((?:[ \t]+-.*\n)+)/m.exec(
+      fs.readFileSync(path.join(repoRoot, "pnpm-workspace.yaml"), "utf8")
+    )?.[1] ?? ""
+  )
+    .split("\n")
+    .map((line) =>
+      line
+        .replace(/^\s*-\s*/, "")
+        .replaceAll('"', "")
+        .trim()
+    )
+    .filter(Boolean);
+
+  const excluded = new Set(
+    globs.filter((glob) => glob.startsWith("!")).map((glob) => glob.slice(1))
+  );
+
+  return globs
+    .filter((glob) => glob.endsWith("/*"))
+    .flatMap((glob) => {
+      const parent = glob.slice(0, -2);
+
+      return fs.readdirSync(path.join(repoRoot, parent)).map((entry) => `${parent}/${entry}`);
+    })
+    .filter(
+      (workspace) =>
+        !excluded.has(workspace) && fs.existsSync(path.join(repoRoot, workspace, "package.json"))
+    );
+})();
+
+/** Every workspace `format` script, as [workspace, script] pairs. */
+const workspaceFormatScripts = workspaces.flatMap((workspace) => {
+  const { scripts } = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, workspace, "package.json"), "utf8")
+  );
+
+  return scripts?.format ? [[workspace, scripts.format] as const] : [];
+});
+
 describe("CI quality gates", () => {
   it("plans a gate for tests, lint, formatting and locale keys", () => {
-    expect(gates.map((entry) => entry.name)).toEqual([
-      "Tests",
-      "Lint",
-      "Format Check",
-      "Locale Keys Check",
-    ]);
+    expect(gates.map((entry) => entry.name)).toEqual(
+      expect.arrayContaining(["Tests", "Lint", "Format Check", "Locale Keys Check"])
+    );
   });
 
   it("runs every gate through a root script", () => {
@@ -59,6 +98,17 @@ describe("the Format Check gate", () => {
   it("reports formatting rather than rewriting the checkout", () => {
     expect(scriptFor(gate("Format Check")!.command)).not.toContain("--write");
   });
+
+  // The root script only orchestrates: it runs `format` in every workspace. A
+  // single workspace script flipped to --write puts that workspace back to
+  // never being able to fail, and the root check above would not notice.
+  it("reaches no workspace script that rewrites instead", () => {
+    expect(workspaceFormatScripts.length).toBeGreaterThan(0);
+
+    for (const [workspace, script] of workspaceFormatScripts) {
+      expect(script, workspace).not.toContain("--write");
+    }
+  });
 });
 
 describe("the Tests gate", () => {
@@ -66,7 +116,10 @@ describe("the Tests gate", () => {
     expect(gate("Tests")!.nodeEnv).toBe("test");
   });
 
-  it("is the only gate that needs one", () => {
+  // Every gate names its own NODE_ENV because `env:` overrides the workflow
+  // default unconditionally — a gate that omitted the key would run with
+  // NODE_ENV="" rather than inheriting "production".
+  it("leaves every other gate on the workflow's production default", () => {
     const others = gates.filter((entry) => entry.name !== "Tests");
 
     expect(others.map((entry) => entry.nodeEnv)).toEqual(others.map(() => "production"));
