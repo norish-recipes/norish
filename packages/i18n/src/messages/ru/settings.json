@@ -612,6 +612,7 @@
       "ytDlpVersion": "Версия yt-dlp",
       "ytDlpVersionDescription": "Версия yt-dlp, работающая на этом сервере. Здесь не изменяется.",
       "ytDlpVersionMissing": "Двоичный файл yt-dlp не найден",
+      "ytDlpVersionUnknown": "Не удалось проверить",
       "ytDlpVersionLoading": "Проверка …",
       "ytDlpProxy": "yt-dlp Proxy",
       "ytDlpProxyDescription": "HTTP/SOCKS5-прокси для yt-dlp",

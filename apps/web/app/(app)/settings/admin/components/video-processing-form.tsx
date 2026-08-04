@@ -116,10 +116,19 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   // A report of the binary this server runs, not something the form saves — and
   // worth reading precisely when video processing is off because imports broke,
   // so it is not gated on the switches above.
-  const { version: ytDlpVersion, isLoading: isLoadingYtDlpVersion } = useYtDlpVersionQuery();
+  const {
+    version: ytDlpVersion,
+    error: ytDlpVersionError,
+    isLoading: isLoadingYtDlpVersion,
+  } = useYtDlpVersionQuery();
+  // A question that went unanswered is not the same as an absent binary, and
+  // saying "no binary" for a failed round trip is the kind of confident wrong
+  // answer this field was rewritten to stop giving.
   const ytDlpVersionLabel = isLoadingYtDlpVersion
     ? t("ytDlpVersionLoading")
-    : (ytDlpVersion ?? t("ytDlpVersionMissing"));
+    : ytDlpVersionError
+      ? t("ytDlpVersionUnknown")
+      : (ytDlpVersion ?? t("ytDlpVersionMissing"));
   const { models: availableTranscriptionModels, isLoading: isLoadingTranscriptionModels } =
     useAvailableTranscriptionModelsQuery({
       provider: transcriptionProvider,

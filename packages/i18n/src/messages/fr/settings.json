@@ -612,6 +612,7 @@
       "ytDlpVersion": "Version de yt-dlp",
       "ytDlpVersionDescription": "Version de yt-dlp utilisée par ce serveur. Non modifiable ici.",
       "ytDlpVersionMissing": "Aucun binaire yt-dlp trouvé",
+      "ytDlpVersionUnknown": "Vérification impossible",
       "ytDlpVersionLoading": "Vérification …",
       "ytDlpProxy": "yt-dlp Proxy",
       "ytDlpProxyDescription": "Proxy HTTP/SOCKS5 pour yt-dlp",

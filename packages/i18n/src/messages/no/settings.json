@@ -612,6 +612,7 @@
       "ytDlpVersion": "yt-dlp-versjon",
       "ytDlpVersionDescription": "Versjon av yt-dlp denne serveren kjører. Kan ikke endres her.",
       "ytDlpVersionMissing": "Fant ingen yt-dlp-binærfil",
+      "ytDlpVersionUnknown": "Kunne ikke sjekke",
       "ytDlpVersionLoading": "Sjekker …",
       "ytDlpProxy": "yt-dlp Proxy",
       "ytDlpProxyDescription": "HTTP/SOCKS5-proxy for yt-dlp",
