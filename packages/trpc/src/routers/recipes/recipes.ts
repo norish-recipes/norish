@@ -513,19 +513,19 @@ const convertMeasurements = authedProcedure
       .then((recipe) => {
         if (recipe === null) return null;
 
-        // Convert with AI
+        // Convert with AI; the runtime throws typed errors on failure.
         return import("@norish/shared-server/ai/enrichment/unit-converter")
           .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
-          .then((result) => {
-            if (!result.success) {
+          .then(
+            (converted) => ({ recipe, converted }),
+            (error: unknown) => {
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
-                message: result.error ?? "Conversion failed, please try again.",
+                message:
+                  error instanceof Error ? error.message : "Conversion failed, please try again.",
               });
             }
-
-            return { recipe, converted: result.data };
-          });
+          );
       })
       .then((result) => {
         if (result === null) return;

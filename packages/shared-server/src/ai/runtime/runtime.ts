@@ -49,11 +49,17 @@ import {
  */
 const SYSTEM_MESSAGES: Record<PromptName, string> = {
   "recipe-extraction": "You extract recipe data as JSON-LD with both metric and US measurements.",
+  "image-extraction":
+    "You extract recipe data from images as JSON-LD with both metric and US measurements.",
   "unit-conversion": "Convert recipe measurements between metric and US systems.",
   "nutrition-estimation":
     "Estimate nutritional values for this recipe based on the ingredients. Return accurate per-serving values.",
   "auto-tagging":
     "You are a recipe tagging assistant. Analyze the recipe and assign relevant tags based on the provided rules.",
+  "auto-categorization":
+    "You are a culinary assistant that assigns breakfast/lunch/dinner/snack categories to recipes.",
+  "allergy-detection":
+    "You are an allergy detection assistant. Analyze recipe ingredients to identify allergens. Be accurate and only report allergens that are definitely present.",
   // Deliberately no language instruction: the prompt decides the note's
   // language from the recipe, and a system message naming one would win.
   "recipe-provenance":

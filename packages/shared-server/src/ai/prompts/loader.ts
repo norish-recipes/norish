@@ -12,9 +12,12 @@ const PROMPTS_DIR = resolveExistingWorkspacePath(
 /** Every administrator-editable prompt, and the config field it is stored in. */
 const PROMPT_FIELDS = {
   "recipe-extraction": "recipeExtraction",
+  "image-extraction": "imageExtraction",
   "unit-conversion": "unitConversion",
   "nutrition-estimation": "nutritionEstimation",
   "auto-tagging": "autoTagging",
+  "auto-categorization": "autoCategorization",
+  "allergy-detection": "allergyDetection",
   "recipe-provenance": "recipeProvenance",
   "ingredient-linking": "ingredientLinking",
 } as const satisfies Record<string, keyof PromptsConfigInput>;
@@ -32,9 +35,12 @@ function readDefaultPrompt(name: PromptName): string {
 export function loadDefaultPrompts(): PromptsConfigInput {
   return {
     recipeExtraction: readDefaultPrompt("recipe-extraction"),
+    imageExtraction: readDefaultPrompt("image-extraction"),
     unitConversion: readDefaultPrompt("unit-conversion"),
     nutritionEstimation: readDefaultPrompt("nutrition-estimation"),
     autoTagging: readDefaultPrompt("auto-tagging"),
+    autoCategorization: readDefaultPrompt("auto-categorization"),
+    allergyDetection: readDefaultPrompt("allergy-detection"),
     recipeProvenance: readDefaultPrompt("recipe-provenance"),
     ingredientLinking: readDefaultPrompt("ingredient-linking"),
   };

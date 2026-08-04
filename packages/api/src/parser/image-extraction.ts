@@ -1,16 +1,7 @@
-import { generateText, Output } from "ai";
-
 import type { ImageImportFile } from "@norish/queue/contracts/job-types";
-import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
-import {
-  aiError,
-  aiSuccess,
-  getErrorMessage,
-  mapErrorToCode,
-} from "@norish/shared-server/ai/types/result";
-import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { AIResponseError } from "@norish/shared-server/ai/runtime/errors";
+import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { RecipeExtractionOutput } from "./extraction.schema";
@@ -19,130 +10,62 @@ import {
   normalizeExtractionOutput,
   validateExtractionOutput,
 } from "./extraction-normalizer";
-import { buildImageExtractionPrompt } from "./extraction-prompts";
 import { recipeExtractionSchema } from "./extraction.schema";
 
 // Re-export type for consumers
 export type { RecipeExtractionOutput };
 
 /**
- * Build message content parts including text prompt and images.
- */
-function buildImageMessageContent(prompt: string, files: ImageImportFile[]) {
-  const content: Array<
-    { type: "text"; text: string } | { type: "image"; image: string; mediaType: string }
-  > = [{ type: "text", text: prompt }];
-
-  // Add each image as a content part
-  for (const file of files) {
-    content.push({
-      type: "image",
-      image: file.data, // base64 encoded data
-      mediaType: file.mimeType,
-    });
-  }
-
-  return content;
-}
-
-/**
  * Extract recipe from images using AI vision models.
+ *
+ * Runs under image extraction's own administrator-editable prompt — never a
+ * rewritten copy of the webpage-extraction prompt.
  *
  * @param recipeId - Recipe ID allocated by the import entry point
  * @param files - Array of image files (base64 encoded)
- * @returns AIResult with extracted recipe or error
+ * @returns The extracted recipe; throws on AI failure or when the images hold no recipe.
  */
 export async function extractRecipeFromImages(
   recipeId: string,
   files: ImageImportFile[]
-): Promise<AIResult<FullRecipeInsertDTO>> {
-  // Guard: AI must be enabled
-  const aiEnabled = await isAIEnabled();
-
-  if (!aiEnabled) {
-    aiLogger.info("AI features are disabled, skipping image extraction");
-
-    return aiError("AI features are disabled", "AI_DISABLED");
-  }
-
+): Promise<FullRecipeInsertDTO> {
   if (files.length === 0) {
-    aiLogger.warn("No images provided for recipe extraction");
-
-    return aiError("No images provided", "INVALID_INPUT");
+    throw new Error("No images provided for recipe extraction");
   }
 
   aiLogger.info({ fileCount: files.length }, "Starting AI image recipe extraction");
 
-  try {
-    const { visionModel, providerName } = await getModels();
-    const settings = await getGenerationSettings();
+  const jsonLd = await generateStructured({
+    prompt: "image-extraction",
+    schema: recipeExtractionSchema,
+    // The images themselves select the vision model.
+    images: files.map((file) => ({ data: file.data, mimeType: file.mimeType })),
+  });
 
-    // Build prompt using shared builder
-    const prompt = await buildImageExtractionPrompt();
+  // Images that hold no recipe are a domain outcome the schema cannot state.
+  const validation = validateExtractionOutput(jsonLd);
 
-    aiLogger.debug(
-      { fileCount: files.length, filenames: files.map((f) => f.filename), provider: providerName },
-      "Sending images to AI vision provider"
-    );
+  if (!validation.valid) {
+    aiLogger.error(validation.details, validation.error);
 
-    // Build messages with image content parts
-    const messages = [
-      {
-        role: "user" as const,
-        content: buildImageMessageContent(prompt, files),
-      },
-    ];
-
-    const result = await generateText({
-      model: visionModel,
-      output: Output.object({ schema: recipeExtractionSchema }),
-      messages,
-      system:
-        "You extract recipe data from images as JSON-LD with both metric and US measurements. Return valid JSON only.",
-      ...settings,
-    });
-
-    const jsonLd = result.output;
-
-    // Validate extraction output
-    const validation = validateExtractionOutput(jsonLd);
-
-    if (!validation.valid) {
-      aiLogger.error(validation.details, validation.error);
-
-      return aiError(validation.error!, "VALIDATION_ERROR");
-    }
-
-    aiLogger.debug(getExtractionLogContext(jsonLd!, null), "AI vision response received");
-
-    // Normalize using shared normalizer (no URL or images for image imports)
-    const normalized = await normalizeExtractionOutput(jsonLd!, { recipeId });
-
-    if (!normalized) {
-      aiLogger.error("Failed to normalize recipe from image extraction");
-
-      return aiError("Failed to normalize recipe data", "VALIDATION_ERROR");
-    }
-
-    aiLogger.info(
-      getExtractionLogContext(jsonLd!, normalized),
-      "AI image recipe extraction completed"
-    );
-
-    return aiSuccess(normalized, {
-      inputTokens: result.usage?.inputTokens ?? 0,
-      outputTokens: result.usage?.outputTokens ?? 0,
-      totalTokens: result.usage?.totalTokens ?? 0,
-    });
-  } catch (error) {
-    const code = mapErrorToCode(error);
-    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
-
-    aiLogger.error(
-      { err: error, fileCount: files.length, code },
-      "Failed to extract recipe from images"
-    );
-
-    return aiError(message, code);
+    throw new AIResponseError(validation.error!);
   }
+
+  aiLogger.debug(getExtractionLogContext(jsonLd, null), "AI vision response received");
+
+  // Normalize using shared normalizer (no URL or images for image imports)
+  const normalized = await normalizeExtractionOutput(jsonLd, { recipeId });
+
+  if (!normalized) {
+    aiLogger.error("Failed to normalize recipe from image extraction");
+
+    throw new AIResponseError("Failed to normalize the extracted recipe data.");
+  }
+
+  aiLogger.info(
+    getExtractionLogContext(jsonLd, normalized),
+    "AI image recipe extraction completed"
+  );
+
+  return normalized;
 }

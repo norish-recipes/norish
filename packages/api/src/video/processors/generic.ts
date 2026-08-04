@@ -1,6 +1,6 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
-import { transcribeAudio } from "@norish/api/video/transcriber";
+import { transcribe } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger as log } from "@norish/shared-server/logger";
 
 import type { VideoProcessorContext } from "../types";
@@ -33,13 +33,7 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
       audioPath = await this.downloadAudio(url, tokens);
       log.info({ url }, "Starting audio transcription");
 
-      const transcriptionResult = await transcribeAudio(audioPath);
-
-      if (!transcriptionResult.success) {
-        throw new Error(transcriptionResult.error);
-      }
-
-      const transcript = transcriptionResult.data;
+      const transcript = await transcribe(audioPath);
 
       log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
@@ -47,20 +41,13 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
       const descriptionText = metadata.description?.trim() || "";
       const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
 
-      const result = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
-
-      if (!result.success) {
-        throw new Error(
-          result.error ||
-            "No recipe found in video. The video may not contain a recipe or the content was not clear enough to extract."
-        );
-      }
+      const recipe = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
 
       const savedVideo = videoPath
         ? await this.saveVideo(videoPath, recipeId, metadata.duration)
         : null;
 
-      return this.addVideoToRecipe(result.data, savedVideo);
+      return this.addVideoToRecipe(recipe, savedVideo);
     } finally {
       await this.cleanup(audioPath);
       if (videoPath?.includes("video-temp")) {

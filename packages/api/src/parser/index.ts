@@ -42,6 +42,10 @@ function getStructuredFailureMessage(code: string): string {
 
 /**
  * Attempt AI extraction. If requireAI = true, throws when AI is disabled.
+ *
+ * The URL parser is the one consumer that wants a non-throwing outcome: it
+ * falls back to non-AI parsing when AI extraction fails, so the failure is
+ * caught here and answered with null.
  */
 async function tryExtractWithAI(
   input: string,
@@ -61,13 +65,14 @@ async function tryExtractWithAI(
   }
 
   log.info({ url }, "Attempting AI extraction");
-  const result = await extractRecipeWithAI(input, recipeId, url, originalHtml);
 
-  if (result.success) return result.data;
+  try {
+    return await extractRecipeWithAI(input, recipeId, url, originalHtml);
+  } catch (error) {
+    log.warn({ url, err: error }, "AI extraction failed");
 
-  log.warn({ url, error: result.error, code: result.code }, "AI extraction failed");
-
-  return null;
+    return null;
+  }
 }
 
 /**

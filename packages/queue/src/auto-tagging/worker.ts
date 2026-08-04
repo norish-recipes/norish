@@ -25,13 +25,9 @@ const autoTaggingWorker = defineLazyWorker<RecipeEnrichmentJobData>(
   QUEUE_NAMES.AUTO_TAGGING,
   (job) =>
     runEnrichmentJob(job, async (recipe) => {
-      const result = await generateTagsForRecipe(toRecipeSummary(recipe));
+      const generated = await generateTagsForRecipe(toRecipeSummary(recipe));
 
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      const tags = normalizeEnrichmentTagNames(result.data);
+      const tags = normalizeEnrichmentTagNames(generated);
 
       if (tags.length === 0) {
         // Nothing to append is a legitimate outcome, not a failure: appending

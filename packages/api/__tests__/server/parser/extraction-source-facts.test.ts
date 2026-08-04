@@ -1,54 +1,55 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
+import {
+  buildRecipeExtractionSections,
+  buildVideoExtractionSections,
+} from "@norish/api/parser/extraction-prompts";
 import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
-import { loadPrompt } from "@norish/shared-server/ai/prompts/loader";
+import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
 
-vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
-  loadPrompt: vi.fn(),
-  fillPrompt: vi.fn(),
-}));
+const IMAGE_EXTRACTION_PROMPT = readFileSync(
+  join(
+    resolveExistingWorkspacePath(join("packages", "shared-server", "src", "ai", "prompts")),
+    "image-extraction.txt"
+  ),
+  "utf-8"
+);
 
-const { buildImageExtractionPrompt, buildRecipeExtractionPrompt, buildVideoExtractionPrompt } =
-  await import("@norish/api/parser/extraction-prompts");
+describe("extraction inputs request no inference", () => {
+  it("builds the HTML sections without tagging or allergy instructions", () => {
+    const sections = buildRecipeExtractionSections("WEBPAGE", { url: "https://example.com" });
+    const composed = sections.join("\n\n");
 
-/** A recognizable stand-in so we can tell base prompt from appended instructions. */
-const BASE_PROMPT = "BASE EXTRACTION PROMPT";
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  vi.mocked(loadPrompt).mockResolvedValue(BASE_PROMPT);
-});
-
-describe("extraction prompts request no inference", () => {
-  it("builds the HTML prompt without tagging or allergy instructions", async () => {
-    const prompt = await buildRecipeExtractionPrompt("WEBPAGE", { url: "https://example.com" });
-
-    expect(prompt).toContain(BASE_PROMPT);
-    expect(prompt).toContain("WEBPAGE");
-    expect(prompt).not.toMatch(/TAGGING INSTRUCTIONS/i);
-    expect(prompt).not.toMatch(/ALLERGY DETECTION/i);
-    expect(loadPrompt).toHaveBeenCalledTimes(1);
-    expect(loadPrompt).toHaveBeenCalledWith("recipe-extraction");
+    expect(composed).toContain("WEBPAGE");
+    expect(composed).toContain("URL: https://example.com");
+    expect(composed).not.toMatch(/TAGGING INSTRUCTIONS/i);
+    expect(composed).not.toMatch(/ALLERGY DETECTION/i);
   });
 
-  it("builds the image prompt without tagging, allergy, or categorization instructions", async () => {
-    const prompt = await buildImageExtractionPrompt();
-
-    expect(prompt).not.toMatch(/TAGGING INSTRUCTIONS/i);
-    expect(prompt).not.toMatch(/ALLERGY DETECTION/i);
-    expect(prompt).not.toMatch(/Categorize the recipe as/i);
+  it("ships an image-extraction prompt without tagging, allergy, or categorization instructions", () => {
+    // Image extraction runs under its own administrator-editable prompt; the
+    // shipped default is what a deployment actually sends.
+    expect(IMAGE_EXTRACTION_PROMPT).not.toMatch(/TAGGING INSTRUCTIONS/i);
+    expect(IMAGE_EXTRACTION_PROMPT).not.toMatch(/ALLERGY DETECTION/i);
+    expect(IMAGE_EXTRACTION_PROMPT).not.toMatch(/Categorize the recipe as/i);
+    // It reads images, and says so — never a rewritten webpage prompt.
+    expect(IMAGE_EXTRACTION_PROMPT).toMatch(/images/i);
+    expect(IMAGE_EXTRACTION_PROMPT).toMatch(/combine them into a single complete recipe/i);
   });
 
-  it("builds the video prompt without tagging or allergy instructions", async () => {
-    const prompt = await buildVideoExtractionPrompt("TRANSCRIPT", {
+  it("builds the video sections without tagging or allergy instructions", () => {
+    const sections = buildVideoExtractionSections("TRANSCRIPT", {
       title: "Pasta",
       duration: 120,
       url: "https://example.com/video",
     });
+    const composed = sections.join("\n\n");
 
-    expect(prompt).toContain("TRANSCRIPT");
-    expect(prompt).not.toMatch(/TAGGING INSTRUCTIONS/i);
-    expect(prompt).not.toMatch(/ALLERGY DETECTION/i);
+    expect(composed).toContain("TRANSCRIPT");
+    expect(composed).not.toMatch(/TAGGING INSTRUCTIONS/i);
+    expect(composed).not.toMatch(/ALLERGY DETECTION/i);
   });
 });
 

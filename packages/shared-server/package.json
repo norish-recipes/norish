@@ -26,7 +26,6 @@
     "./ai/providers/listing": "./src/ai/providers/listing.ts",
     "./ai/runtime/*": "./src/ai/runtime/*.ts",
     "./video/yt-dlp-version": "./src/video/yt-dlp-version.ts",
-    "./ai/types/result": "./src/ai/types/result.ts",
     "./caldav/ics-helpers": "./src/caldav/ics-helpers.ts",
     "./lib/workspace-paths": "./src/lib/workspace-paths.ts",
     "./lib/operation-context": "./src/lib/operation-context.ts",

@@ -19,15 +19,6 @@ export interface ModelConfig {
 }
 
 /**
- * Generation settings passed to generateText() calls.
- */
-export interface GenerationSettings {
-  temperature?: number;
-  maxOutputTokens?: number;
-  abortSignal?: AbortSignal;
-}
-
-/**
  * Model info returned by listing functions.
  */
 export interface AvailableModel {

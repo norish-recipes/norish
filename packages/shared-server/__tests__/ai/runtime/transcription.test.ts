@@ -5,9 +5,8 @@
  * Transcription is tested at the provider-construction level: each provider is
  * pointed at a local HTTP server (or, for the two whose base URL is fixed, a
  * stubbed global fetch) and the assertion is that the request arrives at the
- * correct URL in the correct shape. This is the regression net for moving
- * transcription client construction into the provider module: the wire
- * contract asserted here must survive the move.
+ * correct URL in the correct shape, through the shared transport, with the
+ * AI timeout applied.
  */
 
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -34,7 +33,9 @@ vi.mock("@norish/shared-server/logger", () => {
   return { aiLogger: logger, videoLogger: logger, createLogger: vi.fn(() => logger) };
 });
 
-const { transcribeAudio } = await import("@norish/api/video/transcriber");
+const { transcribe } = await import("@norish/shared-server/ai/runtime/runtime");
+const { AIConfigurationError, AIDisabledError, AIResponseError } =
+  await import("@norish/shared-server/ai/runtime/errors");
 
 interface CapturedRequest {
   method: string;
@@ -48,6 +49,8 @@ let baseUrl: string;
 let captured: CapturedRequest[] = [];
 /** JSON body the local server answers with; set per test. */
 let reply: unknown = { text: "local transcript" };
+/** When set, the server records the request but never answers it. */
+let holdResponses = false;
 
 let audioPath: string;
 
@@ -68,6 +71,9 @@ beforeAll(async () => {
         contentType: req.headers["content-type"] ?? "",
         body: Buffer.concat(chunks),
       });
+
+      if (holdResponses) return;
+
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify(reply));
     });
@@ -78,6 +84,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  server.closeAllConnections();
   await new Promise<void>((resolve, reject) =>
     server.close((err) => (err ? reject(err) : resolve()))
   );
@@ -98,6 +105,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   captured = [];
   reply = { text: "local transcript" };
+  holdResponses = false;
   mockGetAIConfig.mockResolvedValue(null);
 });
 
@@ -115,9 +123,9 @@ describe("transcription requests reach the provider correctly", () => {
       })
     );
 
-    const result = await transcribeAudio(audioPath);
+    const transcript = await transcribe(audioPath);
 
-    expect(result).toEqual({ success: true, data: "local transcript", usage: undefined });
+    expect(transcript).toBe("local transcript");
     expect(captured).toHaveLength(1);
     expect(captured[0]!.method).toBe("POST");
     expect(captured[0]!.url).toBe("/v1/audio/transcriptions");
@@ -140,9 +148,9 @@ describe("transcription requests reach the provider correctly", () => {
       })
     );
 
-    const result = await transcribeAudio(audioPath);
+    const transcript = await transcribe(audioPath);
 
-    expect(result).toEqual({ success: true, data: "local transcript", usage: undefined });
+    expect(transcript).toBe("local transcript");
     expect(captured).toHaveLength(1);
     expect(captured[0]!.method).toBe("POST");
     // The /openai path suffix is appended to the configured endpoint; the
@@ -162,9 +170,9 @@ describe("transcription requests reach the provider correctly", () => {
       })
     );
 
-    const result = await transcribeAudio(audioPath);
+    const transcript = await transcribe(audioPath);
 
-    expect(result).toEqual({ success: true, data: "ollama transcript", usage: undefined });
+    expect(transcript).toBe("ollama transcript");
     expect(captured).toHaveLength(1);
     expect(captured[0]!.method).toBe("POST");
     // The trailing slash on the configured endpoint is stripped, not doubled.
@@ -201,9 +209,9 @@ describe("transcription requests reach the provider correctly", () => {
       videoConfig({ transcriptionProvider: "openai", transcriptionApiKey: "openai-key" })
     );
 
-    const result = await transcribeAudio(audioPath);
+    const transcript = await transcribe(audioPath);
 
-    expect(result).toEqual({ success: true, data: "openai transcript", usage: undefined });
+    expect(transcript).toBe("openai transcript");
     expect(sent).toHaveLength(1);
     expect(sent[0]!.url).toBe("https://api.openai.com/v1/audio/transcriptions");
 
@@ -240,9 +248,9 @@ describe("transcription requests reach the provider correctly", () => {
       })
     );
 
-    const result = await transcribeAudio(audioPath);
+    const transcript = await transcribe(audioPath);
 
-    expect(result).toEqual({ success: true, data: "groq transcript", usage: undefined });
+    expect(transcript).toBe("groq transcript");
     expect(sent).toHaveLength(1);
     expect(sent[0]!.url).toContain("api.groq.com");
     expect(sent[0]!.url).toContain("/audio/transcriptions");
@@ -266,9 +274,9 @@ describe("transcription requests reach the provider correctly", () => {
     );
     mockGetAIConfig.mockResolvedValue({ endpoint: baseUrl, apiKey: "ai-config-key" });
 
-    const result = await transcribeAudio(audioPath);
+    const transcript = await transcribe(audioPath);
 
-    expect(result).toEqual({ success: true, data: "local transcript", usage: undefined });
+    expect(transcript).toBe("local transcript");
     expect(captured).toHaveLength(1);
     expect(captured[0]!.url).toBe("/v1/audio/transcriptions");
   });
@@ -282,28 +290,45 @@ describe("transcription requests reach the provider correctly", () => {
       })
     );
 
-    const result = await transcribeAudio(audioPath);
-
-    expect(result).toMatchObject({ success: false, code: "EMPTY_RESPONSE" });
+    await expect(transcribe(audioPath)).rejects.toBeInstanceOf(AIResponseError);
   });
 
   it("refuses without a provider call when video parsing is disabled", async () => {
     mockGetVideoConfig.mockResolvedValue(videoConfig({ enabled: false }));
 
-    const result = await transcribeAudio(audioPath);
-
-    expect(result).toMatchObject({ success: false, code: "AI_DISABLED" });
+    await expect(transcribe(audioPath)).rejects.toBeInstanceOf(AIDisabledError);
     expect(captured).toHaveLength(0);
   });
 
-  it("refuses a cloud provider without an API key", async () => {
+  it("refuses a cloud provider without an API key, as a non-retryable configuration error", async () => {
     mockGetVideoConfig.mockResolvedValue(
       videoConfig({ transcriptionProvider: "openai", transcriptionApiKey: undefined })
     );
 
-    const result = await transcribeAudio(audioPath);
+    const error = await transcribe(audioPath).catch((err: unknown) => err);
 
-    expect(result).toMatchObject({ success: false, code: "AUTH_ERROR" });
+    expect(error).toBeInstanceOf(AIConfigurationError);
+    expect((error as InstanceType<typeof AIConfigurationError>).retryable).toBe(false);
     expect(captured).toHaveLength(0);
+  });
+
+  it("gives up on a hung endpoint within the configured AI timeout", async () => {
+    // A server that accepts the connection and never answers. Before the
+    // shared transport, four of the five providers would wait forever here.
+    holdResponses = true;
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: baseUrl,
+      })
+    );
+    mockGetAIConfig.mockResolvedValue({ timeoutMs: 300 });
+
+    const started = Date.now();
+    const error = await transcribe(audioPath).catch((err: unknown) => err);
+
+    expect(Date.now() - started).toBeLessThan(5_000);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as { retryable?: boolean }).retryable).toBe(true);
   });
 });

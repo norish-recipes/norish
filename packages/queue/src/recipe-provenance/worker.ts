@@ -30,13 +30,7 @@ const log = createLogger("worker:recipe-provenance");
 /** Exported so the job body can be exercised without a Redis-backed worker. */
 export async function processRecipeProvenanceJob(job: Job<RecipeEnrichmentJobData>): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
-    const result = await inferRecipeProvenance(toRecipeSummary(recipe));
-
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    const claim = result.data;
+    const claim = await inferRecipeProvenance(toRecipeSummary(recipe));
 
     if (claim.cuisineIds.length === 0 && !hasSubstantiveProvenance(claim)) {
       // Replacement clears whatever it does not set, so an entirely empty claim

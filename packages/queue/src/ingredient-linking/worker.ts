@@ -68,13 +68,7 @@ export async function processIngredientLinkingJob(
   job: Job<RecipeEnrichmentJobData>
 ): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
-    const result = await inferStepIngredients(toLinkableRecipe(recipe));
-
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    const claim = result.data;
+    const claim = await inferStepIngredients(toLinkableRecipe(recipe));
 
     if (claim.links.length === 0) {
       // A recipe whose steps genuinely use nothing stays bare, and later

@@ -25,13 +25,9 @@ const autoCategorizationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
   QUEUE_NAMES.AUTO_CATEGORIZATION,
   (job) =>
     runEnrichmentJob(job, async (recipe) => {
-      const result = await categorizeRecipe(toRecipeSummary(recipe));
+      const categories = await categorizeRecipe(toRecipeSummary(recipe));
 
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      if (result.data.length === 0) {
+      if (categories.length === 0) {
         // Replacement with nothing would erase stored categories, so an empty
         // result is a failure the job retries rather than a write.
         throw new Error("AI returned no categories to replace the stored list with");
@@ -39,10 +35,10 @@ const autoCategorizationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
 
       await reportStep(job, "saving");
 
-      const applied = await replaceRecipeCategories(recipe.id, result.data, job.data.origin);
+      const applied = await replaceRecipeCategories(recipe.id, categories, job.data.origin);
 
       log.info(
-        { recipeId: recipe.id, categories: result.data, applied, origin: job.data.origin },
+        { recipeId: recipe.id, categories, applied, origin: job.data.origin },
         applied ? "Auto-categorization saved" : "Auto-categorization deferred to supplied data"
       );
 

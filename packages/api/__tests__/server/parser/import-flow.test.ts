@@ -136,7 +136,7 @@ describe("parseRecipeFromUrl import flow", () => {
     });
     mockAdaptRecipeScrapersResponse.mockResolvedValue(structuredRecipe);
     mockProcessVideoRecipe.mockResolvedValue(structuredRecipe);
-    mockExtractRecipeWithAI.mockResolvedValue({ success: true, data: aiRecipe });
+    mockExtractRecipeWithAI.mockResolvedValue(aiRecipe);
   });
 
   it("uses the existing video pipeline for video imports", { timeout: 15000 }, async () => {

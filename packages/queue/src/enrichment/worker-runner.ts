@@ -12,9 +12,11 @@
  */
 
 import type { Job } from "bullmq";
+import { UnrecoverableError } from "bullmq";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { getRecipeFull } from "@norish/db";
+import { AIError } from "@norish/shared-server/ai/runtime/errors";
 import { createLogger } from "@norish/shared-server/logger";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
@@ -40,9 +42,11 @@ export type EnrichmentExecutor = (
  * `queued` when BullMQ accepts the job; clients ignore that event if it arrives
  * after this later worker state.
  *
- * Nothing here is caught: a thrown error is how a worker signals a retryable
- * failure, and BullMQ's existing attempts and backoff decide when it becomes
- * terminal.
+ * A thrown error is how a worker signals a retryable failure, and BullMQ's
+ * existing attempts and backoff decide when it becomes terminal — except for
+ * an AI failure that says a retry cannot succeed (AI having been switched
+ * off being the motivating case), which is rethrown as unrecoverable so no
+ * attempts are burned on a state that will not change.
  */
 export async function runEnrichmentJob(
   job: Job<RecipeEnrichmentJobData>,
@@ -61,7 +65,18 @@ export async function runEnrichmentJob(
   }
 
   await reportStep(job, "ai-request");
-  const changed = await execute(recipe, job);
+
+  let changed: boolean;
+
+  try {
+    changed = await execute(recipe, job);
+  } catch (error) {
+    if (error instanceof AIError && !error.retryable) {
+      throw new UnrecoverableError(error.message);
+    }
+
+    throw error;
+  }
 
   if (changed) {
     // Canonical recipe update, so clients refresh caches directly instead of
@@ -81,7 +96,8 @@ export async function runEnrichmentJob(
 /**
  * Report a failed attempt. Only the final attempt is terminal, and only a
  * terminal failure publishes `failed`, because intermediate attempts are still
- * `processing` from a reader's point of view.
+ * `processing` from a reader's point of view. An unrecoverable failure is
+ * terminal on whatever attempt it happens: BullMQ stops retrying it.
  */
 export async function handleEnrichmentJobFailure(
   job: Job<RecipeEnrichmentJobData> | undefined,
@@ -91,7 +107,7 @@ export async function handleEnrichmentJobFailure(
 
   const { recipeId, kind, origin } = job.data;
   const maxAttempts = job.opts.attempts ?? 3;
-  const isFinalFailure = job.attemptsMade >= maxAttempts;
+  const isFinalFailure = job.attemptsMade >= maxAttempts || error instanceof UnrecoverableError;
 
   log.error(
     {

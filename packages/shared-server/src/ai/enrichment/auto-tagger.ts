@@ -1,20 +1,11 @@
-import { generateText, Output } from "ai";
-
-import type { AIResult } from "@norish/shared-server/ai/types/result";
 import { listAllTagNames } from "@norish/db/repositories/tags";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
-import {
-  aiError,
-  aiSuccess,
-  getErrorMessage,
-  mapErrorToCode,
-} from "@norish/shared-server/ai/types/result";
-import { getTagStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { RecipeForTagging } from "./auto-tagging-prompt";
 import type { AutoTaggingOutput } from "./auto-tagging.schema";
-import { buildAutoTaggingPrompt } from "./auto-tagging-prompt";
+import { generateStructured } from "../runtime/runtime";
+import { buildAutoTaggingSections } from "./auto-tagging-prompt";
 import { autoTaggingSchema } from "./auto-tagging.schema";
 
 // Re-export types for consumers
@@ -24,26 +15,15 @@ export type { AutoTaggingOutput, RecipeForTagging };
  * Generate tags for a recipe using AI.
  *
  * @param recipe - The recipe data to analyze
- * @returns AIResult with array of tag strings, or error
+ * @returns Array of tag strings; throws on AI failure
  */
-export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<AIResult<string[]>> {
-  // Guard: AI must be enabled
-  const aiEnabled = await isAIEnabled();
-
-  if (!aiEnabled) {
-    aiLogger.info("AI features are disabled, skipping auto-tagging");
-
-    return aiError("AI features are disabled", "AI_DISABLED");
-  }
-
+export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<string[]> {
   // The tag strategy is deliberately not an enablement check: whether auto-tagging
   // runs automatically is coordination policy, not a reason to refuse a request.
   const strategy = await getTagStrategy();
 
   if (recipe.ingredients.length === 0) {
-    aiLogger.warn("No ingredients provided for auto-tagging");
-
-    return aiError("No ingredients provided", "INVALID_INPUT");
+    throw new Error("No ingredients provided for auto-tagging");
   }
 
   aiLogger.info(
@@ -51,64 +31,26 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<A
     "Starting auto-tagging"
   );
 
-  try {
-    const { model, providerName } = await getModels();
-    const settings = await getGenerationSettings();
+  // For predefined_db mode, fetch existing tags from database
+  let existingDbTags: string[] | undefined;
 
-    // For predefined_db mode, fetch existing tags from database
-    let existingDbTags: string[] | undefined;
-
-    if (strategy === "predefined_db") {
-      existingDbTags = await listAllTagNames();
-      aiLogger.debug({ existingTagCount: existingDbTags.length }, "Fetched existing DB tags");
-    }
-
-    const prompt = await buildAutoTaggingPrompt({ existingDbTags }, recipe);
-
-    aiLogger.debug({ provider: providerName, prompt }, "Sending auto-tagging prompt to AI");
-
-    const result = await generateText({
-      model,
-      output: Output.object({ schema: autoTaggingSchema }),
-      prompt,
-      system:
-        "You are a recipe tagging assistant. Analyze the recipe and assign relevant tags based on the provided rules.",
-      ...settings,
-    });
-
-    const output = result.output;
-
-    if (!output) {
-      aiLogger.error({ title: recipe.title }, "AI returned empty output for auto-tagging");
-
-      return aiError("AI returned empty response", "EMPTY_RESPONSE");
-    }
-
-    // Validate the response
-    if (!Array.isArray(output.tags)) {
-      aiLogger.error({ title: recipe.title, output }, "Invalid auto-tagging response");
-
-      return aiError("AI response missing tags array", "VALIDATION_ERROR");
-    }
-
-    // Normalize tags: lowercase, trim, deduplicate
-    const normalizedTags = Array.from(
-      new Set(output.tags.map((t) => t.toLowerCase().trim()).filter((t) => t.length > 0))
-    );
-
-    aiLogger.info({ title: recipe.title, tags: normalizedTags }, "Auto-tagging completed");
-
-    return aiSuccess(normalizedTags, {
-      inputTokens: result.usage?.inputTokens ?? 0,
-      outputTokens: result.usage?.outputTokens ?? 0,
-      totalTokens: result.usage?.totalTokens ?? 0,
-    });
-  } catch (error) {
-    const code = mapErrorToCode(error);
-    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
-
-    aiLogger.error({ err: error, title: recipe.title, code }, "Failed to generate tags");
-
-    return aiError(message, code);
+  if (strategy === "predefined_db") {
+    existingDbTags = await listAllTagNames();
+    aiLogger.debug({ existingTagCount: existingDbTags.length }, "Fetched existing DB tags");
   }
+
+  const output = await generateStructured({
+    prompt: "auto-tagging",
+    schema: autoTaggingSchema,
+    sections: await buildAutoTaggingSections({ existingDbTags }, recipe),
+  });
+
+  // Normalize tags: lowercase, trim, deduplicate
+  const normalizedTags = Array.from(
+    new Set(output.tags.map((t) => t.toLowerCase().trim()).filter((t) => t.length > 0))
+  );
+
+  aiLogger.info({ title: recipe.title, tags: normalizedTags }, "Auto-tagging completed");
+
+  return normalizedTags;
 }

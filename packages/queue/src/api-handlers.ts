@@ -1,4 +1,3 @@
-import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { RecipeCategory, Slot } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
@@ -37,17 +36,14 @@ export interface QueueApiHandlers {
     recipeId: string,
     url?: string,
     originalHtml?: string
-  ): Promise<AIResult<FullRecipeInsertDTO>>;
+  ): Promise<FullRecipeInsertDTO>;
   parseRecipeFromUrl(
     url: string,
     recipeId: string,
     forceAI?: boolean,
     tokens?: SiteAuthTokenDecryptedDto[]
   ): Promise<QueueParseRecipeResult>;
-  extractRecipeFromImages(
-    recipeId: string,
-    files: ImageImportFile[]
-  ): Promise<AIResult<FullRecipeInsertDTO>>;
+  extractRecipeFromImages(recipeId: string, files: ImageImportFile[]): Promise<FullRecipeInsertDTO>;
   syncPlannedItem(
     userId: string,
     itemId: string,

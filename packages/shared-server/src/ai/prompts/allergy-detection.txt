@@ -1,0 +1,10 @@
+Analyze the recipe and detect which allergens from the provided list are present in the ingredients.
+
+INSTRUCTIONS:
+1. Carefully analyze each ingredient for the presence of allergens from the provided list.
+2. Consider both explicit mentions (e.g., "wheat flour" contains gluten) and implicit allergens (e.g., "soy sauce" contains soy and often wheat/gluten).
+3. Only return allergens from the provided list that are actually present in the ingredients.
+4. If no allergens from the list are detected, return an empty array.
+5. Use the exact allergen names from the provided list (case-insensitive matching is fine, but return them as provided).
+
+Return ONLY allergens that are definitely present based on the ingredients. Do not guess or assume.

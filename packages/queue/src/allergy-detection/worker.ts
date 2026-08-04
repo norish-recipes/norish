@@ -39,13 +39,9 @@ const allergyDetectionWorker = defineLazyWorker<RecipeEnrichmentJobData>(
         return false;
       }
 
-      const result = await detectAllergiesInRecipe(toRecipeSummary(recipe), allergiesToDetect);
+      const found = await detectAllergiesInRecipe(toRecipeSummary(recipe), allergiesToDetect);
 
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      const detected = normalizeEnrichmentTagNames(result.data);
+      const detected = normalizeEnrichmentTagNames(found);
 
       if (detected.length === 0) {
         log.info({ recipeId: recipe.id }, "AI detected no allergens");

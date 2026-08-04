@@ -1,7 +1,7 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
-import { transcribeAudio } from "@norish/api/video/transcriber";
 import { downloadCaptions, parseVttFile } from "@norish/api/video/yt-dlp";
+import { transcribe } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger as log } from "@norish/shared-server/logger";
 
 import type { VideoProcessorContext } from "../types";
@@ -62,36 +62,35 @@ export class YouTubeProcessor extends BaseVideoProcessor {
           "Trying extraction from captions + description first"
         );
 
-        const result = await extractRecipeFromVideo(
-          combinedCaptionAndDescription,
-          metadata,
-          recipeId,
-          url
-        );
+        // A failed caption extraction is not terminal: the audio itself is
+        // still there to transcribe.
+        try {
+          const recipe = await extractRecipeFromVideo(
+            combinedCaptionAndDescription,
+            metadata,
+            recipeId,
+            url
+          );
 
-        if (result.success) {
           log.info({ url }, "Successfully extracted recipe from captions + description");
           const savedVideo = videoPath
             ? await this.saveVideo(videoPath, recipeId, metadata.duration)
             : null;
 
-          return this.addVideoToRecipe(result.data, savedVideo);
+          return this.addVideoToRecipe(recipe, savedVideo);
+        } catch (captionExtractionError) {
+          log.info(
+            { url, err: captionExtractionError },
+            "Caption/description extraction failed, falling back to transcription"
+          );
         }
-
-        log.info({ url }, "Caption/description extraction failed, falling back to transcription");
       }
 
       // Fall back to audio transcription
       audioPath = await this.downloadAudio(url, tokens);
       log.info({ url }, "Starting audio transcription");
 
-      const transcriptionResult = await transcribeAudio(audioPath);
-
-      if (!transcriptionResult.success) {
-        throw new Error(transcriptionResult.error);
-      }
-
-      const transcript = transcriptionResult.data;
+      const transcript = await transcribe(audioPath);
 
       log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
@@ -100,25 +99,18 @@ export class YouTubeProcessor extends BaseVideoProcessor {
         .filter(Boolean)
         .join("\n\n---\n\n");
 
-      const result = await extractRecipeFromVideo(
+      const recipe = await extractRecipeFromVideo(
         combinedTranscriptAndDescription,
         metadata,
         recipeId,
         url
       );
 
-      if (!result.success) {
-        throw new Error(
-          result.error ||
-            "No recipe found in video. The video may not contain a recipe or the content was not clear enough to extract."
-        );
-      }
-
       const savedVideo = videoPath
         ? await this.saveVideo(videoPath, recipeId, metadata.duration)
         : null;
 
-      return this.addVideoToRecipe(result.data, savedVideo);
+      return this.addVideoToRecipe(recipe, savedVideo);
     } finally {
       await this.cleanup(audioPath, captionPath);
       if (videoPath?.includes("video-temp")) {

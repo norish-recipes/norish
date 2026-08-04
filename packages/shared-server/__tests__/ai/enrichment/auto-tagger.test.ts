@@ -1,54 +1,32 @@
 /**
  * Auto-Tagger Tests
  *
- * Tests for AI-based recipe auto-tagging functionality.
+ * The AI Runtime is the single mocked AI seam. The tags repository stays
+ * mocked as a genuine data dependency: which stored tags the model may reuse
+ * is the feature's own domain input.
  *
  * @vitest-environment node
  */
-import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { listAllTagNames } from "@norish/db/repositories/tags";
-import { generateTagsForRecipe } from "@norish/shared-server/ai/enrichment/auto-tagger";
-import { getTagStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { AIDisabledError } from "@norish/shared-server/ai/runtime/errors";
+import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 
-// Mock dependencies - vi.mock is hoisted by Vitest
-vi.mock("ai", () => ({
-  generateText: vi.fn(),
-  Output: {
-    object: vi.fn(({ schema }) => schema),
-  },
+const mocked = vi.hoisted(() => ({
+  generateStructured: vi.fn(),
+}));
+
+vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
+  generateStructured: mocked.generateStructured,
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  isAIEnabled: vi.fn(),
   getTagStrategy: vi.fn(),
-  getAIConfig: vi.fn().mockResolvedValue({
-    enabled: true,
-    provider: "openai",
-    model: "gpt-4o-mini",
-    apiKey: "test-key",
-  }),
 }));
 
 vi.mock("@norish/db/repositories/tags", () => ({
   listAllTagNames: vi.fn(),
-}));
-
-vi.mock("@norish/shared-server/ai/runtime/providers", () => ({
-  getModels: vi.fn().mockResolvedValue({
-    model: {},
-    providerName: "openai",
-  }),
-  getGenerationSettings: vi.fn().mockResolvedValue({
-    temperature: 0.7,
-    maxTokens: 4096,
-  }),
-}));
-
-vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
-  loadPrompt: vi.fn().mockResolvedValue("Mock auto-tagging prompt template"),
-  fillPrompt: vi.fn((template, _vars) => template),
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -60,6 +38,8 @@ vi.mock("@norish/shared-server/logger", () => ({
   },
 }));
 
+const { generateTagsForRecipe } = await import("@norish/shared-server/ai/enrichment/auto-tagger");
+
 describe("Auto-Tagger", () => {
   const mockRecipe = {
     title: "Spaghetti Carbonara",
@@ -69,150 +49,94 @@ describe("Auto-Tagger", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getTagStrategy).mockResolvedValue("predefined");
+    mocked.generateStructured.mockResolvedValue({ tags: [] });
   });
 
   describe("generateTagsForRecipe", () => {
-    it("returns error when AI is disabled", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(false);
+    it("propagates the runtime's refusal when AI is disabled", async () => {
+      mocked.generateStructured.mockRejectedValue(new AIDisabledError());
 
-      const result = await generateTagsForRecipe(mockRecipe);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("AI features are disabled");
-        expect(result.code).toBe("AI_DISABLED");
-      }
+      await expect(generateTagsForRecipe(mockRecipe)).rejects.toBeInstanceOf(AIDisabledError);
     });
 
     it("still generates tags when automatic auto-tagging is switched off", async () => {
       // The automatic switch is coordination policy; it must not disable the manual tool.
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
-      vi.mocked(generateText).mockResolvedValue({
-        output: { tags: ["Italian"] },
-        usage: { inputTokens: 100, outputTokens: 20, totalTokens: 120 },
-      } as ReturnType<typeof generateText> extends Promise<infer R> ? R : never);
+      mocked.generateStructured.mockResolvedValue({ tags: ["Italian"] });
 
-      const result = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe);
 
-      expect(result.success).toBe(true);
+      expect(tags).toEqual(["italian"]);
     });
 
-    it("returns error when recipe has no ingredients", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
+    it("refuses a recipe with no ingredients", async () => {
+      await expect(
+        generateTagsForRecipe({ title: "Empty Recipe", ingredients: [] })
+      ).rejects.toThrow("No ingredients provided");
+      expect(mocked.generateStructured).not.toHaveBeenCalled();
+    });
 
-      const recipeWithoutIngredients = {
-        title: "Empty Recipe",
-        ingredients: [],
-      };
+    it("runs under the administrator-editable auto-tagging prompt", async () => {
+      mocked.generateStructured.mockResolvedValue({ tags: ["Italian"] });
 
-      const result = await generateTagsForRecipe(recipeWithoutIngredients);
+      await generateTagsForRecipe(mockRecipe);
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("No ingredients provided");
-        expect(result.code).toBe("INVALID_INPUT");
-      }
+      expect(mocked.generateStructured).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: "auto-tagging",
+          sections: expect.arrayContaining([expect.stringContaining("Spaghetti Carbonara")]),
+        })
+      );
     });
 
     it("successfully generates tags in predefined mode", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
-      vi.mocked(generateText).mockResolvedValue({
-        output: { tags: ["Italian", "Pasta", "Quick"] },
-        usage: { inputTokens: 100, outputTokens: 20, totalTokens: 120 },
-      } as ReturnType<typeof generateText> extends Promise<infer R> ? R : never);
+      mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Pasta", "Quick"] });
 
-      const result = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe);
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toEqual(["italian", "pasta", "quick"]);
-        expect(result.usage?.totalTokens).toBe(120);
-      }
+      expect(tags).toEqual(["italian", "pasta", "quick"]);
     });
 
-    it("fetches existing tags in predefined_db mode", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
+    it("fetches existing tags and offers them to the model in predefined_db mode", async () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
       vi.mocked(listAllTagNames).mockResolvedValue(["dinner", "italian", "vegetarian"]);
-      vi.mocked(generateText).mockResolvedValue({
-        output: { tags: ["Italian", "Dinner"] },
-        usage: { inputTokens: 150, outputTokens: 15, totalTokens: 165 },
-      } as ReturnType<typeof generateText> extends Promise<infer R> ? R : never);
+      mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Dinner"] });
 
-      const result = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe);
 
-      expect(result.success).toBe(true);
       expect(listAllTagNames).toHaveBeenCalled();
-      if (result.success) {
-        expect(result.data).toEqual(["italian", "dinner"]);
-      }
+      expect(mocked.generateStructured).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sections: expect.arrayContaining([
+            expect.stringContaining("dinner, italian, vegetarian"),
+          ]),
+        })
+      );
+      expect(tags).toEqual(["italian", "dinner"]);
+    });
+
+    it("does not fetch DB tags in predefined mode", async () => {
+      await generateTagsForRecipe(mockRecipe);
+
+      expect(listAllTagNames).not.toHaveBeenCalled();
     });
 
     it("normalizes tags (lowercase, trim, deduplicate)", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
       vi.mocked(getTagStrategy).mockResolvedValue("freeform");
-      vi.mocked(generateText).mockResolvedValue({
-        output: { tags: ["  PASTA  ", "Italian", "pasta", "Quick ", ""] },
-        usage: { inputTokens: 100, outputTokens: 30, totalTokens: 130 },
-      } as ReturnType<typeof generateText> extends Promise<infer R> ? R : never);
+      mocked.generateStructured.mockResolvedValue({
+        tags: ["  PASTA  ", "Italian", "pasta", "Quick ", ""],
+      });
 
-      const result = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe);
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        // Should be lowercase, trimmed, deduplicated, empty strings removed
-        expect(result.data).toEqual(["pasta", "italian", "quick"]);
-      }
+      // Should be lowercase, trimmed, deduplicated, empty strings removed
+      expect(tags).toEqual(["pasta", "italian", "quick"]);
     });
 
-    it("returns error when AI returns empty output", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
-      vi.mocked(generateText).mockResolvedValue({
-        output: null,
-        usage: { inputTokens: 100, outputTokens: 0, totalTokens: 100 },
-      } as ReturnType<typeof generateText> extends Promise<infer R> ? R : never);
+    it("lets an AI failure out for the caller to handle", async () => {
+      mocked.generateStructured.mockRejectedValue(new Error("API rate limit exceeded"));
 
-      const result = await generateTagsForRecipe(mockRecipe);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("AI returned empty response");
-        expect(result.code).toBe("EMPTY_RESPONSE");
-      }
-    });
-
-    it("returns error when AI response is invalid (missing tags array)", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
-      vi.mocked(generateText).mockResolvedValue({
-        output: { notTags: ["something"] },
-        usage: { inputTokens: 100, outputTokens: 10, totalTokens: 110 },
-      } as ReturnType<typeof generateText> extends Promise<infer R> ? R : never);
-
-      const result = await generateTagsForRecipe(mockRecipe);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("AI response missing tags array");
-        expect(result.code).toBe("VALIDATION_ERROR");
-      }
-    });
-
-    it("handles AI errors gracefully", async () => {
-      vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
-      vi.mocked(generateText).mockRejectedValue(new Error("API rate limit exceeded"));
-
-      const result = await generateTagsForRecipe(mockRecipe);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.code).toBeDefined();
-      }
+      await expect(generateTagsForRecipe(mockRecipe)).rejects.toThrow("API rate limit exceeded");
     });
   });
 });

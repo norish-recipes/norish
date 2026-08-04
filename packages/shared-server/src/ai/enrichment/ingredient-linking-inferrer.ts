@@ -13,20 +13,9 @@
  * skip steps that already have Step Ingredients.
  */
 
-import { generateText, Output } from "ai";
-
-import type { AIResult } from "@norish/shared-server/ai/types/result";
-import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
-import {
-  aiError,
-  aiSuccess,
-  getErrorMessage,
-  mapErrorToCode,
-} from "@norish/shared-server/ai/types/result";
-import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
+import { generateStructured } from "../runtime/runtime";
 import { ingredientLinkingSchema } from "./ingredient-linking.schema";
 
 export interface IngredientLineForLinking {
@@ -80,41 +69,16 @@ function toShare(
   return candidate.share ?? 1;
 }
 
-async function buildIngredientLinkingPrompt(
-  recipe: RecipeForIngredientLinking,
-  linkableLines: IngredientLineForLinking[],
-  linkableSteps: StepForLinking[]
-): Promise<string> {
-  const template = await loadPrompt("ingredient-linking");
-
-  return fillPrompt(template, {
-    recipeName: recipe.title,
-    ingredients: linkableLines.map((line, index) => `${index + 1}. ${line.text}`).join("\n"),
-    steps: linkableSteps.map((step, index) => `${index + 1}. ${step.text}`).join("\n"),
-  });
-}
-
 export async function inferStepIngredients(
   recipe: RecipeForIngredientLinking
-): Promise<AIResult<IngredientLinkingInference>> {
-  if (!(await isAIEnabled())) {
-    aiLogger.info("AI features are disabled, skipping Ingredient Linking inference");
-
-    return aiError("AI features are disabled", "AI_DISABLED");
-  }
-
+): Promise<IngredientLinkingInference> {
   // Heading rows are structure, not ingredients or steps: they are neither
   // offered to the model nor accepted back.
   const linkableLines = recipe.ingredients.filter((line) => !line.isHeading);
   const linkableSteps = recipe.steps.filter((step) => !step.isHeading);
 
   if (linkableLines.length === 0 || linkableSteps.length === 0) {
-    aiLogger.warn(
-      { title: recipe.title },
-      "No linkable ingredients or steps for Ingredient Linking inference"
-    );
-
-    return aiError("No linkable ingredients or steps", "INVALID_INPUT");
+    throw new Error("No linkable ingredients or steps");
   }
 
   aiLogger.info(
@@ -126,74 +90,45 @@ export async function inferStepIngredients(
     "Starting Ingredient Linking inference"
   );
 
-  try {
-    const { model, providerName } = await getModels();
-    const settings = await getGenerationSettings();
-    const prompt = await buildIngredientLinkingPrompt(recipe, linkableLines, linkableSteps);
+  const output = await generateStructured({
+    prompt: "ingredient-linking",
+    schema: ingredientLinkingSchema,
+    fill: {
+      recipeName: recipe.title,
+      ingredients: linkableLines.map((line, index) => `${index + 1}. ${line.text}`).join("\n"),
+      steps: linkableSteps.map((step, index) => `${index + 1}. ${step.text}`).join("\n"),
+    },
+  });
 
-    aiLogger.debug({ provider: providerName, prompt }, "Sending ingredient-linking prompt to AI");
+  // Map prompt numbering back onto row orders, dropping anything the model
+  // invented. An empty claim is a valid answer, not a failure: a recipe
+  // whose steps genuinely use nothing stays bare.
+  const links: InferredStepLinks[] = [];
 
-    const result = await generateText({
-      model,
-      output: Output.object({ schema: ingredientLinkingSchema }),
-      prompt,
-      system:
-        "You are a careful recipe reader who says which ingredient lines each step uses, and only what the text supports.",
-      ...settings,
+  for (const entry of output.links ?? []) {
+    const step = linkableSteps[entry.step - 1];
+
+    if (!step) continue;
+
+    const refs = (entry.ingredients ?? []).flatMap((candidate, index) => {
+      const line = linkableLines[candidate.line - 1];
+
+      if (!line) return [];
+
+      return [
+        { ingredientOrder: line.order, share: toShare(candidate, line.amount), order: index },
+      ];
     });
 
-    const output = result.output;
-
-    if (!output) {
-      aiLogger.error({ title: recipe.title }, "AI returned empty output for Ingredient Linking");
-
-      return aiError("AI returned empty response", "EMPTY_RESPONSE");
+    if (refs.length > 0) {
+      links.push({ stepOrder: step.order, refs });
     }
-
-    // Map prompt numbering back onto row orders, dropping anything the model
-    // invented. An empty claim is a valid answer, not a failure: a recipe
-    // whose steps genuinely use nothing stays bare.
-    const links: InferredStepLinks[] = [];
-
-    for (const entry of output.links ?? []) {
-      const step = linkableSteps[entry.step - 1];
-
-      if (!step) continue;
-
-      const refs = (entry.ingredients ?? []).flatMap((candidate, index) => {
-        const line = linkableLines[candidate.line - 1];
-
-        if (!line) return [];
-
-        return [
-          { ingredientOrder: line.order, share: toShare(candidate, line.amount), order: index },
-        ];
-      });
-
-      if (refs.length > 0) {
-        links.push({ stepOrder: step.order, refs });
-      }
-    }
-
-    aiLogger.info(
-      { title: recipe.title, linkedSteps: links.length },
-      "Ingredient Linking inference completed"
-    );
-
-    return aiSuccess(
-      { links },
-      {
-        inputTokens: result.usage?.inputTokens ?? 0,
-        outputTokens: result.usage?.outputTokens ?? 0,
-        totalTokens: result.usage?.totalTokens ?? 0,
-      }
-    );
-  } catch (error) {
-    const code = mapErrorToCode(error);
-    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
-
-    aiLogger.error({ err: error, title: recipe.title, code }, "Failed to infer Step Ingredients");
-
-    return aiError(message, code);
   }
+
+  aiLogger.info(
+    { title: recipe.title, linkedSteps: links.length },
+    "Ingredient Linking inference completed"
+  );
+
+  return { links };
 }

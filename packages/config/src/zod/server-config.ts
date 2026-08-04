@@ -126,10 +126,14 @@ export const PromptsConfigSchema = z.object({
   unitConversion: z.string(),
   nutritionEstimation: z.string(),
   autoTagging: z.string(),
-  // Optional so config stored before Recipe Provenance shipped still parses.
-  // The loader falls back to the on-disk default for whatever is missing.
+  // Every prompt added after the initial four is optional, so config stored
+  // before it shipped still parses. The loader falls back to the on-disk
+  // default for whatever is missing.
   recipeProvenance: z.string().optional(),
   ingredientLinking: z.string().optional(),
+  imageExtraction: z.string().optional(),
+  autoCategorization: z.string().optional(),
+  allergyDetection: z.string().optional(),
   isOverridden: z.boolean().default(false),
 });
 

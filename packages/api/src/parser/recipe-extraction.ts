@@ -1,15 +1,6 @@
-import { generateText, Output } from "ai";
-
-import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
-import {
-  aiError,
-  aiSuccess,
-  getErrorMessage,
-  mapErrorToCode,
-} from "@norish/shared-server/ai/types/result";
-import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { AIResponseError } from "@norish/shared-server/ai/runtime/errors";
+import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { RecipeExtractionOutput } from "./extraction.schema";
@@ -18,7 +9,7 @@ import {
   normalizeExtractionOutput,
   validateExtractionOutput,
 } from "./extraction-normalizer";
-import { buildRecipeExtractionPrompt } from "./extraction-prompts";
+import { buildRecipeExtractionSections } from "./extraction-prompts";
 import { extractSanitizedBody } from "./extraction-sanitizer";
 import { recipeExtractionSchema } from "./extraction.schema";
 import { extractImageCandidates } from "./parsers";
@@ -31,95 +22,59 @@ export type { RecipeExtractionOutput };
  *
  * @param html - The HTML content to extract recipe from.
  * @param url - Optional source URL of the recipe.
- * @returns AIResult with extracted recipe or error.
+ * @returns The extracted recipe; throws on AI failure or when the page holds no recipe.
  */
 export async function extractRecipeWithAI(
   html: string,
   recipeId: string,
   url?: string,
   originalHtml?: string
-): Promise<AIResult<FullRecipeInsertDTO>> {
-  // Guard: AI must be enabled
-  const aiEnabled = await isAIEnabled();
-
-  if (!aiEnabled) {
-    aiLogger.info("AI features are disabled, skipping extraction");
-
-    return aiError("AI features are disabled", "AI_DISABLED");
-  }
-
+): Promise<FullRecipeInsertDTO> {
   aiLogger.info({ url }, "Starting AI recipe extraction");
 
-  try {
-    const { model, providerName } = await getModels();
-    const settings = await getGenerationSettings();
+  // Sanitize and truncate HTML content
+  const sanitized = extractSanitizedBody(html);
+  const truncated = sanitized.slice(0, 50000);
 
-    // Sanitize and truncate HTML content
-    const sanitized = extractSanitizedBody(html);
-    const truncated = sanitized.slice(0, 50000);
+  const jsonLd = await generateStructured({
+    prompt: "recipe-extraction",
+    schema: recipeExtractionSchema,
+    sections: buildRecipeExtractionSections(truncated, { url }),
+  });
 
-    // Build prompt using shared builder
-    const prompt = await buildRecipeExtractionPrompt(truncated, { url });
+  // A page that holds no recipe is a domain outcome the schema cannot state:
+  // the model may answer with an empty shell, and storing one would be worse
+  // than failing.
+  const validation = validateExtractionOutput(jsonLd);
 
-    aiLogger.debug(
-      { url, promptLength: prompt.length, provider: providerName },
-      "Sending prompt to AI provider"
-    );
+  if (!validation.valid) {
+    aiLogger.error({ url, ...validation.details }, validation.error);
 
-    const result = await generateText({
-      model,
-      output: Output.object({ schema: recipeExtractionSchema }),
-      prompt,
-      system:
-        "You extract recipe data as JSON-LD with both metric and US measurements. Return valid JSON only.",
-      ...settings,
-    });
-
-    const jsonLd = result.output;
-
-    // Validate extraction output
-    const validation = validateExtractionOutput(jsonLd);
-
-    if (!validation.valid) {
-      aiLogger.error({ url, ...validation.details }, validation.error);
-
-      return aiError(validation.error!, "VALIDATION_ERROR");
-    }
-
-    aiLogger.debug({ url, ...getExtractionLogContext(jsonLd!, null) }, "AI response received");
-
-    // Extract image candidates from HTML
-    const imageCandidates = extractImageCandidates(originalHtml ?? html, url);
-
-    // Normalize using shared normalizer
-    const normalized = await normalizeExtractionOutput(jsonLd!, {
-      url,
-      imageCandidates,
-      recipeId,
-    });
-
-    if (!normalized) {
-      aiLogger.error({ url }, "Failed to normalize recipe from JSON-LD");
-
-      return aiError("Failed to normalize recipe data", "VALIDATION_ERROR");
-    }
-
-    aiLogger.info(
-      { url, ...getExtractionLogContext(jsonLd!, normalized) },
-      "AI recipe extraction completed"
-    );
-
-    return aiSuccess(normalized, {
-      inputTokens: result.usage?.inputTokens ?? 0,
-      outputTokens: result.usage?.outputTokens ?? 0,
-      totalTokens: result.usage?.totalTokens ?? 0,
-    });
-  } catch (error) {
-    const code = mapErrorToCode(error);
-    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
-
-    aiLogger.error({ err: error, url, code }, "Failed to extract recipe with AI");
-
-    return aiError(message, code);
+    throw new AIResponseError(validation.error!);
   }
+
+  aiLogger.debug({ url, ...getExtractionLogContext(jsonLd, null) }, "AI response received");
+
+  // Extract image candidates from HTML
+  const imageCandidates = extractImageCandidates(originalHtml ?? html, url);
+
+  // Normalize using shared normalizer
+  const normalized = await normalizeExtractionOutput(jsonLd, {
+    url,
+    imageCandidates,
+    recipeId,
+  });
+
+  if (!normalized) {
+    aiLogger.error({ url }, "Failed to normalize recipe from JSON-LD");
+
+    throw new AIResponseError("Failed to normalize the extracted recipe data.");
+  }
+
+  aiLogger.info(
+    { url, ...getExtractionLogContext(jsonLd, normalized) },
+    "AI recipe extraction completed"
+  );
+
+  return normalized;
 }

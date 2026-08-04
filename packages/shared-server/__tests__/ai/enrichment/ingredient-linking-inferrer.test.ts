@@ -1,48 +1,32 @@
 /**
  * Ingredient Linking inference.
  *
- * Only the external AI provider is mocked. What matters here is what reaches
- * the model — numbered lines and steps, headings withheld — and what survives
- * coming back: prompt numbers mapped onto row orders, invented numbers
- * dropped, and an empty claim returned as a valid answer rather than an
- * error.
+ * The AI Runtime is the single mocked AI seam. What matters here is what the
+ * feature hands the runtime — numbered lines and steps, headings withheld —
+ * and what survives coming back: prompt numbers mapped onto row orders,
+ * invented numbers dropped, and an empty claim returned as a valid answer
+ * rather than an error.
  *
  * @vitest-environment node
  */
-import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { inferStepIngredients } from "@norish/shared-server/ai/enrichment/ingredient-linking-inferrer";
-import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
-import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { AIDisabledError, AIProviderError } from "@norish/shared-server/ai/runtime/errors";
 
-vi.mock("ai", () => ({
-  generateText: vi.fn(),
-  Output: { object: vi.fn(({ schema }) => schema) },
+const mocked = vi.hoisted(() => ({
+  generateStructured: vi.fn(),
 }));
 
-vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  isAIEnabled: vi.fn(),
-}));
-
-vi.mock("@norish/shared-server/ai/runtime/providers", () => ({
-  getModels: vi.fn().mockResolvedValue({ model: {}, providerName: "openai" }),
-  getGenerationSettings: vi.fn().mockResolvedValue({ temperature: 0.7, maxTokens: 4096 }),
-}));
-
-vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
-  loadPrompt: vi.fn(),
-  fillPrompt: vi.fn(
-    (template: string, vars: Record<string, string>) =>
-      `${template}\n${Object.entries(vars)
-        .map(([key, value]) => `${key}=${value}`)
-        .join("\n")}`
-  ),
+vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
+  generateStructured: mocked.generateStructured,
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
   aiLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
+
+const { inferStepIngredients } =
+  await import("@norish/shared-server/ai/enrichment/ingredient-linking-inferrer");
 
 const RECIPE = {
   title: "Spiced Stew",
@@ -60,37 +44,29 @@ const RECIPE = {
 };
 
 function respondWith(output: unknown) {
-  vi.mocked(generateText).mockResolvedValue({
-    output,
-    usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-  } as never);
+  mocked.generateStructured.mockResolvedValue(output);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(isAIEnabled).mockResolvedValue(true);
-  vi.mocked(loadPrompt).mockResolvedValue("Work out which lines each step uses.");
 });
 
 describe("inferStepIngredients", () => {
   it("is inert rather than broken when AI is globally disabled", async () => {
-    vi.mocked(isAIEnabled).mockResolvedValue(false);
+    mocked.generateStructured.mockRejectedValue(new AIDisabledError());
 
-    const result = await inferStepIngredients(RECIPE);
-
-    expect(result).toMatchObject({ success: false, code: "AI_DISABLED" });
-    expect(generateText).not.toHaveBeenCalled();
+    await expect(inferStepIngredients(RECIPE)).rejects.toBeInstanceOf(AIDisabledError);
   });
 
   it("refuses a recipe with nothing linkable", async () => {
-    const result = await inferStepIngredients({
-      title: "Bare",
-      ingredients: [{ order: 0, text: "# Only a heading", isHeading: true }],
-      steps: RECIPE.steps,
-    });
-
-    expect(result).toMatchObject({ success: false, code: "INVALID_INPUT" });
-    expect(generateText).not.toHaveBeenCalled();
+    await expect(
+      inferStepIngredients({
+        title: "Bare",
+        ingredients: [{ order: 0, text: "# Only a heading", amount: null, isHeading: true }],
+        steps: RECIPE.steps,
+      })
+    ).rejects.toThrow("No linkable ingredients or steps");
+    expect(mocked.generateStructured).not.toHaveBeenCalled();
   });
 
   it("numbers only the linkable rows in the prompt, withholding headings", async () => {
@@ -98,12 +74,13 @@ describe("inferStepIngredients", () => {
 
     await inferStepIngredients(RECIPE);
 
-    expect(loadPrompt).toHaveBeenCalledWith("ingredient-linking");
-    expect(fillPrompt).toHaveBeenCalledWith(
-      expect.any(String),
+    expect(mocked.generateStructured).toHaveBeenCalledWith(
       expect.objectContaining({
-        ingredients: "1. 5 g salt\n2. 3 g pepper\n3. 50 ml water",
-        steps: "1. Add the spices.\n2. Add half the water.",
+        prompt: "ingredient-linking",
+        fill: expect.objectContaining({
+          ingredients: "1. 5 g salt\n2. 3 g pepper\n3. 50 ml water",
+          steps: "1. Add the spices.\n2. Add half the water.",
+        }),
       })
     );
   });
@@ -122,9 +99,9 @@ describe("inferStepIngredients", () => {
       ],
     });
 
-    const result = await inferStepIngredients(RECIPE);
+    const claim = await inferStepIngredients(RECIPE);
 
-    expect(result.success && result.data.links).toEqual([
+    expect(claim.links).toEqual([
       {
         stepOrder: 1,
         refs: [
@@ -145,9 +122,9 @@ describe("inferStepIngredients", () => {
       ],
     });
 
-    const result = await inferStepIngredients(RECIPE);
+    const claim = await inferStepIngredients(RECIPE);
 
-    expect(result.success && result.data.links).toEqual([]);
+    expect(claim.links).toEqual([]);
   });
 
   it("converts a stated amount into the line's share", async () => {
@@ -157,9 +134,9 @@ describe("inferStepIngredients", () => {
       links: [{ step: 2, ingredients: [{ line: 3, share: null, amount: 25 }] }],
     });
 
-    const result = await inferStepIngredients(RECIPE);
+    const claim = await inferStepIngredients(RECIPE);
 
-    expect(result.success && result.data.links).toEqual([
+    expect(claim.links).toEqual([
       { stepOrder: 3, refs: [{ ingredientOrder: 4, share: 0.5, order: 0 }] },
     ]);
   });
@@ -169,9 +146,9 @@ describe("inferStepIngredients", () => {
       links: [{ step: 2, ingredients: [{ line: 3, share: null, amount: 80 }] }],
     });
 
-    const result = await inferStepIngredients(RECIPE);
+    const claim = await inferStepIngredients(RECIPE);
 
-    expect(result.success && result.data.links).toEqual([
+    expect(claim.links).toEqual([
       { stepOrder: 3, refs: [{ ingredientOrder: 4, share: 1, order: 0 }] },
     ]);
   });
@@ -181,9 +158,9 @@ describe("inferStepIngredients", () => {
       links: [{ step: 2, ingredients: [{ line: 3, share: 0.2, amount: 25 }] }],
     });
 
-    const result = await inferStepIngredients(RECIPE);
+    const claim = await inferStepIngredients(RECIPE);
 
-    expect(result.success && result.data.links).toEqual([
+    expect(claim.links).toEqual([
       { stepOrder: 3, refs: [{ ingredientOrder: 4, share: 0.5, order: 0 }] },
     ]);
   });
@@ -199,9 +176,9 @@ describe("inferStepIngredients", () => {
       links: [{ step: 1, ingredients: [{ line: 1, share: null, amount: 2 }] }],
     });
 
-    const result = await inferStepIngredients(recipe);
+    const claim = await inferStepIngredients(recipe);
 
-    expect(result.success && result.data.links).toEqual([
+    expect(claim.links).toEqual([
       { stepOrder: 0, refs: [{ ingredientOrder: 0, share: 1, order: 0 }] },
     ]);
   });
@@ -211,9 +188,9 @@ describe("inferStepIngredients", () => {
       links: [{ step: 1, ingredients: [{ line: 1, share: null, amount: null }] }],
     });
 
-    const result = await inferStepIngredients(RECIPE);
+    const claim = await inferStepIngredients(RECIPE);
 
-    expect(result.success && result.data.links).toEqual([
+    expect(claim.links).toEqual([
       { stepOrder: 1, refs: [{ ingredientOrder: 1, share: 1, order: 0 }] },
     ]);
   });
@@ -221,17 +198,19 @@ describe("inferStepIngredients", () => {
   it("returns an empty claim as a valid answer, not a failure", async () => {
     respondWith({ links: [] });
 
-    const result = await inferStepIngredients(RECIPE);
+    const claim = await inferStepIngredients(RECIPE);
 
-    expect(result.success).toBe(true);
-    expect(result.success && result.data.links).toEqual([]);
+    expect(claim.links).toEqual([]);
   });
 
-  it("reports a provider failure as an ordinary retryable AI failure", async () => {
-    vi.mocked(generateText).mockRejectedValue(new Error("provider timed out"));
+  it("lets a retryable provider failure out for the queue to retry", async () => {
+    mocked.generateStructured.mockRejectedValue(
+      new AIProviderError("provider timed out", { retryable: true })
+    );
 
-    const result = await inferStepIngredients(RECIPE);
+    const error = await inferStepIngredients(RECIPE).catch((err: unknown) => err);
 
-    expect(result.success).toBe(false);
+    expect(error).toBeInstanceOf(AIProviderError);
+    expect((error as AIProviderError).retryable).toBe(true);
   });
 });

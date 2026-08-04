@@ -1,23 +1,32 @@
 /**
  * Recipe Provenance inference.
  *
- * Only the external AI provider is mocked. What matters here is what reaches
- * the model and what survives coming back: the note's language follows the
- * recipe's, and an unusable response fails without anything being written.
+ * The AI Runtime is the single mocked AI seam. What matters here is what the
+ * feature hands the runtime — its prompt identity, its composed input, and a
+ * schema built from the administrator's vocabulary — and what survives coming
+ * back: the note's language follows the recipe's, and an unusable response
+ * fails without anything being written. The cuisines repository stays mocked
+ * as a genuine data dependency: resolving names against the vocabulary is the
+ * feature's own domain logic.
  *
  * @vitest-environment node
  */
-import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createCuisines, listCuisines } from "@norish/db/repositories/cuisines";
-import { inferRecipeProvenance } from "@norish/shared-server/ai/enrichment/provenance-inferrer";
-import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
-import { getCuisineStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import {
+  AIDisabledError,
+  AIProviderError,
+  AIResponseError,
+} from "@norish/shared-server/ai/runtime/errors";
+import { getCuisineStrategy } from "@norish/shared-server/config/server-config-loader";
 
-vi.mock("ai", () => ({
-  generateText: vi.fn(),
-  Output: { object: vi.fn(({ schema }) => schema) },
+const mocked = vi.hoisted(() => ({
+  generateStructured: vi.fn(),
+}));
+
+vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
+  generateStructured: mocked.generateStructured,
 }));
 
 vi.mock("@norish/db/repositories/cuisines", () => ({
@@ -26,34 +35,15 @@ vi.mock("@norish/db/repositories/cuisines", () => ({
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  isAIEnabled: vi.fn(),
   getCuisineStrategy: vi.fn(),
-  getAIConfig: vi.fn().mockResolvedValue({
-    enabled: true,
-    provider: "openai",
-    model: "gpt-4o-mini",
-    apiKey: "test-key",
-  }),
-}));
-
-vi.mock("@norish/shared-server/ai/runtime/providers", () => ({
-  getModels: vi.fn().mockResolvedValue({ model: {}, providerName: "openai" }),
-  getGenerationSettings: vi.fn().mockResolvedValue({ temperature: 0.7, maxTokens: 4096 }),
-}));
-
-vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
-  loadPrompt: vi.fn(),
-  fillPrompt: vi.fn(
-    (template: string, vars: Record<string, string>) =>
-      `${template}\n${Object.entries(vars)
-        .map(([key, value]) => `${key}=${value}`)
-        .join("\n")}`
-  ),
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
   aiLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
+
+const { inferRecipeProvenance } =
+  await import("@norish/shared-server/ai/enrichment/provenance-inferrer");
 
 const ITALIAN_RECIPE = {
   title: "Cacio e Pepe",
@@ -74,39 +64,48 @@ const VOCABULARY = [
 ];
 
 function respondWith(output: unknown) {
-  vi.mocked(generateText).mockResolvedValue({
-    output,
-    usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-  } as never);
+  mocked.generateStructured.mockResolvedValue(output);
+}
+
+interface CapturedRequest {
+  prompt: string;
+  fill: Record<string, string>;
+  schema: {
+    shape: Record<string, { description?: string }>;
+  };
+}
+
+/** The one request the feature made of the runtime. */
+function sentRequest(): CapturedRequest {
+  expect(mocked.generateStructured).toHaveBeenCalledTimes(1);
+
+  return mocked.generateStructured.mock.calls[0]?.[0] as CapturedRequest;
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(isAIEnabled).mockResolvedValue(true);
   vi.mocked(getCuisineStrategy).mockResolvedValue("existing");
   vi.mocked(listCuisines).mockResolvedValue(VOCABULARY);
   vi.mocked(createCuisines).mockResolvedValue([]);
-  vi.mocked(loadPrompt).mockResolvedValue("Work out where this recipe comes from.");
 });
 
 describe("inferRecipeProvenance", () => {
   it("is inert rather than broken when AI is globally disabled", async () => {
-    vi.mocked(isAIEnabled).mockResolvedValue(false);
+    // The runtime refuses; the feature writes nothing and lets the refusal out.
+    mocked.generateStructured.mockRejectedValue(new AIDisabledError());
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
-
-    expect(result).toMatchObject({ success: false, code: "AI_DISABLED" });
-    expect(generateText).not.toHaveBeenCalled();
+    await expect(inferRecipeProvenance(ITALIAN_RECIPE)).rejects.toBeInstanceOf(AIDisabledError);
+    expect(createCuisines).not.toHaveBeenCalled();
   });
 
   it("refuses a recipe with no ingredients", async () => {
-    const result = await inferRecipeProvenance({ ...ITALIAN_RECIPE, ingredients: [] });
-
-    expect(result).toMatchObject({ success: false, code: "INVALID_INPUT" });
-    expect(generateText).not.toHaveBeenCalled();
+    await expect(inferRecipeProvenance({ ...ITALIAN_RECIPE, ingredients: [] })).rejects.toThrow(
+      "No ingredients"
+    );
+    expect(mocked.generateStructured).not.toHaveBeenCalled();
   });
 
-  it("uses the administrator-editable prompt", async () => {
+  it("runs under the administrator-editable Recipe Provenance prompt", async () => {
     respondWith({
       originCountry: "IT",
       originRegion: "Roma",
@@ -116,11 +115,10 @@ describe("inferRecipeProvenance", () => {
 
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(loadPrompt).toHaveBeenCalledWith("recipe-provenance");
-    expect(fillPrompt).toHaveBeenCalledWith(
-      "Work out where this recipe comes from.",
-      expect.objectContaining({ recipeName: "Cacio e Pepe" })
-    );
+    const request = sentRequest();
+
+    expect(request.prompt).toBe("recipe-provenance");
+    expect(request.fill).toMatchObject({ recipeName: "Cacio e Pepe" });
   });
 
   it("sends only the stored recipe, never how it entered Norish", async () => {
@@ -133,17 +131,12 @@ describe("inferRecipeProvenance", () => {
 
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    const { prompt, system } = vi.mocked(generateText).mock.calls[0]?.[0] as {
-      prompt: string;
-      system: string;
-    };
+    const composed = Object.values(sentRequest().fill).join("\n");
 
-    expect(prompt).toContain("Cacio e Pepe");
-    expect(prompt).toContain("pecorino romano");
+    expect(composed).toContain("Cacio e Pepe");
+    expect(composed).toContain("pecorino romano");
     // Nothing about parsing, importing, or the source URL reaches the model.
-    expect(prompt).not.toMatch(/import|parser|url|http/i);
-    // And nothing names a language: the prompt decides that from the recipe.
-    expect(system).not.toMatch(/english|language/i);
+    expect(composed).not.toMatch(/import|parser|url|http/i);
   });
 
   it.each([
@@ -152,10 +145,9 @@ describe("inferRecipeProvenance", () => {
   ])("returns the note in the recipe's own language", async (recipe, note) => {
     respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: note });
 
-    const result = await inferRecipeProvenance(recipe);
+    const claim = await inferRecipeProvenance(recipe);
 
-    expect(result.success).toBe(true);
-    expect(result.success && result.data.provenanceNote).toBe(note);
+    expect(claim.provenanceNote).toBe(note);
   });
 
   it("carries the country's written name beside the code", async () => {
@@ -167,10 +159,10 @@ describe("inferRecipeProvenance", () => {
       provenanceNote: "Dit gerecht komt uit de Turkse keuken.",
     });
 
-    const result = await inferRecipeProvenance(DUTCH_RECIPE);
+    const claim = await inferRecipeProvenance(DUTCH_RECIPE);
 
-    expect(result.success && result.data.originCountry).toBe("TR");
-    expect(result.success && result.data.originCountryName).toBe("Turkije");
+    expect(claim.originCountry).toBe("TR");
+    expect(claim.originCountryName).toBe("Turkije");
   });
 
   it("drops a written name that arrives without a country code", async () => {
@@ -184,9 +176,9 @@ describe("inferRecipeProvenance", () => {
       provenanceNote: "Nota.",
     });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(result.success && result.data.originCountryName).toBe(null);
+    expect(claim.originCountryName).toBe(null);
   });
 
   it("degrades a blank written name to null so the endonym fallback applies", async () => {
@@ -198,10 +190,10 @@ describe("inferRecipeProvenance", () => {
       provenanceNote: "Nota.",
     });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(result.success && result.data.originCountry).toBe("IT");
-    expect(result.success && result.data.originCountryName).toBe(null);
+    expect(claim.originCountry).toBe("IT");
+    expect(claim.originCountryName).toBe(null);
   });
 
   it("asks for the single strongest claim rather than bailing out on rivals", async () => {
@@ -215,52 +207,47 @@ describe("inferRecipeProvenance", () => {
 
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    const schema = vi.mocked(generateText).mock.calls[0]?.[0].output as unknown as {
-      shape: {
-        originCountry: { description?: string };
-        originCountryName: { description?: string };
-      };
-    };
+    const schema = sentRequest().schema;
 
-    expect(schema.shape.originCountry.description).toMatch(/strongest claim/i);
-    expect(schema.shape.originCountry.description).toMatch(/null only when/i);
-    expect(schema.shape.originCountryName.description).toMatch(
+    expect(schema.shape.originCountry!.description).toMatch(/strongest claim/i);
+    expect(schema.shape.originCountry!.description).toMatch(/null only when/i);
+    expect(schema.shape.originCountryName!.description).toMatch(
       /language the recipe itself is written in/i
     );
   });
 
-  it("fails without writing when the response is empty", async () => {
-    respondWith(undefined);
+  it("fails without writing when the runtime rejects the response", async () => {
+    mocked.generateStructured.mockRejectedValue(
+      new AIResponseError("The model's response did not match the expected shape.")
+    );
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
-
-    expect(result).toMatchObject({ success: false, code: "EMPTY_RESPONSE" });
+    await expect(inferRecipeProvenance(ITALIAN_RECIPE)).rejects.toBeInstanceOf(AIResponseError);
+    expect(createCuisines).not.toHaveBeenCalled();
   });
 
   it("fails without writing when the response carries no usable note", async () => {
+    // A blank note is a domain failure the schema does not enforce.
     respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: "   " });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
-
-    expect(result).toMatchObject({ success: false, code: "VALIDATION_ERROR" });
+    await expect(inferRecipeProvenance(ITALIAN_RECIPE)).rejects.toBeInstanceOf(AIResponseError);
+    expect(createCuisines).not.toHaveBeenCalled();
   });
 
-  it("reports a provider failure as an ordinary retryable AI failure", async () => {
-    vi.mocked(generateText).mockRejectedValue(new Error("provider timed out"));
+  it("lets a retryable provider failure out for the queue to retry", async () => {
+    mocked.generateStructured.mockRejectedValue(
+      new AIProviderError("provider timed out", { retryable: true })
+    );
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const error = await inferRecipeProvenance(ITALIAN_RECIPE).catch((err: unknown) => err);
 
-    expect(result.success).toBe(false);
+    expect(error).toBeInstanceOf(AIProviderError);
+    expect((error as AIProviderError).retryable).toBe(true);
   });
 });
 
 describe("Cuisines", () => {
   function describeCuisineField(): string {
-    const schema = vi.mocked(generateText).mock.calls[0]?.[0].output as unknown as {
-      shape: { cuisines: { description?: string } };
-    };
-
-    return schema.shape.cuisines.description ?? "";
+    return sentRequest().schema.shape.cuisines!.description ?? "";
   }
 
   it("builds the request schema from the vocabulary as it stands right now", async () => {
@@ -278,10 +265,7 @@ describe("Cuisines", () => {
 
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(fillPrompt).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ cuisines: "Italian, Japanese, Dutch" })
-    );
+    expect(sentRequest().fill).toMatchObject({ cuisines: "Italian, Japanese, Dutch" });
     expect(describeCuisineField()).toMatch(/never translate/i);
   });
 
@@ -291,10 +275,9 @@ describe("Cuisines", () => {
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
     expect(describeCuisineField()).toMatch(/empty array when none of them fits/i);
-    expect(fillPrompt).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ cuisineFallback: expect.stringMatching(/empty list/i) })
-    );
+    expect(sentRequest().fill).toMatchObject({
+      cuisineFallback: expect.stringMatching(/empty list/i),
+    });
   });
 
   it("invites a name outside the vocabulary under the extend strategy", async () => {
@@ -306,12 +289,9 @@ describe("Cuisines", () => {
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
     expect(describeCuisineField()).toMatch(/name the tradition it does belong to/i);
-    expect(fillPrompt).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        cuisineFallback: expect.stringMatching(/name the tradition it does belong to/i),
-      })
-    );
+    expect(sentRequest().fill).toMatchObject({
+      cuisineFallback: expect.stringMatching(/name the tradition it does belong to/i),
+    });
   });
 
   it("resolves proposed names to vocabulary row ids", async () => {
@@ -322,9 +302,9 @@ describe("Cuisines", () => {
       provenanceNote: "Note.",
     });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(result.success && result.data.cuisineIds).toEqual(["id-italian"]);
+    expect(claim.cuisineIds).toEqual(["id-italian"]);
   });
 
   it("lands a name the model translated anyway on the row that already means it", async () => {
@@ -336,9 +316,9 @@ describe("Cuisines", () => {
       provenanceNote: "Un classico.",
     });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(result.success && result.data.cuisineIds).toEqual(["id-italian"]);
+    expect(claim.cuisineIds).toEqual(["id-italian"]);
     expect(createCuisines).not.toHaveBeenCalled();
   });
 
@@ -350,9 +330,9 @@ describe("Cuisines", () => {
       provenanceNote: "Note.",
     });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(result.success && result.data.cuisineIds).toEqual(["id-italian"]);
+    expect(claim.cuisineIds).toEqual(["id-italian"]);
     expect(createCuisines).not.toHaveBeenCalled();
   });
 
@@ -368,30 +348,29 @@ describe("Cuisines", () => {
       provenanceNote: "Note.",
     });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
     expect(createCuisines).toHaveBeenCalledWith(["Basque"]);
-    expect(result.success && result.data.cuisineIds).toEqual(["id-basque"]);
+    expect(claim.cuisineIds).toEqual(["id-basque"]);
   });
 
   it("tolerates a response with no cuisines field at all", async () => {
     respondWith({ originCountry: "IT", originRegion: null, provenanceNote: "Note." });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(result.success && result.data.cuisineIds).toEqual([]);
+    expect(claim.cuisineIds).toEqual([]);
   });
 
   it("asks for an empty list when the vocabulary is empty", async () => {
     vi.mocked(listCuisines).mockResolvedValue([]);
     respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: "Note." });
 
-    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(result.success && result.data.cuisineIds).toEqual([]);
-    expect(fillPrompt).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ cuisines: expect.stringContaining("no Cuisines are configured") })
-    );
+    expect(claim.cuisineIds).toEqual([]);
+    expect(sentRequest().fill).toMatchObject({
+      cuisines: expect.stringContaining("no Cuisines are configured"),
+    });
   });
 });

@@ -22,10 +22,9 @@ import { createPerplexity } from "@ai-sdk/perplexity";
 import { createOllama } from "ai-sdk-ollama";
 import OpenAI from "openai";
 
-import { getAIConfig } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { AIProvider, GenerationSettings, ModelConfig } from "./types";
+import type { AIProvider, ModelConfig } from "./types";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
 
@@ -53,22 +52,8 @@ function normalizeOllamaEndpoint(endpoint: string): string {
 }
 
 /**
- * Get configured AI models.
- * Throws if AI is not enabled.
- */
-export async function getModels(): Promise<ModelConfig> {
-  const config = await getAIConfig(true);
-
-  if (!config || !config.enabled) {
-    throw new Error("AI is not enabled. Configure AI settings in the admin panel.");
-  }
-
-  return createModelsFromConfig(config);
-}
-
-/**
  * Create AI model instances from configuration.
- * Does not check if AI is enabled - use getModels() for guarded access.
+ * The AI Runtime checks enablement before calling this.
  */
 export function createModelsFromConfig(config: {
   provider: AIProvider;
@@ -244,20 +229,6 @@ function createProviderModels(config: {
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }
-}
-
-/**
- * Get generation settings from config (temperature, maxTokens).
- * These are passed to generateText() calls.
- */
-export async function getGenerationSettings(): Promise<GenerationSettings> {
-  const config = await getAIConfig(true);
-
-  return {
-    temperature: config?.temperature,
-    maxOutputTokens: config?.maxTokens,
-    abortSignal: AbortSignal.timeout(config?.timeoutMs as number),
-  };
 }
 
 // ============================================================================
