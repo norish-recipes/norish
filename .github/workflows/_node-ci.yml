@@ -62,10 +62,18 @@ jobs:
         id: plan
         run: |
           entries=()
-          if ${{ inputs.run-tests }}; then entries+=('{"name":"Tests","command":"pnpm run test"}'); fi
-          if ${{ inputs.run-lint }}; then entries+=('{"name":"Lint","command":"pnpm run lint"}'); fi
-          if ${{ inputs.run-format }}; then entries+=('{"name":"Format Check","command":"pnpm run format"}'); fi
-          if ${{ inputs.run-i18n }}; then entries+=('{"name":"Locale Keys Check","command":"pnpm run i18n:check"}'); fi
+          # Each gate carries the NODE_ENV it runs under. Unit tests need "test":
+          # under the workflow-wide "production" Vite resolves Node builtins as
+          # browser externals, and every jsdom suite that reaches one dies with
+          # "No such built-in module: node:" before a single test runs.
+          #
+          # Format Check runs "format:check", not "format" — the latter writes,
+          # which on a throwaway checkout means the gate reformats the runner's
+          # copy and passes whatever the branch looks like.
+          if ${{ inputs.run-tests }}; then entries+=('{"name":"Tests","command":"pnpm run test","nodeEnv":"test"}'); fi
+          if ${{ inputs.run-lint }}; then entries+=('{"name":"Lint","command":"pnpm run lint","nodeEnv":"production"}'); fi
+          if ${{ inputs.run-format }}; then entries+=('{"name":"Format Check","command":"pnpm run format:check","nodeEnv":"production"}'); fi
+          if ${{ inputs.run-i18n }}; then entries+=('{"name":"Locale Keys Check","command":"pnpm run i18n:check","nodeEnv":"production"}'); fi
           if [ ${#entries[@]} -eq 0 ]; then
             matrix='[]'
           else
@@ -93,6 +101,8 @@ jobs:
 
       - name: Run ${{ matrix.name }}
         run: ${{ matrix.command }}
+        env:
+          NODE_ENV: ${{ matrix.nodeEnv }}
 
   e2e:
     name: Browser E2E
