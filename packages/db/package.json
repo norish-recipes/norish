@@ -17,7 +17,7 @@
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "typecheck": "pnpm exec tsc --noEmit",
     "clean": "git clean -xdf .cache .turbo node_modules dist"
   },

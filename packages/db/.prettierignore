@@ -1,0 +1,4 @@
+# drizzle-kit writes the migration journal and snapshots itself, and its output
+# is not Prettier-shaped. Formatting them means every `pnpm db:generate` leaves
+# the tree failing Format Check until someone reformats generated files by hand.
+src/migrations/meta/
