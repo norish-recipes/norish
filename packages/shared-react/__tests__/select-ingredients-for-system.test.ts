@@ -8,10 +8,9 @@ const metricFlour = { id: "3", ingredientName: "flour", systemUsed: "metric" };
 
 describe("selectIngredientsForSystem", () => {
   it("keeps only the preferred system so ingredients never show once per system", () => {
-    expect(selectIngredientsForSystem([metricButter, usButter, metricFlour], "metric", "us")).toEqual([
-      metricButter,
-      metricFlour,
-    ]);
+    expect(
+      selectIngredientsForSystem([metricButter, usButter, metricFlour], "metric", "us")
+    ).toEqual([metricButter, metricFlour]);
   });
 
   it("falls back to the recipe's own system when the preferred one is absent", () => {

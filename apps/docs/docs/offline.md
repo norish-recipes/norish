@@ -17,7 +17,7 @@ The offline cache includes:
 - the calendar's initial window
 
 Recipes that are not cached, or pages that do not support offline use,
-an explicit unavailable screen is shown. 
+an explicit unavailable screen is shown.
 
 ![The offline unavailable screen](/img/screenshots/offline-unavailable.png)
 

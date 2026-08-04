@@ -301,7 +301,10 @@ function toRowDTO(queueName: QueueName, job: Job, state: AdminJobState): AdminJo
   };
 }
 
-async function resolveState(job: Job, requestedStates?: ListableJobState[]): Promise<AdminJobState> {
+async function resolveState(
+  job: Job,
+  requestedStates?: ListableJobState[]
+): Promise<AdminJobState> {
   // Fast path: a single-state filter already tells us the state
   if (requestedStates?.length === 1) {
     return requestedStates[0] as AdminJobState;
@@ -314,7 +317,10 @@ async function resolveState(job: Job, requestedStates?: ListableJobState[]): Pro
   }
 }
 
-async function getJobOrThrow(queueName: QueueName, jobId: string): Promise<{ queue: Queue; job: Job }> {
+async function getJobOrThrow(
+  queueName: QueueName,
+  jobId: string
+): Promise<{ queue: Queue; job: Job }> {
   const queue = getQueueByName(queueName);
   const job = await queue.getJob(jobId);
 

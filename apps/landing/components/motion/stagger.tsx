@@ -2,7 +2,6 @@
 
 import type { Variants } from "motion/react";
 import type { ReactNode } from "react";
-
 import { motion, useReducedMotion } from "motion/react";
 
 const container: Variants = {

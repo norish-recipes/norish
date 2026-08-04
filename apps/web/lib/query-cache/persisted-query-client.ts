@@ -16,18 +16,17 @@ import type { OfflineIdb } from "@/lib/offline/idb";
 import { deleteImageCache } from "@/lib/offline/cache-names";
 import { KEYVAL_STORE, offlineIdb } from "@/lib/offline/idb";
 import {
-  persistQueryClientRestore,
-  persistQueryClientSubscribe,
-} from "@tanstack/query-persist-client-core";
-import { QueryClient } from "@tanstack/react-query";
-
-import {
   CACHE_OWNER_STORAGE_KEY,
   purgeForeignReadArtifacts,
   queryCacheKey,
 } from "@/lib/query-cache/cache-identity";
 import { createIdbPersister } from "@/lib/query-cache/idb-persister";
 import { clearLastWarmedAt } from "@/lib/query-cache/last-warmed";
+import {
+  persistQueryClientRestore,
+  persistQueryClientSubscribe,
+} from "@tanstack/query-persist-client-core";
+import { QueryClient } from "@tanstack/react-query";
 
 /** Discard a restored cache older than this (ADR: 7-day maxAge). */
 export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;

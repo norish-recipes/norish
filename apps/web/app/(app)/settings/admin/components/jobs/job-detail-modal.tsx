@@ -15,8 +15,8 @@ import { useTranslations } from "next-intl";
 
 import type { AdminJobAttemptDTO, AdminJobStepDTO } from "@norish/shared/contracts";
 
-import JobStatusChip from "./job-status-chip";
 import { formatDuration, formatStep, formatTimestamp } from "./job-format";
+import JobStatusChip from "./job-status-chip";
 
 type Translate = ReturnType<typeof useTranslations>;
 
@@ -190,11 +190,7 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
   );
 
   return (
-    <Modal.Backdrop
-      className="z-[1099]"
-      isOpen={isOpen}
-      onOpenChange={(open) => !open && close()}
-    >
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={(open) => !open && close()}>
       <Modal.Container className="z-[1100] max-w-2xl">
         <Modal.Dialog className="max-h-[85vh]">
           {() => (
@@ -224,16 +220,12 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                         t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue
                       )}
                       {field(t("detail.fields.jobId"), job.id)}
-                      {job.target
-                        ? field(t("detail.fields.description"), job.target, true)
-                        : null}
+                      {job.target ? field(t("detail.fields.description"), job.target, true) : null}
                       {job.recipeId ? field(t("detail.fields.recipe"), job.recipeId) : null}
                       {field(t("detail.fields.created"), formatTimestamp(job.createdAt))}
                       {job.state === "delayed" && job.runAt !== null
                         ? field(
-                            job.isRepeat
-                              ? t("detail.fields.nextRun")
-                              : t("detail.fields.runsAt"),
+                            job.isRepeat ? t("detail.fields.nextRun") : t("detail.fields.runsAt"),
                             formatTimestamp(job.runAt)
                           )
                         : null}
@@ -268,10 +260,7 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                           variant="surface"
                         >
                           {job.attempts.map((attempt) => (
-                            <Accordion.Item
-                              key={attempt.attempt}
-                              id={`attempt-${attempt.attempt}`}
-                            >
+                            <Accordion.Item key={attempt.attempt} id={`attempt-${attempt.attempt}`}>
                               <Accordion.Heading>
                                 <Accordion.Trigger>
                                   <div className="flex items-center gap-2">

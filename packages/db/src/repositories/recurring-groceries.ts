@@ -271,7 +271,9 @@ export async function detachRecurringGrocery(input: {
       const [row] = await trx
         .update(groceries)
         .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
-        .where(and(eq(groceries.id, input.grocery.id), eq(groceries.version, input.grocery.version)))
+        .where(
+          and(eq(groceries.id, input.grocery.id), eq(groceries.version, input.grocery.version))
+        )
         .returning();
 
       if (!row) throw new StaleWriteError();
@@ -300,7 +302,9 @@ export async function checkRecurringGrocery(input: {
     lastCheckedDate: string;
     nextPlannedFor: string;
   } | null;
-}): Promise<MutationOutcome<{ grocery: GroceryDto; recurringGrocery: RecurringGroceryDto | null }>> {
+}): Promise<
+  MutationOutcome<{ grocery: GroceryDto; recurringGrocery: RecurringGroceryDto | null }>
+> {
   try {
     const result = await db.transaction(async (trx) => {
       const [groceryRow] = await trx

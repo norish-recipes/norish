@@ -1,4 +1,4 @@
-import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import type { PrecacheEntry, SerwistGlobalConfig, StrategyHandler } from "serwist";
 import { REACHABILITY_DEADLINE_MS } from "@/lib/connectivity/reachability";
 import {
   IMAGE_CACHE_MAX_AGE_SECONDS,
@@ -7,7 +7,6 @@ import {
   LEGACY_API_CACHE_NAME,
 } from "@/lib/offline/cache-names";
 import { defaultCache, PAGES_CACHE_NAME } from "@serwist/next/worker";
-import type { StrategyHandler } from "serwist";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist, Strategy } from "serwist";
 
 declare global {

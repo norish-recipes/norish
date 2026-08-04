@@ -227,10 +227,7 @@ describe("admin job queue procedures", () => {
       const job = createMockJob({
         attemptsMade: 2,
         getState: vi.fn().mockResolvedValue("failed"),
-        stacktrace: [
-          "Error: first\n  at worker",
-          "Error: second\n  at worker",
-        ],
+        stacktrace: ["Error: first\n  at worker", "Error: second\n  at worker"],
         progress: {
           step: "parsing",
           updatedAt: 3_000,

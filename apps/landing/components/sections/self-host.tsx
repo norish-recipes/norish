@@ -1,12 +1,10 @@
+import { links } from "@/lib/css-tokens";
 import { ArrowTopRightOnSquareIcon, ScaleIcon, ServerStackIcon } from "@heroicons/react/24/outline";
 
 import { CTAButton } from "../cta-button";
 import { DockerIcon, GitHubIcon } from "../icons";
 import { Reveal } from "../motion/reveal";
-
 import { SelfHostCompose } from "./self-host-compose";
-
-import { links } from "@/lib/css-tokens";
 
 const badges = [
   { icon: ScaleIcon, label: "AGPL-3.0 licensed" },

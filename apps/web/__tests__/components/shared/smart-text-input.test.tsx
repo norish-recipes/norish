@@ -22,10 +22,7 @@ const SUGGESTIONS: SmartTextInputIngredientSuggestion[] = [
 function SmartTextInputHarness({
   onMention,
 }: {
-  onMention?: (
-    suggestion: SmartTextInputIngredientSuggestion,
-    newValue: string
-  ) => boolean | void;
+  onMention?: (suggestion: SmartTextInputIngredientSuggestion, newValue: string) => boolean | void;
 }) {
   const [value, setValue] = useState("");
 

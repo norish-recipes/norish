@@ -17,7 +17,6 @@ ingredient list, and guess which lines that means. A step in Norish can carry
 
 ![Amounts under a step on the recipe page](/img/screenshots/step-ingredients-recipe.png)
 
-
 ## In cooking mode
 
 Cooking mode shows the current step's ingredients right under the instruction —
@@ -34,7 +33,7 @@ In the recipe form, every step has a chips row: mention an ingredient with `@`
 while typing, or attach one from the **Link ingredient** picker without naming
 it in the text. Attaching a line that has an amount asks for it.
 Each chip carries how much of its line the step uses; half, a third, a
-quarter, or an exact amount when the line has one. 
+quarter, or an exact amount when the line has one.
 
 An entered amount is stored as the equivalent share of its line, 3 of the
 5 eggs is stored as 0.6 — which is exactly why the displayed amounts keep

@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { links } from "@/lib/css-tokens";
 
 import { BrandLogo } from "./brand-logo";
 import { CTAButton } from "./cta-button";
 import { GitHubIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
-
-import { links } from "@/lib/css-tokens";
 
 const navLinks = [
   { label: "Features", href: "#features" },

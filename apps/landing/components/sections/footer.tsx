@@ -1,8 +1,7 @@
+import { links } from "@/lib/css-tokens";
 
 import { BrandLogo } from "../brand-logo";
 import { GitHubIcon } from "../icons";
-
-import { links } from "@/lib/css-tokens";
 
 const columns = [
   {

@@ -1,7 +1,6 @@
+import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
 
 vi.mock("@/app/(app)/app-shell", () => ({
   AppShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

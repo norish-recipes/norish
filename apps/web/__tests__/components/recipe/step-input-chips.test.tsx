@@ -292,9 +292,7 @@ describe("StepInput chips", () => {
     fireEvent.keyDown(input, { key: "Escape" });
     fireEvent.blur(input);
 
-    expect(lastEmitted()[0]?.stepIngredients).toEqual([
-      { ingredientOrder: 1, share: 1, order: 0 },
-    ]);
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([{ ingredientOrder: 1, share: 1, order: 0 }]);
   });
 
   it("attaches an amountless line silently, with nothing to ask", () => {

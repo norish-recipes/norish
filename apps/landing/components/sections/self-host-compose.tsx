@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { links } from "@/lib/css-tokens";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
 
 import { CopyCommand } from "../copy-command";
 import { Reveal } from "../motion/reveal";
-
-import { links } from "@/lib/css-tokens";
 
 const PLACEHOLDER = "<openssl rand -base64 32>";
 
@@ -85,8 +84,8 @@ export function SelfHostCompose() {
         <LockClosedIcon className="text-accent size-3.5 shrink-0" />
         {ready ? (
           <span>
-            A unique <span className="text-foreground font-mono">MASTER_KEY</span>{" "}
-            was generated right here in your browser. No data is saved.{" "}
+            A unique <span className="text-foreground font-mono">MASTER_KEY</span> was generated
+            right here in your browser. No data is saved.{" "}
             <a
               className="hover:text-foreground underline underline-offset-2 transition-colors"
               href={links.keyGen}

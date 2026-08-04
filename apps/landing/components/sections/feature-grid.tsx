@@ -1,5 +1,4 @@
 import type { ComponentType, SVGProps } from "react";
-
 import {
   BoltIcon,
   CalendarDaysIcon,

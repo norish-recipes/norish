@@ -8,13 +8,12 @@ import {
   IMAGE_CACHE_NAME,
 } from "@/lib/offline/cache-names";
 import { runIfLeader } from "@/lib/outbox/leader";
+import { readLastWarmedAt, writeLastWarmedAt } from "@/lib/query-cache/last-warmed";
+import { CACHE_MAX_AGE_MS, cacheManager } from "@/lib/query-cache/persisted-query-client";
 import { CacheExpiration } from "serwist";
 
 import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-react/contexts";
 import { dateKey } from "@norish/shared/lib/helpers";
-
-import { readLastWarmedAt, writeLastWarmedAt } from "@/lib/query-cache/last-warmed";
-import { CACHE_MAX_AGE_MS, cacheManager } from "@/lib/query-cache/persisted-query-client";
 
 const WARM_RECIPE_LIST_LIMIT = 100;
 const WARM_FULL_RECIPE_COUNT = 50;

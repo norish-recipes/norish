@@ -21,7 +21,7 @@ recipe:
 This is called _enrichment_, and it always happens **after** your recipe is
 saved. Importing or creating a recipe never waits for it, and never fails
 because of it. If AI is unavailable or an enrichment doesn't work out, you still
-have your recipe, enrichments can always be rerun after the recipe is make manually. 
+have your recipe, enrichments can always be rerun after the recipe is make manually.
 
 ## Automatic enrichment
 

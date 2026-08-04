@@ -291,7 +291,11 @@ export default function MiniGroceries({
                       tabIndex={0}
                       onClick={(e) => !isEditing && !isCheckboxEvent(e) && handleEditStart(item.id)}
                       onKeyDown={(e) => {
-                        if ((e.key === "Enter" || e.key === " ") && !isEditing && !isCheckboxEvent(e)) {
+                        if (
+                          (e.key === "Enter" || e.key === " ") &&
+                          !isEditing &&
+                          !isCheckboxEvent(e)
+                        ) {
                           e.preventDefault();
                           handleEditStart(item.id);
                         }

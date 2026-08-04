@@ -320,10 +320,7 @@ describe("recurring groceries transactional writes", () => {
         .select()
         .from(recurringGroceries)
         .where(eq(recurringGroceries.id, recurring.id));
-      const [storedGrocery] = await db
-        .select()
-        .from(groceries)
-        .where(eq(groceries.id, grocery.id));
+      const [storedGrocery] = await db.select().from(groceries).where(eq(groceries.id, grocery.id));
 
       expect(result).toEqual({ stale: true, deletedGroceryIds: [] });
       expect(recurringRow?.id).toBe(recurring.id);

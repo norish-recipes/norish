@@ -1,5 +1,4 @@
 import type { ComponentType, SVGProps } from "react";
-
 import { CalendarDaysIcon, FireIcon, SparklesIcon } from "@heroicons/react/24/outline";
 
 import { Reveal } from "../motion/reveal";

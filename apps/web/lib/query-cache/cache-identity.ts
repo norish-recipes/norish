@@ -69,8 +69,7 @@ export async function purgeForeignReadArtifacts(
 
     await Promise.all(
       keys.map(async (key) => {
-        const owner =
-          ownerFromCacheKey(key) ?? ownerFromPrefixedKey(key, LAST_WARMED_KEY_PREFIX);
+        const owner = ownerFromCacheKey(key) ?? ownerFromPrefixedKey(key, LAST_WARMED_KEY_PREFIX);
 
         if (owner && owner !== keepOwnerId) {
           await idb.del(KEYVAL_STORE, key);

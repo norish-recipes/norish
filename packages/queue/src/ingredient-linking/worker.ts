@@ -19,8 +19,8 @@ import type { QueueRecipeForIngredientLinking } from "@norish/queue/api-handlers
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { addStepIngredientsToBareSteps } from "@norish/db/repositories/recipe-enrichment";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 import { createLogger } from "@norish/shared-server/logger";
+import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { handleEnrichmentJobFailure, runEnrichmentJob } from "../enrichment/worker-runner";

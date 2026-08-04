@@ -1,10 +1,9 @@
+import { links } from "@/lib/css-tokens";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 
 import { CTAButton } from "../cta-button";
 import { GitHubIcon } from "../icons";
 import { Reveal } from "../motion/reveal";
-
-import { links } from "@/lib/css-tokens";
 
 export function CTA() {
   return (

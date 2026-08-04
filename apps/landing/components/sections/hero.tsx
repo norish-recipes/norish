@@ -1,5 +1,6 @@
 "use client";
 
+import { links } from "@/lib/css-tokens";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { motion, useReducedMotion } from "motion/react";
 
@@ -8,8 +9,6 @@ import { BrowserFrame, PhoneFrame } from "../frames";
 import { GitHubIcon } from "../icons";
 import { GradientMesh } from "../motion/gradient-mesh";
 import { ThemedShot } from "../themed-shot";
-
-import { links } from "@/lib/css-tokens";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

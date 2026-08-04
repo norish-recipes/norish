@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComponentProps, ComponentType, PropsWithChildren } from "react";
-
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
 type NextThemesProps = ComponentProps<typeof NextThemesProvider>;
