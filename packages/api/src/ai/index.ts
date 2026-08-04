@@ -62,7 +62,6 @@ export {
   listTranscriptionModels,
   type ModelConfig,
   type GenerationSettings,
-  type ModelCapabilities,
   type AvailableModel,
   type AIProvider,
 } from "@norish/shared-server/ai/providers";

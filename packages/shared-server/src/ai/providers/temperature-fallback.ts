@@ -50,13 +50,35 @@ function modelKey(model: { provider: string; modelId: string }): string {
  * transient and must keep its own error, not be retried into a silently
  * different request.
  */
-function isTemperatureRejection(error: unknown): boolean {
+function isTemperatureRejection(error: unknown): error is APICallError {
   if (!APICallError.isInstance(error)) return false;
   if (error.statusCode !== 400 && error.statusCode !== 422) return false;
 
   const responseBody = typeof error.responseBody === "string" ? error.responseBody : "";
 
   return /temperature/i.test(`${error.message} ${responseBody}`);
+}
+
+/**
+ * The rejection the model actually made, carrying the failed recovery as cause.
+ *
+ * The retry is speculative: `isTemperatureRejection` is a substring match and
+ * Norish sends recipe text that talks about oven temperature, so a 400 about
+ * something else entirely can start one. Reporting the retry's failure would
+ * then swap the real diagnosis for whatever went wrong second.
+ */
+function withCause(rejection: APICallError, retryError: unknown): APICallError {
+  return new APICallError({
+    message: rejection.message,
+    url: rejection.url,
+    requestBodyValues: rejection.requestBodyValues,
+    statusCode: rejection.statusCode,
+    responseHeaders: rejection.responseHeaders,
+    responseBody: rejection.responseBody,
+    isRetryable: rejection.isRetryable,
+    data: rejection.data,
+    cause: retryError,
+  });
 }
 
 const temperatureFallbackMiddleware: LanguageModelMiddleware = {
@@ -82,7 +104,13 @@ const temperatureFallbackMiddleware: LanguageModelMiddleware = {
         "Model rejected the configured temperature; retrying without it"
       );
 
-      const result = await model.doGenerate({ ...params, temperature: undefined });
+      let result;
+
+      try {
+        result = await model.doGenerate({ ...params, temperature: undefined });
+      } catch (retryError) {
+        throw withCause(error, retryError);
+      }
 
       // Only remember the model once dropping temperature actually helped - a
       // 400 that merely mentioned the word stays a one-off.

@@ -16,6 +16,5 @@ export {
   type ImageContent,
   type ModelConfig,
   type GenerationSettings,
-  type ModelCapabilities,
   type AvailableModel,
 } from "./types";

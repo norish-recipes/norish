@@ -28,17 +28,6 @@ export interface GenerationSettings {
 }
 
 /**
- * Model capabilities for UI hints and validation.
- */
-export interface ModelCapabilities {
-  supportsTemperature: boolean;
-  supportsMaxTokens: boolean;
-  supportsVision: boolean;
-  supportsStructuredOutput: boolean;
-  maxTemperature: number;
-}
-
-/**
  * Model info returned by listing functions.
  */
 export interface AvailableModel {

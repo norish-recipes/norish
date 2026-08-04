@@ -1,10 +1,4 @@
-export type {
-  ModelConfig,
-  GenerationSettings,
-  ModelCapabilities,
-  AvailableModel,
-  AIProvider,
-} from "./types";
+export type { ModelConfig, GenerationSettings, AvailableModel, AIProvider } from "./types";
 
 export { getModels, createModelsFromConfig, getGenerationSettings } from "./factory";
 

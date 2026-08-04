@@ -22,7 +22,6 @@ export {
 export type {
   ModelConfig,
   GenerationSettings,
-  ModelCapabilities,
   AvailableModel,
 } from "@norish/shared-server/ai/providers/types";
 
