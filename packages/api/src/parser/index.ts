@@ -1,6 +1,5 @@
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
-import { isVideoUrl } from "@norish/api/helpers";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
 import { adaptRecipeScrapersResponse } from "@norish/api/parser/python/adapter";
@@ -13,7 +12,7 @@ import {
 } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { hasRecipeName } from "@norish/shared/lib/helpers";
+import { hasRecipeName, isVideoUrl } from "@norish/shared/lib/helpers";
 
 export interface ParseRecipeResult {
   recipe: FullRecipeInsertDTO;
@@ -152,6 +151,13 @@ async function tryHandleVideoUrl(
   tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<ParseRecipeResult | null> {
   if (!isVideoUrl(url)) return null;
+
+  // Two checks so the failure names the setting that is actually off: a video
+  // recipe is extracted with AI, so with AI disabled the import can only cost
+  // money (download, transcription) before failing.
+  if (!(await isAIEnabled())) {
+    throw new Error("Video imports use AI to extract the recipe, and AI features are not enabled.");
+  }
 
   if (!(await isVideoParsingEnabled())) {
     throw new Error("Video recipe parsing is not enabled.");
