@@ -23,7 +23,7 @@ import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { CuisineVocabularyEntry } from "@norish/shared/lib/cuisine-resolver";
 import { createCuisines, listCuisines } from "@norish/db/repositories/cuisines";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
 import {
   aiError,
   aiSuccess,

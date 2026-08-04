@@ -1,7 +1,15 @@
 /**
- * AI Provider Factory - Creates AI model instances from configuration.
+ * AI provider construction — language models and transcription clients.
+ *
+ * Every client built here goes through the shared transport, so timeout and
+ * connection handling are one behaviour rather than one per feature. The two
+ * transcription providers the AI SDK cannot serve — the generic
+ * OpenAI-compatible endpoint and Ollama — keep their raw clients, but those
+ * escape hatches live inside this provider boundary rather than in a feature
+ * file.
  */
 
+import type { TranscriptionModel } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAzure } from "@ai-sdk/azure";
 import { createDeepSeek } from "@ai-sdk/deepseek";
@@ -12,13 +20,37 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createPerplexity } from "@ai-sdk/perplexity";
 import { createOllama } from "ai-sdk-ollama";
+import OpenAI from "openai";
 
 import { getAIConfig } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, GenerationSettings, ModelConfig } from "./types";
-import { createFetchWithTimeout } from "./ai-fetcher";
 import { withTemperatureFallback } from "./temperature-fallback";
+import { createFetchWithTimeout } from "./transport";
+
+// ============================================================================
+// Endpoint normalization — each rule exists exactly once
+// ============================================================================
+
+/** The Azure SDK expects the /openai path suffix on a configured endpoint. */
+function normalizeAzureEndpoint(endpoint: string): string {
+  const baseUrl = endpoint.replace(/\/+$/, "");
+
+  return baseUrl.endsWith("/openai") ? baseUrl : `${baseUrl}/openai`;
+}
+
+/** OpenAI-compatible endpoints are addressed under /v1. */
+function normalizeOpenAICompatibleEndpoint(endpoint: string): string {
+  const baseUrl = endpoint.replace(/\/+$/, "");
+
+  return baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
+}
+
+/** Ollama is addressed at its host root, without a trailing slash or /api. */
+function normalizeOllamaEndpoint(endpoint: string): string {
+  return endpoint.replace(/\/+$/, "").replace(/\/api$/, "");
+}
 
 /**
  * Get configured AI models.
@@ -90,8 +122,10 @@ function createProviderModels(config: {
       if (!endpoint) throw new Error("Endpoint is required for Ollama provider");
 
       // ai-sdk-ollama uses the Ollama host directly (e.g. http://localhost:11434)
-      const ollamaBaseUrl = endpoint.replace(/\/+$/, "").replace(/\/api$/, "");
-      const ollama = createOllama({ baseURL: ollamaBaseUrl, fetch: customFetch });
+      const ollama = createOllama({
+        baseURL: normalizeOllamaEndpoint(endpoint),
+        fetch: customFetch,
+      });
 
       return {
         model: ollama(model, { structuredOutputs: true }),
@@ -104,16 +138,10 @@ function createProviderModels(config: {
     case "generic-openai": {
       if (!endpoint) throw new Error("Endpoint is required for this provider");
 
-      let normalizedEndpoint = endpoint.replace(/\/+$/, ""); // Remove trailing slashes
-
-      if (!normalizedEndpoint.endsWith("/v1")) {
-        normalizedEndpoint = `${normalizedEndpoint}/v1`;
-      }
-
       const providerName = provider === "lm-studio" ? "lmstudio" : "generic-openai";
       const compatible = createOpenAICompatible({
         name: providerName,
-        baseURL: normalizedEndpoint,
+        baseURL: normalizeOpenAICompatibleEndpoint(endpoint),
         headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined,
         supportsStructuredOutputs: true,
         fetch: customFetch,
@@ -142,20 +170,9 @@ function createProviderModels(config: {
     case "azure": {
       if (!apiKey) throw new Error("API Key is required for Azure OpenAI provider");
 
-      let azure;
-
-      if (endpoint) {
-        let baseUrl = endpoint.replace(/\/+$/, "");
-
-        // Ensure /openai path is included for SDK compatibility
-        if (!baseUrl.endsWith("/openai")) {
-          baseUrl = `${baseUrl}/openai`;
-        }
-
-        azure = createAzure({ apiKey, baseURL: baseUrl, fetch: customFetch });
-      } else {
-        azure = createAzure({ apiKey, fetch: customFetch });
-      }
+      const azure = endpoint
+        ? createAzure({ apiKey, baseURL: normalizeAzureEndpoint(endpoint), fetch: customFetch })
+        : createAzure({ apiKey, fetch: customFetch });
 
       return {
         model: azure(model),
@@ -241,4 +258,107 @@ export async function getGenerationSettings(): Promise<GenerationSettings> {
     maxOutputTokens: config?.maxTokens,
     abortSignal: AbortSignal.timeout(config?.timeoutMs as number),
   };
+}
+
+// ============================================================================
+// Transcription clients — beside the language models they belong with
+// ============================================================================
+
+export interface TranscriptionClientOptions {
+  apiKey: string;
+  model: string;
+  endpoint?: string;
+  timeoutMs: number;
+}
+
+/**
+ * Build a transcription model for the providers the AI SDK serves natively.
+ */
+export function createTranscriptionModel(
+  provider: "openai" | "groq" | "azure",
+  { apiKey, model, endpoint, timeoutMs }: TranscriptionClientOptions
+): TranscriptionModel {
+  const customFetch = createFetchWithTimeout(timeoutMs);
+
+  switch (provider) {
+    case "openai":
+      return createOpenAI({ apiKey, fetch: customFetch }).transcription(model);
+
+    case "groq":
+      return createGroq({ apiKey, fetch: customFetch }).transcription(model);
+
+    case "azure": {
+      const azure = endpoint
+        ? createAzure({ apiKey, baseURL: normalizeAzureEndpoint(endpoint), fetch: customFetch })
+        : createAzure({ apiKey, fetch: customFetch });
+
+      return azure.transcription(model);
+    }
+  }
+}
+
+/**
+ * Raw client for OpenAI-compatible transcription endpoints
+ * (faster-whisper-server, LocalAI, whisper.cpp) — the AI SDK's
+ * openai-compatible provider has no transcription support.
+ */
+export function createGenericTranscriptionClient({
+  apiKey,
+  endpoint,
+  timeoutMs,
+}: Omit<TranscriptionClientOptions, "model">): OpenAI {
+  return new OpenAI({
+    apiKey,
+    ...(endpoint && { baseURL: normalizeOpenAICompatibleEndpoint(endpoint) }),
+    fetch: createFetchWithTimeout(timeoutMs),
+  });
+}
+
+interface OllamaTranscriptionRequest {
+  endpoint?: string;
+  model: string;
+  timeoutMs: number;
+  audio: { format: string; data: string };
+}
+
+interface OllamaGenerateResponse {
+  model: string;
+  response: string;
+  done: boolean;
+  total_duration?: number;
+  eval_count?: number;
+}
+
+/**
+ * Transcribe through Ollama's native /api/generate with input_audio — the AI
+ * SDK has no transcription route to Ollama.
+ */
+export async function requestOllamaTranscription({
+  endpoint,
+  model,
+  timeoutMs,
+  audio,
+}: OllamaTranscriptionRequest): Promise<OllamaGenerateResponse> {
+  const baseUrl = endpoint ? normalizeOllamaEndpoint(endpoint) : "http://localhost:11434";
+  const doFetch = createFetchWithTimeout(timeoutMs);
+
+  const response = await doFetch(`${baseUrl}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      prompt: "Transcribe the provided audio to plain text.",
+      stream: false,
+      input_audio: [audio],
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "Unknown error");
+
+    throw new Error(`Ollama API error: ${response.status} - ${errorText}`);
+  }
+
+  return (await response.json()) as OllamaGenerateResponse;
 }

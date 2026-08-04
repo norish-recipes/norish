@@ -12,7 +12,7 @@ import {
 import { getRecipesWithoutCategories } from "@norish/db/repositories/recipes";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { enrichRecipe } from "@norish/queue";
-import { listModels, listTranscriptionModels } from "@norish/shared-server/ai/providers";
+import { listModels, listTranscriptionModels } from "@norish/shared-server/ai/providers/listing";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 

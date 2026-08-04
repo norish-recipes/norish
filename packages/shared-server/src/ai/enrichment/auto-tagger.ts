@@ -2,7 +2,7 @@ import { generateText, Output } from "ai";
 
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import { listAllTagNames } from "@norish/db/repositories/tags";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
 import {
   aiError,
   aiSuccess,

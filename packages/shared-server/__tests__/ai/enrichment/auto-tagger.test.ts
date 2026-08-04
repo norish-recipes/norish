@@ -35,7 +35,7 @@ vi.mock("@norish/db/repositories/tags", () => ({
   listAllTagNames: vi.fn(),
 }));
 
-vi.mock("@norish/shared-server/ai/providers", () => ({
+vi.mock("@norish/shared-server/ai/runtime/providers", () => ({
   getModels: vi.fn().mockResolvedValue({
     model: {},
     providerName: "openai",

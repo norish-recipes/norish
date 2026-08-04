@@ -7,7 +7,7 @@ import { Ollama } from "ollama";
 import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { AIProvider, AvailableModel } from "./types";
+import type { AIProvider, AvailableModel } from "../runtime/types";
 
 // ============================================================================
 // Constants

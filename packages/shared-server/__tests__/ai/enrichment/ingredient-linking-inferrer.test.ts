@@ -25,7 +25,7 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isAIEnabled: vi.fn(),
 }));
 
-vi.mock("@norish/shared-server/ai/providers", () => ({
+vi.mock("@norish/shared-server/ai/runtime/providers", () => ({
   getModels: vi.fn().mockResolvedValue({ model: {}, providerName: "openai" }),
   getGenerationSettings: vi.fn().mockResolvedValue({ temperature: 0.7, maxTokens: 4096 }),
 }));

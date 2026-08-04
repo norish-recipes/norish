@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { RecipeCategory } from "@norish/shared/contracts";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
 import {
   aiError,
   aiSuccess,

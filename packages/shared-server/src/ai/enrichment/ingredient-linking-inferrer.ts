@@ -17,7 +17,7 @@ import { generateText, Output } from "ai";
 
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
 import {
   aiError,
   aiSuccess,

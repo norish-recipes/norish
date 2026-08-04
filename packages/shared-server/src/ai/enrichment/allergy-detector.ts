@@ -9,7 +9,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 
 import type { AIResult } from "@norish/shared-server/ai/types/result";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
 import {
   aiError,
   aiSuccess,

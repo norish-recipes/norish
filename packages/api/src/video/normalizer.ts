@@ -9,7 +9,7 @@ import {
 } from "@norish/api/parser/extraction-normalizer";
 import { buildVideoExtractionPrompt } from "@norish/api/parser/extraction-prompts";
 import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
 import {
   aiError,
   aiSuccess,

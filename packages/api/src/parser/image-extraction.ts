@@ -3,7 +3,7 @@ import { generateText, Output } from "ai";
 import type { ImageImportFile } from "@norish/queue/contracts/job-types";
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/runtime/providers";
 import {
   aiError,
   aiSuccess,

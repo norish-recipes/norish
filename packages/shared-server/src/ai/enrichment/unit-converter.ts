@@ -8,7 +8,7 @@ import { RecipeIngredientInputSchema, StepStepSchema } from "@norish/shared/cont
 import type { AIResult } from "../types/result";
 import type { ConversionOutput } from "./conversion.schema";
 import { fillPrompt, loadPrompt } from "../prompts/loader";
-import { getGenerationSettings, getModels } from "../providers";
+import { getGenerationSettings, getModels } from "../runtime/providers";
 import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "../types/result";
 import { conversionSchema } from "./conversion.schema";
 
