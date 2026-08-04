@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .gitignore",
     "typecheck": "pnpm exec tsc --noEmit",
     "clean": "git clean -xdf .next .turbo out node_modules"
   },
