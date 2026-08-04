@@ -16,7 +16,7 @@ import { expect, test } from "@playwright/test";
 
 import type { AIE2EStack } from "./harness";
 import { E2E_BASE_URL, USER_A } from "./env";
-import { bootStack, signIn } from "./harness";
+import { bootStack, signIn, submitImageImport } from "./harness";
 
 test.describe.configure({ mode: "serial" });
 
@@ -45,12 +45,6 @@ const IMAGE_RECIPE = {
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
 };
 
-/** A 1x1 transparent PNG — valid image bytes without a fixture file. */
-const ONE_PIXEL_PNG = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-  "base64"
-);
-
 let stack: AIE2EStack | null = null;
 let context: BrowserContext;
 let page: Page;
@@ -70,31 +64,6 @@ test.afterAll(async () => {
   await stack?.stop().catch(() => undefined);
   stack = null;
 });
-
-async function submitImageImport(page: Page): Promise<void> {
-  let attempt = 0;
-
-  await expect(async () => {
-    if (attempt++ > 0) {
-      await page.reload();
-    }
-
-    const fileInput = page.locator("input[type='file']");
-
-    if (!(await fileInput.isVisible().catch(() => false))) {
-      await page.keyboard.press("Escape");
-      await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-      await page.getByRole("menuitem", { name: "Image" }).click({ timeout: 2_000 });
-    }
-
-    await fileInput.setInputFiles({
-      name: "cookbook-page.png",
-      mimeType: "image/png",
-      buffer: ONE_PIXEL_PNG,
-    });
-    await page.getByRole("button", { name: "Import with AI" }).click({ timeout: 3_000 });
-  }).toPass({ timeout: 90_000, intervals: [500, 1_000, 2_000] });
-}
 
 test("a browser image import reaches the provider as a vision request and persists the result", async () => {
   const ai = stack!.ai;
