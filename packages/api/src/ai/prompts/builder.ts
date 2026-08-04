@@ -5,7 +5,7 @@
  */
 
 import { listAllTagNames } from "@norish/db/repositories/tags";
-import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
+import { loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 
 export interface RecipeExtractionPromptOptions {
@@ -13,21 +13,9 @@ export interface RecipeExtractionPromptOptions {
    * Source URL of the recipe (optional).
    */
   url?: string;
-
-  /**
-   * Additional context to append to the prompt.
-   */
-  additionalContext?: string;
 }
 
 export interface AutoTaggingPromptOptions {
-  /**
-   * Whether this is for embedding in an extraction prompt (true)
-   * or for standalone auto-tagging (false).
-   * @default false
-   */
-  embedded?: boolean;
-
   /**
    * Pre-fetched database tags (for predefined_db mode).
    * If not provided and mode is predefined_db, will be fetched automatically.
@@ -42,21 +30,14 @@ export interface RecipeForTagging {
 }
 
 /**
- * Build auto-tagging instructions/prompt.
- *
- * Can be used in two modes:
- * - Embedded (embedded: true): Returns instructions to append to extraction prompts
- * - Standalone (embedded: false): Returns full prompt for dedicated auto-tagging
- *
- * @param options - Configuration options
- * @param recipe - Recipe data (only needed for standalone mode)
- * @returns The prompt/instructions string, or empty string if disabled
+ * Build the standalone auto-tagging prompt: the tagging rules followed by the
+ * recipe under analysis.
  */
 export async function buildAutoTaggingPrompt(
   options: AutoTaggingPromptOptions = {},
-  recipe?: RecipeForTagging
+  recipe: RecipeForTagging
 ): Promise<string> {
-  const { embedded = false, existingDbTags: providedTags } = options;
+  const { existingDbTags: providedTags } = options;
   const strategy = await getTagStrategy();
 
   const basePrompt = await loadPrompt("auto-tagging");
@@ -84,19 +65,6 @@ You may use tags from both the predefined list above AND this additional list.`;
     modeAddition = `
 
 Note: While you should prefer using predefined tags, you may create new relevant tags if needed.`;
-  }
-
-  if (embedded) {
-    // For embedding in extraction prompts - just return tagging instructions
-    return `
-
-TAGGING INSTRUCTIONS (for the "keywords" field):
-${basePrompt}${modeAddition}`;
-  }
-
-  // For standalone auto-tagging - include recipe context
-  if (!recipe) {
-    throw new Error("Recipe data required for standalone auto-tagging prompt");
   }
 
   const ingredientsList = recipe.ingredients.map((i) => `- ${i}`).join("\n");
@@ -153,7 +121,7 @@ export async function buildRecipeExtractionPrompt(
   content: string,
   options: RecipeExtractionPromptOptions = {}
 ): Promise<string> {
-  const { url, additionalContext } = options;
+  const { url } = options;
 
   // No tagging or allergy instructions: extraction reads source facts, and every
   // inference belongs to the background enrichment workers under their own policy.
@@ -166,10 +134,6 @@ export async function buildRecipeExtractionPrompt(
   }
 
   parts.push(`WEBPAGE TEXT:\n${content}`);
-
-  if (additionalContext) {
-    parts.push(additionalContext);
-  }
 
   return parts.join("\n");
 }
@@ -237,6 +201,3 @@ export async function buildVideoExtractionPrompt(
 
   return parts.join("\n");
 }
-
-// Re-export from loader for convenience
-export { loadPrompt, fillPrompt };

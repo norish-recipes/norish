@@ -8,12 +8,16 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
+import type { AIResult } from "@norish/shared-server/ai/types/result";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import {
+  aiError,
+  aiSuccess,
+  getErrorMessage,
+  mapErrorToCode,
+} from "@norish/shared-server/ai/types/result";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
-
-import type { AIResult } from "./core/types";
-import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./core/types";
 
 /**
  * Schema for allergy detection response.

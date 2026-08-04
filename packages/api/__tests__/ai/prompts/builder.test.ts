@@ -51,7 +51,7 @@ PREDEFINED TAGS:
     it("still builds a prompt, because the strategy is not an enablement check", async () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined");
 
-      const result = await buildAutoTaggingPrompt({ embedded: false }, mockRecipe);
+      const result = await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(result).toContain("PREDEFINED TAGS:");
       expect(loadPrompt).toHaveBeenCalledWith("auto-tagging");
@@ -63,28 +63,14 @@ PREDEFINED TAGS:
       vi.mocked(getTagStrategy).mockResolvedValue("predefined");
     });
 
-    it("loads auto-tagging prompt template", async () => {
-      await buildAutoTaggingPrompt({ embedded: true });
-
-      expect(loadPrompt).toHaveBeenCalledWith("auto-tagging");
-    });
-
-    it("returns embedded instructions for extraction prompts", async () => {
-      const result = await buildAutoTaggingPrompt({ embedded: true });
-
-      expect(result).toContain("TAGGING INSTRUCTIONS");
-      expect(result).toContain("keywords");
-      expect(result).toContain(mockBasePrompt);
-    });
-
-    it("does not fetch DB tags in predefined mode", async () => {
-      await buildAutoTaggingPrompt({ embedded: true });
+    it("does not fetch DB tags", async () => {
+      await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(listAllTagNames).not.toHaveBeenCalled();
     });
 
-    it("returns standalone prompt with recipe context", async () => {
-      const result = await buildAutoTaggingPrompt({ embedded: false }, mockRecipe);
+    it("returns the prompt with recipe context", async () => {
+      const result = await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(result).toContain(mockBasePrompt);
       expect(result).toContain("RECIPE TO ANALYZE");
@@ -96,19 +82,13 @@ PREDEFINED TAGS:
     });
 
     it("includes ingredients list formatted as bullet points", async () => {
-      const result = await buildAutoTaggingPrompt({ embedded: false }, mockRecipe);
+      const result = await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(result).toContain("- spaghetti");
       expect(result).toContain("- eggs");
       expect(result).toContain("- pancetta");
       expect(result).toContain("- parmesan");
       expect(result).toContain("- black pepper");
-    });
-
-    it("throws error when recipe is missing for standalone mode", async () => {
-      await expect(buildAutoTaggingPrompt({ embedded: false })).rejects.toThrow(
-        "Recipe data required for standalone auto-tagging prompt"
-      );
     });
   });
 
@@ -117,19 +97,12 @@ PREDEFINED TAGS:
       vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
     });
 
-    it("fetches existing tags from database", async () => {
+    it("fetches existing tags and includes them in the prompt", async () => {
       vi.mocked(listAllTagNames).mockResolvedValue(["dinner", "lunch", "breakfast"]);
 
-      await buildAutoTaggingPrompt({ embedded: true });
+      const result = await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(listAllTagNames).toHaveBeenCalled();
-    });
-
-    it("includes existing DB tags in prompt", async () => {
-      vi.mocked(listAllTagNames).mockResolvedValue(["dinner", "lunch", "breakfast"]);
-
-      const result = await buildAutoTaggingPrompt({ embedded: true });
-
       expect(result).toContain("ADDITIONAL ALLOWED TAGS");
       expect(result).toContain("dinner, lunch, breakfast");
     });
@@ -137,7 +110,7 @@ PREDEFINED TAGS:
     it("uses pre-fetched tags if provided", async () => {
       const providedTags = ["custom-tag-1", "custom-tag-2"];
 
-      const result = await buildAutoTaggingPrompt({ embedded: true, existingDbTags: providedTags });
+      const result = await buildAutoTaggingPrompt({ existingDbTags: providedTags }, mockRecipe);
 
       expect(listAllTagNames).not.toHaveBeenCalled();
       expect(result).toContain("custom-tag-1, custom-tag-2");
@@ -146,7 +119,7 @@ PREDEFINED TAGS:
     it("handles empty DB tags gracefully", async () => {
       vi.mocked(listAllTagNames).mockResolvedValue([]);
 
-      const result = await buildAutoTaggingPrompt({ embedded: true });
+      const result = await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(result).not.toContain("ADDITIONAL ALLOWED TAGS");
     });
@@ -158,20 +131,20 @@ PREDEFINED TAGS:
     });
 
     it("includes note about creating new tags", async () => {
-      const result = await buildAutoTaggingPrompt({ embedded: true });
+      const result = await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(result).toContain("you may create new relevant tags");
     });
 
     it("does not fetch DB tags", async () => {
-      await buildAutoTaggingPrompt({ embedded: true });
+      await buildAutoTaggingPrompt({}, mockRecipe);
 
       expect(listAllTagNames).not.toHaveBeenCalled();
     });
   });
 
   describe("recipe without description", () => {
-    it("handles recipe without description in standalone mode", async () => {
+    it("handles recipe without description", async () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined");
 
       const recipeNoDesc = {
@@ -179,7 +152,7 @@ PREDEFINED TAGS:
         ingredients: ["eggs", "salt"],
       };
 
-      const result = await buildAutoTaggingPrompt({ embedded: false }, recipeNoDesc);
+      const result = await buildAutoTaggingPrompt({}, recipeNoDesc);
 
       expect(result).toContain("Simple Eggs");
       expect(result).not.toContain("Description:");
@@ -196,7 +169,7 @@ PREDEFINED TAGS:
         ingredients: ["eggs", "salt"],
       };
 
-      const result = await buildAutoTaggingPrompt({ embedded: false }, recipeNullDesc);
+      const result = await buildAutoTaggingPrompt({}, recipeNullDesc);
 
       expect(result).toContain("Simple Eggs");
       expect(result).not.toContain("Description:");

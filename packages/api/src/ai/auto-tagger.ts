@@ -1,14 +1,19 @@
 import { generateText, Output } from "ai";
 
+import type { AIResult } from "@norish/shared-server/ai/types/result";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import {
+  aiError,
+  aiSuccess,
+  getErrorMessage,
+  mapErrorToCode,
+} from "@norish/shared-server/ai/types/result";
 import { getTagStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { AIResult } from "./core/types";
 import type { RecipeForTagging } from "./prompts/builder";
 import type { AutoTaggingOutput } from "./schemas/auto-tagging.schema";
-import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./core/types";
 import { buildAutoTaggingPrompt } from "./prompts/builder";
 import { autoTaggingSchema } from "./schemas/auto-tagging.schema";
 
@@ -58,7 +63,7 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<A
       aiLogger.debug({ existingTagCount: existingDbTags.length }, "Fetched existing DB tags");
     }
 
-    const prompt = await buildAutoTaggingPrompt({ embedded: false, existingDbTags }, recipe);
+    const prompt = await buildAutoTaggingPrompt({ existingDbTags }, recipe);
 
     aiLogger.debug({ provider: providerName, prompt }, "Sending auto-tagging prompt to AI");
 
