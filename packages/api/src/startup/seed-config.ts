@@ -127,7 +127,6 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
       enabled: SERVER_CONFIG.VIDEO_PARSING_ENABLED,
       maxLengthSeconds: SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS,
       maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
-      ytDlpVersion: SERVER_CONFIG.YT_DLP_VERSION,
       ytDlpProxy: SERVER_CONFIG.YT_DLP_PROXY || undefined,
       transcriptionProvider: SERVER_CONFIG.TRANSCRIPTION_PROVIDER,
       transcriptionEndpoint: SERVER_CONFIG.TRANSCRIPTION_ENDPOINT || undefined,
@@ -677,7 +676,6 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         enabled: false,
         maxLengthSeconds: 120,
         maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
-        ytDlpVersion: SERVER_CONFIG.YT_DLP_VERSION,
         transcriptionProvider: "disabled",
         transcriptionModel: "whisper-1",
       };

@@ -440,11 +440,15 @@ export function transcriptionProviderSupportsModelListing(
 /**
  * yt-dlp release Norish ships against.
  *
- * The single source for the `YT_DLP_VERSION` default, the seeded video config,
- * and what the admin screen shows before the saved config arrives - a version
- * quoted in one of those places and not the others is how the UI came to name a
- * release the server had not used for two upgrades. The Docker build takes the
- * same value through its `YT_DLP_VERSION` build arg and must be moved with it.
+ * The single source for the `YT_DLP_VERSION` default, which is what a
+ * development server downloads on its first import. The Docker build takes the
+ * same value through its `YT_DLP_VERSION` build arg and must be moved with it;
+ * a repo-invariant test pins the two together.
+ *
+ * It is not what the admin screen shows. That is a report of the binary the
+ * server is actually running, asked of the binary - quoting this constant there
+ * is how the UI came to name a release the server had not used for two
+ * upgrades.
  *
  * Sites that break as a site changes (Instagram most of all) are fixed in yt-dlp
  * releases, so this trails the newest release rather than leading it.
@@ -455,7 +459,6 @@ export const VideoConfigSchema = z.object({
   enabled: z.boolean(),
   maxLengthSeconds: z.number().int().positive(),
   maxVideoFileSize: z.number().int().positive(), // Max video file size in bytes
-  ytDlpVersion: z.string().min(1),
   ytDlpProxy: z.string().optional(),
   // Transcription settings (required for video processing)
   transcriptionProvider: TranscriptionProviderSchema,

@@ -24,6 +24,7 @@
     "./ai/helpers": "./src/ai/helpers.ts",
     "./ai/prompts/loader": "./src/ai/prompts/loader.ts",
     "./ai/providers": "./src/ai/providers/index.ts",
+    "./video/yt-dlp-version": "./src/video/yt-dlp-version.ts",
     "./ai/providers/factory": "./src/ai/providers/factory.ts",
     "./ai/providers/listing": "./src/ai/providers/listing.ts",
     "./ai/providers/temperature-fallback": "./src/ai/providers/temperature-fallback.ts",

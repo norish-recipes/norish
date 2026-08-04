@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import SecretInput from "@/components/shared/secret-input";
-import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
+import { useAvailableTranscriptionModelsQuery, useYtDlpVersionQuery } from "@/hooks/admin";
 import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   Button,
@@ -22,7 +22,6 @@ import { useTranslations } from "next-intl";
 
 import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import {
-  DEFAULT_YT_DLP_VERSION,
   isCloudTranscriptionProvider,
   ServerConfigKeys,
   transcriptionProviderNeedsEndpoint,
@@ -61,9 +60,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   const [maxVideoFileSizeMB, setMaxVideoFileSizeMB] = useState(
     videoConfig ? Math.round(videoConfig.maxVideoFileSize / (1024 * 1024)) : 100
   );
-  const [ytDlpVersion, setYtDlpVersion] = useState(
-    videoConfig?.ytDlpVersion ?? DEFAULT_YT_DLP_VERSION
-  );
   const [ytDlpProxy, setYtDlpProxy] = useState(videoConfig?.ytDlpProxy ?? "");
   const [transcriptionProvider, setTranscriptionProvider] = useState<TranscriptionProvider>(
     videoConfig?.transcriptionProvider ?? "disabled"
@@ -81,7 +77,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       setEnabled(videoConfig.enabled);
       setMaxLengthSeconds(videoConfig.maxLengthSeconds);
       setMaxVideoFileSizeMB(Math.round(videoConfig.maxVideoFileSize / (1024 * 1024)));
-      setYtDlpVersion(videoConfig.ytDlpVersion);
       setYtDlpProxy(videoConfig.ytDlpProxy ?? "");
       setTranscriptionProvider(videoConfig.transcriptionProvider);
       setTranscriptionEndpoint(videoConfig.transcriptionEndpoint ?? "");
@@ -118,6 +113,13 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     (needsTranscriptionApiKey
       ? transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
       : transcriptionEndpoint);
+  // A report of the binary this server runs, not something the form saves — and
+  // worth reading precisely when video processing is off because imports broke,
+  // so it is not gated on the switches above.
+  const { version: ytDlpVersion, isLoading: isLoadingYtDlpVersion } = useYtDlpVersionQuery();
+  const ytDlpVersionLabel = isLoadingYtDlpVersion
+    ? t("ytDlpVersionLoading")
+    : (ytDlpVersion ?? t("ytDlpVersionMissing"));
   const { models: availableTranscriptionModels, isLoading: isLoadingTranscriptionModels } =
     useAvailableTranscriptionModelsQuery({
       provider: transcriptionProvider,
@@ -193,7 +195,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       enabled !== videoConfig.enabled ||
       maxLengthSeconds !== videoConfig.maxLengthSeconds ||
       maxVideoFileSizeMB !== Math.round(videoConfig.maxVideoFileSize / (1024 * 1024)) ||
-      ytDlpVersion !== videoConfig.ytDlpVersion ||
       ytDlpProxy !== (videoConfig.ytDlpProxy ?? "") ||
       transcriptionProvider !== videoConfig.transcriptionProvider ||
       transcriptionEndpoint !== (videoConfig.transcriptionEndpoint ?? "") ||
@@ -205,7 +206,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     enabled,
     maxLengthSeconds,
     maxVideoFileSizeMB,
-    ytDlpVersion,
     ytDlpProxy,
     transcriptionProvider,
     transcriptionEndpoint,
@@ -227,7 +227,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         maxLengthSeconds,
         maxVideoFileSize: maxVideoFileSizeMB * 1024 * 1024,
         // Convert MB to bytes
-        ytDlpVersion,
         ytDlpProxy: ytDlpProxy || undefined,
         transcriptionProvider,
         transcriptionEndpoint: transcriptionEndpoint || undefined,
@@ -293,7 +292,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         <Description>{t("maxFileSizeDescription")}</Description>
       </TextField>
 
-      <TextField isDisabled={isVideoUiDisabled} value={ytDlpVersion} onChange={setYtDlpVersion}>
+      <TextField isReadOnly value={ytDlpVersionLabel}>
         <Label>{t("ytDlpVersion")}</Label>
         <Input variant="secondary" />
         <Description>{t("ytDlpVersionDescription")}</Description>

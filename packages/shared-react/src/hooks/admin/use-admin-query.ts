@@ -97,10 +97,35 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
     };
   }
 
+  /**
+   * The yt-dlp release the server is actually running.
+   *
+   * A report, not a setting: it is asked of the binary, and `null` means there
+   * is no binary to ask. Only fetched while the video screen is usable.
+   */
+  function useYtDlpVersionQuery(options: { enabled?: boolean } = {}) {
+    const trpc = useTRPC();
+    const { enabled = true } = options;
+
+    const { data, error, isLoading } = useQuery({
+      ...trpc.admin.getYtDlpVersion.queryOptions(),
+      enabled,
+      staleTime: 60000,
+      retry: false,
+    });
+
+    return {
+      version: data?.version ?? null,
+      error,
+      isLoading,
+    };
+  }
+
   return {
     useAdminConfigsQuery,
     useUserRoleQuery,
     useAvailableModelsQuery,
     useAvailableTranscriptionModelsQuery,
+    useYtDlpVersionQuery,
   };
 }

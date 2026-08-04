@@ -8,6 +8,7 @@ import { generalProcedures } from "./general";
 import { jobQueueProcedures } from "./job-queue";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
+import { videoRuntimeProcedures } from "./video-runtime";
 
 export const adminRouter = router({
   // Config queries
@@ -30,6 +31,9 @@ export const adminRouter = router({
 
   // AI and video
   ...aiConfigProcedures._def.procedures,
+
+  // What the downloader binary actually is, as opposed to what is configured
+  ...videoRuntimeProcedures._def.procedures,
 
   // Permissions (recipe policy)
   ...permissionsProcedures._def.procedures,

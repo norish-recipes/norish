@@ -5,6 +5,7 @@ export {
   useAvailableModelsQuery,
   useAvailableTranscriptionModelsQuery,
   useUserRoleQuery,
+  useYtDlpVersionQuery,
   type AdminConfigsData,
 } from "./use-admin-query";
 export { useAdminMutations, type AdminMutationsResult } from "./use-admin-mutations";
