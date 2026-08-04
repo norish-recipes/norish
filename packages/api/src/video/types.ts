@@ -10,6 +10,13 @@ export interface VideoMetadata {
   uploadDate?: string;
   /** BCP-47 language code of the video's original audio (e.g. "en", "es") */
   language?: string;
+  /**
+   * Whether the post has a video stream, as reported by yt-dlp.
+   *
+   * Undefined when yt-dlp gave nothing to go on — which is not the same as
+   * "no video", and must not be treated as such (#513).
+   */
+  hasVideoStream?: boolean;
 }
 
 /**

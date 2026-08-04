@@ -661,14 +661,14 @@ importers:
   packages/api:
     dependencies:
       '@ai-sdk/azure':
-        specifier: ^3.0.59
-        version: 3.0.64(zod@4.4.2)
+        specifier: ^3.0.95
+        version: 3.0.95(zod@4.4.2)
       '@ai-sdk/groq':
-        specifier: ^3.0.38
-        version: 3.0.39(zod@4.4.2)
+        specifier: ^3.0.55
+        version: 3.0.55(zod@4.4.2)
       '@ai-sdk/openai':
-        specifier: ^3.0.58
-        version: 3.0.63(zod@4.4.2)
+        specifier: ^3.0.90
+        version: 3.0.90(zod@4.4.2)
       '@norish/auth':
         specifier: workspace:*
         version: link:../auth
@@ -697,8 +697,8 @@ importers:
         specifier: 11.17.0
         version: 11.17.0(typescript@6.0.3)
       ai:
-        specifier: ^6.0.174
-        version: 6.0.180(zod@4.4.2)
+        specifier: ^6.0.241
+        version: 6.0.241(zod@4.4.2)
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
@@ -1025,7 +1025,7 @@ importers:
         version: 11.17.0(@tanstack/react-query@5.100.11(react@19.2.3))(@trpc/client@11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.17.0(typescript@6.0.3))(react@19.2.3)(typescript@6.0.3)
       better-auth:
         specifier: 'catalog:'
-        version: 1.6.9(25d11554503453a925b99e3281dc848b)
+        version: 1.6.9(38e4de29cf2d893a5a499664719db129)
       date-fns:
         specifier: 'catalog:'
         version: 4.1.0
@@ -1092,10 +1092,10 @@ importers:
         version: link:../i18n
       '@norish/shared':
         specifier: workspace:*
-        version: file:packages/shared(a6de409d231b782a610c50128ef68bf7)
+        version: file:packages/shared(88a916a6889055e5cc6502888c05a9d9)
       '@norish/trpc':
         specifier: workspace:*
-        version: file:packages/trpc(69b5ac59844d4ce3e4e14212e70eb1bf)
+        version: file:packages/trpc(b546f45e3a0ca67c8cca16a6ebb679f9)
       '@tanstack/react-query':
         specifier: 5.100.11
         version: 5.100.11(react@19.2.3)
@@ -1146,32 +1146,32 @@ importers:
   packages/shared-server:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: ^3.0.74
-        version: 3.0.77(zod@4.4.2)
+        specifier: ^3.0.105
+        version: 3.0.105(zod@4.4.2)
       '@ai-sdk/azure':
-        specifier: ^3.0.59
-        version: 3.0.64(zod@4.4.2)
+        specifier: ^3.0.95
+        version: 3.0.95(zod@4.4.2)
       '@ai-sdk/deepseek':
-        specifier: ^2.0.32
-        version: 2.0.35(zod@4.4.2)
+        specifier: ^2.0.51
+        version: 2.0.51(zod@4.4.2)
       '@ai-sdk/google':
-        specifier: ^3.0.67
-        version: 3.0.73(zod@4.4.2)
+        specifier: ^3.0.103
+        version: 3.0.103(zod@4.4.2)
       '@ai-sdk/groq':
-        specifier: ^3.0.38
-        version: 3.0.39(zod@4.4.2)
+        specifier: ^3.0.55
+        version: 3.0.55(zod@4.4.2)
       '@ai-sdk/mistral':
-        specifier: ^3.0.33
-        version: 3.0.36(zod@4.4.2)
+        specifier: ^3.0.53
+        version: 3.0.53(zod@4.4.2)
       '@ai-sdk/openai':
-        specifier: ^3.0.58
-        version: 3.0.63(zod@4.4.2)
+        specifier: ^3.0.90
+        version: 3.0.90(zod@4.4.2)
       '@ai-sdk/openai-compatible':
-        specifier: ^2.0.45
-        version: 2.0.47(zod@4.4.2)
+        specifier: ^2.0.63
+        version: 2.0.63(zod@4.4.2)
       '@ai-sdk/perplexity':
-        specifier: ^3.0.32
-        version: 3.0.33(zod@4.4.2)
+        specifier: ^3.0.49
+        version: 3.0.49(zod@4.4.2)
       '@norish/config':
         specifier: workspace:*
         version: link:../config
@@ -1185,11 +1185,11 @@ importers:
         specifier: workspace:*
         version: file:packages/shared(6d9bd8f262e51f1fec3e35c2a20aea74)
       ai:
-        specifier: ^6.0.174
-        version: 6.0.180(zod@4.4.2)
+        specifier: ^6.0.241
+        version: 6.0.241(zod@4.4.2)
       ai-sdk-ollama:
-        specifier: ^3.8.3
-        version: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+        specifier: ^3.8.8
+        version: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
@@ -1230,6 +1230,9 @@ importers:
         specifier: 4.4.2
         version: 4.4.2
     devDependencies:
+      '@ai-sdk/provider':
+        specifier: ^3.0.14
+        version: 3.0.14
       '@norish/eslint-config':
         specifier: workspace:*
         version: file:tooling/eslint(@typescript-eslint/eslint-plugin@8.59.4(@typescript-eslint/parser@8.59.4(eslint@9.39.1(jiti@2.7.0))(typescript@6.0.3))(eslint@9.39.1(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.59.4(eslint@9.39.1(jiti@2.7.0))(typescript@6.0.3))(eslint@9.39.1(jiti@2.7.0))(turbo@2.9.12)(typescript@6.0.3)
@@ -1483,74 +1486,74 @@ packages:
       react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
       react-dom: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
 
-  '@ai-sdk/anthropic@3.0.77':
-    resolution: {integrity: sha512-ML8C2M1YvPA1ulEx4TiyF0k1xvC2ikEiPBIC1PPQ0a5xELUGrO2lAaEzsTEoJ+eCeDd8PSBuFJjs+r+9yIwQXA==}
+  '@ai-sdk/anthropic@3.0.105':
+    resolution: {integrity: sha512-6B9UjgK14JwG4PtyhHKMQrqg49s90FClsreNZ9HmMdSWZ9tJFHuYmy4cauS/BqO/6rKC+qcNEXTP45+qivdypA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/azure@3.0.64':
-    resolution: {integrity: sha512-jNcgI9tPzpuPJhAvB6twCiH9UGOOBFRPxFWOuDI4qts347q/+iFtc+AvkrKU/JsbSSwGeeW4qslQRri4SmWipg==}
+  '@ai-sdk/azure@3.0.95':
+    resolution: {integrity: sha512-ITLXIb028dG4lqXOip7DGHnSDu8kQXSEnW4L8NFA6TdBsX6ovjLicfZ40qUToV9IvFOrkewnQCy7GwRUlltPBQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/deepseek@2.0.35':
-    resolution: {integrity: sha512-9DhYurbAvcurOEGN6u2myYDybrrzGfcrkG8hwmFjwTrePW6KCMggm0YxP7e8RkLYcQKqCEMgFlyEB4BM6EmiKg==}
+  '@ai-sdk/deepseek@2.0.51':
+    resolution: {integrity: sha512-WqeQDA8HTFRa2RB9dYYMgZ2KxXdICmSV+UPJrspVUcJQPetAJKBH3Ys/ZEmgaGnjqMZEw/EyIYSe09xFETxfZg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/gateway@3.0.114':
-    resolution: {integrity: sha512-MqkZ5sd+qiq6RgIxELkoFQXg2/JwK+WCMaot7U+rtrZpWJl3fSyYvc28SC03b256o4F7OXjQtdjTqs81B2w+dA==}
+  '@ai-sdk/gateway@3.0.163':
+    resolution: {integrity: sha512-tYm3F4Wcwer6ViO/5sCAQnOd9hjuY8Wu4HPK1SfQgDBkyT5Fv/bWh7X7XMMgFqGWJU1MzVxHV9dLpZUkLb8X5w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/google@3.0.73':
-    resolution: {integrity: sha512-o2MuIeyvZrFIeIbnbA8Thrr63irdyUBh0uWBZ2lY6yFeXuE/tcwyXF74bDKS4KvTu84uFpQfpbS/LXHGKKXz+g==}
+  '@ai-sdk/google@3.0.103':
+    resolution: {integrity: sha512-i/I92bfAeRPBvAwrW052NmPTkc+ZgVYs3vZjGhHgReE04cV37xJtbhZgr6U3CZKDArIAN0NhL0GoLpZ7FYV+dA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/groq@3.0.39':
-    resolution: {integrity: sha512-BZAr6DjCbzWQ0Qn1/TSsHo/bmCt4JaAMb4A7HCSUZBQCAcOjne/03D0sVjHnQhUC3TpwcmYiv7tHAviK7BluRw==}
+  '@ai-sdk/groq@3.0.55':
+    resolution: {integrity: sha512-0iM7IX4xZqFJumNZpmLh11ksZqh8PZUJKky7D5urj1Pi8C03sHOr7GG5bk5xQnCj6cAEs/8I5rnolmFwq7ZtTw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/mistral@3.0.36':
-    resolution: {integrity: sha512-FLIb2QdLraOgQP3puUybuFYWbtsB02YWQBTOJOk8heiEsdFW3YE0dfuzwtsvoF4FXlBnbYYMWu5jgOesthcmWg==}
+  '@ai-sdk/mistral@3.0.53':
+    resolution: {integrity: sha512-qArLRbdKbcdKua5YcQW5/go6cL8ZFGYjDxmxgN8HtzrLqYqcmPNRzYg6EaAmiKshGCFzGT8Yt69eiFsHaoLsOA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/openai-compatible@2.0.47':
-    resolution: {integrity: sha512-Enm5UlL0zUCrW3792opk5h7hRWxZOZzDe6eQYVFqX9LUOGGCe1h8MZWAGim765nwzgnjlpeYOsuzZmLtRsTPlg==}
+  '@ai-sdk/openai-compatible@2.0.63':
+    resolution: {integrity: sha512-EmrD7iRboidulu6yHfMiMhd6RQSw8KrIWhNLK8vl5brQZbIjXkyhUU+FULZM3P4m46Vatzx8u3vX1w/qmFUmqA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/openai@3.0.63':
-    resolution: {integrity: sha512-4yY/m8a57MNNVoJCsXuNblKf6BO4yuAuLKRX4tzSNffBEBSp1FlcWdPE0Z4FkqUeS0AJhYSSqp0GIiA/cIcDNA==}
+  '@ai-sdk/openai@3.0.90':
+    resolution: {integrity: sha512-GIucFshCN7JZwTDur25PsnLEMRUFfAKuLaA9TP9fzGxPC2Zxzl94tvat93ZdZLURkKOrDukU0E4fj73tKDWjTA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/perplexity@3.0.33':
-    resolution: {integrity: sha512-aNt6pTAzq+akadDXVdg2SjN2dODtaVlkKbw8/35c+sekr+Tx0sJwVqMR1udxrjLzhQvz8qtfsWRuz+hB9pmOnQ==}
+  '@ai-sdk/perplexity@3.0.49':
+    resolution: {integrity: sha512-6NgKyE9cMVWV4+oJ3MPyRCstLjMoOIpgvI1EA3TrTe1Nzwe0ThopBXP24hHsN6INcDwL3yfDIh3q+77qTDgu8w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/provider-utils@4.0.27':
-    resolution: {integrity: sha512-ubkAJ+xODouwtmN1tYlvTPphH1hPOBfZaEQe8U7skGvFAnIRs9PPpsq57bC2+Ky/MB4yzhd6YOsxTAx9sGpazw==}
+  '@ai-sdk/provider-utils@4.0.41':
+    resolution: {integrity: sha512-I7hhjfw01yEI8NkuAsT8Mv6xbWFr/lqLXMdaJQ2zWfXEpxog1eT7skDcv1+RY29/+5btzH8wD+vVvy48bk9oNQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
 
-  '@ai-sdk/provider@3.0.10':
-    resolution: {integrity: sha512-Q3BZ27qfpYqnCYGvE3vt+Qi6LGOF9R5Nmzn+9JoM1lCRsD9mYaIhfJLkSunN48nfGXJ6n+XNV0J/XVpqGQl7Dw==}
+  '@ai-sdk/provider@3.0.14':
+    resolution: {integrity: sha512-5X1k57JBJ4H7H1QjX7CnJYAB1I19r/trVZTMcSms7/kLNZ8RaU4Nt2agcwZzv82Hfx6Q7/TOLU7agAKeFfc8cA==}
     engines: {node: '>=18'}
 
   '@alloc/quick-lru@5.2.0':
@@ -3021,6 +3024,10 @@ packages:
   '@expo/xcpretty@4.4.4':
     resolution: {integrity: sha512-4aQzz9vgxcNXFfo/iyNgDDYfsU5XGKKxWxZopw0cVotHiW+U8IJbIxMaxsINs6bHhtkG3StKNPcOrn3eBuxKPw==}
     hasBin: true
+
+  '@fastify/busboy@2.1.1':
+    resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
+    engines: {node: '>=14'}
 
   '@fontsource-variable/fira-code@5.2.7':
     resolution: {integrity: sha512-J2bxN7fz5rd8WpQYyau4o19WqTzxoTqaNj9jhsv4p21GSu1Rf34tbqsxqjyDCR+wDMHM3SajyFqtq+5uvRUQ7w==}
@@ -5526,14 +5533,14 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai-sdk-ollama@3.8.4:
-    resolution: {integrity: sha512-vvhLHo9MrOhDxsxRWfOGqBmQsnbDPKQHqDG5vSYMkdu6q8RPxJIYag001jQIAKA2MO37Nf96gCAPWM+dufvglw==}
+  ai-sdk-ollama@3.8.8:
+    resolution: {integrity: sha512-peWelPf6sVsRULQyYhfyu1dMZhwewRszsbQVfbuhNLflh+ncRXn6pe1BRE3NAcSsWd7JMRZAV5RzcuR3R9ZfaQ==}
     engines: {node: '>=22'}
     peerDependencies:
-      ai: ^6.0.177
+      ai: ^6.0.197
 
-  ai@6.0.180:
-    resolution: {integrity: sha512-tOyRbwD0PEjMZKGvYQcTsv95K2zktwwNhQ49QOUAh0g8MNprO7ELIO1SgANMuPc0BFtkP6Ny6OAdjq3TtxLCbQ==}
+  ai@6.0.241:
+    resolution: {integrity: sha512-3QdRudGkU7oo2jqayeIiwlgT2RpW2N5xvtS/8vh/C154iwURwj1UMvU7PQh4OODMsm6HAUG1RASe1EBknsBd2g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.4.2
@@ -10505,6 +10512,10 @@ packages:
   undici-types@7.21.0:
     resolution: {integrity: sha512-w9IMgQrz4O0YN1LtB7K5P63vhlIOvC7opSmouCJ+ZywlPAlO9gIkJ+otk6LvGpAs2wg4econaCz3TvQ9xPoyuQ==}
 
+  undici@5.29.0:
+    resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
+    engines: {node: '>=14.0'}
+
   undici@7.24.6:
     resolution: {integrity: sha512-Xi4agocCbRzt0yYMZGMA6ApD7gvtUFaxm4ZmeacWI4cZxaF6C+8I8QfofC20NAePiB/IcvZmzkJ7XPa471AEtA==}
     engines: {node: '>=20.18.1'}
@@ -11070,76 +11081,78 @@ snapshots:
       react-transition-group: 4.4.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       use-sync-external-store: 1.6.0(react@19.2.3)
 
-  '@ai-sdk/anthropic@3.0.77(zod@4.4.2)':
+  '@ai-sdk/anthropic@3.0.105(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/azure@3.0.64(zod@4.4.2)':
+  '@ai-sdk/azure@3.0.95(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/deepseek@2.0.35(zod@4.4.2)':
+  '@ai-sdk/deepseek@2.0.51(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/gateway@3.0.114(zod@4.4.2)':
+  '@ai-sdk/gateway@3.0.163(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       '@vercel/oidc': 3.2.0
       zod: 4.4.2
 
-  '@ai-sdk/google@3.0.73(zod@4.4.2)':
+  '@ai-sdk/google@3.0.103(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/groq@3.0.39(zod@4.4.2)':
+  '@ai-sdk/groq@3.0.55(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/mistral@3.0.36(zod@4.4.2)':
+  '@ai-sdk/mistral@3.0.53(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/openai-compatible@2.0.47(zod@4.4.2)':
+  '@ai-sdk/openai-compatible@2.0.63(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/openai@3.0.63(zod@4.4.2)':
+  '@ai-sdk/openai@3.0.90(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/perplexity@3.0.33(zod@4.4.2)':
+  '@ai-sdk/perplexity@3.0.49(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       zod: 4.4.2
 
-  '@ai-sdk/provider-utils@4.0.27(zod@4.4.2)':
+  '@ai-sdk/provider-utils@4.0.41(zod@4.4.2)':
     dependencies:
-      '@ai-sdk/provider': 3.0.10
+      '@ai-sdk/provider': 3.0.14
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.8
+      undici: 5.29.0
       zod: 4.4.2
 
-  '@ai-sdk/provider@3.0.10':
+  '@ai-sdk/provider@3.0.14':
     dependencies:
       json-schema: 0.4.0
 
@@ -11693,6 +11706,13 @@ snapshots:
 
   '@balena/dockerignore@1.0.2': {}
 
+  '@better-auth/api-key@1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(37cbb9086a4af56aaf33d05ff8730c32))':
+    dependencies:
+      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
+      '@better-auth/utils': 0.4.0
+      better-auth: 1.5.4(37cbb9086a4af56aaf33d05ff8730c32)
+      zod: 4.4.2
+
   '@better-auth/api-key@1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(4341aa8caff497266b30f93e399c4872))':
     dependencies:
       '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
@@ -11721,18 +11741,11 @@ snapshots:
       better-auth: 1.5.4(6b54dd066f51896f9d79d2a86baf7120)
       zod: 4.4.2
 
-  '@better-auth/api-key@1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(8e3c912eddaa5c38b42859e23189a005))':
+  '@better-auth/api-key@1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(996f0b095b1be0ea614f172e24f5e0bd))':
     dependencies:
       '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/utils': 0.4.0
-      better-auth: 1.5.4(8e3c912eddaa5c38b42859e23189a005)
-      zod: 4.4.2
-
-  '@better-auth/api-key@1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(9afe62cbcd30574cafff891548d3ba59))':
-    dependencies:
-      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
-      '@better-auth/utils': 0.4.0
-      better-auth: 1.5.4(9afe62cbcd30574cafff891548d3ba59)
+      better-auth: 1.5.4(996f0b095b1be0ea614f172e24f5e0bd)
       zod: 4.4.2
 
   '@better-auth/api-key@1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(a8c74694eae9b49f9f2dedd3fb25218f))':
@@ -11775,6 +11788,13 @@ snapshots:
       '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/utils': 0.4.0
       better-auth: 1.6.9(339ad73ac99e8439cc04936e5ba9030d)
+      zod: 4.4.2
+
+  '@better-auth/api-key@1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(38e4de29cf2d893a5a499664719db129))':
+    dependencies:
+      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
+      '@better-auth/utils': 0.4.0
+      better-auth: 1.6.9(38e4de29cf2d893a5a499664719db129)
       zod: 4.4.2
 
   '@better-auth/api-key@1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(623f7048160443184ee7edb13ce94601))':
@@ -11893,19 +11913,24 @@ snapshots:
       expo-network: 56.0.5(expo@56.0.12)(react@19.2.3)
       expo-web-browser: 56.0.5(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))
 
-  '@better-auth/expo@1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(better-auth@1.6.9(25d11554503453a925b99e3281dc848b))':
-    dependencies:
-      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
-      '@better-fetch/fetch': 1.1.21
-      better-auth: 1.6.9(25d11554503453a925b99e3281dc848b)
-      better-call: 1.3.5(zod@4.4.2)
-      zod: 4.4.2
-
   '@better-auth/expo@1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(better-auth@1.6.9(339ad73ac99e8439cc04936e5ba9030d))(expo-constants@56.0.18)(expo-linking@56.0.14)(expo-network@56.0.5(expo@56.0.12)(react@19.2.3))(expo-web-browser@56.0.5(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3)))':
     dependencies:
       '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-fetch/fetch': 1.1.21
       better-auth: 1.6.9(339ad73ac99e8439cc04936e5ba9030d)
+      better-call: 1.3.5(zod@4.4.2)
+      zod: 4.4.2
+    optionalDependencies:
+      expo-constants: 56.0.18(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))
+      expo-linking: 56.0.14(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
+      expo-network: 56.0.5(expo@56.0.12)(react@19.2.3)
+      expo-web-browser: 56.0.5(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))
+
+  '@better-auth/expo@1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(better-auth@1.6.9(38e4de29cf2d893a5a499664719db129))(expo-constants@56.0.18)(expo-linking@56.0.14)(expo-network@56.0.5(expo@56.0.12)(react@19.2.3))(expo-web-browser@56.0.5(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3)))':
+    dependencies:
+      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
+      '@better-fetch/fetch': 1.1.21
+      better-auth: 1.6.9(38e4de29cf2d893a5a499664719db129)
       better-call: 1.3.5(zod@4.4.2)
       zod: 4.4.2
     optionalDependencies:
@@ -13009,6 +13034,8 @@ snapshots:
       chalk: 4.1.2
       js-yaml: 4.1.1
 
+  '@fastify/busboy@2.1.1': {}
+
   '@fontsource-variable/fira-code@5.2.7': {}
 
   '@fontsource-variable/inter@5.2.8': {}
@@ -13472,9 +13499,9 @@ snapshots:
 
   '@norish/api@file:packages/api(64043ddd2645966d55ef8e79bafe1039)':
     dependencies:
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
       '@norish/auth': file:packages/auth(a55f03d94ee9bc2e09bdb89cc83a2308)
       '@norish/config': file:packages/config
       '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.3(react@19.2.3))(typescript@6.0.3)(vitest@4.1.2(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(jsdom@28.1.0(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.5.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
@@ -13484,7 +13511,7 @@ snapshots:
       '@norish/shared-server': file:packages/shared-server(cd987126921ca94791f5e02dfadab497)
       '@norish/trpc': file:packages/trpc(67b5fe83321e819e7c85b43c46676b93)
       '@trpc/server': 11.17.0(typescript@6.0.3)
-      ai: 6.0.180(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
       cheerio: 1.2.0
       drizzle-orm: 0.45.1(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
       ffmpeg-static: 5.3.0
@@ -13631,78 +13658,6 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/auth@file:packages/auth(7c4f6116384db1e38a0ac87ceecda45a)':
-    dependencies:
-      '@better-auth/api-key': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(25d11554503453a925b99e3281dc848b))
-      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
-      '@better-auth/expo': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(better-auth@1.6.9(25d11554503453a925b99e3281dc848b))
-      '@better-auth/utils': 0.4.0
-      '@norish/config': file:packages/config
-      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
-      '@norish/shared': file:packages/shared(a6de409d231b782a610c50128ef68bf7)
-      '@norish/shared-server': file:packages/shared-server(a6de409d231b782a610c50128ef68bf7)
-      better-auth: 1.6.9(25d11554503453a925b99e3281dc848b)
-      next: 16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@aws-sdk/client-rds-data'
-      - '@babel/core'
-      - '@better-fetch/fetch'
-      - '@cloudflare/workers-types'
-      - '@electric-sql/pglite'
-      - '@libsql/client'
-      - '@libsql/client-wasm'
-      - '@lynx-js/react'
-      - '@neondatabase/serverless'
-      - '@op-engineering/op-sqlite'
-      - '@opentelemetry/api'
-      - '@planetscale/database'
-      - '@playwright/test'
-      - '@prisma/client'
-      - '@sveltejs/kit'
-      - '@tanstack/react-start'
-      - '@tanstack/solid-start'
-      - '@tidbcloud/serverless'
-      - '@types/better-sqlite3'
-      - '@types/pg'
-      - '@types/sql.js'
-      - '@upstash/redis'
-      - '@vercel/postgres'
-      - '@xata.io/client'
-      - babel-plugin-macros
-      - babel-plugin-react-compiler
-      - better-call
-      - better-sqlite3
-      - bun-types
-      - drizzle-kit
-      - drizzle-orm
-      - expo-constants
-      - expo-linking
-      - expo-network
-      - expo-sqlite
-      - expo-web-browser
-      - gel
-      - jose
-      - knex
-      - kysely
-      - mongodb
-      - mysql2
-      - nanostores
-      - pg
-      - pg-native
-      - postgres
-      - prisma
-      - react
-      - react-dom
-      - sass
-      - solid-js
-      - sql.js
-      - sqlite3
-      - supports-color
-      - svelte
-      - typescript
-      - vitest
-      - vue
-
   '@norish/auth@file:packages/auth(94e1f69ed75e4504b31f1b606ed74c51)':
     dependencies:
       '@better-auth/api-key': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(1988e6387ffd89583a26fb0aa944409c))
@@ -13787,6 +13742,78 @@ snapshots:
       '@norish/shared-server': file:packages/shared-server(cd987126921ca94791f5e02dfadab497)
       better-auth: 1.6.9(8940b639681975147b01dcd94bae884a)
       next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@babel/core'
+      - '@better-fetch/fetch'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@lynx-js/react'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@playwright/test'
+      - '@prisma/client'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - babel-plugin-macros
+      - babel-plugin-react-compiler
+      - better-call
+      - better-sqlite3
+      - bun-types
+      - drizzle-kit
+      - drizzle-orm
+      - expo-constants
+      - expo-linking
+      - expo-network
+      - expo-sqlite
+      - expo-web-browser
+      - gel
+      - jose
+      - knex
+      - kysely
+      - mongodb
+      - mysql2
+      - nanostores
+      - pg
+      - pg-native
+      - postgres
+      - prisma
+      - react
+      - react-dom
+      - sass
+      - solid-js
+      - sql.js
+      - sqlite3
+      - supports-color
+      - svelte
+      - typescript
+      - vitest
+      - vue
+
+  '@norish/auth@file:packages/auth(e5a216a63c643132a6abb8ed579ce151)':
+    dependencies:
+      '@better-auth/api-key': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(38e4de29cf2d893a5a499664719db129))
+      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
+      '@better-auth/expo': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(better-auth@1.6.9(38e4de29cf2d893a5a499664719db129))(expo-constants@56.0.18)(expo-linking@56.0.14)(expo-network@56.0.5(expo@56.0.12)(react@19.2.3))(expo-web-browser@56.0.5(expo@56.0.12)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3)))
+      '@better-auth/utils': 0.4.0
+      '@norish/config': file:packages/config
+      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
+      '@norish/shared': file:packages/shared(88a916a6889055e5cc6502888c05a9d9)
+      '@norish/shared-server': file:packages/shared-server(88a916a6889055e5cc6502888c05a9d9)
+      better-auth: 1.6.9(38e4de29cf2d893a5a499664719db129)
+      next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
       - '@babel/core'
@@ -14073,11 +14100,11 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/db@file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))':
+  '@norish/db@file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))':
     dependencies:
       '@norish/config': file:packages/config
       '@norish/db-schema': file:packages/db-schema(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
-      '@norish/shared': file:packages/shared(a6de409d231b782a610c50128ef68bf7)
+      '@norish/shared': file:packages/shared(88a916a6889055e5cc6502888c05a9d9)
       drizzle-orm: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
       fuse.js: 7.3.0
       pg: 8.20.0
@@ -14422,12 +14449,12 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/queue@file:packages/queue(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))':
+  '@norish/queue@file:packages/queue(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))':
     dependencies:
       '@norish/config': file:packages/config
-      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
-      '@norish/shared': file:packages/shared(1d748b8ea3183e87b5d71d2e4eeb3453)
-      '@norish/shared-server': file:packages/shared-server(1d748b8ea3183e87b5d71d2e4eeb3453)
+      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
+      '@norish/shared': file:packages/shared(4064310245c6ac30752af0c820199ba1)
+      '@norish/shared-server': file:packages/shared-server(4064310245c6ac30752af0c820199ba1)
       bullmq: 5.71.1
       date-fns: 4.1.0
       drizzle-orm: 0.45.1(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
@@ -14694,23 +14721,23 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/shared-server@file:packages/shared-server(1d748b8ea3183e87b5d71d2e4eeb3453)':
+  '@norish/shared-server@file:packages/shared-server(23db0992bead7abe4f1f062cd2636648)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
-      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
+      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.3(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
-      '@norish/shared': file:packages/shared(1d748b8ea3183e87b5d71d2e4eeb3453)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      '@norish/shared': file:packages/shared(23db0992bead7abe4f1f062cd2636648)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -14775,23 +14802,23 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/shared-server@file:packages/shared-server(23db0992bead7abe4f1f062cd2636648)':
+  '@norish/shared-server@file:packages/shared-server(4064310245c6ac30752af0c820199ba1)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
-      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.3(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
+      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
-      '@norish/shared': file:packages/shared(23db0992bead7abe4f1f062cd2636648)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      '@norish/shared': file:packages/shared(4064310245c6ac30752af0c820199ba1)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -14858,21 +14885,21 @@ snapshots:
 
   '@norish/shared-server@file:packages/shared-server(6d9bd8f262e51f1fec3e35c2a20aea74)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
       '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.4))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
       '@norish/shared': file:packages/shared(6d9bd8f262e51f1fec3e35c2a20aea74)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -14939,21 +14966,102 @@ snapshots:
 
   '@norish/shared-server@file:packages/shared-server(7695bc107d02b5d4ea7b08bf46c28a9f)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
       '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.3(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
       '@norish/shared': file:packages/shared(7695bc107d02b5d4ea7b08bf46c28a9f)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      cheerio: 1.2.0
+      fuse.js: 7.1.0
+      heic-convert: 2.1.0
+      ioredis: 5.10.1
+      jszip: 3.10.1
+      ollama: 0.6.3
+      pino: 10.3.1
+      pino-pretty: 13.1.3
+      sharp: 0.34.5
+      superjson: 2.2.6
+      tsdav: 2.2.1
+      uuid: 14.0.0
+      zod: 4.4.2
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@better-fetch/fetch'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@lynx-js/react'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - better-call
+      - better-sqlite3
+      - bun-types
+      - drizzle-kit
+      - drizzle-orm
+      - expo-sqlite
+      - gel
+      - jose
+      - knex
+      - kysely
+      - mongodb
+      - mysql2
+      - nanostores
+      - next
+      - pg
+      - pg-native
+      - postgres
+      - prisma
+      - react-dom
+      - solid-js
+      - sql.js
+      - sqlite3
+      - supports-color
+      - svelte
+      - typescript
+      - vitest
+      - vue
+
+  '@norish/shared-server@file:packages/shared-server(88a916a6889055e5cc6502888c05a9d9)':
+    dependencies:
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
+      '@norish/config': file:packages/config
+      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
+      '@norish/i18n': file:packages/i18n
+      '@norish/shared': file:packages/shared(88a916a6889055e5cc6502888c05a9d9)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -15020,21 +15128,21 @@ snapshots:
 
   '@norish/shared-server@file:packages/shared-server(913071686a4c067c0085145e5ce84d1a)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
       '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.4))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
       '@norish/shared': file:packages/shared(913071686a4c067c0085145e5ce84d1a)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -15101,102 +15209,21 @@ snapshots:
 
   '@norish/shared-server@file:packages/shared-server(93d0cd9d506e674d14fc84c10506ebc4)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
       '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.4))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
       '@norish/shared': file:packages/shared(93d0cd9d506e674d14fc84c10506ebc4)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
-      cheerio: 1.2.0
-      fuse.js: 7.1.0
-      heic-convert: 2.1.0
-      ioredis: 5.10.1
-      jszip: 3.10.1
-      ollama: 0.6.3
-      pino: 10.3.1
-      pino-pretty: 13.1.3
-      sharp: 0.34.5
-      superjson: 2.2.6
-      tsdav: 2.2.1
-      uuid: 14.0.0
-      zod: 4.4.2
-    transitivePeerDependencies:
-      - '@aws-sdk/client-rds-data'
-      - '@better-fetch/fetch'
-      - '@cloudflare/workers-types'
-      - '@electric-sql/pglite'
-      - '@libsql/client'
-      - '@libsql/client-wasm'
-      - '@lynx-js/react'
-      - '@neondatabase/serverless'
-      - '@op-engineering/op-sqlite'
-      - '@opentelemetry/api'
-      - '@planetscale/database'
-      - '@prisma/client'
-      - '@sveltejs/kit'
-      - '@tanstack/react-start'
-      - '@tanstack/solid-start'
-      - '@tidbcloud/serverless'
-      - '@types/better-sqlite3'
-      - '@types/pg'
-      - '@types/sql.js'
-      - '@upstash/redis'
-      - '@vercel/postgres'
-      - '@xata.io/client'
-      - better-call
-      - better-sqlite3
-      - bun-types
-      - drizzle-kit
-      - drizzle-orm
-      - expo-sqlite
-      - gel
-      - jose
-      - knex
-      - kysely
-      - mongodb
-      - mysql2
-      - nanostores
-      - next
-      - pg
-      - pg-native
-      - postgres
-      - prisma
-      - react-dom
-      - solid-js
-      - sql.js
-      - sqlite3
-      - supports-color
-      - svelte
-      - typescript
-      - vitest
-      - vue
-
-  '@norish/shared-server@file:packages/shared-server(a6de409d231b782a610c50128ef68bf7)':
-    dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
-      '@norish/config': file:packages/config
-      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
-      '@norish/i18n': file:packages/i18n
-      '@norish/shared': file:packages/shared(a6de409d231b782a610c50128ef68bf7)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -15263,21 +15290,21 @@ snapshots:
 
   '@norish/shared-server@file:packages/shared-server(cd987126921ca94791f5e02dfadab497)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
       '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.3(react@19.2.3))(typescript@6.0.3)(vitest@4.1.2(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(jsdom@28.1.0(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.5.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
       '@norish/shared': file:packages/shared(cd987126921ca94791f5e02dfadab497)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -15344,21 +15371,21 @@ snapshots:
 
   '@norish/shared-server@file:packages/shared-server(e6ea26a4dd0c094e6a6ff35f2a5c805d)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.77(zod@4.4.2)
-      '@ai-sdk/azure': 3.0.64(zod@4.4.2)
-      '@ai-sdk/deepseek': 2.0.35(zod@4.4.2)
-      '@ai-sdk/google': 3.0.73(zod@4.4.2)
-      '@ai-sdk/groq': 3.0.39(zod@4.4.2)
-      '@ai-sdk/mistral': 3.0.36(zod@4.4.2)
-      '@ai-sdk/openai': 3.0.63(zod@4.4.2)
-      '@ai-sdk/openai-compatible': 2.0.47(zod@4.4.2)
-      '@ai-sdk/perplexity': 3.0.33(zod@4.4.2)
+      '@ai-sdk/anthropic': 3.0.105(zod@4.4.2)
+      '@ai-sdk/azure': 3.0.95(zod@4.4.2)
+      '@ai-sdk/deepseek': 2.0.51(zod@4.4.2)
+      '@ai-sdk/google': 3.0.103(zod@4.4.2)
+      '@ai-sdk/groq': 3.0.55(zod@4.4.2)
+      '@ai-sdk/mistral': 3.0.53(zod@4.4.2)
+      '@ai-sdk/openai': 3.0.90(zod@4.4.2)
+      '@ai-sdk/openai-compatible': 2.0.63(zod@4.4.2)
+      '@ai-sdk/perplexity': 3.0.49(zod@4.4.2)
       '@norish/config': file:packages/config
       '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.3(react@19.2.3))(typescript@6.0.3)(vitest@4.1.2(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(jsdom@28.1.0(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.5.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
       '@norish/i18n': file:packages/i18n
       '@norish/shared': file:packages/shared(e6ea26a4dd0c094e6a6ff35f2a5c805d)
-      ai: 6.0.180(zod@4.4.2)
-      ai-sdk-ollama: 3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
+      ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
       cheerio: 1.2.0
       fuse.js: 7.1.0
       heic-convert: 2.1.0
@@ -15423,20 +15450,20 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/shared@file:packages/shared(1d748b8ea3183e87b5d71d2e4eeb3453)':
+  '@norish/shared@file:packages/shared(23db0992bead7abe4f1f062cd2636648)':
     dependencies:
-      '@better-auth/api-key': 1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(9afe62cbcd30574cafff891548d3ba59))
+      '@better-auth/api-key': 1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(a8c74694eae9b49f9f2dedd3fb25218f))
       '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/utils': 0.4.0
       '@norish/config': file:packages/config
-      '@norish/db-schema': file:packages/db-schema(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
+      '@norish/db-schema': file:packages/db-schema(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
       '@tanstack/react-query': 5.100.11(react@19.2.3)
       '@trpc/client': 11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3)
       '@trpc/server': 11.17.0(typescript@6.0.3)
       '@trpc/tanstack-react-query': 11.17.0(@tanstack/react-query@5.100.11(react@19.2.3))(@trpc/client@11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.17.0(typescript@6.0.3))(react@19.2.3)(typescript@6.0.3)
-      better-auth: 1.5.4(9afe62cbcd30574cafff891548d3ba59)
+      better-auth: 1.5.4(a8c74694eae9b49f9f2dedd3fb25218f)
       date-fns: 4.1.0
-      drizzle-zod: 0.8.3(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))(zod@4.4.2)
+      drizzle-zod: 0.8.3(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))(zod@4.4.2)
       fraction.js: 5.3.4
       html-entities: 2.6.0
       jsonrepair: 3.14.0
@@ -15493,20 +15520,20 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/shared@file:packages/shared(23db0992bead7abe4f1f062cd2636648)':
+  '@norish/shared@file:packages/shared(4064310245c6ac30752af0c820199ba1)':
     dependencies:
-      '@better-auth/api-key': 1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(a8c74694eae9b49f9f2dedd3fb25218f))
+      '@better-auth/api-key': 1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(996f0b095b1be0ea614f172e24f5e0bd))
       '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/utils': 0.4.0
       '@norish/config': file:packages/config
-      '@norish/db-schema': file:packages/db-schema(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
+      '@norish/db-schema': file:packages/db-schema(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
       '@tanstack/react-query': 5.100.11(react@19.2.3)
       '@trpc/client': 11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3)
       '@trpc/server': 11.17.0(typescript@6.0.3)
       '@trpc/tanstack-react-query': 11.17.0(@tanstack/react-query@5.100.11(react@19.2.3))(@trpc/client@11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.17.0(typescript@6.0.3))(react@19.2.3)(typescript@6.0.3)
-      better-auth: 1.5.4(a8c74694eae9b49f9f2dedd3fb25218f)
+      better-auth: 1.5.4(996f0b095b1be0ea614f172e24f5e0bd)
       date-fns: 4.1.0
-      drizzle-zod: 0.8.3(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))(zod@4.4.2)
+      drizzle-zod: 0.8.3(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))(zod@4.4.2)
       fraction.js: 5.3.4
       html-entities: 2.6.0
       jsonrepair: 3.14.0
@@ -15703,6 +15730,76 @@ snapshots:
       - vitest
       - vue
 
+  '@norish/shared@file:packages/shared(88a916a6889055e5cc6502888c05a9d9)':
+    dependencies:
+      '@better-auth/api-key': 1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(37cbb9086a4af56aaf33d05ff8730c32))
+      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
+      '@better-auth/utils': 0.4.0
+      '@norish/config': file:packages/config
+      '@norish/db-schema': file:packages/db-schema(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
+      '@tanstack/react-query': 5.100.11(react@19.2.3)
+      '@trpc/client': 11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3)
+      '@trpc/server': 11.17.0(typescript@6.0.3)
+      '@trpc/tanstack-react-query': 11.17.0(@tanstack/react-query@5.100.11(react@19.2.3))(@trpc/client@11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.17.0(typescript@6.0.3))(react@19.2.3)(typescript@6.0.3)
+      better-auth: 1.5.4(37cbb9086a4af56aaf33d05ff8730c32)
+      date-fns: 4.1.0
+      drizzle-zod: 0.8.3(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))(zod@4.4.2)
+      fraction.js: 5.3.4
+      html-entities: 2.6.0
+      jsonrepair: 3.14.0
+      parse-ingredient: 2.2.0
+      react: 19.2.3
+      superjson: 2.2.6
+      zod: 4.4.2
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@better-fetch/fetch'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@lynx-js/react'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - better-call
+      - better-sqlite3
+      - bun-types
+      - drizzle-kit
+      - drizzle-orm
+      - expo-sqlite
+      - gel
+      - jose
+      - knex
+      - kysely
+      - mongodb
+      - mysql2
+      - nanostores
+      - next
+      - pg
+      - postgres
+      - prisma
+      - react-dom
+      - solid-js
+      - sql.js
+      - sqlite3
+      - svelte
+      - typescript
+      - vitest
+      - vue
+
   '@norish/shared@file:packages/shared(913071686a4c067c0085145e5ce84d1a)':
     dependencies:
       '@better-auth/api-key': 1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(63faf194be580384d7b8c4429352e971))
@@ -15787,76 +15884,6 @@ snapshots:
       better-auth: 1.5.4(eba62d6d60f7f5b422343d973f4400e1)
       date-fns: 4.1.0
       drizzle-zod: 0.8.3(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3)))(zod@4.4.2)
-      fraction.js: 5.3.4
-      html-entities: 2.6.0
-      jsonrepair: 3.14.0
-      parse-ingredient: 2.2.0
-      react: 19.2.3
-      superjson: 2.2.6
-      zod: 4.4.2
-    transitivePeerDependencies:
-      - '@aws-sdk/client-rds-data'
-      - '@better-fetch/fetch'
-      - '@cloudflare/workers-types'
-      - '@electric-sql/pglite'
-      - '@libsql/client'
-      - '@libsql/client-wasm'
-      - '@lynx-js/react'
-      - '@neondatabase/serverless'
-      - '@op-engineering/op-sqlite'
-      - '@opentelemetry/api'
-      - '@planetscale/database'
-      - '@prisma/client'
-      - '@sveltejs/kit'
-      - '@tanstack/react-start'
-      - '@tanstack/solid-start'
-      - '@tidbcloud/serverless'
-      - '@types/better-sqlite3'
-      - '@types/pg'
-      - '@types/sql.js'
-      - '@upstash/redis'
-      - '@vercel/postgres'
-      - '@xata.io/client'
-      - better-call
-      - better-sqlite3
-      - bun-types
-      - drizzle-kit
-      - drizzle-orm
-      - expo-sqlite
-      - gel
-      - jose
-      - knex
-      - kysely
-      - mongodb
-      - mysql2
-      - nanostores
-      - next
-      - pg
-      - postgres
-      - prisma
-      - react-dom
-      - solid-js
-      - sql.js
-      - sqlite3
-      - svelte
-      - typescript
-      - vitest
-      - vue
-
-  '@norish/shared@file:packages/shared(a6de409d231b782a610c50128ef68bf7)':
-    dependencies:
-      '@better-auth/api-key': 1.5.4(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.5.4(8e3c912eddaa5c38b42859e23189a005))
-      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
-      '@better-auth/utils': 0.4.0
-      '@norish/config': file:packages/config
-      '@norish/db-schema': file:packages/db-schema(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
-      '@tanstack/react-query': 5.100.11(react@19.2.3)
-      '@trpc/client': 11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3)
-      '@trpc/server': 11.17.0(typescript@6.0.3)
-      '@trpc/tanstack-react-query': 11.17.0(@tanstack/react-query@5.100.11(react@19.2.3))(@trpc/client@11.17.0(@trpc/server@11.17.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.17.0(typescript@6.0.3))(react@19.2.3)(typescript@6.0.3)
-      better-auth: 1.5.4(8e3c912eddaa5c38b42859e23189a005)
-      date-fns: 4.1.0
-      drizzle-zod: 0.8.3(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))(zod@4.4.2)
       fraction.js: 5.3.4
       html-entities: 2.6.0
       jsonrepair: 3.14.0
@@ -16293,14 +16320,14 @@ snapshots:
       - vitest
       - vue
 
-  '@norish/trpc@file:packages/trpc(69b5ac59844d4ce3e4e14212e70eb1bf)':
+  '@norish/trpc@file:packages/trpc(b546f45e3a0ca67c8cca16a6ebb679f9)':
     dependencies:
-      '@norish/auth': file:packages/auth(7c4f6116384db1e38a0ac87ceecda45a)
+      '@norish/auth': file:packages/auth(e5a216a63c643132a6abb8ed579ce151)
       '@norish/config': file:packages/config
-      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
-      '@norish/queue': file:packages/queue(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
-      '@norish/shared': file:packages/shared(a6de409d231b782a610c50128ef68bf7)
-      '@norish/shared-server': file:packages/shared-server(a6de409d231b782a610c50128ef68bf7)
+      '@norish/db': file:packages/db(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
+      '@norish/queue': file:packages/queue(@better-fetch/fetch@1.1.21)(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(better-call@1.3.5(zod@4.4.2))(drizzle-kit@0.31.10)(jose@6.2.2)(kysely@0.28.14)(mongodb@7.1.0)(mysql2@3.15.3)(nanostores@1.2.0)(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3))(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(react-dom@19.2.4(react@19.2.3))(typescript@6.0.3)(vitest@4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0)))
+      '@norish/shared': file:packages/shared(88a916a6889055e5cc6502888c05a9d9)
+      '@norish/shared-server': file:packages/shared-server(88a916a6889055e5cc6502888c05a9d9)
       '@trpc/server': 11.17.0(typescript@6.0.3)
       bullmq: 5.76.8
       ioredis: 5.10.1
@@ -18579,21 +18606,21 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai-sdk-ollama@3.8.4(ai@6.0.180(zod@4.4.2))(zod@4.4.2):
+  ai-sdk-ollama@3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2):
     dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
-      ai: 6.0.180(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
+      ai: 6.0.241(zod@4.4.2)
       jsonrepair: 3.14.0
       ollama: 0.6.3
     transitivePeerDependencies:
       - zod
 
-  ai@6.0.180(zod@4.4.2):
+  ai@6.0.241(zod@4.4.2):
     dependencies:
-      '@ai-sdk/gateway': 3.0.114(zod@4.4.2)
-      '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.2)
+      '@ai-sdk/gateway': 3.0.163(zod@4.4.2)
+      '@ai-sdk/provider': 3.0.14
+      '@ai-sdk/provider-utils': 4.0.41(zod@4.4.2)
       '@opentelemetry/api': 1.9.0
       zod: 4.4.2
 
@@ -18914,6 +18941,40 @@ snapshots:
     dependencies:
       tweetnacl: 0.14.5
 
+  better-auth@1.5.4(37cbb9086a4af56aaf33d05ff8730c32):
+    dependencies:
+      '@better-auth/core': 1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
+      '@better-auth/drizzle-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))
+      '@better-auth/kysely-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(kysely@0.28.14)
+      '@better-auth/memory-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)
+      '@better-auth/mongo-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(mongodb@7.1.0)
+      '@better-auth/prisma-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
+      '@better-auth/telemetry': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))
+      '@better-auth/utils': 0.3.1
+      '@better-fetch/fetch': 1.1.21
+      '@noble/ciphers': 2.1.1
+      '@noble/hashes': 2.0.1
+      better-call: 1.3.2(zod@4.4.2)
+      defu: 6.1.4
+      jose: 6.2.2
+      kysely: 0.28.14
+      nanostores: 1.2.0
+      zod: 4.4.2
+    optionalDependencies:
+      '@prisma/client': 7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3)
+      drizzle-kit: 0.31.10
+      drizzle-orm: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
+      mongodb: 7.1.0
+      mysql2: 3.15.3
+      next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      pg: 8.20.0
+      prisma: 7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
+      react: 19.2.3
+      react-dom: 19.2.4(react@19.2.3)
+      vitest: 4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0))
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+
   better-auth@1.5.4(4341aa8caff497266b30f93e399c4872):
     dependencies:
       '@better-auth/core': 1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
@@ -19041,7 +19102,7 @@ snapshots:
       drizzle-orm: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))
       mongodb: 7.1.0
       mysql2: 3.15.3
-      next: 16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       pg: 8.20.0
       prisma: 7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
       react: 19.2.3
@@ -19050,41 +19111,7 @@ snapshots:
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
 
-  better-auth@1.5.4(8e3c912eddaa5c38b42859e23189a005):
-    dependencies:
-      '@better-auth/core': 1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
-      '@better-auth/drizzle-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))
-      '@better-auth/kysely-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(kysely@0.28.14)
-      '@better-auth/memory-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)
-      '@better-auth/mongo-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(mongodb@7.1.0)
-      '@better-auth/prisma-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
-      '@better-auth/telemetry': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))
-      '@better-auth/utils': 0.3.1
-      '@better-fetch/fetch': 1.1.21
-      '@noble/ciphers': 2.1.1
-      '@noble/hashes': 2.0.1
-      better-call: 1.3.2(zod@4.4.2)
-      defu: 6.1.4
-      jose: 6.2.2
-      kysely: 0.28.14
-      nanostores: 1.2.0
-      zod: 4.4.2
-    optionalDependencies:
-      '@prisma/client': 7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3)
-      drizzle-kit: 0.31.10
-      drizzle-orm: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
-      mongodb: 7.1.0
-      mysql2: 3.15.3
-      next: 16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
-      pg: 8.20.0
-      prisma: 7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
-      react: 19.2.3
-      react-dom: 19.2.4(react@19.2.3)
-      vitest: 4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0))
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-
-  better-auth@1.5.4(9afe62cbcd30574cafff891548d3ba59):
+  better-auth@1.5.4(996f0b095b1be0ea614f172e24f5e0bd):
     dependencies:
       '@better-auth/core': 1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/drizzle-adapter': 1.5.4(@better-auth/core@1.5.4(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))
@@ -19109,7 +19136,7 @@ snapshots:
       drizzle-orm: 0.45.1(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
       mongodb: 7.1.0
       mysql2: 3.15.3
-      next: 16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
       pg: 8.20.0
       prisma: 7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
       react: 19.2.3
@@ -19280,7 +19307,7 @@ snapshots:
       drizzle-orm: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
       mongodb: 7.1.0
       mysql2: 3.15.3
-      next: 16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
       pg: 8.20.0
       prisma: 7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
       react: 19.2.3
@@ -19320,6 +19347,41 @@ snapshots:
       prisma: 7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
+      vitest: 4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0))
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+      - '@opentelemetry/api'
+
+  better-auth@1.6.9(38e4de29cf2d893a5a499664719db129):
+    dependencies:
+      '@better-auth/core': 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
+      '@better-auth/drizzle-adapter': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)))
+      '@better-auth/kysely-adapter': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(kysely@0.28.14)
+      '@better-auth/memory-adapter': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)
+      '@better-auth/mongo-adapter': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(mongodb@7.1.0)
+      '@better-auth/prisma-adapter': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
+      '@better-auth/telemetry': 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)
+      '@better-auth/utils': 0.4.0
+      '@better-fetch/fetch': 1.1.21
+      '@noble/ciphers': 2.1.1
+      '@noble/hashes': 2.0.1
+      better-call: 1.3.5(zod@4.4.2)
+      defu: 6.1.4
+      jose: 6.2.2
+      kysely: 0.28.14
+      nanostores: 1.2.0
+      zod: 4.4.2
+    optionalDependencies:
+      '@prisma/client': 7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3)
+      drizzle-kit: 0.31.10
+      drizzle-orm: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))(typescript@6.0.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3))
+      mongodb: 7.1.0
+      mysql2: 3.15.3
+      next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      pg: 8.20.0
+      prisma: 7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
+      react: 19.2.3
+      react-dom: 19.2.4(react@19.2.3)
       vitest: 4.1.6(@opentelemetry/api@1.9.0)(@types/node@25.7.0)(jsdom@29.1.1(@noble/hashes@2.0.1))(vite@7.3.1(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -22996,34 +23058,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
-    dependencies:
-      '@next/env': 16.2.4
-      '@swc/helpers': 0.5.15
-      baseline-browser-mapping: 2.10.31
-      caniuse-lite: 1.0.30001793
-      postcss: 8.4.31
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-      styled-jsx: 5.1.6(@babel/core@7.29.0)(react@19.2.4)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 16.2.4
-      '@next/swc-darwin-x64': 16.2.4
-      '@next/swc-linux-arm64-gnu': 16.2.4
-      '@next/swc-linux-arm64-musl': 16.2.4
-      '@next/swc-linux-x64-gnu': 16.2.4
-      '@next/swc-linux-x64-musl': 16.2.4
-      '@next/swc-win32-arm64-msvc': 16.2.4
-      '@next/swc-win32-x64-msvc': 16.2.4
-      '@opentelemetry/api': 1.9.0
-      '@playwright/test': 1.61.1
-      babel-plugin-react-compiler: 1.0.0
-      sharp: 0.34.5
-    transitivePeerDependencies:
-      - '@babel/core'
-      - babel-plugin-macros
-
-  next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3):
+  next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.3))(react@19.2.3):
     dependencies:
       '@next/env': 16.2.4
       '@swc/helpers': 0.5.15
@@ -23050,7 +23085,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  next@16.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.2.4
       '@swc/helpers': 0.5.15
@@ -23076,7 +23111,6 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
-    optional: true
 
   no-case@3.0.4:
     dependencies:
@@ -25195,6 +25229,10 @@ snapshots:
   undici-types@7.18.2: {}
 
   undici-types@7.21.0: {}
+
+  undici@5.29.0:
+    dependencies:
+      '@fastify/busboy': 2.1.1
 
   undici@7.24.6: {}
 

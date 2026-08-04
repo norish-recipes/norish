@@ -164,6 +164,9 @@ RUN find /app/packages -type d -name '__tests__' -exec rm -rf {} + 2>/dev/null; 
 ##############################
 FROM base AS ytdlp
 
+# Keep in step with DEFAULT_YT_DLP_VERSION in packages/config/src/zod/server-config.ts:
+# this is the binary the image actually ships, and that constant is the version
+# the server reports for it.
 ARG YT_DLP_VERSION=2026.07.04
 ARG TARGETARCH
 

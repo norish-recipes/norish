@@ -22,6 +22,7 @@ import { useTranslations } from "next-intl";
 
 import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import {
+  DEFAULT_YT_DLP_VERSION,
   isCloudTranscriptionProvider,
   ServerConfigKeys,
   transcriptionProviderNeedsEndpoint,
@@ -60,7 +61,9 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   const [maxVideoFileSizeMB, setMaxVideoFileSizeMB] = useState(
     videoConfig ? Math.round(videoConfig.maxVideoFileSize / (1024 * 1024)) : 100
   );
-  const [ytDlpVersion, setYtDlpVersion] = useState(videoConfig?.ytDlpVersion ?? "2025.11.12");
+  const [ytDlpVersion, setYtDlpVersion] = useState(
+    videoConfig?.ytDlpVersion ?? DEFAULT_YT_DLP_VERSION
+  );
   const [ytDlpProxy, setYtDlpProxy] = useState(videoConfig?.ytDlpProxy ?? "");
   const [transcriptionProvider, setTranscriptionProvider] = useState<TranscriptionProvider>(
     videoConfig?.transcriptionProvider ?? "disabled"

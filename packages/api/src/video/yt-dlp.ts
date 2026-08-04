@@ -269,6 +269,69 @@ export async function buildAuthArgs(
   return { args, cleanup };
 }
 
+/** The slice of yt-dlp's info dict this module reads. */
+export type YtDlpInfo = {
+  title?: string;
+  description?: string;
+  duration?: number | null;
+  thumbnail?: string;
+  uploader?: string;
+  channel?: string;
+  upload_date?: string;
+  language?: string;
+  vcodec?: string | null;
+  ext?: string;
+  formats?: { vcodec?: string | null }[];
+  entries?: YtDlpInfo[];
+};
+
+/** Extensions yt-dlp reports for the still images of a photo or carousel post. */
+const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "heic", "gif"]);
+
+function toInfo(rawInfo: unknown): YtDlpInfo {
+  if (Array.isArray(rawInfo)) return { entries: rawInfo as YtDlpInfo[] };
+
+  return (rawInfo ?? {}) as YtDlpInfo;
+}
+
+/**
+ * Whether an info dict describes something with an actual video stream.
+ *
+ * Undefined means yt-dlp said nothing either way. Callers must not read that
+ * silence as "no video": it is the normal answer for a playlist wrapper.
+ */
+export function hasVideoStream(info: YtDlpInfo): boolean | undefined {
+  if (typeof info.vcodec === "string") return info.vcodec !== "none";
+
+  if (Array.isArray(info.formats) && info.formats.length > 0) {
+    const known = info.formats.filter((format) => typeof format.vcodec === "string");
+
+    if (known.length > 0) return known.some((format) => format.vcodec !== "none");
+  }
+
+  if (typeof info.ext === "string") return !IMAGE_EXTENSIONS.has(info.ext.toLowerCase());
+
+  return undefined;
+}
+
+/**
+ * Collapse yt-dlp's answer to the entry that carries the media.
+ *
+ * The same reel comes back as the post itself, as a bare array, or wrapped in a
+ * playlist, depending on the yt-dlp version and which extractor path ran - and
+ * only the entry carries duration, uploader and thumbnail. Reading the wrapper
+ * instead leaves a reel looking durationless and authorless, which downstream
+ * mistook for an image post (#513). A carousel can mix stills and clips, so the
+ * clip wins when there is one.
+ */
+export function selectMediaEntry(info: YtDlpInfo): YtDlpInfo {
+  const entries = info.entries;
+
+  if (!Array.isArray(entries) || entries.length === 0) return info;
+
+  return entries.find((entry) => hasVideoStream(entry) === true) ?? entries[0] ?? {};
+}
+
 export async function getVideoMetadata(
   url: string,
   tokens?: SiteAuthTokenDecryptedDto[]
@@ -281,20 +344,23 @@ export async function getVideoMetadata(
   try {
     const proxyArgs = await getProxyArgs();
     const rawInfo = await ytDlpWrap.getVideoInfo([url, ...(auth?.args ?? []), ...proxyArgs]);
+    const container = toInfo(rawInfo);
+    const primary = selectMediaEntry(container);
 
-    // yt-dlp returns an array for Instagram carousel/image posts (one entry per image)
-    // For single videos, it returns an object directly
-    // Normalize to always work with the first/main entry
-    const info = Array.isArray(rawInfo) ? (rawInfo[0] ?? {}) : rawInfo;
+    // Read the media entry first and the wrapper second: a playlist carries the
+    // caption and title, but only the entry knows the duration and uploader.
+    const pick = <K extends keyof YtDlpInfo>(key: K): YtDlpInfo[K] =>
+      primary[key] ?? container[key];
 
     return {
-      title: info.title || "Untitled Video",
-      description: info.description || "",
-      duration: info.duration || 0,
-      thumbnail: info.thumbnail || "",
-      uploader: info.uploader || info.channel || undefined,
-      uploadDate: info.upload_date || undefined,
-      language: info.language || undefined,
+      title: pick("title") || "Untitled Video",
+      description: pick("description") || "",
+      duration: pick("duration") || 0,
+      thumbnail: pick("thumbnail") || "",
+      uploader: pick("uploader") || pick("channel") || undefined,
+      uploadDate: pick("upload_date") || undefined,
+      language: pick("language") || undefined,
+      hasVideoStream: hasVideoStream(primary) ?? hasVideoStream(container),
     };
   } catch (error: unknown) {
     log.error({ err: error }, "Failed to get video metadata");

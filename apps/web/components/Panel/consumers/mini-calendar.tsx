@@ -3,10 +3,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import Panel from "@/components/Panel/Panel";
+import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
 import { useRecipeQuery } from "@/hooks/recipes";
 import { ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { Button, Dropdown, Label, Separator } from "@heroui/react";
+import { Button, Separator } from "@heroui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -64,7 +65,7 @@ const DayRow = memo(function DayRow({
             {weekdayLong.format(date)}, {monthLong.format(date)} {date.getDate()}
           </div>
 
-          <Dropdown>
+          <SlotDropdown ariaLabel={addItemLabel} onSelectSlot={(slot) => onPlan(dateKeyStr, slot)}>
             <Button
               isIconOnly
               aria-label={addItemLabel}
@@ -74,26 +75,7 @@ const DayRow = memo(function DayRow({
             >
               <PlusIcon className="h-4 w-4" />
             </Button>
-            <Dropdown.Popover className="bg-overlay">
-              <Dropdown.Menu
-                aria-label="Choose slot"
-                onAction={(slot) => onPlan(dateKeyStr, slot as Slot)}
-              >
-                <Dropdown.Item key="Breakfast" id="Breakfast" textValue="Breakfast">
-                  <Label>{slotLabels.Breakfast}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Lunch" id="Lunch" textValue="Lunch">
-                  <Label>{slotLabels.Lunch}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Dinner" id="Dinner" textValue="Dinner">
-                  <Label>{slotLabels.Dinner}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Snack" id="Snack" textValue="Snack">
-                  <Label>{slotLabels.Snack}</Label>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown.Popover>
-          </Dropdown>
+          </SlotDropdown>
         </div>
 
         <Separator className="my-2" />

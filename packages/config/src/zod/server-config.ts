@@ -437,6 +437,20 @@ export function transcriptionProviderSupportsModelListing(
   return (TRANSCRIPTION_PROVIDERS_WITH_MODEL_LISTING as readonly string[]).includes(provider);
 }
 
+/**
+ * yt-dlp release Norish ships against.
+ *
+ * The single source for the `YT_DLP_VERSION` default, the seeded video config,
+ * and what the admin screen shows before the saved config arrives - a version
+ * quoted in one of those places and not the others is how the UI came to name a
+ * release the server had not used for two upgrades. The Docker build takes the
+ * same value through its `YT_DLP_VERSION` build arg and must be moved with it.
+ *
+ * Sites that break as a site changes (Instagram most of all) are fixed in yt-dlp
+ * releases, so this trails the newest release rather than leading it.
+ */
+export const DEFAULT_YT_DLP_VERSION = "2026.07.04";
+
 export const VideoConfigSchema = z.object({
   enabled: z.boolean(),
   maxLengthSeconds: z.number().int().positive(),

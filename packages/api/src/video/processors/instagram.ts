@@ -12,9 +12,18 @@ import { BaseVideoProcessor } from "../base-processor";
 
 /**
  * Check if metadata indicates an image post (no video content).
+ *
+ * yt-dlp's own answer about whether a video stream exists is the only signal
+ * worth trusting. A missing duration is not one: which reels report a duration
+ * varies by yt-dlp version and extractor path, and reading that silence as
+ * "image post" sent reels down the caption-only path, losing the video, the
+ * creator, and every reel whose caption is not a full recipe (#513).
+ *
+ * When yt-dlp reports nothing either way, this returns false so the post takes
+ * the video path — `process` falls back to the caption if that turns up empty.
  */
-function isImagePost(metadata: VideoMetadata): boolean {
-  return !metadata.duration || metadata.duration === 0;
+export function isImagePost(metadata: VideoMetadata): boolean {
+  return metadata.hasVideoStream === false;
 }
 
 /**
@@ -81,7 +90,20 @@ export class InstagramProcessor extends BaseVideoProcessor {
       return this.processImagePost(url, recipeId, metadata, tokens);
     }
 
-    return this.processVideoPost(url, recipeId, metadata, tokens);
+    if (metadata.hasVideoStream === true) {
+      return this.processVideoPost(url, recipeId, metadata, tokens);
+    }
+
+    // yt-dlp classified nothing, so the video path above is a guess. A post with
+    // no media to download is still importable from its caption, so give that a
+    // turn before failing the import.
+    try {
+      return await this.processVideoPost(url, recipeId, metadata, tokens);
+    } catch (err) {
+      log.info({ url, err }, "Unclassified Instagram post failed as video, trying caption");
+
+      return this.processImagePost(url, recipeId, metadata, tokens);
+    }
   }
 
   /**

@@ -677,7 +677,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         enabled: false,
         maxLengthSeconds: 120,
         maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
-        ytDlpVersion: "2026.07.04",
+        ytDlpVersion: SERVER_CONFIG.YT_DLP_VERSION,
         transcriptionProvider: "disabled",
         transcriptionModel: "whisper-1",
       };

@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { usePanel } from "@/components/Panel/Panel";
 import { Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -11,10 +12,22 @@ type SlotDropdownProps = {
 };
 export function SlotDropdown({ children, onSelectSlot, ariaLabel }: SlotDropdownProps) {
   const t = useTranslations("common.slots");
+  // Inside a Panel the menu has to live in the panel, or vaul's inert backdrop
+  // swallows every click on it (#511). Null outside a Panel, which leaves the
+  // default `<body>` container in place.
+  //
+  // UNSTABLE_portalContainer is React Aria's deprecated-but-supported escape
+  // hatch; its replacement, UNSAFE_PortalProvider, ships in `react-aria`, which
+  // react-aria-components does not share a module instance with here.
+  const { portalContainer } = usePanel();
+
   return (
     <Dropdown>
       {children}
-      <Dropdown.Popover className="bg-overlay">
+      <Dropdown.Popover
+        UNSTABLE_portalContainer={portalContainer ?? undefined}
+        className="bg-overlay"
+      >
         <Dropdown.Menu
           aria-label={ariaLabel ?? t("chooseSlot")}
           onAction={(slot) => onSelectSlot(slot as Slot)}

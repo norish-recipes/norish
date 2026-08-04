@@ -52,8 +52,8 @@ adjust AI settings at runtime in **Settings → Admin**.
 ## Recipe Enrichment
 
 Recipe Enrichment is the optional AI work that runs **after** a recipe is saved:
-auto-tagging, allergy detection, auto-categorization, nutrition estimation, and
-recipe provenance.
+auto-tagging, allergy detection, auto-categorization, nutrition estimation,
+recipe provenance, and ingredient linking.
 
 Importing and creating a recipe never depend on it. The recipe is saved first;
 enrichment is enrolled separately, and a disabled, unavailable, slow, or failing
@@ -71,6 +71,7 @@ every newly created recipe — manual entry and every import path alike.
 | **Auto-categorization**  | Sets meal categories on recipes that have none                      | Off     |
 | **Nutrition estimation** | Estimates calories, fat, carbs, and protein when none were supplied | Off     |
 | **Recipe Provenance**    | Works out the country, region, cuisines, and a short note           | Off     |
+| **Ingredient Linking**   | Links ingredient lines to the steps that have none                  | Off     |
 
 Enabling AI globally does not switch these on by itself — each is opt-in
 (except allergy detection, which keeps the behaviour of the setting it
@@ -92,6 +93,10 @@ never overwritten by automatic enrichment:
 - Any part of provenance — country, region, a cuisine, or the note — suppresses
   **automatic** provenance inference for the whole group. The note explains the
   whole claim, so it is never mixed with a value you set yourself.
+- Step ingredients are decided **per step**: a step you linked yourself is left
+  alone, and only steps with no links at all are filled. This holds for a run you
+  request by hand too. See
+  [Step ingredients](../recipes/step-ingredients.md#letting-ai-fill-the-gaps).
 - Empty and blank values do not count as supplied, so placeholders don't block
   useful enrichment.
 
@@ -145,9 +150,22 @@ the AI provider to extract the recipe. It requires AI to be enabled.
 | -------------------------- | ----------------------------------------- | ----------------------------------------- |
 | `VIDEO_PARSING_ENABLED`    | Enable the video parsing pipeline         | `false`                                   |
 | `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length             | `120`                                     |
-| `YT_DLP_VERSION`           | yt-dlp version used by downloader         | `2025.11.12`                              |
+| `YT_DLP_VERSION`           | yt-dlp version used by downloader         | `2026.07.04`                              |
 | `YT_DLP_BIN_DIR`           | Folder containing the yt-dlp binary       | `./.runtime/bin` (dev), `/app/bin` (prod) |
 | `YT_DLP_PROXY`             | HTTP/SOCKS proxy URL for yt-dlp downloads | (empty)                                   |
+
+### Photo posts and reels
+
+An Instagram or Facebook post with no video is imported from its caption alone,
+which only works when the caption holds the whole recipe. Norish decides which
+path to take by asking `yt-dlp` whether the post has a video stream.
+
+If reels import as photo posts on your instance, check which `yt-dlp` you are
+running first: a build too old for Instagram's current markup can fail to report
+the video at all. **Settings => Admin => AI & Processing => Video Processing**
+reports the version. The Docker image ships the binary named above and upgrading
+Norish upgrades it; a development install downloads whatever `YT_DLP_VERSION`
+names.
 
 ## Transcription
 

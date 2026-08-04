@@ -18,6 +18,7 @@ import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, GenerationSettings, ModelConfig } from "./types";
 import { createFetchWithTimeout } from "./ai-fetcher";
+import { withTemperatureFallback } from "./temperature-fallback";
 
 /**
  * Get configured AI models.
@@ -38,6 +39,26 @@ export async function getModels(): Promise<ModelConfig> {
  * Does not check if AI is enabled - use getModels() for guarded access.
  */
 export function createModelsFromConfig(config: {
+  provider: AIProvider;
+  model: string;
+  visionModel?: string;
+  endpoint?: string;
+  apiKey?: string;
+  timeoutMs?: number;
+}): ModelConfig {
+  const models = createProviderModels(config);
+
+  // Every AI feature passes the configured temperature. Providers drop it for
+  // the models they know; a model newer than the provider package, or one
+  // behind a generic endpoint, would otherwise fail rather than answer.
+  return {
+    ...models,
+    model: withTemperatureFallback(models.model),
+    visionModel: withTemperatureFallback(models.visionModel),
+  };
+}
+
+function createProviderModels(config: {
   provider: AIProvider;
   model: string;
   visionModel?: string;
