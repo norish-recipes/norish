@@ -1,0 +1,308 @@
+// @vitest-environment node
+/**
+ * What actually reaches each transcription provider.
+ *
+ * Transcription is tested at the provider-construction level: each provider is
+ * pointed at a local HTTP server (or, for the two whose base URL is fixed, a
+ * stubbed global fetch) and the assertion is that the request arrives at the
+ * correct URL in the correct shape. This is the regression net for moving
+ * transcription client construction into the provider module: the wire
+ * contract asserted here must survive the move.
+ */
+
+import type { AddressInfo } from "node:net";
+import { createServer, type IncomingMessage, type Server } from "node:http";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { VideoConfig } from "@norish/config/zod/server-config";
+
+const mockGetVideoConfig = vi.fn();
+const mockGetAIConfig = vi.fn();
+
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
+  getVideoConfig: mockGetVideoConfig,
+  getAIConfig: mockGetAIConfig,
+}));
+
+vi.mock("@norish/shared-server/logger", () => {
+  const logger = { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() };
+
+  return { aiLogger: logger, videoLogger: logger, createLogger: vi.fn(() => logger) };
+});
+
+const { transcribeAudio } = await import("@norish/api/ai/transcriber");
+
+interface CapturedRequest {
+  method: string;
+  url: string;
+  contentType: string;
+  body: Buffer;
+}
+
+let server: Server;
+let baseUrl: string;
+let captured: CapturedRequest[] = [];
+/** JSON body the local server answers with; set per test. */
+let reply: unknown = { text: "local transcript" };
+
+let audioPath: string;
+
+beforeAll(async () => {
+  const dir = mkdtempSync(join(tmpdir(), "norish-transcription-"));
+
+  audioPath = join(dir, "sample.mp3");
+  writeFileSync(audioPath, Buffer.from("not real audio, providers upload bytes verbatim"));
+
+  server = createServer((req: IncomingMessage, res) => {
+    const chunks: Buffer[] = [];
+
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", () => {
+      captured.push({
+        method: req.method ?? "",
+        url: req.url ?? "",
+        contentType: req.headers["content-type"] ?? "",
+        body: Buffer.concat(chunks),
+      });
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(reply));
+    });
+  });
+
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+});
+
+afterAll(async () => {
+  await new Promise<void>((resolve, reject) =>
+    server.close((err) => (err ? reject(err) : resolve()))
+  );
+});
+
+function videoConfig(overrides: Partial<VideoConfig>): VideoConfig {
+  return {
+    enabled: true,
+    maxLengthSeconds: 600,
+    maxVideoFileSize: 100_000_000,
+    transcriptionProvider: "openai",
+    transcriptionModel: "whisper-1",
+    ...overrides,
+  } as VideoConfig;
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  captured = [];
+  reply = { text: "local transcript" };
+  mockGetAIConfig.mockResolvedValue(null);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("transcription requests reach the provider correctly", () => {
+  it("generic-openai posts multipart form data to <endpoint>/v1/audio/transcriptions", async () => {
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: baseUrl,
+        transcriptionModel: "faster-whisper",
+      })
+    );
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toEqual({ success: true, data: "local transcript", usage: undefined });
+    expect(captured).toHaveLength(1);
+    expect(captured[0]!.method).toBe("POST");
+    expect(captured[0]!.url).toBe("/v1/audio/transcriptions");
+    expect(captured[0]!.contentType).toMatch(/^multipart\/form-data/);
+
+    const body = captured[0]!.body.toString("latin1");
+
+    expect(body).toContain('name="model"');
+    expect(body).toContain("faster-whisper");
+    expect(body).toContain('name="file"');
+  });
+
+  it("azure posts multipart form data under the endpoint's /openai path", async () => {
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "azure",
+        transcriptionEndpoint: baseUrl,
+        transcriptionApiKey: "azure-key",
+        transcriptionModel: "whisper-deployment",
+      })
+    );
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toEqual({ success: true, data: "local transcript", usage: undefined });
+    expect(captured).toHaveLength(1);
+    expect(captured[0]!.method).toBe("POST");
+    // The /openai path suffix is appended to the configured endpoint; the
+    // deployment travels in the form body, not the path.
+    expect(captured[0]!.url).toBe("/openai/audio/transcriptions");
+    expect(captured[0]!.contentType).toMatch(/^multipart\/form-data/);
+    expect(captured[0]!.body.toString("latin1")).toContain("whisper-deployment");
+  });
+
+  it("ollama posts JSON with base64 input_audio to <endpoint>/api/generate", async () => {
+    reply = { model: "whisper-audio", response: "ollama transcript", done: true };
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "ollama",
+        transcriptionEndpoint: `${baseUrl}/`,
+        transcriptionModel: "whisper-audio",
+      })
+    );
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toEqual({ success: true, data: "ollama transcript", usage: undefined });
+    expect(captured).toHaveLength(1);
+    expect(captured[0]!.method).toBe("POST");
+    // The trailing slash on the configured endpoint is stripped, not doubled.
+    expect(captured[0]!.url).toBe("/api/generate");
+    expect(captured[0]!.contentType).toMatch(/^application\/json/);
+
+    const body = JSON.parse(captured[0]!.body.toString()) as Record<string, unknown>;
+
+    expect(body.model).toBe("whisper-audio");
+    expect(body.stream).toBe(false);
+    expect(Array.isArray(body.input_audio)).toBe(true);
+
+    const [audio] = body.input_audio as { format: string; data: string }[];
+
+    expect(audio!.format).toBe("mp3");
+    expect(Buffer.from(audio!.data, "base64").toString()).toContain("not real audio");
+  });
+
+  it("openai posts multipart form data to api.openai.com with the bearer key", async () => {
+    const sent: { url: string; init?: RequestInit }[] = [];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+        sent.push({ url: String(url), init });
+
+        return new Response(JSON.stringify({ text: "openai transcript" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      })
+    );
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({ transcriptionProvider: "openai", transcriptionApiKey: "openai-key" })
+    );
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toEqual({ success: true, data: "openai transcript", usage: undefined });
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.url).toBe("https://api.openai.com/v1/audio/transcriptions");
+
+    const headers = new Headers(sent[0]!.init?.headers);
+
+    expect(headers.get("authorization")).toBe("Bearer openai-key");
+    expect(sent[0]!.init?.body).toBeInstanceOf(FormData);
+
+    const form = sent[0]!.init?.body as FormData;
+
+    expect(form.get("model")).toBe("whisper-1");
+    expect(form.get("file")).toBeInstanceOf(Blob);
+  });
+
+  it("groq posts multipart form data to api.groq.com with the bearer key", async () => {
+    const sent: { url: string; init?: RequestInit }[] = [];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+        sent.push({ url: String(url), init });
+
+        return new Response(JSON.stringify({ text: "groq transcript", x_groq: { id: "req_1" } }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      })
+    );
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "groq",
+        transcriptionApiKey: "groq-key",
+        transcriptionModel: "whisper-large-v3",
+      })
+    );
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toEqual({ success: true, data: "groq transcript", usage: undefined });
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.url).toContain("api.groq.com");
+    expect(sent[0]!.url).toContain("/audio/transcriptions");
+
+    const headers = new Headers(sent[0]!.init?.headers);
+
+    expect(headers.get("authorization")).toBe("Bearer groq-key");
+
+    const form = sent[0]!.init?.body as FormData;
+
+    expect(form.get("model")).toBe("whisper-large-v3");
+  });
+
+  it("falls back to the AI configuration's endpoint and key when transcription has none", async () => {
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: undefined,
+        transcriptionApiKey: undefined,
+      })
+    );
+    mockGetAIConfig.mockResolvedValue({ endpoint: baseUrl, apiKey: "ai-config-key" });
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toEqual({ success: true, data: "local transcript", usage: undefined });
+    expect(captured).toHaveLength(1);
+    expect(captured[0]!.url).toBe("/v1/audio/transcriptions");
+  });
+
+  it("reports an empty transcript instead of storing one", async () => {
+    reply = { text: "   " };
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: baseUrl,
+      })
+    );
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toMatchObject({ success: false, code: "EMPTY_RESPONSE" });
+  });
+
+  it("refuses without a provider call when video parsing is disabled", async () => {
+    mockGetVideoConfig.mockResolvedValue(videoConfig({ enabled: false }));
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toMatchObject({ success: false, code: "AI_DISABLED" });
+    expect(captured).toHaveLength(0);
+  });
+
+  it("refuses a cloud provider without an API key", async () => {
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({ transcriptionProvider: "openai", transcriptionApiKey: undefined })
+    );
+
+    const result = await transcribeAudio(audioPath);
+
+    expect(result).toMatchObject({ success: false, code: "AUTH_ERROR" });
+    expect(captured).toHaveLength(0);
+  });
+});
