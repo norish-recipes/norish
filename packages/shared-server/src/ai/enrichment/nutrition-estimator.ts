@@ -12,8 +12,8 @@ import {
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { NutritionEstimate } from "./schemas/nutrition.schema";
-import { nutritionEstimationSchema } from "./schemas/nutrition.schema";
+import type { NutritionEstimate } from "./nutrition.schema";
+import { nutritionEstimationSchema } from "./nutrition.schema";
 
 // Re-export type for consumers
 export type { NutritionEstimate };

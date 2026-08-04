@@ -10,11 +10,12 @@
  * contract asserted here must survive the move.
  */
 
-import type { AddressInfo } from "node:net";
-import { createServer, type IncomingMessage, type Server } from "node:http";
 import { mkdtempSync, writeFileSync } from "node:fs";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { IncomingMessage, Server } from "node:http";
+import type { AddressInfo } from "node:net";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { VideoConfig } from "@norish/config/zod/server-config";
@@ -33,7 +34,7 @@ vi.mock("@norish/shared-server/logger", () => {
   return { aiLogger: logger, videoLogger: logger, createLogger: vi.fn(() => logger) };
 });
 
-const { transcribeAudio } = await import("@norish/api/ai/transcriber");
+const { transcribeAudio } = await import("@norish/api/video/transcriber");
 
 interface CapturedRequest {
   method: string;

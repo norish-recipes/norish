@@ -10,61 +10,6 @@ export interface QueueParseRecipeResult {
   usedAI: boolean;
 }
 
-export interface QueueNutritionEstimate {
-  calories: number;
-  fat: number;
-  carbs: number;
-  protein: number;
-}
-
-export interface QueueRecipeSummary {
-  title: string;
-  description: string | null;
-  ingredients: string[];
-}
-
-/**
- * The whole Recipe Provenance claim from one AI request, with Cuisines already
- * resolved to vocabulary row ids. The worker never sees proposed names.
- */
-export interface QueueProvenanceInference {
-  originCountry: string | null;
-  originCountryName: string | null;
-  originRegion: string | null;
-  provenanceNote: string;
-  cuisineIds: string[];
-}
-
-/** One step's inferred Step Ingredients, in row-order space, system-agnostic. */
-export interface QueueStepIngredientLinks {
-  stepOrder: number;
-  refs: { ingredientOrder: number; share: number; order: number }[];
-}
-
-export interface QueueIngredientLinkingInference {
-  links: QueueStepIngredientLinks[];
-}
-
-export interface QueueLinkableIngredientLine {
-  order: number;
-  text: string;
-  /** The line's numeric amount, for turning a stated amount into a share. */
-  amount: number | null;
-  isHeading: boolean;
-}
-
-export interface QueueLinkableStep {
-  order: number;
-  text: string;
-  isHeading: boolean;
-}
-
-export interface QueueRecipeForIngredientLinking {
-  title: string;
-  ingredients: QueueLinkableIngredientLine[];
-  steps: QueueLinkableStep[];
-}
-
 export interface QueueSyncResult {
   uid: string;
   isNew: boolean;
@@ -75,6 +20,13 @@ export interface QueueMediaCleanupResult {
   errors: number;
 }
 
+/**
+ * The api-layer operations the queue workers call without importing
+ * `@norish/api` — extraction and parsing are import-pipeline features, and
+ * CalDAV sync and media cleanup are server concerns. Recipe Enrichment is
+ * deliberately absent: those features live in `@norish/shared-server`, which
+ * the queue imports directly.
+ */
 export interface QueueApiHandlers {
   extractRecipeNodesFromJsonValue(input: unknown): Record<string, unknown>[];
   normalizeRecipeFromJson(json: unknown, recipeId: string): Promise<FullRecipeInsertDTO | null>;
@@ -96,25 +48,6 @@ export interface QueueApiHandlers {
     recipeId: string,
     files: ImageImportFile[]
   ): Promise<AIResult<FullRecipeInsertDTO>>;
-  estimateNutritionFromIngredients(
-    recipeName: string,
-    servings: number,
-    ingredients: Array<{
-      ingredientName: string;
-      amount: number | null;
-      unit: string | null;
-    }>
-  ): Promise<AIResult<QueueNutritionEstimate>>;
-  generateTagsForRecipe(recipe: QueueRecipeSummary): Promise<AIResult<string[]>>;
-  categorizeRecipe(recipe: QueueRecipeSummary): Promise<AIResult<RecipeCategory[]>>;
-  detectAllergiesInRecipe(
-    recipe: QueueRecipeSummary,
-    allergiesToDetect: string[]
-  ): Promise<AIResult<string[]>>;
-  inferRecipeProvenance(recipe: QueueRecipeSummary): Promise<AIResult<QueueProvenanceInference>>;
-  inferStepIngredients(
-    recipe: QueueRecipeForIngredientLinking
-  ): Promise<AIResult<QueueIngredientLinkingInference>>;
   syncPlannedItem(
     userId: string,
     itemId: string,

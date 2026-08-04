@@ -36,12 +36,8 @@ vi.mock("@norish/db/repositories/recipe-enrichment", () => ({
   addStepIngredientsToBareSteps: mocks.addStepIngredientsToBareSteps,
 }));
 
-vi.mock("@norish/queue/api-handlers", () => ({
-  requireQueueApiHandler: (name: string) => {
-    if (name !== "inferStepIngredients") throw new Error(`Unexpected handler: ${name}`);
-
-    return mocks.inferStepIngredients;
-  },
+vi.mock("@norish/shared-server/ai/enrichment/ingredient-linking-inferrer", () => ({
+  inferStepIngredients: mocks.inferStepIngredients,
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({

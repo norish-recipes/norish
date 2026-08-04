@@ -13,14 +13,14 @@ import {
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { RecipeExtractionOutput } from "./schemas/recipe.schema";
+import type { RecipeExtractionOutput } from "./extraction.schema";
 import {
   getExtractionLogContext,
   normalizeExtractionOutput,
   validateExtractionOutput,
-} from "./features/recipe-extraction/normalizer";
-import { buildImageExtractionPrompt } from "./prompts/builder";
-import { recipeExtractionSchema } from "./schemas/recipe.schema";
+} from "./extraction-normalizer";
+import { buildImageExtractionPrompt } from "./extraction-prompts";
+import { recipeExtractionSchema } from "./extraction.schema";
 
 // Re-export type for consumers
 export type { RecipeExtractionOutput };

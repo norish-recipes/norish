@@ -53,11 +53,11 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   downloadImage: boundary.downloadImage,
 }));
 
-vi.mock("@norish/api/ai/transcriber", () => ({ transcribeAudio: boundary.transcribeAudio }));
+vi.mock("@norish/api/video/transcriber", () => ({ transcribeAudio: boundary.transcribeAudio }));
 vi.mock("@norish/api/video/normalizer", () => ({
   extractRecipeFromVideo: boundary.extractRecipeFromVideo,
 }));
-vi.mock("@norish/api/ai/recipe-parser", () => ({
+vi.mock("@norish/api/parser/recipe-extraction", () => ({
   extractRecipeWithAI: boundary.extractRecipeWithAI,
 }));
 vi.mock("@norish/api/parser/fetch", () => ({ fetchViaPlaywright: boundary.fetchViaPlaywright }));

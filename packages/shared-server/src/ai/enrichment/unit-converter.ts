@@ -5,16 +5,34 @@ import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 import { RecipeIngredientInputSchema, StepStepSchema } from "@norish/shared/contracts/zod";
 
-import type { ConversionOutput } from "./schemas/conversion.schema";
-import type { AIResult } from "./types/result";
-import { normalizeIngredient, normalizeStep } from "./helpers";
-import { fillPrompt, loadPrompt } from "./prompts/loader";
-import { getGenerationSettings, getModels } from "./providers";
-import { conversionSchema } from "./schemas/conversion.schema";
-import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./types/result";
+import type { AIResult } from "../types/result";
+import type { ConversionOutput } from "./conversion.schema";
+import { fillPrompt, loadPrompt } from "../prompts/loader";
+import { getGenerationSettings, getModels } from "../providers";
+import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "../types/result";
+import { conversionSchema } from "./conversion.schema";
 
 // Re-export types for consumers
 export type { ConversionOutput };
+
+function normalizeIngredient(i: any, system: MeasurementSystem) {
+  return {
+    ingredientId: null,
+    ingredientName: String(i.ingredientName || "").trim(),
+    order: i.order ?? 0,
+    amount: i.amount == null ? null : Number(i.amount),
+    unit: i.unit ? String(i.unit).trim() : null,
+    systemUsed: system,
+  };
+}
+
+function normalizeStep(s: any, system: MeasurementSystem) {
+  return {
+    step: String(s.step || "").trim(),
+    order: s.order ?? 0,
+    systemUsed: system,
+  };
+}
 
 export interface ConversionResult {
   ingredients: ReturnType<typeof normalizeIngredient>[];

@@ -10,8 +10,8 @@
 import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { inferRecipeProvenance } from "@norish/api/ai/provenance-inferrer";
 import { createCuisines, listCuisines } from "@norish/db/repositories/cuisines";
+import { inferRecipeProvenance } from "@norish/shared-server/ai/enrichment/provenance-inferrer";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 import { getCuisineStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 

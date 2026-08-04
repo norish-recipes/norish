@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { recipeExtractionSchema } from "@norish/api/ai/schemas/recipe.schema";
+import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
 
 // Anthropic's Messages API validates tool input_schema property keys against
 // this pattern and rejects the whole request on any mismatch, which breaks

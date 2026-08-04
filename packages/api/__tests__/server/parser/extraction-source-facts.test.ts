@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { recipeExtractionSchema } from "@norish/api/ai/schemas/recipe.schema";
+import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
 import { loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 
 vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
@@ -8,14 +8,8 @@ vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
   fillPrompt: vi.fn(),
 }));
 
-vi.mock("@norish/db/repositories/tags", () => ({ listAllTagNames: vi.fn() }));
-
-vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  getTagStrategy: vi.fn().mockResolvedValue("freeform"),
-}));
-
 const { buildImageExtractionPrompt, buildRecipeExtractionPrompt, buildVideoExtractionPrompt } =
-  await import("@norish/api/ai/prompts/builder");
+  await import("@norish/api/parser/extraction-prompts");
 
 /** A recognizable stand-in so we can tell base prompt from appended instructions. */
 const BASE_PROMPT = "BASE EXTRACTION PROMPT";

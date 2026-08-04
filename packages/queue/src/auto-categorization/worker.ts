@@ -8,7 +8,7 @@
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { replaceRecipeCategories } from "@norish/db/repositories/recipe-enrichment";
-import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { categorizeRecipe } from "@norish/shared-server/ai/enrichment/auto-categorizer";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
@@ -25,7 +25,6 @@ const autoCategorizationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
   QUEUE_NAMES.AUTO_CATEGORIZATION,
   (job) =>
     runEnrichmentJob(job, async (recipe) => {
-      const categorizeRecipe = requireQueueApiHandler("categorizeRecipe");
       const result = await categorizeRecipe(toRecipeSummary(recipe));
 
       if (!result.success) {

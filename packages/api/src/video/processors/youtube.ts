@@ -1,6 +1,6 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { transcribeAudio } from "@norish/api/ai/transcriber";
 import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
+import { transcribeAudio } from "@norish/api/video/transcriber";
 import { downloadCaptions, parseVttFile } from "@norish/api/video/yt-dlp";
 import { videoLogger as log } from "@norish/shared-server/logger";
 

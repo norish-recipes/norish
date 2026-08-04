@@ -6,9 +6,9 @@ import {
   getExtractionLogContext,
   normalizeExtractionOutput,
   validateExtractionOutput,
-} from "@norish/api/ai/features/recipe-extraction/normalizer";
-import { buildVideoExtractionPrompt } from "@norish/api/ai/prompts/builder";
-import { recipeExtractionSchema } from "@norish/api/ai/schemas/recipe.schema";
+} from "@norish/api/parser/extraction-normalizer";
+import { buildVideoExtractionPrompt } from "@norish/api/parser/extraction-prompts";
+import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
 import {
   aiError,

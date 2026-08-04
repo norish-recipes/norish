@@ -2,7 +2,6 @@ import { generateText, Output } from "ai";
 
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { extractSanitizedBody } from "@norish/shared-server/ai/helpers";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
 import {
   aiError,
@@ -13,15 +12,16 @@ import {
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { RecipeExtractionOutput } from "./schemas/recipe.schema";
-import { extractImageCandidates } from "../parser/parsers";
+import type { RecipeExtractionOutput } from "./extraction.schema";
 import {
   getExtractionLogContext,
   normalizeExtractionOutput,
   validateExtractionOutput,
-} from "./features/recipe-extraction/normalizer";
-import { buildRecipeExtractionPrompt } from "./prompts/builder";
-import { recipeExtractionSchema } from "./schemas/recipe.schema";
+} from "./extraction-normalizer";
+import { buildRecipeExtractionPrompt } from "./extraction-prompts";
+import { extractSanitizedBody } from "./extraction-sanitizer";
+import { recipeExtractionSchema } from "./extraction.schema";
+import { extractImageCandidates } from "./parsers";
 
 // Re-export type for consumers
 export type { RecipeExtractionOutput };

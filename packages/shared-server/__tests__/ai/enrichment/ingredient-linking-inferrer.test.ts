@@ -12,7 +12,7 @@
 import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { inferStepIngredients } from "@norish/api/ai/ingredient-linking-inferrer";
+import { inferStepIngredients } from "@norish/shared-server/ai/enrichment/ingredient-linking-inferrer";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 

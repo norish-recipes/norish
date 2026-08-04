@@ -1,19 +1,13 @@
-import { detectAllergiesInRecipe } from "@norish/api/ai/allergy-detector";
-import { categorizeRecipe } from "@norish/api/ai/auto-categorizer";
-import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
-import { extractRecipeFromImages } from "@norish/api/ai/image-recipe-parser";
-import { inferStepIngredients } from "@norish/api/ai/ingredient-linking-inferrer";
-import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
-import { inferRecipeProvenance } from "@norish/api/ai/provenance-inferrer";
-import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import {
   deletePlannedItem,
   syncPlannedItem,
   truncateErrorMessage,
 } from "@norish/api/caldav/sync-manager";
 import { parseRecipeFromUrl } from "@norish/api/parser";
+import { extractRecipeFromImages } from "@norish/api/parser/image-extraction";
 import { extractRecipeNodesFromJsonValue } from "@norish/api/parser/jsonld";
 import { normalizeRecipeFromJson, parseCategories, parseTags } from "@norish/api/parser/normalize";
+import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
 import {
   cleanupOrphanedAvatars,
   cleanupOrphanedImages,
@@ -31,12 +25,6 @@ export function registerApiHandlersForQueue(): void {
     extractRecipeWithAI,
     parseRecipeFromUrl,
     extractRecipeFromImages,
-    estimateNutritionFromIngredients,
-    generateTagsForRecipe,
-    categorizeRecipe,
-    detectAllergiesInRecipe,
-    inferRecipeProvenance,
-    inferStepIngredients,
     syncPlannedItem,
     deletePlannedItem,
     truncateErrorMessage,

@@ -19,7 +19,7 @@ const mockServerConfig = {
   YT_DLP_VERSION: "2025.11.12",
 };
 
-vi.mock("@norish/api/ai/recipe-parser", () => ({
+vi.mock("@norish/api/parser/recipe-extraction", () => ({
   extractRecipeWithAI: mockExtractRecipeWithAI,
 }));
 

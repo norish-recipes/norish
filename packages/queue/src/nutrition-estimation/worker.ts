@@ -8,7 +8,7 @@
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { replaceRecipeNutrition } from "@norish/db/repositories/recipe-enrichment";
-import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { estimateNutritionFromIngredients } from "@norish/shared-server/ai/enrichment/nutrition-estimator";
 import { createLogger } from "@norish/shared-server/logger";
 import { hasSubstantiveNutrition } from "@norish/shared/lib/recipe-enrichment";
 
@@ -22,10 +22,6 @@ const nutritionEstimationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
   QUEUE_NAMES.NUTRITION_ESTIMATION,
   (job) =>
     runEnrichmentJob(job, async (recipe) => {
-      const estimateNutritionFromIngredients = requireQueueApiHandler(
-        "estimateNutritionFromIngredients"
-      );
-
       const result = await estimateNutritionFromIngredients(
         recipe.name,
         recipe.servings ?? 1,

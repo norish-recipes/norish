@@ -514,7 +514,7 @@ const convertMeasurements = authedProcedure
         if (recipe === null) return null;
 
         // Convert with AI
-        return import("@norish/shared-server/ai/unit-converter")
+        return import("@norish/shared-server/ai/enrichment/unit-converter")
           .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
           .then((result) => {
             if (!result.success) {

@@ -15,10 +15,10 @@
 
 import type { Job } from "bullmq";
 
-import type { QueueRecipeForIngredientLinking } from "@norish/queue/api-handlers";
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
+import type { RecipeForIngredientLinking } from "@norish/shared-server/ai/enrichment/ingredient-linking-inferrer";
 import { addStepIngredientsToBareSteps } from "@norish/db/repositories/recipe-enrichment";
-import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { inferStepIngredients } from "@norish/shared-server/ai/enrichment/ingredient-linking-inferrer";
 import { createLogger } from "@norish/shared-server/logger";
 import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 
@@ -36,7 +36,7 @@ type RecipeForLinking = Parameters<Parameters<typeof runEnrichmentJob>[1]>[0];
  * neither offers nor accepts them. Line amounts ride along numerically so a
  * claim that states an amount can be turned into a share of its line.
  */
-export function toLinkableRecipe(recipe: RecipeForLinking): QueueRecipeForIngredientLinking {
+export function toLinkableRecipe(recipe: RecipeForLinking): RecipeForIngredientLinking {
   const system = recipe.systemUsed;
 
   return {
@@ -68,7 +68,6 @@ export async function processIngredientLinkingJob(
   job: Job<RecipeEnrichmentJobData>
 ): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
-    const inferStepIngredients = requireQueueApiHandler("inferStepIngredients");
     const result = await inferStepIngredients(toLinkableRecipe(recipe));
 
     if (!result.success) {

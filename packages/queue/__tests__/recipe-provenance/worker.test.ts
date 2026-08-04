@@ -34,12 +34,8 @@ vi.mock("@norish/db/repositories/recipe-enrichment", () => ({
   replaceRecipeProvenance: mocks.replaceRecipeProvenance,
 }));
 
-vi.mock("@norish/queue/api-handlers", () => ({
-  requireQueueApiHandler: (name: string) => {
-    if (name !== "inferRecipeProvenance") throw new Error(`Unexpected handler: ${name}`);
-
-    return mocks.inferRecipeProvenance;
-  },
+vi.mock("@norish/shared-server/ai/enrichment/provenance-inferrer", () => ({
+  inferRecipeProvenance: mocks.inferRecipeProvenance,
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({

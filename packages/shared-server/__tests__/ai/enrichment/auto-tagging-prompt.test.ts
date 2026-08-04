@@ -9,8 +9,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buildAutoTaggingPrompt } from "@norish/api/ai/prompts/builder";
 import { listAllTagNames } from "@norish/db/repositories/tags";
+import { buildAutoTaggingPrompt } from "@norish/shared-server/ai/enrichment/auto-tagging-prompt";
 import { loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 

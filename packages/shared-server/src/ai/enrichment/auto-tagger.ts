@@ -12,10 +12,10 @@ import {
 import { getTagStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { RecipeForTagging } from "./prompts/builder";
-import type { AutoTaggingOutput } from "./schemas/auto-tagging.schema";
-import { buildAutoTaggingPrompt } from "./prompts/builder";
-import { autoTaggingSchema } from "./schemas/auto-tagging.schema";
+import type { RecipeForTagging } from "./auto-tagging-prompt";
+import type { AutoTaggingOutput } from "./auto-tagging.schema";
+import { buildAutoTaggingPrompt } from "./auto-tagging-prompt";
+import { autoTaggingSchema } from "./auto-tagging.schema";
 
 // Re-export types for consumers
 export type { AutoTaggingOutput, RecipeForTagging };

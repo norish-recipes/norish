@@ -3,13 +3,13 @@
  */
 import { describe, expect, it, vi } from "vitest";
 
-import type { RecipeExtractionOutput } from "@norish/api/ai/schemas/recipe.schema";
+import type { RecipeExtractionOutput } from "@norish/api/parser/extraction.schema";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import {
   getExtractionLogContext,
   normalizeExtractionOutput,
   validateExtractionOutput,
-} from "@norish/api/ai/features/recipe-extraction/normalizer";
+} from "@norish/api/parser/extraction-normalizer";
 
 // Mock the normalizeExtractionOutput dependencies for isolation
 vi.mock("@norish/api/parser/normalize", () => ({

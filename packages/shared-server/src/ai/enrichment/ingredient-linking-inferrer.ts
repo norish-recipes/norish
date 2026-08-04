@@ -27,7 +27,7 @@ import {
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import { ingredientLinkingSchema } from "./schemas/ingredient-linking.schema";
+import { ingredientLinkingSchema } from "./ingredient-linking.schema";
 
 export interface IngredientLineForLinking {
   /** The line's order within its measurement system — the reference key. */

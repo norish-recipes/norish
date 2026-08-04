@@ -8,8 +8,8 @@
 import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
 import { listAllTagNames } from "@norish/db/repositories/tags";
+import { generateTagsForRecipe } from "@norish/shared-server/ai/enrichment/auto-tagger";
 import { getTagStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 
 // Mock dependencies - vi.mock is hoisted by Vitest

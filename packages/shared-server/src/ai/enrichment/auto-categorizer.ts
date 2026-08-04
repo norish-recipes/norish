@@ -10,9 +10,10 @@ import {
   getErrorMessage,
   mapErrorToCode,
 } from "@norish/shared-server/ai/types/result";
-import { matchCategory } from "@norish/shared-server/ai/utils/category-matcher";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
+
+import { matchCategory } from "./category-matcher";
 
 const autoCategorizationSchema = z
   .object({

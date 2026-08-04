@@ -34,7 +34,7 @@ import { getCuisineStrategy, isAIEnabled } from "@norish/shared-server/config/se
 import { aiLogger } from "@norish/shared-server/logger";
 import { resolveCuisines } from "@norish/shared/lib/cuisine-resolver";
 
-import { buildProvenanceSchema } from "./schemas/provenance.schema";
+import { buildProvenanceSchema } from "./provenance.schema";
 
 export interface RecipeForProvenance {
   title: string;
