@@ -45,6 +45,25 @@ export function usePanel() {
   return useContext(PanelContext);
 }
 
+/**
+ * The container an overlay opened inside a Panel must portal into.
+ *
+ * Undefined outside a Panel, which leaves the default `<body>` container in
+ * place. Verified in a real browser at a phone-sized viewport: with a Panel
+ * open, `<body>` computes `pointer-events: none` and every popover portalled
+ * there inherits it — a menu, a select and a date picker alike all render and
+ * swallow every tap (#511). Portalling into the panel puts them back under
+ * vaul's own `pointer-events: auto`.
+ *
+ * `UNSTABLE_portalContainer` is React Aria's deprecated-but-supported escape
+ * hatch. Its replacement, `UNSAFE_PortalProvider`, ships in `react-aria`, which
+ * `react-aria-components` does not share a module instance with here — so
+ * "modernising" this swaps a working prop for a silently ignored one.
+ */
+export function usePanelPortalContainer(): HTMLElement | undefined {
+  return usePanel().portalContainer ?? undefined;
+}
+
 type PanelSectionProps = {
   children: ReactNode;
   className?: string;

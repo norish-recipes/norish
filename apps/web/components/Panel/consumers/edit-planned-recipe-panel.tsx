@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
-import { Panel } from "@/components/Panel/Panel";
+import { Panel, usePanelPortalContainer } from "@/components/Panel/Panel";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -92,72 +92,12 @@ export function EditPlannedRecipePanel({
           </div>
         </Link>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DatePicker
-            isRequired
-            className="w-full"
-            name="planned-recipe-date"
-            value={selectedDate}
-            onChange={(d) => d && setSelectedDate(d)}
-          >
-            <Label>{t("date")}</Label>
-            <DateField.Group fullWidth variant="secondary">
-              <DateField.Input>
-                {(segment) => <DateField.Segment segment={segment} />}
-              </DateField.Input>
-              <DateField.Suffix>
-                <DatePicker.Trigger>
-                  <DatePicker.TriggerIndicator />
-                </DatePicker.Trigger>
-              </DateField.Suffix>
-            </DateField.Group>
-            <DatePicker.Popover>
-              <Calendar aria-label={t("date")}>
-                <Calendar.Header>
-                  <Calendar.YearPickerTrigger>
-                    <Calendar.YearPickerTriggerHeading />
-                    <Calendar.YearPickerTriggerIndicator />
-                  </Calendar.YearPickerTrigger>
-                  <Calendar.NavButton slot="previous" />
-                  <Calendar.NavButton slot="next" />
-                </Calendar.Header>
-                <Calendar.Grid>
-                  <Calendar.GridHeader>
-                    {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
-                  </Calendar.GridHeader>
-                  <Calendar.GridBody>{(date) => <Calendar.Cell date={date} />}</Calendar.GridBody>
-                </Calendar.Grid>
-                <Calendar.YearPickerGrid>
-                  <Calendar.YearPickerGridBody>
-                    {({ year }) => <Calendar.YearPickerCell year={year} />}
-                  </Calendar.YearPickerGridBody>
-                </Calendar.YearPickerGrid>
-              </Calendar>
-            </DatePicker.Popover>
-          </DatePicker>
-          <Select
-            className="w-full"
-            value={selectedSlot}
-            variant="secondary"
-            onChange={(value) => handleSlotChange(value)}
-          >
-            <Label>{t("slot")}</Label>
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {SLOTS.map((s) => (
-                  <ListBox.Item key={s} id={s} textValue={tSlots(s.toLowerCase())}>
-                    {tSlots(s.toLowerCase())}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
-        </div>
+        <DateAndSlotFields
+          selectedDate={selectedDate}
+          selectedSlot={selectedSlot}
+          onSelectDate={setSelectedDate}
+          onSelectSlot={handleSlotChange}
+        />
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup>
@@ -171,5 +111,92 @@ export function EditPlannedRecipePanel({
         </ActionButtonGroup>
       </Panel.Footer>
     </Panel>
+  );
+}
+
+/**
+ * Its own component so the portal container is read from inside the Panel — a
+ * hook called in the Panel's parent sees no panel at all.
+ */
+function DateAndSlotFields({
+  selectedDate,
+  selectedSlot,
+  onSelectDate,
+  onSelectSlot,
+}: {
+  selectedDate: DateValue;
+  selectedSlot: Slot;
+  onSelectDate: (date: DateValue) => void;
+  onSelectSlot: (value: Key | null) => void;
+}) {
+  const t = useTranslations("calendar.editPlannedRecipe");
+  const tSlots = useTranslations("common.slots");
+  const portalContainer = usePanelPortalContainer();
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <DatePicker
+        isRequired
+        className="w-full"
+        name="planned-recipe-date"
+        value={selectedDate}
+        onChange={(d) => d && onSelectDate(d)}
+      >
+        <Label>{t("date")}</Label>
+        <DateField.Group fullWidth variant="secondary">
+          <DateField.Input>{(segment) => <DateField.Segment segment={segment} />}</DateField.Input>
+          <DateField.Suffix>
+            <DatePicker.Trigger>
+              <DatePicker.TriggerIndicator />
+            </DatePicker.Trigger>
+          </DateField.Suffix>
+        </DateField.Group>
+        <DatePicker.Popover UNSTABLE_portalContainer={portalContainer}>
+          <Calendar aria-label={t("date")}>
+            <Calendar.Header>
+              <Calendar.YearPickerTrigger>
+                <Calendar.YearPickerTriggerHeading />
+                <Calendar.YearPickerTriggerIndicator />
+              </Calendar.YearPickerTrigger>
+              <Calendar.NavButton slot="previous" />
+              <Calendar.NavButton slot="next" />
+            </Calendar.Header>
+            <Calendar.Grid>
+              <Calendar.GridHeader>
+                {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
+              </Calendar.GridHeader>
+              <Calendar.GridBody>{(date) => <Calendar.Cell date={date} />}</Calendar.GridBody>
+            </Calendar.Grid>
+            <Calendar.YearPickerGrid>
+              <Calendar.YearPickerGridBody>
+                {({ year }) => <Calendar.YearPickerCell year={year} />}
+              </Calendar.YearPickerGridBody>
+            </Calendar.YearPickerGrid>
+          </Calendar>
+        </DatePicker.Popover>
+      </DatePicker>
+      <Select
+        className="w-full"
+        value={selectedSlot}
+        variant="secondary"
+        onChange={(value) => onSelectSlot(value)}
+      >
+        <Label>{t("slot")}</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <Select.Popover UNSTABLE_portalContainer={portalContainer}>
+          <ListBox>
+            {SLOTS.map((s) => (
+              <ListBox.Item key={s} id={s} textValue={tSlots(s.toLowerCase())}>
+                {tSlots(s.toLowerCase())}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </Select.Popover>
+      </Select>
+    </div>
   );
 }

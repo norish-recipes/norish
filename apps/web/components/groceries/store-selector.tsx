@@ -2,6 +2,7 @@
 
 import type { Key } from "react";
 import { useMemo } from "react";
+import { usePanelPortalContainer } from "@/components/Panel/Panel";
 import { Label, ListBox, Select } from "@heroui/react";
 
 import type { StoreColor, StoreDto } from "@norish/shared/contracts";
@@ -42,6 +43,7 @@ export function StoreSelector({
     () => [...stores].sort((a, b) => a.sortOrder - b.sortOrder),
     [stores]
   );
+  const portalContainer = usePanelPortalContainer();
 
   // Don't render if no stores and showWhenEmpty is false
   if (sortedStores.length === 0 && !showWhenEmpty) {
@@ -69,7 +71,7 @@ export function StoreSelector({
         <Select.Value className="flex items-center" />
         <Select.Indicator />
       </Select.Trigger>
-      <Select.Popover>
+      <Select.Popover UNSTABLE_portalContainer={portalContainer}>
         <ListBox>
           <ListBox.Item id="none" textValue={noStoreDescription ?? noStoreLabel}>
             <div className="flex items-center gap-2">

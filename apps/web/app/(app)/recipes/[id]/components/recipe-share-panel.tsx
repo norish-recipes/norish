@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import Panel from "@/components/Panel/Panel";
+import Panel, { usePanelPortalContainer } from "@/components/Panel/Panel";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
 import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -110,36 +110,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
         <Card className="bg-surface-secondary/40 border-border border">
           <Card.Content className="gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <Select
-                className="flex-1"
-                placeholder={t("expiryLabel")}
-                value={expiresIn}
-                onChange={(selected) => {
-                  if (typeof selected === "string") {
-                    setExpiresIn(selected as CreateRecipeShareInputDto["expiresIn"]);
-                  }
-                }}
-              >
-                <Label>{t("expiryLabel")}</Label>
-                <Select.Trigger className="min-h-10">
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox>
-                    {expiryOptions.map((option) => {
-                      const label = t(`expiryOptions.${option}`);
-
-                      return (
-                        <ListBox.Item key={option} id={option} textValue={label}>
-                          <Label>{label}</Label>
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      );
-                    })}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
+              <ExpirySelect expiresIn={expiresIn} onSelectExpiry={setExpiresIn} />
               <Button
                 onPress={() =>
                   createShareMutation.mutate({
@@ -268,5 +239,53 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
         </div>
       </div>
     </Panel>
+  );
+}
+
+/**
+ * Its own component so the portal container is read from inside the Panel — a
+ * hook called in the Panel's parent sees no panel at all.
+ */
+function ExpirySelect({
+  expiresIn,
+  onSelectExpiry,
+}: {
+  expiresIn: CreateRecipeShareInputDto["expiresIn"];
+  onSelectExpiry: (value: CreateRecipeShareInputDto["expiresIn"]) => void;
+}) {
+  const t = useTranslations("recipes.sharePanel");
+  const portalContainer = usePanelPortalContainer();
+
+  return (
+    <Select
+      className="flex-1"
+      placeholder={t("expiryLabel")}
+      value={expiresIn}
+      onChange={(selected) => {
+        if (typeof selected === "string") {
+          onSelectExpiry(selected as CreateRecipeShareInputDto["expiresIn"]);
+        }
+      }}
+    >
+      <Label>{t("expiryLabel")}</Label>
+      <Select.Trigger className="min-h-10">
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover UNSTABLE_portalContainer={portalContainer}>
+        <ListBox>
+          {expiryOptions.map((option) => {
+            const label = t(`expiryOptions.${option}`);
+
+            return (
+              <ListBox.Item key={option} id={option} textValue={label}>
+                <Label>{label}</Label>
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            );
+          })}
+        </ListBox>
+      </Select.Popover>
+    </Select>
   );
 }

@@ -3,7 +3,7 @@
 import type { Key } from "react";
 import { useEffect, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { Panel } from "@/components/Panel/Panel";
+import { Panel, usePanelPortalContainer } from "@/components/Panel/Panel";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -95,28 +95,7 @@ export function EditNotePanel({
             value={selectedDate}
             onChange={(d) => d && setSelectedDate(d)}
           />
-          <Select
-            className="flex-1"
-            selectedKey={selectedSlot}
-            variant="secondary"
-            onSelectionChange={handleSlotChange}
-          >
-            <Label>{t("slot")}</Label>
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {SLOTS.map((s) => (
-                  <ListBox.Item key={s} id={s} textValue={tSlots(s.toLowerCase())}>
-                    {tSlots(s.toLowerCase())}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
+          <SlotSelect selectedSlot={selectedSlot} onSelectSlot={handleSlotChange} />
         </div>
       </Panel.Body>
       <Panel.Footer>
@@ -131,5 +110,46 @@ export function EditNotePanel({
         </ActionButtonGroup>
       </Panel.Footer>
     </Panel>
+  );
+}
+
+/**
+ * Its own component so the portal container is read from inside the Panel — a
+ * hook called in the Panel's parent sees no panel at all.
+ */
+function SlotSelect({
+  selectedSlot,
+  onSelectSlot,
+}: {
+  selectedSlot: Slot;
+  onSelectSlot: (value: Key | null) => void;
+}) {
+  const t = useTranslations("calendar.editNote");
+  const tSlots = useTranslations("common.slots");
+  const portalContainer = usePanelPortalContainer();
+
+  return (
+    <Select
+      className="flex-1"
+      selectedKey={selectedSlot}
+      variant="secondary"
+      onSelectionChange={onSelectSlot}
+    >
+      <Label>{t("slot")}</Label>
+      <Select.Trigger>
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover UNSTABLE_portalContainer={portalContainer}>
+        <ListBox>
+          {SLOTS.map((s) => (
+            <ListBox.Item key={s} id={s} textValue={tSlots(s.toLowerCase())}>
+              {tSlots(s.toLowerCase())}
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
+    </Select>
   );
 }
