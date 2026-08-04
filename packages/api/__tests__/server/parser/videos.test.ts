@@ -184,6 +184,7 @@ describe("parseVideos - VideoObject extraction", () => {
         description: "",
         duration: 0,
         thumbnail: "",
+        videoStream: "present",
       });
 
       const videoField = {
@@ -225,6 +226,7 @@ describe("parseVideos - VideoObject extraction", () => {
         description: "",
         duration: 180,
         thumbnail: "",
+        videoStream: "present",
       });
 
       const videoField = {

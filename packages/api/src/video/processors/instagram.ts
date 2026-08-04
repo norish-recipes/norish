@@ -9,22 +9,7 @@ import { downloadImage } from "@norish/shared-server/media/storage";
 
 import type { VideoMetadata, VideoProcessorContext } from "../types";
 import { BaseVideoProcessor } from "../base-processor";
-
-/**
- * Check if metadata indicates an image post (no video content).
- *
- * yt-dlp's own answer about whether a video stream exists is the only signal
- * worth trusting. A missing duration is not one: which reels report a duration
- * varies by yt-dlp version and extractor path, and reading that silence as
- * "image post" sent reels down the caption-only path, losing the video, the
- * creator, and every reel whose caption is not a full recipe (#513).
- *
- * When yt-dlp reports nothing either way, this returns false so the post takes
- * the video path — `process` falls back to the caption if that turns up empty.
- */
-export function isImagePost(metadata: VideoMetadata): boolean {
-  return metadata.hasVideoStream === false;
-}
+import { isMediaUnavailable } from "../errors";
 
 /**
  * Extract caption/description from Instagram/Facebook page HTML.
@@ -86,21 +71,25 @@ export class InstagramProcessor extends BaseVideoProcessor {
 
     const metadata = await this.getMetadata(url, tokens);
 
-    if (isImagePost(metadata)) {
+    if (metadata.videoStream === "absent") {
       return this.processImagePost(url, recipeId, metadata, tokens);
     }
 
-    if (metadata.hasVideoStream === true) {
+    if (metadata.videoStream === "present") {
       return this.processVideoPost(url, recipeId, metadata, tokens);
     }
 
-    // yt-dlp classified nothing, so the video path above is a guess. A post with
-    // no media to download is still importable from its caption, so give that a
-    // turn before failing the import.
+    // An Unclassified Post: yt-dlp said nothing either way, so the video path is
+    // a guess worth making. It is only worth taking back if there turned out to
+    // be no media here — a failing transcription or AI provider is a real
+    // failure, and quietly answering it with a caption-only recipe would hide
+    // the outage behind a thin recipe.
     try {
       return await this.processVideoPost(url, recipeId, metadata, tokens);
     } catch (err) {
-      log.info({ url, err }, "Unclassified Instagram post failed as video, trying caption");
+      if (!isMediaUnavailable(err)) throw err;
+
+      log.info({ url, err }, "Unclassified Instagram post had no media, trying caption");
 
       return this.processImagePost(url, recipeId, metadata, tokens);
     }

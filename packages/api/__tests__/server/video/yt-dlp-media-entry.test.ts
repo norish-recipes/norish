@@ -15,10 +15,8 @@
  */
 import { describe, expect, it } from "vitest";
 
-import type { VideoMetadata } from "@norish/api/video/types";
 import type { YtDlpInfo } from "@norish/api/video/yt-dlp";
-import { isImagePost } from "@norish/api/video/processors/instagram";
-import { hasVideoStream, selectMediaEntry } from "@norish/api/video/yt-dlp";
+import { selectMediaEntry, videoStreamOf } from "@norish/api/video/yt-dlp";
 
 const REEL: YtDlpInfo = {
   title: "Pasta reel",
@@ -63,55 +61,31 @@ describe("selectMediaEntry", () => {
   });
 });
 
-describe("hasVideoStream", () => {
+describe("videoStreamOf", () => {
   it("reads vcodec when yt-dlp reports one", () => {
-    expect(hasVideoStream({ vcodec: "h264" })).toBe(true);
-    expect(hasVideoStream({ vcodec: "none" })).toBe(false);
+    expect(videoStreamOf({ vcodec: "h264" })).toBe("present");
+    expect(videoStreamOf({ vcodec: "none" })).toBe("absent");
   });
 
   it("falls back to the format list", () => {
-    expect(hasVideoStream({ formats: [{ vcodec: "none" }, { vcodec: "vp9" }] })).toBe(true);
-    expect(hasVideoStream({ formats: [{ vcodec: "none" }] })).toBe(false);
+    expect(videoStreamOf({ formats: [{ vcodec: "none" }, { vcodec: "vp9" }] })).toBe("present");
+    expect(videoStreamOf({ formats: [{ vcodec: "none" }] })).toBe("absent");
   });
 
   it("falls back to the extension", () => {
-    expect(hasVideoStream({ ext: "mp4" })).toBe(true);
-    expect(hasVideoStream({ ext: "JPG" })).toBe(false);
-    expect(hasVideoStream({ ext: "webp" })).toBe(false);
+    expect(videoStreamOf({ ext: "mp4" })).toBe("present");
+    expect(videoStreamOf({ ext: "JPG" })).toBe("absent");
+    expect(videoStreamOf({ ext: "webp" })).toBe("absent");
   });
 
-  it("says undefined rather than guessing when yt-dlp reported nothing", () => {
+  it("says unknown rather than guessing when yt-dlp reported nothing", () => {
     // The distinction the fix rests on: silence is not evidence of no video.
-    expect(hasVideoStream({ title: "Pasta reel", entries: [REEL] })).toBeUndefined();
-    expect(hasVideoStream({})).toBeUndefined();
-    expect(hasVideoStream({ formats: [] })).toBeUndefined();
+    expect(videoStreamOf({ title: "Pasta reel", entries: [REEL] })).toBe("unknown");
+    expect(videoStreamOf({})).toBe("unknown");
+    expect(videoStreamOf({ formats: [] })).toBe("unknown");
   });
 
   it("ignores formats that report no codec at all", () => {
-    expect(hasVideoStream({ formats: [{}, {}] })).toBeUndefined();
-  });
-});
-
-describe("isImagePost", () => {
-  const metadata = (over: Partial<VideoMetadata>): VideoMetadata => ({
-    title: "Pasta reel",
-    description: "",
-    duration: 0,
-    thumbnail: "",
-    ...over,
-  });
-
-  it("treats a post yt-dlp says has no video as an image post", () => {
-    expect(isImagePost(metadata({ hasVideoStream: false }))).toBe(true);
-  });
-
-  it("does not call a durationless reel an image post", () => {
-    // The exact reported case: yt-dlp reported no duration but did report a
-    // video stream, and Norish still took the caption-only path.
-    expect(isImagePost(metadata({ duration: 0, hasVideoStream: true }))).toBe(false);
-  });
-
-  it("prefers the video path when yt-dlp classified nothing", () => {
-    expect(isImagePost(metadata({ duration: 0 }))).toBe(false);
+    expect(videoStreamOf({ formats: [{}, {}] })).toBe("unknown");
   });
 });

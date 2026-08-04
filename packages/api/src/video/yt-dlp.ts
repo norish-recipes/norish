@@ -11,7 +11,8 @@ import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getVideoConfig } from "@norish/shared-server/config/server-config-loader";
 import { videoLogger as log } from "@norish/shared-server/logger";
 
-import type { VideoMetadata } from "./types";
+import type { VideoMetadata, VideoStream } from "./types";
+import { MediaUnavailableError } from "./errors";
 
 // Handle CJS/ESM interop - the module may be wrapped in a default property
 const YTDlpWrap =
@@ -144,6 +145,32 @@ async function execYtDlp(args: string[], cwd?: string): Promise<void> {
 
     throw new Error(details.join("\n\n"));
   }
+}
+
+/**
+ * Restate a failed download as "the media could not be had", keeping the
+ * operator-facing wording yt-dlp's own diagnostics earned.
+ */
+function asMediaUnavailable(error: unknown): MediaUnavailableError {
+  const message = error instanceof Error ? error.message : "";
+
+  if (message.includes("Unsupported URL")) {
+    return new MediaUnavailableError("Video platform not supported or URL is invalid.", {
+      cause: error,
+    });
+  }
+  if (message.includes("Video unavailable") || message.includes("private")) {
+    return new MediaUnavailableError("Video is unavailable or private.", { cause: error });
+  }
+  if (message.includes("HTTP Error 429")) {
+    return new MediaUnavailableError("Rate limited by video platform. Please try again later.", {
+      cause: error,
+    });
+  }
+
+  return new MediaUnavailableError(`Failed to download video: ${message || "Unknown error"}`, {
+    cause: error,
+  });
 }
 
 async function getProxyArgs(): Promise<string[]> {
@@ -295,23 +322,27 @@ function toInfo(rawInfo: unknown): YtDlpInfo {
 }
 
 /**
- * Whether an info dict describes something with an actual video stream.
+ * What an info dict says about a video stream.
  *
- * Undefined means yt-dlp said nothing either way. Callers must not read that
- * silence as "no video": it is the normal answer for a playlist wrapper.
+ * `"unknown"` is the normal answer for a playlist wrapper, which knows nothing
+ * about the media it wraps.
  */
-export function hasVideoStream(info: YtDlpInfo): boolean | undefined {
-  if (typeof info.vcodec === "string") return info.vcodec !== "none";
+export function videoStreamOf(info: YtDlpInfo): VideoStream {
+  if (typeof info.vcodec === "string") return info.vcodec === "none" ? "absent" : "present";
 
   if (Array.isArray(info.formats) && info.formats.length > 0) {
     const known = info.formats.filter((format) => typeof format.vcodec === "string");
 
-    if (known.length > 0) return known.some((format) => format.vcodec !== "none");
+    if (known.length > 0) {
+      return known.some((format) => format.vcodec !== "none") ? "present" : "absent";
+    }
   }
 
-  if (typeof info.ext === "string") return !IMAGE_EXTENSIONS.has(info.ext.toLowerCase());
+  if (typeof info.ext === "string") {
+    return IMAGE_EXTENSIONS.has(info.ext.toLowerCase()) ? "absent" : "present";
+  }
 
-  return undefined;
+  return "unknown";
 }
 
 /**
@@ -329,7 +360,7 @@ export function selectMediaEntry(info: YtDlpInfo): YtDlpInfo {
 
   if (!Array.isArray(entries) || entries.length === 0) return info;
 
-  return entries.find((entry) => hasVideoStream(entry) === true) ?? entries[0] ?? {};
+  return entries.find((entry) => videoStreamOf(entry) === "present") ?? entries[0] ?? {};
 }
 
 export async function getVideoMetadata(
@@ -352,6 +383,11 @@ export async function getVideoMetadata(
     const pick = <K extends keyof YtDlpInfo>(key: K): YtDlpInfo[K] =>
       primary[key] ?? container[key];
 
+    // The wrapper only gets a say when the entry had none.
+    const entryStream = videoStreamOf(primary);
+    const videoStream: VideoStream =
+      entryStream === "unknown" ? videoStreamOf(container) : entryStream;
+
     return {
       title: pick("title") || "Untitled Video",
       description: pick("description") || "",
@@ -360,7 +396,7 @@ export async function getVideoMetadata(
       uploader: pick("uploader") || pick("channel") || undefined,
       uploadDate: pick("upload_date") || undefined,
       language: pick("language") || undefined,
-      hasVideoStream: hasVideoStream(primary) ?? hasVideoStream(container),
+      videoStream,
     };
   } catch (error: unknown) {
     log.error({ err: error }, "Failed to get video metadata");
@@ -460,7 +496,7 @@ export async function downloadVideoAudio(
     }
 
     throw lastError instanceof Error ? lastError : new Error("Could not create audio file.");
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error({ err: error }, "Failed to download video audio");
 
     // Cleanup on failure
@@ -470,19 +506,7 @@ export async function downloadVideoAudio(
       log.error({ err: cleanupErr }, "Failed to cleanup temp file");
     }
 
-    if (error.message?.includes("Unsupported URL")) {
-      throw new Error("Video platform not supported or URL is invalid.");
-    }
-    if (error.message?.includes("Video unavailable") || error.message?.includes("private")) {
-      throw new Error("Video is unavailable or private.");
-    }
-    if (error.message?.includes("HTTP Error 429")) {
-      throw new Error("Rate limited by video platform. Please try again later.");
-    }
-
-    const errorMessage = error.message || "Unknown error";
-
-    throw new Error(`Failed to download video: ${errorMessage}`);
+    throw asMediaUnavailable(error);
   } finally {
     await auth?.cleanup();
   }
@@ -505,7 +529,9 @@ export async function validateVideoLength(
     const maxTime = `${maxMinutes}:${maxSeconds.toString().padStart(2, "0")}`;
     const actualTime = `${actualMinutes}:${actualSeconds.toString().padStart(2, "0")}`;
 
-    throw new Error(`Video exceeds maximum length of ${maxTime} (actual: ${actualTime})`);
+    throw new MediaUnavailableError(
+      `Video exceeds maximum length of ${maxTime} (actual: ${actualTime})`
+    );
   }
 }
 
@@ -721,22 +747,10 @@ export async function downloadVideo(
     log.info({ filePath, extension, size: stats.size }, "Video downloaded successfully");
 
     return { filePath, extension };
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error({ err: error }, "Failed to download video");
 
-    if (error.message?.includes("Unsupported URL")) {
-      throw new Error("Video platform not supported or URL is invalid.");
-    }
-    if (error.message?.includes("Video unavailable") || error.message?.includes("private")) {
-      throw new Error("Video is unavailable or private.");
-    }
-    if (error.message?.includes("HTTP Error 429")) {
-      throw new Error("Rate limited by video platform. Please try again later.");
-    }
-
-    const errorMessage = error.message || "Unknown error";
-
-    throw new Error(`Failed to download video: ${errorMessage}`);
+    throw asMediaUnavailable(error);
   } finally {
     await auth?.cleanup();
   }
