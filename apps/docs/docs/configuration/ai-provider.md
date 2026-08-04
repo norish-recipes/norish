@@ -146,13 +146,13 @@ enrichment, automatic and manual. No AI request can bypass it.
 Video import downloads the clip with `yt-dlp`, transcribes the audio, and uses
 the AI provider to extract the recipe. It requires AI to be enabled.
 
-| Variable                   | Description                               | Default                                   |
-| -------------------------- | ----------------------------------------- | ----------------------------------------- |
-| `VIDEO_PARSING_ENABLED`    | Enable the video parsing pipeline         | `false`                                   |
-| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length             | `120`                                     |
-| `YT_DLP_VERSION`           | yt-dlp version used by downloader         | `2026.07.04`                              |
-| `YT_DLP_BIN_DIR`           | Folder containing the yt-dlp binary       | `./.runtime/bin` (dev), `/app/bin` (prod) |
-| `YT_DLP_PROXY`             | HTTP/SOCKS proxy URL for yt-dlp downloads | (empty)                                   |
+| Variable                   | Description                                                                                  | Default                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `VIDEO_PARSING_ENABLED`    | Enable the video parsing pipeline                                                            | `false`                                   |
+| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length                                                                | `120`                                     |
+| `YT_DLP_VERSION`           | yt-dlp release a development install downloads on first use (the Docker image ships its own) | `2026.07.04`                              |
+| `YT_DLP_BIN_DIR`           | Folder containing the yt-dlp binary                                                          | `./.runtime/bin` (dev), `/app/bin` (prod) |
+| `YT_DLP_PROXY`             | HTTP/SOCKS proxy URL for yt-dlp downloads                                                    | (empty)                                   |
 
 ### Photo posts and reels
 
@@ -160,12 +160,26 @@ An Instagram or Facebook post with no video is imported from its caption alone,
 which only works when the caption holds the whole recipe. Norish decides which
 path to take by asking `yt-dlp` whether the post has a video stream.
 
-If reels import as photo posts on your instance, check which `yt-dlp` you are
-running first: a build too old for Instagram's current markup can fail to report
-the video at all. **Settings => Admin => AI & Processing => Video Processing**
-reports the version. The Docker image ships the binary named above and upgrading
+A post `yt-dlp` says nothing about either way is treated as a video and
+downloaded; only a post it reports as having no video, or one where there turned
+out to be nothing to download, falls back to the caption. Silence is never read
+as "no video".
+
+If reels still import as photo posts on your instance, check which `yt-dlp` you
+are running first: a build too old for Instagram's current markup can fail to
+report the video at all. **Settings => Admin => AI & Processing => Video
+Processing** shows the release the server is actually running — it asks the
+binary, so it is the truth rather than a stored setting, and it is read-only for
+the same reason. The Docker image ships the binary named above and upgrading
 Norish upgrades it; a development install downloads whatever `YT_DLP_VERSION`
-names.
+names, once, the first time it needs it.
+
+If that field reports **no yt-dlp binary found**, there is nothing to import
+with. In Docker, check that `YT_DLP_BIN_DIR` points at the image's own `/app/bin`
+— an empty volume mounted over it hides the shipped binary. On a development
+install, run an import once with network access and Norish downloads the binary
+itself; if that fails, place the release named by `YT_DLP_VERSION` in
+`YT_DLP_BIN_DIR` by hand and make it executable.
 
 ## Transcription
 
