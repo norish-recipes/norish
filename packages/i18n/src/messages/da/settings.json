@@ -602,7 +602,7 @@
     },
     "videoConfig": {
       "enableVideo": "Aktivér videoanalyse",
-      "enableVideoDescription": "Udtræk opskrifter fra TikTok, Instagram, YouTube Shorts eller Facebook",
+      "enableVideoDescription": "Udtræk opskrifter fra TikTok, Instagram, YouTube Shorts, Facebook, Pinterest med flere",
       "configureWarning": "Konfigurer en transskriptionsudbyder nedenfor for at aktivere videobehandling.",
       "aiDisabledWarning": "Aktivér AI-konfiguration, inden du slår videobehandling til.",
       "maxLength": "Maks. videolængde (sekunder)",

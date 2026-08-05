@@ -13,7 +13,8 @@ AI enables:
 
 - AI fallback when a recipe can't be imported from a URL structurally
 - **Image import** from screenshots or photos of recipes
-- **Video import** from YouTube Shorts, Instagram Reels, TikTok, and more
+- **Video import** from YouTube Shorts, Instagram Reels, TikTok, Pinterest,
+  and more
 - **Recipe Enrichment**: tags, allergy indications, meal categories, and
   nutrition values added after a recipe is saved
 - **Unit conversion** between metric and US units
@@ -153,7 +154,7 @@ Ingredient Linking. What you see there is exactly what is tunable; there are no
 hardcoded prompts behind it.
 
 Each feature appends its own input — the recipe under analysis, your
-household's allergens, the webpage text — *after* your prompt rather than
+household's allergens, the webpage text — _after_ your prompt rather than
 filling placeholders inside it, so a customised prompt keeps working across
 upgrades and editing one prompt never changes what a different feature sends.
 A prompt left empty falls back to the shipped default, and **Restore defaults**
@@ -165,6 +166,11 @@ Video import downloads the clip with `yt-dlp`, transcribes the audio, and uses
 the AI provider to extract the recipe. It requires AI to be enabled: a video
 import is refused immediately when AI is off, before anything is downloaded or
 a transcription is billed.
+
+Links from YouTube, Instagram, TikTok, Facebook, Pinterest (including `pin.it`
+share links), X, Threads, Snapchat, Vimeo, Dailymotion, Douyin, Bilibili, and
+RedNote are recognised as videos and take this pipeline; a link from any other
+site imports as a regular webpage.
 
 | Variable                   | Description                                                                                  | Default                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------- |

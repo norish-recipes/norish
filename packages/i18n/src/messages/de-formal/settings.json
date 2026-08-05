@@ -602,7 +602,7 @@
     },
     "videoConfig": {
       "enableVideo": "Video-Parsing aktivieren",
-      "enableVideoDescription": "Extrahieren Sie Rezepte aus TikTok, Instagram, YouTube Shorts oder Facebook",
+      "enableVideoDescription": "Extrahieren Sie Rezepte aus TikTok, Instagram, YouTube Shorts, Facebook, Pinterest und mehr",
       "configureWarning": "Konfigurieren Sie einen Transkriptions-Anbieter unten, um Video-Verarbeitung zu aktivieren.",
       "aiDisabledWarning": "Aktivieren Sie die KI-Konfiguration, bevor Sie die Video-Verarbeitung einschalten.",
       "maxLength": "Max. Videolänge (Sekunden)",

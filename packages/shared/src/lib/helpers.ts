@@ -149,7 +149,71 @@ export function isUrl(str: string): boolean {
 }
 
 /**
- * Check if a URL points to a supported video platform (YouTube, Instagram, TikTok, etc.)
+ * Hostnames whose URLs import as videos. A matching URL skips structural
+ * webpage parsing entirely, so the list holds platforms where a shared recipe
+ * link is (near-)always a video post — not sites that merely host some video.
+ */
+const VIDEO_PLATFORM_HOSTS = [
+  // YouTube
+  "youtube.com",
+  "youtu.be",
+  // Instagram
+  "instagram.com",
+  // TikTok — the vm./vt. share links are subdomains
+  "tiktok.com",
+  // Facebook
+  "facebook.com",
+  "fb.watch",
+  // Pinterest — pin.it is the app's share link; regional domains still serve pins
+  "pinterest.com",
+  "pin.it",
+  "pinterest.at",
+  "pinterest.ca",
+  "pinterest.ch",
+  "pinterest.co.kr",
+  "pinterest.co.uk",
+  "pinterest.com.au",
+  "pinterest.com.mx",
+  "pinterest.de",
+  "pinterest.dk",
+  "pinterest.es",
+  "pinterest.fr",
+  "pinterest.ie",
+  "pinterest.it",
+  "pinterest.jp",
+  "pinterest.nl",
+  "pinterest.nz",
+  "pinterest.pt",
+  "pinterest.se",
+  // X
+  "x.com",
+  "twitter.com",
+  // Threads
+  "threads.com",
+  "threads.net",
+  // Snapchat
+  "snapchat.com",
+  // Vimeo
+  "vimeo.com",
+  // Dailymotion
+  "dailymotion.com",
+  "dai.ly",
+  // Douyin
+  "douyin.com",
+  // Bilibili
+  "bilibili.com",
+  "b23.tv",
+  // RedNote / Xiaohongshu
+  "xiaohongshu.com",
+  "xhslink.com",
+];
+
+/**
+ * Check if a URL points to a supported video platform.
+ *
+ * Hosts match exactly or at a dot boundary (`vm.tiktok.com`, not
+ * `mytiktok.com`), so a hostname merely containing a platform name is never
+ * routed into the video pipeline.
  */
 export function isVideoUrl(str: string): boolean {
   if (!isUrl(str)) return false;
@@ -157,14 +221,7 @@ export function isVideoUrl(str: string): boolean {
   try {
     const hostname = new URL(str).hostname.toLowerCase();
 
-    return (
-      hostname.includes("youtube.com") ||
-      hostname.includes("youtu.be") ||
-      hostname.includes("instagram.com") ||
-      hostname.includes("tiktok.com") ||
-      hostname.includes("facebook.com") ||
-      hostname.includes("fb.watch")
-    );
+    return VIDEO_PLATFORM_HOSTS.some((host) => hostname === host || hostname.endsWith(`.${host}`));
   } catch {
     return false;
   }

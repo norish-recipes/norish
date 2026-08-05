@@ -602,7 +602,7 @@
     },
     "videoConfig": {
       "enableVideo": "Activar analizador de vídeo",
-      "enableVideoDescription": "Extraer recetas de TikTok, Instagram, YouTube Shorts o Facebook",
+      "enableVideoDescription": "Extraer recetas de TikTok, Instagram, YouTube Shorts, Facebook, Pinterest y más",
       "configureWarning": "Configura un proveedor de transcripción abajo para habilitar el procesamiento de vídeo.",
       "aiDisabledWarning": "Activa la configuración de IA antes de activar el procesamiento de vídeo.",
       "maxLength": "Longitud máxima del vídeo (segundos)",

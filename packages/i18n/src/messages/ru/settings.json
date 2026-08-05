@@ -602,7 +602,7 @@
     },
     "videoConfig": {
       "enableVideo": "Включить парсинг видео",
-      "enableVideoDescription": "Извлекать рецепты из TikTok, Instagram, YouTube Shorts или Facebook",
+      "enableVideoDescription": "Извлекать рецепты из TikTok, Instagram, YouTube Shorts, Facebook, Pinterest и других",
       "configureWarning": "Настройте провайдера транскрибации ниже, чтобы включить обработку видео.",
       "aiDisabledWarning": "Перед включением обработки видео включите настройки ИИ.",
       "maxLength": "Макс. длина видео (секунды)",

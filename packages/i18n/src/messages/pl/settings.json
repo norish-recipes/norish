@@ -602,7 +602,7 @@
     },
     "videoConfig": {
       "enableVideo": "Włącz parsowanie wideo",
-      "enableVideoDescription": "Wyciągaj przepisy z TikToka, Instagrama, YouTube Shorts lub Facebooka",
+      "enableVideoDescription": "Wyciągaj przepisy z TikToka, Instagrama, YouTube Shorts, Facebooka, Pinteresta i innych",
       "configureWarning": "Skonfiguruj poniżej dostawcę transkrypcji, aby włączyć przetwarzanie wideo.",
       "aiDisabledWarning": "Włącz konfigurację AI przed uruchomieniem przetwarzania wideo.",
       "maxLength": "Maks. długość wideo (sekundy)",

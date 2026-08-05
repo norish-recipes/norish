@@ -602,7 +602,7 @@
     },
     "videoConfig": {
       "enableVideo": "Video parsing inschakelen",
-      "enableVideoDescription": "Extraheer recepten van TikTok, Instagram, YouTube Shorts of Facebook",
+      "enableVideoDescription": "Extraheer recepten van TikTok, Instagram, YouTube Shorts, Facebook, Pinterest en meer",
       "configureWarning": "Configureer hieronder een transcriptieprovider om videobewerking in te schakelen.",
       "aiDisabledWarning": "Schakel eerst de AI-configuratie in voordat je videobewerking activeert.",
       "maxLength": "Max videolengte (seconden)",
