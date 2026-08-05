@@ -634,6 +634,17 @@
             templates for new content and image extraction's string surgery.
           </p>
         </li>
+        <li>
+          <a href="ai/0017-the-prompts-row-stores-only-overrides.md"
+            >ADR-0017 — The prompts row stores only overrides</a
+          >
+          <p>
+            <b>Accepted and implemented.</b> The stored prompts row carries only texts that
+            differ from the shipped defaults; reads merge over the shipped files, saves strip
+            default-equal fields, and boot prunes legacy rows against every default any release
+            shipped. Rejects seeded default copies and the row-level isOverridden freeze.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { PromptsConfig, TimerKeywordsConfig } from "@norish/config/zod/server-config";
+import type { TimerKeywordsConfig } from "@norish/config/zod/server-config";
 import {
   ContentIndicatorsSchema,
   PromptsConfigInputSchema,
@@ -10,6 +10,8 @@ import {
   UnitsMapSchema,
 } from "@norish/config/zod/server-config";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { getEffectivePrompts, loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
+import { pruneToOverrides } from "@norish/shared-server/ai/prompts/overrides";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
@@ -103,24 +105,35 @@ const updateRecurrenceConfig = adminProcedure.input(z.string()).mutation(async (
 });
 
 /**
- * Get prompts config.
- * Returns the current prompts from the database.
+ * Get prompts for the admin surface: stored overrides merged over the
+ * shipped defaults, so a release's new prompt text shows up unless the
+ * administrator wrote their own.
  */
 const getPrompts = adminProcedure.query(async () => {
-  return await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
+  const { values, overriddenFields } = await getEffectivePrompts();
+
+  return { ...values, isOverridden: overriddenFields.length > 0 };
 });
 
 /**
  * Update prompts config.
- * Accepts prompt strings and marks as admin-overridden.
+ *
+ * Only genuine overrides are stored: a submitted prompt equal to the shipped
+ * default (or blank) carries no intent and is dropped, so saving the form
+ * never pins prompts the administrator did not change — and reverting a
+ * prompt to the default text un-pins it.
  */
 const updatePrompts = adminProcedure
   .input(PromptsConfigInputSchema)
   .mutation(async ({ input, ctx }) => {
-    log.info({ userId: ctx.user.id }, "Updating prompts config");
+    const { overrides } = pruneToOverrides(input, loadDefaultPrompts());
 
-    // Mark as overridden
-    await setConfig(ServerConfigKeys.PROMPTS, { ...input, isOverridden: true }, ctx.user.id, false);
+    log.info(
+      { userId: ctx.user.id, overriddenFields: Object.keys(overrides) },
+      "Updating prompts config"
+    );
+
+    await setConfig(ServerConfigKeys.PROMPTS, overrides, ctx.user.id, false);
 
     return { success: true };
   });

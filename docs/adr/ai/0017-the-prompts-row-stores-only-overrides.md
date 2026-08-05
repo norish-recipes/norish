@@ -1,0 +1,17 @@
+# The prompts row stores only overrides
+
+Until 0.20, seeding copied the nine shipped prompt texts into the `prompts` config row, and saving the admin form rewrote the row wholesale with `isOverridden: true`. That one flag froze all nine prompts forever: the boot sync skipped the entire row, so a release that improved a prompt never reached any deployment whose administrator had ever pressed Save — including deployments that saved without meaningfully changing anything. The UI showed the stale stored copies, the model received them, and the only way out was a manual "Restore defaults". The boot sync had a second, opposite failure hiding behind the first: for rows *without* the flag it compared two stored fields against all nine defaults — never equal — and bulldozed the row with fresh defaults on every boot, which would have destroyed any customization not protected by the flag.
+
+The stored row now carries **only administrator overrides**: a field is present exactly when its text differs from the shipped default. Everything else — the admin form, every model request, "Restore defaults" — is a merge of that row over the shipped prompt files at read time. The definition of "is this an override" lives in one pure module (`shared-server/ai/prompts/overrides.ts`) shared by the save path, the boot migration, and the read path:
+
+- **Save** drops any submitted field that is blank or equal to the current shipped default. Saving an untouched form stores nothing; reverting a prompt to the default text by hand un-pins it. A save can no longer freeze anything.
+- **Boot** prunes legacy rows to genuine overrides. Because a legacy row cannot say whether its texts were typed or merely seeded, boot also drops any text equal to a default some earlier release shipped — the shipped history lives in `retired-defaults.json`, generated from git by `tooling/monorepo/scripts/generate-retired-prompt-defaults.mjs`, and a shared-server test fails when a prompt edit forgets to regenerate it. The legacy `isOverridden` flag is dropped and never written again.
+- **Read** merges stored overrides over `loadDefaultPrompts()`. A missing row means no overrides; the schema's required fields are gone, so a row from any era parses.
+
+## Consequences
+
+- A release's new prompt text reaches every deployment that did not customize that specific prompt — override semantics are per prompt, not per row. Customized prompts survive every upgrade and keep reaching the model.
+- The database never holds a copy of a default, so there is no copy to go stale. The failure mode this ADR exists for is unrepresentable, not merely handled.
+- An administrator who deliberately saved an *old release's* wording keeps it from then on (the save path compares against current defaults only) — but the 0.20 upgrade boot itself cannot distinguish that intent from a seeded copy and releases it once. Accepted: the alternative left every saved-but-unchanged deployment frozen forever.
+- "Restore defaults" writes an empty row instead of a defaults snapshot, so restoring tracks future releases instead of pinning today's texts.
+- The end-to-end suite boots the production server twice against one database to prove the upgrade moment: a planted pre-0.20 frozen row comes out released, the one genuinely custom prompt survives — in the form and on the wire — and a UI save round-trip pins exactly the edited field. Reintroducing a stored defaults snapshot, or a row-level override flag, is a decision to reopen this ADR.

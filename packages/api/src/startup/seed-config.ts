@@ -27,7 +27,11 @@ import {
   UnitsConfigSchema,
   UnitsMapSchema,
 } from "@norish/db/zodSchemas/server-config";
-import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
+import {
+  loadDefaultPrompts,
+  loadRetiredDefaultPrompts,
+} from "@norish/shared-server/ai/prompts/loader";
+import { pruneToOverrides } from "@norish/shared-server/ai/prompts/overrides";
 import {
   buildLocaleConfigFromEnv,
   DEFAULT_LOCALE_CONFIG,
@@ -144,9 +148,11 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
   },
   {
     key: ServerConfigKeys.PROMPTS,
-    getDefaultValue: () => ({ ...loadDefaultPrompts(), isOverridden: false }),
+    // Overrides only: defaults live in the shipped prompt files and are
+    // merged at read time, so new releases' prompts arrive without a write.
+    getDefaultValue: () => ({}),
     sensitive: false,
-    description: "AI prompts for recipe extraction and unit conversion",
+    description: "AI prompt overrides (empty: all prompts follow shipped defaults)",
   },
   {
     key: ServerConfigKeys.LOCALE_CONFIG,
@@ -467,6 +473,16 @@ async function syncGoogleProvider(): Promise<void> {
   }
 }
 
+/**
+ * Reduce the stored prompts row to genuine administrator overrides.
+ *
+ * Rows written before 0.20 carried full copies of the then-current default
+ * texts (plus a row-level isOverridden flag that froze all of them after any
+ * save). Dropping every field that matches a shipped default — current or
+ * retired — releases those copies, so the release's prompts reach the admin
+ * surface and the model, while texts an administrator actually wrote are
+ * exactly the fields that survive.
+ */
 async function syncPrompts(): Promise<void> {
   const existing = await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
 
@@ -476,27 +492,19 @@ async function syncPrompts(): Promise<void> {
     return;
   }
 
-  if (existing.isOverridden) {
-    serverLogger.debug("Prompts are overridden by admin, skipping file sync");
+  const { overrides, changed } = pruneToOverrides(
+    existing,
+    loadDefaultPrompts(),
+    loadRetiredDefaultPrompts()
+  );
 
-    return;
-  }
+  if (changed) {
+    await setConfig(ServerConfigKeys.PROMPTS, overrides, null, false);
 
-  const defaultPrompts = loadDefaultPrompts();
-  const storedComparable = {
-    recipeExtraction: existing.recipeExtraction,
-    unitConversion: existing.unitConversion,
-  };
-
-  if (configsDiffer(storedComparable, defaultPrompts)) {
-    await setConfig(
-      ServerConfigKeys.PROMPTS,
-      { ...defaultPrompts, isOverridden: false },
-      null,
-      false
+    serverLogger.info(
+      { overriddenFields: Object.keys(overrides) },
+      "Pruned stored prompts to administrator overrides"
     );
-
-    serverLogger.info("Updated prompts from default files (content changed)");
   }
 }
 
@@ -682,7 +690,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return DEFAULT_RECIPE_PERMISSION_POLICY;
     case ServerConfigKeys.PROMPTS:
-      return { ...loadDefaultPrompts(), isOverridden: false };
+      // No overrides: every prompt follows the shipped default again.
+      return {};
     case ServerConfigKeys.LOCALE_CONFIG:
       return DEFAULT_LOCALE_CONFIG;
     case ServerConfigKeys.TIMER_KEYWORDS:
