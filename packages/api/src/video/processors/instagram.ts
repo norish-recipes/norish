@@ -1,9 +1,9 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
-import { transcribeAudio } from "@norish/api/ai/transcriber";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
+import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
 import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
+import { transcribe } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger as log } from "@norish/shared-server/logger";
 import { downloadImage } from "@norish/shared-server/media/storage";
 
@@ -132,14 +132,14 @@ export class InstagramProcessor extends BaseVideoProcessor {
     }
 
     // Use AI to extract recipe from description
-    const result = await extractRecipeWithAI(description, recipeId, url);
+    let recipe;
 
-    if (!result.success) {
-      log.warn({ url, error: result.error }, "AI extraction failed for Instagram image post");
+    try {
+      recipe = await extractRecipeWithAI(description, recipeId, url);
+    } catch (error) {
+      log.warn({ url, err: error }, "AI extraction failed for Instagram image post");
       throw new Error("Instagram image posts are only supported if the caption contains a recipe");
     }
-
-    const recipe = result.data;
 
     // Download thumbnail as recipe image
     if (metadata.thumbnail) {
@@ -191,18 +191,23 @@ export class InstagramProcessor extends BaseVideoProcessor {
           "Trying extraction from description first"
         );
 
-        const result = await extractRecipeFromVideo(descriptionText, metadata, recipeId, url);
+        // A failed description extraction is not terminal: the audio itself
+        // is still there to transcribe.
+        try {
+          const recipe = await extractRecipeFromVideo(descriptionText, metadata, recipeId, url);
 
-        if (result.success) {
           log.info({ url }, "Successfully extracted recipe from description");
           const savedVideo = videoPath
             ? await this.saveVideo(videoPath, recipeId, metadata.duration)
             : null;
 
-          return this.addVideoToRecipe(result.data, savedVideo);
+          return this.addVideoToRecipe(recipe, savedVideo);
+        } catch (descriptionExtractionError) {
+          log.info(
+            { url, err: descriptionExtractionError },
+            "Description extraction failed, falling back to transcription"
+          );
         }
-
-        log.info({ url }, "Description extraction failed, falling back to transcription");
       }
 
       // Fall back to audio transcription
@@ -216,14 +221,15 @@ export class InstagramProcessor extends BaseVideoProcessor {
         );
 
         if (descriptionText.length >= 50) {
-          const result = await extractRecipeWithAI(descriptionText, recipeId, url);
-
-          if (result.success) {
+          try {
+            const recipe = await extractRecipeWithAI(descriptionText, recipeId, url);
             const savedVideo = videoPath
               ? await this.saveVideo(videoPath, recipeId, metadata.duration)
               : null;
 
-            return this.addVideoToRecipe(result.data, savedVideo);
+            return this.addVideoToRecipe(recipe, savedVideo);
+          } catch (descriptionError) {
+            log.warn({ url, err: descriptionError }, "Description extraction failed too");
           }
         }
 
@@ -231,33 +237,20 @@ export class InstagramProcessor extends BaseVideoProcessor {
       }
 
       log.info({ url }, "Starting audio transcription");
-      const transcriptionResult = await transcribeAudio(audioPath);
-
-      if (!transcriptionResult.success) {
-        throw new Error(transcriptionResult.error);
-      }
-
-      const transcript = transcriptionResult.data;
+      const transcript = await transcribe(audioPath);
 
       log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
       // Combine transcript with description
       const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
 
-      const result = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
-
-      if (!result.success) {
-        throw new Error(
-          result.error ||
-            "No recipe found in video. The video may not contain a recipe or the content was not clear enough to extract."
-        );
-      }
+      const recipe = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
 
       const savedVideo = videoPath
         ? await this.saveVideo(videoPath, recipeId, metadata.duration)
         : null;
 
-      return this.addVideoToRecipe(result.data, savedVideo);
+      return this.addVideoToRecipe(recipe, savedVideo);
     } finally {
       await this.cleanup(audioPath);
       if (videoPath?.includes("video-temp")) {

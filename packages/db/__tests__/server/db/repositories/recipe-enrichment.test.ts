@@ -122,28 +122,52 @@ describe("Recipe Enrichment repository", () => {
   });
 
   describe("replaceRecipeNutrition", () => {
-    it("replaces the whole group atomically and clears omitted fields", async () => {
+    it("replaces the whole group atomically", async () => {
       await replaceRecipeNutrition(
         testRecipe.id,
         { calories: 500, fat: "20", carbs: "40", protein: "30" },
         "manual"
       );
 
-      const applied = await replaceRecipeNutrition(testRecipe.id, { calories: 240 }, "manual");
+      const applied = await replaceRecipeNutrition(
+        testRecipe.id,
+        { calories: 240, fat: "9", carbs: "30", protein: "12" },
+        "manual"
+      );
 
       expect(applied).toBe(true);
 
       const recipe = await getRecipeFull(testRecipe.id);
 
       expect(recipe?.calories).toBe(240);
-      expect(recipe?.fat).toBeNull();
-      expect(recipe?.carbs).toBeNull();
-      expect(recipe?.protein).toBeNull();
+      expect(recipe?.fat).toBe("9.00");
+      expect(recipe?.carbs).toBe("30.00");
+      expect(recipe?.protein).toBe("12.00");
     });
 
-    it("rejects an entirely blank proposal without touching stored values", async () => {
-      await replaceRecipeNutrition(testRecipe.id, { calories: 500 }, "manual");
+    it("accepts zeros as values", async () => {
+      const applied = await replaceRecipeNutrition(
+        testRecipe.id,
+        { calories: 4, fat: "0", carbs: "1", protein: "0" },
+        "manual"
+      );
 
+      expect(applied).toBe(true);
+      expect((await getRecipeFull(testRecipe.id))?.fat).toBe("0.00");
+    });
+
+    it("rejects an incomplete proposal without touching stored values", async () => {
+      await replaceRecipeNutrition(
+        testRecipe.id,
+        { calories: 500, fat: "20", carbs: "40", protein: "30" },
+        "manual"
+      );
+
+      // Replacement writes all four fields, so a proposal missing any of them
+      // would null out the rest and must be refused outright.
+      await expect(
+        replaceRecipeNutrition(testRecipe.id, { calories: 240 }, "manual")
+      ).rejects.toThrow();
       await expect(
         replaceRecipeNutrition(
           testRecipe.id,
@@ -167,7 +191,7 @@ describe("Recipe Enrichment repository", () => {
       expect((await getRecipeFull(testRecipe.id))?.calories).toBe(240);
     });
 
-    it("leaves partial supplied nutrition untouched", async () => {
+    it("completes a partially supplied group, replacing it wholesale", async () => {
       const supplied = await createTestRecipe(userId, { name: "Supplied protein", protein: "31" });
 
       const applied = await replaceRecipeNutrition(
@@ -176,12 +200,31 @@ describe("Recipe Enrichment repository", () => {
         "automatic"
       );
 
-      expect(applied).toBe(false);
+      expect(applied).toBe(true);
 
       const recipe = await getRecipeFull(supplied.id);
 
-      expect(recipe?.protein).toBe("31.00");
-      expect(recipe?.calories).toBeNull();
+      expect(recipe?.protein).toBe("12.00");
+      expect(recipe?.calories).toBe(240);
+    });
+
+    it("becomes a no-op when the stored group is already complete", async () => {
+      const supplied = await createTestRecipe(userId, {
+        name: "Fully supplied",
+        calories: 350,
+        fat: "10",
+        carbs: "45",
+        protein: "31",
+      });
+
+      const applied = await replaceRecipeNutrition(
+        supplied.id,
+        { calories: 240, fat: "9", carbs: "30", protein: "12" },
+        "automatic"
+      );
+
+      expect(applied).toBe(false);
+      expect((await getRecipeFull(supplied.id))?.calories).toBe(350);
     });
   });
 

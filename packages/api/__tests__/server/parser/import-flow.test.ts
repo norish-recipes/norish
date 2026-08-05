@@ -19,11 +19,12 @@ const mockServerConfig = {
   YT_DLP_VERSION: "2025.11.12",
 };
 
-vi.mock("@norish/api/ai/recipe-parser", () => ({
+vi.mock("@norish/api/parser/recipe-extraction", () => ({
   extractRecipeWithAI: mockExtractRecipeWithAI,
 }));
 
-vi.mock("@norish/api/helpers", () => ({
+vi.mock("@norish/shared/lib/helpers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared/lib/helpers")>()),
   isVideoUrl: mockIsVideoUrl,
 }));
 
@@ -135,7 +136,7 @@ describe("parseRecipeFromUrl import flow", () => {
     });
     mockAdaptRecipeScrapersResponse.mockResolvedValue(structuredRecipe);
     mockProcessVideoRecipe.mockResolvedValue(structuredRecipe);
-    mockExtractRecipeWithAI.mockResolvedValue({ success: true, data: aiRecipe });
+    mockExtractRecipeWithAI.mockResolvedValue(aiRecipe);
   });
 
   it("uses the existing video pipeline for video imports", { timeout: 15000 }, async () => {
@@ -154,6 +155,34 @@ describe("parseRecipeFromUrl import flow", () => {
     expect(mockFetchViaPlaywright).not.toHaveBeenCalled();
     expect(mockCallRecipeScrapersParser).not.toHaveBeenCalled();
     expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
+  });
+
+  it("refuses a video import naming AI before anything is downloaded when AI is disabled", async () => {
+    mockIsVideoUrl.mockReturnValue(true);
+    mockIsAIEnabled.mockResolvedValue(false);
+    mockIsVideoParsingEnabled.mockResolvedValue(false);
+
+    const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+    await expect(parseRecipeFromUrl("https://example.com/video", "recipe-1")).rejects.toThrow(
+      /AI features are not enabled/
+    );
+    expect(mockProcessVideoRecipe).not.toHaveBeenCalled();
+    expect(mockFetchViaPlaywright).not.toHaveBeenCalled();
+    expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
+  });
+
+  it("refuses a video import naming video parsing when AI is on but video parsing is off", async () => {
+    mockIsVideoUrl.mockReturnValue(true);
+    mockIsAIEnabled.mockResolvedValue(true);
+    mockIsVideoParsingEnabled.mockResolvedValue(false);
+
+    const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+    await expect(parseRecipeFromUrl("https://example.com/video", "recipe-1")).rejects.toThrow(
+      "Video recipe parsing is not enabled."
+    );
+    expect(mockProcessVideoRecipe).not.toHaveBeenCalled();
   });
 
   it("uses AI directly when forceAI is true", async () => {

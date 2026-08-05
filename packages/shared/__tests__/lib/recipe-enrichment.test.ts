@@ -126,31 +126,39 @@ describe("hasSubstantiveCategories", () => {
 });
 
 describe("hasSubstantiveNutrition", () => {
-  it("treats an entirely absent group as absent", () => {
+  it("treats an entirely absent group as not substantive", () => {
     expect(hasSubstantiveNutrition({})).toBe(false);
     expect(hasSubstantiveNutrition({ calories: null, fat: null, carbs: null, protein: null })).toBe(
       false
     );
   });
 
-  it("treats blank and whitespace-only strings as absent", () => {
-    expect(hasSubstantiveNutrition({ fat: "", carbs: "   ", protein: "\n" })).toBe(false);
-  });
-
-  it("treats zero as a substantive supplied value", () => {
-    expect(hasSubstantiveNutrition({ calories: 0 })).toBe(true);
-    expect(hasSubstantiveNutrition({ fat: "0" })).toBe(true);
-  });
-
-  it("treats any single substantive field as making the whole group present", () => {
-    expect(hasSubstantiveNutrition({ protein: "12" })).toBe(true);
+  it("requires the whole group: a partial group is not substantive", () => {
+    expect(hasSubstantiveNutrition({ protein: "12" })).toBe(false);
     expect(hasSubstantiveNutrition({ calories: 240, fat: null, carbs: null, protein: null })).toBe(
+      false
+    );
+    expect(hasSubstantiveNutrition({ calories: 240, fat: "9", carbs: "30" })).toBe(false);
+  });
+
+  it("treats a complete group as substantive", () => {
+    expect(hasSubstantiveNutrition({ calories: 240, fat: "9", carbs: "30", protein: "12" })).toBe(
       true
     );
   });
 
-  it("ignores non-numeric noise", () => {
-    expect(hasSubstantiveNutrition({ fat: "unknown" })).toBe(false);
+  it("counts zero as a value, not as absence", () => {
+    expect(hasSubstantiveNutrition({ calories: 4, fat: "0", carbs: "1", protein: "0" })).toBe(true);
+    expect(hasSubstantiveNutrition({ calories: 0, fat: 0, carbs: 0, protein: 0 })).toBe(true);
+  });
+
+  it("treats blank strings and non-numeric noise as absence", () => {
+    expect(hasSubstantiveNutrition({ calories: 240, fat: "", carbs: "30", protein: "12" })).toBe(
+      false
+    );
+    expect(
+      hasSubstantiveNutrition({ calories: 240, fat: "unknown", carbs: "30", protein: "12" })
+    ).toBe(false);
   });
 });
 

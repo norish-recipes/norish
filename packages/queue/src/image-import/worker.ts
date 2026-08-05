@@ -44,16 +44,9 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   });
 
   // Vision parsing reads the images; every inference happens afterwards.
-  const result = await extractRecipeFromImages(recipeId, files);
-
-  if (!result.success) {
-    throw new Error(
-      result.error ||
-        "Failed to extract recipe from images. The images may not contain a valid recipe."
-    );
-  }
-
-  const parsedRecipe = result.data;
+  // A failure throws with its own message — extraction, not this worker,
+  // knows whether the images held a recipe.
+  const parsedRecipe = await extractRecipeFromImages(recipeId, files);
 
   // Save the recipe
   await reportStep(job, "saving");

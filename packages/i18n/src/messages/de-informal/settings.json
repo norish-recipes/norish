@@ -525,14 +525,18 @@
         "title": "Küchen",
         "subtitle": "Das Vokabular, aus dem Rezepte und KI wählen"
       },
-      "bulkCategorization": {
-        "title": "Massenkategorisierung",
-        "subtitle": "Nicht kategorisierte Rezepte mit KI kategorisieren",
-        "description": "Alle nicht kategorisierten Rezepte für KI-basierte Kategorieerkennung in die Warteschlange stellen. Kategorien sind Frühstück, Mittagessen, Abendessen und Snack.",
-        "button": "Alle Rezepte kategorisieren",
-        "queued": "{count, plural, =0 {Keine Rezepte zu kategorisieren} one {# Rezept in Warteschlange} other {# Rezepte in Warteschlange}}",
-        "success": "Kategorisierung gestartet",
-        "error": "Kategorisierung konnte nicht gestartet werden"
+      "bulkEnrichment": {
+        "title": "Massen-Anreicherung",
+        "subtitle": "Aktivierte Anreicherung für alle Rezepte ausführen",
+        "description": "Stelle für alle Rezepte auf diesem Server jede Anreicherungsart in die Warteschlange, deren automatischer Schalter aktiviert ist. Rezepte behalten, was sie bereits haben — nur Lücken werden gefüllt.",
+        "button": "Alle Rezepte anreichern",
+        "confirmTitle": "Anreicherung für alle Rezepte ausführen?",
+        "confirmMessage": "Dies stellt KI-Arbeit für jedes Rezept auf diesem Server in die Warteschlange. Jede Anreicherungsart, deren automatischer Schalter aktiviert ist, läuft überall dort, wo Daten fehlen.",
+        "costWarning": "Dies kann ein teurer Vorgang sein: Bei vielen Rezepten kann es lange dauern und bei einem kostenpflichtigen KI-Anbieter erhebliches Guthaben verbrauchen.",
+        "confirmButton": "Für alle Rezepte ausführen",
+        "queued": "{queued, plural, =0 {Keine Läufe in Warteschlange} one {# Lauf in Warteschlange} other {# Läufe in Warteschlange}} für {recipes, plural, one {# Rezept} other {# Rezepte}}",
+        "aiDisabled": "KI ist auf diesem Server deaktiviert. Aktiviere zuerst KI.",
+        "error": "Massen-Anreicherung konnte nicht gestartet werden"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Video-Parsing aktivieren",
-      "enableVideoDescription": "Extrahieren Sie Rezepte aus TikTok, Instagram, YouTube Shorts oder Facebook",
+      "enableVideoDescription": "Extrahieren Sie Rezepte aus TikTok, Instagram, YouTube Shorts, Facebook, Pinterest und mehr",
       "configureWarning": "Konfigurieren Sie einen Transkriptions-Anbieter unten, um Video-Verarbeitung zu aktivieren.",
       "aiDisabledWarning": "Aktivieren Sie die KI-Konfiguration, bevor Sie die Video-Verarbeitung einschalten.",
       "maxLength": "Max. Videolänge (Sekunden)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Rezept-Extraktions-Prompt",
       "recipeExtractionDescription": "Dieser Prompt wird verwendet, wenn Rezeptdaten von Webseiten oder Video-Transkripten extrahiert werden.",
       "recipeExtractionPlaceholder": "Gib den Rezept-Extraktions-Prompt ein...",
+      "imageExtraction": "Prompt für Bildextraktion",
+      "imageExtractionDescription": "Dieser Prompt wird verwendet, um Rezeptdaten aus hochgeladenen Bildern zu extrahieren, z. B. Fotos eines Kochbuchs oder einer Rezeptkarte.",
+      "imageExtractionPlaceholder": "Gib den Prompt für die Bildextraktion ein...",
       "unitConversion": "Einheiten-Konvertierungs-Prompt",
       "unitConversionDescription": "Dieser Prompt wird verwendet, wenn Rezeptmaße zwischen metrischen und US-Systemen konvertiert werden. Verfügbare Variablen: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Gib den Einheiten-Konvertierungs-Prompt ein...",
@@ -653,12 +660,18 @@
       "autoTagging": "Auto-Tagging-Prompt",
       "autoTaggingDescription": "Dieser Prompt wird verwendet, um Tags für importierte Rezepte zu generieren. Definiere Tagging-Regeln und vordefinierte Tags-Liste.",
       "autoTaggingPlaceholder": "Gib den Auto-Tagging-Prompt ein...",
+      "autoCategorization": "Prompt für Auto-Kategorisierung",
+      "autoCategorizationDescription": "Dieser Prompt wird verwendet, um Rezepte in Mahlzeitenkategorien einzuordnen (Frühstück, Mittagessen, Abendessen, Snack).",
+      "autoCategorizationPlaceholder": "Gib den Prompt für die Auto-Kategorisierung ein...",
+      "allergyDetection": "Prompt für Allergenerkennung",
+      "allergyDetectionDescription": "Dieser Prompt wird verwendet, um die konfigurierten Allergene des Haushalts in den Zutaten eines Rezepts zu erkennen.",
+      "allergyDetectionPlaceholder": "Gib den Prompt für die Allergenerkennung ein...",
       "recipeProvenance": "Prompt für Rezept-Herkunft",
       "recipeProvenanceDescription": "Dieser Prompt ermittelt die Herkunft eines Rezepts. Die entstehende Notiz ist in der Sprache des Rezepts selbst verfasst. Verfügbare Variablen: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Prompt für die Rezept-Herkunft eingeben ...",
       "ingredientLinking": "Prompt für Zutatenverknüpfung",
-      "ingredientLinkingPlaceholder": "Prompt zum Verknüpfen von Zutaten mit Schritten...",
       "ingredientLinkingDescription": "Wird verwendet, um jeden Schritt mit den verwendeten Zutatenzeilen zu verknüpfen",
-      "recipeProvenancePlaceholder": "Prompt für die Rezept-Herkunft eingeben ..."
+      "ingredientLinkingPlaceholder": "Prompt zum Verknüpfen von Zutaten mit Schritten..."
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {

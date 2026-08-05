@@ -45,13 +45,17 @@ const CATEGORIES_ABSENT = sql`NOT EXISTS (
 )`;
 
 /**
- * SQL predicate for "this recipe's whole Nutrition Information group is absent".
- * Any single substantive value makes the stored group authoritative.
+ * SQL predicate for "this recipe's Nutrition Information group is incomplete".
+ *
+ * Mirrors `hasSubstantiveNutrition`: only a complete group — all four values
+ * present — is authoritative. A partial group (an import that stated calories
+ * alone) may be replaced wholesale by a complete estimate, so the four stored
+ * values always agree with each other.
  */
-const NUTRITION_ABSENT = sql`${recipes.calories} IS NULL
-  AND ${recipes.fat} IS NULL
-  AND ${recipes.carbs} IS NULL
-  AND ${recipes.protein} IS NULL`;
+const NUTRITION_INCOMPLETE = sql`(${recipes.calories} IS NULL
+  OR ${recipes.fat} IS NULL
+  OR ${recipes.carbs} IS NULL
+  OR ${recipes.protein} IS NULL)`;
 
 /**
  * SQL predicate for "this recipe's whole Recipe Provenance group is absent".
@@ -111,20 +115,21 @@ export async function replaceRecipeCategories(
 
 function validateNutrition(nutrition: NutritionGroupInput) {
   if (!hasSubstantiveNutrition(nutrition)) {
-    throw new Error("Refusing to replace Nutrition Information with an empty proposal");
+    // Replacement writes all four fields, so an incomplete proposal would null
+    // out whatever it is missing. This is a failure the worker retries rather
+    // than a silent write of gaps; zeros are values and pass.
+    throw new Error("Refusing to replace Nutrition Information with an incomplete proposal");
   }
 
-  // Replacement cannot mix an old estimate with a new one, so omitted fields
-  // are normalized to null and written along with the substantive ones.
   return normalizeNutritionGroup(nutrition);
 }
 
 /**
  * Atomically replace all four Nutrition Information fields.
  *
- * As with categories, the origin decides the guard. Nutrition Information is
- * one atomic precedence group, so an automatic run applies only while all four
- * fields are absent — partial supplied nutrition survives untouched.
+ * As with categories, the origin decides the guard. Only a complete stored
+ * group is authoritative, so an automatic run applies while any of the four
+ * fields is absent and defers only to a group that already has all of them.
  *
  * @returns whether the replacement was applied
  */
@@ -136,7 +141,7 @@ export async function replaceRecipeNutrition(
   const group = validateNutrition(nutrition);
   const guards = [eq(recipes.id, recipeId)];
 
-  if (origin === "automatic") guards.push(NUTRITION_ABSENT);
+  if (origin === "automatic") guards.push(NUTRITION_INCOMPLETE);
 
   const updated = await db
     .update(recipes)

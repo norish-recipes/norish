@@ -525,14 +525,18 @@
         "title": "Culinárias",
         "subtitle": "O vocabulário do qual receitas e IA escolhem"
       },
-      "bulkCategorization": {
-        "title": "Categorização em massa",
-        "subtitle": "Categorize receitas sem categoria usando IA",
-        "description": "Coloque todas as receitas sem categoria na fila para detecção de categoria baseada em IA. As categorias incluem Café da manhã, Almoço, Jantar e Lanche.",
-        "button": "Categorizar todas as receitas",
-        "queued": "{count, plural, =0 {Nenhuma receita para categorizar} one {# receita na fila} other {# receitas na fila}}",
-        "success": "Categorização iniciada",
-        "error": "Falha ao iniciar categorização"
+      "bulkEnrichment": {
+        "title": "Enriquecimento em massa",
+        "subtitle": "Executar o enriquecimento habilitado em todas as receitas",
+        "description": "Coloque na fila, para todas as receitas deste servidor, cada tipo de enriquecimento cujo interruptor automático esteja habilitado. As receitas mantêm os dados que já têm — apenas as lacunas são preenchidas.",
+        "button": "Enriquecer todas as receitas",
+        "confirmTitle": "Executar o enriquecimento em todas as receitas?",
+        "confirmMessage": "Isto coloca na fila trabalho de IA para cada receita deste servidor. Cada tipo de enriquecimento cujo interruptor automático esteja habilitado é executado onde faltam dados.",
+        "costWarning": "Pode ser uma operação cara: com muitas receitas pode demorar bastante e, em um provedor de IA pago, consumir uma quantidade significativa de créditos.",
+        "confirmButton": "Executar em todas as receitas",
+        "queued": "{queued, plural, =0 {Nenhuma execução na fila} one {# execução na fila} other {# execuções na fila}} para {recipes, plural, one {# receita} other {# receitas}}",
+        "aiDisabled": "A IA está desabilitada neste servidor. Habilite a IA primeiro.",
+        "error": "Falha ao iniciar o enriquecimento em massa"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Ativar análise de vídeo",
-      "enableVideoDescription": "Extraia receitas do TikTok, Instagram, YouTube Shorts ou Facebook",
+      "enableVideoDescription": "Extraia receitas do TikTok, Instagram, YouTube Shorts, Facebook, Pinterest e mais",
       "configureWarning": "Configure um provedor de transcrição abaixo para ativar o processamento de vídeo.",
       "aiDisabledWarning": "Ative a configuração de IA antes de habilitar o processamento de vídeo.",
       "maxLength": "Duração máxima do vídeo (segundos)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Prompt de extração de receita",
       "recipeExtractionDescription": "Este prompt é usado ao extrair dados de receitas de páginas da web ou transcrições de vídeos.",
       "recipeExtractionPlaceholder": "Insira o prompt de extração de receita...",
+      "imageExtraction": "Prompt de extração de imagens",
+      "imageExtractionDescription": "Este prompt é usado ao extrair dados de receitas de imagens enviadas, como fotos de um livro de receitas ou de um cartão de receita.",
+      "imageExtractionPlaceholder": "Insira o prompt de extração de imagens...",
       "unitConversion": "Prompt de conversão de unidades",
       "unitConversionDescription": "Este prompt é usado ao converter medidas de receitas entre os sistemas métrico e dos EUA. Variáveis disponíveis: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Insira o prompt de conversão de unidades...",
@@ -653,12 +660,18 @@
       "autoTagging": "Prompt de marcação automática",
       "autoTaggingDescription": "Este prompt é usado para gerar tags para receitas importadas. Defina regras de marcação e a lista de tags predefinidas.",
       "autoTaggingPlaceholder": "Insira o prompt de marcação automática...",
+      "autoCategorization": "Prompt de categorização automática",
+      "autoCategorizationDescription": "Este prompt é usado para classificar receitas em categorias de refeições (café da manhã, almoço, jantar, lanche).",
+      "autoCategorizationPlaceholder": "Insira o prompt de categorização automática...",
+      "allergyDetection": "Prompt de detecção de alérgenos",
+      "allergyDetectionDescription": "Este prompt é usado para detectar os alérgenos configurados da casa nos ingredientes de uma receita.",
+      "allergyDetectionPlaceholder": "Insira o prompt de detecção de alérgenos...",
       "recipeProvenance": "Prompt de procedência da receita",
       "recipeProvenanceDescription": "Este prompt deduz de onde vem uma receita. A nota produzida é escrita no idioma da própria receita. Variáveis disponíveis: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Insira o prompt de procedência da receita...",
       "ingredientLinking": "Prompt de vinculação de ingredientes",
-      "ingredientLinkingPlaceholder": "Prompt para vincular ingredientes às etapas...",
       "ingredientLinkingDescription": "Usado ao vincular cada etapa às linhas de ingredientes que utiliza",
-      "recipeProvenancePlaceholder": "Insira o prompt de procedência da receita..."
+      "ingredientLinkingPlaceholder": "Prompt para vincular ingredientes às etapas..."
     },
     "unsavedChanges": "Alterações não salvas",
     "jsonEditor": {

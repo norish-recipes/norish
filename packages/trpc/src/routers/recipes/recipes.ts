@@ -36,12 +36,16 @@ import {
 import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
 import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
 import { getQueues } from "@norish/queue/registry";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import {
+  getRecipePermissionPolicy,
+  isVideoParsingEnabled,
+} from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
+import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
@@ -362,6 +366,7 @@ export const importFromUrlProcedure = authedProcedure
       errorResponses: {
         401: "Missing or invalid API credentials",
         409: "An import of this recipe is already in flight",
+        412: "The URL is a video and AI or video parsing is not enabled",
       },
     },
   })
@@ -370,6 +375,27 @@ export const importFromUrlProcedure = authedProcedure
   .mutation(async ({ ctx, input }) => {
     const { url, forceAI } = input;
     const recipeId = randomUUID();
+
+    // A video recipe can only be extracted with AI, and the video pipeline
+    // downloads and may transcribe before extraction runs. Refuse before
+    // dispatching so a doomed import costs nothing and fails in the caller's
+    // hands rather than in a queued job the user watches time out.
+    if (isVideoUrl(url)) {
+      if (!(await checkAIEnabled())) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Video imports use AI to extract the recipe, and AI features are not enabled. Enable AI in the admin settings.",
+        });
+      }
+
+      if (!(await isVideoParsingEnabled())) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Video recipe parsing is not enabled. Enable it in the admin settings.",
+        });
+      }
+    }
 
     // Add job to queue - returns conflict status if duplicate in queue
     const queues = getQueues();
@@ -487,19 +513,19 @@ const convertMeasurements = authedProcedure
       .then((recipe) => {
         if (recipe === null) return null;
 
-        // Convert with AI
-        return import("@norish/shared-server/ai/unit-converter")
+        // Convert with AI; the runtime throws typed errors on failure.
+        return import("@norish/shared-server/ai/enrichment/unit-converter")
           .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
-          .then((result) => {
-            if (!result.success) {
+          .then(
+            (converted) => ({ recipe, converted }),
+            (error: unknown) => {
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
-                message: result.error ?? "Conversion failed, please try again.",
+                message:
+                  error instanceof Error ? error.message : "Conversion failed, please try again.",
               });
             }
-
-            return { recipe, converted: result.data };
-          });
+          );
       })
       .then((result) => {
         if (result === null) return;

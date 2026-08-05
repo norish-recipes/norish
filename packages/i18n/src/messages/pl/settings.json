@@ -525,14 +525,18 @@
         "title": "Kuchnie",
         "subtitle": "Słownik, z którego wybierają przepisy i AI"
       },
-      "bulkCategorization": {
-        "title": "Masowa kategoryzacja",
-        "subtitle": "Kategoryzuj nieskategoryzowane przepisy za pomocą AI",
-        "description": "Dodaj do kolejki wszystkie nieskategoryzowane przepisy do rozpoznania kategorii przez AI. Kategorie obejmują: Śniadanie, Lunch, Kolacja i Przekąska.",
-        "button": "Kategoryzuj wszystkie przepisy",
-        "queued": "{count, plural, =0 {Brak przepisów do skategoryzowania} one {Dodano do kolejki # przepis} other {Dodano do kolejki # przepisów}}",
-        "success": "Rozpoczęto kategoryzację",
-        "error": "Nie udało się uruchomić kategoryzacji"
+      "bulkEnrichment": {
+        "title": "Masowe wzbogacanie",
+        "subtitle": "Uruchom włączone wzbogacanie dla wszystkich przepisów",
+        "description": "Dodaj do kolejki, dla wszystkich przepisów na tym serwerze, każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym. Przepisy zachowują dane, które już mają — uzupełniane są tylko braki.",
+        "button": "Wzbogać wszystkie przepisy",
+        "confirmTitle": "Uruchomić wzbogacanie dla wszystkich przepisów?",
+        "confirmMessage": "To dodaje do kolejki pracę AI dla każdego przepisu na tym serwerze. Każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym uruchamia się tam, gdzie brakuje danych.",
+        "costWarning": "To może być kosztowna operacja: przy wielu przepisach może potrwać długo, a u płatnego dostawcy AI zużyć znaczną ilość kredytów.",
+        "confirmButton": "Uruchom dla wszystkich przepisów",
+        "queued": "{queued, plural, =0 {Brak uruchomień w kolejce} one {# uruchomienie w kolejce} few {# uruchomienia w kolejce} many {# uruchomień w kolejce} other {# uruchomienia w kolejce}} dla {recipes, plural, one {# przepisu} few {# przepisów} many {# przepisów} other {# przepisu}}",
+        "aiDisabled": "AI jest wyłączone na tym serwerze. Najpierw włącz AI.",
+        "error": "Nie udało się uruchomić masowego wzbogacania"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Włącz parsowanie wideo",
-      "enableVideoDescription": "Wyciągaj przepisy z TikToka, Instagrama, YouTube Shorts lub Facebooka",
+      "enableVideoDescription": "Wyciągaj przepisy z TikToka, Instagrama, YouTube Shorts, Facebooka, Pinteresta i innych",
       "configureWarning": "Skonfiguruj poniżej dostawcę transkrypcji, aby włączyć przetwarzanie wideo.",
       "aiDisabledWarning": "Włącz konfigurację AI przed uruchomieniem przetwarzania wideo.",
       "maxLength": "Maks. długość wideo (sekundy)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Prompt ekstrakcji przepisu",
       "recipeExtractionDescription": "Ten prompt jest używany do wyciągania danych przepisu ze stron WWW lub transkryptów wideo.",
       "recipeExtractionPlaceholder": "Wpisz prompt ekstrakcji przepisu...",
+      "imageExtraction": "Prompt ekstrakcji z obrazów",
+      "imageExtractionDescription": "Ten prompt jest używany przy wyodrębnianiu danych przepisu z przesłanych obrazów, np. zdjęć książki kucharskiej lub karty przepisu.",
+      "imageExtractionPlaceholder": "Wpisz prompt ekstrakcji z obrazów...",
       "unitConversion": "Prompt konwersji jednostek",
       "unitConversionDescription": "Ten prompt jest używany do konwersji miar przepisu między systemem metrycznym a US. Dostępne zmienne: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Wpisz prompt konwersji jednostek...",
@@ -653,12 +660,18 @@
       "autoTagging": "Prompt automatycznego tagowania",
       "autoTaggingDescription": "Ten prompt jest używany do generowania tagów dla importowanych przepisów. Zdefiniuj reguły tagowania i listę predefiniowanych tagów.",
       "autoTaggingPlaceholder": "Wpisz prompt automatycznego tagowania...",
+      "autoCategorization": "Prompt automatycznej kategoryzacji",
+      "autoCategorizationDescription": "Ten prompt jest używany do porządkowania przepisów w kategorie posiłków (śniadanie, obiad, kolacja, przekąska).",
+      "autoCategorizationPlaceholder": "Wpisz prompt automatycznej kategoryzacji...",
+      "allergyDetection": "Prompt wykrywania alergenów",
+      "allergyDetectionDescription": "Ten prompt jest używany do wykrywania skonfigurowanych alergenów gospodarstwa domowego w składnikach przepisu.",
+      "allergyDetectionPlaceholder": "Wpisz prompt wykrywania alergenów...",
       "recipeProvenance": "Prompt pochodzenia przepisu",
       "recipeProvenanceDescription": "Ten prompt ustala, skąd pochodzi przepis. Powstała notatka jest napisana w języku samego przepisu. Dostępne zmienne: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Wprowadź prompt pochodzenia przepisu...",
       "ingredientLinking": "Prompt wiązania składników",
-      "ingredientLinkingPlaceholder": "Prompt do wiązania składników z krokami...",
       "ingredientLinkingDescription": "Używany przy wiązaniu każdego kroku z pozycjami składników, których używa",
-      "recipeProvenancePlaceholder": "Wprowadź prompt pochodzenia przepisu..."
+      "ingredientLinkingPlaceholder": "Prompt do wiązania składników z krokami..."
     },
     "unsavedChanges": "Niezapisane zmiany",
     "jsonEditor": {

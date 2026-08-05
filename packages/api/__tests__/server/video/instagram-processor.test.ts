@@ -33,7 +33,7 @@ const boundary = vi.hoisted(() => ({
   convertToMp4: vi.fn(),
   saveVideoFile: vi.fn(),
   downloadImage: vi.fn(),
-  transcribeAudio: vi.fn(),
+  transcribe: vi.fn(),
   extractRecipeFromVideo: vi.fn(),
   extractRecipeWithAI: vi.fn(),
   fetchViaPlaywright: vi.fn(),
@@ -53,11 +53,13 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   downloadImage: boundary.downloadImage,
 }));
 
-vi.mock("@norish/api/ai/transcriber", () => ({ transcribeAudio: boundary.transcribeAudio }));
+vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
+  transcribe: boundary.transcribe,
+}));
 vi.mock("@norish/api/video/normalizer", () => ({
   extractRecipeFromVideo: boundary.extractRecipeFromVideo,
 }));
-vi.mock("@norish/api/ai/recipe-parser", () => ({
+vi.mock("@norish/api/parser/recipe-extraction", () => ({
   extractRecipeWithAI: boundary.extractRecipeWithAI,
 }));
 vi.mock("@norish/api/parser/fetch", () => ({ fetchViaPlaywright: boundary.fetchViaPlaywright }));
@@ -118,7 +120,7 @@ describe("a post yt-dlp reports a video stream for", () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "present", duration: 47, description: LONG_CAPTION })
     );
-    boundary.extractRecipeFromVideo.mockResolvedValue({ success: true, data: recipe() });
+    boundary.extractRecipeFromVideo.mockResolvedValue(recipe());
 
     const result = await process();
 
@@ -131,7 +133,7 @@ describe("a post yt-dlp reports a video stream for", () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "present", duration: 0, description: LONG_CAPTION })
     );
-    boundary.extractRecipeFromVideo.mockResolvedValue({ success: true, data: recipe() });
+    boundary.extractRecipeFromVideo.mockResolvedValue(recipe());
 
     await process();
 
@@ -144,7 +146,7 @@ describe("a post yt-dlp reports no video stream for", () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "absent", description: SHORT_CAPTION })
     );
-    boundary.extractRecipeWithAI.mockResolvedValue({ success: true, data: recipe() });
+    boundary.extractRecipeWithAI.mockResolvedValue(recipe());
 
     const result = await process();
 
@@ -159,7 +161,7 @@ describe("an Unclassified Post", () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "unknown", description: LONG_CAPTION })
     );
-    boundary.extractRecipeFromVideo.mockResolvedValue({ success: true, data: recipe() });
+    boundary.extractRecipeFromVideo.mockResolvedValue(recipe());
 
     const result = await process();
 
@@ -174,12 +176,12 @@ describe("an Unclassified Post", () => {
     boundary.fetchViaPlaywright.mockResolvedValue(
       `<meta property="og:description" content="${SHORT_CAPTION}" />`
     );
-    boundary.extractRecipeWithAI.mockResolvedValue({ success: true, data: recipe() });
+    boundary.extractRecipeWithAI.mockResolvedValue(recipe());
 
     const result = await process();
 
     expect(result.name).toBe("Pasta");
-    expect(boundary.transcribeAudio).not.toHaveBeenCalled();
+    expect(boundary.transcribe).not.toHaveBeenCalled();
   });
 
   it("falls back to the caption when the video was too long to accept", async () => {
@@ -190,7 +192,7 @@ describe("an Unclassified Post", () => {
     boundary.fetchViaPlaywright.mockResolvedValue(
       `<meta property="og:description" content="${SHORT_CAPTION}" />`
     );
-    boundary.extractRecipeWithAI.mockResolvedValue({ success: true, data: recipe() });
+    boundary.extractRecipeWithAI.mockResolvedValue(recipe());
 
     await expect(process()).resolves.toMatchObject({ name: "Pasta" });
   });
@@ -198,10 +200,7 @@ describe("an Unclassified Post", () => {
   it("fails the import when transcription fails", async () => {
     boundary.getVideoMetadata.mockResolvedValue(metadata({ videoStream: "unknown" }));
     boundary.downloadVideoAudio.mockResolvedValue("/tmp/a.mp3");
-    boundary.transcribeAudio.mockResolvedValue({
-      success: false,
-      error: "Transcription provider unreachable",
-    });
+    boundary.transcribe.mockRejectedValue(new Error("Transcription provider unreachable"));
 
     await expect(process()).rejects.toThrow("Transcription provider unreachable");
     expect(boundary.extractRecipeWithAI).not.toHaveBeenCalled();
@@ -210,11 +209,8 @@ describe("an Unclassified Post", () => {
   it("fails the import when the AI provider fails", async () => {
     boundary.getVideoMetadata.mockResolvedValue(metadata({ videoStream: "unknown" }));
     boundary.downloadVideoAudio.mockResolvedValue("/tmp/a.mp3");
-    boundary.transcribeAudio.mockResolvedValue({ success: true, data: "first, boil the water" });
-    boundary.extractRecipeFromVideo.mockResolvedValue({
-      success: false,
-      error: "AI provider returned an error",
-    });
+    boundary.transcribe.mockResolvedValue("first, boil the water");
+    boundary.extractRecipeFromVideo.mockRejectedValue(new Error("AI provider returned an error"));
 
     await expect(process()).rejects.toThrow("AI provider returned an error");
     expect(boundary.extractRecipeWithAI).not.toHaveBeenCalled();

@@ -57,6 +57,40 @@ export async function submitPasteImport(page: Page, text: string): Promise<void>
   }).toPass({ timeout: 90_000, intervals: [500, 1_000, 2_000] });
 }
 
+/** A 1x1 transparent PNG — valid image bytes without a fixture file. */
+export const ONE_PIXEL_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+  "base64"
+);
+
+/**
+ * Drive the image-import dialog through to a submitted import.
+ */
+export async function submitImageImport(page: Page): Promise<void> {
+  let attempt = 0;
+
+  await expect(async () => {
+    if (attempt++ > 0) {
+      await page.reload();
+    }
+
+    const fileInput = page.locator("input[type='file']");
+
+    if (!(await fileInput.isVisible().catch(() => false))) {
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+      await page.getByRole("menuitem", { name: "Image" }).click({ timeout: 2_000 });
+    }
+
+    await fileInput.setInputFiles({
+      name: "cookbook-page.png",
+      mimeType: "image/png",
+      buffer: ONE_PIXEL_PNG,
+    });
+    await page.getByRole("button", { name: "Import with AI" }).click({ timeout: 3_000 });
+  }).toPass({ timeout: 90_000, intervals: [500, 1_000, 2_000] });
+}
+
 /** Sign in against the real auth API and return the resulting session cookies. */
 export async function signIn(user: { email: string; password: string }): Promise<SessionCookies> {
   const api = await request.newContext({
@@ -151,6 +185,47 @@ export async function findCuisineIdByName(name: string): Promise<string> {
   }
 }
 
+/**
+ * Give the signed-in user configured allergies, through their own settings
+ * API — user rows keep encrypted columns, so the database is not a shortcut
+ * here. Allergy detection only issues an AI request when the household has at
+ * least one allergen configured.
+ */
+export async function supplyUserAllergies(
+  cookies: SessionCookies,
+  allergies: string[]
+): Promise<void> {
+  const api = await request.newContext({
+    baseURL: E2E_BASE_URL,
+    extraHTTPHeaders: {
+      origin: E2E_BASE_URL,
+      cookie: cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
+    },
+  });
+
+  try {
+    const current = await api.get("/api/trpc/user.getAllergies");
+
+    if (!current.ok()) {
+      throw new Error(`getAllergies failed: ${current.status()}`);
+    }
+
+    const body = (await current.json()) as {
+      result: { data: { json: { version: number } } };
+    };
+
+    const response = await api.post("/api/trpc/user.setAllergies", {
+      data: { json: { allergies, version: body.result.data.json.version } },
+    });
+
+    if (!response.ok()) {
+      throw new Error(`setAllergies failed: ${response.status()}`);
+    }
+  } finally {
+    await api.dispose();
+  }
+}
+
 /** Read a recipe's stored Recipe Provenance straight from the database. */
 export async function readStoredProvenance(recipeName: string): Promise<{
   originCountry: string | null;
@@ -205,8 +280,10 @@ export async function readStoredCategories(recipeName: string): Promise<string[]
   await db.connect();
 
   try {
+    // categories is an array of a custom enum type, which node-postgres does
+    // not parse; array_to_json turns it into something it does.
     const recipe = await db.query<{ categories: string[] }>(
-      "select categories from recipes where name = $1",
+      "select array_to_json(categories) as categories from recipes where name = $1",
       [recipeName]
     );
     const row = recipe.rows[0];

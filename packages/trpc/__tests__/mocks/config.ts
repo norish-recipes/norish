@@ -8,6 +8,7 @@ export const getRecurrenceConfig = vi.fn().mockResolvedValue({});
 export const getRecipePermissionPolicy = vi
   .fn()
   .mockResolvedValue({ view: "household", edit: "household", delete: "household" });
+export const isVideoParsingEnabled = vi.fn().mockResolvedValue(true);
 
 export function resetConfigMocks() {
   getUnits.mockReset().mockResolvedValue({});
@@ -15,4 +16,5 @@ export function resetConfigMocks() {
   getRecipePermissionPolicy
     .mockReset()
     .mockResolvedValue({ view: "household", edit: "household", delete: "household" });
+  isVideoParsingEnabled.mockReset().mockResolvedValue(true);
 }

@@ -7,7 +7,7 @@
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
-import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { generateTagsForRecipe } from "@norish/shared-server/ai/enrichment/auto-tagger";
 import { createLogger } from "@norish/shared-server/logger";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
@@ -25,14 +25,9 @@ const autoTaggingWorker = defineLazyWorker<RecipeEnrichmentJobData>(
   QUEUE_NAMES.AUTO_TAGGING,
   (job) =>
     runEnrichmentJob(job, async (recipe) => {
-      const generateTagsForRecipe = requireQueueApiHandler("generateTagsForRecipe");
-      const result = await generateTagsForRecipe(toRecipeSummary(recipe));
+      const generated = await generateTagsForRecipe(toRecipeSummary(recipe));
 
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      const tags = normalizeEnrichmentTagNames(result.data);
+      const tags = normalizeEnrichmentTagNames(generated);
 
       if (tags.length === 0) {
         // Nothing to append is a legitimate outcome, not a failure: appending

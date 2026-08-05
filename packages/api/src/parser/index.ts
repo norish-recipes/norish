@@ -1,10 +1,9 @@
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
-import { isVideoUrl } from "@norish/api/helpers";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
 import { adaptRecipeScrapersResponse } from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
+import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
 import {
   getContentIndicators,
   isAIEnabled,
@@ -13,7 +12,7 @@ import {
 } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { hasRecipeName } from "@norish/shared/lib/helpers";
+import { hasRecipeName, isVideoUrl } from "@norish/shared/lib/helpers";
 
 export interface ParseRecipeResult {
   recipe: FullRecipeInsertDTO;
@@ -43,6 +42,10 @@ function getStructuredFailureMessage(code: string): string {
 
 /**
  * Attempt AI extraction. If requireAI = true, throws when AI is disabled.
+ *
+ * The URL parser is the one consumer that wants a non-throwing outcome: it
+ * falls back to non-AI parsing when AI extraction fails, so the failure is
+ * caught here and answered with null.
  */
 async function tryExtractWithAI(
   input: string,
@@ -62,13 +65,14 @@ async function tryExtractWithAI(
   }
 
   log.info({ url }, "Attempting AI extraction");
-  const result = await extractRecipeWithAI(input, recipeId, url, originalHtml);
 
-  if (result.success) return result.data;
+  try {
+    return await extractRecipeWithAI(input, recipeId, url, originalHtml);
+  } catch (error) {
+    log.warn({ url, err: error }, "AI extraction failed");
 
-  log.warn({ url, error: result.error, code: result.code }, "AI extraction failed");
-
-  return null;
+    return null;
+  }
 }
 
 /**
@@ -152,6 +156,13 @@ async function tryHandleVideoUrl(
   tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<ParseRecipeResult | null> {
   if (!isVideoUrl(url)) return null;
+
+  // Two checks so the failure names the setting that is actually off: a video
+  // recipe is extracted with AI, so with AI disabled the import can only cost
+  // money (download, transcription) before failing.
+  if (!(await isAIEnabled())) {
+    throw new Error("Video imports use AI to extract the recipe, and AI features are not enabled.");
+  }
 
   if (!(await isVideoParsingEnabled())) {
     throw new Error("Video recipe parsing is not enabled.");

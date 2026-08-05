@@ -525,14 +525,18 @@
         "title": "Keukens",
         "subtitle": "De woordenlijst waaruit recepten en AI kiezen"
       },
-      "bulkCategorization": {
-        "title": "Bulkcategorisatie",
-        "subtitle": "Categoriseer niet-gecategoriseerde recepten met AI",
-        "description": "Zet alle niet-gecategoriseerde recepten in de wachtrij voor AI-gebaseerde categoriedetectie. Categorieën zijn Ontbijt, Lunch, Diner en Snack.",
-        "button": "Alle recepten categoriseren",
-        "queued": "{count, plural, =0 {Geen recepten om te categoriseren} one {# recept in wachtrij} other {# recepten in wachtrij}}",
-        "success": "Categorisatie gestart",
-        "error": "Categorisatie starten mislukt"
+      "bulkEnrichment": {
+        "title": "Bulkverrijking",
+        "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
+        "description": "Zet voor alle recepten op deze server elke verrijkingssoort in de wachtrij waarvan de automatische schakelaar aanstaat. Recepten behouden wat ze al hebben — alleen ontbrekende gegevens worden aangevuld.",
+        "button": "Alle recepten verrijken",
+        "confirmTitle": "Verrijking op alle recepten uitvoeren?",
+        "confirmMessage": "Dit zet AI-werk in de wachtrij voor elk recept op deze server. Elke verrijkingssoort waarvan de automatische schakelaar aanstaat draait waar gegevens ontbreken.",
+        "costWarning": "Dit kan een kostbare bewerking zijn: met veel recepten kan het lang duren en bij een betaalde AI-provider veel tegoed verbruiken.",
+        "confirmButton": "Op alle recepten uitvoeren",
+        "queued": "{queued, plural, =0 {Geen runs in wachtrij} one {# run in wachtrij} other {# runs in wachtrij}} voor {recipes, plural, one {# recept} other {# recepten}}",
+        "aiDisabled": "AI is uitgeschakeld op deze server. Schakel eerst AI in.",
+        "error": "Bulkverrijking starten mislukt"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Video parsing inschakelen",
-      "enableVideoDescription": "Extraheer recepten van TikTok, Instagram, YouTube Shorts of Facebook",
+      "enableVideoDescription": "Extraheer recepten van TikTok, Instagram, YouTube Shorts, Facebook, Pinterest en meer",
       "configureWarning": "Configureer hieronder een transcriptieprovider om videobewerking in te schakelen.",
       "aiDisabledWarning": "Schakel eerst de AI-configuratie in voordat je videobewerking activeert.",
       "maxLength": "Max videolengte (seconden)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Receptextractie Prompt",
       "recipeExtractionDescription": "Deze prompt wordt gebruikt bij het extraheren van receptgegevens van webpagina's of videotranscripties.",
       "recipeExtractionPlaceholder": "Voer de receptextractie prompt in...",
+      "imageExtraction": "Prompt voor beeldextractie",
+      "imageExtractionDescription": "Deze prompt wordt gebruikt bij het extraheren van receptgegevens uit geüploade afbeeldingen, zoals foto's van een kookboek of een receptkaart.",
+      "imageExtractionPlaceholder": "Voer de prompt voor beeldextractie in...",
       "unitConversion": "Eenheidsconversie Prompt",
       "unitConversionDescription": "Deze prompt wordt gebruikt bij het converteren van receptmaten tussen metrische en US-systemen. Beschikbare variabelen: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Voer de eenheidsconversie prompt in...",
@@ -653,12 +660,18 @@
       "autoTagging": "Auto-tagging Prompt",
       "autoTaggingDescription": "Deze prompt wordt gebruikt om tags te genereren voor geïmporteerde recepten. Definieer taggingregels en een lijst met voorgedefinieerde tags.",
       "autoTaggingPlaceholder": "Voer de auto-tagging prompt in...",
+      "autoCategorization": "Prompt voor automatische categorisering",
+      "autoCategorizationDescription": "Deze prompt wordt gebruikt om recepten in maaltijdcategorieën in te delen (ontbijt, lunch, diner, tussendoortje).",
+      "autoCategorizationPlaceholder": "Voer de prompt voor automatische categorisering in...",
+      "allergyDetection": "Prompt voor allergiedetectie",
+      "allergyDetectionDescription": "Deze prompt wordt gebruikt om de geconfigureerde allergenen van het huishouden in de ingrediënten van een recept te detecteren.",
+      "allergyDetectionPlaceholder": "Voer de prompt voor allergiedetectie in...",
       "recipeProvenance": "Prompt voor receptherkomst",
       "recipeProvenanceDescription": "Deze prompt bepaalt waar een recept vandaan komt. De toelichting die eruit komt staat in de taal van het recept zelf. Beschikbare variabelen: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Voer de prompt voor receptherkomst in...",
       "ingredientLinking": "Prompt voor ingrediëntkoppeling",
-      "ingredientLinkingPlaceholder": "Prompt voor het koppelen van ingrediënten aan stappen...",
       "ingredientLinkingDescription": "Gebruikt bij het koppelen van elke stap aan de ingrediëntregels die hij gebruikt",
-      "recipeProvenancePlaceholder": "Voer de prompt voor receptherkomst in..."
+      "ingredientLinkingPlaceholder": "Prompt voor het koppelen van ingrediënten aan stappen..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {

@@ -525,14 +525,18 @@
         "title": "Cuisines",
         "subtitle": "Le vocabulaire dans lequel les recettes et l'IA puisent"
       },
-      "bulkCategorization": {
-        "title": "Catégorisation en masse",
-        "subtitle": "Catégoriser les recettes non catégorisées avec l'IA",
-        "description": "Mettre en file d'attente toutes les recettes non catégorisées pour la détection de catégorie par IA. Les catégories incluent Petit-déjeuner, Déjeuner, Dîner et Collation.",
-        "button": "Catégoriser toutes les recettes",
-        "queued": "{count, plural, =0 {Aucune recette à catégoriser} one {# recette en file d'attente} other {# recettes en file d'attente}}",
-        "success": "Catégorisation démarrée",
-        "error": "Échec du démarrage de la catégorisation"
+      "bulkEnrichment": {
+        "title": "Enrichissement en masse",
+        "subtitle": "Exécuter l'enrichissement activé sur toutes les recettes",
+        "description": "Mettre en file d'attente, pour toutes les recettes de ce serveur, chaque type d'enrichissement dont l'interrupteur automatique est activé. Les recettes conservent les données qu'elles ont déjà — seuls les manques sont comblés.",
+        "button": "Enrichir toutes les recettes",
+        "confirmTitle": "Exécuter l'enrichissement sur toutes les recettes ?",
+        "confirmMessage": "Ceci met en file d'attente du travail d'IA pour chaque recette de ce serveur. Chaque type d'enrichissement dont l'interrupteur automatique est activé s'exécute là où des données manquent.",
+        "costWarning": "Cette opération peut être coûteuse : avec beaucoup de recettes, elle peut prendre longtemps et, avec un fournisseur d'IA payant, consommer une quantité importante de crédits.",
+        "confirmButton": "Exécuter sur toutes les recettes",
+        "queued": "{queued, plural, =0 {Aucune exécution en file d'attente} one {# exécution en file d'attente} other {# exécutions en file d'attente}} pour {recipes, plural, one {# recette} other {# recettes}}",
+        "aiDisabled": "L'IA est désactivée sur ce serveur. Activez d'abord l'IA.",
+        "error": "Échec du démarrage de l'enrichissement en masse"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Activer l’analyse vidéo",
-      "enableVideoDescription": "Extraire des recettes depuis TikTok, Instagram, YouTube Shorts ou Facebook",
+      "enableVideoDescription": "Extraire des recettes depuis TikTok, Instagram, YouTube Shorts, Facebook, Pinterest et plus encore",
       "configureWarning": "Configurez un fournisseur de transcription ci-dessous pour activer le traitement vidéo.",
       "aiDisabledWarning": "Activez la configuration de l’IA avant d’activer le traitement vidéo.",
       "maxLength": "Longueur max (secondes)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Prompt d'extraction de recette",
       "recipeExtractionDescription": "Utilisé pour extraire les recettes depuis pages web ou transcriptions vidéo.",
       "recipeExtractionPlaceholder": "Entrez le prompt...",
+      "imageExtraction": "Prompt d'extraction d'images",
+      "imageExtractionDescription": "Ce prompt est utilisé pour extraire les données de recettes à partir d'images téléversées, comme des photos d'un livre de cuisine ou d'une fiche recette.",
+      "imageExtractionPlaceholder": "Saisissez le prompt d'extraction d'images...",
       "unitConversion": "Prompt de conversion d’unités",
       "unitConversionDescription": "Utilisé pour convertir les mesures (variables : sourceSystem, targetSystem, units)",
       "unitConversionPlaceholder": "Entrez le prompt...",
@@ -653,12 +660,18 @@
       "autoTagging": "Prompt d’auto‑tag",
       "autoTaggingDescription": "Utilisé pour générer les tags des recettes importées",
       "autoTaggingPlaceholder": "Entrez le prompt...",
+      "autoCategorization": "Prompt de catégorisation automatique",
+      "autoCategorizationDescription": "Ce prompt est utilisé pour classer les recettes en catégories de repas (petit-déjeuner, déjeuner, dîner, en-cas).",
+      "autoCategorizationPlaceholder": "Saisissez le prompt de catégorisation automatique...",
+      "allergyDetection": "Prompt de détection des allergènes",
+      "allergyDetectionDescription": "Ce prompt est utilisé pour détecter les allergènes configurés du foyer dans les ingrédients d'une recette.",
+      "allergyDetectionPlaceholder": "Saisissez le prompt de détection des allergènes...",
       "recipeProvenance": "Invite de provenance des recettes",
       "recipeProvenanceDescription": "Cette invite détermine l'origine d'une recette. La note produite est rédigée dans la langue de la recette elle-même. Variables disponibles : recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Saisissez l'invite de provenance des recettes...",
       "ingredientLinking": "Prompt de liaison des ingrédients",
-      "ingredientLinkingPlaceholder": "Prompt pour lier les ingrédients aux étapes...",
       "ingredientLinkingDescription": "Utilisé pour lier chaque étape aux lignes d'ingrédients qu'elle utilise",
-      "recipeProvenancePlaceholder": "Saisissez l'invite de provenance des recettes..."
+      "ingredientLinkingPlaceholder": "Prompt pour lier les ingrédients aux étapes..."
     },
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {

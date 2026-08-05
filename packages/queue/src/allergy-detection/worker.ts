@@ -9,7 +9,7 @@
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { getAllergiesForUsers, getHouseholdMemberIds } from "@norish/db";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
-import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { detectAllergiesInRecipe } from "@norish/shared-server/ai/enrichment/allergy-detector";
 import { createLogger } from "@norish/shared-server/logger";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
@@ -27,7 +27,6 @@ const allergyDetectionWorker = defineLazyWorker<RecipeEnrichmentJobData>(
   QUEUE_NAMES.ALLERGY_DETECTION,
   (job) =>
     runEnrichmentJob(job, async (recipe) => {
-      const detectAllergiesInRecipe = requireQueueApiHandler("detectAllergiesInRecipe");
       const memberIds = job.data.householdUserIds ?? (await getHouseholdMemberIds(job.data.userId));
       const allergies = await getAllergiesForUsers(memberIds);
       const allergiesToDetect = Array.from(new Set(allergies.map((allergy) => allergy.tagName)));
@@ -40,13 +39,9 @@ const allergyDetectionWorker = defineLazyWorker<RecipeEnrichmentJobData>(
         return false;
       }
 
-      const result = await detectAllergiesInRecipe(toRecipeSummary(recipe), allergiesToDetect);
+      const found = await detectAllergiesInRecipe(toRecipeSummary(recipe), allergiesToDetect);
 
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      const detected = normalizeEnrichmentTagNames(result.data);
+      const detected = normalizeEnrichmentTagNames(found);
 
       if (detected.length === 0) {
         log.info({ recipeId: recipe.id }, "AI detected no allergens");

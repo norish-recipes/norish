@@ -36,12 +36,8 @@ vi.mock("@norish/db/repositories/recipe-enrichment", () => ({
   addStepIngredientsToBareSteps: mocks.addStepIngredientsToBareSteps,
 }));
 
-vi.mock("@norish/queue/api-handlers", () => ({
-  requireQueueApiHandler: (name: string) => {
-    if (name !== "inferStepIngredients") throw new Error(`Unexpected handler: ${name}`);
-
-    return mocks.inferStepIngredients;
-  },
+vi.mock("@norish/shared-server/ai/enrichment/ingredient-linking-inferrer", () => ({
+  inferStepIngredients: mocks.inferStepIngredients,
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -113,7 +109,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.getRecipeFull.mockResolvedValue(RECIPE);
   mocks.addStepIngredientsToBareSteps.mockResolvedValue(1);
-  mocks.inferStepIngredients.mockResolvedValue({ success: true, data: INFERENCE });
+  mocks.inferStepIngredients.mockResolvedValue(INFERENCE);
 });
 
 describe("toLinkableRecipe", () => {
@@ -159,7 +155,7 @@ describe("processIngredientLinkingJob", () => {
   });
 
   it("treats an empty claim as an unchanged success, not a failure", async () => {
-    mocks.inferStepIngredients.mockResolvedValue({ success: true, data: { links: [] } });
+    mocks.inferStepIngredients.mockResolvedValue({ links: [] });
 
     await processIngredientLinkingJob(jobFor());
 
@@ -188,7 +184,7 @@ describe("processIngredientLinkingJob", () => {
   });
 
   it("throws on a transient AI failure so BullMQ retries it", async () => {
-    mocks.inferStepIngredients.mockResolvedValue({ success: false, error: "provider timed out" });
+    mocks.inferStepIngredients.mockRejectedValue(new Error("provider timed out"));
 
     await expect(processIngredientLinkingJob(jobFor())).rejects.toThrow("provider timed out");
     expect(mocks.addStepIngredientsToBareSteps).not.toHaveBeenCalled();

@@ -525,14 +525,18 @@
         "title": "Cucine",
         "subtitle": "Il vocabolario da cui scelgono le ricette e l'IA"
       },
-      "bulkCategorization": {
-        "title": "Categorizzazione in blocco",
-        "subtitle": "Categorizza le ricette non categorizzate usando l'IA",
-        "description": "Metti in coda tutte le ricette non categorizzate per il rilevamento automatico delle categorie tramite IA. Le categorie includono Colazione, Pranzo, Cena e Spuntino.",
-        "button": "Categorizza tutte le ricette",
-        "queued": "{count, plural, =0 {Nessuna ricetta da categorizzare} one {# ricetta in coda} other {# ricette in coda}}",
-        "success": "Categorizzazione avviata",
-        "error": "Avvio della categorizzazione non riuscito"
+      "bulkEnrichment": {
+        "title": "Arricchimento in blocco",
+        "subtitle": "Esegui l'arricchimento abilitato su tutte le ricette",
+        "description": "Metti in coda, per tutte le ricette di questo server, ogni tipo di arricchimento il cui interruttore automatico è abilitato. Le ricette conservano i dati che hanno già — vengono riempite solo le lacune.",
+        "button": "Arricchisci tutte le ricette",
+        "confirmTitle": "Eseguire l'arricchimento su tutte le ricette?",
+        "confirmMessage": "Questo mette in coda lavoro di IA per ogni ricetta di questo server. Ogni tipo di arricchimento il cui interruttore automatico è abilitato viene eseguito dove mancano dati.",
+        "costWarning": "Può essere un'operazione costosa: con molte ricette può richiedere molto tempo e, con un provider di IA a pagamento, consumare una quantità significativa di crediti.",
+        "confirmButton": "Esegui su tutte le ricette",
+        "queued": "{queued, plural, =0 {Nessuna esecuzione in coda} one {# esecuzione in coda} other {# esecuzioni in coda}} per {recipes, plural, one {# ricetta} other {# ricette}}",
+        "aiDisabled": "L'IA è disabilitata su questo server. Abilita prima l'IA.",
+        "error": "Avvio dell'arricchimento in blocco non riuscito"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Abilita analisi video",
-      "enableVideoDescription": "Estrai ricette da TikTok, Instagram, YouTube Shorts o Facebook",
+      "enableVideoDescription": "Estrai ricette da TikTok, Instagram, YouTube Shorts, Facebook, Pinterest e altro",
       "configureWarning": "Configura un provider di trascrizione qui sotto per abilitare l'elaborazione video.",
       "aiDisabledWarning": "Abilita la configurazione IA prima di attivare l'elaborazione video.",
       "maxLength": "Durata massima video (secondi)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Prompt estrazione ricette",
       "recipeExtractionDescription": "Questo prompt viene utilizzato durante l'estrazione dei dati delle ricette da pagine web o trascrizioni video.",
       "recipeExtractionPlaceholder": "Inserisci il prompt di estrazione ricette...",
+      "imageExtraction": "Prompt estrazione da immagini",
+      "imageExtractionDescription": "Questo prompt viene usato per estrarre i dati delle ricette da immagini caricate, come foto di un libro di cucina o di una scheda ricetta.",
+      "imageExtractionPlaceholder": "Inserisci il prompt per l'estrazione da immagini...",
       "unitConversion": "Prompt conversione unità",
       "unitConversionDescription": "Questo prompt viene utilizzato durante la conversione delle misure delle ricette tra sistemi metrico e US. Variabili disponibili: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Inserisci il prompt di conversione unità...",
@@ -653,12 +660,18 @@
       "autoTagging": "Prompt tag automatici",
       "autoTaggingDescription": "Questo prompt viene utilizzato per generare tag per le ricette importate. Definisci le regole di tagging e la lista dei tag predefiniti.",
       "autoTaggingPlaceholder": "Inserisci il prompt per i tag automatici...",
+      "autoCategorization": "Prompt categorizzazione automatica",
+      "autoCategorizationDescription": "Questo prompt viene usato per ordinare le ricette nelle categorie dei pasti (colazione, pranzo, cena, spuntino).",
+      "autoCategorizationPlaceholder": "Inserisci il prompt per la categorizzazione automatica...",
+      "allergyDetection": "Prompt rilevamento allergeni",
+      "allergyDetectionDescription": "Questo prompt viene usato per rilevare gli allergeni configurati della famiglia negli ingredienti di una ricetta.",
+      "allergyDetectionPlaceholder": "Inserisci il prompt per il rilevamento degli allergeni...",
       "recipeProvenance": "Prompt per la provenienza della ricetta",
       "recipeProvenanceDescription": "Questo prompt deduce da dove proviene una ricetta. La nota prodotta è scritta nella lingua della ricetta stessa. Variabili disponibili: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Inserisci il prompt per la provenienza della ricetta...",
       "ingredientLinking": "Prompt di collegamento degli ingredienti",
-      "ingredientLinkingPlaceholder": "Prompt per collegare gli ingredienti ai passaggi...",
       "ingredientLinkingDescription": "Usato per collegare ogni passaggio alle righe di ingredienti che utilizza",
-      "recipeProvenancePlaceholder": "Inserisci il prompt per la provenienza della ricetta..."
+      "ingredientLinkingPlaceholder": "Prompt per collegare gli ingredienti ai passaggi..."
     },
     "unsavedChanges": "Modifiche non salvate",
     "jsonEditor": {

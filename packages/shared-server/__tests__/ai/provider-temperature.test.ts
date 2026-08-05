@@ -13,8 +13,8 @@
 import { generateText } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createModelsFromConfig } from "@norish/shared-server/ai/providers/factory";
-import { resetTemperatureFallbackCache } from "@norish/shared-server/ai/providers/temperature-fallback";
+import { createModelsFromConfig } from "@norish/shared-server/ai/runtime/providers";
+import { resetTemperatureFallbackCache } from "@norish/shared-server/ai/runtime/temperature-fallback";
 
 /** Bodies of every request the provider made, newest last. */
 let sentBodies: Record<string, unknown>[] = [];

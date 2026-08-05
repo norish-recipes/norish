@@ -26,6 +26,19 @@ Use this file for lightweight repo context.
 - `packages/shared`, `packages/shared-server`, `packages/ui`, `packages/config`, `packages/i18n`, `packages/auth`, `packages/queue` - shared package layer
 - `tooling/` - shared lint, format, TypeScript, Tailwind, GitHub, and monorepo tooling
 
+### The AI boundary
+
+Everything under `packages/shared-server/src/ai/` is AI: `runtime/` (the one
+seam that talks to a model — see ADR-0015), `prompts/` (the administrator-editable
+prompts and their loader), and `enrichment/` (the features whose input is a stored
+recipe and whose output is a domain claim). `shared-server` deliberately holds
+these real domain features as well as infrastructure; the `runtime`/`enrichment`
+split says which is which. Recipe extraction is not AI code — it is an
+import-pipeline feature that happens to use AI and lives with the parser in
+`packages/api/src/parser/`. A feature never calls the AI SDK or builds a provider
+client; it goes through `ai/runtime/runtime.ts`, naming a prompt and appending
+sections (never passing a finished prompt string — ADR-0016).
+
 ## Working Conventions
 
 - Keep root scripts and config minimal; workspace ownership should stay inside the owning app, package, or tooling workspace.

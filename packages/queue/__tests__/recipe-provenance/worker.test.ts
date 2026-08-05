@@ -34,12 +34,8 @@ vi.mock("@norish/db/repositories/recipe-enrichment", () => ({
   replaceRecipeProvenance: mocks.replaceRecipeProvenance,
 }));
 
-vi.mock("@norish/queue/api-handlers", () => ({
-  requireQueueApiHandler: (name: string) => {
-    if (name !== "inferRecipeProvenance") throw new Error(`Unexpected handler: ${name}`);
-
-    return mocks.inferRecipeProvenance;
-  },
+vi.mock("@norish/shared-server/ai/enrichment/provenance-inferrer", () => ({
+  inferRecipeProvenance: mocks.inferRecipeProvenance,
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -94,7 +90,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.getRecipeFull.mockResolvedValue(RECIPE);
   mocks.replaceRecipeProvenance.mockResolvedValue(true);
-  mocks.inferRecipeProvenance.mockResolvedValue({ success: true, data: INFERENCE });
+  mocks.inferRecipeProvenance.mockResolvedValue(INFERENCE);
 });
 
 describe("processRecipeProvenanceJob", () => {
@@ -134,7 +130,7 @@ describe("processRecipeProvenanceJob", () => {
   });
 
   it("throws on a transient AI failure so BullMQ retries it", async () => {
-    mocks.inferRecipeProvenance.mockResolvedValue({ success: false, error: "provider timed out" });
+    mocks.inferRecipeProvenance.mockRejectedValue(new Error("provider timed out"));
 
     await expect(processRecipeProvenanceJob(jobFor())).rejects.toThrow("provider timed out");
     expect(mocks.replaceRecipeProvenance).not.toHaveBeenCalled();
@@ -142,8 +138,10 @@ describe("processRecipeProvenanceJob", () => {
 
   it("refuses an empty claim rather than erasing stored provenance", async () => {
     mocks.inferRecipeProvenance.mockResolvedValue({
-      success: true,
-      data: { originCountry: null, originRegion: null, provenanceNote: "   ", cuisineIds: [] },
+      originCountry: null,
+      originRegion: null,
+      provenanceNote: "   ",
+      cuisineIds: [],
     });
 
     await expect(processRecipeProvenanceJob(jobFor())).rejects.toThrow(/no substantive/i);
@@ -152,13 +150,10 @@ describe("processRecipeProvenanceJob", () => {
 
   it("treats a claim that is only Cuisines as substantive", async () => {
     mocks.inferRecipeProvenance.mockResolvedValue({
-      success: true,
-      data: {
-        originCountry: null,
-        originRegion: null,
-        provenanceNote: "Nothing places this dish in one country.",
-        cuisineIds: ["id-italian", "id-japanese"],
-      },
+      originCountry: null,
+      originRegion: null,
+      provenanceNote: "Nothing places this dish in one country.",
+      cuisineIds: ["id-italian", "id-japanese"],
     });
 
     await processRecipeProvenanceJob(jobFor());
@@ -171,10 +166,9 @@ describe("processRecipeProvenanceJob", () => {
   });
 
   it("fails without writing when the response cannot be used", async () => {
-    mocks.inferRecipeProvenance.mockResolvedValue({
-      success: false,
-      error: "AI response is missing the provenance note",
-    });
+    mocks.inferRecipeProvenance.mockRejectedValue(
+      new Error("AI response is missing the provenance note")
+    );
 
     await expect(processRecipeProvenanceJob(jobFor())).rejects.toThrow(/provenance note/);
     expect(mocks.replaceRecipeProvenance).not.toHaveBeenCalled();

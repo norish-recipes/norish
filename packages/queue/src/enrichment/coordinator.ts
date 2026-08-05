@@ -180,8 +180,10 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
         : ELIGIBLE;
 
     case "nutrition-estimation":
-      // Nutrition Information is one atomic group: any substantive supplied
-      // value protects the whole group from automatic estimation.
+      // Nutrition Information is one atomic group, and only a complete one —
+      // all four values — is authoritative. An incomplete group (an import
+      // that stated calories alone) does not suppress estimation: the run
+      // replaces it wholesale, so the four values always agree.
       return origin === "automatic" && hasSubstantiveNutrition(recipe)
         ? ineligible("supplied-data-present")
         : ELIGIBLE;

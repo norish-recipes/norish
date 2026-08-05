@@ -200,23 +200,41 @@ describe("automatic enrollment", () => {
     expect(outcome(results, "auto-categorization")?.status).toBe("queued");
   });
 
+  it("skips nutrition estimation only for a complete supplied group", async () => {
+    getRecipeFull.mockResolvedValue(
+      recipe({ calories: 240, fat: "9", carbs: "30", protein: "12" })
+    );
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "nutrition-estimation")).toEqual({
+      kind: "nutrition-estimation",
+      status: "skipped",
+      reason: "supplied-data-present",
+    });
+  });
+
+  it("treats supplied zeros as a complete group", async () => {
+    getRecipeFull.mockResolvedValue(recipe({ calories: 4, fat: "0", carbs: "1", protein: "0" }));
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "nutrition-estimation")?.status).toBe("skipped");
+  });
+
   it.each(["calories", "fat", "carbs", "protein"] as const)(
-    "skips nutrition estimation when supplied %s makes the group substantive",
+    "queues nutrition estimation when only %s is supplied, because an incomplete group is not authoritative",
     async (field) => {
       getRecipeFull.mockResolvedValue(recipe({ [field]: field === "calories" ? 240 : "12" }));
 
       const results = await enrichRecipe(context, { origin: "automatic" });
 
-      expect(outcome(results, "nutrition-estimation")).toEqual({
-        kind: "nutrition-estimation",
-        status: "skipped",
-        reason: "supplied-data-present",
-      });
+      expect(outcome(results, "nutrition-estimation")?.status).toBe("queued");
     }
   );
 
   it("treats blank nutrition values as absent", async () => {
-    getRecipeFull.mockResolvedValue(recipe({ fat: "  ", carbs: "" }));
+    getRecipeFull.mockResolvedValue(recipe({ calories: 240, fat: "  ", carbs: "", protein: "12" }));
 
     const results = await enrichRecipe(context, { origin: "automatic" });
 

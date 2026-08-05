@@ -1,6 +1,9 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-import { isVideoParsingEnabled } from "@norish/shared-server/config/server-config-loader";
+import {
+  isAIEnabled,
+  isVideoParsingEnabled,
+} from "@norish/shared-server/config/server-config-loader";
 import { videoLogger as log } from "@norish/shared-server/logger";
 
 import { VideoProcessorFactory } from "./processor-factory";
@@ -35,10 +38,14 @@ export async function processVideoRecipe(
   recipeId: string,
   tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<FullRecipeInsertDTO> {
-  const videoEnabled = await isVideoParsingEnabled();
+  // Checked separately so the error names the setting that is actually off,
+  // rather than sending an administrator to the wrong one.
+  if (!(await isAIEnabled())) {
+    throw new Error("AI features are not enabled. Video recipes are extracted with AI.");
+  }
 
-  if (!videoEnabled) {
-    throw new Error("AI features or video processing is not enabled.");
+  if (!(await isVideoParsingEnabled())) {
+    throw new Error("Video processing is not enabled.");
   }
 
   const factory = getFactory();

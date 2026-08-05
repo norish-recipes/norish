@@ -1,7 +1,9 @@
 import type { Job } from "bullmq";
+import { UnrecoverableError } from "bullmq";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
+import { AIDisabledError, AIProviderError } from "@norish/shared-server/ai/runtime/errors";
 
 const mocks = vi.hoisted(() => ({
   getRecipeFull: vi.fn(),
@@ -20,7 +22,8 @@ vi.mock("../../src/enrichment/announce", () => ({
 }));
 vi.mock("../../src/job-steps", () => ({ reportStep: mocks.reportStep }));
 
-const { runEnrichmentJob } = await import("../../src/enrichment/worker-runner");
+const { handleEnrichmentJobFailure, runEnrichmentJob } =
+  await import("../../src/enrichment/worker-runner");
 
 const data: RecipeEnrichmentJobData = {
   recipeId: "recipe-1",
@@ -46,5 +49,61 @@ describe("runEnrichmentJob", () => {
       [data, "processing"],
       [data, "succeeded"],
     ]);
+  });
+
+  it("stops retrying an AI failure that says a retry cannot succeed", async () => {
+    // AI having been switched off cannot change between attempts: burning
+    // three attempts with backoff on it helps nobody.
+    const job = { id: "job-1", data, attemptsMade: 0 } as Job<RecipeEnrichmentJobData>;
+
+    await expect(
+      runEnrichmentJob(job, vi.fn().mockRejectedValue(new AIDisabledError()))
+    ).rejects.toBeInstanceOf(UnrecoverableError);
+  });
+
+  it("keeps a retryable AI failure as an ordinary throw for BullMQ's attempts", async () => {
+    const job = { id: "job-1", data, attemptsMade: 0 } as Job<RecipeEnrichmentJobData>;
+    const failure = new AIProviderError("provider timed out", { retryable: true });
+
+    const error = await runEnrichmentJob(job, vi.fn().mockRejectedValue(failure)).catch(
+      (err: unknown) => err
+    );
+
+    expect(error).toBe(failure);
+    expect(error).not.toBeInstanceOf(UnrecoverableError);
+  });
+});
+
+describe("handleEnrichmentJobFailure", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("treats an unrecoverable failure as terminal on its first attempt", async () => {
+    // BullMQ will not retry it, so waiting for the final attempt would leave
+    // the lifecycle stuck in processing forever.
+    const job = {
+      id: "job-1",
+      data,
+      attemptsMade: 1,
+      opts: { attempts: 3 },
+    } as Job<RecipeEnrichmentJobData>;
+
+    await handleEnrichmentJobFailure(job, new UnrecoverableError("AI features are disabled."));
+
+    expect(mocks.publishLifecycle).toHaveBeenCalledWith(data, "failed");
+  });
+
+  it("stays quiet on a non-final ordinary failure", async () => {
+    const job = {
+      id: "job-1",
+      data,
+      attemptsMade: 1,
+      opts: { attempts: 3 },
+    } as Job<RecipeEnrichmentJobData>;
+
+    await handleEnrichmentJobFailure(job, new Error("provider timed out"));
+
+    expect(mocks.publishLifecycle).not.toHaveBeenCalled();
   });
 });

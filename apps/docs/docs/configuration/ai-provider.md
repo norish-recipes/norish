@@ -13,7 +13,8 @@ AI enables:
 
 - AI fallback when a recipe can't be imported from a URL structurally
 - **Image import** from screenshots or photos of recipes
-- **Video import** from YouTube Shorts, Instagram Reels, TikTok, and more
+- **Video import** from YouTube Shorts, Instagram Reels, TikTok, Pinterest,
+  and more
 - **Recipe Enrichment**: tags, allergy indications, meal categories, and
   nutrition values added after a recipe is saved
 - **Unit conversion** between metric and US units
@@ -64,14 +65,14 @@ AI provider cannot make a save fail.
 Under **Settings → Admin → AI**, each kind has its own switch. They apply to
 every newly created recipe — manual entry and every import path alike.
 
-| Switch                   | What it does automatically                                          | Default |
-| ------------------------ | ------------------------------------------------------------------- | ------- |
-| **Auto-tagging**         | Adds suggested tags without removing existing ones                  | Off     |
-| **Allergy detection**    | Adds allergy tags for your household's configured allergies         | On      |
-| **Auto-categorization**  | Sets meal categories on recipes that have none                      | Off     |
-| **Nutrition estimation** | Estimates calories, fat, carbs, and protein when none were supplied | Off     |
-| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note           | Off     |
-| **Ingredient Linking**   | Links ingredient lines to the steps that have none                  | Off     |
+| Switch                   | What it does automatically                                                                | Default |
+| ------------------------ | ----------------------------------------------------------------------------------------- | ------- |
+| **Auto-tagging**         | Adds suggested tags without removing existing ones                                        | Off     |
+| **Allergy detection**    | Adds allergy tags for your household's configured allergies                               | On      |
+| **Auto-categorization**  | Sets meal categories on recipes that have none                                            | Off     |
+| **Nutrition estimation** | Estimates calories, fat, carbs, and protein when the recipe doesn't already have all four | Off     |
+| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note                                 | Off     |
+| **Ingredient Linking**   | Links ingredient lines to the steps that have none                                        | Off     |
 
 Enabling AI globally does not switch these on by itself — each is opt-in
 (except allergy detection, which keeps the behaviour of the setting it
@@ -84,12 +85,15 @@ already have is not treated as a new recipe.
 
 ### Supplied recipe data wins
 
-Information you entered yourself, or that an import source stated explicitly, is
-never overwritten by automatic enrichment:
+Information you entered yourself, or that an import source stated explicitly,
+outranks automatic enrichment. Each group has its own precedence rule:
 
 - Any meal category on the recipe suppresses **automatic** categorization.
-- Any of calories, fat, carbs, or protein suppresses **automatic** nutrition
-  estimation for the whole group — partial values you supplied stay untouched.
+- A **complete** nutrition group — calories, fat, carbs, and protein all
+  present — suppresses **automatic** nutrition estimation; zeros count as
+  present. An incomplete group does not: the estimate replaces the group as a
+  whole, so the four values always agree with each other rather than mixing a
+  supplied figure with an estimate.
 - Any part of provenance — country, region, a cuisine, or the note — suppresses
   **automatic** provenance inference for the whole group. The note explains the
   whole claim, so it is never mixed with a value you set yourself.
@@ -136,15 +140,55 @@ creating a near-duplicate. The list itself is managed under
 **Settings → Admin → AI & Processing → Cuisines**; see
 [Recipe provenance](../recipes/provenance.md).
 
+### Run it on your whole library
+
+Automatic enrichment only runs when a recipe is created, so recipes imported
+before you enabled a switch — or before an enrichment kind existed — never
+catch up on their own. **Settings → Admin → AI & Processing → Bulk Enrichment
+→ Enrich All Recipes** closes that gap: it queues every enrichment kind whose
+automatic switch is enabled, for every recipe on the server, under the same
+rules as the automatic run — supplied data wins and only gaps are filled.
+
+The action asks for confirmation first, because it can be an expensive
+operation: with many recipes it may take a long time and, on a paid AI
+provider, use a significant amount of credits. It replaces the old
+**Categorize All Recipes** button, which ran only categorization and ignored
+the switches.
+
 ### Turning it all off
 
 `AI_ENABLED=false` (or the global switch in the admin settings) suppresses every
 enrichment, automatic and manual. No AI request can bypass it.
 
+## Prompts
+
+![The Prompts panel in admin settings](/img/screenshots/admin-prompts.png)
+
+Every AI feature runs from an administrator-editable prompt — nine in total,
+listed together under **Settings → Admin → AI & Processing → Prompts**:
+recipe extraction, image extraction, unit conversion, nutrition estimation,
+auto-tagging, auto-categorization, allergy detection, Recipe Provenance, and
+Ingredient Linking. What you see there is exactly what is tunable; there are no
+hardcoded prompts behind it.
+
+Each feature appends its own input — the recipe under analysis, your
+household's allergens, the webpage text — _after_ your prompt rather than
+filling placeholders inside it, so a customised prompt keeps working across
+upgrades and editing one prompt never changes what a different feature sends.
+A prompt left empty falls back to the shipped default, and **Restore defaults**
+brings all nine back at once.
+
 ## Video import
 
 Video import downloads the clip with `yt-dlp`, transcribes the audio, and uses
-the AI provider to extract the recipe. It requires AI to be enabled.
+the AI provider to extract the recipe. It requires AI to be enabled: a video
+import is refused immediately when AI is off, before anything is downloaded or
+a transcription is billed.
+
+Links from YouTube, Instagram, TikTok, Facebook, Pinterest (including `pin.it`
+share links), X, Threads, Snapchat, Vimeo, Dailymotion, Douyin, Bilibili, and
+RedNote are recognised as videos and take this pipeline; a link from any other
+site imports as a regular webpage.
 
 | Variable                   | Description                                                                                  | Default                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------- |
@@ -191,3 +235,9 @@ Transcription turns the video's audio into text for the AI step.
 | `TRANSCRIPTION_ENDPOINT` | Transcription endpoint (local/custom providers) | (empty)     |
 | `TRANSCRIPTION_API_KEY`  | Transcription API key                           | (empty)     |
 | `TRANSCRIPTION_MODEL`    | Transcription model                             | `whisper-1` |
+
+When the endpoint or API key is left empty, transcription falls back to the AI
+configuration's endpoint and key — and it follows `AI_TIMEOUT_MS` the same way.
+There is no separate transcription timeout: the one number you tuned for your
+model applies here too, so a hung transcription endpoint gives up instead of
+holding a video import worker until the server is restarted.

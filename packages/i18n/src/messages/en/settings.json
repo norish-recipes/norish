@@ -525,14 +525,18 @@
         "title": "Cuisines",
         "subtitle": "The vocabulary recipes and AI pick from"
       },
-      "bulkCategorization": {
-        "title": "Bulk Categorization",
-        "subtitle": "Categorize uncategorized recipes using AI",
-        "description": "Queue all uncategorized recipes for AI-based category detection. Categories include Breakfast, Lunch, Dinner, and Snack.",
-        "button": "Categorize All Recipes",
-        "queued": "{count, plural, =0 {No recipes to categorize} one {# recipe queued} other {# recipes queued}}",
-        "success": "Categorization started",
-        "error": "Failed to start categorization"
+      "bulkEnrichment": {
+        "title": "Bulk Enrichment",
+        "subtitle": "Run enabled enrichment on every recipe",
+        "description": "Queue every enrichment kind whose automatic switch is enabled, for all recipes on this server. Recipes keep the data they already have — only gaps are filled.",
+        "button": "Enrich All Recipes",
+        "confirmTitle": "Run enrichment on all recipes?",
+        "confirmMessage": "This queues AI work for every recipe on this server. Every enrichment kind whose automatic switch is enabled runs wherever data is missing.",
+        "costWarning": "This can be an expensive operation: with many recipes it may take a long time and, on a paid AI provider, use a significant amount of credits.",
+        "confirmButton": "Run on All Recipes",
+        "queued": "{queued, plural, =0 {No runs queued} one {# run queued} other {# runs queued}} across {recipes, plural, one {# recipe} other {# recipes}}",
+        "aiDisabled": "AI is disabled on this server. Enable AI first.",
+        "error": "Failed to start bulk enrichment"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Enable Video Parsing",
-      "enableVideoDescription": "Extract recipes from TikTok, Instagram, YouTube Shorts or Facebook",
+      "enableVideoDescription": "Extract recipes from TikTok, Instagram, YouTube Shorts, Facebook, Pinterest, and more",
       "configureWarning": "Configure a transcription provider below to enable video processing.",
       "aiDisabledWarning": "Enable AI configuration before turning on video processing.",
       "maxLength": "Max Video Length (seconds)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Recipe Extraction Prompt",
       "recipeExtractionDescription": "This prompt is used when extracting recipe data from web pages or video transcripts.",
       "recipeExtractionPlaceholder": "Enter the recipe extraction prompt...",
+      "imageExtraction": "Image Extraction Prompt",
+      "imageExtractionDescription": "This prompt is used when extracting recipe data from uploaded images, such as photos of a cookbook or a recipe card.",
+      "imageExtractionPlaceholder": "Enter the image extraction prompt...",
       "unitConversion": "Unit Conversion Prompt",
       "unitConversionDescription": "This prompt is used when converting recipe measurements between metric and US systems. Available variables: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Enter the unit conversion prompt...",
@@ -653,12 +660,18 @@
       "autoTagging": "Auto-Tagging Prompt",
       "autoTaggingDescription": "This prompt is used to generate tags for imported recipes. Define tagging rules and predefined tags list.",
       "autoTaggingPlaceholder": "Enter the auto-tagging prompt...",
+      "autoCategorization": "Auto-Categorization Prompt",
+      "autoCategorizationDescription": "This prompt is used to sort recipes into meal categories (Breakfast, Lunch, Dinner, Snack).",
+      "autoCategorizationPlaceholder": "Enter the auto-categorization prompt...",
+      "allergyDetection": "Allergy Detection Prompt",
+      "allergyDetectionDescription": "This prompt is used to detect the household's configured allergens in a recipe's ingredients.",
+      "allergyDetectionPlaceholder": "Enter the allergy detection prompt...",
       "recipeProvenance": "Recipe Provenance Prompt",
       "recipeProvenanceDescription": "This prompt is used to work out where a recipe comes from. The note it produces is written in the language of the recipe itself. Available variables: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Enter the Recipe Provenance prompt...",
       "ingredientLinking": "Ingredient Linking Prompt",
-      "ingredientLinkingPlaceholder": "Prompt for linking ingredients to steps...",
       "ingredientLinkingDescription": "Used when linking each step to the ingredient lines it uses",
-      "recipeProvenancePlaceholder": "Enter the Recipe Provenance prompt..."
+      "ingredientLinkingPlaceholder": "Prompt for linking ingredients to steps..."
     },
     "unsavedChanges": "Unsaved changes",
     "jsonEditor": {

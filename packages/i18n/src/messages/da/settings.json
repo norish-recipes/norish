@@ -525,14 +525,18 @@
         "title": "Køkkener",
         "subtitle": "Ordforrådet som opskrifter og AI vælger fra"
       },
-      "bulkCategorization": {
-        "title": "Massekategorisering",
-        "subtitle": "Kategoriser ukategoriserede opskrifter med AI",
-        "description": "Sæt alle ukategoriserede opskrifter i kø til AI-baseret kategoriregistrering. Kategorier inkluderer Morgenmad, Frokost, Aftensmad og Snack.",
-        "button": "Kategoriser alle opskrifter",
-        "queued": "{count, plural, =0 {Ingen opskrifter at kategorisere} one {# opskrift i kø} other {# opskrifter i kø}}",
-        "success": "Kategorisering startet",
-        "error": "Kunne ikke starte kategorisering"
+      "bulkEnrichment": {
+        "title": "Masseberigelse",
+        "subtitle": "Kør aktiveret berigelse på alle opskrifter",
+        "description": "Sæt hver berigelsestype, hvis automatiske kontakt er slået til, i kø for alle opskrifter på denne server. Opskrifter beholder de data, de allerede har — kun huller udfyldes.",
+        "button": "Berig alle opskrifter",
+        "confirmTitle": "Kør berigelse på alle opskrifter?",
+        "confirmMessage": "Dette sætter AI-arbejde i kø for hver opskrift på denne server. Hver berigelsestype, hvis automatiske kontakt er slået til, kører hvor der mangler data.",
+        "costWarning": "Dette kan være en dyr operation: Med mange opskrifter kan det tage lang tid og hos en betalt AI-udbyder bruge betydelig kredit.",
+        "confirmButton": "Kør på alle opskrifter",
+        "queued": "{queued, plural, =0 {Ingen kørsler i kø} one {# kørsel i kø} other {# kørsler i kø}} for {recipes, plural, one {# opskrift} other {# opskrifter}}",
+        "aiDisabled": "AI er deaktiveret på denne server. Aktivér AI først.",
+        "error": "Kunne ikke starte masseberigelse"
       }
     },
     "aiConfig": {
@@ -602,7 +606,7 @@
     },
     "videoConfig": {
       "enableVideo": "Aktivér videoanalyse",
-      "enableVideoDescription": "Udtræk opskrifter fra TikTok, Instagram, YouTube Shorts eller Facebook",
+      "enableVideoDescription": "Udtræk opskrifter fra TikTok, Instagram, YouTube Shorts, Facebook, Pinterest med flere",
       "configureWarning": "Konfigurer en transskriptionsudbyder nedenfor for at aktivere videobehandling.",
       "aiDisabledWarning": "Aktivér AI-konfiguration, inden du slår videobehandling til.",
       "maxLength": "Maks. videolængde (sekunder)",
@@ -644,6 +648,9 @@
       "recipeExtraction": "Prompt til opskriftudtrækning",
       "recipeExtractionDescription": "Denne prompt bruges ved udtrækning af opskriftdata fra websider eller videotransskriptioner.",
       "recipeExtractionPlaceholder": "Indtast prompt til opskriftudtrækning...",
+      "imageExtraction": "Prompt til billedudtræk",
+      "imageExtractionDescription": "Denne prompt bruges, når opskriftsdata udtrækkes fra uploadede billeder, f.eks. fotos af en kogebog eller et opskriftskort.",
+      "imageExtractionPlaceholder": "Indtast prompt til billedudtræk...",
       "unitConversion": "Prompt til enhedskonvertering",
       "unitConversionDescription": "Denne prompt bruges ved konvertering af opskriftmål mellem metriske og amerikanske systemer. Tilgængelige variabler: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Indtast prompt til enhedskonvertering...",
@@ -653,12 +660,18 @@
       "autoTagging": "Prompt til auto-tagging",
       "autoTaggingDescription": "Denne prompt bruges til at generere tags for importerede opskrifter. Definer tagningregler og liste over foruddefinerede tags.",
       "autoTaggingPlaceholder": "Indtast prompt til auto-tagging...",
+      "autoCategorization": "Prompt til auto-kategorisering",
+      "autoCategorizationDescription": "Denne prompt bruges til at sortere opskrifter i måltidskategorier (morgenmad, frokost, aftensmad, snack).",
+      "autoCategorizationPlaceholder": "Indtast prompt til auto-kategorisering...",
+      "allergyDetection": "Prompt til allergidetektion",
+      "allergyDetectionDescription": "Denne prompt bruges til at finde husstandens konfigurerede allergener i en opskrifts ingredienser.",
+      "allergyDetectionPlaceholder": "Indtast prompt til allergidetektion...",
       "recipeProvenance": "Prompt til opskriftens oprindelse",
       "recipeProvenanceDescription": "Denne prompt bestemmer, hvor en opskrift kommer fra. Noten skrives på opskriftens eget sprog. Tilgængelige variabler: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Indtast prompten til opskriftens oprindelse ...",
       "ingredientLinking": "Prompt til ingredienstilknytning",
-      "ingredientLinkingPlaceholder": "Prompt til at tilknytte ingredienser til trin...",
       "ingredientLinkingDescription": "Bruges når hvert trin tilknyttes de ingredienslinjer, det bruger",
-      "recipeProvenancePlaceholder": "Indtast prompten til opskriftens oprindelse ..."
+      "ingredientLinkingPlaceholder": "Prompt til at tilknytte ingredienser til trin..."
     },
     "unsavedChanges": "Ugemte ændringer",
     "jsonEditor": {

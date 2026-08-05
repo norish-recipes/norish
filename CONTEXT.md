@@ -56,6 +56,18 @@ The Recipe Enrichment kind that infers Step Ingredients. It is a gap-filler in e
 
 ### Imports & AI
 
+**AI Runtime**:
+The single seam through which Norish issues a model request — structured generation and transcription, both on one shared transport. A feature never constructs a provider client, never reads Generation Preferences, and never calls the SDK: it hands the runtime its Prompt's name, its schema, and its Prompt Sections, and gets a validated result or a typed error that says whether retrying is worth it (ADR-0015).
+_Avoid_: AI executor (names the deleted prototype that had no callers), AI client (suggests a per-provider object, which is what the runtime hides)
+
+**Prompt**:
+The administrator-editable base every AI request starts from. There are nine, one per request shape, each stored in configuration with a shipped default, and the runtime will not accept a finished prompt string in their place — which is what makes every request tunable by construction (ADR-0016).
+_Avoid_: Prompt template (implies placeholders a feature fills; a Prompt is appended to, not filled in)
+
+**Prompt Section**:
+An input block a feature composes and the AI Runtime appends after the Prompt — the recipe under analysis, the household's allergens, the webpage text. Sections are appended, never interpolated into placeholders, so an administrator's customised Prompt keeps working when a feature's input changes shape (ADR-0016).
+_Avoid_: Prompt variable (names the rejected placeholder mechanism)
+
 **Generation Preference**:
 A generation parameter Norish asks a model for — temperature today — that the model is free to refuse. Norish never claims to know in advance which parameters a model accepts, because a self-hoster chooses the model. A refused preference is dropped and the request answered without it, so a preference is never the reason a feature fails (ADR-0014).
 _Avoid_: Model Capability (claims foreknowledge Norish does not have), Generation Setting (a setting is honoured, a preference may be declined)

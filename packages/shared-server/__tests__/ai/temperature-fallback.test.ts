@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   resetTemperatureFallbackCache,
   withTemperatureFallback,
-} from "@norish/shared-server/ai/providers/temperature-fallback";
+} from "@norish/shared-server/ai/runtime/temperature-fallback";
 
 /** The 400 Anthropic returns for claude-sonnet-5 when temperature is present. */
 function temperatureRejection(): APICallError {

@@ -1,22 +1,13 @@
-import { generateText, Output } from "ai";
-
-import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import {
   getExtractionLogContext,
   normalizeExtractionOutput,
   validateExtractionOutput,
-} from "@norish/api/ai/features/recipe-extraction/normalizer";
-import { buildVideoExtractionPrompt } from "@norish/api/ai/prompts/builder";
-import { recipeExtractionSchema } from "@norish/api/ai/schemas/recipe.schema";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
-import {
-  aiError,
-  aiSuccess,
-  getErrorMessage,
-  mapErrorToCode,
-} from "@norish/shared-server/ai/types/result";
-import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+} from "@norish/api/parser/extraction-normalizer";
+import { buildVideoExtractionSections } from "@norish/api/parser/extraction-prompts";
+import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
+import { AIResponseError } from "@norish/shared-server/ai/runtime/errors";
+import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger } from "@norish/shared-server/logger";
 import { downloadImage } from "@norish/shared-server/media/storage";
 
@@ -25,119 +16,76 @@ import type { VideoMetadata } from "./types";
 /**
  * Extract recipe from video transcript using AI.
  *
+ * Runs under the recipe-extraction prompt with transcript sections appended.
+ *
  * @param transcript - The video transcript text.
  * @param metadata - Video metadata (title, description, duration, etc.).
  * @param url - Source URL of the video.
- * @returns AIResult with extracted recipe or error.
+ * @returns The extracted recipe; throws on AI failure or when the video holds no recipe.
  */
 export async function extractRecipeFromVideo(
   transcript: string,
   metadata: VideoMetadata,
   recipeId: string,
   url: string
-): Promise<AIResult<FullRecipeInsertDTO>> {
-  // Guard: AI must be enabled
-  const aiEnabled = await isAIEnabled();
-
-  if (!aiEnabled) {
-    videoLogger.info("AI features are disabled, skipping video extraction");
-
-    return aiError("AI features are disabled", "AI_DISABLED");
-  }
-
+): Promise<FullRecipeInsertDTO> {
   videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
 
-  try {
-    const { model, providerName } = await getModels();
-    const settings = await getGenerationSettings();
-
-    // Build prompt using shared builder
-    const prompt = await buildVideoExtractionPrompt(transcript, {
+  const jsonLd = await generateStructured({
+    prompt: "recipe-extraction",
+    schema: recipeExtractionSchema,
+    sections: buildVideoExtractionSections(transcript, {
       url,
       title: metadata.title,
       description: metadata.description,
       duration: metadata.duration,
       uploader: metadata.uploader,
-    });
+    }),
+  });
 
-    videoLogger.debug(
-      {
-        url,
-        promptLength: prompt.length,
-        transcriptLength: transcript.length,
-        provider: providerName,
-      },
-      "Sending video transcript to AI"
-    );
+  // A video that holds no recipe is a domain outcome the schema cannot state.
+  const validation = validateExtractionOutput(jsonLd);
 
-    const result = await generateText({
-      model,
-      output: Output.object({ schema: recipeExtractionSchema }),
-      prompt,
-      system:
-        "You extract recipe data from video transcripts as JSON-LD with both metric and US measurements. Return valid JSON only.",
-      ...settings,
-    });
+  if (!validation.valid) {
+    videoLogger.error({ url, ...validation.details }, validation.error);
 
-    const jsonLd = result.output;
-
-    videoLogger.debug(jsonLd, "Response");
-
-    // Validate extraction output
-    const validation = validateExtractionOutput(jsonLd);
-
-    if (!validation.valid) {
-      videoLogger.error({ url, ...validation.details }, validation.error);
-
-      return aiError(validation.error!, "VALIDATION_ERROR");
-    }
-
-    videoLogger.debug(
-      { url, ...getExtractionLogContext(jsonLd!, null) },
-      "AI video response received"
-    );
-
-    // Download thumbnail as recipe image if available
-    let thumbnailPath: string | undefined;
-
-    if (metadata.thumbnail) {
-      try {
-        thumbnailPath = await downloadImage(metadata.thumbnail, recipeId);
-      } catch (_error) {
-        // Continue without image rather than failing
-        videoLogger.debug({ url }, "Failed to download video thumbnail");
-      }
-    }
-
-    // Normalize using shared normalizer
-    const normalized = await normalizeExtractionOutput(jsonLd!, {
-      url,
-      image: thumbnailPath,
-      recipeId,
-    });
-
-    if (!normalized) {
-      videoLogger.error({ url }, "Failed to normalize recipe from JSON-LD");
-
-      return aiError("Failed to normalize recipe data", "VALIDATION_ERROR");
-    }
-
-    videoLogger.info(
-      { url, ...getExtractionLogContext(jsonLd!, normalized) },
-      "Video recipe extraction completed"
-    );
-
-    return aiSuccess(normalized, {
-      inputTokens: result.usage?.inputTokens ?? 0,
-      outputTokens: result.usage?.outputTokens ?? 0,
-      totalTokens: result.usage?.totalTokens ?? 0,
-    });
-  } catch (error) {
-    const code = mapErrorToCode(error);
-    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
-
-    videoLogger.error({ err: error, url, code }, "Failed to extract recipe from video");
-
-    return aiError(message, code);
+    throw new AIResponseError(validation.error!);
   }
+
+  videoLogger.debug(
+    { url, ...getExtractionLogContext(jsonLd, null) },
+    "AI video response received"
+  );
+
+  // Download thumbnail as recipe image if available
+  let thumbnailPath: string | undefined;
+
+  if (metadata.thumbnail) {
+    try {
+      thumbnailPath = await downloadImage(metadata.thumbnail, recipeId);
+    } catch (_error) {
+      // Continue without image rather than failing
+      videoLogger.debug({ url }, "Failed to download video thumbnail");
+    }
+  }
+
+  // Normalize using shared normalizer
+  const normalized = await normalizeExtractionOutput(jsonLd, {
+    url,
+    image: thumbnailPath,
+    recipeId,
+  });
+
+  if (!normalized) {
+    videoLogger.error({ url }, "Failed to normalize recipe from JSON-LD");
+
+    throw new AIResponseError("Failed to normalize the extracted recipe data.");
+  }
+
+  videoLogger.info(
+    { url, ...getExtractionLogContext(jsonLd, normalized) },
+    "Video recipe extraction completed"
+  );
+
+  return normalized;
 }

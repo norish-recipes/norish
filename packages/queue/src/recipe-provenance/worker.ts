@@ -13,7 +13,7 @@ import type { Job } from "bullmq";
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { replaceRecipeProvenance } from "@norish/db/repositories/recipe-enrichment";
-import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { inferRecipeProvenance } from "@norish/shared-server/ai/enrichment/provenance-inferrer";
 import { createLogger } from "@norish/shared-server/logger";
 import { hasSubstantiveProvenance } from "@norish/shared/lib/recipe-enrichment";
 
@@ -30,14 +30,7 @@ const log = createLogger("worker:recipe-provenance");
 /** Exported so the job body can be exercised without a Redis-backed worker. */
 export async function processRecipeProvenanceJob(job: Job<RecipeEnrichmentJobData>): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
-    const inferRecipeProvenance = requireQueueApiHandler("inferRecipeProvenance");
-    const result = await inferRecipeProvenance(toRecipeSummary(recipe));
-
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    const claim = result.data;
+    const claim = await inferRecipeProvenance(toRecipeSummary(recipe));
 
     if (claim.cuisineIds.length === 0 && !hasSubstantiveProvenance(claim)) {
       // Replacement clears whatever it does not set, so an entirely empty claim

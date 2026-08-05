@@ -65,30 +65,24 @@ async function parseFromPastedText(
 
   const aiEnabled = await isAIEnabled();
 
-  if (forceAI) {
-    if (!aiEnabled) {
+  if (!aiEnabled) {
+    if (forceAI) {
       throw new Error("AI-only import requested but AI is not enabled.");
     }
 
-    const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
-    const ai = await extractRecipeWithAI(html, recipeId);
-
-    if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
-      return { recipe: ai.data, usedAI: true };
-    }
-
-    throw new Error("Could not parse pasted recipe.");
-  }
-
-  if (!aiEnabled) {
     throw new Error("Could not parse pasted recipe. Try pasting JSON-LD, or enable AI import.");
   }
 
   const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
-  const ai = await extractRecipeWithAI(html, recipeId);
 
-  if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
-    return { recipe: ai.data, usedAI: true };
+  try {
+    const recipe = await extractRecipeWithAI(html, recipeId);
+
+    if (hasRecipeNameIngredientsAndSteps(recipe)) {
+      return { recipe, usedAI: true };
+    }
+  } catch (error) {
+    log.warn({ recipeId, err: error }, "AI extraction of pasted text failed");
   }
 
   throw new Error("Could not parse pasted recipe.");
