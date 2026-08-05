@@ -2,7 +2,8 @@
  * Nutrition Estimation Worker
  *
  * One AI request and an atomic replacement of the whole Nutrition Information
- * group. Automatic runs replace only while the whole group is still absent.
+ * group. Automatic runs replace only while the group is still incomplete; a
+ * group that already has all four values is authoritative.
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
@@ -10,7 +11,6 @@ import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types"
 import { replaceRecipeNutrition } from "@norish/db/repositories/recipe-enrichment";
 import { estimateNutritionFromIngredients } from "@norish/shared-server/ai/enrichment/nutrition-estimator";
 import { createLogger } from "@norish/shared-server/logger";
-import { hasSubstantiveNutrition } from "@norish/shared/lib/recipe-enrichment";
 
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { handleEnrichmentJobFailure, runEnrichmentJob } from "../enrichment/worker-runner";
@@ -32,12 +32,9 @@ const nutritionEstimationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
         }))
       );
 
-      if (!hasSubstantiveNutrition(estimate)) {
-        // Replacement clears whatever it does not set, so an entirely blank
-        // estimate must fail rather than wipe the stored group.
-        throw new Error("AI returned no substantive Nutrition Information");
-      }
-
+      // The estimate is complete by contract: the schema requires all four
+      // values as non-negative numbers, so the runtime has already rejected —
+      // and will retry — a model answer with anything missing.
       await reportStep(job, "saving");
 
       const applied = await replaceRecipeNutrition(recipe.id, estimate, job.data.origin);

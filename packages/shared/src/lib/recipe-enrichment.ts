@@ -164,14 +164,20 @@ export function hasSubstantiveCategories(
 }
 
 /**
- * Nutrition Information is one atomic precedence group: any substantive value
- * among the four fields makes the stored group authoritative.
+ * Nutrition Information is one atomic precedence group, and it counts as
+ * substantive only when the whole group is present: calories, fat, carbs, and
+ * protein. Zero is a value; null and blank are absence.
+ *
+ * Completeness cuts both ways. A stored group missing values — an import that
+ * stated only calories — does not outrank a complete estimate, so automatic
+ * estimation can finish it; and an estimate missing values is unusable,
+ * because replacement writes all four fields and would null out the rest.
  */
 export function hasSubstantiveNutrition(nutrition: NutritionGroupInput): boolean {
   return (
-    normalizeNumeric(nutrition.calories) !== null ||
-    normalizeNumeric(nutrition.fat) !== null ||
-    normalizeNumeric(nutrition.carbs) !== null ||
+    normalizeNumeric(nutrition.calories) !== null &&
+    normalizeNumeric(nutrition.fat) !== null &&
+    normalizeNumeric(nutrition.carbs) !== null &&
     normalizeNumeric(nutrition.protein) !== null
   );
 }

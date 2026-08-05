@@ -65,14 +65,14 @@ AI provider cannot make a save fail.
 Under **Settings → Admin → AI**, each kind has its own switch. They apply to
 every newly created recipe — manual entry and every import path alike.
 
-| Switch                   | What it does automatically                                          | Default |
-| ------------------------ | ------------------------------------------------------------------- | ------- |
-| **Auto-tagging**         | Adds suggested tags without removing existing ones                  | Off     |
-| **Allergy detection**    | Adds allergy tags for your household's configured allergies         | On      |
-| **Auto-categorization**  | Sets meal categories on recipes that have none                      | Off     |
-| **Nutrition estimation** | Estimates calories, fat, carbs, and protein when none were supplied | Off     |
-| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note           | Off     |
-| **Ingredient Linking**   | Links ingredient lines to the steps that have none                  | Off     |
+| Switch                   | What it does automatically                                                                | Default |
+| ------------------------ | ----------------------------------------------------------------------------------------- | ------- |
+| **Auto-tagging**         | Adds suggested tags without removing existing ones                                        | Off     |
+| **Allergy detection**    | Adds allergy tags for your household's configured allergies                               | On      |
+| **Auto-categorization**  | Sets meal categories on recipes that have none                                            | Off     |
+| **Nutrition estimation** | Estimates calories, fat, carbs, and protein when the recipe doesn't already have all four | Off     |
+| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note                                 | Off     |
+| **Ingredient Linking**   | Links ingredient lines to the steps that have none                                        | Off     |
 
 Enabling AI globally does not switch these on by itself — each is opt-in
 (except allergy detection, which keeps the behaviour of the setting it
@@ -89,8 +89,11 @@ Information you entered yourself, or that an import source stated explicitly, is
 never overwritten by automatic enrichment:
 
 - Any meal category on the recipe suppresses **automatic** categorization.
-- Any of calories, fat, carbs, or protein suppresses **automatic** nutrition
-  estimation for the whole group — partial values you supplied stay untouched.
+- A **complete** nutrition group — calories, fat, carbs, and protein all
+  present — suppresses **automatic** nutrition estimation; zeros count as
+  present. An incomplete group does not: the estimate replaces the group as a
+  whole, so the four values always agree with each other rather than mixing a
+  supplied figure with an estimate.
 - Any part of provenance — country, region, a cuisine, or the note — suppresses
   **automatic** provenance inference for the whole group. The note explains the
   whole claim, so it is never mixed with a value you set yourself.

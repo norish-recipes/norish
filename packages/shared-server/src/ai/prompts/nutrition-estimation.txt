@@ -8,3 +8,4 @@ Estimate nutritional values PER SERVING based on these ingredients.
 - Use typical nutritional values for each ingredient
 - Round to whole numbers
 - Ensure calories match: (fat × 9) + (carbs × 4) + (protein × 4)
+- Always provide all four values; use 0 for a nutrient the recipe genuinely lacks

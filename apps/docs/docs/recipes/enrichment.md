@@ -39,9 +39,11 @@ Anything you entered or that the source you imported from stated explicitly
 takes precedence:
 
 - If the recipe already has a meal category, automatic categorization is skipped.
-- If it has any nutrition value at all, automatic nutrition estimation is
-  skipped for all four fields, so a partial figure you supplied is never mixed
-  with an estimate.
+- If it has **complete** nutrition — calories, fat, carbs, and protein all
+  present (zeros count) — automatic nutrition estimation is skipped. A recipe
+  with only some of the four, say just calories from an imported page, is
+  estimated and the whole group replaced, so the values always agree with each
+  other instead of mixing a supplied figure with an estimate.
 - If it has any provenance at all — a country, a region, a cuisine, or a note —
   automatic provenance inference is skipped for the whole group, so the note
   never ends up arguing against a country you set yourself.
