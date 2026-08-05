@@ -28,6 +28,7 @@ import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import {
+  householdUsers,
   ingredients,
   recipeImages,
   recipeIngredients,
@@ -822,11 +823,25 @@ export async function updateRecipeCategories(
   return appliedOutcome(undefined);
 }
 
-export async function getRecipesWithoutCategories(): Promise<{ id: string; name: string }[]> {
+/**
+ * Every recipe on the server, with the context Recipe Enrichment enrollment
+ * needs: the owning user and that user's household. Both are null when the
+ * owner's account has been deleted. The schema permits a user in several
+ * households; DISTINCT ON keeps one row per recipe, because enrollment needs
+ * a household for the recipe, not all of them.
+ */
+export async function getAllRecipesForEnrichment(): Promise<
+  { recipeId: string; userId: string | null; householdId: string | null }[]
+> {
   const rows = await db
-    .select({ id: recipes.id, name: recipes.name })
+    .selectDistinctOn([recipes.id], {
+      recipeId: recipes.id,
+      userId: recipes.userId,
+      householdId: householdUsers.householdId,
+    })
     .from(recipes)
-    .where(sql`cardinality(${recipes.categories}) = 0`);
+    .leftJoin(householdUsers, eq(householdUsers.userId, recipes.userId))
+    .orderBy(recipes.id);
 
   return rows;
 }

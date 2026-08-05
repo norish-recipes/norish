@@ -525,14 +525,18 @@
         "title": "Cocinas",
         "subtitle": "El vocabulario del que eligen las recetas y la IA"
       },
-      "bulkCategorization": {
-        "title": "Categorización masiva",
-        "subtitle": "Categorizar recetas sin categoría usando IA",
-        "description": "Encola todas las recetas sin categoría para detección automática de categoría por IA. Las categorías incluyen Desayuno, Comida, Cena y Tentempié.",
-        "button": "Categorizar todas las recetas",
-        "queued": "{count, plural, =0 {No hay recetas para categorizar} one {# receta en cola} other {# recetas en cola}}",
-        "success": "Categorización iniciada",
-        "error": "No se pudo iniciar la categorización"
+      "bulkEnrichment": {
+        "title": "Enriquecimiento masivo",
+        "subtitle": "Ejecutar el enriquecimiento habilitado en todas las recetas",
+        "description": "Encola, para todas las recetas de este servidor, cada tipo de enriquecimiento cuyo interruptor automático esté habilitado. Las recetas conservan los datos que ya tienen: solo se rellenan los huecos.",
+        "button": "Enriquecer todas las recetas",
+        "confirmTitle": "¿Ejecutar el enriquecimiento en todas las recetas?",
+        "confirmMessage": "Esto encola trabajo de IA para cada receta de este servidor. Cada tipo de enriquecimiento cuyo interruptor automático esté habilitado se ejecuta donde falten datos.",
+        "costWarning": "Puede ser una operación costosa: con muchas recetas puede tardar mucho y, con un proveedor de IA de pago, consumir una cantidad significativa de créditos.",
+        "confirmButton": "Ejecutar en todas las recetas",
+        "queued": "{queued, plural, =0 {Ninguna ejecución en cola} one {# ejecución en cola} other {# ejecuciones en cola}} para {recipes, plural, one {# receta} other {# recetas}}",
+        "aiDisabled": "La IA está deshabilitada en este servidor. Habilita la IA primero.",
+        "error": "No se pudo iniciar el enriquecimiento masivo"
       }
     },
     "aiConfig": {

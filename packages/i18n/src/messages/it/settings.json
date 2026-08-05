@@ -525,14 +525,18 @@
         "title": "Cucine",
         "subtitle": "Il vocabolario da cui scelgono le ricette e l'IA"
       },
-      "bulkCategorization": {
-        "title": "Categorizzazione in blocco",
-        "subtitle": "Categorizza le ricette non categorizzate usando l'IA",
-        "description": "Metti in coda tutte le ricette non categorizzate per il rilevamento automatico delle categorie tramite IA. Le categorie includono Colazione, Pranzo, Cena e Spuntino.",
-        "button": "Categorizza tutte le ricette",
-        "queued": "{count, plural, =0 {Nessuna ricetta da categorizzare} one {# ricetta in coda} other {# ricette in coda}}",
-        "success": "Categorizzazione avviata",
-        "error": "Avvio della categorizzazione non riuscito"
+      "bulkEnrichment": {
+        "title": "Arricchimento in blocco",
+        "subtitle": "Esegui l'arricchimento abilitato su tutte le ricette",
+        "description": "Metti in coda, per tutte le ricette di questo server, ogni tipo di arricchimento il cui interruttore automatico è abilitato. Le ricette conservano i dati che hanno già — vengono riempite solo le lacune.",
+        "button": "Arricchisci tutte le ricette",
+        "confirmTitle": "Eseguire l'arricchimento su tutte le ricette?",
+        "confirmMessage": "Questo mette in coda lavoro di IA per ogni ricetta di questo server. Ogni tipo di arricchimento il cui interruttore automatico è abilitato viene eseguito dove mancano dati.",
+        "costWarning": "Può essere un'operazione costosa: con molte ricette può richiedere molto tempo e, con un provider di IA a pagamento, consumare una quantità significativa di crediti.",
+        "confirmButton": "Esegui su tutte le ricette",
+        "queued": "{queued, plural, =0 {Nessuna esecuzione in coda} one {# esecuzione in coda} other {# esecuzioni in coda}} per {recipes, plural, one {# ricetta} other {# ricette}}",
+        "aiDisabled": "L'IA è disabilitata su questo server. Abilita prima l'IA.",
+        "error": "Avvio dell'arricchimento in blocco non riuscito"
       }
     },
     "aiConfig": {

@@ -525,14 +525,18 @@
         "title": "Küchen",
         "subtitle": "Das Vokabular, aus dem Rezepte und KI wählen"
       },
-      "bulkCategorization": {
-        "title": "Massenkategorisierung",
-        "subtitle": "Nicht kategorisierte Rezepte mit KI kategorisieren",
-        "description": "Alle nicht kategorisierten Rezepte für KI-basierte Kategorieerkennung in die Warteschlange stellen. Kategorien sind Frühstück, Mittagessen, Abendessen und Snack.",
-        "button": "Alle Rezepte kategorisieren",
-        "queued": "{count, plural, =0 {Keine Rezepte zu kategorisieren} one {# Rezept in Warteschlange} other {# Rezepte in Warteschlange}}",
-        "success": "Kategorisierung gestartet",
-        "error": "Kategorisierung konnte nicht gestartet werden"
+      "bulkEnrichment": {
+        "title": "Massen-Anreicherung",
+        "subtitle": "Aktivierte Anreicherung für alle Rezepte ausführen",
+        "description": "Stelle für alle Rezepte auf diesem Server jede Anreicherungsart in die Warteschlange, deren automatischer Schalter aktiviert ist. Rezepte behalten, was sie bereits haben — nur Lücken werden gefüllt.",
+        "button": "Alle Rezepte anreichern",
+        "confirmTitle": "Anreicherung für alle Rezepte ausführen?",
+        "confirmMessage": "Dies stellt KI-Arbeit für jedes Rezept auf diesem Server in die Warteschlange. Jede Anreicherungsart, deren automatischer Schalter aktiviert ist, läuft überall dort, wo Daten fehlen.",
+        "costWarning": "Dies kann ein teurer Vorgang sein: Bei vielen Rezepten kann es lange dauern und bei einem kostenpflichtigen KI-Anbieter erhebliches Guthaben verbrauchen.",
+        "confirmButton": "Für alle Rezepte ausführen",
+        "queued": "{queued, plural, =0 {Keine Läufe in Warteschlange} one {# Lauf in Warteschlange} other {# Läufe in Warteschlange}} für {recipes, plural, one {# Rezept} other {# Rezepte}}",
+        "aiDisabled": "KI ist auf diesem Server deaktiviert. Aktiviere zuerst KI.",
+        "error": "Massen-Anreicherung konnte nicht gestartet werden"
       }
     },
     "aiConfig": {

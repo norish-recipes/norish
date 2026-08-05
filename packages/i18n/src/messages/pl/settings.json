@@ -525,14 +525,18 @@
         "title": "Kuchnie",
         "subtitle": "Słownik, z którego wybierają przepisy i AI"
       },
-      "bulkCategorization": {
-        "title": "Masowa kategoryzacja",
-        "subtitle": "Kategoryzuj nieskategoryzowane przepisy za pomocą AI",
-        "description": "Dodaj do kolejki wszystkie nieskategoryzowane przepisy do rozpoznania kategorii przez AI. Kategorie obejmują: Śniadanie, Lunch, Kolacja i Przekąska.",
-        "button": "Kategoryzuj wszystkie przepisy",
-        "queued": "{count, plural, =0 {Brak przepisów do skategoryzowania} one {Dodano do kolejki # przepis} other {Dodano do kolejki # przepisów}}",
-        "success": "Rozpoczęto kategoryzację",
-        "error": "Nie udało się uruchomić kategoryzacji"
+      "bulkEnrichment": {
+        "title": "Masowe wzbogacanie",
+        "subtitle": "Uruchom włączone wzbogacanie dla wszystkich przepisów",
+        "description": "Dodaj do kolejki, dla wszystkich przepisów na tym serwerze, każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym. Przepisy zachowują dane, które już mają — uzupełniane są tylko braki.",
+        "button": "Wzbogać wszystkie przepisy",
+        "confirmTitle": "Uruchomić wzbogacanie dla wszystkich przepisów?",
+        "confirmMessage": "To dodaje do kolejki pracę AI dla każdego przepisu na tym serwerze. Każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym uruchamia się tam, gdzie brakuje danych.",
+        "costWarning": "To może być kosztowna operacja: przy wielu przepisach może potrwać długo, a u płatnego dostawcy AI zużyć znaczną ilość kredytów.",
+        "confirmButton": "Uruchom dla wszystkich przepisów",
+        "queued": "{queued, plural, =0 {Brak uruchomień w kolejce} one {# uruchomienie w kolejce} few {# uruchomienia w kolejce} many {# uruchomień w kolejce} other {# uruchomienia w kolejce}} dla {recipes, plural, one {# przepisu} few {# przepisów} many {# przepisów} other {# przepisu}}",
+        "aiDisabled": "AI jest wyłączone na tym serwerze. Najpierw włącz AI.",
+        "error": "Nie udało się uruchomić masowego wzbogacania"
       }
     },
     "aiConfig": {

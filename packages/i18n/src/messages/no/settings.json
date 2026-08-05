@@ -525,14 +525,18 @@
         "title": "Kjøkken",
         "subtitle": "Ordlisten oppskrifter og KI velger fra"
       },
-      "bulkCategorization": {
-        "title": "Massekategorisering",
-        "subtitle": "Kategoriser ukategoriserte oppskrifter med AI",
-        "description": "Sett alle ukategoriserte oppskrifter i kø for AI-basert kategoriregistrering. Kategorier inkluderer Frokost, Lunsj, Middag og Snacks.",
-        "button": "Kategoriser alle oppskrifter",
-        "queued": "{count, plural, =0 {Ingen oppskrifter å kategorisere} one {# oppskrift i kø} other {# oppskrifter i kø}}",
-        "success": "Kategorisering startet",
-        "error": "Kunne ikke starte kategorisering"
+      "bulkEnrichment": {
+        "title": "Masseberikelse",
+        "subtitle": "Kjør aktivert berikelse på alle oppskrifter",
+        "description": "Sett hver berikelsestype med automatisk bryter slått på i kø for alle oppskrifter på denne serveren. Oppskrifter beholder dataene de allerede har — bare hull fylles.",
+        "button": "Berik alle oppskrifter",
+        "confirmTitle": "Kjøre berikelse på alle oppskrifter?",
+        "confirmMessage": "Dette setter AI-arbeid i kø for hver oppskrift på denne serveren. Hver berikelsestype med automatisk bryter slått på kjøres der data mangler.",
+        "costWarning": "Dette kan være en kostbar operasjon: Med mange oppskrifter kan det ta lang tid og hos en betalt AI-leverandør bruke betydelig kreditt.",
+        "confirmButton": "Kjør på alle oppskrifter",
+        "queued": "{queued, plural, =0 {Ingen kjøringer i kø} one {# kjøring i kø} other {# kjøringer i kø}} for {recipes, plural, one {# oppskrift} other {# oppskrifter}}",
+        "aiDisabled": "AI er deaktivert på denne serveren. Aktiver AI først.",
+        "error": "Kunne ikke starte masseberikelse"
       }
     },
     "aiConfig": {

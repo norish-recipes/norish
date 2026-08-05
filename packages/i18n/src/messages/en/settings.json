@@ -525,14 +525,18 @@
         "title": "Cuisines",
         "subtitle": "The vocabulary recipes and AI pick from"
       },
-      "bulkCategorization": {
-        "title": "Bulk Categorization",
-        "subtitle": "Categorize uncategorized recipes using AI",
-        "description": "Queue all uncategorized recipes for AI-based category detection. Categories include Breakfast, Lunch, Dinner, and Snack.",
-        "button": "Categorize All Recipes",
-        "queued": "{count, plural, =0 {No recipes to categorize} one {# recipe queued} other {# recipes queued}}",
-        "success": "Categorization started",
-        "error": "Failed to start categorization"
+      "bulkEnrichment": {
+        "title": "Bulk Enrichment",
+        "subtitle": "Run enabled enrichment on every recipe",
+        "description": "Queue every enrichment kind whose automatic switch is enabled, for all recipes on this server. Recipes keep the data they already have — only gaps are filled.",
+        "button": "Enrich All Recipes",
+        "confirmTitle": "Run enrichment on all recipes?",
+        "confirmMessage": "This queues AI work for every recipe on this server. Every enrichment kind whose automatic switch is enabled runs wherever data is missing.",
+        "costWarning": "This can be an expensive operation: with many recipes it may take a long time and, on a paid AI provider, use a significant amount of credits.",
+        "confirmButton": "Run on All Recipes",
+        "queued": "{queued, plural, =0 {No runs queued} one {# run queued} other {# runs queued}} across {recipes, plural, one {# recipe} other {# recipes}}",
+        "aiDisabled": "AI is disabled on this server. Enable AI first.",
+        "error": "Failed to start bulk enrichment"
       }
     },
     "aiConfig": {

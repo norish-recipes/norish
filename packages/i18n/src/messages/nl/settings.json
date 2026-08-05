@@ -525,14 +525,18 @@
         "title": "Keukens",
         "subtitle": "De woordenlijst waaruit recepten en AI kiezen"
       },
-      "bulkCategorization": {
-        "title": "Bulkcategorisatie",
-        "subtitle": "Categoriseer niet-gecategoriseerde recepten met AI",
-        "description": "Zet alle niet-gecategoriseerde recepten in de wachtrij voor AI-gebaseerde categoriedetectie. Categorieën zijn Ontbijt, Lunch, Diner en Snack.",
-        "button": "Alle recepten categoriseren",
-        "queued": "{count, plural, =0 {Geen recepten om te categoriseren} one {# recept in wachtrij} other {# recepten in wachtrij}}",
-        "success": "Categorisatie gestart",
-        "error": "Categorisatie starten mislukt"
+      "bulkEnrichment": {
+        "title": "Bulkverrijking",
+        "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
+        "description": "Zet voor alle recepten op deze server elke verrijkingssoort in de wachtrij waarvan de automatische schakelaar aanstaat. Recepten behouden wat ze al hebben — alleen ontbrekende gegevens worden aangevuld.",
+        "button": "Alle recepten verrijken",
+        "confirmTitle": "Verrijking op alle recepten uitvoeren?",
+        "confirmMessage": "Dit zet AI-werk in de wachtrij voor elk recept op deze server. Elke verrijkingssoort waarvan de automatische schakelaar aanstaat draait waar gegevens ontbreken.",
+        "costWarning": "Dit kan een kostbare bewerking zijn: met veel recepten kan het lang duren en bij een betaalde AI-provider veel tegoed verbruiken.",
+        "confirmButton": "Op alle recepten uitvoeren",
+        "queued": "{queued, plural, =0 {Geen runs in wachtrij} one {# run in wachtrij} other {# runs in wachtrij}} voor {recipes, plural, one {# recept} other {# recepten}}",
+        "aiDisabled": "AI is uitgeschakeld op deze server. Schakel eerst AI in.",
+        "error": "Bulkverrijking starten mislukt"
       }
     },
     "aiConfig": {

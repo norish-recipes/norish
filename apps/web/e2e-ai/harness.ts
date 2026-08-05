@@ -280,8 +280,10 @@ export async function readStoredCategories(recipeName: string): Promise<string[]
   await db.connect();
 
   try {
+    // categories is an array of a custom enum type, which node-postgres does
+    // not parse; array_to_json turns it into something it does.
     const recipe = await db.query<{ categories: string[] }>(
-      "select categories from recipes where name = $1",
+      "select array_to_json(categories) as categories from recipes where name = $1",
       [recipeName]
     );
     const row = recipe.rows[0];

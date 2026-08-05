@@ -525,14 +525,18 @@
         "title": "Culinárias",
         "subtitle": "O vocabulário do qual receitas e IA escolhem"
       },
-      "bulkCategorization": {
-        "title": "Categorização em massa",
-        "subtitle": "Categorize receitas sem categoria usando IA",
-        "description": "Coloque todas as receitas sem categoria na fila para detecção de categoria baseada em IA. As categorias incluem Café da manhã, Almoço, Jantar e Lanche.",
-        "button": "Categorizar todas as receitas",
-        "queued": "{count, plural, =0 {Nenhuma receita para categorizar} one {# receita na fila} other {# receitas na fila}}",
-        "success": "Categorização iniciada",
-        "error": "Falha ao iniciar categorização"
+      "bulkEnrichment": {
+        "title": "Enriquecimento em massa",
+        "subtitle": "Executar o enriquecimento habilitado em todas as receitas",
+        "description": "Coloque na fila, para todas as receitas deste servidor, cada tipo de enriquecimento cujo interruptor automático esteja habilitado. As receitas mantêm os dados que já têm — apenas as lacunas são preenchidas.",
+        "button": "Enriquecer todas as receitas",
+        "confirmTitle": "Executar o enriquecimento em todas as receitas?",
+        "confirmMessage": "Isto coloca na fila trabalho de IA para cada receita deste servidor. Cada tipo de enriquecimento cujo interruptor automático esteja habilitado é executado onde faltam dados.",
+        "costWarning": "Pode ser uma operação cara: com muitas receitas pode demorar bastante e, em um provedor de IA pago, consumir uma quantidade significativa de créditos.",
+        "confirmButton": "Executar em todas as receitas",
+        "queued": "{queued, plural, =0 {Nenhuma execução na fila} one {# execução na fila} other {# execuções na fila}} para {recipes, plural, one {# receita} other {# receitas}}",
+        "aiDisabled": "A IA está desabilitada neste servidor. Habilite a IA primeiro.",
+        "error": "Falha ao iniciar o enriquecimento em massa"
       }
     },
     "aiConfig": {

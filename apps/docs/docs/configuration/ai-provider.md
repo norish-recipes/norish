@@ -140,6 +140,21 @@ creating a near-duplicate. The list itself is managed under
 **Settings → Admin → AI & Processing → Cuisines**; see
 [Recipe provenance](../recipes/provenance.md).
 
+### Run it on your whole library
+
+Automatic enrichment only runs when a recipe is created, so recipes imported
+before you enabled a switch — or before an enrichment kind existed — never
+catch up on their own. **Settings → Admin → AI & Processing → Bulk Enrichment
+→ Enrich All Recipes** closes that gap: it queues every enrichment kind whose
+automatic switch is enabled, for every recipe on the server, under the same
+rules as the automatic run — supplied data wins and only gaps are filled.
+
+The action asks for confirmation first, because it can be an expensive
+operation: with many recipes it may take a long time and, on a paid AI
+provider, use a significant amount of credits. It replaces the old
+**Categorize All Recipes** button, which ran only categorization and ignored
+the switches.
+
 ### Turning it all off
 
 `AI_ENABLED=false` (or the global switch in the admin settings) suppresses every
