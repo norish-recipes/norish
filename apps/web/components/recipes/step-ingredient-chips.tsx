@@ -243,7 +243,26 @@ export function StepIngredientChips({
                   step="0.05"
                   type="number"
                   value={customValue}
-                  onBlur={() => commitCustom(index, false)}
+                  onBlur={(event) => {
+                    // The picker's menu is still exiting when an attach opens
+                    // the ask, and it re-renders without the attached line —
+                    // react-aria then hands DOM focus to a neighbouring menu
+                    // item. That steal is programmatic: a person cannot land
+                    // on a menu item while the ask is open, so a blur into a
+                    // menu means reclaim, never commit.
+                    const thief = event.relatedTarget;
+
+                    if (thief instanceof Element && thief.closest('[role="menu"]')) {
+                      requestAnimationFrame(() => {
+                        if (closingRef.current) return;
+                        customInputRef.current?.focus();
+                        customInputRef.current?.select();
+                      });
+
+                      return;
+                    }
+                    commitCustom(index, false);
+                  }}
                   onChange={(event) => setCustomValue(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
