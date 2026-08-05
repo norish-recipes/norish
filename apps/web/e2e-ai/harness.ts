@@ -91,6 +91,47 @@ export async function submitImageImport(page: Page): Promise<void> {
   }).toPass({ timeout: 90_000, intervals: [500, 1_000, 2_000] });
 }
 
+/**
+ * Open the Prompts panel of the admin tab and return a locator scoped to it:
+ * the admin tab renders several forms with their own Save buttons, so every
+ * prompt selector must live inside the panel.
+ */
+export async function openPromptsPanel(page: Page) {
+  await page.goto("/settings?tab=admin");
+
+  const trigger = page.getByRole("button", { name: /^Prompts/ }).first();
+
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.click();
+
+  const panelId = await trigger.getAttribute("aria-controls");
+
+  return page.locator(`[id="${panelId}"]`);
+}
+
+/**
+ * Edit prompts through the real administrator surface: the Prompts panel of
+ * the AI & Processing card. Saving waits for the form to settle back into its
+ * clean state, so a following import runs against the stored prompt.
+ */
+export async function editPrompts(page: Page, edits: Record<string, string>): Promise<void> {
+  const panel = await openPromptsPanel(page);
+
+  for (const [label, text] of Object.entries(edits)) {
+    const field = panel.getByRole("textbox", { name: label });
+
+    await field.scrollIntoViewIfNeeded();
+    await field.fill(text);
+  }
+
+  const save = panel.getByRole("button", { name: "Save", exact: true });
+
+  await save.click();
+  // The save round-trips through the admin API and the refreshed prompts make
+  // the form clean again; a disabled Save is the observable end of that.
+  await expect(save).toBeDisabled({ timeout: 15_000 });
+}
+
 /** Sign in against the real auth API and return the resulting session cookies. */
 export async function signIn(user: { email: string; password: string }): Promise<SessionCookies> {
   const api = await request.newContext({

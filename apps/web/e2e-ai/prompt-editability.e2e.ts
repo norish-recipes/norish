@@ -18,6 +18,7 @@ import type { AIE2EStack, SessionCookies } from "./harness";
 import { E2E_BASE_URL, USER_A } from "./env";
 import {
   bootStack,
+  editPrompts,
   setAutomaticEnrichment,
   signIn,
   submitImageImport,
@@ -74,39 +75,6 @@ test.afterAll(async () => {
   stack = null;
 });
 
-/**
- * Edit prompts through the real administrator surface: the Prompts panel of
- * the AI & Processing card. Saving waits for the form to settle back into its
- * clean state, so a following import runs against the stored prompt.
- */
-async function editPrompts(edits: Record<string, string>): Promise<void> {
-  await page.goto("/settings?tab=admin");
-
-  const trigger = page.getByRole("button", { name: /^Prompts/ }).first();
-
-  await trigger.scrollIntoViewIfNeeded();
-  await trigger.click();
-
-  // The panel the trigger controls scopes every selector below: the admin tab
-  // renders several forms with their own Save buttons.
-  const panelId = await trigger.getAttribute("aria-controls");
-  const panel = page.locator(`[id="${panelId}"]`);
-
-  for (const [label, text] of Object.entries(edits)) {
-    const field = panel.getByRole("textbox", { name: label });
-
-    await field.scrollIntoViewIfNeeded();
-    await field.fill(text);
-  }
-
-  const save = panel.getByRole("button", { name: "Save", exact: true });
-
-  await save.click();
-  // The save round-trips through the admin API and the refreshed prompts make
-  // the form clean again; a disabled Save is the observable end of that.
-  await expect(save).toBeDisabled({ timeout: 15_000 });
-}
-
 /** The composed text of every captured request, oldest first. */
 function capturedTexts(): string[] {
   return stack!.ai.control.requests.map((request) => JSON.stringify(request.body));
@@ -116,7 +84,7 @@ test("an edited auto-categorization prompt reaches the model", async () => {
   const SENTINEL = "PREFER SNACK WHEN THE DISH IS FINGER FOOD (categorization sentinel).";
   const ai = stack!.ai;
 
-  await editPrompts({ "Auto-Categorization Prompt": SENTINEL });
+  await editPrompts(page, { "Auto-Categorization Prompt": SENTINEL });
   await setAutomaticEnrichment({ autoCategorization: true });
 
   ai.control.reset();
@@ -143,7 +111,7 @@ test("an edited allergy-detection prompt reaches the model, with the household's
   const ai = stack!.ai;
 
   await supplyUserAllergies(cookies, ["peanut"]);
-  await editPrompts({ "Allergy Detection Prompt": SENTINEL });
+  await editPrompts(page, { "Allergy Detection Prompt": SENTINEL });
   await setAutomaticEnrichment({ allergyDetection: true });
 
   ai.control.reset();
@@ -174,7 +142,7 @@ test("image extraction runs under its own prompt, and editing the webpage prompt
   const ai = stack!.ai;
 
   await setAutomaticEnrichment({});
-  await editPrompts({
+  await editPrompts(page, {
     "Recipe Extraction Prompt": EXTRACTION_SENTINEL,
     "Image Extraction Prompt": IMAGE_SENTINEL,
   });
