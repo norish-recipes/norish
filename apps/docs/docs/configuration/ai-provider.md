@@ -85,8 +85,8 @@ already have is not treated as a new recipe.
 
 ### Supplied recipe data wins
 
-Information you entered yourself, or that an import source stated explicitly, is
-never overwritten by automatic enrichment:
+Information you entered yourself, or that an import source stated explicitly,
+outranks automatic enrichment. Each group has its own precedence rule:
 
 - Any meal category on the recipe suppresses **automatic** categorization.
 - A **complete** nutrition group — calories, fat, carbs, and protein all
