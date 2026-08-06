@@ -232,6 +232,40 @@ describe("groceries openapi procedures", () => {
     expect(result.ids[0]).toMatch(UUID_RE);
   });
 
+  it("carries the incoming store onto a merged grocery instead of dropping it", async () => {
+    const storeId = crypto.randomUUID();
+    const existing = createMockGrocery({ name: "Milk", unit: null, amount: 1, storeId: null });
+
+    listGroceriesByUsers.mockResolvedValue([existing]);
+    updateGroceries.mockImplementation(
+      async (updates: Array<{ id: string; amount: number | null; storeId?: string | null }>) =>
+        updates.map((u) => createMockGrocery({ ...existing, ...u }))
+    );
+
+    const result = await createGroceriesData(ctx, [
+      { name: "Milk", unit: null, amount: 2, isDone: false, storeId },
+    ]);
+
+    expect(createGroceries).not.toHaveBeenCalled();
+    expect(updateGroceries).toHaveBeenCalledWith([{ id: existing.id, amount: 3, storeId }]);
+    expect(result.ids).toEqual([existing.id]);
+  });
+
+  it("keeps the existing store when the merged-in grocery has none", async () => {
+    const storeId = crypto.randomUUID();
+    const existing = createMockGrocery({ name: "Milk", unit: null, amount: 1, storeId });
+
+    listGroceriesByUsers.mockResolvedValue([existing]);
+    updateGroceries.mockImplementation(
+      async (updates: Array<{ id: string; amount: number | null; storeId?: string | null }>) =>
+        updates.map((u) => createMockGrocery({ ...existing, ...u }))
+    );
+
+    await createGroceriesData(ctx, [{ name: "Milk", unit: null, amount: 1, isDone: false }]);
+
+    expect(updateGroceries).toHaveBeenCalledWith([{ id: existing.id, amount: 2, storeId }]);
+  });
+
   it("marks a grocery done and returns the updated grocery", async () => {
     const groceryId = crypto.randomUUID();
     const ownerIds = new Map([[groceryId, ctx.user.id]]);
