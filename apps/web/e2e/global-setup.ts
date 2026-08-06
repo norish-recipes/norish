@@ -1,20 +1,23 @@
 /**
  * One-time environment preparation for the backend-down suite (ADR-0009):
- * bring up the dedicated e2e Postgres/Redis, boot the production server once
- * (it runs its own migrations), create the two test users through the real
- * auth API, and seed user A's Warm Set — a recipe with an on-disk primary
- * image, a grocery, and a planned calendar note — via SQL.
+ * start the suite's own Postgres/Redis via Testcontainers, boot the
+ * production server once (it runs its own migrations), create the two test
+ * users through the real auth API, and seed user A's Warm Set — a recipe
+ * with an on-disk primary image, a grocery, and a planned calendar note —
+ * via SQL.
  */
-import { execSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import type { StartedRedisContainer } from "@testcontainers/redis";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import { RedisContainer } from "@testcontainers/redis";
 import { Client } from "pg";
 
 import {
   E2E_BASE_URL,
-  E2E_DATABASE_URL,
-  E2E_DIR,
   E2E_UPLOADS_DIR,
+  e2eDatabaseUrl,
+  exportStackUrls,
   SEEDED_GROCERY_NAME,
   SEEDED_NOTE_TITLE,
   SEEDED_RECIPE_ID,
@@ -23,7 +26,7 @@ import {
   USER_A,
   USER_B,
 } from "./env";
-import { composeDown, composeUp, ensureBuilt, startServer } from "./server";
+import { ensureBuilt, startServer } from "./server";
 
 // A 1x1 transparent PNG — enough for a real, decodable <img> render.
 const PNG_1X1 = Buffer.from(
@@ -48,7 +51,7 @@ async function signUp(user: { email: string; password: string; name: string }): 
 }
 
 async function seed(): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -92,8 +95,8 @@ async function seed(): Promise<void> {
   writeFileSync(path.join(imageDir, "primary.png"), PNG_1X1);
 }
 
-async function forceAuthConfig(): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+async function forceAuthConfig(redis: StartedRedisContainer): Promise<void> {
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -107,18 +110,30 @@ async function forceAuthConfig(): Promise<void> {
   }
 
   // getConfig reads may be Redis-cached; drop them so the SQL value wins.
-  execSync("docker compose -f compose.yaml exec -T redis redis-cli flushall", {
-    cwd: E2E_DIR,
-    stdio: "ignore",
-  });
+  await redis.executeCliCmd("flushall");
 }
 
-export default async function globalSetup(): Promise<void> {
+export default async function globalSetup(): Promise<() => Promise<void>> {
   ensureBuilt();
-  // Fresh volumes every run: user A must deterministically be the first
-  // account (the server owner) and the seed idempotence stays trivial.
-  composeDown();
-  composeUp();
+
+  // Fresh anonymous containers every run: user A must deterministically be
+  // the first account (the server owner) and the seed idempotence stays
+  // trivial. Testcontainers publishes on kernel-assigned host ports (a fixed
+  // port can already be taken — that flaked CI with "address already in
+  // use") and its reaper removes the containers even after a crashed run.
+  const [postgres, redis] = await Promise.all([
+    new PostgreSqlContainer("postgres:17-alpine")
+      .withDatabase("norish_e2e")
+      .withUsername("norish_e2e")
+      .withPassword("norish_e2e")
+      .start(),
+    new RedisContainer("redis:8.6.2-alpine").start(),
+  ]);
+
+  exportStackUrls({
+    databaseUrl: postgres.getConnectionUri(),
+    redisUrl: redis.getConnectionUrl(),
+  });
 
   // Boot #1 migrates and seeds server config. The developer .env can make
   // password auth seed to false (OAuth configured) and the auth provider
@@ -127,7 +142,7 @@ export default async function globalSetup(): Promise<void> {
   const bootstrap = await startServer();
 
   await bootstrap.stop();
-  await forceAuthConfig();
+  await forceAuthConfig(redis);
 
   const server = await startServer();
 
@@ -135,10 +150,14 @@ export default async function globalSetup(): Promise<void> {
     await signUp(USER_A);
     // The first user's registration hook turns registration off; re-enable it
     // for the second account (the check is a live read).
-    await forceAuthConfig();
+    await forceAuthConfig(redis);
     await signUp(USER_B);
     await seed();
   } finally {
     await server.stop();
   }
+
+  return async () => {
+    await Promise.all([postgres.stop(), redis.stop()]);
+  };
 }

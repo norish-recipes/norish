@@ -1,13 +1,14 @@
 /**
  * Shared environment for the production-like AI E2E harness.
  *
- * This suite boots the real production server bundle against its own dedicated
- * Postgres/Redis (see ./compose.yaml) and points the server's AI provider
- * at an in-harness fake provider (see ./ai-provider.ts). Everything except the
- * third-party AI HTTP call is genuinely exercised.
+ * This suite boots the real production server bundle against its own
+ * Postgres/Redis, started by global setup via Testcontainers, and points the
+ * server's AI provider at an in-harness fake provider (see ./ai-provider.ts).
+ * Everything except the third-party AI HTTP call is genuinely exercised.
  *
- * Ports, database, and Redis are deliberately distinct from the backend-down
- * offline suite (apps/web/e2e) so the two suites never share state or collide.
+ * The containers, database, and credentials are deliberately distinct from
+ * the backend-down offline suite (apps/web/e2e) so the two suites never
+ * share state; host ports are kernel-assigned so they can never collide.
  *
  * `pnpm run test:e2e` at the repo root builds and runs every browser suite in
  * one command. To run just this suite on an existing build (Docker running):
@@ -19,10 +20,6 @@ import { fileURLToPath } from "node:url";
 
 export const E2E_PORT = 3200;
 export const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
-
-export const E2E_DATABASE_URL =
-  "postgresql://norish_ai_e2e:norish_ai_e2e@localhost:15433/norish_ai_e2e";
-export const E2E_REDIS_URL = "redis://localhost:16380";
 
 // The fake AI provider binds the loopback address; use 127.0.0.1 (not
 // "localhost") so the server never resolves the endpoint to IPv6 and misses it.
@@ -47,13 +44,48 @@ export const USER_B = {
   name: "Provenance B",
 };
 
+const DATABASE_URL_VAR = "NORISH_AI_E2E_DATABASE_URL";
+const REDIS_URL_VAR = "NORISH_AI_E2E_REDIS_URL";
+
+/**
+ * Global setup starts Postgres/Redis via Testcontainers on kernel-assigned
+ * host ports (a fixed port can already be taken — that made the old
+ * `compose up` flake in CI with "address already in use") and publishes the
+ * URLs here; the production-server child and the Playwright workers inherit
+ * them through the environment.
+ */
+export function exportStackUrls(urls: { databaseUrl: string; redisUrl: string }): void {
+  process.env[DATABASE_URL_VAR] = urls.databaseUrl;
+  process.env[REDIS_URL_VAR] = urls.redisUrl;
+}
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(
+      `${name} is unset — global setup exports it once the suite's containers are up`
+    );
+  }
+
+  return value;
+}
+
+export function e2eDatabaseUrl(): string {
+  return requiredEnv(DATABASE_URL_VAR);
+}
+
+export function e2eRedisUrl(): string {
+  return requiredEnv(REDIS_URL_VAR);
+}
+
 export function serverEnv(): NodeJS.ProcessEnv {
   return {
     ...process.env,
     NODE_ENV: "production",
     PORT: String(E2E_PORT),
-    DATABASE_URL: E2E_DATABASE_URL,
-    REDIS_URL: E2E_REDIS_URL,
+    DATABASE_URL: e2eDatabaseUrl(),
+    REDIS_URL: e2eRedisUrl(),
     AUTH_URL: E2E_BASE_URL,
     TRUSTED_ORIGINS: E2E_BASE_URL,
     // The committed test key from docker/docker-compose.test.yml. On a fresh

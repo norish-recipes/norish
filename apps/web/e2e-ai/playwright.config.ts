@@ -20,7 +20,6 @@ export default defineConfig({
   testDir: ".",
   testMatch: "**/*.e2e.ts",
   globalSetup: "./global-setup.ts",
-  globalTeardown: "./global-teardown.ts",
   timeout: 120_000,
   expect: { timeout: 15_000 },
   // One worker, serial: scenarios share one server lifecycle and one queue.

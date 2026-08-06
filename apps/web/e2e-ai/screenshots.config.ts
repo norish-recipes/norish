@@ -21,7 +21,6 @@ export default defineConfig({
   testDir: ".",
   testMatch: "**/*.shot.ts",
   globalSetup: "./global-setup.ts",
-  globalTeardown: "./global-teardown.ts",
   timeout: 180_000,
   expect: { timeout: 15_000 },
   workers: 1,

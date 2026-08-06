@@ -1,18 +1,20 @@
 /**
  * One-time environment preparation for the production-like AI E2E harness:
- * bring up the dedicated Postgres/Redis, boot the production server once (it
- * runs its own migrations and seeds AI config from the harness env, so the
- * feature is enabled and pointed at the fake provider), then create the two
- * test users through the real auth API.
+ * start the suite's own Postgres/Redis via Testcontainers, boot the
+ * production server once (it runs its own migrations and seeds AI config
+ * from the harness env, so the feature is enabled and pointed at the fake
+ * provider), then create the two test users through the real auth API.
  *
  * No recipe/grocery seeding: scenarios create their own recipes by
  * importing, which is exactly the path under test.
  */
-import { execSync } from "node:child_process";
+import type { StartedRedisContainer } from "@testcontainers/redis";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import { RedisContainer } from "@testcontainers/redis";
 import { Client } from "pg";
 
-import { E2E_BASE_URL, E2E_DATABASE_URL, E2E_DIR, USER_A, USER_B } from "./env";
-import { composeDown, composeUp, ensureBuilt, startServer } from "./server";
+import { E2E_BASE_URL, e2eDatabaseUrl, exportStackUrls, USER_A, USER_B } from "./env";
+import { ensureBuilt, startServer } from "./server";
 
 async function signUp(user: { email: string; password: string; name: string }): Promise<void> {
   const response = await fetch(`${E2E_BASE_URL}/api/auth/sign-up/email`, {
@@ -30,8 +32,8 @@ async function signUp(user: { email: string; password: string; name: string }): 
   }
 }
 
-async function forceAuthConfig(): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+async function forceAuthConfig(redis: StartedRedisContainer): Promise<void> {
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -45,18 +47,30 @@ async function forceAuthConfig(): Promise<void> {
   }
 
   // getConfig reads may be Redis-cached; drop them so the SQL value wins.
-  execSync("docker compose -f compose.yaml exec -T redis redis-cli flushall", {
-    cwd: E2E_DIR,
-    stdio: "ignore",
-  });
+  await redis.executeCliCmd("flushall");
 }
 
-export default async function globalSetup(): Promise<void> {
+export default async function globalSetup(): Promise<() => Promise<void>> {
   ensureBuilt();
-  // Fresh volumes every run: user A must deterministically be the first account
-  // (the server owner) and re-runs stay trivially isolated.
-  composeDown();
-  composeUp();
+
+  // Fresh anonymous containers every run: user A must deterministically be
+  // the first account (the server owner) and re-runs stay trivially
+  // isolated. Testcontainers publishes on kernel-assigned host ports (a
+  // fixed port can already be taken — that flaked CI with "address already
+  // in use") and its reaper removes the containers even after a crashed run.
+  const [postgres, redis] = await Promise.all([
+    new PostgreSqlContainer("postgres:17-alpine")
+      .withDatabase("norish_ai_e2e")
+      .withUsername("norish_ai_e2e")
+      .withPassword("norish_ai_e2e")
+      .start(),
+    new RedisContainer("redis:8.6.2-alpine").start(),
+  ]);
+
+  exportStackUrls({
+    databaseUrl: postgres.getConnectionUri(),
+    redisUrl: redis.getConnectionUrl(),
+  });
 
   // Boot #1 migrates and seeds server config. The developer environment can make
   // password auth seed to false (OAuth configured) and the auth provider cache
@@ -65,7 +79,7 @@ export default async function globalSetup(): Promise<void> {
   const bootstrap = await startServer();
 
   await bootstrap.stop();
-  await forceAuthConfig();
+  await forceAuthConfig(redis);
 
   const server = await startServer();
 
@@ -73,9 +87,13 @@ export default async function globalSetup(): Promise<void> {
     await signUp(USER_A);
     // The first user's registration hook turns registration off; re-enable it
     // for the second account (the check is a live read).
-    await forceAuthConfig();
+    await forceAuthConfig(redis);
     await signUp(USER_B);
   } finally {
     await server.stop();
   }
+
+  return async () => {
+    await Promise.all([postgres.stop(), redis.stop()]);
+  };
 }

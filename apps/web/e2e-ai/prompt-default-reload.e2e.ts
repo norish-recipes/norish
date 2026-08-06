@@ -21,7 +21,7 @@ import { expect, test } from "@playwright/test";
 import { Client } from "pg";
 
 import type { E2eServer, FakeAIProvider, SessionCookies } from "./harness";
-import { E2E_BASE_URL, E2E_DATABASE_URL, FAKE_AI_PORT, REPO_ROOT, USER_A } from "./env";
+import { E2E_BASE_URL, e2eDatabaseUrl, FAKE_AI_PORT, REPO_ROOT, USER_A } from "./env";
 import {
   createFakeAIProvider,
   editPrompts,
@@ -58,7 +58,7 @@ const FIELD_LABELS = {
 } as const;
 
 async function plantPromptsRow(value: Record<string, unknown>): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -72,7 +72,7 @@ async function plantPromptsRow(value: Record<string, unknown>): Promise<void> {
 }
 
 async function readPromptsRow(): Promise<Record<string, unknown>> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 

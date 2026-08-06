@@ -34,6 +34,9 @@ catalogs:
     '@testcontainers/postgresql':
       specifier: ^11.14.0
       version: 11.14.0
+    '@testcontainers/redis':
+      specifier: ^11.14.0
+      version: 11.14.0
     '@types/node':
       specifier: ^25.6.0
       version: 25.7.0
@@ -603,6 +606,12 @@ importers:
       '@tailwindcss/postcss':
         specifier: 'catalog:'
         version: 4.2.2
+      '@testcontainers/postgresql':
+        specifier: 'catalog:'
+        version: 11.14.0
+      '@testcontainers/redis':
+        specifier: 'catalog:'
+        version: 11.14.0
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -4979,6 +4988,9 @@ packages:
 
   '@testcontainers/postgresql@11.14.0':
     resolution: {integrity: sha512-wYbJn8GRTj8qfqzfVubxioYWlHJU/ImIjuzPwyy9C5Qfo6g3GLduPZAj+BifvqTZjgT3gd4gFVLCPhBji7dc1w==}
+
+  '@testcontainers/redis@11.14.0':
+    resolution: {integrity: sha512-WX005slz2JMQPw2avbSjf5awVjpmFhOs5xCxeGSYLcV5ia4W1edv/P6MdOw4dZnvDQDuN5LfqNoV/ut3XGb2pA==}
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -18279,6 +18291,15 @@ snapshots:
       - react-native-b4a
       - supports-color
 
+  '@testcontainers/redis@11.14.0':
+    dependencies:
+      testcontainers: 11.14.0
+    transitivePeerDependencies:
+      - bare-abort-controller
+      - bare-buffer
+      - react-native-b4a
+      - supports-color
+
   '@testing-library/dom@10.4.1':
     dependencies:
       '@babel/code-frame': 7.29.0
@@ -25304,7 +25325,7 @@ snapshots:
       ssh-remote-port-forward: 1.0.4
       tar-fs: 3.1.2
       tmp: 0.2.5
-      undici: 7.24.6
+      undici: 7.25.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer

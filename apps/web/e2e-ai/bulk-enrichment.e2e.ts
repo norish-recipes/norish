@@ -15,7 +15,7 @@ import { expect, test } from "@playwright/test";
 import { Client } from "pg";
 
 import type { AIE2EStack } from "./harness";
-import { E2E_BASE_URL, E2E_DATABASE_URL, USER_A } from "./env";
+import { E2E_BASE_URL, e2eDatabaseUrl, USER_A } from "./env";
 import {
   bootStack,
   findCuisineIdByName,
@@ -69,7 +69,7 @@ let page: Page;
 
 /** Flip the stored AI enablement directly, the way setAutomaticEnrichment does. */
 async function setAIEnabled(enabled: boolean): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 

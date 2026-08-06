@@ -1,15 +1,8 @@
-import { execSync, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import type { ChildProcess } from "node:child_process";
 
-import {
-  DIST_SERVER_ENTRY,
-  E2E_BASE_URL,
-  E2E_DIR,
-  E2E_UPLOADS_DIR,
-  serverEnv,
-  WEB_DIR,
-} from "./env";
+import { DIST_SERVER_ENTRY, E2E_BASE_URL, E2E_UPLOADS_DIR, serverEnv, WEB_DIR } from "./env";
 
 /**
  * Production-server lifecycle for the AI E2E harness: the suite starts the real
@@ -28,20 +21,6 @@ export function ensureBuilt(): void {
       `Missing ${DIST_SERVER_ENTRY}. Build first: pnpm run build:web && pnpm run build:server (repo root), or run pnpm run test:e2e (repo root) to build and run everything.`
     );
   }
-}
-
-export function composeUp(): void {
-  execSync("docker compose -f compose.yaml up -d --wait", {
-    cwd: E2E_DIR,
-    stdio: "inherit",
-  });
-}
-
-export function composeDown(): void {
-  execSync("docker compose -f compose.yaml down -v", {
-    cwd: E2E_DIR,
-    stdio: "ignore",
-  });
 }
 
 async function isHealthy(): Promise<boolean> {

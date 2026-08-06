@@ -13,7 +13,7 @@ import { Client } from "pg";
 import type { FakeAIProvider } from "./ai-provider";
 import type { E2eServer } from "./server";
 import { createFakeAIProvider } from "./ai-provider";
-import { E2E_BASE_URL, E2E_DATABASE_URL, FAKE_AI_PORT } from "./env";
+import { E2E_BASE_URL, e2eDatabaseUrl, FAKE_AI_PORT } from "./env";
 import { startServer } from "./server";
 
 export { createFakeAIProvider } from "./ai-provider";
@@ -180,7 +180,7 @@ export async function setAutomaticEnrichment(
     >
   >
 ): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -207,7 +207,7 @@ export async function setAutomaticEnrichment(
 
 /** A Cuisine from the seeded vocabulary, by name. */
 export async function findCuisineIdByName(name: string): Promise<string> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -275,7 +275,7 @@ export async function readStoredProvenance(recipeName: string): Promise<{
   provenanceNote: string | null;
   cuisines: string[];
 }> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -316,7 +316,7 @@ export async function readStoredProvenance(recipeName: string): Promise<{
 
 /** Read a recipe's stored categories straight from the database. */
 export async function readStoredCategories(recipeName: string): Promise<string[]> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -342,7 +342,7 @@ export async function supplyProvenance(
   recipeName: string,
   provenance: { originCountry?: string; provenanceNote?: string; cuisineIds?: string[] }
 ): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -381,7 +381,7 @@ export async function readStoredStepIngredients(recipeName: string): Promise<
     share: number;
   }[]
 > {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
@@ -421,7 +421,7 @@ export async function supplyStepIngredient(
   recipeName: string,
   link: { systemUsed: string; stepOrder: number; ingredientOrder: number; share: number }
 ): Promise<void> {
-  const db = new Client({ connectionString: E2E_DATABASE_URL });
+  const db = new Client({ connectionString: e2eDatabaseUrl() });
 
   await db.connect();
 
