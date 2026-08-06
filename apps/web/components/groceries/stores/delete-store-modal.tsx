@@ -45,8 +45,15 @@ export function DeleteStoreModal({
     onClose();
   };
   const itemCount = groceryCount ?? 0;
+
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
+    // This confirm opens while the store-manager Panel is still up: z-* lifts it
+    // above the drawer (z-[1001]), and pointer-events-auto opts back out of the
+    // `pointer-events: none` vaul sets on <body>, which the portalled backdrop
+    // inherits — without it every click in the modal is swallowed. It must stay
+    // portalled to <body>: inside the drawer, vaul's transform would re-root
+    // `position: fixed` and shrink the backdrop to the sheet's own box.
+    <Modal.Backdrop className="pointer-events-auto z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
       <Modal.Container className="z-[1100]">
         <Modal.Dialog>
           <Modal.Header>{t("deleteStore")}</Modal.Header>
@@ -94,10 +101,10 @@ export function DeleteStoreModal({
             {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
           </Modal.Body>
           <Modal.Footer>
-            <Button onPress={onClose} variant="tertiary">
+            <Button variant="tertiary" onPress={onClose}>
               {tActions("cancel")}
             </Button>
-            <Button onPress={handleConfirm} variant="danger">
+            <Button variant="danger" onPress={handleConfirm}>
               {t("deleteStore")}
             </Button>
           </Modal.Footer>

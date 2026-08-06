@@ -2,6 +2,7 @@
 
 import type { ButtonProps } from "@heroui/react";
 import type { ComponentType, ReactNode, SVGProps } from "react";
+import { usePanelPortalContainer } from "@/components/Panel/Panel";
 import {
   ArrowPathIcon,
   CheckIcon,
@@ -105,6 +106,7 @@ export function IconActionButton({
 }: IconActionButtonProps) {
   const config = ACTION_CONFIG[action];
   const Icon = config.icon;
+  const portalContainer = usePanelPortalContainer();
 
   return (
     <Tooltip delay={0}>
@@ -117,7 +119,7 @@ export function IconActionButton({
       >
         <Icon className="size-4" />
       </Button>
-      <Tooltip.Content placement={tooltipPlacement}>
+      <Tooltip.Content UNSTABLE_portalContainer={portalContainer} placement={tooltipPlacement}>
         <p>{label}</p>
       </Tooltip.Content>
     </Tooltip>
