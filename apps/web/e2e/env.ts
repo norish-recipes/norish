@@ -16,8 +16,8 @@ import { fileURLToPath } from "node:url";
 export const E2E_PORT = 3100;
 export const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
 
-export const E2E_DATABASE_URL = "postgresql://norish_e2e:norish_e2e@localhost:55432/norish_e2e";
-export const E2E_REDIS_URL = "redis://localhost:56379";
+export const E2E_DATABASE_URL = "postgresql://norish_e2e:norish_e2e@localhost:15432/norish_e2e";
+export const E2E_REDIS_URL = "redis://localhost:16379";
 
 export const E2E_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const WEB_DIR = path.resolve(E2E_DIR, "..");

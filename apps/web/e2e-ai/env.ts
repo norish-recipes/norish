@@ -21,8 +21,8 @@ export const E2E_PORT = 3200;
 export const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
 
 export const E2E_DATABASE_URL =
-  "postgresql://norish_ai_e2e:norish_ai_e2e@localhost:55433/norish_ai_e2e";
-export const E2E_REDIS_URL = "redis://localhost:56380";
+  "postgresql://norish_ai_e2e:norish_ai_e2e@localhost:15433/norish_ai_e2e";
+export const E2E_REDIS_URL = "redis://localhost:16380";
 
 // The fake AI provider binds the loopback address; use 127.0.0.1 (not
 // "localhost") so the server never resolves the endpoint to IPv6 and misses it.
