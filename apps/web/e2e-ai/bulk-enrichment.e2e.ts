@@ -18,10 +18,13 @@ import type { AIE2EStack } from "./harness";
 import { E2E_BASE_URL, E2E_DATABASE_URL, USER_A } from "./env";
 import {
   bootStack,
+  findCuisineIdByName,
   readStoredCategories,
+  readStoredProvenance,
   setAutomaticEnrichment,
   signIn,
   submitPasteImport,
+  supplyProvenance,
 } from "./harness";
 
 test.describe.configure({ mode: "serial" });
@@ -209,5 +212,69 @@ test("a confirmed run fills gaps through enabled kinds and defers to supplied da
   // Supplied Recipe Data won: the supplied recipe kept its category and the
   // provider was asked exactly once — for the gap recipe.
   expect(await readStoredCategories("Bulk Supplied Stew")).toEqual(["Breakfast"]);
+  expect(ai.control.requestCount).toBe(1);
+});
+
+test("a provenance run fills the gaps around a supplied Cuisine and skips a complete group", async () => {
+  // The gap-fill contract at the coordinator seam (ADR-0018): one recipe
+  // carries nothing but a supplied Cuisine — the case that used to suppress
+  // the whole group — and the other a complete group with nothing left to ask.
+  await supplyProvenance("Bulk Gap Stew", {
+    cuisineIds: [await findCuisineIdByName("Italian")],
+  });
+  await supplyProvenance("Bulk Supplied Stew", {
+    originCountry: "NL",
+    provenanceNote: "Set by an editor.",
+    cuisineIds: [await findCuisineIdByName("French")],
+  });
+  await setAutomaticEnrichment({ recipeProvenance: true });
+
+  const ai = stack!.ai;
+
+  ai.control.reset();
+  // The claim proposes a different Cuisine on purpose: the supplied set must
+  // survive the fill, not be replaced by what the model would have picked.
+  ai.control.succeedWith({
+    originCountry: "IT",
+    originCountryName: "Italia",
+    originRegion: "Lazio",
+    cuisines: ["Japanese"],
+    provenanceNote: "Questa ricetta viene dalla cucina romana.",
+  });
+
+  const panel = await openBulkPanel();
+
+  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
+  await page.getByRole("button", { name: "Run on All Recipes" }).click();
+
+  // Of two recipes, only the one with gaps enrolled the one enabled kind.
+  await expect(panel.getByText("1 run queued across 2 recipes")).toBeVisible({
+    timeout: 30_000,
+  });
+
+  // The worker fills the missing slots and keeps the supplied Cuisine.
+  await expect
+    .poll(async () => (await readStoredProvenance("Bulk Gap Stew")).originCountry, {
+      timeout: 60_000,
+      intervals: [1_000, 2_000, 5_000],
+    })
+    .toBe("IT");
+  expect(await readStoredProvenance("Bulk Gap Stew")).toEqual({
+    originCountry: "IT",
+    originCountryName: "Italia",
+    originRegion: "Lazio",
+    provenanceNote: "Questa ricetta viene dalla cucina romana.",
+    cuisines: ["Italian"],
+  });
+
+  // The complete group was skipped outright — the provider was asked exactly
+  // once — and gained nothing, not even the region it never had.
+  expect(await readStoredProvenance("Bulk Supplied Stew")).toEqual({
+    originCountry: "NL",
+    originCountryName: null,
+    originRegion: null,
+    provenanceNote: "Set by an editor.",
+    cuisines: ["French"],
+  });
   expect(ai.control.requestCount).toBe(1);
 });

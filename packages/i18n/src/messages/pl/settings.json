@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Masowe wzbogacanie",
         "subtitle": "Uruchom włączone wzbogacanie dla wszystkich przepisów",
-        "description": "Dodaj do kolejki, dla wszystkich przepisów na tym serwerze, każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym. Przepisy zachowują dane, które już mają — uzupełniane są tylko braki.",
+        "description": "Dodaj do kolejki, dla wszystkich przepisów na tym serwerze, każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym. Przepisy zachowują dane, które już mają, uzupełniane są tylko braki.",
         "button": "Wzbogać wszystkie przepisy",
         "confirmTitle": "Uruchomić wzbogacanie dla wszystkich przepisów?",
         "confirmMessage": "To dodaje do kolejki pracę AI dla każdego przepisu na tym serwerze. Każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym uruchamia się tam, gdzie brakuje danych.",
@@ -586,9 +586,9 @@
         "nutritionEstimation": "Szacowanie wartości odżywczych",
         "nutritionEstimationDescription": "Szacuje kalorie, tłuszcze, węglowodany i białko dla nowych przepisów bez podanych wartości",
         "recipeProvenance": "Pochodzenie przepisu",
-        "recipeProvenanceDescription": "Ustal kraj, region, kuchnie i krótką notatkę dla nowych przepisów, które ich nie mają",
+        "recipeProvenanceDescription": "Ustal kraj, region, kuchnie i krótką notatkę dla nowych przepisów, uzupełniane są tylko brakujące pola, to co podano, pozostaje bez zmian",
         "ingredientLinking": "Wiązanie składników",
-        "ingredientLinkingDescription": "Wiąże każdy krok z używanymi pozycjami składników — tylko dla kroków bez powiązań"
+        "ingredientLinkingDescription": "Wiąże każdy krok z używanymi pozycjami składników, tylko dla kroków bez powiązań"
       },
       "tagStrategy": "Strategia tagów",
       "tagStrategyDescription": "Jakich tagów może używać automatyczne tagowanie, niezależnie od tego, czy działa automatycznie czy ręcznie",

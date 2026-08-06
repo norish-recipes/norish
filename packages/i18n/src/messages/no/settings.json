@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Masseberikelse",
         "subtitle": "Kjør aktivert berikelse på alle oppskrifter",
-        "description": "Sett hver berikelsestype med automatisk bryter slått på i kø for alle oppskrifter på denne serveren. Oppskrifter beholder dataene de allerede har — bare hull fylles.",
+        "description": "Sett hver berikelsestype med automatisk bryter slått på i kø for alle oppskrifter på denne serveren. Oppskrifter beholder dataene de allerede har, bare hull fylles.",
         "button": "Berik alle oppskrifter",
         "confirmTitle": "Kjøre berikelse på alle oppskrifter?",
         "confirmMessage": "Dette setter AI-arbeid i kø for hver oppskrift på denne serveren. Hver berikelsestype med automatisk bryter slått på kjøres der data mangler.",
@@ -586,7 +586,7 @@
         "nutritionEstimation": "Estimering av næringsinnhold",
         "nutritionEstimationDescription": "Estimer kalorier, fett, karbohydrater og protein for nye oppskrifter uten oppgitte verdier",
         "recipeProvenance": "Oppskriftens opphav",
-        "recipeProvenanceDescription": "Utled land, region, kjøkken og et kort notat for nye oppskrifter som mangler det",
+        "recipeProvenanceDescription": "Utled land, region, kjøkken og et kort notat for nye oppskrifter, bare det som mangler fylles ut, det du selv har angitt beholdes",
         "ingredientLinking": "Ingredienskobling",
         "ingredientLinkingDescription": "Kobler hvert trinn til ingredienslinjene det bruker, for trinn uten koblinger"
       },

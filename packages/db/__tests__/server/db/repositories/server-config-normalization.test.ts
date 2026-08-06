@@ -111,6 +111,7 @@ describe("server config normalization", () => {
         autoCategorization: false,
         nutritionEstimation: false,
         recipeProvenance: false,
+        ingredientLinking: false,
       },
     });
 
@@ -135,6 +136,7 @@ describe("server config normalization", () => {
         autoCategorization: false,
         nutritionEstimation: false,
         recipeProvenance: false,
+        ingredientLinking: false,
       },
     });
     expect(JSON.parse(decrypt(persisted!.valueEnc!))).toEqual(result);

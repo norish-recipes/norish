@@ -13,7 +13,10 @@
  * the database, and both go through the cuisines repository.
  *
  * Inference reads only the stored recipe. It never sees parser output, import
- * metadata, or how the recipe entered Norish.
+ * metadata, or how the recipe entered Norish. The stored recipe includes any
+ * provenance already supplied: an automatic run fills the group's gaps
+ * (ADR-0018), so the supplied slots are handed to the model as settled facts
+ * and the missing fields come back written around them, not against them.
  */
 
 import type { CuisineStrategy } from "@norish/config/zod/server-config";
@@ -22,15 +25,27 @@ import { createCuisines, listCuisines } from "@norish/db/repositories/cuisines";
 import { getCuisineStrategy } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 import { resolveCuisines } from "@norish/shared/lib/cuisine-resolver";
+import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 
 import { AIResponseError } from "../runtime/errors";
 import { generateStructured } from "../runtime/runtime";
 import { buildProvenanceSchema } from "./provenance.schema";
 
+/** The provenance slots already supplied when inference runs. */
+export interface SuppliedProvenance {
+  originCountry?: string | null;
+  originRegion?: string | null;
+  provenanceNote?: string | null;
+  /** Names of the Cuisines already attached, as vocabulary rows. */
+  cuisineNames?: readonly string[];
+}
+
 export interface RecipeForProvenance {
   title: string;
   description: string | null;
   ingredients: string[];
+  /** Slots the model must treat as settled rather than work out again. */
+  supplied?: SuppliedProvenance;
 }
 
 /** The stored claim: scalars plus resolved vocabulary row ids, never names. */
@@ -64,6 +79,39 @@ function buildProvenanceFill(
         ? "If none of them fits, name the tradition it does belong to instead."
         : "Return an empty list when none of them fits.",
   };
+}
+
+/**
+ * The supplied slots as an input section, appended after the prompt.
+ *
+ * A section rather than a placeholder (ADR-0016), so an administrator's
+ * customised prompt keeps receiving it. Only substantive values appear; when
+ * nothing is supplied there is no section at all and the request reads exactly
+ * as it did before gap-filling existed.
+ */
+function buildSuppliedSection(supplied: SuppliedProvenance | undefined): string | null {
+  if (!supplied) return null;
+
+  const lines: string[] = [];
+  const country = normalizeOriginCountry(supplied.originCountry);
+  const region = supplied.originRegion?.trim();
+  const note = supplied.provenanceNote?.trim();
+  const cuisineNames = (supplied.cuisineNames ?? [])
+    .map((name) => name.trim())
+    .filter((name) => name !== "");
+
+  if (country) lines.push(`- originCountry: ${country}`);
+  if (region) lines.push(`- originRegion: ${region}`);
+  if (note) lines.push(`- provenanceNote: ${note}`);
+  if (cuisineNames.length > 0) lines.push(`- cuisines: ${cuisineNames.join(", ")}`);
+
+  if (lines.length === 0) return null;
+
+  return [
+    "Part of this recipe's provenance is already recorded. These values are settled:",
+    ...lines,
+    "Return every settled value unchanged in your answer and do not contradict any of them. Work out only the fields that are not settled, consistent with the settled ones. A provenance note you write must explain the whole claim, the settled values included.",
+  ].join("\n");
 }
 
 /**
@@ -112,6 +160,7 @@ export async function inferRecipeProvenance(
   // the resolution: what the model is allowed to propose is the same decision.
   const vocabulary = await listCuisines();
   const strategy = await getCuisineStrategy();
+  const suppliedSection = buildSuppliedSection(recipe.supplied);
 
   const output = await generateStructured({
     prompt: "recipe-provenance",
@@ -119,6 +168,7 @@ export async function inferRecipeProvenance(
       vocabulary.map((cuisine) => cuisine.name),
       strategy
     ),
+    sections: suppliedSection ? [suppliedSection] : [],
     fill: buildProvenanceFill(recipe, vocabulary, strategy),
   });
 

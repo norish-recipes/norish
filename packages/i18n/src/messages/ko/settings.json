@@ -586,7 +586,7 @@
         "nutritionEstimation": "영양 정보 추정",
         "nutritionEstimationDescription": "값이 없는 새 레시피의 칼로리, 지방, 탄수화물, 단백질을 추정합니다",
         "recipeProvenance": "레시피 출처",
-        "recipeProvenanceDescription": "정보가 없는 새 레시피의 국가, 지역, 요리와 짧은 설명을 추론합니다",
+        "recipeProvenanceDescription": "새 레시피의 국가, 지역, 요리와 짧은 설명을 추론하며, 비어 있는 항목만 채웁니다",
         "ingredientLinking": "재료 연결",
         "ingredientLinkingDescription": "연결이 없는 단계에 한해, 각 단계를 사용하는 재료 줄에 연결합니다"
       },

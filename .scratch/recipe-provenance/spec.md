@@ -116,11 +116,13 @@ The written explanation is produced in the language the recipe itself is written
 
 ### Eligibility and precedence
 
+> **Superseded in part by ADR-0018** (`docs/adr/recipes/0018-automatic-provenance-fills-the-groups-gaps.md`): automatic runs are now gap-fillers that keep every supplied slot and fill only the absent ones; only a complete group (country, note, Cuisines) suppresses enrollment. The whole-group suppression described below shipped first and was revised. Manual-run and ingredient-requirement rules below still hold.
+
 - Recipe Provenance requires ingredients, exactly like the other four kinds, and inherits the coordinator's existing blanket pre-check unchanged. The coordinator is not refactored for this feature. A recipe with a title and no ingredients is skipped with `insufficient-input`, for provenance and for everything else.
-- Substantive Recipe Provenance is Supplied Recipe Data. Any substantive value in the group — country, region, Cuisines, or note — suppresses Automatic Recipe Enrichment for the whole group, following the atomic precedent set by Nutrition Information.
-- Atomicity is deliberate. The note explains the whole claim; letting AI fill Cuisines beside a human-set country would store a paragraph arguing against the field next to it.
+- Substantive Recipe Provenance is Supplied Recipe Data. Any substantive value in the group — country, region, Cuisines, or note — suppresses Automatic Recipe Enrichment for the whole group, following the atomic precedent set by Nutrition Information. _(Revised by ADR-0018.)_
+- Atomicity is deliberate. The note explains the whole claim; letting AI fill Cuisines beside a human-set country would store a paragraph arguing against the field next to it. _(Revised by ADR-0018: coherence is now enforced by handing the model the supplied slots as settled facts and refusing claim scalars beside a disagreeing supplied country.)_
 - A Manual Recipe Enrichment run replaces the entire group regardless of what is stored, because a manual request is a deliberate refresh.
-- Whether a stored value came from a person or from a worker is still not recorded. Once provenance exists by any route, automatic inference does not run again for that recipe — the same behaviour categories and Nutrition Information already have.
+- Whether a stored value came from a person or from a worker is still not recorded. Once provenance exists by any route, automatic inference does not run again for that recipe — the same behaviour categories and Nutrition Information already have. _(Revised by ADR-0018: automatic inference may run again until the group is complete.)_
 
 ### Persistence
 
@@ -200,5 +202,5 @@ The written explanation is produced in the language the recipe itself is written
 - Adding a fifth kind is the first real test of whether the Recipe Enrichment architecture generalises. Anywhere provenance needs a special case in the coordinator, the lifecycle, or the client is a place the abstraction leaked, and is worth noticing rather than working around. The coordinator survives this feature untouched, which is evidence in its favour.
 - Cuisine and Tag deliberately share a shape and differ in governance: Tags are minted freely by anyone including AI, Cuisines only by administrators or by an explicitly permissive strategy. That similarity is recorded as an ADR, because two near-identical table pairs will otherwise read as an accident.
 - Cost is one AI request per recipe, independent of how many locales a deployment enables. An earlier draft generated the note in every enabled locale, which cost thirteen notes per recipe by default and would have been Norish's first per-locale content storage.
-- The atomic precedence group means provenance is effectively write-once per recipe unless someone requests a refresh. That is the same shape as Nutrition Information and is intentional, but it does mean a vocabulary change does not retroactively improve recipes already inferred — and with backfill out of scope, the only remedy is a manual run per recipe.
+- The atomic precedence group means provenance is effectively write-once per recipe unless someone requests a refresh. That is the same shape as Nutrition Information and is intentional, but it does mean a vocabulary change does not retroactively improve recipes already inferred — and with backfill out of scope, the only remedy is a manual run per recipe. _(Revised by ADR-0018: provenance is now write-until-complete — an automatic run, including Enrich All Recipes, fills whatever slots are still absent.)_
 - Specification status does not imply implementation. Production code, migrations, documentation, and tests remain to be completed in follow-on tickets.

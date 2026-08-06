@@ -228,15 +228,15 @@ describe("Recipe Enrichment repository", () => {
     });
   });
 
+  async function cuisineId(name: string): Promise<string> {
+    const cuisine = await findCuisineByName(name);
+
+    if (!cuisine) throw new Error(`Seeded Cuisine missing: ${name}`);
+
+    return cuisine.id;
+  }
+
   describe("replaceRecipeProvenance", () => {
-    async function cuisineId(name: string): Promise<string> {
-      const cuisine = await findCuisineByName(name);
-
-      if (!cuisine) throw new Error(`Seeded Cuisine missing: ${name}`);
-
-      return cuisine.id;
-    }
-
     it("writes the scalar fields, the note, and the join rows in one operation", async () => {
       const applied = await replaceRecipeProvenance(
         testRecipe.id,
@@ -368,6 +368,17 @@ describe("Recipe Enrichment repository", () => {
   });
 
   describe("replaceRecipeProvenance with the automatic origin", () => {
+    /** The claim as the worker delivers it: complete, arguing for Italy. */
+    async function italianClaim() {
+      return {
+        originCountry: "IT",
+        originCountryName: "Italia",
+        originRegion: "Lazio",
+        provenanceNote: "Una classica ricetta romana.",
+        cuisineIds: [await cuisineId("Italian")],
+      };
+    }
+
     it("applies while the whole group is absent", async () => {
       const applied = await replaceRecipeProvenance(
         testRecipe.id,
@@ -378,39 +389,155 @@ describe("Recipe Enrichment repository", () => {
       expect(applied).toBe(true);
     });
 
-    it.each(["originCountry", "originRegion", "provenanceNote"] as const)(
-      "defers to supplied %s that appeared while the request was in flight",
-      async (field) => {
-        await replaceRecipeProvenance(
-          testRecipe.id,
-          { [field]: field === "originCountry" ? "NL" : "Set by an editor." },
-          "manual"
-        );
-
-        const applied = await replaceRecipeProvenance(
-          testRecipe.id,
-          { originCountry: "IT", provenanceNote: "Inferred." },
-          "automatic"
-        );
-
-        expect(applied).toBe(false);
-        expect((await getRecipeFull(testRecipe.id))?.provenanceNote).not.toBe("Inferred.");
-      }
-    );
-
-    it("defers to a supplied Cuisine even when every scalar field is absent", async () => {
-      const italian = await findCuisineByName("Italian");
-
-      await replaceRecipeProvenance(testRecipe.id, { cuisineIds: [italian!.id] }, "manual");
+    it("fills the scalars around a supplied Cuisine and keeps the Cuisine set", async () => {
+      // The gap-fill headline (ADR-0018): one supplied Cuisine used to
+      // suppress the whole group; now everything else still gets filled in.
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { cuisineIds: [await cuisineId("Mediterranean")] },
+        "manual"
+      );
 
       const applied = await replaceRecipeProvenance(
         testRecipe.id,
-        { originCountry: "JP", provenanceNote: "Inferred." },
+        await italianClaim(),
+        "automatic"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBe("IT");
+      expect(recipe?.originCountryName).toBe("Italia");
+      expect(recipe?.originRegion).toBe("Lazio");
+      expect(recipe?.provenanceNote).toBe("Una classica ricetta romana.");
+      // The supplied set, not the claim's: Cuisines fill only when absent.
+      expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Mediterranean"]);
+    });
+
+    it("keeps a supplied note and fills the country, region, and Cuisines around it", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { provenanceNote: "My grandmother's, from Rome." },
+        "manual"
+      );
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        await italianClaim(),
+        "automatic"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.provenanceNote).toBe("My grandmother's, from Rome.");
+      expect(recipe?.originCountry).toBe("IT");
+      expect(recipe?.originRegion).toBe("Lazio");
+      expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian"]);
+    });
+
+    it("refuses claim scalars beside a supplied country the claim argues against", async () => {
+      // The claim's note and region argue for Italy. Beside a supplied NL they
+      // would contradict the field next to them, so only the Cuisines fill.
+      await updateRecipeWithRefs(testRecipe.id, userId, { originCountry: "NL" });
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        await italianClaim(),
+        "automatic"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBe("NL");
+      expect(recipe?.originCountryName).toBeNull();
+      expect(recipe?.originRegion).toBeNull();
+      expect(recipe?.provenanceNote).toBeNull();
+      expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian"]);
+    });
+
+    it("completes a supplied country the claim agrees with", async () => {
+      await updateRecipeWithRefs(testRecipe.id, userId, { originCountry: "IT" });
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        await italianClaim(),
+        "automatic"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBe("IT");
+      // The written name is backfilled beside the code the claim agrees with.
+      expect(recipe?.originCountryName).toBe("Italia");
+      expect(recipe?.originRegion).toBe("Lazio");
+      expect(recipe?.provenanceNote).toBe("Una classica ricetta romana.");
+    });
+
+    it("defers entirely to a group completed while the request was in flight", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        {
+          originCountry: "NL",
+          provenanceNote: "Set by an editor.",
+          cuisineIds: [await cuisineId("French")],
+        },
+        "manual"
+      );
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        await italianClaim(),
         "automatic"
       );
 
       expect(applied).toBe(false);
-      expect((await getRecipeCuisines(testRecipe.id)).map((c) => c.name)).toEqual(["Italian"]);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.provenanceNote).toBe("Set by an editor.");
+      // A complete group gains nothing, not even the region it never had.
+      expect(recipe?.originRegion).toBeNull();
+      expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["French"]);
+    });
+
+    it("defers when a disagreeing claim has nothing else to offer", async () => {
+      await updateRecipeWithRefs(testRecipe.id, userId, { originCountry: "NL" });
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", provenanceNote: "Inferred." },
+        "automatic"
+      );
+
+      expect(applied).toBe(false);
+      expect((await getRecipeFull(testRecipe.id))?.provenanceNote).toBeNull();
+    });
+
+    it("leaves the stored gaps untouched when the fill's Cuisine write fails", async () => {
+      const applied = replaceRecipeProvenance(
+        testRecipe.id,
+        {
+          originCountry: "IT",
+          provenanceNote: "Would be stored.",
+          cuisineIds: ["00000000-0000-0000-0000-000000000000"],
+        },
+        "automatic"
+      );
+
+      await expect(applied).rejects.toThrow();
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBeNull();
+      expect(recipe?.provenanceNote).toBeNull();
     });
   });
 

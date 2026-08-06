@@ -209,8 +209,8 @@ export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolic
 export async function getPrompts(): Promise<PromptsConfig> {
   const value = await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
 
-  // Prompts are seeded at startup, so this should always exist
-  return value!;
+  // The row stores only administrator overrides; no row means no overrides.
+  return value ?? {};
 }
 
 /**

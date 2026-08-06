@@ -34,6 +34,7 @@ export async function enrollEnrichmentForAllRecipes(
   requester: BulkEnrichmentRequester
 ): Promise<BulkEnrichmentResult> {
   const targets = await getAllRecipesForEnrichment();
+  const outcomes: Record<string, number> = {};
   let queued = 0;
 
   for (const target of targets) {
@@ -50,9 +51,20 @@ export async function enrollEnrichmentForAllRecipes(
     const results = await enrichRecipe(context, { origin: "automatic" });
 
     queued += results.filter((result) => result.status === "queued").length;
+
+    for (const result of results) {
+      // Aggregated, not per recipe: a library-sized sweep still logs one line,
+      // but an administrator asking "why did nothing run?" gets the reasons.
+      const outcome =
+        result.status === "skipped"
+          ? `${result.kind}:${result.reason}`
+          : `${result.kind}:${result.status}`;
+
+      outcomes[outcome] = (outcomes[outcome] ?? 0) + 1;
+    }
   }
 
-  log.info({ recipes: targets.length, queued }, "Bulk enrichment enrollment complete");
+  log.info({ recipes: targets.length, queued, outcomes }, "Bulk enrichment enrollment complete");
 
   return { recipes: targets.length, queued };
 }

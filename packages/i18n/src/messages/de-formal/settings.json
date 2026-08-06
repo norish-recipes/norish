@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Massen-Anreicherung",
         "subtitle": "Aktivierte Anreicherung für alle Rezepte ausführen",
-        "description": "Stellen Sie für alle Rezepte auf diesem Server jede Anreicherungsart in die Warteschlange, deren automatischer Schalter aktiviert ist. Rezepte behalten, was sie bereits haben — nur Lücken werden gefüllt.",
+        "description": "Stellen Sie für alle Rezepte auf diesem Server jede Anreicherungsart in die Warteschlange, deren automatischer Schalter aktiviert ist. Rezepte behalten, was sie bereits haben, nur Lücken werden gefüllt.",
         "button": "Alle Rezepte anreichern",
         "confirmTitle": "Anreicherung für alle Rezepte ausführen?",
         "confirmMessage": "Dies stellt KI-Arbeit für jedes Rezept auf diesem Server in die Warteschlange. Jede Anreicherungsart, deren automatischer Schalter aktiviert ist, läuft überall dort, wo Daten fehlen.",
@@ -586,9 +586,9 @@
         "nutritionEstimation": "Nährwertschätzung",
         "nutritionEstimationDescription": "Schätzt Kalorien, Fett, Kohlenhydrate und Eiweiß für neue Rezepte ohne Angaben",
         "recipeProvenance": "Rezept-Herkunft",
-        "recipeProvenanceDescription": "Land, Region, Küchen und eine kurze Notiz für neue Rezepte ermitteln, die noch keine haben",
+        "recipeProvenanceDescription": "Land, Region, Küchen und eine kurze Notiz für neue Rezepte ermitteln, nur fehlende Angaben werden ergänzt, Ihre eigenen bleiben erhalten",
         "ingredientLinking": "Zutatenverknüpfung",
-        "ingredientLinkingDescription": "Verknüpft jeden Schritt mit den Zutatenzeilen, die er verwendet — nur für Schritte ohne Verknüpfungen"
+        "ingredientLinkingDescription": "Verknüpft jeden Schritt mit den Zutatenzeilen, die er verwendet, nur für Schritte ohne Verknüpfungen"
       },
       "tagStrategy": "Tag-Strategie",
       "tagStrategyDescription": "Welche Tags die automatische Verschlagwortung verwenden darf, ob automatisch oder manuell",

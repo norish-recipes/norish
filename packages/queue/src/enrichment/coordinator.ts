@@ -27,9 +27,9 @@ import {
 import { createLogger } from "@norish/shared-server/logger";
 import {
   ENRICHMENT_KINDS,
+  hasCompleteProvenance,
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
-  hasSubstantiveProvenance,
 } from "@norish/shared/lib/recipe-enrichment";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
@@ -189,11 +189,12 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
         : ELIGIBLE;
 
     case "recipe-provenance":
-      // Recipe Provenance is one atomic group too, and for a sharper reason:
-      // the note explains the whole claim, so filling Cuisines beside a
-      // human-set country would store a paragraph arguing against the field
-      // next to it.
-      return origin === "automatic" && hasSubstantiveProvenance(recipe)
+      // Automatic Recipe Provenance fills the group's gaps (ADR-0018): it
+      // runs while a country, a note, or the Cuisines are still absent, and
+      // the write keeps every supplied slot. Only a complete group has
+      // nothing left to ask for. The region is not counted, because its
+      // absence is a valid answer and cannot demand a run by itself.
+      return origin === "automatic" && hasCompleteProvenance(recipe)
         ? ineligible("supplied-data-present")
         : ELIGIBLE;
 

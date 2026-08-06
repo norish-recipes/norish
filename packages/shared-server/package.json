@@ -23,6 +23,7 @@
     "./caldav/sync": "./src/caldav/sync.ts",
     "./ai/enrichment/*": "./src/ai/enrichment/*.ts",
     "./ai/prompts/loader": "./src/ai/prompts/loader.ts",
+    "./ai/prompts/overrides": "./src/ai/prompts/overrides.ts",
     "./ai/providers/listing": "./src/ai/providers/listing.ts",
     "./ai/runtime/*": "./src/ai/runtime/*.ts",
     "./video/yt-dlp-version": "./src/video/yt-dlp-version.ts",

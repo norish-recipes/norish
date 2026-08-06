@@ -1,9 +1,11 @@
 /**
  * Recipe Provenance Worker
  *
- * One AI request and an atomic replacement of the whole provenance group.
- * Automatic runs replace only while the whole group is still absent.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
+ * One AI request and one atomic write of the provenance group. A manual run
+ * replaces the whole group; an automatic run fills its gaps, keeping every
+ * supplied slot (ADR-0018) — which is why the stored slots ride along into
+ * inference as settled facts. Uses lazy worker pattern - starts on-demand and
+ * pauses when idle.
  *
  * The worker holds no database handle and composes no queries: it calls one
  * repository operation, which is where every provenance write lives.
@@ -30,12 +32,22 @@ const log = createLogger("worker:recipe-provenance");
 /** Exported so the job body can be exercised without a Redis-backed worker. */
 export async function processRecipeProvenanceJob(job: Job<RecipeEnrichmentJobData>): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
-    const claim = await inferRecipeProvenance(toRecipeSummary(recipe));
+    const claim = await inferRecipeProvenance({
+      ...toRecipeSummary(recipe),
+      // The supplied slots, so the model writes the missing fields around
+      // them instead of working the whole claim out against them.
+      supplied: {
+        originCountry: recipe.originCountry,
+        originRegion: recipe.originRegion,
+        provenanceNote: recipe.provenanceNote,
+        cuisineNames: recipe.cuisines.map((cuisine) => cuisine.name),
+      },
+    });
 
     if (claim.cuisineIds.length === 0 && !hasSubstantiveProvenance(claim)) {
-      // Replacement clears whatever it does not set, so an entirely empty claim
-      // must fail rather than wipe the stored group. A claim that is only
-      // Cuisines is still substantive: the group is atomic in both directions.
+      // A write clears or skips what a claim does not bring, so an entirely
+      // empty claim must fail rather than accomplish nothing. A claim that is
+      // only Cuisines is still substantive.
       throw new Error("AI returned no substantive Recipe Provenance");
     }
 

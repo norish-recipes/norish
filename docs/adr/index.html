@@ -634,6 +634,29 @@
             templates for new content and image extraction's string surgery.
           </p>
         </li>
+        <li>
+          <a href="ai/0017-the-prompts-row-stores-only-overrides.md"
+            >ADR-0017 — The prompts row stores only overrides</a
+          >
+          <p>
+            <b>Accepted and implemented.</b> The stored prompts row carries only texts that
+            differ from the shipped defaults; reads merge over the shipped files, saves strip
+            default-equal fields, and boot prunes legacy rows against every default any release
+            shipped. Rejects seeded default copies and the row-level isOverridden freeze.
+          </p>
+        </li>
+        <li>
+          <a href="recipes/0018-automatic-provenance-fills-the-groups-gaps.md"
+            >ADR-0018 — Automatic provenance fills the group's gaps</a
+          >
+          <p>
+            <b>Accepted and implemented.</b> Automatic Recipe Provenance keeps every supplied
+            slot and fills only the absent ones; inference receives the supplied slots as
+            settled facts, and only a complete group suppresses the run. Rejects whole-group
+            suppression by any single value, merging blind to the model, and append-merging
+            supplied Cuisines.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

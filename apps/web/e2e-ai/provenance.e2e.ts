@@ -189,14 +189,17 @@ test("the provenance heading speaks the recipe's language, not the country's or 
   expect(stored.originCountryName).toBe("Turkije");
 });
 
-test("supplied provenance suppresses the automatic run for the whole group", async () => {
+test("a complete supplied group survives other recipes' automatic runs untouched", async () => {
   await setAutomaticEnrichment({});
 
-  // Import with automation off, then supply provenance the way an editor would.
+  // Import with automation off, then supply a complete group the way an editor
+  // would: a country, a note, and a Cuisine leave a run nothing to fill
+  // (ADR-0018).
   await importRecipe("Supplied Provenance Stew", [bareRecipe("Supplied Provenance Stew")]);
   await supplyProvenance("Supplied Provenance Stew", {
     originCountry: "NL",
     provenanceNote: "Set by an editor.",
+    cuisineIds: [await findCuisineIdByName("French")],
   });
 
   // Now import a second recipe with automation on. Only the extraction
@@ -211,8 +214,8 @@ test("supplied provenance suppresses the automatic run for the whole group", asy
     await expect(page.getByText("Italia").first()).toBeVisible({ timeout: 3_000 });
   });
 
-  // The supplied recipe was never touched: the whole group is what a person set,
-  // including the Cuisines the AI would have added beside it.
+  // The supplied recipe was never touched: the whole group is what a person
+  // set. Its gaps — the written name, the region — stayed honest blanks.
   const stored = await readStoredProvenance("Supplied Provenance Stew");
 
   expect(stored).toEqual({
@@ -220,7 +223,7 @@ test("supplied provenance suppresses the automatic run for the whole group", asy
     originCountryName: null,
     originRegion: null,
     provenanceNote: "Set by an editor.",
-    cuisines: [],
+    cuisines: ["French"],
   });
 });
 
