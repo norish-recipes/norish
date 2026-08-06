@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Arricchimento in blocco",
         "subtitle": "Esegui l'arricchimento abilitato su tutte le ricette",
-        "description": "Metti in coda, per tutte le ricette di questo server, ogni tipo di arricchimento il cui interruttore automatico è abilitato. Le ricette conservano i dati che hanno già — vengono riempite solo le lacune.",
+        "description": "Metti in coda, per tutte le ricette di questo server, ogni tipo di arricchimento il cui interruttore automatico è abilitato. Le ricette conservano i dati che hanno già, vengono riempite solo le lacune.",
         "button": "Arricchisci tutte le ricette",
         "confirmTitle": "Eseguire l'arricchimento su tutte le ricette?",
         "confirmMessage": "Questo mette in coda lavoro di IA per ogni ricetta di questo server. Ogni tipo di arricchimento il cui interruttore automatico è abilitato viene eseguito dove mancano dati.",
@@ -586,7 +586,7 @@
         "nutritionEstimation": "Stima nutrizionale",
         "nutritionEstimationDescription": "Stima calorie, grassi, carboidrati e proteine per le nuove ricette senza valori indicati",
         "recipeProvenance": "Provenienza della ricetta",
-        "recipeProvenanceDescription": "Dedurre paese, regione, cucine e una breve nota per le nuove ricette che non ne hanno",
+        "recipeProvenanceDescription": "Dedurre paese, regione, cucine e una breve nota per le nuove ricette, viene compilato solo ciò che manca, ciò che hai indicato resta invariato",
         "ingredientLinking": "Collegamento degli ingredienti",
         "ingredientLinkingDescription": "Collega ogni passaggio alle righe di ingredienti che usa, per i passaggi senza collegamenti"
       },

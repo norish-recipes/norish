@@ -65,6 +65,11 @@ const RECIPE = {
   name: "Cacio e Pepe",
   description: null,
   recipeIngredients: [{ ingredientName: "pecorino" }],
+  originCountry: null,
+  originCountryName: null,
+  originRegion: null,
+  provenanceNote: null,
+  cuisines: [],
 };
 
 function jobFor(overrides: Partial<RecipeEnrichmentJobData> = {}): Job<RecipeEnrichmentJobData> {
@@ -108,6 +113,31 @@ describe("processRecipeProvenanceJob", () => {
     await processRecipeProvenanceJob(jobFor({ origin: "manual", requestedByUserId: "user-1" }));
 
     expect(mocks.replaceRecipeProvenance).toHaveBeenCalledWith("recipe-1", INFERENCE, "manual");
+  });
+
+  it("hands the stored provenance slots to inference as settled facts", async () => {
+    // Gap-filling (ADR-0018): the model must write the missing fields around
+    // what is already supplied, so the worker passes the stored slots along.
+    mocks.getRecipeFull.mockResolvedValue({
+      ...RECIPE,
+      originCountry: "IT",
+      provenanceNote: "My grandmother's, from Rome.",
+      cuisines: [{ id: "id-italian", name: "Italian" }],
+    });
+
+    await processRecipeProvenanceJob(jobFor());
+
+    expect(mocks.inferRecipeProvenance).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Cacio e Pepe",
+        supplied: {
+          originCountry: "IT",
+          originRegion: null,
+          provenanceNote: "My grandmother's, from Rome.",
+          cuisineNames: ["Italian"],
+        },
+      })
+    );
   });
 
   it("emits the canonical updated recipe when the write applied", async () => {

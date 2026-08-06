@@ -1,18 +1,18 @@
 ---
 sidebar_position: 3
 title: Recipe provenance
-description: Where a recipe comes from — its country, region, cuisines, and a short explanation — how Norish works that out, and how to curate the cuisine list.
+description: Where a recipe comes from, its country, region, cuisines, and a short explanation, how Norish works that out, and how to curate the cuisine list.
 ---
 
 # Recipe provenance
 
 Provenance is where a recipe comes from. Norish records four things:
 
-- **Country** — the country the dish comes from
-- **Region** — a finer-grained region within it, when the dish warrants one
-- **Cuisines** — the culinary traditions it belongs to; a fusion dish can have
+- **Country**, the country the dish comes from
+- **Region**, a finer-grained region within it, when the dish warrants one
+- **Cuisines**, the culinary traditions it belongs to; a fusion dish can have
   several
-- **Note** — a couple of sentences explaining how that was concluded
+- **Note**, a couple of sentences explaining how that was concluded
 
 The country is that section's own heading with its flag, and named **in the recipe's language**, the same
 language as the note beside it: a Dutch recipe about a Turkish dish is titled
@@ -23,7 +23,7 @@ shown exactly as written.
 
 A dish that several countries claim still gets a country: Norish picks the
 single strongest claim and acknowledges the rivals in the note. Only a dish
-that belongs to no national tradition at all keeps an empty country — an
+that belongs to no national tradition at all keeps an empty country, an
 honest blank rather than an invented answer.
 
 The flag also flies in front of the recipe's title, and beside every recipe on
@@ -73,19 +73,30 @@ behaves like the others:
   spending AI on its own.
 - You can ask for it yourself at any time from a recipe's actions menu
   (**Work Out Provenance**), whether or not the automatic switch is on.
-- A run you ask for **replaces the whole group** — country, region, cuisines,
-  and note together — because a deliberate refresh shouldn't be half-blocked by
+- An automatic run **fills in only what is missing** and never touches what you
+  or your import source provided, see below.
+- A run you ask for **replaces the whole group**, country, region, cuisines,
+  and note together, because a deliberate refresh shouldn't be half-blocked by
   a value you no longer want.
 
 ## Your own answer wins
 
-Provenance is one group, and it is treated as one. If you fill in **any** part of
-it, just the country, just a cuisine, just the note, automatic inference skips
-that recipe entirely and never overwrites what you wrote.
+Whatever is already filled in, a country you picked, a cuisine your import
+source stated, a note you wrote, is never overwritten by automatic inference.
+Instead, inference works **around** your answer: import a recipe that only
+carries a cuisine and it still gets its country, region, and note. Your values
+are handed to the AI as settled facts, so the explanation it writes accounts
+for them rather than arguing with them.
+
+Once the group is complete, a country, a note, and at least one cuisine,
+automatic inference leaves the recipe entirely alone. A missing region never
+triggers a run by itself: many dishes are national rather than regional, so an
+empty region is an answer, not a gap.
 
 ![Editing recipe provenance in the recipe form](/img/screenshots/provenance-form.png)
 
 :::note
 Emptying provenance does not re-arm automatic inference, automatic enrichment is
-enrolled once, when a recipe is new. Empty it, then ask for a run.
+enrolled once, when a recipe is new. Empty it, then ask for a run, or an
+administrator's **Enrich All Recipes** will fill the gaps on its next pass.
 :::

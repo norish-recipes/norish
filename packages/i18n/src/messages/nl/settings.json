@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Bulkverrijking",
         "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
-        "description": "Zet voor alle recepten op deze server elke verrijkingssoort in de wachtrij waarvan de automatische schakelaar aanstaat. Recepten behouden wat ze al hebben — alleen ontbrekende gegevens worden aangevuld.",
+        "description": "Zet voor alle recepten op deze server elke verrijkingssoort in de wachtrij waarvan de automatische schakelaar aanstaat. Recepten behouden wat ze al hebben, alleen ontbrekende gegevens worden aangevuld.",
         "button": "Alle recepten verrijken",
         "confirmTitle": "Verrijking op alle recepten uitvoeren?",
         "confirmMessage": "Dit zet AI-werk in de wachtrij voor elk recept op deze server. Elke verrijkingssoort waarvan de automatische schakelaar aanstaat draait waar gegevens ontbreken.",
@@ -586,7 +586,7 @@
         "nutritionEstimation": "Voedingswaarde schatten",
         "nutritionEstimationDescription": "Schat calorieën, vet, koolhydraten en eiwitten voor nieuwe recepten zonder opgegeven waarden",
         "recipeProvenance": "Receptherkomst",
-        "recipeProvenanceDescription": "Bepaal land, streek, keukens en een korte toelichting voor nieuwe recepten die die nog niet hebben",
+        "recipeProvenanceDescription": "Bepaal land, streek, keukens en een korte toelichting voor nieuwe recepten, alleen wat nog ontbreekt wordt ingevuld, wat je zelf invulde blijft staan",
         "ingredientLinking": "Ingrediëntkoppeling",
         "ingredientLinkingDescription": "Koppel elke stap aan de ingrediëntregels die hij gebruikt, voor stappen zonder koppelingen"
       },

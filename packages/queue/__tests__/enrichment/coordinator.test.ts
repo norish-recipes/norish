@@ -246,22 +246,32 @@ describe("automatic enrollment", () => {
     ["originRegion", "Lazio"],
     ["provenanceNote", "A Roman classic."],
   ] as const)(
-    "skips provenance when supplied %s makes the whole group substantive",
+    "queues provenance when only %s is supplied, because the group still has gaps",
     async (field, value) => {
       getRecipeFull.mockResolvedValue(recipe({ [field]: value }));
 
       const results = await enrichRecipe(context, { origin: "automatic" });
 
-      expect(outcome(results, "recipe-provenance")).toEqual({
-        kind: "recipe-provenance",
-        status: "skipped",
-        reason: "supplied-data-present",
-      });
+      expect(outcome(results, "recipe-provenance")?.status).toBe("queued");
     }
   );
 
-  it("skips provenance when a supplied Cuisine makes the whole group substantive", async () => {
+  it("queues provenance when only a Cuisine is supplied, so the rest gets filled in", async () => {
     getRecipeFull.mockResolvedValue(recipe({ cuisines: [{ id: "id-italian", name: "Italian" }] }));
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "recipe-provenance")?.status).toBe("queued");
+  });
+
+  it("skips provenance when the supplied group is complete", async () => {
+    getRecipeFull.mockResolvedValue(
+      recipe({
+        originCountry: "IT",
+        provenanceNote: "A Roman classic.",
+        cuisines: [{ id: "id-italian", name: "Italian" }],
+      })
+    );
 
     const results = await enrichRecipe(context, { origin: "automatic" });
 
@@ -270,6 +280,23 @@ describe("automatic enrollment", () => {
       status: "skipped",
       reason: "supplied-data-present",
     });
+  });
+
+  it("does not queue provenance for a complete group that only lacks a region", async () => {
+    // "No region" is a valid answer for a national dish, so an absent region
+    // alone never warrants an AI request.
+    getRecipeFull.mockResolvedValue(
+      recipe({
+        originCountry: "IT",
+        originRegion: null,
+        provenanceNote: "A national dish.",
+        cuisines: [{ id: "id-italian", name: "Italian" }],
+      })
+    );
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "recipe-provenance")?.status).toBe("skipped");
   });
 
   it("treats blank provenance values as absent", async () => {

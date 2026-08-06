@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Enrichissement en masse",
         "subtitle": "Exécuter l'enrichissement activé sur toutes les recettes",
-        "description": "Mettre en file d'attente, pour toutes les recettes de ce serveur, chaque type d'enrichissement dont l'interrupteur automatique est activé. Les recettes conservent les données qu'elles ont déjà — seuls les manques sont comblés.",
+        "description": "Mettre en file d'attente, pour toutes les recettes de ce serveur, chaque type d'enrichissement dont l'interrupteur automatique est activé. Les recettes conservent les données qu'elles ont déjà, seuls les manques sont comblés.",
         "button": "Enrichir toutes les recettes",
         "confirmTitle": "Exécuter l'enrichissement sur toutes les recettes ?",
         "confirmMessage": "Ceci met en file d'attente du travail d'IA pour chaque recette de ce serveur. Chaque type d'enrichissement dont l'interrupteur automatique est activé s'exécute là où des données manquent.",
@@ -586,7 +586,7 @@
         "nutritionEstimation": "Estimation nutritionnelle",
         "nutritionEstimationDescription": "Estime les calories, lipides, glucides et protéines des nouvelles recettes sans valeurs fournies",
         "recipeProvenance": "Provenance des recettes",
-        "recipeProvenanceDescription": "Déduire le pays, la région, les cuisines et une courte note pour les nouvelles recettes qui n'en ont pas",
+        "recipeProvenanceDescription": "Déduire le pays, la région, les cuisines et une courte note pour les nouvelles recettes, seuls les champs manquants sont complétés, ce que vous avez indiqué est conservé",
         "ingredientLinking": "Liaison des ingrédients",
         "ingredientLinkingDescription": "Lie chaque étape aux lignes d'ingrédients qu'elle utilise, pour les étapes qui n'en ont pas"
       },

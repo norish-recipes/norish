@@ -70,6 +70,7 @@ function respondWith(output: unknown) {
 interface CapturedRequest {
   prompt: string;
   fill: Record<string, string>;
+  sections: string[];
   schema: {
     shape: Record<string, { description?: string }>;
   };
@@ -242,6 +243,65 @@ describe("inferRecipeProvenance", () => {
 
     expect(error).toBeInstanceOf(AIProviderError);
     expect((error as AIProviderError).retryable).toBe(true);
+  });
+});
+
+describe("supplied slots", () => {
+  const RESPONSE = {
+    originCountry: "IT",
+    originCountryName: "Italia",
+    originRegion: "Roma",
+    cuisines: [],
+    provenanceNote: "Un classico romano.",
+  };
+
+  it("appends the supplied slots as a section the model must not contradict", async () => {
+    // A section, never a placeholder (ADR-0016): an administrator's customised
+    // prompt predates gap-filling and must keep receiving this input.
+    respondWith(RESPONSE);
+
+    await inferRecipeProvenance({
+      ...ITALIAN_RECIPE,
+      supplied: {
+        originCountry: "it",
+        originRegion: null,
+        provenanceNote: "My grandmother's, from Rome.",
+        cuisineNames: ["Italian", "Mediterranean"],
+      },
+    });
+
+    const section = sentRequest().sections.join("\n");
+
+    expect(section).toContain("- originCountry: IT");
+    expect(section).toContain("- provenanceNote: My grandmother's, from Rome.");
+    expect(section).toContain("- cuisines: Italian, Mediterranean");
+    expect(section).not.toContain("originRegion");
+    expect(section).toMatch(/do not contradict/i);
+    expect(section).toMatch(/unchanged/i);
+  });
+
+  it("appends no section when nothing is supplied", async () => {
+    respondWith(RESPONSE);
+
+    await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    expect(sentRequest().sections).toEqual([]);
+  });
+
+  it("appends no section when the supplied slots are blank noise", async () => {
+    respondWith(RESPONSE);
+
+    await inferRecipeProvenance({
+      ...ITALIAN_RECIPE,
+      supplied: {
+        originCountry: "Italy",
+        originRegion: "  ",
+        provenanceNote: "",
+        cuisineNames: ["  "],
+      },
+    });
+
+    expect(sentRequest().sections).toEqual([]);
   });
 });
 

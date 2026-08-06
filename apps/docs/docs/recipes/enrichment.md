@@ -21,7 +21,7 @@ recipe:
 This is called _enrichment_, and it always happens **after** your recipe is
 saved. Importing or creating a recipe never waits for it, and never fails
 because of it. If AI is unavailable or an enrichment doesn't work out, you still
-have your recipe, enrichments can always be rerun after the recipe is make manually.
+have your recipe, and every enrichment can be run manually later.
 
 ## Automatic enrichment
 
@@ -47,9 +47,11 @@ takes precedence:
   with only some of the four, say just calories from an imported page, is
   estimated and the whole group replaced, so the values always agree with each
   other instead of mixing a supplied figure with an estimate.
-- If it has any provenance at all — a country, a region, a cuisine, or a note —
-  automatic provenance inference is skipped for the whole group, so the note
-  never ends up arguing against a country you set yourself.
+- Provenance you supplied — a country, a cuisine, a note — is never replaced:
+  automatic inference **fills in only the missing parts**, written to agree
+  with what you already set, so a recipe imported with just a cuisine still
+  gets its country and its explanation. Once the group is complete — country,
+  note, and at least one cuisine — the recipe is skipped entirely.
 - Tags and allergy indications are only ever **added**. Enrichment never removes
   a tag you added.
 - Step ingredients are filled **per step**: a step you linked yourself is never

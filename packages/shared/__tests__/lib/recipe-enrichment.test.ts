@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   ENRICHMENT_KINDS,
+  fillProvenanceGaps,
+  hasCompleteProvenance,
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
   hasSubstantiveProvenance,
@@ -65,6 +67,223 @@ describe("hasSubstantiveProvenance", () => {
 
   it("does not count a malformed country as substantive", () => {
     expect(hasSubstantiveProvenance({ originCountry: "Italy" })).toBe(false);
+  });
+});
+
+describe("hasCompleteProvenance", () => {
+  it("requires a country, a note, and at least one Cuisine", () => {
+    expect(
+      hasCompleteProvenance({
+        originCountry: "IT",
+        provenanceNote: "A Roman classic.",
+        cuisines: [{ name: "Italian" }],
+      })
+    ).toBe(true);
+    expect(hasCompleteProvenance({ originCountry: "IT", provenanceNote: "A Roman classic." })).toBe(
+      false
+    );
+    expect(hasCompleteProvenance({ originCountry: "IT", cuisines: ["Italian"] })).toBe(false);
+    expect(
+      hasCompleteProvenance({ provenanceNote: "A Roman classic.", cuisines: ["Italian"] })
+    ).toBe(false);
+  });
+
+  it("does not count the region: its absence is a valid answer", () => {
+    expect(
+      hasCompleteProvenance({
+        originCountry: "IT",
+        originRegion: null,
+        provenanceNote: "A national dish.",
+        cuisines: ["Italian"],
+      })
+    ).toBe(true);
+    // A region alone completes nothing.
+    expect(hasCompleteProvenance({ originRegion: "Lazio" })).toBe(false);
+  });
+
+  it("does not count the written country name: the endonym fallback covers it", () => {
+    expect(
+      hasCompleteProvenance({
+        originCountry: "IT",
+        originCountryName: null,
+        provenanceNote: "Note.",
+        cuisines: ["Italian"],
+      })
+    ).toBe(true);
+  });
+
+  it("treats blank and malformed values as absent", () => {
+    expect(
+      hasCompleteProvenance({
+        originCountry: "Italy",
+        provenanceNote: "Note.",
+        cuisines: ["Italian"],
+      })
+    ).toBe(false);
+    expect(
+      hasCompleteProvenance({ originCountry: "IT", provenanceNote: "  ", cuisines: ["Italian"] })
+    ).toBe(false);
+  });
+});
+
+describe("fillProvenanceGaps", () => {
+  const CLAIM = {
+    originCountry: "IT",
+    originCountryName: "Italia",
+    originRegion: "Lazio",
+    provenanceNote: "Una classica ricetta romana.",
+    cuisines: ["id-italian"],
+  };
+
+  it("fills every slot of an empty group", () => {
+    const fill = fillProvenanceGaps({}, CLAIM);
+
+    expect(fill).toEqual({
+      group: {
+        originCountry: "IT",
+        originCountryName: "Italia",
+        originRegion: "Lazio",
+        provenanceNote: "Una classica ricetta romana.",
+      },
+      fillCuisines: true,
+      changed: true,
+    });
+  });
+
+  it("fills the scalars around a supplied Cuisine and keeps the Cuisine set", () => {
+    // The complaint that motivated ADR-0018: one supplied Cuisine used to
+    // suppress the whole group.
+    const fill = fillProvenanceGaps({ cuisines: [{ name: "Italian" }] }, CLAIM);
+
+    expect(fill.group).toEqual({
+      originCountry: "IT",
+      originCountryName: "Italia",
+      originRegion: "Lazio",
+      provenanceNote: "Una classica ricetta romana.",
+    });
+    expect(fill.fillCuisines).toBe(false);
+    expect(fill.changed).toBe(true);
+  });
+
+  it("keeps a supplied note byte-for-byte and fills the rest", () => {
+    const fill = fillProvenanceGaps({ provenanceNote: "  My grandmother's, from Rome. " }, CLAIM);
+
+    expect(fill.group.provenanceNote).toBe("  My grandmother's, from Rome. ");
+    expect(fill.group.originCountry).toBe("IT");
+    expect(fill.fillCuisines).toBe(true);
+    expect(fill.changed).toBe(true);
+  });
+
+  it("changes nothing when the stored group is complete, even without a region", () => {
+    const stored = {
+      originCountry: "NL",
+      originCountryName: null,
+      originRegion: null,
+      provenanceNote: "Set by an editor.",
+      cuisines: ["id-dutch"],
+    };
+
+    const fill = fillProvenanceGaps(stored, CLAIM);
+
+    expect(fill.changed).toBe(false);
+    expect(fill.fillCuisines).toBe(false);
+    // No region sneaks in beside a group a person finished.
+    expect(fill.group.originRegion).toBeNull();
+  });
+
+  it("refuses claim scalars beside a supplied country the claim disagrees with", () => {
+    const fill = fillProvenanceGaps({ originCountry: "NL" }, CLAIM);
+
+    // The claim's region and note argue for Italy; storing them beside NL
+    // would put a paragraph next to a field it contradicts.
+    expect(fill.group).toEqual({
+      originCountry: "NL",
+      originCountryName: null,
+      originRegion: null,
+      provenanceNote: null,
+    });
+    // Cuisines are not country-bound, so they still fill.
+    expect(fill.fillCuisines).toBe(true);
+    expect(fill.changed).toBe(true);
+  });
+
+  it("defers entirely when a disagreeing claim brings no Cuisines either", () => {
+    const fill = fillProvenanceGaps({ originCountry: "NL" }, { ...CLAIM, cuisines: [] });
+
+    expect(fill.changed).toBe(false);
+  });
+
+  it("fills the name, region, and note beside a supplied country the claim agrees with", () => {
+    const claim = {
+      originCountry: "NL",
+      originCountryName: "Nederland",
+      originRegion: "Friesland",
+      provenanceNote: "Een Friese klassieker.",
+      cuisines: [],
+    };
+
+    const fill = fillProvenanceGaps({ originCountry: "NL", cuisines: ["id-dutch"] }, claim);
+
+    expect(fill.group).toEqual({
+      originCountry: "NL",
+      originCountryName: "Nederland",
+      originRegion: "Friesland",
+      provenanceNote: "Een Friese klassieker.",
+    });
+    expect(fill.fillCuisines).toBe(false);
+    expect(fill.changed).toBe(true);
+  });
+
+  it("keeps a supplied written name even while filling other slots", () => {
+    const fill = fillProvenanceGaps(
+      { originCountry: "IT", originCountryName: "Italië" },
+      { ...CLAIM, cuisines: [] }
+    );
+
+    expect(fill.group.originCountryName).toBe("Italië");
+    expect(fill.group.provenanceNote).toBe("Una classica ricetta romana.");
+  });
+
+  it("treats blank and malformed stored values as gaps", () => {
+    const fill = fillProvenanceGaps(
+      { originCountry: "Italy", originRegion: "  ", provenanceNote: "" },
+      CLAIM
+    );
+
+    expect(fill.group).toEqual({
+      originCountry: "IT",
+      originCountryName: "Italia",
+      originRegion: "Lazio",
+      provenanceNote: "Una classica ricetta romana.",
+    });
+    expect(fill.changed).toBe(true);
+  });
+
+  it("fills the note of an unplaceable dish only while no country is supplied", () => {
+    const unplaceable = {
+      originCountry: null,
+      originCountryName: null,
+      originRegion: null,
+      provenanceNote: "Dit gerecht is niet aan één land te koppelen.",
+      cuisines: [],
+    };
+
+    // No country stored, none claimed: the explanation of the honest blank fills.
+    expect(fillProvenanceGaps({}, unplaceable).group.provenanceNote).toBe(
+      "Dit gerecht is niet aan één land te koppelen."
+    );
+    // A supplied country contradicts "unplaceable": the note stays out.
+    expect(fillProvenanceGaps({ originCountry: "NL" }, unplaceable).changed).toBe(false);
+  });
+
+  it("reports no change for a claim with nothing left to give", () => {
+    const fill = fillProvenanceGaps(
+      { originCountry: "IT", provenanceNote: "Stored." },
+      { originCountry: "IT", originCountryName: null, originRegion: null, provenanceNote: "New." }
+    );
+
+    expect(fill.changed).toBe(false);
+    expect(fill.group.provenanceNote).toBe("Stored.");
   });
 });
 

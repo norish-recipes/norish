@@ -26,7 +26,7 @@ _Avoid_: Scheduled enrichment, Enrichment saga
 A single enrichment explicitly requested by a recipe editor. Its lifecycle remains visible and a terminal failure is reported to the requester.
 
 **Supplied Recipe Data**:
-Recipe information intentionally entered by a person or explicitly present in an import source and stored with the recipe. Substantive supplied categories, Nutrition Information, or Recipe Provenance suppress the corresponding Automatic Recipe Enrichment; null and empty values do not. AI may read source material to extract supplied facts, but information inferred beyond the source is Recipe Enrichment.
+Recipe information intentionally entered by a person or explicitly present in an import source and stored with the recipe. It outranks Automatic Recipe Enrichment for exactly what it covers: substantive supplied categories and complete Nutrition Information suppress their kinds, and supplied Recipe Provenance slots are kept while an automatic run fills the rest of the group (ADR-0018). Null and empty values do not count. AI may read source material to extract supplied facts, but information inferred beyond the source is Recipe Enrichment.
 
 **Imported Recipe Data**:
 Supplied Recipe Data explicitly present in an import source and preserved during import. It remains imported data even when AI is required to read the source.
@@ -37,7 +37,7 @@ A recipe's calories, fat, carbohydrates, and protein considered as one atomic gr
 _Avoid_: Macros (does not include calories)
 
 **Recipe Provenance**:
-Where a recipe comes from: a single origin country, an optional finer-grained region within it, its Cuisines, and a short written explanation of how that was concluded. A dish claimed by several countries still gets the single strongest claim, with rivals acknowledged in the explanation; only a genuinely unplaceable dish has no country. The country's written name, the region, and the explanation are recipe content, not interface chrome: they speak the language of the recipe itself when inferred (or the supplier's own words when supplied) and are never translated. Flags, pickers, and tooltips are chrome and follow the reader's language. It is one kind of Recipe Enrichment.
+Where a recipe comes from: a single origin country, an optional finer-grained region within it, its Cuisines, and a short written explanation of how that was concluded. A dish claimed by several countries still gets the single strongest claim, with rivals acknowledged in the explanation; only a genuinely unplaceable dish has no country. The country's written name, the region, and the explanation are recipe content, not interface chrome: they speak the language of the recipe itself when inferred (or the supplier's own words when supplied) and are never translated. Flags, pickers, and tooltips are chrome and follow the reader's language. It is one kind of Recipe Enrichment. An automatic run fills the group's gaps — supplied slots are settled facts the inference builds around, and only a complete group (country, note, Cuisines) leaves it nothing to do (ADR-0018); a manual run replaces the whole group.
 _Avoid_: Origin (names only one part), Provenance Inference (names the process, not the data)
 
 **Cuisine**:

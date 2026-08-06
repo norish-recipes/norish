@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Bulk Enrichment",
         "subtitle": "Run enabled enrichment on every recipe",
-        "description": "Queue every enrichment kind whose automatic switch is enabled, for all recipes on this server. Recipes keep the data they already have — only gaps are filled.",
+        "description": "Queue every enrichment kind whose automatic switch is enabled, for all recipes on this server. Recipes keep the data they already have, only gaps are filled.",
         "button": "Enrich All Recipes",
         "confirmTitle": "Run enrichment on all recipes?",
         "confirmMessage": "This queues AI work for every recipe on this server. Every enrichment kind whose automatic switch is enabled runs wherever data is missing.",
@@ -586,7 +586,7 @@
         "nutritionEstimation": "Nutrition Estimation",
         "nutritionEstimationDescription": "Estimate calories, fat, carbs, and protein for new recipes that supply none",
         "recipeProvenance": "Recipe Provenance",
-        "recipeProvenanceDescription": "Work out the country, region, Cuisines, and a short note for new recipes that have none",
+        "recipeProvenanceDescription": "Work out the country, region, Cuisines, and a short note for new recipes, filling in only what is still missing",
         "ingredientLinking": "Ingredient Linking",
         "ingredientLinkingDescription": "Link each step to the ingredient lines it uses, for steps that have none"
       },

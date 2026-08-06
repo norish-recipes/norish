@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Masseberigelse",
         "subtitle": "Kør aktiveret berigelse på alle opskrifter",
-        "description": "Sæt hver berigelsestype, hvis automatiske kontakt er slået til, i kø for alle opskrifter på denne server. Opskrifter beholder de data, de allerede har — kun huller udfyldes.",
+        "description": "Sæt hver berigelsestype, hvis automatiske kontakt er slået til, i kø for alle opskrifter på denne server. Opskrifter beholder de data, de allerede har, kun huller udfyldes.",
         "button": "Berig alle opskrifter",
         "confirmTitle": "Kør berigelse på alle opskrifter?",
         "confirmMessage": "Dette sætter AI-arbejde i kø for hver opskrift på denne server. Hver berigelsestype, hvis automatiske kontakt er slået til, kører hvor der mangler data.",
@@ -586,9 +586,9 @@
         "nutritionEstimation": "Estimering af næringsindhold",
         "nutritionEstimationDescription": "Estimér kalorier, fedt, kulhydrater og protein for nye opskrifter uden angivne værdier",
         "recipeProvenance": "Opskriftens oprindelse",
-        "recipeProvenanceDescription": "Udled land, region, køkkener og en kort note for nye opskrifter uden dem",
+        "recipeProvenanceDescription": "Udled land, region, køkkener og en kort note for nye opskrifter, kun det der mangler udfyldes, det du selv har angivet bevares",
         "ingredientLinking": "Ingredienstilknytning",
-        "ingredientLinkingDescription": "Tilknytter hvert trin de ingredienslinjer, det bruger — kun for trin uden tilknytninger"
+        "ingredientLinkingDescription": "Tilknytter hvert trin de ingredienslinjer, det bruger, kun for trin uden tilknytninger"
       },
       "tagStrategy": "Tagstrategi",
       "tagStrategyDescription": "Hvilke tags automatisk tagging må bruge, uanset om den kører automatisk eller manuelt",

@@ -528,7 +528,7 @@
       "bulkEnrichment": {
         "title": "Enriquecimento em massa",
         "subtitle": "Executar o enriquecimento habilitado em todas as receitas",
-        "description": "Coloque na fila, para todas as receitas deste servidor, cada tipo de enriquecimento cujo interruptor automático esteja habilitado. As receitas mantêm os dados que já têm — apenas as lacunas são preenchidas.",
+        "description": "Coloque na fila, para todas as receitas deste servidor, cada tipo de enriquecimento cujo interruptor automático esteja habilitado. As receitas mantêm os dados que já têm, apenas as lacunas são preenchidas.",
         "button": "Enriquecer todas as receitas",
         "confirmTitle": "Executar o enriquecimento em todas as receitas?",
         "confirmMessage": "Isto coloca na fila trabalho de IA para cada receita deste servidor. Cada tipo de enriquecimento cujo interruptor automático esteja habilitado é executado onde faltam dados.",
@@ -586,7 +586,7 @@
         "nutritionEstimation": "Estimativa nutricional",
         "nutritionEstimationDescription": "Estima calorias, gorduras, carboidratos e proteínas em novas receitas sem valores informados",
         "recipeProvenance": "Procedência da receita",
-        "recipeProvenanceDescription": "Deduzir o país, a região, as culinárias e uma nota curta para receitas novas que não os tenham",
+        "recipeProvenanceDescription": "Deduzir o país, a região, as culinárias e uma nota curta para receitas novas, apenas o que falta é preenchido, o que você informou é mantido",
         "ingredientLinking": "Vinculação de ingredientes",
         "ingredientLinkingDescription": "Vincula cada etapa às linhas de ingredientes que ela usa, para etapas sem vínculos"
       },

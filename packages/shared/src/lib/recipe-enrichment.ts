@@ -43,7 +43,7 @@ export type RecipeEnrichmentSkipReason =
   | "insufficient-input"
   /** Allergy detection has nothing to look for. */
   | "no-household-allergies"
-  /** Substantive Supplied Recipe Data outranks automatic replacement. */
+  /** Supplied Recipe Data already answers everything this kind could add. */
   | "supplied-data-present";
 
 /** Per-kind coordinator outcome. Automatic enrollment never waits for the job itself. */
@@ -270,19 +270,37 @@ export function hasSubstantiveCuisines(cuisines: ProvenanceGroupInput["cuisines"
 }
 
 /**
- * Recipe Provenance is one atomic precedence group: any substantive value among
- * the country, the region, the Cuisines, and the note makes the stored group
- * authoritative, following the precedent set by Nutrition Information.
+ * True when the group holds any substantive value at all — a country, a
+ * region, a note, or one Cuisine.
  *
- * Atomicity is deliberate. The note explains the whole claim, so letting AI fill
- * Cuisines beside a human-set country would store a paragraph arguing against
- * the field next to it.
+ * This is the presence question: it validates that a claim proposes something
+ * and that a stored group is worth rendering. It is not the precedence
+ * question — automatic runs fill the group's gaps per slot, and only
+ * {@link hasCompleteProvenance} says there are none left (ADR-0018).
  */
 export function hasSubstantiveProvenance(provenance: ProvenanceGroupInput): boolean {
   return (
     normalizeOriginCountry(provenance.originCountry) !== null ||
     normalizeText(provenance.originRegion) !== null ||
     normalizeText(provenance.provenanceNote) !== null ||
+    hasSubstantiveCuisines(provenance.cuisines)
+  );
+}
+
+/**
+ * True when the group has answered everything an automatic run could ask:
+ * a country, a note, and at least one Cuisine (ADR-0018).
+ *
+ * The region is deliberately not counted. Its absence is a valid answer — a
+ * national dish has none — so an absent region is indistinguishable from an
+ * answered one and cannot demand a run. The written country name is cosmetic
+ * (the endonym fallback renders without it) and cannot demand one either;
+ * both are still filled opportunistically when a run happens anyway.
+ */
+export function hasCompleteProvenance(provenance: ProvenanceGroupInput): boolean {
+  return (
+    normalizeOriginCountry(provenance.originCountry) !== null &&
+    normalizeText(provenance.provenanceNote) !== null &&
     hasSubstantiveCuisines(provenance.cuisines)
   );
 }
@@ -303,6 +321,96 @@ export function normalizeProvenanceGroup(provenance: ProvenanceGroupInput): Prov
     originRegion: normalizeText(provenance.originRegion),
     provenanceNote: normalizeText(provenance.provenanceNote),
   };
+}
+
+/** What one automatic Recipe Provenance run should write, decided per slot. */
+export interface ProvenanceGapFill {
+  /** The group to store: supplied slots verbatim, absent slots from the claim. */
+  group: ProvenanceGroup;
+  /** Whether the claim's Cuisines should be written. Never true while any are stored. */
+  fillCuisines: boolean;
+  /** Whether applying the fill changes anything at all; false means defer. */
+  changed: boolean;
+}
+
+/**
+ * Merge an inferred claim into a stored Recipe Provenance group, filling only
+ * its gaps (ADR-0018).
+ *
+ * The group has four slots — the country with its written name, the region,
+ * the note, and the Cuisine set — and a slot holding any substantive value is
+ * supplied: it is kept byte-for-byte, never replaced. An absent slot is filled
+ * from the claim. A complete group (per {@link hasCompleteProvenance}) changes
+ * nothing at all, so a group finished while the request was in flight also
+ * keeps its absent region rather than gaining one nobody asked for.
+ *
+ * The claim's scalars argue for the claim's country, so the region, the note,
+ * and the written name fill only when the country they would sit beside is the
+ * one the claim named. Inference is told the supplied slots, so normally the
+ * countries agree; when they do not — the model ignored them, or the country
+ * arrived while the request was in flight — those slots stay empty rather
+ * than argue with the field next to them. Cuisines are not country-bound — a
+ * fusion dish's traditions span countries — and fill whenever none are stored.
+ */
+export function fillProvenanceGaps(
+  stored: ProvenanceGroupInput,
+  claim: ProvenanceGroupInput
+): ProvenanceGapFill {
+  const group: ProvenanceGroup = {
+    originCountry: stored.originCountry ?? null,
+    originCountryName: stored.originCountryName ?? null,
+    originRegion: stored.originRegion ?? null,
+    provenanceNote: stored.provenanceNote ?? null,
+  };
+
+  if (hasCompleteProvenance(stored)) {
+    return { group, fillCuisines: false, changed: false };
+  }
+
+  const proposed = normalizeProvenanceGroup(claim);
+  const storedCountry = normalizeOriginCountry(stored.originCountry);
+  // The country the claim's scalars would end up beside.
+  const countryAgrees = (storedCountry ?? proposed.originCountry) === proposed.originCountry;
+  let changed = false;
+
+  if (storedCountry === null && proposed.originCountry !== null) {
+    group.originCountry = proposed.originCountry;
+    group.originCountryName = proposed.originCountryName;
+    changed = true;
+  } else if (
+    storedCountry !== null &&
+    countryAgrees &&
+    normalizeText(stored.originCountryName) === null &&
+    proposed.originCountryName !== null
+  ) {
+    // The written name is the code's companion: beside a supplied code it may
+    // be backfilled only from a claim that names the same country.
+    group.originCountryName = proposed.originCountryName;
+    changed = true;
+  }
+
+  if (
+    countryAgrees &&
+    normalizeText(stored.originRegion) === null &&
+    proposed.originRegion !== null
+  ) {
+    group.originRegion = proposed.originRegion;
+    changed = true;
+  }
+
+  if (
+    countryAgrees &&
+    normalizeText(stored.provenanceNote) === null &&
+    proposed.provenanceNote !== null
+  ) {
+    group.provenanceNote = proposed.provenanceNote;
+    changed = true;
+  }
+
+  const fillCuisines =
+    !hasSubstantiveCuisines(stored.cuisines) && hasSubstantiveCuisines(claim.cuisines);
+
+  return { group, fillCuisines, changed: changed || fillCuisines };
 }
 
 /** Trim, drop blanks, and deduplicate case-insensitively, keeping the first spelling. */

@@ -645,6 +645,18 @@
             shipped. Rejects seeded default copies and the row-level isOverridden freeze.
           </p>
         </li>
+        <li>
+          <a href="recipes/0018-automatic-provenance-fills-the-groups-gaps.md"
+            >ADR-0018 — Automatic provenance fills the group's gaps</a
+          >
+          <p>
+            <b>Accepted and implemented.</b> Automatic Recipe Provenance keeps every supplied
+            slot and fills only the absent ones; inference receives the supplied slots as
+            settled facts, and only a complete group suppresses the run. Rejects whole-group
+            suppression by any single value, merging blind to the model, and append-merging
+            supplied Cuisines.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

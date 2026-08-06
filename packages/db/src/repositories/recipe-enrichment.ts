@@ -27,6 +27,7 @@ import {
   steps,
 } from "@norish/db/schema";
 import {
+  fillProvenanceGaps,
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
   hasSubstantiveProvenance,
@@ -56,20 +57,6 @@ const NUTRITION_INCOMPLETE = sql`(${recipes.calories} IS NULL
   OR ${recipes.fat} IS NULL
   OR ${recipes.carbs} IS NULL
   OR ${recipes.protein} IS NULL)`;
-
-/**
- * SQL predicate for "this recipe's whole Recipe Provenance group is absent".
- *
- * Mirrors `hasSubstantiveProvenance`, including the Cuisine join: any single
- * substantive value — a country, a region, a note, or one Cuisine — makes the
- * stored group authoritative, so an automatic run defers to all of it.
- */
-const PROVENANCE_ABSENT = sql`btrim(coalesce(${recipes.originCountry}, '')) = ''
-  AND btrim(coalesce(${recipes.originRegion}, '')) = ''
-  AND btrim(coalesce(${recipes.provenanceNote}, '')) = ''
-  AND NOT EXISTS (
-    SELECT 1 FROM ${recipeCuisines} WHERE ${recipeCuisines.recipeId} = ${recipes.id}
-  )`;
 
 function validateCategories(categories: readonly RecipeCategory[]): RecipeCategory[] {
   if (!hasSubstantiveCategories(categories)) {
@@ -158,17 +145,6 @@ export interface ProvenanceReplacement extends ProvenanceGroupInput {
   cuisineIds?: readonly string[];
 }
 
-/**
- * Atomically replace a recipe's whole Recipe Provenance group.
- *
- * The scalar fields, the note, and the Cuisine join rows go in one transaction,
- * so partial application is not possible and a failed write leaves no partial
- * group. As with the other replacement groups the origin decides the guard: an
- * automatic run applies only while the whole group is still absent, and a manual
- * run is a deliberate refresh that replaces regardless.
- *
- * @returns whether the replacement was applied
- */
 /** One step's inferred Step Ingredients, in row-order space, system-agnostic. */
 export interface StepIngredientLinkClaim {
   stepOrder: number;
@@ -277,6 +253,27 @@ export async function addStepIngredientsToBareSteps(
   });
 }
 
+/**
+ * Write a Recipe Provenance claim, atomically, with the origin deciding what
+ * "write" means (ADR-0018).
+ *
+ * A manual run is a deliberate refresh: it replaces the whole group — the
+ * scalar fields, the note, and the Cuisine join rows — in one transaction,
+ * regardless of what is stored.
+ *
+ * An automatic run fills the group's gaps: it re-reads the stored group under
+ * a row lock, keeps every supplied slot byte-for-byte, and writes only what is
+ * absent, per {@link fillProvenanceGaps}. The in-transaction re-read is the
+ * absence recheck that lets newer supplied data win a race with AI — a value a
+ * person typed while the request was in flight is a supplied slot by the time
+ * the write looks, so it is kept, and a group completed in flight defers the
+ * whole claim.
+ *
+ * Either way the write is one transaction, so a failed Cuisine write leaves no
+ * partial group behind.
+ *
+ * @returns whether anything was written
+ */
 export async function replaceRecipeProvenance(
   recipeId: string,
   provenance: ProvenanceReplacement,
@@ -290,21 +287,74 @@ export async function replaceRecipeProvenance(
     throw new Error("Refusing to replace Recipe Provenance with an empty proposal");
   }
 
-  const group = normalizeProvenanceGroup(provenance);
-  const guards = [eq(recipes.id, recipeId)];
+  if (origin === "automatic") {
+    return await fillProvenanceGapsFromClaim(recipeId, provenance, cuisineIds);
+  }
 
-  if (origin === "automatic") guards.push(PROVENANCE_ABSENT);
+  const group = normalizeProvenanceGroup(provenance);
 
   return await db.transaction(async (tx) => {
     const updated = await tx
       .update(recipes)
       .set({ ...group, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-      .where(and(...guards))
+      .where(eq(recipes.id, recipeId))
       .returning({ id: recipes.id });
 
     if (updated.length === 0) return false;
 
     await replaceRecipeCuisinesTx(tx, recipeId, cuisineIds);
+
+    return true;
+  });
+}
+
+/**
+ * The automatic write: merge the claim into the stored group's gaps.
+ *
+ * The row lock serializes this against every other writer of the recipe row —
+ * an editor's save, a manual run — so the merge always reads the group it is
+ * about to complete, never a snapshot from before the race.
+ */
+async function fillProvenanceGapsFromClaim(
+  recipeId: string,
+  claim: ProvenanceReplacement,
+  cuisineIds: readonly string[]
+): Promise<boolean> {
+  return await db.transaction(async (tx) => {
+    const [stored] = await tx
+      .select({
+        originCountry: recipes.originCountry,
+        originCountryName: recipes.originCountryName,
+        originRegion: recipes.originRegion,
+        provenanceNote: recipes.provenanceNote,
+      })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId))
+      .for("update");
+
+    if (!stored) return false;
+
+    const storedCuisines = await tx
+      .select({ cuisineId: recipeCuisines.cuisineId })
+      .from(recipeCuisines)
+      .where(eq(recipeCuisines.recipeId, recipeId))
+      .limit(1);
+
+    const fill = fillProvenanceGaps(
+      { ...stored, cuisines: storedCuisines.map((row) => row.cuisineId) },
+      { ...claim, cuisines: cuisineIds }
+    );
+
+    if (!fill.changed) return false;
+
+    await tx
+      .update(recipes)
+      .set({ ...fill.group, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
+      .where(eq(recipes.id, recipeId));
+
+    if (fill.fillCuisines) {
+      await replaceRecipeCuisinesTx(tx, recipeId, cuisineIds);
+    }
 
     return true;
   });

@@ -586,7 +586,7 @@
         "nutritionEstimation": "Estimación nutricional",
         "nutritionEstimationDescription": "Estima calorías, grasas, carbohidratos y proteínas en recetas nuevas sin datos",
         "recipeProvenance": "Procedencia de la receta",
-        "recipeProvenanceDescription": "Deducir el país, la región, las cocinas y una nota breve para recetas nuevas que no los tengan",
+        "recipeProvenanceDescription": "Deducir el país, la región, las cocinas y una nota breve para recetas nuevas, solo se completa lo que falta, lo que ya indicaste se conserva",
         "ingredientLinking": "Vinculación de ingredientes",
         "ingredientLinkingDescription": "Vincula cada paso a las líneas de ingredientes que usa, para pasos sin vínculos"
       },
