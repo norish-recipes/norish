@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
@@ -25,51 +25,62 @@ export default function CreateRecipeButton() {
   const t = useTranslations("recipes.dashboard");
   const tCommon = useTranslations("common.actions");
 
-  function openModal(setModalOpen: (open: boolean) => void) {
+  const openModal = useCallback((setModalOpen: (open: boolean) => void) => {
     setIsMenuOpen(false);
     setModalOpen(true);
-  }
-  const renderMenuItems = () => (
-    <>
-      <Dropdown.Item
-        key="import"
-        id="import"
-        textValue={t("importFromUrl")}
-        onPress={() => openModal(setShowImportModal)}
-      >
-        {<ArrowDownTrayIcon className="h-4 w-4" />}
-        <Label>{t("importFromUrl")}</Label>
-      </Dropdown.Item>
-      <Dropdown.Item
-        key="paste"
-        id="paste"
-        textValue={t("importFromPaste")}
-        onPress={() => openModal(setShowPasteModal)}
-      >
-        {<ClipboardDocumentIcon className="h-4 w-4" />}
-        <Label>{t("importFromPaste")}</Label>
-      </Dropdown.Item>
-      {isAIEnabled ? (
+  }, []);
+
+  // Held in a memo so the element instances survive a re-render. The menu's own
+  // open state lives here, so merely opening it re-renders this component — and
+  // a fresh set of Dropdown.Item elements makes react-aria rebuild its
+  // collection and remount every row underneath the pointer. Playwright saw
+  // that as "element was detached from the DOM" mid-click
+  // (e2e-ai/enrichment.e2e.ts:175), and a person clicking quickly loses the
+  // click the same way.
+  const menuItems = useMemo(
+    () => (
+      <>
         <Dropdown.Item
-          key="image"
-          id="image"
-          textValue={t("importFromImage")}
-          onPress={() => openModal(setShowImageModal)}
+          key="import"
+          id="import"
+          textValue={t("importFromUrl")}
+          onPress={() => openModal(setShowImportModal)}
         >
-          {<PhotoIcon className="h-4 w-4" />}
-          <Label>{t("importFromImage")}</Label>
+          {<ArrowDownTrayIcon className="h-4 w-4" />}
+          <Label>{t("importFromUrl")}</Label>
         </Dropdown.Item>
-      ) : null}
-      <Dropdown.Item
-        key="create"
-        id="create"
-        textValue={tCommon("create")}
-        onPress={() => router.push("/recipes/new")}
-      >
-        {<PlusIcon className="h-4 w-4" />}
-        <Label>{tCommon("create")}</Label>
-      </Dropdown.Item>
-    </>
+        <Dropdown.Item
+          key="paste"
+          id="paste"
+          textValue={t("importFromPaste")}
+          onPress={() => openModal(setShowPasteModal)}
+        >
+          {<ClipboardDocumentIcon className="h-4 w-4" />}
+          <Label>{t("importFromPaste")}</Label>
+        </Dropdown.Item>
+        {isAIEnabled ? (
+          <Dropdown.Item
+            key="image"
+            id="image"
+            textValue={t("importFromImage")}
+            onPress={() => openModal(setShowImageModal)}
+          >
+            {<PhotoIcon className="h-4 w-4" />}
+            <Label>{t("importFromImage")}</Label>
+          </Dropdown.Item>
+        ) : null}
+        <Dropdown.Item
+          key="create"
+          id="create"
+          textValue={tCommon("create")}
+          onPress={() => router.push("/recipes/new")}
+        >
+          {<PlusIcon className="h-4 w-4" />}
+          <Label>{tCommon("create")}</Label>
+        </Dropdown.Item>
+      </>
+    ),
+    [isAIEnabled, openModal, router, t, tCommon],
   );
 
   return (
@@ -85,7 +96,7 @@ export default function CreateRecipeButton() {
           <span className="hidden md:inline">{t("addRecipe")}</span>
         </Button>
         <Dropdown.Popover className="bg-overlay" placement="bottom end">
-          <Dropdown.Menu aria-label="Add recipe options">{renderMenuItems()}</Dropdown.Menu>
+          <Dropdown.Menu aria-label="Add recipe options">{menuItems}</Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
 
