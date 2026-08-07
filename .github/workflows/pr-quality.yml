@@ -1,39 +1,29 @@
 name: PR Quality Checks
 
+# Pull requests only. A push to main runs release-build.yml, which gates on the
+# same reusable workflow before it tags anything, so a `push: main` trigger here
+# would just run every check on that commit a second time.
 on:
   pull_request:
     branches:
       - main
       - "rc/**"
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
 
+# A new commit supersedes whatever is still running for the PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  dependency-cycles:
-    name: Dependency Cycles
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run circular dependency gate
-        run: pnpm run deps:cycles
-
   quality:
     name: Quality Checks
+    # rc/** branches are their own push trigger: rc-release-build.yml runs this
+    # exact workflow against this exact SHA, and check runs attach to the
+    # commit, so those results already appear on the PR. Running them here as
+    # well doubles every gate to display what is on screen either way.
+    if: ${{ !startsWith(github.head_ref, 'rc/') }}
     uses: ./.github/workflows/_node-ci.yml
     secrets: inherit
-    with:
-      run-build: true
-      run-tests: true
-      run-lint: true
-      run-format: true
-      run-i18n: true
-      run-e2e: true

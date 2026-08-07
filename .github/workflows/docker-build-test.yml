@@ -10,9 +10,21 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   docker-build:
+    # Pushing to an rc/** branch already builds and publishes a multi-arch
+    # image from this SHA, so a PR whose head is that branch would build the
+    # very same image a second time and throw it away.
+    if: ${{ github.event_name == 'workflow_dispatch' || !startsWith(github.head_ref, 'rc/') }}
     uses: ./.github/workflows/_docker-build.yml
     secrets: inherit
     with:
-      image-tags: norish:test
+      # A smoke test of the Dockerfile does not need a second architecture;
+      # arm64 is exercised on every rc push by the publish build.
+      arches: '["amd64"]'
+      # Not pushed — this only names the cache to read from.
+      primary-image: ghcr.io/norish-recipes/norish

@@ -4,17 +4,58 @@ on:
   workflow_call:
     inputs:
       push:
+        description: "Push the built image and assemble a multi-arch manifest."
         required: false
         type: boolean
         default: false
-      image-tags:
+      arches:
+        description: >-
+          JSON array of architectures to build, e.g. '["amd64"]'. Each entry
+          gets its own natively-hosted runner.
+        required: false
+        type: string
+        default: '["amd64", "arm64"]'
+      primary-image:
+        description: >-
+          Registry repository (no tag) that receives the per-arch digests and
+          the assembled manifest. Also holds the build cache.
         required: true
         type: string
+      mirror-images:
+        description: >-
+          Newline-separated extra repositories the finished manifest is copied
+          to. Ignored unless `push` is set.
+        required: false
+        type: string
+        default: ""
+      tags:
+        description: >-
+          Newline-separated tag names applied to every image. Ignored unless
+          `push` is set.
+        required: false
+        type: string
+        default: ""
+
+# No `permissions:` block on purpose: this workflow inherits the caller's.
+# Pinning it here would cap the token, and a reusable workflow cannot ask for
+# more than its caller grants — declaring `packages: write` would break the
+# read-only PR smoke test, while declaring `contents: read` would 403 the
+# publish push to ghcr.
 
 jobs:
-  docker-build:
-    name: Docker Multi-Arch Build
-    runs-on: ubuntu-latest
+  # One runner per architecture, each on a host of that architecture. The
+  # previous shape built both platforms on one amd64 runner under QEMU, which
+  # made the arm64 `pnpm run build` stage 8x slower than the identical amd64
+  # one (30.8 min vs 3.7 min) and was prone to hanging outright — emulated
+  # multi-threaded Node deadlocked one run for three hours.
+  build:
+    name: Docker Build (linux/${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(inputs.arches) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -31,8 +72,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+      # No setup-qemu-action: every leg builds for the architecture it runs on.
 
       - name: Login to container registries
         if: ${{ inputs.push }}
@@ -49,20 +89,148 @@ jobs:
           report="$(node tooling/monorepo/scripts/print-package-versions.mjs)"
           echo "report=${report}" >> "$GITHUB_OUTPUT"
 
-      - name: Build Docker images (multi-arch)
+      # Push builds export their layer cache to the registry rather than to the
+      # Actions cache: that pool is capped at 10 GB per repo, and a mode=max
+      # multi-arch export blew straight past it, so entries were evicted between
+      # runs and every "cached" build started cold. Exporting it also cost 18
+      # minutes a run. Non-push builds read that cache and write nothing.
+      - name: Resolve build output and cache mode
+        id: mode
+        env:
+          PUSH: ${{ inputs.push }}
+          PRIMARY: ${{ inputs.primary-image }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          if [ "$PUSH" = "true" ]; then
+            {
+              echo "outputs=type=image,name=${PRIMARY},push-by-digest=true,name-canonical=true,push=true"
+              echo "cache-to=type=registry,ref=${PRIMARY}:buildcache-${ARCH},mode=max"
+            } >> "$GITHUB_OUTPUT"
+          else
+            # cacheonly: build every stage, keep nothing. The point of a test
+            # build is that the Dockerfile still works, not the artifact.
+            {
+              echo "outputs=type=cacheonly"
+              echo "cache-to="
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build image
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./docker/Dockerfile
-          push: ${{ inputs.push }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/${{ matrix.arch }}
           build-args: |
             NORISH_VERSION_REPORT_JSON=${{ steps.versions.outputs.report }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: ${{ inputs.image-tags }}
+          outputs: ${{ steps.mode.outputs.outputs }}
+          cache-from: type=registry,ref=${{ inputs.primary-image }}:buildcache-${{ matrix.arch }}
+          cache-to: ${{ steps.mode.outputs.cache-to }}
+
+      # Digests are handed to the merge job as empty marker files named after
+      # the hash; buildx has no way to pass them between jobs directly.
+      - name: Export digest
+        if: ${{ inputs.push }}
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
+
+      - name: Upload digest
+        if: ${{ inputs.push }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Build summary
         if: ${{ !inputs.push }}
+        run: echo "Docker build for linux/${{ matrix.arch }} successful!"
+
+  # The per-arch pushes above land as bare digests with no tag attached. This
+  # job is what turns them into the multi-arch manifest users actually pull.
+  merge:
+    name: Docker Manifest
+    if: ${{ inputs.push }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to container registries
+        uses: ./tooling/github/registry-login
+        with:
+          ghcr-username: ${{ github.repository_owner }}
+          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Create and mirror manifests
+        working-directory: /tmp/digests
+        env:
+          PRIMARY: ${{ inputs.primary-image }}
+          MIRRORS: ${{ inputs.mirror-images }}
+          TAGS: ${{ inputs.tags }}
         run: |
-          echo "Docker multi-arch build successful!"
+          set -euo pipefail
+          shopt -s nullglob
+
+          refs=()
+          for digest in *; do refs+=("${PRIMARY}@sha256:${digest}"); done
+          if [ ${#refs[@]} -eq 0 ]; then
+            echo "No digests were produced by the build jobs." >&2
+            exit 1
+          fi
+          echo "Assembling manifests from: ${refs[*]}"
+
+          mapfile -t tags < <(printf '%s\n' "$TAGS" | sed '/^[[:space:]]*$/d')
+          mapfile -t mirrors < <(printf '%s\n' "$MIRRORS" | sed '/^[[:space:]]*$/d')
+
+          # Without this the loop below is a no-op and the release "succeeds"
+          # having pushed nothing but untagged digests.
+          if [ ${#tags[@]} -eq 0 ]; then
+            echo "push was requested but no tags were supplied." >&2
+            exit 1
+          fi
+
+          for tag in "${tags[@]}"; do
+            docker buildx imagetools create --tag "${PRIMARY}:${tag}" "${refs[@]}"
+            # imagetools copies the blobs across registries, so the mirrors get
+            # a real multi-arch image rather than a dangling reference.
+            for mirror in "${mirrors[@]}"; do
+              docker buildx imagetools create --tag "${mirror}:${tag}" "${PRIMARY}:${tag}"
+            done
+          done
+
+      - name: Inspect published manifests
+        env:
+          PRIMARY: ${{ inputs.primary-image }}
+          MIRRORS: ${{ inputs.mirror-images }}
+          TAGS: ${{ inputs.tags }}
+        run: |
+          set -euo pipefail
+          mapfile -t tags < <(printf '%s\n' "$TAGS" | sed '/^[[:space:]]*$/d')
+          mapfile -t mirrors < <(printf '%s\n' "$MIRRORS" | sed '/^[[:space:]]*$/d')
+          for tag in "${tags[@]}"; do
+            for image in "$PRIMARY" "${mirrors[@]}"; do
+              docker buildx imagetools inspect "${image}:${tag}"
+            done
+          done

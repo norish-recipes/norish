@@ -9,6 +9,7 @@ description: Enable Norish's AI features and connect an AI provider for recipe, 
 Several Norish features are powered by AI. They're **off by default**, configure a provider to enable them.
 
 AI enables:
+
 - AI fallback when a recipe can't be imported from a URL structurally
 - **Image import** from screenshots or photos of recipes
 - **Video import** from YouTube Shorts, Instagram Reels, TikTok, Pinterest,
@@ -17,8 +18,9 @@ AI enables:
 - **Unit conversion** between metric and US units
 
 ## Enable AI via the environment
+
 :::note
-AI can also be enabled via the admin settings. 
+AI can also be enabled via the admin settings.
 :::
 
 Set `AI_ENABLED=true` and configure a provider. Norish speaks the OpenAI API
