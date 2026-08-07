@@ -100,6 +100,12 @@ docker-compose.yml
 !.devcontainer/default/**
 
 
-# Playwright e2e artifacts (apps/web/e2e)
+# Playwright e2e artifacts (apps/web/e2e, apps/web/e2e-ai)
+# The e2e-ai entries are also covered by apps/web/e2e-ai/.gitignore, but they
+# have to be repeated here: the format gate runs prettier with
+# `--ignore-path ../../.gitignore`, which reads this file only, so a local AI
+# suite run would otherwise leave artifacts that fail `pnpm run format:check`.
 apps/web/e2e/.results/
 apps/web/e2e/.runtime/
+apps/web/e2e-ai/.results/
+apps/web/e2e-ai/.runtime/
