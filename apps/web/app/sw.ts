@@ -6,12 +6,12 @@ import {
   IMAGE_CACHE_NAME,
   LEGACY_API_CACHE_NAME,
 } from "@/lib/offline/cache-names";
-import { defaultCache, PAGES_CACHE_NAME } from "@serwist/next/worker";
+import { defaultCache, PAGES_CACHE_NAME } from "@serwist/turbopack/worker";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist, Strategy } from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
-    // Content-hashed precache manifest, injected by @serwist/next at build time.
+    // Content-hashed precache manifest, injected by @serwist/turbopack at build time.
     // Replaces the hand-rolled `update-sw` version stamp that rotted silently (ADR-0006).
     __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
   }

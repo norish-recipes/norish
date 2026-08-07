@@ -1,8 +1,7 @@
-import { randomUUID } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import withSerwistInit from "@serwist/next";
+import { withSerwist } from "@serwist/turbopack";
 import createNextIntlPlugin from "next-intl/plugin";
 
 import { getNextIntlRequestConfigPath } from "./config/next-intl-request-config-path.js";
@@ -50,30 +49,6 @@ const workspacePackages = Array.from(
 
 const withNextIntl = createNextIntlPlugin(getNextIntlRequestConfigPath());
 
-const withSerwist = withSerwistInit({
-  swSrc: "app/sw.ts",
-  swDest: "public/sw.js",
-  cacheOnNavigation: true,
-  // The app owns its own connectivity runtime + Reconnect Sequence; Serwist must not
-  // reload the page on the browser `online` event, which is only a hint here (ADR-0006).
-  reloadOnOnline: false,
-  // Registration stays with <RegisterServiceWorker/> (one explicit, logged /sw.js path)
-  // rather than Serwist's injected window runtime.
-  register: false,
-  disable: process.env.NODE_ENV === "development",
-  // Precache the offline navigation-fallback document so the SW's `fallbacks`
-  // can serve it (ADR-0006). Appended via a manifest transform — passing
-  // `additionalPrecacheEntries` instead would *replace* the default public/
-  // folder scan. The revision is per-build: the page's HTML references
-  // content-hashed chunks, so a stale copy would point at pruned assets.
-  manifestTransforms: [
-    async (entries) => ({
-      manifest: [...entries, { url: "/~offline", revision: randomUUID(), size: 0 }],
-      warnings: [],
-    }),
-  ],
-});
-
 export default withSerwist(
   withNextIntl({
     output: "standalone",
@@ -108,12 +83,12 @@ export default withSerwist(
           ],
         },
         {
-          source: "/sw.js",
+          // @serwist/turbopack serves the worker from a Route Handler rather
+          // than public/, so the path is /serwist/sw.js and the handler owns
+          // Content-Type + Service-Worker-Allowed. Only the policy headers
+          // stay here; re-declaring Content-Type would fight the handler.
+          source: "/serwist/:path*",
           headers: [
-            {
-              key: "Content-Type",
-              value: "application/javascript; charset=utf-8",
-            },
             {
               key: "Cache-Control",
               value: "no-cache, no-store, must-revalidate",
