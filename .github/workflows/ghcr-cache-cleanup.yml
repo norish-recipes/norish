@@ -1,0 +1,31 @@
+name: Prune GHCR Build Cache
+
+# Every cache export replaces the `:amd64` / `:arm64` tag and orphans the
+# manifest that held it. GHCR keeps those untagged versions forever, so a
+# mode=max cache grows without bound unless something prunes them.
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+concurrency:
+  group: ghcr-cache-cleanup
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    name: Delete untagged versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Untagged only: the two versions the build actually reads always carry
+      # an arch tag, so they are never candidates here.
+      - name: Prune untagged cache versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: norish-buildcache
+          package-type: container
+          delete-only-untagged-versions: "true"
