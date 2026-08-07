@@ -21,7 +21,7 @@ You can manage:
 
 :::tip
 Settings that can change at runtime live here; settings needed to _boot_ the
-instance — the [database](./database.md), the encryption key in
+instance, the [database](./database.md), the encryption key in
 [Server & runtime](./server-runtime.md), and the initial
 [auth provider](./authentication.md) — are environment variables.
 :::
