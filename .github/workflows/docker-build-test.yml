@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: read
+  # Read-only: this build reads the GHCR layer cache and never writes to it.
+  packages: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -27,5 +29,5 @@ jobs:
       # A smoke test of the Dockerfile does not need a second architecture;
       # arm64 is exercised on every rc push by the publish build.
       arches: '["amd64"]'
-      # Not pushed — this only names the cache to read from.
-      primary-image: docker.io/norishapp/norish
+      # No `primary-image`: nothing is pushed, and the layer cache this reads
+      # lives in its own GHCR repo rather than in the published one.

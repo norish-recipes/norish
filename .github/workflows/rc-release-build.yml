@@ -14,6 +14,9 @@ concurrency:
 
 permissions:
   contents: write
+  # Needed to export the BuildKit layer cache to GHCR. The image itself still
+  # publishes to Docker Hub under DOCKERHUB_* credentials, not this token.
+  packages: write
 
 jobs:
   # The tag and the publish below both hang off this job, so nothing ships

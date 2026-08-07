@@ -18,9 +18,21 @@ on:
       primary-image:
         description: >-
           Registry repository (no tag) that receives the per-arch digests and
-          the assembled manifest. Also holds the build cache.
-        required: true
+          the assembled manifest. Required whenever `push` is set; ignored
+          otherwise, because a non-push build produces no artifact to name.
+        required: false
         type: string
+        default: ""
+      cache-image:
+        description: >-
+          Registry repository (no tag) holding the BuildKit layer cache, one tag
+          per architecture. Deliberately not `primary-image`: the cache is an
+          implementation detail of the build, and pointing it at the published
+          repo put `buildcache-*` tags in the tag list users browse to pick a
+          version to pin.
+        required: false
+        type: string
+        default: ghcr.io/norish-recipes/norish-buildcache
       tags:
         description: >-
           Newline-separated tag names applied to every image. Ignored unless
@@ -31,8 +43,11 @@ on:
 
 # No `permissions:` block on purpose: this workflow inherits the caller's, and a
 # reusable workflow cannot ask for more than its caller grants. Publishing needs
-# no extra scope anyway — images go to Docker Hub under its own credentials, not
-# under GITHUB_TOKEN.
+# no extra scope — images go to Docker Hub under its own credentials, not under
+# GITHUB_TOKEN — but the layer cache does: callers must grant `packages: read`,
+# or `packages: write` when they pass `push`. An explicit `permissions:` block
+# replaces the defaults wholesale, so a caller that lists only `contents:` grants
+# no package access at all and the cache steps below fail.
 
 jobs:
   # One runner per architecture, each on a host of that architecture. The
@@ -70,10 +85,11 @@ jobs:
 
       # No setup-qemu-action: every leg builds for the architecture it runs on.
 
-      # Non-push builds log in too: the layer cache lives in this same Docker Hub
-      # repo, and anonymous pulls are rate limited per IP — which GitHub runners
-      # share. Guarded on the secret so PRs from forks build cold rather than
-      # failing on a login they can never do.
+      # Non-push builds log in too, even though they publish nothing: the base
+      # image (`node:22-alpine3.21`) comes from Docker Hub, and anonymous pulls
+      # are rate limited per IP — which GitHub runners share. Guarded on the
+      # secret so PRs from forks pull anonymously rather than failing on a login
+      # they can never do.
       - name: Login to container registry
         if: ${{ inputs.push || env.HAS_REGISTRY_CREDS == 'true' }}
         uses: ./tooling/github/registry-login
@@ -81,29 +97,51 @@ jobs:
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      # Separate from the Docker Hub login above and deliberately unguarded: the
+      # layer cache lives in GHCR, and GITHUB_TOKEN always exists — read-only on
+      # fork PRs, which is exactly the access reading a cache needs.
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Read package versions
         id: versions
         run: |
           report="$(node tooling/monorepo/scripts/print-package-versions.mjs)"
           echo "report=${report}" >> "$GITHUB_OUTPUT"
 
-      # Push builds export their layer cache to the registry rather than to the
+      # Push builds export their layer cache to a registry rather than to the
       # Actions cache: that pool is capped at 10 GB per repo, and a mode=max
       # multi-arch export blew straight past it, so entries were evicted between
       # runs and every "cached" build started cold. Exporting it also cost 18
-      # minutes a run. Non-push builds read that cache and write nothing.
+      # minutes a run. Non-push builds read that cache and write nothing —
+      # writing from arbitrary PR branches would poison the release cache, and
+      # fork PRs hold a read-only token regardless.
+      #
+      # `image-manifest=true,oci-mediatypes=true` is what GHCR wants: the default
+      # index-based cache manifest is not a media type it accepts.
       - name: Resolve build output and cache mode
         id: mode
         env:
           PUSH: ${{ inputs.push }}
           PRIMARY: ${{ inputs.primary-image }}
+          CACHE: ${{ inputs.cache-image }}
           ARCH: ${{ matrix.arch }}
         run: |
           set -euo pipefail
           if [ "$PUSH" = "true" ]; then
+            # Without this the build below pushes to an empty name and the
+            # release "succeeds" having shipped nothing.
+            if [ -z "$PRIMARY" ]; then
+              echo "push was requested but primary-image is empty." >&2
+              exit 1
+            fi
             {
               echo "outputs=type=image,name=${PRIMARY},push-by-digest=true,name-canonical=true,push=true"
-              echo "cache-to=type=registry,ref=${PRIMARY}:buildcache-${ARCH},mode=max"
+              echo "cache-to=type=registry,ref=${CACHE}:${ARCH},mode=max,image-manifest=true,oci-mediatypes=true"
             } >> "$GITHUB_OUTPUT"
           else
             # cacheonly: build every stage, keep nothing. The point of a test
@@ -124,7 +162,7 @@ jobs:
           build-args: |
             NORISH_VERSION_REPORT_JSON=${{ steps.versions.outputs.report }}
           outputs: ${{ steps.mode.outputs.outputs }}
-          cache-from: type=registry,ref=${{ inputs.primary-image }}:buildcache-${{ matrix.arch }}
+          cache-from: type=registry,ref=${{ inputs.cache-image }}:${{ matrix.arch }}
           cache-to: ${{ steps.mode.outputs.cache-to }}
 
       # Digests are handed to the merge job as empty marker files named after
