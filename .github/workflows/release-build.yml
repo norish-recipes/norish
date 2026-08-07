@@ -11,7 +11,6 @@ concurrency:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   quality:
@@ -54,8 +53,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: prepare-release
-    permissions:
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -63,22 +60,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to container registries
+      - name: Login to container registry
         uses: ./tooling/github/registry-login
         with:
-          ghcr-username: ${{ github.repository_owner }}
-          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Promote GitHub Container Registry image
-        run: |
-          SOURCE="ghcr.io/norish-recipes/norish:${{ needs.prepare-release.outputs.rc_tag }}"
-          VERSION_TAG="ghcr.io/norish-recipes/norish:${{ needs.prepare-release.outputs.tag }}"
-          docker buildx imagetools create \
-            --tag "$VERSION_TAG" \
-            --tag "ghcr.io/norish-recipes/norish:latest" \
-            "$SOURCE"
 
       - name: Promote Docker Hub image
         run: |

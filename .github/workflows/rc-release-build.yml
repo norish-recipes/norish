@@ -11,7 +11,6 @@ concurrency:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   quality:
@@ -51,6 +50,5 @@ jobs:
     secrets: inherit
     with:
       push: true
-      primary-image: ghcr.io/norish-recipes/norish
-      mirror-images: docker.io/norishapp/norish
+      primary-image: docker.io/norishapp/norish
       tags: ${{ needs.prepare-release.outputs.tag }}

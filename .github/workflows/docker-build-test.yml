@@ -27,4 +27,4 @@ jobs:
       # arm64 is exercised on every rc push by the publish build.
       arches: '["amd64"]'
       # Not pushed — this only names the cache to read from.
-      primary-image: ghcr.io/norish-recipes/norish
+      primary-image: docker.io/norishapp/norish

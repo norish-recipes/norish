@@ -1,13 +1,7 @@
 name: "Registry login"
-description: "Log in to the GitHub Container Registry and Docker Hub."
+description: "Log in to Docker Hub, the registry Norish images are published to."
 
 inputs:
-  ghcr-username:
-    description: "GHCR username."
-    required: true
-  ghcr-token:
-    description: "GHCR token."
-    required: true
   dockerhub-username:
     description: "Docker Hub username."
     required: true
@@ -18,13 +12,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v4
-      with:
-        registry: ghcr.io
-        username: ${{ inputs.ghcr-username }}
-        password: ${{ inputs.ghcr-token }}
-
     - name: Login to Docker Hub
       uses: docker/login-action@v4
       with:

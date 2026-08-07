@@ -20,10 +20,10 @@ concurrency:
 jobs:
   quality:
     name: Quality Checks
-    # rc/** branches are their own push trigger: rc-release-build.yml runs this
-    # exact workflow against this exact SHA, and check runs attach to the
-    # commit, so those results already appear on the PR. Running them here as
-    # well doubles every gate to display what is on screen either way.
-    if: ${{ !startsWith(github.head_ref, 'rc/') }}
+    # Runs for every PR, including rc/** heads. Those also trigger
+    # rc-release-build.yml on push, which gates on this same workflow — but that
+    # one sits in a `cancel-in-progress` concurrency group, so a quick follow-up
+    # push cancels it. Leaning on it as the only signal left PRs showing nothing
+    # but skipped and cancelled checks.
     uses: ./.github/workflows/_node-ci.yml
     secrets: inherit

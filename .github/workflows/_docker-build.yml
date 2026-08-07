@@ -21,13 +21,6 @@ on:
           the assembled manifest. Also holds the build cache.
         required: true
         type: string
-      mirror-images:
-        description: >-
-          Newline-separated extra repositories the finished manifest is copied
-          to. Ignored unless `push` is set.
-        required: false
-        type: string
-        default: ""
       tags:
         description: >-
           Newline-separated tag names applied to every image. Ignored unless
@@ -36,11 +29,10 @@ on:
         type: string
         default: ""
 
-# No `permissions:` block on purpose: this workflow inherits the caller's.
-# Pinning it here would cap the token, and a reusable workflow cannot ask for
-# more than its caller grants — declaring `packages: write` would break the
-# read-only PR smoke test, while declaring `contents: read` would 403 the
-# publish push to ghcr.
+# No `permissions:` block on purpose: this workflow inherits the caller's, and a
+# reusable workflow cannot ask for more than its caller grants. Publishing needs
+# no extra scope anyway — images go to Docker Hub under its own credentials, not
+# under GITHUB_TOKEN.
 
 jobs:
   # One runner per architecture, each on a host of that architecture. The
@@ -52,6 +44,10 @@ jobs:
     name: Docker Build (linux/${{ matrix.arch }})
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 30
+    env:
+      # Hoisted to job level because the `secrets` context is not readable from
+      # a step-level `if:`.
+      HAS_REGISTRY_CREDS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -74,12 +70,14 @@ jobs:
 
       # No setup-qemu-action: every leg builds for the architecture it runs on.
 
-      - name: Login to container registries
-        if: ${{ inputs.push }}
+      # Non-push builds log in too: the layer cache lives in this same Docker Hub
+      # repo, and anonymous pulls are rate limited per IP — which GitHub runners
+      # share. Guarded on the secret so PRs from forks build cold rather than
+      # failing on a login they can never do.
+      - name: Login to container registry
+        if: ${{ inputs.push || env.HAS_REGISTRY_CREDS == 'true' }}
         uses: ./tooling/github/registry-login
         with:
-          ghcr-username: ${{ github.repository_owner }}
-          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
@@ -175,19 +173,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to container registries
+      - name: Login to container registry
         uses: ./tooling/github/registry-login
         with:
-          ghcr-username: ${{ github.repository_owner }}
-          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Create and mirror manifests
+      - name: Create manifests
         working-directory: /tmp/digests
         env:
           PRIMARY: ${{ inputs.primary-image }}
-          MIRRORS: ${{ inputs.mirror-images }}
           TAGS: ${{ inputs.tags }}
         run: |
           set -euo pipefail
@@ -202,7 +197,6 @@ jobs:
           echo "Assembling manifests from: ${refs[*]}"
 
           mapfile -t tags < <(printf '%s\n' "$TAGS" | sed '/^[[:space:]]*$/d')
-          mapfile -t mirrors < <(printf '%s\n' "$MIRRORS" | sed '/^[[:space:]]*$/d')
 
           # Without this the loop below is a no-op and the release "succeeds"
           # having pushed nothing but untagged digests.
@@ -213,24 +207,17 @@ jobs:
 
           for tag in "${tags[@]}"; do
             docker buildx imagetools create --tag "${PRIMARY}:${tag}" "${refs[@]}"
-            # imagetools copies the blobs across registries, so the mirrors get
-            # a real multi-arch image rather than a dangling reference.
-            for mirror in "${mirrors[@]}"; do
-              docker buildx imagetools create --tag "${mirror}:${tag}" "${PRIMARY}:${tag}"
-            done
           done
 
+      # Fails the release rather than shipping a manifest that is missing an
+      # architecture — the one thing push-by-digest can get quietly wrong.
       - name: Inspect published manifests
         env:
           PRIMARY: ${{ inputs.primary-image }}
-          MIRRORS: ${{ inputs.mirror-images }}
           TAGS: ${{ inputs.tags }}
         run: |
           set -euo pipefail
           mapfile -t tags < <(printf '%s\n' "$TAGS" | sed '/^[[:space:]]*$/d')
-          mapfile -t mirrors < <(printf '%s\n' "$MIRRORS" | sed '/^[[:space:]]*$/d')
           for tag in "${tags[@]}"; do
-            for image in "$PRIMARY" "${mirrors[@]}"; do
-              docker buildx imagetools inspect "${image}:${tag}"
-            done
+            docker buildx imagetools inspect "${PRIMARY}:${tag}"
           done
