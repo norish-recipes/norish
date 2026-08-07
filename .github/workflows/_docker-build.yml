@@ -41,7 +41,7 @@ jobs:
   # one (30.8 min vs 3.7 min) and was prone to hanging outright — emulated
   # multi-threaded Node deadlocked one run for three hours.
   build:
-    name: Docker Build (linux/${{ matrix.arch }})
+    name: linux/${{ matrix.arch }}
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 30
     env:
@@ -154,7 +154,7 @@ jobs:
   # The per-arch pushes above land as bare digests with no tag attached. This
   # job is what turns them into the multi-arch manifest users actually pull.
   merge:
-    name: Docker Manifest
+    name: Manifest
     if: ${{ inputs.push }}
     needs: build
     runs-on: ubuntu-latest

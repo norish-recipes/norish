@@ -30,10 +30,6 @@ export default function CreateRecipeButton() {
     setModalOpen(true);
   }, []);
 
-  // Held in a memo so the element instances survive an unrelated re-render —
-  // the menu's own open state lives here, so merely opening it re-renders this
-  // component. What actually made rows detach mid-click was the item set
-  // changing size; see the note on the image item below.
   const menuItems = useMemo(
     () => (
       <>
@@ -55,26 +51,17 @@ export default function CreateRecipeButton() {
           {<ClipboardDocumentIcon className="h-4 w-4" />}
           <Label>{t("importFromPaste")}</Label>
         </Dropdown.Item>
-        {/*
-          Always in the collection, merely hidden when AI is off. Dropping the
-          item outright made the menu change from three rows to four *after*
-          mount, because isAIEnabled starts false while usePermissionsQuery is
-          in flight and flips once it resolves. react-aria rebuilds its
-          collection on that change and detaches whatever row the pointer is
-          on. Holding the key set constant lets React reconcile in place.
-          isDisabled keeps arrow-key navigation off the hidden row.
-        */}
-        <Dropdown.Item
-          key="image"
-          className={isAIEnabled ? undefined : "hidden"}
-          id="image"
-          isDisabled={!isAIEnabled}
-          textValue={t("importFromImage")}
-          onPress={() => openModal(setShowImageModal)}
-        >
-          {<PhotoIcon className="h-4 w-4" />}
-          <Label>{t("importFromImage")}</Label>
-        </Dropdown.Item>
+        {isAIEnabled ? (
+          <Dropdown.Item
+            key="image"
+            id="image"
+            textValue={t("importFromImage")}
+            onPress={() => openModal(setShowImageModal)}
+          >
+            {<PhotoIcon className="h-4 w-4" />}
+            <Label>{t("importFromImage")}</Label>
+          </Dropdown.Item>
+        ) : null}
         <Dropdown.Item
           key="create"
           id="create"

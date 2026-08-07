@@ -14,12 +14,12 @@ permissions:
 
 jobs:
   quality:
-    name: Release Quality Checks
+    name: Quality
     uses: ./.github/workflows/_node-ci.yml
     secrets: inherit
 
   prepare-release:
-    name: Release Prep
+    name: Create release tag
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: quality
@@ -49,7 +49,7 @@ jobs:
         run: echo "tag=rc-v${{ steps.tag.outputs.version }}" >> "$GITHUB_OUTPUT"
 
   docker-promote:
-    name: Promote RC Docker Images
+    name: Promote images
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: prepare-release

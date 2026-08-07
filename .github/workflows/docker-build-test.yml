@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   docker-build:
+    name: Docker image
     # Pushing to an rc/** branch already builds and publishes a multi-arch
     # image from this SHA, so a PR whose head is that branch would build the
     # very same image a second time and throw it away.

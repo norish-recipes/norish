@@ -5,21 +5,26 @@ on:
     branches:
       - "rc/**"
 
+# Scoped per branch: a single shared "release-rc" group meant two rc/* branches
+# cancelled each other's releases, leaving the loser's head commit showing a
+# cancelled quality check on its PR.
 concurrency:
-  group: release-rc
+  group: release-rc-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
+  # The tag and the publish below both hang off this job, so nothing ships
+  # without it going green.
   quality:
-    name: RC Quality Gates
+    name: Quality
     uses: ./.github/workflows/_node-ci.yml
     secrets: inherit
 
   prepare-release:
-    name: RC Beta Release Prep
+    name: Create RC tag
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: quality
@@ -45,6 +50,7 @@ jobs:
           require-beta: "true"
 
   docker-publish:
+    name: Publish
     uses: ./.github/workflows/_docker-build.yml
     needs: prepare-release
     secrets: inherit

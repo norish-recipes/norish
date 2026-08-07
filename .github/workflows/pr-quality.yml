@@ -19,11 +19,12 @@ concurrency:
 
 jobs:
   quality:
-    name: Quality Checks
-    # Runs for every PR, including rc/** heads. Those also trigger
-    # rc-release-build.yml on push, which gates on this same workflow — but that
-    # one sits in a `cancel-in-progress` concurrency group, so a quick follow-up
-    # push cancels it. Leaning on it as the only signal left PRs showing nothing
-    # but skipped and cancelled checks.
+    name: Quality
+    # Skipped when the PR's head is an rc/** branch. Pushing to those fires
+    # rc-release-build.yml against the identical SHA, and it gates its tag and
+    # publish on that same run — so the work is not just duplicated here, it is
+    # duplicated without anything depending on the second copy. Check runs
+    # attach to the commit, so the release run's result still lands on this PR.
+    if: ${{ !startsWith(github.head_ref, 'rc/') }}
     uses: ./.github/workflows/_node-ci.yml
     secrets: inherit

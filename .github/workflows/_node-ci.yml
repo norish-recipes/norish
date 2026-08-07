@@ -20,7 +20,10 @@ jobs:
   # depends on has to be redone. Running the gates in sequence here costs a few
   # minutes of wall clock and saves five installs and five rebuilds.
   verify:
-    name: Verify
+    # Named for what it runs, not for its role: this is the only check covering
+    # the unit tests now that they are steps rather than their own job, and
+    # "Verify" gave no hint that a red here could be a failing test.
+    name: Build, test & lint
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
