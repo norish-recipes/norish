@@ -12,7 +12,11 @@ import type { BrowserContext, Page } from "@playwright/test";
 import type { AIE2EStack } from "./fixture";
 import { expect, test } from "./fixture";
 import { submitPasteImport } from "./import-support";
-import { readStoredCategories, setAutomaticEnrichment } from "./recipe-enrichment-support";
+import {
+  readStoredCategories,
+  requestEnrichment,
+  setAutomaticEnrichment,
+} from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -227,8 +231,7 @@ test("a manually requested categorization replaces the supplied categories", asy
   // A manual run is a deliberate refresh, so it replaces rather than defers.
   stack!.ai.control.succeedWith({ categories: ["Dinner"] });
 
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Auto Categorize" }).click();
+  await requestEnrichment(page, "Auto Categorize");
 
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("Dinner").first()).toBeVisible({ timeout: 3_000 });
@@ -250,8 +253,7 @@ test("auto-tagging appends without removing existing tags", async () => {
 
   stack!.ai.control.succeedWith({ tags: ["added-tag"] });
 
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Auto-tag" }).click();
+  await requestEnrichment(page, "Auto-tag");
 
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("added-tag").first()).toBeVisible({ timeout: 3_000 });
@@ -311,8 +313,7 @@ test("a manual failure is reported to the requester", async () => {
 
   stack!.ai.control.failPermanently("provider refused");
 
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Auto Categorize" }).click();
+  await requestEnrichment(page, "Auto Categorize");
 
   // Unlike the automatic case, an action the user asked for reports its failure.
   await expect(page.getByText(/enrichment failed/i).first()).toBeVisible({ timeout: 60_000 });
@@ -330,8 +331,7 @@ test("lifecycle state survives a page reload and reconnect", async () => {
   let isOffline = false;
 
   try {
-    await page.getByRole("button", { name: "Actions" }).click();
-    await page.getByRole("menuitem", { name: "Auto Categorize" }).click();
+    await requestEnrichment(page, "Auto Categorize");
 
     await expect(async () => {
       expect(stack!.ai.control.requestCount).toBeGreaterThanOrEqual(2);

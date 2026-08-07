@@ -1,8 +1,27 @@
+import type { Page } from "@playwright/test";
 import { request } from "@playwright/test";
 import { Client } from "pg";
 
 import type { SessionCookies } from "./fixture";
+import { submitMutation } from "../harness/trpc";
 import { databaseUrl } from "./database";
+
+/**
+ * Ask for a manual enrichment run from the recipe's Actions menu, and do not
+ * return until the request has landed.
+ *
+ * Every kind reaches the server through the same `recipes.requestEnrichment`
+ * mutation, and every caller here navigates immediately afterwards — a reload
+ * inside a polling assertion, or the next scenario. Without the wait that
+ * navigation can abort the request before it is issued, and the run this
+ * scenario asked for simply never happens.
+ */
+export async function requestEnrichment(page: Page, action: string): Promise<void> {
+  await page.getByRole("button", { name: "Actions" }).click();
+  await submitMutation(page, "recipes.requestEnrichment", () =>
+    page.getByRole("menuitem", { name: action }).click()
+  );
+}
 
 export async function setAutomaticEnrichment(
   switches: Partial<

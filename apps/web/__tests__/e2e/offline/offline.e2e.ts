@@ -125,6 +125,12 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
   await page.goto("/import");
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
+
+  // Do not hand the next serial scenario an OfflineUnavailable page: when it
+  // restores Live, that component intentionally reloads its own URL and can
+  // race the next scenario's navigation. Park on a cached Warm Set surface.
+  await page.goto("/");
+  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
 });
 
 test("a hanging network observes the Reachability Deadline (ADR-0013)", async () => {

@@ -16,7 +16,7 @@ import type { AIE2EStack } from "./fixture";
 import { expect, test } from "./fixture";
 import { submitPasteImport } from "./import-support";
 import { findCuisineIdByName, readStoredProvenance, supplyProvenance } from "./provenance-support";
-import { setAutomaticEnrichment } from "./recipe-enrichment-support";
+import { requestEnrichment, setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -111,6 +111,11 @@ async function eventuallyOnRecipe(assertion: () => Promise<void>): Promise<void>
     await page.reload();
     await assertion();
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+}
+
+/** Submit a manual provenance run without letting the next navigation abort it. */
+function requestProvenance(): Promise<void> {
+  return requestEnrichment(page, "Work Out Provenance");
 }
 
 test("an import enters automatic provenance inference and the result is stored and rendered", async () => {
@@ -228,8 +233,7 @@ test("a manual run replaces the entire group", async () => {
   stack!.ai.control.succeedWith(provenanceClaim());
 
   await page.reload();
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Work Out Provenance" }).click();
+  await requestProvenance();
 
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("Italia").first()).toBeVisible({ timeout: 3_000 });
@@ -320,8 +324,7 @@ test("a genuinely unplaceable dish keeps an empty country, titled by the section
     })
   );
 
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Work Out Provenance" }).click();
+  await requestProvenance();
   await page.keyboard.press("Escape");
 
   await eventuallyOnRecipe(async () => {
@@ -364,8 +367,7 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
     })
   );
 
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Work Out Provenance" }).click();
+  await requestProvenance();
   await page.keyboard.press("Escape");
 
   // No reload: the canonical recipe update arrives over the existing realtime

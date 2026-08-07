@@ -138,7 +138,16 @@ export class ProductionStack {
         .map((result) => result.reason);
 
       if (provisioningFailures.length > 0) {
-        throw new AggregateError(provisioningFailures, "Testcontainer provisioning failed");
+        // Spell the reasons into the message. Playwright prints `cause` but not
+        // an AggregateError's `errors`, so without this the commonest local
+        // failure by far — Docker simply not running — reaches the terminal as
+        // a bare "Testcontainer provisioning failed" on all 46 specs.
+        throw new AggregateError(
+          provisioningFailures,
+          `Testcontainer provisioning failed (is Docker running?): ${provisioningFailures
+            .map((failure) => (failure instanceof Error ? failure.message : String(failure)))
+            .join("; ")}`
+        );
       }
 
       this.databaseConnectionUrl = this.postgres!.getConnectionUri();

@@ -18,7 +18,7 @@ import type { AIE2EStack } from "./fixture";
 import { expect, test } from "./fixture";
 import { submitPasteImport } from "./import-support";
 import { readStoredStepIngredients, supplyStepIngredient } from "./ingredient-linking-support";
-import { setAutomaticEnrichment } from "./recipe-enrichment-support";
+import { requestEnrichment, setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -115,8 +115,7 @@ async function importRecipe(name: string): Promise<void> {
 async function runManualLinking(): Promise<void> {
   stack!.ai.control.succeedWith(LINKING_CLAIM);
 
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Link Ingredients to Steps" }).click();
+  await requestEnrichment(page, "Link Ingredients to Steps");
   await page.keyboard.press("Escape");
 }
 
