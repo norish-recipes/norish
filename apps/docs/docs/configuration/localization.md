@@ -23,6 +23,7 @@ Norish ships with translations for these languages:
 |  🇩🇰  | Dansk              |     `da`      |
 |  🇮🇹  | Italiano           |     `it`      |
 |  🇧🇷  | Português (Brasil) |    `pt-BR`    |
+|  🇧🇬  | Български          |     `bg`      |
 
 You can set the instance default and restrict which locales are available:
 

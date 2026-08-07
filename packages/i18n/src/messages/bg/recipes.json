@@ -1,0 +1,330 @@
+{
+  "dashboard": {
+    "title": "Всички рецепти",
+    "searchPlaceholder": "Търсене или добавяне на рецепта...",
+    "searchRecipesPlaceholder": "Търсене на рецепти...",
+    "recipeCount": "{count, plural, one {# рецепта} other {# рецепти}}",
+    "addRecipe": "Добави рецепта",
+    "importFromUrl": "URL",
+    "importFromPaste": "Поставяне",
+    "importFromImage": "Изображение",
+    "searchFields": {
+      "title": "Заглавие",
+      "description": "Описание",
+      "ingredients": "Съставки",
+      "steps": "Стъпки",
+      "tags": "Етикети"
+    },
+    "viewMode": {
+      "label": "Изглед на рецептите",
+      "grid": "Мрежа",
+      "list": "Списък"
+    }
+  },
+  "empty": {
+    "title": "Колекцията ти от рецепти те очаква",
+    "description": "Постави URL адрес на рецепта в полето за търсене по-горе и наблюдавай магията.",
+    "noResults": "Няма намерени рецепти",
+    "noResultsHint": "Опитай да коригираш или изчистиш филтрите си."
+  },
+  "card": {
+    "noImage": "Няма налично изображение",
+    "viewGroceries": "Виж продуктите",
+    "addToCalendar": "Добави в календара",
+    "deleteRecipe": "Изтрий рецептата",
+    "recipeOptions": "Опции за рецептата"
+  },
+  "detail": {
+    "backToRecipes": "Обратно към рецептите",
+    "viewOriginal": "Виж оригиналната рецепта",
+    "ingredients": "Съставки",
+    "steps": "Стъпки",
+    "notes": "Бележки",
+    "addToGroceries": "Добави в продуктите",
+    "ratingPrompt": "Какво мислиш за тази рецепта?",
+    "notFound": "Рецептата не е намерена",
+    "notFoundMessage": "Тази рецепта не съществува или нямаш права да я преглеждаш.",
+    "prep": "подготовка",
+    "total": "общо",
+    "planMeal": "Планирай хранене",
+    "recipeActions": "Действия за рецептата",
+    "instructions": "Инструкции",
+    "cook": "Готви",
+    "switchToDecimal": "Покажи десетични числа",
+    "switchToFraction": "Покажи дроби"
+  },
+  "actions": {
+    "plan": "Планирай",
+    "groceries": "Продукти",
+    "edit": "Редактирай",
+    "delete": "Изтрий",
+    "share": "Сподели",
+    "visitOriginal": "Посети оригиналната рецепта",
+    "addToCalendar": "Добави в календара",
+    "autoTag": "Авто-етикетиране",
+    "autoTagging": "Генериране на етикети...",
+    "autoCategorize": "Авто-категоризиране",
+    "detectAllergies": "Открий алергени",
+    "detectingAllergies": "Откриване на алергени...",
+    "estimateNutrition": "Изчисли хранителни стойности",
+    "estimatingNutrition": "Изчисляване на хранителни стойности...",
+    "screenOn": "Екранът включен",
+    "keepScreenOn": "Дръж екрана включен",
+    "actionsLabel": "Действия",
+    "autoCategorizing": "Автоматично категоризиране…",
+    "inferProvenance": "Определи произхода",
+    "inferringProvenance": "Определяне на произхода…",
+    "linkIngredients": "Свържи съставките със стъпките",
+    "linkingIngredients": "Свързване на съставките…",
+    "enrichmentFailed": "Последното изпълнение е неуспешно"
+  },
+  "sharePanel": {
+    "title": "Сподели рецепта",
+    "description": "Създай и управлявай публични връзки за {recipeName}.",
+    "expiryLabel": "Изтичане на връзката",
+    "createLink": "Създай връзка",
+    "latestLink": "Последна връзка",
+    "currentLinks": "Текущи връзки",
+    "empty": "Все още няма създадени връзки.",
+    "createSuccess": "Връзката е създадена",
+    "copySuccess": "Връзката е копирана",
+    "copyLink": "Копирай",
+    "openLink": "Отвори",
+    "createdAt": "Създадена: {value}",
+    "expiresAt": "Изтича: {value}",
+    "lastAccessedAt": "Последно отворена: {value}",
+    "never": "Никога",
+    "expiryOptions": {
+      "1day": "1 ден",
+      "1week": "1 седмица",
+      "1month": "1 месец",
+      "1year": "1 година",
+      "forever": "Никога"
+    },
+    "status": {
+      "active": "Активна",
+      "expired": "Изтекла",
+      "revoked": "Отменена"
+    },
+    "revokeModal": {
+      "title": "Отмени връзката",
+      "message": "Тази връзка за {recipeName} ще спре да работи, докато не я активираш отново.",
+      "confirm": "Отмени"
+    },
+    "reactivateModal": {
+      "title": "Активирай отново връзката",
+      "message": "Тази връзка за {recipeName} ще стане отново активна.",
+      "confirm": "Активирай отново"
+    },
+    "deleteModal": {
+      "title": "Изтрий връзката",
+      "message": "Да се изтрие ли тази връзка за споделяне на {recipeName}? Това действие не може да бъде отменено.",
+      "confirm": "Изтрий връзката"
+    }
+  },
+  "convert": {
+    "ariaLabel": "Преобразуване на мерна система",
+    "toMetric": "Преобразувай в метрична",
+    "toUS": "Преобразувай в американска"
+  },
+  "deleteModal": {
+    "title": "Изтриване на рецепта",
+    "confirmMessage": "Наистина ли искаш да изтриеш „{recipeName}“?",
+    "warning": "Това действие не може да бъде отменено."
+  },
+  "form": {
+    "createTitle": "Създаване на рецепта",
+    "editTitle": "Редактиране на рецепта",
+    "createDescription": "Добави нова рецепта в колекцията си",
+    "editDescription": "Обнови детайлите на рецептата си",
+    "initializingForm": "Инициализиране на формуляра...",
+    "photo": "Снимка",
+    "basicInfo": "Основна информация",
+    "ingredients": "Съставки",
+    "instructions": "Инструкции",
+    "tags": "Етикети",
+    "nutrition": "Хранителни стойности",
+    "nutritionPerServing": "(на порция, незадължително)",
+    "details": "Детайли",
+    "additionalInfo": "Допълнителна информация",
+    "recipeName": "Име на рецептата",
+    "recipeNamePlaceholder": "напр. Бисквити с шоколадови парченца",
+    "description": "Описание",
+    "descriptionPlaceholder": "Кратко описание на това, което прави тази рецепта специална...",
+    "notes": "Бележки",
+    "notesPlaceholder": "Добави бележки за подготовка, корекции или съвети за поднасяне на тази рецепта...",
+    "ingredientsHelp": "Въведи съставки като „2 чаши брашно“ - количествата и мерните единици се разпознават автоматично.",
+    "instructionsHelp": "Напиши ясни, стъпка по стъпка инструкции. Натисни Enter за преминаване към следващата стъпка.",
+    "tagsHelp": "Въведи етикети и щракни върху предложенията, за да ги добавиш. Избраните етикети са сини, новите имат прекъсната рамка.",
+    "tagsAndCategories": "Етикети и категории",
+    "categoriesHelp": "Избери категории хранене за тази рецепта.",
+    "category": {
+      "breakfast": "Закуска",
+      "lunch": "Обяд",
+      "dinner": "Вечеря",
+      "snack": "Лека закуска"
+    },
+    "calories": "Калории",
+    "fat": "Мазнини (г)",
+    "carbs": "Въглехидрати (г)",
+    "protein": "Протеини (г)",
+    "provenance": "Произход",
+    "provenanceHelp": "Откъде произхожда тази рецепта.",
+    "originCountry": "Държава",
+    "originCountryPlaceholder": "Няма държава",
+    "originRegion": "Регион",
+    "originRegionPlaceholder": "напр. Сицилия",
+    "cuisines": "Кухни",
+    "cuisinesHelp": "Избери от списъка на сървъра си. За фюжън ястие може да са подходящи няколко.",
+    "provenanceNote": "Бележка",
+    "provenanceNotePlaceholder": "Няколко изречения за произхода на това ястие…",
+    "servings": "Порции",
+    "cookingTimes": "Време за приготвяне",
+    "optional": "(незадължително)",
+    "sourceUrl": "URL адрес на източника",
+    "sourceUrlPlaceholder": "https://example.com/recipe",
+    "measurementSystemNote": "Мерната система се разпознава автоматично от съставките, но можеш да я промениш ръчно тук.",
+    "measurementSystemEditNote": " Забележка: Това променя само етикета на системата, но не преобразува мерните единици. Използвай действието „Преобразуване“ след запазване.",
+    "createRecipe": "Създай рецепта",
+    "saveChanges": "Запази промените",
+    "uploading": "Качване...",
+    "clickToUpload": "Щракни, за да качиш, или плъзни и пусни",
+    "pasteToUpload": "за поставяне",
+    "imageFormats": "PNG, JPG, WEBP до 5MB",
+    "discardChangesConfirm": "Имаш незапазени промени. Да се отхвърлят ли и да напуснеш страницата?"
+  },
+  "gallery": {
+    "addImage": "Добави изображение",
+    "uploading": "Качване...",
+    "uploadFailed": "Качването не бе успешно",
+    "dragToReorder": "Плъзни, за да пренаредиш",
+    "maxImagesReached": "Разрешени са максимум {max} изображения",
+    "maxVideosReached": "Разрешени са максимум {max} видеоклипа",
+    "invalidFileType": "Невалиден тип файл"
+  },
+  "carousel": {
+    "noImageAvailable": "Няма налично изображение",
+    "noMediaAvailable": "Няма налично медийно съдържание",
+    "videoPlayer": {
+      "mute": "Заглуши",
+      "unmute": "Включи звука",
+      "fullscreen": "Цял екран",
+      "exitFullscreen": "Изход от цял екран"
+    }
+  },
+  "validation": {
+    "nameRequired": "Името на рецептата е задължително",
+    "ingredientsRequired": "Изисква се поне една съставка",
+    "stepsRequired": "Изисква се поне една стъпка",
+    "servingsMin": "Порциите трябва да са поне 1"
+  },
+  "nutrition": {
+    "title": "Хранителни стойности",
+    "calories": "Калории",
+    "fat": "Мазнини",
+    "carbs": "Въглехидрати",
+    "protein": "Протеини",
+    "showingPortions": "Показани стойности за {count} {count, plural, one {порция} other {порции}}",
+    "noInfo": "Няма налична информация за хранителните стойности",
+    "estimateWithAI": "Изчисли с AI"
+  },
+  "measurementSystem": {
+    "label": "Мерна система",
+    "detected": "Разпознато: {system}",
+    "metric": "Метрична",
+    "us": "Американска"
+  },
+  "timeInputs": {
+    "prep": "Подготовка",
+    "cook": "Готвене",
+    "total": "Общо"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Стъпка {number}: Опиши стъпката...",
+    "stepPlaceholderShort": "Стъпка {number}"
+  },
+  "stepIngredients": {
+    "rowLabel": "Свързани съставки",
+    "addLabel": "Свържи съставка",
+    "pickerLabel": "Свържи съставка с тази стъпка",
+    "shareLabel": "Промени дела на {name}",
+    "share": {
+      "full": "Целият ред",
+      "half": "Половината",
+      "third": "Една трета",
+      "quarter": "Една четвърт",
+      "custom": "По избор…",
+      "amount": "Количество…"
+    },
+    "customShareLabel": "Дял по избор",
+    "customAmountLabel": "Количество",
+    "removeLabel": "Премахни {name}"
+  },
+  "ingredientInput": {
+    "placeholder": "напр. 2 чаши брашно"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Дръж екрана включен",
+    "notSupported": "Функцията за постоянно включен екран не се поддържа от този браузър",
+    "activeTooltip": "Екранът ще остане включен по време на готвене",
+    "inactiveTooltip": "Дръж екрана включен, докато следваш стъпките",
+    "ariaLabel": "Дръж екрана включен"
+  },
+  "toasts": {
+    "imported": "Рецептата е импортирана",
+    "converted": "Мерните единици са преобразувани",
+    "convertedDescription": "Рецептата е преобразувана в {system} мерни единици",
+    "failed": "Операцията с рецептата не бе успешна",
+    "failedDescription": "Нещо се обърка при обработката на рецептата. Провери конзолата на браузъра за технически подробности.",
+    "batchImported": "Рецептите са импортирани",
+    "batchImportedDescription": "{count} рецепти импортирани от архив",
+    "view": "Виж",
+    "open": "Отвори"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Редактиране на етикет",
+      "editPlaceholder": "Въведи име на етикета...",
+      "duplicateTag": "Този етикет вече съществува"
+    }
+  },
+  "cookMode": {
+    "steps": "Стъпки",
+    "ingredients": "Съставки",
+    "servings": "Порции",
+    "serving": "{count, plural, one {# порция} other {# порции}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Плъзни, за да преминеш между стъпките",
+    "swipeIngredients": "Плъзни наляво за съставките",
+    "swipeBackToSteps": "Плъзни надясно за стъпките"
+  },
+  "enrichment": {
+    "failed": "Обогатяването е неуспешно",
+    "states": {
+      "queued": "В опашката",
+      "processing": "В ход",
+      "succeeded": "Завършено",
+      "failed": "Последното изпълнение е неуспешно"
+    },
+    "kinds": {
+      "auto-tagging": "Автоматично етикетиране",
+      "allergy-detection": "Откриване на алергени",
+      "auto-categorization": "Автоматично категоризиране",
+      "nutrition-estimation": "Оценка на хранителните стойности",
+      "recipe-provenance": "Произход на рецептата",
+      "ingredient-linking": "Свързване на съставките"
+    }
+  },
+  "provenance": {
+    "title": "Произход",
+    "region": "Регион",
+    "cuisines": "Кухни",
+    "inferring": "Определя се откъде произхожда тази рецепта…",
+    "noInfo": "Все още няма информация за произхода",
+    "inferWithAI": "Определи с AI"
+  },
+  "import": {
+    "alreadyExists": "Вече имаш тази рецепта",
+    "openExisting": "Отвори"
+  }
+}
