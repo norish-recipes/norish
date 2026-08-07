@@ -4,52 +4,24 @@
  * stopped for the offline phases. Serial by design — the tests share one
  * browser context (one origin profile) and one server lifecycle.
  */
-import { mkdirSync } from "node:fs";
-import net from "node:net";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import type { BrowserContext, Page } from "@playwright/test";
-import { expect, request, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
-import type { E2eServer } from "./server";
+import type { OfflineHarness } from "./fixture";
 import {
-  E2E_BASE_URL,
+  expect,
   SEEDED_GROCERY_NAME,
   SEEDED_NOTE_TITLE,
   SEEDED_RECIPE_ID,
   SEEDED_RECIPE_IMAGE,
   SEEDED_RECIPE_NAME,
+  test,
   UNWARMED_RECIPE_ID,
-  USER_A,
-  USER_B,
-} from "./env";
-import { startServer } from "./server";
+} from "./fixture";
 
 test.describe.configure({ mode: "serial" });
 
-let server: E2eServer | null = null;
-let context: BrowserContext;
+let offline: OfflineHarness;
 let page: Page;
-let cookiesA: Awaited<ReturnType<BrowserContext["cookies"]>>;
-let cookiesB: Awaited<ReturnType<BrowserContext["cookies"]>>;
-
-async function apiSignIn(user: { email: string; password: string }) {
-  const api = await request.newContext({
-    baseURL: E2E_BASE_URL,
-    // Better Auth rejects auth POSTs without a trusted Origin.
-    extraHTTPHeaders: { origin: E2E_BASE_URL },
-  });
-  const response = await api.post("/api/auth/sign-in/email", {
-    data: { email: user.email, password: user.password },
-  });
-
-  expect(response.ok(), `sign-in for ${user.email}`).toBeTruthy();
-  const state = await api.storageState();
-
-  await api.dispose();
-
-  return state.cookies;
-}
 
 /** All Outbox entries in the page's IndexedDB, FIFO. */
 function readOutbox(target: Page) {
@@ -91,23 +63,9 @@ async function addGroceryViaUi(target: Page, name: string) {
   await expect(target.getByText(name).first()).toBeVisible();
 }
 
-async function useCookies(cookies: typeof cookiesA) {
-  await context.clearCookies();
-  await context.addCookies(cookies);
-}
-
-test.beforeAll(async ({ browser }) => {
-  server = await startServer();
-  cookiesA = await apiSignIn(USER_A);
-  cookiesB = await apiSignIn(USER_B);
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await useCookies(cookiesA);
-  page = await context.newPage();
-});
-
-test.afterAll(async () => {
-  await context?.close();
-  await server?.stop().catch(() => undefined);
+test.beforeAll(async ({ offlineHarness }) => {
+  offline = offlineHarness;
+  page = offline.page;
 });
 
 test("a Live visit installs the app shell and warms the Warm Set", async () => {
@@ -135,8 +93,7 @@ test("a Live visit installs the app shell and warms the Warm Set", async () => {
 });
 
 test("backend-down unseen navigation boots every Warm Set surface", async () => {
-  await server?.stop();
-  server = null;
+  await offline.transition("stopped");
 
   // Dashboard.
   await page.goto("/");
@@ -168,51 +125,7 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
   await page.goto("/import");
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
-
-  // The docs embed this state (offline.md) and this suite is the only place
-  // it exists genuinely offline, so the capture lives here rather than in the
-  // AI-harness screenshot suite.
-  const screenshotDir = path.resolve(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "../../..",
-    "apps/docs/static/img/screenshots"
-  );
-
-  mkdirSync(screenshotDir, { recursive: true });
-  await page
-    .getByTestId("offline-unavailable")
-    .locator(".max-w-lg")
-    .first()
-    .screenshot({
-      path: path.join(screenshotDir, "offline-unavailable.png"),
-      animations: "disabled",
-    });
 });
-
-/**
- * A TCP listener that accepts connections and never answers: the
- * slow-but-alive network, as opposed to the stopped server's instant
- * connection refusal. Requests into it hang instead of erroring.
- */
-async function startBlackhole(): Promise<() => Promise<void>> {
-  const port = Number(new URL(E2E_BASE_URL).port);
-  const sockets = new Set<net.Socket>();
-  const listener = net.createServer((socket) => {
-    sockets.add(socket);
-    socket.on("close", () => sockets.delete(socket));
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    listener.once("error", reject);
-    listener.listen(port, resolve);
-  });
-
-  return () =>
-    new Promise<void>((resolve) => {
-      for (const socket of sockets) socket.destroy();
-      listener.close(() => resolve());
-    });
-}
 
 test("a hanging network observes the Reachability Deadline (ADR-0013)", async () => {
   // Before the deadline handler, this scenario hung on whatever was on screen
@@ -222,30 +135,25 @@ test("a hanging network observes the Reachability Deadline (ADR-0013)", async ()
   // Cache one real document under service-worker control first: the suite's
   // initial Live visit predates the worker claiming the page, so the pages
   // cache is still empty.
-  server = await startServer();
+  await offline.transition("live");
   await page.goto("/settings");
-  await server.stop();
-  server = null;
+  await offline.transition("unresponsive");
 
-  const stopBlackhole = await startBlackhole();
+  // An uncached route must fail over to the offline shell at the deadline.
+  let startedAt = Date.now();
 
-  try {
-    // An uncached route must fail over to the offline shell at the deadline.
-    let startedAt = Date.now();
+  await page.goto("/import");
+  await expect(page.getByTestId("offline-unavailable")).toBeVisible();
+  expect(Date.now() - startedAt).toBeLessThan(20_000);
 
-    await page.goto("/import");
-    await expect(page.getByTestId("offline-unavailable")).toBeVisible();
-    expect(Date.now() - startedAt).toBeLessThan(20_000);
+  // A route visited while Live serves its cached document at the deadline
+  // instead of the shell.
+  startedAt = Date.now();
+  await page.goto("/settings");
+  expect(Date.now() - startedAt).toBeLessThan(20_000);
+  await expect(page.getByTestId("offline-unavailable")).not.toBeVisible();
 
-    // A route visited while Live serves its cached document at the deadline
-    // instead of the shell.
-    startedAt = Date.now();
-    await page.goto("/settings");
-    expect(Date.now() - startedAt).toBeLessThan(20_000);
-    await expect(page.getByTestId("offline-unavailable")).not.toBeVisible();
-  } finally {
-    await stopBlackhole();
-  }
+  await offline.transition("stopped");
 
   // Park on a Warm Set surface so no auto-reload candidate is mounted when a
   // later test brings the backend back.
@@ -261,7 +169,7 @@ test("the Offline-unavailable card reloads its page once when Live returns", asy
   // the card reloads the originally requested URL once. The id is not seeded,
   // so the Live render is the recipe's not-found state — what matters is that
   // the offline card is gone without a manual reload.
-  server = await startServer();
+  await offline.transition("live");
   await expect(page.getByTestId("offline-unavailable")).toBeHidden({ timeout: 90_000 });
 
   // The reload spent its once-per-path shot and recorded it.
@@ -274,8 +182,7 @@ test("the Offline-unavailable card reloads its page once when Live returns", asy
     )
     .toBe("1");
 
-  await server.stop();
-  server = null;
+  await offline.transition("stopped");
 });
 
 test("an offline grocery toggle survives navigation and a document cold launch", async () => {
@@ -284,11 +191,10 @@ test("an offline grocery toggle survives navigation and a document cold launch",
   // same-origin GET, so any HTTP-level cache the worker keeps now holds a
   // pre-toggle copy of it, ready to answer the next Offline refetch with a
   // stale success. See ADR-0006.
-  server = await startServer();
+  await offline.transition("live");
   await page.goto("/groceries");
   await expect(page.getByText(SEEDED_GROCERY_NAME).first()).toBeVisible();
-  await server.stop();
-  server = null;
+  await offline.transition("stopped");
 
   await page.goto("/groceries");
   const groceryCheckbox = page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME });
@@ -376,8 +282,8 @@ test("an offline grocery add is durably queued for its owner", async () => {
 });
 
 test("a bypassed identity change isolates the incoming account and keeps the queue dormant", async () => {
-  await useCookies(cookiesB);
-  server = await startServer();
+  await offline.selectIdentity("b");
+  await offline.transition("live");
 
   await page.goto("/groceries");
 
@@ -396,7 +302,7 @@ test("a bypassed identity change isolates the incoming account and keeps the que
 });
 
 test("the dormant queue replays only once its owner signs in again", async () => {
-  await useCookies(cookiesA);
+  await offline.selectIdentity("a");
   await page.goto("/groceries");
 
   // Reconnect sequence as A: the dormant create drains from the queue…

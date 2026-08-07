@@ -15,25 +15,18 @@
  *    default text un-pins it, so a save can never freeze prompts again.
  */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import type { BrowserContext, Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
-import { Client } from "pg";
+import { join, resolve } from "node:path";
+import type { Page } from "@playwright/test";
 
-import type { E2eServer, FakeAIProvider, SessionCookies } from "./harness";
-import { E2E_BASE_URL, e2eDatabaseUrl, FAKE_AI_PORT, REPO_ROOT, USER_A } from "./env";
-import {
-  createFakeAIProvider,
-  editPrompts,
-  openPromptsPanel,
-  setAutomaticEnrichment,
-  signIn,
-  startServer,
-  submitPasteImport,
-} from "./harness";
+import type { AIE2EStack, FakeAIProvider } from "./fixture";
+import { expect, test } from "./fixture";
+import { submitPasteImport } from "./import-support";
+import { editPrompts, openPromptsPanel, readPromptsRow, writePromptsRow } from "./prompt-support";
+import { setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
+const REPO_ROOT = resolve(import.meta.dirname, "../../../../../");
 const PROMPTS_DIR = join(REPO_ROOT, "packages", "shared-server", "src", "ai", "prompts");
 
 /** The default text this build ships for a prompt, whitespace-normalized. */
@@ -45,9 +38,12 @@ function currentDefault(file: string): string {
 function oldestRetiredDefault(field: string): string {
   const retired = JSON.parse(
     readFileSync(join(PROMPTS_DIR, "retired-defaults.json"), "utf-8")
-  ) as Record<string, string[]>;
+  ) as Record<string, string[] | undefined>;
+  const oldest = retired[field]?.at(-1);
 
-  return retired[field].at(-1)!;
+  if (!oldest) throw new Error(`retired-defaults.json records no retired default for "${field}".`);
+
+  return oldest;
 }
 
 const FIELD_LABELS = {
@@ -56,36 +52,6 @@ const FIELD_LABELS = {
   nutritionEstimation: "Nutrition Estimation Prompt",
   autoTagging: "Auto-Tagging Prompt",
 } as const;
-
-async function plantPromptsRow(value: Record<string, unknown>): Promise<void> {
-  const db = new Client({ connectionString: e2eDatabaseUrl() });
-
-  await db.connect();
-
-  try {
-    await db.query(`update server_config set value = $1::jsonb where key = 'prompts'`, [
-      JSON.stringify(value),
-    ]);
-  } finally {
-    await db.end();
-  }
-}
-
-async function readPromptsRow(): Promise<Record<string, unknown>> {
-  const db = new Client({ connectionString: e2eDatabaseUrl() });
-
-  await db.connect();
-
-  try {
-    const result = await db.query<{ value: Record<string, unknown> }>(
-      `select value from server_config where key = 'prompts'`
-    );
-
-    return result.rows[0]!.value;
-  } finally {
-    await db.end();
-  }
-}
 
 /** Extraction output for imports driven through the fake provider. */
 function bareRecipe(name: string) {
@@ -116,34 +82,25 @@ const CUSTOM_EXTRACTION =
   "Extract exactly one recipe and nothing else (custom extraction sentinel).";
 
 let ai: FakeAIProvider;
-let server: E2eServer;
-let context: BrowserContext;
+let stack: AIE2EStack;
 let page: Page;
-let cookies: SessionCookies;
 
-test.beforeAll(async ({ browser }) => {
-  ai = createFakeAIProvider({ port: FAKE_AI_PORT });
-  await ai.start();
-
-  server = await startServer();
-  cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
+test.beforeEach(async ({ aiStack, page: fixturePage }) => {
+  stack = aiStack;
+  ai = aiStack.ai;
+  page = fixturePage;
+  await writePromptsRow({});
+  await setAutomaticEnrichment({});
 });
 
-test.afterAll(async () => {
+test.afterEach(async () => {
   await setAutomaticEnrichment({}).catch(() => undefined);
-  await context?.close();
-  await server?.stop().catch(() => undefined);
-  await ai?.stop().catch(() => undefined);
+  await writePromptsRow({}).catch(() => undefined);
 });
 
 /** The upgrade moment: the same database, a fresh server boot. */
 async function restartServer(): Promise<void> {
-  await server.stop();
-  server = await startServer();
+  await stack.server.restartServer();
 }
 
 /** Poll a prompt textarea until it carries the expected text (the form fills asynchronously from the admin config query). */
@@ -189,7 +146,7 @@ test("an upgrade releases prompts frozen by a pre-0.20 save and keeps the real c
     expect(legacyRow[field]).not.toBe(currentDefault(fileFor(field)));
   }
 
-  await plantPromptsRow(legacyRow);
+  await writePromptsRow(legacyRow);
   await restartServer();
 
   const panel = await openPromptsPanel(page);
@@ -226,6 +183,8 @@ test("saving pins only real edits, and reverting to the default text un-pins", a
   // and writes a genuine auto-tagging edit: only the edit may be stored.
   const CUSTOM_TAGGING = "Tag with at most three nouns (custom tagging sentinel).";
 
+  await writePromptsRow({ recipeExtraction: CUSTOM_EXTRACTION });
+
   await editPrompts(page, {
     [FIELD_LABELS.recipeExtraction]: currentDefault(fileFor("recipeExtraction")),
     [FIELD_LABELS.autoTagging]: CUSTOM_TAGGING,
@@ -243,12 +202,15 @@ test("saving pins only real edits, and reverting to the default text un-pins", a
 
 /** Prompt file base name for a config field. */
 function fileFor(field: string): string {
-  const files: Record<string, string> = {
+  const files: Record<string, string | undefined> = {
     recipeExtraction: "recipe-extraction",
     unitConversion: "unit-conversion",
     nutritionEstimation: "nutrition-estimation",
     autoTagging: "auto-tagging",
   };
+  const file = files[field];
 
-  return files[field];
+  if (!file) throw new Error(`No prompt file is mapped for the config field "${field}".`);
+
+  return file;
 }

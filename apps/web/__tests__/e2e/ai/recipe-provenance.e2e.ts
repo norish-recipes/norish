@@ -10,19 +10,13 @@
  * database, Redis, BullMQ workers, repositories, authorized mutation layer,
  * realtime connection, and UI are all exercised.
  */
-import type { AIE2EStack } from "@/e2e-ai/harness";
 import type { BrowserContext, Page } from "@playwright/test";
-import { E2E_BASE_URL, USER_A } from "@/e2e-ai/env";
-import {
-  bootStack,
-  findCuisineIdByName,
-  readStoredProvenance,
-  setAutomaticEnrichment,
-  signIn,
-  submitPasteImport,
-  supplyProvenance,
-} from "@/e2e-ai/harness";
-import { expect, test } from "@playwright/test";
+
+import type { AIE2EStack } from "./fixture";
+import { expect, test } from "./fixture";
+import { submitPasteImport } from "./import-support";
+import { findCuisineIdByName, readStoredProvenance, supplyProvenance } from "./provenance-support";
+import { setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -63,26 +57,18 @@ function provenanceClaim(overrides: Record<string, unknown> = {}) {
   };
 }
 
-let stack: AIE2EStack | null = null;
+let stack: AIE2EStack;
 let context: BrowserContext;
 let page: Page;
 
-test.beforeAll(async ({ browser }) => {
-  stack = await bootStack();
-
-  const cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
+test.beforeEach(({ aiStack, context: fixtureContext, page: fixturePage }) => {
+  stack = aiStack;
+  context = fixtureContext;
+  page = fixturePage;
 });
 
-test.afterAll(async () => {
-  // Leave the switches off so this file cannot change what another spec enrols.
+test.afterEach(async () => {
   await setAutomaticEnrichment({}).catch(() => undefined);
-  await context?.close();
-  await stack?.stop().catch(() => undefined);
-  stack = null;
 });
 
 async function openRecipe(name: string): Promise<void> {

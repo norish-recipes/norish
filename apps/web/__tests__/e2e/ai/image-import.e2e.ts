@@ -11,12 +11,12 @@
  * the wire shape asserted here must survive extraction moving packages and
  * the runtime taking over the provider call.
  */
-import type { BrowserContext, Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
-import type { AIE2EStack } from "./harness";
-import { E2E_BASE_URL, USER_A } from "./env";
-import { bootStack, signIn, submitImageImport } from "./harness";
+import type { AIE2EStack } from "./fixture";
+import { expect, test } from "./fixture";
+import { submitImageImport } from "./import-support";
+import { setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -45,28 +45,17 @@ const IMAGE_RECIPE = {
   nutrition: { calories: null, fat: null, carbs: null, protein: null },
 };
 
-let stack: AIE2EStack | null = null;
-let context: BrowserContext;
+let stack: AIE2EStack;
 let page: Page;
 
-test.beforeAll(async ({ browser }) => {
-  stack = await bootStack();
-
-  const cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
-});
-
-test.afterAll(async () => {
-  await context?.close();
-  await stack?.stop().catch(() => undefined);
-  stack = null;
+test.beforeEach(async ({ aiStack, page: fixturePage }) => {
+  stack = aiStack;
+  page = fixturePage;
+  await setAutomaticEnrichment({});
 });
 
 test("a browser image import reaches the provider as a vision request and persists the result", async () => {
-  const ai = stack!.ai;
+  const ai = stack.ai;
 
   ai.control.succeedWith(IMAGE_RECIPE);
 

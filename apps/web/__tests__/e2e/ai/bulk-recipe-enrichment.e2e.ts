@@ -10,22 +10,15 @@
  * Data still wins, and nothing at all runs from a cancelled confirmation or a
  * server whose AI is disabled.
  */
-import type { BrowserContext, Locator, Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { Client } from "pg";
 
-import type { AIE2EStack } from "./harness";
-import { E2E_BASE_URL, e2eDatabaseUrl, USER_A } from "./env";
-import {
-  bootStack,
-  findCuisineIdByName,
-  readStoredCategories,
-  readStoredProvenance,
-  setAutomaticEnrichment,
-  signIn,
-  submitPasteImport,
-  supplyProvenance,
-} from "./harness";
+import type { AIE2EStack } from "./fixture";
+import { databaseUrl } from "./database";
+import { expect, test } from "./fixture";
+import { submitPasteImport } from "./import-support";
+import { findCuisineIdByName, readStoredProvenance, supplyProvenance } from "./provenance-support";
+import { readStoredCategories, setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -63,13 +56,12 @@ function suppliedRecipe(name: string) {
   };
 }
 
-let stack: AIE2EStack | null = null;
-let context: BrowserContext;
+let stack: AIE2EStack;
 let page: Page;
 
 /** Flip the stored AI enablement directly, the way setAutomaticEnrichment does. */
 async function setAIEnabled(enabled: boolean): Promise<void> {
-  const db = new Client({ connectionString: e2eDatabaseUrl() });
+  const db = new Client({ connectionString: databaseUrl() });
 
   await db.connect();
 
@@ -82,6 +74,18 @@ async function setAIEnabled(enabled: boolean): Promise<void> {
     );
   } finally {
     await db.end();
+  }
+}
+
+async function deleteAllRecipes(): Promise<void> {
+  const database = new Client({ connectionString: databaseUrl() });
+
+  await database.connect();
+
+  try {
+    await database.query("delete from recipes");
+  } finally {
+    await database.end();
   }
 }
 
@@ -118,15 +122,11 @@ async function openBulkPanel(): Promise<Locator> {
   return page.locator(`[id="${panelId}"]`);
 }
 
-test.beforeAll(async ({ browser }) => {
-  stack = await bootStack();
-
-  const cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
-
+test.beforeEach(async ({ aiStack, page: fixturePage }) => {
+  stack = aiStack;
+  page = fixturePage;
+  await deleteAllRecipes();
+  await setAIEnabled(true);
   // Two recipes imported while every automatic switch is off, so creation-time
   // enrollment cannot contribute any of the requests asserted below.
   await setAutomaticEnrichment({});
@@ -134,12 +134,9 @@ test.beforeAll(async ({ browser }) => {
   await importRecipe("Bulk Supplied Stew", suppliedRecipe("Bulk Supplied Stew"));
 });
 
-test.afterAll(async () => {
+test.afterEach(async () => {
   await setAIEnabled(true).catch(() => undefined);
   await setAutomaticEnrichment({}).catch(() => undefined);
-  await context?.close();
-  await stack?.stop().catch(() => undefined);
-  stack = null;
 });
 
 test("with AI disabled the action refuses before queueing anything", async () => {
@@ -185,6 +182,8 @@ test("cancelling the confirmation runs nothing", async () => {
 });
 
 test("a confirmed run fills gaps through enabled kinds and defers to supplied data", async () => {
+  await setAutomaticEnrichment({ autoCategorization: true });
+
   const ai = stack!.ai;
 
   ai.control.reset();

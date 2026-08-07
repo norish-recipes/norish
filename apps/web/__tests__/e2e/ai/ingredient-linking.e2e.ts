@@ -12,18 +12,13 @@
  * database, Redis, BullMQ workers, repositories, authorized mutation layer,
  * realtime connection, and UI are all exercised.
  */
-import type { AIE2EStack } from "@/e2e-ai/harness";
 import type { BrowserContext, Page } from "@playwright/test";
-import { E2E_BASE_URL, USER_A } from "@/e2e-ai/env";
-import {
-  bootStack,
-  readStoredStepIngredients,
-  setAutomaticEnrichment,
-  signIn,
-  submitPasteImport,
-  supplyStepIngredient,
-} from "@/e2e-ai/harness";
-import { expect, test } from "@playwright/test";
+
+import type { AIE2EStack } from "./fixture";
+import { expect, test } from "./fixture";
+import { submitPasteImport } from "./import-support";
+import { readStoredStepIngredients, supplyStepIngredient } from "./ingredient-linking-support";
+import { setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -73,26 +68,18 @@ const LINKING_CLAIM = {
   ],
 };
 
-let stack: AIE2EStack | null = null;
+let stack: AIE2EStack;
 let context: BrowserContext;
 let page: Page;
 
-test.beforeAll(async ({ browser }) => {
-  stack = await bootStack();
-
-  const cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
+test.beforeEach(({ aiStack, context: fixtureContext, page: fixturePage }) => {
+  stack = aiStack;
+  context = fixtureContext;
+  page = fixturePage;
 });
 
-test.afterAll(async () => {
-  // Leave the switches off so this file cannot change what another spec enrols.
+test.afterEach(async () => {
   await setAutomaticEnrichment({}).catch(() => undefined);
-  await context?.close();
-  await stack?.stop().catch(() => undefined);
-  stack = null;
 });
 
 async function openRecipe(name: string): Promise<void> {
@@ -141,12 +128,18 @@ async function eventuallyOnRecipe(assertion: () => Promise<void>): Promise<void>
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 }
 
-test("a manual run links an aggregate step and computes the fractional amount", async () => {
+async function createLinkedRecipe(name: string): Promise<void> {
   await setAutomaticEnrichment({});
-
-  await importRecipe("Linked Spice Stew");
-  await openRecipe("Linked Spice Stew");
+  await importRecipe(name);
+  await openRecipe(name);
   await runManualLinking();
+  await eventuallyOnRecipe(async () => {
+    await expect(page.getByText("25 milliliters water").first()).toBeVisible({ timeout: 3_000 });
+  });
+}
+
+test("a manual run links an aggregate step and computes the fractional amount", async () => {
+  await createLinkedRecipe("Linked Spice Stew");
 
   await eventuallyOnRecipe(async () => {
     // The aggregate case: "add the spices" carries every spice line, resolved
@@ -182,7 +175,7 @@ test("a manual run links an aggregate step and computes the fractional amount", 
 });
 
 test("cooking mode presents the active step's ingredients with resolved amounts", async () => {
-  await openRecipe("Linked Spice Stew");
+  await createLinkedRecipe("Cooking Mode Linked Stew");
 
   await page.getByRole("button", { name: "Cook", exact: true }).first().click();
 
@@ -196,7 +189,7 @@ test("cooking mode presents the active step's ingredients with resolved amounts"
 });
 
 test("a share-link recipient sees the same amounts beneath steps", async () => {
-  await openRecipe("Linked Spice Stew");
+  await createLinkedRecipe("Shared Linked Stew");
 
   await page.getByRole("button", { name: "Actions" }).click();
   await page.getByRole("menuitem", { name: "Share" }).click();
@@ -212,7 +205,7 @@ test("a share-link recipient sees the same amounts beneath steps", async () => {
   expect(shareUrl).toContain("/share/");
 
   // A fresh, unauthenticated context: the recipient has no session.
-  const anonymous = await context.browser()!.newContext({ baseURL: E2E_BASE_URL });
+  const anonymous = await context.browser()!.newContext({ baseURL: stack.baseURL });
   const shared = await anonymous.newPage();
 
   await shared.goto(shareUrl!);
@@ -222,7 +215,9 @@ test("a share-link recipient sees the same amounts beneath steps", async () => {
 });
 
 test("attaching from the picker asks for the amount, and Escape keeps the whole line", async () => {
-  await openRecipe("Linked Spice Stew");
+  const recipeName = "Editor Linked Stew";
+
+  await createLinkedRecipe(recipeName);
 
   const recipeId = new URL(page.url()).pathname.split("/").pop();
 
@@ -275,13 +270,18 @@ test("attaching from the picker asks for the amount, and Escape keeps the whole 
   // pepper stays the whole line. The editor's save rewrites the active
   // system's steps positionally from 0, so "Serve." is stepOrder 2 now —
   // the import's 1-based numbering survives only on the untouched system.
-  const stored = await readStoredStepIngredients("Linked Spice Stew");
-  const serveStep = stored.filter((row) => row.systemUsed === "metric" && row.stepOrder === 2);
-
-  expect(serveStep).toEqual([
-    { systemUsed: "metric", stepOrder: 2, ingredientOrder: 0, share: 0.5 },
-    { systemUsed: "metric", stepOrder: 2, ingredientOrder: 1, share: 1 },
-  ]);
+  await expect
+    .poll(
+      async () =>
+        (await readStoredStepIngredients(recipeName)).filter(
+          (row) => row.systemUsed === "metric" && row.stepOrder === 2
+        ),
+      { timeout: 30_000, intervals: [250, 500, 1_000] }
+    )
+    .toEqual([
+      { systemUsed: "metric", stepOrder: 2, ingredientOrder: 0, share: 0.5 },
+      { systemUsed: "metric", stepOrder: 2, ingredientOrder: 1, share: 1 },
+    ]);
 });
 
 test("gap-filling leaves a hand-attached chip untouched while bare steps are filled", async () => {

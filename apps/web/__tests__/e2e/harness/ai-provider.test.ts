@@ -13,8 +13,8 @@ import { APICallError, generateText, Output } from "ai";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import type { FakeAIProvider } from "../ai-provider";
-import { buildChatCompletionBody, createFakeAIProvider } from "../ai-provider";
+import type { FakeAIProvider } from "./ai-provider";
+import { buildChatCompletionBody, createFakeAIProvider } from "./ai-provider";
 
 const schema = z
   .object({
@@ -164,5 +164,43 @@ describe("invalid structured output", () => {
 
     expect(error).not.toBeNull();
     expect(provider.control.requestCount).toBe(1);
+  });
+});
+
+describe("cleanup", () => {
+  it("releases a held response when the provider stops", async () => {
+    const heldProvider = createFakeAIProvider();
+
+    await heldProvider.start();
+    heldProvider.control.succeedWith({
+      originCountryCode: null,
+      cuisines: [],
+      note: "Released during cleanup.",
+    });
+    heldProvider.control.hold();
+
+    const response = fetch(`${heldProvider.url}/v1/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ model: "test-model", messages: [] }),
+    });
+
+    while (heldProvider.control.requestCount === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    const stopping = heldProvider.stop();
+    const stoppedPromptly = await Promise.race([
+      stopping.then(() => true),
+      new Promise<false>((resolve) => setTimeout(() => resolve(false), 500)),
+    ]);
+
+    try {
+      expect(stoppedPromptly).toBe(true);
+    } finally {
+      heldProvider.control.release();
+      await stopping;
+      await response.catch(() => undefined);
+    }
   });
 });

@@ -11,20 +11,13 @@
  * auto-categorization and allergy detection, and that image extraction runs
  * under its own prompt rather than a rewritten copy of the webpage one.
  */
-import type { BrowserContext, Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
-import type { AIE2EStack, SessionCookies } from "./harness";
-import { E2E_BASE_URL, USER_A } from "./env";
-import {
-  bootStack,
-  editPrompts,
-  setAutomaticEnrichment,
-  signIn,
-  submitImageImport,
-  submitPasteImport,
-  supplyUserAllergies,
-} from "./harness";
+import type { AIE2EStack, SessionCookies } from "./fixture";
+import { expect, test } from "./fixture";
+import { submitImageImport, submitPasteImport } from "./import-support";
+import { editPrompts, writePromptsRow } from "./prompt-support";
+import { setAutomaticEnrichment, supplyUserAllergies } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -53,26 +46,25 @@ function bareRecipe(name: string) {
   };
 }
 
-let stack: AIE2EStack | null = null;
-let context: BrowserContext;
+let stack: AIE2EStack | undefined;
 let page: Page;
-let cookies: SessionCookies;
+let cookies: SessionCookies | undefined;
 
-test.beforeAll(async ({ browser }) => {
-  stack = await bootStack();
-
-  cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
+test.beforeEach(async ({ aiStack, page: fixturePage }) => {
+  stack = aiStack;
+  cookies = aiStack.ownerCookies;
+  page = fixturePage;
+  await writePromptsRow({});
+  await setAutomaticEnrichment({});
+  await supplyUserAllergies(stack.baseURL, cookies, []);
 });
 
-test.afterAll(async () => {
+test.afterEach(async () => {
   await setAutomaticEnrichment({}).catch(() => undefined);
-  await context?.close();
-  await stack?.stop().catch(() => undefined);
-  stack = null;
+  await writePromptsRow({}).catch(() => undefined);
+  if (stack && cookies) {
+    await supplyUserAllergies(stack.baseURL, cookies, []).catch(() => undefined);
+  }
 });
 
 /** The composed text of every captured request, oldest first. */
@@ -110,7 +102,7 @@ test("an edited allergy-detection prompt reaches the model, with the household's
   const SENTINEL = "TREAT CROSS-CONTAMINATION AS PRESENCE (allergy sentinel).";
   const ai = stack!.ai;
 
-  await supplyUserAllergies(cookies, ["peanut"]);
+  await supplyUserAllergies(stack!.baseURL, cookies!, ["peanut"]);
   await editPrompts(page, { "Allergy Detection Prompt": SENTINEL });
   await setAutomaticEnrichment({ allergyDetection: true });
 

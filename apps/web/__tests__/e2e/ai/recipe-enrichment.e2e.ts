@@ -7,17 +7,12 @@
  * server, database, Redis, BullMQ workers, repositories, authorized mutation
  * layer, realtime connection, and UI are all exercised.
  */
-import type { AIE2EStack } from "@/e2e-ai/harness";
 import type { BrowserContext, Page } from "@playwright/test";
-import { E2E_BASE_URL, USER_A } from "@/e2e-ai/env";
-import {
-  bootStack,
-  readStoredCategories,
-  setAutomaticEnrichment,
-  signIn,
-  submitPasteImport,
-} from "@/e2e-ai/harness";
-import { expect, test } from "@playwright/test";
+
+import type { AIE2EStack } from "./fixture";
+import { expect, test } from "./fixture";
+import { submitPasteImport } from "./import-support";
+import { readStoredCategories, setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -55,27 +50,18 @@ function suppliedRecipe(name: string) {
   };
 }
 
-let stack: AIE2EStack | null = null;
+let stack: AIE2EStack;
 let context: BrowserContext;
 let page: Page;
 
-test.beforeAll(async ({ browser }) => {
-  stack = await bootStack();
-
-  const cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
+test.beforeEach(({ aiStack, context: fixtureContext, page: fixturePage }) => {
+  stack = aiStack;
+  context = fixtureContext;
+  page = fixturePage;
 });
 
-test.afterAll(async () => {
-  // Leave the switches off so this file cannot change what another spec's
-  // imports enrol.
+test.afterEach(async () => {
   await setAutomaticEnrichment({}).catch(() => undefined);
-  await context?.close();
-  await stack?.stop().catch(() => undefined);
-  stack = null;
 });
 
 /**
@@ -124,8 +110,16 @@ async function openActions(): Promise<void> {
 /** Create through the ordinary recipe form, then wait for the detail route. */
 async function createManuallyAndOpen(name: string): Promise<void> {
   await page.goto("/");
-  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Create" }).click();
+
+  let attempt = 0;
+  await expect(async () => {
+    if (attempt++ > 0) {
+      await page.reload();
+    }
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Create" }).click({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
 
   await page.getByLabel("Recipe Name").fill(name);
   await page.getByPlaceholder("e.g., 2 cups flour").fill("200 g pinto beans");

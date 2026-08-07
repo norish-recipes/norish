@@ -33,7 +33,7 @@ iPhone 16e Simulator, iOS 26.2, Mobile Safari against the production bundle on
 
 So the Outbox is intact and replay is correct; the Offline read view is what regresses.
 
-The desktop Playwright equivalent — `apps/web/e2e/offline.e2e.ts`, "an offline grocery toggle
+The desktop Playwright equivalent — `apps/web/__tests__/e2e/offline/offline.e2e.ts`, "an offline grocery toggle
 survives navigation and a document cold launch" — **passes**. Whatever the mechanism is, the
 Chromium suite does not currently exercise it, and part of this ticket is finding a seam that does.
 

@@ -1,5 +1,5 @@
 /**
- * Fake AI provider for the production-like AI E2E harness.
+ * Deterministic external-model adapter for production-like browser tests.
  *
  * This is the ONLY boundary the harness replaces. The production server is
  * configured (through its normal env-seeded AI config) to use the real
@@ -307,7 +307,11 @@ export function createFakeAIProvider(options: { port?: number } = {}): FakeAIPro
       if (!active) return;
 
       server = null;
-      await new Promise<void>((resolve) => active.close(() => resolve()));
+      controller.release();
+      await new Promise<void>((resolve) => {
+        active.close(() => resolve());
+        active.closeAllConnections();
+      });
     },
   };
 }

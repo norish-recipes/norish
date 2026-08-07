@@ -9,15 +9,15 @@
  * replaced — tRPC, the queue worker, the repository, realtime, and the UI are
  * all genuinely exercised.
  *
- * This is the harness's own acceptance test; the Recipe Enrichment scenarios
- * reuse the same `bootStack`/`signIn` seam.
+ * This is the shared harness's own acceptance test; Recipe Enrichment uses the
+ * same worker fixture and fresh authenticated page seam.
  */
-import type { BrowserContext, Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
-import type { AIE2EStack } from "./harness";
-import { E2E_BASE_URL, USER_A } from "./env";
-import { bootStack, signIn, submitPasteImport } from "./harness";
+import type { AIE2EStack } from "./fixture";
+import { expect, test } from "./fixture";
+import { submitPasteImport } from "./import-support";
+import { setAutomaticEnrichment } from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -46,28 +46,17 @@ const SMOKE_RECIPE = {
   nutrition: { calories: 320, fat: 6, carbs: 48, protein: 16 },
 };
 
-let stack: AIE2EStack | null = null;
-let context: BrowserContext;
+let stack: AIE2EStack;
 let page: Page;
 
-test.beforeAll(async ({ browser }) => {
-  stack = await bootStack();
-
-  const cookies = await signIn(USER_A);
-
-  context = await browser.newContext({ baseURL: E2E_BASE_URL });
-  await context.addCookies(cookies);
-  page = await context.newPage();
-});
-
-test.afterAll(async () => {
-  await context?.close();
-  await stack?.stop().catch(() => undefined);
-  stack = null;
+test.beforeEach(async ({ aiStack, page: fixturePage }) => {
+  stack = aiStack;
+  page = fixturePage;
+  await setAutomaticEnrichment({});
 });
 
 test("a browser AI paste import receives the controlled provider response", async () => {
-  const ai = stack!.ai;
+  const ai = stack.ai;
 
   ai.control.succeedWith(SMOKE_RECIPE);
 

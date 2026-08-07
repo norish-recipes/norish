@@ -70,18 +70,19 @@ jobs:
         env:
           NODE_ENV: test
 
-      # The one build. Note what does *not* follow it: the e2e steps below call
-      # the @norish/web scripts directly rather than the root `test:e2e`, which
+      # The one build. Note what does *not* follow it: the e2e step below calls
+      # the @norish/web script directly rather than the root `test:e2e`, which
       # prefixes `build:web && build:server` — precisely the build this step
-      # just did. The suites boot dist-server/index.mjs (apps/web/e2e/env.ts),
-      # which is what `build:server` emits here.
+      # just did. The suites boot dist-server/index.mjs (the harness at
+      # apps/web/__tests__/e2e/harness/production-stack.ts), which is what
+      # `build:server` emits here.
       #
       # That reuse leans on turbo actually running @norish/web#build. It always
       # does today: the task graph has no remote cache and each run starts from
       # a bare checkout. If remote caching is ever turned on, add ".next/**" to
       # the build task's `outputs` in turbo.json first — it is missing there, so
       # a cache replay would restore dist-server/ but leave .next/ absent and
-      # the e2e steps would boot against nothing.
+      # the browser gate would boot against nothing.
       - name: Build
         id: build
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
@@ -106,18 +107,12 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: pnpm --filter @norish/web run test:e2e
 
-      - name: AI E2E
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: pnpm --filter @norish/web run test:e2e:ai
-
       - name: Upload traces and results on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: e2e-results
-          path: |
-            apps/web/e2e/.results
-            apps/web/e2e-ai/.results
+          path: apps/web/__tests__/e2e/.results
           retention-days: 7
           if-no-files-found: ignore
           # Everything lives under dot-directories, which the action skips
