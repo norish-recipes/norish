@@ -671,6 +671,19 @@
             Norish-authored fingerprint beside Obscura's.
           </p>
         </li>
+        <li>
+          <a href="ui/0020-norish-does-not-fake-glass.md"
+            >ADR-0020 — Norish does not fake glass</a
+          >
+          <p>
+            <b>Accepted.</b> Every <code>backdrop-blur</code> and see-through fill is removed
+            from the web app; anything that floats is an opaque object with a surface fill,
+            border and shadow, and the four <code>cssGlassBackdrop*</code> tokens are deleted so
+            there is nothing left to reach for. Rejects the narrower rule of keeping blur over
+            photos and video, which is the concession that seeded the pattern everywhere else.
+            Scoped to the web: native platform blur is a real compositor effect and is untouched.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>
