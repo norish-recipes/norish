@@ -1,17 +1,12 @@
-// TODO: Figure out what tokens are actually used. Remove unused ones.
-
-export const cssGlassBackdrop = "dark:bg-black/70 bg-white/70 backdrop-blur-sm";
+// The shared glass tokens are gone on purpose: Norish does not fake glass
+// (ADR-0020), and their absence is the enforcement — with no token to reach
+// for, re-adding blur means writing it out by hand, which the design
+// invariants suite catches.
 
 export const APP_MAIN_HORIZONTAL_PADDING_CLASS = "px-4 md:px-6";
 
-export const cssGlassBackdropChip = "bg-black/45 backdrop-blur-sm";
-
 export const hoverInputIcon =
   "w-5 h-5 text-muted group-hover:text-foreground group-focus-within:text-accent transition-colors";
-
-export const cssGlassBackdropPanel = "dark:bg-black/75 bg-white/80 backdrop-blur-sm";
-
-export const cssGlassBackdropShadow = "shadow-[0_12px_36px_-12px_rgba(0,0,0,0.45)]";
 
 // A control sitting on real media is solid near-black: it carries its own
 // contrast instead of borrowing whatever plays underneath (ADR-0020).
