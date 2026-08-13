@@ -1,9 +1,9 @@
 "use client";
 
-import type { RecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
+import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
 import type { Key } from "react";
 import { Segment } from "@/components/ui/segment";
-import { useRecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
+import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
 import { ListBulletIcon, Squares2X2Icon } from "@heroicons/react/20/solid";
 import { useTranslations } from "next-intl";
 

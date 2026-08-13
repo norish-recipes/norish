@@ -9,9 +9,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
-import { useRecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
