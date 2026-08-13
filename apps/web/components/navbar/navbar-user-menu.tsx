@@ -31,7 +31,7 @@ interface NavbarUserMenuProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: TriggerVariant;
-  /** "md" is the standalone desktop trigger; "sm" fits as an item inside the mobile bar. */
+  /** "md" is the standalone desktop trigger; "sm" sits in the mobile bar's circle. */
   size?: "sm" | "md";
 }
 export default function NavbarUserMenu({
@@ -95,11 +95,11 @@ export default function NavbarUserMenu({
           <Button
             isIconOnly
             aria-label="Open user menu"
-            className={`relative rounded-full p-0 ${size === "sm" ? "h-9 w-9 min-w-9" : "h-13 w-13"}`}
+            className={`relative rounded-full p-0 ${size === "sm" ? "h-11 w-11 min-w-11" : "h-13 w-13"}`}
             variant="ghost"
           >
             <UserAvatar
-              className={`cursor-pointer ${size === "sm" ? "size-9 text-sm" : "size-13 text-lg"}`}
+              className={`cursor-pointer ${size === "sm" ? "size-11 text-base" : "size-13 text-lg"}`}
               email={user.email}
               image={user.image}
               name={user.name}

@@ -5,7 +5,12 @@ import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
-import { CalendarDaysIcon, ClipboardDocumentListIcon, HomeIcon } from "@heroicons/react/20/solid";
+import {
+  CalendarDaysIcon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+  HomeIcon,
+} from "@heroicons/react/20/solid";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
@@ -18,8 +23,15 @@ const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
   "/calendar": "calendar",
 };
 
+// Both floating pieces share one solid treatment on the chrome tokens — the
+// opposite theme's ground — so the bar contrasts with the cards scrolling
+// under it (ADR-0020).
+const barSurfaceClassName =
+  "bg-chrome border-chrome-border rounded-full border shadow-[0_8px_28px_-10px_rgba(0,0,0,0.3)]";
+
 export const MobileNav = () => {
   const tNav = useTranslations("navbar.nav");
+  const tMenu = useTranslations("navbar.userMenu");
   const pathname = usePathname();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -61,60 +73,78 @@ export const MobileNav = () => {
       </AnimatePresence>
 
       <motion.div
-        animate={{
-          y: isVisible ? 0 : 100,
-          opacity: isVisible ? 1 : 0,
-        }}
+        animate={{ scale: isVisible ? 1 : 0.8 }}
         className="fixed inset-x-0 z-[60] px-4 md:hidden"
         initial={false}
-        style={{ bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)" }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        style={{
+          bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)",
+          originY: 1,
+        }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
       >
-        {/* One solid object: nav items and the account avatar share the bar (ADR-0020) */}
-        <div className="border-border bg-surface flex h-13 items-center rounded-full border px-3 shadow-[0_8px_28px_-10px_rgba(0,0,0,0.3)]">
-          <ul className="flex w-full items-center justify-around text-[11px]">
-            {siteConfig.navItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/" && pathname?.startsWith(item.href + "/"));
-              const Icon =
-                item.href === "/"
-                  ? HomeIcon
-                  : item.href.startsWith("/calendar")
-                    ? CalendarDaysIcon
-                    : ClipboardDocumentListIcon;
+        <div className="flex items-center justify-center gap-3">
+          {/* Nav items - icon height, full width */}
+          <div className={`flex h-12 flex-1 items-center px-3 ${barSurfaceClassName}`}>
+            <ul className="flex w-full items-center justify-around">
+              {siteConfig.navItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/" && pathname?.startsWith(item.href + "/"));
+                const Icon =
+                  item.href === "/"
+                    ? HomeIcon
+                    : item.href.startsWith("/calendar")
+                      ? CalendarDaysIcon
+                      : ClipboardDocumentListIcon;
+                const label = tNav(navLabelKeys[item.href] ?? "home");
 
-              return (
-                <li key={item.href}>
-                  <NextLink
-                    className={`flex flex-col items-center justify-center gap-1 rounded-full px-4 py-1.5 transition-colors ${
-                      isActive
-                        ? "bg-accent-soft text-accent font-semibold"
-                        : "text-muted hover:text-foreground hover:bg-surface-secondary"
-                    }`}
-                    href={item.href}
-                    onClick={(e) => {
-                      if (item.href === "/" && pathname === "/") {
-                        e.preventDefault();
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    }}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="leading-none">{tNav(navLabelKeys[item.href] ?? "home")}</span>
-                  </NextLink>
-                </li>
-              );
-            })}
+                return (
+                  <li key={item.href}>
+                    <NextLink
+                      aria-label={label}
+                      className={`flex items-center justify-center rounded-full p-2.5 transition-colors ${
+                        isActive
+                          ? "bg-accent-soft text-accent"
+                          : "text-chrome-muted hover:text-chrome-foreground hover:bg-chrome-hover"
+                      }`}
+                      href={item.href}
+                      title={label}
+                      onClick={(e) => {
+                        if (item.href === "/" && pathname === "/") {
+                          e.preventDefault();
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </NextLink>
+                  </li>
+                );
+              })}
 
-            <li className="flex items-center justify-center">
-              <NavbarUserMenu
-                isOpen={userMenuOpen}
-                size="sm"
-                onOpenChange={setUserMenuOpen}
-              />
-            </li>
-          </ul>
+              <li>
+                <NextLink
+                  aria-label={tMenu("settings.title")}
+                  className={`flex items-center justify-center rounded-full p-2.5 transition-colors ${
+                    pathname?.startsWith("/settings")
+                      ? "bg-accent-soft text-accent"
+                      : "text-chrome-muted hover:text-chrome-foreground hover:bg-chrome-hover"
+                  }`}
+                  href="/settings?tab=user"
+                  title={tMenu("settings.title")}
+                >
+                  <Cog6ToothIcon className="h-5 w-5" />
+                </NextLink>
+              </li>
+            </ul>
+          </div>
+
+          {/* User menu - its own circle beside the bar */}
+          <div
+            className={`flex h-12 w-12 shrink-0 items-center justify-center ${barSurfaceClassName}`}
+          >
+            <NavbarUserMenu isOpen={userMenuOpen} size="sm" onOpenChange={setUserMenuOpen} />
+          </div>
         </div>
       </motion.div>
     </>

@@ -44,8 +44,12 @@ export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMo
 
   const { saveScrollState, getScrollState } = useScrollRestoration(filterKey);
 
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  const [isLoadedOnce, setIsLoadedOnce] = useState(false);
+  // Seeded from `isLoading` so the skeleton is part of the very first paint —
+  // server render included. Starting at `false` and flipping in the effect
+  // below paints a blank grid for a frame or two, and on a fast network the
+  // data then pops in with no skeleton ever shown.
+  const [showSkeleton, setShowSkeleton] = useState(() => isLoading);
+  const [isLoadedOnce, setIsLoadedOnce] = useState(() => !isLoading);
   // Each tab panel mounts its own grid with the presentation fixed, so a view
   // switch swaps panels rather than re-laying out this one in place.
   const viewMode = variant;

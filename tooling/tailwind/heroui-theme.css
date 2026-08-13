@@ -21,6 +21,14 @@
     --accent-foreground: oklch(99.11% 0 0);
     --background: oklch(96.4% 0.016 88);
     --border: oklch(89.5% 0.012 86);
+    /* Floating chrome (the bottom nav, floating pills) stands on the OPPOSITE
+       theme's ground so it contrasts with the cards around it: each block
+       carries the other block's default/muted/foreground/etc. values. */
+    --chrome: oklch(27.4% 0.008 80);
+    --chrome-border: oklch(31% 0.008 80);
+    --chrome-foreground: oklch(99.11% 0.0015 150.36);
+    --chrome-hover: oklch(26.4% 0.008 80);
+    --chrome-muted: oklch(71.5% 0.011 80);
     --danger: oklch(65.32% 0.2335 13.32);
     --danger-foreground: oklch(99.11% 0 0);
     --default: oklch(93% 0.014 86);
@@ -68,6 +76,12 @@
     --accent-foreground: oklch(99.11% 0 0);
     --background: oklch(18% 0.009 80);
     --border: oklch(31% 0.008 80);
+    /* Floating chrome: the light theme's ground, see the light block. */
+    --chrome: oklch(93% 0.014 86);
+    --chrome-border: oklch(89.5% 0.012 86);
+    --chrome-foreground: oklch(21.03% 0.0015 150.36);
+    --chrome-hover: oklch(91.2% 0.013 86);
+    --chrome-muted: oklch(52.5% 0.012 80);
     --danger: oklch(59.4% 0.1973 12.21);
     --danger-foreground: oklch(99.11% 0 0);
     --default: oklch(27.4% 0.008 80);
@@ -109,6 +123,11 @@
 }
 
 @theme inline {
+  --color-chrome: var(--chrome);
+  --color-chrome-border: var(--chrome-border);
+  --color-chrome-foreground: var(--chrome-foreground);
+  --color-chrome-hover: var(--chrome-hover);
+  --color-chrome-muted: var(--chrome-muted);
   --color-nutrition-calories: var(--nutrition-calories);
   --color-nutrition-calories-soft: var(--nutrition-calories-soft);
   --color-nutrition-carbs: var(--nutrition-carbs);
