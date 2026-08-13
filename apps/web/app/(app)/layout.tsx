@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { AppShell } from "@/app/(app)/app-shell";
+import { amountDisplayPreference } from "@/lib/amount-display";
 import { todaysMealsVisibilityPreference } from "@/lib/todays-meals-visibility";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -11,6 +12,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
+      initialAmountDisplayMode={amountDisplayPreference.parse(
+        cookieStore.get(amountDisplayPreference.cookieName)?.value
+      )}
       initialTodaysMealsVisibility={todaysMealsVisibilityPreference.parse(
         cookieStore.get(todaysMealsVisibilityPreference.cookieName)?.value
       )}
