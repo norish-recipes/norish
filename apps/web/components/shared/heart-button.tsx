@@ -45,7 +45,7 @@ export default function HeartButton({
       isIconOnly
       aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
       aria-pressed={isFavorite}
-      className={`group relative transition-all duration-300 ${showBackground ? "rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/40" : ""} ${isFavorite ? "scale-100 opacity-100" : "scale-90 opacity-70 hover:scale-100 hover:opacity-100"} ${className} `}
+      className={`group relative transition-all duration-300 ${showBackground ? "bg-surface hover:bg-surface-secondary rounded-full shadow-md" : ""} ${isFavorite ? "scale-100 opacity-100" : "scale-90 opacity-70 hover:scale-100 hover:opacity-100"} ${className} `}
       size={size === "lg" ? "md" : "sm"}
       type="button"
       variant="ghost"
@@ -53,7 +53,7 @@ export default function HeartButton({
       onPress={onToggle}
     >
       <HeartIcon
-        className={` ${iconSize} drop-shadow-md transition-colors duration-300 ease-out ${isFavorite ? "text-red-500" : "text-white/80 group-hover:text-red-300"} `}
+        className={` ${iconSize} transition-colors duration-300 ease-out ${isFavorite ? "text-red-500" : "text-muted group-hover:text-red-400"} `}
       />
     </Button>
   );

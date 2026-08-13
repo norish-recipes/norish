@@ -246,7 +246,7 @@ function RecipeSectionComponent({
 
   return (
     <motion.div className="relative">
-      <div className="overflow-hidden rounded-xl transition-all duration-200">
+      <div className="border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-all duration-200">
         {/* Header */}
         <div
           className={`flex w-full items-center gap-3 px-4 py-3 ${

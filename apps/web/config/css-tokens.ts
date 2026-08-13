@@ -13,6 +13,10 @@ export const cssGlassBackdropPanel = "dark:bg-black/75 bg-white/80 backdrop-blur
 
 export const cssGlassBackdropShadow = "shadow-[0_12px_36px_-12px_rgba(0,0,0,0.45)]";
 
+// A control sitting on real media is solid near-black: it carries its own
+// contrast instead of borrowing whatever plays underneath (ADR-0020).
+export const cssMediaControl = "bg-neutral-900 text-white hover:bg-neutral-800";
+
 export const cssInputNoHover =
   "hover:!bg-white/70 dark:hover:!bg-black/70 data-[hovered=true]:!bg-white/70 dark:data-[hovered=true]:!bg-black/70 focus:!bg-white/70 dark:focus:!bg-black/70 data-[focus=true]:!bg-white/70 dark:data-[focus=true]:!bg-black/70 active:!bg-white/70 dark:active:!bg-black/70 data-[pressed=true]:!bg-white/70 dark:data-[pressed=true]:!bg-black/70 hover:!opacity-100 data-[hovered=true]:!opacity-100 transition-none";
 

@@ -21,9 +21,9 @@ const imageFallbackClassName =
   "bg-surface-secondary text-muted absolute inset-0 flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-105";
 const slotChipPositionClassName = "absolute top-2 left-2 z-20 max-w-[calc(100%-1rem)]";
 const constrainedSlotChipPositionClassName = "absolute top-2 left-2 z-20 max-w-[calc(100%-4.5rem)]";
-const slotChipClassName = "bg-overlay/85 text-foreground backdrop-blur";
+const slotChipClassName = "bg-overlay text-foreground shadow-md";
 const remainingChipClassName =
-  "absolute top-2 right-2 z-10 inline-flex w-fit bg-overlay/85 text-foreground backdrop-blur";
+  "absolute top-2 right-2 z-10 inline-flex w-fit bg-overlay text-foreground shadow-md";
 
 export default function TodayMealSlotCard({
   slot,

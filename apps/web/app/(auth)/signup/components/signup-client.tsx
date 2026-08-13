@@ -13,7 +13,7 @@ export function SignupClient({ callbackUrl = "/" }: SignupClientProps) {
   const t = useTranslations("auth.signup");
 
   return (
-    <AuthCard subtitle={t("subtitle")} title={t("title")}>
+    <AuthCard subtitle={t("subtitle")} title={t("heading")}>
       <SignupForm callbackUrl={callbackUrl} />
     </AuthCard>
   );

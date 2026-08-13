@@ -77,10 +77,8 @@ export default function RecipeTags({ tags, allergies = [] }: RecipeTagsProps) {
           return (
             <Chip
               key={t.name.toLowerCase()}
-              className={`shrink-0 ${
-                isAllergen
-                  ? "bg-warning/90 text-warning-foreground ring-warning/30 shadow-sm ring-1 backdrop-blur-md"
-                  : "bg-surface/90 text-foreground shadow-sm ring-1 ring-black/10 backdrop-blur-md dark:ring-white/15"
+              className={`shrink-0 shadow-md ${
+                isAllergen ? "bg-warning text-warning-foreground" : "bg-surface text-foreground"
               }`}
               size="sm"
               variant="soft"

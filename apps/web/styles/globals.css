@@ -1,8 +1,10 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/fira-code";
+@import "@fontsource-variable/fraunces/wght.css";
 @import "@heroui/styles";
 @import "@norish/tailwind-config/heroui-theme";
+@import "@norish/tailwind-config/marks";
 @source "../../../node_modules/@heroui/styles/dist/**/*.{css,js,ts,jsx,tsx}";
 
 @custom-variant light (&:is(:root, .light *, [data-theme="light"] *));
@@ -11,8 +13,43 @@
 @layer theme {
   :root {
     --font-inter: "Inter Variable", system-ui, sans-serif;
+    /* The landing's serif, carried in for the auth headings only. */
+    --font-fraunces: "Fraunces Variable", ui-serif, Georgia, serif;
     --font-mono:
       "Fira Code Variable", ui-monospace, "SFMono-Regular", "Menlo", "Monaco", "Consolas", monospace;
+  }
+}
+
+@theme inline {
+  --font-serif: var(--font-fraunces);
+}
+
+@layer base {
+  /* Fraunces ships a soft, slightly quirky default; dial it toward the
+     bookish end so headlines read calm rather than decorative. */
+  .font-serif {
+    font-variation-settings:
+      "SOFT" 0,
+      "WONK" 0;
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer components {
+  /* The landing's only tint: a still, barely-there warmth behind the auth
+     card. Light only — over the dark ground the same wash reads as a murky
+     glow, so dark rests on the plain background. */
+  .hero-wash {
+    background: radial-gradient(
+      58% 52% at 50% 0%,
+      color-mix(in oklch, var(--accent) 9%, transparent),
+      transparent 70%
+    );
+  }
+
+  .dark .hero-wash,
+  [data-theme="dark"] .hero-wash {
+    background: none;
   }
 }
 

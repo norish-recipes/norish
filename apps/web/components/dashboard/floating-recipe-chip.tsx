@@ -40,7 +40,7 @@ export default function FloatingRecipeChip() {
           >
             <div className="pointer-events-auto">
               <Button
-                className="h-8 min-w-16 rounded-full border border-white/20 bg-black/50 px-4 py-0 text-white shadow backdrop-blur transition-colors hover:bg-black/80 data-[hovered=true]:bg-black/80"
+                className="h-8 min-w-16 rounded-full border border-white/15 bg-neutral-900 px-4 py-0 text-white shadow-md transition-colors hover:bg-neutral-800 data-[hovered=true]:bg-neutral-800"
                 size="sm"
                 onPress={() => setIsOpen(true)}
                 variant="tertiary"

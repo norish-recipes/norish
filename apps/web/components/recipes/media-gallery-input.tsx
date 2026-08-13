@@ -111,7 +111,7 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
       {/* Drag handle */}
       <button
         ref={setActivatorNodeRef}
-        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-black/60 text-white active:cursor-grabbing"
+        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-neutral-900 text-white active:cursor-grabbing"
         type="button"
         {...attributes}
         {...listeners}
@@ -154,13 +154,13 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
           )}
           {/* Play icon overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900">
               <PlayIcon className="h-5 w-5 text-white" />
             </div>
           </div>
           {/* Duration badge */}
           {durationStr && (
-            <div className="absolute bottom-2 left-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+            <div className="absolute bottom-2 left-2 z-10 rounded bg-neutral-900 px-1.5 py-0.5 text-xs text-white">
               {durationStr}
             </div>
           )}
@@ -176,7 +176,7 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
       )}
 
       {/* Order badge */}
-      <div className="absolute right-2 bottom-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+      <div className="absolute right-2 bottom-2 z-10 rounded bg-neutral-900 px-1.5 py-0.5 text-xs text-white">
         {index + 1}
       </div>
     </div>

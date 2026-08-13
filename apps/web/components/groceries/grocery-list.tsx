@@ -109,7 +109,7 @@ export function GroceryList({
   if (!hasGroceries && !hasStores) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-20">
-        <div className="bg-surface/90 shadow-surface relative w-full max-w-xl rounded-xl backdrop-blur-xl">
+        <div className="border-border bg-surface shadow-surface relative w-full max-w-xl rounded-xl border">
           <div className="flex flex-col items-center gap-6 p-10 text-center">
             <div className="relative">
               <div className="bg-accent-soft0/20 dark:bg-accent/15 absolute inset-0 scale-125 rounded-full blur-3xl" />

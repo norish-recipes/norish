@@ -50,7 +50,7 @@ vi.mock("vaul", () => {
 });
 
 describe("Panel", () => {
-  it("uses the shared 80dvh height cap and blur backdrop by default", () => {
+  it("uses the shared 80dvh height cap and dimming backdrop by default", () => {
     const { container } = render(
       <Panel open title="Filters" onOpenChange={vi.fn()}>
         <Panel.Body>Filter controls</Panel.Body>
@@ -60,7 +60,7 @@ describe("Panel", () => {
       </Panel>
     );
 
-    expect(screen.getByTestId("drawer-overlay")).toHaveAttribute("data-variant", "blur");
+    expect(screen.getByTestId("drawer-overlay")).toHaveAttribute("data-variant", "opaque");
     expect(screen.getByRole("dialog", { name: "Filters" })).toHaveClass("max-h-[80dvh]");
     expect(container.querySelector('[data-slot="panel-dialog"]')).toHaveClass("max-h-[80dvh]");
     expect(container.querySelector('[data-slot="panel-body"]')).toHaveClass("min-h-0");

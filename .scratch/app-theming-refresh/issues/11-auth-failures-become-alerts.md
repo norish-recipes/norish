@@ -6,13 +6,18 @@ Scoped to the auth pages on purpose. The roughly fifty other places in the app t
 
 **Blocked by:** 02 (HeroUI 3.2.4).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Invalid credentials and generic sign-in failures are presented as an alert with an indicator and a title.
-- [ ] A wrong password does not clear the email the reader already typed.
-- [ ] Registration failures on sign-up are presented the same way.
-- [ ] An administrator with no providers configured gets that reported as clearly as any other failure, so it reads as a configuration problem rather than as rejected credentials.
-- [ ] The auth error page presents its error the same way.
-- [ ] Field-level validation stays inline under its field. It belongs to the field, not to a banner.
-- [ ] Every message is translated, with no hardcoded English.
-- [ ] Nothing outside the auth pages changes.
+- [x] Invalid credentials and generic sign-in failures are presented as an alert with an indicator and a title.
+- [x] A wrong password does not clear the email the reader already typed.
+- [x] Registration failures on sign-up are presented the same way.
+- [x] An administrator with no providers configured gets that reported as clearly as any other failure, so it reads as a configuration problem rather than as rejected credentials.
+- [x] The auth error page presents its error the same way.
+- [x] Field-level validation stays inline under its field. It belongs to the field, not to a banner.
+- [x] Every message is translated, with no hardcoded English.
+- [x] Nothing outside the auth pages changes.
+
+## Comments
+
+- Implemented on `feat/improve-styling-and-consistency` (working tree; Mike commits). One shared `AuthAlert` (HeroUI `Alert` — its first use in the app) presents invalid credentials, sign-up failures, the no-providers case (warning status, so it reads as a deployment problem) and the auth error page. New translated titles in all 14 locales (`auth.emailPassword.errors.title`, `auth.signup.errors.title`). Verified in the browser that a wrong password shows the alert with the typed email preserved.
+- Judgment calls to review: (1) sign-up's pre-checks (password mismatch/too short/too long) moved onto their fields as live `FieldError`s with the submit button gated — the banner would have been exactly the "belongs to the field, not to a banner" case, but it does mean those rules now show while typing rather than at submit; (2) the auth error page's visible title lives in `Alert.Title`, with an `sr-only` `h1` keeping the document outline — no duplicated visible heading; (3) drive-by fix: the error-code line's guard compared against `"registration_disabled"`, which is not in `ERROR_CODES`, so it never fired — corrected to `"registration_is_currently_disabled"`.

@@ -1,9 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BrandLogo } from "@/components/brand/brand-logo";
 import { AuthLanguageSelector } from "@/components/shared/auth-language-selector";
-import { Card, Separator } from "@heroui/react";
+import { Separator } from "@heroui/react";
+
+import { AuthFrame } from "./auth-frame";
 
 interface AuthCardProps {
   title: string;
@@ -14,30 +15,21 @@ interface AuthCardProps {
 
 export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
   return (
-    <div className="flex min-h-full w-full flex-col items-center justify-center md:max-w-md">
-      <Card className="w-full">
-        <Card.Content className="flex flex-col gap-6 p-8">
-          {/* Language selector - top right */}
-          <div className="absolute top-2 right-2">
-            <AuthLanguageSelector />
-          </div>
+    <AuthFrame footer={footer}>
+      {/* Language selector - top right */}
+      <div className="absolute top-2 right-2">
+        <AuthLanguageSelector />
+      </div>
 
-          {/* Header */}
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="flex items-baseline justify-center gap-2 text-2xl font-bold">
-              <span>{title}</span>
-              <BrandLogo priority className="shrink-0" height={34} width={120} />
-            </h1>
-            <p className="text-muted text-sm">{subtitle}</p>
-          </div>
+      {/* Header */}
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="font-serif text-3xl font-medium">{title}</h1>
+        <p className="text-muted text-sm">{subtitle}</p>
+      </div>
 
-          <Separator className="my-2" />
+      <Separator className="my-2" />
 
-          {children}
-        </Card.Content>
-      </Card>
-
-      {footer}
-    </div>
+      {children}
+    </AuthFrame>
   );
 }

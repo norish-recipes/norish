@@ -80,7 +80,7 @@ function SortableImageItem({ item, index, onDelete }: SortableImageItemProps) {
       {/* Drag handle - always visible */}
       <button
         ref={setActivatorNodeRef}
-        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-black/60 text-white active:cursor-grabbing"
+        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-neutral-900 text-white active:cursor-grabbing"
         type="button"
         {...attributes}
         {...listeners}
@@ -114,7 +114,7 @@ function SortableImageItem({ item, index, onDelete }: SortableImageItemProps) {
       />
 
       {/* Order badge */}
-      <div className="absolute right-2 bottom-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+      <div className="absolute right-2 bottom-2 z-10 rounded bg-neutral-900 px-1.5 py-0.5 text-xs text-white">
         {index + 1}
       </div>
     </div>

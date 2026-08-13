@@ -9,7 +9,9 @@ import {
 } from "@heroicons/react/20/solid";
 import { Button, Chip } from "@heroui/react";
 
-import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
+// Over an arbitrary photo a chip carries its own contrast: an opaque surface
+// fill plus a shadow, never a tinted window onto the picture (ADR-0020).
+const photoChipClassName = "bg-surface text-foreground rounded-full px-2 text-[11px] shadow-md";
 
 interface RecipeMetadataProps {
   timeLabel?: string | null;
@@ -45,33 +47,21 @@ export default function RecipeMetadata({
       {/* Right side metadata */}
       <div className="pointer-events-auto absolute top-2 right-2 z-20 flex items-center gap-2">
         {typeof averageRating === "number" && averageRating > 0 && (
-          <Chip
-            className={`rounded-full px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
-            size="sm"
-            variant="soft"
-          >
+          <Chip className={photoChipClassName} size="sm" variant="soft">
             <StarIcon className="text-warning h-4 w-4" />
             <Chip.Label>{Math.round(averageRating)}</Chip.Label>
           </Chip>
         )}
 
         {timeLabel && (
-          <Chip
-            className={`rounded-full px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
-            size="sm"
-            variant="soft"
-          >
+          <Chip className={photoChipClassName} size="sm" variant="soft">
             <ClockIcon className="h-4 w-4" />
             <Chip.Label>{timeLabel}</Chip.Label>
           </Chip>
         )}
 
         {typeof servings === "number" && servings > 0 && (
-          <Chip
-            className={`rounded-full px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
-            size="sm"
-            variant="soft"
-          >
+          <Chip className={photoChipClassName} size="sm" variant="soft">
             <UserGroupIcon className="h-4 w-4" />
             <Chip.Label>{servings}</Chip.Label>
           </Chip>
@@ -80,7 +70,7 @@ export default function RecipeMetadata({
         {onOptionsPress && (
           <Button
             isIconOnly
-            className={`hidden text-white md:flex ${cssGlassBackdropChip} h-6 w-6 min-w-0 p-0`}
+            className="bg-surface text-foreground hidden h-6 w-6 min-w-0 p-0 shadow-md md:flex"
             size="sm"
             onPress={onOptionsPress}
             variant="tertiary"

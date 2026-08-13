@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 
 import { signIn } from "@norish/shared/lib/auth/client";
 
+import { AuthAlert } from "../../components/auth-alert";
+
 interface EmailPasswordFormProps {
   callbackUrl?: string;
   registrationEnabled?: boolean;
@@ -32,6 +34,7 @@ export function EmailPasswordForm({
         password,
         callbackURL: callbackUrl,
       });
+
       if (result.error) {
         setError(result.error.message || t("errors.invalidCredentials"));
       } else {
@@ -43,6 +46,7 @@ export function EmailPasswordForm({
       setIsLoading(false);
     }
   };
+
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       <TextField
@@ -50,8 +54,8 @@ export function EmailPasswordForm({
         isRequired
         name="email"
         type="email"
-        variant="secondary"
         value={email}
+        variant="secondary"
         onChange={(value) => {
           setEmail(value);
           setError(null);
@@ -72,8 +76,8 @@ export function EmailPasswordForm({
         isRequired
         name="password"
         type="password"
-        variant="secondary"
         value={password}
+        variant="secondary"
         onChange={(value) => {
           setPassword(value);
           setError(null);
@@ -92,7 +96,7 @@ export function EmailPasswordForm({
         <FieldError />
       </TextField>
 
-      {error && <p className="text-danger text-center text-sm">{error}</p>}
+      {error && <AuthAlert description={error} title={t("errors.title")} />}
 
       <Button
         fullWidth

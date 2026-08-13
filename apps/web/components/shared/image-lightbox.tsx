@@ -7,6 +7,8 @@ import { Carousel } from "@/components/ui/carousel";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Modal, Tooltip } from "@heroui/react";
 
+import { cssMediaControl } from "@norish/web/config/css-tokens";
+
 import { FallbackPlaceholder, useImageErrors } from "./fallback-image";
 
 export interface ImageLightboxProps {
@@ -23,6 +25,7 @@ export interface ImageLightboxProps {
 
 function getSafeIndex(index: number, count: number) {
   if (count <= 0) return 0;
+
   return Math.min(Math.max(index, 0), count - 1);
 }
 
@@ -88,6 +91,7 @@ export default function ImageLightbox({
 
   const handleBackdropPointerUp = (event: React.PointerEvent<HTMLElement>) => {
     const start = pointerStartRef.current;
+
     pointerStartRef.current = null;
 
     if (!start) {
@@ -114,8 +118,8 @@ export default function ImageLightbox({
   return (
     <Modal.Backdrop
       isDismissable
-      isOpen={isOpen}
       className={`z-[1200] !bg-black text-white ${backdropClassName ?? ""}`}
+      isOpen={isOpen}
       variant="opaque"
       onOpenChange={(open) => {
         if (!open) onClose();
@@ -133,11 +137,11 @@ export default function ImageLightbox({
           onPointerUp={handleBackdropPointerUp}
         >
           <header
-            className="relative z-30 flex shrink-0 items-center justify-between gap-3 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-2 sm:px-6 sm:pt-[calc(1rem+env(safe-area-inset-top))] sm:pb-3"
             data-lightbox-interactive
+            className="relative z-30 flex shrink-0 items-center justify-between gap-3 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-2 sm:px-6 sm:pt-[calc(1rem+env(safe-area-inset-top))] sm:pb-3"
           >
             {showNavigation ? (
-              <div className="rounded-full bg-white/20 px-3 py-1.5 text-sm font-medium tabular-nums backdrop-blur-md">
+              <div className="rounded-full bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white tabular-nums">
                 {getSafeIndex(currentIndex, images.length) + 1} / {images.length}
               </div>
             ) : (
@@ -148,7 +152,7 @@ export default function ImageLightbox({
               <Button
                 isIconOnly
                 aria-label="Close image viewer"
-                className="size-10 min-w-10 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80"
+                className={`size-10 min-w-10 rounded-full ${cssMediaControl}`}
                 variant="tertiary"
                 onPress={onClose}
               >
@@ -174,15 +178,15 @@ export default function ImageLightbox({
                       >
                         {hasError(image.src) ? (
                           <FallbackPlaceholder
-                            className="h-64 w-full rounded-2xl bg-white/10 sm:rounded-3xl"
                             data-lightbox-interactive
+                            className="h-64 w-full rounded-2xl bg-white/10 sm:rounded-3xl"
                           />
                         ) : (
                           <Image
+                            data-lightbox-interactive
                             unoptimized
                             alt={image.alt || `Image ${index + 1}`}
                             className="max-h-[68dvh] w-auto max-w-full rounded-2xl object-contain select-none sm:rounded-3xl"
-                            data-lightbox-interactive
                             draggable={false}
                             height={760}
                             sizes="(min-width: 1280px) 1120px, 92vw"
@@ -196,16 +200,16 @@ export default function ImageLightbox({
                   </Carousel.Content>
                 </div>
                 <Carousel.Previous
-                  className="bg-black/60 text-white backdrop-blur-md hover:bg-black/80"
                   data-lightbox-interactive
+                  className={cssMediaControl}
                 />
                 <Carousel.Next
-                  className="bg-black/60 text-white backdrop-blur-md hover:bg-black/80"
                   data-lightbox-interactive
+                  className={cssMediaControl}
                 />
                 <Carousel.Thumbnails
-                  className="mt-3 justify-start overflow-x-auto py-1 sm:justify-center"
                   data-lightbox-interactive
+                  className="mt-3 justify-start overflow-x-auto py-1 sm:justify-center"
                   scrollShadowSize={24}
                 >
                   {images.map((image, index) => (
@@ -223,15 +227,15 @@ export default function ImageLightbox({
               <div className="flex items-center justify-center">
                 {hasError(currentImage.src) ? (
                   <FallbackPlaceholder
-                    className="h-64 w-full max-w-5xl rounded-2xl bg-white/10 sm:rounded-3xl"
                     data-lightbox-interactive
+                    className="h-64 w-full max-w-5xl rounded-2xl bg-white/10 sm:rounded-3xl"
                   />
                 ) : (
                   <Image
+                    data-lightbox-interactive
                     unoptimized
                     alt={currentImage.alt || "Image"}
                     className="max-h-[68dvh] w-auto max-w-full rounded-2xl object-contain select-none sm:rounded-3xl"
-                    data-lightbox-interactive
                     draggable={false}
                     height={760}
                     sizes="(min-width: 1280px) 1120px, 92vw"

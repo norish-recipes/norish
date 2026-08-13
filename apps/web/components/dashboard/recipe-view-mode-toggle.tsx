@@ -1,48 +1,34 @@
 "use client";
 
-import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
-import type { Key } from "react";
-import { Segment } from "@/components/ui/segment";
-import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
 import { ListBulletIcon, Squares2X2Icon } from "@heroicons/react/20/solid";
+import { Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-function toRecipeDashboardViewMode(key: Key): RecipeDashboardViewMode {
-  return key === "list" ? "list" : "grid";
-}
-
+/**
+ * The tab list for the library's grid/list switch. The `Tabs` root lives in
+ * the dashboard so the panels it controls can sit below the search input.
+ */
 export default function RecipeViewModeToggle() {
   const t = useTranslations("recipes.dashboard.viewMode");
-  const [viewMode, setViewMode] = useRecipeDashboardViewMode();
 
   return (
-    <Segment
-      aria-label={t("label")}
-      className="shrink-0"
-      selectedKey={viewMode}
-      size="sm"
-      onSelectionChange={(key) => setViewMode(toRecipeDashboardViewMode(key))}
-    >
-      <Segment.Item
-        aria-label={t("grid")}
-        className="min-w-8 px-2.5 sm:min-w-16"
-        id="grid"
-        title={t("grid")}
-      >
-        <Segment.Separator />
-        <Squares2X2Icon className="h-4 w-4" />
-        <span className="sr-only sm:not-sr-only">{t("grid")}</span>
-      </Segment.Item>
-      <Segment.Item
-        aria-label={t("list")}
-        className="min-w-8 px-2.5 sm:min-w-16"
-        id="list"
-        title={t("list")}
-      >
-        <Segment.Separator />
-        <ListBulletIcon className="h-4 w-4" />
-        <span className="sr-only sm:not-sr-only">{t("list")}</span>
-      </Segment.Item>
-    </Segment>
+    <Tabs.ListContainer className="shrink-0">
+      <Tabs.List aria-label={t("label")} className="p-0.5">
+        <Tabs.Tab className="h-7 min-w-8 px-2.5 text-xs sm:min-w-16" id="grid">
+          <div className="flex items-center gap-1.5" title={t("grid")}>
+            <Squares2X2Icon className="size-4 shrink-0" />
+            <span className="sr-only sm:not-sr-only">{t("grid")}</span>
+          </div>
+          <Tabs.Indicator />
+        </Tabs.Tab>
+        <Tabs.Tab className="h-7 min-w-8 px-2.5 text-xs sm:min-w-16" id="list">
+          <div className="flex items-center gap-1.5" title={t("list")}>
+            <ListBulletIcon className="size-4 shrink-0" />
+            <span className="sr-only sm:not-sr-only">{t("list")}</span>
+          </div>
+          <Tabs.Indicator />
+        </Tabs.Tab>
+      </Tabs.List>
+    </Tabs.ListContainer>
   );
 }

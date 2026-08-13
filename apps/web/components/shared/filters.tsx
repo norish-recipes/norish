@@ -6,12 +6,7 @@ import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 
-import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
-
-type FiltersProps = {
-  isGlass: boolean;
-};
-export default function Filters({ isGlass = false }: FiltersProps) {
+export default function Filters() {
   const { filters } = useRecipesFiltersContext();
   const [isOpen, setIsOpen] = useState(false);
   const hasActiveFilters = useMemo(() => {
@@ -33,7 +28,7 @@ export default function Filters({ isGlass = false }: FiltersProps) {
       <Button
         isIconOnly
         aria-label="Filters"
-        className={`shadow-field relative h-12 w-12 border border-transparent ${isGlass ? cssGlassBackdrop : "bg-field hover:bg-field-hover dark:bg-default dark:hover:bg-surface-tertiary"}`}
+        className="shadow-field bg-field hover:bg-field-hover dark:bg-default dark:hover:bg-surface-tertiary relative h-12 w-12 border border-transparent"
         onPress={() => setIsOpen(true)}
         variant="tertiary"
       >

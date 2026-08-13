@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
@@ -9,7 +9,6 @@ import { CalendarDaysIcon, ClipboardDocumentListIcon, HomeIcon } from "@heroicon
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
 import { siteConfig } from "@norish/web/config/site";
 
 // Map hrefs to translation keys (same as navbar.tsx)
@@ -23,8 +22,6 @@ export const MobileNav = () => {
   const tNav = useTranslations("navbar.nav");
   const pathname = usePathname();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const { isVisible, show } = useAutoHide({
     disabled: userMenuOpen,
@@ -73,56 +70,51 @@ export const MobileNav = () => {
         style={{ bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)" }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <div ref={rootRef} className="flex items-center justify-center gap-3">
-          {/* Nav items - full width */}
-          <div
-            className={`flex h-13 flex-1 items-center justify-center rounded-full px-4 ${cssGlassBackdrop}`}
-          >
-            <ul className="flex w-full items-center justify-around text-[11px]">
-              {siteConfig.navItems.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname?.startsWith(item.href + "/"));
-                const Icon =
-                  item.href === "/"
-                    ? HomeIcon
-                    : item.href.startsWith("/calendar")
-                      ? CalendarDaysIcon
-                      : ClipboardDocumentListIcon;
+        {/* One solid object: nav items and the account avatar share the bar (ADR-0020) */}
+        <div className="border-border bg-surface flex h-13 items-center rounded-full border px-3 shadow-[0_8px_28px_-10px_rgba(0,0,0,0.3)]">
+          <ul className="flex w-full items-center justify-around text-[11px]">
+            {siteConfig.navItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/" && pathname?.startsWith(item.href + "/"));
+              const Icon =
+                item.href === "/"
+                  ? HomeIcon
+                  : item.href.startsWith("/calendar")
+                    ? CalendarDaysIcon
+                    : ClipboardDocumentListIcon;
 
-                return (
-                  <li key={item.href}>
-                    <NextLink
-                      className={`flex flex-col items-center justify-center gap-1 rounded-full px-4 py-2 transition-colors ${
-                        isActive
-                          ? "text-accent font-semibold"
-                          : "text-muted hover:text-foreground hover:bg-surface-secondary/70"
-                      }`}
-                      href={item.href}
-                      onClick={(e) => {
-                        if (item.href === "/" && pathname === "/") {
-                          e.preventDefault();
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }
-                      }}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span className="leading-none">
-                        {tNav(navLabelKeys[item.href] ?? "home")}
-                      </span>
-                    </NextLink>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+              return (
+                <li key={item.href}>
+                  <NextLink
+                    className={`flex flex-col items-center justify-center gap-1 rounded-full px-4 py-1.5 transition-colors ${
+                      isActive
+                        ? "bg-accent-soft text-accent font-semibold"
+                        : "text-muted hover:text-foreground hover:bg-surface-secondary"
+                    }`}
+                    href={item.href}
+                    onClick={(e) => {
+                      if (item.href === "/" && pathname === "/") {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="leading-none">{tNav(navLabelKeys[item.href] ?? "home")}</span>
+                  </NextLink>
+                </li>
+              );
+            })}
 
-          {/* User menu */}
-          <div
-            className={`flex h-13 w-13 shrink-0 items-center justify-center rounded-full ${cssGlassBackdrop}`}
-          >
-            <NavbarUserMenu isOpen={userMenuOpen} onOpenChange={setUserMenuOpen} />
-          </div>
+            <li className="flex items-center justify-center">
+              <NavbarUserMenu
+                isOpen={userMenuOpen}
+                size="sm"
+                onOpenChange={setUserMenuOpen}
+              />
+            </li>
+          </ul>
         </div>
       </motion.div>
     </>

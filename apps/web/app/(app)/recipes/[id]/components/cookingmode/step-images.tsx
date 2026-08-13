@@ -7,6 +7,8 @@ import ImageLightbox from "@/components/shared/image-lightbox";
 import { Carousel } from "@/components/ui/carousel";
 import { Button } from "@heroui/react";
 
+import { cssMediaControl } from "@norish/web/config/css-tokens";
+
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
 
 type StepImagesProps = {
@@ -42,8 +44,8 @@ export function StepImages({ className = "", step }: StepImagesProps) {
           ) : (
             <Image
               fill
-              unoptimized
               priority
+              unoptimized
               alt={`Step ${step.stepNumber} image 1`}
               className="object-cover"
               sizes="(min-width: 768px) 520px, 92vw"
@@ -96,8 +98,8 @@ export function StepImages({ className = "", step }: StepImagesProps) {
                 </Carousel.Item>
               ))}
             </Carousel.Content>
-            <Carousel.Previous className="bg-background/70 !left-2 backdrop-blur-md" />
-            <Carousel.Next className="bg-background/70 !right-2 backdrop-blur-md" />
+            <Carousel.Previous className={`!left-2 ${cssMediaControl}`} />
+            <Carousel.Next className={`!right-2 ${cssMediaControl}`} />
             <Carousel.Dots className="mt-3" />
           </Carousel>
         </div>

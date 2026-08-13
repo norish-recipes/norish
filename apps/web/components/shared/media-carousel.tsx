@@ -8,6 +8,8 @@ import VideoPlayer from "@/components/shared/video-player";
 import { Carousel, useCarousel } from "@/components/ui/carousel";
 import { useTranslations } from "next-intl";
 
+import { cssMediaControl } from "@norish/web/config/css-tokens";
+
 export interface MediaItem {
   type: "image" | "video";
   src: string;
@@ -75,6 +77,7 @@ export function buildMediaItems(recipe: RecipeMedia): MediaItem[] {
       order: 999,
     });
   }
+
   return items;
 }
 export interface MediaCarouselProps {
@@ -111,6 +114,7 @@ function MediaCarouselSlides({
 
   useEffect(() => {
     const activeItem = sortedItems[safeIndex];
+
     if (!activeItem) return;
 
     onActiveItemChange?.(activeItem, safeIndex);
@@ -188,6 +192,7 @@ export default function MediaCarousel({
     return [...items].sort((a, b) => {
       if (a.order !== b.order) return a.order - b.order;
       if (a.type !== b.type) return a.type === "video" ? -1 : 1;
+
       return 0;
     });
   }, [items]);
@@ -206,6 +211,7 @@ export default function MediaCarousel({
     if (sortedItems.length !== 1) return;
 
     const activeItem = sortedItems[0];
+
     onActiveItemChange?.(activeItem, 0);
 
     if (activeItem.type !== "video") {
@@ -218,6 +224,7 @@ export default function MediaCarousel({
       if (item.type !== "image") return;
 
       const imgIndex = lightboxImages.findIndex((img) => img.src === item.src);
+
       if (imgIndex !== -1) {
         setLightboxIndex(imgIndex);
         setLightboxOpen(true);
@@ -256,6 +263,7 @@ export default function MediaCarousel({
   // Case 1: Single item (no carousel controls)
   if (sortedItems.length === 1) {
     const item = sortedItems[0];
+
     return (
       <>
         <div
@@ -319,9 +327,9 @@ export default function MediaCarousel({
           onActiveVideoControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
           onImageClick={openLightboxForItem}
         />
-        <Carousel.Previous className="bg-background/70 text-foreground backdrop-blur-md" />
-        <Carousel.Next className="bg-background/70 text-foreground backdrop-blur-md" />
-        <Carousel.Dots className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/20 px-2 py-1 backdrop-blur-sm" />
+        <Carousel.Previous className={cssMediaControl} />
+        <Carousel.Next className={cssMediaControl} />
+        <Carousel.Dots className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 rounded-full bg-neutral-900 px-2 py-1" />
       </Carousel>
 
       <ImageLightbox

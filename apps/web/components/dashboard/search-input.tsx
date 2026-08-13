@@ -138,7 +138,7 @@ export default function SearchInput() {
             </button>
           )}
         </div>
-        <Filters isGlass={false} />
+        <Filters />
       </div>
       {/* Use grid for height animation - avoids layout thrashing on desktop */}
       <div

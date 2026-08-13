@@ -17,7 +17,7 @@ export interface PanelProps {
   className?: string;
   contentClassName?: string;
   panelClassName?: string;
-  backdropVariant?: "opaque" | "blur" | "transparent";
+  backdropVariant?: "opaque" | "transparent";
   title?: string;
   children: ReactNode;
   trigger?: ReactElement;
@@ -78,7 +78,6 @@ type PanelTriggerProps = {
 const PANEL_MAX_HEIGHT_CLASS = "max-h-[80dvh]";
 
 const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]>, string> = {
-  blur: "bg-(--background)/1 backdrop-blur-sm",
   opaque: "bg-(--backdrop)",
   transparent: "bg-transparent",
 };
@@ -104,7 +103,7 @@ const PanelRoot: React.FC<PanelProps> = ({
   className = "",
   contentClassName = "",
   panelClassName = "",
-  backdropVariant = "blur",
+  backdropVariant = "opaque",
   title = "",
   nested = false,
   children,
@@ -216,7 +215,7 @@ const PanelRoot: React.FC<PanelProps> = ({
             >
               <div
                 className={twMerge(
-                  "relative flex min-h-0 flex-col overflow-hidden rounded-t-[calc(var(--radius)*2)] bg-(--overlay) text-(--overlay-foreground) shadow-(--overlay-shadow)",
+                  "border-border relative flex min-h-0 flex-col overflow-hidden rounded-t-[calc(var(--radius)*2)] border-x border-t bg-(--overlay) text-(--overlay-foreground) shadow-(--overlay-shadow)",
                   dialogClasses
                 )}
                 data-slot="panel-dialog"

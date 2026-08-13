@@ -173,7 +173,7 @@ export function TimerDock({ className = "" }: { className?: string }) {
             {/* Morphing Container */}
             <motion.div
               layout
-              className={`overflow-hidden shadow-xl ring-1 ring-black/5 backdrop-blur-sm ${isExpanded ? "bg-surface w-80 rounded-2xl dark:ring-white/10" : "bg-surface/90 rounded-full dark:ring-white/10"}`}
+              className={`border-border bg-surface overflow-hidden border shadow-xl ${isExpanded ? "w-80 rounded-2xl" : "rounded-full"}`}
               transition={{
                 duration: 0.25,
                 ease: [0.4, 0, 0.2, 1],

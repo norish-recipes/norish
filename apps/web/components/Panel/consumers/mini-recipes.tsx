@@ -371,7 +371,6 @@ export default function MiniRecipes({ open, onOpenChange, date, slot }: MiniReci
   const t = useTranslations("calendar.panel");
   return (
     <Panel
-      backdropVariant="blur"
       open={open}
       panelClassName="h-[80dvh]"
       title={t("addRecipe")}

@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 
 import { signUp } from "@norish/shared/lib/auth/client";
 
+import { AuthAlert } from "../../components/auth-alert";
+
 interface SignupFormProps {
   callbackUrl?: string;
 }
@@ -21,21 +23,19 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const passwordsMatch = password === confirmPassword;
-  const isFormValid = name && email && password && confirmPassword && passwordsMatch;
+  // Field-level rules live on their fields; the alert is for the server's answer.
+  const passwordTooShort = password.length > 0 && password.length < 8;
+  const passwordTooLong = password.length > 128;
+  const isFormValid =
+    name &&
+    email &&
+    password &&
+    confirmPassword &&
+    passwordsMatch &&
+    !passwordTooShort &&
+    !passwordTooLong;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passwordsMatch) {
-      setError(t("errors.passwordMismatch"));
-      return;
-    }
-    if (password.length < 8) {
-      setError(t("errors.passwordTooShort"));
-      return;
-    }
-    if (password.length > 128) {
-      setError(t("errors.passwordTooLong"));
-      return;
-    }
     setIsLoading(true);
     setError(null);
     try {
@@ -45,6 +45,7 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
         password,
         callbackURL: callbackUrl,
       });
+
       if (result.error) {
         setError(result.error.message || t("errors.createFailed"));
       } else {
@@ -56,6 +57,7 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       setIsLoading(false);
     }
   };
+
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       <TextField
@@ -63,8 +65,8 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
         isRequired
         name="name"
         type="text"
-        variant="secondary"
         value={name}
+        variant="secondary"
         onChange={(value) => {
           setName(value);
           setError(null);
@@ -85,8 +87,8 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
         isRequired
         name="email"
         type="email"
-        variant="secondary"
         value={email}
+        variant="secondary"
         onChange={(value) => {
           setEmail(value);
           setError(null);
@@ -105,10 +107,11 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       <TextField
         fullWidth
         isRequired
+        isInvalid={passwordTooShort || passwordTooLong}
         name="password"
         type="password"
-        variant="secondary"
         value={password}
+        variant="secondary"
         onChange={(value) => {
           setPassword(value);
           setError(null);
@@ -122,16 +125,19 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
           <InputGroup.Input autoComplete="new-password" placeholder={t("passwordPlaceholder")} />
         </InputGroup>
         <Description>{t("passwordDescription")}</Description>
-        <FieldError />
+        <FieldError>
+          {passwordTooLong ? t("errors.passwordTooLong") : t("errors.passwordTooShort")}
+        </FieldError>
       </TextField>
 
       <TextField
         fullWidth
         isRequired
+        isInvalid={confirmPassword.length > 0 && !passwordsMatch}
         name="confirmPassword"
         type="password"
-        variant="secondary"
         value={confirmPassword}
+        variant="secondary"
         onChange={(value) => {
           setConfirmPassword(value);
           setError(null);
@@ -147,10 +153,10 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
             placeholder={t("confirmPasswordPlaceholder")}
           />
         </InputGroup>
-        <FieldError />
+        <FieldError>{t("errors.passwordMismatch")}</FieldError>
       </TextField>
 
-      {error && <p className="text-danger text-center text-sm">{error}</p>}
+      {error && <AuthAlert description={error} title={t("errors.title")} />}
 
       <Button
         className="mt-2"

@@ -21,7 +21,7 @@ export function NoraCard({ code, title, message, children }: NoraCardProps) {
   const t = useTranslations("common.notFound");
 
   return (
-    <Card className="border-border bg-surface/70 group w-full max-w-lg gap-0 overflow-hidden rounded-3xl border p-0 text-center shadow-lg backdrop-blur-md">
+    <Card className="border-border bg-surface group w-full max-w-lg gap-0 overflow-hidden rounded-3xl border p-0 text-center shadow-lg">
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element -- next/image optimizes through a runtime endpoint the offline shell can't reach; the raw /404.jpg ships in the precached public/ scan, which is the point. */}
         <img

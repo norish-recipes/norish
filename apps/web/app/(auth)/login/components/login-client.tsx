@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
 
+import { AuthAlert } from "../../components/auth-alert";
 import { AuthCard } from "../../components/auth-card";
 import { AutoSignIn } from "./auto-sign-in";
 import { EmailPasswordForm } from "./email-password-form";
@@ -46,7 +47,7 @@ export function LoginClient({
         )
       }
       subtitle={t("subtitle")}
-      title={t("title")}
+      title={t("heading")}
     >
       {/* Email/Password form */}
       {hasCredential && (
@@ -77,12 +78,13 @@ export function LoginClient({
         </div>
       )}
 
-      {/* No providers message */}
+      {/* No providers configured: a deployment problem, not rejected credentials */}
       {!hasCredential && !hasOAuth && (
-        <div className="py-4 text-center">
-          <p className="text-danger text-sm">{t("noProviders.title")}</p>
-          <p className="text-muted mt-2 text-xs">{t("noProviders.contactAdmin")}</p>
-        </div>
+        <AuthAlert
+          description={t("noProviders.contactAdmin")}
+          status="warning"
+          title={t("noProviders.title")}
+        />
       )}
     </AuthCard>
   );

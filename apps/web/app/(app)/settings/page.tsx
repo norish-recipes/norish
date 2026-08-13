@@ -98,8 +98,12 @@ function SettingsContent() {
         selectedKey={currentTab}
         onSelectionChange={handleTabChange}
       >
-        <Tabs.ListContainer className="overflow-x-auto">
-          <Tabs.List aria-label={t("page.ariaLabel")} className="w-max">
+        <Tabs.ListContainer>
+          {/* The overflow chevrons only re-measure when the scroller resizes or
+              scrolls, not when the list's content grows — so when the Admin tab
+              pops in after the role query, remount the list to re-run the
+              measurement. */}
+          <Tabs.List key={tabs.map((tab) => tab.id).join("-")} aria-label={t("page.ariaLabel")}>
             {tabs.map((tab) => {
               const Icon = currentTab === tab.id ? tab.activeIcon : tab.inactiveIcon;
 

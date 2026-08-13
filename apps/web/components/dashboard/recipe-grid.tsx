@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  startTransition,
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
+import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { Spinner } from "@heroui/react";
@@ -33,7 +25,7 @@ const LIST_ROW_OVERSCAN = 12;
 const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
 const LIST_LOAD_MORE_ROW_THRESHOLD = 6;
 
-export default function RecipeGrid() {
+export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMode }) {
   const {
     recipes,
     isLoading,
@@ -54,12 +46,9 @@ export default function RecipeGrid() {
 
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [isLoadedOnce, setIsLoadedOnce] = useState(false);
-  const [storedViewMode] = useRecipeDashboardViewMode();
-  // Re-laying out every card, re-measuring the virtualizer and swapping every
-  // card's variant is far too much work to do inside the click that asked for
-  // it. Deferring it lets the toggle paint its new position immediately and the
-  // grid catch up on the next non-urgent render.
-  const viewMode = useDeferredValue(storedViewMode);
+  // Each tab panel mounts its own grid with the presentation fixed, so a view
+  // switch swaps panels rather than re-laying out this one in place.
+  const viewMode = variant;
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTriggeredLoadMoreRef = useRef(false);
 
