@@ -3,6 +3,10 @@ import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import {
+  NotesSection,
+  useNotesSectionVisible,
+} from "@/app/(app)/recipes/[id]/components/notes-card";
+import {
   NutritionSection,
   useNutritionSectionVisible,
 } from "@/app/(app)/recipes/[id]/components/nutrition-card";
@@ -17,15 +21,14 @@ import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
 import AuthorChip from "@/components/recipes/author-chip";
 import {
   ReadonlyRecipeMedia,
-  ReadonlyRecipeNotes,
   ReadonlyRecipeSummary,
 } from "@/components/recipes/readonly-recipe-sections";
 import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card, Link, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -51,6 +54,7 @@ export default function RecipePageMobile() {
   // sections will render — the same answer each section renders by.
   const showProvenance = useProvenanceSectionVisible();
   const showNutrition = useNutritionSectionVisible();
+  const showNotes = useNotesSectionVisible();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -163,17 +167,10 @@ export default function RecipePageMobile() {
           </div>
 
           {/* Notes */}
-          {recipe.notes && (
+          {showNotes && (
             <>
               <Separator />
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">{t("notes")}</h2>
-                </div>
-                <div>
-                  <ReadonlyRecipeNotes notes={recipe.notes} />
-                </div>
-              </div>
+              <NotesSection />
             </>
           )}
 

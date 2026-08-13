@@ -95,6 +95,12 @@ vi.mock("@/app/(app)/recipes/[id]/components/nutrition-card", () => ({
   useNutritionSectionVisible: () => true,
 }));
 
+vi.mock("@/app/(app)/recipes/[id]/components/notes-card", () => ({
+  default: () => <div>notes-card</div>,
+  NotesSection: () => <div>notes-section</div>,
+  useNotesSectionVisible: () => false,
+}));
+
 vi.mock("@/app/(app)/recipes/[id]/components/actions-menu", () => ({
   default: () => <div>actions-menu</div>,
 }));

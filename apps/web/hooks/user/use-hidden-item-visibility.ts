@@ -9,6 +9,9 @@ export type UseHiddenItemVisibilityResult = {
   showRatings: boolean;
   showFavorites: boolean;
   showConversion: boolean;
+  showProvenance: boolean;
+  showNutrition: boolean;
+  showNotes: boolean;
 };
 
 /**
@@ -23,5 +26,8 @@ export function useHiddenItemVisibility(): UseHiddenItemVisibilityResult {
     showRatings: shows("rating"),
     showFavorites: shows("favorites"),
     showConversion: shows("conversion"),
+    showProvenance: shows("provenance"),
+    showNutrition: shows("nutrition"),
+    showNotes: shows("notes"),
   };
 }

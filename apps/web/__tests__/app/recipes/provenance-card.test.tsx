@@ -9,6 +9,7 @@ type LifecycleState = "idle" | "queued" | "processing" | "succeeded" | "failed";
 
 const mocks = vi.hoisted(() => ({
   state: "idle" as LifecycleState,
+  hidden: [] as string[],
   recipe: {
     id: "recipe-1",
     userId: "owner-1",
@@ -18,6 +19,10 @@ const mocks = vi.hoisted(() => ({
     provenanceNote: null as string | null,
     cuisines: [] as { id: string; name: string; version: number }[],
   },
+}));
+
+vi.mock("@/context/user-context", () => ({
+  useUserContext: () => ({ user: { id: "owner-1", preferences: { hidden: mocks.hidden } } }),
 }));
 
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({
@@ -54,6 +59,7 @@ vi.mock("next-intl", () => ({
 
 beforeEach(() => {
   mocks.state = "idle";
+  mocks.hidden = [];
   mocks.recipe = {
     id: "recipe-1",
     userId: "owner-1",
@@ -213,5 +219,23 @@ describe("Recipe Provenance section", () => {
     render(<ProvenanceCard />);
 
     expect(screen.getByText("Italia")).toBeInTheDocument();
+  });
+
+  it("is absent when the reader has hidden Recipe Provenance", () => {
+    mocks.hidden = ["provenance"];
+    mocks.recipe.originCountry = "IT";
+
+    const { container } = render(<ProvenanceCard />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("stays absent for a hiding reader even while a run is in flight", () => {
+    mocks.hidden = ["provenance"];
+    mocks.state = "processing";
+
+    const { container } = render(<ProvenanceCard />);
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, MACROS } from "@/components/recipes/readonly-nutrition";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { Card, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -11,13 +12,17 @@ import { useTranslations } from "next-intl";
  * Whether the Nutrition Information section has anything to show: something
  * stored, or a run in flight. Queued and processing both render as "working";
  * a quiet automatic failure simply leaves the panel showing whatever is
- * stored. The page layouts read this too, so the rules they draw between
- * sections come from the same answer the section itself renders by.
+ * stored. A reader who has hidden Nutrition Information sees no section at
+ * all, even mid-run — the four values leave together, and enrichment keeps
+ * storing regardless. The page layouts read this too, so the rules they
+ * draw between sections come from the same answer the section itself
+ * renders by.
  */
 export function useNutritionSectionVisible(): boolean {
   const { recipe, enrichment } = useRecipeContext();
+  const { showNutrition } = useHiddenItemVisibility();
 
-  if (!recipe) return false;
+  if (!recipe || !showNutrition) return false;
 
   return getNutritionData(recipe, 1).hasData || enrichment.isBusy("nutrition-estimation");
 }
