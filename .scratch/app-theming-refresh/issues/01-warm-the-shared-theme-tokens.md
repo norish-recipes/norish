@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 The values, which came out of the design session. Lightness is unchanged in every case; only hue and chroma move.
 
@@ -41,10 +41,14 @@ UNCHANGED EVERYWHERE
   --success, --warning, --danger, --nutrition-*
 ```
 
-- [ ] The web app renders on the warm ground in both light and dark, with light surfaces still pure white so cards lift off the page.
-- [ ] Borders, separators and muted text read warm rather than grey against the new ground, in both themes.
-- [ ] Popovers, dropdown menus and input fields match the cards they open over in dark — none of them reads cooler than the surface at the same lightness.
-- [ ] The landing renders identically to before the change, and no longer carries its own token override block.
-- [ ] The native app picks the ground up from the same definition and renders correctly in both themes.
-- [ ] Foreground colours, the accent, focus, and the success/warning/danger/nutrition families are unchanged.
-- [ ] The documentation site is knowingly left on the old cool values; no attempt is made to re-port them here.
+- [x] The web app renders on the warm ground in both light and dark, with light surfaces still pure white so cards lift off the page.
+- [x] Borders, separators and muted text read warm rather than grey against the new ground, in both themes.
+- [x] Popovers, dropdown menus and input fields match the cards they open over in dark — none of them reads cooler than the surface at the same lightness.
+- [x] The landing renders identically to before the change, and no longer carries its own token override block.
+- [x] The native app picks the ground up from the same definition and renders correctly in both themes.
+- [x] Foreground colours, the accent, focus, and the success/warning/danger/nutrition families are unchanged.
+- [x] The documentation site is knowingly left on the old cool values; no attempt is made to re-port them here.
+
+## Comments
+
+- Shipped in 6c849d7e. Spec review against the diff confirmed every OKLCH value in the table lands byte-for-byte in the shared token file (including `0.01` for 0.010), light surfaces stay pure white, the landing's override block is deleted so its values are the single definition, and foregrounds, accent, focus and the semantic families are untouched. The native app picks the ground up through `apps/mobile/src/global.css`. The both-theme renders on web, landing and native are verified by hand per the spec's testing decisions.

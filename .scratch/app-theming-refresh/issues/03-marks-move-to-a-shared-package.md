@@ -6,11 +6,15 @@ The web app cannot use the scroll machinery — a sign-in page does not scroll �
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The five drawings live in a shared package that both the landing and the web app can import.
-- [ ] The rules that draw a stroke and turn a mark live beside the shared theme tokens rather than in the landing's own stylesheet.
-- [ ] The landing renders identically to before: drawings appear in the same places, still draw themselves when scrolled to, still turn slowly, still travel their own share of the page.
-- [ ] A drawing rendered with nothing driving it is fully drawn rather than blank, so a consumer with no scroll context gets a finished drawing.
-- [ ] Reduced motion still stands the movement down, as it does on the landing today.
-- [ ] The web app is not yet using them; this ticket only makes them reachable.
+- [x] The five drawings live in a shared package that both the landing and the web app can import.
+- [x] The rules that draw a stroke and turn a mark live beside the shared theme tokens rather than in the landing's own stylesheet.
+- [x] The landing renders identically to before: drawings appear in the same places, still draw themselves when scrolled to, still turn slowly, still travel their own share of the page.
+- [x] A drawing rendered with nothing driving it is fully drawn rather than blank, so a consumer with no scroll context gets a finished drawing.
+- [x] Reduced motion still stands the movement down, as it does on the landing today.
+- [x] The web app is not yet using them; this ticket only makes them reachable.
+
+## Comments
+
+- Shipped in 6c849d7e. The five drawings live in `@norish/ui`'s Mark, the stroke and turn rules moved to `tooling/tailwind/marks.css` beside the shared theme tokens, and the landing is rewired onto the shared pieces with its scroll-driven reveal and parallax intact. A mark with nothing driving it renders fully drawn, reduced motion stands the movement down, and the web app does not consume them yet.

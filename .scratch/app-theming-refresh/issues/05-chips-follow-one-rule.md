@@ -6,12 +6,16 @@ The pattern already exists in the filters panel — selected chips accent-filled
 
 **Blocked by:** 01 (warm theme tokens), 02 (HeroUI 3.2.4).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Chips that name a thing share one treatment: filter categories and Tags, library card Tags, time and servings, Cuisine chips on the Recipe Provenance card, Step Ingredient chips, and the editor's Tag chips.
-- [ ] An active chip is filled in the accent colour; an inactive one carries a visible soft warm fill so it reads as a control rather than as loose text on the page.
-- [ ] Plain chip text is softened so it reads as a label rather than as body copy at chip size.
-- [ ] Chips that report a condition keep their colour: allergy Tags, job status, CalDAV sync and connection status, household roles, API and site token state, the env-managed badge, and the unsaved-changes, restart-required and new-feature chips.
-- [ ] The override that gives unselected chips a visible background is retained — it is what stops one disappearing into the page.
-- [ ] A cook with allergies can still pick the allergy chip out of a row of Tag chips at a glance.
-- [ ] Verified by hand in both themes on a library card, the filters panel, a recipe page and the admin settings pages.
+- [x] Chips that name a thing share one treatment: filter categories and Tags, library card Tags, time and servings, Cuisine chips on the Recipe Provenance card, Step Ingredient chips, and the editor's Tag chips.
+- [x] An active chip is filled in the accent colour; an inactive one carries a visible soft warm fill so it reads as a control rather than as loose text on the page.
+- [x] Plain chip text is softened so it reads as a label rather than as body copy at chip size.
+- [x] Chips that report a condition keep their colour: allergy Tags, job status, CalDAV sync and connection status, household roles, API and site token state, the env-managed badge, and the unsaved-changes, restart-required and new-feature chips.
+- [x] The override that gives unselected chips a visible background is retained — it is what stops one disappearing into the page.
+- [x] A cook with allergies can still pick the allergy chip out of a row of Tag chips at a glance.
+- [x] Verified by hand in both themes on a library card, the filters panel, a recipe page and the admin settings pages.
+
+## Comments
+
+- Shipped in 6c849d7e. Naming chips — filter categories and Tags, library card Tags, time and servings, Cuisine, Step Ingredient chips and the editor's Tag chips — share the accent-filled/soft-warm treatment; semantic chips (allergy, job status, CalDAV sync and connection, household roles, token state, env-managed, unsaved/restart/new-feature) keep their colours, and the tertiary background override is retained. Allergy chips confirmed still on `bg-warning` so they separate from Tag rows. The both-theme hand check follows the spec's testing decisions.

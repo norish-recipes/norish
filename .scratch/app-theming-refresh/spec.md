@@ -1,4 +1,4 @@
-# App theming refresh and Hidden Items
+# App theming refresh, Hidden Items and first paint
 
 Status: ready-for-agent
 
@@ -16,6 +16,10 @@ Web chrome has drifted into imitating glass — `backdrop-blur` behind a half-op
 
 Separately, the recipe page has grown long. A cook who never reads Recipe Provenance, never checks Nutrition Information, and never writes notes still scrolls past all three to reach the steps, and there is no way to say so. Three display preferences already exist as individual switches in settings, so the pattern is there but it is scattered and it does not cover the sections that make the page long.
 
+A different class of defect runs across all of this: the app forgets what it knows about the reader until after the first paint. Device choices — the groceries view, ingredient grouping, Today's meals visibility, fraction-or-decimal amounts, the library filters — live in browser storage the server cannot see, so the server renders a default and the client re-arranges the page a frame later. A reader who hid Today's meals watches the whole block paint and vanish on every load, taking the dashboard below it along; a reader who shops by recipe watches the store-grouped list swap out; a reader who works in decimals watches every recipe's fractions flip. The library's grid-and-list choice already made the move to a cookie for exactly this reason; everything else still flickers.
+
+The Admin tab in settings is the same failure through a different door. Whether the reader is an administrator is already on the session the server resolves for every page, but the tab is gated on a client-side round trip that asks again, so the tab list changes shape moments after settings opens — and a warm query cache makes the delay intermittent, which reads as flakiness rather than design. And Hidden Items, as specified above, would join this class the day it ships: stored server-side but fetched client-side, a hidden rating would flash and vanish exactly as the localStorage preferences do today, with the network standing in for localStorage.
+
 ## Solution
 
 One warm ground for the whole product. The shared theme token file adopts the landing's warmth so web, landing and the native app stand on the same paper: beige page against white cards in light, warm brown in dark, with borders, separators, muted text and every near-neutral surface warmed to match at unchanged lightness. Foregrounds and the semantic palette are untouched — warm ground, neutral ink.
@@ -28,7 +32,9 @@ The sign-in page takes the landing's treatment — warm ground, the wash behind 
 
 HeroUI moves to 3.2.4, whose Tabs list container gained the segmented appearance and built-in overflow affordances the app was hand-rolling. The handrolled segmented control is deleted and the library view switch is rebuilt on Tabs.
 
-Finally, **Hidden Items**: one multi-select in settings holding everything a reader would rather not be shown — Recipe Provenance, Nutrition Information, notes, ratings, favourites, and the measurement conversion control. Everything is shown by default. Hiding is that reader's own view and suppresses the item everywhere it would appear for them, while settling nothing about the recipe itself. The origin flag beside a recipe's title is chrome, not Recipe Provenance, so it survives.
+Finally, **Hidden Items**: one multi-select in settings holding everything a reader would rather not be shown — Recipe Provenance, Nutrition Information, notes, ratings, favourites, the measurement conversion control, and recipe timers. Everything is shown by default. Hiding is that reader's own view and suppresses the item everywhere it would appear for them, while settling nothing about the recipe itself. The origin flag beside a recipe's title is chrome, not Recipe Provenance, so it survives.
+
+And the first paint tells the truth. Device preferences move onto cookies — the one kind of device state the server can read while it produces the HTML — behind a single shared helper, so groceries arrives in the stored view and grouping, Today's meals is simply absent when hidden, and amounts arrive in the reader's format. The Admin tab derives from the session the server already resolved rather than a follow-up question, so the tab list is complete on its first frame. The library filters, too structured to ride in a cookie, hold the library's loading presentation until they are applied instead of painting the unfiltered collection. And Hidden Items is seeded into the first render on every load path, so hiding something means never seeing it — not seeing it briefly.
 
 ## User Stories
 
@@ -115,6 +121,31 @@ Finally, **Hidden Items**: one multi-select in settings holding everything a rea
 61. As a cook, I want my choices to follow me between my laptop and my phone browser, so I set them once.
 62. As a cook, I want a hidden section to leave no gap, divider or empty heading behind, so the page closes up properly.
 63. As a cook using the native app, I want nutrition still shown there for now, so nothing disappears from a screen that was not part of this change.
+64. As a cook who never uses step timers, I want to hide recipe timers, so no step, library card or filter offers me a timer I will not start.
+65. As a cook on a deployment whose administrator switched timers off, I want the timers entry not offered — and a choice I made earlier kept rather than erased — so the control never lists what cannot appear and never loses what I chose.
+
+### First paint
+
+66. As a cook who shops by recipe, I want the groceries page to open in the recipe view, so the store-grouped list never paints first and swaps out under my eyes.
+67. As a cook who turned off ingredient grouping, I want grocery rows ungrouped from the first frame, so merged rows never split apart in front of me.
+68. As a cook, I want my groceries view and grouping choices to survive a reload and a browser restart, so I choose once and the page stays chosen.
+69. As a cook who hid Today's meals, I want the dashboard to arrive without it, so the block never flashes in and yanks my library up the page.
+70. As a cook who shows Today's meals only when something is planned, I want that rule applied before the page paints, so an empty day never shows the block for a frame.
+71. As a cook, I want the Today's meals select in settings to keep working exactly as it does, so only the flicker goes, not the control.
+72. As a cook who prefers decimals, I want ingredient amounts to arrive as decimals, so fractions never paint and flip while I am reading.
+73. As a cook, I want the amount toggle itself to show my choice on first paint, so it does not need a disabled stand-in while it finds out.
+74. As a cook who reads the library as a list, I want that choice to keep arriving pre-rendered as it does today, so the shared helper underneath changes nothing I can see.
+75. As an administrator, I want the Admin tab present the moment settings paints, so the tab list never changes shape in front of me.
+76. As an administrator following a link straight to the admin section, I want to land on it directly, with no intermediate fall-back to another tab.
+77. As a household member who is not an administrator, I want settings to spend no request finding that out, so the page has nothing to wait for.
+78. As a cook who left filters active, I want the library to come back already filtered, so recipes I filtered away never flash into view and disappear.
+79. As a cook with no filters stored, I want the library to paint as promptly as it does today, so the fix costs nothing when there is nothing to apply.
+80. As a cook who hid ratings, I want them absent from the very first frame everywhere, so hiding is a fact of my app rather than something I watch happen on each load.
+81. As a cook opening the app offline, I want my hidden list applied from the persisted cache, so hiding holds without the network.
+82. As a cook who just changed a preference, I want a navigation answered by the service worker's cached page to settle on my current choice, so a stale copy cannot revert a toggle I just made.
+83. As a cook using the offline shell, I want every one of these choices honoured there too, so first-paint fidelity is not an online-only feature.
+84. As a maintainer, I want one shared way to make a device preference server-readable, so the next preference is a declaration rather than another hand-rolled cookie.
+85. As a maintainer, I want first-paint fidelity asserted in the browser harness, so a regression back to flicker fails a gate instead of waiting for a reader to notice it.
 
 ## Implementation Decisions
 
@@ -183,7 +214,7 @@ Finally, **Hidden Items**: one multi-select in settings holding everything a rea
 
   ```
   hidden: ("provenance" | "nutrition" | "notes"
-         | "rating" | "favorites" | "conversion")[]
+         | "rating" | "favorites" | "conversion" | "timers")[]
   ```
 
 - The three existing display booleans are removed from the preferences contract and from all their consumers. There is deliberately no backwards compatibility: no fallback read, no backfill migration. A reader who had previously hidden ratings or favourites sees them once more and can re-hide them from the new control.
@@ -194,8 +225,30 @@ Finally, **Hidden Items**: one multi-select in settings holding everything a rea
 - Hiding is a reading preference only. The recipe editor is untouched, and Recipe Enrichment continues to run and store for hidden kinds, so unhiding reveals values that are already there.
 - Shared recipe pages are read by people who are not signed in and have no preferences, so they show everything.
 - The preference is stored server-side with the rest of the user's preferences, so it follows the reader between devices.
-- The settings preferences card replaces its three switches with one multi-select. Timers stay a switch, because that is a capability with an administrator gate behind it rather than a display choice. Language and today's-meals stay selects; today's-meals is a three-state placement rule, not a hide, and it is device-local rather than server-side.
+- The settings preferences card replaces its four switches with one multi-select. Language and today's-meals stay selects; today's-meals is a three-state placement rule, not a hide, and it is device-local rather than server-side.
+- Recipe timers join the hidden list as the reader's own layer over the administrator's deployment-wide timers capability. When the administrator has switched timers off there is nothing to offer, so the control does not offer the entry. A control never drops a stored choice it was not in a position to show: it writes back what the reader chose plus what it carried, which covers a timers choice while the capability is off and an entry from a newer version alike. This carried/selected split came out of the implementation and is what makes "an unrecognised entry is ignored" safe in the presence of a control that writes the whole list.
 - The native app does not consult the list in this work. Its recipe screen has no provenance and no notes sections, so only nutrition would be affected, and it is left showing.
+
+### First paint and device preferences
+
+- The mechanism is a cookie, because a cookie is the only device state the server can read while it produces the HTML. Anything read after hydration forces the server to guess a default, and the guess is the flicker.
+- One shared device-preference helper replaces the library view switch's bespoke cookie code and is what tickets 17 through 19 consume. It owns the whole shape a preference cookie needs: a parse that always lands on a valid value, the client read and write, the server-side read for seeding the first render, and a provider that seeds from the server pass, reads the cookie itself when there was no server pass (the offline bootstrap), and reconciles once after mount because the service worker can answer a navigation with cached HTML that predates the last toggle.
+- The cookie contract, settled during the ticket breakdown. Names use underscores because the `norish:` colon convention of the localStorage keys cannot ride in a cookie name:
+
+  ```
+  norish_recipe_view_mode        "grid" | "list"                   default "grid"
+  norish_grocery_view_mode       "store" | "recipe"                default "store"
+  norish_grocery_group_similar   "true" | "false"                  default "true"
+  norish_todays_meals_visibility "always" | "planned" | "hidden"   default "always"
+  norish_amount_display          "fraction" | "decimal"            default "fraction"
+  ```
+
+- No fallback reads of the retired localStorage keys and no migration, matching Hidden Items' own no-backfill decision: a reader picks each moved preference once more and it sticks.
+- Today's meals visibility stays device-local, exactly as this spec's Out of Scope already fixes. The cookie changes where the device keeps the rule, not who owns it, and the settings select above it is untouched.
+- The amount display preference keeps the shared hook's interface, so every consumer is untouched; only the web storage binding underneath changes. Mobile keeps its own native binding.
+- The library filters deliberately do not move to a cookie. Their stored shape is a structured set of fields and chips, too large and too changeable to send with every request. The filters context already exposes a hydration signal that nothing consumes; the library consumes it and holds its existing loading presentation until the stored filters are applied. One frame of skeleton beats a frame of wrong recipes.
+- The Admin tab derives from the session. The session the server resolves for every page already carries the server-owner and server-admin flags, and the client cannot write those fields. Settings gains a thin server pass that reads the session and hands the role to the page — the same shape the dashboard uses today — the gate stops waiting on any fetch, and the role query that existed only to drive the gate is deleted. Every admin procedure keeps its own server-side authorisation; the tab was never the security boundary and still is not.
+- The Hidden Items list is part of what the first render knows, on every load path: the server render reads the reader's preferences while producing the HTML, and the offline shell finds the list in the persisted cache rather than waiting on the network. Whether the seed travels by server pass, by the warm set, or both is the implementer's call; the behaviour is that no consumer of the list ever renders before knowing it.
 
 ## Testing Decisions
 
@@ -205,11 +258,13 @@ Three seams, two of which already exist.
 
 **The recipe page, at page level.** The entire visible effect of Hidden Items is which sections render, so one page-level suite drives all six entries from a given hidden list, plus the case that matters most: that hiding Recipe Provenance removes the card and leaves the origin flag beside the title. This is higher than testing each card in isolation and it is the level at which the rule is actually a rule. Prior art is the existing mobile recipe page test for whole-page composition, and the existing Recipe Provenance card suite — twelve tests, all about when the section renders and what it says — for the style of assertion.
 
-**The settings preferences card.** The write side. The existing suite already has one test per display switch; those become tests that the multi-select writes the right list and reflects what is stored. Nothing new is created, and the timers, language and today's-meals tests around them should continue to pass untouched, which is the evidence that only the display toggles were absorbed.
+**The settings preferences card.** The write side. The existing suite already has one test per display switch, timers included; those become tests that the multi-select writes the right list and reflects what is stored, plus the carried rule — a gated-off or unrecognised stored entry survives a write untouched. Nothing new is created, and the language and today's-meals tests around them should continue to pass untouched, which is the evidence that only the display toggles were absorbed. The administrator capability's own tests stay where they are.
 
 **A design-invariants suite.** One new test that reads the web app's own source and fails on drift: no blur utilities or `backdrop-filter`, no glass tokens, and no remaining handrolled segmented control. That single file makes ADR-0020 permanent instead of a thing reviewers have to notice, and it proves the Tabs migration finished rather than leaving the old control beside its replacement. Prior art is the existing quality-gates suite, which reads the CI workflow and the root package manifest and fails when the gates stop being able to fail.
 
 Two existing suites change fixtures only, and their passing unchanged is itself the assertion. The filters panel suite covers the rating and favourites filters, whose behaviour is preserved and only re-sourced. The tRPC user router suite covers reading and updating preferences and needs the new key shape.
+
+**First paint, in the browser harness.** The first-paint work adds no seams. Its claim — the HTML the server sends already reflects the stored choice — is only observable at the seam that speaks real HTTP, and the app already has one: the production-like browser E2E harness. The harness asserts the server response for each cookie value: a groceries request carrying the recipe view arrives recipe-grouped, a dashboard request carrying hidden arrives without the Today block, a recipe request carrying decimals arrives with decimal amounts, and a settings request from an administrator arrives with the Admin tab in the first markup while a member's arrives without it and without any role request on the wire. The offline side of the same harness covers the two paths that bypass the server: a navigation answered by the service worker's cached HTML settles on the cookie's current value, and the offline bootstrap applies the persisted hidden list and the cookies without the network. The shared preference helper's parse fallback and read/write round trip get plain unit tests, and the write side of each preference stays where it already lives — the settings suite and the groceries and library suites. "Not one frame" is not screenshot-diffed; asserting the server-sent markup, and that no post-hydration swap follows, is the testable form of the same promise.
 
 Deliberately not covered by automated tests: the token warming, the chip restyle, the bottom bar, the sign-in treatment and the sign-in hand-off. They are visual, they have no coverage today, and screenshot tests would pin down exactly the pixels most likely to keep moving. These are verified by hand on the dev server, in both themes, on a phone viewport and a desktop one.
 
@@ -222,10 +277,14 @@ Deliberately not covered by automated tests: the token warming, the chip restyle
 - The roughly fifty non-auth places that report errors as a bare red sentence. Only the auth pages move to alerts.
 - Field-level validation presentation anywhere.
 - Today's-meals visibility. It stays a device-local three-state select and does not join the hidden list.
-- The timers preference. It is a capability with an administrator gate, not a display choice.
+- The administrator's deployment-wide timers capability. Hiding timers is the reader's own Hidden Item; whether timers exist at all for the deployment stays the administrator's setting, untouched here.
 - Cooking mode's tabs. Already on the library component and untouched.
 - Any change to what Recipe Enrichment produces, when it runs, or what the recipe editor can set.
 - A two-column sign-in layout, and the landing's large scroll-driven scenes. Only the small ingredient drawings are ported.
+- The mobile app's amount display storage and behaviour. Only the web binding under the shared hook changes.
+- Migration reads of the retired localStorage keys. A reader re-picks each moved preference once, the same stance Hidden Items takes on its display booleans.
+- Moving the library filters into a cookie. They stay device-stored and gate on hydration instead.
+- A live mid-session role change moving the Admin tab in or out without a navigation. The next server render reflects it.
 
 ## Further Notes
 
@@ -236,3 +295,5 @@ ADR-0020 records the glass removal. It exists because the narrower rule — keep
 Two things are worth watching during implementation. First, moving the account avatar into the bottom bar changes what its menu anchors to, and this app has known rules about popovers inside panels and about menus that re-render mid-exit; the menu's positioning and focus behaviour need checking rather than assuming. Second, the HeroUI upgrade touches most of the library's component stylesheets while this app hand-overrides several of them, so the overrides should be re-checked as part of the upgrade rather than discovered later.
 
 The work is one pull request in ordered commits: tokens first, since everything else reads them; then the library upgrade and the Tabs migration; then the glass removal and the bottom bar; then the sign-in page; then Hidden Items. Chips fall out of the token commit and the chip rule commit together.
+
+The first-paint work is tickets 16 through 22 in this directory and follows the same ordered-commit shape: the shared device-preference helper first (16), since its three consumers read it; then groceries, Today's meals and amounts (17, 18, 19); the Admin tab (20) and the filters gate (21) stand free and can land at any point; the Hidden Items seed (22) follows Hidden Items itself (04). The library view switch is touched twice on purpose — ticket 06 rebuilds its control on Tabs while ticket 16 re-homes its storage — and both leave its behaviour identical, so their order does not matter.
