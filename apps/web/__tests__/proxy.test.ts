@@ -40,6 +40,10 @@ describe("proxy share access", () => {
     expect(config.matcher[0]).toContain("sw\\.js");
     expect(config.matcher[0]).toContain("favicon\\.ico");
     expect(config.matcher[0]).toContain("icons");
+    // The worker script itself: browsers fetch it without credentials, and a
+    // script answered by a redirect is refused, so it can never sit behind
+    // the auth redirect.
+    expect(config.matcher[0]).toContain("serwist/");
   });
 
   it("redirects anonymous private recipe media requests", async () => {
