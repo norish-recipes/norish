@@ -1,4 +1,4 @@
-import type { TodaySectionVisibility } from "@/hooks/use-today-section-visibility";
+import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,8 +18,8 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/hooks/use-today-section-visibility", () => ({
-  useTodaySectionVisibility: () => [visibilityMock, setVisibilityMock, vi.fn()],
+vi.mock("@/context/todays-meals-visibility-context", () => ({
+  useTodaySectionVisibility: () => [visibilityMock, setVisibilityMock],
 }));
 
 vi.mock("next-intl", () => ({

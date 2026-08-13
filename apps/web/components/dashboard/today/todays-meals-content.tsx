@@ -1,6 +1,6 @@
 "use client";
 
-import type { TodaySectionVisibility } from "@/hooks/use-today-section-visibility";
+import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { useMemo, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";

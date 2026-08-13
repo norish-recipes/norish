@@ -1,10 +1,10 @@
 "use client";
 
-import type { TodaySectionVisibility } from "@/hooks/use-today-section-visibility";
+import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTodaySectionVisibility } from "@/context/todays-meals-visibility-context";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
-import { useTodaySectionVisibility } from "@/hooks/use-today-section-visibility";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Card, Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";

@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarContextProvider } from "@/app/(app)/calendar/context";
-import { useTodaySectionVisibility } from "@/hooks/use-today-section-visibility";
+import { useTodaySectionVisibility } from "@/context/todays-meals-visibility-context";
 
 import TodaysMealsContent from "./todays-meals-content";
 

@@ -25,6 +25,15 @@ vi.mock("@/app/(app)/settings/user/context", () => ({
   useUserSettingsContext: () => ({ ...mockContext, user: mockContext.user }),
 }));
 
+const todaysMealsMock = vi.hoisted(() => ({
+  visibility: "always" as "always" | "planned" | "hidden",
+  setVisibility: vi.fn(),
+}));
+
+vi.mock("@/context/todays-meals-visibility-context", () => ({
+  useTodaySectionVisibility: () => [todaysMealsMock.visibility, todaysMealsMock.setVisibility],
+}));
+
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
 vi.mock("@/hooks/config", () => ({
@@ -100,8 +109,7 @@ describe("PreferencesCard", () => {
 
   const hiddenControl = () => screen.getByRole("listbox", { name: /hidden\.title/i });
 
-  const hiddenOptions = () =>
-    within(hiddenControl()).getAllByRole("option") as HTMLOptionElement[];
+  const hiddenOptions = () => within(hiddenControl()).getAllByRole("option") as HTMLOptionElement[];
 
   const hiddenSelection = () =>
     hiddenOptions()
@@ -252,5 +260,21 @@ describe("PreferencesCard", () => {
     await waitFor(() => {
       expect(mockContext.updatePreferences).toHaveBeenCalledWith({ locale: "de-informal" });
     });
+  });
+
+  it("reflects the stored today's-meals rule and writes a new one", () => {
+    todaysMealsMock.visibility = "planned";
+
+    render(<PreferencesCard />);
+
+    const select = screen.getByRole("combobox", { name: /todaySection\.title/i });
+
+    expect((select as HTMLSelectElement).value).toBe("planned");
+
+    fireEvent.change(select, { target: { value: "hidden" } });
+
+    expect(todaysMealsMock.setVisibility).toHaveBeenCalledWith("hidden");
+
+    todaysMealsMock.visibility = "always";
   });
 });
