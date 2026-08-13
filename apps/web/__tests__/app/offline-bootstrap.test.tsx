@@ -10,8 +10,8 @@ vi.mock("@/components/dashboard/dashboard", () => ({
   Dashboard: () => <div>dashboard-surface</div>,
 }));
 
-vi.mock("@/app/(app)/groceries/page", () => ({
-  default: () => <div>groceries-surface</div>,
+vi.mock("@/app/(app)/groceries/groceries-screen", () => ({
+  GroceriesScreen: () => <div>groceries-surface</div>,
 }));
 
 vi.mock("@/app/(app)/calendar/page", () => ({

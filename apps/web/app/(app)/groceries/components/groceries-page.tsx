@@ -108,11 +108,17 @@ export function GroceriesPage() {
     setEditingGrocery(null);
   };
   if (isLoading) {
-    return <GrocerySkeleton />;
+    // The marker rides the skeleton too: the server response carries the
+    // stored view even while the list itself is still on its way.
+    return (
+      <div className="contents" data-grocery-view={viewMode}>
+        <GrocerySkeleton />
+      </div>
+    );
   }
   return (
     <>
-      <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="flex min-h-0 w-full flex-1 flex-col" data-grocery-view={viewMode}>
         {/* Header */}
         <div className="mb-6 flex min-h-10 shrink-0 items-center justify-between">
           <h1 className="text-2xl font-bold">{t("title")}</h1>

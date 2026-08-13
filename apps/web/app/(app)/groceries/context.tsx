@@ -1,12 +1,17 @@
 "use client";
 
+import type { GroceryGroupSimilar, GroceryViewMode } from "@/lib/grocery-preferences";
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { useDevicePreferenceState } from "@/context/device-preference-context";
 import {
   useGroceriesMutations,
   useGroceriesQuery,
   useGroceriesSubscription,
 } from "@/hooks/groceries";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import {
+  groceryGroupSimilarPreference,
+  groceryViewModePreference,
+} from "@/lib/grocery-preferences";
 
 import type { GroceryDto } from "@norish/shared/contracts";
 import { createGroceriesContext } from "@norish/shared-react/contexts";
@@ -24,24 +29,7 @@ const sharedGroceriesContext = createGroceriesContext({
 export const GroceriesProvider = sharedGroceriesContext.GroceriesProvider;
 export const useGroceriesContext = sharedGroceriesContext.useGroceriesContext;
 
-// =============================================================================
-// View Mode Types
-// =============================================================================
-
-export type GroceryViewMode = "store" | "recipe";
-
-const GROCERY_VIEW_MODE_KEY = "norish:grocery-view-mode";
-const GROCERY_GROUP_SIMILAR_KEY = "norish:grocery-group-similar";
-
-// Validation function defined outside component to prevent re-renders
-function validateViewMode(data: unknown): GroceryViewMode | null {
-  return data === "store" || data === "recipe" ? data : null;
-}
-
-// Validation function for group similar toggle
-function validateGroupSimilar(data: unknown): boolean | null {
-  return typeof data === "boolean" ? data : null;
-}
+export type { GroceryViewMode } from "@/lib/grocery-preferences";
 
 // =============================================================================
 // Web-only UI Context
@@ -66,25 +54,42 @@ type GroceriesUiContextValue = {
 
 const GroceriesUiCtx = createContext<GroceriesUiContextValue | null>(null);
 
-function GroceriesUiProvider({ children }: { children: ReactNode }) {
+type GroceriesUiProviderProps = {
+  children: ReactNode;
+  /** The cookies as the server read them; absent on the offline bootstrap. */
+  initialViewMode?: GroceryViewMode;
+  initialGroupSimilar?: GroceryGroupSimilar;
+};
+
+function GroceriesUiProvider({
+  children,
+  initialViewMode,
+  initialGroupSimilar,
+}: GroceriesUiProviderProps) {
   // UI State
   const [recurrencePanelOpen, setRecurrencePanelOpen] = useState(false);
   const [recurrencePanelGroceryId, setRecurrencePanelGroceryId] = useState<string | null>(null);
   const [addGroceryPanelOpen, setAddGroceryPanelOpen] = useState(false);
   const [editingGrocery, setEditingGrocery] = useState<GroceryDto | null>(null);
 
-  // View mode with localStorage persistence
-  const [viewMode, setViewMode] = useLocalStorage<GroceryViewMode>(
-    GROCERY_VIEW_MODE_KEY,
-    "store",
-    validateViewMode
+  // Both device preferences ride cookies so the server renders the page the
+  // way the reader left it; the shared state covers the seeded, self-read
+  // and stale-HTML reconcile paths.
+  const [viewMode, setViewMode] = useDevicePreferenceState(
+    groceryViewModePreference,
+    initialViewMode
   );
 
-  // Group similar ingredients toggle (only for store view)
-  const [groupSimilarIngredients, setGroupSimilarIngredients] = useLocalStorage<boolean>(
-    GROCERY_GROUP_SIMILAR_KEY,
-    true,
-    validateGroupSimilar
+  const [groupSimilarValue, setGroupSimilarValue] = useDevicePreferenceState(
+    groceryGroupSimilarPreference,
+    initialGroupSimilar
+  );
+
+  const groupSimilarIngredients = groupSimilarValue === "true";
+
+  const setGroupSimilarIngredients = useCallback(
+    (enabled: boolean) => setGroupSimilarValue(enabled ? "true" : "false"),
+    [setGroupSimilarValue]
   );
 
   const openRecurrencePanel = useCallback((groceryId: string) => {
@@ -142,10 +147,19 @@ export function useGroceriesUiContext() {
 // Combined Provider
 // =============================================================================
 
-export function GroceriesContextProvider({ children }: { children: ReactNode }) {
+export function GroceriesContextProvider({
+  children,
+  initialViewMode,
+  initialGroupSimilar,
+}: GroceriesUiProviderProps) {
   return (
     <GroceriesProvider>
-      <GroceriesUiProvider>{children}</GroceriesUiProvider>
+      <GroceriesUiProvider
+        initialGroupSimilar={initialGroupSimilar}
+        initialViewMode={initialViewMode}
+      >
+        {children}
+      </GroceriesUiProvider>
     </GroceriesProvider>
   );
 }

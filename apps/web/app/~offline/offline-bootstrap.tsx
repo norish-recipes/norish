@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/app/(app)/app-shell";
 import CalendarPage from "@/app/(app)/calendar/page";
-import GroceriesPage from "@/app/(app)/groceries/page";
+import { GroceriesScreen } from "@/app/(app)/groceries/groceries-screen";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { Dashboard } from "@/components/dashboard/dashboard";
@@ -14,7 +14,7 @@ function offlineSurface(pathname: string) {
   const path = pathname.replace(/\/+$/, "") || "/";
 
   if (path === "/") return <Dashboard />;
-  if (path === "/groceries") return <GroceriesPage />;
+  if (path === "/groceries") return <GroceriesScreen />;
   if (path === "/calendar") return <CalendarPage />;
 
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
