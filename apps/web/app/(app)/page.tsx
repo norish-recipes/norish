@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { Dashboard } from "@/components/dashboard/dashboard";
-import { parseRecipeViewMode, RECIPE_VIEW_MODE_COOKIE } from "@/lib/recipe-view-mode";
+import { recipeViewModePreference } from "@/lib/recipe-view-mode";
 
 import { auth } from "@norish/auth/auth";
 
@@ -17,7 +17,9 @@ export default async function Home() {
 
   return (
     <Dashboard
-      initialViewMode={parseRecipeViewMode(cookieStore.get(RECIPE_VIEW_MODE_COOKIE)?.value)}
+      initialViewMode={recipeViewModePreference.parse(
+        cookieStore.get(recipeViewModePreference.cookieName)?.value
+      )}
     />
   );
 }

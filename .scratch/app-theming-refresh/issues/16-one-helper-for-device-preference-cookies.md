@@ -18,8 +18,12 @@ norish_todays_meals_visibility "always" | "planned" | "hidden" default "always" 
 norish_amount_display          "fraction" | "decimal"          default "fraction" (ticket 19)
 ```
 
-- [ ] The library grid/list switch behaves exactly as it does today — same cookie name, so no reader loses their stored choice — but its cookie handling, provider seeding and stale-HTML reconcile now run through the shared helper.
-- [ ] The helper covers all three load paths: a server-rendered request carrying the cookie, a navigation answered by the service worker's cached HTML, and the offline bootstrap where no server pass happens at all.
-- [ ] An unrecognised or absent cookie value parses to the preference's default; the helper can never surface an invalid value.
-- [ ] Adding a new preference means declaring a name, its value set and a default — no per-preference parsing, document plumbing or reconcile code.
-- [ ] Unit tests cover the parse fallback, the read/write round trip and the seeded-versus-self-read provider paths, and the existing library view tests keep passing untouched.
+- [x] The library grid/list switch behaves exactly as it does today — same cookie name, so no reader loses their stored choice — but its cookie handling, provider seeding and stale-HTML reconcile now run through the shared helper.
+- [x] The helper covers all three load paths: a server-rendered request carrying the cookie, a navigation answered by the service worker's cached HTML, and the offline bootstrap where no server pass happens at all.
+- [x] An unrecognised or absent cookie value parses to the preference's default; the helper can never surface an invalid value.
+- [x] Adding a new preference means declaring a name, its value set and a default — no per-preference parsing, document plumbing or reconcile code.
+- [x] Unit tests cover the parse fallback, the read/write round trip and the seeded-versus-self-read provider paths, and the existing library view tests keep passing untouched.
+
+## Comments
+
+- Shipped. `lib/device-preferences.ts` holds `defineDevicePreference` (name + value set + default → total parse, nullable client read, client write), and `context/device-preference-context.tsx` holds the state half: `useDevicePreferenceState` covers seed / self-read / one reconcile after mount, and `createDevicePreferenceContext` wraps it for cross-component consumers. The load-bearing asymmetry is kept: `parse` is total while `readCookie` is nullable, so "never chosen" stays distinguishable from "chose the default" and the reconcile's guard still works; a present-but-invalid cookie parses to the default rather than counting as never-chosen. The setter accepts a functional updater, which ticket 19's toggle needs. The library's `recipe-view-mode.ts` is now one `defineDevicePreference` declaration, its context a `createDevicePreferenceContext` call, and the dashboard's duplicate Tabs-key parse rides `preference.parse`. There were no existing library view tests to keep passing (the cookie move landed without any); the new unit suites cover parse fallback, round trip, all three provider paths, functional updates and the outside-provider throw, and a dev-server check shows the server HTML selecting the stored tab per cookie value.

@@ -1,7 +1,6 @@
 "use client";
 
 import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
-import type { Key } from "react";
 import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import RecipeGrid from "@/components/dashboard/recipe-grid";
@@ -12,12 +11,9 @@ import {
   RecipeViewModeProvider,
   useRecipeDashboardViewMode,
 } from "@/context/recipe-view-mode-context";
+import { recipeViewModePreference } from "@/lib/recipe-view-mode";
 import { Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-function toRecipeDashboardViewMode(key: Key): RecipeDashboardViewMode {
-  return key === "list" ? "list" : "grid";
-}
 
 function RecipeLibrary() {
   const t = useTranslations("recipes.dashboard");
@@ -28,7 +24,7 @@ function RecipeLibrary() {
       <Tabs
         className="min-h-0 flex-1 gap-5"
         selectedKey={viewMode}
-        onSelectionChange={(key) => setViewMode(toRecipeDashboardViewMode(key))}
+        onSelectionChange={(key) => setViewMode(recipeViewModePreference.parse(String(key)))}
       >
         <div className="flex shrink-0 flex-col gap-4">
           <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
@@ -68,7 +64,7 @@ function RecipeLibrary() {
  */
 export function Dashboard({ initialViewMode }: { initialViewMode?: RecipeDashboardViewMode }) {
   return (
-    <RecipeViewModeProvider initialViewMode={initialViewMode}>
+    <RecipeViewModeProvider initialValue={initialViewMode}>
       <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
         <TodaysMeals />
         <RecipeLibrary />
