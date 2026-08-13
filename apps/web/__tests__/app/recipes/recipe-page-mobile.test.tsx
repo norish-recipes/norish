@@ -43,6 +43,7 @@ const baseRecipe = (): MockRecipe => ({
 const mocks = vi.hoisted(() => ({
   recipe: {} as Record<string, unknown>,
   busyKinds: new Set<string>(),
+  hidden: [] as string[],
 }));
 
 vi.mock("@/app/(app)/recipes/[id]/context", () => {
@@ -105,7 +106,7 @@ vi.mock("@norish/ui/star-rating", () => ({
 }));
 
 vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({ user: { id: "owner-1" } }),
+  useUserContext: () => ({ user: { id: "owner-1", preferences: { hidden: mocks.hidden } } }),
 }));
 vi.mock("@/hooks/favorites", () => ({
   useFavoritesQuery: () => ({ isFavorite: () => false }),
@@ -115,11 +116,6 @@ vi.mock("@/hooks/ratings", () => ({
   useRatingQuery: () => ({ userRating: null, averageRating: null, isLoading: false }),
   useRatingsMutation: () => ({ rateRecipe: vi.fn(), isRating: false }),
 }));
-vi.mock("@norish/shared/lib/user-preferences", () => ({
-  getShowRatingsPreference: () => true,
-  getShowFavoritesPreference: () => true,
-}));
-
 vi.mock("@heroui/react", () => ({
   Card: Object.assign(({ children }: { children: React.ReactNode }) => <div>{children}</div>, {
     Content: ({ children }: { children: React.ReactNode }) => (
@@ -140,6 +136,7 @@ vi.mock("next-intl", () => ({
 beforeEach(() => {
   mocks.recipe = baseRecipe();
   mocks.busyKinds = new Set();
+  mocks.hidden = [];
 });
 
 /** Marker elements for each section, in the order they appear in the DOM. */
@@ -253,5 +250,34 @@ describe("RecipePageMobile section layout", () => {
     expect(screen.queryByText("recipes.detail.notes")).not.toBeInTheDocument();
     expect(separators()).toHaveLength(4);
     expectNoDoubledRules();
+  });
+});
+
+describe("RecipePageMobile hidden items", () => {
+  it("shows the rating section to a reader who has hidden nothing", () => {
+    render(<RecipePageMobile />);
+
+    expect(screen.getByText("recipes.detail.ratingPrompt")).toBeInTheDocument();
+  });
+
+  it("drops the rating section for a reader who has hidden ratings", () => {
+    mocks.hidden = ["rating"];
+
+    render(<RecipePageMobile />);
+
+    expect(screen.queryByText("recipes.detail.ratingPrompt")).not.toBeInTheDocument();
+    // Hiding a section leaves no rule behind: the boundaries either side of the
+    // steps are unchanged, because the rating sits inside that group.
+    expect(separators()).toHaveLength(5);
+    expectNoDoubledRules();
+  });
+
+  it("ignores a stored name it does not recognise", () => {
+    mocks.hidden = ["something-newer"];
+
+    render(<RecipePageMobile />);
+
+    expect(sectionMarkers()).toHaveLength(7);
+    expect(screen.getByText("recipes.detail.ratingPrompt")).toBeInTheDocument();
   });
 });

@@ -111,21 +111,19 @@
         "title": "언어",
         "description": "선호하는 언어를 선택하세요"
       },
-      "timers": {
-        "title": "레시피 타이머 활성화",
-        "description": "레시피 지침에서 상호작용 타이머를 표시합니다"
-      },
-      "conversion": {
-        "title": "재료 단위 변환 버튼 표시",
-        "description": "레시피 페이지에 측정 시스템 변환 버튼을 표시합니다"
-      },
-      "ratings": {
-        "title": "평점 표시",
-        "description": "레시피 카드와 상세 페이지에 별점 평가를 표시합니다"
-      },
-      "favorites": {
-        "title": "즐겨찾기 표시",
-        "description": "레시피 카드와 상세 페이지에 즐겨찾기/하트 아이콘을 표시합니다"
+      "hidden": {
+        "title": "숨긴 항목",
+        "description": "표시하지 않을 항목을 선택하세요. 기본적으로 모두 표시되며, 이 설정은 내 화면에만 적용됩니다.",
+        "placeholder": "숨긴 항목 없음",
+        "options": {
+          "provenance": "출처",
+          "nutrition": "영양 정보",
+          "notes": "메모",
+          "rating": "평점",
+          "favorites": "즐겨찾기",
+          "conversion": "재료 단위 변환",
+          "timers": "레시피 타이머"
+        }
       },
       "todaySection": {
         "title": "오늘 섹션",

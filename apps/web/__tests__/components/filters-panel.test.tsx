@@ -17,8 +17,7 @@ const filtersState = {
 };
 
 const userPreferencesState = {
-  showRatings: true,
-  showFavorites: true,
+  hidden: [] as string[],
 };
 
 vi.mock("next-intl", () => ({
@@ -127,8 +126,7 @@ describe("FiltersPanel", () => {
   });
 
   it("hides favorites and rating section when both preferences are disabled", () => {
-    userPreferencesState.showFavorites = false;
-    userPreferencesState.showRatings = false;
+    userPreferencesState.hidden = ["favorites", "rating"];
 
     render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
@@ -136,13 +134,11 @@ describe("FiltersPanel", () => {
     expect(screen.queryByText("favorites")).not.toBeInTheDocument();
     expect(screen.queryByText("rating-stars")).not.toBeInTheDocument();
 
-    userPreferencesState.showFavorites = true;
-    userPreferencesState.showRatings = true;
+    userPreferencesState.hidden = [];
   });
 
   it("shows only favorites filter when ratings are disabled", () => {
-    userPreferencesState.showFavorites = true;
-    userPreferencesState.showRatings = false;
+    userPreferencesState.hidden = ["rating"];
 
     render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
@@ -150,12 +146,11 @@ describe("FiltersPanel", () => {
     expect(screen.getByText("favorites")).toBeInTheDocument();
     expect(screen.queryByText("rating-stars")).not.toBeInTheDocument();
 
-    userPreferencesState.showRatings = true;
+    userPreferencesState.hidden = [];
   });
 
   it("shows only rating filter when favorites are disabled", () => {
-    userPreferencesState.showFavorites = false;
-    userPreferencesState.showRatings = true;
+    userPreferencesState.hidden = ["favorites"];
 
     render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
@@ -163,6 +158,6 @@ describe("FiltersPanel", () => {
     expect(screen.queryByText("favorites")).not.toBeInTheDocument();
     expect(screen.getByText("rating-stars")).toBeInTheDocument();
 
-    userPreferencesState.showFavorites = true;
+    userPreferencesState.hidden = [];
   });
 });

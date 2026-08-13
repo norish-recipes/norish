@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -21,10 +22,14 @@ export default function SearchFieldToggles({
 }: SearchFieldTogglesProps) {
   const t = useTranslations("recipes.dashboard");
   const { filters, toggleSearchField } = useRecipesFiltersContext();
+  const [, startTransition] = useTransition();
 
   const handleClick = (field: (typeof SEARCH_FIELDS)[number]) => {
     onInteraction?.();
-    toggleSearchField(field);
+    // Changing a search field re-queries and re-sorts the whole library. That
+    // is not work the click should wait on, so it goes in as a transition and
+    // the page stays responsive while React prepares the new list.
+    startTransition(() => toggleSearchField(field));
   };
 
   const containerClass = scrollable

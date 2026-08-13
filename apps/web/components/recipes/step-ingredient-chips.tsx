@@ -231,7 +231,7 @@ export function StepIngredientChips({
         return (
           <li
             key={`${ref.ingredientOrder}`}
-            className="border-border bg-surface-secondary flex items-center gap-0.5 rounded-full border py-0.5 pr-1 pl-2.5"
+            className="border-border bg-surface flex items-center gap-0.5 rounded-full border py-0.5 pr-1 pl-2.5"
           >
             {customIndex === index ? (
               <>
@@ -330,9 +330,11 @@ export function StepIngredientChips({
       {available.length > 0 && (
         <li>
           <Dropdown>
+            {/* Sits in the same row as the linked chips and on the same page
+                ground, so it takes the same surface fill and border they do. */}
             <Button
               aria-label={t("addLabel")}
-              className="text-muted h-6 min-w-0 rounded-full px-2 text-sm font-normal"
+              className="border-border bg-surface text-muted h-6 min-w-0 rounded-full border px-2 text-sm font-normal"
               size="sm"
               variant="tertiary"
             >

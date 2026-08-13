@@ -7,6 +7,10 @@
       "node": "./heroui-theme.js",
       "default": "./heroui-theme.css"
     },
+    "./marks": {
+      "node": "./marks.js",
+      "default": "./marks.css"
+    },
     "./postcss-config": "./postcss-config.js"
   },
   "scripts": {

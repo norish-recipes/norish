@@ -8,7 +8,7 @@ import { Button, Dropdown, Label, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { MeasurementSystem } from "@norish/shared/contracts";
-import { getShowConversionButtonPreference } from "@norish/shared/lib/user-preferences";
+import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
@@ -25,7 +25,7 @@ type ConversionOption = {
 export default function SystemConvertMenu({ compact = false }: SystemConvertMenuProps) {
   const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
   const { user } = useUserContext();
-  const showConversion = getShowConversionButtonPreference(user);
+  const showConversion = !isHiddenForUser(user, "conversion");
   const { isAIEnabled } = usePermissionsContext();
   const t = useTranslations("recipes.convert");
   const availableSystems = useMemo(

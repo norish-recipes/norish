@@ -72,6 +72,39 @@ describe("Recovery", () => {
     expect(calls).toEqual(["refetch", "warm"]);
   });
 
+  it("does not refresh reads on startup when Replay sent nothing", async () => {
+    // The page's own first fetches already read the live server; asking again
+    // here is what made every hard load fetch the whole page twice.
+    await recovery().recover("startup");
+
+    expect(calls).toEqual(["warm"]);
+    expect(refetchActiveQueries).not.toHaveBeenCalled();
+  });
+
+  it("refreshes reads on startup when Replay actually sent something", async () => {
+    await store.enqueue(entry());
+
+    await recovery().recover("startup");
+
+    expect(calls).toEqual(["replay", "refetch", "warm"]);
+  });
+
+  it("refreshes reads on a resync even with an empty Outbox", async () => {
+    await recovery().recover("resync");
+
+    expect(calls).toEqual(["refetch", "warm"]);
+  });
+
+  it("takes the stronger reason when a resync coalesces into a startup run", async () => {
+    const instance = recovery();
+    const first = instance.recover("startup");
+
+    void instance.recover("resync");
+    await first;
+
+    expect(refetchActiveQueries).toHaveBeenCalled();
+  });
+
   it("owns bounded retry continuation before the final reconciliation", async () => {
     await store.enqueue(entry());
     const waits: number[] = [];

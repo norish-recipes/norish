@@ -155,7 +155,7 @@
     "notesPlaceholder": "Voeg tips voor de voorbereiding, aanpassingen of serveersuggesties toe voor dit recept...",
     "ingredientsHelp": "Typ ingrediënten zoals \"2 kopjes bloem\" - we verwerken automatisch hoeveelheden en eenheden.",
     "instructionsHelp": "Schrijf duidelijke stapsgewijze instructies. Druk op Enter om naar de volgende stap te gaan.",
-    "tagsHelp": "Typ tags en klik op suggesties om toe te voegen. Geselecteerde tags zijn blauw, nieuwe tags hebben een omstippelde rand.",
+    "tagsHelp": "Typ tags en klik op suggesties om toe te voegen. Tags op het recept zijn gevuld, nieuwe tags hebben een omstippelde rand.",
     "tagsAndCategories": "Tags & Categorieën",
     "categoriesHelp": "Selecteer maaltijdcategorieën voor dit recept.",
     "category": {

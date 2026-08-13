@@ -24,7 +24,7 @@ describe("user stale mutation handling", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    getUserPreferences.mockResolvedValue({ timersEnabled: true });
+    getUserPreferences.mockResolvedValue({ hidden: [] });
   });
 
   it("logs stale updatePreferences mutations as no-ops", async () => {
@@ -32,7 +32,7 @@ describe("user stale mutation handling", () => {
 
     const testRouter = t.router({
       updatePreferences: t.procedure
-        .input((value) => value as { preferences: { timersEnabled: boolean }; version: number })
+        .input((value) => value as { preferences: { hidden: string[] }; version: number })
         .mutation(async ({ ctx, input }) => {
           const current = await getUserPreferences(ctx.user.id);
           const merged = { ...(current ?? {}), ...(input.preferences ?? {}) };
@@ -57,14 +57,14 @@ describe("user stale mutation handling", () => {
 
     const caller = t.createCallerFactory(testRouter)(ctx);
     const result = await caller.updatePreferences({
-      preferences: { timersEnabled: false },
+      preferences: { hidden: ["timers"] },
       version: 5,
     });
 
     expect(result).toEqual({
       success: true,
       stale: true,
-      preferences: { timersEnabled: true },
+      preferences: { hidden: [] },
       version: 5,
     });
     expect(trpcLogger.info).toHaveBeenCalledWith(

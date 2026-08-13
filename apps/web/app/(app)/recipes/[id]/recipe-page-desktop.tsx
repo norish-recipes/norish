@@ -25,10 +25,7 @@ import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import {
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-} from "@norish/shared/lib/user-preferences";
+import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
 import ServingsControl from "./components/servings-control";
@@ -47,8 +44,8 @@ export default function RecipePageDesktop() {
   const { rateRecipe, isRating } = useRatingsMutation();
   const { user } = useUserContext();
   const t = useTranslations("recipes.detail");
-  const showRatings = getShowRatingsPreference(user);
-  const showFavorites = getShowFavoritesPreference(user);
+  const showRatings = !isHiddenForUser(user, "rating");
+  const showFavorites = !isHiddenForUser(user, "favorites");
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);

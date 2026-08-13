@@ -111,21 +111,19 @@
         "title": "Sprache",
         "description": "Wähle deine bevorzugte Sprache"
       },
-      "timers": {
-        "title": "Rezept-Timer aktivieren",
-        "description": "Interaktive Timer in Rezeptanweisungen anzeigen"
-      },
-      "conversion": {
-        "title": "Konvertier-Button anzeigen",
-        "description": "Zeige auf Rezeptseiten einen Button, um zwischen Maßsystemen umzurechnen"
-      },
-      "ratings": {
-        "title": "Bewertungen anzeigen",
-        "description": "Sternebewertungen auf Rezeptkarten und Detailseiten anzeigen"
-      },
-      "favorites": {
-        "title": "Favoriten anzeigen",
-        "description": "Favoriten-/Herzsymbole auf Rezeptkarten und Detailseiten anzeigen"
+      "hidden": {
+        "title": "Ausgeblendete Elemente",
+        "description": "Wähle, was dir lieber nicht angezeigt werden soll. Standardmäßig wird alles angezeigt, und das ändert nur deine eigene Ansicht.",
+        "placeholder": "Nichts ausgeblendet",
+        "options": {
+          "provenance": "Herkunft",
+          "nutrition": "Nährwerte",
+          "notes": "Notizen",
+          "rating": "Bewertungen",
+          "favorites": "Favoriten",
+          "conversion": "Zutatenumrechnung",
+          "timers": "Rezept-Timer"
+        }
       },
       "todaySection": {
         "title": "Heute-Bereich",

@@ -196,7 +196,7 @@ describe("useUserMutations", () => {
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
 
       const initialData = createMockUserSettingsData(
-        createMockUser({ id: "user-1", name: "Test User", preferences: { timersEnabled: true } }),
+        createMockUser({ id: "user-1", name: "Test User", preferences: { hidden: [] } }),
         []
       );
 
@@ -209,13 +209,13 @@ describe("useUserMutations", () => {
       });
 
       // Start the mutation (don't await yet)
-      const resPromise = result.current.updatePreferences({ timersEnabled: false });
+      const resPromise = result.current.updatePreferences({ hidden: ["timers"] });
 
       // Verify optimistic update was applied before mutation resolves
       await vi.waitFor(() => {
         const optimistic = queryClient.getQueryData(mockUserQueryKey) as any;
 
-        expect(optimistic.user.preferences.timersEnabled).toBe(false);
+        expect(optimistic.user.preferences.hidden).toEqual(["timers"]);
       });
 
       // Now resolve the mutation with failure
@@ -235,7 +235,7 @@ describe("useUserMutations", () => {
     it("merges server response into cache on successful preference update", async () => {
       vi.resetModules();
 
-      const serverPreferences = { timersEnabled: false, showConversionButton: true };
+      const serverPreferences = { hidden: ["conversion"] };
 
       vi.doMock("@/app/providers/trpc-provider", () => ({
         useTRPC: () => ({
@@ -279,7 +279,7 @@ describe("useUserMutations", () => {
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
 
       const initialData = createMockUserSettingsData(
-        createMockUser({ id: "user-1", name: "Test User", preferences: { timersEnabled: true } }),
+        createMockUser({ id: "user-1", name: "Test User", preferences: { hidden: [] } }),
         []
       );
 
@@ -289,7 +289,7 @@ describe("useUserMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const res = await result.current.updatePreferences({ timersEnabled: false });
+      const res = await result.current.updatePreferences({ hidden: ["timers"] });
 
       expect(res.success).toBe(true);
       expect(res.preferences).toEqual(serverPreferences);

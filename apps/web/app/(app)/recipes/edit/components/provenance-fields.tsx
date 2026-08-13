@@ -91,7 +91,7 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
         >
           <Label>{t("originCountry")}</Label>
           <ComboBox.InputGroup>
-            <Input placeholder={t("originCountryPlaceholder")} variant="secondary" />
+            <Input placeholder={t("originCountryPlaceholder")} />
             <ComboBox.Trigger />
           </ComboBox.InputGroup>
           <ComboBox.Popover>
@@ -116,7 +116,7 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
           onChange={(originRegion) => patch({ originRegion })}
         >
           <Label>{t("originRegion")}</Label>
-          <Input placeholder={t("originRegionPlaceholder")} variant="secondary" />
+          <Input placeholder={t("originRegionPlaceholder")} />
         </TextField>
       </div>
 
@@ -127,7 +127,6 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
         placeholder={t("cuisines")}
         selectionMode="multiple"
         value={value.cuisineIds}
-        variant="secondary"
         onChange={(keys) => patch({ cuisineIds: keys.map(String) })}
       >
         <Label>{t("cuisines")}</Label>
@@ -161,7 +160,7 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
         onChange={(provenanceNote) => patch({ provenanceNote })}
       >
         <Label>{t("provenanceNote")}</Label>
-        <TextArea placeholder={t("provenanceNotePlaceholder")} rows={4} variant="secondary" />
+        <TextArea placeholder={t("provenanceNotePlaceholder")} rows={4} />
       </TextField>
     </div>
   );

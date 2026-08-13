@@ -13,7 +13,7 @@ const DEFAULT_HEIGHT = 2532;
 // tooling/tailwind/heroui-theme.css) with the cream the brand uses on dark.
 const SCHEME_COLORS = {
   light: { background: "#FFFEF7", wordmark: "#336640" },
-  dark: { background: "#0E0E0E", wordmark: "#FFFEF7" },
+  dark: { background: "#14110D", wordmark: "#FFFEF7" },
 } as const;
 
 const parseDimension = (value: string | null, fallback: number) => {

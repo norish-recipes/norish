@@ -111,21 +111,19 @@
         "title": "Lingua",
         "description": "Scegli la tua lingua preferita"
       },
-      "timers": {
-        "title": "Abilita timer ricette",
-        "description": "Mostra timer interattivi nelle istruzioni delle ricette"
-      },
-      "conversion": {
-        "title": "Mostra pulsante conversione ingredienti",
-        "description": "Visualizza un pulsante nelle pagine delle ricette per convertire tra sistemi di misura"
-      },
-      "ratings": {
-        "title": "Mostra valutazioni",
-        "description": "Visualizza le valutazioni a stelle sulle schede ricette e nelle pagine di dettaglio"
-      },
-      "favorites": {
-        "title": "Mostra preferiti",
-        "description": "Visualizza le icone preferiti/cuore sulle schede ricette e nelle pagine di dettaglio"
+      "hidden": {
+        "title": "Elementi nascosti",
+        "description": "Scegli cosa preferisci non vedere. Per impostazione predefinita viene mostrato tutto e questo cambia solo la tua visualizzazione.",
+        "placeholder": "Niente nascosto",
+        "options": {
+          "provenance": "Provenienza",
+          "nutrition": "Valori nutrizionali",
+          "notes": "Note",
+          "rating": "Valutazioni",
+          "favorites": "Preferiti",
+          "conversion": "Conversione ingredienti",
+          "timers": "Timer delle ricette"
+        }
       },
       "todaySection": {
         "title": "Sezione Oggi",

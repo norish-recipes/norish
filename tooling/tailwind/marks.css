@@ -1,0 +1,82 @@
+/*
+ * The rules that draw a stroke and turn a mark, beside the tokens they colour
+ * themselves from. Imported by any app that renders `@norish/ui`'s ingredient
+ * drawings.
+ *
+ * Both rules are gated on `.js`, which a page sets on the document element when
+ * it has scripting and something to drive them with. With nothing driving them
+ * a drawing is simply finished and still, which is what a page that does not
+ * scroll — and a reader without scripting — should get.
+ */
+
+/*
+ * A stroke that draws itself once, the first time the block holding it is
+ * reached. Every path using it carries `pathLength="1"`, so the dash is exactly
+ * its own length whatever shape it happens to be, and one rule draws all of
+ * them at one rate.
+ */
+.stroke-in {
+  stroke-dasharray: 1;
+}
+
+.js .stroke-in {
+  stroke-dashoffset: 1;
+  /* The product's calm deceleration where a page defines one. */
+  transition: stroke-dashoffset 1s var(--ease-calm, cubic-bezier(0.16, 1, 0.3, 1));
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.js [data-shown="true"] .stroke-in {
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .stroke-in {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+}
+
+/*
+ * Things off the worktop, sitting in the margins of the quieter sections. They
+ * turn slowly on the spot and travel their own share of the block's crossing,
+ * which `--depth` sets and whatever is measuring the scroll writes as `--drift`,
+ * so the page has a little depth to it without anything actually moving past
+ * you. With no `--drift` written the mark holds where it was placed.
+ */
+.mark {
+  position: absolute;
+  color: var(--muted);
+  opacity: 0.4;
+  pointer-events: none;
+  translate: 0 calc(var(--drift, 0) * var(--depth, 1) * -1.6rem);
+}
+
+/* The drawing fills whatever room the mark was placed in. */
+.mark > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.js .mark {
+  animation: mark-turn var(--turn, 11s) ease-in-out infinite alternate;
+  animation-delay: var(--turn-delay, 0s);
+}
+
+@keyframes mark-turn {
+  from {
+    rotate: -4deg;
+  }
+  to {
+    rotate: 5deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark,
+  .js .mark {
+    translate: none;
+    animation: none;
+  }
+}

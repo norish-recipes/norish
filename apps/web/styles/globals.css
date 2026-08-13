@@ -48,10 +48,38 @@
   }
 }
 
-/* Free @heroui/styles makes tertiary chips transparent; give unselected
-   filter/tag chips a visible background like the previous design. */
+/*
+ * Chips divide by what their colour is doing. A chip that NAMES a thing — a
+ * Tag, a Cuisine, a cooking time — carries no meaning in its colour and is
+ * uniform: accent-filled when it is active, and the warmed default fill when
+ * it is not. A chip that REPORTS a condition keeps its semantic colour,
+ * because there the colour is the information.
+ *
+ * Free @heroui/styles makes tertiary chips transparent, which would leave an
+ * inactive naming chip as loose text on the page; the default fill is what
+ * makes it read as a control, and warming that token is what makes it read
+ * warm.
+ */
 .chip--tertiary {
   --chip-bg: var(--default);
+}
+
+/* Its label sits back from body copy at chip size, so a row of them reads as
+   labels rather than as sentences. Plain chips only — one whose colour is the
+   information keeps the contrast that goes with it. */
+.chip--default.chip--tertiary {
+  --chip-fg: color-mix(in oklab, var(--default-foreground) 65%, var(--muted));
+}
+
+/*
+ * The same rule, one step up, for a chip standing on the page itself rather
+ * than on a card. The default fill separates a chip from a white card, but the
+ * page ground is already warm and the two would sit almost on top of each
+ * other — so there the chip takes the surface and the card's job is done by the
+ * page. Add it wherever a naming chip has no card under it.
+ */
+.chip--tertiary.chip--on-ground {
+  --chip-bg: var(--surface);
 }
 
 /* Blue "info" chip (active jobs) — HeroUI ships no blue color variant. */

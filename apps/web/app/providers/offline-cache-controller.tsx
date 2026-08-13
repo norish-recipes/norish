@@ -81,11 +81,20 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
   const wasOffline = useRef(false);
   const startedForOwner = useRef<string | null>(null);
   const previousWsStatus = useRef(wsStatus);
+  const hasEverConnected = useRef(false);
 
   useEffect(() => {
     const socketConnected = previousWsStatus.current !== "connected" && wsStatus === "connected";
+    // Only a *re*connection can have missed anything. The first connect of a
+    // page load happens alongside the page's own first fetches, which already
+    // read the live server.
+    const socketReconnected = socketConnected && hasEverConnected.current;
 
     previousWsStatus.current = wsStatus;
+
+    if (wsStatus === "connected") {
+      hasEverConnected.current = true;
+    }
 
     if (isOffline) {
       wasOffline.current = true;
@@ -102,12 +111,15 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
 
     wasOffline.current = false;
 
-    if (!starting && !returningLive && !socketConnected) {
+    if (!starting && !returningLive && !socketReconnected) {
       return;
     }
 
     startedForOwner.current = owner;
-    void recovery.recover();
+    // Startup follows the page's own fetches, so recovery does not refresh the
+    // reads again unless Replay actually sent something. Coming back online or
+    // reconnecting always refreshes — those genuinely may have missed changes.
+    void recovery.recover(returningLive || socketReconnected ? "resync" : "startup");
   }, [isLive, isOffline, owner, recovery, wsStatus]);
 
   // CacheManager clears the outgoing QueryClient before activating the

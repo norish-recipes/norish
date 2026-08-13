@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { useRecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
@@ -46,7 +54,12 @@ export default function RecipeGrid() {
 
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [isLoadedOnce, setIsLoadedOnce] = useState(false);
-  const [viewMode] = useRecipeDashboardViewMode();
+  const [storedViewMode] = useRecipeDashboardViewMode();
+  // Re-laying out every card, re-measuring the virtualizer and swapping every
+  // card's variant is far too much work to do inside the click that asked for
+  // it. Deferring it lets the toggle paint its new position immediately and the
+  // grid catch up on the next non-urgent render.
+  const viewMode = useDeferredValue(storedViewMode);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTriggeredLoadMoreRef = useRef(false);
 
@@ -147,7 +160,11 @@ export default function RecipeGrid() {
     }
 
     if (isLoadedOnce && isLoading) {
-      const timeout = setTimeout(() => setShowSkeleton(true), 100);
+      // Swapping a loaded library for a grid of skeletons is the single most
+      // expensive render on this page, and it fires from a timer while the
+      // reader is still interacting with the control that caused it. As a
+      // transition it can be interrupted rather than blocking the frame.
+      const timeout = setTimeout(() => startTransition(() => setShowSkeleton(true)), 100);
 
       return () => clearTimeout(timeout);
     }

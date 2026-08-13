@@ -155,7 +155,7 @@
     "notesPlaceholder": "Add prep notes, adjustments or serving tips for this recipe...",
     "ingredientsHelp": "Type ingredients like \"2 cups flour\" - we'll automatically parse amounts and units.",
     "instructionsHelp": "Write clear step-by-step instructions. Press Enter to move to the next step.",
-    "tagsHelp": "Type tags and click suggestions to add. Selected tags are blue, new tags have a dashed border.",
+    "tagsHelp": "Type tags and click suggestions to add. Tags on the recipe are filled in; new tags have a dashed border.",
     "tagsAndCategories": "Tags & Categories",
     "categoriesHelp": "Select meal categories for this recipe.",
     "category": {

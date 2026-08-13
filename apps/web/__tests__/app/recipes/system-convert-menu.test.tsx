@@ -19,7 +19,7 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
 
 // Permissions context: AI disabled -> conversion options should be empty when no data
 vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({ user: { preferences: { showConversionButton: true } } }),
+  useUserContext: () => ({ user: { preferences: { hidden: [] } } }),
 }));
 
 vi.mock("@/context/permissions-context", () => ({

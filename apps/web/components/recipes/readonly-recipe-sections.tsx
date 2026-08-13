@@ -209,7 +209,7 @@ export function ReadonlyRecipeSummary({
                 key={tag.name}
                 className={isAllergen ? "bg-warning text-warning-foreground" : ""}
                 size="sm"
-                variant="soft"
+                variant="tertiary"
               >
                 {tag.name}
               </Chip>

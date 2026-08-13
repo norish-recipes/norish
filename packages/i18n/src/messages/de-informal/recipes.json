@@ -155,7 +155,7 @@
     "notesPlaceholder": "Füge Hinweise zur Vorbereitung, Anpassungen oder Serviervorschläge für dieses Rezept hinzu...",
     "ingredientsHelp": "Gib Zutaten wie \"2 Tassen Mehl\" ein - wir analysieren die Mengen und Einheiten automatisch.",
     "instructionsHelp": "Schreibe klare Schritt-für-Schritt-Anleitungen. Drücke Enter, um zum nächsten Schritt zu gehen.",
-    "tagsHelp": "Gib Tags ein und klicke auf Vorschläge zum Hinzufügen. Ausgewählte Tags sind blau, neue Tags haben einen gestrichelten Rahmen.",
+    "tagsHelp": "Gib Tags ein und klicke auf Vorschläge zum Hinzufügen. Tags am Rezept sind ausgefüllt, neue Tags haben einen gestrichelten Rahmen.",
     "tagsAndCategories": "Tags & Kategorien",
     "categoriesHelp": "Wähle Mahlzeitkategorien für dieses Rezept.",
     "category": {

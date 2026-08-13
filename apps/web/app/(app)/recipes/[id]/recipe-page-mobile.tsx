@@ -30,10 +30,7 @@ import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card, Link, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import {
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-} from "@norish/shared/lib/user-preferences";
+import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
 import { useRecipeContextRequired } from "./context";
@@ -51,8 +48,8 @@ export default function RecipePageMobile() {
   const { rateRecipe, isRating } = useRatingsMutation();
   const { user } = useUserContext();
   const t = useTranslations("recipes.detail");
-  const showRatings = getShowRatingsPreference(user);
-  const showFavorites = getShowFavoritesPreference(user);
+  const showRatings = !isHiddenForUser(user, "rating");
+  const showFavorites = !isHiddenForUser(user, "favorites");
   // The page owns every rule between sections, so it has to know which
   // sections will render — the same answer each section renders by.
   const showProvenance = useProvenanceSectionVisible();

@@ -12,7 +12,8 @@ catalog:
   "@better-auth/utils": 0.4.0
   "@eslint/js": ^9.39.4
   "@heroicons/react": 2.2.0
-  "@heroui/react": ^3.0.4
+  "@heroui/react": 3.2.4
+  "@heroui/styles": 3.2.4
   "@scalar/nextjs-api-reference": ^0.10.16
   "@tailwindcss/postcss": ^4.2.4
   "@tanstack/react-query": ^5.100.11

@@ -7,8 +7,7 @@ import RecipePageDesktop from "@/app/(app)/recipes/[id]/recipe-page-desktop";
 import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 
 const userPreferencesState = {
-  showFavorites: false,
-  showRatings: true,
+  hidden: ["favorites"] as string[],
 };
 
 vi.mock("next-intl", () => ({
@@ -129,7 +128,7 @@ vi.mock("@/components/recipes/author-chip", () => ({
 
 describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on desktop when favorites are hidden", () => {
-    userPreferencesState.showFavorites = false;
+    userPreferencesState.hidden = ["favorites"];
 
     render(<RecipePageDesktop />);
 
@@ -141,7 +140,7 @@ describe("recipe pages favorite visibility", () => {
   });
 
   it("keeps tap interactions enabled on mobile when favorites are hidden", () => {
-    userPreferencesState.showFavorites = false;
+    userPreferencesState.hidden = ["favorites"];
 
     render(<RecipePageMobile />);
 

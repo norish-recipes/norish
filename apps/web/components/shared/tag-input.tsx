@@ -42,9 +42,11 @@ function SortableTagItem({ tag, onEdit }: SortableTagItemProps) {
   };
 
   return (
+    // A Tag on the recipe is a chip that names a thing, and it is active:
+    // filled in the accent colour, like a selected filter chip.
     <button
       ref={setNodeRef}
-      className="bg-accent/10 text-accent hover:bg-accent/20 inline-flex cursor-grab touch-none items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:cursor-grabbing"
+      className="bg-accent text-accent-foreground hover:bg-accent/90 inline-flex cursor-grab touch-none items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:cursor-grabbing"
       style={style}
       type="button"
       onClick={(e) => {
@@ -258,7 +260,9 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
   return (
     <div className={className}>
       {/* Input area with inline tags */}
-      <div className="group bg-surface-secondary hover:bg-surface-tertiary transition-background data-[focus=true]:bg-surface-secondary flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl px-3 py-2">
+      {/* A field holding chips is still a field: it takes the same white fill,
+          border and shadow as every other input on the form. */}
+      <div className="group bg-field border-(--field-border) shadow-field flex min-h-[48px] flex-wrap items-center gap-2 rounded-2xl border px-3 py-2">
         <DndContext
           collisionDetection={closestCenter}
           sensors={sensors}
@@ -275,7 +279,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
           {/* Drag overlay - shows the tag following the cursor */}
           <DragOverlay>
             {activeId ? (
-              <div className="bg-accent/20 text-accent inline-flex cursor-grabbing items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg">
+              <div className="bg-accent text-accent-foreground inline-flex cursor-grabbing items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg">
                 <span>{activeId}</span>
               </div>
             ) : null}
@@ -313,7 +317,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
                 <motion.button
                   key={`new-tag-${word}-${idx}`}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
-                  className="bg-surface-secondary text-muted dark:bg-surface-secondary dark:text-foreground border-border-secondary inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
+                  className="bg-surface text-muted border-border inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
                   exit={{ opacity: 0, scale: 0.9, x: -10 }}
                   initial={{ opacity: 0, scale: 0.9, x: -10 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -330,7 +334,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
               <motion.button
                 key={`suggestion-${tag}`}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
-                className="bg-surface-secondary text-muted dark:bg-surface-secondary dark:text-foreground border-border-secondary inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
+                className="bg-surface text-muted border-border inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
                 exit={{ opacity: 0, scale: 0.9, x: -10 }}
                 initial={{ opacity: 0, scale: 0.9, x: -10 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}

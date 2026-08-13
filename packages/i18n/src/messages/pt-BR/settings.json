@@ -111,21 +111,19 @@
         "title": "Idioma",
         "description": "Escolha seu idioma preferido"
       },
-      "timers": {
-        "title": "Ativar temporizadores de receita",
-        "description": "Mostrar temporizadores interativos nas instruções da receita"
-      },
-      "conversion": {
-        "title": "Mostrar botão de conversão de ingredientes",
-        "description": "Exibir um botão nas páginas de receita para converter entre sistemas de medidas"
-      },
-      "ratings": {
-        "title": "Mostrar avaliações",
-        "description": "Exibir avaliações por estrelas nos cartões e páginas de detalhes das receitas"
-      },
-      "favorites": {
-        "title": "Mostrar favoritos",
-        "description": "Exibir ícones de favorito/coração nos cartões e páginas de detalhes das receitas"
+      "hidden": {
+        "title": "Itens ocultos",
+        "description": "Escolha o que você prefere não ver. Tudo é exibido por padrão, e isso muda apenas a sua própria visualização.",
+        "placeholder": "Nada oculto",
+        "options": {
+          "provenance": "Procedência",
+          "nutrition": "Nutrição",
+          "notes": "Notas",
+          "rating": "Avaliações",
+          "favorites": "Favoritos",
+          "conversion": "Conversão de ingredientes",
+          "timers": "Cronômetros de receita"
+        }
       },
       "applyError": "Falha ao aplicar preferência",
       "todaySection": {

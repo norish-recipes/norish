@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 import PreferencesCard from "@/app/(app)/settings/user/components/preferences-card";
 
 const mockContext = vi.hoisted(() => ({
-  user: { preferences: { timersEnabled: true } },
+  user: { preferences: { hidden: [] } },
   updatePreferences: vi.fn().mockResolvedValue(undefined),
   isUpdatingPreferences: false,
 }));
@@ -67,12 +67,19 @@ vi.mock("@heroui/react", () => ({
     ItemIndicator: () => null,
   }),
   Select: Object.assign(
-    ({ children, "aria-label": ariaLabel, value, onChange, isDisabled }: any) => (
+    ({ children, "aria-label": ariaLabel, value, onChange, isDisabled, selectionMode }: any) => (
       <select
         aria-label={ariaLabel}
         disabled={isDisabled}
+        multiple={selectionMode === "multiple"}
         value={value ?? ""}
-        onChange={(e) => onChange?.(e.target.value)}
+        onChange={(e) =>
+          onChange?.(
+            selectionMode === "multiple"
+              ? Array.from(e.target.selectedOptions, (option) => option.value)
+              : e.target.value
+          )
+        }
       >
         {children}
       </select>
@@ -91,124 +98,131 @@ describe("PreferencesCard", () => {
     vi.clearAllMocks();
   });
 
-  it("shows enabled when user preference is true and no global disable", async () => {
-    mockContext.user = { preferences: { timersEnabled: true } } as any;
+  const hiddenControl = () => screen.getByRole("listbox", { name: /hidden\.title/i });
+
+  const hiddenOptions = () =>
+    within(hiddenControl()).getAllByRole("option") as HTMLOptionElement[];
+
+  const hiddenSelection = () =>
+    hiddenOptions()
+      .filter((option) => option.selected)
+      .map((option) => option.value);
+
+  it("offers every hideable item from one control", () => {
+    mockContext.user = { preferences: { hidden: [] } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
     render(<PreferencesCard />);
 
-    // Description should be visible
-    expect(screen.getByText("description")).toBeInTheDocument();
-
-    // Locate the timers section parent container (contains the toggle)
-    // Find all toggles; timers toggle should be first
-    const toggles = screen.getAllByRole("button", { name: /toggle/i });
-    const timersToggle = toggles[0];
-
-    expect(timersToggle).toHaveAttribute("aria-pressed", "true");
-    expect(timersToggle).not.toBeDisabled();
+    expect(hiddenOptions().map((option) => option.value)).toEqual([
+      "provenance",
+      "nutrition",
+      "notes",
+      "rating",
+      "favorites",
+      "conversion",
+      "timers",
+    ]);
   });
 
-  it("shows disabled (user-level) when user preference is false and global enabled", async () => {
-    mockContext.user = { preferences: { timersEnabled: false } } as any;
+  it("hides nothing by default", () => {
+    mockContext.user = { preferences: { hidden: [] } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
     render(<PreferencesCard />);
 
-    const toggles = screen.getAllByRole("button", { name: /toggle/i });
-    const timersToggle = toggles[0];
+    expect(hiddenSelection()).toEqual([]);
+  });
 
-    expect(timersToggle).toHaveAttribute("aria-pressed", "false");
-    expect(timersToggle).not.toBeDisabled();
+  it("reflects the stored hidden list", () => {
+    mockContext.user = {
+      preferences: { hidden: ["rating", "conversion"] },
+    } as any;
 
-    fireEvent.click(timersToggle);
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    expect(hiddenSelection()).toEqual(["rating", "conversion"]);
+  });
+
+  it("writes the chosen items to the hidden list", async () => {
+    mockContext.user = { preferences: { hidden: ["rating"] } } as any;
+
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    const favorites = hiddenOptions().find((option) => option.value === "favorites")!;
+
+    favorites.selected = true;
+    fireEvent.change(hiddenControl());
 
     await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ timersEnabled: true });
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({
+        hidden: ["rating", "favorites"],
+      });
     });
   });
 
-  it("hides the timer toggle when globally disabled", async () => {
-    // Set global disabled
+  it("keeps a stored name it does not recognise", async () => {
+    mockContext.user = {
+      preferences: { hidden: ["rating", "something-newer"] },
+    } as any;
+
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    const rating = hiddenOptions().find((option) => option.value === "rating")!;
+
+    rating.selected = false;
+    fireEvent.change(hiddenControl());
+
+    await waitFor(() => {
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ hidden: ["something-newer"] });
+    });
+  });
+
+  it("stops offering timers when an administrator has switched them off", () => {
+    mockContext.user = { preferences: { hidden: [] } } as any;
+
     timersMock = { timersEnabled: false, globalEnabled: false } as any;
 
     render(<PreferencesCard />);
 
-    // The card description should remain visible
-    expect(screen.getByText("description")).toBeInTheDocument();
-
-    // Timer toggle should not be rendered, but conversion toggle may still be present
-    const titleDiv = screen.queryByText("timers.title");
-    const timersToggle = titleDiv?.closest("div")?.parentElement?.querySelector("button") ?? null;
-
-    expect(timersToggle).toBeNull();
+    expect(hiddenOptions().map((option) => option.value)).not.toContain("timers");
+    // The rest of the control is unaffected.
+    expect(hiddenOptions()).toHaveLength(6);
   });
 
-  it("toggles showConversionButton preference", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, showConversionButton: true } } as any;
+  it("keeps a hidden timers choice through an administrator switching them off", async () => {
+    mockContext.user = { preferences: { hidden: ["timers", "rating"] } } as any;
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: false, globalEnabled: false } as any;
 
     render(<PreferencesCard />);
 
-    // The second toggle controls conversion button visibility
-    const toggles = screen.getAllByRole("button", { name: /toggle/i });
-    const conversionToggle = toggles[1];
+    // Not offered, so not ticked — but changing something else must not drop it,
+    // or turning the capability back on would silently unhide timers.
+    expect(hiddenSelection()).toEqual(["rating"]);
 
-    expect(conversionToggle).toHaveAttribute("aria-pressed", "true");
-    expect(conversionToggle).not.toBeDisabled();
+    const favorites = hiddenOptions().find((option) => option.value === "favorites")!;
 
-    fireEvent.click(conversionToggle);
-
-    await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showConversionButton: false });
-    });
-  });
-
-  it("toggles showRatings preference", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, showRatings: true } } as any;
-
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
-
-    render(<PreferencesCard />);
-
-    const toggles = screen.getAllByRole("button", { name: /toggle/i });
-    const ratingsToggle = toggles[2];
-
-    expect(ratingsToggle).toHaveAttribute("aria-pressed", "true");
-    expect(ratingsToggle).not.toBeDisabled();
-
-    fireEvent.click(ratingsToggle);
+    favorites.selected = true;
+    fireEvent.change(hiddenControl());
 
     await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showRatings: false });
-    });
-  });
-
-  it("toggles showFavorites preference", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, showFavorites: true } } as any;
-
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
-
-    render(<PreferencesCard />);
-
-    const toggles = screen.getAllByRole("button", { name: /toggle/i });
-    const favoritesToggle = toggles[3];
-
-    expect(favoritesToggle).toHaveAttribute("aria-pressed", "true");
-    expect(favoritesToggle).not.toBeDisabled();
-
-    fireEvent.click(favoritesToggle);
-
-    await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showFavorites: false });
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({
+        hidden: ["rating", "favorites", "timers"],
+      });
     });
   });
 
   it("renders language dropdown with current locale", () => {
-    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } } as any;
+    mockContext.user = { preferences: { hidden: [], locale: "en" } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
@@ -225,7 +239,7 @@ describe("PreferencesCard", () => {
   });
 
   it("calls updatePreferences with locale when language is changed", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } } as any;
+    mockContext.user = { preferences: { hidden: [], locale: "en" } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 

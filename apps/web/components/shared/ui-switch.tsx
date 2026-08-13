@@ -9,12 +9,16 @@ type UiSwitchProps = Omit<ComponentProps<typeof Switch>, "children" | "onChange"
 };
 
 export default function UiSwitch({ children, onValueChange, ...props }: UiSwitchProps) {
+  // `Switch` is the field wrapper; `Switch.Content` is the clickable button, so
+  // the control and the label both have to live inside it or neither toggles.
   return (
     <Switch {...props} onChange={onValueChange}>
-      <Switch.Control>
-        <Switch.Thumb />
-      </Switch.Control>
-      {children ? <Switch.Content>{children}</Switch.Content> : null}
+      <Switch.Content>
+        <Switch.Control>
+          <Switch.Thumb />
+        </Switch.Control>
+        {children}
+      </Switch.Content>
     </Switch>
   );
 }

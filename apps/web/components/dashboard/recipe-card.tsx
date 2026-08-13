@@ -27,10 +27,7 @@ import { useTranslations } from "next-intl";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
-import {
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-} from "@norish/shared/lib/user-preferences";
+import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 
 import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 import DoubleTapContainer from "../shared/double-tap-container";
@@ -103,6 +100,23 @@ function dashboardFieldEqual(a: unknown, b: unknown): boolean {
   return false;
 }
 
+/**
+ * Whether a panel should be in the tree at all. Cards are virtualized, so one
+ * scrolls out and back in constantly — and a panel mounted before it is ever
+ * opened subscribes to its queries on every one of those mounts, refetching
+ * them each time. Nothing renders until the reader actually opens it; after
+ * that it stays, so closing still animates.
+ */
+function useMountedOnceOpened(open: boolean) {
+  const [mounted, setMounted] = useState(open);
+
+  if (open && !mounted) {
+    setMounted(true);
+  }
+
+  return mounted;
+}
+
 function RecipeCardComponent({
   recipe,
   isFavorite: recipeIsFavorite,
@@ -119,6 +133,8 @@ function RecipeCardComponent({
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
+  const calendarMounted = useMountedOnceOpened(calendarOpen);
+  const groceriesMounted = useMountedOnceOpened(groceriesOpen);
   const [failedImage, setFailedImage] = useState<string | null>(null);
   const {
     isOpen: isDeleteModalOpen,
@@ -126,8 +142,8 @@ function RecipeCardComponent({
     close: onDeleteModalClose,
   } = useOverlayState();
   const t = useTranslations("recipes.card");
-  const showRatings = getShowRatingsPreference(user);
-  const showFavorites = getShowFavoritesPreference(user);
+  const showRatings = !isHiddenForUser(user, "rating");
+  const showFavorites = !isHiddenForUser(user, "favorites");
 
   // Automatically prefetch recipe when card enters viewport
   const cardRef = useRecipePrefetch(recipe.id);
@@ -266,21 +282,21 @@ function RecipeCardComponent({
       title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
     >
       {typeof averageRating === "number" && averageRating > 0 && showRatings && (
-        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="soft">
+        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
           <StarIcon className="text-warning h-3.5 w-3.5" />
           <Chip.Label>{Math.round(averageRating)}</Chip.Label>
         </Chip>
       )}
 
       {timeLabel && (
-        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="soft">
+        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
           <ClockIcon className="h-3.5 w-3.5" />
           <Chip.Label>{timeLabel}</Chip.Label>
         </Chip>
       )}
 
       {typeof servings === "number" && servings > 0 && (
-        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="soft">
+        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
           <UserGroupIcon className="h-3.5 w-3.5" />
           <Chip.Label>{servings}</Chip.Label>
         </Chip>
@@ -291,6 +307,7 @@ function RecipeCardComponent({
           key={tag.toLowerCase()}
           className="max-w-[8rem] min-w-0 rounded-full px-2 text-[11px]"
           size="sm"
+          variant="tertiary"
         >
           <Chip.Label className="truncate">{tag}</Chip.Label>
         </Chip>
@@ -299,14 +316,14 @@ function RecipeCardComponent({
       {hiddenTagCount > 0 && (
         <Tooltip delay={0}>
           <Tooltip.Trigger aria-label={tagNames.join(", ")} onClick={stopParentActivation}>
-            <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="soft">
+            <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
               <Chip.Label>+{hiddenTagCount}</Chip.Label>
             </Chip>
           </Tooltip.Trigger>
           <Tooltip.Content className="max-w-64">
             <div className="flex flex-wrap gap-1.5 p-1">
               {tagNames.map((tag) => (
-                <Chip key={tag.toLowerCase()} className="max-w-48 rounded-full px-2" size="sm">
+                <Chip key={tag.toLowerCase()} className="max-w-48 rounded-full px-2" size="sm" variant="tertiary">
                   <Chip.Label className="truncate">{tag}</Chip.Label>
                 </Chip>
               ))}
@@ -484,16 +501,20 @@ function RecipeCardComponent({
       </SwipeableRow>
 
       {/* Calendar panel */}
-      <MiniCalendar open={calendarOpen} recipeId={recipe.id} onOpenChange={setCalendarOpen} />
+      {calendarMounted && (
+        <MiniCalendar open={calendarOpen} recipeId={recipe.id} onOpenChange={setCalendarOpen} />
+      )}
 
       {/* Groceries panel */}
-      <MiniGroceries
-        initialServings={recipe.servings || 1}
-        open={groceriesOpen}
-        originalServings={recipe.servings || 1}
-        recipeId={recipe.id}
-        onOpenChange={setGroceriesOpen}
-      />
+      {groceriesMounted && (
+        <MiniGroceries
+          initialServings={recipe.servings || 1}
+          open={groceriesOpen}
+          originalServings={recipe.servings || 1}
+          recipeId={recipe.id}
+          onOpenChange={setGroceriesOpen}
+        />
+      )}
 
       <DeleteRecipeModal
         isOpen={isDeleteModalOpen}

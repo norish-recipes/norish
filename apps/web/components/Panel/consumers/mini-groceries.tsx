@@ -307,9 +307,11 @@ export default function MiniGroceries({
                         isSelected={selectedIds.includes(item.id)}
                         onChange={() => toggleSelect(item.id)}
                       >
-                        <Checkbox.Control className="data-[selected=true]:border-accent data-[selected=true]:bg-accent size-5 rounded-full before:rounded-full">
-                          <Checkbox.Indicator className="text-accent-foreground" />
-                        </Checkbox.Control>
+                        <Checkbox.Content>
+                          <Checkbox.Control className="data-[selected=true]:border-accent data-[selected=true]:bg-accent size-5 rounded-full before:rounded-full">
+                            <Checkbox.Indicator className="text-accent-foreground" />
+                          </Checkbox.Control>
+                        </Checkbox.Content>
                       </Checkbox>
                       <div className="ml-2 flex min-w-0 flex-1 flex-col">
                         {isEditing ? (

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./star-rating": "./src/star-rating.tsx"
+    "./star-rating": "./src/star-rating.tsx",
+    "./mark": "./src/mark.tsx"
   },
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",

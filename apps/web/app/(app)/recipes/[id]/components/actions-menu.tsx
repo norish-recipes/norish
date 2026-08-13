@@ -19,9 +19,10 @@ import {
 } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Label, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import { twMerge } from "tailwind-merge";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
-import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
+import { cssAIGradientText, cssAIIconColor, cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
 import RecipeSharePanel from "./recipe-share-panel";
@@ -48,29 +49,36 @@ export default function ActionsMenu({ id }: Props) {
   const [openCalendar, setOpenCalendar] = React.useState(false);
   const [openGroceries, setOpenGroceries] = React.useState(false);
   const [openSharePanel, setOpenSharePanel] = React.useState(false);
+
   const {
     isOpen: isDeleteModalOpen,
     open: onDeleteModalOpen,
     close: onDeleteModalClose,
   } = useOverlayState();
   const router = useRouter();
+  
   const { canEditRecipe, canDeleteRecipe, isAIEnabled } = usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
   const { recipe, enrichment } = useRecipeContextRequired();
+
   const { allergies } = useActiveAllergies();
   const { isSupported, isActive, toggle } = useWakeLockContext();
+
   const t = useTranslations("recipes.actions");
   const tEnrichment = useTranslations("recipes.enrichment");
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
+
   const handleDeleteClick = React.useCallback(() => {
     onDeleteModalOpen();
   }, [onDeleteModalOpen]);
+
   const handleDeleteConfirm = React.useCallback(() => {
     onDeleteModalClose();
     deleteRecipe(id, recipe.version);
     router.push("/");
   }, [deleteRecipe, id, recipe.version, router, onDeleteModalClose]);
+
   const menuItems = useMemo(() => {
     const items: MenuItem[] = [
       {
@@ -190,6 +198,7 @@ export default function ActionsMenu({ id }: Props) {
         label: t("delete"),
         icon: <TrashIcon className="size-4" />,
         onPress: handleDeleteClick,
+        className: cssButtonPillDanger,
         labelClassName: "text-danger",
         iconClassName: "text-danger",
       });
@@ -237,7 +246,13 @@ export default function ActionsMenu({ id }: Props) {
                 textValue={item.label}
               >
                 <Button
-                  className={`w-full justify-start bg-transparent ${cssButtonPill} ${item.className ?? ""}`}
+                  className={twMerge(
+                    "w-full justify-start bg-transparent",
+                    cssButtonPill,
+                    // An item's own pill wins over the neutral one — a danger
+                    // row hovers danger, not surface.
+                    item.className
+                  )}
                   isDisabled={item.isDisabled}
                   size="md"
                   onPress={() => {
@@ -248,9 +263,11 @@ export default function ActionsMenu({ id }: Props) {
                 >
                   {<span className={item.iconClassName ?? "text-muted"}>{item.icon}</span>}
                   <span className="flex flex-col items-start">
-                    <span className={`text-sm font-medium ${item.labelClassName ?? ""}`}>
-                      <Label>{item.label}</Label>
-                    </span>
+                    {/* The class goes on the Label itself: `.label` sets its own
+                        colour, so a colour inherited from a wrapper never lands. */}
+                    <Label className={twMerge("text-sm font-medium", item.labelClassName)}>
+                      {item.label}
+                    </Label>
                     {item.description && (
                       <span className={`${item.descriptionClassName ?? "text-muted"} text-xs`}>
                         {item.description}

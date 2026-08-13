@@ -5,6 +5,15 @@
  * batch (including bounded transient retries), refetch active server-backed
  * queries without clearing their visible data, then top the Warm Set up. A
  * transport/auth/identity halt leaves the local copy as-is for a later trigger.
+ *
+ * The read refresh is what a trigger is really asking for, and it is only worth
+ * anything when the local copy might have fallen behind. A `startup` recovery
+ * runs immediately after the page's own first fetches, so the reads it would
+ * refresh are already converged — asking again just fetches the whole page a
+ * second time. It therefore skips the refresh unless Replay actually sent
+ * something, which is the one case where startup did change server state.
+ * A `resync` — coming back online, or a socket that dropped and reconnected —
+ * always refreshes, because there the client genuinely may have missed changes.
  */
 
 import type { OutboxStore } from "@/lib/outbox/outbox-store";
@@ -24,8 +33,14 @@ interface RecoveryDependencies {
   wait?: (delayMs: number) => Promise<void>;
 }
 
+/**
+ * Why recovery was asked to run. `startup` means the reads were just fetched by
+ * the page itself; anything else means they may have fallen behind.
+ */
+export type RecoveryReason = "startup" | "resync";
+
 export interface Recovery {
-  recover(): Promise<void>;
+  recover(reason?: RecoveryReason): Promise<void>;
   isSyncing(): boolean;
   subscribe(listener: () => void): () => void;
 }
@@ -46,17 +61,24 @@ export function createRecovery({
 }: RecoveryDependencies): Recovery {
   let processing: Promise<void> | null = null;
   let followUpRequested = false;
+  let requestedReason: RecoveryReason | null = null;
   const listeners = new Set<() => void>();
+
+  /** Coalesced triggers take the stronger reason: one resync makes the run one. */
+  function request(reason: RecoveryReason): void {
+    requestedReason = requestedReason === "resync" || reason === "resync" ? "resync" : "startup";
+  }
 
   function notify(): void {
     for (const listener of listeners) listener();
   }
 
-  async function replayToTerminalBatch(): Promise<boolean> {
+  async function replayToTerminalBatch(): Promise<{ completed: boolean; sent: boolean }> {
     const batchOwner = owner();
+    let sent = false;
 
     if (!batchOwner) {
-      return false;
+      return { completed: false, sent };
     }
 
     while (owner() === batchOwner) {
@@ -82,8 +104,10 @@ export function createRecovery({
       });
 
       if (!attempt) {
-        return false;
+        return { completed: false, sent };
       }
+
+      sent ||= attempt.removed > 0 || attempt.parked > 0;
 
       if (attempt.halted === "retry" && attempt.retryAfterMs !== null) {
         await wait(attempt.retryAfterMs);
@@ -95,18 +119,23 @@ export function createRecovery({
         continue;
       }
 
-      return attempt.halted === null;
+      return { completed: attempt.halted === null, sent };
     }
 
-    return false;
+    return { completed: false, sent };
   }
 
-  async function run(): Promise<void> {
-    if (!(await replayToTerminalBatch())) {
+  async function run(reason: RecoveryReason): Promise<void> {
+    const batch = await replayToTerminalBatch();
+
+    if (!batch.completed) {
       return;
     }
 
-    await refetchActiveQueries();
+    if (reason === "resync" || batch.sent) {
+      await refetchActiveQueries();
+    }
+
     await topUp();
   }
 
@@ -114,8 +143,12 @@ export function createRecovery({
     do {
       followUpRequested = false;
 
+      const reason = requestedReason ?? "resync";
+
+      requestedReason = null;
+
       try {
-        await run();
+        await run(reason);
       } catch {
         // Recovery is best-effort and exposes no parallel error state. A trigger
         // that arrived during the failed run still gets its requested follow-up.
@@ -124,7 +157,9 @@ export function createRecovery({
   }
 
   return {
-    recover() {
+    recover(reason: RecoveryReason = "resync") {
+      request(reason);
+
       if (processing) {
         followUpRequested = true;
 

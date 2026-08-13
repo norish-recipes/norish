@@ -155,7 +155,7 @@
     "notesPlaceholder": "Ajoutez des conseils de préparation, des ajustements ou des suggestions de service pour cette recette...",
     "ingredientsHelp": "Saisissez les ingrédients comme « 2 tasses de farine » — nous détecterons automatiquement les quantités et unités.",
     "instructionsHelp": "Rédigez des instructions claires étape par étape. Appuyez sur Entrée pour passer à l’étape suivante.",
-    "tagsHelp": "Tapez des tags et cliquez sur les suggestions pour ajouter. Les tags sélectionnés sont bleus, les nouveaux ont une bordure en pointillé.",
+    "tagsHelp": "Tapez des tags et cliquez sur les suggestions pour ajouter. Les tags de la recette sont remplis, les nouveaux ont une bordure en pointillé.",
     "tagsAndCategories": "Tags & Catégories",
     "categoriesHelp": "Sélectionnez les catégories de repas pour cette recette.",
     "category": {

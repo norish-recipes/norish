@@ -155,7 +155,7 @@
     "notesPlaceholder": "Legg til forberedelsesnotater, justeringer eller serveringstips til denne oppskriften...",
     "ingredientsHelp": "Skriv ingredienser som \"2 dl mel\" – vi analyserer automatisk mengder og enheter.",
     "instructionsHelp": "Skriv klare trinn-for-trinn-instruksjoner. Trykk Enter for å gå til neste trinn.",
-    "tagsHelp": "Skriv tags og klikk på forslag for å legge til. Valgte tags er blå, nye tags har stiplet kant.",
+    "tagsHelp": "Skriv tags og klikk på forslag for å legge til. Tags på oppskriften er fylte, nye tags har stiplet kant.",
     "tagsAndCategories": "Tags og kategorier",
     "categoriesHelp": "Velg måltidskategorier for denne oppskriften.",
     "category": {

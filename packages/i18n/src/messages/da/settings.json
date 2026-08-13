@@ -111,21 +111,19 @@
         "title": "Sprog",
         "description": "Vælg dit foretrukne sprog"
       },
-      "timers": {
-        "title": "Aktivér opskrifttimere",
-        "description": "Vis interaktive timere i opskriftinstruktioner"
-      },
-      "conversion": {
-        "title": "Vis knap til ingredienskonvertering",
-        "description": "Vis en knap på opskriftsider til at konvertere mellem målesystemer"
-      },
-      "ratings": {
-        "title": "Vis bedømmelser",
-        "description": "Vis stjernebedømmelser på opskriftskort og detaljesider"
-      },
-      "favorites": {
-        "title": "Vis favoritter",
-        "description": "Vis favorit/hjerte-ikoner på opskriftskort og detaljesider"
+      "hidden": {
+        "title": "Skjulte elementer",
+        "description": "Vælg hvad du helst ikke vil have vist. Alt vises som standard, og dette ændrer kun din egen visning.",
+        "placeholder": "Intet skjult",
+        "options": {
+          "provenance": "Oprindelse",
+          "nutrition": "Næring",
+          "notes": "Noter",
+          "rating": "Bedømmelser",
+          "favorites": "Favoritter",
+          "conversion": "Ingredienskonvertering",
+          "timers": "Opskriftstimere"
+        }
       },
       "todaySection": {
         "title": "I dag-sektion",

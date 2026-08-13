@@ -2,6 +2,7 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/fraunces/wght.css";
 @import "@norish/tailwind-config/heroui-theme";
+@import "@norish/tailwind-config/marks";
 
 @custom-variant light (&:is(:root, .light *, [data-theme="light"] *));
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
@@ -10,33 +11,6 @@
   :root {
     --font-inter: "Inter Variable", system-ui, sans-serif;
     --font-fraunces: "Fraunces Variable", ui-serif, Georgia, serif;
-  }
-
-  /*
-   * The landing page warms the product's near-neutral ground into paper, and
-   * warms borders and muted text with it so nothing reads grey on beige.
-   * Surfaces stay white: the contrast between beige page and white panel is
-   * what gives screenshots and the compose file their lift. Every other token
-   * — accent, foreground, the whole semantic set — comes from the app.
-   */
-  :root,
-  .light,
-  [data-theme="light"] {
-    --background: oklch(96.4% 0.016 88);
-    --border: oklch(89.5% 0.012 86);
-    --separator: oklch(92% 0.01 86);
-    --muted: oklch(52.5% 0.012 80);
-    --default: oklch(93% 0.014 86);
-  }
-
-  .dark,
-  [data-theme="dark"] {
-    --background: oklch(18% 0.009 80);
-    --surface: oklch(23.5% 0.008 80);
-    --border: oklch(31% 0.008 80);
-    --separator: oklch(28% 0.008 80);
-    --muted: oklch(71.5% 0.011 80);
-    --default: oklch(27.4% 0.008 80);
   }
 
   /*
@@ -201,32 +175,8 @@
   }
 }
 
-/*
- * A stroke that draws itself once, the first time the block holding it is
- * scrolled to: the hero's strands, and the small drawings in the margins. Every
- * path using it carries `pathLength="1"`, so the dash is exactly its own length
- * whatever shape it happens to be, and one rule draws all of them at one rate.
- */
-.stroke-in {
-  stroke-dasharray: 1;
-}
-
-.js .stroke-in {
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 1s var(--ease-calm);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-
-.js [data-shown="true"] .stroke-in {
-  stroke-dashoffset: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js .stroke-in {
-    stroke-dashoffset: 0;
-    transition: none;
-  }
-}
+/* `.stroke-in`, which the hero's strands share with the marks in the margins,
+   lives beside the shared theme tokens — see @norish/tailwind-config/marks. */
 
 /*
  * The hero's strands carry something along them once they are drawn: a short
@@ -261,33 +211,9 @@
   }
 }
 
-/*
- * Things off the worktop, sitting in the margins of the quieter sections. They
- * turn slowly on the spot and travel their own share of the block's crossing,
- * which `--depth` sets and `Drift` measures, so the page has a little depth to
- * it without anything actually moving past you.
- */
-.mark {
-  position: absolute;
-  color: var(--muted);
-  opacity: 0.4;
-  pointer-events: none;
-  translate: 0 calc(var(--drift, 0) * var(--depth, 1) * -1.6rem);
-}
-
-.js .mark {
-  animation: mark-turn var(--turn, 11s) ease-in-out infinite alternate;
-  animation-delay: var(--turn-delay, 0s);
-}
-
-@keyframes mark-turn {
-  from {
-    rotate: -4deg;
-  }
-  to {
-    rotate: 5deg;
-  }
-}
+/* The marks themselves — `.mark` and its slow turn — live beside the shared
+   theme tokens, since the app draws them too. `Drift` is what measures the
+   block's crossing and writes `--drift` for them to travel on. */
 
 /* Anything that rides the same measurement, at its own share of it. */
 .parallax {
@@ -295,11 +221,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mark,
-  .parallax,
-  .js .mark {
+  .parallax {
     translate: none;
-    animation: none;
   }
 }
 

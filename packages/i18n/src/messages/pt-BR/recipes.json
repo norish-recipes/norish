@@ -155,7 +155,7 @@
     "notesPlaceholder": "Adicione notas de preparo, ajustes ou dicas de como servir esta receita...",
     "ingredientsHelp": "Digite ingredientes como \"2 xícaras de farinha\" - vamos analisar automaticamente quantidades e unidades.",
     "instructionsHelp": "Escreva instruções claras passo a passo. Pressione Enter para passar para a próxima etapa.",
-    "tagsHelp": "Digite tags e clique nas sugestões para adicionar. Tags selecionadas são azuis, novas tags têm uma borda tracejada.",
+    "tagsHelp": "Digite tags e clique nas sugestões para adicionar. As tags da receita são preenchidas, novas tags têm uma borda tracejada.",
     "tagsAndCategories": "Tags e categorias",
     "categoriesHelp": "Selecione categorias de refeição para esta receita.",
     "category": {

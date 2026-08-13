@@ -33,7 +33,7 @@ describe("user preferences repository", () => {
   });
 
   it("updates the user row to merge preferences", async () => {
-    await expect(updateUserPreferences("user-1", { timersEnabled: false })).resolves.toEqual({
+    await expect(updateUserPreferences("user-1", { hidden: ["timers"] })).resolves.toEqual({
       applied: true,
       stale: false,
       value: undefined,
@@ -48,7 +48,7 @@ describe("user preferences repository", () => {
   it("rethrows if the update fails", async () => {
     mockReturning.mockRejectedValue(new Error("boom"));
 
-    await expect(updateUserPreferences("user-1", { showConversionButton: true })).rejects.toThrow(
+    await expect(updateUserPreferences("user-1", { hidden: ["conversion"] })).rejects.toThrow(
       "boom"
     );
   });

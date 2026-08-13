@@ -2,6 +2,7 @@
 
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+import { Chip } from "@heroui/react";
 import { useLocale } from "next-intl";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
@@ -67,12 +68,14 @@ function StepIngredientsRowContent({
         const label = [amount, unit, item.name].filter(Boolean).join(" ");
 
         return (
-          <li
+          <Chip<"li">
             key={`${item.ingredientOrder}`}
-            className="bg-surface-secondary text-muted rounded-md px-2 py-0.5 text-sm"
+            className="px-2 py-0.5 text-sm"
+            render={(props) => <li {...props} />}
+            variant="tertiary"
           >
             {label}
-          </li>
+          </Chip>
         );
       })}
     </ul>

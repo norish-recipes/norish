@@ -83,16 +83,20 @@ export function DeleteStoreModal({
                   onValueChange={(v) => setDeleteOption(v as "keep" | "delete")}
                 >
                   <Radio value="keep">
-                    <div className="ml-1">
-                      <p className="text-base font-medium">{t("keepItems")}</p>
-                      <p className="text-muted text-xs">{t("keepItemsDescription")}</p>
-                    </div>
+                    <Radio.Content>
+                      <div className="ml-1">
+                        <p className="text-base font-medium">{t("keepItems")}</p>
+                        <p className="text-muted text-xs">{t("keepItemsDescription")}</p>
+                      </div>
+                    </Radio.Content>
                   </Radio>
                   <Radio value="delete">
-                    <div className="ml-1">
-                      <p className="text-base font-medium">{t("deleteItems")}</p>
-                      <p className="text-muted text-xs">{t("deleteItemsDescription")}</p>
-                    </div>
+                    <Radio.Content>
+                      <div className="ml-1">
+                        <p className="text-base font-medium">{t("deleteItems")}</p>
+                        <p className="text-muted text-xs">{t("deleteItemsDescription")}</p>
+                      </div>
+                    </Radio.Content>
                   </Radio>
                 </RadioGroup>
               </div>

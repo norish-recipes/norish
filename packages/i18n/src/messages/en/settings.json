@@ -111,21 +111,19 @@
         "title": "Language",
         "description": "Choose your preferred language"
       },
-      "timers": {
-        "title": "Enable Recipe Timers",
-        "description": "Show interactive timers in recipe instructions"
-      },
-      "conversion": {
-        "title": "Show Ingredient Conversion Button",
-        "description": "Display a button on recipe pages to convert between measurement systems"
-      },
-      "ratings": {
-        "title": "Show Ratings",
-        "description": "Display star ratings on recipe cards and detail pages"
-      },
-      "favorites": {
-        "title": "Show Favorites",
-        "description": "Display favorite/heart icons on recipe cards and detail pages"
+      "hidden": {
+        "title": "Hidden Items",
+        "description": "Choose what you would rather not be shown. Everything is shown by default, and this changes only your own view.",
+        "placeholder": "Nothing hidden",
+        "options": {
+          "provenance": "Provenance",
+          "nutrition": "Nutrition",
+          "notes": "Notes",
+          "rating": "Ratings",
+          "favorites": "Favorites",
+          "conversion": "Ingredient conversion",
+          "timers": "Recipe timers"
+        }
       },
       "todaySection": {
         "title": "Today Section",

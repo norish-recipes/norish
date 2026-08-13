@@ -611,10 +611,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                       key={category}
                       as="button"
                       aria-pressed={active}
-                      className="h-8 cursor-pointer rounded-full px-3 text-sm"
+                      className="chip--on-ground h-8 cursor-pointer rounded-full px-3 text-sm"
                       color={active ? "accent" : "default"}
                       type="button"
-                      variant={active ? "primary" : "soft"}
+                      variant={active ? "primary" : "tertiary"}
                       onClick={() => toggleCategory(category)}
                     >
                       {t(`category.${category.toLowerCase()}`)}

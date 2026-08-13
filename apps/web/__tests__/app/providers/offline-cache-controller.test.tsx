@@ -188,6 +188,34 @@ describe("OfflineCacheController", () => {
 
     await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
 
+    const settle = (status: typeof wsStatus) => {
+      wsStatus = status;
+      view.rerender(
+        <QueryClientProvider client={view.queryClient}>
+          <OfflineCacheController>
+            <div>child</div>
+          </OfflineCacheController>
+        </QueryClientProvider>
+      );
+    };
+
+    // The socket has to have been up and dropped for this to be a reconnection;
+    // a first connect rides along with startup and has missed nothing.
+    settle("connected");
+    settle("disconnected");
+    settle("connected");
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(2));
+    expect(recover).toHaveBeenLastCalledWith("resync");
+  });
+
+  it("does not run Recovery again for the socket's first connect", async () => {
+    user = { id: "u1" };
+    const view = renderController();
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
+    expect(recover).toHaveBeenLastCalledWith("startup");
+
     wsStatus = "connected";
     view.rerender(
       <QueryClientProvider client={view.queryClient}>
@@ -197,7 +225,9 @@ describe("OfflineCacheController", () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => expect(recover).toHaveBeenCalledTimes(2));
+    // Startup already read the live server; connecting the socket adds nothing.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(recover).toHaveBeenCalledTimes(1);
   });
 
   it("does not run Recovery while Offline", async () => {

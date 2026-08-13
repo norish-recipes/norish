@@ -1,22 +1,16 @@
 "use client";
 
 import type { TodaySectionVisibility } from "@/hooks/use-today-section-visibility";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { useTodaySectionVisibility } from "@/hooks/use-today-section-visibility";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Card, Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import {
-  getLocalePreference,
-  getShowConversionButtonPreference,
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-  getTimersEnabledPreference,
-} from "@norish/shared/lib/user-preferences";
+import { HIDDEN_ITEMS } from "@norish/shared/contracts/zod/user";
+import { getLocalePreference, partitionHiddenItems } from "@norish/shared/lib/user-preferences";
 
 import { useUserSettingsContext } from "../context";
 
@@ -30,48 +24,25 @@ export default function PreferencesCard() {
 
   const todaySectionOptions: TodaySectionVisibility[] = ["always", "planned", "hidden"];
 
-  const effective = getTimersEnabledPreference(user);
-
-  const disabled = !globalEnabled;
-
   const currentLocale = getLocalePreference(user) ?? defaultLocale;
   const selectedLocale = enabledLocales.some((locale) => locale.code === currentLocale)
     ? currentLocale
     : undefined;
 
-  const handleToggle = useCallback(
-    async (value: boolean) => {
-      // If globally disabled, prevent changes
-      if (disabled) return;
-
-      await updatePreferences({ timersEnabled: value });
-    },
-    [updatePreferences, disabled]
+  // Timers are a capability an administrator can switch off for the whole
+  // deployment; when they have, there is nothing to offer the reader.
+  const offeredHidden = useMemo(
+    () => (globalEnabled ? HIDDEN_ITEMS : HIDDEN_ITEMS.filter((item) => item !== "timers")),
+    [globalEnabled]
   );
 
-  const conversionEffective = getShowConversionButtonPreference(user);
-  const ratingsEffective = getShowRatingsPreference(user);
-  const favoritesEffective = getShowFavoritesPreference(user);
+  const { selected: selectedHidden, carried } = partitionHiddenItems(user, offeredHidden);
 
-  const handleConversionToggle = useCallback(
-    async (value: boolean) => {
-      await updatePreferences({ showConversionButton: value });
+  const handleHiddenChange = useCallback(
+    async (chosen: string[]) => {
+      await updatePreferences({ hidden: [...chosen, ...carried] });
     },
-    [updatePreferences]
-  );
-
-  const handleRatingsToggle = useCallback(
-    async (value: boolean) => {
-      await updatePreferences({ showRatings: value });
-    },
-    [updatePreferences]
-  );
-
-  const handleFavoritesToggle = useCallback(
-    async (value: boolean) => {
-      await updatePreferences({ showFavorites: value });
-    },
-    [updatePreferences]
+    [updatePreferences, carried]
   );
 
   const handleLocaleChange = useCallback(
@@ -129,63 +100,44 @@ export default function PreferencesCard() {
           </Select>
         </div>
 
-        {globalEnabled && (
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-foreground font-medium">{t("timers.title")}</div>
-              <div className="text-muted text-sm">{t("timers.description")}</div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <SettingsSwitch
-                isDisabled={isUpdatingPreferences || disabled}
-                isSelected={effective}
-                onValueChange={(v) => handleToggle(v)}
-              />
-            </div>
-          </div>
-        )}
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-foreground font-medium">{t("conversion.title")}</div>
-            <div className="text-muted text-sm">{t("conversion.description")}</div>
+            <div className="text-foreground font-medium">{t("hidden.title")}</div>
+            <div className="text-muted text-sm">{t("hidden.description")}</div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <SettingsSwitch
-              isDisabled={isUpdatingPreferences}
-              isSelected={conversionEffective}
-              onValueChange={(v) => handleConversionToggle(v)}
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("ratings.title")}</div>
-            <div className="text-muted text-sm">{t("ratings.description")}</div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <SettingsSwitch
-              isDisabled={isUpdatingPreferences}
-              isSelected={ratingsEffective}
-              onValueChange={(v) => handleRatingsToggle(v)}
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("favorites.title")}</div>
-            <div className="text-muted text-sm">{t("favorites.description")}</div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <SettingsSwitch
-              isDisabled={isUpdatingPreferences}
-              isSelected={favoritesEffective}
-              onValueChange={(v) => handleFavoritesToggle(v)}
-            />
-          </div>
+          <Select
+            aria-label={t("hidden.title")}
+            className="max-w-[200px]"
+            isDisabled={isUpdatingPreferences}
+            placeholder={t("hidden.placeholder")}
+            selectionMode="multiple"
+            value={selectedHidden}
+            variant="secondary"
+            onChange={(selected) => handleHiddenChange(selected.map(String))}
+          >
+            <Label className="sr-only">{t("hidden.title")}</Label>
+            <Select.Trigger>
+              <Select.Value>
+                {({ defaultChildren, isPlaceholder }) =>
+                  isPlaceholder
+                    ? defaultChildren
+                    : selectedHidden.map((item) => t(`hidden.options.${item}`)).join(", ")
+                }
+              </Select.Value>
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox selectionMode="multiple">
+                {offeredHidden.map((item) => (
+                  <ListBox.Item key={item} id={item} textValue={t(`hidden.options.${item}`)}>
+                    {t(`hidden.options.${item}`)}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
         </div>
         <div className="flex items-center justify-between">
           <div>

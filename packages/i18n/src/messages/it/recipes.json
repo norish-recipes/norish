@@ -155,7 +155,7 @@
     "notesPlaceholder": "Aggiungi note di preparazione, modifiche o suggerimenti per questa ricetta...",
     "ingredientsHelp": "Digita gli ingredienti come \"2 tazze di farina\" - analizzeremo automaticamente quantità e unità.",
     "instructionsHelp": "Scrivi istruzioni chiare passo dopo passo. Premi Invio per passare al passaggio successivo.",
-    "tagsHelp": "Digita i tag e clicca i suggerimenti per aggiungerli. I tag selezionati sono blu, i nuovi tag hanno un bordo tratteggiato.",
+    "tagsHelp": "Digita i tag e clicca i suggerimenti per aggiungerli. I tag della ricetta sono pieni, i nuovi tag hanno un bordo tratteggiato.",
     "tagsAndCategories": "Tag e categorie",
     "categoriesHelp": "Seleziona le categorie di pasto per questa ricetta.",
     "category": {

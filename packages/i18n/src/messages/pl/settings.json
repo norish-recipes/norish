@@ -111,21 +111,19 @@
         "title": "Język",
         "description": "Wybierz preferowany język"
       },
-      "timers": {
-        "title": "Włącz timery w przepisach",
-        "description": "Pokazuj interaktywne timery w instrukcjach przepisu"
-      },
-      "conversion": {
-        "title": "Pokaż przycisk konwersji składników",
-        "description": "Wyświetlaj przycisk na stronach przepisów do konwersji między systemami miar"
-      },
-      "ratings": {
-        "title": "Pokaż oceny",
-        "description": "Wyświetlaj oceny w postaci gwiazdek na kartach przepisów i stronach szczegółów"
-      },
-      "favorites": {
-        "title": "Pokaż ulubione",
-        "description": "Wyświetlaj ikony ulubionych/serca na kartach przepisów i stronach szczegółów"
+      "hidden": {
+        "title": "Ukryte elementy",
+        "description": "Wybierz, czego wolisz nie oglądać. Domyślnie wyświetlane jest wszystko, a to zmienia tylko Twój własny widok.",
+        "placeholder": "Nic nie ukryto",
+        "options": {
+          "provenance": "Pochodzenie",
+          "nutrition": "Wartości odżywcze",
+          "notes": "Notatki",
+          "rating": "Oceny",
+          "favorites": "Ulubione",
+          "conversion": "Konwersja składników",
+          "timers": "Minutniki przepisów"
+        }
       },
       "todaySection": {
         "title": "Sekcja Dzisiaj",

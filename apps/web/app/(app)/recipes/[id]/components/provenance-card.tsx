@@ -81,7 +81,7 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
             <div className="flex flex-wrap items-baseline gap-2">
               <span className="text-muted text-sm">{t("cuisines")}</span>
               {recipe.cuisines.map((cuisine) => (
-                <Chip key={cuisine.id} size="sm" variant="soft">
+                <Chip key={cuisine.id} size="sm" variant="tertiary">
                   {/* A canonical identifier: shown verbatim in every locale. */}
                   {cuisine.name}
                 </Chip>

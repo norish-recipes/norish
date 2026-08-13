@@ -155,7 +155,7 @@
     "notesPlaceholder": "Añade notas de preparación, ajustes o consejos para servir esta receta...",
     "ingredientsHelp": "Escribe ingredientes como \"400 g harina\" — analizaremos automáticamente las cantidades y unidades.",
     "instructionsHelp": "Escribe instrucciones claras paso a paso. Pulsa Intro para pasar al siguiente paso.",
-    "tagsHelp": "Escribe etiquetas y haz clic en las sugerencias para añadirlas. Las etiquetas seleccionadas son azules; las nuevas tienen un borde discontinuo.",
+    "tagsHelp": "Escribe etiquetas y haz clic en las sugerencias para añadirlas. Las etiquetas de la receta están rellenas; las nuevas tienen un borde discontinuo.",
     "tagsAndCategories": "Etiquetas y categorías",
     "categoriesHelp": "Selecciona categorías de comida para esta receta.",
     "category": {

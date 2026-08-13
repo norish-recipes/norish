@@ -111,22 +111,20 @@
         "title": "Taal",
         "description": "Kies je voorkeurstaal"
       },
-      "timers": {
-        "title": "Recepttimers inschakelen",
-        "description": "Interactieve timers in receptinstructies tonen"
-      },
       "applyError": "Instelling kon niet worden toegepast",
-      "conversion": {
-        "title": "Toon conversieknop",
-        "description": "Toon de converteer knop op de recept pagina's"
-      },
-      "ratings": {
-        "title": "Beoordelingen tonen",
-        "description": "Sterbeoordelingen op receptkaarten en detailpagina's weergeven"
-      },
-      "favorites": {
-        "title": "Favorieten tonen",
-        "description": "Favoriet-/hartpictogrammen op receptkaarten en detailpagina's weergeven"
+      "hidden": {
+        "title": "Verborgen onderdelen",
+        "description": "Kies wat je liever niet ziet. Standaard wordt alles getoond en dit verandert alleen jouw eigen weergave.",
+        "placeholder": "Niets verborgen",
+        "options": {
+          "provenance": "Herkomst",
+          "nutrition": "Voedingswaarden",
+          "notes": "Notities",
+          "rating": "Beoordelingen",
+          "favorites": "Favorieten",
+          "conversion": "Ingrediëntconversie",
+          "timers": "Recepttimers"
+        }
       },
       "todaySection": {
         "title": "Vandaag-sectie",
