@@ -12,12 +12,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
-      initialAmountDisplayMode={amountDisplayPreference.parse(
-        cookieStore.get(amountDisplayPreference.cookieName)?.value
-      )}
-      initialTodaysMealsVisibility={todaysMealsVisibilityPreference.parse(
-        cookieStore.get(todaysMealsVisibilityPreference.cookieName)?.value
-      )}
+      initialAmountDisplayMode={amountDisplayPreference.readFrom(cookieStore)}
+      initialTodaysMealsVisibility={todaysMealsVisibilityPreference.readFrom(cookieStore)}
     >
       {children}
     </AppShell>

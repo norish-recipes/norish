@@ -13,12 +13,8 @@ export default async function GroceriesPage() {
 
   return (
     <GroceriesScreen
-      initialGroupSimilar={groceryGroupSimilarPreference.parse(
-        cookieStore.get(groceryGroupSimilarPreference.cookieName)?.value
-      )}
-      initialViewMode={groceryViewModePreference.parse(
-        cookieStore.get(groceryViewModePreference.cookieName)?.value
-      )}
+      initialGroupSimilar={groceryGroupSimilarPreference.readFrom(cookieStore)}
+      initialViewMode={groceryViewModePreference.readFrom(cookieStore)}
     />
   );
 }

@@ -30,6 +30,20 @@ describe("defineDevicePreference", () => {
     });
   });
 
+  describe("readFrom", () => {
+    it("reads the stored value out of a request's cookies", () => {
+      const cookieStore = { get: () => ({ value: "beta" }) };
+
+      expect(preference.readFrom(cookieStore)).toBe("beta");
+    });
+
+    it("lands an absent request cookie on the default", () => {
+      const cookieStore = { get: () => undefined };
+
+      expect(preference.readFrom(cookieStore)).toBe("alpha");
+    });
+  });
+
   describe("cookie round trip", () => {
     it("reads back what it wrote", () => {
       preference.writeCookie("beta");

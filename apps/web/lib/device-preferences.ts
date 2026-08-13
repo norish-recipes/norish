@@ -14,12 +14,19 @@
 
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
+/** The slice of next/headers' ReadonlyRequestCookies a server read needs. */
+type RequestCookies = {
+  get(name: string): { value: string } | undefined;
+};
+
 export type DevicePreferenceDefinition<V extends string> = {
   cookieName: string;
   values: readonly V[];
   defaultValue: V;
   /** Always lands on a valid value; feeds the server render. */
   parse(value: string | null | undefined): V;
+  /** The server-side read: seed the first render from the request. */
+  readFrom(cookieStore: RequestCookies): V;
   /**
    * The stored choice, or null when this browser has never made one. A
    * present-but-unrecognised value is a made choice with a broken value and
@@ -46,6 +53,9 @@ export function defineDevicePreference<V extends string>({
     values,
     defaultValue,
     parse,
+    readFrom(cookieStore) {
+      return parse(cookieStore.get(cookieName)?.value);
+    },
     readCookie() {
       if (typeof document === "undefined") return null;
 

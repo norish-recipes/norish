@@ -12,6 +12,11 @@ export const hoverInputIcon =
 // contrast instead of borrowing whatever plays underneath (ADR-0020).
 export const cssMediaControl = "bg-neutral-900 text-white hover:bg-neutral-800";
 
+// The soft accent halo behind an empty-state icon, drawn as a radial
+// gradient rather than blur compositing (ADR-0020 removed blur outright).
+export const cssEmptyStateGlow =
+  "from-accent-soft0/20 dark:from-accent/15 absolute -inset-12 bg-radial from-40% to-transparent";
+
 export const cssInputNoHover =
   "hover:!bg-white/70 dark:hover:!bg-black/70 data-[hovered=true]:!bg-white/70 dark:data-[hovered=true]:!bg-black/70 focus:!bg-white/70 dark:focus:!bg-black/70 data-[focus=true]:!bg-white/70 dark:data-[focus=true]:!bg-black/70 active:!bg-white/70 dark:active:!bg-black/70 data-[pressed=true]:!bg-white/70 dark:data-[pressed=true]:!bg-black/70 hover:!opacity-100 data-[hovered=true]:!opacity-100 transition-none";
 

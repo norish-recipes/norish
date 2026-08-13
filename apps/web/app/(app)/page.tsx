@@ -15,11 +15,5 @@ export default async function Home() {
   // reader from watching a grid paint first.
   const cookieStore = await cookies();
 
-  return (
-    <Dashboard
-      initialViewMode={recipeViewModePreference.parse(
-        cookieStore.get(recipeViewModePreference.cookieName)?.value
-      )}
-    />
-  );
+  return <Dashboard initialViewMode={recipeViewModePreference.readFrom(cookieStore)} />;
 }

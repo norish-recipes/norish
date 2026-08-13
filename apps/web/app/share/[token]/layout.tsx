@@ -11,11 +11,7 @@ export default async function SharedRecipeLayout({ children }: { children: React
   const cookieStore = await cookies();
 
   return (
-    <AmountDisplayProvider
-      initialValue={amountDisplayPreference.parse(
-        cookieStore.get(amountDisplayPreference.cookieName)?.value
-      )}
-    >
+    <AmountDisplayProvider initialValue={amountDisplayPreference.readFrom(cookieStore)}>
       {children}
     </AmountDisplayProvider>
   );

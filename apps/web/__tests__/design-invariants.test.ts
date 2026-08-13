@@ -89,7 +89,7 @@ describe("design invariants", () => {
 
   it("keeps blur utilities out of the web app", () => {
     expect(
-      filesMatching(/\bblur-(?:none|xs|sm|md|lg|xl|2xl|3xl|\[)/),
+      filesMatching(/\bblur-(?:none|xs|sm|md|lg|xl|2xl|3xl|\[|\()/),
       `A blur utility came back — Norish does not fake glass, see ${ADR}. ` +
         `Soft glows are drawn with gradients, not blur compositing.`
     ).toEqual([]);

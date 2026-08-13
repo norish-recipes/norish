@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
+import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
 import { DndGroceryProvider, DndGroupedGroceryProvider } from "./dnd";
 import { GroupedStoreSection } from "./grouped-store-section";
@@ -112,7 +113,7 @@ export function GroceryList({
         <div className="border-border bg-surface shadow-surface relative w-full max-w-xl rounded-xl border">
           <div className="flex flex-col items-center gap-6 p-10 text-center">
             <div className="relative">
-              <div className="from-accent-soft0/20 dark:from-accent/15 absolute -inset-12 bg-radial from-40% to-transparent" />
+              <div className={cssEmptyStateGlow} />
               <div className="bg-accent-soft0/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
                 <ShoppingCartIcon className="h-7 w-7" />
               </div>
