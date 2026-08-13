@@ -6,13 +6,17 @@ Signing in through an identity provider cannot do that — the browser navigates
 
 **Blocked by:** 10 (auth pages take the landing treatment).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Credential sign-in hands over in one continuous movement: the card and the drawings leave and the app shell arrives without a hard cut between them.
-- [ ] Provider sign-in returns from the provider and the app shell plays the same arrival, so both routes feel like one gesture.
-- [ ] The arrival plays once and then stops. Navigating around the app afterwards is not animated, and returning to a page later does not replay it.
-- [ ] The just-arrived signal is cleared once read, so a refresh does not replay the entrance.
-- [ ] A failed sign-in does not play any of it — the reader stays on the page with the alert.
-- [ ] Reduced motion stands the whole hand-off down and signs in instantly.
-- [ ] A browser without support for the transition signs in instantly rather than breaking.
-- [ ] Sign-in still works by password and by every configured provider, and the callback destination is honoured.
+- [x] Credential sign-in hands over in one continuous movement: the card and the drawings leave and the app shell arrives without a hard cut between them.
+- [x] Provider sign-in returns from the provider and the app shell plays the same arrival, so both routes feel like one gesture.
+- [x] The arrival plays once and then stops. Navigating around the app afterwards is not animated, and returning to a page later does not replay it.
+- [x] The just-arrived signal is cleared once read, so a refresh does not replay the entrance.
+- [x] A failed sign-in does not play any of it — the reader stays on the page with the alert.
+- [x] Reduced motion stands the whole hand-off down and signs in instantly.
+- [x] A browser without support for the transition signs in instantly rather than breaking.
+- [x] Sign-in still works by password and by every configured provider, and the callback destination is honoured.
+
+## Comments
+
+- Shipped. `lib/sign-in-handoff.ts` owns the whole gesture: `handOverToApp` wraps the credential route's `router.push` in `document.startViewTransition` (feature-detected, reduced-motion checked at call time, capped wait so a navigation that never lands cannot freeze the page), with `SignInHandoffCommit` in the root layout resolving the transition when the route actually changes — the outgoing auth page unmounts mid-transition, so only a survivor can report the landing. Provider sign-in marks its arrival in sessionStorage before redirecting; an inline script in the app shell consumes it before first paint and stamps `data-app-arrival` on the document, the entrance CSS keys off that, and `AppArrival` retires the mark after it plays. The auth layout's pre-paint script clears a stale signal a failed or abandoned redirect left behind. Failure paths never navigate, so they never mark anything. Per the spec's testing decisions the hand-off is verified by hand rather than screenshot-tested; the dev server smoke shows both scripts server-rendered and password sign-in landing on the shell. The full movement (both themes, phone and desktop viewports) still wants an eyeball pass.

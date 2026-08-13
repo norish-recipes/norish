@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { markArrivalForRedirect } from "@/lib/sign-in-handoff";
 import { Card, Spinner } from "@heroui/react";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
@@ -20,6 +21,10 @@ export function AutoSignIn({ provider, callbackUrl }: AutoSignInProps) {
   useEffect(() => {
     if (redirectInitiated.current) return;
     redirectInitiated.current = true;
+
+    // The provider round trip returns as a cold load; the arrival signal
+    // rides sessionStorage so the app shell can play its entrance.
+    markArrivalForRedirect();
 
     const providerId = provider.id.toLowerCase();
 

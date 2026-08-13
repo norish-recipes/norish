@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 
 import RegisterServiceWorker from "@/components/register-service-worker";
+import { SignInHandoffCommit } from "@/components/sign-in-handoff-commit";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -26,6 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </NextIntlClientProvider>
         </AppThemeProvider>
         <RegisterServiceWorker />
+        <SignInHandoffCommit />
       </body>
     </html>
   );

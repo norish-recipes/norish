@@ -1,5 +1,6 @@
 "use client";
 
+import { markArrivalForRedirect } from "@/lib/sign-in-handoff";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -22,6 +23,10 @@ export function ProviderButton({
   const t = useTranslations("auth.provider");
   const handleSignIn = async () => {
     const id = providerId.toLowerCase();
+
+    // The provider round trip returns as a cold load; the arrival signal
+    // rides sessionStorage so the app shell can play its entrance.
+    markArrivalForRedirect();
 
     // GitHub and Google use signIn.social(), OIDC uses signIn.oauth2()
     if (id === "github" || id === "google") {
