@@ -51,7 +51,7 @@ export default function MeasurementSystemSelector({
         }}
       >
         {systems.map((system) => (
-          <ToggleButton key={system} className='flex-1' id={system}>
+          <ToggleButton key={system} className="flex-1" id={system}>
             {system === "us" && <ToggleButtonGroup.Separator />}
             {systemLabels[system]}
           </ToggleButton>

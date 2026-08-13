@@ -56,7 +56,7 @@ export default function ActionsMenu({ id }: Props) {
     close: onDeleteModalClose,
   } = useOverlayState();
   const router = useRouter();
-  
+
   const { canEditRecipe, canDeleteRecipe, isAIEnabled } = usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
   const { recipe, enrichment } = useRecipeContextRequired();

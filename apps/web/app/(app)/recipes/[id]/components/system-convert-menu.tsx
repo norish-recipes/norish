@@ -2,13 +2,12 @@
 
 import React, { useMemo } from "react";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { useUserContext } from "@/context/user-context";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import { Button, Dropdown, Label, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { MeasurementSystem } from "@norish/shared/contracts";
-import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
@@ -24,8 +23,7 @@ type ConversionOption = {
 };
 export default function SystemConvertMenu({ compact = false }: SystemConvertMenuProps) {
   const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
-  const { user } = useUserContext();
-  const showConversion = !isHiddenForUser(user, "conversion");
+  const { showConversion } = useHiddenItemVisibility();
   const { isAIEnabled } = usePermissionsContext();
   const t = useTranslations("recipes.convert");
   const availableSystems = useMemo(

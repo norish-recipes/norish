@@ -23,14 +23,13 @@ import {
 import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import { useUserContext } from "@/context/user-context";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card, Link, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
 import { useRecipeContextRequired } from "./context";
@@ -46,10 +45,8 @@ export default function RecipePageMobile() {
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
-  const { user } = useUserContext();
   const t = useTranslations("recipes.detail");
-  const showRatings = !isHiddenForUser(user, "rating");
-  const showFavorites = !isHiddenForUser(user, "favorites");
+  const { showRatings, showFavorites } = useHiddenItemVisibility();
   // The page owns every rule between sections, so it has to know which
   // sections will render — the same answer each section renders by.
   const showProvenance = useProvenanceSectionVisible();

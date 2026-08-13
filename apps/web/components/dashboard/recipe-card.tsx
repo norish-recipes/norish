@@ -8,7 +8,7 @@ import OriginFlag from "@/components/recipes/origin-flag";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { useUserContext } from "@/context/user-context";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 import { useAppStore } from "@/stores/useAppStore";
 import {
@@ -27,7 +27,6 @@ import { useTranslations } from "next-intl";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
-import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 
 import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 import DoubleTapContainer from "../shared/double-tap-container";
@@ -129,7 +128,6 @@ function RecipeCardComponent({
   const rowRef = useRef<SwipeableRowRef>(null);
   const mobileSearchOpen = useAppStore((s) => s.mobileSearchOpen);
   const { canDeleteRecipe } = usePermissionsContext();
-  const { user } = useUserContext();
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
@@ -142,8 +140,7 @@ function RecipeCardComponent({
     close: onDeleteModalClose,
   } = useOverlayState();
   const t = useTranslations("recipes.card");
-  const showRatings = !isHiddenForUser(user, "rating");
-  const showFavorites = !isHiddenForUser(user, "favorites");
+  const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   // Automatically prefetch recipe when card enters viewport
   const cardRef = useRecipePrefetch(recipe.id);

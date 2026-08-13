@@ -18,14 +18,13 @@ import {
 } from "@/components/recipes/readonly-recipe-sections";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import { useUserContext } from "@/context/user-context";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
 import ServingsControl from "./components/servings-control";
@@ -42,10 +41,8 @@ export default function RecipePageDesktop() {
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
-  const { user } = useUserContext();
   const t = useTranslations("recipes.detail");
-  const showRatings = !isHiddenForUser(user, "rating");
-  const showFavorites = !isHiddenForUser(user, "favorites");
+  const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);

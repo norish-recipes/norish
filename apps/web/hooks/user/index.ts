@@ -6,3 +6,7 @@ export { useLocaleCookie, type UseLocaleCookieResult } from "./use-locale-cookie
 export { useLanguageSwitch, type UseLanguageSwitchResult } from "./use-language-switch";
 export { useActiveAllergies, type UseActiveAllergiesResult } from "./use-active-allergies";
 export { useUserAllergiesQuery } from "./use-user-allergies-query";
+export {
+  useHiddenItemVisibility,
+  type UseHiddenItemVisibilityResult,
+} from "./use-hidden-item-visibility";
