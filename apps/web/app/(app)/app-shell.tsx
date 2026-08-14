@@ -1,5 +1,4 @@
 import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
-import { AppArrival } from "@/app/(app)/app-arrival";
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 import { Navbar } from "@/components/navbar/navbar";
@@ -12,7 +11,6 @@ import { RecipesContextProvider } from "@/context/recipes-context";
 import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
 import { TodaysMealsVisibilityProvider } from "@/context/todays-meals-visibility-context";
 import { UserProvider } from "@/context/user-context";
-import { CONSUME_ARRIVAL_SIGNAL_SCRIPT } from "@/lib/sign-in-handoff";
 
 import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
 import { APP_MAIN_HORIZONTAL_PADDING_CLASS } from "@norish/web/config/css-tokens";
@@ -45,13 +43,6 @@ export function AppShell({
                   <RecipesContextProvider>
                     <TodaysMealsVisibilityProvider initialValue={initialTodaysMealsVisibility}>
                       <AmountDisplayProvider initialValue={initialAmountDisplayMode}>
-                        {/* A provider round trip returns as a cold load carrying
-                        the just-arrived signal; consuming it before first
-                        paint lets the entrance apply from the first frame. */}
-                        <script
-                          dangerouslySetInnerHTML={{ __html: CONSUME_ARRIVAL_SIGNAL_SCRIPT }}
-                        />
-                        <AppArrival />
                         <div
                           data-app-container
                           className="relative flex min-h-dvh flex-col overflow-x-hidden"

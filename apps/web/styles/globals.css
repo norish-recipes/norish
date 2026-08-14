@@ -53,33 +53,6 @@
   }
 }
 
-/* Signing in hands over to the app: the shell plays a one-off entrance on
-   its first authenticated paint, keyed off the just-arrived mark the
-   sign-in hand-off sets and retires (lib/sign-in-handoff.ts). Ordinary
-   navigation never carries the mark, so nothing else is animated, and
-   reduced motion stands the whole hand-off down. */
-@keyframes app-arrival {
-  from {
-    opacity: 0;
-    transform: translateY(0.75rem);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-html[data-app-arrival] [data-app-container] {
-  animation: app-arrival 550ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-app-arrival] [data-app-container] {
-    animation: none;
-  }
-}
-
 /* Custom fade-in animation */
 @keyframes fade-in {
   from {

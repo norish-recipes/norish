@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { handOverToApp } from "@/lib/sign-in-handoff";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button, FieldError, InputGroup, Label, Link, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -39,7 +38,7 @@ export function EmailPasswordForm({
       if (result.error) {
         setError(result.error.message || t("errors.invalidCredentials"));
       } else {
-        handOverToApp(() => router.push(callbackUrl));
+        router.push(callbackUrl);
       }
     } catch {
       setError(t("errors.generic"));

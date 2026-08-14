@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { handOverToApp } from "@/lib/sign-in-handoff";
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Button, Description, FieldError, InputGroup, Label, Link, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -50,7 +49,7 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       if (result.error) {
         setError(result.error.message || t("errors.createFailed"));
       } else {
-        handOverToApp(() => router.push(callbackUrl));
+        router.push(callbackUrl);
       }
     } catch {
       setError(t("errors.generic"));
