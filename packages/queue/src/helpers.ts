@@ -58,6 +58,37 @@ export async function isJobInQueue<T>(queue: Queue<T>, jobId: string): Promise<b
   return state === "waiting" || state === "active" || state === "delayed";
 }
 
+/**
+ * Remove a retained terminal (completed/failed) job occupying the given id.
+ *
+ * BullMQ treats `queue.add` with an occupied job id as a no-op that returns
+ * the existing job, so a job retained for history would silently swallow a
+ * re-enqueue under the same deterministic id. Returns true when a retained
+ * job was removed, false when the id is free or held by an in-flight job.
+ * Throws when the retained job cannot be removed, so callers never report
+ * "queued" for an add BullMQ will ignore.
+ */
+export async function removeRetainedTerminalJob<T>(
+  queue: Queue<T>,
+  jobId: string
+): Promise<boolean> {
+  const retained = await queue.getJob(jobId);
+
+  if (!retained) return false;
+
+  const state = await retained.getState();
+
+  if (state !== "completed" && state !== "failed") return false;
+
+  try {
+    await retained.remove();
+
+    return true;
+  } catch (err) {
+    throw new Error(`Could not remove retained job ${jobId}`, { cause: err });
+  }
+}
+
 export async function withTimeout<T>(
   operation: () => Promise<T>,
   timeoutMs: number,

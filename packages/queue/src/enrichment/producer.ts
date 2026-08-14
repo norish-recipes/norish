@@ -17,6 +17,7 @@ import type {
 import { createLogger } from "@norish/shared-server/logger";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
+import { removeRetainedTerminalJob } from "../helpers";
 import { publishEnrichmentLifecycle } from "./announce";
 import { ENRICHMENT_JOB_NAMES, enrichmentJobId, findActiveEnrichmentJobId } from "./identity";
 
@@ -91,12 +92,8 @@ async function removeRetainedJob(
   kind: RecipeEnrichmentKind,
   recipeId: string
 ): Promise<void> {
-  const retained = await queue.getJob(jobId);
-
-  if (!retained) return;
-
   try {
-    await retained.remove();
+    await removeRetainedTerminalJob(queue, jobId);
   } catch (err) {
     // Returning queued here would be false: BullMQ can keep the retained job
     // under the same deterministic id and treat the later add as a no-op.
