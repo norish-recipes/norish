@@ -12,8 +12,10 @@ control, timers in the steps. If you cook without ever reading some of those,
 you can tell Norish so. A Hidden Item is something you have chosen not to be
 shown, and the page simply gets shorter for you.
 
-Everything is shown by default. Hiding is a choice you make once, in your own
-settings, and it follows you between devices.
+Everything is shown by default. Hiding is a choice each device remembers for
+itself, like the other view settings: hide Nutrition Information on a cramped
+phone screen and your desktop keeps showing it. Set up each device the way
+that screen deserves.
 
 ## What can be hidden
 
