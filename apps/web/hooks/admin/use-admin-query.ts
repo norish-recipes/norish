@@ -3,7 +3,6 @@
 import { sharedAdminHooks } from "./shared-admin-hooks";
 
 export const useAdminConfigsQuery = sharedAdminHooks.useAdminConfigsQuery;
-export const useUserRoleQuery = sharedAdminHooks.useUserRoleQuery;
 export const useAvailableModelsQuery = sharedAdminHooks.useAvailableModelsQuery;
 export const useAvailableTranscriptionModelsQuery =
   sharedAdminHooks.useAvailableTranscriptionModelsQuery;

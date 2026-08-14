@@ -413,27 +413,6 @@ export async function isUserServerAdmin(userId: string): Promise<boolean> {
   return user.isServerOwner || user.isServerAdmin;
 }
 
-export async function getUserServerRole(
-  userId: string
-): Promise<{ isOwner: boolean; isAdmin: boolean }> {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: {
-      isServerOwner: true,
-      isServerAdmin: true,
-    },
-  });
-
-  if (!user) {
-    return { isOwner: false, isAdmin: false };
-  }
-
-  return {
-    isOwner: user.isServerOwner,
-    isAdmin: user.isServerAdmin,
-  };
-}
-
 export async function setUserAsOwnerAndAdmin(userId: string): Promise<void> {
   await db
     .update(users)

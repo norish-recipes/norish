@@ -4,7 +4,6 @@ export {
   useAdminConfigsQuery,
   useAvailableModelsQuery,
   useAvailableTranscriptionModelsQuery,
-  useUserRoleQuery,
   useYtDlpVersionQuery,
   type AdminConfigsData,
 } from "./use-admin-query";

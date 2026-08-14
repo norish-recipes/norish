@@ -1,153 +1,20 @@
-"use client";
+import { headers } from "next/headers";
+import SettingsPageContent from "./components/settings-page-content";
 
-import { Suspense } from "react";
-import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
-import { useUserRoleQuery } from "@/hooks/admin";
-import {
-  HomeIcon as HomeIconSolid,
-  ServerIcon as ServerIconSolid,
-  ShieldCheckIcon as ShieldCheckIconSolid,
-  UserCircleIcon as UserCircleIconSolid,
-} from "@heroicons/react/20/solid";
-import {
-  HomeIcon as HomeIconOutline,
-  ServerIcon as ServerIconOutline,
-  ShieldCheckIcon as ShieldCheckIconOutline,
-  UserCircleIcon as UserCircleIconOutline,
-} from "@heroicons/react/24/outline";
-import { Tabs } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { auth } from "@norish/auth/auth";
 
-const UserSettingsTab = dynamic(() => import("./user/components/user-settings-content"), {
-  loading: () => <SettingsSkeleton />,
-});
+export default async function SettingsPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-const HouseholdSettingsTab = dynamic(
-  () => import("./household/components/household-settings-content"),
-  {
-    loading: () => <SettingsSkeleton />,
-  }
-);
+  // The role rides on the session the server already resolved; the client
+  // cannot write these fields (input: false in the auth config). Hiding the
+  // tab is presentation only — every admin procedure authorises server-side.
+  const sessionUser = session?.user as
+    | { isServerAdmin?: boolean; isServerOwner?: boolean }
+    | undefined;
+  const showAdminTab = Boolean(sessionUser?.isServerOwner || sessionUser?.isServerAdmin);
 
-const CalDavSettingsTab = dynamic(() => import("./caldav/components/caldav-settings-content"), {
-  loading: () => <SettingsSkeleton />,
-});
-
-const AdminSettingsTab = dynamic(() => import("./admin/components/admin-settings-content"), {
-  loading: () => <SettingsSkeleton />,
-});
-
-function SettingsContent() {
-  const t = useTranslations("settings");
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { isServerAdmin, isLoading: isLoadingRole } = useUserRoleQuery();
-  const showAdminTab = !isLoadingRole && isServerAdmin;
-  const requestedTab = searchParams.get("tab") || "user";
-  const currentTab =
-    requestedTab === "user" ||
-    requestedTab === "household" ||
-    requestedTab === "caldav" ||
-    (requestedTab === "admin" && showAdminTab)
-      ? requestedTab
-      : "user";
-  const tabs = [
-    {
-      id: "user",
-      label: t("tabs.user"),
-      activeIcon: UserCircleIconSolid,
-      inactiveIcon: UserCircleIconOutline,
-    },
-    {
-      id: "household",
-      label: t("tabs.household"),
-      activeIcon: HomeIconSolid,
-      inactiveIcon: HomeIconOutline,
-    },
-    {
-      id: "caldav",
-      label: t("tabs.caldav"),
-      activeIcon: ServerIconSolid,
-      inactiveIcon: ServerIconOutline,
-    },
-    ...(showAdminTab
-      ? [
-          {
-            id: "admin",
-            label: t("tabs.admin"),
-            activeIcon: ShieldCheckIconSolid,
-            inactiveIcon: ShieldCheckIconOutline,
-          },
-        ]
-      : []),
-  ];
-
-  const handleTabChange = (key: React.Key) => {
-    router.push(`/settings?tab=${String(key)}`);
-  };
-
-  return (
-    <div className="flex w-full flex-col gap-6">
-      <h1 className="text-2xl font-bold">{t("page.title")}</h1>
-
-      <Tabs
-        aria-label={t("page.ariaLabel")}
-        className="w-full"
-        selectedKey={currentTab}
-        onSelectionChange={handleTabChange}
-      >
-        <Tabs.ListContainer>
-          {/* The overflow chevrons only re-measure when the scroller resizes or
-              scrolls, not when the list's content grows — so when the Admin tab
-              pops in after the role query, remount the list to re-run the
-              measurement. */}
-          <Tabs.List key={tabs.map((tab) => tab.id).join("-")} aria-label={t("page.ariaLabel")}>
-            {tabs.map((tab) => {
-              const Icon = currentTab === tab.id ? tab.activeIcon : tab.inactiveIcon;
-
-              return (
-                <Tabs.Tab key={tab.id} id={tab.id} className="h-12">
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-5 w-5" />
-                    <span>{tab.label}</span>
-                  </div>
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              );
-            })}
-          </Tabs.List>
-        </Tabs.ListContainer>
-
-        <Tabs.Panel id="user" className="py-4">
-          <UserSettingsTab />
-        </Tabs.Panel>
-
-        <Tabs.Panel id="household" className="py-4">
-          <HouseholdSettingsTab />
-        </Tabs.Panel>
-
-        <Tabs.Panel id="caldav" className="py-4">
-          <CalDavSettingsTab />
-        </Tabs.Panel>
-
-        {showAdminTab ? (
-          <Tabs.Panel id="admin" className="py-4">
-            <AdminSettingsTab />
-          </Tabs.Panel>
-        ) : null}
-      </Tabs>
-    </div>
-  );
-}
-
-export default function SettingsPage() {
-  const t = useTranslations("settings");
-
-  return (
-    <Suspense fallback={<div>{t("page.loading")}</div>}>
-      <SettingsContent />
-    </Suspense>
-  );
+  return <SettingsPageContent showAdminTab={showAdminTab} />;
 }

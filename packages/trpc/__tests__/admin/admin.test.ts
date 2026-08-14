@@ -22,7 +22,7 @@ import {
   getConfigSecret,
   setConfig,
 } from "../mocks/server-config";
-import { getUserServerRole, isUserServerAdmin } from "../mocks/users";
+import { isUserServerAdmin } from "../mocks/users";
 import {
   createMockAdminContext,
   createMockAdminUser,
@@ -67,7 +67,6 @@ const adminMiddleware = t.middleware(async ({ ctx, next }) => {
 });
 
 const adminProcedure = t.procedure.use(adminMiddleware);
-const authedProcedure = t.procedure;
 
 describe("admin procedures", () => {
   const mockUser = createMockUser();
@@ -116,27 +115,6 @@ describe("admin procedures", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
 
       await expect(caller.getAllConfigs()).rejects.toThrow(TRPCError);
-    });
-  });
-
-  describe("getUserRole", () => {
-    it("returns user role for any authenticated user", async () => {
-      const ctx = createMockAuthedContext(mockUser);
-      const mockRole = { isOwner: false, isAdmin: false };
-
-      getUserServerRole.mockResolvedValue(mockRole);
-
-      const testRouter = t.router({
-        getUserRole: authedProcedure.query(async () => {
-          return getUserServerRole(ctx.user.id);
-        }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.getUserRole();
-
-      expect(result).toEqual(mockRole);
-      expect(getUserServerRole).toHaveBeenCalledWith(mockUser.id);
     });
   });
 

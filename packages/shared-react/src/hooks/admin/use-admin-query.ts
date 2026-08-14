@@ -30,19 +30,6 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
     };
   }
 
-  function useUserRoleQuery() {
-    const trpc = useTRPC();
-    const { data, error, isLoading } = useQuery(trpc.admin.getUserRole.queryOptions());
-
-    return {
-      isOwner: data?.isOwner ?? false,
-      isAdmin: data?.isAdmin ?? false,
-      isServerAdmin: (data?.isOwner || data?.isAdmin) ?? false,
-      error,
-      isLoading,
-    };
-  }
-
   function useAvailableModelsQuery(options: {
     provider: AIConfig["provider"];
     endpoint?: string;
@@ -123,7 +110,6 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
 
   return {
     useAdminConfigsQuery,
-    useUserRoleQuery,
     useAvailableModelsQuery,
     useAvailableTranscriptionModelsQuery,
     useYtDlpVersionQuery,
