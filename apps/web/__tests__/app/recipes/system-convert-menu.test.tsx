@@ -22,6 +22,10 @@ vi.mock("@/context/user-context", () => ({
   useUserContext: () => ({ user: { preferences: { hidden: [] } } }),
 }));
 
+vi.mock("@/context/hidden-items-context", () => ({
+  useHiddenItems: () => [],
+}));
+
 vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({ isAIEnabled: false }),
 }));

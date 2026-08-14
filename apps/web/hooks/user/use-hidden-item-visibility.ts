@@ -1,9 +1,8 @@
 "use client";
 
-import { useUserContext } from "@/context/user-context";
+import { useHiddenItems } from "@/context/hidden-items-context";
 
 import type { HiddenItem } from "@norish/shared/contracts/zod/user";
-import { isHiddenForUser } from "@norish/shared/lib/user-preferences";
 
 export type UseHiddenItemVisibilityResult = {
   showRatings: boolean;
@@ -17,10 +16,11 @@ export type UseHiddenItemVisibilityResult = {
 /**
  * The reader's Hidden Item choices as visibility flags, derived in one place
  * so every consumer answers "is this shown for this reader?" the same way.
+ * Reads the seeded hidden list, so the answer is right from the first frame.
  */
 export function useHiddenItemVisibility(): UseHiddenItemVisibilityResult {
-  const { user } = useUserContext();
-  const shows = (item: HiddenItem) => !isHiddenForUser(user, item);
+  const hidden = useHiddenItems();
+  const shows = (item: HiddenItem) => !hidden.includes(item);
 
   return {
     showRatings: shows("rating"),

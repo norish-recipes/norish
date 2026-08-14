@@ -25,6 +25,10 @@ vi.mock("@/context/user-context", () => ({
   }),
 }));
 
+vi.mock("@/context/hidden-items-context", () => ({
+  useHiddenItems: () => userPreferencesState.hidden,
+}));
+
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({
   useRecipeContextRequired: () => ({
     recipe: {

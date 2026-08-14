@@ -158,6 +158,10 @@ vi.mock("@norish/ui/star-rating", () => ({
 vi.mock("@/context/user-context", () => ({
   useUserContext: () => ({ user: { id: "owner-1", preferences: { hidden: mocks.hidden } } }),
 }));
+
+vi.mock("@/context/hidden-items-context", () => ({
+  useHiddenItems: () => mocks.hidden,
+}));
 vi.mock("@/hooks/favorites", () => ({
   useFavoritesQuery: () => ({ isFavorite: () => false }),
   useFavoritesMutation: () => ({ toggleFavorite: vi.fn() }),

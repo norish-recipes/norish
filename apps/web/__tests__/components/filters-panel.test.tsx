@@ -73,6 +73,10 @@ vi.mock("@/context/user-context", () => ({
   }),
 }));
 
+vi.mock("@/context/hidden-items-context", () => ({
+  useHiddenItems: () => userPreferencesState.hidden,
+}));
+
 vi.mock("@/hooks/config", () => ({
   useTagsQuery: () => ({
     tags: ["Dinner", "Quick", "Vegetarian", "Soup", "Pasta", "Spicy"],
