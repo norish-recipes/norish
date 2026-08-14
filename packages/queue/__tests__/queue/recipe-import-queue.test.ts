@@ -144,6 +144,71 @@ vi.mock("@norish/db", () => ({
   recipeExistsByUrlForPolicy: mockRecipeExistsByUrlForPolicy,
 }));
 
+type FakeJob = {
+  id: string;
+  data: RecipeImportJobData;
+  state: string;
+  getState: () => Promise<string>;
+  remove: () => Promise<void>;
+};
+
+/**
+ * Stateful stand-in for a BullMQ queue, modeling the two semantics the
+ * producer depends on: `add` against an occupied job id is a no-op that
+ * returns the existing job, and `remove` frees the id.
+ */
+function createFakeQueue() {
+  const jobs = new Map<string, FakeJob>();
+
+  const makeJob = (id: string, data: RecipeImportJobData, state: string): FakeJob => {
+    const job: FakeJob = {
+      id,
+      data,
+      state,
+      getState: async () => job.state,
+      remove: async () => {
+        jobs.delete(id);
+      },
+    };
+
+    return job;
+  };
+
+  return {
+    jobs,
+    seed(id: string, state: string, data: RecipeImportJobData): FakeJob {
+      const job = makeJob(id, data, state);
+
+      jobs.set(id, job);
+
+      return job;
+    },
+    getJob: async (id: string) => jobs.get(id),
+    add: async (_name: string, data: RecipeImportJobData, opts: { jobId: string }) => {
+      const existing = jobs.get(opts.jobId);
+
+      if (existing) return existing;
+
+      const job = makeJob(opts.jobId, data, "waiting");
+
+      jobs.set(opts.jobId, job);
+
+      return job;
+    },
+  };
+}
+
+function importData(overrides: Partial<RecipeImportJobData> = {}): RecipeImportJobData {
+  return {
+    url: "https://example.com/recipe",
+    recipeId: "recipe-123",
+    userId: "user-123",
+    householdKey: "household-456",
+    householdUserIds: ["user-123"],
+    ...overrides,
+  };
+}
+
 describe("Recipe Import Queue", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -317,53 +382,49 @@ describe("Recipe Import Queue", () => {
       delete: "household",
     };
 
+    let queue: ReturnType<typeof createFakeQueue>;
+
     beforeEach(() => {
       vi.mocked(getRecipePermissionPolicy).mockResolvedValue(mockPolicy);
-      mockGetJob.mockResolvedValue(null); // No existing job
-      mockAdd.mockResolvedValue({ id: "new-job-id" });
+      queue = createFakeQueue();
     });
 
     it("adds job successfully when no duplicate exists", async () => {
       const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
-      const result = await addImportJob(mockQueue as any, {
-        url: "https://example.com/recipe",
-        recipeId: "recipe-123",
-        userId: "user-123",
-        householdKey: "household-456",
-        householdUserIds: ["user-123"],
-      });
+      const result = await addImportJob(queue as any, importData());
 
-      expect(mockAdd).toHaveBeenCalledWith(
-        "import",
-        expect.objectContaining({
-          url: "https://example.com/recipe",
-          recipeId: "recipe-123",
-        }),
-        expect.objectContaining({
-          jobId: expect.any(String),
-        })
-      );
       expect(result.status).toBe("queued");
-    });
 
-    it("returns duplicate status when job exists in queue", async () => {
-      mockGetJob.mockResolvedValue({
-        getState: vi.fn().mockResolvedValue("waiting"),
-      });
+      const stored = queue.jobs.get("import_example.com_recipe");
 
-      const { addImportJob } = await import("@norish/queue/recipe-import/producer");
-
-      const result = await addImportJob(mockQueue as any, {
+      expect(stored?.data).toMatchObject({
         url: "https://example.com/recipe",
         recipeId: "recipe-123",
-        userId: "user-123",
-        householdKey: "household-456",
-        householdUserIds: ["user-123"],
       });
-
-      expect(result.status).toBe("duplicate");
+      expect(stored?.state).toBe("waiting");
     });
+
+    it.each(["waiting", "active", "delayed"])(
+      "returns duplicate and leaves the job alone while a %s job holds the id",
+      async (state) => {
+        const seeded = queue.seed(
+          "import_example.com_recipe",
+          state,
+          importData({ recipeId: "in-flight" })
+        );
+
+        const { addImportJob } = await import("@norish/queue/recipe-import/producer");
+
+        const result = await addImportJob(queue as any, importData());
+
+        expect(result).toEqual({
+          status: "duplicate",
+          existingJobId: "import_example.com_recipe",
+        });
+        expect(queue.jobs.get("import_example.com_recipe")).toBe(seeded);
+      }
+    );
 
     it("allows same URL for different households with 'household' policy", async () => {
       vi.mocked(getRecipePermissionPolicy).mockResolvedValue({
@@ -371,37 +432,32 @@ describe("Recipe Import Queue", () => {
         view: "household",
       });
 
-      // First call - no existing job
-      mockGetJob.mockResolvedValueOnce(null);
-      mockAdd.mockResolvedValueOnce({ id: "job-1" });
-
       const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
-      // First household
-      const result1 = await addImportJob(mockQueue as any, {
-        url: "https://example.com/recipe",
-        recipeId: "recipe-1",
-        userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: ["user-1"],
-      });
+      const result1 = await addImportJob(
+        queue as any,
+        importData({
+          recipeId: "recipe-1",
+          userId: "user-1",
+          householdKey: "household-1",
+          householdUserIds: ["user-1"],
+        })
+      );
+
+      const result2 = await addImportJob(
+        queue as any,
+        importData({
+          recipeId: "recipe-2",
+          userId: "user-2",
+          householdKey: "household-2",
+          householdUserIds: ["user-2"],
+        })
+      );
 
       expect(result1.status).toBe("queued");
-
-      // Second call - no existing job for different household
-      mockGetJob.mockResolvedValueOnce(null);
-      mockAdd.mockResolvedValueOnce({ id: "job-2" });
-
-      // Different household - should succeed
-      const result2 = await addImportJob(mockQueue as any, {
-        url: "https://example.com/recipe",
-        recipeId: "recipe-2",
-        userId: "user-2",
-        householdKey: "household-2",
-        householdUserIds: ["user-2"],
-      });
-
       expect(result2.status).toBe("queued");
+      expect(queue.jobs.has("import_household-1_example.com_recipe")).toBe(true);
+      expect(queue.jobs.has("import_household-2_example.com_recipe")).toBe(true);
     });
 
     it("allows same URL for different users with 'owner' policy", async () => {
@@ -410,83 +466,116 @@ describe("Recipe Import Queue", () => {
         view: "owner",
       });
 
-      // First call - no existing job
-      mockGetJob.mockResolvedValueOnce(null);
-      mockAdd.mockResolvedValueOnce({ id: "job-1" });
-
       const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
-      // First user
-      const result1 = await addImportJob(mockQueue as any, {
-        url: "https://example.com/recipe",
-        recipeId: "recipe-1",
-        userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: ["user-1"],
-      });
+      const result1 = await addImportJob(
+        queue as any,
+        importData({
+          recipeId: "recipe-1",
+          userId: "user-1",
+          householdKey: "household-1",
+          householdUserIds: ["user-1"],
+        })
+      );
+
+      const result2 = await addImportJob(
+        queue as any,
+        importData({
+          recipeId: "recipe-2",
+          userId: "user-2",
+          householdKey: "household-1",
+          householdUserIds: ["user-1", "user-2"],
+        })
+      );
 
       expect(result1.status).toBe("queued");
-
-      // Second call - no existing job for different user
-      mockGetJob.mockResolvedValueOnce(null);
-      mockAdd.mockResolvedValueOnce({ id: "job-2" });
-
-      // Different user - should succeed
-      const result2 = await addImportJob(mockQueue as any, {
-        url: "https://example.com/recipe",
-        recipeId: "recipe-2",
-        userId: "user-2",
-        householdKey: "household-1",
-        householdUserIds: ["user-1", "user-2"],
-      });
-
       expect(result2.status).toBe("queued");
+      expect(queue.jobs.has("import_user-1_example.com_recipe")).toBe(true);
+      expect(queue.jobs.has("import_user-2_example.com_recipe")).toBe(true);
     });
 
-    it("allows re-import after job completes (removed from queue)", async () => {
-      // Job exists but is completed (not in active queue)
-      mockGetJob.mockResolvedValueOnce({
-        getState: vi.fn().mockResolvedValue("completed"),
-      });
-      mockAdd.mockResolvedValueOnce({ id: "new-job" });
+    it.each(["completed", "failed"])(
+      "re-import removes the retained %s job and queues a fresh one",
+      async (state) => {
+        // The recipe was deleted after this import finished; only the retained
+        // BullMQ job under the deterministic id is left behind (issue #524).
+        queue.seed("import_example.com_recipe", state, importData({ recipeId: "old-recipe" }));
+
+        const { addImportJob } = await import("@norish/queue/recipe-import/producer");
+
+        const result = await addImportJob(queue as any, importData({ recipeId: "new-recipe" }));
+
+        expect(result.status).toBe("queued");
+
+        const stored = queue.jobs.get("import_example.com_recipe");
+
+        expect(stored?.data.recipeId).toBe("new-recipe");
+        expect(stored?.state).toBe("waiting");
+      }
+    );
+
+    it("rejects instead of reporting queued when the retained job cannot be removed", async () => {
+      const seeded = queue.seed(
+        "import_example.com_recipe",
+        "completed",
+        importData({ recipeId: "old-recipe" })
+      );
+
+      seeded.remove = async () => {
+        throw new Error("locked");
+      };
 
       const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
-      // Should succeed because completed jobs don't block new imports
-      const result = await addImportJob(mockQueue as any, {
-        url: "https://example.com/recipe",
-        recipeId: "recipe-123",
-        userId: "user-123",
-        householdKey: "household-456",
-        householdUserIds: ["user-123"],
-      });
-
-      expect(result.status).toBe("queued");
+      await expect(addImportJob(queue as any, importData())).rejects.toThrow(
+        "Could not remove retained job"
+      );
+      expect(queue.jobs.get("import_example.com_recipe")?.data.recipeId).toBe("old-recipe");
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.anything(),
+        "Recipe import job added to queue"
+      );
     });
 
-    it("allows re-import after job fails (removed from queue)", async () => {
-      // Job exists but is failed
-      mockGetJob.mockResolvedValueOnce({
-        getState: vi.fn().mockResolvedValue("failed"),
-      });
-      mockAdd.mockResolvedValueOnce({ id: "new-job" });
+    it("reports duplicate when a concurrent add wins the job id race", async () => {
+      const seeded = queue.seed(
+        "import_example.com_recipe",
+        "completed",
+        importData({ recipeId: "old-recipe" })
+      );
+
+      // Removing succeeds, but a rival producer claims the freed id before our add.
+      seeded.remove = async () => {
+        queue.seed(
+          "import_example.com_recipe",
+          "waiting",
+          importData({ recipeId: "rival-recipe" })
+        );
+      };
 
       const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
-      // Should succeed because failed jobs don't block new imports
-      const result = await addImportJob(mockQueue as any, {
-        url: "https://example.com/recipe",
-        recipeId: "recipe-123",
-        userId: "user-123",
-        householdKey: "household-456",
-        householdUserIds: ["user-123"],
-      });
+      const result = await addImportJob(queue as any, importData({ recipeId: "new-recipe" }));
 
-      expect(result.status).toBe("queued");
+      expect(result).toEqual({
+        status: "duplicate",
+        existingJobId: "import_example.com_recipe",
+      });
+      expect(queue.jobs.get("import_example.com_recipe")?.data.recipeId).toBe("rival-recipe");
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.anything(),
+        "Recipe import job added to queue"
+      );
     });
   });
 
   describe("Queue deduplication by policy", () => {
+    let queue: ReturnType<typeof createFakeQueue>;
+
+    beforeEach(() => {
+      queue = createFakeQueue();
+    });
+
     describe("everyone policy", () => {
       beforeEach(() => {
         vi.mocked(getRecipePermissionPolicy).mockResolvedValue({
@@ -497,21 +586,20 @@ describe("Recipe Import Queue", () => {
       });
 
       it("returns duplicate for same URL globally regardless of user/household", async () => {
-        // First job exists and is active
-        mockGetJob.mockResolvedValue({
-          getState: vi.fn().mockResolvedValue("active"),
-        });
+        queue.seed("import_example.com_recipe", "active", importData());
 
         const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
         // Different user, different household, same URL
-        const result = await addImportJob(mockQueue as any, {
-          url: "https://example.com/recipe",
-          recipeId: "recipe-999",
-          userId: "different-user",
-          householdKey: "different-household",
-          householdUserIds: ["different-user"],
-        });
+        const result = await addImportJob(
+          queue as any,
+          importData({
+            recipeId: "recipe-999",
+            userId: "different-user",
+            householdKey: "different-household",
+            householdUserIds: ["different-user"],
+          })
+        );
 
         expect(result.status).toBe("duplicate");
       });
@@ -527,20 +615,24 @@ describe("Recipe Import Queue", () => {
       });
 
       it("returns duplicate for same URL within same household", async () => {
-        mockGetJob.mockResolvedValue({
-          getState: vi.fn().mockResolvedValue("active"),
-        });
+        queue.seed(
+          "import_household-1_example.com_recipe",
+          "active",
+          importData({ userId: "user-1", householdKey: "household-1" })
+        );
 
         const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
         // Same household, different user
-        const result = await addImportJob(mockQueue as any, {
-          url: "https://example.com/recipe",
-          recipeId: "recipe-2",
-          userId: "user-2",
-          householdKey: "household-1", // Same household
-          householdUserIds: ["user-1", "user-2"],
-        });
+        const result = await addImportJob(
+          queue as any,
+          importData({
+            recipeId: "recipe-2",
+            userId: "user-2",
+            householdKey: "household-1", // Same household
+            householdUserIds: ["user-1", "user-2"],
+          })
+        );
 
         expect(result.status).toBe("duplicate");
       });
@@ -556,20 +648,24 @@ describe("Recipe Import Queue", () => {
       });
 
       it("returns duplicate for same URL for same user only", async () => {
-        mockGetJob.mockResolvedValue({
-          getState: vi.fn().mockResolvedValue("active"),
-        });
+        queue.seed(
+          "import_user-1_example.com_recipe",
+          "active",
+          importData({ userId: "user-1", householdKey: "household-1" })
+        );
 
         const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
         // Same user
-        const result = await addImportJob(mockQueue as any, {
-          url: "https://example.com/recipe",
-          recipeId: "recipe-2",
-          userId: "user-1", // Same user
-          householdKey: "household-1",
-          householdUserIds: ["user-1"],
-        });
+        const result = await addImportJob(
+          queue as any,
+          importData({
+            recipeId: "recipe-2",
+            userId: "user-1", // Same user
+            householdKey: "household-1",
+            householdUserIds: ["user-1"],
+          })
+        );
 
         expect(result.status).toBe("duplicate");
       });

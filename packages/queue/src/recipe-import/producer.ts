@@ -12,7 +12,7 @@ import { recipeExistsByUrlForPolicy } from "@norish/db";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { generateJobId, isJobInQueue } from "../helpers";
+import { generateJobId, isJobInQueue, removeRetainedTerminalJob } from "../helpers";
 
 const log = createLogger("queue:recipe-import");
 
@@ -52,7 +52,24 @@ export async function addImportJob(
     return { status: "duplicate", existingJobId: jobId };
   }
 
+  // A completed or failed job retained for history still occupies the
+  // deterministic id, and BullMQ would silently ignore the add below.
+  const removed = await removeRetainedTerminalJob(queue, jobId);
+
+  if (removed) {
+    log.info({ url: data.url, jobId }, "Removed retained terminal job to free import job id");
+  }
+
   const job = await queue.add("import", data, { jobId });
+  const stored = await queue.getJob(jobId);
+
+  if (stored && stored.data.recipeId !== data.recipeId) {
+    // Another producer won the deterministic-id race between our checks and
+    // BullMQ's atomic add: its job is the real one and ours was ignored.
+    log.warn({ url: data.url, jobId }, "Import job id claimed by a concurrent add");
+
+    return { status: "duplicate", existingJobId: jobId };
+  }
 
   log.info(
     { url: data.url, jobId: job.id, recipeId: data.recipeId },
