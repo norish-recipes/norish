@@ -126,7 +126,11 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
   // incoming owner, but that work crosses an async boundary. Do not let the
   // incoming account render against the previous owner's still-live cache in
   // the render between the session change and reconciliation completing.
-  if (sessionUserId !== null && owner !== sessionUserId) {
+  // Only an actual live-owner mismatch hides children: on a cold start the
+  // applied owner is still null while the session resolves, and nothing
+  // foreign is in memory yet — hiding there would unmount and remount the
+  // entire app on every launch.
+  if (sessionUserId !== null && owner !== null && owner !== sessionUserId) {
     return null;
   }
 

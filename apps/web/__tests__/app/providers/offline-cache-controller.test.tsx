@@ -116,6 +116,18 @@ describe("OfflineCacheController", () => {
     );
   });
 
+  it("keeps children mounted through a cold start while the owner is still restoring", async () => {
+    // The everyday cold start: the session has resolved but the persisted
+    // cache has not applied an owner yet. Nothing foreign is live in memory,
+    // so hiding here would unmount and remount the whole app (the visible
+    // "unloads and loads" flicker).
+    cache.reconcileIdentity.mockImplementation(() => new Promise<void>(() => {}));
+    user = { id: "u1" };
+    renderController();
+
+    expect(screen.getByText("child")).toBeInTheDocument();
+  });
+
   it("hides the outgoing owner's UI until an account switch is isolated", async () => {
     user = { id: "u1" };
     const view = renderController();

@@ -1,11 +1,10 @@
 "use client";
 
-import type { Key } from "react";
 import { useEffect, useState } from "react";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Label, ListBox, Select, Separator, toast } from "@heroui/react";
+import { Button, Card, ListBox, Select, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
@@ -134,7 +133,7 @@ export default function GeneralCard() {
         <Separator />
 
         {/* Locale Configuration */}
-        <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <span className="flex items-center gap-2 font-medium">
               {t("locales")}
@@ -144,6 +143,7 @@ export default function GeneralCard() {
           </div>
 
           <Select
+            aria-label={t("locales")}
             className="max-w-xs"
             isDisabled={isLoading || isSaving}
             placeholder={t("locales")}
@@ -160,7 +160,6 @@ export default function GeneralCard() {
               }
             }}
           >
-            <Label>{t("locales")}</Label>
             <Select.Trigger>
               <Select.Value>
                 {({ defaultChildren, isPlaceholder }) =>
@@ -185,13 +184,14 @@ export default function GeneralCard() {
         </div>
 
         {/* Default Locale Selector */}
-        <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <span className="font-medium">{t("defaultLocale")}</span>
             <span className="text-muted text-base">{t("defaultLocaleDescription")}</span>
           </div>
 
           <Select
+            aria-label={t("defaultLocale")}
             variant="secondary"
             className="max-w-xs"
             isDisabled={isLoading || isSaving}
@@ -203,7 +203,6 @@ export default function GeneralCard() {
               }
             }}
           >
-            <Label>{t("defaultLocale")}</Label>
             <Select.Trigger>
               <Select.Value />
               <Select.Indicator />

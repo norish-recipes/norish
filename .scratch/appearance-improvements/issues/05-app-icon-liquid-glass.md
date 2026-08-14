@@ -1,6 +1,6 @@
 # 05 — App Icon: opaque full-bleed square for Liquid Glass
 
-Status: ready-for-human
+Status: resolved
 
 **What to build:** Replace the transparent-circle icon set with a flat, fully opaque, full-bleed square master: brand green `#336640` filling the canvas, the cream `#FFFEF7` N-fork mark at ~65%. No baked-in corner rounding, gloss, or shadow — iOS applies the squircle mask and Liquid Glass itself, and transparency is composited onto black (the current bug). There is no web mechanism to control the glass/dark/tinted/clear variants; do not attempt one.
 
@@ -19,3 +19,4 @@ Simulator retest protocol (icon "not even using the logo" reports): `curl -I` th
 - 2026-08-14: `curl -I http://localhost:3000/apple-touch-icon.png` anonymously → direct `200`, `Content-Type: image/png`, no redirect.
 - 2026-08-14: Background check done, no change needed: `body` carries `bg-background` in `app/layout.tsx` (explicit token background, which propagates to the canvas — the thing Safari 26 samples); `html` intentionally has no own background.
 - 2026-08-14: Remaining for a human: the iOS 26.2 simulator home-screen check (erase content → Safari → add to home screen). The runtime is installed on this machine, but scripting Safari's share sheet needs the simulator UI tools behind Mike's device grant. Status → ready-for-human for that last visual confirmation.
+- 2026-08-14: Maintainer confirmed on the iOS simulator: the home-screen icon renders the green/cream mark correctly. Resolved.
