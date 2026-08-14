@@ -11,15 +11,6 @@ vi.mock("@/context/user-context", () => ({
   useUserContext: () => ({ user: mockCurrentUser }),
 }));
 
-vi.mock("@heroui/react", () => ({
-  Avatar: Object.assign(({ children }: { children: React.ReactNode }) => <>{children}</>, {
-    Image: ({ alt, src }: { alt?: string; src?: string }) => (
-      <img alt={alt || "avatar"} src={src} />
-    ),
-    Fallback: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-  }),
-}));
-
 describe("AuthorChip avatar src", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -29,7 +20,8 @@ describe("AuthorChip avatar src", () => {
   it("uses plain avatar URL without cache-busting query params", () => {
     render(<AuthorChip image="/avatars/user-1.png" name="Alice" userId="user-1" />);
 
-    const src = screen.getByAltText("Alice").getAttribute("src");
+    const avatar = screen.getByRole("img", { name: "Alice" });
+    const src = avatar.querySelector("img")?.getAttribute("src");
 
     expect(src).toBe("/avatars/user-1.png");
   });

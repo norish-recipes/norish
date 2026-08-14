@@ -28,17 +28,6 @@ vi.mock("@heroui/react", () => ({
     Header: ({ children }: any) => <div>{children}</div>,
     Content: ({ children }: any) => <div>{children}</div>,
   }),
-  Avatar: Object.assign(
-    ({ children, className, style }: any) => (
-      <span className={className} style={style}>
-        {children}
-      </span>
-    ),
-    {
-      Image: ({ alt, src }: any) => <img alt={alt} src={src} />,
-      Fallback: ({ children }: any) => <span>{children}</span>,
-    }
-  ),
   TextField: ({ children, value, onChange, isReadOnly, isDisabled }: any) => (
     <input
       disabled={isDisabled}
@@ -110,7 +99,8 @@ describe("ProfileCard", () => {
 
     render(<ProfileCard />);
 
-    const src = screen.getByAltText("Alice").getAttribute("src");
+    const avatar = screen.getByRole("img", { name: "Alice" });
+    const src = avatar.querySelector("img")?.getAttribute("src");
 
     expect(src).toBe("/avatars/user-1.png");
   });

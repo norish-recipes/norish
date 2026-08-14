@@ -24,7 +24,13 @@ export function createUseHouseholdSubscription({
   return function useHouseholdSubscription() {
     const trpc = useTRPC();
     const currentUserId = useCurrentUserId();
-    const { setHouseholdData, invalidate, invalidateCalendar } = useHouseholdCacheHelpers();
+    const {
+      setHouseholdData,
+      invalidate,
+      invalidateCalendar,
+      invalidateUserSettings,
+      invalidateRecipes,
+    } = useHouseholdCacheHelpers();
     const toastAdapter = useToastAdapter();
 
     // onCreated user-scoped: when current user creates or joins a household
@@ -228,6 +234,22 @@ export function createUseHouseholdSubscription({
 
           // Invalidate calendar to recompute allergy warnings
           invalidateCalendar();
+        },
+      })
+    );
+
+    // onMemberProfileUpdated household-scoped: a member's avatar changed
+    // (ADR-0021). No echo suppression — the actor's other tabs converge
+    // through this too.
+    useSubscription(
+      trpc.households.onMemberProfileUpdated.subscriptionOptions(undefined, {
+        onData: ({ payload }: any) => {
+          if (payload.userId === currentUserId) {
+            invalidateUserSettings();
+          }
+
+          // Recipe payloads carry the author's profile picture
+          invalidateRecipes();
         },
       })
     );

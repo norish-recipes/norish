@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import {
   addWeeks,
+  avatarFilenameFromImagePath,
   buildAvatarFilename,
   formatMinutesHM,
   getWeekDays,
@@ -321,5 +322,23 @@ describe("avatar filename helpers", () => {
   it("does not match filenames for different users", () => {
     expect(isAvatarFilenameForUser("user-10-1735689600000.png", "user-1")).toBe(false);
     expect(isAvatarFilenameForUser("other-user.png", "user-1")).toBe(false);
+  });
+
+  it("extracts the filename from an /avatars/ image path", () => {
+    expect(avatarFilenameFromImagePath("/avatars/user-1-1735689600000.png")).toBe(
+      "user-1-1735689600000.png"
+    );
+    expect(avatarFilenameFromImagePath("/avatars/user-1.webp")).toBe("user-1.webp");
+  });
+
+  it("returns null for external or missing image paths", () => {
+    expect(avatarFilenameFromImagePath("https://example.com/photo.jpg")).toBeNull();
+    expect(avatarFilenameFromImagePath(null)).toBeNull();
+    expect(avatarFilenameFromImagePath(undefined)).toBeNull();
+    expect(avatarFilenameFromImagePath("")).toBeNull();
+  });
+
+  it("rejects avatar paths with nested segments", () => {
+    expect(avatarFilenameFromImagePath("/avatars/nested/file.png")).toBeNull();
   });
 });

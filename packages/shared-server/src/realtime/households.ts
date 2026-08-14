@@ -11,6 +11,7 @@ import {
   HouseholdAllergiesUpdatedEventSchema,
   HouseholdFailedEventSchema,
   HouseholdJoinCodeRegeneratedEventSchema,
+  HouseholdMemberProfileUpdatedEventSchema,
   HouseholdMemberRemovedEventSchema,
   HouseholdUserJoinedEventSchema,
   HouseholdUserKickedEventSchema,
@@ -30,6 +31,7 @@ export type HouseholdSubscriptionEvents = {
   adminTransferred: z.infer<typeof HouseholdAdminTransferredEventSchema>;
   joinCodeRegenerated: z.infer<typeof HouseholdJoinCodeRegeneratedEventSchema>;
   allergiesUpdated: z.infer<typeof HouseholdAllergiesUpdatedEventSchema>;
+  memberProfileUpdated: z.infer<typeof HouseholdMemberProfileUpdatedEventSchema>;
   failed: z.infer<typeof HouseholdFailedEventSchema>;
 };
 

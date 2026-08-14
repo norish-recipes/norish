@@ -90,10 +90,22 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           return { enabled: true };
         }),
       },
+      onMemberProfileUpdated: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onMemberProfileUpdated = options?.onData;
+
+          return { enabled: true };
+        }),
+      },
     },
     calendar: {
       listRecipes: {
         queryKey: () => [["calendar", "listRecipes"], { type: "query" }],
+      },
+    },
+    user: {
+      get: {
+        queryKey: () => [["user", "get"], { type: "query" }],
       },
     },
   }),
@@ -273,6 +285,56 @@ describe("useHouseholdSubscription", () => {
           variant: "danger",
         })
       );
+    });
+  });
+
+  describe("onMemberProfileUpdated handler", () => {
+    it("refetches user settings and recipes when the current user's profile changed", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onMemberProfileUpdated?.({
+          payload: { userId: "user-1", image: "/avatars/user-1-1755000000000.png" },
+        });
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: [["user", "get"], { type: "query" }],
+      });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
+    });
+
+    it("refetches only recipes when another member's profile changed", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onMemberProfileUpdated?.({
+          payload: { userId: "user-2", image: null },
+        });
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
+      expect(invalidateSpy).not.toHaveBeenCalledWith({
+        queryKey: [["user", "get"], { type: "query" }],
+      });
     });
   });
 

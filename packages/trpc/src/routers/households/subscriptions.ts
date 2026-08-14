@@ -264,6 +264,40 @@ const onAllergiesUpdated = authedProcedure.subscription(async function* ({ ctx, 
   }
 });
 
+/**
+ * Subscription for member profile changes (avatar upload/delete, ADR-0021).
+ * Household-scoped: all members receive it, including the actor's other tabs.
+ */
+const onMemberProfileUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  // If no household, wait for connection to be closed (will restart on reconnect)
+  if (!ctx.household) {
+    log.trace({ userId: ctx.user.id }, "No household, waiting for reconnection");
+    await waitForAbort(signal);
+
+    return;
+  }
+
+  const eventName = householdEmitter.householdEvent(ctx.household.id, "memberProfileUpdated");
+
+  log.trace(
+    { userId: ctx.user.id, householdId: ctx.household.id, eventName },
+    "Subscribed to member profile updated events"
+  );
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      householdEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as HouseholdSubscriptionEvents["memberProfileUpdated"];
+    }
+  } finally {
+    log.trace({ userId: ctx.user.id }, "Unsubscribed from member profile updated events");
+  }
+});
+
 export const householdSubscriptionsRouter = router({
   onCreated,
   onKicked,
@@ -274,4 +308,5 @@ export const householdSubscriptionsRouter = router({
   onAdminTransferred,
   onJoinCodeRegenerated,
   onAllergiesUpdated,
+  onMemberProfileUpdated,
 });

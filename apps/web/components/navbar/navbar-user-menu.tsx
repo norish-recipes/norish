@@ -99,10 +99,10 @@ export default function NavbarUserMenu({
             variant="ghost"
           >
             <UserAvatar
-              className={`cursor-pointer ${size === "sm" ? "size-11 text-base" : "size-13 text-lg"}`}
               email={user.email}
               image={user.image}
               name={user.name}
+              size={size === "sm" ? "sm" : "md"}
               userId={user.id}
             />
             {isOffline ? (

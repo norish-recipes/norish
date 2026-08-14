@@ -1,6 +1,6 @@
 # Login Tagline, Avatar Overhaul, Settings Flicker, and iOS App Icon/Splash
 
-Status: in-progress
+Status: implemented — awaiting maintainer review (translations 01, flicker decision 04, simulator checks 05/06)
 
 Decisions in this spec come from a grilling session on 2026-08-14. Vocabulary: **Avatar** (a person's profile picture) and **App Icon** (the Norish mark as platforms present it) are defined in `CONTEXT.md`; the avatar caching contract is ADR-0021.
 

@@ -24,10 +24,22 @@ export function createUseHouseholdCache({ useTRPC }: CreateHouseholdHooksOptions
       queryClient.invalidateQueries({ queryKey: ["calendar", "combined"] });
     }, [queryClient]);
 
+    const invalidateUserSettings = useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: trpc.user.get.queryKey() });
+    }, [queryClient, trpc]);
+
+    const invalidateRecipes = useCallback(() => {
+      // Path-level prefix: catches list and detail queries, whose payloads
+      // carry the recipe author's profile
+      queryClient.invalidateQueries({ queryKey: [["recipes"]] });
+    }, [queryClient]);
+
     return {
       setHouseholdData,
       invalidate,
       invalidateCalendar,
+      invalidateUserSettings,
+      invalidateRecipes,
     };
   };
 }

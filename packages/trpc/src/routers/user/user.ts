@@ -1,4 +1,4 @@
-import { mkdir, readdir, writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { z } from "zod";
 
@@ -18,7 +18,10 @@ import {
   updateUserPreferences,
 } from "@norish/db";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { deleteAvatarByFilename } from "@norish/shared-server/media/avatar-cleanup";
+import {
+  deleteAvatarByFilename,
+  sweepUserAvatars,
+} from "@norish/shared-server/media/avatar-cleanup";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import {
   DeleteUserAvatarInputSchema,
@@ -27,13 +30,33 @@ import {
   UserPreferencesSchema,
 } from "@norish/shared/contracts/zod";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
-import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
+import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared/lib/helpers";
 
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { householdEmitter } from "../households/emitter";
+
+/**
+ * Tell every open household client (the actor's other tabs included — no echo
+ * suppression, ADR-0021) that a member's profile picture changed.
+ */
+function emitMemberProfileUpdated(
+  ctx: { user: { id: string }; household: { id: string } | null },
+  image: string | null
+) {
+  if (!ctx.household) {
+    log.debug({ userId: ctx.user.id }, "No household, skipping memberProfileUpdated emit");
+
+    return;
+  }
+
+  householdEmitter.emitToHousehold(ctx.household.id, "memberProfileUpdated", {
+    userId: ctx.user.id,
+    image,
+  });
+}
 
 /**
  * Get current user settings (user profile + API keys)
@@ -181,19 +204,12 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
 
   await mkdir(avatarDir, { recursive: true });
 
-  // Delete all previous avatars for this user (they might have different extensions)
-  try {
-    const existingFiles = await readdir(avatarDir);
-    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
+  // The DB-referenced file becomes the retained predecessor (ADR-0021), so
+  // read it fresh rather than trusting the session snapshot.
+  const currentUser = await getUserById(ctx.user.id);
+  const predecessorFilename = avatarFilenameFromImagePath(currentUser?.image);
 
-    for (const oldAvatar of userAvatars) {
-      await deleteAvatarByFilename(oldAvatar);
-    }
-  } catch {
-    // Ignore errors if directory doesn't exist or files can't be read
-  }
-
-  // Use user ID as filename
+  // Every upload mints a new versioned filename (ADR-0021)
   const filename = buildAvatarFilename(ctx.user.id, ext);
   const filepath = path.join(avatarDir, filename);
 
@@ -212,11 +228,20 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
     return { success: true, stale: true };
   }
 
+  // Sweep only after the DB points at the new file: keep it and its immediate
+  // predecessor so payloads still holding the old URL keep rendering.
+  await sweepUserAvatars(
+    ctx.user.id,
+    predecessorFilename ? [filename, predecessorFilename] : [filename]
+  );
+
   const updatedUser = await getUserById(ctx.user.id);
 
   if (!updatedUser) {
     return { success: false, error: "User not found" };
   }
+
+  emitMemberProfileUpdated(ctx, protectedPath);
 
   log.info({ userId: ctx.user.id, path: protectedPath }, "Avatar uploaded");
 
@@ -245,25 +270,16 @@ const deleteAvatar = authedProcedure
       return { success: true, stale: true };
     }
 
-    const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
-
-    // Delete all avatars for this user
-    try {
-      const existingFiles = await readdir(avatarDir);
-      const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
-
-      for (const avatar of userAvatars) {
-        await deleteAvatarByFilename(avatar);
-      }
-    } catch {
-      // Ignore errors
-    }
+    // Delete keeps nothing — no payload should render a removed picture
+    await sweepUserAvatars(ctx.user.id);
 
     const updatedUser = await getUserById(ctx.user.id);
 
     if (!updatedUser) {
       return { success: false, error: "User not found" };
     }
+
+    emitMemberProfileUpdated(ctx, null);
 
     log.info({ userId: ctx.user.id }, "Avatar deleted");
 
@@ -295,18 +311,7 @@ const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
   }
 
   // Delete user avatars
-  const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
-
-  try {
-    const existingFiles = await readdir(avatarDir);
-    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
-
-    for (const avatar of userAvatars) {
-      await deleteAvatarByFilename(avatar);
-    }
-  } catch {
-    // Ignore errors
-  }
+  await sweepUserAvatars(ctx.user.id);
 
   await deleteUser(ctx.user.id);
 

@@ -390,3 +390,21 @@ export function buildAvatarFilename(
 export function isAvatarFilenameForUser(filename: string, userId: string): boolean {
   return filename.startsWith(`${userId}.`) || filename.startsWith(`${userId}-`);
 }
+
+/**
+ * Extract the filename from a `/avatars/<filename>` image path. External URLs
+ * (OAuth profile pictures) and anything with nested segments yield null.
+ */
+export function avatarFilenameFromImagePath(image: string | null | undefined): string | null {
+  if (!image || !image.startsWith("/avatars/")) {
+    return null;
+  }
+
+  const filename = image.slice("/avatars/".length);
+
+  if (!filename || filename.includes("/")) {
+    return null;
+  }
+
+  return filename;
+}

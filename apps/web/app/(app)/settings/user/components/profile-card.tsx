@@ -89,15 +89,15 @@ export default function ProfileCard() {
           <div className="relative">
             <button
               aria-label={t("avatarHint")}
-              className="rounded-full"
+              className="cursor-pointer rounded-full transition-opacity hover:opacity-80"
               type="button"
               onClick={() => fileInputRef.current?.click()}
             >
               <UserAvatar
-                className="size-24 cursor-pointer text-2xl transition-opacity hover:opacity-80"
                 email={user?.email}
                 image={imagePreview || user?.image}
                 name={user?.name}
+                size="lg"
                 userId={user?.id}
               />
             </button>

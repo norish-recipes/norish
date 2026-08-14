@@ -120,6 +120,11 @@ export const HouseholdAllergiesUpdatedEventSchema = z.object({
   allergies: z.array(z.string()),
 });
 
+export const HouseholdMemberProfileUpdatedEventSchema = z.object({
+  userId: z.string(),
+  image: z.string().nullable(),
+});
+
 export const HouseholdFailedEventSchema = z.object({
   reason: z.string(),
 });

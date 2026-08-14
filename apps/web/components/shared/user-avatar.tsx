@@ -1,18 +1,28 @@
 "use client";
 
-import { Avatar } from "@heroui/react";
+import { useState } from "react";
 
-import { useUserAvatar } from "@norish/shared-react/hooks";
+import { getAvatarFallbackStyle } from "@norish/shared/lib/avatar-color";
+
+/**
+ * Fixed size scale (ADR-0021 front-end contract): call sites pick a step
+ * instead of passing geometry classes, so the avatar is a circle everywhere.
+ */
+const SIZE_CLASSES = {
+  xs: "size-8 text-xs",
+  sm: "size-11 text-base",
+  md: "size-13 text-lg",
+  lg: "size-24 text-2xl",
+} as const;
+
+type UserAvatarSize = keyof typeof SIZE_CLASSES;
 
 type UserAvatarProps = {
   userId?: string | null;
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  className?: string;
-  imageClassName?: string;
-  fallbackClassName?: string;
-  onImageError?: () => void;
+  size?: UserAvatarSize;
 };
 
 export function getUserInitials(value?: string | null) {
@@ -25,41 +35,38 @@ export function getUserInitials(value?: string | null) {
     .slice(0, 2);
 }
 
-export default function UserAvatar({
-  userId,
-  name,
-  email,
-  image,
-  className,
-  imageClassName,
-  fallbackClassName,
-  onImageError,
-}: UserAvatarProps) {
-  const { avatarSrc, fallbackStyle } = useUserAvatar({
-    image,
-    fallbackSeed: userId || email || name || "U",
-    disabled: !image,
-  });
+/**
+ * A person's profile picture: always a circle, initials on a pastel disc
+ * rendered underneath the image so nothing ever shows as an empty box —
+ * not while loading, not when an old URL 404s, not offline. Presentational
+ * only; the image URL arrives via props (either `/avatars/…` or an external
+ * OAuth picture).
+ */
+export default function UserAvatar({ userId, name, email, image, size = "md" }: UserAvatarProps) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const label = name || email || "User";
+  const showImage = Boolean(image) && image !== failedSrc;
 
   return (
-    <Avatar
-      className={`border-border bg-surface-secondary text-foreground shrink-0 font-semibold ${avatarSrc ? "bg-surface" : ""} ${className ?? ""}`}
-      color="accent"
-      style={avatarSrc ? undefined : fallbackStyle}
-      variant="soft"
+    <span
+      aria-label={label}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold select-none ${SIZE_CLASSES[size]}`}
+      role="img"
+      style={getAvatarFallbackStyle(userId || email || name || "U")}
     >
-      {avatarSrc ? (
-        <Avatar.Image
-          alt={label}
-          className={imageClassName}
-          src={avatarSrc}
-          onError={onImageError}
+      <span aria-hidden>{getUserInitials(name || email || "U")}</span>
+      {showImage ? (
+        // Tiny originals from our own immutable route; the Next image optimizer
+        // would re-encode them per size and break offline caching.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt=""
+          className="absolute inset-0 size-full rounded-full object-cover"
+          draggable={false}
+          src={image ?? undefined}
+          onError={() => setFailedSrc(image ?? null)}
         />
       ) : null}
-      <Avatar.Fallback className={fallbackClassName}>
-        {getUserInitials(name || email || "U")}
-      </Avatar.Fallback>
-    </Avatar>
+    </span>
   );
 }

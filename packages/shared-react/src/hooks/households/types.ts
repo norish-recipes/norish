@@ -33,6 +33,8 @@ export type HouseholdCacheHelpers = {
   ) => void;
   invalidate: () => void;
   invalidateCalendar: () => void;
+  invalidateUserSettings: () => void;
+  invalidateRecipes: () => void;
 };
 
 export type HouseholdMutationsResult = {

@@ -3,7 +3,6 @@ export * from "./use-grocery-form-state";
 export * from "./use-scroll-restoration";
 export * from "./use-servings-scaler";
 export * from "./use-unit-formatter";
-export * from "./use-user-avatar";
 export * from "./use-user";
 export * from "./use-amount-display-preference";
 export * from "./use-recurrence-detection";
