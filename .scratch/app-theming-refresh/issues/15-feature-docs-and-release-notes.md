@@ -4,7 +4,7 @@
 
 The repo's definition of done requires every feature PR to update the Target Version's release notes and the docs site.
 
-**Blocked by:** 12 (hide provenance, nutrition and notes), 13 (signing in hands over), 14 (design invariants suite).
+**Blocked by:** 12 (hide provenance, nutrition and notes), 14 (design invariants suite). (13 was a blocker until it closed wontfix on 2026-08-14 — the release notes describe the sign-in refresh without a hand-over.)
 
 **Status:** ready-for-agent
 
