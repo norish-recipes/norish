@@ -55,7 +55,10 @@ export function createUseRecipesQuery(
   { useTRPC }: CreateRecipeHooksOptions,
   { usePendingRecipesQuery, useRecipesCacheHelpers }: RecipesQueryDependencies
 ) {
-  return function useRecipesQuery(filters: RecipeFilters = {}): RecipesQueryResult {
+  return function useRecipesQuery(
+    filters: RecipeFilters = {},
+    { enabled = true }: { enabled?: boolean } = {}
+  ): RecipesQueryResult {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
@@ -96,8 +99,10 @@ export function createUseRecipesQuery(
     const recipesBaseKey = trpc.recipes.list.queryKey({});
     const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
 
-    const { data, error, isLoading, isFetching, hasNextPage, fetchNextPage } =
-      useInfiniteQuery(infiniteQueryOptions);
+    const { data, error, isLoading, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({
+      ...infiniteQueryOptions,
+      enabled,
+    });
 
     const recipes = useMemo(() => {
       if (!data?.pages) return [];

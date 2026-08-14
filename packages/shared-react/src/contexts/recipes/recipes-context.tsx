@@ -57,11 +57,12 @@ type RecipesNavigationAdapter = {
 type RecipesFiltersContextShape = {
   filters: Parameters<typeof toRecipesQueryFilters>[0];
   clearFilters: () => void;
+  isHydrated: boolean;
 };
 
 type CreateRecipesContextOptions = {
   useRecipesFiltersContext: () => RecipesFiltersContextShape;
-  useRecipesQuery: (filters: RecipeFilters) => RecipesQueryResult;
+  useRecipesQuery: (filters: RecipeFilters, options?: { enabled?: boolean }) => RecipesQueryResult;
   useRecipesMutations: () => Pick<
     RecipesMutationsResult,
     "importRecipe" | "importRecipeWithAI" | "createRecipe" | "updateRecipe" | "deleteRecipe"
@@ -92,7 +93,7 @@ export function createRecipesContext({
   const RecipesContext = createContext<SharedRecipesContextValue | null>(null);
 
   function RecipesProvider({ children }: { children: React.ReactNode }) {
-    const { filters, clearFilters } = useRecipesFiltersContext();
+    const { filters, clearFilters, isHydrated } = useRecipesFiltersContext();
     const navigation = useNavigationAdapter();
     const toastAdapter = useToastAdapter();
 
@@ -102,6 +103,11 @@ export function createRecipesContext({
     );
     const filterKey = useMemo(() => serializeRecipeFilters(filters), [filters]);
 
+    // Until the persisted filters are applied, the default filters are a
+    // guess: fetching or painting with them briefly shows recipes the reader
+    // had filtered away. Hold the loading presentation instead (a persisted
+    // query cache can answer the default-filters key instantly, so gating
+    // only the fetch would not be enough).
     const {
       recipes,
       total,
@@ -112,7 +118,7 @@ export function createRecipesContext({
       pendingRecipeIds,
       loadMore,
       invalidate,
-    } = useRecipesQuery(queryFilters);
+    } = useRecipesQuery(queryFilters, { enabled: isHydrated });
 
     const {
       importRecipe: importRecipeMutation,
@@ -185,7 +191,7 @@ export function createRecipesContext({
       () => ({
         recipes,
         total,
-        isLoading: isLoading || isFavoritesLoading,
+        isLoading: isLoading || isFavoritesLoading || !isHydrated,
         isValidating,
         error,
         favoriteIds,
@@ -212,6 +218,7 @@ export function createRecipesContext({
         total,
         isLoading,
         isFavoritesLoading,
+        isHydrated,
         favoriteIds,
         isFavorite,
         toggleFavorite,
