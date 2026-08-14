@@ -43,8 +43,7 @@ line with no amount of its own is edited as a share directly. See
 
 ## Letting AI fill the gaps
 
-**Ingredient Linking** is one of the kinds of
-[recipe enrichment](./enrichment.md), and it is deliberately the gentlest one:
+**Ingredient Linking** is one of the [recipe enrichments](./enrichment.md), and it is deliberately the gentlest one:
 it is a **gap-filler in every case**. Automatic or requested by hand, it only
 ever adds links to steps that have none.
 
