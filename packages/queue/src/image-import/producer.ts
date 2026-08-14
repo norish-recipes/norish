@@ -13,7 +13,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, removeRetainedTerminalJob } from "../helpers";
 
 const log = createLogger("queue:image-import");
 
@@ -40,6 +40,14 @@ export async function addImageImportJob(
     log.warn({ recipeId: data.recipeId, jobId }, "Duplicate image import job rejected");
 
     return { status: "duplicate", existingJobId: jobId };
+  }
+
+  // A retained terminal job under the same id would make the add below a
+  // silent BullMQ no-op.
+  const removed = await removeRetainedTerminalJob(queue, jobId);
+
+  if (removed) {
+    log.debug({ recipeId: data.recipeId, jobId }, "Removed retained terminal job to free job id");
   }
 
   const job = await queue.add("image-import", data, { jobId });

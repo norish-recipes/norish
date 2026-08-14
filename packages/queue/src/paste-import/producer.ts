@@ -14,7 +14,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, removeRetainedTerminalJob } from "../helpers";
 
 const log = createLogger("queue:paste-import");
 
@@ -41,6 +41,14 @@ export async function addPasteImportJob(
     log.warn({ batchId: data.batchId, jobId }, "Duplicate paste import job rejected");
 
     return { status: "duplicate", existingJobId: jobId };
+  }
+
+  // A retained terminal job under the same id would make the add below a
+  // silent BullMQ no-op.
+  const removed = await removeRetainedTerminalJob(queue, jobId);
+
+  if (removed) {
+    log.debug({ batchId: data.batchId, jobId }, "Removed retained terminal job to free job id");
   }
 
   const job = await queue.add("paste-import", data, { jobId });
