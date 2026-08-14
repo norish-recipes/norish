@@ -1,0 +1,9 @@
+# Avatar URLs are versioned and immutable
+
+An avatar upload used to overwrite one stable path (`/avatars/<userId>.<ext>`), which the route served with `Cache-Control: no-store`. Neither half of that contract held. The service worker's CacheFirst image route ignores `no-store` and kept the first copy it ever saw, so an installed app showed a replaced avatar forever; contexts the service worker didn't answer obeyed the header and refetched on every render, which is the settings page's blank-then-pop avatar. **Every avatar upload now mints a new versioned filename, and the route serves avatars as immutable.** A changed picture is a changed URL, so every cache — HTTP, service worker, anything downstream — is correct by construction, and no consumer needs to know a version exists. The predecessor file is kept until the next upload's cleanup rather than deleted at once, so payloads still holding the old URL render the old picture instead of collapsing to initials, and a `memberProfileUpdated` household event prompts live clients to refetch and converge. Rejected: client-side cache-busting (each consumer appending `?v=` from user data), because it moves the burden to every call site and one forgetful consumer reintroduces the bug; and excluding `/avatars/` from the service worker cache while keeping `no-store`, because always-refetching guarantees the loading flash, adds a request per avatar render, and shows nothing offline.
+
+## Consequences
+
+- The startup media-cleanup job must treat the single retained predecessor as live, not as an orphan to sweep.
+- Old URLs eventually 404. The initials fallback is the accepted rendering for that terminal case, and offline generally: avatars stay outside the Warm Set guarantee.
+- Prefetching the avatar on settings navigation is obsolete — the navbar fetches the same immutable URL on first paint of any page, so settings is a cache hit by the time it can be reached.

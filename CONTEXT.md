@@ -84,6 +84,16 @@ _Avoid_: Unknown post
 The release of the downloader binary a server is actually running. A report, not a setting: production fixes it by image and development by first download, and no Norish setting changes it.
 _Avoid_: Configured yt-dlp version
 
+### People & Presentation
+
+**Avatar**:
+A person's profile picture, shown as a circle at every size wherever the person appears; absent or unloadable, it degrades to their initials. Offline it is best-effort: initials are the accepted rendering, not a defect.
+_Avoid_: User icon (ambiguous with App Icon), profile photo
+
+**App Icon**:
+The Norish mark as an installed platform presents it — home screen, dock, favicon. Norish supplies a flat, fully opaque, full-bleed square; the platform applies its own shape, masking, and effects, which Norish neither imitates nor overrides.
+_Avoid_: PWA icon (names one mechanism, not the thing), User icon
+
 ### Connectivity & Offline
 
 **Offline**:

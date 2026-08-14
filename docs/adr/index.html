@@ -684,6 +684,19 @@
             Scoped to the web: native platform blur is a real compositor effect and is untouched.
           </p>
         </li>
+        <li>
+          <a href="ui/0021-avatar-urls-are-versioned-and-immutable.md"
+            >ADR-0021 — Avatar URLs are versioned and immutable</a
+          >
+          <p>
+            <b>Accepted.</b> An avatar upload mints a new filename and the route serves it
+            immutable, so a changed picture is a changed URL and every cache is correct by
+            construction; the predecessor file survives until the next upload's cleanup and a
+            <code>memberProfileUpdated</code> household event nudges live clients to converge.
+            Rejects per-call-site <code>?v=</code> cache-busting and a never-cache route, which
+            traded staleness for a guaranteed loading flash and nothing offline.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>
