@@ -1,6 +1,6 @@
 import type { User } from "@norish/shared/contracts";
 import type { HiddenItem, UserPreferencesDto } from "@norish/shared/contracts/zod/user";
-import { HIDDEN_ITEMS } from "@norish/shared/contracts/zod/user";
+import { HIDDEN_ITEMS, UserPreferencesSchema } from "@norish/shared/contracts/zod/user";
 
 export function getUserPreferences(
   user: Pick<User, "preferences"> | null | undefined
@@ -26,6 +26,17 @@ export function getHiddenItems(
   const value = getUserPreferences(user).hidden;
 
   return Array.isArray(value) ? value : [];
+}
+
+/**
+ * The hidden list from a raw stored preferences value, parsed the way
+ * `user.get` parses preferences — so a server pass seeding the list and the
+ * live query always agree on what a malformed row means.
+ */
+export function hiddenItemsFromStoredPreferences(stored: unknown): readonly string[] {
+  const parsed = UserPreferencesSchema.safeParse(stored);
+
+  return getHiddenItems({ preferences: parsed.success ? parsed.data : {} });
 }
 
 /**

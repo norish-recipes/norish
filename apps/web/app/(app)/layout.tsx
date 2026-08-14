@@ -5,13 +5,9 @@ import { todaysMealsVisibilityPreference } from "@/lib/todays-meals-visibility";
 
 import { auth } from "@norish/auth/auth";
 import { getUserPreferences } from "@norish/db/repositories/users";
-import { UserPreferencesSchema } from "@norish/shared/contracts/zod/user";
-import { getHiddenItems } from "@norish/shared/lib/user-preferences";
+import { hiddenItemsFromStoredPreferences } from "@norish/shared/lib/user-preferences";
 
-/**
- * The reader's hidden list, read while producing the HTML. Parsed exactly
- * the way `user.get` parses it, so the seed and the live list always agree.
- */
+/** The reader's hidden list, read while producing the HTML. */
 async function readHiddenItems(): Promise<readonly string[] | undefined> {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -21,9 +17,7 @@ async function readHiddenItems(): Promise<readonly string[] | undefined> {
     return undefined;
   }
 
-  const parsed = UserPreferencesSchema.safeParse(await getUserPreferences(session.user.id));
-
-  return getHiddenItems({ preferences: parsed.success ? parsed.data : {} });
+  return hiddenItemsFromStoredPreferences(await getUserPreferences(session.user.id));
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
