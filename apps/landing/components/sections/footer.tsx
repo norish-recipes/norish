@@ -66,7 +66,7 @@ export function Footer() {
 
       <div className="border-border mx-auto mt-12 flex max-w-5xl flex-col gap-2 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted/70 text-xs">
-          © {new Date().getFullYear()} Norish · Released under the AGPL-3.0 License.
+          © {new Date().getFullYear()} Norish is released under the AGPL-3.0 License.
         </p>
         <p className="text-muted/70 text-xs">Built for people who love to cook.</p>
       </div>

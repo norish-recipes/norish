@@ -23,7 +23,7 @@ const moments: {
     tint: "text-tint-site",
     track: "bg-tint-site/20",
     fill: "bg-tint-site",
-    body: "Give it a link, a video, a photo or the text itself. What comes back is structured, searchable and yours.",
+    body: "A link, a video, a photo or plain text. Norish parses it into a clean readable recipe.",
   },
   {
     title: "Plan",
@@ -31,7 +31,7 @@ const moments: {
     tint: "text-tint-text",
     track: "bg-tint-text/20",
     fill: "bg-tint-text",
-    body: "Drop meals onto a calendar the whole household shares, and let the grocery list build itself from what you planned.",
+    body: "Drop meals onto a calendar shared by your household.",
   },
   {
     title: "Cook",
@@ -39,7 +39,7 @@ const moments: {
     tint: "text-tint-photo",
     track: "bg-tint-photo/25",
     fill: "bg-tint-photo",
-    body: "Open cooking mode for big, glanceable steps, timers and scaled quantities, on a screen that stays awake.",
+    body: "Use the cooking mode, to remove the clutter and focus on the task at hand.",
   },
 ];
 

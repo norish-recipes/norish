@@ -20,16 +20,16 @@ type Group = {
 
 const groups: Group[] = [
   {
-    name: "Getting recipes in",
+    name: "Importing recipes.",
     tint: "bg-tint-site",
     features: [
       {
         title: "From a link",
-        body: "Websites, blogs and recipe apps. Norish reads the page's own structured data, so an ordinary link needs no AI at all, and a second, AI-assisted pass handles pages that hide it.",
+        body: "Websites, blogs and recipe apps. Norish turns the structured data into a clean recipe, no clutter.",
       },
       {
         title: "From a video",
-        body: "YouTube, Instagram and Facebook each have their own handling, and anything else yt-dlp can reach falls back to a general one. The audio is transcribed and read alongside the description.",
+        body: "YouTube, Instagram and Facebook and more. When no audio is available it looks at the discription.",
         ai: true,
       },
       {
@@ -39,11 +39,11 @@ const groups: Group[] = [
       },
       {
         title: "From pasted text",
-        body: "Free text or raw JSON-LD, straight into the box. Useful when a site will not cooperate and you can still copy what is on it.",
+        body: "Free text or raw JSON-LD. Useful when a site will not cooperate and you can still copy what is on it.",
       },
       {
         title: "Filled in afterwards",
-        body: "Tags, meal categories, cuisines, nutrition, allergens and where a dish comes from are worked out in the background once a recipe lands. Anything you supplied yourself is left exactly as you wrote it.",
+        body: "Tags, meal categories, cuisines, nutrition, allergens and provenance are worked out in the background once a recipe lands.",
         ai: true,
       },
     ],
@@ -54,11 +54,11 @@ const groups: Group[] = [
     features: [
       {
         title: "Cooking mode",
-        body: "Step-by-step and glanceable, with timers where the step needs them, quantities already scaled, and a screen that stays awake.",
+        body: "Step-by-step and easy on the eye, with timers where the step needs them, quantities already scaled, and a screen that stays awake.",
       },
       {
-        title: "Steps know their ingredients",
-        body: "A step can carry the ingredient lines it uses and how much of each, like half the water or three of the five eggs, resolved live so it follows your edits and your unit setting.",
+        title: "Linked ingredients in steps",
+        body: "A step can carry the ingredient lines it uses and how much of each, like half the water or three of the five eggs. Scaled the recipe? The linked ingredients scale along.",
       },
       {
         title: "Scaling and units",
@@ -66,25 +66,25 @@ const groups: Group[] = [
         ai: true,
       },
       {
-        title: "Nutrition and allergens",
-        body: "Calories, protein, carbs and fat estimated per recipe, and allergens flagged against what your household reacts to.",
+        title: "Nutrition and allergies",
+        body: "Calories, protein, carbs and fat estimated per recipe, per serving and allergies are flagged against what your household reacts to.",
         ai: true,
       },
       {
         title: "Plan together",
-        body: "Drop recipes onto a meal calendar your household shares, and read that same plan from your own calendar app over CalDAV.",
+        body: "Drop recipes onto the calendar shared along your household.",
       },
       {
         title: "Shop together",
-        body: "One shared list, including recurring items. Split the aisles between you and each tick lands on the other phone before you reach the next shelf.",
+        body: "One shared list, including recurring items.",
       },
       {
         title: "Real-time, always",
-        body: "Edit a recipe, tick an item, plan a dinner. Everyone you share with sees it on every device, with nothing to refresh.",
+        body: "Edit a recipe, tick an item, plan a recipe. The whole household sees it on every device, with refresh needed..",
       },
       {
-        title: "Works without a signal",
-        body: "Your fifty most recent recipes, all groceries and the current calendar window stay on the device. Changes you make offline queue up and replay themselves when you are back, and they tell you plainly if one could not land.",
+        title: "Works even when offline",
+        body: "Your fifty most recent recipes, all groceries and the current calendar window stay on the device. Changes you make offline queue up and replay themselves when you come back online.",
       },
     ],
   },
@@ -93,20 +93,20 @@ const groups: Group[] = [
     tint: "bg-tint-text",
     features: [
       {
-        title: "Bring your own AI",
-        body: "OpenAI or Anthropic, or Ollama and LM Studio on your own machine. Nine prompts, one per job, all editable by an administrator. None of it runs until you turn it on.",
+        title: "Bring your own AI or use the cloud",
+        body: "OpenAI, Anthropic, or Ollama and LM Studio on your own machine. Use the model you like how you like.",
       },
       {
-        title: "Auth on your terms",
-        body: "Any OIDC provider such as Authentik, Keycloak or Pocket ID, or GitHub, Google, or plain email and password. OIDC groups map straight onto roles and households.",
+        title: "Auth how you like it",
+        body: "Any OIDC provider such as Authentik, Pocket ID, GitHub, Google, or plain email and password.",
       },
       {
         title: "Thirteen languages",
-        body: "English, Nederlands, Deutsch in both Sie and Du, Français, Español, Italiano, Português (BR), Polski, Dansk, Norsk, Русский, Български and 한국어, all translated by the community.",
+        body: "English, Nederlands, Deutsch, Français, Español, Italiano, Português, Polski, Dansk, Norsk, Русский, Български and 한국어, translated by the community.",
       },
       {
         title: "Installs like an app",
-        body: "Add Norish to your home screen and it opens full-screen, in whichever of the two themes you prefer.",
+        body: "Add Norish as a PWA and use it just like an app.",
       },
       {
         title: "Native apps",

@@ -40,7 +40,7 @@ export function Hero() {
 
           <Reveal delay={90}>
             <p className="text-muted mx-auto mt-6 max-w-lg text-base leading-relaxed text-pretty sm:text-lg">
-              A link, video, photo, or plain text. Norish reads it and keeps one clean, structured
+              A link, video, photo, or plain text. Norish reads it and turns it into a clean, structured
               recipe for you and everyone you cook with.
             </p>
           </Reveal>
