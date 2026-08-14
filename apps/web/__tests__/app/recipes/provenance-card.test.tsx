@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({ user: { id: "owner-1", preferences: { hidden: mocks.hidden } } }),
+  useUserContext: () => ({ user: { id: "owner-1" } }),
 }));
 
 vi.mock("@/context/hidden-items-context", () => ({

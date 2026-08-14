@@ -36,6 +36,24 @@ export type DevicePreferenceDefinition<V extends string> = {
   writeCookie(value: V): void;
 };
 
+function readRawCookie(cookieName: string): string | null {
+  if (typeof document === "undefined") return null;
+
+  for (const entry of document.cookie.split(";")) {
+    const [name, value] = entry.trim().split("=");
+
+    if (name === cookieName) return value ?? "";
+  }
+
+  return null;
+}
+
+function writeRawCookie(cookieName: string, value: string): void {
+  if (typeof document === "undefined") return;
+
+  document.cookie = `${cookieName}=${value};path=/;max-age=${COOKIE_MAX_AGE_SECONDS};SameSite=Lax`;
+}
+
 export function defineDevicePreference<V extends string>({
   cookieName,
   values,
@@ -57,20 +75,69 @@ export function defineDevicePreference<V extends string>({
       return parse(cookieStore.get(cookieName)?.value);
     },
     readCookie() {
-      if (typeof document === "undefined") return null;
+      const raw = readRawCookie(cookieName);
 
-      for (const entry of document.cookie.split(";")) {
-        const [name, value] = entry.trim().split("=");
-
-        if (name === cookieName) return parse(value);
-      }
-
-      return null;
+      return raw === null ? null : parse(raw);
     },
     writeCookie(value: V) {
-      if (typeof document === "undefined") return;
+      writeRawCookie(cookieName, value);
+    },
+  };
+}
 
-      document.cookie = `${cookieName}=${value};path=/;max-age=${COOKIE_MAX_AGE_SECONDS};SameSite=Lax`;
+export type DeviceListPreferenceDefinition = {
+  cookieName: string;
+  /** An empty list: nothing chosen means nothing in the list. */
+  defaultValue: readonly string[];
+  /** Always lands on a list; absent or empty means the default. */
+  parse(value: string | null | undefined): readonly string[];
+  /** The server-side read: seed the first render from the request. */
+  readFrom(cookieStore: RequestCookies): readonly string[];
+  /** The stored list, or null when this browser has never written one. */
+  readCookie(): readonly string[] | null;
+  writeCookie(value: readonly string[]): void;
+};
+
+/**
+ * A list-valued device preference: comma-joined entry names in one cookie.
+ * Unlike the scalar preference there is no closed value set — the parse
+ * keeps entries it does not recognise, because a control that writes the
+ * whole list back must be able to carry a choice it was not in a position
+ * to show (a gated-off entry, or one from a newer version). Consumers act
+ * only on the entries they know.
+ */
+export function defineDeviceListPreference({
+  cookieName,
+}: {
+  cookieName: string;
+}): DeviceListPreferenceDefinition {
+  const parse = (value: string | null | undefined): readonly string[] => {
+    if (!value) return [];
+
+    return [
+      ...new Set(
+        value
+          .split(",")
+          .map((entry) => entry.trim())
+          .filter(Boolean)
+      ),
+    ];
+  };
+
+  return {
+    cookieName,
+    defaultValue: [],
+    parse,
+    readFrom(cookieStore) {
+      return parse(cookieStore.get(cookieName)?.value);
+    },
+    readCookie() {
+      const raw = readRawCookie(cookieName);
+
+      return raw === null ? null : parse(raw);
+    },
+    writeCookie(value) {
+      writeRawCookie(cookieName, [...new Set(value)].join(","));
     },
   };
 }

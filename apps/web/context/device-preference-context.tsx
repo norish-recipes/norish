@@ -1,6 +1,5 @@
 "use client";
 
-import type { DevicePreferenceDefinition } from "@/lib/device-preferences";
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { useIsomorphicLayoutEffect } from "usehooks-ts";
@@ -8,6 +7,16 @@ import { useIsomorphicLayoutEffect } from "usehooks-ts";
 type SetDevicePreference<V> = (next: V | ((prev: V) => V)) => void;
 
 export type DevicePreferenceState<V> = readonly [V, SetDevicePreference<V>];
+
+/**
+ * The slice of a preference definition the state machinery needs — satisfied
+ * by both the scalar and the list definitions in lib/device-preferences.ts.
+ */
+type DevicePreferenceLike<V> = {
+  defaultValue: V;
+  readCookie(): V | null;
+  writeCookie(value: V): void;
+};
 
 /**
  * The state half every device preference shares, covering all three load
@@ -20,8 +29,8 @@ export type DevicePreferenceState<V> = readonly [V, SetDevicePreference<V>];
  * last toggle — so a layout effect reconciles against the cookie once,
  * a no-op on every load that came from the network.
  */
-export function useDevicePreferenceState<V extends string>(
-  preference: DevicePreferenceDefinition<V>,
+export function useDevicePreferenceState<V>(
+  preference: DevicePreferenceLike<V>,
   initialValue?: V
 ): DevicePreferenceState<V> {
   const [value, setValue] = useState<V>(
@@ -40,7 +49,9 @@ export function useDevicePreferenceState<V extends string>(
 
   const select = useCallback<SetDevicePreference<V>>(
     (next) => {
-      const resolved = typeof next === "function" ? next(valueRef.current) : next;
+      // typeof cannot narrow an unconstrained V | ((prev: V) => V) union.
+      const resolved =
+        typeof next === "function" ? (next as (prev: V) => V)(valueRef.current) : next;
 
       preference.writeCookie(resolved);
       setValue(resolved);
@@ -56,8 +67,8 @@ export function useDevicePreferenceState<V extends string>(
  * provider takes the server-read value where there was a server pass and
  * self-reads the cookie where there was none.
  */
-export function createDevicePreferenceContext<V extends string>(
-  preference: DevicePreferenceDefinition<V>,
+export function createDevicePreferenceContext<V>(
+  preference: DevicePreferenceLike<V>,
   displayName: string
 ) {
   const Context = createContext<DevicePreferenceState<V> | null>(null);

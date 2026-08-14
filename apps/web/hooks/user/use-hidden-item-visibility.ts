@@ -1,8 +1,7 @@
 "use client";
 
+import type { HiddenItem } from "@/lib/hidden-items";
 import { useHiddenItems } from "@/context/hidden-items-context";
-
-import type { HiddenItem } from "@norish/shared/contracts/zod/user";
 
 export type UseHiddenItemVisibilityResult = {
   showRatings: boolean;

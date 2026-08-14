@@ -33,7 +33,6 @@ export function AppShell({
   /** The cookies as the layout's server pass read them; absent offline. */
   initialTodaysMealsVisibility?: TodaySectionVisibility;
   initialAmountDisplayMode?: AmountDisplayMode;
-  /** The reader's hidden list as the server pass read it; absent offline. */
   initialHiddenItems?: readonly string[];
 }) {
   return (

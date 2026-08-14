@@ -100,7 +100,7 @@ describe("user procedures", () => {
 
       const caller = t.createCallerFactory(testRouter)(ctx);
 
-      getUserPreferences.mockResolvedValue({ hidden: [] });
+      getUserPreferences.mockResolvedValue({});
 
       const result = await caller.get();
 
@@ -113,7 +113,7 @@ describe("user procedures", () => {
     it("includes preferences when present", async () => {
       const ctx = createMockAuthedContext(mockUser);
 
-      getUserPreferences.mockResolvedValue({ hidden: ["timers"] });
+      getUserPreferences.mockResolvedValue({ locale: "de-informal" });
 
       const testRouter = t.router({
         get: authedProcedure.query(async ({ ctx }) => {
@@ -134,13 +134,13 @@ describe("user procedures", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
       const result = await caller.get();
 
-      expect(result.user.preferences.hidden).toEqual(["timers"]);
+      expect(result.user.preferences.locale).toBe("de-informal");
     });
 
     it("allows updating preferences", async () => {
       const ctx = createMockAuthedContext(mockUser);
 
-      getUserPreferences.mockResolvedValue({ hidden: [] });
+      getUserPreferences.mockResolvedValue({});
       updateUserPreferences.mockResolvedValue(undefined);
 
       const testRouter = t.router({
@@ -158,10 +158,10 @@ describe("user procedures", () => {
 
       const caller = t.createCallerFactory(testRouter)(ctx);
 
-      const result = await caller.updatePreferences({ preferences: { hidden: ["timers"] } });
+      const result = await caller.updatePreferences({ preferences: { locale: "de-informal" } });
 
       expect(result.success).toBe(true);
-      expect(updateUserPreferences).toHaveBeenCalledWith(mockUser.id, { hidden: ["timers"] });
+      expect(updateUserPreferences).toHaveBeenCalledWith(mockUser.id, { locale: "de-informal" });
     });
   });
 

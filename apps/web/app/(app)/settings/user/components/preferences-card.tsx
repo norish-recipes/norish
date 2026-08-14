@@ -3,14 +3,15 @@
 import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useHiddenItemsState } from "@/context/hidden-items-context";
 import { useTodaySectionVisibility } from "@/context/todays-meals-visibility-context";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
+import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Card, Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { HIDDEN_ITEMS } from "@norish/shared/contracts/zod/user";
-import { getLocalePreference, partitionHiddenItems } from "@norish/shared/lib/user-preferences";
+import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 import { useUserSettingsContext } from "../context";
 
@@ -21,6 +22,7 @@ export default function PreferencesCard() {
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
   const router = useRouter();
   const [todaySectionVisibility, setTodaySectionVisibility] = useTodaySectionVisibility();
+  const [hiddenItems, setHiddenItems] = useHiddenItemsState();
 
   const todaySectionOptions: TodaySectionVisibility[] = ["always", "planned", "hidden"];
 
@@ -36,13 +38,13 @@ export default function PreferencesCard() {
     [globalEnabled]
   );
 
-  const { selected: selectedHidden, carried } = partitionHiddenItems(user, offeredHidden);
+  const { selected: selectedHidden, carried } = partitionHiddenItems(hiddenItems, offeredHidden);
 
   const handleHiddenChange = useCallback(
-    async (chosen: string[]) => {
-      await updatePreferences({ hidden: [...chosen, ...carried] });
+    (chosen: string[]) => {
+      setHiddenItems([...chosen, ...carried]);
     },
-    [updatePreferences, carried]
+    [setHiddenItems, carried]
   );
 
   const handleLocaleChange = useCallback(
@@ -109,7 +111,6 @@ export default function PreferencesCard() {
           <Select
             aria-label={t("hidden.title")}
             className="max-w-[200px]"
-            isDisabled={isUpdatingPreferences}
             placeholder={t("hidden.placeholder")}
             selectionMode="multiple"
             value={selectedHidden}

@@ -26,8 +26,8 @@ describe("User preferences - DB integration", () => {
     await testBase.teardown();
   });
 
-  it("writes a simple preference key into the preferences JSONB column", async () => {
-    await updateUserPreferences(userId, { hidden: ["timers"] });
+  it("writes a list-valued preference key into the preferences JSONB column", async () => {
+    await updateUserPreferences(userId, { someList: ["one"] });
 
     const db = getTestDb();
 
@@ -38,7 +38,7 @@ describe("User preferences - DB integration", () => {
 
     expect(row).toBeDefined();
     expect(row!.preferences).toBeDefined();
-    expect((row!.preferences as any).hidden).toEqual(["timers"]);
+    expect((row!.preferences as any).someList).toEqual(["one"]);
   });
 
   it("merges subsequent updates into the existing preferences object", async () => {
@@ -63,12 +63,12 @@ describe("User preferences - DB integration", () => {
   });
 
   it("getUserPreferences returns an object reflecting the stored JSONB", async () => {
-    await updateUserPreferences(userId, { hidden: ["conversion", "rating"] });
+    await updateUserPreferences(userId, { someList: ["one", "two"] });
 
     const prefs = await getUserPreferences(userId);
 
     expect(prefs).toBeDefined();
-    expect((prefs as any).hidden).toEqual(["conversion", "rating"]);
+    expect((prefs as any).someList).toEqual(["one", "two"]);
   });
 
   it("stores and retrieves locale in JSONB preferences", async () => {
@@ -81,12 +81,12 @@ describe("User preferences - DB integration", () => {
   });
 
   it("updates locale without affecting other preferences", async () => {
-    await updateUserPreferences(userId, { hidden: [], locale: "en" });
+    await updateUserPreferences(userId, { someList: [], locale: "en" });
     await updateUserPreferences(userId, { locale: "fr" });
 
     const prefs = await getUserPreferences(userId);
 
-    expect((prefs as any).hidden).toEqual([]);
+    expect((prefs as any).someList).toEqual([]);
     expect((prefs as any).locale).toBe("fr");
   });
 });

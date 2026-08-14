@@ -1,34 +1,9 @@
 import z from "zod";
 
-/**
- * The things a reader can choose not to be shown. Names only — what each one
- * suppresses is the reading side's business, not the contract's.
- *
- * `timers` differs from the rest in one way: an administrator can switch recipe
- * timers off for the whole deployment, and when they have, a reader is never
- * offered the choice. The stored name survives that, so turning the capability
- * back on restores whatever the reader had chosen.
- */
-export const HIDDEN_ITEMS = [
-  "provenance",
-  "nutrition",
-  "notes",
-  "rating",
-  "favorites",
-  "conversion",
-  "timers",
-] as const;
-
-export type HiddenItem = (typeof HIDDEN_ITEMS)[number];
-
+// Hidden Items left this contract with ticket 23: the hidden list is a device
+// preference on the `norish_hidden_items` cookie, not server state. A stored
+// `hidden` key from before the move is simply ignored by this parse.
 export const UserPreferencesSchema = z.object({
-  /**
-   * What this reader has hidden. Absent or empty means everything is shown,
-   * which is the default. Stored as plain strings rather than an enum so an
-   * entry this version does not recognise is simply ignored: a future hideable
-   * item costs nothing here, and an older client cannot lose one it never knew.
-   */
-  hidden: z.array(z.string()).optional(),
   locale: z.string().nullable().optional(),
 });
 

@@ -8,7 +8,6 @@
  * here; they retain the outgoing queue dormant under its owner.
  */
 import type { OutboxStore } from "@/lib/outbox";
-import { clearHiddenItemsMirror } from "@/lib/hidden-items-mirror";
 import { discardAllEntries, outboxStore } from "@/lib/outbox";
 import { cacheManager } from "@/lib/query-cache";
 
@@ -48,6 +47,5 @@ export async function clearOfflineStateForSignOut({
     await discardAllEntries(owner, store);
   }
 
-  clearHiddenItemsMirror();
   await cacheManager.resetOfflineCopy("sign-out");
 }

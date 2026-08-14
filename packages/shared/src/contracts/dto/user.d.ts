@@ -1,5 +1,4 @@
 export interface UserPreferences {
-  hidden?: string[];
   locale?: string | null;
 }
 

@@ -196,7 +196,7 @@ describe("useUserMutations", () => {
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
 
       const initialData = createMockUserSettingsData(
-        createMockUser({ id: "user-1", name: "Test User", preferences: { hidden: [] } }),
+        createMockUser({ id: "user-1", name: "Test User", preferences: { locale: "en" } }),
         []
       );
 
@@ -209,13 +209,13 @@ describe("useUserMutations", () => {
       });
 
       // Start the mutation (don't await yet)
-      const resPromise = result.current.updatePreferences({ hidden: ["timers"] });
+      const resPromise = result.current.updatePreferences({ locale: "de-informal" });
 
       // Verify optimistic update was applied before mutation resolves
       await vi.waitFor(() => {
         const optimistic = queryClient.getQueryData(mockUserQueryKey) as any;
 
-        expect(optimistic.user.preferences.hidden).toEqual(["timers"]);
+        expect(optimistic.user.preferences.locale).toBe("de-informal");
       });
 
       // Now resolve the mutation with failure
@@ -235,7 +235,7 @@ describe("useUserMutations", () => {
     it("merges server response into cache on successful preference update", async () => {
       vi.resetModules();
 
-      const serverPreferences = { hidden: ["conversion"] };
+      const serverPreferences = { locale: "fr" };
 
       vi.doMock("@/app/providers/trpc-provider", () => ({
         useTRPC: () => ({
@@ -279,7 +279,7 @@ describe("useUserMutations", () => {
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
 
       const initialData = createMockUserSettingsData(
-        createMockUser({ id: "user-1", name: "Test User", preferences: { hidden: [] } }),
+        createMockUser({ id: "user-1", name: "Test User", preferences: { locale: "en" } }),
         []
       );
 
@@ -289,7 +289,7 @@ describe("useUserMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const res = await result.current.updatePreferences({ hidden: ["timers"] });
+      const res = await result.current.updatePreferences({ locale: "de-informal" });
 
       expect(res.success).toBe(true);
       expect(res.preferences).toEqual(serverPreferences);

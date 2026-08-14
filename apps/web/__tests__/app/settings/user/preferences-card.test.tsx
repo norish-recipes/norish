@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 import PreferencesCard from "@/app/(app)/settings/user/components/preferences-card";
 
 const mockContext = vi.hoisted(() => ({
-  user: { preferences: { hidden: [] } },
+  user: { preferences: {} },
   updatePreferences: vi.fn().mockResolvedValue(undefined),
   isUpdatingPreferences: false,
 }));
@@ -32,6 +32,15 @@ const todaysMealsMock = vi.hoisted(() => ({
 
 vi.mock("@/context/todays-meals-visibility-context", () => ({
   useTodaySectionVisibility: () => [todaysMealsMock.visibility, todaysMealsMock.setVisibility],
+}));
+
+const hiddenItemsMock = vi.hoisted(() => ({
+  hidden: [] as string[],
+  setHidden: vi.fn(),
+}));
+
+vi.mock("@/context/hidden-items-context", () => ({
+  useHiddenItemsState: () => [hiddenItemsMock.hidden, hiddenItemsMock.setHidden],
 }));
 
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
@@ -105,6 +114,8 @@ vi.mock("@heroui/react", () => ({
 describe("PreferencesCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    hiddenItemsMock.hidden = [];
+    mockContext.user = { preferences: {} } as any;
   });
 
   const hiddenControl = () => screen.getByRole("listbox", { name: /hidden\.title/i });
@@ -117,8 +128,6 @@ describe("PreferencesCard", () => {
       .map((option) => option.value);
 
   it("offers every hideable item from one control", () => {
-    mockContext.user = { preferences: { hidden: [] } } as any;
-
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
     render(<PreferencesCard />);
@@ -135,8 +144,6 @@ describe("PreferencesCard", () => {
   });
 
   it("hides nothing by default", () => {
-    mockContext.user = { preferences: { hidden: [] } } as any;
-
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
     render(<PreferencesCard />);
@@ -145,9 +152,7 @@ describe("PreferencesCard", () => {
   });
 
   it("reflects the stored hidden list", () => {
-    mockContext.user = {
-      preferences: { hidden: ["rating", "conversion"] },
-    } as any;
+    hiddenItemsMock.hidden = ["rating", "conversion"];
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
@@ -156,8 +161,8 @@ describe("PreferencesCard", () => {
     expect(hiddenSelection()).toEqual(["rating", "conversion"]);
   });
 
-  it("writes the chosen items to the hidden list", async () => {
-    mockContext.user = { preferences: { hidden: ["rating"] } } as any;
+  it("writes the chosen items to the hidden list", () => {
+    hiddenItemsMock.hidden = ["rating"];
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
@@ -168,17 +173,11 @@ describe("PreferencesCard", () => {
     favorites.selected = true;
     fireEvent.change(hiddenControl());
 
-    await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({
-        hidden: ["rating", "favorites"],
-      });
-    });
+    expect(hiddenItemsMock.setHidden).toHaveBeenCalledWith(["rating", "favorites"]);
   });
 
-  it("keeps a stored name it does not recognise", async () => {
-    mockContext.user = {
-      preferences: { hidden: ["rating", "something-newer"] },
-    } as any;
+  it("keeps a stored name it does not recognise", () => {
+    hiddenItemsMock.hidden = ["rating", "something-newer"];
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
@@ -189,14 +188,10 @@ describe("PreferencesCard", () => {
     rating.selected = false;
     fireEvent.change(hiddenControl());
 
-    await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ hidden: ["something-newer"] });
-    });
+    expect(hiddenItemsMock.setHidden).toHaveBeenCalledWith(["something-newer"]);
   });
 
   it("stops offering timers when an administrator has switched them off", () => {
-    mockContext.user = { preferences: { hidden: [] } } as any;
-
     timersMock = { timersEnabled: false, globalEnabled: false } as any;
 
     render(<PreferencesCard />);
@@ -206,8 +201,8 @@ describe("PreferencesCard", () => {
     expect(hiddenOptions()).toHaveLength(6);
   });
 
-  it("keeps a hidden timers choice through an administrator switching them off", async () => {
-    mockContext.user = { preferences: { hidden: ["timers", "rating"] } } as any;
+  it("keeps a hidden timers choice through an administrator switching them off", () => {
+    hiddenItemsMock.hidden = ["timers", "rating"];
 
     timersMock = { timersEnabled: false, globalEnabled: false } as any;
 
@@ -222,15 +217,11 @@ describe("PreferencesCard", () => {
     favorites.selected = true;
     fireEvent.change(hiddenControl());
 
-    await waitFor(() => {
-      expect(mockContext.updatePreferences).toHaveBeenCalledWith({
-        hidden: ["rating", "favorites", "timers"],
-      });
-    });
+    expect(hiddenItemsMock.setHidden).toHaveBeenCalledWith(["rating", "favorites", "timers"]);
   });
 
   it("renders language dropdown with current locale", () => {
-    mockContext.user = { preferences: { hidden: [], locale: "en" } } as any;
+    mockContext.user = { preferences: { locale: "en" } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
@@ -247,7 +238,7 @@ describe("PreferencesCard", () => {
   });
 
   it("calls updatePreferences with locale when language is changed", async () => {
-    mockContext.user = { preferences: { hidden: [], locale: "en" } } as any;
+    mockContext.user = { preferences: { locale: "en" } } as any;
 
     timersMock = { timersEnabled: true, globalEnabled: true } as any;
 

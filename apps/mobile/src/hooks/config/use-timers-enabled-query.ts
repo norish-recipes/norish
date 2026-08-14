@@ -1,25 +1,18 @@
-import { useUserContext } from "@/context/user-context";
-
-import { getTimersEnabledPreference } from "@norish/shared/lib/user-preferences";
-
 import { sharedConfigHooks } from "./shared-config-hooks";
 
 /**
- * Hook to check if recipe timers are enabled globally AND for the current user.
- * Logic: globalEnabled AND (userPreference ?? true)
+ * Hook to check if recipe timers are enabled globally.
  *
- * Mirrors the web's useTimersEnabledQuery.
+ * The reader's own timers hide is a web device preference (the
+ * `norish_hidden_items` cookie, ticket 23) and cannot reach the native app,
+ * which also has no control to set it — so mobile answers with the
+ * deployment-wide capability alone.
  */
 export function useTimersEnabledQuery() {
-  const user = useUserContext().user;
-
   const { globalEnabled, error, isLoading } = sharedConfigHooks.useTimersEnabledBaseQuery();
-  const userPrefEnabled = getTimersEnabledPreference(user);
-
-  const isTimersEnabled = globalEnabled && userPrefEnabled;
 
   return {
-    timersEnabled: isTimersEnabled,
+    timersEnabled: globalEnabled,
     globalEnabled,
     isLoading,
     error,
