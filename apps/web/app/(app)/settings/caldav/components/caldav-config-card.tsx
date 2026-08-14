@@ -193,16 +193,8 @@ export default function CalDavConfigCard() {
                     Apple Calendar
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    isExternal
-                    href="https://support.google.com/calendar/answer/99358"
-                    size="sm"
-                    target="_blank"
-                  >
-                    Google Calendar
-                  </Link>
-                </li>
+                {/* No Google Calendar here: its CalDAV endpoint now requires
+                    OAuth/OIDC, which this username/password setup cannot do. */}
               </ul>
             </div>
           </div>
