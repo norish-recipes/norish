@@ -78,10 +78,14 @@ export default function NoHouseholdView() {
                   onChange={setJoinCode}
                 >
                   <InputOTP.Group className="justify-start gap-2">
+                    {/* The secondary-input treatment every other field on
+                        these cards carries: the soft warm fill, no shadow —
+                        the plain field fill is pure white and would vanish
+                        against the white card. */}
                     {Array.from({ length: 6 }).map((_, index) => (
                       <InputOTP.Slot
                         key={index}
-                        className="border-field-border bg-field text-foreground shadow-field data-[active=true]:bg-field-focus data-[filled=true]:bg-field-focus h-12 w-10 flex-none"
+                        className="border-field-border bg-default text-foreground hover:bg-default data-[active=true]:bg-default data-[filled=true]:bg-default h-12 w-10 flex-none shadow-none"
                         index={index}
                       />
                     ))}

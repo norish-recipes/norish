@@ -260,9 +260,10 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
   return (
     <div className={className}>
       {/* Input area with inline tags */}
-      {/* A field holding chips is still a field: it takes the same white fill,
-          border and shadow as every other input on the form. */}
-      <div className="group bg-field border-(--field-border) shadow-field flex min-h-[48px] flex-wrap items-center gap-2 rounded-2xl border px-3 py-2">
+      {/* A field holding chips is still a field: it takes the same soft
+          secondary fill and border as every other input on the form — the
+          plain field fill is pure white and would vanish against the card. */}
+      <div className="group bg-default flex min-h-[48px] flex-wrap items-center gap-2 rounded-2xl border border-(--field-border) px-3 py-2 shadow-none">
         <DndContext
           collisionDetection={closestCenter}
           sensors={sensors}
