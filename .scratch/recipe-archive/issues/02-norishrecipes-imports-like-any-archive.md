@@ -6,14 +6,14 @@ Covers, per the spec and ADR-0022: the manifest and `recipe.json` shapes (core r
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Manifest shape defined: format identifier, `formatVersion: 1`, export timestamp, exporter block, recipe count
-- [ ] `recipe.json` shape defined as a superset of the canonical insert shape, with cuisines as names instead of instance-local identifiers
-- [ ] Archive writer produces a zip with root manifest and one folder per recipe keyed by recipe id
-- [ ] Format detection positively identifies a Recipe Archive by its manifest, not its extension; the import UI's file picker accepts the `.norishrecipes` extension
-- [ ] The Norish parser yields canonical insert shapes into the existing import loop unchanged: URL-or-name match within household scope, overwrite on match, freshly minted ids otherwise; archive ids are folder keys only
-- [ ] Cuisine names resolve case-insensitively against the target vocabulary; unmatched names are dropped — never created, never demoted to Tags
-- [ ] Writer and parser unit tests in the existing archive-test style (in-memory zips, mocked persistence)
-- [ ] The centerpiece round-trip test passes: records → writer → zip → parser → insert shapes, asserting losslessness plus the deliberate losses (unmatched cuisines dropped, ids re-minted, ownership flattened to the importer)
-- [ ] A fixture archive imports end-to-end through the existing import UI on a dev instance
+- [x] Manifest shape defined: format identifier, `formatVersion: 1`, export timestamp, exporter block, recipe count
+- [x] `recipe.json` shape defined as a superset of the canonical insert shape, with cuisines as names instead of instance-local identifiers
+- [x] Archive writer produces a zip with root manifest and one folder per recipe keyed by recipe id
+- [x] Format detection positively identifies a Recipe Archive by its manifest, not its extension; the import UI's file picker accepts the `.norishrecipes` extension
+- [x] The Norish parser yields canonical insert shapes into the existing import loop unchanged: URL-or-name match within household scope, overwrite on match, freshly minted ids otherwise; archive ids are folder keys only
+- [x] Cuisine names resolve case-insensitively against the target vocabulary; unmatched names are dropped — never created, never demoted to Tags
+- [x] Writer and parser unit tests in the existing archive-test style (in-memory zips, mocked persistence)
+- [x] The centerpiece round-trip test passes: records → writer → zip → parser → insert shapes, asserting losslessness plus the deliberate losses (unmatched cuisines dropped, ids re-minted, ownership flattened to the importer)
+- [x] A fixture archive imports end-to-end through the existing import UI on a dev instance

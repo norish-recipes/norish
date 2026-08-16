@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 — Import loop carries a favourite beside the rating; 02 — A `.norishrecipes` file imports like any other archive; 03 — A user exports everything they can see.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] `recipe.json` carries the author's display name, the exporter's own rating, and the exporter's favourite flag
-- [ ] Only the exporter's marks are exported — never other users' ratings or favourites
-- [ ] Import applies rating and favourite to the winning recipe (matched or created) for the importing user; a missing or unknown author name never fails an import
-- [ ] No emails, avatars, preferences, or any other account data appear anywhere in the archive
-- [ ] Format-seam unit tests and the round-trip test extended for marks and attribution
+- [x] `recipe.json` carries the author's display name, the exporter's own rating, and the exporter's favourite flag
+- [x] Only the exporter's marks are exported — never other users' ratings or favourites
+- [x] Import applies rating and favourite to the winning recipe (matched or created) for the importing user; a missing or unknown author name never fails an import
+- [x] No emails, avatars, preferences, or any other account data appear anywhere in the archive
+- [x] Format-seam unit tests and the round-trip test extended for marks and attribution

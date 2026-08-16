@@ -4,10 +4,10 @@
 
 **Blocked by:** 02 — A `.norishrecipes` file imports like any other archive.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Dropped cuisine names surface in the import result's reporting, visible where the import UI already shows skips and errors
-- [ ] An archive declaring a newer `formatVersion` major is refused with a clear message and imports nothing
-- [ ] A corrupt recipe entry produces a per-entry error and does not prevent the remaining recipes from importing
-- [ ] Unknown fields in the manifest or a `recipe.json` within the current major are ignored
-- [ ] All four behaviours pinned by unit tests at the format seam
+- [x] Dropped cuisine names surface in the import result's reporting, visible where the import UI already shows skips and errors
+- [x] An archive declaring a newer `formatVersion` major is refused with a clear message and imports nothing
+- [x] A corrupt recipe entry produces a per-entry error and does not prevent the remaining recipes from importing
+- [x] Unknown fields in the manifest or a `recipe.json` within the current major are ignored
+- [x] All four behaviours pinned by unit tests at the format seam

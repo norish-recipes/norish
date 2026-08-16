@@ -1,6 +1,6 @@
 # Recipe Archive export
 
-Status: ready-for-agent
+Status: resolved
 
 Spec for the Recipe Archive export feature. Vocabulary per `CONTEXT.md` (Recipe Archive, Cuisine, Tag, Recipe Enrichment); decisions per ADR-0022 (Recipe Archives are portability, not backup), constrained by ADR-0012 (Cuisines are curated) and ADR-0018 (automatic provenance fills the group's gaps).
 

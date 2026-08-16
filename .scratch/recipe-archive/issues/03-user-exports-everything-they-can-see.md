@@ -6,12 +6,12 @@ Scope is delegated, never reimplemented: the export service passes the existing 
 
 **Blocked by:** 02 — A `.norishrecipes` file imports like any other archive.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Export button with a busy state joins the existing archive-import card in the user settings tab; all strings localized across supported locales and the i18n gate passes
-- [ ] The route streams the zip as it is produced, session-authenticated, with a dated `.norishrecipes` content-disposition filename
-- [ ] A signed-out request is refused
-- [ ] The archive contains one folder per visible recipe, scope computed by the existing recipe-listing visibility logic — no new visibility code
-- [ ] The manifest's exporter block is filled: display name, instance origin, timestamp, recipe count
-- [ ] No temp files or stored archives exist on the server after an export
-- [ ] The downloaded archive imports back through the import flow (round-trip demo on a dev instance)
+- [x] Export button with a busy state joins the existing archive-import card in the user settings tab; all strings localized across supported locales and the i18n gate passes
+- [x] The route streams the zip as it is produced, session-authenticated, with a dated `.norishrecipes` content-disposition filename
+- [x] A signed-out request is refused
+- [x] The archive contains one folder per visible recipe, scope computed by the existing recipe-listing visibility logic — no new visibility code
+- [x] The manifest's exporter block is filled: display name, instance origin, timestamp, recipe count
+- [x] No temp files or stored archives exist on the server after an export
+- [x] The downloaded archive imports back through the import flow (round-trip demo on a dev instance)

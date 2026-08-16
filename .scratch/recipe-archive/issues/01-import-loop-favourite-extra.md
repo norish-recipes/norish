@@ -4,10 +4,10 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The shared archive-import loop accepts an optional favourite mark per recipe alongside the imported rating
-- [ ] Both extras apply to the winning recipe (matched-and-overwritten or newly created) for the importing user
-- [ ] A failure to apply the favourite never fails the import, mirroring the rating's existing error posture
-- [ ] Behaviour of every existing archive format is unchanged
-- [ ] A unit test beside the existing overwrite-loop test pins the favourite's application in both the match and create paths
+- [x] The shared archive-import loop accepts an optional favourite mark per recipe alongside the imported rating
+- [x] Both extras apply to the winning recipe (matched-and-overwritten or newly created) for the importing user
+- [x] A failure to apply the favourite never fails the import, mirroring the rating's existing error posture
+- [x] Behaviour of every existing archive format is unchanged
+- [x] A unit test beside the existing overwrite-loop test pins the favourite's application in both the match and create paths

@@ -4,9 +4,9 @@
 
 **Blocked by:** 03 — A user exports everything they can see; 04 — Media travels inside the archive; 05 — Personal marks and attribution travel; 06 — The format contract is hardened; 07 — An admin exports the whole instance.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Docs page for the Recipe Archive with screenshots of both doorways, following the feature-docs guide
-- [ ] The page states the portability-not-backup semantics, the no-PII guarantee, and the unknown-cuisine behaviour in user terms
-- [ ] Release-notes section added under the Target Version
-- [ ] All copy uses the CONTEXT.md vocabulary
+- [x] Docs page for the Recipe Archive with screenshots of both doorways, following the feature-docs guide
+- [x] The page states the portability-not-backup semantics, the no-PII guarantee, and the unknown-cuisine behaviour in user terms
+- [x] Release-notes section added under the Target Version
+- [x] All copy uses the CONTEXT.md vocabulary

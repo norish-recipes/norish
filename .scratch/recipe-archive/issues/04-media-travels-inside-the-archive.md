@@ -6,10 +6,10 @@ On export, media streams from disk through the zip without whole-file buffering,
 
 **Blocked by:** 02 — A `.norishrecipes` file imports like any other archive; 03 — A user exports everything they can see.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Hero, gallery, and step images plus videos and thumbnails are written into each recipe's folder and referenced by relative path from `recipe.json`
-- [ ] Export streams media from disk into the zip without buffering whole files in memory
-- [ ] Import rehomes archive media through the existing media pipeline; a round-tripped recipe displays its images and plays its video
-- [ ] A recipe with no media exports and imports cleanly
-- [ ] Format-seam unit tests extended: media entries, relative references, and the round-trip test covering a recipe with media
+- [x] Hero, gallery, and step images plus videos and thumbnails are written into each recipe's folder and referenced by relative path from `recipe.json`
+- [x] Export streams media from disk into the zip without buffering whole files in memory
+- [x] Import rehomes archive media through the existing media pipeline; a round-tripped recipe displays its images and plays its video
+- [x] A recipe with no media exports and imports cleanly
+- [x] Format-seam unit tests extended: media entries, relative references, and the round-trip test covering a recipe with media

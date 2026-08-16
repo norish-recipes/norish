@@ -4,9 +4,9 @@
 
 **Blocked by:** 03 — A user exports everything they can see.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The same export-button component renders in the admin tab's General card, localized, with instance-wide wording
-- [ ] The instance-wide export requires server-admin authorisation server-side; a non-admin request is refused
-- [ ] The archive contains every recipe on the instance, produced by the same format and streaming mechanics as the user export
-- [ ] A signed-in non-admin never sees the admin doorway, and hitting the route directly still fails
+- [x] The same export-button component renders in the admin tab's General card, localized, with instance-wide wording
+- [x] The instance-wide export requires server-admin authorisation server-side; a non-admin request is refused
+- [x] The archive contains every recipe on the instance, produced by the same format and streaming mechanics as the user export
+- [x] A signed-in non-admin never sees the admin doorway, and hitting the route directly still fails

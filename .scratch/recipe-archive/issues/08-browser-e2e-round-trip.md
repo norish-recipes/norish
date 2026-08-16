@@ -4,9 +4,9 @@
 
 **Blocked by:** 03 — A user exports everything they can see; 04 — Media travels inside the archive; 05 — Personal marks and attribution travel.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] One E2E test in the existing full-stack browser project covering sign-in → create → export → download → reimport → assert
-- [ ] The test asserts the match-and-overwrite outcome, media presence after reimport, and applied rating/favourite
-- [ ] The downloaded file is the real streamed response from the authenticated route, not a synthesized fixture
-- [ ] The test runs green under the standard E2E command alongside the existing suites
+- [x] One E2E test in the existing full-stack browser project covering sign-in → create → export → download → reimport → assert
+- [x] The test asserts the match-and-overwrite outcome, media presence after reimport, and applied rating/favourite
+- [x] The downloaded file is the real streamed response from the authenticated route, not a synthesized fixture
+- [x] The test runs green under the standard E2E command alongside the existing suites
