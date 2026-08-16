@@ -9,6 +9,7 @@ const mockArchiveParser = vi.hoisted(() => ({
   calculateBatchSize: vi.fn(() => 10),
   getArchiveInfo: vi.fn().mockResolvedValue({ format: "paprika", count: 1 }),
   ArchiveFormat: {
+    NORISH: "norish",
     MELA: "mela",
     MEALIE: "mealie",
     TANDOOR: "tandoor",
@@ -27,6 +28,7 @@ vi.mock("@norish/shared-server/logger", async (importOriginal) => {
     trpcLogger: {
       debug: vi.fn(),
       info: vi.fn(),
+      warn: vi.fn(),
       error: vi.fn(),
     },
   };
@@ -81,5 +83,60 @@ describe("archiveRouter.importArchive", () => {
 
     expect(result.success).toBe(true);
     expect(result.total).toBe(1);
+  });
+
+  it("accepts .norishrecipes files", async () => {
+    mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "norish", count: 2 });
+
+    const caller = archiveRouter.createCaller({
+      user: {
+        id: "user-1",
+      },
+      userIds: ["user-1"],
+      householdKey: "house-1",
+    } as any);
+
+    const formData = new FormData();
+    const zip = new JSZip();
+
+    zip.file("manifest.json", JSON.stringify({ format: "norish-recipes", formatVersion: 1 }));
+    const zipBuffer = await zip.generateAsync({ type: "uint8array" });
+    const zipArrayBuffer = zipBuffer.buffer.slice(
+      zipBuffer.byteOffset,
+      zipBuffer.byteOffset + zipBuffer.byteLength
+    ) as ArrayBuffer;
+
+    const file = new File([zipArrayBuffer], "norish-recipes-2026-08-15.norishrecipes", {
+      type: "application/zip",
+    });
+
+    formData.append("file", file);
+
+    const result = await caller.importArchive(formData);
+
+    expect(result.success).toBe(true);
+    expect(result.total).toBe(2);
+  });
+
+  it("rejects unsupported file extensions", async () => {
+    const caller = archiveRouter.createCaller({
+      user: {
+        id: "user-1",
+      },
+      userIds: ["user-1"],
+      householdKey: "house-1",
+    } as any);
+
+    const formData = new FormData();
+    const file = new File([new ArrayBuffer(4)], "recipes.tar.gz", {
+      type: "application/gzip",
+    });
+
+    formData.append("file", file);
+
+    const result = await caller.importArchive(formData);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/\.norishrecipes/);
   });
 });

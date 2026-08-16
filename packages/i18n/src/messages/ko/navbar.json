@@ -42,7 +42,7 @@
     "uploading": "업로드 중…",
     "uploadFile": "파일 업로드",
     "dragDrop": "또는 드래그 앤 드롭",
-    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
     "uploadingFile": "파일 업로드 중…",
     "processing": "처리 중: {details}",
     "complete": "완료: {details}",

@@ -1,0 +1,88 @@
+import type { FullRecipeDTO } from "@norish/shared/contracts";
+
+/** A fully populated recipe record as the recipe listing layer loads it. */
+export function buildFullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRecipeDTO {
+  return {
+    id: "11111111-1111-4111-8111-111111111111",
+    userId: "user-1",
+    name: "Spaghetti alle Vongole",
+    description: "Clams and pasta",
+    image: "/recipes/11111111-1111-4111-8111-111111111111/hero.jpg",
+    url: "https://example.com/vongole",
+    servings: 4,
+    prepMinutes: 15,
+    cookMinutes: 20,
+    totalMinutes: 35,
+    notes: "Best with fresh clams",
+    systemUsed: "metric",
+    calories: 650,
+    fat: "12.50",
+    carbs: "80.00",
+    protein: "25.00",
+    originCountry: "IT",
+    originCountryName: "Italia",
+    originRegion: "Campania",
+    provenanceNote: "A coastal classic",
+    createdAt: new Date("2026-01-01T00:00:00Z"),
+    updatedAt: new Date("2026-01-02T00:00:00Z"),
+    categories: ["Dinner"],
+    version: 3,
+    recipeIngredients: [
+      {
+        id: "22222222-2222-4222-8222-222222222222",
+        ingredientId: "33333333-3333-4333-8333-333333333333",
+        ingredientName: "spaghetti",
+        amount: 400,
+        unit: "g",
+        systemUsed: "metric",
+        order: 0,
+        version: 1,
+      },
+      {
+        id: "44444444-4444-4444-8444-444444444444",
+        ingredientId: "55555555-5555-4555-8555-555555555555",
+        ingredientName: "clams",
+        amount: 1,
+        unit: "kg",
+        systemUsed: "metric",
+        order: 1,
+        version: 1,
+      },
+    ],
+    steps: [
+      {
+        step: "Boil the pasta",
+        systemUsed: "metric",
+        order: 0,
+        version: 1,
+        images: [],
+        stepIngredients: [{ ingredientOrder: 0, share: 1, order: 0 }],
+      },
+      {
+        step: "Steam the clams",
+        systemUsed: "metric",
+        order: 1,
+        version: 1,
+        images: [],
+        stepIngredients: [{ ingredientOrder: 1, share: 0.5, order: 0 }],
+      },
+    ],
+    tags: [
+      { name: "pasta", version: 1 },
+      { name: "seafood", version: 1 },
+    ],
+    cuisines: [
+      { id: "66666666-6666-4666-8666-666666666666", name: "Italian", version: 1 },
+      { id: "77777777-7777-4777-8777-777777777777", name: "Neapolitan", version: 1 },
+    ],
+    author: {
+      id: "user-1",
+      name: "Mika",
+      image: "/avatars/user-1.jpg",
+      version: 1,
+    },
+    images: [],
+    videos: [],
+    ...overrides,
+  };
+}

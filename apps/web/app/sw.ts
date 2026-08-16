@@ -112,6 +112,10 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/export/"),
+      handler: new NetworkOnly(),
+    },
     // Documents race the network against the Reachability Deadline; shadows
     // defaultCache's NetworkFirst-without-timeout for navigations (ADR-0013).
     {

@@ -61,7 +61,11 @@
     },
     "archiveImport": {
       "title": "Импортиране на архив с рецепти",
-      "description": "Импортирай рецепти от Mela (.melarecipes), Paprika (.paprikarecipes) или Mealie/Tandoor (.zip) експорти"
+      "description": "Импортирай рецепти от Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) или Mealie/Tandoor (.zip) експорти",
+      "export": {
+        "button": "Експортиране на архив с рецепти",
+        "description": "Изтеглете всички рецепти, които виждате, като един файл с архив с рецепти."
+      }
     },
     "siteAuthTokens": {
       "title": "Токени за удостоверяване на сайтове",

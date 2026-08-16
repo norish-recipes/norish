@@ -278,6 +278,21 @@ async function buildViewPolicyCondition(ctx: RecipeListContext) {
   }
 }
 
+/**
+ * Every recipe id the viewer can see under the deployment's view policy.
+ */
+export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<string[]> {
+  const policyCondition = await buildViewPolicyCondition(ctx);
+
+  const rows = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(policyCondition)
+    .orderBy(asc(recipes.createdAt));
+
+  return rows.map((row) => row.id);
+}
+
 export async function listRecipes(
   ctx: RecipeListContext,
   limit: number,

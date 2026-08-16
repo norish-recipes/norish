@@ -39,6 +39,20 @@ vi.mock("@norish/db/repositories/ratings", () => ({
   rateRecipe: mockRateRecipe,
 }));
 
+vi.mock("@norish/db/repositories/favorites", () => ({
+  addFavorite: vi.fn(),
+}));
+
+vi.mock("@norish/db/repositories/cuisines", () => ({
+  listCuisines: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@norish/shared-server/media/storage", () => ({
+  saveImageBytes: vi.fn(),
+  saveStepImageBytes: vi.fn(),
+  saveVideoBytes: vi.fn(),
+}));
+
 vi.mock("@norish/shared-server/archive/mela-parser", () => ({
   parseMelaArchive: mockParseMelaArchive,
   parseMelaRecipeToDTO: mockParseMelaRecipeToDTO,

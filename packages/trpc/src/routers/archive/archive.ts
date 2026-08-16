@@ -17,9 +17,8 @@ import { router } from "../../trpc";
 import { recipeEmitter } from "../recipes/emitter";
 
 /**
- * Import recipes from an archive (Mela .melarecipes or Mealie/Tandoor .zip export).
- * Progress is streamed via onArchiveProgress subscription
- * Recipe data is emitted via recipeBatchCreated subscription
+ * Import recipes from an archive (Norish .norishrecipes, Mela .melarecipes,
+ * Paprika .paprikarecipes, or Mealie/Tandoor .zip export).
  */
 const importArchive = authedProcedure
   .input(formDataInputSchema)
@@ -34,8 +33,9 @@ const importArchive = authedProcedure
       return { success: false, error: "No file provided" };
     }
 
-    // Validate file name - accept .melarecipes, .paprikarecipes, and .zip
+    // Validate file name - accept .norishrecipes, .melarecipes, .paprikarecipes, and .zip
     const fileName = file.name.toLowerCase();
+    const isNorish = fileName.endsWith(".norishrecipes");
     const isMela = fileName.endsWith(".melarecipes");
     const isPaprikaRecipes = fileName.endsWith(".paprikarecipes");
     const isZip = fileName.endsWith(".zip");
@@ -45,12 +45,12 @@ const importArchive = authedProcedure
       "Archive file received"
     );
 
-    if (!isMela && !isPaprikaRecipes && !isZip) {
+    if (!isNorish && !isMela && !isPaprikaRecipes && !isZip) {
       log.warn({ userId: ctx.user.id, fileName: file.name }, "Archive import: invalid file type");
 
       return {
         success: false,
-        error: "Invalid file type. Expected .melarecipes, .paprikarecipes, or .zip file.",
+        error: "Invalid file type. Expected .norishrecipes, .melarecipes, .paprikarecipes, or .zip file.",
       };
     }
 
@@ -74,8 +74,7 @@ const importArchive = authedProcedure
 
         return {
           success: false,
-          error:
-            "Unknown archive format. Expected .melarecipes, .paprikarecipes, Mealie .zip, or Tandoor .zip export",
+          error: "Unknown archive format. Expected .norishrecipes, .melarecipes, .paprikarecipes, Mealie .zip, or Tandoor .zip export",
         };
       }
 

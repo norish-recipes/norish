@@ -61,7 +61,11 @@
     },
     "archiveImport": {
       "title": "Импорт архива рецептов",
-      "description": "Импортируйте рецепты из экспортов Mela (.melarecipes), Paprika (.paprikarecipes) или Mealie/Tandoor (.zip)"
+      "description": "Импортируйте рецепты из экспортов Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) или Mealie/Tandoor (.zip)",
+      "export": {
+        "button": "Экспортировать архив рецептов",
+        "description": "Скачайте все рецепты, которые вам видны, одним файлом архива рецептов."
+      }
     },
     "siteAuthTokens": {
       "title": "Токены аутентификации сайтов",

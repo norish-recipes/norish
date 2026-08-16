@@ -150,7 +150,7 @@ export default function ArchiveImporter() {
               <input
                 key={isComplete ? "reset" : "active"}
                 ref={inputRef}
-                accept=".melarecipes,.paprikarecipes,.zip"
+                accept=".norishrecipes,.melarecipes,.paprikarecipes,.zip"
                 className="sr-only"
                 disabled={isStarting || isImporting}
                 id="archive-file-upload"

@@ -61,7 +61,11 @@
     },
     "archiveImport": {
       "title": "레시피 아카이브 가져오기",
-      "description": "Mela(.melarecipes), Paprika(.paprikarecipes) 또는 Mealie/Tandoor(.zip) 내보내기에서 레시피 가져오기"
+      "description": "Norish(.norishrecipes), Mela(.melarecipes), Paprika(.paprikarecipes) 또는 Mealie/Tandoor(.zip) 내보내기에서 레시피 가져오기",
+      "export": {
+        "button": "레시피 아카이브 내보내기",
+        "description": "볼 수 있는 모든 레시피를 하나의 레시피 아카이브 파일로 다운로드합니다."
+      }
     },
     "siteAuthTokens": {
       "title": "사이트 인증 토큰",

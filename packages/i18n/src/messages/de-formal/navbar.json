@@ -42,7 +42,7 @@
     "uploading": "Wird hochgeladen…",
     "uploadFile": "Datei hochladen",
     "dragDrop": "oder per Drag & Drop",
-    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
     "uploadingFile": "Datei wird hochgeladen…",
     "processing": "Wird verarbeitet: {details}",
     "complete": "Fertig: {details}",

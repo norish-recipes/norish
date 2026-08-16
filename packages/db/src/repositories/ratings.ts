@@ -1,4 +1,4 @@
-import { and, avg, count, eq, sql } from "drizzle-orm";
+import { and, avg, count, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 
@@ -57,6 +57,23 @@ export async function getUserRating(userId: string, recipeId: string): Promise<n
     .limit(1);
 
   return result[0]?.rating ?? null;
+}
+
+/**
+ * One user's own ratings across many recipes, keyed by recipe id.
+ */
+export async function getUserRatingsByRecipeIds(
+  userId: string,
+  recipeIds: string[]
+): Promise<Map<string, number>> {
+  if (recipeIds.length === 0) return new Map();
+
+  const results = await db
+    .select({ recipeId: recipeRatings.recipeId, rating: recipeRatings.rating })
+    .from(recipeRatings)
+    .where(and(eq(recipeRatings.userId, userId), inArray(recipeRatings.recipeId, recipeIds)));
+
+  return new Map(results.map((r) => [r.recipeId, r.rating]));
 }
 
 export async function getUserRatingWithVersion(

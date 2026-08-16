@@ -11,6 +11,59 @@ import {
 
 describe("Archive Parser", () => {
   describe("getArchiveInfo", () => {
+    it("detects Norish format (manifest.json declaring norish-recipes)", async () => {
+      const zip = new JSZip();
+
+      zip.file("manifest.json", JSON.stringify({ format: "norish-recipes", formatVersion: 1 }));
+      zip.file("recipe-a/recipe.json", "{}");
+      zip.file("recipe-b/recipe.json", "{}");
+
+      const { format, count } = await getArchiveInfo(zip);
+
+      expect(format).toBe(ArchiveFormat.NORISH);
+      expect(count).toBe(2);
+    });
+
+    it("prioritizes Norish over every content heuristic when a manifest identifies it", async () => {
+      const zip = new JSZip();
+
+      zip.file("manifest.json", JSON.stringify({ format: "norish-recipes", formatVersion: 1 }));
+      zip.file("recipe-a/recipe.json", "{}");
+      zip.file("database.json", JSON.stringify({ recipes: [{ id: "1" }] }));
+      zip.file("recipe.melarecipe", JSON.stringify({ title: "Recipe" }));
+
+      const { format, count } = await getArchiveInfo(zip);
+
+      expect(format).toBe(ArchiveFormat.NORISH);
+      expect(count).toBe(1);
+    });
+
+    it("does not claim an archive whose manifest declares another format", async () => {
+      const zip = new JSZip();
+
+      zip.file("manifest.json", JSON.stringify({ format: "someone-elses-format" }));
+      zip.file("database.json", JSON.stringify({ recipes: [{ id: "1" }] }));
+
+      const { format } = await getArchiveInfo(zip);
+
+      expect(format).toBe(ArchiveFormat.MEALIE);
+    });
+
+    it("detects Norish inside a single wrapping root folder", async () => {
+      const zip = new JSZip();
+
+      zip.file(
+        "norish-export/manifest.json",
+        JSON.stringify({ format: "norish-recipes", formatVersion: 1 })
+      );
+      zip.file("norish-export/recipe-a/recipe.json", "{}");
+
+      const { format, count } = await getArchiveInfo(zip);
+
+      expect(format).toBe(ArchiveFormat.NORISH);
+      expect(count).toBe(1);
+    });
+
     it("detects Mealie format (database.json present)", async () => {
       const zip = new JSZip();
 

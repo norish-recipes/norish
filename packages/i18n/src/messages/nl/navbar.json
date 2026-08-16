@@ -42,7 +42,7 @@
     "uploading": "Uploaden...",
     "uploadFile": "Upload een bestand",
     "dragDrop": "of sleep en zet neer",
-    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
     "uploadingFile": "Bestand uploaden…",
     "processing": "Bezig met verwerken: {details}",
     "complete": "Voltooid: {details}",
