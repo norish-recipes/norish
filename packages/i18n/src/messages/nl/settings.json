@@ -355,7 +355,12 @@
       "saveLocales": "Taalinstellingen opslaan",
       "localesSaved": "Taalinstellingen opgeslagen",
       "localesError": "Taalinstellingen opslaan mislukt",
-      "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn"
+      "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn",
+      "export": {
+        "title": "Receptarchief",
+        "description": "Download elk recept op deze server als één receptarchiefbestand, ongeacht wie het kan zien.",
+        "button": "Receptarchief exporteren"
+      }
     },
     "registration": {
       "title": "Registratie",

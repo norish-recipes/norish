@@ -43,10 +43,18 @@ function nodeStreamToWeb(nodeStream: ZipStream): ReadableStream<Uint8Array> {
 }
 
 /**
+ * The instance-wide doorway. Both scopes are the same operation, format, and
+ * route; the scope only says which viewer context the visibility layer is
+ * asked with — and this one is admin-only (ADR-0022).
+ */
+const INSTANCE_SCOPE = "instance";
+
+/**
  * Recipe Archive export: streams a `.norishrecipes` zip of every recipe the
- * signed-in user can see under the deployment's view policy. The archive is
- * generated straight into the response — no temp file or stored artifact
- * ever exists server-side (ADR-0022).
+ * signed-in user can see under the deployment's view policy, or — with
+ * `?scope=instance`, for a server admin — every recipe on the instance. The
+ * archive is generated straight into the response — no temp file or stored
+ * artifact ever exists server-side (ADR-0022).
  */
 export async function GET(req: Request) {
   const session = await auth.api.getSession({ headers: req.headers });
@@ -62,6 +70,15 @@ export async function GET(req: Request) {
     isServerOwner?: boolean;
   };
 
+  const isServerAdmin = Boolean(sessionUser.isServerOwner || sessionUser.isServerAdmin);
+  const instanceScope = new URL(req.url).searchParams.get("scope") === INSTANCE_SCOPE;
+
+  // Admin scope is server-authorised, never presentation-gated: hiding the
+  // admin doorway is not what keeps a non-admin out of it.
+  if (instanceScope && !isServerAdmin) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
   const household = await getCachedHouseholdForUser(sessionUser.id);
   const householdUserIds = household?.users.map((user: { id: string }) => user.id) ?? [];
 
@@ -70,7 +87,7 @@ export async function GET(req: Request) {
     ctx: {
       userId: sessionUser.id,
       householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
-      isServerAdmin: Boolean(sessionUser.isServerOwner || sessionUser.isServerAdmin),
+      isServerAdmin,
     },
     exporter: {
       name: sessionUser.name ?? null,
@@ -82,7 +99,10 @@ export async function GET(req: Request) {
   const date = exportedAt.toISOString().slice(0, 10);
   const fileName = `norish-recipes-${date}${NORISH_ARCHIVE_EXTENSION}`;
 
-  log.info({ userId: sessionUser.id, recipeCount }, "Streaming Recipe Archive export");
+  log.info(
+    { userId: sessionUser.id, recipeCount, scope: instanceScope ? INSTANCE_SCOPE : "viewer" },
+    "Streaming Recipe Archive export"
+  );
 
   const nodeStream = zip.generateNodeStream({
     type: "nodebuffer",

@@ -355,7 +355,12 @@
       "saveLocales": "Salva impostazioni lingua",
       "localesSaved": "Impostazioni lingua salvate",
       "localesError": "Salvataggio impostazioni lingua non riuscito",
-      "atLeastOneLocale": "Almeno una lingua deve essere abilitata"
+      "atLeastOneLocale": "Almeno una lingua deve essere abilitata",
+      "export": {
+        "title": "Archivio ricette",
+        "description": "Scarica tutte le ricette di questo server come un unico file di archivio ricette, indipendentemente da chi può vederle.",
+        "button": "Esporta archivio ricette"
+      }
     },
     "registration": {
       "title": "Registrazione",

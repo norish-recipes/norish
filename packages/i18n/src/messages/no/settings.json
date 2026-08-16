@@ -355,7 +355,12 @@
       "saveLocales": "Lagre språkinnstillinger",
       "localesSaved": "Språkinnstillinger lagret",
       "localesError": "Kunne ikke lagre språkinnstillinger",
-      "atLeastOneLocale": "Minst ett språk må være aktivert"
+      "atLeastOneLocale": "Minst ett språk må være aktivert",
+      "export": {
+        "title": "Oppskriftsarkiv",
+        "description": "Last ned hver eneste oppskrift på denne serveren som én oppskriftsarkivfil, uansett hvem som kan se den.",
+        "button": "Eksporter oppskriftsarkiv"
+      }
     },
     "registration": {
       "title": "Registrering",

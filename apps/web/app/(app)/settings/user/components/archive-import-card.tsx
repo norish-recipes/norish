@@ -1,10 +1,9 @@
 "use client";
 
+import ArchiveExportButton from "@/app/(app)/settings/components/archive-export-button";
 import ArchiveImporter from "@/components/navbar/archive-importer";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import ArchiveExportButton from "./archive-export-button";
 
 export default function ArchiveImportCard() {
   const t = useTranslations("settings.user.archiveImport");
@@ -21,7 +20,7 @@ export default function ArchiveImportCard() {
         <ArchiveImporter />
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-muted text-base">{t("export.description")}</p>
-          <ArchiveExportButton />
+          <ArchiveExportButton label={t("export.button")} />
         </div>
       </Card.Content>
     </Card>

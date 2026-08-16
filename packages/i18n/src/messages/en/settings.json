@@ -355,7 +355,12 @@
       "saveLocales": "Save Language Settings",
       "localesSaved": "Language settings saved",
       "localesError": "Failed to save language settings",
-      "atLeastOneLocale": "At least one language must be enabled"
+      "atLeastOneLocale": "At least one language must be enabled",
+      "export": {
+        "title": "Recipe Archive",
+        "description": "Download every recipe on this server as a single Recipe Archive file, no matter who can see it.",
+        "button": "Export Recipe Archive"
+      }
     },
     "registration": {
       "title": "Registration",

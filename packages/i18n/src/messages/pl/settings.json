@@ -355,7 +355,12 @@
       "saveLocales": "Zapisz ustawienia językowe",
       "localesSaved": "Zapisano ustawienia językowe",
       "localesError": "Nie udało się zapisać ustawień językowych",
-      "atLeastOneLocale": "Musi być włączony co najmniej jeden język"
+      "atLeastOneLocale": "Musi być włączony co najmniej jeden język",
+      "export": {
+        "title": "Archiwum przepisów",
+        "description": "Pobierz każdy przepis na tym serwerze jako jeden plik archiwum przepisów, niezależnie od tego, kto może go zobaczyć.",
+        "button": "Eksportuj archiwum przepisów"
+      }
     },
     "registration": {
       "title": "Rejestracja",

@@ -355,7 +355,12 @@
       "saveLocales": "Guardar ajustes de idioma",
       "localesSaved": "Ajustes de idioma guardados",
       "localesError": "No se pudieron guardar los ajustes de idioma",
-      "atLeastOneLocale": "Debe habilitarse al menos un idioma"
+      "atLeastOneLocale": "Debe habilitarse al menos un idioma",
+      "export": {
+        "title": "Archivo de recetas",
+        "description": "Descarga todas las recetas de este servidor en un único archivo de recetas, sin importar quién pueda verlas.",
+        "button": "Exportar archivo de recetas"
+      }
     },
     "registration": {
       "title": "Registro",

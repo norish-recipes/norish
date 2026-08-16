@@ -355,7 +355,12 @@
       "saveLocales": "언어 설정 저장",
       "localesSaved": "언어 설정이 저장되었습니다",
       "localesError": "언어 설정을 저장하지 못했습니다.",
-      "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다."
+      "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다.",
+      "export": {
+        "title": "레시피 아카이브",
+        "description": "누가 볼 수 있는지와 관계없이 이 서버의 모든 레시피를 하나의 레시피 아카이브 파일로 다운로드합니다.",
+        "button": "레시피 아카이브 내보내기"
+      }
     },
     "registration": {
       "title": "등록",

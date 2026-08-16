@@ -355,7 +355,12 @@
       "saveLocales": "Salvar configurações de idioma",
       "localesSaved": "Configurações de idioma salvas",
       "localesError": "Falha ao salvar configurações de idioma",
-      "atLeastOneLocale": "Pelo menos um idioma deve estar ativado"
+      "atLeastOneLocale": "Pelo menos um idioma deve estar ativado",
+      "export": {
+        "title": "Arquivo de receitas",
+        "description": "Baixe todas as receitas deste servidor como um único arquivo de receitas, independentemente de quem pode vê-las.",
+        "button": "Exportar arquivo de receitas"
+      }
     },
     "registration": {
       "title": "Cadastro",

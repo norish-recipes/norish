@@ -355,7 +355,12 @@
       "saveLocales": "Spracheinstellungen speichern",
       "localesSaved": "Spracheinstellungen gespeichert",
       "localesError": "Spracheinstellungen konnten nicht gespeichert werden",
-      "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein"
+      "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein",
+      "export": {
+        "title": "Rezeptarchiv",
+        "description": "Lade jedes Rezept auf diesem Server als eine Rezeptarchiv-Datei herunter, unabhängig davon, wer es sehen kann.",
+        "button": "Rezeptarchiv exportieren"
+      }
     },
     "registration": {
       "title": "Registrierung",

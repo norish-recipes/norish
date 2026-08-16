@@ -355,7 +355,12 @@
       "saveLocales": "Gem sprogindstillinger",
       "localesSaved": "Sprogindstillinger gemt",
       "localesError": "Kunne ikke gemme sprogindstillinger",
-      "atLeastOneLocale": "Mindst ét sprog skal være aktiveret"
+      "atLeastOneLocale": "Mindst ét sprog skal være aktiveret",
+      "export": {
+        "title": "Opskriftsarkiv",
+        "description": "Download hver eneste opskrift på denne server som én opskriftsarkivfil, uanset hvem der kan se den.",
+        "button": "Eksportér opskriftsarkiv"
+      }
     },
     "registration": {
       "title": "Registrering",

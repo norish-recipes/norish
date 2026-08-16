@@ -355,7 +355,12 @@
       "saveLocales": "Enregistrer les paramètres de langue",
       "localesSaved": "Paramètres de langue enregistrés",
       "localesError": "Échec de l'enregistrement des paramètres de langue",
-      "atLeastOneLocale": "Au moins une langue doit être activée"
+      "atLeastOneLocale": "Au moins une langue doit être activée",
+      "export": {
+        "title": "Archive de recettes",
+        "description": "Téléchargez toutes les recettes de ce serveur dans un seul fichier d'archive de recettes, quel que soit le public qui peut les voir.",
+        "button": "Exporter l'archive de recettes"
+      }
     },
     "registration": {
       "title": "Inscriptions",

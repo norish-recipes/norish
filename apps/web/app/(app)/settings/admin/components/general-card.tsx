@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ArchiveExportButton from "@/app/(app)/settings/components/archive-export-button";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
@@ -230,6 +231,17 @@ export default function GeneralCard() {
           >
             {t("saveLocales")}
           </Button>
+        </div>
+
+        <Separator />
+
+        {/* Instance-wide Recipe Archive export */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="font-medium">{t("export.title")}</span>
+            <span className="text-muted text-base">{t("export.description")}</span>
+          </div>
+          <ArchiveExportButton label={t("export.button")} scope="instance" />
         </div>
       </Card.Content>
     </Card>
