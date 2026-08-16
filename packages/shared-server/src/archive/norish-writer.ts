@@ -122,7 +122,10 @@ export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMedi
 
     const thumbnailBasename = localMediaBasename(video.thumbnail, recipe.id);
 
-    add(video.thumbnail, thumbnailBasename && `${NORISH_ARCHIVE_MEDIA_DIRS.videos}/${thumbnailBasename}`);
+    add(
+      video.thumbnail,
+      thumbnailBasename && `${NORISH_ARCHIVE_MEDIA_DIRS.videos}/${thumbnailBasename}`
+    );
   }
 
   return refs;

@@ -198,9 +198,7 @@ describe("norish archive writer", () => {
       "videos/thumb-1.jpg": "thumb-bytes",
     };
 
-    const { collectRecipeMediaRefs } = await import(
-      "@norish/shared-server/archive/norish-writer"
-    );
+    const { collectRecipeMediaRefs } = await import("@norish/shared-server/archive/norish-writer");
     const refs = collectRecipeMediaRefs(recipe);
 
     expect(refs).toEqual([

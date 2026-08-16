@@ -50,7 +50,8 @@ const importArchive = authedProcedure
 
       return {
         success: false,
-        error: "Invalid file type. Expected .norishrecipes, .melarecipes, .paprikarecipes, or .zip file.",
+        error:
+          "Invalid file type. Expected .norishrecipes, .melarecipes, .paprikarecipes, or .zip file.",
       };
     }
 
@@ -74,7 +75,8 @@ const importArchive = authedProcedure
 
         return {
           success: false,
-          error: "Unknown archive format. Expected .norishrecipes, .melarecipes, .paprikarecipes, Mealie .zip, or Tandoor .zip export",
+          error:
+            "Unknown archive format. Expected .norishrecipes, .melarecipes, .paprikarecipes, Mealie .zip, or Tandoor .zip export",
         };
       }
 

@@ -218,7 +218,11 @@ describe("parseNorishRecipeToDTO", () => {
   });
 
   it("yields the canonical insert shape with a freshly minted id", async () => {
-    const { dto } = await parseNorishRecipeToDTO(buildArchiveRecipeJson(), RECIPE_ID, cuisineLookup);
+    const { dto } = await parseNorishRecipeToDTO(
+      buildArchiveRecipeJson(),
+      RECIPE_ID,
+      cuisineLookup
+    );
 
     expect(dto).toMatchObject({
       id: RECIPE_ID,

@@ -38,9 +38,8 @@ describe("norish export service", () => {
   });
 
   it("delegates scope to the recipe listing visibility layer", async () => {
-    const { buildNorishArchiveForViewer } = await import(
-      "@norish/shared-server/archive/norish-export"
-    );
+    const { buildNorishArchiveForViewer } =
+      await import("@norish/shared-server/archive/norish-export");
 
     const ctx = { userId: "user-1", householdUserIds: ["user-1", "user-2"], isServerAdmin: false };
 
@@ -55,9 +54,8 @@ describe("norish export service", () => {
   });
 
   it("writes one folder per visible recipe and fills the exporter block", async () => {
-    const { buildNorishArchiveForViewer } = await import(
-      "@norish/shared-server/archive/norish-export"
-    );
+    const { buildNorishArchiveForViewer } =
+      await import("@norish/shared-server/archive/norish-export");
 
     const { zip, recipeCount } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
@@ -84,9 +82,8 @@ describe("norish export service", () => {
     mockGetUserRatingsByRecipeIds.mockResolvedValue(new Map([[RECIPE_A, 5]]));
     mockGetFavoritesByRecipeIds.mockResolvedValue(new Set([RECIPE_B]));
 
-    const { buildNorishArchiveForViewer } = await import(
-      "@norish/shared-server/archive/norish-export"
-    );
+    const { buildNorishArchiveForViewer } =
+      await import("@norish/shared-server/archive/norish-export");
 
     const { zip } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
@@ -112,9 +109,8 @@ describe("norish export service", () => {
       id === RECIPE_B ? null : buildFullRecipe({ id })
     );
 
-    const { buildNorishArchiveForViewer } = await import(
-      "@norish/shared-server/archive/norish-export"
-    );
+    const { buildNorishArchiveForViewer } =
+      await import("@norish/shared-server/archive/norish-export");
 
     const { zip, recipeCount } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
@@ -138,9 +134,8 @@ describe("norish export service", () => {
       return buildFullRecipe({ id });
     });
 
-    const { buildNorishArchiveForViewer } = await import(
-      "@norish/shared-server/archive/norish-export"
-    );
+    const { buildNorishArchiveForViewer } =
+      await import("@norish/shared-server/archive/norish-export");
 
     const { recipeCount } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },

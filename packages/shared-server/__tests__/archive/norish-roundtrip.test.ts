@@ -1,5 +1,5 @@
-import JSZip from "jszip";
 import { Readable } from "node:stream";
+import JSZip from "jszip";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
@@ -18,12 +18,10 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   saveVideoBytes: mockSaveVideoBytes,
 }));
 
-const { extractNorishRecipes, parseNorishRecipeToDTO, readNorishManifest } = await import(
-  "@norish/shared-server/archive/norish-parser"
-);
-const { buildNorishArchive, collectRecipeMediaRefs } = await import(
-  "@norish/shared-server/archive/norish-writer"
-);
+const { extractNorishRecipes, parseNorishRecipeToDTO, readNorishManifest } =
+  await import("@norish/shared-server/archive/norish-parser");
+const { buildNorishArchive, collectRecipeMediaRefs } =
+  await import("@norish/shared-server/archive/norish-writer");
 
 /**
  * The centerpiece: records → writer → zip bytes → parser → insert shapes.
@@ -247,9 +245,7 @@ describe("norish archive round-trip", () => {
   });
 
   it("round-trips a recipe with no media at all", async () => {
-    const { parsed } = await roundTrip(
-      buildFullRecipe({ image: null, images: [], videos: [] })
-    );
+    const { parsed } = await roundTrip(buildFullRecipe({ image: null, images: [], videos: [] }));
 
     expect(parsed.dto.image).toBeNull();
     expect(parsed.dto.images).toEqual([]);

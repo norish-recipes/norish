@@ -182,9 +182,7 @@ describe("archive import loop favourite extra", () => {
     const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
 
     await importRecipeItems(
-      itemsOf([
-        { dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true },
-      ]),
+      itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true }]),
       undefined,
       ["user-1"]
     );
@@ -200,9 +198,7 @@ describe("archive import loop favourite extra", () => {
 
     const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
     const result = await importRecipeItems(
-      itemsOf([
-        { dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true },
-      ]),
+      itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true }]),
       "user-1",
       ["user-1"]
     );
