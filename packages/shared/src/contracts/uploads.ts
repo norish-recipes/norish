@@ -36,11 +36,13 @@ export type ArchiveImportError = {
 };
 
 /**
- * Skipped recipe during archive import (e.g., duplicates)
+ * Something an imported recipe lost on the way in — a cuisine name this
+ * instance's vocabulary does not know, say. The recipe itself landed; the
+ * note says what did not come with it.
  */
-export type ArchiveSkippedItem = {
+export type ArchiveImportNote = {
   file: string;
-  reason: string;
+  note: string;
 };
 
 /**
@@ -59,8 +61,7 @@ export type ArchiveProgressPayload = {
  */
 export type ArchiveCompletedPayload = {
   imported: number;
-  skipped: number;
-  skippedItems: ArchiveSkippedItem[];
+  notes: ArchiveImportNote[];
   errors: ArchiveImportError[];
 };
 

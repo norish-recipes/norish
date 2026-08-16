@@ -33,23 +33,19 @@ export function useArchiveImportSubscription(): void {
               current: payload.current,
               total: payload.total,
               imported: payload.imported,
-              skipped: payload.current - payload.imported - payload.errors.length,
-              skippedItems: [], // Will be populated on completion
+              notes: [], // Populated on completion
               isImporting: true,
               errors: payload.errors,
             };
           }
 
           const allErrors = [...(prev.errors || []), ...payload.errors];
-          // Use imported count from payload, calculate skipped
-          const skipped = payload.current - payload.imported - allErrors.length;
 
           return {
             ...prev,
             current: payload.current,
             imported: payload.imported,
             errors: allErrors,
-            skipped: Math.max(0, skipped),
           };
         });
       },
@@ -64,14 +60,13 @@ export function useArchiveImportSubscription(): void {
         // Update state to mark import as complete
         setImportState((prev) => {
           // Always accept completion, even if state is undefined
-          const total = prev?.total ?? payload.imported + payload.skipped + payload.errors.length;
+          const total = prev?.total ?? payload.imported + payload.errors.length;
 
           return {
             current: total,
             total: total,
             imported: payload.imported,
-            skipped: payload.skipped,
-            skippedItems: payload.skippedItems,
+            notes: payload.notes,
             isImporting: false,
             errors: payload.errors,
           };
@@ -79,16 +74,16 @@ export function useArchiveImportSubscription(): void {
 
         // Show completion toast
         const hasErrors = payload.errors.length > 0;
-        const hasSkipped = payload.skipped > 0;
+        const noteCount = payload.notes.length;
 
         let description: string;
 
-        if (hasErrors && hasSkipped) {
-          description = `Imported ${payload.imported} recipes, skipped ${payload.skipped} duplicates, ${payload.errors.length} errors`;
+        if (hasErrors && noteCount > 0) {
+          description = `Imported ${payload.imported} recipes, ${noteCount} with notes, ${payload.errors.length} errors`;
         } else if (hasErrors) {
           description = `Imported ${payload.imported} recipes with ${payload.errors.length} errors`;
-        } else if (hasSkipped) {
-          description = `Imported ${payload.imported} recipes, skipped ${payload.skipped} duplicates`;
+        } else if (noteCount > 0) {
+          description = `Imported ${payload.imported} recipes, ${noteCount} with notes`;
         } else {
           description = `Imported ${payload.imported} recipes`;
         }

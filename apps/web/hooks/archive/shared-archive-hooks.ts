@@ -31,18 +31,18 @@ export const sharedArchiveHooks = createArchiveHooks({
   },
   useSubscriptionToastAdapter: () => {
     return {
-      showCompletionToast: (imported: number, skipped: number, errors: number) => {
+      showCompletionToast: (imported: number, notes: number, errors: number) => {
         const hasErrors = errors > 0;
-        const hasSkipped = skipped > 0;
+        const hasNotes = notes > 0;
 
         let description: string;
 
-        if (hasErrors && hasSkipped) {
-          description = `Imported ${imported} recipes, skipped ${skipped} duplicates, ${errors} errors`;
+        if (hasErrors && hasNotes) {
+          description = `Imported ${imported} recipes, ${notes} with notes, ${errors} errors`;
         } else if (hasErrors) {
           description = `Imported ${imported} recipes with ${errors} errors`;
-        } else if (hasSkipped) {
-          description = `Imported ${imported} recipes, skipped ${skipped} duplicates`;
+        } else if (hasNotes) {
+          description = `Imported ${imported} recipes, ${notes} with notes`;
         } else {
           description = `Imported ${imported} recipes`;
         }

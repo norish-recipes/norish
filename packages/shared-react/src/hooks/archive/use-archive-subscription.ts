@@ -7,7 +7,7 @@ import type { ArchiveImportCacheHelpers, CreateArchiveHooksOptions } from "./typ
 const log = createClientLogger("ArchiveImportSubscription");
 
 export type ArchiveSubscriptionToastAdapter = {
-  showCompletionToast: (imported: number, skipped: number, errors: number) => void;
+  showCompletionToast: (imported: number, notes: number, errors: number) => void;
 };
 
 type CreateUseArchiveSubscriptionOptions = CreateArchiveHooksOptions & {
@@ -35,22 +35,19 @@ export function createUseArchiveSubscription({
                 current: payload.current,
                 total: payload.total,
                 imported: payload.imported,
-                skipped: payload.current - payload.imported - payload.errors.length,
-                skippedItems: [],
+                notes: [],
                 isImporting: true,
                 errors: payload.errors,
               };
             }
 
             const allErrors = [...(prev.errors || []), ...payload.errors];
-            const skipped = payload.current - payload.imported - allErrors.length;
 
             return {
               ...prev,
               current: payload.current,
               imported: payload.imported,
               errors: allErrors,
-              skipped: Math.max(0, skipped),
             };
           });
         },
@@ -62,14 +59,13 @@ export function createUseArchiveSubscription({
         onData: ({ payload }: any) => {
           log.debug({ payload }, "Completion event received");
           setImportState((prev) => {
-            const total = prev?.total ?? payload.imported + payload.skipped + payload.errors.length;
+            const total = prev?.total ?? payload.imported + payload.errors.length;
 
             return {
               current: total,
               total: total,
               imported: payload.imported,
-              skipped: payload.skipped,
-              skippedItems: payload.skippedItems,
+              notes: payload.notes,
               isImporting: false,
               errors: payload.errors,
             };
@@ -77,7 +73,7 @@ export function createUseArchiveSubscription({
 
           toastAdapter.showCompletionToast(
             payload.imported,
-            payload.skipped,
+            payload.notes.length,
             payload.errors.length
           );
         },

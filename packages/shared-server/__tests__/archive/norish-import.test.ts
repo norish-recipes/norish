@@ -215,27 +215,30 @@ describe("norish archive rides the shared import loop", () => {
     expect(result.imported).toHaveLength(1);
   });
 
-  it("surfaces dropped cuisine names through the skipped reporting", async () => {
+  it("reports dropped cuisine names as a note on a recipe that imported", async () => {
     const zipBytes = await buildArchiveBytes([
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
     const { importArchive } = await import("@norish/shared-server/archive/parser");
 
-    const progressSkips: Array<{ file: string; reason: string }> = [];
-    const result = await importArchive("user-1", ["user-1"], zipBytes, (_c, _r, _e, skipped) => {
-      if (skipped) progressSkips.push(skipped);
+    const progressNotes: Array<{ file: string; note: string }> = [];
+    const result = await importArchive("user-1", ["user-1"], zipBytes, (_c, _r, _e, note) => {
+      if (note) progressNotes.push(note);
     });
 
-    expect(result.skipped).toEqual([
-      { file: "recipe_Archived Soup", reason: "Unknown cuisines dropped: Klingon" },
+    expect(result.notes).toEqual([
+      { file: "recipe_Archived Soup", note: "Unknown cuisines dropped: Klingon" },
     ]);
-    expect(progressSkips).toEqual(result.skipped);
+    expect(progressNotes).toEqual(result.notes);
+
+    // The recipe itself landed — a dropped cuisine is a note about what it
+    // lost, never a claim that the recipe was passed over.
     expect(result.imported).toHaveLength(1);
   });
 
-  it("reports a failed entry as an error only, never also as skipped", async () => {
-    // The recipe drops cuisines (a skipped note) and then fails to persist
+  it("reports a failed entry as an error only, never also as a note", async () => {
+    // The recipe drops cuisines (a note) and then fails to persist
     mockCreateRecipeWithRefs.mockRejectedValue(new Error("constraint violation"));
 
     const zipBytes = await buildArchiveBytes([
@@ -246,7 +249,7 @@ describe("norish archive rides the shared import loop", () => {
     const result = await importArchive("user-1", ["user-1"], zipBytes);
 
     expect(result.errors).toHaveLength(1);
-    expect(result.skipped).toHaveLength(0);
+    expect(result.notes).toHaveLength(0);
     expect(result.imported).toHaveLength(0);
   });
 

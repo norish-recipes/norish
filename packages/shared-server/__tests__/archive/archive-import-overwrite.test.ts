@@ -152,7 +152,7 @@ describe("archive importer overwrite behavior", () => {
     );
     expect(mockCreateRecipeWithRefs).not.toHaveBeenCalled();
     expect(result.imported).toHaveLength(1);
-    expect(result.skipped).toHaveLength(0);
+    expect(result.notes).toHaveLength(0);
   });
 
   it("allocates the archive recipe ID in parser.ts and persists the same ID", async () => {

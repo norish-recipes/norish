@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { ArchiveImportError, ArchiveSkippedItem } from "@norish/shared/contracts/uploads";
+import type { ArchiveImportError, ArchiveImportNote } from "@norish/shared/contracts/uploads";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import { ARCHIVE_IMPORT_KEY } from "./use-archive-cache";
@@ -13,8 +13,7 @@ type ArchiveImportState = {
   current: number;
   total: number;
   imported: number;
-  skipped: number;
-  skippedItems: ArchiveSkippedItem[];
+  notes: ArchiveImportNote[];
   isImporting: boolean;
   errors: ArchiveImportError[];
 };
@@ -23,8 +22,7 @@ const defaultState: ArchiveImportState = {
   current: 0,
   total: 0,
   imported: 0,
-  skipped: 0,
-  skippedItems: [],
+  notes: [],
   isImporting: false,
   errors: [],
 };
@@ -33,8 +31,7 @@ export type ArchiveImportQueryResult = {
   current: number;
   total: number;
   imported: number;
-  skipped: number;
-  skippedItems: ArchiveSkippedItem[];
+  notes: ArchiveImportNote[];
   isImporting: boolean;
   errors: ArchiveImportError[];
   setImportState: (updater: (prev: ArchiveImportState) => ArchiveImportState) => void;
@@ -81,8 +78,7 @@ export function useArchiveImportQuery(): ArchiveImportQueryResult {
     current: state?.current ?? 0,
     total: state?.total ?? 0,
     imported: state?.imported ?? 0,
-    skipped: state?.skipped ?? 0,
-    skippedItems: state?.skippedItems ?? [],
+    notes: state?.notes ?? [],
     isImporting: state?.isImporting ?? false,
     errors: state?.errors ?? [],
     setImportState,

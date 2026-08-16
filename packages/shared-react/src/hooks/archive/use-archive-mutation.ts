@@ -42,9 +42,8 @@ export function createUseArchiveMutation({
               current: 0,
               total: result.total!,
               imported: 0,
-              skipped: 0,
               isImporting: true,
-              skippedItems: [],
+              notes: [],
               errors: [],
             }));
 

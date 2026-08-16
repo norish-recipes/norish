@@ -12,8 +12,7 @@ export default function ArchiveImporter() {
   const {
     current,
     imported,
-    skipped,
-    skippedItems,
+    notes,
     total,
     errors: progressErrors,
     isImporting,
@@ -22,7 +21,7 @@ export default function ArchiveImporter() {
   const { startImport, isStarting } = useArchiveImportMutation();
   const [dragActive, setDragActive] = useState(false);
   const [localErrors, setLocalErrors] = useState<{ file: string; error: string }[]>([]);
-  const [showSkipped, setShowSkipped] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const uploadFile = useCallback(
@@ -77,7 +76,7 @@ export default function ArchiveImporter() {
 
       return () => clearTimeout(timer);
     }
-  }, [isComplete, skippedItems.length, clearImport]);
+  }, [isComplete, notes.length, clearImport]);
 
   // Combine local errors with progress errors
   const allErrors = [
@@ -94,7 +93,6 @@ export default function ArchiveImporter() {
     const parts = [`${current} of ${total}`];
 
     if (imported > 0) parts.push(`${imported} imported`);
-    if (skipped > 0) parts.push(`${skipped} skipped`);
     if (progressErrors.length > 0) parts.push(`${progressErrors.length} errors`);
     status = `Processing: ${parts.join(", ")}`;
   } else if (isComplete) {
@@ -102,7 +100,6 @@ export default function ArchiveImporter() {
     const parts: string[] = [];
 
     if (imported > 0) parts.push(`${imported} imported`);
-    if (skipped > 0) parts.push(`${skipped} skipped`);
     if (progressErrors.length > 0) parts.push(`${progressErrors.length} errors`);
     status = `Complete: ${parts.join(", ")}`;
   }
@@ -179,22 +176,22 @@ export default function ArchiveImporter() {
 
         {status && <div className="text-muted text-base">{status}</div>}
 
-        {/* Show skipped recipes with toggle */}
-        {isComplete && skippedItems.length > 0 && (
+        {/* Recipes that landed, minus something the archive carried */}
+        {isComplete && notes.length > 0 && (
           <div className="text-muted text-sm">
             <button
               className="hover:text-foreground underline underline-offset-2"
               type="button"
-              onClick={() => setShowSkipped(!showSkipped)}
+              onClick={() => setShowNotes(!showNotes)}
             >
-              {showSkipped ? "Hide" : "Show"} {skippedItems.length} skipped recipe
-              {skippedItems.length !== 1 ? "s" : ""}
+              {showNotes ? "Hide" : "Show"} {notes.length} import note
+              {notes.length !== 1 ? "s" : ""}
             </button>
-            {showSkipped && (
+            {showNotes && (
               <ul className="mt-1 list-disc pl-4">
-                {skippedItems.map((s, i) => (
+                {notes.map((entry, i) => (
                   <li key={i}>
-                    {s.file}: {s.reason}
+                    {entry.file}: {entry.note}
                   </li>
                 ))}
               </ul>

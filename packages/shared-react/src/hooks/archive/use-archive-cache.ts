@@ -13,8 +13,7 @@ const defaultState: ArchiveImportState = {
   current: 0,
   total: 0,
   imported: 0,
-  skipped: 0,
-  skippedItems: [],
+  notes: [],
   isImporting: false,
   errors: [],
 };

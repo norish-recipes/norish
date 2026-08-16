@@ -54,7 +54,8 @@ export enum ArchiveFormat {
 export type ImportResult = {
   imported: RecipeDashboardDTO[];
   errors: Array<{ file: string; error: string }>; // keep going on partial failures
-  skipped: Array<{ file: string; reason: string }>; // duplicates
+  /** Recipes that landed, minus something — an unknown cuisine name, say */
+  notes: Array<{ file: string; note: string }>;
 };
 
 /**
@@ -293,8 +294,8 @@ export type RecipeImportItem = {
   importedRating?: number;
   /** Optional favourite mark to apply for the importing user */
   importedFavorite?: boolean;
-  /** Optional note surfaced through the import result's skipped reporting */
-  skippedNote?: { file: string; reason: string };
+  /** What this recipe lost on the way in, surfaced in the import result */
+  note?: { file: string; note: string };
 };
 
 /**
@@ -350,12 +351,12 @@ export async function importRecipeItems(
     current: number,
     recipe?: RecipeDashboardDTO,
     error?: { file: string; error: string },
-    skipped?: { file: string; reason: string }
+    note?: { file: string; note: string }
   ) => void
 ): Promise<ImportResult> {
   const imported: RecipeDashboardDTO[] = [];
   const errors: Array<{ file: string; error: string }> = [];
-  const skipped: Array<{ file: string; reason: string }> = [];
+  const notes: Array<{ file: string; note: string }> = [];
   let current = 0;
 
   for await (const item of items) {
@@ -371,12 +372,12 @@ export async function importRecipeItems(
     }
 
     // Handle regular import items
-    const { dto, fileName, importedRating, importedFavorite, skippedNote } = item;
+    const { dto, fileName, importedRating, importedFavorite, note } = item;
 
     // Recorded only once the recipe actually lands: an entry that then fails
-    // is reported as an error, and must not also be counted as skipped.
-    const recordSkippedNote = () => {
-      if (skippedNote) skipped.push(skippedNote);
+    // is reported as an error, and has nothing to say about what it lost.
+    const recordNote = () => {
+      if (note) notes.push(note);
     };
 
     try {
@@ -400,8 +401,8 @@ export async function importRecipeItems(
 
         if (updatedRecipe) {
           imported.push(updatedRecipe);
-          recordSkippedNote();
-          onProgress?.(current, updatedRecipe, undefined, skippedNote);
+          recordNote();
+          onProgress?.(current, updatedRecipe, undefined, note);
         }
 
         continue;
@@ -424,8 +425,8 @@ export async function importRecipeItems(
 
       if (recipe) {
         imported.push(recipe);
-        recordSkippedNote();
-        onProgress?.(current, recipe, undefined, skippedNote);
+        recordNote();
+        onProgress?.(current, recipe, undefined, note);
       }
     } catch (e: unknown) {
       const error = { file: fileName, error: String((e as Error)?.message || e) };
@@ -435,7 +436,7 @@ export async function importRecipeItems(
     }
   }
 
-  return { imported, errors, skipped };
+  return { imported, errors, notes };
 }
 
 /**
@@ -477,11 +478,11 @@ async function* generateNorishRecipes(
         fileName,
         importedRating,
         importedFavorite,
-        skippedNote:
+        note:
           droppedCuisines.length > 0
             ? {
                 file: fileName,
-                reason: `Unknown cuisines dropped: ${droppedCuisines.join(", ")}`,
+                note: `Unknown cuisines dropped: ${droppedCuisines.join(", ")}`,
               }
             : undefined,
       };
@@ -655,7 +656,7 @@ export async function importArchive(
     current: number,
     recipe?: RecipeDashboardDTO,
     error?: { file: string; error: string },
-    skipped?: { file: string; reason: string }
+    note?: { file: string; note: string }
   ) => void
 ): Promise<ImportResult> {
   const arrayBuffer = zipBytes.buffer.slice(
