@@ -10,8 +10,8 @@ import {
   findExistingRecipe,
   updateRecipeWithRefs,
 } from "@norish/db";
-import { addFavorite } from "@norish/db/repositories/favorites";
 import { listCuisines } from "@norish/db/repositories/cuisines";
+import { addFavorite } from "@norish/db/repositories/favorites";
 import { rateRecipe } from "@norish/db/repositories/ratings";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
@@ -30,6 +30,7 @@ import {
 } from "./mealie-parser";
 import { parseMelaArchive, parseMelaRecipeToDTO } from "./mela-parser";
 import {
+  assertSupportedNorishArchive,
   assertSupportedNorishFormatVersion,
   countNorishRecipes,
   extractNorishRecipes,
@@ -186,6 +187,12 @@ export async function getArchiveInfo(rawZip: JSZip): Promise<ArchiveInfo> {
   // Check for Norish Recipe Archive first: the manifest positively
   // identifies the format, so it always wins over content heuristics.
   if (await isNorishArchive(zip)) {
+    // A newer major is refused here, while the caller is still deciding
+    // whether to import at all — so the refusal reaches the user as one
+    // clear message instead of a per-entry error partway through a run
+    // that was already reported as started.
+    await assertSupportedNorishArchive(zip);
+
     return {
       format: ArchiveFormat.NORISH,
       count: countNorishRecipes(zip),

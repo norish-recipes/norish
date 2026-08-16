@@ -137,9 +137,7 @@ describe("norish archive rides the shared import loop", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockListCuisines.mockResolvedValue([
-      { id: FRENCH_CUISINE_ID, name: "French", version: 1 },
-    ]);
+    mockListCuisines.mockResolvedValue([{ id: FRENCH_CUISINE_ID, name: "French", version: 1 }]);
     mockFindExistingRecipe.mockResolvedValue(null);
     mockCreateRecipeWithRefs.mockImplementation(async (recipeId) => ({
       status: "inserted",
@@ -156,9 +154,8 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const { importArchive, getArchiveInfo, ArchiveFormat } = await import(
-      "@norish/shared-server/archive/parser"
-    );
+    const { importArchive, getArchiveInfo, ArchiveFormat } =
+      await import("@norish/shared-server/archive/parser");
 
     const info = await getArchiveInfo(await JSZip.loadAsync(zipBytes));
 
@@ -278,9 +275,22 @@ describe("norish archive rides the shared import loop", () => {
 
     const { importArchive } = await import("@norish/shared-server/archive/parser");
 
-    await expect(importArchive("user-1", ["user-1"], zipBytes)).rejects.toThrow(
-      /format version 2/
-    );
+    await expect(importArchive("user-1", ["user-1"], zipBytes)).rejects.toThrow(/format version 2/);
     expect(mockCreateRecipeWithRefs).not.toHaveBeenCalled();
+  });
+
+  it("refuses a newer major while the caller is still inspecting the archive", async () => {
+    // The refusal has to land before an import is reported as started, or the
+    // user meets it as a per-entry error inside a run that already looked
+    // under way.
+    const zipBytes = await buildArchiveBytes(
+      [{ folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) }],
+      buildManifest({ formatVersion: 2 })
+    );
+    const zip = await JSZip.loadAsync(new Uint8Array(zipBytes));
+
+    const { getArchiveInfo } = await import("@norish/shared-server/archive/parser");
+
+    await expect(getArchiveInfo(zip)).rejects.toThrow(/format version 2/);
   });
 });

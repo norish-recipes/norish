@@ -1,13 +1,13 @@
 import path from "node:path";
 import JSZip from "jszip";
 
-import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import {
   saveImageBytes,
   saveStepImageBytes,
   saveVideoBytes,
 } from "@norish/shared-server/media/storage";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 
 import {
   EXTERNAL_MEDIA_URL,
@@ -81,17 +81,49 @@ export async function readNorishManifest(zip: JSZip): Promise<NorishManifest> {
   return parsed.data;
 }
 
+function newerMajorError(formatVersion: number): Error {
+  return new Error(
+    `This Recipe Archive uses format version ${formatVersion}, ` +
+      `but this server only understands up to version ${NORISH_ARCHIVE_FORMAT_VERSION}. ` +
+      `Update Norish to import it.`
+  );
+}
+
 /**
  * Refuse a newer major instead of guessing: within a major, unknown fields
  * are ignored, so anything this importer *can* read it reads completely.
  */
 export function assertSupportedNorishFormatVersion(manifest: NorishManifest): void {
   if (manifest.formatVersion > NORISH_ARCHIVE_FORMAT_VERSION) {
-    throw new Error(
-      `This Recipe Archive uses format version ${manifest.formatVersion}, ` +
-        `but this server only understands up to version ${NORISH_ARCHIVE_FORMAT_VERSION}. ` +
-        `Update Norish to import it.`
-    );
+    throw newerMajorError(manifest.formatVersion);
+  }
+}
+
+/**
+ * The same refusal, made at detection time from the version field alone.
+ *
+ * Reading only that one field is the point: a Recipe Archive whose manifest
+ * is otherwise imperfect is still *recognised* here (and its problems still
+ * reported per entry later), while an archive from a future major is turned
+ * away before the caller reports an import as started.
+ */
+export async function assertSupportedNorishArchive(zip: JSZip): Promise<void> {
+  const manifestFile = zip.file(NORISH_ARCHIVE_MANIFEST_FILE);
+
+  if (!manifestFile) return;
+
+  let formatVersion: unknown;
+
+  try {
+    ({ formatVersion } = JSON.parse(await manifestFile.async("string")) as {
+      formatVersion?: unknown;
+    });
+  } catch {
+    return;
+  }
+
+  if (typeof formatVersion === "number" && formatVersion > NORISH_ARCHIVE_FORMAT_VERSION) {
+    throw newerMajorError(formatVersion);
   }
 }
 
