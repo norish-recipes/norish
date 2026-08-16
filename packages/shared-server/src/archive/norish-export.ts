@@ -2,7 +2,6 @@ import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
-import JSZip from "jszip";
 
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -17,7 +16,7 @@ import type {
   NorishArchiveMedia,
   NorishArchiveRecord,
 } from "./norish-writer";
-import { buildNorishArchive, collectRecipeMediaRefs } from "./norish-writer";
+import { collectRecipeMediaRefs, streamNorishArchive } from "./norish-writer";
 
 export type NorishExportInput = {
   /** The recipe-list viewer context — scope is delegated, never reimplemented */
@@ -27,16 +26,18 @@ export type NorishExportInput = {
 };
 
 export type NorishExportResult = {
-  zip: JSZip;
+  /** The archive itself, already producing bytes */
+  stream: Readable;
+  /** How many recipes the export set out to write */
   recipeCount: number;
 };
 
 /**
- * A readable that opens the underlying file only when the zip generator
- * first pulls from it, so a large export never holds every media file
- * open (or buffered) at once.
+ * A readable that opens the underlying file only when the archive first
+ * pulls from it, so a large export never holds every media file open (or
+ * buffered) at once.
  */
-function lazyFileStream(filePath: string): NodeJS.ReadableStream {
+function lazyFileStream(filePath: string): Readable {
   let source: ReturnType<typeof createReadStream> | null = null;
 
   return new Readable({
@@ -84,6 +85,46 @@ async function collectExistingMedia(recipe: FullRecipeDTO): Promise<NorishArchiv
   return media;
 }
 
+/**
+ * Load each visible recipe in turn, yielding it the moment it is ready.
+ *
+ * The generator is what makes the download stream: the writer appends each
+ * recipe as it arrives, so bytes leave the server while the rest of the
+ * library is still being read. A recipe that has been deleted since the id
+ * list was taken, or that fails to load, is simply not yielded.
+ */
+async function* loadExportRecords(
+  recipeIds: string[],
+  ratings: ReadonlyMap<string, number>,
+  favorites: ReadonlySet<string>
+): AsyncGenerator<NorishArchiveRecord> {
+  for (const recipeId of recipeIds) {
+    let recipe: FullRecipeDTO | null = null;
+
+    try {
+      recipe = await getRecipeFull(recipeId);
+    } catch (error) {
+      log.warn({ err: error, recipeId }, "Skipping recipe that failed to load during export");
+    }
+
+    if (!recipe) continue;
+
+    yield {
+      recipe,
+      media: await collectExistingMedia(recipe),
+      rating: ratings.get(recipeId),
+      favorite: favorites.has(recipeId) || undefined,
+    };
+  }
+}
+
+/**
+ * Start a Recipe Archive of everything the viewer can see.
+ *
+ * Only the cheap work happens before returning — the visible id list and the
+ * exporter's own marks — so the caller can begin responding immediately. The
+ * expensive per-recipe loading runs behind the stream.
+ */
 export async function buildNorishArchiveForViewer(
   input: NorishExportInput
 ): Promise<NorishExportResult> {
@@ -95,33 +136,12 @@ export async function buildNorishArchiveForViewer(
     getFavoritesByRecipeIds(input.ctx.userId, recipeIds),
   ]);
 
-  const records: NorishArchiveRecord[] = [];
-
-  for (const recipeId of recipeIds) {
-    let recipe: FullRecipeDTO | null = null;
-
-    try {
-      recipe = await getRecipeFull(recipeId);
-    } catch (error) {
-      log.warn({ err: error, recipeId }, "Skipping recipe that failed to load during export");
-    }
-
-    // A recipe deleted between listing and loading simply drops out
-    if (recipe) {
-      records.push({
-        recipe,
-        media: await collectExistingMedia(recipe),
-        rating: ratings.get(recipeId),
-        favorite: favorites.has(recipeId) || undefined,
-      });
-    }
-  }
-
-  const zip = buildNorishArchive({
-    records,
+  const stream = streamNorishArchive({
+    records: loadExportRecords(recipeIds, ratings, favorites),
     exporter: input.exporter,
     exportedAt: input.exportedAt,
+    recipeCount: recipeIds.length,
   });
 
-  return { zip, recipeCount: records.length };
+  return { stream, recipeCount: recipeIds.length };
 }

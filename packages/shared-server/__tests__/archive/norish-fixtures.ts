@@ -1,4 +1,11 @@
+import JSZip from "jszip";
+
+import type {
+  NorishArchiveExporter,
+  NorishArchiveRecord,
+} from "@norish/shared-server/archive/norish-writer";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
+import { streamNorishArchive } from "@norish/shared-server/archive/norish-writer";
 
 /** A fully populated recipe record as the recipe listing layer loads it. */
 export function buildFullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRecipeDTO {
@@ -85,4 +92,35 @@ export function buildFullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRec
     videos: [],
     ...overrides,
   };
+}
+
+/**
+ * Run records through the streaming writer and load the bytes back.
+ *
+ * Tests assert against a real zip, the way an importer meets one — which is
+ * also what keeps them honest about the writer producing a stream rather
+ * than an object they could inspect directly.
+ */
+export async function writeArchive(input: {
+  records: NorishArchiveRecord[];
+  exporter: NorishArchiveExporter;
+  exportedAt: Date;
+  /** Defaults to the number of records, as a real export's id list would */
+  recipeCount?: number;
+}): Promise<JSZip> {
+  const stream = streamNorishArchive({
+    exporter: input.exporter,
+    exportedAt: input.exportedAt,
+    recipeCount: input.recipeCount ?? input.records.length,
+    // eslint-disable-next-line @typescript-eslint/require-await
+    records: (async function* () {
+      yield* input.records;
+    })(),
+  });
+
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk as Buffer));
+
+  return JSZip.loadAsync(Buffer.concat(chunks));
 }

@@ -7,17 +7,16 @@ import { serverLogger as log } from "@norish/shared-server/logger";
 
 export const runtime = "nodejs";
 
-/** JSZip types its stream as the bare interface; the object is a real Readable. */
 type ZipStream = NodeJS.ReadableStream & { destroy?: (error?: Error) => void };
 
 /**
- * Wrap JSZip's node stream in a web ReadableStream with backpressure, so a
- * slow download pauses zip generation instead of buffering it in memory.
+ * Wrap the archive's node stream in a web ReadableStream with backpressure,
+ * so a slow download pauses the export instead of buffering it in memory.
  *
  * Chunks are copied rather than enqueued as views: the consumer reads them
  * after this callback returns, and the bytes underneath may belong to a
  * pooled buffer that is reused by then. An abandoned download destroys the
- * generator so its open file handles go with it.
+ * archive so its open file handles go with it.
  */
 function nodeStreamToWeb(nodeStream: ZipStream): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
@@ -83,7 +82,7 @@ export async function GET(req: Request) {
   const householdUserIds = household?.users.map((user: { id: string }) => user.id) ?? [];
 
   const exportedAt = new Date();
-  const { zip, recipeCount } = await buildNorishArchiveForViewer({
+  const { stream, recipeCount } = await buildNorishArchiveForViewer({
     ctx: {
       userId: sessionUser.id,
       householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
@@ -104,13 +103,7 @@ export async function GET(req: Request) {
     "Streaming Recipe Archive export"
   );
 
-  const nodeStream = zip.generateNodeStream({
-    type: "nodebuffer",
-    streamFiles: true,
-    compression: "DEFLATE",
-  });
-
-  return new Response(nodeStreamToWeb(nodeStream), {
+  return new Response(nodeStreamToWeb(stream), {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${fileName}"`,

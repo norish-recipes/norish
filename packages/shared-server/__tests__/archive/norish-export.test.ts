@@ -1,3 +1,4 @@
+import JSZip from "jszip";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildFullRecipe } from "./norish-fixtures";
@@ -22,6 +23,15 @@ vi.mock("@norish/db/repositories/favorites", () => ({
   getFavoritesByRecipeIds: mockGetFavoritesByRecipeIds,
 }));
 
+/** Read the streamed archive back, the way the browser's download would. */
+async function collect(stream: NodeJS.ReadableStream): Promise<JSZip> {
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk as Buffer));
+
+  return JSZip.loadAsync(Buffer.concat(chunks));
+}
+
 const RECIPE_A = "11111111-1111-4111-8111-111111111111";
 const RECIPE_B = "99999999-9999-4999-8999-999999999999";
 
@@ -35,6 +45,41 @@ describe("norish export service", () => {
     );
     mockGetUserRatingsByRecipeIds.mockResolvedValue(new Map());
     mockGetFavoritesByRecipeIds.mockResolvedValue(new Set());
+  });
+
+  it("hands back a stream before it has loaded a single recipe", async () => {
+    // Story 9: the download starts immediately rather than waiting for the
+    // server to assemble the whole library first. Held open here so the
+    // assertion cannot pass by the loading merely being fast.
+    let releaseFirstLoad!: () => void;
+    const firstLoadReached = new Promise<void>((resolve) => {
+      releaseFirstLoad = resolve;
+    });
+
+    mockGetRecipeFull.mockImplementation(async (id: string) => {
+      await firstLoadReached;
+
+      return buildFullRecipe({ id });
+    });
+
+    const { buildNorishArchiveForViewer } =
+      await import("@norish/shared-server/archive/norish-export");
+
+    const { stream, recipeCount } = await buildNorishArchiveForViewer({
+      ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
+      exporter: { name: "Mika", origin: "https://norish.example.com" },
+      exportedAt: new Date("2026-08-15T12:00:00Z"),
+    });
+
+    // Returned while every recipe load is still blocked, and already able to
+    // say how many recipes the archive is for.
+    expect(recipeCount).toBe(2);
+
+    releaseFirstLoad();
+
+    const zip = await collect(stream);
+
+    expect(zip.file(`${RECIPE_A}/recipe.json`)).toBeTruthy();
   });
 
   it("delegates scope to the recipe listing visibility layer", async () => {
@@ -57,11 +102,12 @@ describe("norish export service", () => {
     const { buildNorishArchiveForViewer } =
       await import("@norish/shared-server/archive/norish-export");
 
-    const { zip, recipeCount } = await buildNorishArchiveForViewer({
+    const { stream, recipeCount } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
+    const zip = await collect(stream);
 
     expect(recipeCount).toBe(2);
     expect(zip.file(`${RECIPE_A}/recipe.json`)).toBeTruthy();
@@ -85,11 +131,12 @@ describe("norish export service", () => {
     const { buildNorishArchiveForViewer } =
       await import("@norish/shared-server/archive/norish-export");
 
-    const { zip } = await buildNorishArchiveForViewer({
+    const { stream } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
+    const zip = await collect(stream);
 
     // The marks are read for the exporting user, never for the household
     expect(mockGetUserRatingsByRecipeIds).toHaveBeenCalledWith("user-1", [RECIPE_A, RECIPE_B]);
@@ -112,19 +159,19 @@ describe("norish export service", () => {
     const { buildNorishArchiveForViewer } =
       await import("@norish/shared-server/archive/norish-export");
 
-    const { zip, recipeCount } = await buildNorishArchiveForViewer({
+    const { stream, recipeCount } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
+    const zip = await collect(stream);
 
-    expect(recipeCount).toBe(1);
+    // The archive streams, so its manifest is written before anyone knows a
+    // recipe has gone: the count is what the export set out to write, and
+    // the entries are the ground truth the importer counts.
+    expect(recipeCount).toBe(2);
     expect(zip.file(`${RECIPE_A}/recipe.json`)).toBeTruthy();
     expect(zip.file(`${RECIPE_B}/recipe.json`)).toBeNull();
-
-    const manifest = JSON.parse(await zip.file("manifest.json")!.async("string"));
-
-    expect(manifest.recipeCount).toBe(1);
   });
 
   it("keeps exporting when a single recipe fails to load", async () => {
@@ -137,12 +184,14 @@ describe("norish export service", () => {
     const { buildNorishArchiveForViewer } =
       await import("@norish/shared-server/archive/norish-export");
 
-    const { recipeCount } = await buildNorishArchiveForViewer({
+    const { stream } = await buildNorishArchiveForViewer({
       ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
+    const zip = await collect(stream);
 
-    expect(recipeCount).toBe(1);
+    expect(zip.file(`${RECIPE_A}/recipe.json`)).toBeNull();
+    expect(zip.file(`${RECIPE_B}/recipe.json`)).toBeTruthy();
   });
 });

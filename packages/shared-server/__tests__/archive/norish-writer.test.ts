@@ -4,13 +4,12 @@ import {
   NORISH_ARCHIVE_FORMAT,
   NORISH_ARCHIVE_FORMAT_VERSION,
 } from "@norish/shared-server/archive/norish-format";
-import { buildNorishArchive } from "@norish/shared-server/archive/norish-writer";
 
-import { buildFullRecipe } from "./norish-fixtures";
+import { buildFullRecipe, writeArchive } from "./norish-fixtures";
 
 // @vitest-environment node
 
-async function readJson(zip: ReturnType<typeof buildNorishArchive>, path: string) {
+async function readJson(zip: Awaited<ReturnType<typeof writeArchive>>, path: string) {
   const file = zip.file(path);
 
   if (!file) throw new Error(`Missing archive entry: ${path}`);
@@ -23,7 +22,7 @@ describe("norish archive writer", () => {
   const exporter = { name: "Mika", origin: "https://norish.example.com" };
 
   it("writes a root manifest identifying the format", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe() }],
       exporter,
       exportedAt,
@@ -47,7 +46,7 @@ describe("norish archive writer", () => {
       name: "Second Recipe",
     });
 
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: recipeA }, { recipe: recipeB }],
       exporter,
       exportedAt,
@@ -62,7 +61,7 @@ describe("norish archive writer", () => {
   });
 
   it("carries cuisines as names, never instance-local ids", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe() }],
       exporter,
       exportedAt,
@@ -74,7 +73,7 @@ describe("norish archive writer", () => {
   });
 
   it("carries the full canonical recipe data", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe() }],
       exporter,
       exportedAt,
@@ -122,7 +121,7 @@ describe("norish archive writer", () => {
   });
 
   it("nulls instance-local ingredient ids and travels ingredients by name", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe() }],
       exporter,
       exportedAt,
@@ -224,7 +223,7 @@ describe("norish archive writer", () => {
       },
     ]);
 
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [
         {
           recipe,
@@ -269,7 +268,7 @@ describe("norish archive writer", () => {
     });
 
     // No media handles supplied: the local gallery file did not make it in
-    const zip = buildNorishArchive({ records: [{ recipe }], exporter, exportedAt });
+    const zip = await writeArchive({ records: [{ recipe }], exporter, exportedAt });
 
     const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
 
@@ -280,7 +279,7 @@ describe("norish archive writer", () => {
   it("exports a recipe with no media cleanly", async () => {
     const recipe = buildFullRecipe({ image: null, images: [], videos: [] });
 
-    const zip = buildNorishArchive({ records: [{ recipe }], exporter, exportedAt });
+    const zip = await writeArchive({ records: [{ recipe }], exporter, exportedAt });
 
     const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
 
@@ -290,7 +289,7 @@ describe("norish archive writer", () => {
   });
 
   it("carries the author's display name, the exporter's rating, and the favourite mark", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe(), rating: 4, favorite: true }],
       exporter,
       exportedAt,
@@ -304,7 +303,7 @@ describe("norish archive writer", () => {
   });
 
   it("omits marks the exporter never made", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe() }],
       exporter,
       exportedAt,
@@ -317,7 +316,7 @@ describe("norish archive writer", () => {
   });
 
   it("writes a null author name for an orphaned recipe", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe({ userId: null, author: undefined }) }],
       exporter,
       exportedAt,
@@ -329,7 +328,7 @@ describe("norish archive writer", () => {
   });
 
   it("leaks no account data of the author or exporter into a recipe entry", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [
         {
           recipe: buildFullRecipe({
@@ -362,7 +361,7 @@ describe("norish archive writer", () => {
   });
 
   it("strips row ids, versions, and timestamps from the archive payload", async () => {
-    const zip = buildNorishArchive({
+    const zip = await writeArchive({
       records: [{ recipe: buildFullRecipe() }],
       exporter,
       exportedAt,

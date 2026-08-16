@@ -69,6 +69,7 @@
     "@norish/shared": "workspace:*",
     "ai": "^6.0.241",
     "ai-sdk-ollama": "^3.8.8",
+    "archiver": "catalog:",
     "fuse.js": "catalog:",
     "heic-convert": "^2.1.0",
     "ioredis": "catalog:",
@@ -88,6 +89,7 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
+    "@types/archiver": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "vitest": "catalog:"

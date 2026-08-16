@@ -1,4 +1,6 @@
-import JSZip from "jszip";
+import { Readable } from "node:stream";
+import type { Archiver } from "archiver";
+import archiver from "archiver";
 
 import { FullRecipeDTO } from "@norish/shared/contracts";
 
@@ -23,11 +25,11 @@ export type NorishArchiveMediaRef = {
 
 export type NorishArchiveMedia = NorishArchiveMediaRef & {
   /**
-   * Produces the media bytes when the zip generator reaches this entry.
-   * Returning a fresh stream per call keeps large exports from holding
-   * every file open (or in memory) at once.
+   * Produces the media bytes when the archive reaches this entry. Returning
+   * a fresh stream per call keeps large exports from holding every file open
+   * (or in memory) at once.
    */
-  source: () => NodeJS.ReadableStream;
+  source: () => Readable;
 };
 
 /**
@@ -53,9 +55,15 @@ export type NorishArchiveExporter = {
 };
 
 export type NorishArchiveInput = {
-  records: NorishArchiveRecord[];
+  /**
+   * Yielded as they load, so entries are written while the rest of the
+   * library is still being read.
+   */
+  records: AsyncIterable<NorishArchiveRecord>;
   exporter: NorishArchiveExporter;
   exportedAt: Date;
+  /** What the manifest declares it set out to write */
+  recipeCount: number;
 };
 
 /**
@@ -230,16 +238,15 @@ function buildArchiveRecipe(record: NorishArchiveRecord): NorishArchiveRecipe {
 }
 
 /**
- * Build a Recipe Archive: root manifest plus one folder per recipe keyed by
- * its recipe id, media inside each folder. Returns the JSZip so the caller
- * decides how to generate — in-memory bytes for tests, a node stream for
- * HTTP delivery. Media entries are stored uncompressed: images and videos
- * are already compressed, and skipping DEFLATE keeps streaming cheap.
+ * How much finished zip output may sit unread before the writer stops
+ * producing. A paused download must not let the loop run the whole library
+ * into memory; a reading one never reaches this.
  */
-export function buildNorishArchive(input: NorishArchiveInput): JSZip {
-  const zip = new JSZip();
+const MAX_BUFFERED_BYTES = 4 * 1024 * 1024;
+const BACKPRESSURE_POLL_MS = 25;
 
-  const manifest: NorishManifest = {
+function buildManifest(input: NorishArchiveInput): NorishManifest {
+  return {
     format: NORISH_ARCHIVE_FORMAT,
     formatVersion: NORISH_ARCHIVE_FORMAT_VERSION,
     exportedAt: input.exportedAt.toISOString(),
@@ -247,26 +254,66 @@ export function buildNorishArchive(input: NorishArchiveInput): JSZip {
       name: input.exporter.name,
       origin: input.exporter.origin,
     },
-    recipeCount: input.records.length,
+    // What the export set out to write. Entries are the ground truth on
+    // import, which is why a recipe that vanishes mid-stream can simply be
+    // left out rather than invalidating the archive.
+    recipeCount: input.recipeCount,
   };
+}
 
-  zip.file(NORISH_ARCHIVE_MANIFEST_FILE, JSON.stringify(manifest, null, 2));
+function appendRecord(archive: Archiver, record: NorishArchiveRecord): void {
+  archive.append(JSON.stringify(buildArchiveRecipe(record), null, 2), {
+    name: `${record.recipe.id}/${NORISH_ARCHIVE_RECIPE_FILE}`,
+  });
 
-  for (const record of input.records) {
-    const archiveRecipe = buildArchiveRecipe(record);
-
-    zip.file(
-      `${record.recipe.id}/${NORISH_ARCHIVE_RECIPE_FILE}`,
-      JSON.stringify(archiveRecipe, null, 2)
-    );
-
-    for (const media of record.media ?? []) {
-      zip.file(`${record.recipe.id}/${media.archivePath}`, media.source(), {
-        binary: true,
-        compression: "STORE",
-      });
-    }
+  // Media is stored, not deflated: images and videos are already compressed,
+  // and skipping DEFLATE keeps a video-heavy export cheap to stream.
+  for (const media of record.media ?? []) {
+    archive.append(media.source(), {
+      name: `${record.recipe.id}/${media.archivePath}`,
+      store: true,
+    });
   }
+}
 
-  return zip;
+/**
+ * Write a Recipe Archive as a stream: root manifest first, then one folder
+ * per recipe keyed by its recipe id with that recipe's media inside.
+ *
+ * Records arrive as an async iterable and entries are appended as they do,
+ * so the first bytes reach the client while the server is still reading
+ * recipes — nobody waits for the whole library to be assembled, and no
+ * artifact is ever built server-side (ADR-0022). A record the source cannot
+ * produce is simply never yielded, so a recipe deleted mid-export drops out
+ * instead of corrupting the download.
+ */
+export function streamNorishArchive(input: NorishArchiveInput): Readable {
+  const archive = archiver("zip", { zlib: { level: 6 } });
+
+  archive.append(JSON.stringify(buildManifest(input), null, 2), {
+    name: NORISH_ARCHIVE_MANIFEST_FILE,
+  });
+
+  void (async () => {
+    try {
+      for await (const record of input.records) {
+        appendRecord(archive, record);
+
+        // The consumer sets the pace: while finished output sits unread,
+        // stop pulling recipes rather than racing ahead of the download.
+        while (archive.readableLength > MAX_BUFFERED_BYTES) {
+          await new Promise((resolve) => setTimeout(resolve, BACKPRESSURE_POLL_MS));
+        }
+      }
+
+      await archive.finalize();
+    } catch (error) {
+      // The response has already begun, so there is no status code left to
+      // send: destroying the stream is what tells the client the download is
+      // not the whole archive.
+      archive.destroy(error instanceof Error ? error : new Error(String(error)));
+    }
+  })();
+
+  return archive;
 }

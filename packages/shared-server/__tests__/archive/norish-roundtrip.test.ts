@@ -1,10 +1,9 @@
 import { Readable } from "node:stream";
-import JSZip from "jszip";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 
-import { buildFullRecipe } from "./norish-fixtures";
+import { buildFullRecipe, writeArchive } from "./norish-fixtures";
 
 // @vitest-environment node
 
@@ -20,8 +19,7 @@ vi.mock("@norish/shared-server/media/storage", () => ({
 
 const { extractNorishRecipes, parseNorishRecipeToDTO, readNorishManifest } =
   await import("@norish/shared-server/archive/norish-parser");
-const { buildNorishArchive, collectRecipeMediaRefs } =
-  await import("@norish/shared-server/archive/norish-writer");
+const { collectRecipeMediaRefs } = await import("@norish/shared-server/archive/norish-writer");
 
 /**
  * The centerpiece: records → writer → zip bytes → parser → insert shapes.
@@ -49,7 +47,7 @@ describe("norish archive round-trip", () => {
     mediaBytes: Record<string, string> = {},
     marks: { rating?: number; favorite?: boolean } = {}
   ) {
-    const zip = buildNorishArchive({
+    const reloaded = await writeArchive({
       records: [
         {
           recipe,
@@ -65,10 +63,6 @@ describe("norish archive round-trip", () => {
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
-
-    // Serialize to real bytes and reload, exactly like an import would
-    const bytes = await zip.generateAsync({ type: "uint8array" });
-    const reloaded = await JSZip.loadAsync(bytes);
 
     const manifest = await readNorishManifest(reloaded);
     const entries = await extractNorishRecipes(reloaded);

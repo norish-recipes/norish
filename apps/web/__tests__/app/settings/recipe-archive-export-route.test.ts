@@ -1,7 +1,7 @@
 // @vitest-environment node
 
+import { Readable } from "node:stream";
 import { GET } from "@/app/(app)/export/recipes/route";
-import JSZip from "jszip";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionMock = vi.hoisted(() => vi.fn());
@@ -46,7 +46,7 @@ describe("Recipe Archive export route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     householdMock.mockResolvedValue(null);
-    buildArchiveMock.mockResolvedValue({ zip: new JSZip(), recipeCount: 0 });
+    buildArchiveMock.mockResolvedValue({ stream: Readable.from(["PK"]), recipeCount: 0 });
   });
 
   it("refuses a signed-out request", async () => {
@@ -131,7 +131,7 @@ describe("Recipe Archive export route", () => {
     vi.clearAllMocks();
     signedInAs({ id: "admin-1", isServerAdmin: true });
     householdMock.mockResolvedValue(null);
-    buildArchiveMock.mockResolvedValue({ zip: new JSZip(), recipeCount: 0 });
+    buildArchiveMock.mockResolvedValue({ stream: Readable.from(["PK"]), recipeCount: 0 });
 
     const instance = await GET(exportRequest("?scope=instance"));
 

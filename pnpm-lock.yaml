@@ -43,6 +43,9 @@ catalogs:
     '@testcontainers/redis':
       specifier: ^11.14.0
       version: 11.14.0
+    '@types/archiver':
+      specifier: ^6.0.3
+      version: 6.0.4
     '@types/node':
       specifier: ^25.6.0
       version: 25.7.0
@@ -55,6 +58,9 @@ catalogs:
     '@vitejs/plugin-react':
       specifier: ^5.1.3
       version: 5.2.0
+    archiver:
+      specifier: ^7.0.1
+      version: 7.0.1
     better-auth:
       specifier: 1.6.9
       version: 1.6.9
@@ -1193,6 +1199,9 @@ importers:
       ai-sdk-ollama:
         specifier: ^3.8.8
         version: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver:
+        specifier: 'catalog:'
+        version: 7.0.1
       fuse.js:
         specifier: 'catalog:'
         version: 7.3.0
@@ -1245,6 +1254,9 @@ importers:
       '@norish/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@types/archiver':
+        specifier: 'catalog:'
+        version: 6.0.4
       eslint:
         specifier: 'catalog:'
         version: 9.39.1(jiti@2.7.0)
@@ -5342,6 +5354,9 @@ packages:
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
+  '@types/archiver@6.0.4':
+    resolution: {integrity: sha512-ULdQpARQ3sz9WH4nb98mJDYA0ft2A8C4f4fovvUcFwINa1cgGjY36JCAYuP5YypRq4mco1lJp1/7jEMS2oR0Hg==}
+
   '@types/aria-query@5.0.4':
     resolution: {integrity: sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==}
 
@@ -5433,6 +5448,9 @@ packages:
 
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
+
+  '@types/readdir-glob@1.1.5':
+    resolution: {integrity: sha512-raiuEPUYqXu+nvtY2Pe8s8FEmZ3x5yAH4VkLdihcPdalvsHltomrRC9BzuStrJ9yk06470hS0Crw0f1pXqD+Hg==}
 
   '@types/ssh2-streams@0.1.13':
     resolution: {integrity: sha512-faHyY3brO9oLEA0QlcO8N2wT7R0+1sHWZvQ+y3rMLwdY1ZyS1z0W3t65j9PqT4HmQ6ALzNe7RZlNuCNE0wBSWA==}
@@ -11474,7 +11492,7 @@ snapshots:
       '@csstools/css-color-parser': 4.0.2(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)
       '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.0)
       '@csstools/css-tokenizer': 4.0.0
-      lru-cache: 11.2.7
+      lru-cache: 11.3.6
 
   '@asamuzakjp/css-color@5.1.11':
     dependencies:
@@ -13903,6 +13921,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bufferutil
@@ -13926,6 +13946,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -13977,6 +13998,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14000,6 +14023,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -14050,6 +14074,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14073,6 +14099,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -14123,6 +14150,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14146,6 +14175,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -14196,6 +14226,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14219,6 +14251,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -14269,6 +14302,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14292,6 +14327,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -14342,6 +14378,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14365,6 +14403,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -14862,6 +14901,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14880,6 +14921,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -14925,6 +14967,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -14943,6 +14987,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -14988,6 +15033,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15006,6 +15053,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15051,6 +15099,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15069,6 +15119,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15114,6 +15165,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15132,6 +15185,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15181,6 +15235,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bufferutil
@@ -15205,6 +15261,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -15255,6 +15312,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bufferutil
@@ -15279,6 +15338,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -15307,6 +15367,7 @@ snapshots:
       '@norish/shared': file:packages/shared(1d748b8ea3183e87b5d71d2e4eeb3453)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15343,6 +15404,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15362,6 +15425,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15389,6 +15453,7 @@ snapshots:
       '@norish/shared': file:packages/shared(7695bc107d02b5d4ea7b08bf46c28a9f)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15425,6 +15490,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15444,6 +15511,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15471,6 +15539,7 @@ snapshots:
       '@norish/shared': file:packages/shared(23db0992bead7abe4f1f062cd2636648)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15507,6 +15576,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15526,6 +15597,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15553,6 +15625,7 @@ snapshots:
       '@norish/shared': file:packages/shared(cd987126921ca94791f5e02dfadab497)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15589,6 +15662,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15608,6 +15683,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15635,6 +15711,7 @@ snapshots:
       '@norish/shared': file:packages/shared(e6ea26a4dd0c094e6a6ff35f2a5c805d)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15671,6 +15748,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15690,6 +15769,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15717,6 +15797,7 @@ snapshots:
       '@norish/shared': file:packages/shared(cd987126921ca94791f5e02dfadab497)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15753,6 +15834,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15772,6 +15855,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15799,6 +15883,7 @@ snapshots:
       '@norish/shared': file:packages/shared(913071686a4c067c0085145e5ce84d1a)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15835,6 +15920,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15854,6 +15941,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15881,6 +15969,7 @@ snapshots:
       '@norish/shared': file:packages/shared(6d9bd8f262e51f1fec3e35c2a20aea74)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15917,6 +16006,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -15936,6 +16027,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -15963,6 +16055,7 @@ snapshots:
       '@norish/shared': file:packages/shared(e6ea26a4dd0c094e6a6ff35f2a5c805d)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -15999,6 +16092,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -16018,6 +16113,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -16045,6 +16141,7 @@ snapshots:
       '@norish/shared': file:packages/shared(93d0cd9d506e674d14fc84c10506ebc4)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -16081,6 +16178,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -16100,6 +16199,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -16127,6 +16227,7 @@ snapshots:
       '@norish/shared': file:packages/shared(a6de409d231b782a610c50128ef68bf7)
       ai: 6.0.241(zod@4.4.2)
       ai-sdk-ollama: 3.8.8(ai@6.0.241(zod@4.4.2))(zod@4.4.2)
+      archiver: 7.0.1
       fuse.js: 7.1.0
       heic-convert: 2.1.0
       ioredis: 5.10.1
@@ -16163,6 +16264,8 @@ snapshots:
       - '@upstash/redis'
       - '@vercel/postgres'
       - '@xata.io/client'
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bun-types
@@ -16182,6 +16285,7 @@ snapshots:
       - postgres
       - prisma
       - react-dom
+      - react-native-b4a
       - solid-js
       - sql.js
       - sqlite3
@@ -16866,6 +16970,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bufferutil
@@ -16891,6 +16997,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -16946,6 +17053,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bufferutil
@@ -16971,6 +17080,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -17026,6 +17136,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bufferutil
@@ -17051,6 +17163,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -17106,6 +17219,8 @@ snapshots:
       - '@xata.io/client'
       - babel-plugin-macros
       - babel-plugin-react-compiler
+      - bare-abort-controller
+      - bare-buffer
       - better-call
       - better-sqlite3
       - bufferutil
@@ -17131,6 +17246,7 @@ snapshots:
       - prisma
       - react
       - react-dom
+      - react-native-b4a
       - sass
       - solid-js
       - sql.js
@@ -18796,6 +18912,10 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
+  '@types/archiver@6.0.4':
+    dependencies:
+      '@types/readdir-glob': 1.1.5
+
   '@types/aria-query@5.0.4': {}
 
   '@types/babel__core@7.20.5':
@@ -18906,6 +19026,10 @@ snapshots:
   '@types/react@19.2.14':
     dependencies:
       csstype: 3.2.3
+
+  '@types/readdir-glob@1.1.5':
+    dependencies:
+      '@types/node': 25.7.0
 
   '@types/ssh2-streams@0.1.13':
     dependencies:
