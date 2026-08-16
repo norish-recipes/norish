@@ -29,7 +29,27 @@ const ONE_PIXEL_PNG = Buffer.from(
   "base64"
 );
 
-export async function submitImageImport(page: Page): Promise<void> {
+export interface UploadedImage {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
+/**
+ * The default upload is a single pixel — enough for the vision request, but
+ * below the media pipeline's minimum, so no file lands on disk. Pass a real
+ * image when the scenario needs the import to leave media behind.
+ */
+const DEFAULT_IMPORT_IMAGE: UploadedImage = {
+  name: "cookbook-page.png",
+  mimeType: "image/png",
+  buffer: ONE_PIXEL_PNG,
+};
+
+export async function submitImageImport(
+  page: Page,
+  image: UploadedImage = DEFAULT_IMPORT_IMAGE
+): Promise<void> {
   let attempt = 0;
 
   await expect(async () => {
@@ -43,11 +63,7 @@ export async function submitImageImport(page: Page): Promise<void> {
       await page.getByRole("menuitem", { name: "Image" }).click({ timeout: 2_000 });
     }
 
-    await fileInput.setInputFiles({
-      name: "cookbook-page.png",
-      mimeType: "image/png",
-      buffer: ONE_PIXEL_PNG,
-    });
+    await fileInput.setInputFiles(image);
     await submitMutation(page, "recipes.importFromImages", () =>
       page.getByRole("button", { name: "Import with AI" }).click({ timeout: 3_000 })
     );
