@@ -89,8 +89,10 @@ something on the instance that issued it. On import, each name is matched
 against the receiving server's own cuisine list, ignoring capitalisation:
 
 - A name the list already knows is attached to the recipe.
-- A name it does not know is **dropped**, and reported in the import summary
-  under the skipped recipes, so you can see what the import chose not to keep.
+- A name it does not know is **dropped**, and reported in the import summary as
+  an import note, so you can see what the import chose not to keep. The recipe
+  itself still imports: a note says what a recipe lost, never that it was
+  passed over.
 
 Unknown cuisines are never created and never turned into tags. The cuisine list
 belongs to the server's administrator, and an imported file is not allowed to
