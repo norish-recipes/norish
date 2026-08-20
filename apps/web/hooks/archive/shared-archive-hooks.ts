@@ -11,11 +11,12 @@ export const sharedArchiveHooks = createArchiveHooks({
   useTRPC,
   useMutationToastAdapter: () => {
     const tErrors = useTranslations("common.errors");
+    const t = useTranslations("navbar.archiveImporter.toasts");
 
     return {
       showStartToast: (total: number) => {
-        toast("Recipe import started", {
-          description: `Importing ${total} recipes...`,
+        toast(t("startTitle"), {
+          description: t("startDescription", { count: total }),
           variant: "default",
         });
       },
@@ -30,26 +31,15 @@ export const sharedArchiveHooks = createArchiveHooks({
     };
   },
   useSubscriptionToastAdapter: () => {
+    const t = useTranslations("navbar.archiveImporter.toasts");
+
     return {
       showCompletionToast: (imported: number, notes: number, errors: number) => {
-        const hasErrors = errors > 0;
-        const hasNotes = notes > 0;
-
-        let description: string;
-
-        if (hasErrors && hasNotes) {
-          description = `Imported ${imported} recipes, ${notes} with notes, ${errors} errors`;
-        } else if (hasErrors) {
-          description = `Imported ${imported} recipes with ${errors} errors`;
-        } else if (hasNotes) {
-          description = `Imported ${imported} recipes, ${notes} with notes`;
-        } else {
-          description = `Imported ${imported} recipes`;
-        }
-
-        toast("Recipe import complete", {
-          description: description,
-          variant: hasErrors ? "warning" : "success",
+        // One message covers all four outcomes: the note and error clauses
+        // drop out at zero rather than being assembled here.
+        toast(t("completeTitle"), {
+          description: t("completeDescription", { imported, notes, errors }),
+          variant: errors > 0 ? "warning" : "success",
         });
       },
     };

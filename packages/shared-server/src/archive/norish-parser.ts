@@ -24,21 +24,37 @@ import {
 const RECIPE_ENTRY_PATTERN = /^([^/]+)\/recipe\.json$/;
 
 /**
+ * How far reading the raw manifest got. Every manifest reader starts here;
+ * they differ only in what they make of a manifest that is absent or
+ * unreadable, so that judgement stays with each caller.
+ */
+type RawManifestRead =
+  | { status: "ok"; raw: unknown }
+  | { status: "missing" }
+  | { status: "unreadable" };
+
+async function readRawManifest(zip: JSZip): Promise<RawManifestRead> {
+  const manifestFile = zip.file(NORISH_ARCHIVE_MANIFEST_FILE);
+
+  if (!manifestFile) return { status: "missing" };
+
+  try {
+    return { status: "ok", raw: JSON.parse(await manifestFile.async("string")) };
+  } catch {
+    return { status: "unreadable" };
+  }
+}
+
+/**
  * Positive format identification: a Recipe Archive is recognised by its
  * manifest's `format` field, never by the file extension.
  */
 export async function isNorishArchive(zip: JSZip): Promise<boolean> {
-  const manifestFile = zip.file(NORISH_ARCHIVE_MANIFEST_FILE);
+  const read = await readRawManifest(zip);
 
-  if (!manifestFile) return false;
+  if (read.status !== "ok") return false;
 
-  try {
-    const manifest = JSON.parse(await manifestFile.async("string")) as { format?: unknown };
-
-    return manifest?.format === NORISH_ARCHIVE_FORMAT;
-  } catch {
-    return false;
-  }
+  return (read.raw as { format?: unknown } | null)?.format === NORISH_ARCHIVE_FORMAT;
 }
 
 /** Count recipe folders (`<id>/recipe.json`) — ground truth over the manifest's count. */
@@ -54,21 +70,17 @@ export function countNorishRecipes(zip: JSZip): number {
 
 /** Read and validate the manifest, throwing a clear error when it is malformed. */
 export async function readNorishManifest(zip: JSZip): Promise<NorishManifest> {
-  const manifestFile = zip.file(NORISH_ARCHIVE_MANIFEST_FILE);
+  const read = await readRawManifest(zip);
 
-  if (!manifestFile) {
+  if (read.status === "missing") {
     throw new Error(`Not a Recipe Archive: ${NORISH_ARCHIVE_MANIFEST_FILE} is missing`);
   }
 
-  let raw: unknown;
-
-  try {
-    raw = JSON.parse(await manifestFile.async("string"));
-  } catch {
+  if (read.status === "unreadable") {
     throw new Error(`Invalid Recipe Archive: ${NORISH_ARCHIVE_MANIFEST_FILE} is not valid JSON`);
   }
 
-  const parsed = NorishManifestSchema.safeParse(raw);
+  const parsed = NorishManifestSchema.safeParse(read.raw);
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -108,19 +120,11 @@ export function assertSupportedNorishFormatVersion(manifest: NorishManifest): vo
  * away before the caller reports an import as started.
  */
 export async function assertSupportedNorishArchive(zip: JSZip): Promise<void> {
-  const manifestFile = zip.file(NORISH_ARCHIVE_MANIFEST_FILE);
+  const read = await readRawManifest(zip);
 
-  if (!manifestFile) return;
+  if (read.status !== "ok") return;
 
-  let formatVersion: unknown;
-
-  try {
-    ({ formatVersion } = JSON.parse(await manifestFile.async("string")) as {
-      formatVersion?: unknown;
-    });
-  } catch {
-    return;
-  }
+  const { formatVersion } = (read.raw ?? {}) as { formatVersion?: unknown };
 
   if (typeof formatVersion === "number" && formatVersion > NORISH_ARCHIVE_FORMAT_VERSION) {
     throw newerMajorError(formatVersion);

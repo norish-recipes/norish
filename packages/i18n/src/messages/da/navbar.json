@@ -43,12 +43,21 @@
     "uploadFile": "Upload en fil",
     "dragDrop": "eller træk og slip",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Upload en opskriftsarkivfil",
     "uploadingFile": "Uploader fil…",
     "processing": "Behandler: {details}",
     "complete": "Færdig: {details}",
     "imported": "{count} importeret",
-    "skipped": "{count} sprunget over",
-    "errors": "{count} fejl",
-    "ofTotal": "{current} af {total}"
+    "errors": "{count, plural, one {# fejl} other {# fejl}}",
+    "ofTotal": "{current} af {total}",
+    "progressLabel": "Importforløb",
+    "showNotes": "Vis {count, plural, one {# importnote} other {# importnoter}}",
+    "hideNotes": "Skjul {count, plural, one {# importnote} other {# importnoter}}",
+    "toasts": {
+      "startTitle": "Import af opskrifter startet",
+      "startDescription": "{count, plural, one {Importerer # opskrift…} other {Importerer # opskrifter…}}",
+      "completeTitle": "Import af opskrifter fuldført",
+      "completeDescription": "{imported, plural, one {Importerede # opskrift} other {Importerede # opskrifter}}{notes, plural, =0 {} one {, # med en note} other {, # med noter}}{errors, plural, =0 {} other {, # fejl}}"
+    }
   }
 }

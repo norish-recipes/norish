@@ -17,12 +17,17 @@ Export is the verb; the file is the archive.
 
 ## Exporting your own recipes
 
-Go to **Settings → User**, find the **Import Recipe Archive** card, and press
-**Export Recipe Archive**. The download starts immediately and streams as the
-file is built, so nothing is prepared on the server first and nothing is left
-behind on it afterwards.
+Go to **Settings → User**, find the **Export Recipe Archive** card, and press
+**Export**. The download starts immediately and streams as the file is built,
+so nothing is prepared on the server first and nothing is left behind on it
+afterwards.
 
-![The Export Recipe Archive button in user settings](/img/screenshots/recipe-archive-user-export.png)
+The button stays busy for as long as the transfer runs and counts up the bytes
+that have arrived, which is worth watching for a large library. A video-heavy
+instance export can take a while; because the archive is never assembled
+anywhere first, there is no size to show a percentage against.
+
+![The Export Recipe Archive card in user settings](/img/screenshots/recipe-archive-user-export.png)
 
 What lands in the archive is exactly what your library shows you under the
 server's view policy: your own recipes, the ones your household shares with you,

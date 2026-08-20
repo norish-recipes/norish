@@ -61,11 +61,12 @@
     },
     "archiveImport": {
       "title": "레시피 아카이브 가져오기",
-      "description": "Norish(.norishrecipes), Mela(.melarecipes), Paprika(.paprikarecipes) 또는 Mealie/Tandoor(.zip) 내보내기에서 레시피 가져오기",
-      "export": {
-        "button": "레시피 아카이브 내보내기",
-        "description": "볼 수 있는 모든 레시피를 하나의 레시피 아카이브 파일로 다운로드합니다."
-      }
+      "description": "Norish(.norishrecipes), Mela(.melarecipes), Paprika(.paprikarecipes) 또는 Mealie/Tandoor(.zip) 내보내기에서 레시피 가져오기"
+    },
+    "archiveExport": {
+      "title": "레시피 아카이브 내보내기",
+      "description": "볼 수 있는 모든 레시피를 다운로드합니다.",
+      "button": "내보내기"
     },
     "siteAuthTokens": {
       "title": "사이트 인증 토큰",
@@ -358,7 +359,7 @@
       "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다.",
       "export": {
         "title": "레시피 아카이브",
-        "description": "누가 볼 수 있는지와 관계없이 이 서버의 모든 레시피를 하나의 레시피 아카이브 파일로 다운로드합니다.",
+        "description": "이 서버의 모든 레시피를 다운로드합니다.",
         "button": "레시피 아카이브 내보내기"
       }
     },
@@ -808,6 +809,15 @@
       "empty": "아직 요리가 없습니다.",
       "duplicate": "같은 이름의 요리가 이미 있습니다.",
       "saveFailed": "해당 요리를 저장할 수 없습니다."
+    }
+  },
+  "archiveExport": {
+    "progress": "내보내는 중… {size}",
+    "errors": {
+      "failedTitle": "내보내기 실패",
+      "failedDescription": "레시피 아카이브를 다운로드할 수 없습니다. 다시 시도해 주세요.",
+      "signedOut": "세션이 만료되었습니다. 다시 로그인하여 내보내세요.",
+      "notAllowed": "이 항목을 내보낼 권한이 없습니다."
     }
   }
 }

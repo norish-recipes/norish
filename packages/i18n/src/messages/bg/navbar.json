@@ -43,12 +43,21 @@
     "uploadFile": "Качи файл",
     "dragDrop": "или плъзни и пусни",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Качване на архивен файл с рецепти",
     "uploadingFile": "Качване на файл…",
     "processing": "Обработка: {details}",
     "complete": "Завършено: {details}",
     "imported": "{count} импортирани",
-    "skipped": "{count} пропуснати",
-    "errors": "{count} грешки",
-    "ofTotal": "{current} от {total}"
+    "errors": "{count, plural, one {# грешка} other {# грешки}}",
+    "ofTotal": "{current} от {total}",
+    "progressLabel": "Напредък на импортирането",
+    "showNotes": "Показване на {count, plural, one {# бележка от импортирането} other {# бележки от импортирането}}",
+    "hideNotes": "Скриване на {count, plural, one {# бележка от импортирането} other {# бележки от импортирането}}",
+    "toasts": {
+      "startTitle": "Импортирането на рецепти започна",
+      "startDescription": "{count, plural, one {Импортиране на # рецепта…} other {Импортиране на # рецепти…}}",
+      "completeTitle": "Импортирането на рецепти завърши",
+      "completeDescription": "{imported, plural, one {Импортирана # рецепта} other {Импортирани # рецепти}}{notes, plural, =0 {} one {, # с бележка} other {, # с бележки}}{errors, plural, =0 {} one {, # грешка} other {, # грешки}}"
+    }
   }
 }

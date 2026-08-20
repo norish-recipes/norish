@@ -61,11 +61,12 @@
     },
     "archiveImport": {
       "title": "Импорт архива рецептов",
-      "description": "Импортируйте рецепты из экспортов Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) или Mealie/Tandoor (.zip)",
-      "export": {
-        "button": "Экспортировать архив рецептов",
-        "description": "Скачайте все рецепты, которые вам видны, одним файлом архива рецептов."
-      }
+      "description": "Импортируйте рецепты из экспортов Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) или Mealie/Tandoor (.zip)"
+    },
+    "archiveExport": {
+      "title": "Экспортировать архив рецептов",
+      "description": "Скачайте все рецепты, которые вам видны.",
+      "button": "Экспортировать"
     },
     "siteAuthTokens": {
       "title": "Токены аутентификации сайтов",
@@ -358,7 +359,7 @@
       "atLeastOneLocale": "Должен быть включён хотя бы один язык",
       "export": {
         "title": "Архив рецептов",
-        "description": "Скачайте все рецепты на этом сервере одним файлом архива рецептов, независимо от того, кому они видны.",
+        "description": "Скачайте все рецепты на этом сервере.",
         "button": "Экспортировать архив рецептов"
       }
     },
@@ -808,6 +809,15 @@
       "empty": "Кухонь пока нет.",
       "duplicate": "Кухня с таким названием уже существует.",
       "saveFailed": "Не удалось сохранить эту кухню."
+    }
+  },
+  "archiveExport": {
+    "progress": "Экспорт… {size}",
+    "errors": {
+      "failedTitle": "Не удалось выполнить экспорт",
+      "failedDescription": "Не удалось скачать архив рецептов. Попробуйте снова.",
+      "signedOut": "Ваш сеанс истёк. Войдите снова, чтобы экспортировать.",
+      "notAllowed": "У вас нет прав на экспорт этого."
     }
   }
 }

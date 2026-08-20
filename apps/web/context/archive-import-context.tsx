@@ -1,6 +1,6 @@
 "use client";
 
-import type { ArchiveImportQueryResult } from "@/hooks/archive/use-archive-import-query";
+import type { ArchiveImportQueryResult } from "@/hooks/archive";
 import { createContext, ReactNode, useContext } from "react";
 import { useArchiveImportQuery, useArchiveImportSubscription } from "@/hooks/archive";
 

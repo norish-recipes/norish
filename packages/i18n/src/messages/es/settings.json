@@ -61,11 +61,12 @@
     },
     "archiveImport": {
       "title": "Importar archivo de recetas",
-      "description": "Importa recetas desde exportes de Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) o Mealie/Tandoor (.zip)",
-      "export": {
-        "button": "Exportar archivo de recetas",
-        "description": "Descarga todas las recetas que puedes ver en un único archivo de recetas."
-      }
+      "description": "Importa recetas desde exportes de Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) o Mealie/Tandoor (.zip)"
+    },
+    "archiveExport": {
+      "title": "Exportar archivo de recetas",
+      "description": "Descarga todas las recetas que puedes ver.",
+      "button": "Exportar"
     },
     "siteAuthTokens": {
       "title": "Tokens de autenticación por sitio",
@@ -358,7 +359,7 @@
       "atLeastOneLocale": "Debe habilitarse al menos un idioma",
       "export": {
         "title": "Archivo de recetas",
-        "description": "Descarga todas las recetas de este servidor en un único archivo de recetas, sin importar quién pueda verlas.",
+        "description": "Descarga todas las recetas de este servidor.",
         "button": "Exportar archivo de recetas"
       }
     },
@@ -808,6 +809,15 @@
       "empty": "Aún no hay cocinas.",
       "duplicate": "Ya existe una cocina con ese nombre.",
       "saveFailed": "No se pudo guardar esa cocina."
+    }
+  },
+  "archiveExport": {
+    "progress": "Exportando… {size}",
+    "errors": {
+      "failedTitle": "La exportación falló",
+      "failedDescription": "No se pudo descargar el archivo de recetas. Inténtalo de nuevo.",
+      "signedOut": "Tu sesión ha caducado. Inicia sesión de nuevo para exportar.",
+      "notAllowed": "No tienes permiso para exportar esto."
     }
   }
 }

@@ -74,10 +74,15 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+/** The export doorway: the button in the user settings Export Recipe Archive card. */
+function exportButton() {
+  return page.getByRole("button", { name: "Export", exact: true });
+}
+
 /** Open the settings tab that holds both doorways: archive import and export. */
 async function openArchiveSettings(): Promise<void> {
   await page.goto("/settings?tab=user");
-  await expect(page.getByRole("button", { name: "Export Recipe Archive" })).toBeVisible({
+  await expect(exportButton()).toBeVisible({
     timeout: 30_000,
   });
 }
@@ -116,10 +121,7 @@ test("a Recipe Archive exported from settings imports back over the recipe it ca
   // to the browser as a download.
   await openArchiveSettings();
 
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Export Recipe Archive" }).click(),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent("download"), exportButton().click()]);
 
   expect(download.suggestedFilename()).toMatch(/^norish-recipes-\d{4}-\d{2}-\d{2}\.norishrecipes$/);
 

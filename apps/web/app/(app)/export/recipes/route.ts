@@ -1,3 +1,7 @@
+import type { SessionRoleUser } from "@/lib/auth/server-admin";
+import { hasServerAdminRole } from "@/lib/auth/server-admin";
+import { ARCHIVE_PROBE_PARAM, ARCHIVE_PROBE_VALUE } from "@/lib/export/archive-download-protocol";
+
 import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { buildNorishArchiveForViewer } from "@norish/shared-server/archive/norish-export";
@@ -62,20 +66,23 @@ export async function GET(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const sessionUser = session.user as {
+  const sessionUser = session.user as SessionRoleUser & {
     id: string;
     name?: string | null;
-    isServerAdmin?: boolean;
-    isServerOwner?: boolean;
   };
 
-  const isServerAdmin = Boolean(sessionUser.isServerOwner || sessionUser.isServerAdmin);
-  const instanceScope = new URL(req.url).searchParams.get("scope") === INSTANCE_SCOPE;
+  const isServerAdmin = hasServerAdminRole(sessionUser);
+  const params = new URL(req.url).searchParams;
+  const instanceScope = params.get("scope") === INSTANCE_SCOPE;
 
   // Admin scope is server-authorised, never presentation-gated: hiding the
   // admin doorway is not what keeps a non-admin out of it.
   if (instanceScope && !isServerAdmin) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (params.get(ARCHIVE_PROBE_PARAM) === ARCHIVE_PROBE_VALUE) {
+    return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
   }
 
   const household = await getCachedHouseholdForUser(sessionUser.id);
@@ -86,6 +93,11 @@ export async function GET(req: Request) {
     ctx: {
       userId: sessionUser.id,
       householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
+      // The exporter's own reach, from either doorway. An admin's library
+      // already lists every recipe on the instance — `recipes.list` asks the
+      // visibility layer with this same flag — so "everything the exporter can
+      // see" *is* the whole instance for them, and the admin button is
+      // discoverability rather than privileged extra data (ADR-0022).
       isServerAdmin,
     },
     exporter: {

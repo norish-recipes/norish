@@ -43,12 +43,21 @@
     "uploadFile": "Datei hochladen",
     "dragDrop": "oder per Drag & Drop",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Rezeptarchiv-Datei hochladen",
     "uploadingFile": "Datei wird hochgeladen…",
     "processing": "Wird verarbeitet: {details}",
     "complete": "Fertig: {details}",
     "imported": "{count} importiert",
-    "skipped": "{count} übersprungen",
-    "errors": "{count} Fehler",
-    "ofTotal": "{current} von {total}"
+    "errors": "{count, plural, one {# Fehler} other {# Fehler}}",
+    "ofTotal": "{current} von {total}",
+    "progressLabel": "Importfortschritt",
+    "showNotes": "{count, plural, one {# Importhinweis} other {# Importhinweise}} anzeigen",
+    "hideNotes": "{count, plural, one {# Importhinweis} other {# Importhinweise}} ausblenden",
+    "toasts": {
+      "startTitle": "Rezeptimport gestartet",
+      "startDescription": "{count, plural, one {# Rezept wird importiert…} other {# Rezepte werden importiert…}}",
+      "completeTitle": "Rezeptimport abgeschlossen",
+      "completeDescription": "{imported, plural, one {# Rezept importiert} other {# Rezepte importiert}}{notes, plural, =0 {} one {, # mit einem Hinweis} other {, # mit Hinweisen}}{errors, plural, =0 {} other {, # Fehler}}"
+    }
   }
 }

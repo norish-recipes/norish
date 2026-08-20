@@ -61,11 +61,12 @@
     },
     "archiveImport": {
       "title": "Importer opskriftarkiv",
-      "description": "Importer opskrifter fra Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) eller Mealie/Tandoor (.zip)-eksporter",
-      "export": {
-        "button": "Eksportér opskriftsarkiv",
-        "description": "Download alle de opskrifter, du kan se, som én opskriftsarkivfil."
-      }
+      "description": "Importer opskrifter fra Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) eller Mealie/Tandoor (.zip)-eksporter"
+    },
+    "archiveExport": {
+      "title": "Eksportér opskriftsarkiv",
+      "description": "Download alle de opskrifter, du kan se.",
+      "button": "Eksportér"
     },
     "siteAuthTokens": {
       "title": "Websteds-godkendelsestokens",
@@ -358,7 +359,7 @@
       "atLeastOneLocale": "Mindst ét sprog skal være aktiveret",
       "export": {
         "title": "Opskriftsarkiv",
-        "description": "Download hver eneste opskrift på denne server som én opskriftsarkivfil, uanset hvem der kan se den.",
+        "description": "Download alle opskrifter på denne server.",
         "button": "Eksportér opskriftsarkiv"
       }
     },
@@ -808,6 +809,15 @@
       "empty": "Ingen køkkener endnu.",
       "duplicate": "Der findes allerede et køkken med det navn.",
       "saveFailed": "Kunne ikke gemme det køkken."
+    }
+  },
+  "archiveExport": {
+    "progress": "Eksporterer… {size}",
+    "errors": {
+      "failedTitle": "Eksport mislykkedes",
+      "failedDescription": "Opskriftsarkivet kunne ikke downloades. Prøv igen.",
+      "signedOut": "Din session er udløbet. Log ind igen for at eksportere.",
+      "notAllowed": "Du har ikke tilladelse til at eksportere dette."
     }
   }
 }

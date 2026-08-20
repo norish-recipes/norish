@@ -43,12 +43,21 @@
     "uploadFile": "Carica un file",
     "dragDrop": "o trascina e rilascia",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Carica un file di archivio ricette",
     "uploadingFile": "Caricamento file…",
     "processing": "Elaborazione: {details}",
     "complete": "Completato: {details}",
     "imported": "{count} importate",
-    "skipped": "{count} saltate",
-    "errors": "{count} errori",
-    "ofTotal": "{current} di {total}"
+    "errors": "{count, plural, one {# errore} other {# errori}}",
+    "ofTotal": "{current} di {total}",
+    "progressLabel": "Avanzamento dell'importazione",
+    "showNotes": "Mostra {count, plural, one {# nota di importazione} other {# note di importazione}}",
+    "hideNotes": "Nascondi {count, plural, one {# nota di importazione} other {# note di importazione}}",
+    "toasts": {
+      "startTitle": "Importazione ricette avviata",
+      "startDescription": "{count, plural, one {Importazione di # ricetta…} other {Importazione di # ricette…}}",
+      "completeTitle": "Importazione ricette completata",
+      "completeDescription": "{imported, plural, one {# ricetta importata} other {# ricette importate}}{notes, plural, =0 {} one {, # con una nota} other {, # con note}}{errors, plural, =0 {} one {, # errore} other {, # errori}}"
+    }
   }
 }

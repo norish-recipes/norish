@@ -43,12 +43,21 @@
     "uploadFile": "Upload een bestand",
     "dragDrop": "of sleep en zet neer",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Een archiefbestand uploaden",
     "uploadingFile": "Bestand uploaden…",
     "processing": "Bezig met verwerken: {details}",
     "complete": "Voltooid: {details}",
     "imported": "{count} geïmporteerd",
-    "skipped": "{count} overgeslagen",
-    "errors": "{count} fouten",
-    "ofTotal": "{current} van {total}"
+    "errors": "{count, plural, one {# fout} other {# fouten}}",
+    "ofTotal": "{current} van {total}",
+    "progressLabel": "Voortgang van importeren",
+    "showNotes": "{count, plural, one {# importnotitie} other {# importnotities}} tonen",
+    "hideNotes": "{count, plural, one {# importnotitie} other {# importnotities}} verbergen",
+    "toasts": {
+      "startTitle": "Importeren van recepten gestart",
+      "startDescription": "{count, plural, one {# recept importeren…} other {# recepten importeren…}}",
+      "completeTitle": "Importeren van recepten voltooid",
+      "completeDescription": "{imported, plural, one {# recept geïmporteerd} other {# recepten geïmporteerd}}{notes, plural, =0 {} one {, # met een notitie} other {, # met notities}}{errors, plural, =0 {} one {, # fout} other {, # fouten}}"
+    }
   }
 }

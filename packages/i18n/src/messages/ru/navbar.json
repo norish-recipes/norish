@@ -43,12 +43,21 @@
     "uploadFile": "Загрузить файл",
     "dragDrop": "или перетащите файл",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Загрузить файл архива рецептов",
     "uploadingFile": "Загрузка файла…",
     "processing": "Обработка: {details}",
     "complete": "Завершено: {details}",
     "imported": "{count} импортировано",
-    "skipped": "{count} пропущено",
-    "errors": "{count} ошибок",
-    "ofTotal": "{current} из {total}"
+    "errors": "{count, plural, one {# ошибка} few {# ошибки} many {# ошибок} other {# ошибки}}",
+    "ofTotal": "{current} из {total}",
+    "progressLabel": "Ход импорта",
+    "showNotes": "Показать {count, plural, one {# заметку импорта} few {# заметки импорта} many {# заметок импорта} other {# заметки импорта}}",
+    "hideNotes": "Скрыть {count, plural, one {# заметку импорта} few {# заметки импорта} many {# заметок импорта} other {# заметки импорта}}",
+    "toasts": {
+      "startTitle": "Импорт рецептов начат",
+      "startDescription": "{count, plural, one {Импорт # рецепта…} few {Импорт # рецептов…} many {Импорт # рецептов…} other {Импорт # рецепта…}}",
+      "completeTitle": "Импорт рецептов завершён",
+      "completeDescription": "{imported, plural, one {Импортирован # рецепт} few {Импортировано # рецепта} many {Импортировано # рецептов} other {Импортировано # рецепта}}{notes, plural, =0 {} one {, # с заметкой} few {, # с заметками} many {, # с заметками} other {, # с заметками}}{errors, plural, =0 {} one {, # ошибка} few {, # ошибки} many {, # ошибок} other {, # ошибки}}"
+    }
   }
 }

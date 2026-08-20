@@ -43,12 +43,21 @@
     "uploadFile": "Prześlij plik",
     "dragDrop": "przeciągnij i upuść",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Prześlij plik archiwum przepisów",
     "uploadingFile": "Przesyłanie pliku…",
     "processing": "Przetwarzanie: {details}",
     "complete": "Ukończono: {details}",
     "imported": "{count} zaimportowano",
-    "skipped": "{count} pominięto",
-    "errors": "{count} błędów",
-    "ofTotal": "{current} z {total}"
+    "errors": "{count, plural, one {# błąd} few {# błędy} many {# błędów} other {# błędu}}",
+    "ofTotal": "{current} z {total}",
+    "progressLabel": "Postęp importu",
+    "showNotes": "Pokaż {count, plural, one {# uwagę importu} few {# uwagi importu} many {# uwag importu} other {# uwagi importu}}",
+    "hideNotes": "Ukryj {count, plural, one {# uwagę importu} few {# uwagi importu} many {# uwag importu} other {# uwagi importu}}",
+    "toasts": {
+      "startTitle": "Rozpoczęto import przepisów",
+      "startDescription": "{count, plural, one {Importowanie # przepisu…} few {Importowanie # przepisów…} many {Importowanie # przepisów…} other {Importowanie # przepisu…}}",
+      "completeTitle": "Zakończono import przepisów",
+      "completeDescription": "{imported, plural, one {Zaimportowano # przepis} few {Zaimportowano # przepisy} many {Zaimportowano # przepisów} other {Zaimportowano # przepisu}}{notes, plural, =0 {} one {, # z uwagą} few {, # z uwagami} many {, # z uwagami} other {, # z uwagami}}{errors, plural, =0 {} one {, # błąd} few {, # błędy} many {, # błędów} other {, # błędu}}"
+    }
   }
 }

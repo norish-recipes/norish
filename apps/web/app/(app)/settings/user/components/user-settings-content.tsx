@@ -3,6 +3,7 @@
 import { UserSettingsProvider } from "../context";
 import AllergiesCard from "./allergies-card";
 import ApiTokenCard from "./api-token-card";
+import ArchiveExportCard from "./archive-export-card";
 import ArchiveImportCard from "./archive-import-card";
 import DangerZoneCard from "./danger-zone-card";
 import PreferencesCard from "./preferences-card";
@@ -20,6 +21,7 @@ function UserSettingsContent() {
       <ShareLinksCard />
       <SiteAuthTokensCard />
       <ArchiveImportCard />
+      <ArchiveExportCard />
       <DangerZoneCard />
     </div>
   );

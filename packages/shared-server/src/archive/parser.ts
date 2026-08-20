@@ -168,7 +168,7 @@ async function rehomeArchiveMediaToRecipe(
       thumbnail:
         rewriteRecipeMediaUrl(video.thumbnail, sourceRecipeId, targetRecipeId) ?? video.thumbnail,
     })),
-    steps: dto.steps.map((step) => ({
+    steps: dto.steps?.map((step) => ({
       ...step,
       images: step.images?.map((image) => ({
         ...image,

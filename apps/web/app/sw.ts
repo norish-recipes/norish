@@ -1,5 +1,10 @@
 import type { PrecacheEntry, SerwistGlobalConfig, StrategyHandler } from "serwist";
 import { REACHABILITY_DEADLINE_MS } from "@/lib/connectivity/reachability";
+import { SW_ARCHIVE_DOWNLOAD_PATH } from "@/lib/export/archive-download-protocol";
+import {
+  acceptArchiveDownload,
+  respondWithArchiveDownload,
+} from "@/lib/export/sw-archive-download";
 import {
   IMAGE_CACHE_MAX_AGE_SECONDS,
   IMAGE_CACHE_MAX_ENTRIES,
@@ -112,6 +117,17 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
+    // First, so nothing downstream can claim a handed-off archive download —
+    // in particular the document strategy below, which a hidden frame's
+    // navigation would otherwise reach. Answered entirely from memory; this
+    // path has no server behind it (see archive-download-protocol.ts).
+    {
+      matcher: ({ url, sameOrigin }) =>
+        sameOrigin && url.pathname.startsWith(SW_ARCHIVE_DOWNLOAD_PATH),
+      handler: async ({ url }) =>
+        respondWithArchiveDownload(url.pathname) ??
+        new Response("Not an archive download", { status: 404 }),
+    },
     {
       matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/export/"),
       handler: new NetworkOnly(),
@@ -183,6 +199,14 @@ const serwist = new Serwist({
 // activation that replaces such a worker and nothing on every later one.
 self.addEventListener("activate", (event) => {
   event.waitUntil(caches.delete(LEGACY_API_CACHE_NAME).catch(() => false));
+});
+
+// A page handing over an export response body to be streamed out as a
+// download. Additive to Serwist's own message listener — message events are
+// delivered to every listener, so returning false here simply leaves the
+// message to the others.
+self.addEventListener("message", (event) => {
+  acceptArchiveDownload(event.data);
 });
 
 self.addEventListener("notificationclick", (event) => {

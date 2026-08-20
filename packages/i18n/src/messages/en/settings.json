@@ -61,11 +61,12 @@
     },
     "archiveImport": {
       "title": "Import Recipe Archive",
-      "description": "Import recipes from Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes), or Mealie/Tandoor (.zip) exports",
-      "export": {
-        "button": "Export Recipe Archive",
-        "description": "Download every recipe you can see as a single Recipe Archive file."
-      }
+      "description": "Import recipes from Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes), or Mealie/Tandoor (.zip) exports"
+    },
+    "archiveExport": {
+      "title": "Export Recipe Archive",
+      "description": "Download every recipe you can see.",
+      "button": "Export"
     },
     "siteAuthTokens": {
       "title": "Site Authentication Tokens",
@@ -358,7 +359,7 @@
       "atLeastOneLocale": "At least one language must be enabled",
       "export": {
         "title": "Recipe Archive",
-        "description": "Download every recipe on this server as a single Recipe Archive file, no matter who can see it.",
+        "description": "Download every recipe on this server.",
         "button": "Export Recipe Archive"
       }
     },
@@ -808,6 +809,15 @@
       "empty": "No Cuisines yet.",
       "duplicate": "A Cuisine with that name already exists.",
       "saveFailed": "Could not save that Cuisine."
+    }
+  },
+  "archiveExport": {
+    "progress": "Exporting… {size}",
+    "errors": {
+      "failedTitle": "Export failed",
+      "failedDescription": "The Recipe Archive could not be downloaded. Please try again.",
+      "signedOut": "Your session has expired. Sign in again to export.",
+      "notAllowed": "You do not have permission to export this."
     }
   }
 }

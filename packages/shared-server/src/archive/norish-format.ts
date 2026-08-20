@@ -26,8 +26,13 @@ export const NORISH_ARCHIVE_MEDIA_DIRS = {
   videos: "videos",
 } as const;
 
-/** A media reference inside a recipe folder: `<kind>/<filename>`, nothing deeper. */
-export const NORISH_ARCHIVE_MEDIA_PATH = /^(images|steps|videos)\/[^/\\]+$/;
+/**
+ * A media reference inside a recipe folder: `<kind>/<filename>`, nothing
+ * deeper. Derived from the directory names above so the two can never drift.
+ */
+export const NORISH_ARCHIVE_MEDIA_PATH = new RegExp(
+  `^(${Object.values(NORISH_ARCHIVE_MEDIA_DIRS).join("|")})/[^/\\\\]+$`
+);
 
 /** A reference that points off the archive entirely and travels unchanged. */
 export const EXTERNAL_MEDIA_URL = /^https?:\/\//i;

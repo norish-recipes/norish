@@ -43,12 +43,21 @@
     "uploadFile": "파일 업로드",
     "dragDrop": "또는 드래그 앤 드롭",
     "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "레시피 아카이브 파일 업로드",
     "uploadingFile": "파일 업로드 중…",
     "processing": "처리 중: {details}",
     "complete": "완료: {details}",
     "imported": "{count}개 가져옴",
-    "skipped": "{count}개 건너뜀",
-    "errors": "{count}건 오류",
-    "ofTotal": "{total}개 중 {current}개"
+    "errors": "오류 {count}건",
+    "ofTotal": "{total}개 중 {current}개",
+    "progressLabel": "가져오기 진행률",
+    "showNotes": "가져오기 메모 {count}개 표시",
+    "hideNotes": "가져오기 메모 {count}개 숨기기",
+    "toasts": {
+      "startTitle": "레시피 가져오기 시작됨",
+      "startDescription": "레시피 {count}개 가져오는 중…",
+      "completeTitle": "레시피 가져오기 완료",
+      "completeDescription": "레시피 {imported}개 가져옴{notes, plural, =0 {} other {, 메모 있음 #개}}{errors, plural, =0 {} other {, 오류 #건}}"
+    }
   }
 }

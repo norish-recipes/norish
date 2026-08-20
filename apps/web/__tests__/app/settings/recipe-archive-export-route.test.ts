@@ -104,8 +104,9 @@ describe("Recipe Archive export route", () => {
 
   it("gives an admin the same reach from the user doorway, by design", async () => {
     // The scope is "everything the exporter can see", and an admin's library
-    // already shows them everything — so the admin button is discoverability,
-    // not privileged extra data (ADR-0022). Pinned because it looks like an
+    // already shows them everything — `recipes.list` asks the visibility layer
+    // with this same flag — so the admin button is discoverability, not
+    // privileged extra data (ADR-0022). Pinned because it looks like an
     // authorisation leak until you know it is the decision.
     signedInAs({ id: "admin-1", isServerAdmin: true });
 
@@ -139,6 +140,55 @@ describe("Recipe Archive export route", () => {
     expect(instance.headers.get("Content-Disposition")).toBe(
       viewer.headers.get("Content-Disposition")
     );
+  });
+
+  describe("authorisation probe", () => {
+    it("answers a signed-in probe without building an archive", async () => {
+      signedInAs({ id: "user-1" });
+
+      const response = await GET(exportRequest("?probe=1"));
+
+      expect(response.status).toBe(204);
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      // The point of the probe: the expensive half never runs.
+      expect(buildArchiveMock).not.toHaveBeenCalled();
+      expect(householdMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses a signed-out probe the same way the download would", async () => {
+      getSessionMock.mockResolvedValue(null);
+
+      const response = await GET(exportRequest("?probe=1"));
+
+      expect(response.status).toBe(401);
+    });
+
+    it("refuses a non-admin's instance-scope probe before answering it", async () => {
+      signedInAs({ id: "user-1" });
+
+      const response = await GET(exportRequest("?scope=instance&probe=1"));
+
+      expect(response.status).toBe(403);
+      expect(buildArchiveMock).not.toHaveBeenCalled();
+    });
+
+    it("answers an admin's instance-scope probe", async () => {
+      signedInAs({ id: "admin-1", isServerAdmin: true });
+
+      const response = await GET(exportRequest("?scope=instance&probe=1"));
+
+      expect(response.status).toBe(204);
+      expect(buildArchiveMock).not.toHaveBeenCalled();
+    });
+
+    it("still streams when no probe is asked for", async () => {
+      signedInAs({ id: "user-1" });
+
+      const response = await GET(exportRequest("?probe=0"));
+
+      expect(response.status).toBe(200);
+      expect(buildArchiveMock).toHaveBeenCalled();
+    });
   });
 
   it("ignores an unrecognised scope instead of widening it", async () => {

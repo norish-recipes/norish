@@ -60,12 +60,13 @@
       }
     },
     "archiveImport": {
-      "title": "Importeer Receptarchief",
-      "description": "Importeer recepten van Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes), of Mealie/Tandoor (.zip) exports",
-      "export": {
-        "button": "Receptarchief exporteren",
-        "description": "Download alle recepten die je kunt zien als één receptarchiefbestand."
-      }
+      "title": "Archief importeren",
+      "description": "Importeer recepten van Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes), of Mealie/Tandoor (.zip) exports"
+    },
+    "archiveExport": {
+      "title": "Archief exporteren",
+      "description": "Download alle recepten die je kunt zien.",
+      "button": "Exporteren"
     },
     "siteAuthTokens": {
       "title": "Site-authenticatietokens",
@@ -357,9 +358,9 @@
       "localesError": "Taalinstellingen opslaan mislukt",
       "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn",
       "export": {
-        "title": "Receptarchief",
-        "description": "Download elk recept op deze server als één receptarchiefbestand, ongeacht wie het kan zien.",
-        "button": "Receptarchief exporteren"
+        "title": "Archief",
+        "description": "Download elk recept op deze server.",
+        "button": "Archief exporteren"
       }
     },
     "registration": {
@@ -808,6 +809,15 @@
       "empty": "Nog geen keukens.",
       "duplicate": "Er bestaat al een keuken met die naam.",
       "saveFailed": "Kon die keuken niet opslaan."
+    }
+  },
+  "archiveExport": {
+    "progress": "Exporteren… {size}",
+    "errors": {
+      "failedTitle": "Exporteren mislukt",
+      "failedDescription": "Het archief kon niet worden gedownload. Probeer het opnieuw.",
+      "signedOut": "Je sessie is verlopen. Meld je opnieuw aan om te exporteren.",
+      "notAllowed": "Je hebt geen rechten om dit te exporteren."
     }
   }
 }
