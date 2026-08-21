@@ -22,12 +22,12 @@ catalog:
   "@trpc/client": ^11.18.0
   "@trpc/server": ^11.18.0
   "@trpc/tanstack-react-query": ^11.18.0
-  "@types/archiver": ^8.0.0
+  "@types/archiver": ^6.0.3
   "@types/node": ^25.9.5
   "@types/react": 19.2.18
   "@types/react-dom": 19.2.4
   "@vitejs/plugin-react": ^6.1.0
-  archiver: ^8.0.0
+  archiver: ^7.0.1
   better-auth: 1.6.9
   bullmq: ^5.81.3
   date-fns: ^4.4.0

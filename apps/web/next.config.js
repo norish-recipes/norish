@@ -57,7 +57,7 @@ export default withSerwist(
       root: resolve(configDirectory, "../.."),
     },
     productionBrowserSourceMaps: false,
-    allowedDevOrigins: ["localhost", "192.168.2.13", "192.168.2.25", "http://mac-mini.local"],
+    allowedDevOrigins: ["localhost", "192.168.2.13", "192.168.2.25", "http://mac-mini.local", "*.local"],
     devIndicators: false,
     env: {
       NEXT_PUBLIC_APP_VERSION: packageJson.version,
