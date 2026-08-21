@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
 import type { Archiver } from "archiver";
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 
 import { FullRecipeDTO } from "@norish/shared/contracts";
 
@@ -288,7 +288,7 @@ function appendRecord(archive: Archiver, record: NorishArchiveRecord): void {
  * instead of corrupting the download.
  */
 export function streamNorishArchive(input: NorishArchiveInput): Readable {
-  const archive = archiver("zip", { zlib: { level: 6 } });
+  const archive = new ZipArchive({ zlib: { level: 6 } });
 
   archive.append(JSON.stringify(buildManifest(input), null, 2), {
     name: NORISH_ARCHIVE_MANIFEST_FILE,

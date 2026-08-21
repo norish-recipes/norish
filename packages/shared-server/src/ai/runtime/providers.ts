@@ -279,7 +279,10 @@ export function createGenericTranscriptionClient({
   timeoutMs,
 }: Omit<TranscriptionClientOptions, "model">): OpenAI {
   return new OpenAI({
-    apiKey,
+    // These servers are normally run without any auth at all, but openai v7
+    // refuses to construct a client without a credential. The placeholder rides
+    // along in an Authorization header a keyless endpoint is free to ignore.
+    apiKey: apiKey || "no-key",
     ...(endpoint && { baseURL: normalizeOpenAICompatibleEndpoint(endpoint) }),
     fetch: createFetchWithTimeout(timeoutMs),
   });
