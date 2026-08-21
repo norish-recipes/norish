@@ -99,7 +99,69 @@ function getFfmpegPath(): string | null {
   return null;
 }
 
+/** What the binary is called on disk — not what the release calls it. */
 const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
+
+/**
+ * The release asset named plain `yt-dlp`: a Python zipapp behind a
+ * `#!/usr/bin/env python3` line rather than a program that runs on its own.
+ * Only ever the right choice where no self-contained build exists.
+ */
+const ZIPAPP_ASSET = "yt-dlp";
+
+/**
+ * The release asset to fetch for a given host.
+ *
+ * yt-dlp publishes self-contained builds that carry their own certificates
+ * and need no Python at all. The zipapp instead borrows whichever interpreter
+ * the machine happens to put first on PATH and inherits that interpreter's
+ * TLS trust with it — a Python with no CA bundle (a python.org install whose
+ * `Install Certificates.command` was never run is the common one) turns every
+ * fetch into CERTIFICATE_VERIFY_FAILED, on sites that work fine from any
+ * other program on the same machine. The image has always shipped a platform
+ * build (docker/Dockerfile); this is development catching up to it.
+ *
+ * Pure, so every branch is testable from one machine.
+ */
+export function ytDlpAssetFor(platform: string, arch: string, libc: "glibc" | "musl"): string {
+  if (platform === "win32") {
+    if (arch === "arm64") return "yt-dlp_arm64.exe";
+    if (arch === "ia32") return "yt-dlp_x86.exe";
+
+    return "yt-dlp.exe";
+  }
+
+  // One universal2 build covers both Apple silicon and Intel.
+  if (platform === "darwin") return "yt-dlp_macos";
+
+  if (platform === "linux") {
+    if (arch === "x64") return libc === "musl" ? "yt-dlp_musllinux" : "yt-dlp_linux";
+    if (arch === "arm64") {
+      return libc === "musl" ? "yt-dlp_musllinux_aarch64" : "yt-dlp_linux_aarch64";
+    }
+  }
+
+  // 32-bit ARM is published only as a zip, and the BSDs have no build at all.
+  return ZIPAPP_ASSET;
+}
+
+/**
+ * glibc or musl, read from Node's own report: `glibcVersionRuntime` is absent
+ * on a musl build. Alpine is the case that matters — a glibc binary does not
+ * start there.
+ */
+function hostLibc(): "glibc" | "musl" {
+  if (process.platform !== "linux") return "glibc";
+
+  const report = process.report?.getReport() as
+    { header?: { glibcVersionRuntime?: string } } | undefined;
+
+  return report?.header?.glibcVersionRuntime ? "glibc" : "musl";
+}
+
+function hostYtDlpAsset(): string {
+  return ytDlpAssetFor(process.platform, process.arch, hostLibc());
+}
 
 export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
   "best[vcodec^=avc1][ext=mp4]/bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[ext=mp4]/best";
@@ -205,9 +267,17 @@ async function getProxyArgs(): Promise<string[]> {
 async function downloadYtDlpBinary(targetPath: string, version: string): Promise<void> {
   const releasePath =
     version === "latest" ? "releases/latest/download" : `releases/download/${version}`;
-  const url = `https://github.com/yt-dlp/yt-dlp/${releasePath}/${ytDlpFilename}`;
+  const asset = hostYtDlpAsset();
+  const url = `https://github.com/yt-dlp/yt-dlp/${releasePath}/${asset}`;
 
-  log.debug({ url, targetPath }, "Downloading yt-dlp binary");
+  if (asset === ZIPAPP_ASSET) {
+    log.warn(
+      { platform: process.platform, arch: process.arch },
+      "No self-contained yt-dlp build for this platform; falling back to the Python zipapp, which needs a python3 that has a CA bundle"
+    );
+  }
+
+  log.debug({ url, targetPath, asset }, "Downloading yt-dlp binary");
 
   const response = await fetch(url);
 
@@ -227,16 +297,54 @@ async function downloadYtDlpBinary(targetPath: string, version: string): Promise
   }
 }
 
+/**
+ * Whether the binary already on disk is a zipapp we would no longer download.
+ *
+ * Development checkouts made before Norish picked platform builds hold the
+ * zipapp, and `ensureYtDlpBinary` never looks at a file that exists — so
+ * without this those checkouts keep the Python dependency, and the machines
+ * broken by it stay broken, forever. A zipapp is a script: it opens `#!`.
+ */
+async function isSupersededZipapp(): Promise<boolean> {
+  if (hostYtDlpAsset() === ZIPAPP_ASSET) return false;
+
+  try {
+    const handle = await fs.open(ytDlpPath, "r");
+
+    try {
+      const { buffer, bytesRead } = await handle.read(Buffer.alloc(2), 0, 2, 0);
+
+      return bytesRead === 2 && buffer.toString("latin1") === "#!";
+    } finally {
+      await handle.close();
+    }
+  } catch (err) {
+    log.debug({ err, ytDlpPath }, "Could not read the binary's first bytes");
+
+    return false;
+  }
+}
+
 export async function ensureYtDlpBinary(): Promise<void> {
   log.debug({ ytDlpPath }, "Checking for binary");
   await fs.mkdir(path.dirname(ytDlpPath), { recursive: true });
 
-  try {
-    await fs.access(ytDlpPath);
-    log.debug({ ytDlpPath }, "Binary found");
+  const present = await fs
+    .access(ytDlpPath)
+    .then(() => true)
+    .catch(() => false);
 
-    return; // Binary exists, we're good
-  } catch (_error) {
+  if (present) {
+    // An image ships whatever it was built with; only development ever
+    // replaces a binary it already has.
+    if (process.env.NODE_ENV === "production" || !(await isSupersededZipapp())) {
+      log.debug({ ytDlpPath }, "Binary found");
+
+      return; // Binary exists, we're good
+    }
+
+    log.info({ ytDlpPath }, "Replacing the Python zipapp with this platform's yt-dlp build");
+  } else {
     // Binary doesn't exist
     log.error({ ytDlpPath }, "Binary NOT found");
     if (process.env.NODE_ENV === "production") {
@@ -244,20 +352,20 @@ export async function ensureYtDlpBinary(): Promise<void> {
         `yt-dlp binary not found at ${ytDlpPath}. It should be pre-downloaded during Docker build.`
       );
     }
+  }
 
-    try {
-      const ytDlpVersion = SERVER_CONFIG.YT_DLP_VERSION;
+  try {
+    const ytDlpVersion = SERVER_CONFIG.YT_DLP_VERSION;
 
-      await downloadYtDlpBinary(ytDlpPath, ytDlpVersion);
+    await downloadYtDlpBinary(ytDlpPath, ytDlpVersion);
 
-      if (process.platform !== "win32") {
-        await fs.chmod(ytDlpPath, 0o755);
-      }
-    } catch (downloadError) {
-      log.error({ err: downloadError, ytDlpPath }, "Could not download the yt-dlp binary");
-
-      throw new Error("Failed to download yt-dlp binary. Video processing is unavailable.");
+    if (process.platform !== "win32") {
+      await fs.chmod(ytDlpPath, 0o755);
     }
+  } catch (downloadError) {
+    log.error({ err: downloadError, ytDlpPath }, "Could not download the yt-dlp binary");
+
+    throw new Error("Failed to download yt-dlp binary. Video processing is unavailable.");
   }
 }
 
