@@ -34,7 +34,7 @@
     "ioredis": "catalog:",
     "mime": "4.1.0",
     "next": "catalog:",
-    "playwright-core": "^1.61.1",
+    "playwright-core": "^1.62.1",
     "superjson": "catalog:",
     "zod": "catalog:"
   },

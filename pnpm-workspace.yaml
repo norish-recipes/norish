@@ -10,62 +10,62 @@ catalog:
   "@better-auth/core": 1.6.9
   "@better-auth/expo": 1.6.9
   "@better-auth/utils": 0.4.0
-  "@eslint/js": ^9.39.4
+  "@eslint/js": ^9.39.5
   "@heroicons/react": 2.2.0
   "@heroui/react": 3.2.4
   "@heroui/styles": 3.2.4
   "@scalar/nextjs-api-reference": ^0.10.16
-  "@tailwindcss/postcss": ^4.2.4
-  "@tanstack/react-query": ^5.100.11
+  "@tailwindcss/postcss": ^4.3.3
+  "@tanstack/react-query": ^5.101.4
   "@testcontainers/postgresql": ^11.14.0
   "@testcontainers/redis": ^11.14.0
-  "@trpc/client": ^11.17.0
-  "@trpc/server": ^11.17.0
-  "@trpc/tanstack-react-query": ^11.17.0
+  "@trpc/client": ^11.18.0
+  "@trpc/server": ^11.18.0
+  "@trpc/tanstack-react-query": ^11.18.0
   "@types/archiver": ^6.0.3
-  "@types/node": ^25.6.0
-  "@types/react": 19.2.14
-  "@types/react-dom": 19.2.3
+  "@types/node": ^25.9.5
+  "@types/react": 19.2.18
+  "@types/react-dom": 19.2.4
   "@vitejs/plugin-react": ^5.1.3
   archiver: ^7.0.1
   better-auth: 1.6.9
   bullmq: ^5.76.5
-  date-fns: ^4.1.0
+  date-fns: ^4.4.0
   drizzle-orm: 0.45.2
-  eslint: 9.39.1
-  fuse.js: ^7.3.0
+  eslint: 9.39.5
+  fuse.js: ^7.5.0
   html-entities: ^2.6.0
   ioredis: ^5.10.1
   jsdom: ^29.0.0
   jszip: 3.10.1
-  next: 16.2.4
-  pg: 8.20.0
-  postcss: ^8.5.13
-  prettier: ^3.8.3
+  next: 16.3.2
+  pg: 8.23.0
+  postcss: ^8.5.26
+  prettier: ^3.9.6
   react: 19.2.3
   react-dom: 19.2.3
   server-only: ^0.0.1
   superjson: ^2.2.6
-  tailwindcss: ^4.2.4
-  trpc-to-openapi: ^3.2.0
-  turbo: ^2.9.8
+  tailwindcss: ^4.3.3
+  trpc-to-openapi: ^3.3.0
+  turbo: ^2.10.11
   typescript: 5.9.3
   vite: ^7.3.1
-  vitest: ^4.1.5
-  ws: 8.20.0
-  zod: 4.4.2
-  zod-openapi: ^5.4.2
+  vitest: ^4.1.11
+  ws: 8.21.3
+  zod: 4.4.3
+  zod-openapi: ^5.4.6
 
 injectWorkspacePackages: true
 
 nodeLinker: hoisted
 
 overrides:
-  "@tanstack/react-query": 5.100.11
-  "@trpc/client": 11.17.0
-  "@trpc/server": 11.17.0
-  "@trpc/tanstack-react-query": 11.17.0
-  zod: 4.4.2
+  "@tanstack/react-query": 5.101.4
+  "@trpc/client": 11.18.0
+  "@trpc/server": 11.18.0
+  "@trpc/tanstack-react-query": 11.18.0
+  zod: 4.4.3
 
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"

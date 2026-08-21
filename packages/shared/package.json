@@ -36,7 +36,7 @@
     "drizzle-zod": "0.8.3",
     "fraction.js": "^5.3.4",
     "html-entities": "catalog:",
-    "jsonrepair": "3.14.0",
+    "jsonrepair": "3.15.0",
     "parse-ingredient": "2.2.0",
     "react": "catalog:",
     "superjson": "catalog:",

@@ -37,7 +37,7 @@
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
     "@testcontainers/postgresql": "catalog:",
-    "@types/pg": "8.20.0",
+    "@types/pg": "8.23.1",
     "drizzle-kit": "0.31.10",
     "eslint": "catalog:",
     "prettier": "catalog:",
