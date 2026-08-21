@@ -104,6 +104,21 @@ const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
 export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
   "best[vcodec^=avc1][ext=mp4]/bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[ext=mp4]/best";
 
+/**
+ * Arguments for asking yt-dlp what it knows about a URL.
+ *
+ * Deliberately no `-f`. Reading a URL is not downloading it, and a format
+ * selector can only ever make the read fail: `best` matches pre-merged formats
+ * only, so a YouTube or TikTok video published as separate video and audio
+ * streams - or one whose pre-merged entry is Premium-only - answers "Requested
+ * format is not available" and the import dies before it reaches the download.
+ * With no selector yt-dlp applies its own `bv*+ba/b` default, which matches
+ * anything it can fetch, and `videoStreamOf` reads `formats[]` when the
+ * top-level `vcodec` is absent. The download keeps its selector - see
+ * DOWNLOAD_VIDEO_FORMAT_SELECTOR - because that one really is fetching bytes.
+ */
+export const METADATA_PROBE_ARGS = ["--dump-json"] as const;
+
 export const TRANSCRIPTION_AUDIO_FORMAT = "mp3";
 export const TRANSCRIPTION_AUDIO_QUALITY = "64K";
 export const TRANSCRIPTION_AUDIO_FALLBACKS = [
@@ -354,11 +369,10 @@ const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "heic", "gif"]);
  *
  * `--dump-json` prints one info dict per media entry, so a playlist answers
  * with newline-delimited objects rather than a single document - both shapes
- * reach `toInfo`, which flattens them. `-f best` is what fills the top-level
- * `vcodec`, and that is how `videoStreamOf` tells a reel from a photo post.
+ * reach `toInfo`, which flattens them.
  */
 async function fetchVideoInfo(args: string[]): Promise<unknown> {
-  const stdout = await execYtDlp([...args, "-f", "best", "--dump-json"]);
+  const stdout = await execYtDlp([...args, ...METADATA_PROBE_ARGS]);
 
   try {
     return JSON.parse(stdout) as unknown;
