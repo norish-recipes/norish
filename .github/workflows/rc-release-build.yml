@@ -41,7 +41,7 @@ jobs:
 
       # Tag computation only needs Node itself, not the workspace install.
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
 

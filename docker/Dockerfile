@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.26
 
 ##############################
 # Base image (minimal, no pnpm needed at runtime)
@@ -18,9 +18,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ##############################
 FROM base AS builder-base
 
-RUN npm install -g pnpm@10.33.2
+RUN npm install -g pnpm@10.34.5
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.8 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12.5 /uv /uvx /bin/
 
 ENV UV_LINK_MODE=copy \
   UV_PYTHON_DOWNLOADS=0 \

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/javascript-node:4-22-bookworm
+FROM mcr.microsoft.com/devcontainers/javascript-node:5-22-bookworm
 
 RUN apt-get update \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -6,4 +6,4 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable && corepack prepare pnpm@10.30.1 --activate
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate

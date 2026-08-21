@@ -3,7 +3,7 @@
   "version": "0.21.0-beta",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.33.2",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "dev": "turbo watch dev --filter=@norish/web... --continue",
     "dev:tui": "turbo watch dev --ui=tui --filter=@norish/web... --continue",

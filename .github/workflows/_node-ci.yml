@@ -95,7 +95,7 @@ jobs:
       # setup-uv stopped publishing floating major tags with v8; pin exactly.
       - name: Install uv
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.0.1
 
       # The production server boots the embedded parser and refuses to run
       # without its runtime; the shared setup skips it for everything else.

@@ -19,7 +19,7 @@ services:
 
   # Redis for real-time events
   redis:
-    image: redis:8.6.2
+    image: redis:8.10.1
     restart: unless-stopped
     volumes:
       - norish_redis_data:/data
