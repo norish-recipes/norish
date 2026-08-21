@@ -25,6 +25,7 @@ Use this file for lightweight repo context.
 - `packages/shared-react` - shared hooks and contexts
 - `packages/shared`, `packages/shared-server`, `packages/ui`, `packages/config`, `packages/i18n`, `packages/auth`, `packages/queue` - shared package layer
 - `tooling/` - shared lint, format, TypeScript, Tailwind, GitHub, and monorepo tooling
+- `apps/quick-import-extension` - a git submodule of [Norish-Quick-Import-Extension](https://github.com/AfoxDesignz/Norish-Quick-Import-Extension), checked out here for visibility only. It is not maintained from this repo: it sits outside the pnpm workspace, no gate reaches it, and a change there is a PR to that repository rather than a commit here. Leave it out of repo-wide work such as dependency sweeps.
 
 ### The AI boundary
 
