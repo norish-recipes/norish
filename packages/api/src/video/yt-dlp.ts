@@ -4,7 +4,6 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import YTDlpWrapModule from "yt-dlp-wrap";
 
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -13,10 +12,6 @@ import { videoLogger as log } from "@norish/shared-server/logger";
 
 import type { VideoMetadata, VideoStream } from "./types";
 import { MediaUnavailableError } from "./errors";
-
-// Handle CJS/ESM interop - the module may be wrapped in a default property
-const YTDlpWrap =
-  (YTDlpWrapModule as unknown as { default?: typeof YTDlpWrapModule }).default ?? YTDlpWrapModule;
 
 const execFileAsync = promisify(execFile);
 
@@ -122,13 +117,17 @@ export const TRANSCRIPTION_AUDIO_FALLBACKS = [
 const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
 const outputDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "video-temp");
 
-async function execYtDlp(args: string[], cwd?: string): Promise<void> {
+async function execYtDlp(args: string[], cwd?: string): Promise<string> {
   try {
-    await execFileAsync(ytDlpPath, args, {
+    // --dump-json prints a whole info dict per media entry, so a long playlist
+    // answers with several megabytes on stdout.
+    const { stdout } = await execFileAsync(ytDlpPath, args, {
       cwd,
       windowsHide: true,
-      maxBuffer: 10 * 1024 * 1024,
+      maxBuffer: 64 * 1024 * 1024,
     });
+
+    return stdout;
   } catch (error: unknown) {
     const childError = error as Error & { stdout?: string | Buffer; stderr?: string | Buffer };
     const stderr = childError.stderr?.toString().trim();
@@ -180,6 +179,39 @@ async function getProxyArgs(): Promise<string[]> {
   return proxy ? ["--proxy", proxy] : [];
 }
 
+/**
+ * Fetch a yt-dlp release binary from GitHub into `targetPath`.
+ *
+ * Only a development server gets here - production ships the binary in the
+ * image. The bytes land in a sibling temp file and are renamed into place, so
+ * an interrupted download cannot leave a half-written binary for the next boot
+ * to find and trust.
+ */
+async function downloadYtDlpBinary(targetPath: string, version: string): Promise<void> {
+  const releasePath =
+    version === "latest" ? "releases/latest/download" : `releases/download/${version}`;
+  const url = `https://github.com/yt-dlp/yt-dlp/${releasePath}/${ytDlpFilename}`;
+
+  log.debug({ url, targetPath }, "Downloading yt-dlp binary");
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`GitHub answered ${response.status} ${response.statusText} for ${url}`);
+  }
+
+  const tempPath = `${targetPath}.download`;
+
+  try {
+    await fs.writeFile(tempPath, new Uint8Array(await response.arrayBuffer()));
+    await fs.rename(tempPath, targetPath);
+  } catch (error) {
+    await fs.unlink(tempPath).catch(() => {});
+
+    throw error;
+  }
+}
+
 export async function ensureYtDlpBinary(): Promise<void> {
   log.debug({ ytDlpPath }, "Checking for binary");
   await fs.mkdir(path.dirname(ytDlpPath), { recursive: true });
@@ -201,12 +233,14 @@ export async function ensureYtDlpBinary(): Promise<void> {
     try {
       const ytDlpVersion = SERVER_CONFIG.YT_DLP_VERSION;
 
-      await YTDlpWrap.downloadFromGithub(ytDlpPath, ytDlpVersion, process.platform);
+      await downloadYtDlpBinary(ytDlpPath, ytDlpVersion);
 
       if (process.platform !== "win32") {
         await fs.chmod(ytDlpPath, 0o755);
       }
-    } catch (_downloadError) {
+    } catch (downloadError) {
+      log.error({ err: downloadError, ytDlpPath }, "Could not download the yt-dlp binary");
+
       throw new Error("Failed to download yt-dlp binary. Video processing is unavailable.");
     }
   }
@@ -315,6 +349,28 @@ export type YtDlpInfo = {
 /** Extensions yt-dlp reports for the still images of a photo or carousel post. */
 const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "heic", "gif"]);
 
+/**
+ * Ask yt-dlp for what it knows about a URL.
+ *
+ * `--dump-json` prints one info dict per media entry, so a playlist answers
+ * with newline-delimited objects rather than a single document - both shapes
+ * reach `toInfo`, which flattens them. `-f best` is what fills the top-level
+ * `vcodec`, and that is how `videoStreamOf` tells a reel from a photo post.
+ */
+async function fetchVideoInfo(args: string[]): Promise<unknown> {
+  const stdout = await execYtDlp([...args, "-f", "best", "--dump-json"]);
+
+  try {
+    return JSON.parse(stdout) as unknown;
+  } catch {
+    return stdout
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as unknown);
+  }
+}
+
 function toInfo(rawInfo: unknown): YtDlpInfo {
   if (Array.isArray(rawInfo)) return { entries: rawInfo as YtDlpInfo[] };
 
@@ -368,13 +424,12 @@ export async function getVideoMetadata(
   tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<VideoMetadata> {
   await ensureYtDlpBinary();
-  const ytDlpWrap = new YTDlpWrap(ytDlpPath);
 
   const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
   try {
     const proxyArgs = await getProxyArgs();
-    const rawInfo = await ytDlpWrap.getVideoInfo([url, ...(auth?.args ?? []), ...proxyArgs]);
+    const rawInfo = await fetchVideoInfo([url, ...(auth?.args ?? []), ...proxyArgs]);
     const container = toInfo(rawInfo);
     const primary = selectMediaEntry(container);
 

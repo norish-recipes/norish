@@ -6,11 +6,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { buildAuthArgs } from "@norish/api/video/yt-dlp";
 
-vi.mock("yt-dlp-wrap", () => ({
-  default: class MockYTDlpWrap {
-    constructor() {}
-  },
-}));
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }),
   videoLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },

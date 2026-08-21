@@ -25,7 +25,6 @@ export default defineConfig({
     "sharp",
     "heic-convert",
     "libheif-js",
-    "yt-dlp-wrap",
     "ffmpeg-static",
     "playwright-core",
     "bullmq",

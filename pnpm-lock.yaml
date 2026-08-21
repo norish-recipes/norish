@@ -738,9 +738,6 @@ importers:
       superjson:
         specifier: 'catalog:'
         version: 2.2.6
-      yt-dlp-wrap:
-        specifier: ^2.3.12
-        version: 2.3.12
       zod:
         specifier: 4.4.2
         version: 4.4.2
@@ -1433,7 +1430,7 @@ importers:
         version: 3.8.3
       prettier-plugin-tailwindcss:
         specifier: ^0.8.0
-        version: 0.8.0(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.8.3))(prettier@3.8.3)
+        version: 0.8.0(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.8.1))(prettier@3.8.3)
     devDependencies:
       '@norish/tsconfig':
         specifier: workspace:*
@@ -11329,10 +11326,6 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  yt-dlp-wrap@2.3.12:
-    resolution: {integrity: sha512-P8fJ+6M1YjukyJENCTviNLiZ8mokxprR54ho3DsSKPWDcac489OjRiStGEARJr6un6ETS6goTn4CWl/b/rM3aA==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
-
   zeptomatch@2.1.0:
     resolution: {integrity: sha512-KiGErG2J0G82LSpniV0CtIzjlJ10E04j02VOudJsPyPwNZgGnRKQy7I1R7GMyg/QswnE4l7ohSGrQbQbjXPPDA==}
 
@@ -13892,7 +13885,6 @@ snapshots:
       next: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       playwright-core: 1.61.1
       superjson: 2.2.6
-      yt-dlp-wrap: 2.3.12
       zod: 4.4.2
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
@@ -18084,9 +18076,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.74.89': {}
 
@@ -24469,7 +24459,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-tailwindcss@0.8.0(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.8.3))(prettier@3.8.3):
+  prettier-plugin-tailwindcss@0.8.0(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.8.1))(prettier@3.8.3):
     dependencies:
       prettier: 3.8.3
     optionalDependencies:
@@ -26697,8 +26687,6 @@ snapshots:
       yargs-parser: 21.1.1
 
   yocto-queue@0.1.0: {}
-
-  yt-dlp-wrap@2.3.12: {}
 
   zeptomatch@2.1.0:
     dependencies:

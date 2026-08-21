@@ -36,7 +36,6 @@
     "next": "catalog:",
     "playwright-core": "^1.61.1",
     "superjson": "catalog:",
-    "yt-dlp-wrap": "^2.3.12",
     "zod": "catalog:"
   },
   "devDependencies": {
