@@ -595,6 +595,7 @@
       "vision": "visión",
       "automaticEnrichment": "Enriquecimiento automático de recetas",
       "automaticEnrichmentDescription": "Elige qué enriquecimiento con IA se ejecuta automáticamente en las recetas nuevas. Los miembros pueden ejecutar cada uno manualmente mientras la IA esté activada.",
+      "automaticEnrichmentPlaceholder": "No se ejecuta nada automáticamente",
       "automaticEnrichmentKinds": {
         "autoTagging": "Etiquetado automático",
         "autoTaggingDescription": "Añade etiquetas sugeridas por IA a las recetas nuevas sin eliminar las existentes",
@@ -622,6 +623,11 @@
         "existing": "Solo cocinas existentes",
         "extend": "La IA puede crear cocinas nuevas"
       }
+    },
+    "modelListing": {
+      "empty": "No se recibió ningún modelo. Comprueba la clave de API o el endpoint, o escribe un nombre de modelo.",
+      "refused": "{provider} rechazó la solicitud ({status}). Comprueba la clave de API.",
+      "unreachable": "No se pudo conectar con {provider}. Comprueba el endpoint."
     },
     "videoConfig": {
       "enableVideo": "Activar analizador de vídeo",

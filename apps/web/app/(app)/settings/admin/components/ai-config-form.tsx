@@ -14,7 +14,6 @@ import {
   ListBox,
   Select,
   Slider,
-  Spinner,
   TextField,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -33,6 +32,7 @@ import {
 } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
+import ModelListingEmptyState from "./model-listing-empty-state";
 
 interface AIConfigFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -130,7 +130,11 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         ? endpoint
         : endpoint); // generic-openai needs endpoint
 
-  const { models: availableModels, isLoading: isLoadingModels } = useAvailableModelsQuery({
+  const {
+    models: availableModels,
+    refusal: modelRefusal,
+    isLoading: isLoadingModels,
+  } = useAvailableModelsQuery({
     provider: provider as AIConfig["provider"],
     endpoint: endpoint || undefined,
     apiKey: apiKey || undefined,
@@ -237,6 +241,25 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const handleRevealApiKey = useCallback(async () => {
     return await fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey");
   }, [fetchConfigSecret]);
+
+  /**
+   * The stored record read as the list the picker selects over. A column of six
+   * switches read as six separate decisions; which kinds are allowed to run
+   * unasked is one.
+   */
+  const selectedEnrichmentKinds = useMemo(
+    () => AUTOMATIC_ENRICHMENT_KEYS.filter((key) => automaticEnrichment[key]),
+    [automaticEnrichment]
+  );
+  const handleEnrichmentKindsChange = useCallback((chosen: string[]) => {
+    const selected = new Set(chosen);
+
+    setAutomaticEnrichment(
+      Object.fromEntries(
+        AUTOMATIC_ENRICHMENT_KEYS.map((key) => [key, selected.has(key)])
+      ) as AutomaticEnrichmentConfig
+    );
+  }, []);
 
   // Clear model fields when provider changes to avoid invalid model selection
   const handleProviderChange = (newProvider: AIConfig["provider"]) => {
@@ -395,13 +418,9 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         </ComboBox.InputGroup>
         <ComboBox.Popover>
           <ListBox
-            renderEmptyState={() =>
-              isLoadingModels ? (
-                <div className="flex justify-center py-2">
-                  <Spinner size="sm" />
-                </div>
-              ) : null
-            }
+            renderEmptyState={() => (
+              <ModelListingEmptyState isLoading={isLoadingModels} refusal={modelRefusal} />
+            )}
           >
             {modelOptions.map((item) => (
               <ListBox.Item key={item.value} id={item.value} textValue={item.value}>
@@ -432,13 +451,9 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         <Description>{t("visionModelDescription")}</Description>
         <ComboBox.Popover>
           <ListBox
-            renderEmptyState={() =>
-              isLoadingModels ? (
-                <div className="flex justify-center py-2">
-                  <Spinner size="sm" />
-                </div>
-              ) : null
-            }
+            renderEmptyState={() => (
+              <ModelListingEmptyState isLoading={isLoadingModels} refusal={modelRefusal} />
+            )}
           >
             {visionModelOptions.map((item) => (
               <ListBox.Item key={item.value} id={item.value} textValue={item.value}>
@@ -511,29 +526,52 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <span className="font-medium">{t("automaticEnrichment")}</span>
-        <span className="text-muted text-base">{t("automaticEnrichmentDescription")}</span>
-      </div>
-
-      {AUTOMATIC_ENRICHMENT_KEYS.map((key) => (
-        <div key={key} className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="font-medium">{t(`automaticEnrichmentKinds.${key}`)}</span>
-            <span className="text-muted text-base">
-              {t(`automaticEnrichmentKinds.${key}Description`)}
-            </span>
-          </div>
-          <SettingsSwitch
-            color="success"
-            isDisabled={!enabled}
-            isSelected={automaticEnrichment[key]}
-            onValueChange={(value) =>
-              setAutomaticEnrichment((current) => ({ ...current, [key]: value }))
-            }
-          />
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">{t("automaticEnrichment")}</span>
+          <span className="text-muted text-base">{t("automaticEnrichmentDescription")}</span>
         </div>
-      ))}
+
+        <Select
+          aria-label={t("automaticEnrichment")}
+          className="max-w-xs"
+          isDisabled={!enabled}
+          placeholder={t("automaticEnrichmentPlaceholder")}
+          selectionMode="multiple"
+          value={selectedEnrichmentKinds}
+          variant="secondary"
+          onChange={(selected) => handleEnrichmentKindsChange(selected.map(String))}
+        >
+          <Label className="sr-only">{t("automaticEnrichment")}</Label>
+          <Select.Trigger>
+            <Select.Value>
+              {({ defaultChildren, isPlaceholder }) =>
+                isPlaceholder
+                  ? defaultChildren
+                  : selectedEnrichmentKinds
+                      .map((key) => t(`automaticEnrichmentKinds.${key}`))
+                      .join(", ")
+              }
+            </Select.Value>
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox selectionMode="multiple">
+              {AUTOMATIC_ENRICHMENT_KEYS.map((key) => (
+                <ListBox.Item key={key} id={key} textValue={t(`automaticEnrichmentKinds.${key}`)}>
+                  <div className="flex flex-col">
+                    <span>{t(`automaticEnrichmentKinds.${key}`)}</span>
+                    <span className="text-muted text-xs">
+                      {t(`automaticEnrichmentKinds.${key}Description`)}
+                    </span>
+                  </div>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </div>
 
       <Select
         variant="secondary"

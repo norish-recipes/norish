@@ -595,6 +595,7 @@
       "vision": "비전",
       "automaticEnrichment": "자동 레시피 보강",
       "automaticEnrichmentDescription": "새 레시피에 자동으로 실행할 AI 보강을 선택하세요. AI가 켜져 있으면 구성원은 각 항목을 수동으로 실행할 수 있습니다.",
+      "automaticEnrichmentPlaceholder": "자동으로 실행되는 항목 없음",
       "automaticEnrichmentKinds": {
         "autoTagging": "자동 태그 지정",
         "autoTaggingDescription": "기존 태그를 지우지 않고 새 레시피에 AI가 제안한 태그를 추가합니다",
@@ -622,6 +623,11 @@
         "existing": "기존 요리만",
         "extend": "AI가 새 요리를 추가할 수 있음"
       }
+    },
+    "modelListing": {
+      "empty": "모델을 가져오지 못했습니다. API 키나 엔드포인트를 확인하거나 모델 이름을 입력하세요.",
+      "refused": "{provider}이(가) 요청을 거부했습니다({status}). API 키를 확인하세요.",
+      "unreachable": "{provider}에 연결할 수 없습니다. 엔드포인트를 확인하세요."
     },
     "videoConfig": {
       "enableVideo": "비디오 구문 분석 활성화",

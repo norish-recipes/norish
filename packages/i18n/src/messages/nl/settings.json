@@ -595,6 +595,7 @@
       "vision": "vision",
       "automaticEnrichment": "Automatische receptverrijking",
       "automaticEnrichmentDescription": "Kies welke AI-verrijking automatisch draait voor nieuwe recepten. Leden kunnen elke verrijking handmatig blijven starten zolang AI aanstaat.",
+      "automaticEnrichmentPlaceholder": "Niets draait automatisch",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatisch taggen",
         "autoTaggingDescription": "Voeg door AI voorgestelde tags toe aan nieuwe recepten zonder bestaande tags te verwijderen",
@@ -622,6 +623,11 @@
         "existing": "Alleen bestaande keukens",
         "extend": "AI kan nieuwe keukens toevoegen"
       }
+    },
+    "modelListing": {
+      "empty": "Geen modellen ontvangen. Controleer de API-sleutel of het endpoint, of typ een modelnaam.",
+      "refused": "{provider} weigerde het verzoek ({status}). Controleer de API-sleutel.",
+      "unreachable": "{provider} is niet bereikbaar. Controleer het endpoint."
     },
     "videoConfig": {
       "enableVideo": "Video parsing inschakelen",

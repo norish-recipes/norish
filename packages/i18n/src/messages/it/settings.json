@@ -595,6 +595,7 @@
       "vision": "visione",
       "automaticEnrichment": "Arricchimento automatico delle ricette",
       "automaticEnrichmentDescription": "Scegli quale arricchimento AI viene eseguito automaticamente per le nuove ricette. I membri possono comunque eseguirne ciascuno manualmente quando l'AI è attiva.",
+      "automaticEnrichmentPlaceholder": "Non viene eseguito nulla automaticamente",
       "automaticEnrichmentKinds": {
         "autoTagging": "Tag automatici",
         "autoTaggingDescription": "Aggiunge tag suggeriti dall'AI alle nuove ricette senza rimuovere quelli esistenti",
@@ -622,6 +623,11 @@
         "existing": "Solo cucine esistenti",
         "extend": "L'IA può creare nuove cucine"
       }
+    },
+    "modelListing": {
+      "empty": "Nessun modello ricevuto. Controlla la chiave API o l'endpoint, oppure digita il nome di un modello.",
+      "refused": "{provider} ha rifiutato la richiesta ({status}). Controlla la chiave API.",
+      "unreachable": "Impossibile raggiungere {provider}. Controlla l'endpoint."
     },
     "videoConfig": {
       "enableVideo": "Abilita analisi video",

@@ -595,6 +595,7 @@
       "vision": "vision",
       "automaticEnrichment": "Enrichissement automatique des recettes",
       "automaticEnrichmentDescription": "Choisissez quel enrichissement IA s'exécute automatiquement pour les nouvelles recettes. Les membres peuvent toujours lancer chacun manuellement tant que l'IA est activée.",
+      "automaticEnrichmentPlaceholder": "Rien ne s'exécute automatiquement",
       "automaticEnrichmentKinds": {
         "autoTagging": "Étiquetage automatique",
         "autoTaggingDescription": "Ajoute des étiquettes suggérées par l'IA aux nouvelles recettes sans supprimer les étiquettes existantes",
@@ -622,6 +623,11 @@
         "existing": "Cuisines existantes uniquement",
         "extend": "L'IA peut créer de nouvelles cuisines"
       }
+    },
+    "modelListing": {
+      "empty": "Aucun modèle reçu. Vérifiez la clé API ou le point de terminaison, ou saisissez un nom de modèle.",
+      "refused": "{provider} a refusé la requête ({status}). Vérifiez la clé API.",
+      "unreachable": "Impossible de joindre {provider}. Vérifiez le point de terminaison."
     },
     "videoConfig": {
       "enableVideo": "Activer l’analyse vidéo",

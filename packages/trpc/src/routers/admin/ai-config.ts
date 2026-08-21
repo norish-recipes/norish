@@ -12,7 +12,11 @@ import {
 } from "@norish/config/zod/server-config";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { enrollEnrichmentForAllRecipes } from "@norish/queue";
-import { listModels, listTranscriptionModels } from "@norish/shared-server/ai/providers/listing";
+import {
+  listModels,
+  listTranscriptionModels,
+  ModelListingError,
+} from "@norish/shared-server/ai/providers/listing";
 import {
   getRecipePermissionPolicy,
   isAIEnabled,
@@ -28,6 +32,53 @@ type ListedModel = {
   name: string;
   supportsVision?: boolean;
 };
+
+/** Why a list came back empty, in parts the UI can phrase in its own language. */
+type ListingRefusal = {
+  provider: string;
+  status?: number;
+  statusText?: string;
+};
+
+/**
+ * Run a listing and report a refusal rather than letting it read as "no models".
+ *
+ * A provider that rejects the key answers with nothing, which is exactly what a
+ * provider that was never configured answers with. The dropdown cannot tell an
+ * administrator which of the two happened unless the reason travels with the
+ * (empty) list, so it does.
+ */
+async function listOrExplain(
+  provider: string,
+  list: () => Promise<{ id: string; name: string; supportsVision?: boolean }[]>
+): Promise<{ models: ListedModel[]; refusal?: ListingRefusal }> {
+  try {
+    const listed = await list();
+
+    return {
+      models: listed.map((model) => ({
+        id: model.id,
+        name: model.name,
+        supportsVision: model.supportsVision,
+      })),
+    };
+  } catch (cause) {
+    if (!(cause instanceof ModelListingError)) {
+      throw cause;
+    }
+
+    log.warn({ err: cause, provider }, "Model listing refused by provider");
+
+    return {
+      models: [],
+      refusal: {
+        provider: cause.provider,
+        status: cause.status,
+        statusText: cause.statusText,
+      },
+    };
+  }
+}
 
 /**
  * Update AI config.
@@ -121,18 +172,12 @@ const listAvailableModels = adminProcedure
       }
     }
 
-    const listedModels = await listModels(input.provider, {
-      endpoint: input.endpoint,
-      apiKey,
-    });
-
-    const models: ListedModel[] = listedModels.map((model) => ({
-      id: model.id,
-      name: model.name,
-      supportsVision: model.supportsVision,
-    }));
-
-    return { models };
+    return listOrExplain(input.provider, () =>
+      listModels(input.provider, {
+        endpoint: input.endpoint,
+        apiKey,
+      })
+    );
   });
 
 /**
@@ -169,18 +214,12 @@ const listAvailableTranscriptionModels = adminProcedure
       }
     }
 
-    const listedModels = await listTranscriptionModels(input.provider, {
-      endpoint: input.endpoint,
-      apiKey,
-    });
-
-    const models: ListedModel[] = listedModels.map((model) => ({
-      id: model.id,
-      name: model.name,
-      supportsVision: model.supportsVision,
-    }));
-
-    return { models };
+    return listOrExplain(input.provider, () =>
+      listTranscriptionModels(input.provider, {
+        endpoint: input.endpoint,
+        apiKey,
+      })
+    );
   });
 
 /**

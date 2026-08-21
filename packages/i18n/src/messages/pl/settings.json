@@ -595,6 +595,7 @@
       "vision": "vision",
       "automaticEnrichment": "Automatyczne wzbogacanie przepisów",
       "automaticEnrichmentDescription": "Wybierz, które wzbogacanie AI uruchamia się automatycznie dla nowych przepisów. Członkowie nadal mogą uruchomić każde ręcznie, gdy AI jest włączone.",
+      "automaticEnrichmentPlaceholder": "Nic nie działa automatycznie",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatyczne tagowanie",
         "autoTaggingDescription": "Dodaje tagi zaproponowane przez AI do nowych przepisów bez usuwania istniejących",
@@ -622,6 +623,11 @@
         "existing": "Tylko istniejące kuchnie",
         "extend": "AI może dodawać nowe kuchnie"
       }
+    },
+    "modelListing": {
+      "empty": "Nie zwrócono żadnych modeli. Sprawdź klucz API lub punkt końcowy albo wpisz nazwę modelu.",
+      "refused": "{provider} odrzucił żądanie ({status}). Sprawdź klucz API.",
+      "unreachable": "Nie można połączyć się z {provider}. Sprawdź punkt końcowy."
     },
     "videoConfig": {
       "enableVideo": "Włącz parsowanie wideo",

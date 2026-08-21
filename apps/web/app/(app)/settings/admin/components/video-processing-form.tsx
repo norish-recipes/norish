@@ -15,7 +15,6 @@ import {
   ListBox,
   Select,
   Separator,
-  Spinner,
   TextField,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -29,6 +28,7 @@ import {
 } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
+import ModelListingEmptyState from "./model-listing-empty-state";
 
 interface VideoProcessingFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -104,15 +104,16 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   const isAIApiKeyConfigured = !!aiConfig?.apiKey && aiConfig.apiKey !== "";
   const isAIEnabled = aiConfig?.enabled ?? false;
 
-  // Determine if we can fetch transcription models
-  // Cloud providers need API key, local providers need endpoint
+  // What a provider authenticates its model list with, which is not always a key
+  // of its own: cloud providers may borrow the AI configuration's key, and local
+  // ones answer to an endpoint with no key at all. One predicate, because gating
+  // the fetch and the picker on different answers is what left the picker greyed
+  // out on the very path the API key field recommends.
+  const hasTranscriptionCredentials = needsTranscriptionApiKey
+    ? !!transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
+    : !needsTranscriptionEndpoint || !!transcriptionEndpoint;
   const canFetchTranscriptionModels =
-    enabled &&
-    transcriptionEnabled &&
-    supportsModelListing &&
-    (needsTranscriptionApiKey
-      ? transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
-      : transcriptionEndpoint);
+    enabled && transcriptionEnabled && supportsModelListing && hasTranscriptionCredentials;
   // A report of the binary this server runs, not something the form saves — and
   // worth reading precisely when video processing is off because imports broke,
   // so it is not gated on the switches above.
@@ -129,13 +130,16 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     : ytDlpVersionError
       ? t("ytDlpVersionUnknown")
       : (ytDlpVersion ?? t("ytDlpVersionMissing"));
-  const { models: availableTranscriptionModels, isLoading: isLoadingTranscriptionModels } =
-    useAvailableTranscriptionModelsQuery({
-      provider: transcriptionProvider,
-      endpoint: transcriptionEndpoint || undefined,
-      apiKey: transcriptionApiKey || undefined,
-      enabled: !!canFetchTranscriptionModels,
-    });
+  const {
+    models: availableTranscriptionModels,
+    refusal: transcriptionRefusal,
+    isLoading: isLoadingTranscriptionModels,
+  } = useAvailableTranscriptionModelsQuery({
+    provider: transcriptionProvider,
+    endpoint: transcriptionEndpoint || undefined,
+    apiKey: transcriptionApiKey || undefined,
+    enabled: !!canFetchTranscriptionModels,
+  });
 
   // Create transcription model options for autocomplete
   const transcriptionModelOptions = useMemo(() => {
@@ -409,9 +413,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
             <ComboBox
               allowsCustomValue
               inputValue={transcriptionModel}
-              isDisabled={
-                isVideoUiDisabled || (!transcriptionApiKey && !isTranscriptionApiKeyConfigured)
-              }
+              isDisabled={isVideoUiDisabled || !hasTranscriptionCredentials}
               onInputChange={setTranscriptionModel}
               onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
             >
@@ -423,13 +425,12 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
               <Description>{t("transcriptionModelDescription")}</Description>
               <ComboBox.Popover>
                 <ListBox
-                  renderEmptyState={() =>
-                    isLoadingTranscriptionModels ? (
-                      <div className="flex justify-center py-2">
-                        <Spinner size="sm" />
-                      </div>
-                    ) : null
-                  }
+                  renderEmptyState={() => (
+                    <ModelListingEmptyState
+                      isLoading={isLoadingTranscriptionModels}
+                      refusal={transcriptionRefusal}
+                    />
+                  )}
                 >
                   {transcriptionModelOptions.map((item) => (
                     <ListBox.Item key={item.value} id={item.value} textValue={item.label}>

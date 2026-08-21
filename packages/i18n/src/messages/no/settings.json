@@ -595,6 +595,7 @@
       "vision": "visjon",
       "automaticEnrichment": "Automatisk oppskriftsberikelse",
       "automaticEnrichmentDescription": "Velg hvilken AI-berikelse som kjøres automatisk for nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt når AI er på.",
+      "automaticEnrichmentPlaceholder": "Ingenting kjører automatisk",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatiske tagger",
         "autoTaggingDescription": "Legg til AI-foreslåtte tagger på nye oppskrifter uten å fjerne eksisterende tagger",
@@ -622,6 +623,11 @@
         "existing": "Bare eksisterende kjøkken",
         "extend": "KI kan opprette nye kjøkken"
       }
+    },
+    "modelListing": {
+      "empty": "Ingen modeller kom tilbake. Sjekk API-nøkkelen eller endepunktet, eller skriv inn et modellnavn.",
+      "refused": "{provider} avviste forespørselen ({status}). Sjekk API-nøkkelen.",
+      "unreachable": "Kunne ikke nå {provider}. Sjekk endepunktet."
     },
     "videoConfig": {
       "enableVideo": "Aktiver videoanalyse",

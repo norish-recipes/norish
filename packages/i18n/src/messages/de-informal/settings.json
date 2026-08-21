@@ -595,6 +595,7 @@
       "vision": "Vision",
       "automaticEnrichment": "Automatische Rezeptanreicherung",
       "automaticEnrichmentDescription": "Wähle, welche KI-Anreicherung für neue Rezepte automatisch läuft. Mitglieder können jede Anreicherung weiterhin manuell starten, solange KI aktiviert ist.",
+      "automaticEnrichmentPlaceholder": "Nichts läuft automatisch",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatische Tags",
         "autoTaggingDescription": "Fügt neuen Rezepten KI-vorgeschlagene Tags hinzu, ohne vorhandene Tags zu entfernen",
@@ -622,6 +623,11 @@
         "existing": "Nur vorhandene Küchen",
         "extend": "KI darf neue Küchen anlegen"
       }
+    },
+    "modelListing": {
+      "empty": "Keine Modelle erhalten. Prüf den API-Schlüssel oder den Endpunkt, oder gib einen Modellnamen ein.",
+      "refused": "{provider} hat die Anfrage abgelehnt ({status}). Prüf den API-Schlüssel.",
+      "unreachable": "{provider} ist nicht erreichbar. Prüf den Endpunkt."
     },
     "videoConfig": {
       "enableVideo": "Video-Parsing aktivieren",

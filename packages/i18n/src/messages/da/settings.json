@@ -595,6 +595,7 @@
       "vision": "vision",
       "automaticEnrichment": "Automatisk opskriftsberigelse",
       "automaticEnrichmentDescription": "Vælg hvilken AI-berigelse der kører automatisk for nye opskrifter. Medlemmer kan stadig køre hver enkelt manuelt, når AI er slået til.",
+      "automaticEnrichmentPlaceholder": "Intet kører automatisk",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatiske tags",
         "autoTaggingDescription": "Tilføj AI-foreslåede tags til nye opskrifter uden at fjerne eksisterende tags",
@@ -622,6 +623,11 @@
         "existing": "Kun eksisterende køkkener",
         "extend": "AI må oprette nye køkkener"
       }
+    },
+    "modelListing": {
+      "empty": "Ingen modeller kom retur. Tjek API-nøglen eller endpointet, eller skriv et modelnavn.",
+      "refused": "{provider} afviste anmodningen ({status}). Tjek API-nøglen.",
+      "unreachable": "Kunne ikke nå {provider}. Tjek endpointet."
     },
     "videoConfig": {
       "enableVideo": "Aktivér videoanalyse",

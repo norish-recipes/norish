@@ -595,6 +595,7 @@
       "vision": "visão",
       "automaticEnrichment": "Enriquecimento automático de receitas",
       "automaticEnrichmentDescription": "Escolha qual enriquecimento por IA é executado automaticamente para novas receitas. Os membros ainda podem executar cada um manualmente enquanto a IA estiver ativada.",
+      "automaticEnrichmentPlaceholder": "Nada é executado automaticamente",
       "automaticEnrichmentKinds": {
         "autoTagging": "Marcação automática",
         "autoTaggingDescription": "Adiciona tags sugeridas pela IA às novas receitas sem remover as existentes",
@@ -622,6 +623,11 @@
         "existing": "Apenas culinárias existentes",
         "extend": "A IA pode criar novas culinárias"
       }
+    },
+    "modelListing": {
+      "empty": "Nenhum modelo retornado. Verifique a chave de API ou o endpoint, ou digite o nome de um modelo.",
+      "refused": "{provider} recusou a requisição ({status}). Verifique a chave de API.",
+      "unreachable": "Não foi possível acessar {provider}. Verifique o endpoint."
     },
     "videoConfig": {
       "enableVideo": "Ativar análise de vídeo",

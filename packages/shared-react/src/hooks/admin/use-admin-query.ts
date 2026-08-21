@@ -52,6 +52,8 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
 
     return {
       models: data?.models ?? [],
+      // Why the provider gave nothing back, when it was asked and declined.
+      refusal: data?.refusal,
       error,
       isLoading,
     };
@@ -79,6 +81,7 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
 
     return {
       models: data?.models ?? [],
+      refusal: data?.refusal,
       error,
       isLoading,
     };

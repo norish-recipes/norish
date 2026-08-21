@@ -595,6 +595,7 @@
       "vision": "vision",
       "automaticEnrichment": "Automatic Recipe Enrichment",
       "automaticEnrichmentDescription": "Choose which AI enrichment runs automatically for newly created recipes. Members can still run each one manually while AI is enabled.",
+      "automaticEnrichmentPlaceholder": "Nothing runs automatically",
       "automaticEnrichmentKinds": {
         "autoTagging": "Auto-Tagging",
         "autoTaggingDescription": "Add AI-suggested tags to new recipes without removing existing tags",
@@ -622,6 +623,11 @@
         "existing": "Only Existing Cuisines",
         "extend": "AI Can Add New Cuisines"
       }
+    },
+    "modelListing": {
+      "empty": "No models came back. Check the API key or endpoint, or type a model name.",
+      "refused": "{provider} refused the request ({status}). Check the API key.",
+      "unreachable": "Could not reach {provider}. Check the endpoint."
     },
     "videoConfig": {
       "enableVideo": "Enable Video Parsing",
