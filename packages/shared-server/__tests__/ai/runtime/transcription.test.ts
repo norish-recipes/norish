@@ -41,6 +41,7 @@ interface CapturedRequest {
   method: string;
   url: string;
   contentType: string;
+  authorization?: string;
   body: Buffer;
 }
 
@@ -69,6 +70,7 @@ beforeAll(async () => {
         method: req.method ?? "",
         url: req.url ?? "",
         contentType: req.headers["content-type"] ?? "",
+        authorization: req.headers.authorization,
         body: Buffer.concat(chunks),
       });
 
@@ -136,6 +138,8 @@ describe("transcription requests reach the provider correctly", () => {
     expect(body).toContain('name="model"');
     expect(body).toContain("faster-whisper");
     expect(body).toContain('name="file"');
+    // No key configured means no Authorization header - not a placeholder one.
+    expect(captured[0]!.authorization).toBeUndefined();
   });
 
   it("azure posts multipart form data under the endpoint's /openai path", async () => {
@@ -279,6 +283,7 @@ describe("transcription requests reach the provider correctly", () => {
     expect(transcript).toBe("local transcript");
     expect(captured).toHaveLength(1);
     expect(captured[0]!.url).toBe("/v1/audio/transcriptions");
+    expect(captured[0]!.authorization).toBe("Bearer ai-config-key");
   });
 
   it("reports an empty transcript instead of storing one", async () => {
