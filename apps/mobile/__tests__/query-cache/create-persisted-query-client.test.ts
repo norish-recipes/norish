@@ -31,7 +31,7 @@ vi.mock("@/lib/storage/query-cache-mmkv", () => ({
   queryCacheStorage: {
     set: vi.fn(),
     getString: vi.fn(),
-    delete: vi.fn(),
+    remove: vi.fn(),
   },
 }));
 

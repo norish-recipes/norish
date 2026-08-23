@@ -282,5 +282,10 @@
   "queuedOffline": {
     "title": "Sei offline",
     "description": "In coda: Norish completerà automaticamente quando tornerai online."
+  },
+  "storageUnavailable": {
+    "title": "Avvio non riuscito",
+    "description": "Norish non è riuscita a leggere l'archivio sicuro e non sa a quale server appartiene questa app. Non è stato modificato nulla. Riprova o riavvia l'app.",
+    "detailsLabel": "Dettagli tecnici"
   }
 }

@@ -282,5 +282,10 @@
   "queuedOffline": {
     "title": "Du bist offline",
     "description": "In der Warteschlange — Norish schließt dies automatisch ab, sobald du wieder online bist."
+  },
+  "storageUnavailable": {
+    "title": "Start nicht möglich",
+    "description": "Norish konnte den sicheren Speicher nicht lesen und weiß daher nicht, zu welchem Server diese App gehört. Es wurde nichts geändert. Versuch es erneut oder starte die App neu.",
+    "detailsLabel": "Technische Details"
   }
 }

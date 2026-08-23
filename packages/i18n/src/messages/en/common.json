@@ -282,5 +282,10 @@
   "queuedOffline": {
     "title": "You're offline",
     "description": "Queued — Norish will finish this automatically when you're back online."
+  },
+  "storageUnavailable": {
+    "title": "Couldn't start",
+    "description": "Norish could not read its secure storage, so it cannot tell which server it belongs to. Nothing has been changed. Try again, or restart the app.",
+    "detailsLabel": "Technical details"
   }
 }

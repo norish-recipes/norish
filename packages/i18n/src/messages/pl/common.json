@@ -282,5 +282,10 @@
   "queuedOffline": {
     "title": "Jesteś offline",
     "description": "Dodano do kolejki — Norish dokończy to automatycznie, gdy wrócisz online."
+  },
+  "storageUnavailable": {
+    "title": "Nie można uruchomić",
+    "description": "Norish nie mógł odczytać bezpiecznego magazynu, więc nie wie, do którego serwera należy ta aplikacja. Nic nie zostało zmienione. Spróbuj ponownie lub uruchom aplikację jeszcze raz.",
+    "detailsLabel": "Szczegóły techniczne"
   }
 }

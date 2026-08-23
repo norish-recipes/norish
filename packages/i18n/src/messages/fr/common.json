@@ -282,5 +282,10 @@
   "queuedOffline": {
     "title": "Vous êtes hors ligne",
     "description": "Mis en file d'attente — Norish terminera automatiquement dès que vous serez de nouveau en ligne."
+  },
+  "storageUnavailable": {
+    "title": "Démarrage impossible",
+    "description": "Norish n'a pas pu lire son stockage sécurisé et ne sait donc pas à quel serveur cette application est rattachée. Rien n'a été modifié. Réessayez ou redémarrez l'application.",
+    "detailsLabel": "Détails techniques"
   }
 }

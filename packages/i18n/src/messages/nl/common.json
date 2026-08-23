@@ -282,5 +282,10 @@
   "queuedOffline": {
     "title": "Je bent offline",
     "description": "In de wachtrij gezet — Norish maakt dit automatisch af zodra je weer online bent."
+  },
+  "storageUnavailable": {
+    "title": "Kan niet starten",
+    "description": "Norish kon de beveiligde opslag niet lezen en weet daardoor niet bij welke server deze app hoort. Er is niets gewijzigd. Probeer het opnieuw of herstart de app.",
+    "detailsLabel": "Technische details"
   }
 }

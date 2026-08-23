@@ -20,7 +20,7 @@ function readQueue(): OutboxItem[] {
     return JSON.parse(raw) as OutboxItem[];
   } catch (error) {
     log.warn({ error }, "Failed to read outbox queue, resetting");
-    outboxStorage.delete(STORAGE_KEY);
+    outboxStorage.remove(STORAGE_KEY);
 
     return [];
   }
