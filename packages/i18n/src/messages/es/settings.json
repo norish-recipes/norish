@@ -371,6 +371,32 @@
         "button": "Exportar archivo de recetas"
       }
     },
+    "users": {
+      "title": "Usuarios",
+      "description": "Gestiona a todos los que tienen una cuenta en este servidor.",
+      "table": {
+        "user": "Usuario",
+        "role": "Rol",
+        "household": "Hogar",
+        "actions": "Acciones"
+      },
+      "roles": {
+        "owner": "Propietario",
+        "admin": "Admin"
+      },
+      "noHousehold": "Sin hogar",
+      "loading": "Cargando usuarios…",
+      "empty": "Todavía no hay usuarios.",
+      "actions": {
+        "makeAdmin": "Hacer admin",
+        "revokeAdmin": "Quitar acceso de admin",
+        "delete": "Eliminar usuario"
+      },
+      "deleteTitle": "¿Eliminar a {name}?",
+      "deleteConfirm": "Esto elimina permanentemente la cuenta del usuario y lo saca de su hogar. Esta acción no se puede deshacer.",
+      "deleteSuccess": "{name} fue eliminado",
+      "countSummary": "{count, plural, one {# usuario} other {# usuarios}} en total"
+    },
     "registration": {
       "title": "Registro",
       "allowRegistration": "Permitir registro de nuevos usuarios",

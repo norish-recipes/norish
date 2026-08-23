@@ -371,6 +371,32 @@
         "button": "Export Recipe Archive"
       }
     },
+    "users": {
+      "title": "Users",
+      "description": "Manage everyone with an account on this server.",
+      "table": {
+        "user": "User",
+        "role": "Role",
+        "household": "Household",
+        "actions": "Actions"
+      },
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin"
+      },
+      "noHousehold": "No household",
+      "loading": "Loading users…",
+      "empty": "No users yet.",
+      "actions": {
+        "makeAdmin": "Make admin",
+        "revokeAdmin": "Remove admin access",
+        "delete": "Delete user"
+      },
+      "deleteTitle": "Delete {name}?",
+      "deleteConfirm": "This permanently deletes the user's account and removes them from their household. This cannot be undone.",
+      "deleteSuccess": "{name} was deleted",
+      "countSummary": "{count, plural, one {# user} other {# users}} total"
+    },
     "registration": {
       "title": "Registration",
       "allowRegistration": "Allow new user registration",

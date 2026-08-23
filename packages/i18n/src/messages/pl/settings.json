@@ -371,6 +371,32 @@
         "button": "Eksportuj archiwum przepisów"
       }
     },
+    "users": {
+      "title": "Użytkownicy",
+      "description": "Zarządzaj wszystkimi, którzy mają konto na tym serwerze.",
+      "table": {
+        "user": "Użytkownik",
+        "role": "Rola",
+        "household": "Gospodarstwo domowe",
+        "actions": "Akcje"
+      },
+      "roles": {
+        "owner": "Właściciel",
+        "admin": "Admin"
+      },
+      "noHousehold": "Brak gospodarstwa",
+      "loading": "Ładowanie użytkowników…",
+      "empty": "Brak użytkowników.",
+      "actions": {
+        "makeAdmin": "Nadaj uprawnienia admina",
+        "revokeAdmin": "Odbierz uprawnienia admina",
+        "delete": "Usuń użytkownika"
+      },
+      "deleteTitle": "Usunąć {name}?",
+      "deleteConfirm": "To trwale usunie konto użytkownika i usunie go z gospodarstwa domowego. Tej operacji nie można cofnąć.",
+      "deleteSuccess": "{name} został(a) usunięty(a)",
+      "countSummary": "{count, plural, one {# użytkownik} few {# użytkowników} many {# użytkowników} other {# użytkownika}} łącznie"
+    },
     "registration": {
       "title": "Rejestracja",
       "allowRegistration": "Zezwalaj na rejestrację nowych użytkowników",

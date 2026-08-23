@@ -371,6 +371,32 @@
         "button": "Rezeptarchiv exportieren"
       }
     },
+    "users": {
+      "title": "Benutzer",
+      "description": "Verwalte alle, die ein Konto auf diesem Server haben.",
+      "table": {
+        "user": "Benutzer",
+        "role": "Rolle",
+        "household": "Haushalt",
+        "actions": "Aktionen"
+      },
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin"
+      },
+      "noHousehold": "Kein Haushalt",
+      "loading": "Benutzer werden geladen…",
+      "empty": "Noch keine Benutzer.",
+      "actions": {
+        "makeAdmin": "Zum Admin machen",
+        "revokeAdmin": "Admin-Zugriff entziehen",
+        "delete": "Benutzer löschen"
+      },
+      "deleteTitle": "{name} löschen?",
+      "deleteConfirm": "Das löscht das Konto dieses Benutzers dauerhaft und entfernt ihn aus seinem Haushalt. Das kann nicht rückgängig gemacht werden.",
+      "deleteSuccess": "{name} wurde gelöscht",
+      "countSummary": "{count, plural, one {# Benutzer} other {# Benutzer}} insgesamt"
+    },
     "registration": {
       "title": "Registrierung",
       "allowRegistration": "Neue Benutzerregistrierung zulassen",

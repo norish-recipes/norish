@@ -371,6 +371,32 @@
         "button": "Exporter l'archive de recettes"
       }
     },
+    "users": {
+      "title": "Utilisateurs",
+      "description": "Gérez toutes les personnes ayant un compte sur ce serveur.",
+      "table": {
+        "user": "Utilisateur",
+        "role": "Rôle",
+        "household": "Foyer",
+        "actions": "Actions"
+      },
+      "roles": {
+        "owner": "Propriétaire",
+        "admin": "Admin"
+      },
+      "noHousehold": "Aucun foyer",
+      "loading": "Chargement des utilisateurs…",
+      "empty": "Aucun utilisateur pour le moment.",
+      "actions": {
+        "makeAdmin": "Nommer admin",
+        "revokeAdmin": "Retirer les droits admin",
+        "delete": "Supprimer l'utilisateur"
+      },
+      "deleteTitle": "Supprimer {name} ?",
+      "deleteConfirm": "Cette action supprime définitivement le compte de l'utilisateur et le retire de son foyer. Cette action est irréversible.",
+      "deleteSuccess": "{name} a été supprimé",
+      "countSummary": "{count, plural, one {# utilisateur} other {# utilisateurs}} au total"
+    },
     "registration": {
       "title": "Inscriptions",
       "allowRegistration": "Autoriser l'inscription de nouveaux utilisateurs",

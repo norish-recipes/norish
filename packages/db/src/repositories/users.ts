@@ -1,12 +1,14 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
-import type { User } from "@norish/shared/contracts/dto/user";
+import type { AdminUserRowDTO, User } from "@norish/shared/contracts";
 import { decrypt, encrypt, hmacIndex } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
 import { authLogger } from "@norish/db/logger";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { accounts, users } from "../schema/auth";
+import { householdUsers } from "../schema/household-users";
+import { households } from "../schema/households";
 import { ServerConfigKeys } from "../zodSchemas/server-config";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { setConfig } from "./server-config";
@@ -395,6 +397,57 @@ export async function getUserAuthorInfo(
     image: user.image ? decrypt(user.image) : null,
     version: user.version,
   };
+}
+
+/**
+ * List every user on the server for the admin user management page.
+ * Each user is in at most one household, so the left join can't fan out.
+ */
+export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
+  const rows = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      image: users.image,
+      isServerOwner: users.isServerOwner,
+      isServerAdmin: users.isServerAdmin,
+      createdAt: users.createdAt,
+      householdId: households.id,
+      householdName: households.name,
+    })
+    .from(users)
+    .leftJoin(householdUsers, eq(householdUsers.userId, users.id))
+    .leftJoin(households, eq(households.id, householdUsers.householdId))
+    .orderBy(desc(users.isServerOwner), desc(users.isServerAdmin), users.createdAt);
+
+  return rows.map((row) => ({
+    id: row.id,
+    email: decrypt(row.email),
+    name: row.name ? decrypt(row.name) : "",
+    image: row.image ? decrypt(row.image) : null,
+    isServerOwner: row.isServerOwner,
+    isServerAdmin: row.isServerAdmin,
+    createdAt: row.createdAt.getTime(),
+    household:
+      row.householdId && row.householdName
+        ? { id: row.householdId, name: row.householdName }
+        : null,
+  }));
+}
+
+export async function getUserRoleFlags(
+  userId: string
+): Promise<{ isServerOwner: boolean; isServerAdmin: boolean } | null> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: {
+      isServerOwner: true,
+      isServerAdmin: true,
+    },
+  });
+
+  return user ?? null;
 }
 
 export async function isUserServerAdmin(userId: string): Promise<boolean> {
