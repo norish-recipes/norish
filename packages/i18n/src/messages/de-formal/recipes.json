@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "Alle Rezepte",
+    "libraryTitle": "Ihre Bibliothek",
+    "recipesTitle": "Ihre Rezepte",
+    "cookbooksTitle": "Ihre Kochbücher",
     "searchPlaceholder": "Rezept suchen oder hinzufügen...",
     "searchRecipesPlaceholder": "Rezepte durchsuchen...",
     "recipeCount": "{count, plural, one {# Rezept} other {# Rezepte}}",
@@ -19,13 +21,21 @@
       "label": "Rezeptansicht",
       "grid": "Raster",
       "list": "Liste"
+    },
+    "libraryType": {
+      "label": "Anzeigen",
+      "all": "Alle",
+      "recipes": "Rezepte",
+      "cookbooks": "Kochbücher"
     }
   },
   "empty": {
     "title": "Ihre Rezeptsammlung wartet",
     "description": "Fügen Sie eine Rezept-URL in das Suchfeld oben ein und schauen Sie, wie die Magie passiert.",
     "noResults": "Keine Rezepte gefunden",
-    "noResultsHint": "Versuchen Sie, Ihre Filter anzupassen oder zu löschen."
+    "noResultsHint": "Versuchen Sie, Ihre Filter anzupassen oder zu löschen.",
+    "noCookbooks": "Noch keine Kochbücher",
+    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstellen Sie Ihr erstes, um Ihre Bibliothek zu ordnen."
   },
   "card": {
     "noImage": "Kein Bild verfügbar",

@@ -1,6 +1,9 @@
 import {
+  DEFAULT_LIBRARY_TYPE_FILTER,
   DEFAULT_SEARCH_FIELDS,
   FilterMode,
+  LIBRARY_TYPE_FILTERS,
+  LibraryTypeFilter,
   RecipeCategory,
   SEARCH_FIELDS,
   SearchField,
@@ -17,6 +20,13 @@ export type CanonicalRecipeFilters = {
   minRating: number | null;
   maxCookingTime: number | null;
   categories: RecipeCategory[];
+  /**
+   * Which kind of thing the Library shows. Persisted like every other field,
+   * but not part of "has applied filters" and untouched by Clear filters: the
+   * heading already announces it, and clearing a search must not throw a
+   * reader back into a view they did not ask for (ADR-0026).
+   */
+  libraryType: LibraryTypeFilter;
 };
 
 export type PersistedRecipeFilters = Omit<CanonicalRecipeFilters, "rawInput">;
@@ -41,6 +51,7 @@ export const DEFAULT_PERSISTED_RECIPE_FILTERS: PersistedRecipeFilters = {
   minRating: null,
   maxCookingTime: null,
   categories: [],
+  libraryType: DEFAULT_LIBRARY_TYPE_FILTER,
 };
 
 export const DEFAULT_RECIPE_FILTERS: CanonicalRecipeFilters = {
@@ -90,6 +101,13 @@ export function normalizePersistedRecipeFilters(data: unknown): PersistedRecipeF
       )
     : null;
 
+  // An absent or unrecognised value is All rather than a rejection: the mobile
+  // app shares this contract and will not render the chip, so its persisted
+  // filters must round-trip through here without corruption.
+  const libraryType = LIBRARY_TYPE_FILTERS.includes(d.libraryType as LibraryTypeFilter)
+    ? (d.libraryType as LibraryTypeFilter)
+    : null;
+
   if (sortMode === null && filterMode === null && searchFields === null) return null;
 
   return {
@@ -101,6 +119,7 @@ export function normalizePersistedRecipeFilters(data: unknown): PersistedRecipeF
     minRating: minRating ?? DEFAULT_PERSISTED_RECIPE_FILTERS.minRating,
     maxCookingTime: maxCookingTime ?? DEFAULT_PERSISTED_RECIPE_FILTERS.maxCookingTime,
     categories: categories ?? DEFAULT_PERSISTED_RECIPE_FILTERS.categories,
+    libraryType: libraryType ?? DEFAULT_PERSISTED_RECIPE_FILTERS.libraryType,
   };
 }
 
@@ -145,6 +164,7 @@ export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
     sortMode: filters.sortMode,
     minRating: filters.minRating ?? undefined,
     maxCookingTime: filters.maxCookingTime ?? undefined,
+    type: filters.libraryType,
   };
 }
 

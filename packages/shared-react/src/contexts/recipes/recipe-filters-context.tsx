@@ -85,7 +85,12 @@ export function createRecipeFiltersContext({
     }, []);
 
     const clearFilters = useCallback(() => {
-      setFilterState(DEFAULT_RECIPE_FILTERS);
+      // The Library type is a lens, not a filter: clearing a search must not
+      // move a reader who browses by cookbook back to All (ADR-0026).
+      setFilterState((previous) => ({
+        ...DEFAULT_RECIPE_FILTERS,
+        libraryType: previous.libraryType,
+      }));
       void storageAdapter?.removeItem(storageKey);
     }, [storageAdapter, storageKey]);
 

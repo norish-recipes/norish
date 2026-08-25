@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "Alle oppskrifter",
+    "libraryTitle": "Biblioteket ditt",
+    "recipesTitle": "Oppskriftene dine",
+    "cookbooksTitle": "Kokebøkene dine",
     "searchPlaceholder": "Søk eller legg til oppskrift...",
     "searchRecipesPlaceholder": "Søk oppskrifter...",
     "recipeCount": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
@@ -19,13 +21,21 @@
       "label": "Oppskriftsvisning",
       "grid": "Rutenett",
       "list": "Liste"
+    },
+    "libraryType": {
+      "label": "Vis",
+      "all": "Alt",
+      "recipes": "Oppskrifter",
+      "cookbooks": "Kokebøker"
     }
   },
   "empty": {
     "title": "Oppskriftsamlingen din venter",
     "description": "Lim inn en oppskrift-URL i søkefeltet ovenfor, og la magien skje.",
     "noResults": "Ingen oppskrifter funnet",
-    "noResultsHint": "Prøv å justere eller tømme filtrene."
+    "noResultsHint": "Prøv å justere eller tømme filtrene.",
+    "noCookbooks": "Ingen kokebøker ennå",
+    "noCookbooksHint": "En kokebok er et navngitt sett med oppskrifter. Lag din første for å få orden i biblioteket."
   },
   "card": {
     "noImage": "Ingen bilde tilgjengelig",

@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "Tutte le ricette",
+    "libraryTitle": "La tua libreria",
+    "recipesTitle": "Le tue ricette",
+    "cookbooksTitle": "I tuoi libri di cucina",
     "searchPlaceholder": "Cerca o aggiungi ricetta...",
     "searchRecipesPlaceholder": "Cerca ricette...",
     "recipeCount": "{count, plural, one {# ricetta} other {# ricette}}",
@@ -19,13 +21,21 @@
       "label": "Vista ricette",
       "grid": "Griglia",
       "list": "Lista"
+    },
+    "libraryType": {
+      "label": "Mostra",
+      "all": "Tutto",
+      "recipes": "Ricette",
+      "cookbooks": "Libri di cucina"
     }
   },
   "empty": {
     "title": "La tua collezione di ricette ti aspetta",
     "description": "Incolla l'URL di una ricetta nel campo di ricerca sopra e guarda la magia.",
     "noResults": "Nessuna ricetta trovata",
-    "noResultsHint": "Prova a modificare o cancellare i filtri."
+    "noResultsHint": "Prova a modificare o cancellare i filtri.",
+    "noCookbooks": "Nessun libro di cucina",
+    "noCookbooksHint": "Un libro di cucina è un insieme di ricette con un titolo. Creane uno per dare ordine alla tua libreria."
   },
   "card": {
     "noImage": "Nessuna immagine disponibile",

@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "Alle opskrifter",
+    "libraryTitle": "Dit bibliotek",
+    "recipesTitle": "Dine opskrifter",
+    "cookbooksTitle": "Dine kogebøger",
     "searchPlaceholder": "Søg eller tilføj opskrift...",
     "searchRecipesPlaceholder": "Søg opskrifter...",
     "recipeCount": "{count, plural, one {# opskrift} other {# opskrifter}}",
@@ -19,13 +21,21 @@
       "label": "Opskriftsvisning",
       "grid": "Gitter",
       "list": "Liste"
+    },
+    "libraryType": {
+      "label": "Vis",
+      "all": "Alt",
+      "recipes": "Opskrifter",
+      "cookbooks": "Kogebøger"
     }
   },
   "empty": {
     "title": "Din opskriftsamling venter",
     "description": "Indsæt en opskrift-URL i søgefeltet ovenfor, og lad magien ske.",
     "noResults": "Ingen opskrifter fundet",
-    "noResultsHint": "Prøv at justere eller rydde dine filtre."
+    "noResultsHint": "Prøv at justere eller rydde dine filtre.",
+    "noCookbooks": "Ingen kogebøger endnu",
+    "noCookbooksHint": "En kogebog er et navngivet sæt opskrifter. Opret din første for at organisere dit bibliotek."
   },
   "card": {
     "noImage": "Intet billede tilgængeligt",

@@ -25,7 +25,7 @@ export default function RecipesLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: intl.formatMessage({ id: "recipes.dashboard.title" }),
+          title: intl.formatMessage({ id: "recipes.dashboard.recipesTitle" }),
           headerLeft: showOfflineIndicator ? () => <OfflineBanner /> : undefined,
           headerRight: () => <SettingsMenu />,
         }}

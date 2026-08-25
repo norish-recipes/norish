@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "Todas as receitas",
+    "libraryTitle": "Sua biblioteca",
+    "recipesTitle": "Suas receitas",
+    "cookbooksTitle": "Seus livros de receitas",
     "searchPlaceholder": "Buscar ou adicionar receita...",
     "searchRecipesPlaceholder": "Buscar receitas...",
     "recipeCount": "{count, plural, one {# receita} other {# receitas}}",
@@ -19,13 +21,21 @@
       "label": "Visualização de receitas",
       "grid": "Grade",
       "list": "Lista"
+    },
+    "libraryType": {
+      "label": "Mostrar",
+      "all": "Tudo",
+      "recipes": "Receitas",
+      "cookbooks": "Livros de receitas"
     }
   },
   "empty": {
     "title": "Sua coleção de receitas espera por você",
     "description": "Cole uma URL de receita no campo de busca acima e veja a mágica acontecer.",
     "noResults": "Nenhuma receita encontrada",
-    "noResultsHint": "Tente ajustar ou limpar seus filtros."
+    "noResultsHint": "Tente ajustar ou limpar seus filtros.",
+    "noCookbooks": "Nenhum livro de receitas ainda",
+    "noCookbooksHint": "Um livro de receitas é um conjunto de receitas com título. Crie o primeiro para organizar sua biblioteca."
   },
   "card": {
     "noImage": "Nenhuma imagem disponível",

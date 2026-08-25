@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "All recipes",
+    "libraryTitle": "Your library",
+    "recipesTitle": "Your recipes",
+    "cookbooksTitle": "Your cookbooks",
     "searchPlaceholder": "Search or add recipe...",
     "searchRecipesPlaceholder": "Search recipes...",
     "recipeCount": "{count, plural, one {# recipe} other {# recipes}}",
@@ -19,13 +21,21 @@
       "label": "Recipe view",
       "grid": "Grid",
       "list": "List"
+    },
+    "libraryType": {
+      "label": "Show",
+      "all": "All",
+      "recipes": "Recipes",
+      "cookbooks": "Cookbooks"
     }
   },
   "empty": {
     "title": "Your recipe collection awaits",
     "description": "Paste a recipe URL in the search field above and watch the magic happen.",
     "noResults": "No recipes found",
-    "noResultsHint": "Try adjusting or clearing your filters."
+    "noResultsHint": "Try adjusting or clearing your filters.",
+    "noCookbooks": "No cookbooks yet",
+    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order."
   },
   "card": {
     "noImage": "No image available",

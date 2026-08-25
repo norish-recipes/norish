@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "Alle recepten",
+    "libraryTitle": "Jouw bibliotheek",
+    "recipesTitle": "Jouw recepten",
+    "cookbooksTitle": "Jouw kookboeken",
     "searchPlaceholder": "Zoek of voeg een recept toe...",
     "searchRecipesPlaceholder": "Zoek recepten...",
     "recipeCount": "{count, plural, one {# recept} other {# recepten}}",
@@ -19,13 +21,21 @@
       "label": "Receptweergave",
       "grid": "Raster",
       "list": "Lijst"
+    },
+    "libraryType": {
+      "label": "Weergeven",
+      "all": "Alles",
+      "recipes": "Recepten",
+      "cookbooks": "Kookboeken"
     }
   },
   "empty": {
     "title": "Begin je collectie met recepten",
     "description": "Plak een link in het zoekveld en zie de magie gebeuren.",
     "noResults": "Geen recepten gevonden",
-    "noResultsHint": "Probeer je filters aan te passen of te wissen."
+    "noResultsHint": "Probeer je filters aan te passen of te wissen.",
+    "noCookbooks": "Nog geen kookboeken",
+    "noCookbooksHint": "Een kookboek is een set recepten met een titel. Maak je eerste om je bibliotheek te ordenen."
   },
   "card": {
     "noImage": "Geen afbeelding beschikbaar",

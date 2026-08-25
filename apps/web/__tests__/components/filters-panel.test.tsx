@@ -14,6 +14,7 @@ const filtersState = {
   showFavoritesOnly: false,
   minRating: null as number | null,
   maxCookingTime: null as number | null,
+  searchFields: ["title", "ingredients"] as string[],
 };
 
 const userPreferencesState = {

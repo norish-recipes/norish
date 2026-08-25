@@ -1,6 +1,8 @@
 {
   "dashboard": {
-    "title": "Toutes les recettes",
+    "libraryTitle": "Votre bibliothèque",
+    "recipesTitle": "Vos recettes",
+    "cookbooksTitle": "Vos livres de cuisine",
     "searchPlaceholder": "Rechercher ou ajouter une recette...",
     "searchRecipesPlaceholder": "Rechercher des recettes...",
     "recipeCount": "{count, plural, one {# recette} other {# recettes}}",
@@ -19,13 +21,21 @@
       "label": "Vue des recettes",
       "grid": "Grille",
       "list": "Liste"
+    },
+    "libraryType": {
+      "label": "Afficher",
+      "all": "Tout",
+      "recipes": "Recettes",
+      "cookbooks": "Livres de cuisine"
     }
   },
   "empty": {
     "title": "Votre collection de recettes vous attend",
     "description": "Collez une URL de recette dans le champ de recherche ci-dessus et laissez opérer la magie.",
     "noResults": "Aucune recette trouvée",
-    "noResultsHint": "Essayez d’ajuster ou de réinitialiser vos filtres."
+    "noResultsHint": "Essayez d’ajuster ou de réinitialiser vos filtres.",
+    "noCookbooks": "Aucun livre de cuisine pour l’instant",
+    "noCookbooksHint": "Un livre de cuisine est un ensemble de recettes intitulé. Créez le premier pour organiser votre bibliothèque."
   },
   "card": {
     "noImage": "Aucune image disponible",
