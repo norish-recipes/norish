@@ -49,6 +49,7 @@
   "filters": {
     "title": "Filters",
     "search": "Zoeken",
+    "searchIn": "Zoeken in",
     "sort": "Sorteren",
     "mode": "Modus",
     "modeAll": "Alles",

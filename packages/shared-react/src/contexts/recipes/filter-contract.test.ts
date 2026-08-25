@@ -4,6 +4,7 @@ import {
   DEFAULT_RECIPE_FILTERS,
   normalizePersistedRecipeFilters,
   serializeRecipeFilters,
+  toggleSearchFieldIn,
   toRecipesQueryFilters,
 } from "./filter-contract";
 
@@ -47,5 +48,12 @@ describe("recipe filter contract", () => {
     });
 
     expect(normalizePersistedRecipeFilters({ sortMode: "invalid" })).toBeNull();
+  });
+
+  it("never leaves a reader searching no fields at all", () => {
+    expect(toggleSearchFieldIn(["title"], "steps")).toEqual(["title", "steps"]);
+    expect(toggleSearchFieldIn(["title", "steps"], "steps")).toEqual(["title"]);
+    // Unticking the last field restores the default pair rather than an empty set.
+    expect(toggleSearchFieldIn(["title"], "title")).toEqual(DEFAULT_RECIPE_FILTERS.searchFields);
   });
 });

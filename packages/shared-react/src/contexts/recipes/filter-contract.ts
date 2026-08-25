@@ -104,6 +104,28 @@ export function normalizePersistedRecipeFilters(data: unknown): PersistedRecipeF
   };
 }
 
+/**
+ * Toggle one search field, keeping the rule that a reader can never end up
+ * searching nothing: unticking the last remaining field restores the default
+ * pair rather than leaving an empty set. The rule lives here because two
+ * callers now apply it — the filters context, which writes straight through,
+ * and the Filters panel, which holds a working copy until Apply.
+ */
+export function toggleSearchFieldIn(
+  fields: readonly SearchField[],
+  field: SearchField
+): SearchField[] {
+  if (!fields.includes(field)) {
+    return [...fields, field];
+  }
+
+  if (fields.length <= 1) {
+    return [...DEFAULT_SEARCH_FIELDS];
+  }
+
+  return fields.filter((item) => item !== field);
+}
+
 export function hasAppliedRecipeFilters(filters: CanonicalRecipeFilters): boolean {
   return (
     filters.rawInput.trim().length > 0 ||

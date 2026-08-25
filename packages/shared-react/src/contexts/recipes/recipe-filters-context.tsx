@@ -1,10 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import { DEFAULT_SEARCH_FIELDS, SearchField } from "@norish/shared/contracts";
+import { SearchField } from "@norish/shared/contracts";
 
 import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
 import type { CanonicalRecipeFilters } from "./filter-contract";
-import { DEFAULT_RECIPE_FILTERS, normalizePersistedRecipeFilters } from "./filter-contract";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  normalizePersistedRecipeFilters,
+  toggleSearchFieldIn,
+} from "./filter-contract";
 
 type RecipeFiltersContextValue = {
   filters: CanonicalRecipeFilters;
@@ -86,25 +90,10 @@ export function createRecipeFiltersContext({
     }, [storageAdapter, storageKey]);
 
     const toggleSearchField = useCallback((field: SearchField) => {
-      setFilterState((previous) => {
-        const isEnabled = previous.searchFields.includes(field);
-
-        if (isEnabled) {
-          if (previous.searchFields.length <= 1) {
-            return { ...previous, searchFields: [...DEFAULT_SEARCH_FIELDS] };
-          }
-
-          return {
-            ...previous,
-            searchFields: previous.searchFields.filter((item) => item !== field),
-          };
-        }
-
-        return {
-          ...previous,
-          searchFields: [...previous.searchFields, field],
-        };
-      });
+      setFilterState((previous) => ({
+        ...previous,
+        searchFields: toggleSearchFieldIn(previous.searchFields, field),
+      }));
     }, []);
 
     const value = useMemo<RecipeFiltersContextValue>(

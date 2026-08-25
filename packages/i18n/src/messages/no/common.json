@@ -49,6 +49,7 @@
   "filters": {
     "title": "Filtre",
     "search": "Søk",
+    "searchIn": "Søk i",
     "sort": "Sorter",
     "mode": "Modus",
     "modeAll": "Alle",

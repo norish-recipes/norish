@@ -49,6 +49,7 @@
   "filters": {
     "title": "Фильтры",
     "search": "Поиск",
+    "searchIn": "Искать в",
     "sort": "Сортировка",
     "mode": "Режим",
     "modeAll": "Все",

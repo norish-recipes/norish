@@ -19,7 +19,8 @@ import { Button, Chip, Input } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
+import type { FilterMode, RecipeCategory, SearchField, SortOrder } from "@norish/shared/contracts";
+import { DEFAULT_RECIPE_FILTERS } from "@norish/shared-react/contexts";
 import StarRating from "@norish/ui/star-rating";
 
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -44,6 +45,7 @@ const COOKING_TIME_OPTIONS: Array<{
     labelKey: "cookingTimeUnder120",
   },
 ];
+
 function normalizeSortMode(sortMode: SortOrder | null | undefined): SortOrder {
   if (
     sortMode === "titleAsc" ||
@@ -54,6 +56,7 @@ function normalizeSortMode(sortMode: SortOrder | null | undefined): SortOrder {
   ) {
     return sortMode;
   }
+
   return "none";
 }
 
@@ -120,7 +123,11 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const [localMaxCookingTime, setLocalMaxCookingTime] = useState<number | null>(
     filters.maxCookingTime ?? null
   );
+  const [localSearchFields, setLocalSearchFields] = useState<SearchField[]>([
+    ...filters.searchFields,
+  ]);
   const { tags: allTags, isLoading } = useTagsQuery();
+
   useEffect(() => {
     setWorkingTags(filters.searchTags);
     setWorkingCategories(filters.categories);
@@ -130,6 +137,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
     setLocalFavoritesOnly(filters.showFavoritesOnly);
     setLocalMinRating(filters.minRating);
     setLocalMaxCookingTime(filters.maxCookingTime ?? null);
+    setLocalSearchFields([...filters.searchFields]);
   }, [filters]);
   const toggleTag = useCallback((tag: string) => {
     setWorkingTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
@@ -145,12 +153,15 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const decideSortOrder = (type: "title" | "date") => {
     const asc = `${type}Asc` as SortOrder;
     const desc = `${type}Desc` as SortOrder;
+
     if (localSortMode === asc) {
       setLocalSortMode(desc);
+
       return;
     }
     if (localSortMode === desc) {
       setLocalSortMode("none");
+
       return;
     }
     setLocalSortMode(asc);
@@ -166,6 +177,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
     setLocalFavoritesOnly(false);
     setLocalMinRating(null);
     setLocalMaxCookingTime(null);
+    setLocalSearchFields([...DEFAULT_RECIPE_FILTERS.searchFields]);
     close();
   }, [clearFilters, close]);
   const apply = useCallback(() => {
@@ -178,6 +190,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
       showFavoritesOnly: showFavorites ? localFavoritesOnly : false,
       minRating: showRatings ? localMinRating : null,
       maxCookingTime: localMaxCookingTime,
+      searchFields: localSearchFields,
     });
     close();
   }, [
@@ -190,10 +203,12 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
     localFavoritesOnly,
     localMinRating,
     localMaxCookingTime,
+    localSearchFields,
     showFavorites,
     showRatings,
     close,
   ]);
+
   return (
     <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
       {open ? (
@@ -208,7 +223,20 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
               value={localInput}
               onChange={setLocalInput}
             />
-            <SearchFieldToggles className="mt-2" itemClassName="h-9 px-3 text-xs" />
+          </section>
+
+          {/* Search in — which fields a search looks at. It sits beside the
+              other filters rather than under the page's search bar, and lands
+              with this panel's Apply like everything else here. */}
+          <section>
+            <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
+              {t("searchIn")}
+            </h3>
+            <SearchFieldToggles
+              itemClassName="h-9 px-3 text-xs"
+              value={localSearchFields}
+              onChange={setLocalSearchFields}
+            />
           </section>
 
           {/* Sort */}
@@ -229,6 +257,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
               ].map(({ key, label }) => {
                 const isActive = localSortMode.startsWith(key) && localSortMode !== "none";
                 const isAsc = localSortMode === `${key}Asc`;
+
                 return (
                   <Button
                     key={key}
@@ -277,6 +306,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                 },
               ].map(({ label, value }) => {
                 const active = localFilterMode === value;
+
                 return (
                   <Button
                     key={value}
@@ -333,6 +363,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
             <div className="flex flex-wrap gap-2">
               {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => {
                 const active = localMaxCookingTime === value;
+
                 return (
                   <Button
                     key={value}
@@ -356,6 +387,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
             <div className="flex flex-wrap gap-1">
               {ALL_CATEGORIES.map((category) => {
                 const active = workingCategories.includes(category);
+
                 return (
                   <Chip
                     key={category}
@@ -394,6 +426,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                   .filter((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase()))
                   .map((tag) => {
                     const active = workingTags.includes(tag);
+
                     return (
                       <Chip
                         key={tag}

@@ -49,6 +49,7 @@
   "filters": {
     "title": "필터",
     "search": "검색",
+    "searchIn": "검색 범위",
     "sort": "정렬",
     "mode": "모드",
     "modeAll": "모두",
