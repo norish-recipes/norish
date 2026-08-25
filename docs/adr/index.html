@@ -753,6 +753,34 @@
             confirmation on the manual action.
           </p>
         </li>
+        <li>
+          <a href="cookbooks/0026-the-library-is-one-interleaved-list.md"
+            >ADR-0026 &mdash; The library is one interleaved list, not two</a
+          >
+          <p>
+            <b>Proposed.</b> Recipes and cookbooks share one union, one sort and one pagination,
+            rendered from a discriminated card type, so the All / Recipes / Cookbooks chips are a
+            plain filter rather than a layout switch. Search is the exception: cookbooks match on
+            title alone and are pinned above the <code>ts_rank</code>-ordered recipes, because the
+            two scores come from documents of different shape and length. Rejects two banded
+            queries, pinning cookbooks first in the sort, one comparable rank, and matching a
+            cookbook by its members.
+          </p>
+        </li>
+        <li>
+          <a href="cookbooks/0027-cookbooks-reuse-the-recipe-permission-policy.md"
+            >ADR-0027 &mdash; Cookbooks reuse the recipe permission policy</a
+          >
+          <p>
+            <b>Proposed.</b> A Cookbook carries a <code>userId</code> and is seen, edited and
+            deleted under the existing <code>RECIPE_PERMISSION_POLICY</code> &mdash; no new
+            setting and no second rule. Filing a recipe needs view on the recipe and edit on the
+            cookbook, and never writes the recipe row, so membership is the cookbook's business
+            rather than the recipe's. Rejects household-owned cookbooks, always-personal
+            cookbooks, deriving visibility from the edit level, and requiring edit rights on the
+            recipe.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

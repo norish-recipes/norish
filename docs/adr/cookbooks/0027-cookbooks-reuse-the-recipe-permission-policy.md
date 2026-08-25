@@ -1,0 +1,20 @@
+# Cookbooks reuse the recipe permission policy
+
+Norish is household-first, and the obvious shape for a shared cookbook is a household-owned entity. **A Cookbook instead carries a `userId` like a recipe and is seen, edited and deleted under the instance's existing `RECIPE_PERMISSION_POLICY`.** No new administrator setting, no second permission rule to hold in mind, and no case where a cookbook is visible under rules its recipes are not. On a default instance — `view: everyone`, `edit: household`, `delete: household` — that means cookbooks are as browsable across households as the recipes already are. A self-hoster who wants them private has the switch already; it simply also applies to recipes, which is the point of there being one switch.
+
+Membership is the other half, and it is the half that looks wrong. **Filing a recipe into a cookbook requires view on the recipe and edit on the cookbook, and never writes the recipe row** — its version is not bumped, its owner is not notified, nothing about it changes. So under the default policy a person can collect a recipe they could not edit, which reads as a permission bug until you know it was chosen. Membership is a fact about the cookbook rather than about the recipe, and the alternative is worse than untidy: requiring edit rights on both would leave a reader on a default instance browsing hundreds of recipes and able to file almost none of them.
+
+## Considered Options
+
+- **Household-owned cookbooks**, keyed to a `householdId` and editable by every member regardless of the instance policy. Truest to the product's framing and rejected for the second rule it introduces: it forces an answer for a creator who leaves their household and for a user who has none at all (`householdUserIds` is nullable), neither of which the recipe policy has to answer.
+- **Always-personal cookbooks**, visible only to their creator whatever the policy says. Makes "Your cookbooks" literally true, and makes it impossible for a household to build one together, which is the main thing a household would want a cookbook for.
+- **Deriving cookbook visibility from the policy's `edit` level** rather than its `view` level, which would make cookbooks household-scoped by default while staying administrator-tunable without a new setting. Rejected as a coupling nobody would predict: `edit: everyone` would then mean strangers can both see and rename your cookbook, from a setting named for editing.
+- **Requiring edit rights on the recipe** to file it. Never surprises a recipe owner, at the cost of making the feature nearly inert under the shipped default.
+
+## Consequences
+
+- Because a cookbook is exactly as visible as the recipes its owner could see, a cookbook holding a member its viewer cannot see does not arise under any fixed policy: with `everyone` nothing is filtered, and with `household` or `owner` the audience for the cookbook and the audience for its members are the same set. It becomes possible only after an administrator tightens the policy, after someone changes household, or when a server admin — who bypasses the policy entirely — files a cross-household recipe into their own cookbook. Member queries reuse the same policy condition the recipes list applies, so the count and the list agree by construction and the rare case degrades quietly rather than showing a locked placeholder or a count that does not match what is on screen.
+- Two readers can honestly see different member counts for the same cookbook. That is the Library rule applied one level down, not a bug to reconcile.
+- Deleting a cookbook never touches its recipes. Deleting a recipe removes it from every cookbook it was in, and may leave cookbooks empty, which is an ordinary state.
+- A recipe's owner has no say over which cookbooks it appears in and no view of them. Giving them one would mean notifying on membership, which turns a private act of filing into a social one.
+- Giving cookbooks their own permission level in `RECIPE_PERMISSION_POLICY`, or hard-scoping their visibility to the household regardless of the policy, reopens this.

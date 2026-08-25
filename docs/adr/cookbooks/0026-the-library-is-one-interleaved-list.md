@@ -1,0 +1,21 @@
+# The library is one interleaved list, not two
+
+The dashboard used to show one kind of thing, paginated straight out of `listRecipes` and virtualized a row at a time. Cookbooks make it two, and the cheap way to add them is two queries drawn as two bands — cookbooks above, recipes below — needing no union, no discriminated card type and no reconciliation of anything. **The Library is one list instead: a union over recipes and cookbooks, ordered by the reader's active sort, paginated once, and rendered from a discriminated card type.** The three chips are then exactly what they look like, a filter on what kind of thing you are looking at, rather than a control that also rearranges the page.
+
+Both entities carry the two facts every sort mode needs, a title and a `createdAt`, so `titleAsc`, `titleDesc`, `dateAsc` and `dateDesc` apply to both without inventing anything. Search does not work that way. Recipes are ranked by `ts_rank` over a weighted tsvector assembled from the reader's chosen search fields, while a cookbook has only a title to offer, so the two scores come from documents of quite different shape and length — and `ts_rank` normalizes by length, which would let a two-word cookbook title beat almost any recipe by arithmetic rather than by intent. **Cookbooks whose titles match are therefore pinned above the ranked recipes, and a cookbook matches on its title alone**, so unticking Title in "Search in" removes cookbooks from search entirely. That is the honest reading of a control that says which fields are searched.
+
+## Considered Options
+
+- **Two banded queries**, cookbooks in a band above the recipe grid. Cheapest by a wide margin, no union, no rank reconciliation, and cookbooks can never sink out of sight. Rejected because "All" then stops being a list and becomes a layout, and the three chips stop being a plain filter: two of them show a list and one shows a page with sections.
+- **One list with cookbooks pinned first**, keeping the single query and single pagination while guaranteeing cookbooks stay visible. Rejected because it makes the sort control lie — "Newest first" would not mean newest first — and a sort control that is only approximately true is worse than one that is occasionally inconvenient.
+- **One comparable rank across both**, ordering the union by `ts_rank` regardless of document shape. Rejected as arbitrary in a way nobody can explain or tune: cookbooks would tend to win anyway, by normalization rather than by rule, and the resulting order could not be reasoned about when it looked wrong.
+- **Matching a cookbook by its members**, so searching "aubergine" surfaces the cookbook holding your aubergine recipes. Genuinely useful and deliberately deferred: it needs every cookbook evaluated against the recipe tsvector through its membership, and it puts the same recipe on screen twice, once on its own and once inside a cookbook that matched because of it.
+
+## Consequences
+
+- Recipe-only filters — rating, cooking time, categories, tags, favourites — have no meaning for a cookbook, so an active one drops cookbooks out of the results the same way a recipe missing that data drops out. A reader filtering by rating is looking at recipes whether or not the All chip is lit.
+- Under the default `dateDesc`, old cookbooks sink into the library exactly as old recipes do. The Cookbooks chip is the discoverability mechanism that makes this acceptable, which is why it is permanently visible rather than revealed on search focus: the control that produces "Your cookbooks" stays on screen beside the result of it.
+- The list's `total` now counts two kinds of row, so anything reading it as a recipe count is wrong.
+- The window virtualizer estimates one row height per view mode (356px grid, 144px list). A cookbook card has to match the recipe card's height in both, or the estimate degrades for every mixed page.
+- Cookbooks contribute a title to search and nothing else, so a cookbook can never be found by its members' names. If that becomes the complaint, the deferred option above is the answer and this ADR reopens.
+- If cookbooks ever gain a sort key recipes lack, or recipe-only filters should start keeping cookbooks visible rather than dropping them, the union's common projection stops being enough and this reopens too.
