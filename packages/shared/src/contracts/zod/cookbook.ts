@@ -59,6 +59,10 @@ export const CookbookForRecipeInputSchema = z.object({
  */
 export const CookbookRecipesInputSchema = RecipeListInputSchema.extend({
   cookbookId: z.uuid(),
+  favoritesOnly: z
+    .boolean()
+    .default(false)
+    .describe("Restrict to the caller's favourites, as the Library's own list does."),
 });
 
 export const CookbookRenameInputSchema = z.object({

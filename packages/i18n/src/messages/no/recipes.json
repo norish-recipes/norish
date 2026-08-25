@@ -30,7 +30,7 @@
     }
   },
   "empty": {
-    "title": "Oppskriftsamlingen din venter",
+    "title": "Biblioteket ditt venter",
     "description": "Lim inn en oppskrift-URL i søkefeltet ovenfor, og la magien skje.",
     "noResults": "Ingen oppskrifter funnet",
     "noResultsHint": "Prøv å justere eller tømme filtrene.",

@@ -25,6 +25,7 @@ import {
   removeRecipeFromCookbook,
   renameCookbook,
 } from "@norish/db/repositories/cookbooks";
+import { setFavorite } from "@norish/db/repositories/favorites";
 import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
 import { cookbooks as cookbooksTable, recipeImages as recipeImagesTable } from "@norish/db/schema";
@@ -328,6 +329,34 @@ describe("cookbook repository", () => {
       );
 
       expect(searched.recipes.map((recipe) => recipe.id)).toEqual([inside.id]);
+    });
+
+    it("applies the favourites filter inside a cookbook, as the Library does", async () => {
+      const cookbook = await createCookbook({ userId: ownerId, title: "Weeknights" });
+      const loved = await createTestRecipe(ownerId, { name: "Loved" });
+      const merely = await createTestRecipe(ownerId, { name: "Merely fine" });
+
+      await addRecipeToCookbook(cookbook.id, loved.id);
+      await addRecipeToCookbook(cookbook.id, merely.id);
+      await setFavorite(ownerId, loved.id, true);
+
+      const favourites = await listRecipes(
+        viewer(ownerId),
+        50,
+        0,
+        undefined,
+        ["title"],
+        undefined,
+        "AND",
+        "dateDesc",
+        undefined,
+        undefined,
+        undefined,
+        { cookbookId: cookbook.id, favoritesOnly: true }
+      );
+
+      expect(favourites.recipes.map((recipe) => recipe.id)).toEqual([loved.id]);
+      expect(favourites.total).toBe(1);
     });
 
     it("builds a stable derived cover from the members' primary images", async () => {

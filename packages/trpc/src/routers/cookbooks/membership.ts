@@ -69,19 +69,6 @@ const setMembership = authedProcedure
 
 /** The cookbooks a recipe is in, as its own page lists them. */
 const forRecipe = authedProcedure
-  .meta({
-    openapi: {
-      method: "GET",
-      path: "/recipes/{recipeId}/cookbooks",
-      protect: true,
-      tags: ["Cookbooks"],
-      summary: "List the cookbooks a recipe is in",
-      errorResponses: {
-        401: "Missing or invalid API credentials",
-        404: "Recipe not found",
-      },
-    },
-  })
   .input(CookbookForRecipeInputSchema)
   .output(z.array(CookbookSummarySchema))
   .query(async ({ ctx, input }) => {
@@ -129,7 +116,7 @@ const recipes = authedProcedure
       input.minRating,
       input.maxCookingTime,
       input.categories,
-      { cookbookId: input.cookbookId }
+      { cookbookId: input.cookbookId, favoritesOnly: input.favoritesOnly }
     );
 
     return {

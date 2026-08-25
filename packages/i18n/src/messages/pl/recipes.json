@@ -30,7 +30,7 @@
     }
   },
   "empty": {
-    "title": "Twoja kolekcja przepisów czeka",
+    "title": "Twoja biblioteka czeka",
     "description": "Wklej URL przepisu w pole wyszukiwania powyżej i obserwuj magię.",
     "noResults": "Nie znaleziono przepisów",
     "noResultsHint": "Spróbuj zmienić lub wyczyścić filtry.",

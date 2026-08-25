@@ -19,6 +19,7 @@ export function createUseCookbooksMutations({
   useTRPC,
   shouldPreserveOptimisticUpdate: preserve,
   usePromoteCreatedCookbook,
+  useCurrentUserId,
   useCookbooksCacheHelpers,
 }: Dependencies) {
   return function useCookbooksMutations(): CookbooksMutationsResult {
@@ -30,7 +31,9 @@ export function createUseCookbooksMutations({
       invalidateCookbook,
       invalidateMembership,
       patchRecipeMembership,
+      seedCookbook,
     } = useCookbooksCacheHelpers();
+    const currentUserId = useCurrentUserId?.();
 
     const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
     const renameMutation = useMutation(trpc.cookbooks.rename.mutationOptions());
@@ -44,15 +47,41 @@ export function createUseCookbooksMutations({
         // Minted here, so filing queued behind an Offline create still points
         // at the right cookbook once replayed (ADR-0003).
         const id = createClientId();
+        const now = new Date();
+        // The owner is the caller: minting this as Orphaned would offer rename
+        // and delete to everyone under every policy until the echo arrived
+        // (ADR-0027).
+        const tentative: CookbookSummaryDTO = {
+          id,
+          userId: currentUserId ?? null,
+          title,
+          createdAt: now,
+          updatedAt: now,
+          version: 1,
+          memberCount: recipeId ? 1 : 0,
+          coverImages: [],
+        };
+
+        /**
+         * Seed the cookbook's own read and hold it at the offline cache's
+         * lifetime, so it is in the guaranteed floor from the moment it exists
+         * and its page opens straight away — Offline included (ADR-0008).
+         * Promotion alone cannot do this: there is nothing to promote until
+         * something has written the entry.
+         */
+        const adopt = (cookbook: CookbookSummaryDTO) => {
+          seedCookbook(cookbook);
+          promoteCreatedCookbook?.(cookbook.id);
+        };
 
         return new Promise<string>((resolve, reject) => {
           createMutation.mutate(
             { id, title, recipeId },
             {
-              onSuccess: () => {
+              onSuccess: (cookbook) => {
                 invalidate();
                 if (recipeId) invalidateMembership(recipeId);
-                promoteCreatedCookbook?.(id);
+                adopt(cookbook ?? tentative);
                 resolve(id);
               },
               onError: (error) => {
@@ -67,32 +96,19 @@ export function createUseCookbooksMutations({
                     if (!first) return prev;
                     if (first.cookbooks.some((cookbook) => cookbook.id === id)) return prev;
 
-                    const now = new Date();
-
                     return {
                       ...prev,
                       pages: [
                         {
                           ...first,
                           total: first.total + 1,
-                          cookbooks: [
-                            {
-                              id,
-                              userId: null,
-                              title,
-                              createdAt: now,
-                              updatedAt: now,
-                              version: 1,
-                              memberCount: recipeId ? 1 : 0,
-                              coverImages: [],
-                            },
-                            ...first.cookbooks,
-                          ],
+                          cookbooks: [tentative, ...first.cookbooks],
                         },
                         ...rest,
                       ],
                     };
                   });
+                  adopt(tentative);
                   resolve(id);
 
                   return;
@@ -107,9 +123,11 @@ export function createUseCookbooksMutations({
       },
       [
         createMutation,
+        currentUserId,
         invalidate,
         invalidateMembership,
         setAllCookbooksData,
+        seedCookbook,
         promoteCreatedCookbook,
         preserve,
       ]

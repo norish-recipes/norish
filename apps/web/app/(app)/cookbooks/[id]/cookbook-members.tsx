@@ -12,7 +12,11 @@ import { MinusCircleIcon } from "@heroicons/react/20/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { toRecipesQueryFilters } from "@norish/shared-react/contexts";
+import {
+  hasAppliedRecipeFilters,
+  serializeRecipeFilters,
+  toRecipesQueryFilters,
+} from "@norish/shared-react/contexts";
 
 /**
  * A cookbook's members, through the same grid the Library uses.
@@ -82,13 +86,9 @@ export default function CookbookMembers({
     [allergies, isFavorite, deleteRecipe, toggleFavorite, variant, setMembership, cookbookId, t]
   );
 
-  const hasNarrowingFilters =
-    filters.rawInput.trim().length > 0 ||
-    filters.searchTags.length > 0 ||
-    filters.categories.length > 0 ||
-    filters.minRating !== null ||
-    filters.maxCookingTime !== null ||
-    filters.showFavoritesOnly;
+  // The contract's own predicate, so "no matches" here means what it means on
+  // the Library rather than a second opinion that drifts from it.
+  const hasNarrowingFilters = hasAppliedRecipeFilters(filters);
 
   const emptyState = (
     <div className="flex flex-col items-center justify-center px-4 py-16">
@@ -112,7 +112,7 @@ export default function CookbookMembers({
       loadMore={loadMore}
       renderItem={renderItem}
       // Scroll position is remembered per cookbook and per set of filters.
-      scrollKey={`cookbook:${cookbookId}:${JSON.stringify(queryFilters)}`}
+      scrollKey={`cookbook:${cookbookId}:${serializeRecipeFilters(filters)}`}
       variant={variant}
     />
   );

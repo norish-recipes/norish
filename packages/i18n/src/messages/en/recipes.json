@@ -30,7 +30,7 @@
     }
   },
   "empty": {
-    "title": "Your recipe collection awaits",
+    "title": "Your library awaits",
     "description": "Paste a recipe URL in the search field above and watch the magic happen.",
     "noResults": "No recipes found",
     "noResultsHint": "Try adjusting or clearing your filters.",

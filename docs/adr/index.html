@@ -758,7 +758,7 @@
             >ADR-0026 &mdash; The library is one interleaved list, not two</a
           >
           <p>
-            <b>Proposed.</b> Recipes and cookbooks share one union, one sort and one pagination,
+            <b>Accepted.</b> Recipes and cookbooks share one union, one sort and one pagination,
             rendered from a discriminated card type, so the All / Recipes / Cookbooks chips are a
             plain filter rather than a layout switch. Search is the exception: cookbooks match on
             title alone and are pinned above the <code>ts_rank</code>-ordered recipes, because the
@@ -772,7 +772,7 @@
             >ADR-0027 &mdash; Cookbooks reuse the recipe permission policy</a
           >
           <p>
-            <b>Proposed.</b> A Cookbook carries a <code>userId</code> and is seen, edited and
+            <b>Accepted.</b> A Cookbook carries a <code>userId</code> and is seen, edited and
             deleted under the existing <code>RECIPE_PERMISSION_POLICY</code> &mdash; no new
             setting and no second rule. Filing a recipe needs view on the recipe and edit on the
             cookbook, and never writes the recipe row, so membership is the cookbook's business

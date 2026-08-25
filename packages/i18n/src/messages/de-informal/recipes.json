@@ -30,7 +30,7 @@
     }
   },
   "empty": {
-    "title": "Deine Rezeptsammlung wartet",
+    "title": "Deine Bibliothek wartet",
     "description": "Füge eine Rezept-URL in das Suchfeld oben ein und schau, wie die Magie passiert.",
     "noResults": "Keine Rezepte gefunden",
     "noResultsHint": "Versuche, deine Filter anzupassen oder zu löschen.",

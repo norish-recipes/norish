@@ -55,6 +55,14 @@ function makeTrpc() {
       },
     },
     cookbooks: {
+      list: {
+        infiniteQueryOptions: (input: unknown, options: object) => ({
+          queryKey: [["cookbooks", "list"], { input, type: "infinite" }],
+          queryFn: async () => ({ cookbooks: [{ id: "c1" }], total: 1, nextCursor: null }),
+          initialPageParam: 0,
+          ...options,
+        }),
+      },
       get: {
         queryOptions: ({ id }: { id: string }) => ({
           queryKey: [["cookbooks", "get"], { input: { id }, type: "query" }],
@@ -196,6 +204,31 @@ describe("WarmSet", () => {
         { input: { recipeId: "r1" }, type: "query" },
       ])
     ).toEqual([{ id: "c1", title: "Cookbook c1" }]);
+  });
+
+  it("warms every cookbook, not just the ones the first Library page held", async () => {
+    const trpc = makeTrpc();
+
+    // A Library page of nothing but recipes: an older cookbook would fall
+    // outside the floor if the warm read cookbooks off this page.
+    trpc.library.list.infiniteQueryOptions = (input: unknown, options: object) => ({
+      queryKey: [["library", "list"], { input, type: "infinite" }],
+      queryFn: async () => ({
+        items: [{ kind: "recipe", recipe: { id: "r1" } }],
+        total: 1,
+        nextCursor: null,
+      }),
+      initialPageParam: 0,
+      ...options,
+    });
+
+    const queryClient = new QueryClient();
+
+    await expect(createWarmSet({ queryClient, trpc }).topUp()).resolves.toBe("complete");
+
+    expect(
+      queryClient.getQueryData([["cookbooks", "get"], { input: { id: "c1" }, type: "query" }])
+    ).toEqual({ id: "c1", title: "Cookbook c1" });
   });
 
   it("keeps the member recipes' fifty-recipe guarantee and adds no new one", async () => {

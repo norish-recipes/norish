@@ -38,6 +38,8 @@ export type CookbooksCacheHelpers = {
   invalidate: () => void;
   /** Forget the recipe-facing membership reads for one recipe, or all of them. */
   invalidateMembership: (recipeId?: string) => void;
+  /** Write a cookbook into its own read, so its page can open at once. */
+  seedCookbook: (cookbook: CookbookSummaryDTO) => void;
   /** Write a membership change straight into the recipe's own read. */
   patchRecipeMembership: (
     recipeId: string,
@@ -81,4 +83,10 @@ export type CreateCookbookHooksOptions = CreateRecipeHooksOptions & {
    * Absent on a client with no offline cache.
    */
   usePromoteCreatedCookbook?: () => (cookbookId: string) => void;
+  /**
+   * The signed-in reader's id, so a cookbook created while Offline is shown
+   * as theirs rather than as Orphaned (ADR-0027). Absent where no user
+   * context is available.
+   */
+  useCurrentUserId?: () => string | undefined;
 };

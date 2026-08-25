@@ -30,7 +30,7 @@ export type CookbookRecipesQueryResult = {
 export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOptions) {
   return function useCookbookRecipesQuery(
     cookbookId: string,
-    filters: RecipeFilters = {},
+    filters: RecipeFilters & { favoritesOnly?: boolean } = {},
     { enabled = true }: { enabled?: boolean } = {}
   ): CookbookRecipesQueryResult {
     const trpc = useTRPC();
@@ -45,6 +45,7 @@ export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOp
       sortMode = "dateDesc",
       minRating,
       maxCookingTime,
+      favoritesOnly = false,
     } = filters;
 
     const infiniteQueryOptions = trpc.cookbooks.recipes.infiniteQueryOptions(
@@ -59,6 +60,7 @@ export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOp
         sortMode,
         minRating,
         maxCookingTime,
+        favoritesOnly,
       },
       { getNextPageParam: (lastPage) => lastPage.nextCursor }
     );

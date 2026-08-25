@@ -30,7 +30,7 @@
     }
   },
   "empty": {
-    "title": "Sua coleção de receitas espera por você",
+    "title": "Sua biblioteca espera por você",
     "description": "Cole uma URL de receita no campo de busca acima e veja a mágica acontecer.",
     "noResults": "Nenhuma receita encontrada",
     "noResultsHint": "Tente ajustar ou limpar seus filtros.",

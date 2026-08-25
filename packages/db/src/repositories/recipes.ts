@@ -32,6 +32,7 @@ import {
   cookbookRecipes,
   householdUsers,
   ingredients,
+  recipeFavorites,
   recipeImages,
   recipeIngredients,
   recipes,
@@ -432,6 +433,106 @@ export function recipeSearchSql(
   };
 }
 
+/**
+ * The dashboard projection, in one place.
+ *
+ * Three reads answer in this shape — the recipe list, one recipe by id, and a
+ * known set of ids for the Library union — and a field added to
+ * RecipeDashboardSchema has to reach all three or the cards disagree.
+ */
+const DASHBOARD_COLUMNS = {
+  id: true,
+  userId: true,
+  name: true,
+  description: true,
+  notes: true,
+  url: true,
+  servings: true,
+  prepMinutes: true,
+  cookMinutes: true,
+  totalMinutes: true,
+  calories: true,
+  // Only the country: the dashboard flies its flag, and the rest of the
+  // provenance group has nothing to show at that size.
+  originCountry: true,
+  categories: true,
+  createdAt: true,
+  updatedAt: true,
+  version: true,
+} as const;
+
+const DASHBOARD_WITH = {
+  recipeTags: {
+    with: { tag: { columns: { id: true, name: true, version: true } } },
+    /**
+     * Tag order is the editor's, so the cards read the same way the recipe
+     * does. A getter, not a value: reading a schema column while this module
+     * is still loading breaks any consumer that mocks `@norish/db/schema`,
+     * and it is only ever needed when a query is actually built.
+     */
+    get orderBy() {
+      return [asc(recipeTags.order)];
+    },
+  },
+  ratings: { columns: { rating: true } },
+} as const;
+
+type DashboardRow = {
+  id: string;
+  userId: string | null;
+  name: string;
+  description: string | null;
+  notes: string | null;
+  url: string | null;
+  image: string | null;
+  servings: number | null;
+  prepMinutes: number | null;
+  cookMinutes: number | null;
+  totalMinutes: number | null;
+  calories: number | null;
+  originCountry: string | null;
+  categories: RecipeCategory[] | null;
+  createdAt: Date;
+  updatedAt: Date;
+  version: number;
+  recipeTags?: { tag?: { name?: string; version?: number } | null }[];
+  ratings?: { rating: number }[];
+};
+
+/** One projected row as the cards read it, ratings averaged. */
+function toDashboardRecipe(r: DashboardRow) {
+  const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
+  const ratingCount = ratingValues.length;
+
+  return {
+    id: r.id,
+    userId: r.userId,
+    name: r.name,
+    description: r.description ?? null,
+    notes: r.notes ?? null,
+    url: r.url ?? null,
+    image: r.image ?? null,
+    servings: r.servings ?? 1,
+    prepMinutes: r.prepMinutes ?? null,
+    cookMinutes: r.cookMinutes ?? null,
+    totalMinutes: r.totalMinutes ?? null,
+    calories: r.calories ?? null,
+    originCountry: r.originCountry ?? null,
+    categories: r.categories ?? [],
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    version: r.version,
+    tags: (r.recipeTags ?? []).flatMap((rt) =>
+      rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
+        ? [{ name: rt.tag.name, version: rt.tag.version }]
+        : []
+    ),
+    averageRating:
+      ratingCount > 0 ? ratingValues.reduce((sum, value) => sum + value, 0) / ratingCount : null,
+    ratingCount,
+  };
+}
+
 export async function listRecipes(
   ctx: RecipeListContext,
   limit: number,
@@ -451,7 +552,7 @@ export async function listRecipes(
    * Library applies, which is what makes a cookbook's count and its list
    * agree by construction (ADR-0027).
    */
-  options?: { cookbookId?: string }
+  options?: { cookbookId?: string; favoritesOnly?: boolean }
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -460,6 +561,17 @@ export async function listRecipes(
 
   if (policyCondition) {
     whereConditions.push(policyCondition);
+  }
+
+  if (options?.favoritesOnly) {
+    // Same clause the Library union applies, so the favourites toggle means
+    // the same thing inside a cookbook as it does on the Library.
+    whereConditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM ${recipeFavorites} AS favorite
+        WHERE favorite.recipe_id = "recipes"."id" AND favorite.user_id = ${ctx.userId}
+      )`
+    );
   }
 
   if (options?.cookbookId) {
@@ -554,39 +666,12 @@ export async function listRecipes(
 
   const [rows, totalCount] = await Promise.all([
     db.query.recipes.findMany({
-      columns: {
-        id: true,
-        userId: true,
-        name: true,
-        description: true,
-        notes: true,
-        url: true,
-        servings: true,
-        prepMinutes: true,
-        cookMinutes: true,
-        totalMinutes: true,
-        calories: true,
-        // Only the country: the dashboard flies its flag, and the rest of the
-        // provenance group has nothing to show at that size.
-        originCountry: true,
-        categories: true,
-        createdAt: true,
-        updatedAt: true,
-        version: true,
-      },
+      columns: DASHBOARD_COLUMNS,
       extras: {
         // The resolved primary, not the deprecated scalar.
         image: PRIMARY_IMAGE_SQL.as("image"),
       },
-      with: {
-        recipeTags: {
-          with: { tag: { columns: { id: true, name: true, version: true } } },
-          orderBy: (rt, { asc }) => [asc(rt.order)],
-        },
-        ratings: {
-          columns: { rating: true },
-        },
-      },
+      with: DASHBOARD_WITH,
       where: whereClause,
       orderBy,
       limit,
@@ -598,43 +683,7 @@ export async function listRecipes(
       .where(whereClause),
   ]);
 
-  const formatted = rows.map((r) => {
-    // Compute average rating
-    const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
-    const ratingCount = ratingValues.length;
-    const averageRating =
-      ratingCount > 0 ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingCount : null;
-
-    return {
-      id: r.id,
-      userId: r.userId,
-      name: r.name,
-      description: r.description ?? null,
-      notes: r.notes ?? null,
-      url: r.url ?? null,
-      image: r.image ?? null,
-      servings: r.servings ?? 1,
-      prepMinutes: r.prepMinutes ?? null,
-      cookMinutes: r.cookMinutes ?? null,
-      totalMinutes: r.totalMinutes ?? null,
-      calories: r.calories ?? null,
-      originCountry: r.originCountry ?? null,
-      categories: r.categories ?? [],
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-      version: r.version,
-      tags: (r.recipeTags ?? []).flatMap(
-        (rt: { tag?: { name?: string; version?: number } | null }) =>
-          rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
-            ? [{ name: rt.tag.name, version: rt.tag.version }]
-            : []
-      ),
-      averageRating,
-      ratingCount,
-    };
-  });
-
-  const parsed = z.array(RecipeDashboardSchema).safeParse(formatted);
+  const parsed = z.array(RecipeDashboardSchema).safeParse(rows.map(toDashboardRecipe));
 
   if (!parsed.success) throw new Error("RecipeDashboardDTO parse failed");
 
@@ -661,76 +710,25 @@ export async function listRecipes(
  * how a page of mixed rows gets its recipe halves without the union having to
  * carry every card field through it.
  */
+/**
+ * The dashboard projection for a known set of ids, in the order the caller
+ * asked for them.
+ *
+ * The Library union decides the order in SQL and then hydrates, so this is
+ * how a page of mixed rows gets its recipe halves without the union having to
+ * carry every card field through it.
+ */
 export async function listDashboardRecipesByIds(ids: string[]): Promise<RecipeDashboardDTO[]> {
   if (ids.length === 0) return [];
 
   const rows = await db.query.recipes.findMany({
     where: inArray(recipes.id, ids),
-    columns: {
-      id: true,
-      userId: true,
-      name: true,
-      description: true,
-      notes: true,
-      url: true,
-      servings: true,
-      prepMinutes: true,
-      cookMinutes: true,
-      totalMinutes: true,
-      calories: true,
-      originCountry: true,
-      categories: true,
-      createdAt: true,
-      updatedAt: true,
-      version: true,
-    },
-    extras: {
-      image: PRIMARY_IMAGE_SQL.as("image"),
-    },
-    with: {
-      recipeTags: {
-        with: { tag: { columns: { id: true, name: true, version: true } } },
-        orderBy: (rt, { asc }) => [asc(rt.order)],
-      },
-      ratings: { columns: { rating: true } },
-    },
+    columns: DASHBOARD_COLUMNS,
+    extras: { image: PRIMARY_IMAGE_SQL.as("image") },
+    with: DASHBOARD_WITH,
   });
 
-  const formatted = rows.map((r) => {
-    const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
-    const ratingCount = ratingValues.length;
-
-    return {
-      id: r.id,
-      userId: r.userId,
-      name: r.name,
-      description: r.description ?? null,
-      notes: r.notes ?? null,
-      url: r.url ?? null,
-      image: r.image ?? null,
-      servings: r.servings ?? 1,
-      prepMinutes: r.prepMinutes ?? null,
-      cookMinutes: r.cookMinutes ?? null,
-      totalMinutes: r.totalMinutes ?? null,
-      calories: r.calories ?? null,
-      originCountry: r.originCountry ?? null,
-      categories: r.categories ?? [],
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-      version: r.version,
-      tags: (r.recipeTags ?? []).flatMap(
-        (rt: { tag?: { name?: string; version?: number } | null }) =>
-          rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
-            ? [{ name: rt.tag.name, version: rt.tag.version }]
-            : []
-      ),
-      averageRating:
-        ratingCount > 0 ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingCount : null,
-      ratingCount,
-    };
-  });
-
-  const parsed = z.array(RecipeDashboardSchema).safeParse(formatted);
+  const parsed = z.array(RecipeDashboardSchema).safeParse(rows.map(toDashboardRecipe));
 
   if (!parsed.success) throw new Error("RecipeDashboardDTO parse failed");
 
@@ -746,26 +744,7 @@ export async function listDashboardRecipesByIds(ids: string[]): Promise<RecipeDa
 export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | null> {
   const rows = await db.query.recipes.findMany({
     where: eq(recipes.id, id),
-    columns: {
-      id: true,
-      userId: true,
-      name: true,
-      description: true,
-      notes: true,
-      url: true,
-      servings: true,
-      prepMinutes: true,
-      cookMinutes: true,
-      totalMinutes: true,
-      calories: true,
-      // Only the country: the dashboard flies its flag, and the rest of the
-      // provenance group has nothing to show at that size.
-      originCountry: true,
-      categories: true,
-      createdAt: true,
-      updatedAt: true,
-      version: true,
-    },
+    columns: DASHBOARD_COLUMNS,
     extras: {
       // The resolved primary, not the deprecated scalar.
       image: PRIMARY_IMAGE_SQL.as("image"),

@@ -188,12 +188,19 @@ test("the Glance Bar answers above the fold and the cards follow cooking order",
 });
 
 test("the cook pill stays reachable at full scroll and covers neither nav nor timers", async () => {
+  // This suite is serial on one shared page, so the page arrives during the
+  // test before this one. Wait for the last card to settle before measuring:
+  // a section still resolving re-lays the page out under the locator.
+  await expect(page.getByTestId("cookbooks-card").locator("visible=true")).toBeVisible();
+
   // A running timer first, so the corner the dock rises into is occupied.
   // Both page trees render the chip; only the phone tree's copy is visible.
   const timerChip = page.getByText("40 minutes").locator("visible=true").first();
 
-  await timerChip.scrollIntoViewIfNeeded();
-  await timerChip.click();
+  await expect(async () => {
+    await timerChip.scrollIntoViewIfNeeded();
+    await timerChip.click();
+  }).toPass({ timeout: 20_000 });
 
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await page.waitForTimeout(600);

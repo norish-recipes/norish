@@ -1,3 +1,4 @@
+import type { QueryKey } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -13,6 +14,7 @@ export type LibraryFilters = RecipeFilters & {
 
 export type LibraryQueryResult = {
   items: LibraryItemDTO[];
+  queryKey: QueryKey;
   /** Counts both kinds. Nothing may read this as a recipe count. */
   total: number;
   isLoading: boolean;
@@ -81,6 +83,7 @@ export function createUseLibraryQuery({ useTRPC }: CreateRecipeHooksOptions) {
 
     return {
       items,
+      queryKey,
       total: data?.pages?.[0]?.total ?? 0,
       isLoading,
       isValidating: isFetching,

@@ -13,20 +13,6 @@ import { router } from "../../trpc";
  * serves every existing caller — the mobile app included (ADR-0026).
  */
 const list = authedProcedure
-  .meta({
-    openapi: {
-      method: "POST",
-      path: "/library/search",
-      protect: true,
-      tags: ["Library"],
-      summary: "List the Library",
-      description:
-        "Returns a paginated list of recipes and cookbooks together, ordered by the requested sort. `total` counts both kinds.",
-      errorResponses: {
-        401: "Missing or invalid API credentials",
-      },
-    },
-  })
   .input(LibraryListInputSchema)
   .output(LibraryListResultSchema)
   .query(async ({ ctx, input }) => {

@@ -26,20 +26,6 @@ import { assertRecipeAccess } from "../recipes/helpers";
 import { assertCookbookAccess, emitCookbookEvent, listContextFor } from "./helpers";
 
 const list = authedProcedure
-  .meta({
-    openapi: {
-      method: "POST",
-      path: "/cookbooks/search",
-      protect: true,
-      tags: ["Cookbooks"],
-      summary: "List cookbooks",
-      description:
-        "Returns a paginated list of the cookbooks the caller may see. All filter fields are optional.",
-      errorResponses: {
-        401: "Missing or invalid API credentials",
-      },
-    },
-  })
   .input(CookbookListInputSchema)
   .output(CookbookListResultSchema)
   .query(async ({ ctx, input }) => {
@@ -58,19 +44,6 @@ const list = authedProcedure
   });
 
 const get = authedProcedure
-  .meta({
-    openapi: {
-      method: "GET",
-      path: "/cookbooks/{id}",
-      protect: true,
-      tags: ["Cookbooks"],
-      summary: "Get a cookbook by ID",
-      errorResponses: {
-        401: "Missing or invalid API credentials",
-        404: "Cookbook not found",
-      },
-    },
-  })
   .input(CookbookGetInputSchema)
   .output(CookbookSummarySchema)
   .query(async ({ ctx, input }) => {
@@ -84,18 +57,6 @@ const get = authedProcedure
   });
 
 const create = authedProcedure
-  .meta({
-    openapi: {
-      method: "POST",
-      path: "/cookbooks",
-      protect: true,
-      tags: ["Cookbooks"],
-      summary: "Create a cookbook",
-      errorResponses: {
-        401: "Missing or invalid API credentials",
-      },
-    },
-  })
   .input(CookbookCreateInputSchema)
   .output(CookbookSummarySchema)
   .mutation(async ({ ctx, input }) => {

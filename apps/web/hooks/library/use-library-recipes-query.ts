@@ -39,7 +39,7 @@ export function useLibraryRecipesQuery(
     isValidating: library.isValidating,
     hasMore: library.hasMore,
     error: library.error,
-    queryKey: [],
+    queryKey: library.queryKey,
     pendingRecipeIds,
     loadMore: library.loadMore,
     addPendingRecipe,

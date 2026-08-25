@@ -30,7 +30,7 @@
     }
   },
   "empty": {
-    "title": "Din opskriftsamling venter",
+    "title": "Dit bibliotek venter",
     "description": "Indsæt en opskrift-URL i søgefeltet ovenfor, og lad magien ske.",
     "noResults": "Ingen opskrifter fundet",
     "noResultsHint": "Prøv at justere eller rydde dine filtre.",

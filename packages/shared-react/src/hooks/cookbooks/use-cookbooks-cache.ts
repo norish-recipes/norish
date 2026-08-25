@@ -106,12 +106,23 @@ export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions)
       [queryClient, trpc]
     );
 
+    const seedCookbook = useCallback(
+      (cookbook: CookbookSummaryDTO) => {
+        queryClient.setQueryData<CookbookSummaryDTO>(
+          trpc.cookbooks.get.queryKey({ id: cookbook.id }),
+          cookbook
+        );
+      },
+      [queryClient, trpc]
+    );
+
     return {
       setAllCookbooksData,
       invalidate,
       invalidateCookbook,
       invalidateMembership,
       patchRecipeMembership,
+      seedCookbook,
     };
   };
 }

@@ -1,6 +1,5 @@
 import type { SQL } from "drizzle-orm";
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
-import z from "zod";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { SortOrder } from "@norish/shared/contracts/store-types";
@@ -370,12 +369,4 @@ export async function listCookbookMemberIds(cookbookId: string): Promise<string[
   return rows.map((row) => row.recipeId);
 }
 
-/** Total cookbook rows, for the admin overview's counters. */
-export async function getTotalCookbookCount(): Promise<number> {
-  const rows = await db.select({ total: count() }).from(cookbooks);
-
-  return Number(rows[0]?.total ?? 0);
-}
-
 export type { CookbookRow };
-export const CookbookSummaryArraySchema = z.array(CookbookSummarySchema);

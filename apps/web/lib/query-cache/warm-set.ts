@@ -17,6 +17,11 @@ import { dateKey } from "@norish/shared/lib/helpers";
 
 const WARM_RECIPE_LIST_LIMIT = 100;
 const WARM_FULL_RECIPE_COUNT = 50;
+/**
+ * Cookbooks are cheap rows and there is no equivalent of the fifty-recipe
+ * ceiling for them: the floor promises every one the reader can see.
+ */
+const WARM_COOKBOOK_LIST_LIMIT = 200;
 
 type CalendarRange = { startISO: string; endISO: string };
 type RecipeListItem = { id: string; image?: string | null };
@@ -24,9 +29,21 @@ type LibraryListItem =
   { kind: "recipe"; recipe: RecipeListItem } | { kind: "cookbook"; cookbook: { id: string } };
 type LibraryListPage = { items: LibraryListItem[]; total: number; nextCursor: number | null };
 type LibraryListInfiniteData = { pages: LibraryListPage[] };
+type CookbookListPage = {
+  cookbooks: { id: string }[];
+  total: number;
+  nextCursor: number | null;
+};
+type CookbookListInfiniteData = { pages: CookbookListPage[] };
 
 interface WarmSetTRPC {
   cookbooks: {
+    list: {
+      infiniteQueryOptions: (
+        input: { limit: number; sortMode: "dateDesc" },
+        options: { getNextPageParam: (lastPage: CookbookListPage) => number | null }
+      ) => object;
+    };
     get: {
       queryOptions: (input: { id: string }) => object;
       queryKey: (input: { id: string }) => readonly unknown[];
@@ -240,7 +257,11 @@ async function warmLibrary(trpc: WarmSetTRPC, queryClient: QueryClient): Promise
   // Cookbooks come down with the list itself; only the member recipes need
   // their details warming, and they keep the existing fifty-recipe guarantee.
   const recipes = extractRecipeListItems(data).slice(0, WARM_FULL_RECIPE_COUNT);
-  const cookbookIds = extractCookbookIds(data);
+  // Every cookbook, not just the ones the first Library page happened to hold:
+  // a Library dominated by recent recipes would otherwise leave older
+  // cookbooks outside the floor, and the guarantee is "every cookbook the
+  // reader can see" (ADR-0009).
+  const cookbookIds = await warmedCookbookIds(trpc, queryClient);
   const [detailResults, cookbookResults, imagesComplete] = await Promise.all([
     Promise.allSettled(
       recipes.map(({ id }) =>
@@ -354,14 +375,27 @@ function sameOriginImageUrl(image: string | null | undefined): string | null {
   }
 }
 
-function extractCookbookIds(data: unknown): string[] {
-  const infinite = data as LibraryListInfiniteData | undefined;
+/**
+ * Every cookbook the reader can see, read through the cookbook list's own
+ * pagination so the count is not capped by whatever the Library page held.
+ * Returns what it managed to read; a failure surfaces as a partial top-up
+ * through the fetches that follow.
+ */
+async function warmedCookbookIds(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<string[]> {
+  try {
+    const data = (await queryClient.fetchInfiniteQuery(
+      withWarmGcTime(
+        trpc.cookbooks.list.infiniteQueryOptions(
+          { limit: WARM_COOKBOOK_LIST_LIMIT, sortMode: "dateDesc" },
+          { getNextPageParam: (lastPage) => lastPage.nextCursor }
+        )
+      ) as never
+    )) as CookbookListInfiniteData | undefined;
 
-  return (
-    infinite?.pages?.flatMap((page) =>
-      page.items.flatMap((item) => (item.kind === "cookbook" ? [item.cookbook.id] : []))
-    ) ?? []
-  );
+    return data?.pages?.flatMap((page) => page.cookbooks.map((cookbook) => cookbook.id)) ?? [];
+  } catch {
+    return [];
+  }
 }
 
 function extractRecipeListItems(data: unknown): RecipeListItem[] {

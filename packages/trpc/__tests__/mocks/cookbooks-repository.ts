@@ -15,7 +15,6 @@ export const listCookbookMemberIds = vi.fn();
 export const addRecipeToCookbook = vi.fn();
 export const removeRecipeFromCookbook = vi.fn();
 export const withMemberSummaries = vi.fn();
-export const getTotalCookbookCount = vi.fn();
 
 export function resetCookbooksRepositoryMocks() {
   [
@@ -31,6 +30,5 @@ export function resetCookbooksRepositoryMocks() {
     addRecipeToCookbook,
     removeRecipeFromCookbook,
     withMemberSummaries,
-    getTotalCookbookCount,
   ].forEach((fn) => fn.mockReset());
 }
