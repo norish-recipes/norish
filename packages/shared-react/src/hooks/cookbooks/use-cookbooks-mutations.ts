@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type {
@@ -17,12 +18,19 @@ type Dependencies = CreateCookbookHooksOptions & {
 export function createUseCookbooksMutations({
   useTRPC,
   shouldPreserveOptimisticUpdate: preserve,
+  usePromoteCreatedCookbook,
   useCookbooksCacheHelpers,
 }: Dependencies) {
   return function useCookbooksMutations(): CookbooksMutationsResult {
     const trpc = useTRPC();
-    const { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership } =
-      useCookbooksCacheHelpers();
+    const promoteCreatedCookbook = usePromoteCreatedCookbook?.();
+    const {
+      setAllCookbooksData,
+      invalidate,
+      invalidateCookbook,
+      invalidateMembership,
+      patchRecipeMembership,
+    } = useCookbooksCacheHelpers();
 
     const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
     const renameMutation = useMutation(trpc.cookbooks.rename.mutationOptions());
@@ -44,6 +52,7 @@ export function createUseCookbooksMutations({
               onSuccess: () => {
                 invalidate();
                 if (recipeId) invalidateMembership(recipeId);
+                promoteCreatedCookbook?.(id);
                 resolve(id);
               },
               onError: (error) => {
@@ -96,7 +105,14 @@ export function createUseCookbooksMutations({
           );
         });
       },
-      [createMutation, invalidate, invalidateMembership, setAllCookbooksData, preserve]
+      [
+        createMutation,
+        invalidate,
+        invalidateMembership,
+        setAllCookbooksData,
+        promoteCreatedCookbook,
+        preserve,
+      ]
     );
 
     /**
@@ -112,11 +128,16 @@ export function createUseCookbooksMutations({
         cookbookId,
         recipeId,
         isMember,
+        cookbook,
       }: {
         cookbookId: string;
         recipeId: string;
         isMember: boolean;
+        /** The row as the caller has it, for the tentative patch. */
+        cookbook?: CookbookSummaryDTO;
       }) => {
+        let patched: CookbookSummaryDTO | undefined = cookbook;
+
         setAllCookbooksData((prev) => {
           if (!prev) return prev;
 
@@ -124,25 +145,36 @@ export function createUseCookbooksMutations({
             ...prev,
             pages: prev.pages.map((page) => ({
               ...page,
-              cookbooks: page.cookbooks.map((cookbook) =>
-                cookbook.id === cookbookId
-                  ? {
-                      ...cookbook,
-                      memberCount: Math.max(0, cookbook.memberCount + (isMember ? 1 : -1)),
-                    }
-                  : cookbook
-              ),
+              cookbooks: page.cookbooks.map((entry) => {
+                if (entry.id !== cookbookId) return entry;
+
+                const next = {
+                  ...entry,
+                  memberCount: Math.max(0, entry.memberCount + (isMember ? 1 : -1)),
+                };
+
+                patched = next;
+
+                return next;
+              }),
             })),
           };
         });
 
+        if (patched) {
+          patchRecipeMembership(recipeId, patched, isMember);
+        }
+
         membershipMutation.mutate(
           { cookbookId, recipeId, isMember },
           {
-            onSettled: () => {
+            onSuccess: () => {
               invalidateMembership(recipeId);
               invalidateCookbook(cookbookId);
             },
+            // A queued filing keeps its tentative state: there is nothing to
+            // refetch Offline, and refetching would erase the change the
+            // reader can see (ADR-0009).
             onError: invalidateUnlessQueued,
           }
         );
@@ -150,6 +182,7 @@ export function createUseCookbooksMutations({
       [
         membershipMutation,
         setAllCookbooksData,
+        patchRecipeMembership,
         invalidateMembership,
         invalidateCookbook,
         invalidateUnlessQueued,

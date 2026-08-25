@@ -12,6 +12,7 @@ import {
 
 export type {
   CookbookFilters,
+  EditableCookbook,
   EditableCookbooksQueryResult,
   RecipeCookbooksQueryResult,
   CookbooksCacheHelpers,

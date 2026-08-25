@@ -96,6 +96,7 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
                       cookbookId: cookbook.id,
                       recipeId,
                       isMember: !cookbook.containsRecipe,
+                      cookbook,
                     })
                   }
                 >

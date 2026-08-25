@@ -26,6 +26,26 @@ type LibraryListPage = { items: LibraryListItem[]; total: number; nextCursor: nu
 type LibraryListInfiniteData = { pages: LibraryListPage[] };
 
 interface WarmSetTRPC {
+  cookbooks: {
+    get: {
+      queryOptions: (input: { id: string }) => object;
+      queryKey: (input: { id: string }) => readonly unknown[];
+    };
+    recipes: {
+      infiniteQueryOptions: (
+        input: { cookbookId: string; limit: number },
+        options: { getNextPageParam: (lastPage: { nextCursor: number | null }) => number | null }
+      ) => object;
+    };
+    editable: {
+      queryOptions: () => object;
+      queryKey: () => readonly unknown[];
+    };
+    forRecipe: {
+      queryOptions: (input: { recipeId: string }) => object;
+      queryKey: (input: { recipeId: string }) => readonly unknown[];
+    };
+  };
   library: {
     list: {
       infiniteQueryOptions: (
@@ -64,6 +84,7 @@ export type WarmSetTopUpResult = "complete" | "partial" | "not-leader";
 
 export interface WarmSetInventory {
   recipes: number;
+  cookbooks: number;
   groceries: number;
   stores: number;
   plannedThisWeek: number;
@@ -74,6 +95,11 @@ export interface WarmSet {
   topUp(): Promise<WarmSetTopUpResult>;
   inspect(): Promise<WarmSetInventory>;
   promoteCreatedRecipe(recipeId: string): void;
+  /**
+   * A cookbook made while Live joins the floor now rather than at the next
+   * warm, the same promise a newly created recipe gets (ADR-0008).
+   */
+  promoteCreatedCookbook(cookbookId: string): void;
 }
 
 export function createWarmSet({
@@ -88,12 +114,12 @@ export function createWarmSet({
   return {
     async topUp() {
       const result = await runIfLeader(async () => {
-        const [recipesComplete, listsComplete] = await Promise.all([
-          warmRecipes(trpc, queryClient),
+        const [warmed, listsComplete] = await Promise.all([
+          warmLibrary(trpc, queryClient),
           warmLists(trpc, queryClient),
         ]);
         const owner = cacheManager.owner();
-        const complete = recipesComplete && listsComplete && owner !== null;
+        const complete = warmed && listsComplete && owner !== null;
 
         if (complete) {
           try {
@@ -117,6 +143,11 @@ export function createWarmSet({
         .getQueryCache()
         .findAll({ queryKey: recipePath })
         .filter((query) => query.state.data != null).length;
+      const cookbookPath = [trpc.cookbooks.get.queryKey({ id: "" })[0]];
+      const cookbooks = queryClient
+        .getQueryCache()
+        .findAll({ queryKey: cookbookPath })
+        .filter((query) => query.state.data != null).length;
       const groceriesData = queryClient.getQueryData(trpc.groceries.list.queryKey()) as
         { groceries?: unknown[] } | undefined;
       const storesData = queryClient.getQueryData(trpc.stores.list.queryKey()) as
@@ -127,6 +158,7 @@ export function createWarmSet({
 
       return {
         recipes,
+        cookbooks,
         groceries: groceriesData?.groceries?.length ?? 0,
         stores: storesData?.length ?? 0,
         plannedThisWeek: plannedData?.length ?? 0,
@@ -135,13 +167,11 @@ export function createWarmSet({
     },
 
     promoteCreatedRecipe(recipeId) {
-      const queryKey = trpc.recipes.get.queryKey({ id: recipeId });
-      const query = queryClient.getQueryCache().find({ queryKey });
+      promote(queryClient, trpc.recipes.get.queryKey({ id: recipeId }));
+    },
 
-      if (query) {
-        query.updateGcTime(CACHE_MAX_AGE_MS);
-        query.scheduleGc();
-      }
+    promoteCreatedCookbook(cookbookId) {
+      promote(queryClient, trpc.cookbooks.get.queryKey({ id: cookbookId }));
     },
   };
 }
@@ -170,7 +200,30 @@ function withWarmGcTime<T extends object>(options: T): T {
   return { ...options, gcTime: CACHE_MAX_AGE_MS };
 }
 
-async function warmRecipes(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<boolean> {
+/** Hold a cached read at the offline cache's own lifetime. */
+function promote(queryClient: QueryClient, queryKey: readonly unknown[]): void {
+  const query = queryClient.getQueryCache().find({ queryKey });
+
+  if (query) {
+    query.updateGcTime(CACHE_MAX_AGE_MS);
+    query.scheduleGc();
+  }
+}
+
+/**
+ * The Library's floor: every cookbook the reader can see with its membership,
+ * and the first fifty member recipes in full.
+ *
+ * Cookbooks come down with the list itself, so what needs warming beside it is
+ * each cookbook's own page — its summary and its member list — plus the
+ * cookbooks the reader may edit, which is what lets filing work Offline. That
+ * last read is deliberately not per recipe: one answer serves every recipe
+ * page. Member recipes keep the existing fifty-recipe guarantee and gain no
+ * new one, so a cookbook page Offline may list a member whose detail was never
+ * cached — which renders the existing unavailable-offline treatment rather
+ * than failing (ADR-0009).
+ */
+async function warmLibrary(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<boolean> {
   const listOptions = withWarmGcTime(
     trpc.library.list.infiniteQueryOptions(libraryListInput(), {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -187,16 +240,40 @@ async function warmRecipes(trpc: WarmSetTRPC, queryClient: QueryClient): Promise
   // Cookbooks come down with the list itself; only the member recipes need
   // their details warming, and they keep the existing fifty-recipe guarantee.
   const recipes = extractRecipeListItems(data).slice(0, WARM_FULL_RECIPE_COUNT);
-  const [detailResults, imagesComplete] = await Promise.all([
+  const cookbookIds = extractCookbookIds(data);
+  const [detailResults, cookbookResults, imagesComplete] = await Promise.all([
     Promise.allSettled(
       recipes.map(({ id }) =>
         queryClient.fetchQuery(withWarmGcTime(trpc.recipes.get.queryOptions({ id })) as never)
       )
     ),
+    Promise.allSettled([
+      queryClient.fetchQuery(withWarmGcTime(trpc.cookbooks.editable.queryOptions()) as never),
+      ...cookbookIds.flatMap((id) => [
+        queryClient.fetchQuery(withWarmGcTime(trpc.cookbooks.get.queryOptions({ id })) as never),
+        queryClient.fetchInfiniteQuery(
+          withWarmGcTime(
+            trpc.cookbooks.recipes.infiniteQueryOptions(
+              { cookbookId: id, limit: WARM_RECIPE_LIST_LIMIT },
+              { getNextPageParam: (lastPage) => lastPage.nextCursor }
+            )
+          ) as never
+        ),
+      ]),
+      ...recipes.map(({ id }) =>
+        queryClient.fetchQuery(
+          withWarmGcTime(trpc.cookbooks.forRecipe.queryOptions({ recipeId: id })) as never
+        )
+      ),
+    ]),
     warmPrimaryImages(recipes),
   ]);
 
-  return detailResults.every((result) => result.status === "fulfilled") && imagesComplete;
+  return (
+    detailResults.every((result) => result.status === "fulfilled") &&
+    cookbookResults.every((result) => result.status === "fulfilled") &&
+    imagesComplete
+  );
 }
 
 async function warmLists(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<boolean> {
@@ -275,6 +352,16 @@ function sameOriginImageUrl(image: string | null | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+function extractCookbookIds(data: unknown): string[] {
+  const infinite = data as LibraryListInfiniteData | undefined;
+
+  return (
+    infinite?.pages?.flatMap((page) =>
+      page.items.flatMap((item) => (item.kind === "cookbook" ? [item.cookbook.id] : []))
+    ) ?? []
+  );
 }
 
 function extractRecipeListItems(data: unknown): RecipeListItem[] {

@@ -34,7 +34,7 @@ export default function CookbookMembers({
   const { setMembership } = useCookbooksMutations();
 
   const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
-  const { recipes, isLoading, isValidating, loadMore } = useCookbookRecipesQuery(
+  const { recipes, isLoading, isValidating, loadMore, removeMember } = useCookbookRecipesQuery(
     cookbookId,
     queryFilters
   );
@@ -69,6 +69,9 @@ export default function CookbookMembers({
               event.preventDefault();
               event.stopPropagation();
               setMembership({ cookbookId, recipeId: item.recipe.id, isMember: false });
+              // The member list is this cookbook's own read, so drop the row
+              // now rather than waiting for a refetch that Offline never comes.
+              removeMember(item.recipe.id);
             }}
           >
             <MinusCircleIcon className="h-5 w-5" />

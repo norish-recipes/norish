@@ -29,11 +29,6 @@ export const CookbookSummarySchema = z.object({
   coverImages: z.array(z.string()),
 });
 
-/** A cookbook offered for filing, with this recipe's membership shown. */
-export const EditableCookbookSchema = CookbookSummarySchema.extend({
-  containsRecipe: z.boolean(),
-});
-
 export const CookbookCreateInputSchema = z.object({
   // Client-minted so that filing queued behind an Offline create still points
   // at the right cookbook once replayed (ADR-0003).

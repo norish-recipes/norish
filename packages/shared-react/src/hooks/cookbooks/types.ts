@@ -1,6 +1,6 @@
 import type { InfiniteData, QueryKey } from "@tanstack/react-query";
 
-import type { CookbookSummaryDTO, EditableCookbookDTO, SortOrder } from "@norish/shared/contracts";
+import type { CookbookSummaryDTO, SortOrder } from "@norish/shared/contracts";
 
 import type { CreateRecipeHooksOptions } from "../recipes/types";
 
@@ -38,6 +38,12 @@ export type CookbooksCacheHelpers = {
   invalidate: () => void;
   /** Forget the recipe-facing membership reads for one recipe, or all of them. */
   invalidateMembership: (recipeId?: string) => void;
+  /** Write a membership change straight into the recipe's own read. */
+  patchRecipeMembership: (
+    recipeId: string,
+    cookbook: CookbookSummaryDTO,
+    isMember: boolean
+  ) => void;
 };
 
 export type CookbooksMutationsResult = {
@@ -46,7 +52,12 @@ export type CookbooksMutationsResult = {
   renameCookbook: (input: { id: string; title: string; version: number }) => void;
   deleteCookbook: (input: { id: string; version: number }) => void;
   /** File a recipe into a cookbook, or take it out — the same call both ways. */
-  setMembership: (input: { cookbookId: string; recipeId: string; isMember: boolean }) => void;
+  setMembership: (input: {
+    cookbookId: string;
+    recipeId: string;
+    isMember: boolean;
+    cookbook?: CookbookSummaryDTO;
+  }) => void;
   isCreating: boolean;
 };
 
@@ -55,9 +66,19 @@ export type RecipeCookbooksQueryResult = {
   isLoading: boolean;
 };
 
+/** A cookbook offered for filing, with this recipe's membership shown. */
+export type EditableCookbook = CookbookSummaryDTO & { containsRecipe: boolean };
+
 export type EditableCookbooksQueryResult = {
-  cookbooks: EditableCookbookDTO[];
+  cookbooks: EditableCookbook[];
   isLoading: boolean;
 };
 
-export type CreateCookbookHooksOptions = CreateRecipeHooksOptions;
+export type CreateCookbookHooksOptions = CreateRecipeHooksOptions & {
+  /**
+   * Hold a just-created cookbook at the offline cache's lifetime, so it joins
+   * the guaranteed floor immediately rather than at the next warm (ADR-0008).
+   * Absent on a client with no offline cache.
+   */
+  usePromoteCreatedCookbook?: () => (cookbookId: string) => void;
+};

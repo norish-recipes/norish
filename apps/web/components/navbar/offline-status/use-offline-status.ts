@@ -59,6 +59,7 @@ export function useOfflineStatus(): OfflineStatus {
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [inventory, setInventory] = useState<WarmSetInventory>({
     recipes: 0,
+    cookbooks: 0,
     groceries: 0,
     stores: 0,
     plannedThisWeek: 0,
@@ -98,6 +99,7 @@ export function useOfflineStatus(): OfflineStatus {
     if (!owner) {
       setInventory({
         recipes: 0,
+        cookbooks: 0,
         groceries: 0,
         stores: 0,
         plannedThisWeek: 0,
@@ -173,6 +175,7 @@ export function useOfflineStatus(): OfflineStatus {
     await cacheManager.resetOfflineCopy("manual");
     setInventory({
       recipes: 0,
+      cookbooks: 0,
       groceries: 0,
       stores: 0,
       plannedThisWeek: 0,

@@ -4,7 +4,7 @@ import type { FilterMode, SortOrder } from "@norish/shared/contracts";
 import {
   addRecipeToCookbook,
   listCookbooksForRecipe,
-  listEditableCookbooksForRecipe,
+  listEditableCookbooks,
   removeRecipeFromCookbook,
 } from "@norish/db/repositories/cookbooks";
 import { listRecipes } from "@norish/db/repositories/recipes";
@@ -14,7 +14,6 @@ import {
   CookbookMembershipInputSchema,
   CookbookRecipesInputSchema,
   CookbookSummarySchema,
-  EditableCookbookSchema,
   RecipeListResultSchema,
 } from "@norish/shared/contracts/zod";
 
@@ -92,18 +91,16 @@ const forRecipe = authedProcedure
   });
 
 /**
- * Every cookbook the reader may edit, each saying whether it already holds
- * this recipe — the membership panel's whole list, so one place both files
- * and unfiles.
+ * Every cookbook the reader may edit — the membership panel's list.
+ *
+ * Not scoped to a recipe: the answer is the same whatever is being filed, so
+ * one read serves every recipe page and the Warm Set has one thing to
+ * guarantee rather than one per recipe (ADR-0009). Which of them already hold
+ * a given recipe comes from `forRecipe`.
  */
-const editableForRecipe = authedProcedure
-  .input(CookbookForRecipeInputSchema)
-  .output(z.array(EditableCookbookSchema))
-  .query(async ({ ctx, input }) => {
-    await assertRecipeAccess(ctx, input.recipeId, "view");
-
-    return listEditableCookbooksForRecipe(listContextFor(ctx), input.recipeId);
-  });
+const editable = authedProcedure
+  .output(z.array(CookbookSummarySchema))
+  .query(async ({ ctx }) => listEditableCookbooks(listContextFor(ctx)));
 
 /**
  * A cookbook's members, paged through the recipe list itself.
@@ -145,6 +142,6 @@ const recipes = authedProcedure
 export const cookbookMembershipProcedures = router({
   setMembership,
   forRecipe,
-  editableForRecipe,
+  editable,
   recipes,
 });

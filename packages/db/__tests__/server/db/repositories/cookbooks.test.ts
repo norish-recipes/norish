@@ -21,7 +21,7 @@ import {
   listCookbookMemberIds,
   listCookbooks,
   listCookbooksForRecipe,
-  listEditableCookbooksForRecipe,
+  listEditableCookbooks,
   removeRecipeFromCookbook,
   renameCookbook,
 } from "@norish/db/repositories/cookbooks";
@@ -129,10 +129,7 @@ describe("cookbook repository", () => {
           `view: ${level}`
         ).toContain(cookbook.id);
         // Editable and deletable by everyone too, so a departure cannot strand it.
-        const editable = await listEditableCookbooksForRecipe(
-          viewer(strangerId),
-          (await createTestRecipe(strangerId)).id
-        );
+        const editable = await listEditableCookbooks(viewer(strangerId));
 
         expect(
           editable.map((c) => c.id),
@@ -215,7 +212,7 @@ describe("cookbook repository", () => {
       await removeRecipeFromCookbook(cookbook.id, recipe.id);
     });
 
-    it("reports what a recipe is in, per cookbook the reader may edit", async () => {
+    it("offers every cookbook the reader may edit, and says what a recipe is in", async () => {
       await setPolicy({ view: "everyone", edit: "everyone", delete: "everyone" });
       const holding = await createCookbook({ userId: ownerId, title: "Holding" });
       const empty = await createCookbook({ userId: ownerId, title: "Empty" });
@@ -223,11 +220,15 @@ describe("cookbook repository", () => {
 
       await addRecipeToCookbook(holding.id, recipe.id);
 
-      const editable = await listEditableCookbooksForRecipe(viewer(strangerId), recipe.id);
-      const byId = new Map(editable.map((c) => [c.id, c.containsRecipe]));
+      // The two halves the membership panel puts together: what may be edited,
+      // which does not depend on the recipe, and what the recipe is in.
+      const editable = await listEditableCookbooks(viewer(strangerId));
 
-      expect(byId.get(holding.id)).toBe(true);
-      expect(byId.get(empty.id)).toBe(false);
+      expect(editable.map((c) => c.id).sort()).toEqual([holding.id, empty.id].sort());
+
+      const holdingIt = await listCookbooksForRecipe(viewer(strangerId), recipe.id);
+
+      expect(holdingIt.map((c) => c.id)).toEqual([holding.id]);
     });
 
     it("counts only the members the reader can see", async () => {

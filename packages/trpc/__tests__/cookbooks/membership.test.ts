@@ -15,7 +15,8 @@ import {
   addRecipeToCookbook,
   createCookbook,
   getCookbookRow,
-  listEditableCookbooksForRecipe,
+  listCookbooksForRecipe,
+  listEditableCookbooks,
   removeRecipeFromCookbook,
 } from "../mocks/cookbooks-repository";
 import { canAccessResource } from "../mocks/permissions";
@@ -181,23 +182,31 @@ describe("cookbook membership", () => {
     expectNoRecipeWrites();
   });
 
-  it("offers only the cookbooks the reader may edit, with membership shown", async () => {
-    canAccessResource.mockResolvedValue(true);
-    listEditableCookbooksForRecipe.mockResolvedValue([
-      { ...cookbookRow(), memberCount: 1, coverImages: [], containsRecipe: true },
+  it("offers the cookbooks the reader may edit, whatever is being filed", async () => {
+    // Not scoped to a recipe: the answer is the same for every recipe page,
+    // which is what lets the Warm Set guarantee filing Offline (ADR-0009).
+    listEditableCookbooks.mockResolvedValue([
+      { ...cookbookRow(), memberCount: 1, coverImages: [] },
     ]);
 
-    const result = await callerFor().cookbooks.editableForRecipe({ recipeId: RECIPE_ID });
+    const result = await callerFor().cookbooks.editable();
 
     expect(result).toHaveLength(1);
-    expect(result[0]?.containsRecipe).toBe(true);
-    expect(listEditableCookbooksForRecipe).toHaveBeenCalledWith(
-      {
-        userId: "test-user-id",
-        householdUserIds: ["test-user-id", "household-member-id"],
-        isServerAdmin: false,
-      },
-      RECIPE_ID
-    );
+    expect(listEditableCookbooks).toHaveBeenCalledWith({
+      userId: "test-user-id",
+      householdUserIds: ["test-user-id", "household-member-id"],
+      isServerAdmin: false,
+    });
+  });
+
+  it("reports which cookbooks hold a recipe, for the panel and the card alike", async () => {
+    canAccessResource.mockResolvedValue(true);
+    listCookbooksForRecipe.mockResolvedValue([
+      { ...cookbookRow(), memberCount: 1, coverImages: [] },
+    ]);
+
+    const result = await callerFor().cookbooks.forRecipe({ recipeId: RECIPE_ID });
+
+    expect(result.map((cookbook) => cookbook.id)).toEqual([COOKBOOK_ID]);
   });
 });

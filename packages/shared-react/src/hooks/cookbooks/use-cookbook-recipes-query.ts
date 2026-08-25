@@ -14,6 +14,12 @@ export type CookbookRecipesQueryResult = {
   hasMore: boolean;
   loadMore: () => void;
   invalidate: () => void;
+  /**
+   * Take a member out of this cookbook's own read. Written rather than
+   * refetched, so an unfile made Offline reads as tentatively applied
+   * (ADR-0009).
+   */
+  removeMember: (recipeId: string) => void;
 };
 
 /**
@@ -81,6 +87,30 @@ export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOp
       invalidate: useCallback(() => {
         void queryClient.invalidateQueries({ queryKey });
       }, [queryClient, queryKey]),
+      removeMember: useCallback(
+        (recipeId: string) => {
+          queryClient.setQueryData<{
+            pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];
+            pageParams: unknown[];
+          }>(queryKey, (previous) => {
+            if (!previous?.pages) return previous;
+
+            return {
+              ...previous,
+              pages: previous.pages.map((page) => {
+                const kept = page.recipes.filter((recipe) => recipe.id !== recipeId);
+
+                return {
+                  ...page,
+                  recipes: kept,
+                  total: Math.max(0, page.total - (page.recipes.length - kept.length)),
+                };
+              }),
+            };
+          });
+        },
+        [queryClient, queryKey]
+      ),
     };
   };
 }

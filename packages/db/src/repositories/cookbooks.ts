@@ -2,7 +2,7 @@ import type { SQL } from "drizzle-orm";
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
-import type { CookbookSummaryDTO, EditableCookbookDTO } from "@norish/shared/contracts";
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { SortOrder } from "@norish/shared/contracts/store-types";
 import { db } from "@norish/db/drizzle";
 
@@ -322,41 +322,24 @@ export async function listCookbooksForRecipe(
 }
 
 /**
- * The cookbooks this reader may edit, each saying whether it already holds
- * this recipe — the membership panel's whole list, in one read.
+ * Every cookbook this reader may edit — the membership panel's whole list.
+ *
+ * Deliberately not scoped to a recipe: which cookbooks a reader may edit is
+ * the same answer whatever they are filing, so one read serves every recipe
+ * page and the Warm Set has one thing to guarantee rather than one per
+ * recipe (ADR-0009). Whether a given cookbook already holds the recipe comes
+ * from the recipe's own membership read.
  */
-export async function listEditableCookbooksForRecipe(
-  ctx: RecipeListContext,
-  recipeId: string
-): Promise<EditableCookbookDTO[]> {
+export async function listEditableCookbooks(ctx: RecipeListContext): Promise<CookbookSummaryDTO[]> {
   const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "edit");
 
   const rows = await db
-    .select({
-      ...COOKBOOK_COLUMNS,
-      // The outer reference is spelled `"cookbooks"."id"` by hand: drizzle
-      // renders an interpolated column unqualified in a plain select, and
-      // inside this subquery an unqualified `"id"` resolves to the membership
-      // table's own column — silently matching nothing.
-      containsRecipe: sql<boolean>`EXISTS (
-        SELECT 1 FROM ${cookbookRecipes} AS membership
-        WHERE membership.cookbook_id = "cookbooks"."id"
-          AND membership.recipe_id = ${recipeId}
-      )`,
-    })
+    .select(COOKBOOK_COLUMNS)
     .from(cookbooks)
     .where(policyCondition)
     .orderBy(asc(cookbooks.title));
 
-  const summaries = await withMemberSummaries(
-    ctx,
-    rows.map(({ containsRecipe: _containsRecipe, ...row }) => row)
-  );
-
-  return summaries.map((summary, index) => ({
-    ...summary,
-    containsRecipe: Boolean(rows[index]?.containsRecipe),
-  }));
+  return withMemberSummaries(ctx, rows);
 }
 
 /**

@@ -54,6 +54,43 @@ function makeTrpc() {
         }),
       },
     },
+    cookbooks: {
+      get: {
+        queryOptions: ({ id }: { id: string }) => ({
+          queryKey: [["cookbooks", "get"], { input: { id }, type: "query" }],
+          queryFn: async () => ({ id, title: `Cookbook ${id}` }),
+        }),
+        queryKey: ({ id }: { id: string }) => [
+          ["cookbooks", "get"],
+          { input: { id }, type: "query" },
+        ],
+      },
+      recipes: {
+        infiniteQueryOptions: (input: { cookbookId: string }, options: object) => ({
+          queryKey: [["cookbooks", "recipes"], { input, type: "infinite" }],
+          queryFn: async () => ({ recipes: [{ id: "r1" }], total: 1, nextCursor: null }),
+          initialPageParam: 0,
+          ...options,
+        }),
+      },
+      editable: {
+        queryOptions: () => ({
+          queryKey: [["cookbooks", "editable"], { type: "query" }],
+          queryFn: async () => [{ id: "c1", title: "Cookbook c1" }],
+        }),
+        queryKey: () => [["cookbooks", "editable"], { type: "query" }],
+      },
+      forRecipe: {
+        queryOptions: ({ recipeId }: { recipeId: string }) => ({
+          queryKey: [["cookbooks", "forRecipe"], { input: { recipeId }, type: "query" }],
+          queryFn: async () => [{ id: "c1", title: "Cookbook c1" }],
+        }),
+        queryKey: ({ recipeId }: { recipeId: string }) => [
+          ["cookbooks", "forRecipe"],
+          { input: { recipeId }, type: "query" },
+        ],
+      },
+    },
     recipes: {
       get: {
         queryOptions: ({ id }: { id: string }) => ({
@@ -130,6 +167,63 @@ describe("WarmSet", () => {
     expect(writeLastWarmedAt).toHaveBeenCalledWith("owner-1", expect.any(Number));
   });
 
+  it("guarantees every cookbook the reader can see, with its membership", async () => {
+    const queryClient = new QueryClient();
+    const warmSet = createWarmSet({ queryClient, trpc: makeTrpc() });
+
+    await expect(warmSet.topUp()).resolves.toBe("complete");
+
+    // The cookbook itself, so its page opens Offline.
+    expect(
+      queryClient.getQueryData([["cookbooks", "get"], { input: { id: "c1" }, type: "query" }])
+    ).toEqual({ id: "c1", title: "Cookbook c1" });
+    // Its membership, so the page lists what is in it.
+    expect(
+      queryClient.getQueryData([
+        ["cookbooks", "recipes"],
+        { input: { cookbookId: "c1", limit: 100 }, type: "infinite" },
+      ])
+    ).toMatchObject({ pages: [{ recipes: [{ id: "r1" }] }] });
+    // The cookbooks the reader may edit — one answer for every recipe page, so
+    // filing works Offline without a read per recipe.
+    expect(queryClient.getQueryData([["cookbooks", "editable"], { type: "query" }])).toEqual([
+      { id: "c1", title: "Cookbook c1" },
+    ]);
+    // And which cookbooks hold each warmed recipe, for the recipe page's card.
+    expect(
+      queryClient.getQueryData([
+        ["cookbooks", "forRecipe"],
+        { input: { recipeId: "r1" }, type: "query" },
+      ])
+    ).toEqual([{ id: "c1", title: "Cookbook c1" }]);
+  });
+
+  it("keeps the member recipes' fifty-recipe guarantee and adds no new one", async () => {
+    const trpc = makeTrpc();
+    const manyItems = Array.from({ length: 60 }, (_unused, index) => ({
+      kind: "recipe" as const,
+      recipe: { id: `r${index}` },
+    }));
+
+    trpc.library.list.infiniteQueryOptions = (input: unknown, options: object) => ({
+      queryKey: [["library", "list"], { input, type: "infinite" }],
+      queryFn: async () => ({ items: manyItems, total: manyItems.length, nextCursor: null }),
+      initialPageParam: 0,
+      ...options,
+    });
+
+    const queryClient = new QueryClient();
+
+    await createWarmSet({ queryClient, trpc }).topUp();
+
+    const warmedDetails = queryClient
+      .getQueryCache()
+      .findAll({ queryKey: [["recipes", "get"]] })
+      .filter((query) => query.state.data != null);
+
+    expect(warmedDetails).toHaveLength(50);
+  });
+
   it("inspects the same Warm Set that top-up writes", async () => {
     const queryClient = new QueryClient();
     const warmSet = createWarmSet({ queryClient, trpc: makeTrpc() });
@@ -138,6 +232,7 @@ describe("WarmSet", () => {
 
     await expect(warmSet.inspect()).resolves.toEqual({
       recipes: 2,
+      cookbooks: 1,
       groceries: 1,
       stores: 0,
       plannedThisWeek: 0,
@@ -155,6 +250,20 @@ describe("WarmSet", () => {
     warmSet.promoteCreatedRecipe("new-recipe");
 
     expect(queryClient.getQueryCache().find({ queryKey: recipeKey })?.gcTime).toBe(604_800_000);
+  });
+
+  it("promotes a newly created cookbook into the Warm Set", () => {
+    const queryClient = new QueryClient();
+    const trpc = makeTrpc();
+    const warmSet = createWarmSet({ queryClient, trpc });
+    const cookbookKey = trpc.cookbooks.get.queryKey({ id: "new-cookbook" });
+
+    queryClient.setQueryData(cookbookKey, { id: "new-cookbook" });
+    warmSet.promoteCreatedCookbook("new-cookbook");
+
+    // Held at the offline cache's own lifetime, so it is in the floor now
+    // rather than at the next warm (ADR-0008).
+    expect(queryClient.getQueryCache().find({ queryKey: cookbookKey })?.gcTime).toBe(604_800_000);
   });
 
   it("reports a partial top-up without stamping completion", async () => {
