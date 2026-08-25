@@ -385,6 +385,8 @@
     "noneEditable": "Ainda não há livros de receitas que você possa editar.",
     "cardTitle": "Em livros de receitas",
     "cardInvitation": "Esta receita ainda não está em um livro de receitas.",
-    "fileIt": "Arquivar"
+    "fileIt": "Arquivar",
+    "removeFromCookbook": "Remover do livro",
+    "noMatchingMembers": "Nenhuma receita neste livro corresponde aos seus filtros."
   }
 }

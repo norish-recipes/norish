@@ -385,6 +385,8 @@
     "noneEditable": "There are no cookbooks you can edit yet.",
     "cardTitle": "In cookbooks",
     "cardInvitation": "This recipe is not in a cookbook yet.",
-    "fileIt": "File it"
+    "fileIt": "File it",
+    "removeFromCookbook": "Remove from cookbook",
+    "noMatchingMembers": "No recipes in this cookbook match your filters."
   }
 }

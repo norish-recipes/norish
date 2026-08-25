@@ -385,6 +385,8 @@
     "noneEditable": "Es gibt keine Kochbücher, die Sie bearbeiten können.",
     "cardTitle": "In Kochbüchern",
     "cardInvitation": "Dieses Rezept ist noch in keinem Kochbuch.",
-    "fileIt": "Einsortieren"
+    "fileIt": "Einsortieren",
+    "removeFromCookbook": "Aus Kochbuch entfernen",
+    "noMatchingMembers": "In diesem Kochbuch gibt es keine Rezepte, die zu Ihren Filtern passen."
   }
 }

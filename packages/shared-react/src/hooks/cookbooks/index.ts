@@ -1,5 +1,6 @@
 import type { CreateCookbookHooksOptions } from "./types";
 import { createUseCookbookQuery } from "./use-cookbook-query";
+import { createUseCookbookRecipesQuery } from "./use-cookbook-recipes-query";
 import { createUseCookbooksCache } from "./use-cookbooks-cache";
 import { createUseCookbooksMutations } from "./use-cookbooks-mutations";
 import { createUseCookbooksQuery } from "./use-cookbooks-query";
@@ -21,9 +22,11 @@ export type {
 } from "./types";
 
 export type { CookbookQueryResult } from "./use-cookbook-query";
+export type { CookbookRecipesQueryResult } from "./use-cookbook-recipes-query";
 
 export {
   createUseCookbookQuery,
+  createUseCookbookRecipesQuery,
   createUseEditableCookbooksQuery,
   createUseRecipeCookbooksQuery,
   createUseCookbooksCache,
@@ -38,6 +41,7 @@ export function createCookbookHooks(options: CreateCookbookHooksOptions) {
   return {
     useCookbooksCacheHelpers,
     useCookbookQuery: createUseCookbookQuery(options),
+    useCookbookRecipesQuery: createUseCookbookRecipesQuery(options),
     useRecipeCookbooksQuery: createUseRecipeCookbooksQuery(options),
     useEditableCookbooksQuery: createUseEditableCookbooksQuery(options),
     useCookbooksQuery: createUseCookbooksQuery(options),

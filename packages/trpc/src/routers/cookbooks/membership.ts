@@ -1,17 +1,21 @@
 import { z } from "zod";
 
+import type { FilterMode, SortOrder } from "@norish/shared/contracts";
 import {
   addRecipeToCookbook,
   listCookbooksForRecipe,
   listEditableCookbooksForRecipe,
   removeRecipeFromCookbook,
 } from "@norish/db/repositories/cookbooks";
+import { listRecipes } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   CookbookForRecipeInputSchema,
   CookbookMembershipInputSchema,
+  CookbookRecipesInputSchema,
   CookbookSummarySchema,
   EditableCookbookSchema,
+  RecipeListResultSchema,
 } from "@norish/shared/contracts/zod";
 
 import { authedProcedure } from "../../middleware";
@@ -101,8 +105,46 @@ const editableForRecipe = authedProcedure
     return listEditableCookbooksForRecipe(listContextFor(ctx), input.recipeId);
   });
 
+/**
+ * A cookbook's members, paged through the recipe list itself.
+ *
+ * Reusing `listRecipes` is the point: the members answer the same view policy
+ * condition the Library applies, so the count on the card and the list on the
+ * page agree by construction, and a large cookbook stays usable under the
+ * reader's own search and filters (ADR-0027).
+ */
+const recipes = authedProcedure
+  .input(CookbookRecipesInputSchema)
+  .output(RecipeListResultSchema)
+  .query(async ({ ctx, input }) => {
+    // Seeing a cookbook is enough to browse it; the members filter themselves.
+    await assertCookbookAccess(ctx, input.cookbookId, "view");
+
+    const result = await listRecipes(
+      listContextFor(ctx),
+      input.limit,
+      input.cursor,
+      input.search,
+      input.searchFields,
+      input.tags,
+      input.filterMode as FilterMode,
+      input.sortMode as SortOrder,
+      input.minRating,
+      input.maxCookingTime,
+      input.categories,
+      { cookbookId: input.cookbookId }
+    );
+
+    return {
+      recipes: result.recipes,
+      total: result.total,
+      nextCursor: input.cursor + input.limit < result.total ? input.cursor + input.limit : null,
+    };
+  });
+
 export const cookbookMembershipProcedures = router({
   setMembership,
   forRecipe,
   editableForRecipe,
+  recipes,
 });

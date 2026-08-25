@@ -25,9 +25,9 @@ import {
   removeRecipeFromCookbook,
   renameCookbook,
 } from "@norish/db/repositories/cookbooks";
-import { deleteRecipeById } from "@norish/db/repositories/recipes";
+import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import { cookbooks as cookbooksTable } from "@norish/db/schema";
+import { cookbooks as cookbooksTable, recipeImages as recipeImagesTable } from "@norish/db/schema";
 
 import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -247,6 +247,108 @@ describe("cookbook repository", () => {
       // Two readers, two honest counts for the same cookbook (ADR-0027).
       expect((await getCookbookForViewer(viewer(strangerId), cookbook.id))?.memberCount).toBe(1);
       expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.memberCount).toBe(1);
+    });
+  });
+
+  describe("browsing a cookbook", () => {
+    it("filters members by the same view policy the recipe list applies", async () => {
+      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
+      const cookbook = await createCookbook({ userId: ownerId, title: "Shared" });
+
+      await orphan(cookbook.id);
+
+      const mine = await createTestRecipe(strangerId, { name: "Mine" });
+      const theirs = await createTestRecipe(ownerId, { name: "Theirs" });
+
+      await addRecipeToCookbook(cookbook.id, mine.id);
+      await addRecipeToCookbook(cookbook.id, theirs.id);
+
+      const seen = await listRecipes(
+        viewer(strangerId),
+        50,
+        0,
+        undefined,
+        ["title"],
+        undefined,
+        "AND",
+        "dateDesc",
+        undefined,
+        undefined,
+        undefined,
+        { cookbookId: cookbook.id }
+      );
+
+      // Count and list agree by construction: the member query and the card's
+      // count run the same policy condition (ADR-0027).
+      expect(seen.recipes.map((recipe) => recipe.id)).toEqual([mine.id]);
+      expect(seen.total).toBe(1);
+      expect((await getCookbookForViewer(viewer(strangerId), cookbook.id))?.memberCount).toBe(1);
+    });
+
+    it("lists only members, under the reader's own sort and search", async () => {
+      const cookbook = await createCookbook({ userId: ownerId, title: "Weeknights" });
+      const inside = await createTestRecipe(ownerId, { name: "Aubergine bake" });
+      const alsoInside = await createTestRecipe(ownerId, { name: "Bean stew" });
+
+      await createTestRecipe(ownerId, { name: "Not filed" });
+      await addRecipeToCookbook(cookbook.id, inside.id);
+      await addRecipeToCookbook(cookbook.id, alsoInside.id);
+
+      const byTitle = await listRecipes(
+        viewer(ownerId),
+        50,
+        0,
+        undefined,
+        ["title"],
+        undefined,
+        "AND",
+        "titleAsc",
+        undefined,
+        undefined,
+        undefined,
+        { cookbookId: cookbook.id }
+      );
+
+      expect(byTitle.recipes.map((recipe) => recipe.name)).toEqual(["Aubergine bake", "Bean stew"]);
+
+      const searched = await listRecipes(
+        viewer(ownerId),
+        50,
+        0,
+        "aubergine",
+        ["title"],
+        undefined,
+        "AND",
+        "dateDesc",
+        undefined,
+        undefined,
+        undefined,
+        { cookbookId: cookbook.id }
+      );
+
+      expect(searched.recipes.map((recipe) => recipe.id)).toEqual([inside.id]);
+    });
+
+    it("builds a stable derived cover from the members' primary images", async () => {
+      const cookbook = await createCookbook({ userId: ownerId, title: "Pictures" });
+      const withImage = await createTestRecipe(ownerId, { name: "With picture" });
+
+      await getTestDb()
+        .insert(recipeImagesTable)
+        .values({ recipeId: withImage.id, image: "/recipes/images/one.jpg", order: 0 });
+      await addRecipeToCookbook(cookbook.id, withImage.id);
+      // A member with no picture fills nothing rather than a blank tile.
+      await addRecipeToCookbook(
+        cookbook.id,
+        (await createTestRecipe(ownerId, { name: "No picture" })).id
+      );
+
+      const first = await getCookbookForViewer(viewer(ownerId), cookbook.id);
+      const second = await getCookbookForViewer(viewer(ownerId), cookbook.id);
+
+      expect(first?.coverImages).toEqual(["/recipes/images/one.jpg"]);
+      expect(second?.coverImages).toEqual(first?.coverImages);
+      expect(first?.memberCount).toBe(2);
     });
   });
 

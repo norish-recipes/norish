@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { clientMintedId } from "./common";
+import { RecipeListInputSchema } from "./recipe";
 
 /**
  * The Cookbook title: the only thing a cookbook stores beyond its own row
@@ -55,6 +56,14 @@ export const CookbookMembershipInputSchema = z.object({
 
 export const CookbookForRecipeInputSchema = z.object({
   recipeId: z.uuid(),
+});
+
+/**
+ * A cookbook's members, read through the recipe list's own input so the page
+ * honours the reader's sort, search and filters without inventing anything.
+ */
+export const CookbookRecipesInputSchema = RecipeListInputSchema.extend({
+  cookbookId: z.uuid(),
 });
 
 export const CookbookRenameInputSchema = z.object({

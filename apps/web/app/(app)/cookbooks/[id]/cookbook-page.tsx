@@ -3,15 +3,24 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CookbookTitlePanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
+import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
+import SearchInput from "@/components/dashboard/search-input";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { usePermissionsContext } from "@/context/permissions-context";
+import {
+  RecipeViewModeProvider,
+  useRecipeDashboardViewMode,
+} from "@/context/recipe-view-mode-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
+import { recipeViewModePreference } from "@/lib/recipe-view-mode";
 import { EllipsisHorizontalIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
-import { Button, Dropdown, Label, Spinner } from "@heroui/react";
+import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
+
+import CookbookMembers from "./cookbook-members";
 
 /**
  * A cookbook's own page: its own address, so it can be linked, bookmarked and
@@ -20,8 +29,9 @@ import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-token
  * The title carries the same Rename and Delete the card carries, so a name can
  * be fixed without leaving the thing being renamed.
  */
-export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
+function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
   const router = useRouter();
+  const [viewMode, setViewMode] = useRecipeDashboardViewMode();
   const t = useTranslations("recipes.cookbooks");
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
   const { renameCookbook, deleteCookbook } = useCookbooksMutations();
@@ -76,72 +86,94 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
           </span>
         </div>
 
-        {(canEdit || canDelete) && (
-          <Dropdown isOpen={menuOpen} onOpenChange={setMenuOpen}>
-            <Button
-              isIconOnly
-              aria-label={t("options")}
-              className="transition active:scale-95"
-              size="sm"
-              variant="tertiary"
-            >
-              <EllipsisHorizontalIcon className="text-muted h-5 w-5" />
-            </Button>
-            <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
-              <Dropdown.Menu aria-label={t("options")}>
-                {canEdit ? (
-                  <Dropdown.Item
-                    key="rename"
-                    className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                    id="rename"
-                    textValue={t("renameTitle")}
-                  >
-                    <Button
-                      className={twMerge("w-full justify-start bg-transparent", cssButtonPill)}
-                      size="md"
-                      variant="tertiary"
-                      // The menu closes before the action runs, so its items
-                      // cannot rebuild mid-exit and steal focus from the panel
-                      // the action opens.
-                      onPress={() => {
-                        setMenuOpen(false);
-                        setRenameOpen(true);
-                      }}
+        <div className="flex items-center gap-2">
+          <RecipeViewModeToggle />
+          {(canEdit || canDelete) && (
+            <Dropdown isOpen={menuOpen} onOpenChange={setMenuOpen}>
+              <Button
+                isIconOnly
+                aria-label={t("options")}
+                className="transition active:scale-95"
+                size="sm"
+                variant="tertiary"
+              >
+                <EllipsisHorizontalIcon className="text-muted h-5 w-5" />
+              </Button>
+              <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
+                <Dropdown.Menu aria-label={t("options")}>
+                  {canEdit ? (
+                    <Dropdown.Item
+                      key="rename"
+                      className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                      id="rename"
+                      textValue={t("renameTitle")}
                     >
-                      <PencilSquareIcon className="text-muted size-4" />
-                      <Label className="text-sm font-medium">{t("renameTitle")}</Label>
-                    </Button>
-                  </Dropdown.Item>
-                ) : null}
-                {canDelete ? (
-                  <Dropdown.Item
-                    key="delete"
-                    className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                    id="delete"
-                    textValue={t("deleteTitle")}
-                  >
-                    <Button
-                      className={twMerge(
-                        "w-full justify-start bg-transparent",
-                        cssButtonPillDanger
-                      )}
-                      size="md"
-                      variant="tertiary"
-                      onPress={() => {
-                        setMenuOpen(false);
-                        setDeleteOpen(true);
-                      }}
+                      <Button
+                        className={twMerge("w-full justify-start bg-transparent", cssButtonPill)}
+                        size="md"
+                        variant="tertiary"
+                        // The menu closes before the action runs, so its items
+                        // cannot rebuild mid-exit and steal focus from the panel
+                        // the action opens.
+                        onPress={() => {
+                          setMenuOpen(false);
+                          setRenameOpen(true);
+                        }}
+                      >
+                        <PencilSquareIcon className="text-muted size-4" />
+                        <Label className="text-sm font-medium">{t("renameTitle")}</Label>
+                      </Button>
+                    </Dropdown.Item>
+                  ) : null}
+                  {canDelete ? (
+                    <Dropdown.Item
+                      key="delete"
+                      className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                      id="delete"
+                      textValue={t("deleteTitle")}
                     >
-                      <TrashIcon className="text-danger size-4" />
-                      <Label className="text-danger text-sm font-medium">{t("deleteTitle")}</Label>
-                    </Button>
-                  </Dropdown.Item>
-                ) : null}
-              </Dropdown.Menu>
-            </Dropdown.Popover>
-          </Dropdown>
-        )}
+                      <Button
+                        className={twMerge(
+                          "w-full justify-start bg-transparent",
+                          cssButtonPillDanger
+                        )}
+                        size="md"
+                        variant="tertiary"
+                        onPress={() => {
+                          setMenuOpen(false);
+                          setDeleteOpen(true);
+                        }}
+                      >
+                        <TrashIcon className="text-danger size-4" />
+                        <Label className="text-danger text-sm font-medium">
+                          {t("deleteTitle")}
+                        </Label>
+                      </Button>
+                    </Dropdown.Item>
+                  ) : null}
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
+          )}
+        </div>
       </div>
+
+      <div className="min-w-0">
+        <SearchInput />
+      </div>
+
+      <Tabs
+        className="min-h-0 flex-1 gap-5"
+        selectedKey={viewMode}
+        onSelectionChange={(key) => setViewMode(recipeViewModePreference.parse(String(key)))}
+      >
+        <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="grid">
+          <CookbookMembers cookbookId={cookbookId} variant="grid" />
+        </Tabs.Panel>
+        <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
+          <CookbookMembers cookbookId={cookbookId} variant="list" />
+        </Tabs.Panel>
+      </Tabs>
 
       <CookbookTitlePanel
         initialTitle={cookbook.title}
@@ -158,5 +190,18 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
         onConfirm={handleDelete}
       />
     </section>
+  );
+}
+
+/**
+ * The stored grid-or-list preference is the same device preference the
+ * Library uses, so a cookbook looks like the rest of the app rather than
+ * having a view mode of its own.
+ */
+export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
+  return (
+    <RecipeViewModeProvider>
+      <CookbookPageContent cookbookId={cookbookId} />
+    </RecipeViewModeProvider>
   );
 }

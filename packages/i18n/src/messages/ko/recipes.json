@@ -385,6 +385,8 @@
     "noneEditable": "편집할 수 있는 요리책이 아직 없습니다.",
     "cardTitle": "수록된 요리책",
     "cardInvitation": "이 레시피는 아직 요리책에 없습니다.",
-    "fileIt": "정리하기"
+    "fileIt": "정리하기",
+    "removeFromCookbook": "요리책에서 제거",
+    "noMatchingMembers": "이 요리책에 필터와 일치하는 레시피가 없습니다."
   }
 }

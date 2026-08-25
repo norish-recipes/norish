@@ -385,6 +385,8 @@
     "noneEditable": "Der er ingen kogebøger, du kan redigere.",
     "cardTitle": "I kogebøger",
     "cardInvitation": "Denne opskrift er endnu ikke i en kogebog.",
-    "fileIt": "Læg den i en kogebog"
+    "fileIt": "Læg den i en kogebog",
+    "removeFromCookbook": "Fjern fra kogebog",
+    "noMatchingMembers": "Der er ingen opskrifter i denne kogebog, der matcher dine filtre."
   }
 }

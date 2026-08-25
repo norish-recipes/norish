@@ -29,6 +29,7 @@ import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import {
+  cookbookRecipes,
   householdUsers,
   ingredients,
   recipeImages,
@@ -353,7 +354,15 @@ export async function listRecipes(
   sortMode: SortOrder = "dateDesc",
   minRating?: number,
   maxCookingTime?: number,
-  categories?: RecipeCategory[]
+  categories?: RecipeCategory[],
+  /**
+   * Narrow the list to one cookbook's members. The rest of this function is
+   * untouched by it, so a cookbook's page gets the reader's own sort, search
+   * and filters for free — and the members answer the same view policy the
+   * Library applies, which is what makes a cookbook's count and its list
+   * agree by construction (ADR-0027).
+   */
+  options?: { cookbookId?: string }
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -362,6 +371,19 @@ export async function listRecipes(
 
   if (policyCondition) {
     whereConditions.push(policyCondition);
+  }
+
+  if (options?.cookbookId) {
+    // `"recipes"."id"` by hand: drizzle renders an interpolated column
+    // unqualified, and inside this subquery an unqualified `"id"` would
+    // resolve to the membership table's own column.
+    whereConditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM ${cookbookRecipes} AS membership
+        WHERE membership.cookbook_id = ${options.cookbookId}
+          AND membership.recipe_id = "recipes"."id"
+      )`
+    );
   }
 
   // Build full-text search with weighted ranking

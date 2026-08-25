@@ -2,6 +2,10 @@
 
 export { useCookbookQuery, type CookbookQueryResult } from "./use-cookbook-query";
 export {
+  useCookbookRecipesQuery,
+  type CookbookRecipesQueryResult,
+} from "./use-cookbook-recipes-query";
+export {
   useCookbooksQuery,
   type CookbookFilters,
   type CookbooksQueryResult,

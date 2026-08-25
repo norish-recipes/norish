@@ -385,6 +385,8 @@
     "noneEditable": "Il n’y a pas encore de livre de cuisine que vous puissiez modifier.",
     "cardTitle": "Dans les livres de cuisine",
     "cardInvitation": "Cette recette n’est encore dans aucun livre de cuisine.",
-    "fileIt": "Classer"
+    "fileIt": "Classer",
+    "removeFromCookbook": "Retirer du livre",
+    "noMatchingMembers": "Aucune recette de ce livre ne correspond à vos filtres."
   }
 }

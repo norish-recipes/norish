@@ -385,6 +385,8 @@
     "noneEditable": "Er zijn nog geen kookboeken die je kunt bewerken.",
     "cardTitle": "In kookboeken",
     "cardInvitation": "Dit recept staat nog niet in een kookboek.",
-    "fileIt": "Opbergen"
+    "fileIt": "Opbergen",
+    "removeFromCookbook": "Uit kookboek verwijderen",
+    "noMatchingMembers": "Geen recepten in dit kookboek passen bij je filters."
   }
 }
