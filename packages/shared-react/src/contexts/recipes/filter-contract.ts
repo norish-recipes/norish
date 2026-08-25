@@ -165,6 +165,9 @@ export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
     minRating: filters.minRating ?? undefined,
     maxCookingTime: filters.maxCookingTime ?? undefined,
     type: filters.libraryType,
+    // Recipe-only, and honoured by the Library union in SQL so a page of it
+    // is correct. The older recipe list ignores the field.
+    favoritesOnly: filters.showFavoritesOnly,
   };
 }
 

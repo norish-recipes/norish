@@ -4,7 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import type { PendingRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 
+import type { InfiniteLibraryData } from "../../library/library-cache";
 import type { CreateRecipeHooksOptions } from "../types";
+import { applyRecipeUpdateToLibrary } from "../../library/library-cache";
 
 export const OPTIMISTIC_PENDING_RECIPE_PREFIX = "optimistic-pending-recipe:";
 
@@ -36,6 +38,10 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
 
     const recipesBaseKey = trpc.recipes.list.queryKey({});
     const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
+    // The Library holds the same recipes in one interleaved list, so anything
+    // that reaches the recipe lists has to reach it too (ADR-0026).
+    const libraryBaseKey = trpc.library.list.queryKey({});
+    const libraryPath = useMemo(() => [libraryBaseKey[0]], [libraryBaseKey]);
 
     const pendingKey = trpc.recipes.getPending.queryKey();
 
@@ -48,13 +54,22 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
         for (const [key] of queries) {
           queryClient.setQueryData<InfiniteRecipeData>(key, updater);
         }
+
+        for (const [key] of queryClient.getQueriesData<InfiniteLibraryData>({
+          queryKey: libraryPath,
+        })) {
+          queryClient.setQueryData<InfiniteLibraryData>(key, (previous) =>
+            applyRecipeUpdateToLibrary(previous, updater)
+          );
+        }
       },
-      [queryClient, recipesPath]
+      [queryClient, recipesPath, libraryPath]
     );
 
     const invalidate = useCallback(() => {
       queryClient.invalidateQueries({ queryKey: recipesPath });
-    }, [queryClient, recipesPath]);
+      queryClient.invalidateQueries({ queryKey: libraryPath });
+    }, [queryClient, recipesPath, libraryPath]);
 
     const addPendingRecipe = useCallback(
       (recipeId: string) => {

@@ -5,7 +5,7 @@
     "cookbooksTitle": "Вашите готварски книги",
     "searchPlaceholder": "Търсене или добавяне на рецепта...",
     "searchRecipesPlaceholder": "Търсене на рецепти...",
-    "recipeCount": "{count, plural, one {# рецепта} other {# рецепти}}",
+    "libraryCount": "{count, plural, one {# запис} other {# записа}}",
     "addRecipe": "Добави рецепта",
     "importFromUrl": "URL",
     "importFromPaste": "Поставяне",

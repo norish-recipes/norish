@@ -5,7 +5,7 @@
     "cookbooksTitle": "Kokebøkene dine",
     "searchPlaceholder": "Søk eller legg til oppskrift...",
     "searchRecipesPlaceholder": "Søk oppskrifter...",
-    "recipeCount": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
+    "libraryCount": "{count, plural, one {# element} other {# elementer}}",
     "addRecipe": "Legg til oppskrift",
     "importFromUrl": "URL",
     "importFromPaste": "Lim inn",

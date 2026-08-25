@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { clientMintedId } from "./common";
-import { RecipeListInputSchema } from "./recipe";
+import { RecipeDashboardSchema, RecipeListInputSchema } from "./recipe";
 
 /**
  * The Cookbook title: the only thing a cookbook stores beyond its own row
@@ -104,6 +104,40 @@ export const CookbookListInputSchema = z.object({
 
 export const CookbookListResultSchema = z.object({
   cookbooks: z.array(CookbookSummarySchema),
+  total: z.number().int().nonnegative(),
+  nextCursor: z.number().int().nonnegative().nullable(),
+});
+
+/**
+ * One Library row: a recipe or a cookbook, discriminated by kind.
+ *
+ * The Library is one list rather than two bands (ADR-0026), so its rows are a
+ * discriminated union and every reader of them has to say which kind it is
+ * drawing.
+ */
+export const LibraryItemSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("recipe"), recipe: RecipeDashboardSchema }),
+  z.object({ kind: z.literal("cookbook"), cookbook: CookbookSummarySchema }),
+]);
+
+export const LibraryListInputSchema = RecipeListInputSchema.extend({
+  /**
+   * Which kind of thing to return. A parameter of the query rather than a
+   * slice of an already-fetched page, so paging stays correct.
+   */
+  type: z
+    .enum(["all", "recipes", "cookbooks"])
+    .default("all")
+    .describe("Which kind of Library row to return. Defaults to both."),
+  favoritesOnly: z
+    .boolean()
+    .default(false)
+    .describe("Restrict to the caller's favourites. Recipes only."),
+});
+
+export const LibraryListResultSchema = z.object({
+  items: z.array(LibraryItemSchema),
+  /** Counts both kinds. Nothing may read this as a recipe count. */
   total: z.number().int().nonnegative(),
   nextCursor: z.number().int().nonnegative().nullable(),
 });

@@ -20,17 +20,21 @@ const WARM_FULL_RECIPE_COUNT = 50;
 
 type CalendarRange = { startISO: string; endISO: string };
 type RecipeListItem = { id: string; image?: string | null };
-type RecipeListPage = { recipes: RecipeListItem[]; total: number; nextCursor: number | null };
-type RecipeListInfiniteData = { pages: RecipeListPage[] };
+type LibraryListItem =
+  { kind: "recipe"; recipe: RecipeListItem } | { kind: "cookbook"; cookbook: { id: string } };
+type LibraryListPage = { items: LibraryListItem[]; total: number; nextCursor: number | null };
+type LibraryListInfiniteData = { pages: LibraryListPage[] };
 
 interface WarmSetTRPC {
-  recipes: {
+  library: {
     list: {
       infiniteQueryOptions: (
-        input: ReturnType<typeof recipeListInput>,
-        options: { getNextPageParam: (lastPage: RecipeListPage) => number | null }
+        input: ReturnType<typeof libraryListInput>,
+        options: { getNextPageParam: (lastPage: LibraryListPage) => number | null }
       ) => object;
     };
+  };
+  recipes: {
     get: {
       queryOptions: (input: { id: string }) => object;
       queryKey: (input: { id: string }) => readonly unknown[];
@@ -142,7 +146,12 @@ export function createWarmSet({
   };
 }
 
-function recipeListInput() {
+/**
+ * The Library's own first page, under the reader's default filters — the same
+ * input the dashboard asks for, so the guaranteed floor and the reader's first
+ * paint are one cache entry (ADR-0009).
+ */
+function libraryListInput() {
   return {
     limit: WARM_RECIPE_LIST_LIMIT,
     ...toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS),
@@ -163,7 +172,7 @@ function withWarmGcTime<T extends object>(options: T): T {
 
 async function warmRecipes(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<boolean> {
   const listOptions = withWarmGcTime(
-    trpc.recipes.list.infiniteQueryOptions(recipeListInput(), {
+    trpc.library.list.infiniteQueryOptions(libraryListInput(), {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     })
   );
@@ -175,6 +184,8 @@ async function warmRecipes(trpc: WarmSetTRPC, queryClient: QueryClient): Promise
     return false;
   }
 
+  // Cookbooks come down with the list itself; only the member recipes need
+  // their details warming, and they keep the existing fifty-recipe guarantee.
   const recipes = extractRecipeListItems(data).slice(0, WARM_FULL_RECIPE_COUNT);
   const [detailResults, imagesComplete] = await Promise.all([
     Promise.allSettled(
@@ -267,7 +278,11 @@ function sameOriginImageUrl(image: string | null | undefined): string | null {
 }
 
 function extractRecipeListItems(data: unknown): RecipeListItem[] {
-  const infinite = data as RecipeListInfiniteData | undefined;
+  const infinite = data as LibraryListInfiniteData | undefined;
 
-  return infinite?.pages?.flatMap((page) => page.recipes) ?? [];
+  return (
+    infinite?.pages?.flatMap((page) =>
+      page.items.flatMap((item) => (item.kind === "recipe" ? [item.recipe] : []))
+    ) ?? []
+  );
 }

@@ -9,6 +9,9 @@ import type {
   CookbookRenameInputSchema,
   CookbookSummarySchema,
   EditableCookbookSchema,
+  LibraryItemSchema,
+  LibraryListInputSchema,
+  LibraryListResultSchema,
 } from "@norish/shared/contracts/zod";
 
 export type CookbookSummaryDTO = z.output<typeof CookbookSummarySchema>;
@@ -19,3 +22,6 @@ export type CookbookDeleteInput = z.infer<typeof CookbookDeleteInputSchema>;
 export type CookbookListInput = z.input<typeof CookbookListInputSchema>;
 export type CookbookListResult = z.output<typeof CookbookListResultSchema>;
 export type CookbookMembershipInput = z.infer<typeof CookbookMembershipInputSchema>;
+export type LibraryItemDTO = z.output<typeof LibraryItemSchema>;
+export type LibraryListInput = z.input<typeof LibraryListInputSchema>;
+export type LibraryListResult = z.output<typeof LibraryListResultSchema>;

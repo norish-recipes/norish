@@ -181,6 +181,9 @@ test("the Glance Bar answers above the fold and the cards follow cooking order",
     "Cooking time",
     "Nutrition",
     "Source",
+    // Last on the page, and always drawn: with no cookbooks it is the
+    // invitation to file the recipe into one.
+    "In cookbooks",
   ]);
 });
 

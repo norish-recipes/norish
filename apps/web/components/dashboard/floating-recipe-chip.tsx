@@ -8,6 +8,13 @@ import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+/**
+ * The floating Library pill: how much is on screen, and a shortcut to the
+ * Filters panel.
+ *
+ * The count is the Library's, which holds both kinds — so it counts items
+ * rather than recipes (ADR-0026).
+ */
 export default function FloatingRecipeChip() {
   const { total, isLoading } = useRecipesContext();
   const [isOpen, setIsOpen] = useState(false);
@@ -46,7 +53,7 @@ export default function FloatingRecipeChip() {
                 variant="tertiary"
               >
                 <span className="text-sm">
-                  {t("recipeCount", {
+                  {t("libraryCount", {
                     count: total,
                   })}
                 </span>

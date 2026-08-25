@@ -5,7 +5,7 @@
     "cookbooksTitle": "Your cookbooks",
     "searchPlaceholder": "Search or add recipe...",
     "searchRecipesPlaceholder": "Search recipes...",
-    "recipeCount": "{count, plural, one {# recipe} other {# recipes}}",
+    "libraryCount": "{count, plural, one {# item} other {# items}}",
     "addRecipe": "Add Recipe",
     "importFromUrl": "URL",
     "importFromPaste": "Paste",

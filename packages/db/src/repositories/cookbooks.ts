@@ -278,6 +278,31 @@ export async function listCookbooks(
   };
 }
 
+/** A known set of cookbooks, in the order the caller asked for them. */
+export async function listCookbooksByIds(
+  ctx: RecipeListContext,
+  ids: string[]
+): Promise<CookbookSummaryDTO[]> {
+  if (ids.length === 0) return [];
+
+  const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+  const idCondition = inArray(cookbooks.id, ids);
+
+  const rows = await db
+    .select(COOKBOOK_COLUMNS)
+    .from(cookbooks)
+    .where(policyCondition ? and(idCondition, policyCondition) : idCondition);
+
+  const summaries = await withMemberSummaries(ctx, rows);
+  const byId = new Map(summaries.map((summary) => [summary.id, summary]));
+
+  return ids.flatMap((id) => {
+    const summary = byId.get(id);
+
+    return summary ? [summary] : [];
+  });
+}
+
 /** The cookbooks holding a recipe, as its own page lists them. */
 export async function listCookbooksForRecipe(
   ctx: RecipeListContext,

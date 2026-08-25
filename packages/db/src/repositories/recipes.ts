@@ -343,6 +343,95 @@ export const PRIMARY_IMAGE_SQL = sql<string | null>`COALESCE(
   "recipes"."image"
 )`;
 
+/**
+ * The weighted search document and its rank, for whichever fields the reader
+ * has chosen.
+ *
+ * Priority is title (A) > tags (B) > ingredients (C) > description/steps (D),
+ * and the terms are prefix-matched so "om" finds "oma". Returns null when
+ * there is nothing to search for, either because no term survived
+ * sanitisation or because the reader unticked every field.
+ *
+ * Every reference is spelled `"recipes"."…"` by hand for the same reason
+ * PRIMARY_IMAGE_SQL is: an interpolated drizzle column renders unqualified,
+ * which resolves to the wrong table inside a correlated subquery and silently
+ * matches nothing. The explicit spelling is what lets one builder serve both
+ * the recipe list and the Library union.
+ */
+export function recipeSearchSql(
+  search: string | undefined,
+  searchFields: SearchField[]
+): { match: ReturnType<typeof sql>; rank: ReturnType<typeof sql<number>> } | null {
+  if (!search || searchFields.length === 0) return null;
+
+  // Sanitize terms to remove PostgreSQL tsquery special characters.
+  const sanitizeTsqueryTerm = (term: string): string => term.replace(/[&|!():<>*\\'"]/g, "").trim();
+
+  const searchTerms = search
+    .trim()
+    .split(/\s+/)
+    .map(sanitizeTsqueryTerm)
+    .filter((term) => term.length > 0)
+    .map((term) => `${term}:*`)
+    .join(" | ");
+
+  if (!searchTerms) return null;
+
+  const parts: ReturnType<typeof sql>[] = [];
+
+  for (const field of searchFields) {
+    switch (field) {
+      case "title":
+        parts.push(sql`setweight(to_tsvector('simple', coalesce("recipes"."name", '')), 'A')`);
+        break;
+      case "tags":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce((
+            SELECT string_agg(search_tag.name, ' ')
+            FROM ${recipeTags} search_rt
+            INNER JOIN ${tags} search_tag ON search_rt.tag_id = search_tag.id
+            WHERE search_rt.recipe_id = "recipes"."id"
+          ), '')), 'B')`
+        );
+        break;
+      case "ingredients":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce((
+            SELECT string_agg(search_ingredient.name, ' ')
+            FROM ${recipeIngredients} search_ri
+            INNER JOIN ${ingredients} search_ingredient ON search_ri.ingredient_id = search_ingredient.id
+            WHERE search_ri.recipe_id = "recipes"."id"
+          ), '')), 'C')`
+        );
+        break;
+      case "description":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce("recipes"."description", '')), 'D')`
+        );
+        break;
+      case "steps":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce((
+            SELECT string_agg(search_step.step, ' ')
+            FROM ${stepsTable} search_step
+            WHERE search_step.recipe_id = "recipes"."id"
+          ), '')), 'D')`
+        );
+        break;
+    }
+  }
+
+  if (parts.length === 0) return null;
+
+  const document = sql.join(parts, sql` || `);
+  const query = sql`to_tsquery('simple', ${searchTerms})`;
+
+  return {
+    match: sql`(${document}) @@ ${query}`,
+    rank: sql<number>`ts_rank(${document}, ${query})`,
+  };
+}
+
 export async function listRecipes(
   ctx: RecipeListContext,
   limit: number,
@@ -386,93 +475,14 @@ export async function listRecipes(
     );
   }
 
-  // Build full-text search with weighted ranking
-  // Priority: title (A) > tags (B) > ingredients (C) > description/steps (D)
+  // Build full-text search with weighted ranking, through the one builder
+  // the Library union uses too.
+  const searchSql = recipeSearchSql(search, searchFields);
   let searchRank: ReturnType<typeof sql<number>> | null = null;
 
-  if (search && searchFields.length > 0) {
-    // Convert search terms to tsquery format with prefix matching
-    // Each term gets :* suffix for partial word matching (e.g., "om" matches "oma")
-    // Sanitize terms to remove PostgreSQL tsquery special characters: & | ! ( ) : * \ ' "
-    const sanitizeTsqueryTerm = (term: string): string =>
-      term.replace(/[&|!():<>*\\'"]/g, "").trim();
-
-    const searchTerms = search
-      .trim()
-      .split(/\s+/)
-      .map(sanitizeTsqueryTerm)
-      .filter((t) => t.length > 0)
-      .map((t) => `${t}:*`)
-      .join(" | ");
-
-    // Skip search if all terms were filtered out (e.g., search was only special characters)
-    if (!searchTerms) {
-      // Fall through without adding search conditions
-    } else {
-      // Build weighted tsvector components based on selected fields
-      const tsvectorParts: ReturnType<typeof sql>[] = [];
-
-      for (const field of searchFields) {
-        switch (field) {
-          case "title":
-            // Weight A (highest) for title
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce(${recipes.name}, '')), 'A')`
-            );
-            break;
-          case "tags":
-            // Weight B for tags - aggregate from related table
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce((
-              SELECT string_agg(t.name, ' ')
-              FROM ${recipeTags} rt
-              INNER JOIN ${tags} t ON rt.tag_id = t.id
-              WHERE rt.recipe_id = ${recipes.id}
-            ), '')), 'B')`
-            );
-            break;
-          case "ingredients":
-            // Weight C for ingredients - aggregate from related table
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce((
-              SELECT string_agg(i.name, ' ')
-              FROM ${recipeIngredients} ri
-              INNER JOIN ${ingredients} i ON ri.ingredient_id = i.id
-              WHERE ri.recipe_id = ${recipes.id}
-            ), '')), 'C')`
-            );
-            break;
-          case "description":
-            // Weight D for description
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce(${recipes.description}, '')), 'D')`
-            );
-            break;
-          case "steps":
-            // Weight D for steps - aggregate from related table
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce((
-              SELECT string_agg(s.step, ' ')
-              FROM ${stepsTable} s
-              WHERE s.recipe_id = ${recipes.id}
-            ), '')), 'D')`
-            );
-            break;
-        }
-      }
-
-      if (tsvectorParts.length > 0) {
-        // Combine all tsvector parts with ||
-        const combinedTsvector = sql.join(tsvectorParts, sql` || `);
-        const tsQuery = sql`to_tsquery('simple', ${searchTerms})`;
-
-        // Add search condition using @@ operator
-        whereConditions.push(sql`(${combinedTsvector}) @@ ${tsQuery}`);
-
-        // Build rank expression for ordering
-        searchRank = sql<number>`ts_rank(${combinedTsvector}, ${tsQuery})`;
-      }
-    }
+  if (searchSql) {
+    whereConditions.push(searchSql.match);
+    searchRank = searchSql.rank;
   }
 
   let tagFilteredIds: string[] | undefined;
@@ -641,6 +651,96 @@ export async function listRecipes(
     recipes: filteredRecipes,
     total: minRating !== undefined ? filteredRecipes.length : Number(totalCount?.[0]?.count ?? 0),
   };
+}
+
+/**
+ * The dashboard projection for a known set of ids, in the order the caller
+ * asked for them.
+ *
+ * The Library union decides the order in SQL and then hydrates, so this is
+ * how a page of mixed rows gets its recipe halves without the union having to
+ * carry every card field through it.
+ */
+export async function listDashboardRecipesByIds(ids: string[]): Promise<RecipeDashboardDTO[]> {
+  if (ids.length === 0) return [];
+
+  const rows = await db.query.recipes.findMany({
+    where: inArray(recipes.id, ids),
+    columns: {
+      id: true,
+      userId: true,
+      name: true,
+      description: true,
+      notes: true,
+      url: true,
+      servings: true,
+      prepMinutes: true,
+      cookMinutes: true,
+      totalMinutes: true,
+      calories: true,
+      originCountry: true,
+      categories: true,
+      createdAt: true,
+      updatedAt: true,
+      version: true,
+    },
+    extras: {
+      image: PRIMARY_IMAGE_SQL.as("image"),
+    },
+    with: {
+      recipeTags: {
+        with: { tag: { columns: { id: true, name: true, version: true } } },
+        orderBy: (rt, { asc }) => [asc(rt.order)],
+      },
+      ratings: { columns: { rating: true } },
+    },
+  });
+
+  const formatted = rows.map((r) => {
+    const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
+    const ratingCount = ratingValues.length;
+
+    return {
+      id: r.id,
+      userId: r.userId,
+      name: r.name,
+      description: r.description ?? null,
+      notes: r.notes ?? null,
+      url: r.url ?? null,
+      image: r.image ?? null,
+      servings: r.servings ?? 1,
+      prepMinutes: r.prepMinutes ?? null,
+      cookMinutes: r.cookMinutes ?? null,
+      totalMinutes: r.totalMinutes ?? null,
+      calories: r.calories ?? null,
+      originCountry: r.originCountry ?? null,
+      categories: r.categories ?? [],
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      version: r.version,
+      tags: (r.recipeTags ?? []).flatMap(
+        (rt: { tag?: { name?: string; version?: number } | null }) =>
+          rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
+            ? [{ name: rt.tag.name, version: rt.tag.version }]
+            : []
+      ),
+      averageRating:
+        ratingCount > 0 ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingCount : null,
+      ratingCount,
+    };
+  });
+
+  const parsed = z.array(RecipeDashboardSchema).safeParse(formatted);
+
+  if (!parsed.success) throw new Error("RecipeDashboardDTO parse failed");
+
+  const byId = new Map(parsed.data.map((recipe) => [recipe.id, recipe]));
+
+  return ids.flatMap((id) => {
+    const recipe = byId.get(id);
+
+    return recipe ? [recipe] : [];
+  });
 }
 
 export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | null> {

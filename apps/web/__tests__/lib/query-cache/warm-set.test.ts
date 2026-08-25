@@ -34,19 +34,27 @@ vi.mock("@/lib/query-cache/persisted-query-client", async (importOriginal) => ({
 
 function makeTrpc() {
   return {
-    recipes: {
+    // The Library is what the Warm Set warms: one interleaved list holding
+    // both kinds (ADR-0026).
+    library: {
       list: {
         infiniteQueryOptions: (input: unknown, options: object) => ({
-          queryKey: [["recipes", "list"], { input, type: "infinite" }],
+          queryKey: [["library", "list"], { input, type: "infinite" }],
           queryFn: async () => ({
-            recipes: [{ id: "r1" }, { id: "r2" }],
-            total: 2,
+            items: [
+              { kind: "recipe", recipe: { id: "r1" } },
+              { kind: "recipe", recipe: { id: "r2" } },
+              { kind: "cookbook", cookbook: { id: "c1" } },
+            ],
+            total: 3,
             nextCursor: null,
           }),
           initialPageParam: 0,
           ...options,
         }),
       },
+    },
+    recipes: {
       get: {
         queryOptions: ({ id }: { id: string }) => ({
           queryKey: [["recipes", "get"], { input: { id }, type: "query" }],
@@ -184,10 +192,10 @@ describe("WarmSet", () => {
   it("stores warmed recipes' same-origin primary images", async () => {
     const trpc = makeTrpc();
 
-    trpc.recipes.list.infiniteQueryOptions = (input: unknown, options: object) => ({
-      queryKey: [["recipes", "list"], { input, type: "infinite" }],
+    trpc.library.list.infiniteQueryOptions = (input: unknown, options: object) => ({
+      queryKey: [["library", "list"], { input, type: "infinite" }],
       queryFn: async () => ({
-        recipes: [{ id: "r1", image: "/uploads/r1.jpg" }],
+        items: [{ kind: "recipe", recipe: { id: "r1", image: "/uploads/r1.jpg" } }],
         total: 1,
         nextCursor: null,
       }),

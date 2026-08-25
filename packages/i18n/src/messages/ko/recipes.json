@@ -5,7 +5,7 @@
     "cookbooksTitle": "내 요리책",
     "searchPlaceholder": "레시피를 검색하거나 추가...",
     "searchRecipesPlaceholder": "레시피 검색...",
-    "recipeCount": "{count, plural, one {#개 레시피} other {#개 레시피}}",
+    "libraryCount": "{count}개",
     "addRecipe": "레시피 추가",
     "importFromUrl": "URL",
     "importFromPaste": "붙여넣기",

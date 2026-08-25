@@ -24,6 +24,7 @@ describe("recipe filter contract", () => {
       minRating: undefined,
       maxCookingTime: undefined,
       type: "all",
+      favoritesOnly: false,
     });
     expect(serializeRecipeFilters(DEFAULT_RECIPE_FILTERS)).toBe(JSON.stringify(queryFilters));
   });

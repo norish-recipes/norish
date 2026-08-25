@@ -5,7 +5,7 @@
     "cookbooksTitle": "Twoje książki kucharskie",
     "searchPlaceholder": "Szukaj lub dodaj przepis...",
     "searchRecipesPlaceholder": "Szukaj przepisów...",
-    "recipeCount": "{count, plural, one {# przepis} other {# przepisów}}",
+    "libraryCount": "{count, plural, one {# element} other {# elementy}}",
     "addRecipe": "Dodaj przepis",
     "importFromUrl": "URL",
     "importFromPaste": "Wklej",

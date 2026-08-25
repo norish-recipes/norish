@@ -12,24 +12,23 @@ import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useCookbooksMutations, useCookbooksQuery } from "@/hooks/cookbooks";
+import { useCookbooksMutations } from "@/hooks/cookbooks";
+import { useLibraryQuery } from "@/hooks/library";
+
+import { toRecipesQueryFilters } from "@norish/shared-react/contexts";
 
 /**
- * The Library's list, for whichever type chip is lit.
+ * The Library's list: recipes and cookbooks interleaved, ordered by whatever
+ * sort the reader chose, and paged as one list rather than two (ADR-0026).
  *
- * Recipes and cookbooks are drawn by one grid from one discriminated item
- * type, so the chips are a plain filter on what kind of thing is on screen
- * rather than a control that also rearranges the page (ADR-0026).
+ * The type chip is a parameter of the query, so choosing Recipes or Cookbooks
+ * narrows the union rather than slicing a page that was already fetched — and
+ * the list's total counts both kinds, which is why nothing here reads it as a
+ * recipe count.
  */
 export default function LibraryView({ variant }: { variant: RecipeDashboardViewMode }) {
-  const { filters } = useRecipesFiltersContext();
-  const showsCookbooks = filters.libraryType === "cookbooks";
-
+  const { filters, isHydrated } = useRecipesFiltersContext();
   const {
-    recipes,
-    isLoading: isLoadingRecipes,
-    isFetchingMore: isFetchingMoreRecipes,
-    loadMore: loadMoreRecipes,
     pendingRecipeIds,
     hasAppliedFilters,
     clearFilters,
@@ -39,28 +38,30 @@ export default function LibraryView({ variant }: { variant: RecipeDashboardViewM
     deleteRecipe,
     allergies,
   } = useRecipesContext();
-
-  const {
-    cookbooks,
-    isLoading: isLoadingCookbooks,
-    isValidating: isValidatingCookbooks,
-    loadMore: loadMoreCookbooks,
-  } = useCookbooksQuery(
-    { search: filters.rawInput || undefined, sortMode: filters.sortMode },
-    { enabled: showsCookbooks }
-  );
   const { renameCookbook, deleteCookbook } = useCookbooksMutations();
 
-  const items = useMemo<LibraryGridItem[]>(() => {
-    if (showsCookbooks) {
-      return cookbooks.map((cookbook) => ({ kind: "cookbook", id: cookbook.id, cookbook }));
-    }
+  // The same filters the context passes, so both share one cache entry and
+  // one request.
+  const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
 
-    return [
+  // Until the persisted filters are applied, the default filters are a guess,
+  // so hold the loading presentation rather than painting a list the reader
+  // had filtered away.
+  const { items, isLoading, isValidating, loadMore } = useLibraryQuery(queryFilters, {
+    enabled: isHydrated,
+  });
+
+  const gridItems = useMemo<LibraryGridItem[]>(
+    () => [
       ...Array.from(pendingRecipeIds).map((id) => ({ kind: "pending" as const, id })),
-      ...recipes.map((recipe) => ({ kind: "recipe" as const, id: recipe.id, recipe })),
-    ];
-  }, [showsCookbooks, cookbooks, pendingRecipeIds, recipes]);
+      ...items.map((item) =>
+        item.kind === "recipe"
+          ? { kind: "recipe" as const, id: item.recipe.id, recipe: item.recipe }
+          : { kind: "cookbook" as const, id: item.cookbook.id, cookbook: item.cookbook }
+      ),
+    ],
+    [pendingRecipeIds, items]
+  );
 
   const renderItem = useCallback(
     (item: LibraryGridItem) => {
@@ -93,23 +94,22 @@ export default function LibraryView({ variant }: { variant: RecipeDashboardViewM
     [variant, allergies, isFavorite, deleteRecipe, toggleFavorite, deleteCookbook, renameCookbook]
   );
 
-  const emptyState = showsCookbooks ? (
-    <NoCookbooksText />
-  ) : hasAppliedFilters ? (
-    <NoRecipeResults onClear={clearFilters} />
-  ) : (
-    <NoRecipesText />
-  );
+  const emptyState =
+    filters.libraryType === "cookbooks" && !hasAppliedFilters ? (
+      <NoCookbooksText />
+    ) : hasAppliedFilters ? (
+      <NoRecipeResults onClear={clearFilters} />
+    ) : (
+      <NoRecipesText />
+    );
 
   return (
     <LibraryGrid
       emptyState={emptyState}
-      isFetchingMore={
-        showsCookbooks ? isValidatingCookbooks && !isLoadingCookbooks : isFetchingMoreRecipes
-      }
-      isLoading={showsCookbooks ? isLoadingCookbooks : isLoadingRecipes}
-      items={items}
-      loadMore={showsCookbooks ? loadMoreCookbooks : loadMoreRecipes}
+      isFetchingMore={isValidating && !isLoading}
+      isLoading={isLoading || !isHydrated}
+      items={gridItems}
+      loadMore={loadMore}
       renderItem={renderItem}
       scrollKey={filterKey}
       variant={variant}
