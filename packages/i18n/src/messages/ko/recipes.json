@@ -96,7 +96,8 @@
     "linkingIngredients": "재료 연결 중…",
     "enrichmentFailed": "마지막 실행 실패",
     "generateImage": "이미지 생성",
-    "generatingImage": "이미지 생성 중…"
+    "generatingImage": "이미지 생성 중…",
+    "cookbooks": "요리책"
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -378,6 +379,12 @@
     "singular": "요리책",
     "notFound": "요리책을 찾을 수 없습니다",
     "notFoundHint": "삭제되었거나 접근 권한이 없을 수 있습니다.",
-    "emptyHint": "레시피의 빠른 작업 메뉴에서 레시피를 추가하세요."
+    "emptyHint": "레시피의 빠른 작업 메뉴에서 레시피를 추가하세요.",
+    "panelTitle": "요리책에 추가",
+    "newWithRecipe": "이 레시피로 새 요리책 만들기",
+    "noneEditable": "편집할 수 있는 요리책이 아직 없습니다.",
+    "cardTitle": "수록된 요리책",
+    "cardInvitation": "이 레시피는 아직 요리책에 없습니다.",
+    "fileIt": "정리하기"
   }
 }

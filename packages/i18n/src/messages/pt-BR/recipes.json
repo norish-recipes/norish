@@ -96,7 +96,8 @@
     "linkingIngredients": "Vinculando ingredientes…",
     "enrichmentFailed": "A última execução falhou",
     "generateImage": "Gerar imagem",
-    "generatingImage": "Gerando imagem…"
+    "generatingImage": "Gerando imagem…",
+    "cookbooks": "Livros de receitas"
   },
   "sharePanel": {
     "title": "Compartilhar receita",
@@ -378,6 +379,12 @@
     "singular": "Livro de receitas",
     "notFound": "Livro de receitas não encontrado",
     "notFoundHint": "Ele pode ter sido excluído ou não estar visível para você.",
-    "emptyHint": "Adicione receitas pelo menu de ações rápidas de uma receita."
+    "emptyHint": "Adicione receitas pelo menu de ações rápidas de uma receita.",
+    "panelTitle": "Adicionar a um livro de receitas",
+    "newWithRecipe": "Novo livro com esta receita",
+    "noneEditable": "Ainda não há livros de receitas que você possa editar.",
+    "cardTitle": "Em livros de receitas",
+    "cardInvitation": "Esta receita ainda não está em um livro de receitas.",
+    "fileIt": "Arquivar"
   }
 }

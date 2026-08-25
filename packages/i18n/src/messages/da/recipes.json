@@ -96,7 +96,8 @@
     "linkingIngredients": "Tilknytter ingredienser…",
     "enrichmentFailed": "Sidste forsøg mislykkedes",
     "generateImage": "Generér billede",
-    "generatingImage": "Genererer billede…"
+    "generatingImage": "Genererer billede…",
+    "cookbooks": "Kogebøger"
   },
   "sharePanel": {
     "title": "Del opskrift",
@@ -378,6 +379,12 @@
     "singular": "Kogebog",
     "notFound": "Kogebogen blev ikke fundet",
     "notFoundHint": "Den er måske slettet, eller den er ikke synlig for dig.",
-    "emptyHint": "Tilføj opskrifter fra en opskrifts handlingsmenu."
+    "emptyHint": "Tilføj opskrifter fra en opskrifts handlingsmenu.",
+    "panelTitle": "Tilføj til kogebog",
+    "newWithRecipe": "Ny kogebog med denne opskrift",
+    "noneEditable": "Der er ingen kogebøger, du kan redigere.",
+    "cardTitle": "I kogebøger",
+    "cardInvitation": "Denne opskrift er endnu ikke i en kogebog.",
+    "fileIt": "Læg den i en kogebog"
   }
 }

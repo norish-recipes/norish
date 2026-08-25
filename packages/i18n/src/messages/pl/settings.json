@@ -126,7 +126,8 @@
           "rating": "Oceny",
           "favorites": "Ulubione",
           "conversion": "Konwersja składników",
-          "timers": "Minutniki przepisów"
+          "timers": "Minutniki przepisów",
+          "cookbooks": "Książki kucharskie"
         }
       },
       "todaySection": {

@@ -126,7 +126,8 @@
           "rating": "평점",
           "favorites": "즐겨찾기",
           "conversion": "재료 단위 변환",
-          "timers": "레시피 타이머"
+          "timers": "레시피 타이머",
+          "cookbooks": "요리책"
         }
       },
       "todaySection": {

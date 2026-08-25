@@ -4,9 +4,15 @@ import { createUseCookbooksCache } from "./use-cookbooks-cache";
 import { createUseCookbooksMutations } from "./use-cookbooks-mutations";
 import { createUseCookbooksQuery } from "./use-cookbooks-query";
 import { createUseCookbooksSubscription } from "./use-cookbooks-subscription";
+import {
+  createUseEditableCookbooksQuery,
+  createUseRecipeCookbooksQuery,
+} from "./use-recipe-cookbooks-query";
 
 export type {
   CookbookFilters,
+  EditableCookbooksQueryResult,
+  RecipeCookbooksQueryResult,
   CookbooksCacheHelpers,
   CookbooksMutationsResult,
   CookbooksQueryResult,
@@ -18,6 +24,8 @@ export type { CookbookQueryResult } from "./use-cookbook-query";
 
 export {
   createUseCookbookQuery,
+  createUseEditableCookbooksQuery,
+  createUseRecipeCookbooksQuery,
   createUseCookbooksCache,
   createUseCookbooksMutations,
   createUseCookbooksQuery,
@@ -30,6 +38,8 @@ export function createCookbookHooks(options: CreateCookbookHooksOptions) {
   return {
     useCookbooksCacheHelpers,
     useCookbookQuery: createUseCookbookQuery(options),
+    useRecipeCookbooksQuery: createUseRecipeCookbooksQuery(options),
+    useEditableCookbooksQuery: createUseEditableCookbooksQuery(options),
     useCookbooksQuery: createUseCookbooksQuery(options),
     useCookbooksMutations: createUseCookbooksMutations({ ...options, useCookbooksCacheHelpers }),
     useCookbooksSubscription: createUseCookbooksSubscription({

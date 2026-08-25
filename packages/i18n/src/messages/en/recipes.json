@@ -96,7 +96,8 @@
     "linkingIngredients": "Linking ingredients…",
     "enrichmentFailed": "Last run failed",
     "generateImage": "Generate Picture",
-    "generatingImage": "Generating picture…"
+    "generatingImage": "Generating picture…",
+    "cookbooks": "Cookbooks"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -378,6 +379,12 @@
     "singular": "Cookbook",
     "notFound": "Cookbook not found",
     "notFoundHint": "It may have been deleted, or it is not visible to you.",
-    "emptyHint": "Add recipes from any recipe’s quick actions menu."
+    "emptyHint": "Add recipes from any recipe’s quick actions menu.",
+    "panelTitle": "Add to cookbook",
+    "newWithRecipe": "New cookbook with this recipe",
+    "noneEditable": "There are no cookbooks you can edit yet.",
+    "cardTitle": "In cookbooks",
+    "cardInvitation": "This recipe is not in a cookbook yet.",
+    "fileIt": "File it"
   }
 }

@@ -126,7 +126,8 @@
           "rating": "Valoraciones",
           "favorites": "Favoritos",
           "conversion": "Conversión de ingredientes",
-          "timers": "Temporizadores de recetas"
+          "timers": "Temporizadores de recetas",
+          "cookbooks": "Libros de cocina"
         }
       },
       "todaySection": {

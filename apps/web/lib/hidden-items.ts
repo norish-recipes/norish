@@ -17,6 +17,7 @@ export const HIDDEN_ITEMS = [
   "favorites",
   "conversion",
   "timers",
+  "cookbooks",
 ] as const;
 
 export type HiddenItem = (typeof HIDDEN_ITEMS)[number];

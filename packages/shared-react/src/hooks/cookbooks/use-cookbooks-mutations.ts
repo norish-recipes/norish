@@ -21,26 +21,29 @@ export function createUseCookbooksMutations({
 }: Dependencies) {
   return function useCookbooksMutations(): CookbooksMutationsResult {
     const trpc = useTRPC();
-    const { setAllCookbooksData, invalidate, invalidateCookbook } = useCookbooksCacheHelpers();
+    const { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership } =
+      useCookbooksCacheHelpers();
 
     const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
     const renameMutation = useMutation(trpc.cookbooks.rename.mutationOptions());
     const deleteMutation = useMutation(trpc.cookbooks.remove.mutationOptions());
+    const membershipMutation = useMutation(trpc.cookbooks.setMembership.mutationOptions());
 
     const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate, preserve);
 
     const createCookbook = useCallback(
-      ({ title }: { title: string }) => {
+      ({ title, recipeId }: { title: string; recipeId?: string }) => {
         // Minted here, so filing queued behind an Offline create still points
         // at the right cookbook once replayed (ADR-0003).
         const id = createClientId();
 
         return new Promise<string>((resolve, reject) => {
           createMutation.mutate(
-            { id, title },
+            { id, title, recipeId },
             {
               onSuccess: () => {
                 invalidate();
+                if (recipeId) invalidateMembership(recipeId);
                 resolve(id);
               },
               onError: (error) => {
@@ -71,7 +74,7 @@ export function createUseCookbooksMutations({
                               createdAt: now,
                               updatedAt: now,
                               version: 1,
-                              memberCount: 0,
+                              memberCount: recipeId ? 1 : 0,
                               coverImages: [],
                             },
                             ...first.cookbooks,
@@ -93,7 +96,64 @@ export function createUseCookbooksMutations({
           );
         });
       },
-      [createMutation, invalidate, setAllCookbooksData, preserve]
+      [createMutation, invalidate, invalidateMembership, setAllCookbooksData, preserve]
+    );
+
+    /**
+     * File a recipe into a cookbook, or take it out. The same call both ways,
+     * so undoing a mistake is not a hunt for a different control.
+     *
+     * The toggle is applied tentatively — including the member count, which is
+     * what the card shows — and reconciled by the server's echo. A queued
+     * mutation keeps the tentative state rather than snapping back (ADR-0009).
+     */
+    const setMembership = useCallback(
+      ({
+        cookbookId,
+        recipeId,
+        isMember,
+      }: {
+        cookbookId: string;
+        recipeId: string;
+        isMember: boolean;
+      }) => {
+        setAllCookbooksData((prev) => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            pages: prev.pages.map((page) => ({
+              ...page,
+              cookbooks: page.cookbooks.map((cookbook) =>
+                cookbook.id === cookbookId
+                  ? {
+                      ...cookbook,
+                      memberCount: Math.max(0, cookbook.memberCount + (isMember ? 1 : -1)),
+                    }
+                  : cookbook
+              ),
+            })),
+          };
+        });
+
+        membershipMutation.mutate(
+          { cookbookId, recipeId, isMember },
+          {
+            onSettled: () => {
+              invalidateMembership(recipeId);
+              invalidateCookbook(cookbookId);
+            },
+            onError: invalidateUnlessQueued,
+          }
+        );
+      },
+      [
+        membershipMutation,
+        setAllCookbooksData,
+        invalidateMembership,
+        invalidateCookbook,
+        invalidateUnlessQueued,
+      ]
     );
 
     const renameCookbook = useCallback(
@@ -151,6 +211,7 @@ export function createUseCookbooksMutations({
       createCookbook,
       renameCookbook,
       deleteCookbook,
+      setMembership,
       isCreating: createMutation.isPending,
     };
   };

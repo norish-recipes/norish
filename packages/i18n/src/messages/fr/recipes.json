@@ -96,7 +96,8 @@
     "linkingIngredients": "Liaison des ingrédients…",
     "enrichmentFailed": "Dernière tentative échouée",
     "generateImage": "Générer une image",
-    "generatingImage": "Génération de l'image…"
+    "generatingImage": "Génération de l'image…",
+    "cookbooks": "Livres de cuisine"
   },
   "sharePanel": {
     "title": "Partager la recette",
@@ -378,6 +379,12 @@
     "singular": "Livre de cuisine",
     "notFound": "Livre de cuisine introuvable",
     "notFoundHint": "Il a peut-être été supprimé, ou il ne vous est pas visible.",
-    "emptyHint": "Ajoutez des recettes depuis le menu d’actions rapides d’une recette."
+    "emptyHint": "Ajoutez des recettes depuis le menu d’actions rapides d’une recette.",
+    "panelTitle": "Ajouter à un livre de cuisine",
+    "newWithRecipe": "Nouveau livre avec cette recette",
+    "noneEditable": "Il n’y a pas encore de livre de cuisine que vous puissiez modifier.",
+    "cardTitle": "Dans les livres de cuisine",
+    "cardInvitation": "Cette recette n’est encore dans aucun livre de cuisine.",
+    "fileIt": "Classer"
   }
 }

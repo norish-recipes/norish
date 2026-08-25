@@ -127,7 +127,8 @@
           "rating": "Beoordelingen",
           "favorites": "Favorieten",
           "conversion": "Ingrediëntconversie",
-          "timers": "Recepttimers"
+          "timers": "Recepttimers",
+          "cookbooks": "Kookboeken"
         }
       },
       "todaySection": {

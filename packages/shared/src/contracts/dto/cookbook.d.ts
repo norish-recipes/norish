@@ -5,6 +5,7 @@ import type {
   CookbookDeleteInputSchema,
   CookbookListInputSchema,
   CookbookListResultSchema,
+  CookbookMembershipInputSchema,
   CookbookRenameInputSchema,
   CookbookSummarySchema,
   EditableCookbookSchema,
@@ -17,3 +18,4 @@ export type CookbookRenameInput = z.infer<typeof CookbookRenameInputSchema>;
 export type CookbookDeleteInput = z.infer<typeof CookbookDeleteInputSchema>;
 export type CookbookListInput = z.input<typeof CookbookListInputSchema>;
 export type CookbookListResult = z.output<typeof CookbookListResultSchema>;
+export type CookbookMembershipInput = z.infer<typeof CookbookMembershipInputSchema>;

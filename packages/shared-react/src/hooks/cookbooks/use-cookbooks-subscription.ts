@@ -19,7 +19,8 @@ export function createUseCookbooksSubscription({
 }: Dependencies) {
   return function useCookbooksSubscription() {
     const trpc = useTRPC();
-    const { setAllCookbooksData, invalidate, invalidateCookbook } = useCookbooksCacheHelpers();
+    const { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership } =
+      useCookbooksCacheHelpers();
 
     useSubscription(
       trpc.cookbooks.onCreated.subscriptionOptions(undefined, {
@@ -48,6 +49,19 @@ export function createUseCookbooksSubscription({
             };
           });
           invalidateCookbook(payload.cookbook.id);
+        },
+      })
+    );
+
+    useSubscription(
+      trpc.cookbooks.onMembershipChanged.subscriptionOptions(undefined, {
+        onData: ({ payload }: any) => {
+          // The member count and the derived cover are computed per reader on
+          // the server, so a membership change is a refetch rather than a
+          // local guess.
+          invalidateMembership(payload.recipeId);
+          invalidateCookbook(payload.cookbookId);
+          invalidate();
         },
       })
     );

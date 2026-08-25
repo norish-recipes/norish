@@ -120,6 +120,14 @@ vi.mock("@/app/(app)/recipes/[id]/components/servings-control", () => ({
 vi.mock("@/app/(app)/recipes/[id]/components/steps-list", () => ({
   default: () => <div data-testid="steps-list" />,
 }));
+vi.mock("@/components/Panel/consumers", () => ({
+  MiniCookbooks: () => null,
+}));
+
+vi.mock("@/hooks/cookbooks", () => ({
+  useRecipeCookbooksQuery: () => ({ cookbooks: [], isLoading: false }),
+}));
+
 vi.mock("@/components/recipes/author-chip", () => ({
   default: () => <div data-testid="author-chip" />,
 }));
@@ -216,6 +224,7 @@ const CARD_TITLES = {
   cookingTime: "recipes.cookingTime.title",
   nutrition: "recipes.nutrition.title",
   source: "recipes.detail.source",
+  cookbooks: "recipes.cookbooks.cardTitle",
   rating: "recipes.detail.ratingPrompt",
 } as const;
 
@@ -245,7 +254,7 @@ function cardCount(): number {
  * absence renders as a slimmer page rather than as an empty box.
  */
 describe("RecipePageMobile card body", () => {
-  it("orders the cards ingredients → steps → notes → cooking time → nutrition → provenance → source → rating", () => {
+  it("orders the cards ingredients → steps → notes → cooking time → nutrition → provenance → source → cookbooks → rating", () => {
     render(<RecipePageMobile />);
 
     expect(cardTitlesInOrder()).toEqual([
@@ -256,6 +265,7 @@ describe("RecipePageMobile card body", () => {
       CARD_TITLES.nutrition,
       "🇮🇹Italia",
       CARD_TITLES.source,
+      CARD_TITLES.cookbooks,
       CARD_TITLES.rating,
     ]);
   });
@@ -283,10 +293,13 @@ describe("RecipePageMobile card body", () => {
     expect(cardTitlesInOrder()).toEqual([
       CARD_TITLES.ingredients,
       CARD_TITLES.steps,
+      CARD_TITLES.cookbooks,
       CARD_TITLES.rating,
     ]);
-    // Three cards drawn, three cards with something in them.
-    expect(cardCount()).toBe(3);
+    // Four cards: the three with something in them, plus the cookbooks card,
+    // which is an invitation rather than a stored section and so is drawn even
+    // for a recipe that stores nothing else.
+    expect(cardCount()).toBe(4);
   });
 
   it("renders a section with a run in flight as working", () => {
@@ -350,7 +363,7 @@ describe("RecipePageMobile hidden items", () => {
 
     render(<RecipePageMobile />);
 
-    expect(cardTitlesInOrder()).toHaveLength(8);
+    expect(cardTitlesInOrder()).toHaveLength(9);
   });
 
   it("drops the provenance card but keeps the origin flag beside the title", () => {

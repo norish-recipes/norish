@@ -126,7 +126,8 @@
           "rating": "Avaliações",
           "favorites": "Favoritos",
           "conversion": "Conversão de ingredientes",
-          "timers": "Cronômetros de receita"
+          "timers": "Cronômetros de receita",
+          "cookbooks": "Livros de receitas"
         }
       },
       "applyError": "Falha ao aplicar preferência",

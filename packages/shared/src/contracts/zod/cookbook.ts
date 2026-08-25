@@ -38,6 +38,23 @@ export const CookbookCreateInputSchema = z.object({
   // at the right cookbook once replayed (ADR-0003).
   id: clientMintedId,
   title: CookbookTitleSchema,
+  /**
+   * File this recipe into the new cookbook in one step, so "these two belong
+   * together" is one decision rather than two. Needs view rights on the
+   * recipe and nothing more (ADR-0027).
+   */
+  recipeId: z.uuid().optional(),
+});
+
+export const CookbookMembershipInputSchema = z.object({
+  cookbookId: z.uuid(),
+  recipeId: z.uuid(),
+  /** Where the toggle has been left: in the cookbook, or out of it. */
+  isMember: z.boolean(),
+});
+
+export const CookbookForRecipeInputSchema = z.object({
+  recipeId: z.uuid(),
 });
 
 export const CookbookRenameInputSchema = z.object({

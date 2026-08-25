@@ -13,6 +13,13 @@ export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions)
     const queryClient = useQueryClient();
 
     const listPath = useMemo(() => [trpc.cookbooks.list.queryKey({})[0]], [trpc]);
+    const membershipPaths = useMemo(
+      () => [
+        [trpc.cookbooks.forRecipe.queryKey({ recipeId: "" })[0]],
+        [trpc.cookbooks.editableForRecipe.queryKey({ recipeId: "" })[0]],
+      ],
+      [trpc]
+    );
 
     const setAllCookbooksData = useCallback<CookbooksCacheHelpers["setAllCookbooksData"]>(
       (updater) => {
@@ -38,6 +45,26 @@ export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions)
       [queryClient, trpc]
     );
 
-    return { setAllCookbooksData, invalidate, invalidateCookbook };
+    const invalidateMembership = useCallback(
+      (recipeId?: string) => {
+        if (recipeId) {
+          queryClient.invalidateQueries({
+            queryKey: trpc.cookbooks.forRecipe.queryKey({ recipeId }),
+          });
+          queryClient.invalidateQueries({
+            queryKey: trpc.cookbooks.editableForRecipe.queryKey({ recipeId }),
+          });
+
+          return;
+        }
+
+        for (const path of membershipPaths) {
+          queryClient.invalidateQueries({ queryKey: path });
+        }
+      },
+      [queryClient, trpc, membershipPaths]
+    );
+
+    return { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership };
   };
 }

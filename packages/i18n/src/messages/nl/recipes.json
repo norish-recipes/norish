@@ -96,7 +96,8 @@
     "linkingIngredients": "Ingrediënten koppelen…",
     "enrichmentFailed": "Laatste poging mislukt",
     "generateImage": "Afbeelding genereren",
-    "generatingImage": "Afbeelding genereren…"
+    "generatingImage": "Afbeelding genereren…",
+    "cookbooks": "Kookboeken"
   },
   "sharePanel": {
     "title": "Recept delen",
@@ -378,6 +379,12 @@
     "singular": "Kookboek",
     "notFound": "Kookboek niet gevonden",
     "notFoundHint": "Het is misschien verwijderd, of niet zichtbaar voor jou.",
-    "emptyHint": "Voeg recepten toe via het snelle-actiesmenu van een recept."
+    "emptyHint": "Voeg recepten toe via het snelle-actiesmenu van een recept.",
+    "panelTitle": "Toevoegen aan kookboek",
+    "newWithRecipe": "Nieuw kookboek met dit recept",
+    "noneEditable": "Er zijn nog geen kookboeken die je kunt bewerken.",
+    "cardTitle": "In kookboeken",
+    "cardInvitation": "Dit recept staat nog niet in een kookboek.",
+    "fileIt": "Opbergen"
   }
 }

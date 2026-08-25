@@ -126,7 +126,8 @@
           "rating": "Bedømmelser",
           "favorites": "Favoritter",
           "conversion": "Ingredienskonvertering",
-          "timers": "Opskriftstimere"
+          "timers": "Opskriftstimere",
+          "cookbooks": "Kogebøger"
         }
       },
       "todaySection": {

@@ -96,7 +96,8 @@
     "linkingIngredients": "Zutaten werden verknüpft…",
     "enrichmentFailed": "Letzter Versuch fehlgeschlagen",
     "generateImage": "Bild generieren",
-    "generatingImage": "Bild wird generiert…"
+    "generatingImage": "Bild wird generiert…",
+    "cookbooks": "Kochbücher"
   },
   "sharePanel": {
     "title": "Rezept teilen",
@@ -378,6 +379,12 @@
     "singular": "Kochbuch",
     "notFound": "Kochbuch nicht gefunden",
     "notFoundHint": "Es wurde möglicherweise gelöscht oder ist für Sie nicht sichtbar.",
-    "emptyHint": "Fügen Sie Rezepte über das Aktionsmenü eines Rezepts hinzu."
+    "emptyHint": "Fügen Sie Rezepte über das Aktionsmenü eines Rezepts hinzu.",
+    "panelTitle": "Zu Kochbuch hinzufügen",
+    "newWithRecipe": "Neues Kochbuch mit diesem Rezept",
+    "noneEditable": "Es gibt keine Kochbücher, die Sie bearbeiten können.",
+    "cardTitle": "In Kochbüchern",
+    "cardInvitation": "Dieses Rezept ist noch in keinem Kochbuch.",
+    "fileIt": "Einsortieren"
   }
 }

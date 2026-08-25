@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 
 import {
+  addRecipeToCookbook,
   createCookbook,
   deleteCookbookById,
   getCookbookForViewer,
@@ -21,6 +22,7 @@ import {
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { assertRecipeAccess } from "../recipes/helpers";
 import { assertCookbookAccess, emitCookbookEvent, listContextFor } from "./helpers";
 
 const list = authedProcedure
@@ -97,16 +99,37 @@ const create = authedProcedure
   .input(CookbookCreateInputSchema)
   .output(CookbookSummarySchema)
   .mutation(async ({ ctx, input }) => {
+    // A cookbook made from a recipe holds it from the first moment, so
+    // "these two belong together" is one step. Only view rights on the
+    // recipe are needed, and the recipe itself is not written (ADR-0027).
+    if (input.recipeId) {
+      await assertRecipeAccess(ctx, input.recipeId, "view");
+    }
+
     const cookbook = await createCookbook({
       id: input.id,
       userId: ctx.user.id,
       title: input.title,
     });
 
-    log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook created");
-    await emitCookbookEvent(ctx, "created", { cookbook });
+    if (input.recipeId) {
+      await addRecipeToCookbook(cookbook.id, input.recipeId);
+    }
 
-    return cookbook;
+    log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook created");
+    await emitCookbookEvent(ctx, "created", {
+      cookbook: input.recipeId ? { ...cookbook, memberCount: 1 } : cookbook,
+    });
+
+    if (input.recipeId) {
+      await emitCookbookEvent(ctx, "membershipChanged", {
+        cookbookId: cookbook.id,
+        recipeId: input.recipeId,
+        isMember: true,
+      });
+    }
+
+    return input.recipeId ? { ...cookbook, memberCount: 1 } : cookbook;
   });
 
 const rename = authedProcedure

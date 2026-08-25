@@ -126,7 +126,8 @@
           "rating": "Bewertungen",
           "favorites": "Favoriten",
           "conversion": "Zutatenumrechnung",
-          "timers": "Rezept-Timer"
+          "timers": "Rezept-Timer",
+          "cookbooks": "Kochbücher"
         }
       },
       "todaySection": {

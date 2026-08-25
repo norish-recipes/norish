@@ -126,7 +126,8 @@
           "rating": "Ratings",
           "favorites": "Favorites",
           "conversion": "Ingredient conversion",
-          "timers": "Recipe timers"
+          "timers": "Recipe timers",
+          "cookbooks": "Cookbooks"
         }
       },
       "todaySection": {

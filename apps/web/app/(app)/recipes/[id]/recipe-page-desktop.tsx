@@ -3,6 +3,7 @@
 import Link from "next/link";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
+import CookbooksCard from "@/app/(app)/recipes/[id]/components/cookbooks-card";
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import NotesCard from "@/app/(app)/recipes/[id]/components/notes-card";
@@ -166,6 +167,9 @@ export default function RecipePageDesktop() {
               </div>
             )}
           </Card>
+
+          {/* The cookbooks this recipe is filed into, last on the page. */}
+          <CookbooksCard />
         </div>
       </div>
     </div>

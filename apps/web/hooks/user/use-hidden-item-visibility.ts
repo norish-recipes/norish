@@ -10,6 +10,7 @@ export type UseHiddenItemVisibilityResult = {
   showProvenance: boolean;
   showNutrition: boolean;
   showNotes: boolean;
+  showCookbooks: boolean;
 };
 
 /**
@@ -28,5 +29,8 @@ export function useHiddenItemVisibility(): UseHiddenItemVisibilityResult {
     showProvenance: shows("provenance"),
     showNutrition: shows("nutrition"),
     showNotes: shows("notes"),
+    // The recipe page's cookbooks card only. Hiding it never touches the
+    // Library or its type chips.
+    showCookbooks: shows("cookbooks"),
   };
 }

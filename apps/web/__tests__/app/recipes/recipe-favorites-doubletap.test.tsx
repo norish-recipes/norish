@@ -29,7 +29,32 @@ vi.mock("@/context/hidden-items-context", () => ({
   useHiddenItems: () => userPreferencesState.hidden,
 }));
 
+const stubRecipe = {
+  id: "r1",
+  name: "Recipe",
+  url: null,
+  description: "desc",
+  categories: [],
+  prepMinutes: 10,
+  cookMinutes: 20,
+  totalMinutes: 30,
+  tags: [],
+  author: null,
+  notes: null,
+  servings: 2,
+  systemUsed: null,
+};
+
+vi.mock("@/components/Panel/consumers", () => ({
+  MiniCookbooks: () => null,
+}));
+
+vi.mock("@/hooks/cookbooks", () => ({
+  useRecipeCookbooksQuery: () => ({ cookbooks: [], isLoading: false }),
+}));
+
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({
+  useRecipeContext: () => ({ recipe: stubRecipe }),
   useRecipeContextRequired: () => ({
     recipe: {
       id: "r1",

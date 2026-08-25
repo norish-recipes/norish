@@ -96,7 +96,8 @@
     "linkingIngredients": "Wiązanie składników…",
     "enrichmentFailed": "Ostatnia próba nie powiodła się",
     "generateImage": "Wygeneruj obraz",
-    "generatingImage": "Generowanie obrazu…"
+    "generatingImage": "Generowanie obrazu…",
+    "cookbooks": "Książki kucharskie"
   },
   "sharePanel": {
     "title": "Udostępnij przepis",
@@ -378,6 +379,12 @@
     "singular": "Książka kucharska",
     "notFound": "Nie znaleziono książki kucharskiej",
     "notFoundHint": "Mogła zostać usunięta lub nie jest dla Ciebie widoczna.",
-    "emptyHint": "Dodawaj przepisy z menu szybkich akcji przepisu."
+    "emptyHint": "Dodawaj przepisy z menu szybkich akcji przepisu.",
+    "panelTitle": "Dodaj do książki kucharskiej",
+    "newWithRecipe": "Nowa książka z tym przepisem",
+    "noneEditable": "Nie ma jeszcze książek kucharskich, które możesz edytować.",
+    "cardTitle": "W książkach kucharskich",
+    "cardInvitation": "Ten przepis nie jest jeszcze w żadnej książce kucharskiej.",
+    "fileIt": "Dodaj do książki"
   }
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
+import CookbooksCard from "@/app/(app)/recipes/[id]/components/cookbooks-card";
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import IngredientsOptionsMenu from "@/app/(app)/recipes/[id]/components/ingredients-options-menu";
@@ -178,6 +179,9 @@ export default function RecipePageMobile() {
         <ProvenanceCard />
 
         <SourceCard recipe={recipe} />
+
+        {/* The cookbooks this recipe is filed into, last on the page. */}
+        <CookbooksCard />
 
         {showRatings && (
           <Card className="rounded-2xl">
