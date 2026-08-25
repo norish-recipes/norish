@@ -362,5 +362,22 @@
     "cook": "Tilberedning",
     "other": "Anden tid",
     "total": "I alt"
+  },
+  "cookbooks": {
+    "addCookbook": "Tilføj kogebog",
+    "createTitle": "Ny kogebog",
+    "renameTitle": "Omdøb kogebog",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "fx Hverdagsmiddage",
+    "options": "Kogebogsindstillinger",
+    "deleteTitle": "Slet kogebog",
+    "deleteConfirm": "Er du sikker på, at du vil slette \"{title}\"?",
+    "deleteKeepsRecipes": "Opskrifterne i den bliver i dit bibliotek.",
+    "recipeCount": "{count, plural, one {# opskrift} other {# opskrifter}}",
+    "empty": "Ingen opskrifter endnu",
+    "singular": "Kogebog",
+    "notFound": "Kogebogen blev ikke fundet",
+    "notFoundHint": "Den er måske slettet, eller den er ikke synlig for dig.",
+    "emptyHint": "Tilføj opskrifter fra en opskrifts handlingsmenu."
   }
 }

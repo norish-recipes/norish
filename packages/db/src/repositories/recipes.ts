@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { and, asc, desc, eq, ilike, inArray, isNull, like, lte, or, sql } from "drizzle-orm";
 import z from "zod";
 
@@ -62,10 +63,17 @@ import { attachTagsToRecipeByInputTx } from "./tags";
 
 type RecipeViewPolicy = RecipePermissionPolicy["view"];
 
-async function getRecipeViewPolicy(): Promise<RecipeViewPolicy> {
+/**
+ * Which of the recipe permission policy's three levels a query is asking
+ * about. Spelled out here rather than imported from `@norish/auth`, which
+ * depends on this package.
+ */
+export type PolicyAction = "view" | "edit" | "delete";
+
+async function getRecipePolicyLevel(action: PolicyAction): Promise<RecipeViewPolicy> {
   const policy = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
 
-  return policy?.view ?? DEFAULT_RECIPE_PERMISSION_POLICY.view;
+  return policy?.[action] ?? DEFAULT_RECIPE_PERMISSION_POLICY[action];
 }
 
 function nonEmpty(s: string | null | undefined): s is string {
@@ -237,45 +245,66 @@ export interface RecipeListContext {
 }
 
 /**
- * Build SQL condition for view policy filtering
+ * Build the SQL condition the recipe permission policy puts on an owner
+ * column, for whichever of its three levels the caller is asking about.
  *
- * Recipes with null userId (orphaned recipes) are always visible to everyone.
+ * A row with a null owner — an Orphaned recipe, or an Orphaned cookbook — is
+ * always included, at every level and for every action, which is the same
+ * answer `assertRecipeAccess` gives one row at a time.
+ *
+ * The owner column is a parameter because cookbooks answer to this same
+ * policy rather than a rule of their own (ADR-0027): a cookbook is exactly as
+ * visible as the recipes its owner could see, so the two conditions have to
+ * come from one place or they will drift.
  */
-async function buildViewPolicyCondition(ctx: RecipeListContext) {
-  const viewLevel = await getRecipeViewPolicy();
+export async function buildOwnerPolicyCondition(
+  ctx: RecipeListContext,
+  ownerColumn: AnyPgColumn,
+  action: PolicyAction = "view"
+) {
+  const level = await getRecipePolicyLevel(action);
 
   // Server admin sees all
   if (ctx.isServerAdmin) {
     return undefined;
   }
 
-  switch (viewLevel) {
+  const ownOrOrphaned = () => or(eq(ownerColumn, ctx.userId), sql`${ownerColumn} IS NULL`);
+
+  switch (level) {
     case "everyone":
       // No filtering needed
       return undefined;
 
     case "household":
-      // User sees own recipes + household members' recipes + orphaned recipes (null userId)
+      // Own rows + household members' rows + orphaned rows (null owner)
       if (ctx.householdUserIds && ctx.householdUserIds.length > 0) {
         // Ensure user's own ID is included (should always be, but safety check)
         const userIds = ctx.householdUserIds.includes(ctx.userId)
           ? ctx.householdUserIds
           : [...ctx.householdUserIds, ctx.userId];
 
-        // Include recipes where userId is in household OR userId is null (orphaned)
-        return or(inArray(recipes.userId, userIds), sql`${recipes.userId} IS NULL`);
+        return or(inArray(ownerColumn, userIds), sql`${ownerColumn} IS NULL`);
       }
 
-      // No household = only own recipes + orphaned recipes
-      return or(eq(recipes.userId, ctx.userId), sql`${recipes.userId} IS NULL`);
+      // No household = only own rows + orphaned rows
+      return ownOrOrphaned();
 
     case "owner":
-      // Only own recipes + orphaned recipes (null userId)
-      return or(eq(recipes.userId, ctx.userId), sql`${recipes.userId} IS NULL`);
+      // Only own rows + orphaned rows (null owner)
+      return ownOrOrphaned();
 
     default:
-      return or(eq(recipes.userId, ctx.userId), sql`${recipes.userId} IS NULL`);
+      return ownOrOrphaned();
   }
+}
+
+/**
+ * The recipe list's own view-policy condition — `buildOwnerPolicyCondition`
+ * pointed at `recipes.userId`.
+ */
+async function buildViewPolicyCondition(ctx: RecipeListContext) {
+  return buildOwnerPolicyCondition(ctx, recipes.userId, "view");
 }
 
 /**
@@ -305,7 +334,7 @@ export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<stri
  * selects, and inside the subquery an unqualified `"id"` resolves to the
  * gallery's own column — silently matching nothing.
  */
-const PRIMARY_IMAGE_SQL = sql<string | null>`COALESCE(
+export const PRIMARY_IMAGE_SQL = sql<string | null>`COALESCE(
   (SELECT gallery.image FROM ${recipeImages} AS gallery
     WHERE gallery.recipe_id = "recipes"."id"
     ORDER BY COALESCE(gallery."order", 0) ASC, gallery.created_at ASC

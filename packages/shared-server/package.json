@@ -37,6 +37,7 @@
     "./lib/workspace-paths": "./src/lib/workspace-paths.ts",
     "./lib/operation-context": "./src/lib/operation-context.ts",
     "./realtime/caldav": "./src/realtime/caldav.ts",
+    "./realtime/cookbooks": "./src/realtime/cookbooks.ts",
     "./realtime/connection-invalidation": "./src/realtime/connection-invalidation.ts",
     "./realtime/groceries": "./src/realtime/groceries.ts",
     "./realtime/households": "./src/realtime/households.ts",

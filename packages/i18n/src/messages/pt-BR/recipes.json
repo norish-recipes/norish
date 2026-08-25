@@ -362,5 +362,22 @@
     "cook": "Cozimento",
     "other": "Outro tempo",
     "total": "Total"
+  },
+  "cookbooks": {
+    "addCookbook": "Adicionar livro",
+    "createTitle": "Novo livro de receitas",
+    "renameTitle": "Renomear livro",
+    "titleLabel": "Título",
+    "titlePlaceholder": "ex. Jantares da semana",
+    "options": "Opções do livro",
+    "deleteTitle": "Excluir livro",
+    "deleteConfirm": "Tem certeza de que deseja excluir \"{title}\"?",
+    "deleteKeepsRecipes": "As receitas nele continuam na sua biblioteca.",
+    "recipeCount": "{count, plural, one {# receita} other {# receitas}}",
+    "empty": "Nenhuma receita ainda",
+    "singular": "Livro de receitas",
+    "notFound": "Livro de receitas não encontrado",
+    "notFoundHint": "Ele pode ter sido excluído ou não estar visível para você.",
+    "emptyHint": "Adicione receitas pelo menu de ações rápidas de uma receita."
   }
 }

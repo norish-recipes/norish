@@ -362,5 +362,22 @@
     "cook": "Kochen",
     "other": "Sonstige Zeit",
     "total": "Gesamt"
+  },
+  "cookbooks": {
+    "addCookbook": "Kochbuch hinzufügen",
+    "createTitle": "Neues Kochbuch",
+    "renameTitle": "Kochbuch umbenennen",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "z. B. Wochentagsessen",
+    "options": "Kochbuch-Optionen",
+    "deleteTitle": "Kochbuch löschen",
+    "deleteConfirm": "Möchten Sie \"{title}\" wirklich löschen?",
+    "deleteKeepsRecipes": "Die enthaltenen Rezepte bleiben in Ihrer Bibliothek.",
+    "recipeCount": "{count, plural, one {# Rezept} other {# Rezepte}}",
+    "empty": "Noch keine Rezepte",
+    "singular": "Kochbuch",
+    "notFound": "Kochbuch nicht gefunden",
+    "notFoundHint": "Es wurde möglicherweise gelöscht oder ist für Sie nicht sichtbar.",
+    "emptyHint": "Fügen Sie Rezepte über das Aktionsmenü eines Rezepts hinzu."
   }
 }

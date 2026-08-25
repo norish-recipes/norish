@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./hooks/groceries": "./src/hooks/groceries/index.ts",
+    "./hooks/cookbooks": "./src/hooks/cookbooks/index.ts",
     "./hooks/households": "./src/hooks/households/index.ts",
     "./hooks/ratings": "./src/hooks/ratings/index.ts",
     "./hooks/recipes": "./src/hooks/recipes/index.ts",

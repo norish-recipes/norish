@@ -362,5 +362,22 @@
     "cook": "Koking",
     "other": "Annen tid",
     "total": "Totalt"
+  },
+  "cookbooks": {
+    "addCookbook": "Legg til kokebok",
+    "createTitle": "Ny kokebok",
+    "renameTitle": "Gi kokeboken nytt navn",
+    "titleLabel": "Tittel",
+    "titlePlaceholder": "f.eks. Hverdagsmiddager",
+    "options": "Kokebokalternativer",
+    "deleteTitle": "Slett kokebok",
+    "deleteConfirm": "Er du sikker på at du vil slette «{title}»?",
+    "deleteKeepsRecipes": "Oppskriftene i den blir liggende i biblioteket ditt.",
+    "recipeCount": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
+    "empty": "Ingen oppskrifter ennå",
+    "singular": "Kokebok",
+    "notFound": "Fant ikke kokeboken",
+    "notFoundHint": "Den kan være slettet, eller den er ikke synlig for deg.",
+    "emptyHint": "Legg til oppskrifter fra hurtigmenyen på en oppskrift."
   }
 }

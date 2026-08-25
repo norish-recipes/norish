@@ -40,6 +40,12 @@ const loggerMiddleware = t.middleware(async ({ ctx, path, type, next }) => {
 });
 
 export const router = t.router;
+/**
+ * Build a direct caller for a router. Exported so a test can drive the real
+ * procedures — middleware, input parsing and all — rather than re-implementing
+ * them beside the thing it is meant to be checking.
+ */
+export const createCallerFactory = t.createCallerFactory;
 export const publicProcedure = t.procedure.use(loggerMiddleware);
 export const middleware = t.middleware;
 export const mergeRouters = t.mergeRouters;

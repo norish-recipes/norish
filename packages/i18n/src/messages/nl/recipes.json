@@ -362,5 +362,22 @@
     "cook": "Koken",
     "other": "Overige tijd",
     "total": "Totaal"
+  },
+  "cookbooks": {
+    "addCookbook": "Kookboek toevoegen",
+    "createTitle": "Nieuw kookboek",
+    "renameTitle": "Kookboek hernoemen",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "bv. Doordeweekse diners",
+    "options": "Kookboekopties",
+    "deleteTitle": "Kookboek verwijderen",
+    "deleteConfirm": "Weet je zeker dat je \"{title}\" wilt verwijderen?",
+    "deleteKeepsRecipes": "De recepten erin blijven in je bibliotheek.",
+    "recipeCount": "{count, plural, one {# recept} other {# recepten}}",
+    "empty": "Nog geen recepten",
+    "singular": "Kookboek",
+    "notFound": "Kookboek niet gevonden",
+    "notFoundHint": "Het is misschien verwijderd, of niet zichtbaar voor jou.",
+    "emptyHint": "Voeg recepten toe via het snelle-actiesmenu van een recept."
   }
 }

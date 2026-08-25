@@ -362,5 +362,22 @@
     "cook": "Cottura",
     "other": "Altro tempo",
     "total": "Totale"
+  },
+  "cookbooks": {
+    "addCookbook": "Aggiungi libro",
+    "createTitle": "Nuovo libro di cucina",
+    "renameTitle": "Rinomina libro",
+    "titleLabel": "Titolo",
+    "titlePlaceholder": "es. Cene infrasettimanali",
+    "options": "Opzioni libro",
+    "deleteTitle": "Elimina libro",
+    "deleteConfirm": "Vuoi davvero eliminare \"{title}\"?",
+    "deleteKeepsRecipes": "Le ricette che contiene restano nella tua libreria.",
+    "recipeCount": "{count, plural, one {# ricetta} other {# ricette}}",
+    "empty": "Nessuna ricetta",
+    "singular": "Libro di cucina",
+    "notFound": "Libro di cucina non trovato",
+    "notFoundHint": "Potrebbe essere stato eliminato o non essere visibile per te.",
+    "emptyHint": "Aggiungi ricette dal menu azioni rapide di una ricetta."
   }
 }

@@ -362,5 +362,22 @@
     "cook": "Cook",
     "other": "Other time",
     "total": "Total"
+  },
+  "cookbooks": {
+    "addCookbook": "Add Cookbook",
+    "createTitle": "New cookbook",
+    "renameTitle": "Rename cookbook",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Weeknight dinners",
+    "options": "Cookbook options",
+    "deleteTitle": "Delete cookbook",
+    "deleteConfirm": "Are you sure you want to delete \"{title}\"?",
+    "deleteKeepsRecipes": "The recipes it holds stay in your library.",
+    "recipeCount": "{count, plural, one {# recipe} other {# recipes}}",
+    "empty": "No recipes yet",
+    "singular": "Cookbook",
+    "notFound": "Cookbook not found",
+    "notFoundHint": "It may have been deleted, or it is not visible to you.",
+    "emptyHint": "Add recipes from any recipe’s quick actions menu."
   }
 }

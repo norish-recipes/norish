@@ -1,4 +1,5 @@
 export * from "@norish/db/repositories/recipes";
+export * from "@norish/db/repositories/cookbooks";
 export * from "@norish/db/repositories/groceries";
 export * from "@norish/db/repositories/recurring-groceries";
 export * from "@norish/db/repositories/stores";

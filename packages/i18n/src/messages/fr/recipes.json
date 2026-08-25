@@ -362,5 +362,22 @@
     "cook": "Cuisson",
     "other": "Autre temps",
     "total": "Total"
+  },
+  "cookbooks": {
+    "addCookbook": "Ajouter un livre",
+    "createTitle": "Nouveau livre de cuisine",
+    "renameTitle": "Renommer le livre",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "ex. Dîners de semaine",
+    "options": "Options du livre",
+    "deleteTitle": "Supprimer le livre",
+    "deleteConfirm": "Voulez-vous vraiment supprimer « {title} » ?",
+    "deleteKeepsRecipes": "Les recettes qu’il contient restent dans votre bibliothèque.",
+    "recipeCount": "{count, plural, one {# recette} other {# recettes}}",
+    "empty": "Aucune recette pour l’instant",
+    "singular": "Livre de cuisine",
+    "notFound": "Livre de cuisine introuvable",
+    "notFoundHint": "Il a peut-être été supprimé, ou il ne vous est pas visible.",
+    "emptyHint": "Ajoutez des recettes depuis le menu d’actions rapides d’une recette."
   }
 }

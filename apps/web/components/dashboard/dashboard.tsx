@@ -5,8 +5,7 @@ import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import LibraryHeading from "@/components/dashboard/library-heading";
 import LibraryTypeChips from "@/components/dashboard/library-type-chips";
-import NoCookbooksText from "@/components/dashboard/no-cookbooks-text";
-import RecipeGrid from "@/components/dashboard/recipe-grid";
+import LibraryView from "@/components/dashboard/library-view";
 import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
@@ -14,7 +13,6 @@ import {
   RecipeViewModeProvider,
   useRecipeDashboardViewMode,
 } from "@/context/recipe-view-mode-context";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { recipeViewModePreference } from "@/lib/recipe-view-mode";
 import { Tabs } from "@heroui/react";
 
@@ -22,11 +20,6 @@ const LIBRARY_HEADING_ID = "recipe-library-heading";
 
 function RecipeLibrary() {
   const [viewMode, setViewMode] = useRecipeDashboardViewMode();
-  const { filters } = useRecipesFiltersContext();
-  // No cookbooks exist yet, so the Cookbooks lens has its own empty state and
-  // the recipe query is not run at all — the chip decides what is fetched
-  // rather than slicing a page that was already fetched.
-  const showsCookbooks = filters.libraryType === "cookbooks";
 
   return (
     <section aria-labelledby={LIBRARY_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
@@ -51,10 +44,10 @@ function RecipeLibrary() {
         </div>
 
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="grid">
-          {showsCookbooks ? <NoCookbooksText /> : <RecipeGrid variant="grid" />}
+          <LibraryView variant="grid" />
         </Tabs.Panel>
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
-          {showsCookbooks ? <NoCookbooksText /> : <RecipeGrid variant="list" />}
+          <LibraryView variant="list" />
         </Tabs.Panel>
       </Tabs>
     </section>

@@ -2,10 +2,13 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CookbookTitlePanel } from "@/components/cookbooks/cookbook-panels";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useCookbooksMutations } from "@/hooks/cookbooks";
 import {
   ArrowDownTrayIcon,
   ClipboardDocumentIcon,
@@ -15,15 +18,39 @@ import {
 import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+/**
+ * The Library's Add button.
+ *
+ * Under the Cookbooks chip it becomes **+ Cookbook** and asks for a title;
+ * under All and Recipes it is the recipe menu it has always been. The button
+ * and the chips are load-bearing on each other: this is only honest because
+ * the chip that decides its meaning is permanently on screen beside a heading
+ * that names it (ADR-0026). If the chips ever move back behind search focus,
+ * this has to stop being chip-aware in the same change.
+ */
 export default function CreateRecipeButton() {
   const router = useRouter();
   const { isAIEnabled } = usePermissionsContext();
+  const { filters } = useRecipesFiltersContext();
+  const { createCookbook } = useCookbooksMutations();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showPasteModal, setShowPasteModal] = useState(false);
+  const [showCookbookPanel, setShowCookbookPanel] = useState(false);
   const t = useTranslations("recipes.dashboard");
+  const tCookbooks = useTranslations("recipes.cookbooks");
   const tCommon = useTranslations("common.actions");
+  const addsCookbook = filters.libraryType === "cookbooks";
+
+  const handleCreateCookbook = useCallback(
+    (title: string) => {
+      // The id is minted client-side, so the new cookbook can be opened
+      // immediately — Offline included (ADR-0003).
+      void createCookbook({ title }).then((id) => router.push(`/cookbooks/${id}`));
+    },
+    [createCookbook, router]
+  );
 
   const openModal = useCallback((setModalOpen: (open: boolean) => void) => {
     setIsMenuOpen(false);
@@ -75,6 +102,31 @@ export default function CreateRecipeButton() {
     ),
     [isAIEnabled, openModal, router, t, tCommon]
   );
+
+  if (addsCookbook) {
+    return (
+      <>
+        <Button
+          aria-label={tCookbooks("addCookbook")}
+          className="min-w-10 rounded-full font-medium md:min-w-20"
+          data-testid="add-cookbook-button"
+          size="md"
+          variant="primary"
+          onPress={() => setShowCookbookPanel(true)}
+        >
+          <PlusIcon className="h-5 w-5" />
+          <span className="hidden md:inline">{tCookbooks("singular")}</span>
+        </Button>
+
+        <CookbookTitlePanel
+          mode="create"
+          open={showCookbookPanel}
+          onOpenChange={setShowCookbookPanel}
+          onSubmit={handleCreateCookbook}
+        />
+      </>
+    );
+  }
 
   return (
     <>

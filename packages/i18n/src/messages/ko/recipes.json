@@ -362,5 +362,22 @@
     "cook": "조리",
     "other": "기타 시간",
     "total": "합계"
+  },
+  "cookbooks": {
+    "addCookbook": "요리책 추가",
+    "createTitle": "새 요리책",
+    "renameTitle": "요리책 이름 변경",
+    "titleLabel": "제목",
+    "titlePlaceholder": "예: 평일 저녁",
+    "options": "요리책 옵션",
+    "deleteTitle": "요리책 삭제",
+    "deleteConfirm": "\"{title}\"을(를) 삭제하시겠습니까?",
+    "deleteKeepsRecipes": "안에 있는 레시피는 라이브러리에 그대로 남습니다.",
+    "recipeCount": "레시피 {count}개",
+    "empty": "아직 레시피가 없습니다",
+    "singular": "요리책",
+    "notFound": "요리책을 찾을 수 없습니다",
+    "notFoundHint": "삭제되었거나 접근 권한이 없을 수 있습니다.",
+    "emptyHint": "레시피의 빠른 작업 메뉴에서 레시피를 추가하세요."
   }
 }

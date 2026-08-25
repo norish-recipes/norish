@@ -1,23 +1,19 @@
 "use client";
 
+import type { LibraryGridItem } from "@/lib/library-items";
 import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRecipesContext } from "@/context/recipes-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
 import { useScrollRestoration } from "@norish/shared-react/hooks";
-import { RecipeDashboardDTO } from "@norish/shared/contracts";
 
-import RecipeCardSkeleton from "../skeleton/recipe-card-skeleton";
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
-import NoRecipeResults from "./no-recipe-results";
-import NoRecipesText from "./no-recipes-text";
-import RecipeCard from "./recipe-card";
 
-// Estimated row height (card height + gap)
+// Estimated row height (card height + gap). Both kinds of card match these,
+// or the estimate degrades for every row on a mixed page (ADR-0026).
 const ESTIMATED_GRID_ROW_HEIGHT = 356;
 const ESTIMATED_LIST_ROW_HEIGHT = 144;
 const GRID_ROW_OVERSCAN = 3;
@@ -25,24 +21,38 @@ const LIST_ROW_OVERSCAN = 12;
 const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
 const LIST_LOAD_MORE_ROW_THRESHOLD = 6;
 
-export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMode }) {
-  const {
-    recipes,
-    isLoading,
-    isFetchingMore,
-    hasMore: _hasMore,
-    loadMore,
-    pendingRecipeIds,
-    hasAppliedFilters,
-    clearFilters,
-    filterKey,
-    isFavorite,
-    toggleFavorite,
-    deleteRecipe,
-    allergies,
-  } = useRecipesContext();
+type LibraryGridProps = {
+  variant: RecipeDashboardViewMode;
+  items: LibraryGridItem[];
+  isLoading: boolean;
+  isFetchingMore: boolean;
+  loadMore: () => void;
+  /** Scroll position is remembered per set of filters. */
+  scrollKey: string;
+  /** What to draw when the list is empty and nothing is loading. */
+  emptyState: React.ReactNode;
+  renderItem: (item: LibraryGridItem) => React.ReactNode;
+};
 
-  const { saveScrollState, getScrollState } = useScrollRestoration(filterKey);
+/**
+ * The Library's virtualizing shell: one window virtualizer, one row-height
+ * estimate per view mode, infinite scroll and scroll restoration — and no
+ * opinion at all about what a row contains.
+ *
+ * Everything that knows about recipes or cookbooks lives in `renderItem`,
+ * which is what lets one list hold both kinds.
+ */
+export default function LibraryGrid({
+  variant,
+  items,
+  isLoading,
+  isFetchingMore,
+  loadMore,
+  scrollKey,
+  emptyState,
+  renderItem,
+}: LibraryGridProps) {
+  const { saveScrollState, getScrollState } = useScrollRestoration(scrollKey);
 
   // Seeded from `isLoading` so the skeleton is part of the very first paint —
   // server render included. Starting at `false` and flipping in the effect
@@ -75,25 +85,14 @@ export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_windowHeight]); // Recalculate when window resizes
 
-  // Merge pending skeletons with actual recipes
-  const displayData = useMemo(() => {
-    const pendingSkeletons = Array.from(pendingRecipeIds).map((id) => ({
-      id,
-      isLoading: true,
-    }));
-
-    return [...pendingSkeletons, ...recipes];
-  }, [pendingRecipeIds, recipes]);
-
-  // Calculate row count for virtualization
-  const rowCount = useMemo(() => {
-    return Math.ceil(displayData.length / effectiveColumnCount);
-  }, [displayData.length, effectiveColumnCount]);
+  const rowCount = useMemo(
+    () => Math.ceil(items.length / effectiveColumnCount),
+    [items.length, effectiveColumnCount]
+  );
 
   // Get saved scroll state for initialization
   const savedState = getScrollState();
 
-  // Window virtualizer for row-based virtualization
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
     estimateSize: () =>
@@ -161,32 +160,17 @@ export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMo
 
       return () => clearTimeout(timeout);
     }
-  }, [isLoading, recipes.length, isLoadedOnce]);
+  }, [isLoading, items.length, isLoadedOnce]);
 
-  const showEmptyState = !isLoading && displayData.length === 0;
+  const showEmptyState = !isLoading && items.length === 0;
 
-  // Render a single item (skeleton or card)
-  const renderItem = useCallback(
-    (item: (typeof displayData)[number]) => {
-      if ("isLoading" in item && item.isLoading) {
-        return <RecipeCardSkeleton key={`skeleton-${item.id}`} variant={viewMode} />;
-      }
-
-      const recipe = item as RecipeDashboardDTO;
-
-      return (
-        <RecipeCard
-          key={`recipe-${recipe.id}`}
-          allergies={allergies}
-          isFavorite={isFavorite(recipe.id)}
-          recipe={recipe}
-          variant={viewMode}
-          onDelete={deleteRecipe}
-          onToggleFavorite={toggleFavorite}
-        />
-      );
-    },
-    [allergies, isFavorite, deleteRecipe, toggleFavorite, viewMode]
+  const renderRow = useCallback(
+    (rowIndex: number) =>
+      items.slice(
+        rowIndex * effectiveColumnCount,
+        rowIndex * effectiveColumnCount + effectiveColumnCount
+      ),
+    [items, effectiveColumnCount]
   );
 
   // Show skeleton during initial load
@@ -199,11 +183,7 @@ export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMo
       style={{ containIntrinsicSize: "0 500px" }}
     >
       {showEmptyState ? (
-        hasAppliedFilters ? (
-          <NoRecipeResults onClear={clearFilters} />
-        ) : (
-          <NoRecipesText />
-        )
+        emptyState
       ) : (
         <>
           <div
@@ -214,9 +194,7 @@ export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMo
             }}
           >
             {virtualRows.map((virtualRow) => {
-              // Calculate which items belong to this row
-              const startIndex = virtualRow.index * effectiveColumnCount;
-              const rowItems = displayData.slice(startIndex, startIndex + effectiveColumnCount);
+              const rowItems = renderRow(virtualRow.index);
 
               return (
                 <div
@@ -242,7 +220,7 @@ export default function RecipeGrid({ variant }: { variant: RecipeDashboardViewMo
                     }}
                   >
                     {rowItems.map((item) => (
-                      <div key={item.id}>{renderItem(item)}</div>
+                      <div key={`${item.kind}-${item.id}`}>{renderItem(item)}</div>
                     ))}
                   </div>
                 </div>

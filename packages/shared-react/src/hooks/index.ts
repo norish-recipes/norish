@@ -12,6 +12,7 @@ export * from "./caldav/index";
 export * from "./calendar/index";
 export * from "./user/index";
 export * from "./config/index";
+export * from "./cookbooks/index";
 export * from "./favorites/index";
 export * from "./groceries/index";
 export * from "./households/index";
