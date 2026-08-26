@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Aggiungi libro",
     "createTitle": "Nuovo libro di cucina",
-    "renameTitle": "Rinomina libro",
+    "editTitle": "Modifica libro",
     "titleLabel": "Titolo",
     "titlePlaceholder": "es. Cene infrasettimanali",
     "options": "Opzioni libro",
@@ -387,6 +387,10 @@
     "cardInvitation": "Questa ricetta non è ancora in nessun libro di cucina.",
     "fileIt": "Archivia",
     "removeFromCookbook": "Rimuovi dal libro",
-    "noMatchingMembers": "Nessuna ricetta di questo libro corrisponde ai tuoi filtri."
+    "noMatchingMembers": "Nessuna ricetta di questo libro corrisponde ai tuoi filtri.",
+    "membersLabel": "Ricette in questo libro",
+    "undoRemove": "Annulla la rimozione",
+    "showMore": "Mostra altri",
+    "willBeCreated": "Verrà creato al salvataggio"
   }
 }

@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Adicionar livro",
     "createTitle": "Novo livro de receitas",
-    "renameTitle": "Renomear livro",
+    "editTitle": "Editar livro",
     "titleLabel": "Título",
     "titlePlaceholder": "ex. Jantares da semana",
     "options": "Opções do livro",
@@ -387,6 +387,10 @@
     "cardInvitation": "Esta receita ainda não está em um livro de receitas.",
     "fileIt": "Arquivar",
     "removeFromCookbook": "Remover do livro",
-    "noMatchingMembers": "Nenhuma receita neste livro corresponde aos seus filtros."
+    "noMatchingMembers": "Nenhuma receita neste livro corresponde aos seus filtros.",
+    "membersLabel": "Receitas neste livro",
+    "undoRemove": "Desfazer remoção",
+    "showMore": "Mostrar mais",
+    "willBeCreated": "Será criado ao salvar"
   }
 }

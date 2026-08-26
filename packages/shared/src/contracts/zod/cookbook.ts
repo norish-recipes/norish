@@ -9,13 +9,21 @@ import { RecipeDashboardSchema, RecipeListInputSchema } from "./recipe";
  */
 export const CookbookTitleSchema = z.string().trim().min(1).max(120);
 
+/** How many member titles a cookbook's derived description names. */
+export const COOKBOOK_DESCRIPTION_TITLE_LIMIT = 6;
+
 /**
  * A cookbook as every list and card reads it.
  *
- * `memberCount` and `coverImages` are viewer-scoped: they answer the same
- * view policy the recipe list applies, so two readers can honestly see
- * different counts for the same cookbook and the count always agrees with
- * what is on screen (ADR-0027).
+ * Everything below `version` is viewer-scoped: it answers the same view
+ * policy the recipe list applies, so two readers can honestly see different
+ * counts for the same cookbook and what a card says always agrees with what
+ * is on screen (ADR-0027).
+ *
+ * A cookbook still stores nothing but its title. The description and the
+ * metadata a card shows are derived from its members at read time, exactly
+ * as the cover is, so they can never go stale and there is nothing to
+ * maintain.
  */
 export const CookbookSummarySchema = z.object({
   id: z.uuid(),
@@ -27,6 +35,26 @@ export const CookbookSummarySchema = z.object({
   memberCount: z.number().int().nonnegative(),
   /** Member images for the derived cover mosaic, resolved gallery-first. */
   coverImages: z.array(z.string()),
+  /** The first few members' names — the cookbook's derived description. */
+  memberTitles: z.array(z.string()).default([]),
+  /**
+   * Distinct member tag names, for the reader to find their allergens in.
+   *
+   * Whether a tag is an allergen is the reader's own answer — it comes from
+   * their household's allergy list, or their own, and both live on the client
+   * — so the server cannot send "the allergens" and sends every member tag
+   * instead. Deliberately uncapped: any cap drops whichever tags it orders
+   * last, and a card that silently omits an allergen is worse than a larger
+   * row. The set is bounded by the members' own tag lists.
+   */
+  memberTags: z.array(z.string()).default([]),
+  /** Every member's cooking time added up, or null when none states one. */
+  totalMinutes: z.number().int().nonnegative().nullable().default(null),
+  /**
+   * The smallest number of people any member serves: cook the whole cookbook
+   * and this is how many it feeds without scaling something up.
+   */
+  minServings: z.number().int().positive().nullable().default(null),
 });
 
 export const CookbookCreateInputSchema = z.object({

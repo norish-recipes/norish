@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Legg til kokebok",
     "createTitle": "Ny kokebok",
-    "renameTitle": "Gi kokeboken nytt navn",
+    "editTitle": "Rediger kokebok",
     "titleLabel": "Tittel",
     "titlePlaceholder": "f.eks. Hverdagsmiddager",
     "options": "Kokebokalternativer",
@@ -387,6 +387,10 @@
     "cardInvitation": "Denne oppskriften er ikke i en kokebok ennå.",
     "fileIt": "Legg den i en kokebok",
     "removeFromCookbook": "Fjern fra kokeboken",
-    "noMatchingMembers": "Ingen oppskrifter i denne kokeboken passer filtrene dine."
+    "noMatchingMembers": "Ingen oppskrifter i denne kokeboken passer filtrene dine.",
+    "membersLabel": "Oppskrifter i denne kokeboken",
+    "undoRemove": "Angre fjerning",
+    "showMore": "Vis flere",
+    "willBeCreated": "Opprettes når du lagrer"
   }
 }

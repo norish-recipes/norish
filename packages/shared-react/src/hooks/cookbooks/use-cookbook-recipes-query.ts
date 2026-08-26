@@ -6,6 +6,24 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateCookbookHooksOptions } from "./types";
 
+type InfiniteMemberPages = {
+  pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];
+  pageParams: unknown[];
+};
+
+/**
+ * Which cookbook a cached member list belongs to.
+ *
+ * A tRPC query key carries its input in the second element, so this reads the
+ * cookbook out of the key rather than the caller having to know every filter
+ * combination someone might have keyed a list with.
+ */
+export function cookbookIdOf(key: readonly unknown[]): string | undefined {
+  const input = (key[1] as { input?: { cookbookId?: unknown } } | undefined)?.input;
+
+  return typeof input?.cookbookId === "string" ? input.cookbookId : undefined;
+}
+
 export type CookbookRecipesQueryResult = {
   recipes: RecipeDashboardDTO[];
   total: number;
@@ -15,7 +33,7 @@ export type CookbookRecipesQueryResult = {
   loadMore: () => void;
   invalidate: () => void;
   /**
-   * Take a member out of this cookbook's own read. Written rather than
+   * Take a member out of this cookbook's member lists. Written rather than
    * refetched, so an unfile made Offline reads as tentatively applied
    * (ADR-0009).
    */
@@ -65,6 +83,10 @@ export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOp
       { getNextPageParam: (lastPage) => lastPage.nextCursor }
     );
     const queryKey = infiniteQueryOptions.queryKey;
+    const memberListPath = useMemo(
+      () => [trpc.cookbooks.recipes.queryKey({ cookbookId })[0]],
+      [trpc, cookbookId]
+    );
 
     const { data, isLoading, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({
       ...infiniteQueryOptions,
@@ -91,27 +113,34 @@ export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOp
       }, [queryClient, queryKey]),
       removeMember: useCallback(
         (recipeId: string) => {
-          queryClient.setQueryData<{
-            pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];
-            pageParams: unknown[];
-          }>(queryKey, (previous) => {
-            if (!previous?.pages) return previous;
+          // Every cached member list for this cookbook, whatever sort, search
+          // or filters keyed it — the panel that removes a member reads the
+          // default filters, while the cookbook page reads the reader's own,
+          // and Offline there is no refetch to reconcile the two.
+          for (const [key] of queryClient.getQueriesData<InfiniteMemberPages>({
+            queryKey: memberListPath,
+          })) {
+            if (cookbookIdOf(key) !== cookbookId) continue;
 
-            return {
-              ...previous,
-              pages: previous.pages.map((page) => {
-                const kept = page.recipes.filter((recipe) => recipe.id !== recipeId);
+            queryClient.setQueryData<InfiniteMemberPages>(key, (previous) => {
+              if (!previous?.pages) return previous;
 
-                return {
-                  ...page,
-                  recipes: kept,
-                  total: Math.max(0, page.total - (page.recipes.length - kept.length)),
-                };
-              }),
-            };
-          });
+              return {
+                ...previous,
+                pages: previous.pages.map((page) => {
+                  const kept = page.recipes.filter((recipe) => recipe.id !== recipeId);
+
+                  return {
+                    ...page,
+                    recipes: kept,
+                    total: Math.max(0, page.total - (page.recipes.length - kept.length)),
+                  };
+                }),
+              };
+            });
+          }
         },
-        [queryClient, queryKey]
+        [queryClient, memberListPath, cookbookId]
       ),
     };
   };

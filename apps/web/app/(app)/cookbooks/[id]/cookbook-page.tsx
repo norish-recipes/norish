@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CookbookTitlePanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
+import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
 import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import { NotFoundView } from "@/components/shared/not-found-view";
@@ -38,10 +38,10 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
   const [viewMode, setViewMode] = useRecipeDashboardViewMode();
   const t = useTranslations("recipes.cookbooks");
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
-  const { renameCookbook, deleteCookbook } = useCookbooksMutations();
+  const { deleteCookbook } = useCookbooksMutations();
   const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [renameOpen, setRenameOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleDelete = useCallback(() => {
@@ -50,14 +50,6 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
     deleteCookbook({ id: cookbook.id, version: cookbook.version });
     router.push("/");
   }, [cookbook, deleteCookbook, router]);
-
-  const handleRename = useCallback(
-    (title: string) => {
-      if (!cookbook) return;
-      renameCookbook({ id: cookbook.id, title, version: cookbook.version });
-    },
-    [cookbook, renameCookbook]
-  );
 
   if (isNotFound) {
     return <NotFoundView message={t("notFoundHint")} title={t("notFound")} />;
@@ -113,10 +105,10 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
                     <Dropdown.Menu aria-label={t("options")}>
                       {canEdit ? (
                         <Dropdown.Item
-                          key="rename"
+                          key="edit"
                           className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
-                          id="rename"
-                          textValue={t("renameTitle")}
+                          id="edit"
+                          textValue={t("editTitle")}
                         >
                           <Button
                             className={twMerge(
@@ -130,11 +122,11 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
                             // from the panel the action opens.
                             onPress={() => {
                               setMenuOpen(false);
-                              setRenameOpen(true);
+                              setEditOpen(true);
                             }}
                           >
                             <PencilSquareIcon className="text-muted size-4" />
-                            <Label className="text-sm font-medium">{t("renameTitle")}</Label>
+                            <Label className="text-sm font-medium">{t("editTitle")}</Label>
                           </Button>
                         </Dropdown.Item>
                       ) : null}
@@ -184,13 +176,7 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
         </Tabs.Panel>
       </Tabs>
 
-      <CookbookTitlePanel
-        initialTitle={cookbook.title}
-        mode="rename"
-        open={renameOpen}
-        onOpenChange={setRenameOpen}
-        onSubmit={handleRename}
-      />
+      <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
 
       <DeleteCookbookModal
         isOpen={deleteOpen}

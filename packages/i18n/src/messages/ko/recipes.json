@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "요리책 추가",
     "createTitle": "새 요리책",
-    "renameTitle": "요리책 이름 변경",
+    "editTitle": "요리책 편집",
     "titleLabel": "제목",
     "titlePlaceholder": "예: 평일 저녁",
     "options": "요리책 옵션",
@@ -387,6 +387,10 @@
     "cardInvitation": "이 레시피는 아직 요리책에 없습니다.",
     "fileIt": "정리하기",
     "removeFromCookbook": "요리책에서 제거",
-    "noMatchingMembers": "이 요리책에 필터와 일치하는 레시피가 없습니다."
+    "noMatchingMembers": "이 요리책에 필터와 일치하는 레시피가 없습니다.",
+    "membersLabel": "이 요리책의 레시피",
+    "undoRemove": "제거 취소",
+    "showMore": "더 보기",
+    "willBeCreated": "저장하면 만들어집니다"
   }
 }

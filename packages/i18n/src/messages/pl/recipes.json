@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Dodaj książkę",
     "createTitle": "Nowa książka kucharska",
-    "renameTitle": "Zmień nazwę książki",
+    "editTitle": "Edytuj książkę kucharską",
     "titleLabel": "Tytuł",
     "titlePlaceholder": "np. Kolacje w tygodniu",
     "options": "Opcje książki",
@@ -387,6 +387,10 @@
     "cardInvitation": "Ten przepis nie jest jeszcze w żadnej książce kucharskiej.",
     "fileIt": "Dodaj do książki",
     "removeFromCookbook": "Usuń z książki",
-    "noMatchingMembers": "Żaden przepis w tej książce nie odpowiada filtrom."
+    "noMatchingMembers": "Żaden przepis w tej książce nie odpowiada filtrom.",
+    "membersLabel": "Przepisy w tej książce",
+    "undoRemove": "Cofnij usunięcie",
+    "showMore": "Pokaż więcej",
+    "willBeCreated": "Zostanie utworzona po zapisaniu"
   }
 }

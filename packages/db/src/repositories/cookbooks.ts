@@ -7,13 +7,53 @@ import { db } from "@norish/db/drizzle";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import type { RecipeListContext } from "./recipes";
-import { cookbookRecipes, cookbooks, recipes } from "../schema";
-import { CookbookSummarySchema } from "../zodSchemas";
+import { cookbookRecipes, cookbooks, recipes, recipeTags, tags } from "../schema";
+import { COOKBOOK_DESCRIPTION_TITLE_LIMIT, CookbookSummarySchema } from "../zodSchemas";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { buildOwnerPolicyCondition, PRIMARY_IMAGE_SQL } from "./recipes";
 
 /** How many member images the derived cover mosaic asks for. */
 const COVER_TILE_COUNT = 4;
+
+/**
+ * What a card can say about a cookbook without the cookbook storing any of it.
+ *
+ * Derived from the members the reader can see, at read time, exactly as the
+ * cover is — so none of it can go stale and none of it is a field anyone has
+ * to maintain.
+ */
+type MemberSummary = {
+  memberCount: number;
+  coverImages: string[];
+  memberTitles: string[];
+  memberTags: string[];
+  totalMinutes: number | null;
+  minServings: number | null;
+};
+
+function emptyMemberSummary(): MemberSummary {
+  return {
+    memberCount: 0,
+    coverImages: [],
+    memberTitles: [],
+    memberTags: [],
+    totalMinutes: null,
+    minServings: null,
+  };
+}
+
+/**
+ * One member's cooking time, read the way every recipe surface reads it:
+ * the stated total when there is one, otherwise prep and cook added up. A
+ * recipe that states none of the three contributes nothing rather than zero,
+ * so a cookbook of untimed recipes says nothing instead of saying "0m".
+ */
+const MEMBER_MINUTES_SQL = sql<number | null>`CASE
+  WHEN ${recipes.totalMinutes} IS NOT NULL THEN ${recipes.totalMinutes}
+  WHEN ${recipes.prepMinutes} IS NOT NULL OR ${recipes.cookMinutes} IS NOT NULL
+    THEN COALESCE(${recipes.prepMinutes}, 0) + COALESCE(${recipes.cookMinutes}, 0)
+  ELSE NULL
+END`;
 
 type CookbookRow = {
   id: string;
@@ -75,39 +115,84 @@ export function cookbookTitleMatch(search: string) {
 }
 
 /**
+ * Every distinct tag name across the members this reader can see.
+ *
+ * The reader's allergy list lives on the client — it is their household's
+ * list, or their own — so the server cannot answer "which allergens are in
+ * here" and answers "which tags are in here" instead. Every one of them: a
+ * cap drops whichever tags it orders last, and the whole point of this field
+ * is a warning that must not go missing.
+ *
+ * Ordered by the column itself rather than by `lower()`, which `SELECT
+ * DISTINCT` would refuse for not being in the select list.
+ */
+async function memberTags(
+  cookbookIds: string[],
+  policyCondition: SQL | undefined
+): Promise<Map<string, string[]>> {
+  const byCookbook = new Map<string, string[]>();
+  const membership = inArray(cookbookRecipes.cookbookId, cookbookIds);
+
+  const rows = await db
+    .selectDistinct({ cookbookId: cookbookRecipes.cookbookId, name: tags.name })
+    .from(cookbookRecipes)
+    .innerJoin(recipes, eq(cookbookRecipes.recipeId, recipes.id))
+    .innerJoin(recipeTags, eq(recipeTags.recipeId, recipes.id))
+    .innerJoin(tags, eq(recipeTags.tagId, tags.id))
+    .where(policyCondition ? and(membership, policyCondition) : membership)
+    .orderBy(asc(tags.name));
+
+  for (const row of rows) {
+    const names = byCookbook.get(row.cookbookId) ?? [];
+
+    names.push(row.name);
+    byCookbook.set(row.cookbookId, names);
+  }
+
+  return byCookbook;
+}
+
+/**
  * The viewer-scoped read model each card needs: how many members this reader
- * can see, and the first few of their primary images for the derived cover.
+ * can see, the first few of their primary images for the derived cover, and
+ * the handful of derived facts a card states about the set as a whole.
  *
  * One membership join under the same view-policy condition the recipe list
  * applies, so the count and the list agree by construction and two readers
  * may honestly see two different counts (ADR-0027). Images resolve through
  * the same gallery-first SQL recipes use, so the deprecated scalar is never
- * read directly. Ordered by the member's own creation time so the mosaic is
- * stable between reads.
+ * read directly. Ordered by the member's own creation time so the mosaic and
+ * the derived description are stable between reads.
  */
 async function memberSummaries(
   ctx: RecipeListContext,
   cookbookIds: string[]
-): Promise<Map<string, { memberCount: number; coverImages: string[] }>> {
-  const summaries = new Map<string, { memberCount: number; coverImages: string[] }>();
+): Promise<Map<string, MemberSummary>> {
+  const summaries = new Map<string, MemberSummary>();
 
   if (cookbookIds.length === 0) return summaries;
 
   const policyCondition = await buildOwnerPolicyCondition(ctx, recipes.userId, "view");
   const membership = inArray(cookbookRecipes.cookbookId, cookbookIds);
 
-  const rows = await db
-    .select({
-      cookbookId: cookbookRecipes.cookbookId,
-      image: PRIMARY_IMAGE_SQL,
-    })
-    .from(cookbookRecipes)
-    .innerJoin(recipes, eq(cookbookRecipes.recipeId, recipes.id))
-    .where(policyCondition ? and(membership, policyCondition) : membership)
-    .orderBy(asc(recipes.createdAt), asc(recipes.id));
+  const [rows, tagsByCookbook] = await Promise.all([
+    db
+      .select({
+        cookbookId: cookbookRecipes.cookbookId,
+        image: PRIMARY_IMAGE_SQL,
+        name: recipes.name,
+        servings: recipes.servings,
+        minutes: MEMBER_MINUTES_SQL,
+      })
+      .from(cookbookRecipes)
+      .innerJoin(recipes, eq(cookbookRecipes.recipeId, recipes.id))
+      .where(policyCondition ? and(membership, policyCondition) : membership)
+      .orderBy(asc(recipes.createdAt), asc(recipes.id)),
+    memberTags(cookbookIds, policyCondition),
+  ]);
 
   for (const row of rows) {
-    const entry = summaries.get(row.cookbookId) ?? { memberCount: 0, coverImages: [] };
+    const entry = summaries.get(row.cookbookId) ?? emptyMemberSummary();
 
     entry.memberCount += 1;
 
@@ -115,7 +200,28 @@ async function memberSummaries(
       entry.coverImages.push(row.image);
     }
 
+    if (entry.memberTitles.length < COOKBOOK_DESCRIPTION_TITLE_LIMIT) {
+      entry.memberTitles.push(row.name);
+    }
+
+    const minutes = row.minutes === null ? null : Number(row.minutes);
+
+    if (minutes !== null && Number.isFinite(minutes)) {
+      entry.totalMinutes = (entry.totalMinutes ?? 0) + minutes;
+    }
+
+    if (row.servings > 0) {
+      entry.minServings =
+        entry.minServings === null ? row.servings : Math.min(entry.minServings, row.servings);
+    }
+
     summaries.set(row.cookbookId, entry);
+  }
+
+  for (const [cookbookId, names] of tagsByCookbook) {
+    const entry = summaries.get(cookbookId);
+
+    if (entry) entry.memberTags = names;
   }
 
   return summaries;
@@ -123,12 +229,11 @@ async function memberSummaries(
 
 function toCookbookSummary(
   row: CookbookRow,
-  members: { memberCount: number; coverImages: string[] } | undefined
+  members: MemberSummary | undefined
 ): CookbookSummaryDTO {
   const parsed = CookbookSummarySchema.safeParse({
     ...row,
-    memberCount: members?.memberCount ?? 0,
-    coverImages: members?.coverImages ?? [],
+    ...(members ?? emptyMemberSummary()),
   });
 
   if (!parsed.success) throw new Error("CookbookSummaryDTO parse failed");

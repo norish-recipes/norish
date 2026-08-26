@@ -28,7 +28,13 @@ import {
 import { setFavorite } from "@norish/db/repositories/favorites";
 import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import { cookbooks as cookbooksTable, recipeImages as recipeImagesTable } from "@norish/db/schema";
+import {
+  cookbooks as cookbooksTable,
+  recipeImages as recipeImagesTable,
+  recipes as recipesTable,
+  recipeTags as recipeTagsTable,
+  tags as tagsTable,
+} from "@norish/db/schema";
 
 import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -51,6 +57,31 @@ async function setPolicy(level: {
   delete: PermissionLevel;
 }) {
   await setConfig(ServerConfigKeys.RECIPE_PERMISSION_POLICY, level, null, false);
+}
+
+/** Put named tags on a recipe, so a cookbook has member tags to gather. */
+async function tagRecipe(recipeId: string, names: string[]) {
+  const db = getTestDb();
+
+  for (const [order, name] of names.entries()) {
+    // Tags are shared rows, so two members carrying the same one must reuse it.
+    await db.insert(tagsTable).values({ name }).onConflictDoNothing();
+
+    const [tag] = await db.select().from(tagsTable).where(eq(tagsTable.name, name)).limit(1);
+
+    await db.insert(recipeTagsTable).values({ recipeId, tagId: tag!.id, order });
+  }
+}
+
+/**
+ * Set a recipe's three time columns exactly, nulls included — which the
+ * factory cannot express, since it fills an absent value with a default.
+ */
+async function setTimes(
+  recipeId: string,
+  times: { totalMinutes: number | null; prepMinutes: number | null; cookMinutes: number | null }
+) {
+  await getTestDb().update(recipesTable).set(times).where(eq(recipesTable.id, recipeId));
 }
 
 /** Detach a cookbook's owner, the way deleting an account does. */
@@ -379,6 +410,66 @@ describe("cookbook repository", () => {
       expect(first?.coverImages).toEqual(["/recipes/images/one.jpg"]);
       expect(second?.coverImages).toEqual(first?.coverImages);
       expect(first?.memberCount).toBe(2);
+    });
+
+    it("derives a description, a total time, the smallest serving and the member tags", async () => {
+      const cookbook = await createCookbook({ userId: ownerId, title: "Sunday" });
+      const soup = await createTestRecipe(ownerId, { name: "Soup", servings: 6 });
+      const cake = await createTestRecipe(ownerId, { name: "Cake", servings: 2 });
+
+      await setTimes(soup.id, { totalMinutes: 45, prepMinutes: null, cookMinutes: null });
+      // No stated total, so prep and cook are added up the way every recipe
+      // surface reads them.
+      await setTimes(cake.id, { totalMinutes: null, prepMinutes: 20, cookMinutes: 40 });
+      await tagRecipe(soup.id, ["Nuts", "Vegetarian"]);
+      await tagRecipe(cake.id, ["Nuts"]);
+      await addRecipeToCookbook(cookbook.id, soup.id);
+      await addRecipeToCookbook(cookbook.id, cake.id);
+
+      const summary = await getCookbookForViewer(viewer(ownerId), cookbook.id);
+
+      // The description is the members themselves, in the order they joined.
+      expect(summary?.memberTitles).toEqual(["Soup", "Cake"]);
+      expect(summary?.totalMinutes).toBe(105);
+      // Cook the whole cookbook and it feeds the smallest member's count.
+      expect(summary?.minServings).toBe(2);
+      // Distinct across the members, so the reader can find their allergens.
+      expect(summary?.memberTags).toEqual(["Nuts", "Vegetarian"]);
+    });
+
+    it("states no time when no member states one, rather than stating zero", async () => {
+      const cookbook = await createCookbook({ userId: ownerId, title: "Untimed" });
+      const untimed = await createTestRecipe(ownerId, { name: "Untimed" });
+
+      await setTimes(untimed.id, {
+        totalMinutes: null,
+        prepMinutes: null,
+        cookMinutes: null,
+      });
+      await addRecipeToCookbook(cookbook.id, untimed.id);
+
+      const summary = await getCookbookForViewer(viewer(ownerId), cookbook.id);
+
+      expect(summary?.totalMinutes).toBeNull();
+    });
+
+    it("derives all of it from the members the reader may see, and no others", async () => {
+      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
+
+      const cookbook = await createCookbook({ userId: ownerId, title: "Mine" });
+      const mine = await createTestRecipe(ownerId, { name: "Mine", servings: 4 });
+      const theirs = await createTestRecipe(strangerId, { name: "Theirs", servings: 1 });
+
+      await tagRecipe(theirs.id, ["Shellfish"]);
+      await addRecipeToCookbook(cookbook.id, mine.id);
+      await addRecipeToCookbook(cookbook.id, theirs.id);
+      await orphan(cookbook.id);
+
+      const summary = await getCookbookForViewer(viewer(ownerId), cookbook.id);
+
+      expect(summary?.memberTitles).toEqual(["Mine"]);
+      expect(summary?.minServings).toBe(4);
+      expect(summary?.memberTags).toEqual([]);
     });
   });
 

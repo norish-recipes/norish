@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Kookboek toevoegen",
     "createTitle": "Nieuw kookboek",
-    "renameTitle": "Kookboek hernoemen",
+    "editTitle": "Kookboek bewerken",
     "titleLabel": "Titel",
     "titlePlaceholder": "bv. Doordeweekse diners",
     "options": "Kookboekopties",
@@ -387,6 +387,10 @@
     "cardInvitation": "Dit recept staat nog niet in een kookboek.",
     "fileIt": "Opbergen",
     "removeFromCookbook": "Uit kookboek verwijderen",
-    "noMatchingMembers": "Geen recepten in dit kookboek passen bij je filters."
+    "noMatchingMembers": "Geen recepten in dit kookboek passen bij je filters.",
+    "membersLabel": "Recepten in dit kookboek",
+    "undoRemove": "Verwijderen ongedaan maken",
+    "showMore": "Meer tonen",
+    "willBeCreated": "Wordt aangemaakt bij opslaan"
   }
 }

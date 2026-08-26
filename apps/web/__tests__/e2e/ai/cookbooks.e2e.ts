@@ -42,6 +42,26 @@ async function closePanel() {
   await page.getByRole("button", { name: "Close panel" }).click();
 }
 
+/** Commit the membership panel, which never writes until it is saved. */
+async function saveMembership() {
+  await page.getByTestId("save-cookbook-membership").click();
+}
+
+/**
+ * Rows by kind rather than by text.
+ *
+ * A cookbook's card is described by the names of the recipes inside it, so a
+ * bare text match on a recipe's name finds the cookbook holding it as well as
+ * the recipe itself — and under the default sort the cookbook comes first.
+ */
+function recipeCard() {
+  return page.locator("[data-recipe-card]").filter({ hasText: RECIPE_NAME }).first();
+}
+
+function cookbookCard(title: string) {
+  return page.locator("[data-cookbook-card]").filter({ hasText: title }).first();
+}
+
 test.beforeAll(async ({ aiStack: _aiStack }) => {
   await clearCookbooks();
   await seedRecipe(RECIPE_NAME);
@@ -55,23 +75,23 @@ test("the three chips change both the list and the heading", async () => {
   await page.goto("/");
 
   await expectHeading("Your library");
-  await expect(page.getByText(RECIPE_NAME).first()).toBeVisible();
+  await expect(recipeCard()).toBeVisible();
 
   await (await chip("cookbooks")).click();
   await expectHeading("Your cookbooks");
   // No cookbooks yet, so the recipe is gone and the empty state explains why.
-  await expect(page.getByText(RECIPE_NAME)).toHaveCount(0);
+  await expect(page.locator("[data-recipe-card]")).toHaveCount(0);
   await expect(page.getByText("No cookbooks yet")).toBeVisible();
 
   await (await chip("recipes")).click();
   await expectHeading("Your recipes");
-  await expect(page.getByText(RECIPE_NAME).first()).toBeVisible();
+  await expect(recipeCard()).toBeVisible();
 
   await (await chip("all")).click();
   await expectHeading("Your library");
 });
 
-test("creating a cookbook from the Library lands on its page", async () => {
+test("creating a cookbook from the Library leaves the reader on the Library", async () => {
   await page.goto("/");
   await (await chip("cookbooks")).click();
 
@@ -79,8 +99,10 @@ test("creating a cookbook from the Library lands on its page", async () => {
   await page.getByTestId("cookbook-title-input").fill(COOKBOOK_TITLE);
   await page.getByRole("button", { name: /create/i }).click();
 
-  await expect(page).toHaveURL(/\/cookbooks\/[0-9a-f-]{36}$/);
-  await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
+  // Made and left in the list, not opened: the reader was reading the
+  // Library, and the new cookbook appears in it.
+  await expect(page).toHaveURL(/\/$/);
+  await expect(cookbookCard(COOKBOOK_TITLE)).toBeVisible();
   expect(await readCookbookTitles()).toContain(COOKBOOK_TITLE);
 });
 
@@ -94,8 +116,8 @@ test("a cookbook and a recipe appear interleaved under All", async () => {
 
   // Both kinds are on screen — wait for the real cards, since the skeleton
   // carries the recipe-card marker too.
-  await expect(page.getByText(COOKBOOK_TITLE).first()).toBeVisible();
-  await expect(page.getByText(RECIPE_NAME).first()).toBeVisible();
+  await expect(cookbookCard(COOKBOOK_TITLE)).toBeVisible();
+  await expect(recipeCard()).toBeVisible();
 
   const kinds = await cards.evaluateAll((nodes) =>
     nodes.map((node) => (node.hasAttribute("data-cookbook-card") ? "cookbook" : "recipe"))
@@ -107,7 +129,7 @@ test("a cookbook and a recipe appear interleaved under All", async () => {
 
 test("filing a recipe from its quick actions shows it on the recipe page card", async () => {
   await page.goto("/");
-  await page.getByText(RECIPE_NAME).first().click();
+  await recipeCard().click();
   await expect(page.getByRole("heading", { name: RECIPE_NAME })).toBeVisible();
 
   // The card starts as an invitation, because the recipe is in no cookbook.
@@ -117,25 +139,48 @@ test("filing a recipe from its quick actions shows it on the recipe page card", 
   await expect(card).toBeVisible();
   await card.getByTestId("file-into-cookbook").click();
 
+  // Toggling stages the change; nothing is written until Save.
   await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
-  await closePanel();
+  expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
+
+  await saveMembership();
 
   await expect(card.locator(`[data-cookbook-chip="${COOKBOOK_TITLE}"]`)).toBeVisible();
-  expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);
+  await expect(async () => {
+    expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);
+  }).toPass({ timeout: 10_000 });
 });
 
 test("the cookbook page lists the member it was given", async () => {
   await page.goto("/");
   await (await chip("cookbooks")).click();
-  await page.getByText(COOKBOOK_TITLE).first().click();
+  await cookbookCard(COOKBOOK_TITLE).click();
 
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
-  await expect(page.getByText(RECIPE_NAME).first()).toBeVisible();
+  await expect(recipeCard()).toBeVisible();
 });
 
 test("the same panel takes the recipe out again", async () => {
   await page.goto("/");
-  await page.getByText(RECIPE_NAME).first().click();
+  await recipeCard().click();
+
+  // Both recipe page layouts are in the DOM; the desktop one comes first.
+  const card = page.getByTestId("cookbooks-card").first();
+
+  await card.getByTestId("file-into-cookbook").click();
+  await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
+  await saveMembership();
+
+  await expect(card.locator(`[data-cookbook-chip="${COOKBOOK_TITLE}"]`)).toHaveCount(0);
+
+  await expect(async () => {
+    expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
+  }).toPass({ timeout: 10_000 });
+});
+
+test("closing the membership panel without saving changes nothing", async () => {
+  await page.goto("/");
+  await recipeCard().click();
 
   // Both recipe page layouts are in the DOM; the desktop one comes first.
   const card = page.getByTestId("cookbooks-card").first();
@@ -145,19 +190,16 @@ test("the same panel takes the recipe out again", async () => {
   await closePanel();
 
   await expect(card.locator(`[data-cookbook-chip="${COOKBOOK_TITLE}"]`)).toHaveCount(0);
-
-  await expect(async () => {
-    expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
-  }).toPass({ timeout: 10_000 });
+  expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
 });
 
-test("renaming and deleting a cookbook leaves its recipes alone", async () => {
-  // Put the recipe back, so the delete has something to not destroy.
+test("the edit panel takes a recipe out of the cookbook it is editing", async () => {
+  // Put it back first, so there is something to take out.
   await page.goto("/");
-  await page.getByText(RECIPE_NAME).first().click();
+  await recipeCard().click();
   await page.getByTestId("cookbooks-card").first().getByTestId("file-into-cookbook").click();
   await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
-  await closePanel();
+  await saveMembership();
 
   await expect(async () => {
     expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);
@@ -165,15 +207,49 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
 
   await page.goto("/");
   await (await chip("cookbooks")).click();
-  await page.getByText(COOKBOOK_TITLE).first().click();
+  await cookbookCard(COOKBOOK_TITLE).click();
+  await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
+
+  await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
+  await page.getByRole("button", { name: "Edit cookbook", exact: true }).click();
+  await page.locator(`[data-remove-member="${RECIPE_NAME}"]`).click();
+
+  // Staged, like everything else in this panel: nothing is written yet.
+  expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);
+
+  await page.getByRole("button", { name: /^save$/i }).click();
+
+  await expect(async () => {
+    expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
+  }).toPass({ timeout: 10_000 });
+  // Unfiling is never destructive.
+  expect(await recipeExists(RECIPE_NAME)).toBe(true);
+});
+
+test("renaming and deleting a cookbook leaves its recipes alone", async () => {
+  // Put the recipe back, so the delete has something to not destroy.
+  await page.goto("/");
+  await recipeCard().click();
+  await page.getByTestId("cookbooks-card").first().getByTestId("file-into-cookbook").click();
+  await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
+  await saveMembership();
+
+  await expect(async () => {
+    expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);
+  }).toPass({ timeout: 10_000 });
+
+  await page.goto("/");
+  await (await chip("cookbooks")).click();
+  await cookbookCard(COOKBOOK_TITLE).click();
 
   // Wait for the cookbook's own page: the Library card carrying the same
   // action labels is gone by then.
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
 
-  // Rename from inside the cookbook.
+  // Rename from inside the cookbook, through the same panel that takes
+  // recipes out of it.
   await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
-  await page.getByRole("button", { name: "Rename cookbook", exact: true }).click();
+  await page.getByRole("button", { name: "Edit cookbook", exact: true }).click();
   await page.getByTestId("cookbook-title-input").fill(RENAMED_TITLE);
   await page.getByRole("button", { name: /^save$/i }).click();
 
@@ -196,5 +272,5 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
   await page.goto("/");
   // The chip choice persisted, so come back to All to see the recipe again.
   await (await chip("all")).click();
-  await expect(page.getByText(RECIPE_NAME).first()).toBeVisible();
+  await expect(recipeCard()).toBeVisible();
 });

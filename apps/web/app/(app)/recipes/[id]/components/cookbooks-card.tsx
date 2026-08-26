@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
+import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { MiniCookbooks } from "@/components/Panel/consumers";
 import { useRecipeCookbooksQuery } from "@/hooks/cookbooks";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
-import { BookmarkSquareIcon } from "@heroicons/react/16/solid";
 import { Button, Card, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -46,7 +46,7 @@ export default function CookbooksCard() {
             variant="tertiary"
             onPress={() => setPanelOpen(true)}
           >
-            <BookmarkSquareIcon className="size-4" />
+            <CookbookIconSolid className="size-4" />
             {t("fileIt")}
           </Button>
         </Card.Header>

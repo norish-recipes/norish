@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Добавить книгу",
     "createTitle": "Новая кулинарная книга",
-    "renameTitle": "Переименовать книгу",
+    "editTitle": "Изменить книгу",
     "titleLabel": "Название",
     "titlePlaceholder": "напр. Ужины на неделе",
     "options": "Параметры книги",
@@ -387,6 +387,10 @@
     "cardInvitation": "Этот рецепт пока не в кулинарной книге.",
     "fileIt": "Добавить",
     "removeFromCookbook": "Убрать из книги",
-    "noMatchingMembers": "Ни один рецепт в этой книге не подходит под фильтры."
+    "noMatchingMembers": "Ни один рецепт в этой книге не подходит под фильтры.",
+    "membersLabel": "Рецепты в этой книге",
+    "undoRemove": "Отменить удаление",
+    "showMore": "Показать ещё",
+    "willBeCreated": "Будет создана при сохранении"
   }
 }

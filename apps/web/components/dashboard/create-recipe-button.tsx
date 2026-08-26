@@ -45,11 +45,14 @@ export default function CreateRecipeButton() {
 
   const handleCreateCookbook = useCallback(
     (title: string) => {
-      // The id is minted client-side, so the new cookbook can be opened
-      // immediately — Offline included (ADR-0003).
-      void createCookbook({ title }).then((id) => router.push(`/cookbooks/${id}`));
+      // Made and left on the Library, not opened. The reader who has just
+      // said "there should be a Christmas cookbook" is not asking to be
+      // taken away from the list they were reading; the new cookbook appears
+      // at the top of it, which is where the Cookbooks chip already has them
+      // looking.
+      void createCookbook({ title });
     },
-    [createCookbook, router]
+    [createCookbook]
   );
 
   const openModal = useCallback((setModalOpen: (open: boolean) => void) => {
@@ -119,7 +122,6 @@ export default function CreateRecipeButton() {
         </Button>
 
         <CookbookTitlePanel
-          mode="create"
           open={showCookbookPanel}
           onOpenChange={setShowCookbookPanel}
           onSubmit={handleCreateCookbook}

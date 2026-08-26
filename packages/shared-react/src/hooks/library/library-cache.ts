@@ -110,6 +110,29 @@ export function applyRecipeUpdateToLibrary(
   );
 }
 
+/**
+ * Apply a cookbook-list update to a flat list of cookbooks.
+ *
+ * The membership panel's list is one array rather than pages, so it is
+ * wrapped as a single page for the same updater every other cookbook list
+ * takes and read back out. That is what lets one helper reach every cached
+ * cookbook list — including the one a reader is looking at while they make a
+ * cookbook, which was the list it used to miss.
+ */
+export function applyCookbookUpdateToList(
+  previous: CookbookSummaryDTO[] | undefined,
+  updater: (previous: InfiniteCookbookPages | undefined) => InfiniteCookbookPages | undefined
+): CookbookSummaryDTO[] | undefined {
+  if (!previous) return previous;
+
+  const next = updater({
+    pageParams: [0],
+    pages: [{ cookbooks: previous, total: previous.length, nextCursor: null }],
+  });
+
+  return next?.pages?.[0]?.cookbooks ?? previous;
+}
+
 /** The same, for a cookbook-list update. */
 export function applyCookbookUpdateToLibrary(
   previous: InfiniteLibraryData | undefined,

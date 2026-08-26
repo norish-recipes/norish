@@ -38,7 +38,7 @@ export default function LibraryView({ variant }: { variant: RecipeDashboardViewM
     deleteRecipe,
     allergies,
   } = useRecipesContext();
-  const { renameCookbook, deleteCookbook } = useCookbooksMutations();
+  const { deleteCookbook } = useCookbooksMutations();
 
   // The same filters the context passes, so both share one cache entry and
   // one request.
@@ -72,10 +72,10 @@ export default function LibraryView({ variant }: { variant: RecipeDashboardViewM
       if (item.kind === "cookbook") {
         return (
           <CookbookCard
+            allergies={allergies}
             cookbook={item.cookbook}
             variant={variant}
             onDelete={deleteCookbook}
-            onRename={renameCookbook}
           />
         );
       }
@@ -91,7 +91,7 @@ export default function LibraryView({ variant }: { variant: RecipeDashboardViewM
         />
       );
     },
-    [variant, allergies, isFavorite, deleteRecipe, toggleFavorite, deleteCookbook, renameCookbook]
+    [variant, allergies, isFavorite, deleteRecipe, toggleFavorite, deleteCookbook]
   );
 
   const emptyState =

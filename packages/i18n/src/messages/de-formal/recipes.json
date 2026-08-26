@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Kochbuch hinzufügen",
     "createTitle": "Neues Kochbuch",
-    "renameTitle": "Kochbuch umbenennen",
+    "editTitle": "Kochbuch bearbeiten",
     "titleLabel": "Titel",
     "titlePlaceholder": "z. B. Wochentagsessen",
     "options": "Kochbuch-Optionen",
@@ -387,6 +387,10 @@
     "cardInvitation": "Dieses Rezept ist noch in keinem Kochbuch.",
     "fileIt": "Einsortieren",
     "removeFromCookbook": "Aus Kochbuch entfernen",
-    "noMatchingMembers": "In diesem Kochbuch gibt es keine Rezepte, die zu Ihren Filtern passen."
+    "noMatchingMembers": "In diesem Kochbuch gibt es keine Rezepte, die zu Ihren Filtern passen.",
+    "membersLabel": "Rezepte in diesem Kochbuch",
+    "undoRemove": "Entfernen rückgängig machen",
+    "showMore": "Mehr anzeigen",
+    "willBeCreated": "Wird beim Speichern erstellt"
   }
 }

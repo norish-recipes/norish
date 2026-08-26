@@ -4,35 +4,53 @@ import type { MouseEvent } from "react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
-import { CookbookTitlePanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
+import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
+import {
+  CookbookAllergenChips,
+  CookbookMetadata,
+  VISIBLE_ALLERGENS_IN_ROW,
+} from "@/components/cookbooks/cookbook-metadata";
+import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
+import { photoChipClassName } from "@/components/dashboard/recipe-metadata";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { EllipsisHorizontalIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/20/solid";
-import { Button, Card, Chip, Tooltip } from "@heroui/react";
+import { Button, Card, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 
 type CookbookCardProps = {
   cookbook: CookbookSummaryDTO;
+  /** The reader's own allergy list, so the card can name what is in here. */
+  allergies: string[];
   variant?: "grid" | "list";
-  onRename: (input: { id: string; title: string; version: number }) => void;
   onDelete: (input: { id: string; version: number }) => void;
 };
 
 /**
  * A cookbook on the Library.
  *
+ * It reads like a recipe card on purpose — the same cover, the same metadata
+ * chips in the same corner, the same description slot — because it stands in
+ * the same list under the same sort and a row that looked like a different
+ * kind of object would break the one thing ADR-0026 is protecting. What it
+ * says in those slots is the set's own answer: every member's time added up,
+ * the smallest number of people any member serves, and the allergens the
+ * reader would meet somewhere inside. All of it is derived from the members
+ * at read time, so a cookbook still stores nothing but its title.
+ *
  * Its outer heights match the recipe card's exactly — 340px in grid, 128px in
  * list — because the window virtualizer estimates one row height per view
- * mode and a mixed page degrades for every row if the two disagree
- * (ADR-0026).
+ * mode and a mixed page degrades for every row if the two disagree.
  */
 function CookbookCardComponent({
   cookbook,
+  allergies,
   variant = "grid",
-  onRename,
   onDelete,
 }: CookbookCardProps) {
   const router = useRouter();
@@ -40,7 +58,11 @@ function CookbookCardComponent({
   const t = useTranslations("recipes.cookbooks");
   const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
   const [rowOpen, setRowOpen] = useState(false);
-  const [renameOpen, setRenameOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  // The edit panel reads this cookbook's members, and cards are virtualized:
+  // mounting it before it is ever opened would fire that read every time the
+  // card scrolls back into view.
+  const editMounted = useMountedOnceOpened(editOpen);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Cookbooks answer to the recipe permission policy, so the same two
@@ -57,11 +79,6 @@ function CookbookCardComponent({
     event.stopPropagation();
   }, []);
 
-  const handleRename = useCallback(
-    (title: string) => onRename({ id: cookbook.id, title, version: cookbook.version }),
-    [onRename, cookbook.id, cookbook.version]
-  );
-
   const handleDelete = useCallback(() => {
     setDeleteOpen(false);
     rowRef.current?.triggerDeleteAnimation(() => {
@@ -74,11 +91,11 @@ function CookbookCardComponent({
 
     if (canEdit) {
       list.push({
-        key: "rename",
+        key: "edit",
         icon: PencilSquareIcon,
         color: "accent",
-        onPress: () => setRenameOpen(true),
-        label: t("renameTitle"),
+        onPress: () => setEditOpen(true),
+        label: t("editTitle"),
       });
     }
 
@@ -96,6 +113,23 @@ function CookbookCardComponent({
     return list;
   }, [canEdit, canDelete, t]);
 
+  // The description a cookbook never stored: what is actually inside it.
+  const description = cookbook.memberTitles.join(", ");
+  const timeLabel = formatMinutesHM(cookbook.totalMinutes ?? undefined);
+  // Cook the whole cookbook and the smallest member is what it feeds without
+  // scaling something up, so that is the honest number to put on the card.
+  const servings = cookbook.minServings;
+  const allergySet = useMemo(
+    () => new Set(allergies.map((allergy) => allergy.toLowerCase())),
+    [allergies]
+  );
+  // Only the reader's own allergens, not every tag the members carry: a
+  // cookbook is a set of other people's recipes and the warning is the part
+  // worth the space.
+  const allergens = useMemo(
+    () => cookbook.memberTags.filter((tag) => isAllergenTag(tag, allergySet)),
+    [cookbook.memberTags, allergySet]
+  );
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>
       <Tooltip delay={0}>
@@ -118,10 +152,72 @@ function CookbookCardComponent({
     </div>
   );
 
-  const countChip = (
-    <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
-      <Chip.Label>{t("recipeCount", { count: cookbook.memberCount })}</Chip.Label>
-    </Chip>
+  const listChipClassName = "rounded-full px-2 text-[11px]";
+
+  const metadataChips = (
+    <div
+      className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
+      title={allergens.length > 0 ? allergens.join(", ") : undefined}
+    >
+      <CookbookMetadata
+        allergens={allergens}
+        chipClassName={listChipClassName}
+        chipVariant="tertiary"
+        iconClassName="h-3.5 w-3.5"
+        memberCount={cookbook.memberCount}
+        servings={servings}
+        timeLabel={timeLabel}
+        visibleAllergens={VISIBLE_ALLERGENS_IN_ROW}
+      />
+    </div>
+  );
+
+  // Over the cover, chips carry their own contrast rather than tinting the
+  // picture — the same rule the recipe card follows (ADR-0020). The allergens
+  // are not here: in grid they run along the bottom of the cover, where the
+  // recipe card puts its tags.
+  const coverMetadata = (
+    <div className="pointer-events-none absolute top-2 right-2 z-20 flex items-center gap-2">
+      <CookbookMetadata
+        chipClassName={photoChipClassName}
+        chipVariant="soft"
+        iconClassName="h-4 w-4"
+        memberCount={cookbook.memberCount}
+        servings={servings}
+        timeLabel={timeLabel}
+      />
+
+      <div className="pointer-events-auto" role="presentation" onClick={stopParentActivation}>
+        <Button
+          isIconOnly
+          aria-label={t("options")}
+          className="bg-surface text-foreground h-6 w-6 min-w-0 p-0 shadow-md"
+          size="sm"
+          type="button"
+          variant="tertiary"
+          onPress={() => {
+            if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
+            else rowRef.current?.openRow();
+          }}
+        >
+          <EllipsisHorizontalIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  /**
+   * The mark that says this row is a cookbook rather than a recipe.
+   *
+   * Deliberately quiet: the cover mosaic and the recipe count already say it,
+   * so this only has to settle the case where a cookbook holds one recipe and
+   * its cover is that recipe's photo.
+   */
+  const kindMark = (
+    <CookbookIconSolid
+      aria-hidden
+      className="text-muted mr-1.5 inline-block size-4 shrink-0 align-[-2px]"
+    />
   );
 
   const cardContent =
@@ -159,9 +255,15 @@ function CookbookCardComponent({
                   className={`text-foreground truncate text-base leading-5 font-semibold ${rowOpen ? "" : "group-hover/row:underline"}`}
                   title={cookbook.title}
                 >
+                  {kindMark}
                   {cookbook.title}
                 </h3>
-                <div className="mt-3 flex items-center gap-1.5">{countChip}</div>
+                {description && (
+                  <p className="text-muted mt-1 truncate text-sm" title={description}>
+                    {description}
+                  </p>
+                )}
+                <div className="mt-3">{metadataChips}</div>
                 <div className="absolute top-1/2 right-3 -translate-y-1/2">{optionsButton}</div>
               </Card.Content>
             </div>
@@ -193,26 +295,12 @@ function CookbookCardComponent({
           >
             <div className="relative h-[236px] w-full shrink-0 overflow-hidden">
               <CookbookCover images={cookbook.coverImages} title={cookbook.title} />
-              <div
-                className="absolute top-2 right-2 z-10"
-                role="presentation"
-                onClick={stopParentActivation}
-              >
-                <Button
-                  isIconOnly
-                  aria-label={t("options")}
-                  className="bg-overlay text-foreground shadow-surface h-8 w-8 min-w-0 rounded-full p-0"
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                  onPress={() => {
-                    if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
-                    else rowRef.current?.openRow();
-                  }}
-                >
-                  <EllipsisHorizontalIcon className="h-5 w-5" />
-                </Button>
-              </div>
+              {coverMetadata}
+              {allergens.length > 0 && (
+                <div className="absolute inset-x-0 bottom-0 z-30 flex flex-wrap gap-2 overflow-hidden p-2">
+                  <CookbookAllergenChips allergens={allergens} chipClassName="shadow-md" />
+                </div>
+              )}
             </div>
 
             <Card.Content className="h-[104px] overflow-hidden px-4 pt-3 pb-3">
@@ -220,9 +308,23 @@ function CookbookCardComponent({
                 className={`text-foreground truncate text-base font-semibold ${rowOpen ? "" : "group-hover/row:underline"}`}
                 title={cookbook.title}
               >
+                {kindMark}
                 {cookbook.title}
               </h3>
-              <div className="mt-2 flex items-center gap-1.5">{countChip}</div>
+              {description && (
+                <p
+                  className="text-muted mt-1 text-sm"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                  title={description}
+                >
+                  {description}
+                </p>
+              )}
             </Card.Content>
           </Card>
         </div>
@@ -244,13 +346,9 @@ function CookbookCardComponent({
         cardContent
       )}
 
-      <CookbookTitlePanel
-        initialTitle={cookbook.title}
-        mode="rename"
-        open={renameOpen}
-        onOpenChange={setRenameOpen}
-        onSubmit={handleRename}
-      />
+      {editMounted && (
+        <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
+      )}
 
       <DeleteCookbookModal
         isOpen={deleteOpen}
@@ -262,9 +360,14 @@ function CookbookCardComponent({
   );
 }
 
+function sameStrings(a: readonly string[], b: readonly string[]) {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
 const CookbookCard = memo(CookbookCardComponent, (previous, next) => {
   if (previous.variant !== next.variant) return false;
-  if (previous.onRename !== next.onRename || previous.onDelete !== next.onDelete) return false;
+  if (previous.allergies !== next.allergies) return false;
+  if (previous.onDelete !== next.onDelete) return false;
 
   const a = previous.cookbook;
   const b = next.cookbook;
@@ -278,8 +381,11 @@ const CookbookCard = memo(CookbookCardComponent, (previous, next) => {
       // so an ownership change — a cookbook becoming Orphaned — has to redraw.
       a.userId === b.userId &&
       a.memberCount === b.memberCount &&
-      a.coverImages.length === b.coverImages.length &&
-      a.coverImages.every((image, index) => image === b.coverImages[index]))
+      a.totalMinutes === b.totalMinutes &&
+      a.minServings === b.minServings &&
+      sameStrings(a.coverImages, b.coverImages) &&
+      sameStrings(a.memberTitles, b.memberTitles) &&
+      sameStrings(a.memberTags, b.memberTags))
   );
 });
 

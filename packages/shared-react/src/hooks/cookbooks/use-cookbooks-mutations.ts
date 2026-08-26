@@ -60,6 +60,13 @@ export function createUseCookbooksMutations({
           version: 1,
           memberCount: recipeId ? 1 : 0,
           coverImages: [],
+          // Everything a card derives from the members is left empty: the
+          // echo brings the real answers, and guessing them here would put
+          // numbers on screen that no member supports.
+          memberTitles: [],
+          memberTags: [],
+          totalMinutes: null,
+          minServings: null,
         };
 
         /**

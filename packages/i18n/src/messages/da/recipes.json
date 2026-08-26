@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Tilføj kogebog",
     "createTitle": "Ny kogebog",
-    "renameTitle": "Omdøb kogebog",
+    "editTitle": "Rediger kogebog",
     "titleLabel": "Titel",
     "titlePlaceholder": "fx Hverdagsmiddage",
     "options": "Kogebogsindstillinger",
@@ -387,6 +387,10 @@
     "cardInvitation": "Denne opskrift er endnu ikke i en kogebog.",
     "fileIt": "Læg den i en kogebog",
     "removeFromCookbook": "Fjern fra kogebog",
-    "noMatchingMembers": "Der er ingen opskrifter i denne kogebog, der matcher dine filtre."
+    "noMatchingMembers": "Der er ingen opskrifter i denne kogebog, der matcher dine filtre.",
+    "membersLabel": "Opskrifter i denne kogebog",
+    "undoRemove": "Fortryd fjernelse",
+    "showMore": "Vis flere",
+    "willBeCreated": "Oprettes, når du gemmer"
   }
 }

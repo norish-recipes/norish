@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { BookmarkSquareIcon } from "@heroicons/react/24/outline";
+import { CookbookIconOutline } from "@/components/cookbooks/cookbook-icon";
 
 /**
  * The derived cover: a mosaic of the first few members' primary images.
  *
  * Nothing is stored — the tiles come from the members themselves, so a cover
  * can never go stale and there is nothing to upload. Fewer members than tiles
- * fills what exists; none renders a plain tinted tile, which is a deliberate
- * new cookbook rather than a broken one.
+ * fills what exists; none falls back to exactly the treatment a recipe with
+ * no picture gets, with the cookbook's own mark in place of the photo one, so
+ * an empty cookbook reads as the same kind of "nothing here yet" rather than
+ * as a different component.
  */
 export default function CookbookCover({
   images,
@@ -28,9 +30,9 @@ export default function CookbookCover({
   if (usable.length === 0) {
     return (
       <div
-        className={`bg-accent-soft0/25 text-accent flex h-full w-full items-center justify-center ${className}`}
+        className={`bg-surface-secondary text-muted flex h-full w-full items-center justify-center ${className}`}
       >
-        <BookmarkSquareIcon aria-hidden className={`${emptyIconClassName} opacity-70`} />
+        <CookbookIconOutline aria-hidden className={`${emptyIconClassName} opacity-70`} />
       </div>
     );
   }

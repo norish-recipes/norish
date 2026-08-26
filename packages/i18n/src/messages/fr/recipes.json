@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Ajouter un livre",
     "createTitle": "Nouveau livre de cuisine",
-    "renameTitle": "Renommer le livre",
+    "editTitle": "Modifier le livre",
     "titleLabel": "Titre",
     "titlePlaceholder": "ex. Dîners de semaine",
     "options": "Options du livre",
@@ -387,6 +387,10 @@
     "cardInvitation": "Cette recette n’est encore dans aucun livre de cuisine.",
     "fileIt": "Classer",
     "removeFromCookbook": "Retirer du livre",
-    "noMatchingMembers": "Aucune recette de ce livre ne correspond à vos filtres."
+    "noMatchingMembers": "Aucune recette de ce livre ne correspond à vos filtres.",
+    "membersLabel": "Recettes dans ce livre",
+    "undoRemove": "Annuler le retrait",
+    "showMore": "Afficher plus",
+    "willBeCreated": "Sera créé à l’enregistrement"
   }
 }

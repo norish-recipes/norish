@@ -9,7 +9,7 @@ import type {
   CreateCookbookHooksOptions,
   InfiniteCookbookData,
 } from "./types";
-import { applyCookbookUpdateToLibrary } from "../library/library-cache";
+import { applyCookbookUpdateToLibrary, applyCookbookUpdateToList } from "../library/library-cache";
 
 export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions) {
   return function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
@@ -17,6 +17,11 @@ export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions)
     const queryClient = useQueryClient();
 
     const listPath = useMemo(() => [trpc.cookbooks.list.queryKey({})[0]], [trpc]);
+    // The membership panel's list is a cookbook list too, and it is the one a
+    // reader is looking at while they create one. Leaving it out of these
+    // helpers is what made a cookbook created from a recipe exist on the
+    // server and stay invisible in the panel that created it.
+    const editableKey = useMemo(() => trpc.cookbooks.editable.queryKey(), [trpc]);
     // Cookbooks are Library rows too, so a change here has to reach the
     // interleaved list as well (ADR-0026).
     const libraryPath = useMemo(() => [trpc.library.list.queryKey({})[0]], [trpc]);
@@ -43,14 +48,19 @@ export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions)
             applyCookbookUpdateToLibrary(previous, updater)
           );
         }
+
+        queryClient.setQueryData<CookbookSummaryDTO[]>(editableKey, (previous) =>
+          applyCookbookUpdateToList(previous, updater)
+        );
       },
-      [queryClient, listPath, libraryPath]
+      [queryClient, listPath, libraryPath, editableKey]
     );
 
     const invalidate = useCallback(() => {
       queryClient.invalidateQueries({ queryKey: listPath });
       queryClient.invalidateQueries({ queryKey: libraryPath });
-    }, [queryClient, listPath, libraryPath]);
+      queryClient.invalidateQueries({ queryKey: editableKey });
+    }, [queryClient, listPath, libraryPath, editableKey]);
 
     const invalidateCookbook = useCallback(
       (cookbookId: string) => {

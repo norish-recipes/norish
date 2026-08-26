@@ -367,7 +367,7 @@
   "cookbooks": {
     "addCookbook": "Añadir libro de cocina",
     "createTitle": "Nuevo libro de cocina",
-    "renameTitle": "Renombrar libro de cocina",
+    "editTitle": "Editar libro de cocina",
     "titleLabel": "Título",
     "titlePlaceholder": "p. ej. Cenas de la semana",
     "options": "Opciones del libro",
@@ -387,6 +387,10 @@
     "cardInvitation": "Esta receta aún no está en ningún libro de cocina.",
     "fileIt": "Guardarla",
     "removeFromCookbook": "Quitar del libro de cocina",
-    "noMatchingMembers": "Ninguna receta de este libro coincide con tus filtros."
+    "noMatchingMembers": "Ninguna receta de este libro coincide con tus filtros.",
+    "membersLabel": "Recetas de este libro de cocina",
+    "undoRemove": "Deshacer la eliminación",
+    "showMore": "Mostrar más",
+    "willBeCreated": "Se creará al guardar"
   }
 }

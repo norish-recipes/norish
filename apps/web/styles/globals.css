@@ -113,9 +113,12 @@
  * than on a card. The default fill separates a chip from a white card, but the
  * page ground is already warm and the two would sit almost on top of each
  * other — so there the chip takes the surface and the card's job is done by the
- * page. Add it wherever a naming chip has no card under it.
+ * page. Add it wherever a naming chip has no card under it — including a
+ * secondary chip, which is a naming chip that has been asked to look like a
+ * control.
  */
-.chip--tertiary.chip--on-ground {
+.chip--tertiary.chip--on-ground,
+.chip--secondary.chip--on-ground {
   --chip-bg: var(--surface);
 }
 
