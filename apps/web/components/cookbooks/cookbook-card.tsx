@@ -113,12 +113,27 @@ function CookbookCardComponent({
     return list;
   }, [canEdit, canDelete, t]);
 
+  /*
+   * The facts a cookbook derives from its members, read in one place and with
+   * a floor under each.
+   *
+   * A card renders whatever the query cache holds, and a cache restored from a
+   * build made before these fields existed carries cookbook rows without them:
+   * the cache buster keys on the app version, which does not move while a
+   * release is being built, so a contract change inside one release cycle is
+   * exactly the case it does not catch. The contract says these are always
+   * there and for anything fetched they are — this is the floor for rows that
+   * were already on the device, so an upgrade is an emptier card for one
+   * refetch rather than a Library that will not paint.
+   */
+  const { memberTitles = [], memberTags = [], totalMinutes = null, minServings = null } = cookbook;
+
   // The description a cookbook never stored: what is actually inside it.
-  const description = cookbook.memberTitles.join(", ");
-  const timeLabel = formatMinutesHM(cookbook.totalMinutes ?? undefined);
+  const description = memberTitles.join(", ");
+  const timeLabel = formatMinutesHM(totalMinutes ?? undefined);
   // Cook the whole cookbook and the smallest member is what it feeds without
   // scaling something up, so that is the honest number to put on the card.
-  const servings = cookbook.minServings;
+  const servings = minServings;
   const allergySet = useMemo(
     () => new Set(allergies.map((allergy) => allergy.toLowerCase())),
     [allergies]
@@ -127,8 +142,8 @@ function CookbookCardComponent({
   // cookbook is a set of other people's recipes and the warning is the part
   // worth the space.
   const allergens = useMemo(
-    () => cookbook.memberTags.filter((tag) => isAllergenTag(tag, allergySet)),
-    [cookbook.memberTags, allergySet]
+    () => memberTags.filter((tag) => isAllergenTag(tag, allergySet)),
+    [memberTags, allergySet]
   );
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>
@@ -360,7 +375,10 @@ function CookbookCardComponent({
   );
 }
 
-function sameStrings(a: readonly string[], b: readonly string[]) {
+// Absent on a row restored from a cache older than the field, so this compares
+// what is there rather than trusting the contract — the comparator runs before
+// the component that puts a floor under them.
+function sameStrings(a: readonly string[] = [], b: readonly string[] = []) {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 

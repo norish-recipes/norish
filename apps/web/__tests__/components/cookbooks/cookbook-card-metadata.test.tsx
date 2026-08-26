@@ -121,6 +121,27 @@ describe("CookbookCard", () => {
     expect(warnings).toEqual(["Nuts"]);
   });
 
+  it("paints a row cached before the derived fields existed", () => {
+    // A cache restored from an older build carries cookbook rows without them,
+    // because the cache buster keys on the app version and that does not move
+    // while a release is being built. An emptier card, never a crash.
+    const legacy = cookbook();
+
+    delete (legacy as Partial<CookbookSummaryDTO>).memberTitles;
+    delete (legacy as Partial<CookbookSummaryDTO>).memberTags;
+    delete (legacy as Partial<CookbookSummaryDTO>).totalMinutes;
+    delete (legacy as Partial<CookbookSummaryDTO>).minServings;
+
+    render(
+      <CookbookCard allergies={["nuts"]} cookbook={legacy} variant="list" onDelete={vi.fn()} />
+    );
+
+    expect(screen.getByText("Weeknights")).toBeInTheDocument();
+    expect(screen.getAllByTestId("chip").map((chip) => chip.textContent)).toEqual([
+      'recipeCount:{"count":3}',
+    ]);
+  });
+
   it("says nothing about time when no member states one", () => {
     renderCard({ totalMinutes: null });
 
