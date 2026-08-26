@@ -6,6 +6,7 @@
  * seam that decides whether "Your" stands still in a given language.
  */
 import { sharedAffixes } from "@/components/dashboard/library-heading";
+import { toSlots } from "@/components/shared/rolling-text";
 import { describe, expect, it } from "vitest";
 
 describe("sharedAffixes", () => {
@@ -39,5 +40,27 @@ describe("sharedAffixes", () => {
     // "Your" is entirely a shared prefix of "Your recipes", so taking it would
     // leave the first label with nothing to animate.
     expect(sharedAffixes(["Your", "Your recipes"])).toEqual({ prefix: "", suffix: "" });
+  });
+});
+
+describe("toSlots", () => {
+  it("pads a word at the end, so a longer one has slots to roll into", () => {
+    // "library" against "cookbooks": without the padding the last two slots
+    // are created when the longer word arrives, and a slot cannot roll on the
+    // render that creates it.
+    expect(toSlots("library", 9, "left")).toEqual(["l", "i", "b", "r", "a", "r", "y", " ", " "]);
+  });
+
+  it("pads a number at the start, where a number grows", () => {
+    expect(toSlots("400", 4, "right")).toEqual([" ", "4", "0", "0"]);
+  });
+
+  it("leaves a value that already fills its slots alone", () => {
+    expect(toSlots("cookbooks", 9, "left")).toEqual([..."cookbooks"]);
+    expect(toSlots("cookbooks", undefined, "left")).toEqual([..."cookbooks"]);
+  });
+
+  it("never returns fewer slots than the value needs", () => {
+    expect(toSlots("cookbooks", 2, "left")).toEqual([..."cookbooks"]);
   });
 });

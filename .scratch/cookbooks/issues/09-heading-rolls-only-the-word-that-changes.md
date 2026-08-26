@@ -6,6 +6,7 @@
 
 - [x] The roll is extracted into one primitive (`components/shared/rolling-text.tsx`) that `AnimatedNumber` also sits on, rather than a second copy of the mechanic
 - [x] Slots key from the left for words and from the right for numbers, so a word's shared first letter stays still and `400 → 1000` still rolls only what changed
+- [x] The row holds as many slots as the longest of the three words, so no slot is created or destroyed by a change — a slot cannot roll on the render that creates it, which left the two letters "cookbooks" has over "library" simply appearing
 - [x] The three headings stay three complete translated strings (`spec.md` story 50): what is fixed and what changes is read off the strings themselves
 - [x] The shared prefix and suffix stop at a whitespace boundary, so a shared run of letters inside a word never splits it
 - [x] A language whose three headings share nothing rolls the whole heading rather than breaking

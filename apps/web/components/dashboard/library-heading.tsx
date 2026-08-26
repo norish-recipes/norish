@@ -112,10 +112,16 @@ export default function LibraryHeading({ id }: { id: string }) {
     );
   }
 
-  const { prefix, suffix } = sharedAffixes(
-    LIBRARY_TYPE_FILTERS.map((type) => t(HEADING_KEYS[type]))
-  );
-  const changing = label.slice(prefix.length, label.length - suffix.length);
+  const labels = LIBRARY_TYPE_FILTERS.map((type) => t(HEADING_KEYS[type]));
+  const { prefix, suffix } = sharedAffixes(labels);
+  const changingOf = (heading: string) =>
+    heading.slice(prefix.length, heading.length - suffix.length);
+  const changing = changingOf(label);
+  // The longest of the three words, so the row of slots is the same width
+  // whichever lens is lit. Without it the two letters "cookbooks" has over
+  // "library" are slots that did not exist a moment ago, and a slot cannot
+  // roll on the render that creates it — those two letters simply appeared.
+  const slots = Math.max(...labels.map((heading) => [...changingOf(heading)].length));
 
   return (
     // The slots are named once here rather than one letter at a time, and the
@@ -123,7 +129,7 @@ export default function LibraryHeading({ id }: { id: string }) {
     <h1 aria-label={label} className="text-foreground text-2xl leading-8 font-semibold" id={id}>
       <span aria-hidden className="inline-flex items-baseline whitespace-pre">
         {prefix}
-        <RollingText isRising={isRising} keyFrom="left" value={changing} />
+        <RollingText isRising={isRising} keyFrom="left" slots={slots} value={changing} />
         {suffix}
       </span>
     </h1>

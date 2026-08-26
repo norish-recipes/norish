@@ -20,6 +20,22 @@ type RollingTextProps = {
    */
   keyFrom?: "left" | "right";
   /**
+   * How many slots to render, whatever this value's own length is.
+   *
+   * A slot that only exists for the longer of two values is created when that
+   * value arrives, and a slot created now cannot roll — its own presence
+   * animation is its first render, so the character simply appears. "Your
+   * library" to "Your cookbooks" rolled seven letters and popped the "ks",
+   * which reads as a glitch on the end of a word.
+   *
+   * Holding the count at the longest value the caller can show means no slot
+   * is ever created or destroyed: the extra ones stand empty and roll a space
+   * out of the way when a longer value arrives. Callers with one fixed width
+   * — the three Library headings — pass it; callers whose values have no
+   * bound leave it out.
+   */
+  slots?: number;
+  /**
    * Read aloud in place of the slots.
    *
    * Splitting a value across slots would have anything reading it say "five,
@@ -31,6 +47,18 @@ type RollingTextProps = {
   srValue?: string;
   className?: string;
 };
+
+/**
+ * The value as slots, padded to `slots` with empty ones on the side it grows
+ * from — the end for a word, the start for a number.
+ */
+export function toSlots(value: string, slots: number | undefined, keyFrom: "left" | "right") {
+  const characters = [...value];
+  const padding = Math.max(0, (slots ?? characters.length) - characters.length);
+  const blanks = Array.from({ length: padding }, () => " ");
+
+  return keyFrom === "right" ? [...blanks, ...characters] : [...characters, ...blanks];
+}
 
 /**
  * Text whose characters roll rather than repaint, the way an odometer does.
@@ -49,6 +77,7 @@ export function RollingText({
   value,
   isRising,
   keyFrom = "right",
+  slots,
   srValue,
   className = "",
 }: RollingTextProps) {
@@ -58,8 +87,10 @@ export function RollingText({
     return <span className={className}>{value}</span>;
   }
 
-  const characters = [...value];
-  const isSplit = characters.length > 1;
+  const characters = toSlots(value, slots, keyFrom);
+  // Whether the *value* is split, not the padded row: a one-character value
+  // padded out to four slots is still read as one character.
+  const isSplit = [...value].length > 1;
   const hideSlots = Boolean(srValue) && isSplit;
 
   return (
