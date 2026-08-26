@@ -21,6 +21,7 @@ import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { useBackDestination } from "@/hooks/use-back-destination";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
@@ -43,6 +44,7 @@ export default function RecipePageDesktop() {
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
   const t = useTranslations("recipes.detail");
+  const back = useBackDestination();
   const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   const isFavorite = checkFavorite(recipe.id);
@@ -55,10 +57,10 @@ export default function RecipePageDesktop() {
       <div className="w-fit">
         <Link
           className="text-muted hover:text-foreground flex items-center gap-1 text-base no-underline"
-          href="/"
+          href={back.href}
         >
           <ArrowLeftIcon className="h-4 w-4" />
-          {t("backToRecipes")}
+          {back.label}
         </Link>
       </div>
 

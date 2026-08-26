@@ -13,10 +13,14 @@ export type CookbookQueryResult = {
 };
 
 export function createUseCookbookQuery({ useTRPC }: CreateCookbookHooksOptions) {
-  return function useCookbookQuery(cookbookId: string): CookbookQueryResult {
+  return function useCookbookQuery(
+    cookbookId: string,
+    { enabled = true }: { enabled?: boolean } = {}
+  ): CookbookQueryResult {
     const trpc = useTRPC();
     const { data, error, isLoading } = useQuery({
       ...trpc.cookbooks.get.queryOptions({ id: cookbookId }),
+      enabled: enabled && Boolean(cookbookId),
       retry: false,
     });
 

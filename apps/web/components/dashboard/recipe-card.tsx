@@ -2,7 +2,7 @@
 
 import type { MouseEvent } from "react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import OriginFlag from "@/components/recipes/origin-flag";
 import HeartButton from "@/components/shared/heart-button";
@@ -11,6 +11,7 @@ import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { withOrigin } from "@/lib/back-destination";
 import { useAppStore } from "@/stores/useAppStore";
 import {
   CalendarDaysIcon,
@@ -113,6 +114,9 @@ function RecipeCardComponent({
   onDelete,
 }: RecipeCardProps) {
   const router = useRouter();
+  // This card stands on the Library and inside a cookbook, so where the reader
+  // is standing is what the recipe's back link should offer.
+  const pathname = usePathname();
   const rowRef = useRef<SwipeableRowRef>(null);
   const mobileSearchOpen = useAppStore((s) => s.mobileSearchOpen);
   const { canDeleteRecipe } = usePermissionsContext();
@@ -139,9 +143,9 @@ function RecipeCardComponent({
     if (recipe.id && !open && !mobileSearchOpen) {
       // Navigate immediately - skeleton shows while data loads
       // Prefetch is already happening via useRecipePrefetch hook
-      router.push(`/recipes/${recipe.id}`);
+      router.push(withOrigin(`/recipes/${recipe.id}`, pathname));
     }
-  }, [router, recipe.id, open, mobileSearchOpen]);
+  }, [router, recipe.id, open, mobileSearchOpen, pathname]);
 
   const totalMinutes =
     recipe.totalMinutes ?? ((recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0) || undefined);

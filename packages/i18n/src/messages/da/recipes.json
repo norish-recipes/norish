@@ -29,6 +29,14 @@
       "cookbooks": "Kogebøger"
     }
   },
+  "back": {
+    "all": "Tilbage til biblioteket",
+    "recipes": "Tilbage til opskrifter",
+    "cookbooks": "Tilbage til kogebøger",
+    "named": "Tilbage til {name}",
+    "cookbook": "Tilbage til kogebogen",
+    "generic": "Tilbage"
+  },
   "empty": {
     "title": "Dit bibliotek venter",
     "description": "Indsæt en opskrift-URL i søgefeltet ovenfor, og lad magien ske.",
@@ -45,7 +53,6 @@
     "recipeOptions": "Opskriftsindstillinger"
   },
   "detail": {
-    "backToRecipes": "Tilbage til opskrifter",
     "viewOriginal": "Se original opskrift",
     "ingredients": "Ingredienser",
     "ingredientOptions": "Ingrediensindstillinger",

@@ -108,6 +108,11 @@ The member count is what _you_ can see, so two people may honestly see
 different counts for the same cookbook — the same rule the Library follows,
 one level down.
 
+However you got here — from the Library, or from a recipe that is in this
+cookbook — the link at the top names where you came from and takes you back
+there. Recipes opened from inside a cookbook do the same, so following one and
+coming back does not drop you on the Library instead.
+
 ## Who can see and change what
 
 Cookbooks obey the recipe permission policy your administrator already set.

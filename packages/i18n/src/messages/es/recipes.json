@@ -29,6 +29,14 @@
       "cookbooks": "Libros de cocina"
     }
   },
+  "back": {
+    "all": "Volver a la biblioteca",
+    "recipes": "Volver a las recetas",
+    "cookbooks": "Volver a los libros de cocina",
+    "named": "Volver a {name}",
+    "cookbook": "Volver al libro de cocina",
+    "generic": "Volver"
+  },
   "empty": {
     "title": "Tu biblioteca te espera",
     "description": "Pega la URL de una receta en el campo de búsqueda de arriba y verás la magia.",
@@ -45,7 +53,6 @@
     "recipeOptions": "Opciones de receta"
   },
   "detail": {
-    "backToRecipes": "Volver a las recetas",
     "viewOriginal": "Ver receta original",
     "ingredients": "Ingredientes",
     "ingredientOptions": "Opciones de ingredientes",

@@ -29,6 +29,14 @@
       "cookbooks": "요리책"
     }
   },
+  "back": {
+    "all": "라이브러리로 돌아가기",
+    "recipes": "레시피로 돌아가기",
+    "cookbooks": "요리책으로 돌아가기",
+    "named": "{name}(으)로 돌아가기",
+    "cookbook": "요리책으로 돌아가기",
+    "generic": "뒤로"
+  },
   "empty": {
     "title": "아직 레시피가 없어요",
     "description": "위의 검색 필드에 레시피 URL을 붙여넣어 보세요.",
@@ -45,7 +53,6 @@
     "recipeOptions": "레시피 옵션"
   },
   "detail": {
-    "backToRecipes": "레시피로 돌아가기",
     "viewOriginal": "원본 레시피 보기",
     "ingredients": "재료",
     "ingredientOptions": "재료 옵션",

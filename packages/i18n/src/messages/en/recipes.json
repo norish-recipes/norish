@@ -29,6 +29,14 @@
       "cookbooks": "Cookbooks"
     }
   },
+  "back": {
+    "all": "Back to library",
+    "recipes": "Back to recipes",
+    "cookbooks": "Back to cookbooks",
+    "named": "Back to {name}",
+    "cookbook": "Back to cookbook",
+    "generic": "Back"
+  },
   "empty": {
     "title": "Your library awaits",
     "description": "Paste a recipe URL in the search field above and watch the magic happen.",
@@ -45,7 +53,6 @@
     "recipeOptions": "Recipe options"
   },
   "detail": {
-    "backToRecipes": "Back to recipes",
     "viewOriginal": "View original recipe",
     "ingredients": "Ingredients",
     "ingredientOptions": "Ingredient options",

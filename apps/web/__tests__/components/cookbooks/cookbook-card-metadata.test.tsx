@@ -13,7 +13,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/",
+}));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key}:${JSON.stringify(values)}` : key,

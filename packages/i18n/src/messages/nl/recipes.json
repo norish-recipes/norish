@@ -29,6 +29,14 @@
       "cookbooks": "Kookboeken"
     }
   },
+  "back": {
+    "all": "Terug naar bibliotheek",
+    "recipes": "Terug naar recepten",
+    "cookbooks": "Terug naar kookboeken",
+    "named": "Terug naar {name}",
+    "cookbook": "Terug naar kookboek",
+    "generic": "Terug"
+  },
   "empty": {
     "title": "Je bibliotheek wacht op je",
     "description": "Plak een link in het zoekveld en zie de magie gebeuren.",
@@ -45,7 +53,6 @@
     "recipeOptions": "Receptopties"
   },
   "detail": {
-    "backToRecipes": "Terug naar recepten",
     "viewOriginal": "Bekijk origineel recept",
     "ingredients": "Ingrediënten",
     "ingredientOptions": "Ingrediëntopties",

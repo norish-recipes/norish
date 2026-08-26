@@ -7,6 +7,7 @@ import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { MiniCookbooks } from "@/components/Panel/consumers";
 import { useRecipeCookbooksQuery } from "@/hooks/cookbooks";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { withOrigin } from "@/lib/back-destination";
 import { Button, Card, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -56,7 +57,10 @@ export default function CookbooksCard() {
           ) : (
             <div className="flex flex-wrap gap-2">
               {cookbooks.map((cookbook) => (
-                <Link key={cookbook.id} href={`/cookbooks/${cookbook.id}`}>
+                <Link
+                  key={cookbook.id}
+                  href={withOrigin(`/cookbooks/${cookbook.id}`, `/recipes/${recipe.id}`)}
+                >
                   <Chip
                     className="cursor-pointer rounded-full px-3"
                     data-cookbook-chip={cookbook.title}

@@ -29,6 +29,14 @@
       "cookbooks": "Kochbücher"
     }
   },
+  "back": {
+    "all": "Zurück zur Bibliothek",
+    "recipes": "Zurück zu den Rezepten",
+    "cookbooks": "Zurück zu den Kochbüchern",
+    "named": "Zurück zu {name}",
+    "cookbook": "Zurück zum Kochbuch",
+    "generic": "Zurück"
+  },
   "empty": {
     "title": "Deine Bibliothek wartet",
     "description": "Füge eine Rezept-URL in das Suchfeld oben ein und schau, wie die Magie passiert.",
@@ -45,7 +53,6 @@
     "recipeOptions": "Rezeptoptionen"
   },
   "detail": {
-    "backToRecipes": "Zurück zu Rezepten",
     "viewOriginal": "Originalrezept anzeigen",
     "ingredients": "Zutaten",
     "ingredientOptions": "Zutaten-Optionen",

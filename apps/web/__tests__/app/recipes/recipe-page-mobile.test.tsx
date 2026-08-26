@@ -178,6 +178,12 @@ vi.mock("@/context/user-context", () => ({
 vi.mock("@/context/hidden-items-context", () => ({
   useHiddenItems: () => mocks.hidden,
 }));
+// The way back reads the reader's lens and the page they came from, neither
+// of which these tests set up — the cards under test are what they are about.
+vi.mock("@/hooks/use-back-destination", () => ({
+  useBackDestination: () => ({ href: "/", label: "Back to library" }),
+}));
+
 vi.mock("@/hooks/favorites", () => ({
   useFavoritesQuery: () => ({ isFavorite: () => false }),
   useFavoritesMutation: () => ({ toggleFavorite: vi.fn() }),

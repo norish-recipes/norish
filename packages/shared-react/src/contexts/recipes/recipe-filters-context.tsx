@@ -110,7 +110,7 @@ export function createRecipeFiltersContext({
   }
 
   function useRecipeFiltersContext() {
-    const context = useContext(RecipeFiltersContext);
+    const context = useOptionalRecipeFiltersContext();
 
     if (!context) {
       throw new Error("useRecipeFiltersContext must be used within RecipeFiltersProvider");
@@ -119,8 +119,21 @@ export function createRecipeFiltersContext({
     return context;
   }
 
+  /**
+   * The filters where there are any, and null outside the provider.
+   *
+   * Wanting to *name* the Library is not the same as being part of it: a back
+   * link that says where "/" will land reads the lens, but a recipe page is
+   * not a filtered list and should not stop rendering because nothing above it
+   * happens to be one.
+   */
+  function useOptionalRecipeFiltersContext() {
+    return useContext(RecipeFiltersContext);
+  }
+
   return {
     RecipeFiltersProvider,
     useRecipeFiltersContext,
+    useOptionalRecipeFiltersContext,
   };
 }

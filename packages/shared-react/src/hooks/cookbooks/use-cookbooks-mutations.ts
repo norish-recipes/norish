@@ -147,6 +147,15 @@ export function createUseCookbooksMutations({
      * The toggle is applied tentatively — including the member count, which is
      * what the card shows — and reconciled by the server's echo. A queued
      * mutation keeps the tentative state rather than snapping back (ADR-0009).
+     *
+     * Taking a recipe out also drops everything the card derives from the
+     * members, because none of it can be recomputed here: which of the cover
+     * images was the departing recipe's, which name to strike from the
+     * description, how much of the total time was its, and what the smallest
+     * serving count is once it is gone are all answers that need the members
+     * themselves. Showing an emptier card until the echo lands is honest;
+     * leaving a description that names a recipe the cookbook no longer holds
+     * is not — and Offline that echo does not come at all.
      */
     const setMembership = useCallback(
       ({
@@ -176,6 +185,18 @@ export function createUseCookbooksMutations({
                 const next = {
                   ...entry,
                   memberCount: Math.max(0, entry.memberCount + (isMember ? 1 : -1)),
+                  // Filing keeps them: every member they describe is still in
+                  // here, so they are merely incomplete until the echo adds the
+                  // newcomer. Unfiling cannot say that.
+                  ...(isMember
+                    ? {}
+                    : {
+                        coverImages: [],
+                        memberTitles: [],
+                        memberTags: [],
+                        totalMinutes: null,
+                        minServings: null,
+                      }),
                 };
 
                 patched = next;
@@ -196,6 +217,11 @@ export function createUseCookbooksMutations({
             onSuccess: () => {
               invalidateMembership(recipeId);
               invalidateCookbook(cookbookId);
+              // The lists too, rather than waiting on the echo for them: the
+              // derived facts this cleared above are the server's to answer,
+              // and the reader who made the change should not need realtime to
+              // be up to see their own cookbook settle.
+              invalidate();
             },
             // A queued filing keeps its tentative state: there is nothing to
             // refetch Offline, and refetching would erase the change the
@@ -208,6 +234,7 @@ export function createUseCookbooksMutations({
         membershipMutation,
         setAllCookbooksData,
         patchRecipeMembership,
+        invalidate,
         invalidateMembership,
         invalidateCookbook,
         invalidateUnlessQueued,

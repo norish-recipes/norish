@@ -160,6 +160,33 @@ test("the cookbook page lists the member it was given", async () => {
   await expect(recipeCard()).toBeVisible();
 });
 
+test("the way back names where the reader actually came from", async () => {
+  // From the Library, under the lens that is lit.
+  await page.goto("/");
+  await (await chip("recipes")).click();
+  await recipeCard().click();
+  await expect(page.getByRole("heading", { name: RECIPE_NAME })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to recipes" }).first()).toBeVisible();
+
+  // From inside a cookbook, the cookbook — not "recipes", which is where the
+  // link used to offer to take a reader who had never been there.
+  await page.goto("/");
+  await (await chip("cookbooks")).click();
+  await cookbookCard(COOKBOOK_TITLE).click();
+  await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
+  // The cookbook itself came from the Library under Cookbooks.
+  await expect(page.getByRole("link", { name: "Back to cookbooks" })).toBeVisible();
+
+  await recipeCard().click();
+  await expect(page.getByRole("heading", { name: RECIPE_NAME })).toBeVisible();
+
+  const back = page.getByRole("link", { name: `Back to ${COOKBOOK_TITLE}` }).first();
+
+  await expect(back).toBeVisible();
+  await back.click();
+  await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
+});
+
 test("the same panel takes the recipe out again", async () => {
   await page.goto("/");
   await recipeCard().click();

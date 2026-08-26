@@ -2,7 +2,7 @@
 
 import type { MouseEvent } from "react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import {
@@ -14,6 +14,7 @@ import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/c
 import { photoChipClassName } from "@/components/dashboard/recipe-metadata";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
+import { withOrigin } from "@/lib/back-destination";
 import { EllipsisHorizontalIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/20/solid";
 import { Button, Card, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -54,6 +55,7 @@ function CookbookCardComponent({
   onDelete,
 }: CookbookCardProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const rowRef = useRef<SwipeableRowRef>(null);
   const t = useTranslations("recipes.cookbooks");
   const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
@@ -71,8 +73,8 @@ function CookbookCardComponent({
   const canDelete = cookbook.userId ? canDeleteRecipe(cookbook.userId) : true;
 
   const open = useCallback(() => {
-    if (!rowOpen) router.push(`/cookbooks/${cookbook.id}`);
-  }, [router, cookbook.id, rowOpen]);
+    if (!rowOpen) router.push(withOrigin(`/cookbooks/${cookbook.id}`, pathname));
+  }, [router, cookbook.id, rowOpen, pathname]);
 
   const stopParentActivation = useCallback((event: MouseEvent) => {
     event.preventDefault();

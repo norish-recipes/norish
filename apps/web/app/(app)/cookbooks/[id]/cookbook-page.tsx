@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
 import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
@@ -12,8 +13,14 @@ import {
   useRecipeDashboardViewMode,
 } from "@/context/recipe-view-mode-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
+import { useBackDestination } from "@/hooks/use-back-destination";
 import { recipeViewModePreference } from "@/lib/recipe-view-mode";
-import { EllipsisHorizontalIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
+import {
+  ArrowLeftIcon,
+  EllipsisHorizontalIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/16/solid";
 import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
@@ -40,6 +47,7 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
   const { deleteCookbook } = useCookbooksMutations();
   const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
+  const back = useBackDestination();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -75,6 +83,18 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
         onSelectionChange={(key) => setViewMode(recipeViewModePreference.parse(String(key)))}
       >
         <div className="flex shrink-0 flex-col gap-4">
+          {/* A cookbook is reached from the Library and from a recipe that is
+              in it, so the way back names wherever that was. */}
+          <div className="w-fit">
+            <Link
+              className="text-muted hover:text-foreground flex items-center gap-1 text-base no-underline"
+              href={back.href}
+            >
+              <ArrowLeftIcon className="h-4 w-4" />
+              {back.label}
+            </Link>
+          </div>
+
           <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
               <h1

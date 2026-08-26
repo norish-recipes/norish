@@ -29,6 +29,14 @@
       "cookbooks": "Książki kucharskie"
     }
   },
+  "back": {
+    "all": "Wróć do biblioteki",
+    "recipes": "Wróć do przepisów",
+    "cookbooks": "Wróć do książek kucharskich",
+    "named": "Wróć do {name}",
+    "cookbook": "Wróć do książki kucharskiej",
+    "generic": "Wstecz"
+  },
   "empty": {
     "title": "Twoja biblioteka czeka",
     "description": "Wklej URL przepisu w pole wyszukiwania powyżej i obserwuj magię.",
@@ -45,7 +53,6 @@
     "recipeOptions": "Opcje przepisu"
   },
   "detail": {
-    "backToRecipes": "Powrót do przepisów",
     "viewOriginal": "Zobacz oryginalny przepis",
     "ingredients": "Składniki",
     "ingredientOptions": "Opcje składników",
