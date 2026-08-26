@@ -11,7 +11,7 @@ import { ServerConfigKeys } from "../zodSchemas/server-config";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { setConfig } from "./server-config";
 
-type VersionedUser = User & { version: number };
+export type VersionedUser = User & { version: number };
 
 // BetterAuth-compatible user type for adapter operations
 // Note: emailVerified is now a boolean in BetterAuth, not a Date
@@ -178,6 +178,49 @@ export async function getUserById(userId: string): Promise<VersionedUser | null>
     name: user.name ? decrypt(user.name) : "",
     image: user.image ? decrypt(user.image) : null,
     version: user.version,
+  };
+}
+
+/**
+ * The identity a request is authorised with.
+ *
+ * `isServerAdmin` folds in server ownership, matching {@link isUserServerAdmin}.
+ */
+export type SessionIdentity = VersionedUser & { isServerAdmin: boolean };
+
+/**
+ * Load the identity behind a session, in a single query.
+ *
+ * Session payloads are cached outside the database and carry a snapshot of the
+ * user row taken at sign-in, so they outlive both the row itself and any change
+ * to its privileges. Anything that authorises a request must resolve the user
+ * through here rather than trusting that snapshot.
+ */
+export async function getUserSessionIdentity(userId: string): Promise<SessionIdentity | null> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: {
+      id: true,
+      email: true,
+      name: true,
+      image: true,
+      version: true,
+      isServerOwner: true,
+      isServerAdmin: true,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    email: decrypt(user.email),
+    name: user.name ? decrypt(user.name) : "",
+    image: user.image ? decrypt(user.image) : null,
+    version: user.version,
+    isServerAdmin: user.isServerOwner || user.isServerAdmin,
   };
 }
 
@@ -422,6 +465,15 @@ export async function setUserAsOwnerAndAdmin(userId: string): Promise<void> {
       version: sql`${users.version} + 1`,
     })
     .where(eq(users.id, userId));
+}
+
+export async function isUserServerOwner(userId: string): Promise<boolean> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: { isServerOwner: true },
+  });
+
+  return user?.isServerOwner ?? false;
 }
 
 export async function setUserAdminStatus(userId: string, isAdmin: boolean): Promise<void> {

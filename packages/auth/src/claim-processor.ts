@@ -6,7 +6,7 @@ import {
   getHouseholdForUser,
   getUsersByHouseholdId,
 } from "@norish/db/repositories/households";
-import { getUserById, setUserAdminStatus } from "@norish/db/repositories/users";
+import { getUserById, isUserServerOwner, setUserAdminStatus } from "@norish/db/repositories/users";
 import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/household";
 import { authLogger } from "@norish/shared-server/logger";
 import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection-invalidation";
@@ -236,6 +236,31 @@ export function parseOIDCClaims(
 }
 
 /**
+ * Sync admin status from the claim, without ever demoting the server owner.
+ *
+ * The very first user is created as owner and admin at once, and the account
+ * hook that lands us here fires on that same sign-in: an unguarded sync would
+ * strip admin straight back off whenever the token carries no admin group,
+ * leaving the owner of a fresh server marked as a plain member.
+ */
+async function syncAdminStatus(userId: string, isAdmin: boolean): Promise<void> {
+  if (isAdmin) {
+    await setUserAdminStatus(userId, true);
+    authLogger.info({ userId }, "User granted admin via OIDC claim");
+
+    return;
+  }
+
+  if (await isUserServerOwner(userId)) {
+    authLogger.debug({ userId }, "Server owner keeps admin despite absent OIDC admin claim");
+
+    return;
+  }
+
+  await setUserAdminStatus(userId, false);
+}
+
+/**
  * Process OIDC claims for a user after login
  * - Only processes if claim mapping is enabled
  * - Updates admin status on every login
@@ -262,12 +287,7 @@ export async function processClaimsForUser(
     "Processing OIDC claims for user"
   );
 
-  // Always sync admin status based on claims
-  await setUserAdminStatus(userId, claims.isAdmin);
-
-  if (claims.isAdmin) {
-    authLogger.info({ userId }, "User granted admin via OIDC claim");
-  }
+  await syncAdminStatus(userId, claims.isAdmin);
 
   // Only process household if user has a claim and is not already in a household
   if (claims.householdName) {

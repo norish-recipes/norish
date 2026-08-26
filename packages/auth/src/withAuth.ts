@@ -1,44 +1,47 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+import type { SessionIdentity } from "@norish/db/repositories/users";
 import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
-import { auth } from "@norish/auth/auth";
-import { getHouseholdForUser, getUserById, isUserServerAdmin } from "@norish/db";
+import { getHouseholdForUser } from "@norish/db";
 
-export async function requireUser(): Promise<User> {
-  // Use BetterAuth's getSession API which handles both session cookies and API keys
-  const headersList = await headers();
-  const session = await auth.api.getSession({
-    headers: headersList,
-  });
+import { getVerifiedSession } from "./session";
 
-  if (session?.user?.id) {
-    const user = await getUserById(session.user.id);
-
-    if (user) {
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-        version: user.version,
-      };
-    }
-  }
-
-  throw new Error("UNAUTHORIZED");
+function toUser(identity: SessionIdentity): User {
+  return {
+    id: identity.id,
+    email: identity.email,
+    name: identity.name,
+    image: identity.image,
+    version: identity.version,
+  };
 }
 
-export async function requireServerAdmin(): Promise<User> {
-  const user = await requireUser();
+async function requireIdentity(): Promise<SessionIdentity> {
+  // getVerifiedSession covers session cookies and API keys alike, and confirms
+  // the user still exists rather than trusting the cached session payload.
+  const headersList = await headers();
+  const identity = await getVerifiedSession(headersList);
 
-  const isAdmin = await isUserServerAdmin(user.id);
-
-  if (!isAdmin) {
+  if (!identity) {
     throw new Error("UNAUTHORIZED");
   }
 
-  return user;
+  return identity;
+}
+
+export async function requireUser(): Promise<User> {
+  return toUser(await requireIdentity());
+}
+
+export async function requireServerAdmin(): Promise<User> {
+  const identity = await requireIdentity();
+
+  if (!identity.isServerAdmin) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return toUser(identity);
 }
 
 export async function requireUserAndHousehold(): Promise<{

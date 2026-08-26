@@ -4,7 +4,11 @@ import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 import type { SubscriptionMultiplexer } from "@norish/shared-server/redis/subscription-multiplexer";
 import type { User } from "@norish/shared/contracts";
 import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
-import { auth } from "@norish/auth/auth";
+import {
+  getVerifiedSession,
+  readSessionPrincipal,
+  verifySessionPrincipal,
+} from "@norish/auth/session";
 import { getHouseholdForUser } from "@norish/db";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { isOperationId } from "@norish/shared/lib/operation-helpers";
@@ -30,26 +34,41 @@ export async function createHttpContextFromHeaders(
   headers: Headers,
   operationId: OperationId | null
 ): Promise<Context> {
-  try {
-    const session = await auth.api.getSession({
-      headers,
-    });
+  const anonymous: Context = {
+    user: null,
+    household: null,
+    connectionId: null,
+    multiplexer: null,
+    operationId,
+  };
 
-    if (!session?.user?.id) {
-      return { user: null, household: null, connectionId: null, multiplexer: null, operationId };
+  try {
+    const principal = await readSessionPrincipal(headers);
+
+    if (!principal) {
+      return anonymous;
     }
 
-    const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
+    // The household lookup only needs the id the session claims, so it can run
+    // against the same round trip that verifies the claim.
+    const [identity, dbHousehold] = await Promise.all([
+      verifySessionPrincipal(principal),
+      getHouseholdForUser(principal.userId),
+    ]);
+
+    if (!identity) {
+      return anonymous;
+    }
+
     const user: User = {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name || "",
-      image: session.user.image || null,
-      version: 1,
-      isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
+      id: identity.id,
+      email: identity.email,
+      name: identity.name,
+      image: identity.image,
+      version: identity.version,
+      isServerAdmin: identity.isServerAdmin,
     };
 
-    const dbHousehold = await getHouseholdForUser(user.id);
     const household: ContextHousehold | null = dbHousehold
       ? {
           id: dbHousehold.id,
@@ -63,7 +82,7 @@ export async function createHttpContextFromHeaders(
 
     return { user, household, connectionId: null, multiplexer: null, operationId };
   } catch {
-    return { user: null, household: null, connectionId: null, multiplexer: null, operationId };
+    return anonymous;
   }
 }
 
@@ -100,20 +119,19 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
       headers.set("x-api-key", String(req.headers["x-api-key"]));
     }
 
-    const session = await auth.api.getSession({ headers });
+    const identity = await getVerifiedSession(headers);
 
-    if (!session?.user?.id) {
+    if (!identity) {
       return { user: null, household: null, connectionId, multiplexer: null, operationId: null };
     }
 
-    const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
     const user: User = {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name || "",
-      image: session.user.image || null,
-      version: 1,
-      isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
+      id: identity.id,
+      email: identity.email,
+      name: identity.name,
+      image: identity.image,
+      version: identity.version,
+      isServerAdmin: identity.isServerAdmin,
     };
 
     return { user, household: null, connectionId, multiplexer: null, operationId: null };

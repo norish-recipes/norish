@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { shouldBypassAuthProxy } from "@/lib/recipe-share-access";
 
-import { auth } from "@norish/auth/auth";
+import { getVerifiedSession } from "@norish/auth/session";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 export async function proxy(request: NextRequest) {
@@ -18,15 +18,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
+  const identity = await getVerifiedSession(request.headers);
 
-  if (session?.user) {
+  if (identity) {
     return NextResponse.next();
   }
 
-  // Invalid or no session - redirect to login
+  // Invalid, expired, or orphaned session - redirect to login
   // Use X-Forwarded headers when behind a reverse proxy
   const forwardedOrigin = getPublicOrigin(request);
   let loginUrl: URL;

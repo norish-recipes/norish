@@ -3,7 +3,7 @@ import type { Server } from "node:http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import * as wsModule from "ws";
 
-import { auth } from "@norish/auth/auth";
+import { getVerifiedSession } from "@norish/auth/session";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { trpcLogger } from "@norish/shared-server/logger";
 
@@ -98,12 +98,12 @@ export function initTrpcWebSocket(server: Server) {
     let userId: string | undefined;
 
     try {
-      const session = await auth.api.getSession({ headers });
+      const identity = await getVerifiedSession(headers);
 
-      userId = session?.user?.id;
-      if (!session || !session.user) {
+      if (!identity) {
         throw new Error("No session");
       }
+      userId = identity.id;
     } catch {
       trpcLogger.debug("Rejecting unauthenticated WebSocket connection");
       socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
