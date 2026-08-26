@@ -9,6 +9,7 @@ import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
+import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { useAppStore } from "@/stores/useAppStore";
 import {
@@ -101,23 +102,6 @@ function dashboardFieldEqual(a: unknown, b: unknown): boolean {
   }
 
   return false;
-}
-
-/**
- * Whether a panel should be in the tree at all. Cards are virtualized, so one
- * scrolls out and back in constantly — and a panel mounted before it is ever
- * opened subscribes to its queries on every one of those mounts, refetching
- * them each time. Nothing renders until the reader actually opens it; after
- * that it stays, so closing still animates.
- */
-function useMountedOnceOpened(open: boolean) {
-  const [mounted, setMounted] = useState(open);
-
-  if (open && !mounted) {
-    setMounted(true);
-  }
-
-  return mounted;
 }
 
 function RecipeCardComponent({
