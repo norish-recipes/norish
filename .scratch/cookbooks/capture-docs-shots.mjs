@@ -1,5 +1,5 @@
 /*
- * Takes the five Cookbooks documentation captures from a running Norish dev
+ * Takes the six Cookbooks documentation captures from a running Norish dev
  * instance and writes them into `apps/docs/static/img/screenshots`.
  *
  *   NORISH_URL=http://localhost:3000 \
@@ -11,8 +11,8 @@
  * mosaic of its members' images, so a library of imageless recipes documents
  * the plain tile instead.
  *
- * Reduced motion is mandatory: the Library heading crossfades between the
- * three chip states, and a capture taken mid-transition holds both words.
+ * Reduced motion is mandatory: the Library heading rolls the word that names
+ * the lit chip, and a capture taken mid-transition holds two of them at once.
  */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -76,14 +76,26 @@ await page.addStyleTag({ content: HIDE_DEV_UI }).catch(() => {});
 
 // Sign in.
 await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
-await page.getByLabel(/e-?mail/i).first().fill(EMAIL);
+await page
+  .getByLabel(/e-?mail/i)
+  .first()
+  .fill(EMAIL);
 await page.locator('input[type="password"]').first().fill(PASSWORD);
-await page.getByRole("button", { name: /sign in|log ?in/i }).first().click();
+await page
+  .getByRole("button", { name: /sign in|log ?in/i })
+  .first()
+  .click();
 await page.waitForURL((url) => !/\/login/.test(url.pathname), { timeout: 30_000 });
 await settle(page, "dashboard");
 await page.addStyleTag({ content: HIDE_DEV_UI });
 
 const chip = (kind) => page.locator(`[data-library-type="${kind}"]`);
+/*
+ * A cookbook is described by the names of the recipes inside it, so matching
+ * its title as bare text can land on a cookbook that merely holds it.
+ */
+const cookbookCard = (title) =>
+  page.locator("[data-cookbook-card]").filter({ hasText: title }).first();
 const library = page.locator("section[aria-labelledby='recipe-library-heading']");
 
 /* ---- Staging: two cookbooks, the first holding a few recipes ---- */
@@ -94,14 +106,20 @@ async function ensureCookbook(title) {
   await chip("cookbooks").click();
   await sleep(600);
 
-  if (await page.getByText(title, { exact: true }).first().isVisible().catch(() => false)) {
+  if (
+    await cookbookCard(title)
+      .isVisible()
+      .catch(() => false)
+  ) {
     return;
   }
 
   await page.getByTestId("add-cookbook-button").click();
   await page.getByTestId("cookbook-title-input").fill(title);
   await page.getByRole("button", { name: /^create$/i }).click();
-  await page.waitForURL(/\/cookbooks\//, { timeout: 20_000 });
+  // Creating leaves the reader on the Library, so wait for the new card
+  // rather than for a navigation that no longer happens.
+  await cookbookCard(title).waitFor({ timeout: 20_000 });
   await settle(page, `cookbook ${title}`);
 }
 
@@ -132,10 +150,13 @@ async function fileRecipes(count) {
     await toggle.waitFor({ timeout: 10_000 });
     if ((await toggle.getAttribute("aria-pressed")) !== "true") {
       await toggle.click();
-      await sleep(500);
+      await sleep(300);
+      // Staged, not written: the panel commits on Save.
+      await page.getByTestId("save-cookbook-membership").click();
+    } else {
+      await page.getByRole("button", { name: "Close panel" }).click();
     }
-    await page.getByRole("button", { name: "Close panel" }).click();
-    await sleep(400);
+    await sleep(600);
   }
 }
 
@@ -187,11 +208,20 @@ await page.getByRole("button", { name: "Close panel" }).click();
 await page.goto(BASE, { waitUntil: "domcontentloaded" });
 await chip("cookbooks").click();
 await settle(page, "cookbooks");
-await page.getByText(COOKBOOK_TITLE, { exact: true }).first().click();
+await cookbookCard(COOKBOOK_TITLE).click();
 await page.waitForURL(/\/cookbooks\//, { timeout: 20_000 });
 await settle(page, "cookbook page");
 await page.addStyleTag({ content: HIDE_DEV_UI });
 await shoot(page.locator("section[aria-labelledby='cookbook-heading']"), "cookbooks-page");
+
+/* ---- 6. Editing one: its name and what is in it, together ---- */
+
+await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
+await page.getByRole("button", { name: "Edit cookbook", exact: true }).click();
+await page.locator("[data-cookbook-member]").first().waitFor({ timeout: 10_000 });
+await sleep(600);
+await shoot(page.locator('[role="dialog"]').first(), "cookbooks-edit");
+await page.getByRole("button", { name: "Close panel" }).click();
 
 await browser.close();
 console.log("done");

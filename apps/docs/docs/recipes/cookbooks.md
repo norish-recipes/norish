@@ -12,8 +12,12 @@ rating and cooking time all describe what a recipe _is_, and a cookbook is
 somewhere to _put_ things.
 
 It is deliberately thin. A cookbook has a title, a set of members, and nothing
-else to maintain — no description, no cover to upload, no ordering. Its cover
-is drawn from the pictures of what is inside it, so it can never go stale.
+else to maintain — no description to write, no cover to upload, no ordering.
+Everything a cookbook's card says about it is read off the members themselves:
+the cover mosaic, the description naming what is inside, the members' cooking
+times added up, the smallest number of people any member serves, and any of
+your allergens waiting in there. None of it can go stale, because none of it
+is stored.
 
 ## The Library and its three chips
 
@@ -42,9 +46,9 @@ cooking time, categories, tags, favorites) simply show recipes.
 ## Making one
 
 With the **Cookbooks** chip lit, the Add button becomes **+ Cookbook**. It asks
-for a title and nothing else, then opens the cookbook so you can start filling
-it — or leave it empty and fill it later, which is how you set up a Christmas
-cookbook in November.
+for a title and nothing else, and leaves you where you were: the new cookbook
+appears at the top of the list you are already reading. Fill it now or fill it
+later, which is how you set up a Christmas cookbook in November.
 
 ![Creating a cookbook from the Library](/img/screenshots/cookbooks-create.png)
 
@@ -53,8 +57,13 @@ cookbook in November.
 Open any recipe, then **Cookbooks** in its actions menu. The panel lists every
 cookbook you may edit with this recipe's membership shown as a toggle, so the
 same place both files and unfiles — undoing a mistake is not a hunt for a
-different control. The row at the top makes a new cookbook already holding
+different control. The row at the top asks for a new cookbook already holding
 this recipe, for when two things obviously belong together.
+
+Nothing is written until you press **Save**, so a mis-tap costs you closing
+the panel rather than tapping the same toggle back. A cookbook you ask for
+appears in the list straight away, marked as one that will be made when you
+save.
 
 ![The cookbook membership panel on a recipe](/img/screenshots/cookbooks-panel.png)
 
@@ -72,6 +81,18 @@ If you do not use cookbooks, that card is a **Hidden Item**: turn it off once
 under Settings => User => **Hidden Items**, per device, exactly as you can with
 Nutrition Information or the rating. Hiding it affects the recipe page only —
 never the Library or its chips.
+
+## Renaming one, and taking recipes out
+
+**Edit cookbook** — from a cookbook's card in the Library, or from the menu on
+its own page — opens the name and the list of what is in it together. Rename
+it, mark recipes to take out, and **Save** applies both. Marking is not
+removing: a recipe you marked by mistake is un-marked, or the panel is closed
+and nothing happened.
+
+![Editing a cookbook: its name and what is in it, in one panel](/img/screenshots/cookbooks-edit.png)
+
+Taking a recipe out of a cookbook never touches the recipe.
 
 ## Browsing one
 
@@ -121,7 +142,8 @@ queued behind a create still lands in the cookbook you made.
 - Selecting many recipes at once and adding them together.
 - Cookbooks inside cookbooks.
 - Ordering a cookbook's members by hand. A cookbook is a set, not a sequence.
-- Uploading a cover, or a description. The cover is derived from the members.
+- Uploading a cover, or writing a description. Both are derived from the
+  members instead.
 - Cookbooks in a [Recipe Archive](./recipe-archive.md). An archive is an
   exchange of recipe content, so cookbooks stay behind.
 - Sharing a cookbook by link. Recipe share links are unaffected.
