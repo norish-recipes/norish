@@ -2,13 +2,13 @@
 
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { MiniCalendar, MiniCookbooks, MiniGroceries } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useActiveAllergies } from "@/hooks/user";
 import {
-  BookmarkSquareIcon,
   CalendarDaysIcon,
   DevicePhoneMobileIcon,
   EllipsisHorizontalIcon,
@@ -107,7 +107,7 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
         // this is offered to every reader who can see the page (ADR-0027).
         key: "cookbooks",
         label: t("cookbooks"),
-        icon: <BookmarkSquareIcon className="size-4" />,
+        icon: <CookbookIconSolid className="size-4" />,
         onPress: () => setOpenCookbooks(true),
       },
     ];

@@ -12,28 +12,26 @@ import { Button, Card, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 /**
- * Whether the cookbooks section has anything to show for this reader.
+ * The cookbooks a recipe is in, at the end of the recipe page.
  *
- * A Hidden Item, so a reader who does not use cookbooks turns it off once,
- * per device — exactly as they can with Nutrition Information or the rating.
- * The page layouts read this too, so the rules they draw between sections
- * come from the same answer the card itself renders by.
+ * It appears only when there are some. A card that invited every reader to
+ * file every recipe put a permanent advertisement on the end of a page most
+ * readers had not asked for — and the door it offered is already in the quick
+ * actions, where filing belongs whether or not the recipe is in anything yet.
+ * So this states a fact when there is one and says nothing when there is not.
+ *
+ * It is also a Hidden Item, so a reader who uses cookbooks but does not want
+ * to read about them here turns it off once, per device — exactly as they can
+ * with Nutrition Information or the rating.
  */
-export function useCookbooksSectionVisible(): boolean {
-  const { showCookbooks } = useHiddenItemVisibility();
-
-  return showCookbooks;
-}
-
-/** The cookbooks a recipe is in, at the end of the recipe page. */
 export default function CookbooksCard() {
   const { recipe } = useRecipeContext();
   const t = useTranslations("recipes.cookbooks");
-  const isVisible = useCookbooksSectionVisible();
+  const { showCookbooks } = useHiddenItemVisibility();
   const [panelOpen, setPanelOpen] = useState(false);
-  const { cookbooks } = useRecipeCookbooksQuery(isVisible && recipe ? recipe.id : null);
+  const { cookbooks } = useRecipeCookbooksQuery(showCookbooks && recipe ? recipe.id : null);
 
-  if (!recipe || !isVisible) return null;
+  if (!recipe || !showCookbooks || cookbooks.length === 0) return null;
 
   return (
     <>
@@ -48,31 +46,27 @@ export default function CookbooksCard() {
             onPress={() => setPanelOpen(true)}
           >
             <CookbookIconSolid className="size-4" />
-            {t("fileIt")}
+            {t("manage")}
           </Button>
         </Card.Header>
         <Card.Content className="p-6 pt-0">
-          {cookbooks.length === 0 ? (
-            <p className="text-muted text-base">{t("cardInvitation")}</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {cookbooks.map((cookbook) => (
-                <Link
-                  key={cookbook.id}
-                  href={withOrigin(`/cookbooks/${cookbook.id}`, `/recipes/${recipe.id}`)}
+          <div className="flex flex-wrap gap-2">
+            {cookbooks.map((cookbook) => (
+              <Link
+                key={cookbook.id}
+                href={withOrigin(`/cookbooks/${cookbook.id}`, `/recipes/${recipe.id}`)}
+              >
+                <Chip
+                  className="cursor-pointer rounded-full px-3"
+                  data-cookbook-chip={cookbook.title}
+                  size="md"
+                  variant="tertiary"
                 >
-                  <Chip
-                    className="cursor-pointer rounded-full px-3"
-                    data-cookbook-chip={cookbook.title}
-                    size="md"
-                    variant="tertiary"
-                  >
-                    <Chip.Label>{cookbook.title}</Chip.Label>
-                  </Chip>
-                </Link>
-              ))}
-            </div>
-          )}
+                  <Chip.Label>{cookbook.title}</Chip.Label>
+                </Chip>
+              </Link>
+            ))}
+          </div>
         </Card.Content>
       </Card>
 

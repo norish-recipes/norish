@@ -78,6 +78,13 @@ export function recipeExists(name: string): Promise<boolean> {
   });
 }
 
+/** Drop one cookbook, so a scenario that made its own can clean up after it. */
+export function deleteCookbookByTitle(title: string): Promise<void> {
+  return withDatabase(async (database) => {
+    await database.query(`delete from cookbooks where title = $1`, [title]);
+  });
+}
+
 /** Clear every cookbook, so each scenario starts from a known Library. */
 export function clearCookbooks(): Promise<void> {
   return withDatabase(async (database) => {

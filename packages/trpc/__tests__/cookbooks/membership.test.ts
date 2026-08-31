@@ -15,6 +15,7 @@ import {
   addRecipeToCookbook,
   createCookbook,
   getCookbookRow,
+  listCookbookMemberIds,
   listCookbooksForRecipe,
   listEditableCookbooks,
   removeRecipeFromCookbook,
@@ -197,6 +198,29 @@ describe("cookbook membership", () => {
       householdUserIds: ["test-user-id", "household-member-id"],
       isServerAdmin: false,
     });
+  });
+
+  it("reports which recipes a cookbook holds, to whoever may see the cookbook", async () => {
+    // Seeing a cookbook is enough: this says nothing a reader could not learn
+    // by opening it, and it is what lets bulk-adding leave out what is
+    // already in there.
+    canAccessResource.mockResolvedValue(true);
+    listCookbookMemberIds.mockResolvedValue([RECIPE_ID]);
+
+    const result = await callerFor().cookbooks.memberIds({ cookbookId: COOKBOOK_ID });
+
+    expect(result).toEqual([RECIPE_ID]);
+    expect(listCookbookMemberIds).toHaveBeenCalledWith(COOKBOOK_ID);
+    expectNoRecipeWrites();
+  });
+
+  it("refuses the member ids of a cookbook the reader may not see", async () => {
+    canAccessResource.mockResolvedValue(false);
+
+    await expect(callerFor().cookbooks.memberIds({ cookbookId: COOKBOOK_ID })).rejects.toThrow(
+      TRPCError
+    );
+    expect(listCookbookMemberIds).not.toHaveBeenCalled();
   });
 
   it("reports which cookbooks hold a recipe, for the panel and the card alike", async () => {

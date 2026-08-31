@@ -391,13 +391,17 @@
     "newWithRecipe": "Новая книга с этим рецептом",
     "noneEditable": "Пока нет кулинарных книг, доступных вам для изменения.",
     "cardTitle": "В кулинарных книгах",
-    "cardInvitation": "Этот рецепт пока не в кулинарной книге.",
-    "fileIt": "Добавить",
     "removeFromCookbook": "Убрать из книги",
     "noMatchingMembers": "Ни один рецепт в этой книге не подходит под фильтры.",
     "membersLabel": "Рецепты в этой книге",
-    "undoRemove": "Отменить удаление",
     "showMore": "Показать ещё",
-    "willBeCreated": "Будет создана при сохранении"
+    "willBeCreated": "Будет создана при сохранении",
+    "manage": "Управлять",
+    "addRecipes": "Добавить рецепты",
+    "addRecipesTitle": "Добавить рецепты в «{title}»",
+    "searchRecipes": "Поиск рецептов",
+    "noRecipesToAdd": "Рецепты не найдены.",
+    "addCount": "{count, plural, one {Добавить # рецепт} few {Добавить # рецепта} many {Добавить # рецептов} other {Добавить # рецепта}}",
+    "everythingAlreadyIn": "Все рецепты уже в этой книге."
   }
 }

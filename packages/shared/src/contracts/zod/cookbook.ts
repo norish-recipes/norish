@@ -108,6 +108,17 @@ export const CookbookGetInputSchema = z.object({
   id: z.uuid(),
 });
 
+/**
+ * Which recipes a cookbook holds, as ids alone.
+ *
+ * Bulk-adding needs to know what is already in there, and the paged member
+ * list cannot answer that — a page of it is a page, and the answer has to
+ * cover the whole cookbook. Ids are what that question actually needs.
+ */
+export const CookbookMemberIdsInputSchema = z.object({
+  cookbookId: z.uuid(),
+});
+
 export const CookbookListInputSchema = z.object({
   cursor: z
     .number()

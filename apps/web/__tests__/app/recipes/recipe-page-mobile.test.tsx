@@ -124,8 +124,12 @@ vi.mock("@/components/Panel/consumers", () => ({
   MiniCookbooks: () => null,
 }));
 
+const recipeCookbooks = vi.hoisted(() => ({
+  current: [{ id: "cookbook-1", title: "Weeknights" }] as { id: string; title: string }[],
+}));
+
 vi.mock("@/hooks/cookbooks", () => ({
-  useRecipeCookbooksQuery: () => ({ cookbooks: [], isLoading: false }),
+  useRecipeCookbooksQuery: () => ({ cookbooks: recipeCookbooks.current, isLoading: false }),
 }));
 
 vi.mock("@/components/recipes/author-chip", () => ({
@@ -203,7 +207,9 @@ vi.mock("@heroui/react", () => ({
       Content: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     }
   ),
-  Chip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+  Chip: Object.assign(({ children }: { children: React.ReactNode }) => <span>{children}</span>, {
+    Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+  }),
   Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   Link: ({ children }: { children: React.ReactNode }) => <a href="/">{children}</a>,
   Separator: () => <hr />,
@@ -276,6 +282,18 @@ describe("RecipePageMobile card body", () => {
     ]);
   });
 
+  it("says nothing about cookbooks for a recipe that is in none", () => {
+    // The card states a fact. A recipe in no cookbook has no fact to state,
+    // and filing is in the quick actions whether or not it is in one already.
+    recipeCookbooks.current = [];
+
+    render(<RecipePageMobile />);
+
+    expect(cardTitlesInOrder()).not.toContain(CARD_TITLES.cookbooks);
+
+    recipeCookbooks.current = [{ id: "cookbook-1", title: "Weeknights" }];
+  });
+
   it("draws no rules between the sections", () => {
     render(<RecipePageMobile />);
 
@@ -303,8 +321,7 @@ describe("RecipePageMobile card body", () => {
       CARD_TITLES.rating,
     ]);
     // Four cards: the three with something in them, plus the cookbooks card,
-    // which is an invitation rather than a stored section and so is drawn even
-    // for a recipe that stores nothing else.
+    // which is here because this recipe is in a cookbook.
     expect(cardCount()).toBe(4);
   });
 

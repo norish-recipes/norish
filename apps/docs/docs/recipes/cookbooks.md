@@ -6,150 +6,54 @@ description: Group recipes into titled sets, file a recipe from its own page, an
 
 # Cookbooks
 
-A **Cookbook** is a titled set of recipes. It is the one thing in Norish that
-groups recipes by intent rather than by attribute: tags, cuisines, categories,
-rating and cooking time all describe what a recipe _is_, and a cookbook is
-somewhere to _put_ things.
-
-It is deliberately thin. A cookbook has a title, a set of members, and nothing
-else to maintain — no description to write, no cover to upload, no ordering.
-Everything a cookbook's card says about it is read off the members themselves:
-the cover mosaic, the description naming what is inside, the members' cooking
-times added up, the smallest number of people any member serves, and any of
-your allergens waiting in there. None of it can go stale, because none of it
-is stored.
-
-## The Library and its three chips
-
-The dashboard is your **Library**: everything you can see, recipes and
-cookbooks together, in one list. Three chips under the search bar choose what
-kind of thing is on screen, and the heading names the choice:
-
-- **All** — _Your library_: both kinds, interleaved
-- **Recipes** — _Your recipes_
-- **Cookbooks** — _Your cookbooks_
-
-![The Library under the All chip, with a cookbook and recipes in one list](/img/screenshots/cookbooks-library.png)
-
-Under **All**, cookbooks and recipes share one list ordered by whatever sort
-you chose — not two bands, and not cookbooks pinned on top. Both carry a title
-and a creation date, so "Newest first" means newest first for everything on
-screen. Your chip stays chosen on that device, so a Library you prefer to
-browse by cookbook opens that way, and **Clear filters** leaves it alone.
-
-Searching finds a cookbook by its title, and a matching cookbook is shown
-ahead of the matching recipes. A cookbook has only a title to match on, so
-removing **Title** from _Search in_ — in the Filters panel — takes cookbooks
-out of search entirely. Filters that only mean something for a recipe (rating,
-cooking time, categories, tags, favorites) simply show recipes.
+A **Cookbook** are a set of recipes contained by a title. 
 
 ## Making one
 
-With the **Cookbooks** chip lit, the Add button becomes **+ Cookbook**. It asks
-for a title and nothing else, and leaves you where you were: the new cookbook
-appears at the top of the list you are already reading. Fill it now or fill it
-later, which is how you set up a Christmas cookbook in November.
+With the **Cookbooks** chip lit, the Add button becomes **+ Cookbook**. This opens a panel where you can set the title.
+
+Under **All** the list holds both kinds (recipes + cookbooks). Its menu offers a cookbook beside the ways of adding a recipe. Under
+**Recipes** it makes recipes only, because that is all that list can show.
 
 ![Creating a cookbook from the Library](/img/screenshots/cookbooks-create.png)
 
-## Filing a recipe
+## Adding a recipe
 
-Open any recipe, then **Cookbooks** in its actions menu. The panel lists every
-cookbook you may edit with this recipe's membership shown as a toggle, so the
-same place both files and unfiles — undoing a mistake is not a hunt for a
-different control. The row at the top asks for a new cookbook already holding
-this recipe, for when two things obviously belong together.
-
-Nothing is written until you press **Save**, so a mis-tap costs you closing
-the panel rather than tapping the same toggle back. A cookbook you ask for
-appears in the list straight away, marked as one that will be made when you
-save.
+There are two ways to add recipes to a cookbook. Via a recipe page using in the quick actions panel. The add panel shows all available cookbooks. 
 
 ![The cookbook membership panel on a recipe](/img/screenshots/cookbooks-panel.png)
 
-A recipe can be in as many cookbooks as you like, and filing the same one
-twice changes nothing. Filing needs only that you can see the recipe and edit
-the cookbook: the recipe itself is never written, so its owner is not
-notified and nothing about it changes. Being collected is not an edit.
+The other way is to swipe left (or using the three dots) on a cookbook and click the plus icon. 
 
-Every recipe page ends with a card naming the cookbooks it is in, each one a
-link, or an invitation to file it when it is in none.
+![Adding several recipes to a cookbook at once](/img/screenshots/cookbooks-add-recipes.png)
+
+At the end if a recipe page there is a card showing all cookbooks the recipe is placed into. 
+Each of these items are clickable and take you to the respective cookbook.
 
 ![The cookbooks card at the end of a recipe page](/img/screenshots/cookbooks-recipe-card.png)
 
-If you do not use cookbooks, that card is a **Hidden Item**: turn it off once
-under Settings => User => **Hidden Items**, per device, exactly as you can with
-Nutrition Information or the rating. Hiding it affects the recipe page only —
-never the Library or its chips.
+If you do no whish to see the cookbooks card you can hide it under: Settings => User => **Hidden
+Items**, this is a per device setting.
 
 ## Renaming one, and taking recipes out
 
 **Edit cookbook** — from a cookbook's card in the Library, or from the menu on
-its own page — opens the name and the list of what is in it together. Rename
-it, mark recipes to take out, and **Save** applies both. Marking is not
-removing: a recipe you marked by mistake is un-marked, or the panel is closed
-and nothing happened.
+its own page, opens the name and the list of what is in it. Rename
+it, untick anything that should go, and **Save** applies both.
 
 ![Editing a cookbook: its name and what is in it, in one panel](/img/screenshots/cookbooks-edit.png)
-
-Taking a recipe out of a cookbook never touches the recipe.
-
-## Browsing one
-
-A cookbook has its own address, so it can be linked, bookmarked and reached
-with the back button. It shows its recipes through the same grid the Library
-uses, in your stored grid-or-list layout, and your sort, your search and the
-Filters panel all apply inside it — which keeps a large cookbook usable. A
-recipe can be taken out from here too.
-
-![A cookbook's own page, showing its members](/img/screenshots/cookbooks-page.png)
-
-The member count is what _you_ can see, so two people may honestly see
-different counts for the same cookbook — the same rule the Library follows,
-one level down.
-
-However you got here — from the Library, or from a recipe that is in this
-cookbook — the link at the top names where you came from and takes you back
-there. Recipes opened from inside a cookbook do the same, so following one and
-coming back does not drop you on the Library instead.
 
 ## Who can see and change what
 
 Cookbooks obey the recipe permission policy your administrator already set.
-There is no second setting and no separate rule: on the shipped default,
-cookbooks are as browsable across households as the recipes already are, and
-an instance that keeps recipes private keeps cookbooks private too.
 
 Nothing about cookbooks is destructive:
 
-- Deleting a cookbook leaves every recipe it held untouched. It confirms by
-  name first.
-- Deleting a recipe takes it out of every cookbook it was in, and leaves those
-  cookbooks standing — a cookbook that loses its last recipe keeps its title.
-- A cookbook made by someone who later deletes their account stays. Like an
-  orphaned recipe, it belongs to nobody and everyone can maintain it, so a
-  departure never empties a shared Library.
+- Deleting a cookbook leaves every recipe it held untouched.
+- Deleting a recipe takes it out of every cookbook it was in.
+- A cookbook made by someone who later deletes their account stays (becomes orphaned).
 
 ## Offline
 
 Every cookbook you can see, and what is in it, is part of the guaranteed
-**Warm Set**, so your Library is not half empty the moment the backend is
-unreachable. Opening a cookbook Offline lists its members; a member whose
-detail was never cached says so rather than failing, because member recipes
-keep the same fifty-recipe guarantee they always had.
-
-Making a cookbook and filing recipes into it works Offline too. The change is
-shown as applied and queued, and arrives intact once you are back — filing
-queued behind a create still lands in the cookbook you made.
-
-## Not included
-
-- Selecting many recipes at once and adding them together.
-- Cookbooks inside cookbooks.
-- Ordering a cookbook's members by hand. A cookbook is a set, not a sequence.
-- Uploading a cover, or writing a description. Both are derived from the
-  members instead.
-- Cookbooks in a [Recipe Archive](./recipe-archive.md). An archive is an
-  exchange of recipe content, so cookbooks stay behind.
-- Sharing a cookbook by link. Recipe share links are unaffected.
-- Cookbooks on the mobile app, for now.
+**Warm Set**.

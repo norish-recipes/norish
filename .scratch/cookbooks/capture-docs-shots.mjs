@@ -1,5 +1,5 @@
 /*
- * Takes the six Cookbooks documentation captures from a running Norish dev
+ * Takes the seven Cookbooks documentation captures from a running Norish dev
  * instance and writes them into `apps/docs/static/img/screenshots`.
  *
  *   NORISH_URL=http://localhost:3000 \
@@ -142,9 +142,8 @@ async function fileRecipes(count) {
     await page.waitForURL(/\/recipes\//, { timeout: 20_000 });
     await settle(page, "recipe page");
 
-    const card = page.getByTestId("cookbooks-card").first();
-
-    await card.getByTestId("file-into-cookbook").click();
+    await page.getByRole("button", { name: "Actions", exact: true }).first().click();
+    await page.getByRole("button", { name: "Cookbooks", exact: true }).click();
     const toggle = page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`);
 
     await toggle.waitFor({ timeout: 10_000 });
@@ -221,6 +220,21 @@ await page.getByRole("button", { name: "Edit cookbook", exact: true }).click();
 await page.locator("[data-cookbook-member]").first().waitFor({ timeout: 10_000 });
 await sleep(600);
 await shoot(page.locator('[role="dialog"]').first(), "cookbooks-edit");
+await page.getByRole("button", { name: "Close panel" }).click();
+await sleep(600);
+
+/* ---- 7. Filling one from its own side ---- */
+
+await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
+await page.getByRole("button", { name: "Add recipes", exact: true }).click();
+await page.locator("[data-add-recipe]").first().waitFor({ timeout: 10_000 });
+await sleep(400);
+// Two ticked, so the capture shows what a multiple selection looks like and
+// what the button then offers to do.
+await page.locator("[data-add-recipe]").nth(0).click();
+await page.locator("[data-add-recipe]").nth(2).click();
+await sleep(500);
+await shoot(page.locator('[role="dialog"]').first(), "cookbooks-add-recipes");
 await page.getByRole("button", { name: "Close panel" }).click();
 
 await browser.close();

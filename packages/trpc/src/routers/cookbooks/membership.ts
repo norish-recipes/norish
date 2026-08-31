@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { FilterMode, SortOrder } from "@norish/shared/contracts";
 import {
   addRecipeToCookbook,
+  listCookbookMemberIds,
   listCookbooksForRecipe,
   listEditableCookbooks,
   removeRecipeFromCookbook,
@@ -11,6 +12,7 @@ import { listRecipes } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   CookbookForRecipeInputSchema,
+  CookbookMemberIdsInputSchema,
   CookbookMembershipInputSchema,
   CookbookRecipesInputSchema,
   CookbookSummarySchema,
@@ -126,9 +128,28 @@ const recipes = authedProcedure
     };
   });
 
+/**
+ * Which recipes this cookbook holds, as ids.
+ *
+ * Seeing a cookbook is enough: this says nothing a reader could not learn by
+ * opening it, and the member list they would open is already filtered by the
+ * recipe view policy. Ids rather than rows because the one caller — filling a
+ * cookbook in bulk — only needs to know what is already in there, and needs
+ * that for the whole cookbook rather than for a page of it.
+ */
+const memberIds = authedProcedure
+  .input(CookbookMemberIdsInputSchema)
+  .output(z.array(z.string()))
+  .query(async ({ ctx, input }) => {
+    await assertCookbookAccess(ctx, input.cookbookId, "view");
+
+    return listCookbookMemberIds(input.cookbookId);
+  });
+
 export const cookbookMembershipProcedures = router({
   setMembership,
   forRecipe,
   editable,
+  memberIds,
   recipes,
 });

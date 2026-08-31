@@ -5,6 +5,18 @@ import { Checkbox } from "@heroui/react";
 
 const CHECKMARK_COMMIT_DELAY_MS = 220;
 
+/**
+ * Whether an event came from the checkbox rather than the row around it.
+ *
+ * React Aria checkboxes drop the `onClick` prop, so `stopPropagation` on the
+ * Checkbox never runs and a row that is itself clickable would toggle twice —
+ * once from the control and once from the row. Containment is what is left to
+ * detect it with.
+ */
+export function isCheckboxEvent(event: { target: EventTarget | null }) {
+  return event.target instanceof Element && event.target.closest('[data-slot="checkbox"]') !== null;
+}
+
 type GroceryCheckboxProps = {
   "aria-label": string;
   isSelected: boolean;

@@ -391,13 +391,17 @@
     "newWithRecipe": "Neues Kochbuch mit diesem Rezept",
     "noneEditable": "Es gibt keine Kochbücher, die du bearbeiten kannst.",
     "cardTitle": "In Kochbüchern",
-    "cardInvitation": "Dieses Rezept ist noch in keinem Kochbuch.",
-    "fileIt": "Einsortieren",
     "removeFromCookbook": "Aus Kochbuch entfernen",
     "noMatchingMembers": "In diesem Kochbuch gibt es keine Rezepte, die zu deinen Filtern passen.",
     "membersLabel": "Rezepte in diesem Kochbuch",
-    "undoRemove": "Entfernen rückgängig machen",
     "showMore": "Mehr anzeigen",
-    "willBeCreated": "Wird beim Speichern erstellt"
+    "willBeCreated": "Wird beim Speichern erstellt",
+    "manage": "Verwalten",
+    "addRecipes": "Rezepte hinzufügen",
+    "addRecipesTitle": "Rezepte zu {title} hinzufügen",
+    "searchRecipes": "Rezepte suchen",
+    "noRecipesToAdd": "Keine Rezepte gefunden.",
+    "addCount": "{count, plural, one {# Rezept hinzufügen} other {# Rezepte hinzufügen}}",
+    "everythingAlreadyIn": "Alle Rezepte sind bereits in diesem Kochbuch."
   }
 }

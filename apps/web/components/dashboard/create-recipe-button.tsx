@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import { CookbookTitlePanel } from "@/components/cookbooks/cookbook-panels";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
@@ -19,14 +20,19 @@ import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 /**
- * The Library's Add button.
+ * The Library's Add button, which makes whichever kind of thing is on screen.
  *
- * Under the Cookbooks chip it becomes **+ Cookbook** and asks for a title;
- * under All and Recipes it is the recipe menu it has always been. The button
- * and the chips are load-bearing on each other: this is only honest because
- * the chip that decides its meaning is permanently on screen beside a heading
- * that names it (ADR-0026). If the chips ever move back behind search focus,
- * this has to stop being chip-aware in the same change.
+ * Under **Cookbooks** it is **+ Cookbook** and asks for a title. Under
+ * **Recipes** it is the recipe menu it has always been. Under **All** both
+ * kinds are on screen, so both are in the menu and the button drops to a plain
+ * **Add** — a list holding recipes and cookbooks together should not have an
+ * Add button that can only make one of them, and one labelled "Add Recipe"
+ * with a Cookbook inside it would be lying about the shorter half of itself.
+ *
+ * The button and the chips are load-bearing on each other: this is only honest
+ * because the chip that decides its meaning is permanently on screen beside a
+ * heading that names it (ADR-0026). If the chips ever move back behind search
+ * focus, this has to stop being chip-aware in the same change.
  */
 export default function CreateRecipeButton() {
   const router = useRouter();
@@ -42,6 +48,8 @@ export default function CreateRecipeButton() {
   const tCookbooks = useTranslations("recipes.cookbooks");
   const tCommon = useTranslations("common.actions");
   const addsCookbook = filters.libraryType === "cookbooks";
+  // Under All the list holds both kinds, so the menu offers both.
+  const addsEither = filters.libraryType === "all";
 
   const handleCreateCookbook = useCallback(
     (title: string) => {
@@ -101,10 +109,25 @@ export default function CreateRecipeButton() {
           {<PlusIcon className="h-4 w-4" />}
           <Label>{tCommon("create")}</Label>
         </Dropdown.Item>
+        {addsEither ? (
+          <Dropdown.Item
+            key="cookbook"
+            id="cookbook"
+            textValue={tCookbooks("singular")}
+            // The menu closes before the panel opens, so its items cannot
+            // rebuild mid-exit and steal focus from the panel.
+            onPress={() => openModal(setShowCookbookPanel)}
+          >
+            {<CookbookIconSolid className="h-4 w-4" />}
+            <Label>{tCookbooks("singular")}</Label>
+          </Dropdown.Item>
+        ) : null}
       </>
     ),
-    [isAIEnabled, openModal, router, t, tCommon]
+    [addsEither, isAIEnabled, openModal, router, t, tCommon, tCookbooks]
   );
+
+  const addLabel = addsEither ? tCommon("add") : t("addRecipe");
 
   if (addsCookbook) {
     return (
@@ -134,18 +157,27 @@ export default function CreateRecipeButton() {
     <>
       <Dropdown isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <Button
-          aria-label={t("addRecipe")}
+          aria-label={addLabel}
           className="min-w-10 rounded-full font-medium md:min-w-20"
+          data-testid="add-library-button"
           size="md"
           variant="primary"
         >
           <PlusIcon className="h-5 w-5" />
-          <span className="hidden md:inline">{t("addRecipe")}</span>
+          <span className="hidden md:inline">{addLabel}</span>
         </Button>
         <Dropdown.Popover className="bg-overlay" placement="bottom end">
-          <Dropdown.Menu aria-label="Add recipe options">{menuItems}</Dropdown.Menu>
+          <Dropdown.Menu aria-label={addLabel}>{menuItems}</Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
+
+      {addsEither && (
+        <CookbookTitlePanel
+          open={showCookbookPanel}
+          onOpenChange={setShowCookbookPanel}
+          onSubmit={handleCreateCookbook}
+        />
+      )}
 
       <ImportRecipeModal isOpen={showImportModal} onOpenChange={setShowImportModal} />
       <ImportFromPasteModal isOpen={showPasteModal} onOpenChange={setShowPasteModal} />

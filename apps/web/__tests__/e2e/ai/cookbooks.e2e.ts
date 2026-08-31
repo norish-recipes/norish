@@ -13,6 +13,7 @@ import type { Page } from "@playwright/test";
 
 import {
   clearCookbooks,
+  deleteCookbookByTitle,
   readCookbookMembers,
   readCookbookTitles,
   recipeExists,
@@ -40,6 +41,39 @@ async function expectHeading(text: string) {
 /** The panel's own close control, rather than a keypress. */
 async function closePanel() {
   await page.getByRole("button", { name: "Close panel" }).click();
+}
+
+/**
+ * Open the membership panel from a recipe's quick actions.
+ *
+ * The recipe page's cookbooks card only appears once the recipe is in a
+ * cookbook, so the quick actions are the door that is always there.
+ */
+async function openMembershipPanel() {
+  await page.getByRole("button", { name: "Actions", exact: true }).first().click();
+  await page.getByRole("button", { name: "Cookbooks", exact: true }).click();
+}
+
+/**
+ * Put the recipe in the cookbook, from wherever the last test left it.
+ *
+ * The toggle says which way it is pointing, so a step that only needs the
+ * recipe filed does not depend on the test before it having left it unfiled.
+ */
+async function ensureFiled() {
+  await openMembershipPanel();
+
+  const toggle = page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`);
+
+  await toggle.waitFor();
+  if ((await toggle.getAttribute("aria-pressed")) === "true") {
+    await closePanel();
+
+    return;
+  }
+
+  await toggle.click();
+  await saveMembership();
 }
 
 /** Commit the membership panel, which never writes until it is saved. */
@@ -106,6 +140,37 @@ test("creating a cookbook from the Library leaves the reader on the Library", as
   expect(await readCookbookTitles()).toContain(COOKBOOK_TITLE);
 });
 
+test("the Add button under All makes either kind", async () => {
+  const SECOND = "Sunday Roasts";
+
+  await page.goto("/");
+  await (await chip("all")).click();
+
+  // Both kinds are on screen, so the button is a plain Add and the menu holds
+  // both — rather than an "Add Recipe" that can only make half the list.
+  await expect(page.getByTestId("add-library-button")).toHaveText("Add");
+  await page.getByTestId("add-library-button").click();
+  await page.getByRole("menuitem", { name: "Cookbook", exact: true }).click();
+
+  await page.getByTestId("cookbook-title-input").fill(SECOND);
+  await page.getByRole("button", { name: /^create$/i }).click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(cookbookCard(SECOND)).toBeVisible();
+  expect(await readCookbookTitles()).toContain(SECOND);
+
+  // Under Recipes the button only makes recipes, because that is all the list
+  // can show.
+  await (await chip("recipes")).click();
+  await expect(page.getByTestId("add-library-button")).toHaveText("Add Recipe");
+  await page.getByTestId("add-library-button").click();
+  await expect(page.getByRole("menuitem", { name: "Cookbook", exact: true })).toHaveCount(0);
+
+  // Leave the Library as this scenario found it: the interleaving test after
+  // it is about one cookbook standing beside one recipe.
+  await deleteCookbookByTitle(SECOND);
+});
+
 test("a cookbook and a recipe appear interleaved under All", async () => {
   await page.goto("/");
   await (await chip("all")).click();
@@ -132,18 +197,19 @@ test("filing a recipe from its quick actions shows it on the recipe page card", 
   await recipeCard().click();
   await expect(page.getByRole("heading", { name: RECIPE_NAME })).toBeVisible();
 
-  // The card starts as an invitation, because the recipe is in no cookbook.
-  // Both recipe page layouts are in the DOM; the desktop one comes first.
-  const card = page.getByTestId("cookbooks-card").first();
+  // Nothing is said about cookbooks yet, because the recipe is in none.
+  await expect(page.getByTestId("cookbooks-card")).toHaveCount(0);
 
-  await expect(card).toBeVisible();
-  await card.getByTestId("file-into-cookbook").click();
+  await openMembershipPanel();
 
   // Toggling stages the change; nothing is written until Save.
   await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
   expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
 
   await saveMembership();
+
+  // Now there is a fact to state, so the card appears with the cookbook on it.
+  const card = page.getByTestId("cookbooks-card").first();
 
   await expect(card.locator(`[data-cookbook-chip="${COOKBOOK_TITLE}"]`)).toBeVisible();
   await expect(async () => {
@@ -198,7 +264,8 @@ test("the same panel takes the recipe out again", async () => {
   await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
   await saveMembership();
 
-  await expect(card.locator(`[data-cookbook-chip="${COOKBOOK_TITLE}"]`)).toHaveCount(0);
+  // The recipe is in nothing again, so the card goes with the last chip.
+  await expect(page.getByTestId("cookbooks-card")).toHaveCount(0);
 
   await expect(async () => {
     expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
@@ -209,24 +276,41 @@ test("closing the membership panel without saving changes nothing", async () => 
   await page.goto("/");
   await recipeCard().click();
 
-  // Both recipe page layouts are in the DOM; the desktop one comes first.
-  const card = page.getByTestId("cookbooks-card").first();
-
-  await card.getByTestId("file-into-cookbook").click();
+  await openMembershipPanel();
   await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
   await closePanel();
 
-  await expect(card.locator(`[data-cookbook-chip="${COOKBOOK_TITLE}"]`)).toHaveCount(0);
+  await expect(page.getByTestId("cookbooks-card")).toHaveCount(0);
   expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
+});
+
+test("a cookbook fills itself from its own side", async () => {
+  // The other direction: the thought starts at the cookbook, and several
+  // recipes go in at once rather than one recipe at a time from each page.
+  await page.goto("/");
+  await (await chip("cookbooks")).click();
+  await cookbookCard(COOKBOOK_TITLE).click();
+  await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
+
+  await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
+  await page.getByRole("button", { name: "Add recipes", exact: true }).click();
+  await page.locator(`[data-add-recipe="${RECIPE_NAME}"]`).click();
+
+  // Staged, like every other cookbook panel.
+  expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([]);
+
+  await page.getByTestId("save-cookbook-recipes").click();
+
+  await expect(async () => {
+    expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);
+  }).toPass({ timeout: 10_000 });
 });
 
 test("the edit panel takes a recipe out of the cookbook it is editing", async () => {
   // Put it back first, so there is something to take out.
   await page.goto("/");
   await recipeCard().click();
-  await page.getByTestId("cookbooks-card").first().getByTestId("file-into-cookbook").click();
-  await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
-  await saveMembership();
+  await ensureFiled();
 
   await expect(async () => {
     expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);
@@ -257,9 +341,7 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
   // Put the recipe back, so the delete has something to not destroy.
   await page.goto("/");
   await recipeCard().click();
-  await page.getByTestId("cookbooks-card").first().getByTestId("file-into-cookbook").click();
-  await page.locator(`[data-cookbook-toggle="${COOKBOOK_TITLE}"]`).click();
-  await saveMembership();
+  await ensureFiled();
 
   await expect(async () => {
     expect(await readCookbookMembers(COOKBOOK_TITLE)).toEqual([RECIPE_NAME]);

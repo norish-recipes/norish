@@ -391,13 +391,17 @@
     "newWithRecipe": "Nuovo libro con questa ricetta",
     "noneEditable": "Non ci sono ancora libri di cucina che puoi modificare.",
     "cardTitle": "Nei libri di cucina",
-    "cardInvitation": "Questa ricetta non è ancora in nessun libro di cucina.",
-    "fileIt": "Archivia",
     "removeFromCookbook": "Rimuovi dal libro",
     "noMatchingMembers": "Nessuna ricetta di questo libro corrisponde ai tuoi filtri.",
     "membersLabel": "Ricette in questo libro",
-    "undoRemove": "Annulla la rimozione",
     "showMore": "Mostra altri",
-    "willBeCreated": "Verrà creato al salvataggio"
+    "willBeCreated": "Verrà creato al salvataggio",
+    "manage": "Gestisci",
+    "addRecipes": "Aggiungi ricette",
+    "addRecipesTitle": "Aggiungi ricette a {title}",
+    "searchRecipes": "Cerca ricette",
+    "noRecipesToAdd": "Nessuna ricetta trovata.",
+    "addCount": "{count, plural, one {Aggiungi # ricetta} other {Aggiungi # ricette}}",
+    "everythingAlreadyIn": "Tutte le ricette sono già in questo libro."
   }
 }

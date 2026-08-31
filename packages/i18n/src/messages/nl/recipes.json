@@ -391,13 +391,17 @@
     "newWithRecipe": "Nieuw kookboek met dit recept",
     "noneEditable": "Er zijn nog geen kookboeken die je kunt bewerken.",
     "cardTitle": "In kookboeken",
-    "cardInvitation": "Dit recept staat nog niet in een kookboek.",
-    "fileIt": "Opbergen",
     "removeFromCookbook": "Uit kookboek verwijderen",
     "noMatchingMembers": "Geen recepten in dit kookboek passen bij je filters.",
     "membersLabel": "Recepten in dit kookboek",
-    "undoRemove": "Verwijderen ongedaan maken",
     "showMore": "Meer tonen",
-    "willBeCreated": "Wordt aangemaakt bij opslaan"
+    "willBeCreated": "Wordt aangemaakt bij opslaan",
+    "manage": "Beheren",
+    "addRecipes": "Recepten toevoegen",
+    "addRecipesTitle": "Recepten toevoegen aan {title}",
+    "searchRecipes": "Recepten zoeken",
+    "noRecipesToAdd": "Geen recepten gevonden.",
+    "addCount": "{count, plural, one {# recept toevoegen} other {# recepten toevoegen}}",
+    "everythingAlreadyIn": "Alle recepten staan al in dit kookboek."
   }
 }

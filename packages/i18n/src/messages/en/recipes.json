@@ -391,13 +391,17 @@
     "newWithRecipe": "New cookbook with this recipe",
     "noneEditable": "There are no cookbooks you can edit yet.",
     "cardTitle": "In cookbooks",
-    "cardInvitation": "This recipe is not in a cookbook yet.",
-    "fileIt": "File it",
     "removeFromCookbook": "Remove from cookbook",
     "noMatchingMembers": "No recipes in this cookbook match your filters.",
     "membersLabel": "Recipes in this cookbook",
-    "undoRemove": "Undo remove",
     "showMore": "Show more",
-    "willBeCreated": "Will be created when you save"
+    "willBeCreated": "Will be created when you save",
+    "manage": "Manage",
+    "addRecipes": "Add recipes",
+    "addRecipesTitle": "Add recipes to {title}",
+    "searchRecipes": "Search recipes",
+    "noRecipesToAdd": "No recipes found.",
+    "addCount": "{count, plural, one {Add # recipe} other {Add # recipes}}",
+    "everythingAlreadyIn": "Every recipe is already in this cookbook."
   }
 }

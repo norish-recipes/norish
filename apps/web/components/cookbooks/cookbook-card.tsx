@@ -3,6 +3,7 @@
 import type { MouseEvent } from "react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import {
@@ -15,7 +16,12 @@ import { photoChipClassName } from "@/components/dashboard/recipe-metadata";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { withOrigin } from "@/lib/back-destination";
-import { EllipsisHorizontalIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/20/solid";
+import {
+  EllipsisHorizontalIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid";
 import { Button, Card, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -65,6 +71,8 @@ function CookbookCardComponent({
   // mounting it before it is ever opened would fire that read every time the
   // card scrolls back into view.
   const editMounted = useMountedOnceOpened(editOpen);
+  const [addOpen, setAddOpen] = useState(false);
+  const addMounted = useMountedOnceOpened(addOpen);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Cookbooks answer to the recipe permission policy, so the same two
@@ -90,6 +98,16 @@ function CookbookCardComponent({
 
   const actions: SwipeAction[] = useMemo(() => {
     const list: SwipeAction[] = [];
+
+    if (canEdit) {
+      list.push({
+        key: "add",
+        icon: PlusIcon,
+        color: "warning",
+        onPress: () => setAddOpen(true),
+        label: t("addRecipes"),
+      });
+    }
 
     if (canEdit) {
       list.push({
@@ -241,7 +259,7 @@ function CookbookCardComponent({
     variant === "list" ? (
       <div
         data-cookbook-card
-        className={`relative h-[128px] w-full overflow-hidden transition-all duration-300 ${rowOpen ? "rounded-none opacity-70" : "rounded-2xl"}`}
+        className={`relative h-[128px] w-full cursor-pointer overflow-hidden transition-all duration-300 ${rowOpen ? "rounded-none opacity-70" : "rounded-2xl"}`}
         role="button"
         tabIndex={rowOpen ? 0 : -1}
         onClick={() => {
@@ -290,7 +308,7 @@ function CookbookCardComponent({
     ) : (
       <div
         data-cookbook-card
-        className={`relative h-[340px] w-full overflow-hidden transition-all duration-300 ${rowOpen ? "rounded-none opacity-70" : "rounded-3xl"}`}
+        className={`relative h-[340px] w-full cursor-pointer overflow-hidden transition-all duration-300 ${rowOpen ? "rounded-none opacity-70" : "rounded-3xl"}`}
         role="button"
         tabIndex={rowOpen ? 0 : -1}
         onClick={() => {
@@ -365,6 +383,10 @@ function CookbookCardComponent({
 
       {editMounted && (
         <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
+      )}
+
+      {addMounted && (
+        <CookbookAddRecipesPanel cookbook={cookbook} open={addOpen} onOpenChange={setAddOpen} />
       )}
 
       <DeleteCookbookModal

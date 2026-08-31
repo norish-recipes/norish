@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbooks";
-import { ArrowUturnLeftIcon, MinusCircleIcon } from "@heroicons/react/16/solid";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Label, Modal, Separator, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -95,6 +95,10 @@ export function CookbookTitlePanel({
  * them across a panel and a separate page was the wrong seam. Both are staged
  * and applied together by Save, so a mis-tapped remove is undone by closing
  * the panel rather than by filing the recipe back in.
+ *
+ * What is in the cookbook is shown the way the membership panel shows it: a
+ * ticked row stays, an unticked one goes when you save. One question asked one
+ * way, rather than a minus and an undo arrow here and a tick there.
  *
  * Removing a recipe from a cookbook never touches the recipe (ADR-0027).
  */
@@ -202,16 +206,15 @@ export function CookbookEditPanel({
           ) : (
             <div className="divide-border/40 flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
               {recipes.map((recipe) => {
-                const isRemoved = removed.includes(recipe.id);
+                const stays = !removed.includes(recipe.id);
 
                 return (
-                  <div
+                  <SelectableRow
                     key={recipe.id}
-                    className="flex items-center gap-3 px-2 py-2"
-                    data-cookbook-member={recipe.name}
-                  >
-                    <span className="bg-surface-secondary text-muted flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-                      {recipe.image ? (
+                    data-remove-member={recipe.name}
+                    isSelected={stays}
+                    media={
+                      recipe.image ? (
                         <img
                           alt=""
                           className="h-full w-full object-cover"
@@ -220,30 +223,11 @@ export function CookbookEditPanel({
                         />
                       ) : (
                         <PhotoIcon aria-hidden className="h-5 w-5 opacity-70" />
-                      )}
-                    </span>
-                    <span
-                      className={`min-w-0 flex-1 truncate text-base ${isRemoved ? "text-muted line-through" : ""}`}
-                      title={recipe.name}
-                    >
-                      {recipe.name}
-                    </span>
-                    <Button
-                      isIconOnly
-                      aria-label={isRemoved ? t("undoRemove") : t("removeFromCookbook")}
-                      className="shrink-0 rounded-full"
-                      data-remove-member={recipe.name}
-                      size="sm"
-                      variant={isRemoved ? "tertiary" : "danger-soft"}
-                      onPress={() => toggleRemoved(recipe.id)}
-                    >
-                      {isRemoved ? (
-                        <ArrowUturnLeftIcon className="size-4" />
-                      ) : (
-                        <MinusCircleIcon className="size-4" />
-                      )}
-                    </Button>
-                  </div>
+                      )
+                    }
+                    title={recipe.name}
+                    onToggle={() => toggleRemoved(recipe.id)}
+                  />
                 );
               })}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GroceryCheckbox } from "@/components/groceries/grocery-checkbox";
+import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -107,12 +107,6 @@ function parseEditedIngredientLine(value: string, fallback: GroceryIngredient): 
 
 function formatEditableIngredient(item: GroceryIngredient) {
   return [item.amount, item.unit, item.ingredientName].filter(Boolean).join(" ");
-}
-
-/* React Aria checkboxes drop the onClick prop, so stopPropagation on the
-   Checkbox never runs; detect checkbox events by containment instead. */
-function isCheckboxEvent(event: React.SyntheticEvent) {
-  return event.target instanceof Element && event.target.closest('[data-slot="checkbox"]') !== null;
 }
 
 export default function MiniGroceries({
@@ -315,7 +309,7 @@ export default function MiniGroceries({
                     return (
                       <div
                         key={item.id}
-                        className="flex cursor-pointer items-start px-2 py-2"
+                        className="flex cursor-pointer items-center px-2 py-2"
                         role="button"
                         tabIndex={0}
                         onClick={(e) =>
@@ -332,14 +326,7 @@ export default function MiniGroceries({
                           }
                         }}
                       >
-                        <GroceryCheckbox
-                          aria-label={item.ingredientName}
-                          className="mt-[-4px]"
-                          isSelected={selectedIds.includes(item.id)}
-                          size="md"
-                          onChange={() => toggleSelect(item.id)}
-                        />
-                        <div className="ml-2 flex min-w-0 flex-1 flex-col">
+                        <div className="flex min-w-0 flex-1 flex-col">
                           {isEditing ? (
                             <Input
                               className="text-base"
@@ -370,6 +357,13 @@ export default function MiniGroceries({
                             </>
                           )}
                         </div>
+                        <GroceryCheckbox
+                          aria-label={item.ingredientName}
+                          className="ml-2 shrink-0"
+                          isSelected={selectedIds.includes(item.id)}
+                          size="md"
+                          onChange={() => toggleSelect(item.id)}
+                        />
                       </div>
                     );
                   })}

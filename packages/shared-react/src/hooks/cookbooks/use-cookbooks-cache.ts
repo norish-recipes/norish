@@ -10,6 +10,7 @@ import type {
   InfiniteCookbookData,
 } from "./types";
 import { applyCookbookUpdateToLibrary, applyCookbookUpdateToList } from "../library/library-cache";
+import { cookbookIdOf } from "./use-cookbook-recipes-query";
 
 export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions) {
   return function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
@@ -62,10 +63,26 @@ export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions)
       queryClient.invalidateQueries({ queryKey: editableKey });
     }, [queryClient, listPath, libraryPath, editableKey]);
 
+    /**
+     * Everything one cookbook answers for: the row itself, its member list and
+     * which recipes it holds.
+     *
+     * The member list is keyed by whatever sort, search and filters the reader
+     * had on, so it is matched by path and read back out of the key rather
+     * than guessed — adding a recipe from the cookbook's own page used to
+     * leave that page listing what it held a moment earlier.
+     */
     const invalidateCookbook = useCallback(
       (cookbookId: string) => {
         queryClient.invalidateQueries({
           queryKey: trpc.cookbooks.get.queryKey({ id: cookbookId }),
+        });
+        queryClient.invalidateQueries({
+          queryKey: [trpc.cookbooks.recipes.queryKey({ cookbookId })[0]],
+          predicate: (query) => cookbookIdOf(query.queryKey) === cookbookId,
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.cookbooks.memberIds.queryKey({ cookbookId }),
         });
       },
       [queryClient, trpc]

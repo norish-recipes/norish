@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
+import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { useCookbooksMutations, useEditableCookbooksQuery } from "@/hooks/cookbooks";
-import { CheckIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -173,37 +174,21 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
                 const isMember = staged[cookbook.id] ?? cookbook.containsRecipe;
 
                 return (
-                  <button
+                  <SelectableRow
                     key={cookbook.id}
-                    aria-pressed={isMember}
-                    className="hover:bg-surface-secondary flex items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors"
                     data-cookbook-toggle={cookbook.title}
-                    type="button"
-                    onClick={() => toggle(cookbook.id, !isMember)}
-                  >
-                    <span className="bg-surface-secondary h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                    isSelected={isMember}
+                    media={
                       <CookbookCover
                         emptyIconClassName="h-5 w-5"
                         images={cookbook.coverImages}
                         title={cookbook.title}
                       />
-                    </span>
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-base font-semibold">{cookbook.title}</span>
-                      <span className="text-muted text-xs">
-                        {t("recipeCount", { count: cookbook.memberCount })}
-                      </span>
-                    </span>
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                        isMember
-                          ? "border-accent bg-accent text-accent-foreground"
-                          : "border-border text-transparent"
-                      }`}
-                    >
-                      <CheckIcon className="size-4" />
-                    </span>
-                  </button>
+                    }
+                    subtitle={t("recipeCount", { count: cookbook.memberCount })}
+                    title={cookbook.title}
+                    onToggle={() => toggle(cookbook.id, !isMember)}
+                  />
                 );
               })}
             </div>

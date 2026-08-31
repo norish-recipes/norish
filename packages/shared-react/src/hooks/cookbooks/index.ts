@@ -1,4 +1,5 @@
 import type { CreateCookbookHooksOptions } from "./types";
+import { createUseCookbookMemberIdsQuery } from "./use-cookbook-member-ids-query";
 import { createUseCookbookQuery } from "./use-cookbook-query";
 import { createUseCookbookRecipesQuery } from "./use-cookbook-recipes-query";
 import { createUseCookbooksCache } from "./use-cookbooks-cache";
@@ -22,10 +23,12 @@ export type {
   InfiniteCookbookData,
 } from "./types";
 
+export type { CookbookMemberIdsQueryResult } from "./use-cookbook-member-ids-query";
 export type { CookbookQueryResult } from "./use-cookbook-query";
 export type { CookbookRecipesQueryResult } from "./use-cookbook-recipes-query";
 
 export {
+  createUseCookbookMemberIdsQuery,
   createUseCookbookQuery,
   createUseCookbookRecipesQuery,
   createUseEditableCookbooksQuery,
@@ -42,6 +45,7 @@ export function createCookbookHooks(options: CreateCookbookHooksOptions) {
   return {
     useCookbooksCacheHelpers,
     useCookbookQuery: createUseCookbookQuery(options),
+    useCookbookMemberIdsQuery: createUseCookbookMemberIdsQuery(options),
     useCookbookRecipesQuery: createUseCookbookRecipesQuery(options),
     useRecipeCookbooksQuery: createUseRecipeCookbooksQuery(options),
     useEditableCookbooksQuery: createUseEditableCookbooksQuery(options),

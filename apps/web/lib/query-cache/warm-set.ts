@@ -48,6 +48,9 @@ interface WarmSetTRPC {
       queryOptions: (input: { id: string }) => object;
       queryKey: (input: { id: string }) => readonly unknown[];
     };
+    memberIds: {
+      queryOptions: (input: { cookbookId: string }) => object;
+    };
     recipes: {
       infiniteQueryOptions: (
         input: { cookbookId: string; limit: number },
@@ -75,6 +78,9 @@ interface WarmSetTRPC {
     get: {
       queryOptions: (input: { id: string }) => object;
       queryKey: (input: { id: string }) => readonly unknown[];
+    };
+    memberIds: {
+      queryOptions: (input: { cookbookId: string }) => object;
     };
   };
   groceries: {
@@ -272,6 +278,12 @@ async function warmLibrary(trpc: WarmSetTRPC, queryClient: QueryClient): Promise
       queryClient.fetchQuery(withWarmGcTime(trpc.cookbooks.editable.queryOptions()) as never),
       ...cookbookIds.flatMap((id) => [
         queryClient.fetchQuery(withWarmGcTime(trpc.cookbooks.get.queryOptions({ id })) as never),
+        // Ids only, and what the bulk-add panel needs to leave out what is
+        // already in a cookbook — Offline it would otherwise offer to add
+        // every member back.
+        queryClient.fetchQuery(
+          withWarmGcTime(trpc.cookbooks.memberIds.queryOptions({ cookbookId: id })) as never
+        ),
         queryClient.fetchInfiniteQuery(
           withWarmGcTime(
             trpc.cookbooks.recipes.infiniteQueryOptions(

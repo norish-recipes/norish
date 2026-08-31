@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
 import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
@@ -19,6 +20,7 @@ import {
   ArrowLeftIcon,
   EllipsisHorizontalIcon,
   PencilSquareIcon,
+  PlusIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
@@ -50,6 +52,7 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
   const back = useBackDestination();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleDelete = useCallback(() => {
@@ -125,6 +128,30 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
                     <Dropdown.Menu aria-label={t("options")}>
                       {canEdit ? (
                         <Dropdown.Item
+                          key="add"
+                          className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
+                          id="add"
+                          textValue={t("addRecipes")}
+                        >
+                          <Button
+                            className={twMerge(
+                              "w-full justify-start bg-transparent",
+                              cssButtonPill
+                            )}
+                            size="md"
+                            variant="tertiary"
+                            onPress={() => {
+                              setMenuOpen(false);
+                              setAddOpen(true);
+                            }}
+                          >
+                            <PlusIcon className="text-muted size-4" />
+                            <Label className="text-sm font-medium">{t("addRecipes")}</Label>
+                          </Button>
+                        </Dropdown.Item>
+                      ) : null}
+                      {canEdit ? (
+                        <Dropdown.Item
                           key="edit"
                           className="py-1 data-[focus=true]:bg-transparent data-[hovered=true]:bg-transparent"
                           id="edit"
@@ -197,6 +224,8 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
       </Tabs>
 
       <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
+
+      <CookbookAddRecipesPanel cookbook={cookbook} open={addOpen} onOpenChange={setAddOpen} />
 
       <DeleteCookbookModal
         isOpen={deleteOpen}

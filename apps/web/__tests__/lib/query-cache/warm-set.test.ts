@@ -73,6 +73,12 @@ function makeTrpc() {
           { input: { id }, type: "query" },
         ],
       },
+      memberIds: {
+        queryOptions: ({ cookbookId }: { cookbookId: string }) => ({
+          queryKey: [["cookbooks", "memberIds"], { input: { cookbookId }, type: "query" }],
+          queryFn: async () => ["r1"],
+        }),
+      },
       recipes: {
         infiniteQueryOptions: (input: { cookbookId: string }, options: object) => ({
           queryKey: [["cookbooks", "recipes"], { input, type: "infinite" }],

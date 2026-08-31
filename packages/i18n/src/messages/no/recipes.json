@@ -391,13 +391,17 @@
     "newWithRecipe": "Ny kokebok med denne oppskriften",
     "noneEditable": "Det finnes ingen kokebøker du kan redigere ennå.",
     "cardTitle": "I kokebøker",
-    "cardInvitation": "Denne oppskriften er ikke i en kokebok ennå.",
-    "fileIt": "Legg den i en kokebok",
     "removeFromCookbook": "Fjern fra kokeboken",
     "noMatchingMembers": "Ingen oppskrifter i denne kokeboken passer filtrene dine.",
     "membersLabel": "Oppskrifter i denne kokeboken",
-    "undoRemove": "Angre fjerning",
     "showMore": "Vis flere",
-    "willBeCreated": "Opprettes når du lagrer"
+    "willBeCreated": "Opprettes når du lagrer",
+    "manage": "Administrer",
+    "addRecipes": "Legg til oppskrifter",
+    "addRecipesTitle": "Legg oppskrifter til {title}",
+    "searchRecipes": "Søk oppskrifter",
+    "noRecipesToAdd": "Ingen oppskrifter funnet.",
+    "addCount": "{count, plural, one {Legg til # oppskrift} other {Legg til # oppskrifter}}",
+    "everythingAlreadyIn": "Alle oppskrifter er allerede i denne kokeboken."
   }
 }

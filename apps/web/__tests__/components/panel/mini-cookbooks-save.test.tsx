@@ -61,15 +61,37 @@ vi.mock("@/components/shared/action-button", () => ({
   ActionButtonGroup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock("@heroui/react", () => ({
-  Button: ({ children, onPress, isDisabled, ...props }: any) => (
-    <button disabled={isDisabled} type="button" onClick={onPress} {...props}>
-      {children}
-    </button>
-  ),
-  Input: (props: any) => <input {...props} />,
-  Separator: () => <hr />,
-}));
+vi.mock("@heroui/react", () => {
+  // The row's tick is the app's round select box, so the row test needs it —
+  // a plain input carrying the same data-slot the containment guard looks for.
+  const Checkbox = Object.assign(
+    ({ "aria-label": label, isSelected, onChange }: any) => (
+      <input
+        aria-label={label}
+        checked={isSelected}
+        data-slot="checkbox"
+        type="checkbox"
+        onChange={(event) => onChange?.(event.target.checked)}
+      />
+    ),
+    {
+      Content: ({ children }: any) => <>{children}</>,
+      Control: ({ children }: any) => <>{children}</>,
+      Indicator: () => null,
+    }
+  );
+
+  return {
+    Checkbox,
+    Button: ({ children, onPress, isDisabled, ...props }: any) => (
+      <button disabled={isDisabled} type="button" onClick={onPress} {...props}>
+        {children}
+      </button>
+    ),
+    Input: (props: any) => <input {...props} />,
+    Separator: () => <hr />,
+  };
+});
 
 function renderPanel() {
   return render(<MiniCookbooks open recipeId="recipe-1" onOpenChange={vi.fn()} />);

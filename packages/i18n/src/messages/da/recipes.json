@@ -391,13 +391,17 @@
     "newWithRecipe": "Ny kogebog med denne opskrift",
     "noneEditable": "Der er ingen kogebøger, du kan redigere.",
     "cardTitle": "I kogebøger",
-    "cardInvitation": "Denne opskrift er endnu ikke i en kogebog.",
-    "fileIt": "Læg den i en kogebog",
     "removeFromCookbook": "Fjern fra kogebog",
     "noMatchingMembers": "Der er ingen opskrifter i denne kogebog, der matcher dine filtre.",
     "membersLabel": "Opskrifter i denne kogebog",
-    "undoRemove": "Fortryd fjernelse",
     "showMore": "Vis flere",
-    "willBeCreated": "Oprettes, når du gemmer"
+    "willBeCreated": "Oprettes, når du gemmer",
+    "manage": "Administrer",
+    "addRecipes": "Tilføj opskrifter",
+    "addRecipesTitle": "Tilføj opskrifter til {title}",
+    "searchRecipes": "Søg opskrifter",
+    "noRecipesToAdd": "Ingen opskrifter fundet.",
+    "addCount": "{count, plural, one {Tilføj # opskrift} other {Tilføj # opskrifter}}",
+    "everythingAlreadyIn": "Alle opskrifter er allerede i denne kogebog."
   }
 }
