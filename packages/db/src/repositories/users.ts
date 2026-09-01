@@ -479,6 +479,10 @@ export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
   }));
 }
 
+/**
+ * The server roles a user holds, or null when there is no such user.
+ * Callers that only need a yes/no want `isUserServerAdmin`.
+ */
 export async function getUserRoleFlags(
   userId: string
 ): Promise<{ isServerOwner: boolean; isServerAdmin: boolean } | null> {
@@ -494,19 +498,13 @@ export async function getUserRoleFlags(
 }
 
 export async function isUserServerAdmin(userId: string): Promise<boolean> {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: {
-      isServerOwner: true,
-      isServerAdmin: true,
-    },
-  });
+  const roles = await getUserRoleFlags(userId);
 
-  if (!user) {
+  if (!roles) {
     return false;
   }
 
-  return user.isServerOwner || user.isServerAdmin;
+  return roles.isServerOwner || roles.isServerAdmin;
 }
 
 export async function setUserAsOwnerAndAdmin(userId: string): Promise<void> {
