@@ -553,7 +553,14 @@ async function syncTimerKeywords(): Promise<void> {
 }
 
 /**
- * Migrate units config to wrapped schema format introduced in v0.16.0.
+ * Migrate units config to wrapped schema format introduced in v0.16.0, and
+ * carry shipped vocabulary changes into a row the administrator has not edited.
+ *
+ * The units row is seeded at first boot, so without the second half an upgrade
+ * reaches nobody who already runs Norish: the six locales the vocabulary was
+ * missing would have stayed missing on every existing server, and units would
+ * have kept rendering in English for them (#504). Timer keywords already work
+ * this way; an edited row is still left alone.
  */
 async function syncUnits(): Promise<void> {
   const existing = await getConfig<unknown>(ServerConfigKeys.UNITS);
@@ -565,6 +572,22 @@ async function syncUnits(): Promise<void> {
   const wrapped = UnitsConfigSchema.safeParse(existing);
 
   if (wrapped.success) {
+    if (wrapped.data.isOverridden) {
+      serverLogger.debug("Units are overridden by admin, skipping file sync");
+
+      return;
+    }
+
+    if (configsDiffer(wrapped.data.units, defaultUnits as Record<string, unknown>)) {
+      await setConfig(
+        ServerConfigKeys.UNITS,
+        { units: defaultUnits, isOverridden: false },
+        null,
+        false
+      );
+      serverLogger.info("Updated units from default file (content changed)");
+    }
+
     return;
   }
 
