@@ -131,8 +131,8 @@ export default function UsersCard() {
             },
             {
               key: "actions",
+              align: "center",
               label: t("table.actions"),
-              className: "text-right",
               render: (row: AdminUserRowDTO) => {
                 const isSelf = row.id === currentUser?.id;
                 const canChangeRole = !row.isServerOwner && !(isSelf && row.isServerAdmin);
@@ -140,7 +140,7 @@ export default function UsersCard() {
                 const roleBusy = isUpdatingAdminStatus && pendingRoleChangeId === row.id;
 
                 return (
-                  <div className="flex justify-end gap-1">
+                  <div className="flex justify-center gap-1">
                     <Tooltip delay={0}>
                       <Button
                         isIconOnly
