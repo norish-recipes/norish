@@ -42,6 +42,36 @@ describe("UserAvatar", () => {
     expect(avatar.querySelector("img")).toHaveAttribute("src", "/avatars/user-1-200.png");
   });
 
+  it("puts a loaded picture on the plain surface, not on the identity pastel", () => {
+    // A transparent PNG shows whatever is behind it. The identity pastel stands
+    // in for a missing picture; behind a real one it became a green disc the
+    // person never chose, ignoring the light or dark theme around it (#536).
+    render(<UserAvatar image="/avatars/user-1-100.png" name="Alice Smith" userId="user-1" />);
+
+    const avatar = screen.getByRole("img", { name: "Alice Smith" });
+
+    fireEvent.load(avatar.querySelector("img")!);
+
+    expect(avatar.style.backgroundColor).toBe("");
+    expect(avatar.className).toContain("bg-surface");
+    expect(avatar).not.toHaveTextContent("AS");
+  });
+
+  it("falls back to the pastel disc again when a loaded picture is replaced by one that 404s", () => {
+    const { rerender } = render(
+      <UserAvatar image="/avatars/user-1-100.png" name="Alice Smith" userId="user-1" />
+    );
+
+    const avatar = screen.getByRole("img", { name: "Alice Smith" });
+
+    fireEvent.load(avatar.querySelector("img")!);
+    rerender(<UserAvatar image="/avatars/user-1-200.png" name="Alice Smith" userId="user-1" />);
+    fireEvent.error(avatar.querySelector("img")!);
+
+    expect(avatar.style.backgroundColor).not.toBe("");
+    expect(avatar).toHaveTextContent("AS");
+  });
+
   it("renders initials with the pastel fallback style when there is no image", () => {
     render(<UserAvatar name="Bob Jones" userId="user-2" />);
 
