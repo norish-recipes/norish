@@ -5,8 +5,9 @@ import { useRef } from "react";
 
 import { Phone, Screen } from "../frames";
 import { clamp, useScrollFrame } from "../scroll-frame";
-import { asking, heldAt, walkAt } from "../sequence";
+import { asking, heldAt, reachOf, stopsOf, walkAt } from "../sequence";
 import { Shot } from "../shot";
+import { SnapPoints } from "../snapping";
 
 type Screenful = {
   title: string;
@@ -75,6 +76,13 @@ const INK = 0.25;
 
 /** The share of the held screen a move between two screens takes. */
 const GLIDE = 0.08;
+
+/** Where the scroll may stop, and how near it has to be to be carried there. */
+const STOPS = stopsOf(screens.length, GLIDE);
+const REACH = reachOf(screens.length, GLIDE);
+
+/** The other side of `WIDE`: the sizes at which the section holds the screen. */
+const NARROW = "(max-width: 63.999rem)";
 
 /**
  * How far the reader has come, counted in blocks: a whole number is a block at
@@ -153,6 +161,10 @@ function Capture({ screen }: { screen: Screenful }) {
  * because a screenshot scrubbed halfway into another screenshot is a blend of
  * two pictures and reads as neither; under reduced motion it is a cut.
  *
+ * Held, the scroll may only come to rest on a screen rather than in the middle
+ * of a swap, and how far a flick carries in the first place is Lenis's business
+ * rather than the phone's (see `app/providers.tsx`).
+ *
  * Adding a screen is one entry here plus its four captures, web and mobile in
  * both themes, registered in `components/shot.tsx`.
  */
@@ -217,6 +229,8 @@ export function Tour() {
       className="tour-stage border-border border-t"
       style={{ "--screens": `${screens.length}` } as CSSProperties}
     >
+      <SnapPoints at={STOPS} reach={REACH} when={NARROW} />
+
       <div className="tour-pin px-5 sm:px-8">
         {/* Two columns where there is room for them, and the copy stacked over
             the capture where there is not. The copy blocks own their stretch of
