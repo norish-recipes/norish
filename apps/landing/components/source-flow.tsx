@@ -23,28 +23,28 @@ type Source = {
 const SOURCES: Source[] = [
   {
     icon: GlobeAltIcon,
-    label: "A recipe site",
+    label: "Recipe sites",
     chip: "bg-tint-site/14 text-tint-site",
     line: "text-tint-site",
     y: 28,
   },
   {
     icon: YouTubeIcon,
-    label: "A YouTube video",
+    label: "YouTube videos",
     chip: "bg-tint-video/14 text-tint-video",
     line: "text-tint-video",
     y: 94,
   },
   {
     icon: InstagramIcon,
-    label: "An Instagram reel",
+    label: "Instagram reels",
     chip: "bg-tint-social/14 text-tint-social",
     line: "text-tint-social",
     y: 160,
   },
   {
     icon: CameraIcon,
-    label: "A photo",
+    label: "Photos",
     chip: "bg-tint-photo/14 text-tint-photo",
     line: "text-tint-photo",
     y: 226,
