@@ -7,7 +7,6 @@ import { useUserContext } from "@/context/user-context";
 import { useUserMutations, useUsersListQuery } from "@/hooks/admin";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
-  NoSymbolIcon,
   ShieldCheckIcon as ShieldCheckIconSolid,
   TrashIcon,
   UserGroupIcon as UserGroupIconSolid,
@@ -19,6 +18,7 @@ import { useTranslations } from "next-intl";
 import type { AdminUserRowDTO } from "@norish/shared/contracts";
 
 import { DeleteUserModal } from "./users/delete-user-modal";
+import { ShieldMinusIcon } from "./users/shield-minus-icon";
 import { UserRoleChips } from "./users/user-role-chips";
 
 export default function UsersCard() {
@@ -153,7 +153,7 @@ export default function UsersCard() {
                         onPress={() => void handleToggleAdmin(row)}
                       >
                         {row.isServerAdmin ? (
-                          <NoSymbolIcon className="h-4 w-4" />
+                          <ShieldMinusIcon className="h-4 w-4" />
                         ) : (
                           <ShieldCheckIconSolid className="h-4 w-4" />
                         )}
