@@ -379,6 +379,7 @@
         "user": "Gebruiker",
         "role": "Rol",
         "household": "Huishouden",
+        "joined": "Lid sinds",
         "actions": "Acties"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "Geen huishouden",
       "loading": "Gebruikers laden…",
       "empty": "Nog geen gebruikers.",
+      "loadFailed": "Kan de gebruikerslijst niet laden.",
       "actions": {
         "makeAdmin": "Admin maken",
         "revokeAdmin": "Adminrechten intrekken",

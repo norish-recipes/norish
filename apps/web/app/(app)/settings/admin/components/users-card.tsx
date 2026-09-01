@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import DataTable from "@/components/ui/data-table";
 import UserAvatar from "@/components/shared/user-avatar";
-import { useUserMutations, useUsersListQuery } from "@/hooks/admin";
+import DataTable from "@/components/ui/data-table";
 import { useUserContext } from "@/context/user-context";
+import { useUserMutations, useUsersListQuery } from "@/hooks/admin";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   NoSymbolIcon,
@@ -13,7 +13,7 @@ import {
   UserGroupIcon as UserGroupIconSolid,
 } from "@heroicons/react/16/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Tooltip, toast } from "@heroui/react";
+import { Button, Card, toast, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { AdminUserRowDTO } from "@norish/shared/contracts";
@@ -25,7 +25,7 @@ export default function UsersCard() {
   const t = useTranslations("settings.admin.users");
   const tErrors = useTranslations("common.errors");
   const { user: currentUser } = useUserContext();
-  const { users, isLoading } = useUsersListQuery();
+  const { users, isLoading, error } = useUsersListQuery();
   const { setAdminStatus, deleteUser, isUpdatingAdminStatus, isDeleting } = useUserMutations();
 
   const [pendingRoleChangeId, setPendingRoleChangeId] = useState<string | null>(null);
@@ -65,6 +65,11 @@ export default function UsersCard() {
       });
     }
   };
+
+  // The empty slot is the only place this table can speak from, so it has to
+  // tell a failed load apart from a server that genuinely has no users —
+  // otherwise a broken list reads as "there is nobody here".
+  const emptyState = isLoading ? t("loading") : error ? t("loadFailed") : t("empty");
 
   return (
     <Card>
@@ -116,6 +121,13 @@ export default function UsersCard() {
               label: t("table.household"),
               className: "text-sm",
               render: (row: AdminUserRowDTO) => row.household?.name ?? t("noHousehold"),
+            },
+            {
+              key: "joined",
+              hideOnNarrow: true,
+              label: t("table.joined"),
+              className: "text-sm",
+              render: (row: AdminUserRowDTO) => new Date(row.createdAt).toLocaleDateString(),
             },
             {
               key: "actions",
@@ -172,15 +184,17 @@ export default function UsersCard() {
               },
             },
           ]}
-          emptyState={isLoading ? t("loading") : t("empty")}
+          emptyState={emptyState}
           rowKey={(row: AdminUserRowDTO) => row.id}
           rows={users}
         />
 
-        <p className="text-muted flex items-center gap-1.5 text-xs">
-          <UserGroupIconSolid className="h-3.5 w-3.5" />
-          {t("countSummary", { count: users.length })}
-        </p>
+        {isLoading || error ? null : (
+          <p className="text-muted flex items-center gap-1.5 text-xs">
+            <UserGroupIconSolid className="h-3.5 w-3.5" />
+            {t("countSummary", { count: users.length })}
+          </p>
+        )}
       </Card.Content>
 
       <DeleteUserModal

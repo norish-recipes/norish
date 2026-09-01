@@ -379,6 +379,7 @@
         "user": "User",
         "role": "Role",
         "household": "Household",
+        "joined": "Joined",
         "actions": "Actions"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "No household",
       "loading": "Loading users…",
       "empty": "No users yet.",
+      "loadFailed": "Could not load the user list.",
       "actions": {
         "makeAdmin": "Make admin",
         "revokeAdmin": "Remove admin access",

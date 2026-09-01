@@ -379,6 +379,7 @@
         "user": "Bruker",
         "role": "Rolle",
         "household": "Husstand",
+        "joined": "Ble med",
         "actions": "Handlinger"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "Ingen husstand",
       "loading": "Laster brukere…",
       "empty": "Ingen brukere ennå.",
+      "loadFailed": "Kunne ikke laste brukerlisten.",
       "actions": {
         "makeAdmin": "Gjør til admin",
         "revokeAdmin": "Fjern admintilgang",

@@ -379,6 +379,7 @@
         "user": "사용자",
         "role": "역할",
         "household": "가구",
+        "joined": "가입일",
         "actions": "작업"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "가구 없음",
       "loading": "사용자 불러오는 중…",
       "empty": "아직 사용자가 없습니다.",
+      "loadFailed": "사용자 목록을 불러오지 못했습니다.",
       "actions": {
         "makeAdmin": "관리자로 지정",
         "revokeAdmin": "관리자 권한 해제",

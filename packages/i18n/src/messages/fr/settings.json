@@ -379,6 +379,7 @@
         "user": "Utilisateur",
         "role": "Rôle",
         "household": "Foyer",
+        "joined": "Inscrit le",
         "actions": "Actions"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "Aucun foyer",
       "loading": "Chargement des utilisateurs…",
       "empty": "Aucun utilisateur pour le moment.",
+      "loadFailed": "Impossible de charger la liste des utilisateurs.",
       "actions": {
         "makeAdmin": "Nommer admin",
         "revokeAdmin": "Retirer les droits admin",

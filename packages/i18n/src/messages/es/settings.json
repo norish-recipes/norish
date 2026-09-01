@@ -379,6 +379,7 @@
         "user": "Usuario",
         "role": "Rol",
         "household": "Hogar",
+        "joined": "Se unió",
         "actions": "Acciones"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "Sin hogar",
       "loading": "Cargando usuarios…",
       "empty": "Todavía no hay usuarios.",
+      "loadFailed": "No se pudo cargar la lista de usuarios.",
       "actions": {
         "makeAdmin": "Hacer admin",
         "revokeAdmin": "Quitar acceso de admin",

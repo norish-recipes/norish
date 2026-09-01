@@ -379,6 +379,7 @@
         "user": "Użytkownik",
         "role": "Rola",
         "household": "Gospodarstwo domowe",
+        "joined": "Dołączył",
         "actions": "Akcje"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "Brak gospodarstwa",
       "loading": "Ładowanie użytkowników…",
       "empty": "Brak użytkowników.",
+      "loadFailed": "Nie udało się wczytać listy użytkowników.",
       "actions": {
         "makeAdmin": "Nadaj uprawnienia admina",
         "revokeAdmin": "Odbierz uprawnienia admina",

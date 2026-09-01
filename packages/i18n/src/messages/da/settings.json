@@ -379,6 +379,7 @@
         "user": "Bruger",
         "role": "Rolle",
         "household": "Husstand",
+        "joined": "Tilmeldt",
         "actions": "Handlinger"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "Ingen husstand",
       "loading": "Indlæser brugere…",
       "empty": "Ingen brugere endnu.",
+      "loadFailed": "Brugerlisten kunne ikke indlæses.",
       "actions": {
         "makeAdmin": "Gør til admin",
         "revokeAdmin": "Fjern adminadgang",

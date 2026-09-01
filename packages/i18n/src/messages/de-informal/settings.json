@@ -379,6 +379,7 @@
         "user": "Benutzer",
         "role": "Rolle",
         "household": "Haushalt",
+        "joined": "Beigetreten",
         "actions": "Aktionen"
       },
       "roles": {
@@ -388,6 +389,7 @@
       "noHousehold": "Kein Haushalt",
       "loading": "Benutzer werden geladen…",
       "empty": "Noch keine Benutzer.",
+      "loadFailed": "Die Benutzerliste konnte nicht geladen werden.",
       "actions": {
         "makeAdmin": "Zum Admin machen",
         "revokeAdmin": "Admin-Zugriff entziehen",
