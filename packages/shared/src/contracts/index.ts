@@ -19,6 +19,7 @@ export type * from "./dto/caldav";
 export type * from "./dto/auth";
 export type * from "./dto/queue";
 export type * from "./dto/admin-jobs";
+export type * from "./dto/admin-users";
 export type * from "./dto/favorites";
 export type * from "./dto/recipe-shares";
 export type * from "./dto/cookbook";

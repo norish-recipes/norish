@@ -372,6 +372,32 @@
         "button": "Archief exporteren"
       }
     },
+    "users": {
+      "title": "Gebruikers",
+      "description": "Beheer iedereen met een account op deze server.",
+      "table": {
+        "user": "Gebruiker",
+        "role": "Rol",
+        "household": "Huishouden",
+        "actions": "Acties"
+      },
+      "roles": {
+        "owner": "Eigenaar",
+        "admin": "Admin"
+      },
+      "noHousehold": "Geen huishouden",
+      "loading": "Gebruikers laden…",
+      "empty": "Nog geen gebruikers.",
+      "actions": {
+        "makeAdmin": "Admin maken",
+        "revokeAdmin": "Adminrechten intrekken",
+        "delete": "Gebruiker verwijderen"
+      },
+      "deleteTitle": "{name} verwijderen?",
+      "deleteConfirm": "Dit verwijdert het account van deze gebruiker permanent en verwijdert hem/haar uit het huishouden. Dit kan niet ongedaan worden gemaakt.",
+      "deleteSuccess": "{name} is verwijderd",
+      "countSummary": "{count, plural, one {# gebruiker} other {# gebruikers}} totaal"
+    },
     "registration": {
       "title": "Registratie",
       "allowRegistration": "Nieuwe registraties toestaan",

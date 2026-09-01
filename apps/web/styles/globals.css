@@ -161,6 +161,10 @@
     z-index: 70;
   }
 
+  .toast-region {
+    z-index: 70;
+  }
+
   .dropdown__menu {
     padding: 0.375rem;
   }

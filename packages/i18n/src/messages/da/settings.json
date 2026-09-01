@@ -372,6 +372,32 @@
         "button": "Eksportér opskriftsarkiv"
       }
     },
+    "users": {
+      "title": "Brugere",
+      "description": "Administrer alle med en konto på denne server.",
+      "table": {
+        "user": "Bruger",
+        "role": "Rolle",
+        "household": "Husstand",
+        "actions": "Handlinger"
+      },
+      "roles": {
+        "owner": "Ejer",
+        "admin": "Admin"
+      },
+      "noHousehold": "Ingen husstand",
+      "loading": "Indlæser brugere…",
+      "empty": "Ingen brugere endnu.",
+      "actions": {
+        "makeAdmin": "Gør til admin",
+        "revokeAdmin": "Fjern adminadgang",
+        "delete": "Slet bruger"
+      },
+      "deleteTitle": "Slet {name}?",
+      "deleteConfirm": "Dette sletter permanent brugerens konto og fjerner dem fra deres husstand. Dette kan ikke fortrydes.",
+      "deleteSuccess": "{name} blev slettet",
+      "countSummary": "{count, plural, one {# bruger} other {# brugere}} i alt"
+    },
     "registration": {
       "title": "Registrering",
       "allowRegistration": "Tillad ny brugerregistrering",

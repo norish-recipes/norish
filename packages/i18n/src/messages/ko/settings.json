@@ -372,6 +372,32 @@
         "button": "레시피 아카이브 내보내기"
       }
     },
+    "users": {
+      "title": "사용자",
+      "description": "이 서버의 계정을 가진 모든 사용자를 관리하세요.",
+      "table": {
+        "user": "사용자",
+        "role": "역할",
+        "household": "가구",
+        "actions": "작업"
+      },
+      "roles": {
+        "owner": "소유자",
+        "admin": "관리자"
+      },
+      "noHousehold": "가구 없음",
+      "loading": "사용자 불러오는 중…",
+      "empty": "아직 사용자가 없습니다.",
+      "actions": {
+        "makeAdmin": "관리자로 지정",
+        "revokeAdmin": "관리자 권한 해제",
+        "delete": "사용자 삭제"
+      },
+      "deleteTitle": "{name}님을 삭제할까요?",
+      "deleteConfirm": "이 작업은 사용자의 계정을 영구적으로 삭제하고 가구에서 제외합니다. 되돌릴 수 없습니다.",
+      "deleteSuccess": "{name}님이 삭제되었습니다",
+      "countSummary": "총 {count}명"
+    },
     "registration": {
       "title": "등록",
       "allowRegistration": "신규 사용자 등록 허용",

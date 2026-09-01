@@ -372,6 +372,32 @@
         "button": "Esporta archivio ricette"
       }
     },
+    "users": {
+      "title": "Utenti",
+      "description": "Gestisci tutte le persone con un account su questo server.",
+      "table": {
+        "user": "Utente",
+        "role": "Ruolo",
+        "household": "Famiglia",
+        "actions": "Azioni"
+      },
+      "roles": {
+        "owner": "Proprietario",
+        "admin": "Admin"
+      },
+      "noHousehold": "Nessuna famiglia",
+      "loading": "Caricamento utenti…",
+      "empty": "Nessun utente ancora.",
+      "actions": {
+        "makeAdmin": "Rendi admin",
+        "revokeAdmin": "Rimuovi accesso admin",
+        "delete": "Elimina utente"
+      },
+      "deleteTitle": "Eliminare {name}?",
+      "deleteConfirm": "Questo elimina definitivamente l'account dell'utente e lo rimuove dalla sua famiglia. L'azione non può essere annullata.",
+      "deleteSuccess": "{name} è stato eliminato",
+      "countSummary": "{count, plural, one {# utente} other {# utenti}} in totale"
+    },
     "registration": {
       "title": "Registrazione",
       "allowRegistration": "Consenti registrazione nuovi utenti",
