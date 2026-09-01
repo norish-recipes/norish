@@ -2,11 +2,11 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
-  deleteUser,
   getUserRoleFlags,
   listUsersForAdmin,
   setUserAdminStatus,
 } from "@norish/db/repositories/users";
+import { deleteUserAccount } from "@norish/shared-server/accounts/deletion";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
@@ -68,6 +68,9 @@ const DeleteUserInputSchema = z.object({
 /**
  * Delete a user from the server.
  * The server owner can't be deleted, and an admin can't delete themselves.
+ * Deletion goes through the same routine as closing your own account, so a
+ * household the deleted user administered is handed on rather than cascaded
+ * away with them.
  */
 const remove = adminProcedure.input(DeleteUserInputSchema).mutation(async ({ input, ctx }) => {
   const { userId } = input;
@@ -94,7 +97,7 @@ const remove = adminProcedure.input(DeleteUserInputSchema).mutation(async ({ inp
 
   log.info({ actingUserId: ctx.user.id, userId }, "Deleting user");
 
-  await deleteUser(userId);
+  await deleteUserAccount(userId);
 
   return { success: true };
 });

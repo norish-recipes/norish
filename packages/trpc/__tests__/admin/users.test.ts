@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usersProcedures } from "@norish/trpc/routers/admin/users";
 
 import {
-  deleteUser,
   getUserRoleFlags,
   isUserServerAdmin,
   listUsersForAdmin,
@@ -14,7 +13,10 @@ import {
 } from "../mocks/users";
 import { createMockAdminContext, createMockAdminUser } from "./test-utils";
 
+const deleteUserAccount = vi.hoisted(() => vi.fn());
+
 vi.mock("@norish/db/repositories/users", () => import("../mocks/users"));
+vi.mock("@norish/shared-server/accounts/deletion", () => ({ deleteUserAccount }));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -31,6 +33,8 @@ function createCaller() {
 describe("admin users router", () => {
   beforeEach(() => {
     resetUsersMocks();
+    deleteUserAccount.mockReset();
+    deleteUserAccount.mockResolvedValue(undefined);
     isUserServerAdmin.mockImplementation((userId: string) => Promise.resolve(userId === admin.id));
   });
 
@@ -102,14 +106,13 @@ describe("admin users router", () => {
   });
 
   describe("remove", () => {
-    it("deletes another user", async () => {
+    it("deletes another user through the shared account-deletion routine", async () => {
       getUserRoleFlags.mockResolvedValue({ isServerOwner: false, isServerAdmin: false });
-      deleteUser.mockResolvedValue(undefined);
 
       const caller = createCaller();
       const result = await caller.remove({ userId: "other-1" });
 
-      expect(deleteUser).toHaveBeenCalledWith("other-1");
+      expect(deleteUserAccount).toHaveBeenCalledWith("other-1");
       expect(result).toEqual({ success: true });
     });
 
@@ -120,7 +123,7 @@ describe("admin users router", () => {
         code: "BAD_REQUEST",
       } satisfies Partial<TRPCError>);
 
-      expect(deleteUser).not.toHaveBeenCalled();
+      expect(deleteUserAccount).not.toHaveBeenCalled();
     });
 
     it("refuses to delete the server owner", async () => {
@@ -132,7 +135,7 @@ describe("admin users router", () => {
         code: "BAD_REQUEST",
       } satisfies Partial<TRPCError>);
 
-      expect(deleteUser).not.toHaveBeenCalled();
+      expect(deleteUserAccount).not.toHaveBeenCalled();
     });
   });
 });

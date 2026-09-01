@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./logger": "./src/logger.ts",
+    "./accounts/deletion": "./src/accounts/deletion.ts",
     "./cache/household": "./src/cache/household.ts",
     "./config/server-config-loader": "./src/config/server-config-loader.ts",
     "./media/storage": "./src/media/storage.ts",
