@@ -161,8 +161,14 @@
     z-index: 70;
   }
 
+  /* A toast reports what just happened, so it has to be readable wherever it
+     lands. HeroUI ships it at z-50, under the navbar (60) and far under a
+     modal (1099/1100) — an error raised by a dialog that stays open on
+     failure was painted over by that dialog. Sit above every overlay the app
+     draws; the region is pointer-events-none, so nothing underneath becomes
+     unclickable. */
   .toast-region {
-    z-index: 70;
+    z-index: 1250;
   }
 
   .dropdown__menu {
