@@ -26,31 +26,13 @@ import type { ImageGenerationProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, ModelConfig } from "./types";
+import {
+  normalizeAzureEndpoint,
+  normalizeOllamaEndpoint,
+  normalizeOpenAICompatibleEndpoint,
+} from "./endpoints";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
-
-// ============================================================================
-// Endpoint normalization — each rule exists exactly once
-// ============================================================================
-
-/** The Azure SDK expects the /openai path suffix on a configured endpoint. */
-function normalizeAzureEndpoint(endpoint: string): string {
-  const baseUrl = endpoint.replace(/\/+$/, "");
-
-  return baseUrl.endsWith("/openai") ? baseUrl : `${baseUrl}/openai`;
-}
-
-/** OpenAI-compatible endpoints are addressed under /v1. */
-function normalizeOpenAICompatibleEndpoint(endpoint: string): string {
-  const baseUrl = endpoint.replace(/\/+$/, "");
-
-  return baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
-}
-
-/** Ollama is addressed at its host root, without a trailing slash or /api. */
-function normalizeOllamaEndpoint(endpoint: string): string {
-  return endpoint.replace(/\/+$/, "").replace(/\/api$/, "");
-}
 
 /**
  * Create AI model instances from configuration.
