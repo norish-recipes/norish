@@ -174,16 +174,15 @@ test("the Glance Bar answers above the fold and the cards follow cooking order",
 
   // Card order on the phone tree (the hidden desktop tree keeps its own
   // headings, so only visible ones count). No notes and no provenance are
-  // stored, so neither card renders — a bare section is a shorter page.
+  // stored, so neither card renders — a bare section is a shorter page. The
+  // cookbooks card is absent for the same reason: it states a fact when there
+  // is one, and this recipe is in no cookbook.
   await expect(page.locator("h2:visible")).toHaveText([
     "Ingredients",
     "Steps",
     "Cooking time",
     "Nutrition",
     "Source",
-    // Last on the page, and always drawn: with no cookbooks it is the
-    // invitation to file the recipe into one.
-    "In cookbooks",
   ]);
 });
 
@@ -191,7 +190,9 @@ test("the cook pill stays reachable at full scroll and covers neither nav nor ti
   // This suite is serial on one shared page, so the page arrives during the
   // test before this one. Wait for the last card to settle before measuring:
   // a section still resolving re-lays the page out under the locator.
-  await expect(page.getByTestId("cookbooks-card").locator("visible=true")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Source", exact: true }).locator("visible=true")
+  ).toBeVisible();
 
   // A running timer first, so the corner the dock rises into is occupied.
   // Both page trees render the chip; only the phone tree's copy is visible.
