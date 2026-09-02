@@ -27,13 +27,13 @@ list shows what a token is, never what it holds.
 
 Each token has five parts.
 
-| Field       | What goes in it                                                          |
-| ----------- | ------------------------------------------------------------------------ |
-| **Domain**  | The site the token is for, for example `instagram.com`                    |
-| **Account** | Which of your logins on that site it belongs to — optional, see below     |
-| **Name**    | The cookie name, or the header name                                       |
-| **Value**   | The cookie value, or the header value                                     |
-| **Type**    | **Cookie** or **Header**                                                  |
+| Field       | What goes in it                                                       |
+| ----------- | --------------------------------------------------------------------- |
+| **Domain**  | The site the token is for, for example `instagram.com`                |
+| **Account** | Which of your logins on that site it belongs to — optional, see below |
+| **Name**    | The cookie name, or the header name                                   |
+| **Value**   | The cookie value, or the header value                                 |
+| **Type**    | **Cookie** or **Header**                                              |
 
 **Domain** matches by suffix, so `instagram.com` covers `www.instagram.com` and
 any other subdomain. A bare word works too: `instagram` matches
