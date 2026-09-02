@@ -85,7 +85,9 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   await reportStep(
     job,
     "parsing",
-    credentials ? { siteAuth: { account: credentials.account, ofAccounts: sets.length } } : undefined
+    credentials
+      ? { siteAuth: { account: credentials.account, ofAccounts: sets.length } }
+      : undefined
   );
   const parseResult = await withTimeout(
     () => parseRecipeFromUrl(url, recipeId, job.data.forceAI, credentials?.tokens),
