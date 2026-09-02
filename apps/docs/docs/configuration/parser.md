@@ -26,9 +26,10 @@ page, nothing more. If Obscura cannot reach or render the page, the import fails
 Obscura is a stealth browser: it presents one coherent browser identity and
 blocks tracker and fingerprinting domains, which is what gives an import its
 best chance on sites that screen automated traffic. Norish adds nothing to that
-beyond the site authentication tokens you have saved for a source, and Obscura
-refuses to fetch loopback, private-network, and link-local addresses, so
-an import cannot be pointed at services inside your network.
+beyond the [site authentication tokens](./site-authentication.md) you have saved
+for a source, and Obscura refuses to fetch loopback, private-network, and
+link-local addresses, so an import cannot be pointed at services inside your
+network.
 
 ## Settings
 

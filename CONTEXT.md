@@ -126,6 +126,18 @@ _Avoid_: Model Capability (claims foreknowledge Norish does not have), Generatio
 A post whose source gave no evidence either way about a video stream. It is not a post without video: reading that silence as absence is what sent reels down the caption-only path, losing the video and the creator.
 _Avoid_: Unknown post
 
+**Site Auth Token**:
+One cookie or one request header a user saves so their imports reach a site that only answers a signed-in visitor. It belongs to the person who saved it, never to the server, and its value is encrypted at rest and never returned to a browser. Its domain decides which imports carry it: only a URL whose hostname the domain matches, so one site's session cannot travel to another's.
+_Avoid_: Credential (a Site Auth Token is a fragment of a session, not a login Norish can perform), Site cookie (half the tokens are headers)
+
+**Site Account**:
+Which of a user's logins on a site a Site Auth Token belongs to, as a label they choose. It is what tells two Instagram sessions apart, since both are a `sessionid` cookie on the same domain. A token left without one is not tied to a login and travels with every import for its domain — the shape of a CSRF cookie every account on the site shares, and the shape every server has until someone names an account.
+_Avoid_: Profile (taken by the person's own Norish profile), Token group (names the mechanism, not the thing the user has)
+
+**Credential Set**:
+The tokens one import actually sends: a site's unlabelled tokens plus one Site Account's. A site with several accounts has several sets, and each import picks one at random, so imports spread over the logins instead of one login carrying all of them. Random rather than round-robin because a worker keeps nothing between jobs, and the job records which set it was given as parsing starts — a rate-limited or expired login has to be nameable from an import that failed on it.
+_Avoid_: Token rotation (names the picking, not the thing picked), Session pool (implies Norish holds sessions open)
+
 **yt-dlp Version**:
 The release of the downloader binary a server is actually running. A report, not a setting: production fixes it by image and development by first download, and no Norish setting changes it.
 _Avoid_: Configured yt-dlp version
