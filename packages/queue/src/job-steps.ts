@@ -136,11 +136,22 @@ function currentAttemptEntry(attempts: JobAttemptTimeline[], job: Job): JobAttem
   return entry;
 }
 
+/** Whether two details can be merged rather than one replacing the other. */
+function isMergeable(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 /**
  * Report that the job is entering a new processing step.
+ *
+ * A step may carry a detail from the start — what the step was given to work
+ * with, rather than what it produced — so the pipeline view and the job log
+ * still name it when the step goes on to fail. `completeStep` merges its own
+ * detail on top rather than replacing it.
+ *
  * Best-effort: monitoring must never fail the job itself.
  */
-export async function reportStep(job: Job, step: string): Promise<void> {
+export async function reportStep(job: Job, step: string, detail?: unknown): Promise<void> {
   try {
     const now = Date.now();
     const attempts = cloneAttempts(job);
@@ -151,13 +162,14 @@ export async function reportStep(job: Job, step: string): Promise<void> {
       last.endedAt = now;
     }
 
-    entry.timeline.push({ id: step, startedAt: now });
+    entry.timeline.push({ id: step, startedAt: now, detail });
 
     const progress: JobStepProgress = { step, updatedAt: now, attempts };
+    const note = detail === undefined ? "" : ` ${JSON.stringify(detail)}`;
 
     const results = await Promise.allSettled([
       job.updateProgress(progress),
-      job.log(`${new Date().toISOString()} [attempt ${entry.attempt}] ${step}`),
+      job.log(`${new Date().toISOString()} [attempt ${entry.attempt}] ${step}${note}`),
     ]);
 
     for (const result of results) {
@@ -173,6 +185,7 @@ export async function reportStep(job: Job, step: string): Promise<void> {
 /**
  * Mark the current step as completed, optionally attaching a small
  * JSON-able summary shown in the pipeline view (e.g. {alreadyExists: false}).
+ * A plain object is merged onto whatever `reportStep` already recorded.
  * Best-effort: never throws.
  */
 export async function completeStep(job: Job, detail?: unknown): Promise<void> {
@@ -191,7 +204,8 @@ export async function completeStep(job: Job, detail?: unknown): Promise<void> {
     last.endedAt = now;
 
     if (detail !== undefined) {
-      last.detail = detail;
+      last.detail =
+        isMergeable(last.detail) && isMergeable(detail) ? { ...last.detail, ...detail } : detail;
     }
 
     await job.updateProgress({

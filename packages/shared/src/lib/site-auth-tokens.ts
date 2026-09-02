@@ -1,3 +1,11 @@
+/**
+ * Which of a user's Site Auth Tokens an import sends.
+ *
+ * Two questions, in order: which tokens belong to this URL's site, and which of
+ * that site's logins is this import using. The answer to the second is what the
+ * job records, so a rate-limited or expired login can be named.
+ */
+
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 /**
@@ -67,4 +75,66 @@ function extractHostname(input: string): string | null {
 
   // Return the raw input as a last resort (e.g. bare word like "instagram")
   return trimmed || null;
+}
+
+/**
+ * One site login's worth of tokens, as an import will send them.
+ *
+ * `account` is the label the tokens were saved under, or null when nothing on
+ * the domain is labelled and the domain's tokens travel as one unnamed set.
+ */
+export interface CredentialSet {
+  account: string | null;
+  tokens: SiteAuthTokenDecryptedDto[];
+}
+
+/**
+ * The credential sets that apply to `url`, in a stable order.
+ *
+ * Only the account label separates one set from another; the domain decides
+ * whether a token applies to this URL at all. A token saved without a label is
+ * not tied to one login, so it joins every set — a CSRF cookie or an
+ * Authorization header shared by all of a site's accounts is saved once.
+ *
+ * With nothing labelled there is exactly one set, which is every token the
+ * domain matched: the shape a server that has never named an account keeps.
+ */
+export function credentialSetsForUrl(
+  tokens: SiteAuthTokenDecryptedDto[],
+  url: string
+): CredentialSet[] {
+  const matching = getMatchingTokens(tokens, url);
+  const shared = matching.filter((token) => !token.account);
+  const byAccount = new Map<string, SiteAuthTokenDecryptedDto[]>();
+
+  for (const token of matching) {
+    if (!token.account) continue;
+
+    const existing = byAccount.get(token.account);
+
+    if (existing) existing.push(token);
+    else byAccount.set(token.account, [token]);
+  }
+
+  if (byAccount.size === 0) {
+    return shared.length > 0 ? [{ account: null, tokens: shared }] : [];
+  }
+
+  return [...byAccount.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([account, owned]) => ({ account, tokens: [...shared, ...owned] }));
+}
+
+/**
+ * Pick the set this import will use.
+ *
+ * The choice is random rather than round-robin: a worker handles one job and
+ * keeps no state between them, and spreading imports over the accounts is the
+ * whole point — no counter has to survive a restart for that to hold.
+ */
+export function rotateCredentialSet(sets: CredentialSet[]): CredentialSet | null {
+  if (sets.length === 0) return null;
+  if (sets.length === 1) return sets[0] ?? null;
+
+  return sets[Math.floor(Math.random() * sets.length)] ?? null;
 }

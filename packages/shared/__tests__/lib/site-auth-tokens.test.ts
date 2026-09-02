@@ -2,7 +2,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-import { getMatchingTokens } from "@norish/shared/lib/site-auth-tokens";
+import {
+  credentialSetsForUrl,
+  getMatchingTokens,
+  rotateCredentialSet,
+} from "@norish/shared/lib/site-auth-tokens";
 
 function makeToken(
   overrides: Partial<SiteAuthTokenDecryptedDto> & { domain: string }
@@ -10,6 +14,7 @@ function makeToken(
   return {
     id: "test-id",
     userId: "test-user",
+    account: null,
     name: "Authorization",
     value: "Bearer token123",
     type: "header",
@@ -163,5 +168,102 @@ describe("getMatchingTokens", () => {
 
       expect(result).toHaveLength(1);
     });
+  });
+});
+
+describe("credentialSetsForUrl", () => {
+  it("returns nothing when no token matches the site", () => {
+    const tokens = [makeToken({ domain: "instagram.com" })];
+
+    expect(credentialSetsForUrl(tokens, "https://example.com/recipe")).toEqual([]);
+  });
+
+  it("keeps an unlabelled domain as one set, so a server that never named an account is unaffected", () => {
+    const tokens = [
+      makeToken({ id: "t1", domain: "instagram.com", name: "sessionid", type: "cookie" }),
+      makeToken({ id: "t2", domain: "instagram.com", name: "csrftoken", type: "cookie" }),
+    ];
+    const sets = credentialSetsForUrl(tokens, "https://www.instagram.com/p/123");
+
+    expect(sets).toHaveLength(1);
+    expect(sets[0]?.account).toBeNull();
+    expect(sets[0]?.tokens.map((t) => t.id)).toEqual(["t1", "t2"]);
+  });
+
+  it("gives every account its own set", () => {
+    const tokens = [
+      makeToken({ id: "a", domain: "instagram.com", account: "alice", name: "sessionid" }),
+      makeToken({ id: "b", domain: "instagram.com", account: "bob", name: "sessionid" }),
+    ];
+    const sets = credentialSetsForUrl(tokens, "https://www.instagram.com/p/123");
+
+    expect(sets.map((s) => s.account)).toEqual(["alice", "bob"]);
+    expect(sets.map((s) => s.tokens.map((t) => t.id))).toEqual([["a"], ["b"]]);
+  });
+
+  it("sends an unlabelled token with every account, since it belongs to no single login", () => {
+    const tokens = [
+      makeToken({ id: "shared", domain: "instagram.com", name: "csrftoken" }),
+      makeToken({ id: "a", domain: "instagram.com", account: "alice", name: "sessionid" }),
+      makeToken({ id: "b", domain: "instagram.com", account: "bob", name: "sessionid" }),
+    ];
+    const sets = credentialSetsForUrl(tokens, "https://www.instagram.com/p/123");
+
+    expect(sets.map((s) => s.tokens.map((t) => t.id))).toEqual([
+      ["shared", "a"],
+      ["shared", "b"],
+    ]);
+  });
+
+  it("leaves another site's accounts out of the set", () => {
+    const tokens = [
+      makeToken({ id: "ig", domain: "instagram.com", account: "alice", name: "sessionid" }),
+      makeToken({ id: "fb", domain: "facebook.com", account: "alice", name: "sessionid" }),
+    ];
+    const sets = credentialSetsForUrl(tokens, "https://www.instagram.com/p/123");
+
+    expect(sets).toHaveLength(1);
+    expect(sets[0]?.tokens.map((t) => t.id)).toEqual(["ig"]);
+  });
+
+  it("orders the accounts the same way on every call, so rotation is the only thing that varies", () => {
+    const tokens = [
+      makeToken({ id: "c", domain: "instagram.com", account: "carol" }),
+      makeToken({ id: "a", domain: "instagram.com", account: "alice" }),
+      makeToken({ id: "b", domain: "instagram.com", account: "bob" }),
+    ];
+
+    expect(credentialSetsForUrl(tokens, "https://instagram.com").map((s) => s.account)).toEqual([
+      "alice",
+      "bob",
+      "carol",
+    ]);
+  });
+});
+
+describe("rotateCredentialSet", () => {
+  it("returns null when the site has no tokens", () => {
+    expect(rotateCredentialSet([])).toBeNull();
+  });
+
+  it("returns the only set when there is one", () => {
+    const only = { account: null, tokens: [] };
+
+    expect(rotateCredentialSet([only])).toBe(only);
+  });
+
+  it("reaches every account over repeated imports", () => {
+    const sets = [
+      { account: "alice", tokens: [] },
+      { account: "bob", tokens: [] },
+      { account: "carol", tokens: [] },
+    ];
+    const seen = new Set<string | null>();
+
+    for (let i = 0; i < 200; i++) {
+      seen.add(rotateCredentialSet(sets)?.account ?? null);
+    }
+
+    expect([...seen].sort()).toEqual(["alice", "bob", "carol"]);
   });
 });

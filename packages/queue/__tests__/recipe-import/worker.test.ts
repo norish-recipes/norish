@@ -104,4 +104,79 @@ describe("processImportJob", () => {
       expect.objectContaining({ name: "Imported Stew", dishColor: "#7c4a1e" })
     );
   });
+
+  describe("site authentication tokens", () => {
+    const token = (overrides: Record<string, unknown>) => ({
+      id: "token",
+      userId: "user-1",
+      domain: "example.com",
+      account: null,
+      name: "sessionid",
+      value: "secret",
+      type: "cookie",
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
+
+    const runImport = async (url: string) => {
+      const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+      await processRecipeImportJob({
+        id: "job-1",
+        attemptsMade: 0,
+        opts: {},
+        data: {
+          url,
+          recipeId: "recipe-77",
+          userId: "user-1",
+          householdKey: "household-1",
+          householdUserIds: null,
+        },
+      } as unknown as Job<RecipeImportJobData>);
+    };
+
+    const tokensPassedToParser = () =>
+      (parseRecipeFromUrl.mock.calls.at(-1)?.[3] ?? []) as { id: string }[];
+
+    it("sends no tokens for a site the user has none for", async () => {
+      getDecryptedTokensByUserId.mockResolvedValue([token({ id: "ig", domain: "instagram.com" })]);
+
+      await runImport("https://example.com/stew");
+
+      expect(parseRecipeFromUrl.mock.calls.at(-1)?.[3]).toBeUndefined();
+    });
+
+    it("keeps one site's tokens off another site's import", async () => {
+      getDecryptedTokensByUserId.mockResolvedValue([
+        token({ id: "ig", domain: "instagram.com" }),
+        token({ id: "ex", domain: "example.com" }),
+      ]);
+
+      await runImport("https://example.com/stew");
+
+      expect(tokensPassedToParser().map((t) => t.id)).toEqual(["ex"]);
+    });
+
+    it("uses one account per import, never two at once", async () => {
+      getDecryptedTokensByUserId.mockResolvedValue([
+        token({ id: "alice", domain: "instagram.com", account: "alice" }),
+        token({ id: "bob", domain: "instagram.com", account: "bob" }),
+      ]);
+
+      const used = new Set<string>();
+
+      for (let i = 0; i < 50; i++) {
+        await runImport("https://www.instagram.com/p/123");
+
+        const ids = tokensPassedToParser().map((t) => t.id);
+
+        expect(ids).toHaveLength(1);
+        used.add(ids[0] as string);
+      }
+
+      expect([...used].sort()).toEqual(["alice", "bob"]);
+    });
+  });
 });
