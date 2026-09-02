@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Site-authenticatietokens",
       "description": "Voeg headers of cookies toe die worden meegestuurd bij het importeren van recepten van specifieke sites. Handig voor sites die inloggen vereisen (bijv. Instagram, Facebook).",
+      "accountsDescription": "Geef een account een naam als je meerdere logins voor een site hebt. Elke import gebruikt dan één van de accounts van die site, willekeurig gekozen, zodat niet één login alle imports draagt. Een token zonder accountnaam wordt bij elke import voor dat domein meegestuurd.",
       "domain": "Domein",
       "domainPlaceholder": "bijv. instagram.com",
+      "account": "Account",
+      "accountPlaceholder": "bijv. mijn_handle (optioneel)",
+      "accountShared": "Alle accounts",
       "name": "Naam",
       "namePlaceholder": "bijv. Cookie of Authorization",
       "value": "Waarde",
@@ -84,6 +88,7 @@
       "noTokens": "Geen site-authenticatietokens geconfigureerd.",
       "tableHeaders": {
         "domain": "DOMEIN",
+        "account": "ACCOUNT",
         "name": "NAAM",
         "type": "TYPE",
         "created": "AANGEMAAKT",

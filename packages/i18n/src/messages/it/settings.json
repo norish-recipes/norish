@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Token di autenticazione siti",
       "description": "Aggiungi header o cookie inviati durante l'importazione di ricette da siti specifici. Utile per siti che richiedono l'accesso (es. Instagram, Facebook).",
+      "accountsDescription": "Assegna un nome all'account quando hai più accessi per un sito. Ogni importazione usa allora uno degli account di quel sito, scelto a caso, così nessun accesso porta tutte le importazioni. Un token lasciato senza nome account viene inviato a ogni importazione per il suo dominio.",
       "domain": "Dominio",
       "domainPlaceholder": "es. instagram.com",
+      "account": "Account",
+      "accountPlaceholder": "es. mio_handle (facoltativo)",
+      "accountShared": "Tutti gli account",
       "name": "Nome",
       "namePlaceholder": "es. Cookie o Authorization",
       "value": "Valore",
@@ -84,6 +88,7 @@
       "noTokens": "Nessun token di autenticazione siti configurato.",
       "tableHeaders": {
         "domain": "DOMINIO",
+        "account": "ACCOUNT",
         "name": "NOME",
         "type": "TIPO",
         "created": "CREATO",

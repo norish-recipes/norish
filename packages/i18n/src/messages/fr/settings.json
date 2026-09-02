@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Jetons d'authentification de site",
       "description": "Ajoutez des en-têtes ou cookies envoyés lors de l'importation de recettes depuis des sites spécifiques. Utile pour les sites nécessitant une connexion (ex. Instagram, Facebook).",
+      "accountsDescription": "Nommez un compte lorsque vous avez plusieurs identifiants pour un site. Chaque import utilise alors un des comptes de ce site, choisi au hasard, afin qu'aucun identifiant ne porte tous les imports. Un jeton laissé sans nom de compte est envoyé à chaque import pour son domaine.",
       "domain": "Domaine",
       "domainPlaceholder": "ex. instagram.com",
+      "account": "Compte",
+      "accountPlaceholder": "ex. mon_pseudo (facultatif)",
+      "accountShared": "Tous les comptes",
       "name": "Nom",
       "namePlaceholder": "ex. Cookie ou Authorization",
       "value": "Valeur",
@@ -84,6 +88,7 @@
       "noTokens": "Aucun jeton d'authentification de site configuré.",
       "tableHeaders": {
         "domain": "DOMAINE",
+        "account": "COMPTE",
         "name": "NOM",
         "type": "TYPE",
         "created": "CRÉÉ",

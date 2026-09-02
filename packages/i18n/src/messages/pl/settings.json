@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Tokeny uwierzytelniania stron",
       "description": "Dodaj nagłówki lub cookies wysyłane podczas importowania przepisów z określonych stron. Przydatne dla stron wymagających logowania (np. Instagram, Facebook).",
+      "accountsDescription": "Nazwij konto, gdy masz więcej niż jedno logowanie do witryny. Każdy import użyje wtedy jednego z kont tej witryny, wybranego losowo, aby żadne logowanie nie obsługiwało wszystkich importów. Token bez nazwy konta jest wysyłany przy każdym imporcie z jego domeny.",
       "domain": "Domena",
       "domainPlaceholder": "np. instagram.com",
+      "account": "Konto",
+      "accountPlaceholder": "np. moj_handle (opcjonalnie)",
+      "accountShared": "Wszystkie konta",
       "name": "Nazwa",
       "namePlaceholder": "np. Cookie lub Authorization",
       "value": "Wartość",
@@ -84,6 +88,7 @@
       "noTokens": "Nie skonfigurowano tokenów uwierzytelniania stron.",
       "tableHeaders": {
         "domain": "DOMENA",
+        "account": "KONTO",
         "name": "NAZWA",
         "type": "TYP",
         "created": "UTWORZONO",

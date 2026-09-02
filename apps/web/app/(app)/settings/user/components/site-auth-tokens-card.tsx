@@ -36,6 +36,7 @@ export default function SiteAuthTokensCard() {
 
   // Form state
   const [domain, setDomain] = useState("");
+  const [account, setAccount] = useState("");
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState<"header" | "cookie">("header");
@@ -50,6 +51,7 @@ export default function SiteAuthTokensCard() {
     try {
       const newToken = await createMutation.mutateAsync({
         domain,
+        account,
         name,
         value,
         type,
@@ -58,6 +60,7 @@ export default function SiteAuthTokensCard() {
         prev ? [...prev, newToken] : [newToken]
       );
       setDomain("");
+      setAccount("");
       setName("");
       setValue("");
       setType("header");
@@ -97,6 +100,16 @@ export default function SiteAuthTokensCard() {
     }
   };
   const isFormValid = domain.trim() && name.trim() && value.trim();
+
+  // Sorted so a site's accounts read as the sets they are, rather than in the
+  // order they happened to be added.
+  const orderedTokens = [...tokens].sort(
+    (a, b) =>
+      a.domain.localeCompare(b.domain) ||
+      (a.account ?? "").localeCompare(b.account ?? "") ||
+      a.name.localeCompare(b.name)
+  );
+
   return (
     <>
       <Card>
@@ -108,13 +121,18 @@ export default function SiteAuthTokensCard() {
         </Card.Header>
         <Card.Content className="gap-4">
           <p className="text-muted text-base">{t("description")}</p>
+          <p className="text-muted text-base">{t("accountsDescription")}</p>
 
           {/* Create form */}
           <div className="flex flex-col gap-3">
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_9rem] lg:items-end">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_9rem] xl:items-end">
               <TextField className="min-w-0" value={domain} onChange={setDomain}>
                 <Label>{t("domain")}</Label>
                 <Input variant="secondary" placeholder={t("domainPlaceholder")} />
+              </TextField>
+              <TextField className="min-w-0" value={account} onChange={setAccount}>
+                <Label>{t("account")}</Label>
+                <Input variant="secondary" placeholder={t("accountPlaceholder")} />
               </TextField>
               <TextField className="min-w-0" value={name} onChange={setName}>
                 <Label>{t("name")}</Label>
@@ -175,18 +193,24 @@ export default function SiteAuthTokensCard() {
                       <Table.Column id="domain" isRowHeader>
                         {t("tableHeaders.domain")}
                       </Table.Column>
+                      <Table.Column id="account">{t("tableHeaders.account")}</Table.Column>
                       <Table.Column id="name">{t("tableHeaders.name")}</Table.Column>
                       <Table.Column id="type">{t("tableHeaders.type")}</Table.Column>
                       <Table.Column id="created">{t("tableHeaders.created")}</Table.Column>
                       <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
                     </Table.Header>
                     <Table.Body>
-                      {tokens.map((token) => (
+                      {orderedTokens.map((token) => (
                         <Table.Row key={token.id} id={token.id}>
                           <Table.Cell>
                             <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
                               {token.domain}
                             </code>
+                          </Table.Cell>
+                          <Table.Cell>
+                            {token.account ?? (
+                              <span className="text-muted">{t("accountShared")}</span>
+                            )}
                           </Table.Cell>
                           <Table.Cell>{token.name}</Table.Cell>
                           <Table.Cell>

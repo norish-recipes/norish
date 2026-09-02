@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Site Authentication Tokens",
       "description": "Add headers or cookies that are sent when importing recipes from specific sites. Useful for sites that require login (e.g. Instagram, Facebook).",
+      "accountsDescription": "Name an account when you have more than one login for a site. Each import then uses one of that site's accounts, picked at random, so no single login carries every import. A token left without an account name is sent with every import for its domain.",
       "domain": "Domain",
       "domainPlaceholder": "e.g. instagram.com",
+      "account": "Account",
+      "accountPlaceholder": "e.g. my_handle (optional)",
+      "accountShared": "All accounts",
       "name": "Name",
       "namePlaceholder": "e.g. Cookie or Authorization",
       "value": "Value",
@@ -84,6 +88,7 @@
       "noTokens": "No site authentication tokens configured.",
       "tableHeaders": {
         "domain": "DOMAIN",
+        "account": "ACCOUNT",
         "name": "NAME",
         "type": "TYPE",
         "created": "CREATED",

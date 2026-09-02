@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Websteds-godkendelsestokens",
       "description": "Tilføj headere eller cookies, der sendes ved import af opskrifter fra specifikke websteder. Nyttigt for websteder, der kræver login (f.eks. Instagram, Facebook).",
+      "accountsDescription": "Navngiv en konto, når du har mere end ét login til et websted. Hver import bruger så en af webstedets konti, valgt tilfældigt, så ét login ikke bærer alle importer. Et token uden kontonavn sendes med hver import for dets domæne.",
       "domain": "Domæne",
       "domainPlaceholder": "f.eks. instagram.com",
+      "account": "Konto",
+      "accountPlaceholder": "f.eks. mit_handle (valgfrit)",
+      "accountShared": "Alle konti",
       "name": "Navn",
       "namePlaceholder": "f.eks. Cookie eller Authorization",
       "value": "Værdi",
@@ -84,6 +88,7 @@
       "noTokens": "Ingen websteds-godkendelsestokens konfigureret.",
       "tableHeaders": {
         "domain": "DOMÆNE",
+        "account": "KONTO",
         "name": "NAVN",
         "type": "TYPE",
         "created": "OPRETTET",

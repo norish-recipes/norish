@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Tokens de autenticación por sitio",
       "description": "Añade cabeceras o cookies que se envían al importar recetas desde sitios específicos. Útil para webs que requieren inicio de sesión (p. ej., Instagram, Facebook).",
+      "accountsDescription": "Da nombre a una cuenta cuando tengas más de un inicio de sesión para un sitio. Cada importación usa entonces una de las cuentas de ese sitio, elegida al azar, para que ningún inicio de sesión cargue con todas. Un token sin nombre de cuenta se envía en cada importación de su dominio.",
       "domain": "Dominio",
       "domainPlaceholder": "p. ej., instagram.com",
+      "account": "Cuenta",
+      "accountPlaceholder": "p. ej. mi_usuario (opcional)",
+      "accountShared": "Todas las cuentas",
       "name": "Nombre",
       "namePlaceholder": "p. ej., Cookie o Authorization",
       "value": "Valor",
@@ -84,6 +88,7 @@
       "noTokens": "No hay tokens de autenticación configurados.",
       "tableHeaders": {
         "domain": "DOMINIO",
+        "account": "CUENTA",
         "name": "NOMBRE",
         "type": "TIPO",
         "created": "CREADO",
