@@ -1,14 +1,5 @@
 import type { SVGProps } from "react";
 
-/**
- * A shield with a minus cut out of it, drawn to match Heroicons 16/solid.
- *
- * Granting admin access uses their ShieldCheck; revoking it needs the same
- * shield with the mark reversed, which Heroicons does not ship — its only
- * other shield carries an exclamation, and that reads as "something is wrong"
- * rather than "this is being taken away". The outline below is ShieldCheck's,
- * unchanged, so the two buttons sit at exactly the same weight.
- */
 export function ShieldMinusIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
