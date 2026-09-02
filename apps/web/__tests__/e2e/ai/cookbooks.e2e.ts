@@ -29,13 +29,33 @@ const RENAMED_TITLE = "Weeknight Favourites";
 
 let page: Page;
 
-async function chip(name: "all" | "recipes" | "cookbooks") {
-  return page.locator(`[data-library-type="${name}"]`);
-}
+type LibraryType = "all" | "recipes" | "cookbooks";
+
+const CHIP_HEADINGS: Record<LibraryType, string> = {
+  all: "Your library",
+  recipes: "Your recipes",
+  cookbooks: "Your cookbooks",
+};
 
 /** Wait for the heading to have settled on one complete string. */
-async function expectHeading(text: string) {
-  await expect(page.locator("#recipe-library-heading")).toHaveText(text);
+async function expectHeading(text: string, timeout?: number) {
+  await expect(page.locator("#recipe-library-heading")).toHaveText(text, { timeout });
+}
+
+/**
+ * Light a chip, and wait until the Library has actually followed it.
+ *
+ * The chips are ordinary buttons on a page that hydrates behind its first
+ * paint, so a click landing before React has attached is swallowed without a
+ * trace — the chip is visible, enabled and stable either way, so there is
+ * nothing for the click itself to fail on. The heading is the shortest honest
+ * proof the click was heard, so the click is repeated until it says so.
+ */
+async function selectChip(name: LibraryType) {
+  await expect(async () => {
+    await page.locator(`[data-library-type="${name}"]`).click();
+    await expectHeading(CHIP_HEADINGS[name], 5_000);
+  }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
 }
 
 /** The panel's own close control, rather than a keypress. */
@@ -111,23 +131,23 @@ test("the three chips change both the list and the heading", async () => {
   await expectHeading("Your library");
   await expect(recipeCard()).toBeVisible();
 
-  await (await chip("cookbooks")).click();
+  await selectChip("cookbooks");
   await expectHeading("Your cookbooks");
   // No cookbooks yet, so the recipe is gone and the empty state explains why.
   await expect(page.locator("[data-recipe-card]")).toHaveCount(0);
   await expect(page.getByText("No cookbooks yet")).toBeVisible();
 
-  await (await chip("recipes")).click();
+  await selectChip("recipes");
   await expectHeading("Your recipes");
   await expect(recipeCard()).toBeVisible();
 
-  await (await chip("all")).click();
+  await selectChip("all");
   await expectHeading("Your library");
 });
 
 test("creating a cookbook from the Library leaves the reader on the Library", async () => {
   await page.goto("/");
-  await (await chip("cookbooks")).click();
+  await selectChip("cookbooks");
 
   await page.getByTestId("add-cookbook-button").click();
   await page.getByTestId("cookbook-title-input").fill(COOKBOOK_TITLE);
@@ -144,7 +164,7 @@ test("the Add button under All makes either kind", async () => {
   const SECOND = "Sunday Roasts";
 
   await page.goto("/");
-  await (await chip("all")).click();
+  await selectChip("all");
 
   // Both kinds are on screen, so the button is a plain Add and the menu holds
   // both — rather than an "Add Recipe" that can only make half the list.
@@ -161,7 +181,7 @@ test("the Add button under All makes either kind", async () => {
 
   // Under Recipes the button only makes recipes, because that is all the list
   // can show.
-  await (await chip("recipes")).click();
+  await selectChip("recipes");
   await expect(page.getByTestId("add-library-button")).toHaveText("Add Recipe");
   await page.getByTestId("add-library-button").click();
   await expect(page.getByRole("menuitem", { name: "Cookbook", exact: true })).toHaveCount(0);
@@ -173,7 +193,7 @@ test("the Add button under All makes either kind", async () => {
 
 test("a cookbook and a recipe appear interleaved under All", async () => {
   await page.goto("/");
-  await (await chip("all")).click();
+  await selectChip("all");
 
   // Newest first by default, so the cookbook made second leads and the recipe
   // follows it — one list ordered by the reader's sort, not two bands.
@@ -219,7 +239,7 @@ test("filing a recipe from its quick actions shows it on the recipe page card", 
 
 test("the cookbook page lists the member it was given", async () => {
   await page.goto("/");
-  await (await chip("cookbooks")).click();
+  await selectChip("cookbooks");
   await cookbookCard(COOKBOOK_TITLE).click();
 
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
@@ -229,7 +249,7 @@ test("the cookbook page lists the member it was given", async () => {
 test("the way back names where the reader actually came from", async () => {
   // From the Library, under the lens that is lit.
   await page.goto("/");
-  await (await chip("recipes")).click();
+  await selectChip("recipes");
   await recipeCard().click();
   await expect(page.getByRole("heading", { name: RECIPE_NAME })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to recipes" }).first()).toBeVisible();
@@ -237,7 +257,7 @@ test("the way back names where the reader actually came from", async () => {
   // From inside a cookbook, the cookbook — not "recipes", which is where the
   // link used to offer to take a reader who had never been there.
   await page.goto("/");
-  await (await chip("cookbooks")).click();
+  await selectChip("cookbooks");
   await cookbookCard(COOKBOOK_TITLE).click();
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
   // The cookbook itself came from the Library under Cookbooks.
@@ -288,7 +308,7 @@ test("a cookbook fills itself from its own side", async () => {
   // The other direction: the thought starts at the cookbook, and several
   // recipes go in at once rather than one recipe at a time from each page.
   await page.goto("/");
-  await (await chip("cookbooks")).click();
+  await selectChip("cookbooks");
   await cookbookCard(COOKBOOK_TITLE).click();
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
 
@@ -317,7 +337,7 @@ test("the edit panel takes a recipe out of the cookbook it is editing", async ()
   }).toPass({ timeout: 10_000 });
 
   await page.goto("/");
-  await (await chip("cookbooks")).click();
+  await selectChip("cookbooks");
   await cookbookCard(COOKBOOK_TITLE).click();
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
 
@@ -348,7 +368,7 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
   }).toPass({ timeout: 10_000 });
 
   await page.goto("/");
-  await (await chip("cookbooks")).click();
+  await selectChip("cookbooks");
   await cookbookCard(COOKBOOK_TITLE).click();
 
   // Wait for the cookbook's own page: the Library card carrying the same
@@ -380,6 +400,6 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
   expect(await recipeExists(RECIPE_NAME)).toBe(true);
   await page.goto("/");
   // The chip choice persisted, so come back to All to see the recipe again.
-  await (await chip("all")).click();
+  await selectChip("all");
   await expect(recipeCard()).toBeVisible();
 });
