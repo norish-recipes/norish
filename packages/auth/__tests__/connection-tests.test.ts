@@ -11,8 +11,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { normalizeOpenAICompatibleEndpoint } from "@norish/shared-server/ai/runtime/endpoints";
 import { testAIEndpoint } from "@norish/auth/connection-tests";
+import { normalizeOpenAICompatibleEndpoint } from "@norish/shared-server/ai/runtime/endpoints";
 
 /** URLs the stubbed transport was asked for, in order. */
 let requested: string[] = [];
@@ -66,9 +66,7 @@ describe("testAIEndpoint", () => {
       "http://localhost:1234/v1/",
     ]) {
       requested = [];
-      expect(await urlFor(endpoint)).toBe(
-        `${normalizeOpenAICompatibleEndpoint(endpoint)}/models`
-      );
+      expect(await urlFor(endpoint)).toBe(`${normalizeOpenAICompatibleEndpoint(endpoint)}/models`);
     }
   });
 
@@ -85,7 +83,10 @@ describe("testAIEndpoint", () => {
   });
 
   it("reports a refusal rather than claiming success", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("nope", { status: 404 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("nope", { status: 404 }))
+    );
 
     const result = await testAIEndpoint({
       provider: "generic-openai",

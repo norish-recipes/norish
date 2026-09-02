@@ -4,8 +4,8 @@ import { parseIngredient } from "parse-ingredient";
 
 import type { FlatUnitsMap, UnitsMap } from "@norish/config/zod/server-config";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { httpUrlSchema } from "@norish/shared/lib/schema";
 import type { MultiWordUnit } from "@norish/shared/lib/unit-localization";
+import { httpUrlSchema } from "@norish/shared/lib/schema";
 import {
   collectMultiWordUnits,
   findLeadingUnit,

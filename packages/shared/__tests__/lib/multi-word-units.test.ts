@@ -38,7 +38,9 @@ describe("multi-word units", () => {
   });
 
   it("agrees with the abbreviation it is displayed as", () => {
-    expect(parse("1 càs de miel").unitOfMeasureID).toBe(parse("1 cuillères à soupe de miel").unitOfMeasureID);
+    expect(parse("1 càs de miel").unitOfMeasureID).toBe(
+      parse("1 cuillères à soupe de miel").unitOfMeasureID
+    );
   });
 
   it("still reads the quantity in every shape the parser accepts", () => {

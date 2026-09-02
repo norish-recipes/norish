@@ -8,10 +8,7 @@ import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, AvailableModel } from "../runtime/types";
-import {
-  normalizeOllamaEndpoint,
-  normalizeOpenAICompatibleEndpoint,
-} from "../runtime/endpoints";
+import { normalizeOllamaEndpoint, normalizeOpenAICompatibleEndpoint } from "../runtime/endpoints";
 
 // ============================================================================
 // Constants
