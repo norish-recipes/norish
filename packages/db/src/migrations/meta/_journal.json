@@ -302,6 +302,13 @@
       "when": 1787661168219,
       "tag": "0042_cookbooks",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1788354876718,
+      "tag": "0043_site_auth_token_account",
+      "breakpoints": true
     }
   ]
 }

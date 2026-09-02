@@ -13,6 +13,12 @@ export const siteAuthTokens = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     domain: text("domain").notNull(),
+    /**
+     * Which of the site's accounts this token belongs to. Null means the
+     * token is not tied to one account and travels with every import from
+     * the domain; a label groups tokens into a set that imports rotate over.
+     */
+    account: text("account"),
     name: text("name").notNull(),
     valueEnc: text("value_enc").notNull(),
     type: siteAuthTokenTypeEnum("type").notNull(),

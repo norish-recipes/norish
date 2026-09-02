@@ -24,6 +24,7 @@ function decryptToken(token: SiteAuthTokenDto): SiteAuthTokenDecryptedDto {
     id: token.id,
     userId: token.userId,
     domain: token.domain,
+    account: token.account,
     name: token.name,
     value: decrypt(token.valueEnc),
     type: token.type,
@@ -38,6 +39,7 @@ function toSafeToken(token: SiteAuthTokenDto): SiteAuthTokenSafeDto {
     id: token.id,
     userId: token.userId,
     domain: token.domain,
+    account: token.account,
     name: token.name,
     type: token.type,
     version: token.version,
@@ -57,6 +59,7 @@ export async function createSiteAuthToken(
     .values({
       userId,
       domain: validated.domain,
+      account: validated.account,
       name: validated.name,
       valueEnc: encrypt(validated.value),
       type: validated.type,
@@ -134,6 +137,7 @@ export async function updateSiteAuthToken(
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
   if (validated.domain !== undefined) updateData.domain = validated.domain;
+  if (validated.account !== undefined) updateData.account = validated.account || null;
   if (validated.name !== undefined) updateData.name = validated.name;
   if (validated.value !== undefined) updateData.valueEnc = encrypt(validated.value);
   if (validated.type !== undefined) updateData.type = validated.type;

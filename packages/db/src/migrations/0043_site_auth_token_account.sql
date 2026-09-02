@@ -1,0 +1,1 @@
+ALTER TABLE "site_auth_tokens" ADD COLUMN "account" text;
