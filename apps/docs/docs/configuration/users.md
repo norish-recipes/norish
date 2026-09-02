@@ -28,7 +28,7 @@ Two roles appear as chips next to a name:
 ## Granting and revoking admin access
 
 The shield button on a row grants admin access; on someone who already has it,
-the same button revokes it. 
+the same button revokes it.
 
 Two things are refused, by the server rather than by a greyed-out button:
 

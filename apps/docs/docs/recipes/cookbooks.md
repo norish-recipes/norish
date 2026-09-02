@@ -6,7 +6,7 @@ description: Group recipes into titled sets, file a recipe from its own page, an
 
 # Cookbooks
 
-A **Cookbook** are a set of recipes contained by a title. 
+A **Cookbook** are a set of recipes contained by a title.
 
 ## Making one
 
@@ -19,15 +19,15 @@ Under **All** the list holds both kinds (recipes + cookbooks). Its menu offers a
 
 ## Adding a recipe
 
-There are two ways to add recipes to a cookbook. Via a recipe page using in the quick actions panel. The add panel shows all available cookbooks. 
+There are two ways to add recipes to a cookbook. Via a recipe page using in the quick actions panel. The add panel shows all available cookbooks.
 
 ![The cookbook membership panel on a recipe](/img/screenshots/cookbooks-panel.png)
 
-The other way is to swipe left (or using the three dots) on a cookbook and click the plus icon. 
+The other way is to swipe left (or using the three dots) on a cookbook and click the plus icon.
 
 ![Adding several recipes to a cookbook at once](/img/screenshots/cookbooks-add-recipes.png)
 
-At the end if a recipe page there is a card showing all cookbooks the recipe is placed into. 
+At the end if a recipe page there is a card showing all cookbooks the recipe is placed into.
 Each of these items are clickable and take you to the respective cookbook.
 
 ![The cookbooks card at the end of a recipe page](/img/screenshots/cookbooks-recipe-card.png)
