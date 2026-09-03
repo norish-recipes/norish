@@ -1,0 +1,9 @@
+{
+  "label": "Configuration",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "title": "Configuration",
+    "description": "Configure your Norish instance: authentication, AI, database, server runtime, localization, the recipe parser, and runtime admin settings."
+  }
+}

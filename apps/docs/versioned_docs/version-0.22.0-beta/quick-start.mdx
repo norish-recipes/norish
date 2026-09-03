@@ -1,0 +1,67 @@
+---
+id: quick-start
+title: Quick start
+slug: /quick-start
+sidebar_position: 2
+description: Get a working Norish instance running with Docker Compose in a couple of minutes.
+---
+
+import QuickStartCompose from "@site/src/components/QuickStartCompose";
+
+# Quick start
+
+The fastest way to run Norish is Docker Compose. Save the file below as
+`docker-compose.yml` and run:
+
+```bash
+docker compose up -d
+```
+
+Then open [http://localhost:3000](http://localhost:3000). The **first user to
+sign in becomes the server owner and admin** — see [First run](#first-run) below.
+
+<QuickStartCompose />
+
+:::info Generating a `MASTER_KEY`
+The compose above already includes a random `MASTER_KEY`, freshly generated in
+your browser each time you load this page (it is never sent anywhere). To create
+your own instead, run:
+
+```bash
+openssl rand -base64 32
+```
+
+Keep it secret and **stable** — it derives the encryption keys, so changing it
+later invalidates previously encrypted data.
+:::
+
+## What's in the stack
+
+| Service   | Why it's needed                                          |
+| --------- | -------------------------------------------------------- |
+| `norish`  | The Norish app server.                                   |
+| `db`      | PostgreSQL — your recipes, groceries, and planning data. |
+| `redis`   | Real-time events and background jobs.                    |
+| `obscura` | Renders recipe pages so URL imports can read them.       |
+
+## First run
+
+The first user to sign in becomes the **server owner** and **server admin**.
+After that first sign-in, user registration is disabled automatically and
+ongoing settings are managed in **Settings → Admin**.
+
+Norish includes **email & password** sign-in out of the box, so you can create
+your owner account right away. You can also use OIDC, GitHub, or Google — see
+[Authentication](./configuration/authentication.md).
+
+## Next steps
+
+- [Authentication](./configuration/authentication.md) — password, OIDC, GitHub, Google
+- [AI provider](./configuration/ai-provider.md) — enable recipe AI, video, and image import
+- [Server & runtime](./configuration/server-runtime.md) — logging, uploads, trusted origins, limits
+- [Admin settings](./configuration/admin-settings.md) — what you can change from the UI
+
+:::tip Production template
+A fuller, commented template lives in the repository at
+[`docker-compose.example.yml`](https://github.com/norish-recipes/Norish/blob/main/docker/docker-compose.example.yml).
+:::
