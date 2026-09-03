@@ -1,6 +1,6 @@
 {
   "name": "@norish/db-schema",
-  "version": "0.21.0-beta",
+  "version": "0.22.0-beta",
   "private": true,
   "type": "module",
   "exports": {
