@@ -781,6 +781,35 @@
             recipe.
           </p>
         </li>
+        <li>
+          <a href="groceries/0028-a-grocery-is-priced-only-through-a-store-product.md"
+            >ADR-0028 &mdash; A grocery is priced only through a Store Product</a
+          >
+          <p>
+            <b>Accepted.</b> A price lives only on a Store Product, one specific item a store
+            sells, and a grocery is priced by pointing at one through a household-wide Product
+            Link keyed by store and normalised name; totals derive at read time and are stored
+            nowhere. A Set Price outranks the refreshed Store Price until cleared, a Sale is the
+            store's claim alone, and a line buys whole packs. Rejects a price column on the
+            grocery, price fields on the Store Preference, per-member links, and comparing
+            stores.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0029-one-switch-gates-every-price-visit.md"
+            >ADR-0029 &mdash; One switch gates every Price Visit, and a visit borrows any
+            member's login</a
+          >
+          <p>
+            <b>Accepted.</b> One deployment setting, off by default, allows or forbids every
+            Price Visit &mdash; lookups, refreshes, pasted pages and picker searches alike
+            &mdash; because the retailer sees one server whichever it is; off means prices by
+            hand, a complete mode. A visit carries the Site Auth Tokens any household member
+            holds for the store's domain, the asker's own first and one member's at random
+            otherwise. Rejects gating only the quiet work, no setting, no tokens ever, and the
+            store creator's tokens.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>
