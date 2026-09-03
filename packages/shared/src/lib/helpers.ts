@@ -2,10 +2,15 @@ import { decode } from "html-entities";
 import { jsonrepair } from "jsonrepair";
 import { parseIngredient } from "parse-ingredient";
 
-import type { UnitsMap } from "@norish/config/zod/server-config";
+import type { FlatUnitsMap, UnitsMap } from "@norish/config/zod/server-config";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import type { MultiWordUnit } from "@norish/shared/lib/unit-localization";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
-import { flattenForLibrary } from "@norish/shared/lib/unit-localization";
+import {
+  collectMultiWordUnits,
+  findLeadingUnit,
+  flattenForLibrary,
+} from "@norish/shared/lib/unit-localization";
 
 export function stripHtmlTags(input: string): string {
   // 1. Remove HTML tags first (replace with space to preserve word boundaries)
@@ -41,6 +46,44 @@ export const parseJsonWithRepair = (input: string): any | null => {
   }
 };
 
+/**
+ * A word the parser cannot mistake for anything else, standing in for a unit
+ * name it would otherwise never see as one. Letters only, so the library's own
+ * word split treats it as a single word.
+ */
+const UNIT_PLACEHOLDER = "norishmultiwordunit";
+
+/**
+ * Hand `parse-ingredient` a line it can read, by collapsing a multi-word unit
+ * name into one word it is told about.
+ *
+ * The alternative — reading the unit ourselves and handing back the rest — would
+ * mean re-implementing where a quantity ends and how a description is trimmed,
+ * rules the library already owns. Substituting keeps every one of them: the
+ * placeholder occupies exactly the unit's position, so quantities, ranges, and
+ * the leading "of" are parsed as they always were, and the name is put back
+ * afterwards (#535).
+ */
+function withMultiWordUnitCollapsed(
+  line: string,
+  phrases: readonly MultiWordUnit[],
+  flatUnits: FlatUnitsMap
+): { line: string; units: FlatUnitsMap; unitText?: string } {
+  const match = findLeadingUnit(line, phrases);
+  const unit = match ? flatUnits[match.unitId] : undefined;
+
+  if (!match || !unit) return { line, units: flatUnits };
+
+  return {
+    line: `${line.slice(0, match.start)}${UNIT_PLACEHOLDER}${line.slice(match.end)}`,
+    units: {
+      ...flatUnits,
+      [match.unitId]: { ...unit, alternates: [...unit.alternates, UNIT_PLACEHOLDER] },
+    },
+    unitText: line.slice(match.start, match.end),
+  };
+}
+
 export function parseIngredientWithDefaults(
   input: string | string[],
   units: UnitsMap = {}
@@ -50,6 +93,7 @@ export function parseIngredientWithDefaults(
 
   // Flatten locale-aware units for parse-ingredient library
   const flatUnits = flattenForLibrary(units);
+  const multiWordUnits = collectMultiWordUnits(units);
 
   for (const line of lines) {
     if (!line) continue;
@@ -57,15 +101,29 @@ export function parseIngredientWithDefaults(
     // Normalize comma decimals to periods (European format => US format)
     const normalizedLine = line.toString().replace(/(\d),(\d)/g, "$1.$2");
 
+    const collapsed = withMultiWordUnitCollapsed(normalizedLine, multiWordUnits, flatUnits);
+
     // Parse with flattened units
-    const parsed = parseIngredient(normalizedLine, {
-      additionalUOMs: flatUnits,
+    const parsed = parseIngredient(collapsed.line, {
+      additionalUOMs: collapsed.units,
     });
 
-    merged.push(...parsed);
+    merged.push(...(collapsed.unitText ? restoreUnitText(parsed, collapsed.unitText) : parsed));
   }
 
   return merged as any;
+}
+
+/** Put the collapsed unit name back wherever the placeholder survived. */
+function restoreUnitText(
+  parsed: ReturnType<typeof parseIngredient>,
+  unitText: string
+): ReturnType<typeof parseIngredient> {
+  return parsed.map((ingredient) => ({
+    ...ingredient,
+    unitOfMeasure: ingredient.unitOfMeasure?.replace(UNIT_PLACEHOLDER, unitText) ?? null,
+    description: ingredient.description.replace(UNIT_PLACEHOLDER, unitText),
+  }));
 }
 
 export const parseIsoDuration = (iso: string): number | undefined => {

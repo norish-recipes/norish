@@ -11,6 +11,7 @@ change required. Server owners and admins manage these under **Settings → Admi
 
 You can manage:
 
+- **[Users](./users.md)** — everyone with an account, their roles, and removing accounts.
 - **Registration policy** — whether new users may register.
 - **Permission policies** for recipe view, edit, and delete scopes.
 - **Auth providers** (OIDC, GitHub, Google).

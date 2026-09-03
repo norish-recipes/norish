@@ -8,6 +8,7 @@ import { generalProcedures } from "./general";
 import { jobQueueProcedures } from "./job-queue";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
+import { usersProcedures } from "./users";
 import { videoRuntimeProcedures } from "./video-runtime";
 
 export const adminRouter = router({
@@ -37,6 +38,9 @@ export const adminRouter = router({
 
   // Permissions (recipe policy)
   ...permissionsProcedures._def.procedures,
+
+  // User management (list, grant/revoke admin, delete)
+  users: usersProcedures,
 
   // System (scheduler, restart, restore)
   ...systemProcedures._def.procedures,

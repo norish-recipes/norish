@@ -1,0 +1,27 @@
+import type { z } from "zod";
+
+import type {
+  CookbookCreateInputSchema,
+  CookbookDeleteInputSchema,
+  CookbookListInputSchema,
+  CookbookListResultSchema,
+  CookbookMemberIdsInputSchema,
+  CookbookMembershipInputSchema,
+  CookbookRenameInputSchema,
+  CookbookSummarySchema,
+  LibraryItemSchema,
+  LibraryListInputSchema,
+  LibraryListResultSchema,
+} from "@norish/shared/contracts/zod";
+
+export type CookbookSummaryDTO = z.output<typeof CookbookSummarySchema>;
+export type CookbookCreateInput = z.infer<typeof CookbookCreateInputSchema>;
+export type CookbookRenameInput = z.infer<typeof CookbookRenameInputSchema>;
+export type CookbookDeleteInput = z.infer<typeof CookbookDeleteInputSchema>;
+export type CookbookListInput = z.input<typeof CookbookListInputSchema>;
+export type CookbookListResult = z.output<typeof CookbookListResultSchema>;
+export type CookbookMembershipInput = z.infer<typeof CookbookMembershipInputSchema>;
+export type CookbookMemberIdsInput = z.infer<typeof CookbookMemberIdsInputSchema>;
+export type LibraryItemDTO = z.output<typeof LibraryItemSchema>;
+export type LibraryListInput = z.input<typeof LibraryListInputSchema>;
+export type LibraryListResult = z.output<typeof LibraryListResultSchema>;

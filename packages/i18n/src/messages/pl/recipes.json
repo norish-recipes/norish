@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "Wszystkie przepisy",
+    "libraryTitle": "Twoja biblioteka",
+    "recipesTitle": "Twoje przepisy",
+    "cookbooksTitle": "Twoje książki kucharskie",
     "searchPlaceholder": "Szukaj lub dodaj przepis...",
     "searchRecipesPlaceholder": "Szukaj przepisów...",
-    "recipeCount": "{count, plural, one {# przepis} other {# przepisów}}",
+    "libraryCount": "{count, plural, one {# element} other {# elementy}}",
     "addRecipe": "Dodaj przepis",
     "importFromUrl": "URL",
     "importFromPaste": "Wklej",
@@ -19,13 +21,29 @@
       "label": "Widok przepisów",
       "grid": "Siatka",
       "list": "Lista"
+    },
+    "libraryType": {
+      "label": "Pokaż",
+      "all": "Wszystko",
+      "recipes": "Przepisy",
+      "cookbooks": "Książki kucharskie"
     }
   },
+  "back": {
+    "all": "Wróć do biblioteki",
+    "recipes": "Wróć do przepisów",
+    "cookbooks": "Wróć do książek kucharskich",
+    "named": "Wróć do {name}",
+    "cookbook": "Wróć do książki kucharskiej",
+    "generic": "Wstecz"
+  },
   "empty": {
-    "title": "Twoja kolekcja przepisów czeka",
+    "title": "Twoja biblioteka czeka",
     "description": "Wklej URL przepisu w pole wyszukiwania powyżej i obserwuj magię.",
     "noResults": "Nie znaleziono przepisów",
-    "noResultsHint": "Spróbuj zmienić lub wyczyścić filtry."
+    "noResultsHint": "Spróbuj zmienić lub wyczyścić filtry.",
+    "noCookbooks": "Brak książek kucharskich",
+    "noCookbooksHint": "Książka kucharska to nazwany zbiór przepisów. Utwórz pierwszą, aby uporządkować bibliotekę."
   },
   "card": {
     "noImage": "Brak obrazu",
@@ -35,7 +53,6 @@
     "recipeOptions": "Opcje przepisu"
   },
   "detail": {
-    "backToRecipes": "Powrót do przepisów",
     "viewOriginal": "Zobacz oryginalny przepis",
     "ingredients": "Składniki",
     "ingredientOptions": "Opcje składników",
@@ -86,7 +103,8 @@
     "linkingIngredients": "Wiązanie składników…",
     "enrichmentFailed": "Ostatnia próba nie powiodła się",
     "generateImage": "Wygeneruj obraz",
-    "generatingImage": "Generowanie obrazu…"
+    "generatingImage": "Generowanie obrazu…",
+    "cookbooks": "Książki kucharskie"
   },
   "sharePanel": {
     "title": "Udostępnij przepis",
@@ -352,5 +370,38 @@
     "cook": "Gotowanie",
     "other": "Pozostały czas",
     "total": "Łącznie"
+  },
+  "cookbooks": {
+    "addCookbook": "Dodaj książkę",
+    "createTitle": "Nowa książka kucharska",
+    "editTitle": "Edytuj książkę kucharską",
+    "titleLabel": "Tytuł",
+    "titlePlaceholder": "np. Kolacje w tygodniu",
+    "options": "Opcje książki",
+    "deleteTitle": "Usuń książkę kucharską",
+    "deleteConfirm": "Czy na pewno chcesz usunąć „{title}”?",
+    "deleteKeepsRecipes": "Przepisy w niej pozostaną w Twojej bibliotece.",
+    "recipeCount": "{count, plural, one {# przepis} other {# przepisy}}",
+    "empty": "Brak przepisów",
+    "singular": "Książka kucharska",
+    "notFound": "Nie znaleziono książki kucharskiej",
+    "notFoundHint": "Mogła zostać usunięta lub nie jest dla Ciebie widoczna.",
+    "emptyHint": "Dodawaj przepisy z menu szybkich akcji przepisu.",
+    "panelTitle": "Dodaj do książki kucharskiej",
+    "newWithRecipe": "Nowa książka z tym przepisem",
+    "noneEditable": "Nie ma jeszcze książek kucharskich, które możesz edytować.",
+    "cardTitle": "W książkach kucharskich",
+    "removeFromCookbook": "Usuń z książki",
+    "noMatchingMembers": "Żaden przepis w tej książce nie odpowiada filtrom.",
+    "membersLabel": "Przepisy w tej książce",
+    "showMore": "Pokaż więcej",
+    "willBeCreated": "Zostanie utworzona po zapisaniu",
+    "manage": "Zarządzaj",
+    "addRecipes": "Dodaj przepisy",
+    "addRecipesTitle": "Dodaj przepisy do {title}",
+    "searchRecipes": "Szukaj przepisów",
+    "noRecipesToAdd": "Nie znaleziono przepisów.",
+    "addCount": "{count, plural, one {Dodaj # przepis} few {Dodaj # przepisy} many {Dodaj # przepisów} other {Dodaj # przepisu}}",
+    "everythingAlreadyIn": "Wszystkie przepisy są już w tej książce kucharskiej."
   }
 }

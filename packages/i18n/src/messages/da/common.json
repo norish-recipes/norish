@@ -49,6 +49,7 @@
   "filters": {
     "title": "Filtre",
     "search": "Søg",
+    "searchIn": "Søg i",
     "sort": "Sorter",
     "mode": "Tilstand",
     "modeAll": "Alle",
@@ -235,6 +236,7 @@
     "cache": {
       "heading": "Offline cache",
       "recipes": "Recipes",
+      "cookbooks": "Kogebøger",
       "groceries": "Groceries",
       "stores": "Stores",
       "planned": "This week",
@@ -282,5 +284,10 @@
   "queuedOffline": {
     "title": "Du er offline",
     "description": "Sat i kø — Norish fuldfører dette automatisk, når du er online igen."
+  },
+  "storageUnavailable": {
+    "title": "Kunne ikke starte",
+    "description": "Norish kunne ikke læse sin sikre lagring og ved derfor ikke, hvilken server appen hører til. Intet er ændret. Prøv igen, eller genstart appen.",
+    "detailsLabel": "Tekniske detaljer"
   }
 }

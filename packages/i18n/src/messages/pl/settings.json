@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Tokeny uwierzytelniania stron",
       "description": "Dodaj nagłówki lub cookies wysyłane podczas importowania przepisów z określonych stron. Przydatne dla stron wymagających logowania (np. Instagram, Facebook).",
+      "accountsDescription": "Nazwij konto, gdy masz więcej niż jedno logowanie do witryny. Każdy import użyje wtedy jednego z kont tej witryny, wybranego losowo, aby żadne logowanie nie obsługiwało wszystkich importów. Token bez nazwy konta jest wysyłany przy każdym imporcie z jego domeny.",
       "domain": "Domena",
       "domainPlaceholder": "np. instagram.com",
+      "account": "Konto",
+      "accountPlaceholder": "np. moj_handle (opcjonalnie)",
+      "accountShared": "Wszystkie konta",
       "name": "Nazwa",
       "namePlaceholder": "np. Cookie lub Authorization",
       "value": "Wartość",
@@ -84,6 +88,7 @@
       "noTokens": "Nie skonfigurowano tokenów uwierzytelniania stron.",
       "tableHeaders": {
         "domain": "DOMENA",
+        "account": "KONTO",
         "name": "NAZWA",
         "type": "TYP",
         "created": "UTWORZONO",
@@ -126,7 +131,8 @@
           "rating": "Oceny",
           "favorites": "Ulubione",
           "conversion": "Konwersja składników",
-          "timers": "Minutniki przepisów"
+          "timers": "Minutniki przepisów",
+          "cookbooks": "Książki kucharskie"
         }
       },
       "todaySection": {
@@ -370,6 +376,34 @@
         "description": "Pobierz każdy przepis na tym serwerze.",
         "button": "Eksportuj archiwum przepisów"
       }
+    },
+    "users": {
+      "title": "Użytkownicy",
+      "description": "Zarządzaj wszystkimi, którzy mają konto na tym serwerze.",
+      "table": {
+        "user": "Użytkownik",
+        "role": "Rola",
+        "household": "Gospodarstwo domowe",
+        "joined": "Dołączył",
+        "actions": "Akcje"
+      },
+      "roles": {
+        "owner": "Właściciel",
+        "admin": "Admin"
+      },
+      "noHousehold": "Brak gospodarstwa",
+      "loading": "Ładowanie użytkowników…",
+      "empty": "Brak użytkowników.",
+      "loadFailed": "Nie udało się wczytać listy użytkowników.",
+      "actions": {
+        "makeAdmin": "Nadaj uprawnienia admina",
+        "revokeAdmin": "Odbierz uprawnienia admina",
+        "delete": "Usuń użytkownika"
+      },
+      "deleteTitle": "Usunąć {name}?",
+      "deleteConfirm": "To trwale usunie konto użytkownika i usunie go z gospodarstwa domowego. Tej operacji nie można cofnąć.",
+      "deleteSuccess": "{name} został(a) usunięty(a)",
+      "countSummary": "{count, plural, one {# użytkownik} few {# użytkowników} many {# użytkowników} other {# użytkownika}} łącznie"
     },
     "registration": {
       "title": "Rejestracja",

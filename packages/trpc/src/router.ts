@@ -3,9 +3,11 @@ import { archive } from "./routers/archive";
 import { caldavRouter, caldavSubscriptions } from "./routers/caldav";
 import { calendarRouter } from "./routers/calendar";
 import { configRouter } from "./routers/config";
+import { cookbooksRouter } from "./routers/cookbooks";
 import { favoritesRouter } from "./routers/favorites";
 import { groceriesRouter } from "./routers/groceries";
 import { householdsAppRouter } from "./routers/households";
+import { libraryRouter } from "./routers/library";
 import { permissionsRouter } from "./routers/permissions";
 import { ratingsRouter } from "./routers/ratings";
 import { recipesRouter } from "./routers/recipes";
@@ -18,6 +20,8 @@ export const appRouter = router({
   groceries: groceriesRouter,
   calendar: calendarRouter,
   recipes: recipesRouter,
+  cookbooks: cookbooksRouter,
+  library: libraryRouter,
   permissions: permissionsRouter,
   admin: adminRouter,
   households: householdsAppRouter,

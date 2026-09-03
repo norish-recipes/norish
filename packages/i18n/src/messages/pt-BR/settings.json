@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Tokens de autenticação de sites",
       "description": "Adicione cabeçalhos ou cookies que são enviados ao importar receitas de sites específicos. Útil para sites que exigem login (ex.: Instagram, Facebook).",
+      "accountsDescription": "Dê um nome à conta quando você tiver mais de um login para um site. Cada importação passa a usar uma das contas desse site, escolhida ao acaso, para que nenhum login carregue todas as importações. Um token sem nome de conta é enviado em toda importação do seu domínio.",
       "domain": "Domínio",
       "domainPlaceholder": "ex.: instagram.com",
+      "account": "Conta",
+      "accountPlaceholder": "ex. meu_usuario (opcional)",
+      "accountShared": "Todas as contas",
       "name": "Nome",
       "namePlaceholder": "ex.: Cookie ou Authorization",
       "value": "Valor",
@@ -84,6 +88,7 @@
       "noTokens": "Nenhum token de autenticação de site configurado.",
       "tableHeaders": {
         "domain": "DOMÍNIO",
+        "account": "CONTA",
         "name": "NOME",
         "type": "TIPO",
         "created": "CRIADO",
@@ -126,7 +131,8 @@
           "rating": "Avaliações",
           "favorites": "Favoritos",
           "conversion": "Conversão de ingredientes",
-          "timers": "Cronômetros de receita"
+          "timers": "Cronômetros de receita",
+          "cookbooks": "Livros de receitas"
         }
       },
       "applyError": "Falha ao aplicar preferência",
@@ -370,6 +376,34 @@
         "description": "Baixe todas as receitas deste servidor.",
         "button": "Exportar arquivo de receitas"
       }
+    },
+    "users": {
+      "title": "Usuários",
+      "description": "Gerencie todos que têm uma conta neste servidor.",
+      "table": {
+        "user": "Usuário",
+        "role": "Função",
+        "household": "Residência",
+        "joined": "Entrou em",
+        "actions": "Ações"
+      },
+      "roles": {
+        "owner": "Proprietário",
+        "admin": "Admin"
+      },
+      "noHousehold": "Sem residência",
+      "loading": "Carregando usuários…",
+      "empty": "Ainda não há usuários.",
+      "loadFailed": "Não foi possível carregar a lista de usuários.",
+      "actions": {
+        "makeAdmin": "Tornar admin",
+        "revokeAdmin": "Remover acesso de admin",
+        "delete": "Excluir usuário"
+      },
+      "deleteTitle": "Excluir {name}?",
+      "deleteConfirm": "Isso exclui permanentemente a conta do usuário e o remove de sua residência. Essa ação não pode ser desfeita.",
+      "deleteSuccess": "{name} foi excluído",
+      "countSummary": "{count, plural, one {# usuário} other {# usuários}} no total"
     },
     "registration": {
       "title": "Cadastro",

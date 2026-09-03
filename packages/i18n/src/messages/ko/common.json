@@ -49,6 +49,7 @@
   "filters": {
     "title": "필터",
     "search": "검색",
+    "searchIn": "검색 범위",
     "sort": "정렬",
     "mode": "모드",
     "modeAll": "모두",
@@ -235,6 +236,7 @@
     "cache": {
       "heading": "Offline cache",
       "recipes": "Recipes",
+      "cookbooks": "요리책",
       "groceries": "Groceries",
       "stores": "Stores",
       "planned": "This week",
@@ -282,5 +284,10 @@
   "queuedOffline": {
     "title": "오프라인 상태입니다",
     "description": "대기열에 추가되었습니다. 다시 온라인이 되면 Norish가 자동으로 완료합니다."
+  },
+  "storageUnavailable": {
+    "title": "시작할 수 없음",
+    "description": "Norish가 보안 저장소를 읽지 못해 이 앱이 어느 서버에 속하는지 알 수 없습니다. 변경된 내용은 없습니다. 다시 시도하거나 앱을 재시작하세요.",
+    "detailsLabel": "기술 세부 정보"
   }
 }

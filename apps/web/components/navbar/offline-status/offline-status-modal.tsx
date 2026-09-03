@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 import { OFFLINE_FORCED_AVAILABLE } from "@/lib/connectivity";
 import {
   ArrowPathIcon,
+  BookmarkSquareIcon,
   BookOpenIcon,
   BuildingStorefrontIcon,
   CalendarDaysIcon,
@@ -156,6 +157,7 @@ function CacheSection({ status }: { status: OfflineStatus }) {
 
   const items = [
     { icon: BookOpenIcon, label: t("recipes"), value: counts.recipes },
+    { icon: BookmarkSquareIcon, label: t("cookbooks"), value: counts.cookbooks },
     { icon: ShoppingCartIcon, label: t("groceries"), value: counts.groceries },
     { icon: BuildingStorefrontIcon, label: t("stores"), value: counts.stores },
     { icon: CalendarDaysIcon, label: t("planned"), value: counts.plannedThisWeek },

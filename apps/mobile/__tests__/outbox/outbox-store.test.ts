@@ -12,7 +12,7 @@ vi.mock("@/lib/storage/outbox-mmkv", () => ({
   outboxStorage: {
     getString: (key: string) => mockStorage.get(key),
     set: (key: string, value: string) => mockStorage.set(key, value),
-    delete: (key: string) => mockStorage.delete(key),
+    remove: (key: string) => mockStorage.delete(key),
   },
 }));
 

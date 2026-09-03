@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "Alle recepten",
+    "libraryTitle": "Jouw bibliotheek",
+    "recipesTitle": "Jouw recepten",
+    "cookbooksTitle": "Jouw kookboeken",
     "searchPlaceholder": "Zoek of voeg een recept toe...",
     "searchRecipesPlaceholder": "Zoek recepten...",
-    "recipeCount": "{count, plural, one {# recept} other {# recepten}}",
+    "libraryCount": "{count, plural, one {# item} other {# items}}",
     "addRecipe": "Recept toevoegen",
     "importFromUrl": "URL",
     "importFromPaste": "Plakken",
@@ -19,13 +21,29 @@
       "label": "Receptweergave",
       "grid": "Raster",
       "list": "Lijst"
+    },
+    "libraryType": {
+      "label": "Weergeven",
+      "all": "Alles",
+      "recipes": "Recepten",
+      "cookbooks": "Kookboeken"
     }
   },
+  "back": {
+    "all": "Terug naar bibliotheek",
+    "recipes": "Terug naar recepten",
+    "cookbooks": "Terug naar kookboeken",
+    "named": "Terug naar {name}",
+    "cookbook": "Terug naar kookboek",
+    "generic": "Terug"
+  },
   "empty": {
-    "title": "Begin je collectie met recepten",
+    "title": "Je bibliotheek wacht op je",
     "description": "Plak een link in het zoekveld en zie de magie gebeuren.",
     "noResults": "Geen recepten gevonden",
-    "noResultsHint": "Probeer je filters aan te passen of te wissen."
+    "noResultsHint": "Probeer je filters aan te passen of te wissen.",
+    "noCookbooks": "Nog geen kookboeken",
+    "noCookbooksHint": "Een kookboek is een set recepten met een titel. Maak je eerste om je bibliotheek te ordenen."
   },
   "card": {
     "noImage": "Geen afbeelding beschikbaar",
@@ -35,7 +53,6 @@
     "recipeOptions": "Receptopties"
   },
   "detail": {
-    "backToRecipes": "Terug naar recepten",
     "viewOriginal": "Bekijk origineel recept",
     "ingredients": "Ingrediënten",
     "ingredientOptions": "Ingrediëntopties",
@@ -86,7 +103,8 @@
     "linkingIngredients": "Ingrediënten koppelen…",
     "enrichmentFailed": "Laatste poging mislukt",
     "generateImage": "Afbeelding genereren",
-    "generatingImage": "Afbeelding genereren…"
+    "generatingImage": "Afbeelding genereren…",
+    "cookbooks": "Kookboeken"
   },
   "sharePanel": {
     "title": "Recept delen",
@@ -352,5 +370,38 @@
     "cook": "Koken",
     "other": "Overige tijd",
     "total": "Totaal"
+  },
+  "cookbooks": {
+    "addCookbook": "Kookboek toevoegen",
+    "createTitle": "Nieuw kookboek",
+    "editTitle": "Kookboek bewerken",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "bv. Doordeweekse diners",
+    "options": "Kookboekopties",
+    "deleteTitle": "Kookboek verwijderen",
+    "deleteConfirm": "Weet je zeker dat je \"{title}\" wilt verwijderen?",
+    "deleteKeepsRecipes": "De recepten erin blijven in je bibliotheek.",
+    "recipeCount": "{count, plural, one {# recept} other {# recepten}}",
+    "empty": "Nog geen recepten",
+    "singular": "Kookboek",
+    "notFound": "Kookboek niet gevonden",
+    "notFoundHint": "Het is misschien verwijderd, of niet zichtbaar voor jou.",
+    "emptyHint": "Voeg recepten toe via het snelle-actiesmenu van een recept.",
+    "panelTitle": "Toevoegen aan kookboek",
+    "newWithRecipe": "Nieuw kookboek met dit recept",
+    "noneEditable": "Er zijn nog geen kookboeken die je kunt bewerken.",
+    "cardTitle": "In kookboeken",
+    "removeFromCookbook": "Uit kookboek verwijderen",
+    "noMatchingMembers": "Geen recepten in dit kookboek passen bij je filters.",
+    "membersLabel": "Recepten in dit kookboek",
+    "showMore": "Meer tonen",
+    "willBeCreated": "Wordt aangemaakt bij opslaan",
+    "manage": "Beheren",
+    "addRecipes": "Recepten toevoegen",
+    "addRecipesTitle": "Recepten toevoegen aan {title}",
+    "searchRecipes": "Recepten zoeken",
+    "noRecipesToAdd": "Geen recepten gevonden.",
+    "addCount": "{count, plural, one {# recept toevoegen} other {# recepten toevoegen}}",
+    "everythingAlreadyIn": "Alle recepten staan al in dit kookboek."
   }
 }

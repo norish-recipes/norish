@@ -21,13 +21,14 @@ import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import type { z } from "zod";
 import {
+  asSchema,
   experimental_transcribe,
   generateImage as generateImageWithModel,
   generateText,
   Output,
 } from "ai";
 
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
+import type { AIConfig, TranscriptionProvider } from "@norish/config/zod/server-config";
 import {
   isCloudTranscriptionProvider,
   isImageGenerationConfigValid,
@@ -42,8 +43,16 @@ import { aiLogger } from "@norish/shared-server/logger";
 
 import type { PromptName } from "../prompts/loader";
 import { fillPrompt, loadPrompt } from "../prompts/loader";
-import { AIConfigurationError, AIDisabledError, AIResponseError, toAIError } from "./errors";
 import {
+  AIConfigurationError,
+  AIDisabledError,
+  AIProviderError,
+  AIResponseError,
+  isRequestShapeRejection,
+  toAIError,
+} from "./errors";
+import {
+  canDegradeToJsonMode,
   createGenericTranscriptionClient,
   createImageModelFromConfig,
   createModelsFromConfig,
@@ -133,12 +142,136 @@ export interface GenerateOptions<T> {
 }
 
 /**
+ * What a plain-JSON request has to carry that a schema-constrained one does
+ * not: the shape itself. `json_object` mode only promises valid JSON, so
+ * without this the model answers something parseable and wrong.
+ *
+ * Code-owned like the system messages, and appended to one rather than to the
+ * administrator's prompt: it is an invariant of the transport, not an
+ * instruction anyone should be able to edit away.
+ */
+async function jsonModeInstruction<T>(schema: z.ZodType<T>): Promise<string> {
+  const jsonSchema = await asSchema(schema).jsonSchema;
+
+  return [
+    "Answer with a single JSON object and nothing else: no prose, no code fence.",
+    "It must validate against this JSON Schema:",
+    JSON.stringify(jsonSchema),
+  ].join("\n");
+}
+
+interface ObjectRequest<T> {
+  config: AIConfig;
+  promptName: StructuredPromptName;
+  prompt: string;
+  schema: z.ZodType<T>;
+  images: readonly AIImage[];
+  /**
+   * Ask for plain `json_object` output and carry the schema in the system
+   * message, rather than asking the endpoint to enforce a JSON schema.
+   */
+  jsonMode: boolean;
+}
+
+/** One model round trip, in whichever structured-output mode was asked for. */
+async function requestObject<T>({
+  config,
+  promptName,
+  prompt,
+  schema,
+  images,
+  jsonMode,
+}: ObjectRequest<T>): Promise<T> {
+  const { model, visionModel, providerName } = createModelsFromConfig(config, {
+    structuredOutputs: !jsonMode,
+  });
+
+  // Vision selection is implicit: the presence of images selects the vision
+  // model, so images cannot be silently dropped by a forgotten flag.
+  const useVision = images.length > 0;
+  const system = jsonMode
+    ? `${SYSTEM_MESSAGES[promptName]}\n\n${await jsonModeInstruction(schema)}`
+    : SYSTEM_MESSAGES[promptName];
+
+  aiLogger.debug(
+    {
+      feature: promptName,
+      provider: providerName,
+      promptLength: prompt.length,
+      images: images.length,
+      jsonMode,
+    },
+    "Sending AI request"
+  );
+
+  const result = await generateText({
+    model: useVision ? visionModel : model,
+    output: Output.object({ schema }),
+    system,
+    temperature: config.temperature,
+    maxOutputTokens: config.maxTokens,
+    abortSignal: AbortSignal.timeout(config.timeoutMs),
+    ...(useVision
+      ? {
+          messages: [
+            {
+              role: "user" as const,
+              content: [
+                { type: "text" as const, text: prompt },
+                ...images.map((image) => ({
+                  type: "image" as const,
+                  image: image.data,
+                  mediaType: image.mimeType,
+                })),
+              ],
+            },
+          ],
+        }
+      : { prompt }),
+  });
+
+  aiLogger.info(
+    {
+      feature: promptName,
+      provider: providerName,
+      model: useVision ? (config.visionModel ?? config.model) : config.model,
+      inputTokens: result.usage?.inputTokens ?? 0,
+      outputTokens: result.usage?.outputTokens ?? 0,
+      totalTokens: result.usage?.totalTokens ?? 0,
+    },
+    "AI request completed"
+  );
+
+  return result.output;
+}
+
+/** Log a failed request once, as the typed error the caller will see. */
+function reportFailure(promptName: StructuredPromptName, error: unknown): never {
+  const aiError = toAIError(error);
+
+  aiLogger.error(
+    { err: error, feature: promptName, retryable: aiError.retryable },
+    "AI request failed"
+  );
+
+  throw aiError;
+}
+
+/**
  * Issue one structured-generation request and return the validated output.
  *
  * Throws an {@link AIError} on failure. The SDK's structured-output strategy
  * parses and validates against the schema and throws on either failure, so
  * this never returns an unvalidated object — callers keep only their own
  * domain rules.
+ *
+ * A generic OpenAI-compatible endpoint gets a second chance: what sits behind
+ * a typed base URL decides whether a strict `json_schema` request is servable
+ * at all, and an aggregator reports that as a routing failure blaming the
+ * account's settings. So a refused request shape is retried once in plain JSON
+ * mode with the schema in the prompt, which most models handle, and only a
+ * second refusal is reported — naming the missing capability rather than the
+ * aggregator's guess, and not worth another queue attempt (#538).
  */
 export async function generateStructured<T>(options: GenerateOptions<T>): Promise<T> {
   const { prompt: promptName, schema, sections = [], fill, images = [] } = options;
@@ -153,72 +286,37 @@ export async function generateStructured<T>(options: GenerateOptions<T>): Promis
   const basePrompt = await loadPrompt(promptName);
   const filled = fill ? fillPrompt(basePrompt, fill) : basePrompt;
   const prompt = [filled, ...sections].join("\n\n");
+  const request = { config, promptName, prompt, schema, images };
 
   try {
-    const { model, visionModel, providerName } = createModelsFromConfig(config);
-
-    // Vision selection is implicit: the presence of images selects the vision
-    // model, so images cannot be silently dropped by a forgotten flag.
-    const useVision = images.length > 0;
-
-    aiLogger.debug(
-      {
-        feature: promptName,
-        provider: providerName,
-        promptLength: prompt.length,
-        images: images.length,
-      },
-      "Sending AI request"
-    );
-
-    const result = await generateText({
-      model: useVision ? visionModel : model,
-      output: Output.object({ schema }),
-      system: SYSTEM_MESSAGES[promptName],
-      temperature: config.temperature,
-      maxOutputTokens: config.maxTokens,
-      abortSignal: AbortSignal.timeout(config.timeoutMs),
-      ...(useVision
-        ? {
-            messages: [
-              {
-                role: "user" as const,
-                content: [
-                  { type: "text" as const, text: prompt },
-                  ...images.map((image) => ({
-                    type: "image" as const,
-                    image: image.data,
-                    mediaType: image.mimeType,
-                  })),
-                ],
-              },
-            ],
-          }
-        : { prompt }),
-    });
-
-    aiLogger.info(
-      {
-        feature: promptName,
-        provider: providerName,
-        model: useVision ? (config.visionModel ?? config.model) : config.model,
-        inputTokens: result.usage?.inputTokens ?? 0,
-        outputTokens: result.usage?.outputTokens ?? 0,
-        totalTokens: result.usage?.totalTokens ?? 0,
-      },
-      "AI request completed"
-    );
-
-    return result.output;
+    return await requestObject({ ...request, jsonMode: false });
   } catch (error) {
-    const aiError = toAIError(error);
+    if (!canDegradeToJsonMode(config.provider) || !isRequestShapeRejection(error)) {
+      reportFailure(promptName, error);
+    }
 
-    aiLogger.error(
-      { err: error, feature: promptName, retryable: aiError.retryable },
-      "AI request failed"
+    aiLogger.warn(
+      { err: error, feature: promptName, provider: config.provider },
+      "Endpoint refused a JSON-schema request, retrying in plain JSON mode"
     );
 
-    throw aiError;
+    try {
+      return await requestObject({ ...request, jsonMode: true });
+    } catch (fallbackError) {
+      if (!isRequestShapeRejection(fallbackError)) reportFailure(promptName, fallbackError);
+
+      aiLogger.error(
+        { err: fallbackError, feature: promptName, provider: config.provider },
+        "Endpoint served neither JSON-schema nor plain JSON output"
+      );
+
+      throw new AIProviderError(
+        "The configured AI endpoint could not serve a structured response: it refused both a " +
+          "JSON schema request and a plain JSON one. If the endpoint is an aggregator, the " +
+          "models it is allowed to route to must support JSON output.",
+        { retryable: false, cause: fallbackError }
+      );
+    }
   }
 }
 

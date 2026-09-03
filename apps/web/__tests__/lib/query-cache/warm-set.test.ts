@@ -34,19 +34,78 @@ vi.mock("@/lib/query-cache/persisted-query-client", async (importOriginal) => ({
 
 function makeTrpc() {
   return {
-    recipes: {
+    // The Library is what the Warm Set warms: one interleaved list holding
+    // both kinds (ADR-0026).
+    library: {
       list: {
         infiniteQueryOptions: (input: unknown, options: object) => ({
-          queryKey: [["recipes", "list"], { input, type: "infinite" }],
+          queryKey: [["library", "list"], { input, type: "infinite" }],
           queryFn: async () => ({
-            recipes: [{ id: "r1" }, { id: "r2" }],
-            total: 2,
+            items: [
+              { kind: "recipe", recipe: { id: "r1" } },
+              { kind: "recipe", recipe: { id: "r2" } },
+              { kind: "cookbook", cookbook: { id: "c1" } },
+            ],
+            total: 3,
             nextCursor: null,
           }),
           initialPageParam: 0,
           ...options,
         }),
       },
+    },
+    cookbooks: {
+      list: {
+        infiniteQueryOptions: (input: unknown, options: object) => ({
+          queryKey: [["cookbooks", "list"], { input, type: "infinite" }],
+          queryFn: async () => ({ cookbooks: [{ id: "c1" }], total: 1, nextCursor: null }),
+          initialPageParam: 0,
+          ...options,
+        }),
+      },
+      get: {
+        queryOptions: ({ id }: { id: string }) => ({
+          queryKey: [["cookbooks", "get"], { input: { id }, type: "query" }],
+          queryFn: async () => ({ id, title: `Cookbook ${id}` }),
+        }),
+        queryKey: ({ id }: { id: string }) => [
+          ["cookbooks", "get"],
+          { input: { id }, type: "query" },
+        ],
+      },
+      memberIds: {
+        queryOptions: ({ cookbookId }: { cookbookId: string }) => ({
+          queryKey: [["cookbooks", "memberIds"], { input: { cookbookId }, type: "query" }],
+          queryFn: async () => ["r1"],
+        }),
+      },
+      recipes: {
+        infiniteQueryOptions: (input: { cookbookId: string }, options: object) => ({
+          queryKey: [["cookbooks", "recipes"], { input, type: "infinite" }],
+          queryFn: async () => ({ recipes: [{ id: "r1" }], total: 1, nextCursor: null }),
+          initialPageParam: 0,
+          ...options,
+        }),
+      },
+      editable: {
+        queryOptions: () => ({
+          queryKey: [["cookbooks", "editable"], { type: "query" }],
+          queryFn: async () => [{ id: "c1", title: "Cookbook c1" }],
+        }),
+        queryKey: () => [["cookbooks", "editable"], { type: "query" }],
+      },
+      forRecipe: {
+        queryOptions: ({ recipeId }: { recipeId: string }) => ({
+          queryKey: [["cookbooks", "forRecipe"], { input: { recipeId }, type: "query" }],
+          queryFn: async () => [{ id: "c1", title: "Cookbook c1" }],
+        }),
+        queryKey: ({ recipeId }: { recipeId: string }) => [
+          ["cookbooks", "forRecipe"],
+          { input: { recipeId }, type: "query" },
+        ],
+      },
+    },
+    recipes: {
       get: {
         queryOptions: ({ id }: { id: string }) => ({
           queryKey: [["recipes", "get"], { input: { id }, type: "query" }],
@@ -122,6 +181,88 @@ describe("WarmSet", () => {
     expect(writeLastWarmedAt).toHaveBeenCalledWith("owner-1", expect.any(Number));
   });
 
+  it("guarantees every cookbook the reader can see, with its membership", async () => {
+    const queryClient = new QueryClient();
+    const warmSet = createWarmSet({ queryClient, trpc: makeTrpc() });
+
+    await expect(warmSet.topUp()).resolves.toBe("complete");
+
+    // The cookbook itself, so its page opens Offline.
+    expect(
+      queryClient.getQueryData([["cookbooks", "get"], { input: { id: "c1" }, type: "query" }])
+    ).toEqual({ id: "c1", title: "Cookbook c1" });
+    // Its membership, so the page lists what is in it.
+    expect(
+      queryClient.getQueryData([
+        ["cookbooks", "recipes"],
+        { input: { cookbookId: "c1", limit: 100 }, type: "infinite" },
+      ])
+    ).toMatchObject({ pages: [{ recipes: [{ id: "r1" }] }] });
+    // The cookbooks the reader may edit — one answer for every recipe page, so
+    // filing works Offline without a read per recipe.
+    expect(queryClient.getQueryData([["cookbooks", "editable"], { type: "query" }])).toEqual([
+      { id: "c1", title: "Cookbook c1" },
+    ]);
+    // And which cookbooks hold each warmed recipe, for the recipe page's card.
+    expect(
+      queryClient.getQueryData([
+        ["cookbooks", "forRecipe"],
+        { input: { recipeId: "r1" }, type: "query" },
+      ])
+    ).toEqual([{ id: "c1", title: "Cookbook c1" }]);
+  });
+
+  it("warms every cookbook, not just the ones the first Library page held", async () => {
+    const trpc = makeTrpc();
+
+    // A Library page of nothing but recipes: an older cookbook would fall
+    // outside the floor if the warm read cookbooks off this page.
+    trpc.library.list.infiniteQueryOptions = (input: unknown, options: object) => ({
+      queryKey: [["library", "list"], { input, type: "infinite" }],
+      queryFn: async () => ({
+        items: [{ kind: "recipe", recipe: { id: "r1" } }],
+        total: 1,
+        nextCursor: null,
+      }),
+      initialPageParam: 0,
+      ...options,
+    });
+
+    const queryClient = new QueryClient();
+
+    await expect(createWarmSet({ queryClient, trpc }).topUp()).resolves.toBe("complete");
+
+    expect(
+      queryClient.getQueryData([["cookbooks", "get"], { input: { id: "c1" }, type: "query" }])
+    ).toEqual({ id: "c1", title: "Cookbook c1" });
+  });
+
+  it("keeps the member recipes' fifty-recipe guarantee and adds no new one", async () => {
+    const trpc = makeTrpc();
+    const manyItems = Array.from({ length: 60 }, (_unused, index) => ({
+      kind: "recipe" as const,
+      recipe: { id: `r${index}` },
+    }));
+
+    trpc.library.list.infiniteQueryOptions = (input: unknown, options: object) => ({
+      queryKey: [["library", "list"], { input, type: "infinite" }],
+      queryFn: async () => ({ items: manyItems, total: manyItems.length, nextCursor: null }),
+      initialPageParam: 0,
+      ...options,
+    });
+
+    const queryClient = new QueryClient();
+
+    await createWarmSet({ queryClient, trpc }).topUp();
+
+    const warmedDetails = queryClient
+      .getQueryCache()
+      .findAll({ queryKey: [["recipes", "get"]] })
+      .filter((query) => query.state.data != null);
+
+    expect(warmedDetails).toHaveLength(50);
+  });
+
   it("inspects the same Warm Set that top-up writes", async () => {
     const queryClient = new QueryClient();
     const warmSet = createWarmSet({ queryClient, trpc: makeTrpc() });
@@ -130,6 +271,7 @@ describe("WarmSet", () => {
 
     await expect(warmSet.inspect()).resolves.toEqual({
       recipes: 2,
+      cookbooks: 1,
       groceries: 1,
       stores: 0,
       plannedThisWeek: 0,
@@ -147,6 +289,20 @@ describe("WarmSet", () => {
     warmSet.promoteCreatedRecipe("new-recipe");
 
     expect(queryClient.getQueryCache().find({ queryKey: recipeKey })?.gcTime).toBe(604_800_000);
+  });
+
+  it("promotes a newly created cookbook into the Warm Set", () => {
+    const queryClient = new QueryClient();
+    const trpc = makeTrpc();
+    const warmSet = createWarmSet({ queryClient, trpc });
+    const cookbookKey = trpc.cookbooks.get.queryKey({ id: "new-cookbook" });
+
+    queryClient.setQueryData(cookbookKey, { id: "new-cookbook" });
+    warmSet.promoteCreatedCookbook("new-cookbook");
+
+    // Held at the offline cache's own lifetime, so it is in the floor now
+    // rather than at the next warm (ADR-0008).
+    expect(queryClient.getQueryCache().find({ queryKey: cookbookKey })?.gcTime).toBe(604_800_000);
   });
 
   it("reports a partial top-up without stamping completion", async () => {
@@ -184,10 +340,10 @@ describe("WarmSet", () => {
   it("stores warmed recipes' same-origin primary images", async () => {
     const trpc = makeTrpc();
 
-    trpc.recipes.list.infiniteQueryOptions = (input: unknown, options: object) => ({
-      queryKey: [["recipes", "list"], { input, type: "infinite" }],
+    trpc.library.list.infiniteQueryOptions = (input: unknown, options: object) => ({
+      queryKey: [["library", "list"], { input, type: "infinite" }],
       queryFn: async () => ({
-        recipes: [{ id: "r1", image: "/uploads/r1.jpg" }],
+        items: [{ kind: "recipe", recipe: { id: "r1", image: "/uploads/r1.jpg" } }],
         total: 1,
         nextCursor: null,
       }),

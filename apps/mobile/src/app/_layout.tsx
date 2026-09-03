@@ -1,12 +1,13 @@
 import "@/global.css";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
 } from "@/context/appearance-preference-context";
+import { StorageUnavailableScreen } from "@/components/shell/storage-unavailable-screen";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { GroceriesProvider } from "@/context/groceries-context";
 import { HouseholdProvider } from "@/context/household-context";
@@ -18,15 +19,22 @@ import { RecipesProvider } from "@/context/recipes-context";
 import { StoresProvider } from "@/context/stores-context";
 import { UserProvider } from "@/context/user-context";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
+import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { useCacheHydration } from "@/hooks/use-cache-hydration";
 import { useCacheInvalidationOnReconnect } from "@/hooks/use-cache-lifecycle";
 import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { TrpcProvider } from "@/providers/trpc-provider";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { HeroUINativeProvider } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
+
+// The boot gate below renders nothing until hydration settles. Holding the
+// native splash over that window is what keeps it from showing as a blank
+// screen; every branch of the gate hides it again.
+void SplashScreen.preventAutoHideAsync();
 
 // ============================================================================
 // Entry point
@@ -55,8 +63,21 @@ function RootLayoutContent() {
   const backendBaseUrl = useBackendBaseUrl();
   const cacheReady = useCacheHydration();
 
+  const boot = resolveBootPhase({
+    appearanceHydrated: hydrated,
+    cacheReady,
+    backendBaseUrl,
+  });
+
+  // Hand the screen over from the native splash only once there is something to
+  // show, including the failure case: a boot that cannot finish still has to say
+  // so rather than sit under the splash forever.
+  useEffect(() => {
+    if (boot.phase !== "loading") void SplashScreen.hideAsync();
+  }, [boot.phase]);
+
   // Gate: wait for all async hydration before rendering anything
-  if (!hydrated || backendBaseUrl === undefined || !cacheReady) {
+  if (boot.phase === "loading") {
     return null;
   }
 
@@ -64,8 +85,21 @@ function RootLayoutContent() {
 
   const theme = effectiveScheme === "dark" ? DarkTheme : DefaultTheme;
 
+  // Secure storage could not be read, so which backend this install belongs to
+  // is unknown. Treating that as "no backend configured" would quietly drop a
+  // configured server, so surface it instead.
+  if (boot.phase === "storage-error") {
+    return (
+      <ThemeProvider value={theme}>
+        <MobileIntlFallbackProvider>
+          <StorageUnavailableScreen error={boot.error} onRetry={backendBaseUrl.retry} />
+        </MobileIntlFallbackProvider>
+      </ThemeProvider>
+    );
+  }
+
   // No backend URL configured — minimal provider tree (setup / onboarding)
-  if (!backendBaseUrl) {
+  if (boot.phase === "onboarding") {
     return (
       <ThemeProvider value={theme}>
         <AuthProvider backendBaseUrl={null}>
@@ -81,9 +115,9 @@ function RootLayoutContent() {
   // Full provider tree — backend available
   return (
     <ThemeProvider value={theme}>
-      <NetworkProvider backendBaseUrl={backendBaseUrl}>
-        <TrpcProvider baseUrl={backendBaseUrl}>
-          <AuthProvider backendBaseUrl={backendBaseUrl}>
+      <NetworkProvider backendBaseUrl={boot.backendBaseUrl}>
+        <TrpcProvider baseUrl={boot.backendBaseUrl}>
+          <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
             <MobileIntlProvider>
               <DomainProviders>
                 <RootStack />

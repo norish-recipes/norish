@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "사이트 인증 토큰",
       "description": "특정 사이트에서 레시피를 가져올 때 전송되는 헤더나 쿠키를 추가하세요. 로그인이 필요한 사이트(예: Instagram, Facebook)에 유용합니다.",
+      "accountsDescription": "한 사이트에 로그인이 여러 개 있으면 계정 이름을 지정하세요. 그러면 가져오기마다 해당 사이트의 계정 중 하나를 무작위로 사용하므로 한 로그인이 모든 가져오기를 감당하지 않습니다. 계정 이름이 없는 토큰은 해당 도메인의 모든 가져오기에 함께 전송됩니다.",
       "domain": "도메인",
       "domainPlaceholder": "예: instagram.com",
+      "account": "계정",
+      "accountPlaceholder": "예: my_handle (선택 사항)",
+      "accountShared": "모든 계정",
       "name": "이름",
       "namePlaceholder": "예: Cookie 또는 Authorization",
       "value": "값",
@@ -84,6 +88,7 @@
       "noTokens": "설정된 사이트 인증 토큰이 없습니다.",
       "tableHeaders": {
         "domain": "도메인",
+        "account": "계정",
         "name": "이름",
         "type": "유형",
         "created": "생성일",
@@ -126,7 +131,8 @@
           "rating": "평점",
           "favorites": "즐겨찾기",
           "conversion": "재료 단위 변환",
-          "timers": "레시피 타이머"
+          "timers": "레시피 타이머",
+          "cookbooks": "요리책"
         }
       },
       "todaySection": {
@@ -370,6 +376,34 @@
         "description": "이 서버의 모든 레시피를 다운로드합니다.",
         "button": "레시피 아카이브 내보내기"
       }
+    },
+    "users": {
+      "title": "사용자",
+      "description": "이 서버의 계정을 가진 모든 사용자를 관리하세요.",
+      "table": {
+        "user": "사용자",
+        "role": "역할",
+        "household": "가구",
+        "joined": "가입일",
+        "actions": "작업"
+      },
+      "roles": {
+        "owner": "소유자",
+        "admin": "관리자"
+      },
+      "noHousehold": "가구 없음",
+      "loading": "사용자 불러오는 중…",
+      "empty": "아직 사용자가 없습니다.",
+      "loadFailed": "사용자 목록을 불러오지 못했습니다.",
+      "actions": {
+        "makeAdmin": "관리자로 지정",
+        "revokeAdmin": "관리자 권한 해제",
+        "delete": "사용자 삭제"
+      },
+      "deleteTitle": "{name}님을 삭제할까요?",
+      "deleteConfirm": "이 작업은 사용자의 계정을 영구적으로 삭제하고 가구에서 제외합니다. 되돌릴 수 없습니다.",
+      "deleteSuccess": "{name}님이 삭제되었습니다",
+      "countSummary": "총 {count}명"
     },
     "registration": {
       "title": "등록",

@@ -10,6 +10,16 @@ import { probeBackendReachable, setOfflineForced } from "@/lib/connectivity";
 import { discardAllEntries, outboxStore, requeueParkedEntries } from "@/lib/outbox";
 import { cacheManager } from "@/lib/query-cache";
 
+/** Nothing cached: what the modal shows before a warm, and after a wipe. */
+const EMPTY_INVENTORY: WarmSetInventory = {
+  recipes: 0,
+  cookbooks: 0,
+  groceries: 0,
+  stores: 0,
+  plannedThisWeek: 0,
+  lastCompletedAt: null,
+};
+
 export interface OutboxSummary {
   entries: OutboxEntry[];
   total: number;
@@ -57,13 +67,7 @@ export function useOfflineStatus(): OfflineStatus {
   const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
-  const [inventory, setInventory] = useState<WarmSetInventory>({
-    recipes: 0,
-    groceries: 0,
-    stores: 0,
-    plannedThisWeek: 0,
-    lastCompletedAt: null,
-  });
+  const [inventory, setInventory] = useState<WarmSetInventory>(EMPTY_INVENTORY);
   const isSyncing = useSyncExternalStore(recovery.subscribe, recovery.isSyncing, () => false);
 
   // Keep the Outbox list live while open (in-tab and cross-tab).
@@ -96,13 +100,7 @@ export function useOfflineStatus(): OfflineStatus {
   // Read the Warm Set inventory when the modal opens.
   useEffect(() => {
     if (!owner) {
-      setInventory({
-        recipes: 0,
-        groceries: 0,
-        stores: 0,
-        plannedThisWeek: 0,
-        lastCompletedAt: null,
-      });
+      setInventory(EMPTY_INVENTORY);
 
       return;
     }
@@ -171,13 +169,7 @@ export function useOfflineStatus(): OfflineStatus {
 
   const wipeCache = useCallback(async () => {
     await cacheManager.resetOfflineCopy("manual");
-    setInventory({
-      recipes: 0,
-      groceries: 0,
-      stores: 0,
-      plannedThisWeek: 0,
-      lastCompletedAt: null,
-    });
+    setInventory(EMPTY_INVENTORY);
 
     // Re-warm immediately when Live so the floor self-heals; Offline this simply
     // leaves an empty cache until reconnect.

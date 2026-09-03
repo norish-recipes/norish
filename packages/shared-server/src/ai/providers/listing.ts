@@ -8,6 +8,7 @@ import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, AvailableModel } from "../runtime/types";
+import { normalizeOllamaEndpoint, normalizeOpenAICompatibleEndpoint } from "../runtime/endpoints";
 
 // ============================================================================
 // Constants
@@ -306,8 +307,7 @@ function isVisionModel(name: string, families?: string[]): boolean {
  */
 export async function listOllamaModels(endpoint: string): Promise<AvailableModel[]> {
   try {
-    const host = endpoint.replace(/\/+$/, "").replace(/\/api$/, "");
-    const client = new Ollama({ host });
+    const client = new Ollama({ host: normalizeOllamaEndpoint(endpoint) });
     const response = await client.list();
 
     return response.models.map((m) => ({
@@ -333,12 +333,6 @@ export async function listOpenAICompatibleModels(
   endpoint: string,
   apiKey?: string
 ): Promise<AvailableModel[]> {
-  let baseUrl = endpoint.replace(/\/+$/, "");
-
-  if (baseUrl.endsWith("/v1")) {
-    baseUrl = baseUrl.slice(0, -3);
-  }
-
   const headers: Record<string, string> = {};
 
   if (apiKey) {
@@ -346,7 +340,7 @@ export async function listOpenAICompatibleModels(
   }
 
   const models = await fetchModelsRaw({
-    url: `${baseUrl}/v1/models`,
+    url: `${normalizeOpenAICompatibleEndpoint(endpoint)}/models`,
     headers,
     timeout: 5000,
     provider: "generic-openai",
@@ -471,12 +465,6 @@ export async function listOpenAICompatibleTranscriptionModels(
   endpoint: string,
   apiKey?: string
 ): Promise<AvailableModel[]> {
-  let baseUrl = endpoint.replace(/\/+$/, "");
-
-  if (baseUrl.endsWith("/v1")) {
-    baseUrl = baseUrl.slice(0, -3);
-  }
-
   const headers: Record<string, string> = {};
 
   if (apiKey) {
@@ -484,7 +472,7 @@ export async function listOpenAICompatibleTranscriptionModels(
   }
 
   const models = await fetchModelsRaw({
-    url: `${baseUrl}/v1/models`,
+    url: `${normalizeOpenAICompatibleEndpoint(endpoint)}/models`,
     headers,
     timeout: 5000,
     provider: "generic-openai",

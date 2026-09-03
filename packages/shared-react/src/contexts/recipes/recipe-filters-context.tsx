@@ -1,10 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import { DEFAULT_SEARCH_FIELDS, SearchField } from "@norish/shared/contracts";
+import { SearchField } from "@norish/shared/contracts";
 
 import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
 import type { CanonicalRecipeFilters } from "./filter-contract";
-import { DEFAULT_RECIPE_FILTERS, normalizePersistedRecipeFilters } from "./filter-contract";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  normalizePersistedRecipeFilters,
+  toggleSearchFieldIn,
+} from "./filter-contract";
 
 type RecipeFiltersContextValue = {
   filters: CanonicalRecipeFilters;
@@ -81,30 +85,20 @@ export function createRecipeFiltersContext({
     }, []);
 
     const clearFilters = useCallback(() => {
-      setFilterState(DEFAULT_RECIPE_FILTERS);
+      // The Library type is a lens, not a filter: clearing a search must not
+      // move a reader who browses by cookbook back to All (ADR-0026).
+      setFilterState((previous) => ({
+        ...DEFAULT_RECIPE_FILTERS,
+        libraryType: previous.libraryType,
+      }));
       void storageAdapter?.removeItem(storageKey);
     }, [storageAdapter, storageKey]);
 
     const toggleSearchField = useCallback((field: SearchField) => {
-      setFilterState((previous) => {
-        const isEnabled = previous.searchFields.includes(field);
-
-        if (isEnabled) {
-          if (previous.searchFields.length <= 1) {
-            return { ...previous, searchFields: [...DEFAULT_SEARCH_FIELDS] };
-          }
-
-          return {
-            ...previous,
-            searchFields: previous.searchFields.filter((item) => item !== field),
-          };
-        }
-
-        return {
-          ...previous,
-          searchFields: [...previous.searchFields, field],
-        };
-      });
+      setFilterState((previous) => ({
+        ...previous,
+        searchFields: toggleSearchFieldIn(previous.searchFields, field),
+      }));
     }, []);
 
     const value = useMemo<RecipeFiltersContextValue>(
@@ -116,7 +110,7 @@ export function createRecipeFiltersContext({
   }
 
   function useRecipeFiltersContext() {
-    const context = useContext(RecipeFiltersContext);
+    const context = useOptionalRecipeFiltersContext();
 
     if (!context) {
       throw new Error("useRecipeFiltersContext must be used within RecipeFiltersProvider");
@@ -125,8 +119,21 @@ export function createRecipeFiltersContext({
     return context;
   }
 
+  /**
+   * The filters where there are any, and null outside the provider.
+   *
+   * Wanting to *name* the Library is not the same as being part of it: a back
+   * link that says where "/" will land reads the lens, but a recipe page is
+   * not a filtered list and should not stop rendering because nothing above it
+   * happens to be one.
+   */
+  function useOptionalRecipeFiltersContext() {
+    return useContext(RecipeFiltersContext);
+  }
+
   return {
     RecipeFiltersProvider,
     useRecipeFiltersContext,
+    useOptionalRecipeFiltersContext,
   };
 }

@@ -14,5 +14,7 @@ const sharedRecipeFiltersContext = createRecipeFiltersContext({
 
 export const RecipesFiltersProvider = sharedRecipeFiltersContext.RecipeFiltersProvider;
 export const useRecipesFiltersContext = sharedRecipeFiltersContext.useRecipeFiltersContext;
+export const useOptionalRecipesFiltersContext =
+  sharedRecipeFiltersContext.useOptionalRecipeFiltersContext;
 
 export type { CanonicalRecipeFilters as RecipeFilters } from "@norish/shared-react/contexts";

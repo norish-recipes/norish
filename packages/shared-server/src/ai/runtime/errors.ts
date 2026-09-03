@@ -90,6 +90,25 @@ function isTimeout(error: unknown): boolean {
 }
 
 /**
+ * Statuses that say the provider rejected the *shape* of the request rather
+ * than the caller, the credential, or its own health — the class a refused
+ * structured-output request falls into.
+ *
+ * OpenRouter answers 404 ("no endpoints available matching your guardrail
+ * restrictions") when no permitted upstream can serve a required parameter, so
+ * a missing capability arrives looking like a wrong URL (#538). Both readings
+ * are worth one plain-JSON retry and neither is worth a queue retry, so they
+ * are classified together.
+ */
+export function isRequestShapeRejection(error: unknown): boolean {
+  if (!APICallError.isInstance(error)) return false;
+
+  const status = error.statusCode;
+
+  return status === 400 || status === 404 || status === 422 || status === 501;
+}
+
+/**
  * Turn whatever a model call threw into a typed AI error, carrying the
  * original as `cause`.
  */

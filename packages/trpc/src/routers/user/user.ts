@@ -5,7 +5,6 @@ import { z } from "zod";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
-  deleteUser,
   getAllergiesForUsers,
   getApiKeysForUser,
   getHouseholdForUser,
@@ -17,6 +16,7 @@ import {
   updateUserName,
   updateUserPreferences,
 } from "@norish/db";
+import { deleteUserAccount } from "@norish/shared-server/accounts/deletion";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   deleteAvatarByFilename,
@@ -32,7 +32,6 @@ import {
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared/lib/helpers";
 
-import { emitConnectionInvalidation } from "../../connection-manager";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -310,13 +309,7 @@ const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
     }
   }
 
-  // Delete user avatars
-  await sweepUserAvatars(ctx.user.id);
-
-  await deleteUser(ctx.user.id);
-
-  // Terminate WebSocket connections so client doesn't stay connected
-  await emitConnectionInvalidation(ctx.user.id, "account-deleted");
+  await deleteUserAccount(ctx.user.id);
 
   log.info({ userId: ctx.user.id }, "Account deleted");
 

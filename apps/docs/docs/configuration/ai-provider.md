@@ -49,8 +49,16 @@ AI_API_KEY: <your-api-key>
 
 :::note
 AI feature speed and quality vary by provider, model, and region. You can also
-adjust AI settings at runtime in **Settings => Admin**.
+adjust AI settings in **Settings => Admin**.
 :::
+
+## What an OpenAI-compatible endpoint has to support
+
+Norish asks for **structured output**: every AI requests an answer in form of a JSON schema. It asks in the strictest form a provider offers first
+(`response_format: json_schema`), and falls back on its own to plain JSON mode
+(`response_format: json_object`), carrying the schema in the prompt instead.
+
+An endpoint that refuses **both** cannot run AI features at all.
 
 ## Recipe Enrichment
 

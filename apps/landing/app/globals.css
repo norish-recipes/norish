@@ -3,6 +3,7 @@
 @import "@fontsource-variable/fraunces/wght.css";
 @import "@norish/tailwind-config/heroui-theme";
 @import "@norish/tailwind-config/marks";
+@import "lenis/dist/lenis.css";
 
 @custom-variant light (&:is(:root, .light *, [data-theme="light"] *));
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
@@ -65,7 +66,10 @@
 }
 
 @layer base {
-  html {
+  /* Lenis drives the scroll wherever it is running, hash links included, and
+     the two fighting over the same scroll position reads as a stutter. Where it
+     is not — no scripting — the browser's own smoothing is still wanted. */
+  html:not(.lenis) {
     scroll-behavior: smooth;
   }
 
@@ -528,8 +532,10 @@
 }
 
 .js .moments-stage {
-  /* The runway: how long the section keeps the screen for its three steps. */
-  height: 320svh;
+  /* The runway: how long the section keeps the screen for its steps, and so how
+     far a reader travels to walk one. Driven by the step count, because adding
+     a step should lengthen the section rather than squeeze the others. */
+  height: calc(var(--steps) * 100svh + 100svh);
 }
 
 .js .moments-pin {
@@ -556,6 +562,28 @@
 
 .js .moments-dots {
   display: flex;
+}
+
+/*
+ * One end of one move a held section makes: nothing to look at, only somewhere
+ * for the scroll to be stopped. It sits `--at` of the way along the runway —
+ * the section's height less the screen it holds — which is the same share of
+ * the section that `stopsOf` puts it at. `components/snapping.tsx` hands the
+ * set of them to Lenis.
+ */
+.snap-point {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--at, 0) * (100% - 100svh));
+  height: 1px;
+  pointer-events: none;
+}
+
+/* The stops are measured against the runway they mark out, so the sections
+   holding them have to be what they are measured from. */
+.moments-stage,
+.tour-stage {
+  position: relative;
 }
 
 /*
@@ -638,8 +666,10 @@
 }
 
 .js .tour-stage {
-  /* The runway: a screen of scroll for each capture, plus the one it holds. */
-  height: calc(var(--screens) * 72svh + 100svh);
+  /* The runway: a screen of scroll for each capture, plus the one it holds. The
+     same measure the rail uses, so a flick carries the reader one screen here
+     and one step there rather than one of each. */
+  height: calc(var(--screens) * 100svh + 100svh);
 }
 
 /*

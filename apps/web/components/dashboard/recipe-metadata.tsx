@@ -11,7 +11,10 @@ import { Button, Chip } from "@heroui/react";
 
 // Over an arbitrary photo a chip carries its own contrast: an opaque surface
 // fill plus a shadow, never a tinted window onto the picture (ADR-0020).
-const photoChipClassName = "bg-surface text-foreground rounded-full px-2 text-[11px] shadow-md";
+// Exported so a cookbook's cover — an arbitrary photo by the same argument —
+// states its own metadata in exactly the same voice.
+export const photoChipClassName =
+  "bg-surface text-foreground rounded-full px-2 text-[11px] shadow-md";
 
 interface RecipeMetadataProps {
   timeLabel?: string | null;

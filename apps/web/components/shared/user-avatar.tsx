@@ -41,20 +41,28 @@ export function getUserInitials(value?: string | null) {
  * not while loading, not when an old URL 404s, not offline. Presentational
  * only; the image URL arrives via props (either `/avatars/…` or an external
  * OAuth picture).
+ *
+ * A picture that has arrived sits on the plain surface instead, with the
+ * initials gone: the identity pastel is a stand-in for a missing picture, and
+ * behind a transparent PNG it became the picture's background — a green disc
+ * nobody chose, following the person rather than the light or dark theme
+ * around it (#282, #536).
  */
 export default function UserAvatar({ userId, name, email, image, size = "md" }: UserAvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const label = name || email || "User";
   const showImage = Boolean(image) && image !== failedSrc;
+  const imageIsVisible = showImage && image === loadedSrc;
 
   return (
     <span
       aria-label={label}
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold select-none ${SIZE_CLASSES[size]}`}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold select-none ${SIZE_CLASSES[size]} ${imageIsVisible ? "bg-surface" : ""}`}
       role="img"
-      style={getAvatarFallbackStyle(userId || email || name || "U")}
+      style={imageIsVisible ? undefined : getAvatarFallbackStyle(userId || email || name || "U")}
     >
-      <span aria-hidden>{getUserInitials(name || email || "U")}</span>
+      {imageIsVisible ? null : <span aria-hidden>{getUserInitials(name || email || "U")}</span>}
       {showImage ? (
         // Tiny originals from our own immutable route; the Next image optimizer
         // would re-encode them per size and break offline caching.
@@ -65,6 +73,7 @@ export default function UserAvatar({ userId, name, email, image, size = "md" }: 
           draggable={false}
           src={image ?? undefined}
           onError={() => setFailedSrc(image ?? null)}
+          onLoad={() => setLoadedSrc(image ?? null)}
         />
       ) : null}
     </span>

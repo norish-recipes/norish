@@ -113,9 +113,12 @@
  * than on a card. The default fill separates a chip from a white card, but the
  * page ground is already warm and the two would sit almost on top of each
  * other — so there the chip takes the surface and the card's job is done by the
- * page. Add it wherever a naming chip has no card under it.
+ * page. Add it wherever a naming chip has no card under it — including a
+ * secondary chip, which is a naming chip that has been asked to look like a
+ * control.
  */
-.chip--tertiary.chip--on-ground {
+.chip--tertiary.chip--on-ground,
+.chip--secondary.chip--on-ground {
   --chip-bg: var(--surface);
 }
 
@@ -156,6 +159,16 @@
     box-shadow: var(--overlay-shadow);
     border: 1px solid var(--border);
     z-index: 70;
+  }
+
+  /* A toast reports what just happened, so it has to be readable wherever it
+     lands. HeroUI ships it at z-50, under the navbar (60) and far under a
+     modal (1099/1100) — an error raised by a dialog that stays open on
+     failure was painted over by that dialog. Sit above every overlay the app
+     draws; the region is pointer-events-none, so nothing underneath becomes
+     unclickable. */
+  .toast-region {
+    z-index: 1250;
   }
 
   .dropdown__menu {

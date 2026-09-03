@@ -41,6 +41,18 @@ function fullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRecipeDTO {
 // Mock tRPC provider
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
+    // The Library holds the same recipes in one interleaved list, so the cache
+    // helpers reach it too (ADR-0026).
+    library: {
+      list: {
+        queryKey: () => [["library", "list"], { input: {}, type: "query" }],
+        infiniteQueryOptions: () => ({
+          queryKey: ["library", "list", {}],
+          queryFn: async () => ({ items: [], total: 0, nextCursor: null }),
+          getNextPageParam: () => null,
+        }),
+      },
+    },
     recipes: {
       list: {
         queryKey: () => [["recipes", "list"], { input: {}, type: "query" }],

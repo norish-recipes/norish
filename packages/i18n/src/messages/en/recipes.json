@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "All recipes",
+    "libraryTitle": "Your library",
+    "recipesTitle": "Your recipes",
+    "cookbooksTitle": "Your cookbooks",
     "searchPlaceholder": "Search or add recipe...",
     "searchRecipesPlaceholder": "Search recipes...",
-    "recipeCount": "{count, plural, one {# recipe} other {# recipes}}",
+    "libraryCount": "{count, plural, one {# item} other {# items}}",
     "addRecipe": "Add Recipe",
     "importFromUrl": "URL",
     "importFromPaste": "Paste",
@@ -19,13 +21,29 @@
       "label": "Recipe view",
       "grid": "Grid",
       "list": "List"
+    },
+    "libraryType": {
+      "label": "Show",
+      "all": "All",
+      "recipes": "Recipes",
+      "cookbooks": "Cookbooks"
     }
   },
+  "back": {
+    "all": "Back to library",
+    "recipes": "Back to recipes",
+    "cookbooks": "Back to cookbooks",
+    "named": "Back to {name}",
+    "cookbook": "Back to cookbook",
+    "generic": "Back"
+  },
   "empty": {
-    "title": "Your recipe collection awaits",
+    "title": "Your library awaits",
     "description": "Paste a recipe URL in the search field above and watch the magic happen.",
     "noResults": "No recipes found",
-    "noResultsHint": "Try adjusting or clearing your filters."
+    "noResultsHint": "Try adjusting or clearing your filters.",
+    "noCookbooks": "No cookbooks yet",
+    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order."
   },
   "card": {
     "noImage": "No image available",
@@ -35,7 +53,6 @@
     "recipeOptions": "Recipe options"
   },
   "detail": {
-    "backToRecipes": "Back to recipes",
     "viewOriginal": "View original recipe",
     "ingredients": "Ingredients",
     "ingredientOptions": "Ingredient options",
@@ -86,7 +103,8 @@
     "linkingIngredients": "Linking ingredients…",
     "enrichmentFailed": "Last run failed",
     "generateImage": "Generate Picture",
-    "generatingImage": "Generating picture…"
+    "generatingImage": "Generating picture…",
+    "cookbooks": "Cookbooks"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -352,5 +370,38 @@
     "cook": "Cook",
     "other": "Other time",
     "total": "Total"
+  },
+  "cookbooks": {
+    "addCookbook": "Add Cookbook",
+    "createTitle": "New cookbook",
+    "editTitle": "Edit cookbook",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Weeknight dinners",
+    "options": "Cookbook options",
+    "deleteTitle": "Delete cookbook",
+    "deleteConfirm": "Are you sure you want to delete \"{title}\"?",
+    "deleteKeepsRecipes": "The recipes it holds stay in your library.",
+    "recipeCount": "{count, plural, one {# recipe} other {# recipes}}",
+    "empty": "No recipes yet",
+    "singular": "Cookbook",
+    "notFound": "Cookbook not found",
+    "notFoundHint": "It may have been deleted, or it is not visible to you.",
+    "emptyHint": "Add recipes from any recipe’s quick actions menu.",
+    "panelTitle": "Add to cookbook",
+    "newWithRecipe": "New cookbook with this recipe",
+    "noneEditable": "There are no cookbooks you can edit yet.",
+    "cardTitle": "In cookbooks",
+    "removeFromCookbook": "Remove from cookbook",
+    "noMatchingMembers": "No recipes in this cookbook match your filters.",
+    "membersLabel": "Recipes in this cookbook",
+    "showMore": "Show more",
+    "willBeCreated": "Will be created when you save",
+    "manage": "Manage",
+    "addRecipes": "Add recipes",
+    "addRecipesTitle": "Add recipes to {title}",
+    "searchRecipes": "Search recipes",
+    "noRecipesToAdd": "No recipes found.",
+    "addCount": "{count, plural, one {Add # recipe} other {Add # recipes}}",
+    "everythingAlreadyIn": "Every recipe is already in this cookbook."
   }
 }

@@ -7,6 +7,7 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/",
 }));
 
 vi.mock("next-intl", () => ({

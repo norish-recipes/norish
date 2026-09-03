@@ -18,6 +18,7 @@ import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
+import { credentialSetsForUrl, rotateCredentialSet } from "@norish/shared/lib/site-auth-tokens";
 
 import { defineLazyWorker, QUEUE_NAMES, RECIPE_IMPORT_PROCESSING_TIMEOUT_MS } from "../config";
 import { announceUsableRecipe } from "../enrichment/announce";
@@ -75,17 +76,21 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
 
   // No allergy list is fetched here: extraction reads the source, and allergy
   // detection runs afterwards as its own enrichment kind.
-  // Parse and create recipe
-  await reportStep(job, "parsing");
-  const userTokens = await getDecryptedTokensByUserId(userId);
+
+  // One site login per import, and the job records which: an import that dies
+  // on an expired or rate-limited account has to be able to name it.
+  const sets = credentialSetsForUrl(await getDecryptedTokensByUserId(userId), url);
+  const credentials = rotateCredentialSet(sets);
+
+  await reportStep(
+    job,
+    "parsing",
+    credentials
+      ? { siteAuth: { account: credentials.account, ofAccounts: sets.length } }
+      : undefined
+  );
   const parseResult = await withTimeout(
-    () =>
-      parseRecipeFromUrl(
-        url,
-        recipeId,
-        job.data.forceAI,
-        userTokens.length > 0 ? userTokens : undefined
-      ),
+    () => parseRecipeFromUrl(url, recipeId, job.data.forceAI, credentials?.tokens),
     RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
     "Recipe import parsing"
   );

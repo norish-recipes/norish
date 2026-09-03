@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "모든 레시피",
+    "libraryTitle": "내 라이브러리",
+    "recipesTitle": "내 레시피",
+    "cookbooksTitle": "내 요리책",
     "searchPlaceholder": "레시피를 검색하거나 추가...",
     "searchRecipesPlaceholder": "레시피 검색...",
-    "recipeCount": "{count, plural, one {#개 레시피} other {#개 레시피}}",
+    "libraryCount": "{count}개",
     "addRecipe": "레시피 추가",
     "importFromUrl": "URL",
     "importFromPaste": "붙여넣기",
@@ -19,13 +21,29 @@
       "label": "레시피 보기",
       "grid": "그리드",
       "list": "목록"
+    },
+    "libraryType": {
+      "label": "표시",
+      "all": "전체",
+      "recipes": "레시피",
+      "cookbooks": "요리책"
     }
+  },
+  "back": {
+    "all": "라이브러리로 돌아가기",
+    "recipes": "레시피로 돌아가기",
+    "cookbooks": "요리책으로 돌아가기",
+    "named": "{name}(으)로 돌아가기",
+    "cookbook": "요리책으로 돌아가기",
+    "generic": "뒤로"
   },
   "empty": {
     "title": "아직 레시피가 없어요",
     "description": "위의 검색 필드에 레시피 URL을 붙여넣어 보세요.",
     "noResults": "레시피를 찾을 수 없습니다.",
-    "noResultsHint": "필터를 조정하거나 지워보세요."
+    "noResultsHint": "필터를 조정하거나 지워보세요.",
+    "noCookbooks": "아직 요리책이 없습니다",
+    "noCookbooksHint": "요리책은 제목이 있는 레시피 모음입니다. 첫 요리책을 만들어 라이브러리를 정리해 보세요."
   },
   "card": {
     "noImage": "이미지가 없습니다.",
@@ -35,7 +53,6 @@
     "recipeOptions": "레시피 옵션"
   },
   "detail": {
-    "backToRecipes": "레시피로 돌아가기",
     "viewOriginal": "원본 레시피 보기",
     "ingredients": "재료",
     "ingredientOptions": "재료 옵션",
@@ -86,7 +103,8 @@
     "linkingIngredients": "재료 연결 중…",
     "enrichmentFailed": "마지막 실행 실패",
     "generateImage": "이미지 생성",
-    "generatingImage": "이미지 생성 중…"
+    "generatingImage": "이미지 생성 중…",
+    "cookbooks": "요리책"
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -352,5 +370,38 @@
     "cook": "조리",
     "other": "기타 시간",
     "total": "합계"
+  },
+  "cookbooks": {
+    "addCookbook": "요리책 추가",
+    "createTitle": "새 요리책",
+    "editTitle": "요리책 편집",
+    "titleLabel": "제목",
+    "titlePlaceholder": "예: 평일 저녁",
+    "options": "요리책 옵션",
+    "deleteTitle": "요리책 삭제",
+    "deleteConfirm": "\"{title}\"을(를) 삭제하시겠습니까?",
+    "deleteKeepsRecipes": "안에 있는 레시피는 라이브러리에 그대로 남습니다.",
+    "recipeCount": "레시피 {count}개",
+    "empty": "아직 레시피가 없습니다",
+    "singular": "요리책",
+    "notFound": "요리책을 찾을 수 없습니다",
+    "notFoundHint": "삭제되었거나 접근 권한이 없을 수 있습니다.",
+    "emptyHint": "레시피의 빠른 작업 메뉴에서 레시피를 추가하세요.",
+    "panelTitle": "요리책에 추가",
+    "newWithRecipe": "이 레시피로 새 요리책 만들기",
+    "noneEditable": "편집할 수 있는 요리책이 아직 없습니다.",
+    "cardTitle": "수록된 요리책",
+    "removeFromCookbook": "요리책에서 제거",
+    "noMatchingMembers": "이 요리책에 필터와 일치하는 레시피가 없습니다.",
+    "membersLabel": "이 요리책의 레시피",
+    "showMore": "더 보기",
+    "willBeCreated": "저장하면 만들어집니다",
+    "manage": "관리",
+    "addRecipes": "레시피 추가",
+    "addRecipesTitle": "{title}에 레시피 추가",
+    "searchRecipes": "레시피 검색",
+    "noRecipesToAdd": "레시피를 찾을 수 없습니다.",
+    "addCount": "{count, plural, other {레시피 #개 추가}}",
+    "everythingAlreadyIn": "모든 레시피가 이미 이 요리책에 있습니다."
   }
 }

@@ -174,7 +174,9 @@ test("the Glance Bar answers above the fold and the cards follow cooking order",
 
   // Card order on the phone tree (the hidden desktop tree keeps its own
   // headings, so only visible ones count). No notes and no provenance are
-  // stored, so neither card renders — a bare section is a shorter page.
+  // stored, so neither card renders — a bare section is a shorter page. The
+  // cookbooks card is absent for the same reason: it states a fact when there
+  // is one, and this recipe is in no cookbook.
   await expect(page.locator("h2:visible")).toHaveText([
     "Ingredients",
     "Steps",
@@ -185,12 +187,21 @@ test("the Glance Bar answers above the fold and the cards follow cooking order",
 });
 
 test("the cook pill stays reachable at full scroll and covers neither nav nor timers", async () => {
+  // This suite is serial on one shared page, so the page arrives during the
+  // test before this one. Wait for the last card to settle before measuring:
+  // a section still resolving re-lays the page out under the locator.
+  await expect(
+    page.getByRole("heading", { name: "Source", exact: true }).locator("visible=true")
+  ).toBeVisible();
+
   // A running timer first, so the corner the dock rises into is occupied.
   // Both page trees render the chip; only the phone tree's copy is visible.
   const timerChip = page.getByText("40 minutes").locator("visible=true").first();
 
-  await timerChip.scrollIntoViewIfNeeded();
-  await timerChip.click();
+  await expect(async () => {
+    await timerChip.scrollIntoViewIfNeeded();
+    await timerChip.click();
+  }).toPass({ timeout: 20_000 });
 
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await page.waitForTimeout(600);

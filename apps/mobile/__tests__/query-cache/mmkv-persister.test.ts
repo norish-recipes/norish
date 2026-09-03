@@ -5,14 +5,14 @@ import { createMmkvPersister } from "../../src/lib/query-cache/mmkv-persister";
 // Mock MMKV
 const mockSet = vi.fn();
 const mockGetString = vi.fn();
-const mockDelete = vi.fn();
+const mockRemove = vi.fn();
 const mockClearAll = vi.fn();
 
 vi.mock("@/lib/storage/query-cache-mmkv", () => ({
   queryCacheStorage: {
     set: (...args: unknown[]) => mockSet(...args),
     getString: (...args: unknown[]) => mockGetString(...args),
-    delete: (...args: unknown[]) => mockDelete(...args),
+    remove: (...args: unknown[]) => mockRemove(...args),
     clearAll: () => mockClearAll(),
   },
 }));
@@ -88,7 +88,7 @@ describe("mmkv-persister", () => {
       const result = persister.restoreClient();
 
       expect(result).toBeUndefined();
-      expect(mockDelete).toHaveBeenCalledWith("tanstack-query-cache");
+      expect(mockRemove).toHaveBeenCalledWith("tanstack-query-cache");
     });
 
     it("handles read errors gracefully and clears storage", () => {
@@ -97,20 +97,20 @@ describe("mmkv-persister", () => {
       });
 
       expect(persister.restoreClient()).toBeUndefined();
-      expect(mockDelete).toHaveBeenCalledWith("tanstack-query-cache");
+      expect(mockRemove).toHaveBeenCalledWith("tanstack-query-cache");
     });
   });
 
   describe("removeClient", () => {
-    it("deletes the stored data", () => {
+    it("removes the stored data", () => {
       persister.removeClient();
 
-      expect(mockDelete).toHaveBeenCalledWith("tanstack-query-cache");
+      expect(mockRemove).toHaveBeenCalledWith("tanstack-query-cache");
     });
 
     it("catches errors without throwing", () => {
-      mockDelete.mockImplementation(() => {
-        throw new Error("delete failed");
+      mockRemove.mockImplementation(() => {
+        throw new Error("remove failed");
       });
 
       expect(() => persister.removeClient()).not.toThrow();

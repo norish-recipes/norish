@@ -2,7 +2,8 @@
 
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
+import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
+import { MiniCalendar, MiniCookbooks, MiniGroceries } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
@@ -55,6 +56,7 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [openCalendar, setOpenCalendar] = React.useState(false);
   const [openGroceries, setOpenGroceries] = React.useState(false);
+  const [openCookbooks, setOpenCookbooks] = React.useState(false);
   const [openSharePanel, setOpenSharePanel] = React.useState(false);
 
   const {
@@ -99,6 +101,14 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
         label: t("groceries"),
         icon: <ShoppingCartIcon className="size-4" />,
         onPress: () => setOpenGroceries(true),
+      },
+      {
+        // Filing needs only view on the recipe and edit on the cookbook, so
+        // this is offered to every reader who can see the page (ADR-0027).
+        key: "cookbooks",
+        label: t("cookbooks"),
+        icon: <CookbookIconSolid className="size-4" />,
+        onPress: () => setOpenCookbooks(true),
       },
     ];
     if (canEdit) {
@@ -299,6 +309,8 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
       <MiniGroceries open={openGroceries} recipeId={id} onOpenChange={setOpenGroceries} />
 
       <MiniCalendar open={openCalendar} recipeId={id} onOpenChange={setOpenCalendar} />
+
+      <MiniCookbooks open={openCookbooks} recipeId={id} onOpenChange={setOpenCookbooks} />
 
       <RecipeSharePanel open={openSharePanel} onOpenChange={setOpenSharePanel} />
 

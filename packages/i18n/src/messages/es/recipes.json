@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "Todas las recetas",
+    "libraryTitle": "Tu biblioteca",
+    "recipesTitle": "Tus recetas",
+    "cookbooksTitle": "Tus libros de cocina",
     "searchPlaceholder": "Buscar o añadir receta...",
     "searchRecipesPlaceholder": "Buscar recetas...",
-    "recipeCount": "{count, plural, one {# receta} other {# recetas}}",
+    "libraryCount": "{count, plural, one {# elemento} other {# elementos}}",
     "addRecipe": "Añadir receta",
     "importFromUrl": "URL",
     "importFromPaste": "Pegar",
@@ -19,13 +21,29 @@
       "label": "Vista de recetas",
       "grid": "Cuadrícula",
       "list": "Lista"
+    },
+    "libraryType": {
+      "label": "Mostrar",
+      "all": "Todo",
+      "recipes": "Recetas",
+      "cookbooks": "Libros de cocina"
     }
   },
+  "back": {
+    "all": "Volver a la biblioteca",
+    "recipes": "Volver a las recetas",
+    "cookbooks": "Volver a los libros de cocina",
+    "named": "Volver a {name}",
+    "cookbook": "Volver al libro de cocina",
+    "generic": "Volver"
+  },
   "empty": {
-    "title": "Tu colección de recetas te espera",
+    "title": "Tu biblioteca te espera",
     "description": "Pega la URL de una receta en el campo de búsqueda de arriba y verás la magia.",
     "noResults": "No se han encontrado recetas",
-    "noResultsHint": "Prueba ajustando o eliminando tus filtros."
+    "noResultsHint": "Prueba ajustando o eliminando tus filtros.",
+    "noCookbooks": "Aún no hay libros de cocina",
+    "noCookbooksHint": "Un libro de cocina es un conjunto de recetas con título. Crea el primero para ordenar tu biblioteca."
   },
   "card": {
     "noImage": "No hay imagen disponible",
@@ -35,7 +53,6 @@
     "recipeOptions": "Opciones de receta"
   },
   "detail": {
-    "backToRecipes": "Volver a las recetas",
     "viewOriginal": "Ver receta original",
     "ingredients": "Ingredientes",
     "ingredientOptions": "Opciones de ingredientes",
@@ -86,7 +103,8 @@
     "linkingIngredients": "Vinculando ingredientes…",
     "enrichmentFailed": "El último intento falló",
     "generateImage": "Generar imagen",
-    "generatingImage": "Generando imagen…"
+    "generatingImage": "Generando imagen…",
+    "cookbooks": "Libros de cocina"
   },
   "sharePanel": {
     "title": "Compartir receta",
@@ -352,5 +370,38 @@
     "cook": "Cocción",
     "other": "Otro tiempo",
     "total": "Total"
+  },
+  "cookbooks": {
+    "addCookbook": "Añadir libro de cocina",
+    "createTitle": "Nuevo libro de cocina",
+    "editTitle": "Editar libro de cocina",
+    "titleLabel": "Título",
+    "titlePlaceholder": "p. ej. Cenas de la semana",
+    "options": "Opciones del libro",
+    "deleteTitle": "Eliminar libro de cocina",
+    "deleteConfirm": "¿Seguro que quieres eliminar \"{title}\"?",
+    "deleteKeepsRecipes": "Las recetas que contiene permanecen en tu biblioteca.",
+    "recipeCount": "{count, plural, one {# receta} other {# recetas}}",
+    "empty": "Aún no hay recetas",
+    "singular": "Libro de cocina",
+    "notFound": "Libro de cocina no encontrado",
+    "notFoundHint": "Puede que se haya eliminado o que no sea visible para ti.",
+    "emptyHint": "Añade recetas desde el menú de acciones rápidas de cualquier receta.",
+    "panelTitle": "Añadir a un libro de cocina",
+    "newWithRecipe": "Nuevo libro con esta receta",
+    "noneEditable": "Todavía no hay libros de cocina que puedas editar.",
+    "cardTitle": "En libros de cocina",
+    "removeFromCookbook": "Quitar del libro de cocina",
+    "noMatchingMembers": "Ninguna receta de este libro coincide con tus filtros.",
+    "membersLabel": "Recetas de este libro de cocina",
+    "showMore": "Mostrar más",
+    "willBeCreated": "Se creará al guardar",
+    "manage": "Gestionar",
+    "addRecipes": "Añadir recetas",
+    "addRecipesTitle": "Añadir recetas a {title}",
+    "searchRecipes": "Buscar recetas",
+    "noRecipesToAdd": "No se han encontrado recetas.",
+    "addCount": "{count, plural, one {Añadir # receta} other {Añadir # recetas}}",
+    "everythingAlreadyIn": "Todas las recetas ya están en este libro de cocina."
   }
 }

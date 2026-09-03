@@ -295,6 +295,20 @@
       "when": 1787351370601,
       "tag": "0041_generated_recipe_images",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1787661168219,
+      "tag": "0042_cookbooks",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1788354876718,
+      "tag": "0043_site_auth_token_account",
+      "breakpoints": true
     }
   ]
 }

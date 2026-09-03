@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "Tutte le ricette",
+    "libraryTitle": "La tua libreria",
+    "recipesTitle": "Le tue ricette",
+    "cookbooksTitle": "I tuoi libri di cucina",
     "searchPlaceholder": "Cerca o aggiungi ricetta...",
     "searchRecipesPlaceholder": "Cerca ricette...",
-    "recipeCount": "{count, plural, one {# ricetta} other {# ricette}}",
+    "libraryCount": "{count, plural, one {# elemento} other {# elementi}}",
     "addRecipe": "Aggiungi ricetta",
     "importFromUrl": "URL",
     "importFromPaste": "Incolla",
@@ -19,13 +21,29 @@
       "label": "Vista ricette",
       "grid": "Griglia",
       "list": "Lista"
+    },
+    "libraryType": {
+      "label": "Mostra",
+      "all": "Tutto",
+      "recipes": "Ricette",
+      "cookbooks": "Libri di cucina"
     }
   },
+  "back": {
+    "all": "Torna alla libreria",
+    "recipes": "Torna alle ricette",
+    "cookbooks": "Torna ai libri di cucina",
+    "named": "Torna a {name}",
+    "cookbook": "Torna al libro",
+    "generic": "Indietro"
+  },
   "empty": {
-    "title": "La tua collezione di ricette ti aspetta",
+    "title": "La tua libreria ti aspetta",
     "description": "Incolla l'URL di una ricetta nel campo di ricerca sopra e guarda la magia.",
     "noResults": "Nessuna ricetta trovata",
-    "noResultsHint": "Prova a modificare o cancellare i filtri."
+    "noResultsHint": "Prova a modificare o cancellare i filtri.",
+    "noCookbooks": "Nessun libro di cucina",
+    "noCookbooksHint": "Un libro di cucina è un insieme di ricette con un titolo. Creane uno per dare ordine alla tua libreria."
   },
   "card": {
     "noImage": "Nessuna immagine disponibile",
@@ -35,7 +53,6 @@
     "recipeOptions": "Opzioni ricetta"
   },
   "detail": {
-    "backToRecipes": "Torna alle ricette",
     "viewOriginal": "Vedi ricetta originale",
     "ingredients": "Ingredienti",
     "ingredientOptions": "Opzioni ingredienti",
@@ -86,7 +103,8 @@
     "linkingIngredients": "Collegamento degli ingredienti…",
     "enrichmentFailed": "Ultimo tentativo non riuscito",
     "generateImage": "Genera immagine",
-    "generatingImage": "Generazione immagine…"
+    "generatingImage": "Generazione immagine…",
+    "cookbooks": "Libri di cucina"
   },
   "sharePanel": {
     "title": "Condividi ricetta",
@@ -352,5 +370,38 @@
     "cook": "Cottura",
     "other": "Altro tempo",
     "total": "Totale"
+  },
+  "cookbooks": {
+    "addCookbook": "Aggiungi libro",
+    "createTitle": "Nuovo libro di cucina",
+    "editTitle": "Modifica libro",
+    "titleLabel": "Titolo",
+    "titlePlaceholder": "es. Cene infrasettimanali",
+    "options": "Opzioni libro",
+    "deleteTitle": "Elimina libro",
+    "deleteConfirm": "Vuoi davvero eliminare \"{title}\"?",
+    "deleteKeepsRecipes": "Le ricette che contiene restano nella tua libreria.",
+    "recipeCount": "{count, plural, one {# ricetta} other {# ricette}}",
+    "empty": "Nessuna ricetta",
+    "singular": "Libro di cucina",
+    "notFound": "Libro di cucina non trovato",
+    "notFoundHint": "Potrebbe essere stato eliminato o non essere visibile per te.",
+    "emptyHint": "Aggiungi ricette dal menu azioni rapide di una ricetta.",
+    "panelTitle": "Aggiungi a un libro di cucina",
+    "newWithRecipe": "Nuovo libro con questa ricetta",
+    "noneEditable": "Non ci sono ancora libri di cucina che puoi modificare.",
+    "cardTitle": "Nei libri di cucina",
+    "removeFromCookbook": "Rimuovi dal libro",
+    "noMatchingMembers": "Nessuna ricetta di questo libro corrisponde ai tuoi filtri.",
+    "membersLabel": "Ricette in questo libro",
+    "showMore": "Mostra altri",
+    "willBeCreated": "Verrà creato al salvataggio",
+    "manage": "Gestisci",
+    "addRecipes": "Aggiungi ricette",
+    "addRecipesTitle": "Aggiungi ricette a {title}",
+    "searchRecipes": "Cerca ricette",
+    "noRecipesToAdd": "Nessuna ricetta trovata.",
+    "addCount": "{count, plural, one {Aggiungi # ricetta} other {Aggiungi # ricette}}",
+    "everythingAlreadyIn": "Tutte le ricette sono già in questo libro."
   }
 }

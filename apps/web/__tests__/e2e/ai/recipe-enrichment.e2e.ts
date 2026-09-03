@@ -121,7 +121,7 @@ async function createManuallyAndOpen(name: string): Promise<void> {
       await page.reload();
     }
     await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+    await page.getByTestId("add-library-button").click();
     await page.getByRole("menuitem", { name: "Create" }).click({ timeout: 2_000 });
   }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
 

@@ -17,6 +17,12 @@ export const CreateSiteAuthTokenInputSchema = z.object({
     .string()
     .min(1)
     .transform((v) => v.toLowerCase().trim()),
+  // Blank and absent both mean "not tied to one account".
+  account: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((v) => v || null),
   name: z.string().min(1),
   value: z.string().min(1),
   type: z.enum(["header", "cookie"]),
@@ -31,6 +37,7 @@ export const UpdateSiteAuthTokenInputSchema = z.object({
     .min(1)
     .transform((v) => v.toLowerCase().trim())
     .optional(),
+  account: z.string().trim().nullable().optional(),
   name: z.string().min(1).optional(),
   value: z.string().min(1).optional(),
   type: z.enum(["header", "cookie"]).optional(),
@@ -47,6 +54,7 @@ export const SiteAuthTokenDecryptedSchema = z.object({
   id: z.uuid(),
   userId: z.string(),
   domain: z.string(),
+  account: z.string().nullable(),
   name: z.string(),
   value: z.string(),
   type: z.enum(["header", "cookie"]),
@@ -60,6 +68,7 @@ export const SiteAuthTokenSafeSchema = z.object({
   id: z.uuid(),
   userId: z.string(),
   domain: z.string(),
+  account: z.string().nullable(),
   name: z.string(),
   type: z.enum(["header", "cookie"]),
   version: z.number(),

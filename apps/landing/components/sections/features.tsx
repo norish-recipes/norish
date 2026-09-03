@@ -53,6 +53,10 @@ const groups: Group[] = [
     tint: "bg-tint-photo",
     features: [
       {
+        title: "Cookbooks",
+        body: "Group recipes into a of your choosing: the weeknight dinners, the Christmas baking, everything out of your grandmother's book.",
+      },
+      {
         title: "Cooking mode",
         body: "Step-by-step and easy on the eye, with timers where the step needs them, quantities already scaled, and a screen that stays awake.",
       },

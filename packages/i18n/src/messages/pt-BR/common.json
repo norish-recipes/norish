@@ -49,6 +49,7 @@
   "filters": {
     "title": "Filtros",
     "search": "Buscar",
+    "searchIn": "Buscar em",
     "sort": "Ordenar",
     "mode": "Modo",
     "modeAll": "Todos",
@@ -235,6 +236,7 @@
     "cache": {
       "heading": "Offline cache",
       "recipes": "Recipes",
+      "cookbooks": "Livros de receitas",
       "groceries": "Groceries",
       "stores": "Stores",
       "planned": "This week",
@@ -282,5 +284,10 @@
   "queuedOffline": {
     "title": "Você está offline",
     "description": "Na fila — o Norish concluirá isso automaticamente quando você estiver online novamente."
+  },
+  "storageUnavailable": {
+    "title": "Não foi possível iniciar",
+    "description": "O Norish não conseguiu ler o armazenamento seguro e não sabe a qual servidor este aplicativo pertence. Nada foi alterado. Tente novamente ou reinicie o aplicativo.",
+    "detailsLabel": "Detalhes técnicos"
   }
 }

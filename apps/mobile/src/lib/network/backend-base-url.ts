@@ -7,6 +7,18 @@ import { httpUrlSchema } from "@norish/shared/lib/schema";
 const BACKEND_BASE_URL_KEY = "norish.backend-base-url";
 const listeners = new Set<() => void>();
 
+/**
+ * Outcome of reading the stored backend URL.
+ *
+ * `error` is deliberately distinct from `ready` with a `null` url: secure
+ * storage failing is not the same as the user not having configured a server,
+ * and collapsing the two would silently discard a configured backend.
+ */
+export type BackendBaseUrlState =
+  | { status: "loading" }
+  | { status: "ready"; url: string | null }
+  | { status: "error"; error: unknown };
+
 function emitBackendBaseUrlChange() {
   for (const listener of listeners) {
     listener();

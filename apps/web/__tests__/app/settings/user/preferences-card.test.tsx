@@ -149,6 +149,7 @@ describe("PreferencesCard", () => {
       "favorites",
       "conversion",
       "timers",
+      "cookbooks",
     ]);
   });
 
@@ -207,7 +208,7 @@ describe("PreferencesCard", () => {
 
     expect(hiddenOptions().map((option) => option.value)).not.toContain("timers");
     // The rest of the control is unaffected.
-    expect(hiddenOptions()).toHaveLength(6);
+    expect(hiddenOptions()).toHaveLength(7);
   });
 
   it("keeps a hidden timers choice through an administrator switching them off", () => {

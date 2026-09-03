@@ -136,7 +136,7 @@ export default function RecipesScreen() {
           onAction={() => router.push("/(tabs)/calendar")}
         />
         <TodaysMealsSection meals={TODAYS_MEALS_MOCK} />
-        <SectionHeader title={intl.formatMessage({ id: "recipes.dashboard.title" })} />
+        <SectionHeader title={intl.formatMessage({ id: "recipes.dashboard.recipesTitle" })} />
       </>
     ),
     [intl, router]

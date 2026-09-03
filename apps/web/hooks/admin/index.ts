@@ -14,3 +14,4 @@ export {
   useJobQueueMutations,
   useQueueSummaryQuery,
 } from "./use-job-queue";
+export { useUserMutations, useUsersListQuery } from "./use-users";

@@ -63,7 +63,7 @@ A picture of a dish that AI drew rather than a camera captured, stored in the re
 _Avoid_: AI Photo (it is a photograph of nothing), Placeholder Image (it is the recipe's real primary image, not a stand-in for one)
 
 **Hidden Item**:
-Something a reader has chosen not to be shown: Recipe Provenance, Nutrition Information, a recipe's notes, its rating, favourites, the measurement conversion control, or recipe timers. Hiding belongs to that reader alone and is kept per device, like every visibility preference — a cramped phone can hide what a desktop keeps. It suppresses the item everywhere it would appear for them, so hiding the rating takes the recipe page's stars, the library chip and the rating filter together, while the items that exist only on the recipe page simply make it slimmer. It settles nothing about the recipe: what is stored, what may be edited and what Recipe Enrichment produces are all unchanged, and a recipe read by someone signed out shows everything. An origin flag beside a recipe's title is chrome rather than Recipe Provenance, so it stays when Recipe Provenance is hidden.
+Something a reader has chosen not to be shown: Recipe Provenance, Nutrition Information, a recipe's notes, its rating, favourites, the cookbooks it is in, the measurement conversion control, or recipe timers. Hiding belongs to that reader alone and is kept per device, like every visibility preference — a cramped phone can hide what a desktop keeps. It suppresses the item everywhere it would appear for them, so hiding the rating takes the recipe page's stars, the Library chip and the rating filter together, while the items that exist only on the recipe page simply make it slimmer. It settles nothing about the recipe: what is stored, what may be edited and what Recipe Enrichment produces are all unchanged, and a recipe read by someone signed out shows everything. An origin flag beside a recipe's title is chrome rather than Recipe Provenance, so it stays when Recipe Provenance is hidden.
 _Avoid_: Disabled (suggests the thing stops working), Hidden Section (not every hidden item is a section), Display Preference (names where it is stored, not what it is)
 
 **Glance Bar**:
@@ -86,10 +86,24 @@ _Avoid_: Finish time, ETA (both read as a commitment Norish is not making)
 One colour taken from a recipe's primary image when that image is stored, and kept with the recipe so a page can be tinted before the photo has even arrived. Only its hue and a clamped amount of its saturation are ever used: lightness always comes from the reader's theme, so a recipe colours its page without ever deciding how readable that page is. A recipe with no image, or one stored before the colour existed, simply has none and renders on the plain theme background. A reader may also decline the tint outright and read every recipe on that plain background, which is a preference about their own device and never a change to the recipe. It is derived from the image rather than supplied with the recipe, so it is never Supplied Recipe Data and never travels in a Recipe Archive — a receiving instance takes its own from the image it received.
 _Avoid_: Dominant colour (names the algorithm), Theme colour (collides with the reader's light and dark themes), Accent (that is the app's own, and it never shifts)
 
+### Library & Cookbooks
+
+**Library**:
+Everything a reader can see on the dashboard, recipes and cookbooks together, under the recipe view policy the instance's administrator has set. It is a view rather than a container: nothing is ever "in" the Library, and the same instance shows two readers different Libraries.
+_Avoid_: Collection (a Cookbook is a collection), All recipes (the library is no longer only recipes)
+
+**Orphaned**:
+A recipe or cookbook whose owner's account no longer exists. Deleting an account detaches what it made rather than destroying it, and what is detached belongs to nobody: every reader may see it, edit it and delete it, under every view policy including the strictest, where it was private a moment earlier. The widening is the price of the guarantee — a household keeps cooking from the recipes and maintaining the cookbooks it already had, and no departure quietly empties a shared Library. It is a one-way state: nothing hands an orphan to a new owner.
+_Avoid_: Unowned (suggests it never had an owner), Deleted user's recipes (names the cause rather than the state), Ownerless
+
+**Cookbook**:
+A titled set of recipes, owned by the person who made it and seen, edited and deleted under the same policy as a recipe. A recipe may belong to several cookbooks, and a cookbook holding none is an ordinary cookbook rather than a broken one: it may be made empty and filled later, or made from the recipe that prompted it, and taking the last recipe out never destroys the title someone chose. It is a set and not a sequence, so it keeps no order of its own and shows its members in whatever sort the reader is already using. Everything beyond its title is derived from its members at read time rather than supplied — the cover, the description that names what is inside, the members' cooking time added up, the smallest number of people any member serves, and the tags a reader finds their allergens among — so a cookbook has nothing to keep up to date and nothing that can go stale.
+_Avoid_: Collection (names the shape, and collides with the Library), Folder (suggests a recipe lives in exactly one), Album
+
 ### Imports & AI
 
 **Recipe Archive**:
-The portable file a Norish instance writes so recipes can leave it: everything the exporter can see, each recipe complete with its media, the author's display name as attribution, and the exporter's own rating and favourite mark. It is an exchange of recipe content, never a backup — whoever imports it owns what that creates, and no accounts, emails, or instance state travel inside, so an archive is safe to hand around. Cuisine names travel as words and attach only where the receiving instance's curated vocabulary already knows them; an archive never extends a vocabulary its administrator owns. Norish reads foreign archives (Mela, Paprika, Mealie, Tandoor) through the same import door as its own.
+The portable file a Norish instance writes so recipes can leave it: every recipe the exporter can see, complete with its media, the author's display name as attribution, and the exporter's own rating and favourite mark. It carries recipe content rather than the exporter's Library, so cookbooks stay behind and an importer receives loose recipes to file as they please. It is an exchange of recipe content, never a backup — whoever imports it owns what that creates, and no accounts, emails, or instance state travel inside, so an archive is safe to hand around. Cuisine names travel as words and attach only where the receiving instance's curated vocabulary already knows them; an archive never extends a vocabulary its administrator owns. Norish reads foreign archives (Mela, Paprika, Mealie, Tandoor) through the same import door as its own.
 _Avoid_: Export (the act, not the artifact), Backup (promises restoration an archive refuses to make), Instance export (suggests instance state is inside)
 
 **AI Runtime**:
@@ -111,6 +125,18 @@ _Avoid_: Model Capability (claims foreknowledge Norish does not have), Generatio
 **Unclassified Post**:
 A post whose source gave no evidence either way about a video stream. It is not a post without video: reading that silence as absence is what sent reels down the caption-only path, losing the video and the creator.
 _Avoid_: Unknown post
+
+**Site Auth Token**:
+One cookie or one request header a user saves so their imports reach a site that only answers a signed-in visitor. It belongs to the person who saved it, never to the server, and its value is encrypted at rest and never returned to a browser. Its domain decides which imports carry it: only a URL whose hostname the domain matches, so one site's session cannot travel to another's.
+_Avoid_: Credential (a Site Auth Token is a fragment of a session, not a login Norish can perform), Site cookie (half the tokens are headers)
+
+**Site Account**:
+Which of a user's logins on a site a Site Auth Token belongs to, as a label they choose. It is what tells two Instagram sessions apart, since both are a `sessionid` cookie on the same domain. A token left without one is not tied to a login and travels with every import for its domain — the shape of a CSRF cookie every account on the site shares, and the shape every server has until someone names an account.
+_Avoid_: Profile (taken by the person's own Norish profile), Token group (names the mechanism, not the thing the user has)
+
+**Credential Set**:
+The tokens one import actually sends: a site's unlabelled tokens plus one Site Account's. A site with several accounts has several sets, and each import picks one at random, so imports spread over the logins instead of one login carrying all of them. Random rather than round-robin because a worker keeps nothing between jobs, and the job records which set it was given as parsing starts — a rate-limited or expired login has to be nameable from an import that failed on it.
+_Avoid_: Token rotation (names the picking, not the thing picked), Session pool (implies Norish holds sessions open)
 
 **yt-dlp Version**:
 The release of the downloader binary a server is actually running. A report, not a setting: production fixes it by image and development by first download, and no Norish setting changes it.
@@ -147,7 +173,7 @@ The static assets (HTML, JS, CSS, fonts, icons) required to boot the web app wit
 The personalized persisted copy of previously fetched server data that the web app serves while Offline. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
 
 **Warm Set**:
-The content guaranteed to be in the Offline Cache: the 50 most recent recipes in full (each with its primary image; further gallery images and videos are excluded from the guarantee), all groceries (including recurring) and stores, and the calendar's initial view window (roughly the current week on desktop, two weeks back/forward on mobile — enough to see the coming week's planned days). The Warm Set is a guaranteed floor — anything else fetched while Live is kept best-effort. A recipe the user creates joins the Warm Set on create (ADR-0008), so it is offline-available immediately rather than only at the next warm.
+The content guaranteed to be in the Offline Cache: the 50 most recent recipes in full (each with its primary image; further gallery images and videos are excluded from the guarantee), all groceries (including recurring) and stores, every cookbook the reader can see together with its membership, and the calendar's initial view window (roughly the current week on desktop, two weeks back/forward on mobile — enough to see the coming week's planned days). The Warm Set is a guaranteed floor — anything else fetched while Live is kept best-effort. A recipe the user creates joins the Warm Set on create (ADR-0008), so it is offline-available immediately rather than only at the next warm. A cookbook's members are guaranteed only insofar as they fall inside the fifty, so an Offline cookbook may list a recipe that cannot be opened.
 
 **Cache Warmer**:
 The background process that, while Live, tops the Offline Cache up until the Warm Set is present.

@@ -1,12 +1,13 @@
 "use client";
 
-import type { ComponentType } from "react";
+import type { ComponentType, CSSProperties } from "react";
 import { useRef } from "react";
 
 import { CookScene, ImportScene, PlanScene } from "../doodles";
 import { Mark } from "../marks";
 import { clamp, useScrollFrame } from "../scroll-frame";
-import { holdOf, prefersCalm, walkAt } from "../sequence";
+import { holdOf, prefersCalm, reachOf, stopsOf, walkAt } from "../sequence";
+import { SnapPoints } from "../snapping";
 
 /** Tint classes are written out in full so Tailwind's scanner can see them. */
 const moments: {
@@ -46,6 +47,10 @@ const moments: {
 /** The share of the held screen spent moving from one step to the next. */
 const GLIDE = 0.18;
 
+/** Where the scroll may stop, and how near it has to be to be carried there. */
+const STOPS = stopsOf(moments.length, GLIDE);
+const REACH = reachOf(moments.length, GLIDE);
+
 /**
  * Import, then plan, then cook: a sequence, so it plays like one. The section
  * holds the screen and the page's own scroll walks the rail sideways, a step at
@@ -53,6 +58,10 @@ const GLIDE = 0.18;
  * ghosting in past the edge. Everything is worked out from where the section
  * sits in the scroll, so it scrubs both ways and never plays to an empty room;
  * under reduced motion the rail snaps between steps instead of sliding.
+ *
+ * How fast that reads is not decided here. The page's scroll is Lenis's (see
+ * `app/providers.tsx`), which is what keeps a flick from carrying the whole
+ * sequence past in two frames, and the rests below are where it may stop.
  *
  * Without scripting the rail is exactly what it looks like: a row you swipe
  * yourself, snapping to each step (see `.moments-*` in globals.css).
@@ -113,7 +122,13 @@ export function Moments() {
   });
 
   return (
-    <section ref={stage} className="moments-stage border-border border-t">
+    <section
+      ref={stage}
+      className="moments-stage border-border border-t"
+      style={{ "--steps": `${moments.length}` } as CSSProperties}
+    >
+      <SnapPoints at={STOPS} reach={REACH} />
+
       <div ref={pin} className="moments-pin py-20 sm:py-24">
         {/* Off the worktop, in the room the steps leave either side of them. */}
         <Mark at="top-[11%] left-[4%] size-10 sm:size-11" depth={1.3} shape="sprig" turn={13} />

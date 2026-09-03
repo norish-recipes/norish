@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { and, asc, desc, eq, ilike, inArray, isNull, like, lte, or, sql } from "drizzle-orm";
 import z from "zod";
 
@@ -28,8 +29,10 @@ import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import {
+  cookbookRecipes,
   householdUsers,
   ingredients,
+  recipeFavorites,
   recipeImages,
   recipeIngredients,
   recipes,
@@ -62,10 +65,17 @@ import { attachTagsToRecipeByInputTx } from "./tags";
 
 type RecipeViewPolicy = RecipePermissionPolicy["view"];
 
-async function getRecipeViewPolicy(): Promise<RecipeViewPolicy> {
+/**
+ * Which of the recipe permission policy's three levels a query is asking
+ * about. Spelled out here rather than imported from `@norish/auth`, which
+ * depends on this package.
+ */
+export type PolicyAction = "view" | "edit" | "delete";
+
+async function getRecipePolicyLevel(action: PolicyAction): Promise<RecipeViewPolicy> {
   const policy = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
 
-  return policy?.view ?? DEFAULT_RECIPE_PERMISSION_POLICY.view;
+  return policy?.[action] ?? DEFAULT_RECIPE_PERMISSION_POLICY[action];
 }
 
 function nonEmpty(s: string | null | undefined): s is string {
@@ -237,45 +247,66 @@ export interface RecipeListContext {
 }
 
 /**
- * Build SQL condition for view policy filtering
+ * Build the SQL condition the recipe permission policy puts on an owner
+ * column, for whichever of its three levels the caller is asking about.
  *
- * Recipes with null userId (orphaned recipes) are always visible to everyone.
+ * A row with a null owner — an Orphaned recipe, or an Orphaned cookbook — is
+ * always included, at every level and for every action, which is the same
+ * answer `assertRecipeAccess` gives one row at a time.
+ *
+ * The owner column is a parameter because cookbooks answer to this same
+ * policy rather than a rule of their own (ADR-0027): a cookbook is exactly as
+ * visible as the recipes its owner could see, so the two conditions have to
+ * come from one place or they will drift.
  */
-async function buildViewPolicyCondition(ctx: RecipeListContext) {
-  const viewLevel = await getRecipeViewPolicy();
+export async function buildOwnerPolicyCondition(
+  ctx: RecipeListContext,
+  ownerColumn: AnyPgColumn,
+  action: PolicyAction = "view"
+) {
+  const level = await getRecipePolicyLevel(action);
 
   // Server admin sees all
   if (ctx.isServerAdmin) {
     return undefined;
   }
 
-  switch (viewLevel) {
+  const ownOrOrphaned = () => or(eq(ownerColumn, ctx.userId), sql`${ownerColumn} IS NULL`);
+
+  switch (level) {
     case "everyone":
       // No filtering needed
       return undefined;
 
     case "household":
-      // User sees own recipes + household members' recipes + orphaned recipes (null userId)
+      // Own rows + household members' rows + orphaned rows (null owner)
       if (ctx.householdUserIds && ctx.householdUserIds.length > 0) {
         // Ensure user's own ID is included (should always be, but safety check)
         const userIds = ctx.householdUserIds.includes(ctx.userId)
           ? ctx.householdUserIds
           : [...ctx.householdUserIds, ctx.userId];
 
-        // Include recipes where userId is in household OR userId is null (orphaned)
-        return or(inArray(recipes.userId, userIds), sql`${recipes.userId} IS NULL`);
+        return or(inArray(ownerColumn, userIds), sql`${ownerColumn} IS NULL`);
       }
 
-      // No household = only own recipes + orphaned recipes
-      return or(eq(recipes.userId, ctx.userId), sql`${recipes.userId} IS NULL`);
+      // No household = only own rows + orphaned rows
+      return ownOrOrphaned();
 
     case "owner":
-      // Only own recipes + orphaned recipes (null userId)
-      return or(eq(recipes.userId, ctx.userId), sql`${recipes.userId} IS NULL`);
+      // Only own rows + orphaned rows (null owner)
+      return ownOrOrphaned();
 
     default:
-      return or(eq(recipes.userId, ctx.userId), sql`${recipes.userId} IS NULL`);
+      return ownOrOrphaned();
   }
+}
+
+/**
+ * The recipe list's own view-policy condition — `buildOwnerPolicyCondition`
+ * pointed at `recipes.userId`.
+ */
+async function buildViewPolicyCondition(ctx: RecipeListContext) {
+  return buildOwnerPolicyCondition(ctx, recipes.userId, "view");
 }
 
 /**
@@ -305,13 +336,202 @@ export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<stri
  * selects, and inside the subquery an unqualified `"id"` resolves to the
  * gallery's own column — silently matching nothing.
  */
-const PRIMARY_IMAGE_SQL = sql<string | null>`COALESCE(
+export const PRIMARY_IMAGE_SQL = sql<string | null>`COALESCE(
   (SELECT gallery.image FROM ${recipeImages} AS gallery
     WHERE gallery.recipe_id = "recipes"."id"
     ORDER BY COALESCE(gallery."order", 0) ASC, gallery.created_at ASC
     LIMIT 1),
   "recipes"."image"
 )`;
+
+/**
+ * The weighted search document and its rank, for whichever fields the reader
+ * has chosen.
+ *
+ * Priority is title (A) > tags (B) > ingredients (C) > description/steps (D),
+ * and the terms are prefix-matched so "om" finds "oma". Returns null when
+ * there is nothing to search for, either because no term survived
+ * sanitisation or because the reader unticked every field.
+ *
+ * Every reference is spelled `"recipes"."…"` by hand for the same reason
+ * PRIMARY_IMAGE_SQL is: an interpolated drizzle column renders unqualified,
+ * which resolves to the wrong table inside a correlated subquery and silently
+ * matches nothing. The explicit spelling is what lets one builder serve both
+ * the recipe list and the Library union.
+ */
+export function recipeSearchSql(
+  search: string | undefined,
+  searchFields: SearchField[]
+): { match: ReturnType<typeof sql>; rank: ReturnType<typeof sql<number>> } | null {
+  if (!search || searchFields.length === 0) return null;
+
+  // Sanitize terms to remove PostgreSQL tsquery special characters.
+  const sanitizeTsqueryTerm = (term: string): string => term.replace(/[&|!():<>*\\'"]/g, "").trim();
+
+  const searchTerms = search
+    .trim()
+    .split(/\s+/)
+    .map(sanitizeTsqueryTerm)
+    .filter((term) => term.length > 0)
+    .map((term) => `${term}:*`)
+    .join(" | ");
+
+  if (!searchTerms) return null;
+
+  const parts: ReturnType<typeof sql>[] = [];
+
+  for (const field of searchFields) {
+    switch (field) {
+      case "title":
+        parts.push(sql`setweight(to_tsvector('simple', coalesce("recipes"."name", '')), 'A')`);
+        break;
+      case "tags":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce((
+            SELECT string_agg(search_tag.name, ' ')
+            FROM ${recipeTags} search_rt
+            INNER JOIN ${tags} search_tag ON search_rt.tag_id = search_tag.id
+            WHERE search_rt.recipe_id = "recipes"."id"
+          ), '')), 'B')`
+        );
+        break;
+      case "ingredients":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce((
+            SELECT string_agg(search_ingredient.name, ' ')
+            FROM ${recipeIngredients} search_ri
+            INNER JOIN ${ingredients} search_ingredient ON search_ri.ingredient_id = search_ingredient.id
+            WHERE search_ri.recipe_id = "recipes"."id"
+          ), '')), 'C')`
+        );
+        break;
+      case "description":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce("recipes"."description", '')), 'D')`
+        );
+        break;
+      case "steps":
+        parts.push(
+          sql`setweight(to_tsvector('simple', coalesce((
+            SELECT string_agg(search_step.step, ' ')
+            FROM ${stepsTable} search_step
+            WHERE search_step.recipe_id = "recipes"."id"
+          ), '')), 'D')`
+        );
+        break;
+    }
+  }
+
+  if (parts.length === 0) return null;
+
+  const document = sql.join(parts, sql` || `);
+  const query = sql`to_tsquery('simple', ${searchTerms})`;
+
+  return {
+    match: sql`(${document}) @@ ${query}`,
+    rank: sql<number>`ts_rank(${document}, ${query})`,
+  };
+}
+
+/**
+ * The dashboard projection, in one place.
+ *
+ * Three reads answer in this shape — the recipe list, one recipe by id, and a
+ * known set of ids for the Library union — and a field added to
+ * RecipeDashboardSchema has to reach all three or the cards disagree.
+ */
+const DASHBOARD_COLUMNS = {
+  id: true,
+  userId: true,
+  name: true,
+  description: true,
+  notes: true,
+  url: true,
+  servings: true,
+  prepMinutes: true,
+  cookMinutes: true,
+  totalMinutes: true,
+  calories: true,
+  // Only the country: the dashboard flies its flag, and the rest of the
+  // provenance group has nothing to show at that size.
+  originCountry: true,
+  categories: true,
+  createdAt: true,
+  updatedAt: true,
+  version: true,
+} as const;
+
+const DASHBOARD_WITH = {
+  recipeTags: {
+    with: { tag: { columns: { id: true, name: true, version: true } } },
+    /**
+     * Tag order is the editor's, so the cards read the same way the recipe
+     * does. A getter, not a value: reading a schema column while this module
+     * is still loading breaks any consumer that mocks `@norish/db/schema`,
+     * and it is only ever needed when a query is actually built.
+     */
+    get orderBy() {
+      return [asc(recipeTags.order)];
+    },
+  },
+  ratings: { columns: { rating: true } },
+} as const;
+
+type DashboardRow = {
+  id: string;
+  userId: string | null;
+  name: string;
+  description: string | null;
+  notes: string | null;
+  url: string | null;
+  image: string | null;
+  servings: number | null;
+  prepMinutes: number | null;
+  cookMinutes: number | null;
+  totalMinutes: number | null;
+  calories: number | null;
+  originCountry: string | null;
+  categories: RecipeCategory[] | null;
+  createdAt: Date;
+  updatedAt: Date;
+  version: number;
+  recipeTags?: { tag?: { name?: string; version?: number } | null }[];
+  ratings?: { rating: number }[];
+};
+
+/** One projected row as the cards read it, ratings averaged. */
+function toDashboardRecipe(r: DashboardRow) {
+  const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
+  const ratingCount = ratingValues.length;
+
+  return {
+    id: r.id,
+    userId: r.userId,
+    name: r.name,
+    description: r.description ?? null,
+    notes: r.notes ?? null,
+    url: r.url ?? null,
+    image: r.image ?? null,
+    servings: r.servings ?? 1,
+    prepMinutes: r.prepMinutes ?? null,
+    cookMinutes: r.cookMinutes ?? null,
+    totalMinutes: r.totalMinutes ?? null,
+    calories: r.calories ?? null,
+    originCountry: r.originCountry ?? null,
+    categories: r.categories ?? [],
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    version: r.version,
+    tags: (r.recipeTags ?? []).flatMap((rt) =>
+      rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
+        ? [{ name: rt.tag.name, version: rt.tag.version }]
+        : []
+    ),
+    averageRating:
+      ratingCount > 0 ? ratingValues.reduce((sum, value) => sum + value, 0) / ratingCount : null,
+    ratingCount,
+  };
+}
 
 export async function listRecipes(
   ctx: RecipeListContext,
@@ -324,7 +544,15 @@ export async function listRecipes(
   sortMode: SortOrder = "dateDesc",
   minRating?: number,
   maxCookingTime?: number,
-  categories?: RecipeCategory[]
+  categories?: RecipeCategory[],
+  /**
+   * Narrow the list to one cookbook's members. The rest of this function is
+   * untouched by it, so a cookbook's page gets the reader's own sort, search
+   * and filters for free — and the members answer the same view policy the
+   * Library applies, which is what makes a cookbook's count and its list
+   * agree by construction (ADR-0027).
+   */
+  options?: { cookbookId?: string; favoritesOnly?: boolean }
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -335,93 +563,38 @@ export async function listRecipes(
     whereConditions.push(policyCondition);
   }
 
-  // Build full-text search with weighted ranking
-  // Priority: title (A) > tags (B) > ingredients (C) > description/steps (D)
+  if (options?.favoritesOnly) {
+    // Same clause the Library union applies, so the favourites toggle means
+    // the same thing inside a cookbook as it does on the Library.
+    whereConditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM ${recipeFavorites} AS favorite
+        WHERE favorite.recipe_id = "recipes"."id" AND favorite.user_id = ${ctx.userId}
+      )`
+    );
+  }
+
+  if (options?.cookbookId) {
+    // `"recipes"."id"` by hand: drizzle renders an interpolated column
+    // unqualified, and inside this subquery an unqualified `"id"` would
+    // resolve to the membership table's own column.
+    whereConditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM ${cookbookRecipes} AS membership
+        WHERE membership.cookbook_id = ${options.cookbookId}
+          AND membership.recipe_id = "recipes"."id"
+      )`
+    );
+  }
+
+  // Build full-text search with weighted ranking, through the one builder
+  // the Library union uses too.
+  const searchSql = recipeSearchSql(search, searchFields);
   let searchRank: ReturnType<typeof sql<number>> | null = null;
 
-  if (search && searchFields.length > 0) {
-    // Convert search terms to tsquery format with prefix matching
-    // Each term gets :* suffix for partial word matching (e.g., "om" matches "oma")
-    // Sanitize terms to remove PostgreSQL tsquery special characters: & | ! ( ) : * \ ' "
-    const sanitizeTsqueryTerm = (term: string): string =>
-      term.replace(/[&|!():<>*\\'"]/g, "").trim();
-
-    const searchTerms = search
-      .trim()
-      .split(/\s+/)
-      .map(sanitizeTsqueryTerm)
-      .filter((t) => t.length > 0)
-      .map((t) => `${t}:*`)
-      .join(" | ");
-
-    // Skip search if all terms were filtered out (e.g., search was only special characters)
-    if (!searchTerms) {
-      // Fall through without adding search conditions
-    } else {
-      // Build weighted tsvector components based on selected fields
-      const tsvectorParts: ReturnType<typeof sql>[] = [];
-
-      for (const field of searchFields) {
-        switch (field) {
-          case "title":
-            // Weight A (highest) for title
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce(${recipes.name}, '')), 'A')`
-            );
-            break;
-          case "tags":
-            // Weight B for tags - aggregate from related table
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce((
-              SELECT string_agg(t.name, ' ')
-              FROM ${recipeTags} rt
-              INNER JOIN ${tags} t ON rt.tag_id = t.id
-              WHERE rt.recipe_id = ${recipes.id}
-            ), '')), 'B')`
-            );
-            break;
-          case "ingredients":
-            // Weight C for ingredients - aggregate from related table
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce((
-              SELECT string_agg(i.name, ' ')
-              FROM ${recipeIngredients} ri
-              INNER JOIN ${ingredients} i ON ri.ingredient_id = i.id
-              WHERE ri.recipe_id = ${recipes.id}
-            ), '')), 'C')`
-            );
-            break;
-          case "description":
-            // Weight D for description
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce(${recipes.description}, '')), 'D')`
-            );
-            break;
-          case "steps":
-            // Weight D for steps - aggregate from related table
-            tsvectorParts.push(
-              sql`setweight(to_tsvector('simple', coalesce((
-              SELECT string_agg(s.step, ' ')
-              FROM ${stepsTable} s
-              WHERE s.recipe_id = ${recipes.id}
-            ), '')), 'D')`
-            );
-            break;
-        }
-      }
-
-      if (tsvectorParts.length > 0) {
-        // Combine all tsvector parts with ||
-        const combinedTsvector = sql.join(tsvectorParts, sql` || `);
-        const tsQuery = sql`to_tsquery('simple', ${searchTerms})`;
-
-        // Add search condition using @@ operator
-        whereConditions.push(sql`(${combinedTsvector}) @@ ${tsQuery}`);
-
-        // Build rank expression for ordering
-        searchRank = sql<number>`ts_rank(${combinedTsvector}, ${tsQuery})`;
-      }
-    }
+  if (searchSql) {
+    whereConditions.push(searchSql.match);
+    searchRank = searchSql.rank;
   }
 
   let tagFilteredIds: string[] | undefined;
@@ -493,39 +666,12 @@ export async function listRecipes(
 
   const [rows, totalCount] = await Promise.all([
     db.query.recipes.findMany({
-      columns: {
-        id: true,
-        userId: true,
-        name: true,
-        description: true,
-        notes: true,
-        url: true,
-        servings: true,
-        prepMinutes: true,
-        cookMinutes: true,
-        totalMinutes: true,
-        calories: true,
-        // Only the country: the dashboard flies its flag, and the rest of the
-        // provenance group has nothing to show at that size.
-        originCountry: true,
-        categories: true,
-        createdAt: true,
-        updatedAt: true,
-        version: true,
-      },
+      columns: DASHBOARD_COLUMNS,
       extras: {
         // The resolved primary, not the deprecated scalar.
         image: PRIMARY_IMAGE_SQL.as("image"),
       },
-      with: {
-        recipeTags: {
-          with: { tag: { columns: { id: true, name: true, version: true } } },
-          orderBy: (rt, { asc }) => [asc(rt.order)],
-        },
-        ratings: {
-          columns: { rating: true },
-        },
-      },
+      with: DASHBOARD_WITH,
       where: whereClause,
       orderBy,
       limit,
@@ -537,43 +683,7 @@ export async function listRecipes(
       .where(whereClause),
   ]);
 
-  const formatted = rows.map((r) => {
-    // Compute average rating
-    const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
-    const ratingCount = ratingValues.length;
-    const averageRating =
-      ratingCount > 0 ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingCount : null;
-
-    return {
-      id: r.id,
-      userId: r.userId,
-      name: r.name,
-      description: r.description ?? null,
-      notes: r.notes ?? null,
-      url: r.url ?? null,
-      image: r.image ?? null,
-      servings: r.servings ?? 1,
-      prepMinutes: r.prepMinutes ?? null,
-      cookMinutes: r.cookMinutes ?? null,
-      totalMinutes: r.totalMinutes ?? null,
-      calories: r.calories ?? null,
-      originCountry: r.originCountry ?? null,
-      categories: r.categories ?? [],
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-      version: r.version,
-      tags: (r.recipeTags ?? []).flatMap(
-        (rt: { tag?: { name?: string; version?: number } | null }) =>
-          rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
-            ? [{ name: rt.tag.name, version: rt.tag.version }]
-            : []
-      ),
-      averageRating,
-      ratingCount,
-    };
-  });
-
-  const parsed = z.array(RecipeDashboardSchema).safeParse(formatted);
+  const parsed = z.array(RecipeDashboardSchema).safeParse(rows.map(toDashboardRecipe));
 
   if (!parsed.success) throw new Error("RecipeDashboardDTO parse failed");
 
@@ -592,29 +702,49 @@ export async function listRecipes(
   };
 }
 
+/**
+ * The dashboard projection for a known set of ids, in the order the caller
+ * asked for them.
+ *
+ * The Library union decides the order in SQL and then hydrates, so this is
+ * how a page of mixed rows gets its recipe halves without the union having to
+ * carry every card field through it.
+ */
+/**
+ * The dashboard projection for a known set of ids, in the order the caller
+ * asked for them.
+ *
+ * The Library union decides the order in SQL and then hydrates, so this is
+ * how a page of mixed rows gets its recipe halves without the union having to
+ * carry every card field through it.
+ */
+export async function listDashboardRecipesByIds(ids: string[]): Promise<RecipeDashboardDTO[]> {
+  if (ids.length === 0) return [];
+
+  const rows = await db.query.recipes.findMany({
+    where: inArray(recipes.id, ids),
+    columns: DASHBOARD_COLUMNS,
+    extras: { image: PRIMARY_IMAGE_SQL.as("image") },
+    with: DASHBOARD_WITH,
+  });
+
+  const parsed = z.array(RecipeDashboardSchema).safeParse(rows.map(toDashboardRecipe));
+
+  if (!parsed.success) throw new Error("RecipeDashboardDTO parse failed");
+
+  const byId = new Map(parsed.data.map((recipe) => [recipe.id, recipe]));
+
+  return ids.flatMap((id) => {
+    const recipe = byId.get(id);
+
+    return recipe ? [recipe] : [];
+  });
+}
+
 export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | null> {
   const rows = await db.query.recipes.findMany({
     where: eq(recipes.id, id),
-    columns: {
-      id: true,
-      userId: true,
-      name: true,
-      description: true,
-      notes: true,
-      url: true,
-      servings: true,
-      prepMinutes: true,
-      cookMinutes: true,
-      totalMinutes: true,
-      calories: true,
-      // Only the country: the dashboard flies its flag, and the rest of the
-      // provenance group has nothing to show at that size.
-      originCountry: true,
-      categories: true,
-      createdAt: true,
-      updatedAt: true,
-      version: true,
-    },
+    columns: DASHBOARD_COLUMNS,
     extras: {
       // The resolved primary, not the deprecated scalar.
       image: PRIMARY_IMAGE_SQL.as("image"),

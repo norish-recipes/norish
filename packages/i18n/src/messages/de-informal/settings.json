@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Website-Authentifizierungstoken",
       "description": "Füge Header oder Cookies hinzu, die beim Importieren von Rezepten von bestimmten Websites gesendet werden. Nützlich für Websites, die eine Anmeldung erfordern (z.B. Instagram, Facebook).",
+      "accountsDescription": "Benenne ein Konto, wenn du mehrere Anmeldungen für eine Website hast. Jeder Import verwendet dann eines der Konten dieser Website, zufällig ausgewählt, sodass nicht eine einzelne Anmeldung alle Importe trägt. Ein Token ohne Kontonamen wird bei jedem Import für diese Domain gesendet.",
       "domain": "Domain",
       "domainPlaceholder": "z.B. instagram.com",
+      "account": "Konto",
+      "accountPlaceholder": "z.B. mein_handle (optional)",
+      "accountShared": "Alle Konten",
       "name": "Name",
       "namePlaceholder": "z.B. Cookie oder Authorization",
       "value": "Wert",
@@ -84,6 +88,7 @@
       "noTokens": "Keine Website-Authentifizierungstoken konfiguriert.",
       "tableHeaders": {
         "domain": "DOMAIN",
+        "account": "KONTO",
         "name": "NAME",
         "type": "TYP",
         "created": "ERSTELLT",
@@ -126,7 +131,8 @@
           "rating": "Bewertungen",
           "favorites": "Favoriten",
           "conversion": "Zutatenumrechnung",
-          "timers": "Rezept-Timer"
+          "timers": "Rezept-Timer",
+          "cookbooks": "Kochbücher"
         }
       },
       "todaySection": {
@@ -370,6 +376,34 @@
         "description": "Lade jedes Rezept auf diesem Server herunter.",
         "button": "Rezeptarchiv exportieren"
       }
+    },
+    "users": {
+      "title": "Benutzer",
+      "description": "Verwalte alle, die ein Konto auf diesem Server haben.",
+      "table": {
+        "user": "Benutzer",
+        "role": "Rolle",
+        "household": "Haushalt",
+        "joined": "Beigetreten",
+        "actions": "Aktionen"
+      },
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin"
+      },
+      "noHousehold": "Kein Haushalt",
+      "loading": "Benutzer werden geladen…",
+      "empty": "Noch keine Benutzer.",
+      "loadFailed": "Die Benutzerliste konnte nicht geladen werden.",
+      "actions": {
+        "makeAdmin": "Zum Admin machen",
+        "revokeAdmin": "Admin-Zugriff entziehen",
+        "delete": "Benutzer löschen"
+      },
+      "deleteTitle": "{name} löschen?",
+      "deleteConfirm": "Das löscht das Konto dieses Benutzers dauerhaft und entfernt ihn aus seinem Haushalt. Das kann nicht rückgängig gemacht werden.",
+      "deleteSuccess": "{name} wurde gelöscht",
+      "countSummary": "{count, plural, one {# Benutzer} other {# Benutzer}} insgesamt"
     },
     "registration": {
       "title": "Registrierung",

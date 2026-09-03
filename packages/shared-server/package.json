@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./logger": "./src/logger.ts",
+    "./accounts/deletion": "./src/accounts/deletion.ts",
     "./cache/household": "./src/cache/household.ts",
     "./config/server-config-loader": "./src/config/server-config-loader.ts",
     "./media/storage": "./src/media/storage.ts",
@@ -37,6 +38,7 @@
     "./lib/workspace-paths": "./src/lib/workspace-paths.ts",
     "./lib/operation-context": "./src/lib/operation-context.ts",
     "./realtime/caldav": "./src/realtime/caldav.ts",
+    "./realtime/cookbooks": "./src/realtime/cookbooks.ts",
     "./realtime/connection-invalidation": "./src/realtime/connection-invalidation.ts",
     "./realtime/groceries": "./src/realtime/groceries.ts",
     "./realtime/households": "./src/realtime/households.ts",

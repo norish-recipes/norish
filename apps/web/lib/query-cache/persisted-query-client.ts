@@ -200,9 +200,14 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
         clearOwnerReadArtifacts(knownOwner),
         purgeForeignReadArtifacts(idb, nextOwner),
       ]);
-    } else if (!knownOwner) {
-      queryClient.clear();
     }
+
+    // A first-ever adoption keeps what is already in the client. Everything in
+    // it was read moments ago under this very session, so there is nothing
+    // foreign to purge — and clearing it strands every read still in flight:
+    // the observer is left watching a query that no longer exists, holding its
+    // loading state until some unrelated re-render happens to rebuild it. That
+    // is a first paint that never settles.
 
     await restoreForOwner(nextOwner);
   }

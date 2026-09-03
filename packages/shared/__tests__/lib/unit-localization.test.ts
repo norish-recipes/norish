@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import defaultUnits from "@norish/config/units.default.json";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { flattenForLibrary, formatUnit, normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 const unitsConfig = defaultUnits as UnitsMap;
@@ -98,8 +99,10 @@ describe("Unit Localization", () => {
 
     describe("Fallback behavior", () => {
       it("falls back to English for unknown locale", () => {
-        expect(formatUnit("tablespoon", "es", unitsConfig)).toBe("tbsp");
+        // Spanish stood here until it became a language the vocabulary knows
+        // (#504); the fallback is for languages Norish is not translated into.
         expect(formatUnit("tablespoon", "ja", unitsConfig)).toBe("tbsp");
+        expect(formatUnit("tablespoon", "sv", unitsConfig)).toBe("tbsp");
       });
 
       it("returns unitId for unknown units", () => {
@@ -122,6 +125,45 @@ describe("Unit Localization", () => {
         expect(formatUnit("gram", "en", unitsConfig, null)).toBe("g");
         expect(formatUnit("gram", "en", unitsConfig)).toBe("g");
       });
+    });
+  });
+
+  describe("the languages the vocabulary used to be missing (#504)", () => {
+    // A Spanish shopping list read "500 grams" because the unit had no Spanish
+    // form and formatUnit falls back to English. Per-unit coverage is asserted
+    // in shared-server; these hold the shape of a few, in both directions.
+    it.each([
+      ["es", "gramos"],
+      ["pt-BR", "gramas"],
+      ["ru", "граммы"],
+      ["pl", "gramy"],
+      ["bg", "грама"],
+      ["fr", "grammes"],
+    ])("names a unit in %s rather than falling back to English", (locale, expected) => {
+      expect(formatUnit("gram", locale, unitsConfig, 500)).toBe(expected);
+    });
+
+    it("still falls back to English for a language it has no forms for", () => {
+      expect(formatUnit("gram", "ja", unitsConfig, 500)).toBe("grams");
+    });
+
+    it.each([
+      ["2 litros de leche", "liter", "de leche"],
+      ["1 cucharada de aceite", "tablespoon", "de aceite"],
+      ["3 colheres de sopa de azeite", "tablespoon", "de azeite"],
+      ["2 столовые ложки масла", "tablespoon", "масла"],
+      ["2 łyżki oliwy", "tablespoon", "oliwy"],
+      ["3 brins de thym", "sprig", "de thym"],
+    ])("reads %s as a unit written in that language", (line, unitId, description) => {
+      const parsed = parseIngredientWithDefaults(line, unitsConfig)[0];
+
+      expect(normalizeUnit(parsed.unitOfMeasure ?? "", unitsConfig)).toBe(unitId);
+      expect(parsed.description).toBe(description);
+    });
+
+    it("keeps a locale's abbreviation for a single item and spells it out beyond one", () => {
+      expect(formatUnit("liter", "es", unitsConfig, 1)).toBe("l");
+      expect(formatUnit("liter", "es", unitsConfig, 2)).toBe("litros");
     });
   });
 

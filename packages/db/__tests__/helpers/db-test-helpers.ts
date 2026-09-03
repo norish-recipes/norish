@@ -81,6 +81,8 @@ export async function cleanDatabase() {
   await db.delete(schema.recipeRatings);
   await db.delete(schema.recipeFavorites);
   await db.delete(schema.recipeShares);
+  await db.delete(schema.cookbookRecipes);
+  await db.delete(schema.cookbooks);
   await db.delete(schema.recipes);
   await db.delete(schema.ingredients);
   await db.delete(schema.plannedItems);

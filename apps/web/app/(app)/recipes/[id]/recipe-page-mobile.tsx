@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
+import CookbooksCard from "@/app/(app)/recipes/[id]/components/cookbooks-card";
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import IngredientsOptionsMenu from "@/app/(app)/recipes/[id]/components/ingredients-options-menu";
@@ -22,6 +23,7 @@ import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { useBackDestination } from "@/hooks/use-back-destination";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card } from "@heroui/react";
@@ -52,6 +54,7 @@ export default function RecipePageMobile() {
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
   const t = useTranslations("recipes.detail");
+  const back = useBackDestination();
   const { showRatings, showFavorites, showNutrition } = useHiddenItemVisibility();
 
   const isFavorite = checkFavorite(recipe.id);
@@ -91,9 +94,9 @@ export default function RecipePageMobile() {
             showAuthorFallback={false}
             topLeftContent={
               <Link
-                aria-label={t("backToRecipes")}
+                aria-label={back.label}
                 className={`${RECIPE_HERO_CHROME_OFFSET_CLASS} ${RECIPE_HERO_CHROME_BUTTON_CLASS} no-underline`}
-                href="/"
+                href={back.href}
               >
                 <ArrowLeftIcon className="size-5" />
               </Link>
@@ -178,6 +181,9 @@ export default function RecipePageMobile() {
         <ProvenanceCard />
 
         <SourceCard recipe={recipe} />
+
+        {/* The cookbooks this recipe is filed into, last on the page. */}
+        <CookbooksCard />
 
         {showRatings && (
           <Card className="rounded-2xl">

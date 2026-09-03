@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "Все рецепты",
+    "libraryTitle": "Ваша библиотека",
+    "recipesTitle": "Ваши рецепты",
+    "cookbooksTitle": "Ваши кулинарные книги",
     "searchPlaceholder": "Найдите или добавьте рецепт...",
     "searchRecipesPlaceholder": "Поиск рецептов...",
-    "recipeCount": "{count, plural, one {# рецепт} few {# рецепта} many {# рецептов} other {# рецепта}}",
+    "libraryCount": "{count, plural, one {# запись} other {# записей}}",
     "addRecipe": "Добавить рецепт",
     "importFromUrl": "URL",
     "importFromPaste": "Вставка",
@@ -19,13 +21,29 @@
       "label": "Вид рецептов",
       "grid": "Сетка",
       "list": "Список"
+    },
+    "libraryType": {
+      "label": "Показать",
+      "all": "Все",
+      "recipes": "Рецепты",
+      "cookbooks": "Кулинарные книги"
     }
   },
+  "back": {
+    "all": "Назад к библиотеке",
+    "recipes": "Назад к рецептам",
+    "cookbooks": "Назад к кулинарным книгам",
+    "named": "Назад к {name}",
+    "cookbook": "Назад к книге",
+    "generic": "Назад"
+  },
   "empty": {
-    "title": "Ваша коллекция рецептов ждёт",
+    "title": "Ваша библиотека ждёт",
     "description": "Вставьте URL рецепта в поле поиска выше — и магия начнётся.",
     "noResults": "Рецепты не найдены",
-    "noResultsHint": "Попробуйте изменить или очистить фильтры."
+    "noResultsHint": "Попробуйте изменить или очистить фильтры.",
+    "noCookbooks": "Кулинарных книг пока нет",
+    "noCookbooksHint": "Кулинарная книга — это набор рецептов с названием. Создайте первую, чтобы упорядочить библиотеку."
   },
   "card": {
     "noImage": "Изображение недоступно",
@@ -35,7 +53,6 @@
     "recipeOptions": "Параметры рецепта"
   },
   "detail": {
-    "backToRecipes": "Назад к рецептам",
     "viewOriginal": "Открыть оригинальный рецепт",
     "ingredients": "Ингредиенты",
     "ingredientOptions": "Настройки ингредиентов",
@@ -86,7 +103,8 @@
     "linkingIngredients": "Связывание ингредиентов…",
     "enrichmentFailed": "Последняя попытка не удалась",
     "generateImage": "Сгенерировать изображение",
-    "generatingImage": "Генерация изображения…"
+    "generatingImage": "Генерация изображения…",
+    "cookbooks": "Кулинарные книги"
   },
   "sharePanel": {
     "title": "Поделиться рецептом",
@@ -352,5 +370,38 @@
     "cook": "Готовка",
     "other": "Прочее время",
     "total": "Всего"
+  },
+  "cookbooks": {
+    "addCookbook": "Добавить книгу",
+    "createTitle": "Новая кулинарная книга",
+    "editTitle": "Изменить книгу",
+    "titleLabel": "Название",
+    "titlePlaceholder": "напр. Ужины на неделе",
+    "options": "Параметры книги",
+    "deleteTitle": "Удалить книгу",
+    "deleteConfirm": "Удалить «{title}»?",
+    "deleteKeepsRecipes": "Рецепты из неё останутся в вашей библиотеке.",
+    "recipeCount": "{count, plural, one {# рецепт} other {# рецептов}}",
+    "empty": "Рецептов пока нет",
+    "singular": "Кулинарная книга",
+    "notFound": "Кулинарная книга не найдена",
+    "notFoundHint": "Возможно, она удалена или недоступна вам.",
+    "emptyHint": "Добавляйте рецепты через меню быстрых действий рецепта.",
+    "panelTitle": "Добавить в книгу",
+    "newWithRecipe": "Новая книга с этим рецептом",
+    "noneEditable": "Пока нет кулинарных книг, доступных вам для изменения.",
+    "cardTitle": "В кулинарных книгах",
+    "removeFromCookbook": "Убрать из книги",
+    "noMatchingMembers": "Ни один рецепт в этой книге не подходит под фильтры.",
+    "membersLabel": "Рецепты в этой книге",
+    "showMore": "Показать ещё",
+    "willBeCreated": "Будет создана при сохранении",
+    "manage": "Управлять",
+    "addRecipes": "Добавить рецепты",
+    "addRecipesTitle": "Добавить рецепты в «{title}»",
+    "searchRecipes": "Поиск рецептов",
+    "noRecipesToAdd": "Рецепты не найдены.",
+    "addCount": "{count, plural, one {Добавить # рецепт} few {Добавить # рецепта} many {Добавить # рецептов} other {Добавить # рецепта}}",
+    "everythingAlreadyIn": "Все рецепты уже в этой книге."
   }
 }

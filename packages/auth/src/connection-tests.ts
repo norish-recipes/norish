@@ -1,3 +1,8 @@
+import {
+  normalizeAzureEndpoint,
+  normalizeOllamaEndpoint,
+  normalizeOpenAICompatibleEndpoint,
+} from "@norish/shared-server/ai/runtime/endpoints";
 import { aiLogger } from "@norish/shared-server/logger";
 
 export async function testOIDCProvider(config: {
@@ -111,6 +116,34 @@ async function testPerplexityConnection(
   }
 }
 
+/**
+ * The URL a failed test attempted, with any credential in the query string
+ * removed — Google AI carries its API key there, and a log line is not the
+ * place for it.
+ */
+function redactUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+
+    for (const key of parsed.searchParams.keys()) {
+      parsed.searchParams.set(key, "***");
+    }
+
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Ask a provider whether the configured endpoint and key work.
+ *
+ * The URL is built with the same normalization the AI Runtime uses, because a
+ * test that addresses a different URL than the real requests do tests nothing:
+ * an `…/api/v1` base URL used to have a second `/v1` appended here only, so a
+ * working OpenRouter configuration answered 404 to its own test while every
+ * enrichment job succeeded (#537).
+ */
 export async function testAIEndpoint(config: {
   provider: string;
   endpoint?: string;
@@ -124,14 +157,7 @@ export async function testAIEndpoint(config: {
       break;
     case "azure":
       if (config.endpoint) {
-        let baseUrl = config.endpoint.replace(/\/+$/, "");
-
-        // Ensure /openai path is included
-        if (!baseUrl.endsWith("/openai")) {
-          baseUrl = `${baseUrl}/openai`;
-        }
-
-        testUrl = `${baseUrl}/models?api-version=2024-02-01`;
+        testUrl = `${normalizeAzureEndpoint(config.endpoint)}/models?api-version=2024-02-01`;
       } else {
         // Without an endpoint, we can only validate that an API key was provided
         if (!config.apiKey) {
@@ -163,19 +189,19 @@ export async function testAIEndpoint(config: {
       if (!config.endpoint) {
         return { success: false, error: "Endpoint is required for Ollama" };
       }
-      testUrl = `${config.endpoint.replace(/\/$/, "")}/api/tags`;
+      testUrl = `${normalizeOllamaEndpoint(config.endpoint)}/api/tags`;
       break;
     case "lm-studio":
       if (!config.endpoint) {
         return { success: false, error: "Endpoint is required for LM Studio" };
       }
-      testUrl = `${config.endpoint.replace(/\/$/, "")}/v1/models`;
+      testUrl = `${normalizeOpenAICompatibleEndpoint(config.endpoint)}/models`;
       break;
     case "generic-openai":
       if (!config.endpoint) {
         return { success: false, error: "Endpoint is required for generic OpenAI" };
       }
-      testUrl = `${config.endpoint.replace(/\/$/, "")}/v1/models`;
+      testUrl = `${normalizeOpenAICompatibleEndpoint(config.endpoint)}/models`;
       break;
     case "perplexity":
       // Perplexity doesn't have a /models endpoint, use chat completions with minimal request
@@ -215,19 +241,39 @@ export async function testAIEndpoint(config: {
       signal: AbortSignal.timeout(10000),
     });
 
-    aiLogger.debug(
-      { status: response.status, statusText: response.statusText, url: testUrl },
-      "Test AI endpoint"
-    );
     if (!response.ok) {
+      // The mutation answers `{ success: false }` rather than throwing, so this
+      // is the only record of what was attempted. Without the URL and status a
+      // failing test leaves no breadcrumb anywhere — not in Norish's log, and
+      // not in the provider's, when the request never reached it (#537).
+      aiLogger.warn(
+        {
+          provider: config.provider,
+          url: redactUrl(testUrl),
+          status: response.status,
+          statusText: response.statusText,
+        },
+        "AI endpoint test failed"
+      );
+
       return {
         success: false,
         error: `Failed to connect: ${response.status} ${response.statusText}`,
       };
     }
 
+    aiLogger.debug(
+      { provider: config.provider, url: redactUrl(testUrl), status: response.status },
+      "AI endpoint test succeeded"
+    );
+
     return { success: true };
   } catch (error) {
+    aiLogger.warn(
+      { err: error, provider: config.provider, url: redactUrl(testUrl) },
+      "AI endpoint test could not reach the provider"
+    );
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to connect to AI endpoint",

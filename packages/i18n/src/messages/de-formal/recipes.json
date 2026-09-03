@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "Alle Rezepte",
+    "libraryTitle": "Ihre Bibliothek",
+    "recipesTitle": "Ihre Rezepte",
+    "cookbooksTitle": "Ihre Kochbücher",
     "searchPlaceholder": "Rezept suchen oder hinzufügen...",
     "searchRecipesPlaceholder": "Rezepte durchsuchen...",
-    "recipeCount": "{count, plural, one {# Rezept} other {# Rezepte}}",
+    "libraryCount": "{count, plural, one {# Eintrag} other {# Einträge}}",
     "addRecipe": "Rezept hinzufügen",
     "importFromUrl": "URL",
     "importFromPaste": "Einfügen",
@@ -19,13 +21,29 @@
       "label": "Rezeptansicht",
       "grid": "Raster",
       "list": "Liste"
+    },
+    "libraryType": {
+      "label": "Anzeigen",
+      "all": "Alle",
+      "recipes": "Rezepte",
+      "cookbooks": "Kochbücher"
     }
   },
+  "back": {
+    "all": "Zurück zur Bibliothek",
+    "recipes": "Zurück zu den Rezepten",
+    "cookbooks": "Zurück zu den Kochbüchern",
+    "named": "Zurück zu {name}",
+    "cookbook": "Zurück zum Kochbuch",
+    "generic": "Zurück"
+  },
   "empty": {
-    "title": "Ihre Rezeptsammlung wartet",
+    "title": "Ihre Bibliothek wartet",
     "description": "Fügen Sie eine Rezept-URL in das Suchfeld oben ein und schauen Sie, wie die Magie passiert.",
     "noResults": "Keine Rezepte gefunden",
-    "noResultsHint": "Versuchen Sie, Ihre Filter anzupassen oder zu löschen."
+    "noResultsHint": "Versuchen Sie, Ihre Filter anzupassen oder zu löschen.",
+    "noCookbooks": "Noch keine Kochbücher",
+    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstellen Sie Ihr erstes, um Ihre Bibliothek zu ordnen."
   },
   "card": {
     "noImage": "Kein Bild verfügbar",
@@ -35,7 +53,6 @@
     "recipeOptions": "Rezeptoptionen"
   },
   "detail": {
-    "backToRecipes": "Zurück zu Rezepten",
     "viewOriginal": "Originalrezept anzeigen",
     "ingredients": "Zutaten",
     "ingredientOptions": "Zutaten-Optionen",
@@ -86,7 +103,8 @@
     "linkingIngredients": "Zutaten werden verknüpft…",
     "enrichmentFailed": "Letzter Versuch fehlgeschlagen",
     "generateImage": "Bild generieren",
-    "generatingImage": "Bild wird generiert…"
+    "generatingImage": "Bild wird generiert…",
+    "cookbooks": "Kochbücher"
   },
   "sharePanel": {
     "title": "Rezept teilen",
@@ -352,5 +370,38 @@
     "cook": "Kochen",
     "other": "Sonstige Zeit",
     "total": "Gesamt"
+  },
+  "cookbooks": {
+    "addCookbook": "Kochbuch hinzufügen",
+    "createTitle": "Neues Kochbuch",
+    "editTitle": "Kochbuch bearbeiten",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "z. B. Wochentagsessen",
+    "options": "Kochbuch-Optionen",
+    "deleteTitle": "Kochbuch löschen",
+    "deleteConfirm": "Möchten Sie \"{title}\" wirklich löschen?",
+    "deleteKeepsRecipes": "Die enthaltenen Rezepte bleiben in Ihrer Bibliothek.",
+    "recipeCount": "{count, plural, one {# Rezept} other {# Rezepte}}",
+    "empty": "Noch keine Rezepte",
+    "singular": "Kochbuch",
+    "notFound": "Kochbuch nicht gefunden",
+    "notFoundHint": "Es wurde möglicherweise gelöscht oder ist für Sie nicht sichtbar.",
+    "emptyHint": "Fügen Sie Rezepte über das Aktionsmenü eines Rezepts hinzu.",
+    "panelTitle": "Zu Kochbuch hinzufügen",
+    "newWithRecipe": "Neues Kochbuch mit diesem Rezept",
+    "noneEditable": "Es gibt keine Kochbücher, die Sie bearbeiten können.",
+    "cardTitle": "In Kochbüchern",
+    "removeFromCookbook": "Aus Kochbuch entfernen",
+    "noMatchingMembers": "In diesem Kochbuch gibt es keine Rezepte, die zu Ihren Filtern passen.",
+    "membersLabel": "Rezepte in diesem Kochbuch",
+    "showMore": "Mehr anzeigen",
+    "willBeCreated": "Wird beim Speichern erstellt",
+    "manage": "Verwalten",
+    "addRecipes": "Rezepte hinzufügen",
+    "addRecipesTitle": "Rezepte zu {title} hinzufügen",
+    "searchRecipes": "Rezepte suchen",
+    "noRecipesToAdd": "Keine Rezepte gefunden.",
+    "addCount": "{count, plural, one {# Rezept hinzufügen} other {# Rezepte hinzufügen}}",
+    "everythingAlreadyIn": "Alle Rezepte sind bereits in diesem Kochbuch."
   }
 }

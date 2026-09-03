@@ -71,8 +71,12 @@
     "siteAuthTokens": {
       "title": "Jetons d'authentification de site",
       "description": "Ajoutez des en-têtes ou cookies envoyés lors de l'importation de recettes depuis des sites spécifiques. Utile pour les sites nécessitant une connexion (ex. Instagram, Facebook).",
+      "accountsDescription": "Nommez un compte lorsque vous avez plusieurs identifiants pour un site. Chaque import utilise alors un des comptes de ce site, choisi au hasard, afin qu'aucun identifiant ne porte tous les imports. Un jeton laissé sans nom de compte est envoyé à chaque import pour son domaine.",
       "domain": "Domaine",
       "domainPlaceholder": "ex. instagram.com",
+      "account": "Compte",
+      "accountPlaceholder": "ex. mon_pseudo (facultatif)",
+      "accountShared": "Tous les comptes",
       "name": "Nom",
       "namePlaceholder": "ex. Cookie ou Authorization",
       "value": "Valeur",
@@ -84,6 +88,7 @@
       "noTokens": "Aucun jeton d'authentification de site configuré.",
       "tableHeaders": {
         "domain": "DOMAINE",
+        "account": "COMPTE",
         "name": "NOM",
         "type": "TYPE",
         "created": "CRÉÉ",
@@ -126,7 +131,8 @@
           "rating": "Évaluations",
           "favorites": "Favoris",
           "conversion": "Conversion des ingrédients",
-          "timers": "Minuteurs de recette"
+          "timers": "Minuteurs de recette",
+          "cookbooks": "Livres de cuisine"
         }
       },
       "todaySection": {
@@ -370,6 +376,34 @@
         "description": "Téléchargez toutes les recettes de ce serveur.",
         "button": "Exporter l'archive de recettes"
       }
+    },
+    "users": {
+      "title": "Utilisateurs",
+      "description": "Gérez toutes les personnes ayant un compte sur ce serveur.",
+      "table": {
+        "user": "Utilisateur",
+        "role": "Rôle",
+        "household": "Foyer",
+        "joined": "Inscrit le",
+        "actions": "Actions"
+      },
+      "roles": {
+        "owner": "Propriétaire",
+        "admin": "Admin"
+      },
+      "noHousehold": "Aucun foyer",
+      "loading": "Chargement des utilisateurs…",
+      "empty": "Aucun utilisateur pour le moment.",
+      "loadFailed": "Impossible de charger la liste des utilisateurs.",
+      "actions": {
+        "makeAdmin": "Nommer admin",
+        "revokeAdmin": "Retirer les droits admin",
+        "delete": "Supprimer l'utilisateur"
+      },
+      "deleteTitle": "Supprimer {name} ?",
+      "deleteConfirm": "Cette action supprime définitivement le compte de l'utilisateur et le retire de son foyer. Cette action est irréversible.",
+      "deleteSuccess": "{name} a été supprimé",
+      "countSummary": "{count, plural, one {# utilisateur} other {# utilisateurs}} au total"
     },
     "registration": {
       "title": "Inscriptions",

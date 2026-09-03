@@ -196,7 +196,7 @@ export const useTimerStore = create<TimerState>()(
           storage.set(key, value);
         },
         removeItem: (key: string) => {
-          storage.delete(key);
+          storage.remove(key);
         },
       })),
     }

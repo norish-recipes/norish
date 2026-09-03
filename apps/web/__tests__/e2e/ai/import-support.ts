@@ -12,7 +12,7 @@ export async function submitPasteImport(page: Page, text: string): Promise<void>
 
     if (!(await pasteArea.isVisible().catch(() => false))) {
       await page.keyboard.press("Escape");
-      await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+      await page.getByTestId("add-library-button").click();
       await page.getByRole("menuitem", { name: "Paste" }).click({ timeout: 2_000 });
       await expect(pasteArea).toBeVisible({ timeout: 2_000 });
     }
@@ -59,7 +59,7 @@ export async function submitImageImport(
 
     if (!(await fileInput.isVisible().catch(() => false))) {
       await page.keyboard.press("Escape");
-      await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+      await page.getByTestId("add-library-button").click();
       await page.getByRole("menuitem", { name: "Image" }).click({ timeout: 2_000 });
     }
 

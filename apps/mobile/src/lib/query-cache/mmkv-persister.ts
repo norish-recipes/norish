@@ -27,7 +27,7 @@ export function createMmkvPersister(): Persister {
         return JSON.parse(raw) as PersistedClient;
       } catch (error) {
         log.warn({ error }, "Failed to restore query cache, clearing storage");
-        queryCacheStorage.delete(STORAGE_KEY);
+        queryCacheStorage.remove(STORAGE_KEY);
 
         return undefined;
       }
@@ -35,7 +35,7 @@ export function createMmkvPersister(): Persister {
 
     removeClient() {
       try {
-        queryCacheStorage.delete(STORAGE_KEY);
+        queryCacheStorage.remove(STORAGE_KEY);
       } catch (error) {
         log.warn({ error }, "Failed to remove persisted query cache");
       }

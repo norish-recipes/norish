@@ -26,45 +26,57 @@ import type { ImageGenerationProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, ModelConfig } from "./types";
+import {
+  normalizeAzureEndpoint,
+  normalizeOllamaEndpoint,
+  normalizeOpenAICompatibleEndpoint,
+} from "./endpoints";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
 
-// ============================================================================
-// Endpoint normalization — each rule exists exactly once
-// ============================================================================
+/**
+ * Providers reached through a base URL an operator typed, rather than a service
+ * whose capabilities the SDK knows. What such an endpoint can actually serve is
+ * decided by whatever sits behind it — an aggregator resolves a model to one of
+ * several upstream providers — so it is the only place where asking for a
+ * strict JSON schema may be refused by something that answers everything else
+ * (#538).
+ */
+const OPENAI_COMPATIBLE_PROVIDERS: ReadonlySet<AIProvider> = new Set([
+  "generic-openai",
+  "lm-studio",
+]);
 
-/** The Azure SDK expects the /openai path suffix on a configured endpoint. */
-function normalizeAzureEndpoint(endpoint: string): string {
-  const baseUrl = endpoint.replace(/\/+$/, "");
-
-  return baseUrl.endsWith("/openai") ? baseUrl : `${baseUrl}/openai`;
+/** Whether a plain-JSON retry is available for this provider (#538). */
+export function canDegradeToJsonMode(provider: AIProvider): boolean {
+  return OPENAI_COMPATIBLE_PROVIDERS.has(provider);
 }
 
-/** OpenAI-compatible endpoints are addressed under /v1. */
-function normalizeOpenAICompatibleEndpoint(endpoint: string): string {
-  const baseUrl = endpoint.replace(/\/+$/, "");
-
-  return baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
-}
-
-/** Ollama is addressed at its host root, without a trailing slash or /api. */
-function normalizeOllamaEndpoint(endpoint: string): string {
-  return endpoint.replace(/\/+$/, "").replace(/\/api$/, "");
+export interface ModelBuildOptions {
+  /**
+   * Ask an OpenAI-compatible endpoint for a strict `json_schema` answer
+   * (the default), or for plain `json_object` mode. Ignored by every provider
+   * whose structured-output support is known in advance.
+   */
+  structuredOutputs?: boolean;
 }
 
 /**
  * Create AI model instances from configuration.
  * The AI Runtime checks enablement before calling this.
  */
-export function createModelsFromConfig(config: {
-  provider: AIProvider;
-  model: string;
-  visionModel?: string;
-  endpoint?: string;
-  apiKey?: string;
-  timeoutMs?: number;
-}): ModelConfig {
-  const models = createProviderModels(config);
+export function createModelsFromConfig(
+  config: {
+    provider: AIProvider;
+    model: string;
+    visionModel?: string;
+    endpoint?: string;
+    apiKey?: string;
+    timeoutMs?: number;
+  },
+  options: ModelBuildOptions = {}
+): ModelConfig {
+  const models = createProviderModels(config, options);
 
   // Every AI feature passes the configured temperature. Providers drop it for
   // the models they know; a model newer than the provider package, or one
@@ -76,14 +88,17 @@ export function createModelsFromConfig(config: {
   };
 }
 
-function createProviderModels(config: {
-  provider: AIProvider;
-  model: string;
-  visionModel?: string;
-  endpoint?: string;
-  apiKey?: string;
-  timeoutMs?: number;
-}): ModelConfig {
+function createProviderModels(
+  config: {
+    provider: AIProvider;
+    model: string;
+    visionModel?: string;
+    endpoint?: string;
+    apiKey?: string;
+    timeoutMs?: number;
+  },
+  options: ModelBuildOptions
+): ModelConfig {
   const { provider, model, visionModel, endpoint, apiKey, timeoutMs } = config;
 
   aiLogger.debug({ provider, model, visionModel }, "Creating AI models");
@@ -129,7 +144,9 @@ function createProviderModels(config: {
         name: providerName,
         baseURL: normalizeOpenAICompatibleEndpoint(endpoint),
         headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined,
-        supportsStructuredOutputs: true,
+        // Off means `response_format: { type: "json_object" }` instead of a
+        // strict schema — the retry for an endpoint that refuses the schema.
+        supportsStructuredOutputs: options.structuredOutputs ?? true,
         fetch: customFetch,
       });
 
