@@ -167,7 +167,7 @@ FROM base AS ytdlp
 # Keep in step with DEFAULT_YT_DLP_VERSION in packages/config/src/zod/server-config.ts:
 # this is the binary the image actually ships, and that constant is the version
 # the server reports for it.
-ARG YT_DLP_VERSION=2026.07.04
+ARG YT_DLP_VERSION=2026.08.19
 ARG TARGETARCH
 
 RUN apk add --no-cache curl
