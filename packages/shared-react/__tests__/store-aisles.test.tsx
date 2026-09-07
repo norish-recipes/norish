@@ -4,7 +4,7 @@
  */
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { AisleLinkDto } from "@norish/shared/contracts";
@@ -106,13 +106,9 @@ describe("aisleFor", () => {
         <Probe name="boter" useStoreAisles={useStoreAisles} />
       </QueryClientProvider>
     );
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
 
-    const [melk, boter] = screen.getAllByTestId("aisle");
-
-    expect(melk?.textContent).toBe(ZUIVEL);
-    expect(boter?.textContent).toBe("unfiled");
+    // The first render has nothing yet; the query answers on a later tick.
+    await waitFor(() => expect(screen.getAllByTestId("aisle")[0]?.textContent).toBe(ZUIVEL));
+    expect(screen.getAllByTestId("aisle")[1]?.textContent).toBe("unfiled");
   });
 });
