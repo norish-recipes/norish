@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} svarte, men Norish fant ingen priser der.",
     "checkAnswered": "{store} svarte. Norish søker der når du legger til en vare.",
     "checkNoAnswer": "{store} svarte ikke. Søkeadressen kan være feil.",
-    "checkNoAddress": "Norish fant ingen søkeside for {store}. Lim inn et søk du gjorde der."
+    "checkNoAddress": "Norish fant ingen søkeside for {store}. Lim inn et søk du gjorde der.",
+    "aisles": "Ganger",
+    "aislesHint": "Gi gangene i denne butikken navn i den rekkefølgen du går dem. Innkjøp vises per gang.",
+    "aisleNamePlaceholder": "f.eks. Meieri",
+    "addAisle": "Legg til gang",
+    "removeAisle": "Fjern gang",
+    "dragAisle": "Dra for å endre rekkefølgen",
+    "aisleDuplicate": "Denne butikken har allerede en gang med det navnet"
   },
   "panel": {
     "addTitle": "Legg til handlevare",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Legg til i handleliste",
     "ingredientsAdded": "Ingredienser lagt til i handlelisten.",
     "ingredientsFailed": "Kunne ikke legge til ingredienser i handlelisten.",
-    "addToGroceries": "Legg til i handleliste"
+    "addToGroceries": "Legg til i handleliste",
+    "aisle": "Gang",
+    "noAisle": "Ingen gang"
   },
   "picker": {
     "searchPlaceholder": "Skriv for å søke i butikken",

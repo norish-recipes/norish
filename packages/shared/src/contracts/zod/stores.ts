@@ -1,7 +1,7 @@
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod";
 
-import { ingredientStorePreferences, stores } from "@norish/db-schema/schema";
+import { aisleLinks, aisles, ingredientStorePreferences, stores } from "@norish/db-schema/schema";
 
 import { httpUrlSchema } from "../../lib/schema";
 import { isSearchAddress, SEARCH_ADDRESS_PLACEHOLDER } from "../../lib/search-address";
@@ -32,11 +32,35 @@ export const StoreColorSchema = z.enum([
 
 export type StoreColor = z.infer<typeof StoreColorSchema>;
 
-// Store select schema
-export const StoreSelectBaseSchema = createSelectSchema(stores).omit({
+/** An aisle's name: one to a hundred characters, with the whitespace around it gone. */
+export const AisleNameSchema = z.string().trim().min(1, "Aisle name is required").max(100);
+
+// An Aisle as the Store carries it: ordered by `sortOrder`, one list per Store.
+export const AisleSelectSchema = createSelectSchema(aisles).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+/**
+ * An aisle as the Store editor sends it: a client-minted id (ADR-0003) and a
+ * name. Its position in the list is its order. A known id is renamed and
+ * repositioned, a new id is created, and an aisle absent from the list is
+ * deleted with its Aisle Links.
+ */
+export const AisleInputSchema = z.object({
+  id: z.uuid(),
+  name: AisleNameSchema,
+});
+
+export const StoreAislesInputSchema = z.array(AisleInputSchema);
+
+// Store select schema: a Store travels with its Aisles, in order (ADR-0031).
+export const StoreSelectBaseSchema = createSelectSchema(stores)
+  .omit({
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({ aisles: z.array(AisleSelectSchema) });
 
 // Store insert schema (without userId - added server-side)
 export const StoreInsertBaseSchema = z.object({
@@ -47,9 +71,10 @@ export const StoreInsertBaseSchema = z.object({
   sortOrder: z.number().int().default(0),
   website: StoreWebsiteSchema.nullish(),
   searchAddress: StoreSearchAddressSchema.nullish(),
+  aisles: StoreAislesInputSchema.optional(),
 });
 
-// Store create schema (tRPC input - no userId)
+// Store create schema: the public REST create, which makes a Store with no aisles
 export const StoreCreateSchema = z.object({
   id: clientMintedId,
   name: z.string().min(1, "Store name is required").max(100),
@@ -59,7 +84,13 @@ export const StoreCreateSchema = z.object({
   searchAddress: StoreSearchAddressSchema.nullish(),
 });
 
-// Store update schema
+// Store create input (tRPC): the same Store, with its aisles in one go
+export const StoreCreateInputSchema = StoreCreateSchema.extend({
+  aisles: StoreAislesInputSchema.optional(),
+});
+
+// Store update schema. `aisles` absent leaves the Store's aisles as they are;
+// present, it is the whole ordered list and is reconciled against what is stored.
 export const StoreUpdateBaseSchema = z.object({
   id: z.uuid(),
   version: z.number().int().positive().optional(),
@@ -69,6 +100,7 @@ export const StoreUpdateBaseSchema = z.object({
   sortOrder: z.number().int().optional(),
   website: StoreWebsiteSchema.nullish(),
   searchAddress: StoreSearchAddressSchema.nullish(),
+  aisles: StoreAislesInputSchema.optional(),
 });
 
 // Store update input schema (tRPC)
@@ -80,6 +112,24 @@ export const StoreUpdateInputSchema = z.object({
   icon: z.string().optional(),
   website: StoreWebsiteSchema.nullish(),
   searchAddress: StoreSearchAddressSchema.nullish(),
+  aisles: StoreAislesInputSchema.optional(),
+});
+
+// An Aisle Link: where a Store files one normalized grocery name (ADR-0031).
+export const AisleLinkSelectSchema = createSelectSchema(aisleLinks).pick({
+  storeId: true,
+  normalizedName: true,
+  aisleId: true,
+});
+
+/**
+ * Filing a name: a Store, the name as typed, and one of the Store's aisles —
+ * or null, which forgets the name. The server folds the name.
+ */
+export const AisleFilingSchema = z.object({
+  storeId: z.uuid(),
+  name: z.string().min(1).max(300),
+  aisleId: z.uuid().nullable(),
 });
 
 // Asking a Store's shop whether its Search Address works, with the user's own term

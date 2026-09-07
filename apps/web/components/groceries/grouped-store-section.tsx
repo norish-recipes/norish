@@ -19,6 +19,8 @@ import type {
 } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
+import { AisleHeading } from "./aisle-heading";
+import { partitionByAisle } from "./aisle-partition";
 import {
   SortableGroupedStoreContainer,
   SortableGroupItem,
@@ -125,6 +127,32 @@ function GroupedStoreSectionComponent({
     return groups.filter((g) => g.allDone);
   }, [groups]);
 
+  // The block's shape: unfiled groups first, under no heading, then every
+  // aisle of the Store in its order, filled or not (ADR-0031).
+  const aisles = store?.aisles;
+  const { unfiled, blocks } = useMemo(
+    () => partitionByAisle(activeGroups, aisles ?? [], () => null),
+    [activeGroups, aisles]
+  );
+  const firstActiveKey = activeGroups[0]?.groupKey;
+  const lastActiveKey = doneGroups.length === 0 ? activeGroups.at(-1)?.groupKey : undefined;
+  const renderActive = (group: GroceryGroup) => (
+    <SortableGroupItem key={group.groupKey} group={group}>
+      {({ dragHandle }) => (
+        <GroupedGroceryItem
+          dragHandle={dragHandle}
+          group={group}
+          isFirst={group.groupKey === firstActiveKey}
+          isLast={group.groupKey === lastActiveKey}
+          recurringGroceries={recurringGroceries}
+          onEdit={onEdit}
+          onToggle={onToggle}
+          onToggleGroup={onToggleGroup}
+        />
+      )}
+    </SortableGroupItem>
+  );
+
   // Header element - passed to SortableGroupedStoreContainer so it's part of droppable area
   const headerElement = (
     <div
@@ -223,27 +251,16 @@ function GroupedStoreSectionComponent({
         {/* Groups area - only shown when expanded */}
         {isExpanded ? (
           <div className="divide-border divide-y">
-            {/* Active (not done) groups - sortable */}
-            {activeGroups.map((group, index) => {
-              const isFirst = index === 0;
-              const isLast = index === activeGroups.length - 1 && doneGroups.length === 0;
-              return (
-                <SortableGroupItem key={group.groupKey} group={group}>
-                  {({ dragHandle }) => (
-                    <GroupedGroceryItem
-                      dragHandle={dragHandle}
-                      group={group}
-                      isFirst={isFirst}
-                      isLast={isLast}
-                      recurringGroceries={recurringGroceries}
-                      onEdit={onEdit}
-                      onToggle={onToggle}
-                      onToggleGroup={onToggleGroup}
-                    />
-                  )}
-                </SortableGroupItem>
-              );
-            })}
+            {/* Unfiled groups first, under no heading, so they are noticed and filed */}
+            {unfiled.map(renderActive)}
+
+            {/* Every aisle of the Store, in its order, whether or not anything is filed under it */}
+            {blocks.map(({ aisle, rows }) => (
+              <div key={aisle.id} className="divide-border divide-y" data-aisle-id={aisle.id}>
+                <AisleHeading empty={rows.length === 0} name={aisle.name} />
+                {rows.map(renderActive)}
+              </div>
+            ))}
 
             {/* Done groups - not sortable, just rendered */}
             {doneGroups.map((group, index) => {
@@ -264,8 +281,8 @@ function GroupedStoreSectionComponent({
               );
             })}
 
-            {/* Empty state */}
-            {activeGroups.length === 0 && doneGroups.length === 0 && (
+            {/* Empty state - only when nothing is here and the Store has no aisles to show its shape */}
+            {activeGroups.length === 0 && doneGroups.length === 0 && blocks.length === 0 && (
               <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
             )}
           </div>

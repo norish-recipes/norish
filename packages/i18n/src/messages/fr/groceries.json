@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} a répondu, mais Norish n'y a trouvé aucun prix.",
     "checkAnswered": "{store} a répondu. Norish y cherchera dès que vous ajouterez une course.",
     "checkNoAnswer": "{store} n'a pas répondu. L'adresse de recherche est peut-être fausse.",
-    "checkNoAddress": "Norish n'a pas trouvé de page de recherche pour {store}. Collez une recherche que vous y avez faite."
+    "checkNoAddress": "Norish n'a pas trouvé de page de recherche pour {store}. Collez une recherche que vous y avez faite.",
+    "aisles": "Rayons",
+    "aislesHint": "Nommez les rayons de ce magasin dans l’ordre où vous les parcourez. Les courses sont affichées par rayon.",
+    "aisleNamePlaceholder": "p. ex. Produits laitiers",
+    "addAisle": "Ajouter un rayon",
+    "removeAisle": "Supprimer le rayon",
+    "dragAisle": "Glisser pour réordonner",
+    "aisleDuplicate": "Ce magasin a déjà un rayon portant ce nom"
   },
   "panel": {
     "addTitle": "Ajouter un article",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Ajouter aux courses",
     "ingredientsAdded": "Ingrédients ajoutés à la liste de courses.",
     "ingredientsFailed": "Échec de l'ajout des ingrédients à la liste de courses.",
-    "addToGroceries": "Ajouter aux courses"
+    "addToGroceries": "Ajouter aux courses",
+    "aisle": "Rayon",
+    "noAisle": "Aucun rayon"
   },
   "picker": {
     "searchPlaceholder": "Tapez pour chercher dans la boutique",

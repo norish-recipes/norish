@@ -21,6 +21,7 @@ import type {
   StoreDto,
   StoreSearchAddressResult,
 } from "@norish/shared/contracts";
+import { sortAisles } from "@norish/shared/lib/aisles";
 
 import type { EditingStore } from "./store-editor-panel";
 import { DeleteStoreModal } from "./delete-store-modal";
@@ -62,6 +63,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       color: "primary",
       icon: "ShoppingBagIcon",
       link: "",
+      aisles: [],
     });
   };
   const handleStartEdit = (store: StoreDto) => {
@@ -71,6 +73,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       color: store.color as StoreColor,
       icon: store.icon,
       link: store.searchAddress ?? store.website ?? "",
+      aisles: sortAisles(store.aisles).map(({ id, name }) => ({ id, name })),
     });
   };
   const handleSave = async () => {
@@ -88,6 +91,8 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       (before.searchAddress ?? null) !== searchAddress;
 
     let savedId = editingStore.id;
+    // The whole list, in order: the aisles are saved with the Store, in one write.
+    const aisles = editingStore.aisles.map(({ id, name }) => ({ id, name: name.trim() }));
 
     if (editingStore.id) {
       updateStore({
@@ -97,6 +102,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
         icon: editingStore.icon,
         website,
         searchAddress,
+        aisles,
       });
     } else {
       savedId = await createStore({
@@ -105,6 +111,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
         icon: editingStore.icon,
         website,
         searchAddress,
+        aisles,
       });
     }
     setEditingStore(null);

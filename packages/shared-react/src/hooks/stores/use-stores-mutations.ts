@@ -1,6 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type {
+  AisleDto,
+  AisleInput,
   StoreCreateDto,
   StoreDeleteInput,
   StoreDto,
@@ -23,6 +25,23 @@ import {
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
   useStoresQuery: () => StoresQueryResult;
 };
+
+/**
+ * The aisles as the Store will carry them once the save lands, for the
+ * optimistic row: a known aisle keeps its version, a new one starts at 1, and
+ * the position in the list is the order (ADR-0031).
+ */
+function optimisticAisles(storeId: string, input: AisleInput[], before: AisleDto[]): AisleDto[] {
+  const known = new Map(before.map((aisle) => [aisle.id, aisle]));
+
+  return input.map((aisle, index) => ({
+    id: aisle.id,
+    storeId,
+    name: aisle.name,
+    sortOrder: index,
+    version: known.get(aisle.id)?.version ?? 1,
+  }));
+}
 
 export function createUseStoresMutations({
   useTRPC,
@@ -60,6 +79,7 @@ export function createUseStoresMutations({
           searchAddress: data.searchAddress ?? null,
           sortOrder: stores.length,
           version: 1,
+          aisles: optimisticAisles(storeId, data.aisles ?? [], []),
         };
 
         setStoresData((prev) => {
@@ -97,7 +117,17 @@ export function createUseStoresMutations({
       setStoresData((prev) => {
         if (!prev) return prev;
 
-        return prev.map((s) => (s.id === data.id ? { ...s, ...data } : s));
+        return prev.map((s) => {
+          if (s.id !== data.id) return s;
+          const { aisles, ...fields } = data;
+
+          return {
+            ...s,
+            ...fields,
+            // Absent, the aisles are not part of this save and stay as they are.
+            aisles: aisles === undefined ? s.aisles : optimisticAisles(s.id, aisles, s.aisles),
+          };
+        });
       });
 
       updateMutation.mutate(

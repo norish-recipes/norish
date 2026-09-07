@@ -173,6 +173,7 @@ function store(id: string, name: string): StoreDto {
     sortOrder: 0,
     website: `https://${id}.example`,
     searchAddress: `https://${id}.example/search?q={query}`,
+    aisles: [],
   } as unknown as StoreDto;
 }
 

@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} antwoordde, maar Norish vond er geen prijzen.",
     "checkAnswered": "{store} antwoordde. Norish zoekt er zodra je een boodschap toevoegt.",
     "checkNoAnswer": "{store} antwoordde niet. Het zoekadres klopt misschien niet.",
-    "checkNoAddress": "Norish vond geen zoekpagina voor {store}. Plak een zoekopdracht die je er deed."
+    "checkNoAddress": "Norish vond geen zoekpagina voor {store}. Plak een zoekopdracht die je er deed.",
+    "aisles": "Gangpaden",
+    "aislesHint": "Geef de gangpaden van deze winkel een naam, in de volgorde waarin je erdoor loopt. Boodschappen worden per gangpad getoond.",
+    "aisleNamePlaceholder": "bijv. Zuivel",
+    "addAisle": "Gangpad toevoegen",
+    "removeAisle": "Gangpad verwijderen",
+    "dragAisle": "Sleep om te herordenen",
+    "aisleDuplicate": "Deze winkel heeft al een gangpad met die naam"
   },
   "panel": {
     "addTitle": "Boodschap toevoegen",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Voeg toe aan boodschappen",
     "ingredientsAdded": "Ingrediënten toegevoegd aan boodschappenlijst.",
     "ingredientsFailed": "Kan ingrediënten niet toevoegen aan boodschappenlijst.",
-    "addToGroceries": "Toevoegen aan boodschappen"
+    "addToGroceries": "Toevoegen aan boodschappen",
+    "aisle": "Gangpad",
+    "noAisle": "Geen gangpad"
   },
   "picker": {
     "searchPlaceholder": "Typ om in de winkel te zoeken",

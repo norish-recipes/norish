@@ -65,7 +65,14 @@
     "checkNoProducts": "{store}는 응답했지만 Norish가 가격을 찾지 못했습니다.",
     "checkAnswered": "{store}가 응답했습니다. 장보기를 추가하면 Norish가 검색합니다.",
     "checkNoAnswer": "{store}가 응답하지 않았습니다. 검색 주소가 틀렸을 수 있습니다.",
-    "checkNoAddress": "{store}의 검색 페이지를 찾지 못했습니다. 그곳에서 한 검색을 붙여넣으세요."
+    "checkNoAddress": "{store}의 검색 페이지를 찾지 못했습니다. 그곳에서 한 검색을 붙여넣으세요.",
+    "aisles": "통로",
+    "aislesHint": "이 매장의 통로에 다니는 순서대로 이름을 붙이세요. 장보기 목록은 통로별로 표시됩니다.",
+    "aisleNamePlaceholder": "예: 유제품",
+    "addAisle": "통로 추가",
+    "removeAisle": "통로 삭제",
+    "dragAisle": "드래그하여 순서 변경",
+    "aisleDuplicate": "이 매장에는 이미 같은 이름의 통로가 있습니다"
   },
   "panel": {
     "addTitle": "장보기 추가",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "장보기에 추가",
     "ingredientsAdded": "장보기 목록에 재료가 추가되었습니다.",
     "ingredientsFailed": "장보기 목록에 재료를 추가하지 못했습니다.",
-    "addToGroceries": "장보기에 추가"
+    "addToGroceries": "장보기에 추가",
+    "aisle": "통로",
+    "noAisle": "통로 없음"
   },
   "picker": {
     "searchPlaceholder": "입력하여 상점 검색",

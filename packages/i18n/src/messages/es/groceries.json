@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} respondió, pero Norish no encontró precios allí.",
     "checkAnswered": "{store} respondió. Norish buscará allí cuando añadas un producto.",
     "checkNoAnswer": "{store} no respondió. La dirección de búsqueda puede estar mal.",
-    "checkNoAddress": "Norish no encontró una página de búsqueda para {store}. Pega una búsqueda que hayas hecho allí."
+    "checkNoAddress": "Norish no encontró una página de búsqueda para {store}. Pega una búsqueda que hayas hecho allí.",
+    "aisles": "Pasillos",
+    "aislesHint": "Nombra los pasillos de esta tienda en el orden en que los recorres. La compra se muestra por pasillo.",
+    "aisleNamePlaceholder": "p. ej., Lácteos",
+    "addAisle": "Añadir pasillo",
+    "removeAisle": "Quitar pasillo",
+    "dragAisle": "Arrastra para reordenar",
+    "aisleDuplicate": "Esta tienda ya tiene un pasillo con ese nombre"
   },
   "panel": {
     "addTitle": "Añadir producto",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Añadir a la lista de la compra",
     "ingredientsAdded": "Ingredientes añadidos a la lista de la compra.",
     "ingredientsFailed": "No se han podido añadir los ingredientes a la lista de la compra.",
-    "addToGroceries": "Añadir a la lista de la compra"
+    "addToGroceries": "Añadir a la lista de la compra",
+    "aisle": "Pasillo",
+    "noAisle": "Sin pasillo"
   },
   "picker": {
     "searchPlaceholder": "Escribe para buscar en la tienda",

@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} odpowiedział, ale Norish nie znalazł tam cen.",
     "checkAnswered": "{store} odpowiedział. Norish poszuka tam, gdy dodasz zakup.",
     "checkNoAnswer": "{store} nie odpowiedział. Adres wyszukiwania może być błędny.",
-    "checkNoAddress": "Norish nie znalazł strony wyszukiwania dla {store}. Wklej wyszukiwanie, które tam wykonano."
+    "checkNoAddress": "Norish nie znalazł strony wyszukiwania dla {store}. Wklej wyszukiwanie, które tam wykonano.",
+    "aisles": "Alejki",
+    "aislesHint": "Nazwij alejki tego sklepu w kolejności, w jakiej je przechodzisz. Zakupy są pokazywane według alejek.",
+    "aisleNamePlaceholder": "np. Nabiał",
+    "addAisle": "Dodaj alejkę",
+    "removeAisle": "Usuń alejkę",
+    "dragAisle": "Przeciągnij, aby zmienić kolejność",
+    "aisleDuplicate": "Ten sklep ma już alejkę o tej nazwie"
   },
   "panel": {
     "addTitle": "Dodaj zakup",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Dodaj do zakupów",
     "ingredientsAdded": "Składniki dodane do listy zakupów.",
     "ingredientsFailed": "Nie udało się dodać składników do listy zakupów.",
-    "addToGroceries": "Dodaj do zakupów"
+    "addToGroceries": "Dodaj do zakupów",
+    "aisle": "Alejka",
+    "noAisle": "Bez alejki"
   },
   "picker": {
     "searchPlaceholder": "Wpisz, aby szukać w sklepie",

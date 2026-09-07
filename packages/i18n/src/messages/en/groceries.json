@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} answered, but Norish found no prices there.",
     "checkAnswered": "{store} answered. Norish will search it when you add a grocery.",
     "checkNoAnswer": "{store} did not answer. The search address may be wrong.",
-    "checkNoAddress": "Norish could not find a search page for {store}. Paste a search you ran there."
+    "checkNoAddress": "Norish could not find a search page for {store}. Paste a search you ran there.",
+    "aisles": "Aisles",
+    "aislesHint": "Name the aisles of this shop in the order you walk them. Groceries are shown by aisle.",
+    "aisleNamePlaceholder": "e.g., Dairy",
+    "addAisle": "Add aisle",
+    "removeAisle": "Remove aisle",
+    "dragAisle": "Drag to reorder",
+    "aisleDuplicate": "This store already has an aisle with that name"
   },
   "panel": {
     "addTitle": "Add Grocery",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Add to groceries",
     "ingredientsAdded": "Ingredients added to grocery list.",
     "ingredientsFailed": "Failed to add ingredients to grocery list.",
-    "addToGroceries": "Add to Groceries"
+    "addToGroceries": "Add to Groceries",
+    "aisle": "Aisle",
+    "noAisle": "No aisle"
   },
   "picker": {
     "searchPlaceholder": "Type to search the shop",

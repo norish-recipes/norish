@@ -25,6 +25,7 @@ vi.mock("@tanstack/react-query", async () => {
           searchAddress: null,
           sortOrder: 0,
           userId: "user-1",
+          aisles: [],
         },
       ],
       error: null,

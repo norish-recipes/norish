@@ -18,6 +18,8 @@ import type {
   StoreDto,
 } from "@norish/shared/contracts";
 
+import { AisleHeading } from "./aisle-heading";
+import { partitionByAisle } from "./aisle-partition";
 import {
   SortableGroceryItem,
   SortableStoreContainer,
@@ -160,6 +162,37 @@ function StoreSectionComponent({
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [groceries, transitioningIds]);
 
+  // The block's shape: unfiled rows first, under no heading, then every aisle
+  // of the Store in its order, filled or not (ADR-0031).
+  const aisles = store?.aisles;
+  const { unfiled, blocks } = useMemo(
+    () => partitionByAisle(activeGroceries, aisles ?? [], () => null),
+    [activeGroceries, aisles]
+  );
+  const firstActiveId = activeGroceries[0]?.id;
+  const lastActiveId = doneGroceries.length === 0 ? activeGroceries.at(-1)?.id : undefined;
+  const renderActive = (grocery: GroceryDto) => {
+    const recurringGrocery = grocery.recurringGroceryId
+      ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
+      : null;
+
+    return (
+      <SortableGroceryItem key={grocery.id} grocery={grocery}>
+        <GroceryItem
+          grocery={grocery}
+          isFirst={grocery.id === firstActiveId}
+          isLast={grocery.id === lastActiveId}
+          recipeName={getRecipeNameForGrocery?.(grocery)}
+          recurringGrocery={recurringGrocery}
+          store={store}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          onToggle={handleToggle}
+        />
+      </SortableGroceryItem>
+    );
+  };
+
   // Header element - passed to SortableStoreContainer so it's part of droppable area
   const headerElement = (
     <div
@@ -258,29 +291,16 @@ function StoreSectionComponent({
         {/* Items area - only shown when expanded */}
         {isExpanded ? (
           <div className="divide-border divide-y">
-            {/* Active (not done) items - sortable */}
-            {activeGroceries.map((grocery, index) => {
-              const recurringGrocery = grocery.recurringGroceryId
-                ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
-                : null;
-              const isFirst = index === 0;
-              const isLast = index === activeGroceries.length - 1 && doneGroceries.length === 0;
-              return (
-                <SortableGroceryItem key={grocery.id} grocery={grocery}>
-                  <GroceryItem
-                    grocery={grocery}
-                    isFirst={isFirst}
-                    isLast={isLast}
-                    recipeName={getRecipeNameForGrocery?.(grocery)}
-                    recurringGrocery={recurringGrocery}
-                    store={store}
-                    onDelete={onDelete}
-                    onEdit={onEdit}
-                    onToggle={handleToggle}
-                  />
-                </SortableGroceryItem>
-              );
-            })}
+            {/* Unfiled rows first, under no heading, so they are noticed and filed */}
+            {unfiled.map(renderActive)}
+
+            {/* Every aisle of the Store, in its order, whether or not anything is filed under it */}
+            {blocks.map(({ aisle, rows }) => (
+              <div key={aisle.id} className="divide-border divide-y" data-aisle-id={aisle.id}>
+                <AisleHeading empty={rows.length === 0} name={aisle.name} />
+                {rows.map(renderActive)}
+              </div>
+            ))}
 
             {/* Done items - not sortable, just rendered */}
             {doneGroceries.map((grocery, index) => {
@@ -306,8 +326,8 @@ function StoreSectionComponent({
               );
             })}
 
-            {/* Empty state - only show when no items AND no items being dragged here */}
-            {activeGroceries.length === 0 && doneGroceries.length === 0 && (
+            {/* Empty state - only when nothing is here and the Store has no aisles to show its shape */}
+            {activeGroceries.length === 0 && doneGroceries.length === 0 && blocks.length === 0 && (
               <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
             )}
           </div>

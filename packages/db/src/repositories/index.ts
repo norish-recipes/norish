@@ -5,6 +5,7 @@ export * from "@norish/db/repositories/groceries";
 export * from "@norish/db/repositories/recurring-groceries";
 export * from "@norish/db/repositories/stores";
 export * from "@norish/db/repositories/store-products";
+export * from "@norish/db/repositories/aisles";
 export * from "@norish/db/repositories/households";
 export * from "@norish/db/repositories/ingredients";
 export * from "@norish/db/repositories/steps";

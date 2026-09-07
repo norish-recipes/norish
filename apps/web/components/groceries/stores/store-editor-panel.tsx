@@ -9,9 +9,14 @@ import { Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { StoreColor } from "@norish/shared/contracts";
+import { duplicateAisleName } from "@norish/shared/lib/aisles";
 import { deriveSearchAddress } from "@norish/shared/lib/search-address";
 
+import type { EditingAisle } from "./store-aisles-editor";
+import { StoreAislesEditor } from "./store-aisles-editor";
 import { StoreSearchAddressField } from "./store-search-address-field";
+
+export type { EditingAisle } from "./store-aisles-editor";
 
 /** A Store as it is being typed: a new one where `id` is null. */
 export interface EditingStore {
@@ -21,17 +26,27 @@ export interface EditingStore {
   icon: string;
   /** What the user pasted: the shop's website, or a search they ran there. */
   link: string;
+  /** The Store's aisles, in the order the household walks them. */
+  aisles: EditingAisle[];
 }
 
 /**
- * Whether the form can be saved: a name, and a shop link that is either empty
- * or one Norish can read. A link it cannot read would be saved as no link at
- * all, silently taking the Store's website and Search Address with it.
+ * Whether the form can be saved: a name, a shop link that is either empty or
+ * one Norish can read, and aisles that each have a name of their own. A link
+ * Norish cannot read would be saved as no link at all, silently taking the
+ * Store's website and Search Address with it; two aisles on one name would
+ * be refused by the server, so Save waits here instead.
  */
 export function canSaveStore(editing: EditingStore): boolean {
   const link = editing.link.trim();
+  const aisleNames = editing.aisles.map((aisle) => aisle.name);
 
-  return editing.name.trim() !== "" && (link === "" || deriveSearchAddress(link) !== null);
+  return (
+    editing.name.trim() !== "" &&
+    (link === "" || deriveSearchAddress(link) !== null) &&
+    aisleNames.every((name) => name.trim() !== "") &&
+    duplicateAisleName(aisleNames) === null
+  );
 }
 
 interface StoreEditorPanelProps {
@@ -144,6 +159,13 @@ export function StoreEditorPanel({
                 })}
               </div>
             </div>
+
+            {/* The aisles of the shop, in the order the household walks them */}
+            <StoreAislesEditor
+              aisles={editing.aisles}
+              open={open}
+              onChange={(aisles) => onChange({ ...editing, aisles })}
+            />
           </div>
         )}
       </Panel.Body>

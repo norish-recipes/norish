@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} respondeu, mas o Norish não encontrou preços lá.",
     "checkAnswered": "{store} respondeu. O Norish vai buscar lá quando você adicionar um item.",
     "checkNoAnswer": "{store} não respondeu. O endereço de busca pode estar errado.",
-    "checkNoAddress": "O Norish não encontrou uma página de busca para {store}. Cole uma busca que você fez lá."
+    "checkNoAddress": "O Norish não encontrou uma página de busca para {store}. Cole uma busca que você fez lá.",
+    "aisles": "Corredores",
+    "aislesHint": "Nomeie os corredores desta loja na ordem em que você os percorre. As compras são mostradas por corredor.",
+    "aisleNamePlaceholder": "ex.: Laticínios",
+    "addAisle": "Adicionar corredor",
+    "removeAisle": "Remover corredor",
+    "dragAisle": "Arraste para reordenar",
+    "aisleDuplicate": "Esta loja já tem um corredor com esse nome"
   },
   "panel": {
     "addTitle": "Adicionar item",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Adicionar à lista de compras",
     "ingredientsAdded": "Ingredientes adicionados à lista de compras.",
     "ingredientsFailed": "Falha ao adicionar ingredientes à lista de compras.",
-    "addToGroceries": "Adicionar à lista de compras"
+    "addToGroceries": "Adicionar à lista de compras",
+    "aisle": "Corredor",
+    "noAisle": "Sem corredor"
   },
   "picker": {
     "searchPlaceholder": "Digite para buscar na loja",

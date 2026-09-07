@@ -171,6 +171,104 @@ describe("stores procedures", () => {
     });
   });
 
+  it("saves a Store's aisles with it and tells the household the Store, aisles and all", async () => {
+    // Every Store event carries the Store as the repository handed it back,
+    // aisles included, and the client merges it by store id (ADR-0031).
+    const storeId = crypto.randomUUID();
+    const zuivel = crypto.randomUUID();
+    const brood = crypto.randomUUID();
+    const saved = {
+      id: storeId,
+      userId: ctx.user.id,
+      name: "Dirk",
+      color: "primary",
+      icon: "ShoppingBagIcon",
+      website: null,
+      searchAddress: null,
+      sortOrder: 0,
+      version: 2,
+      aisles: [
+        { id: zuivel, storeId, name: "Zuivel", sortOrder: 0, version: 1 },
+        { id: brood, storeId, name: "Brood", sortOrder: 1, version: 1 },
+      ],
+    };
+
+    storesRepository.checkStoreNameExistsInHousehold.mockResolvedValue(false);
+    storesRepository.updateStore.mockResolvedValue(saved);
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await caller.update({
+      id: storeId,
+      version: 1,
+      aisles: [
+        { id: zuivel, name: "Zuivel" },
+        { id: brood, name: "Brood" },
+      ],
+    });
+
+    expect(storesRepository.updateStore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: storeId,
+        aisles: [
+          { id: zuivel, name: "Zuivel" },
+          { id: brood, name: "Brood" },
+        ],
+      })
+    );
+    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "updated", {
+      store: saved,
+    });
+  });
+
+  it("refuses two aisles whose names differ only in case, before anything is written", async () => {
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.update({
+        id: crypto.randomUUID(),
+        version: 1,
+        aisles: [
+          { id: crypto.randomUUID(), name: "Zuivel" },
+          { id: crypto.randomUUID(), name: "zuivel " },
+        ],
+      })
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+
+    expect(storesRepository.updateStore).not.toHaveBeenCalled();
+    expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
+  });
+
+  it("creates a Store with its aisles in one go", async () => {
+    const zuivel = crypto.randomUUID();
+
+    storesRepository.checkStoreNameExistsInHousehold.mockResolvedValue(false);
+    storesRepository.createStore.mockImplementation(
+      async (id: string, data: Record<string, unknown>) => ({
+        id,
+        ...data,
+        version: 1,
+        aisles: [{ id: zuivel, storeId: id, name: "Zuivel", sortOrder: 0, version: 1 }],
+      })
+    );
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await caller.create({ name: "Dirk", aisles: [{ id: zuivel, name: "Zuivel" }] });
+
+    expect(storesRepository.createStore).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ name: "Dirk", aisles: [{ id: zuivel, name: "Zuivel" }] })
+    );
+    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(
+      ctx.householdKey,
+      "created",
+      expect.objectContaining({
+        store: expect.objectContaining({ aisles: [expect.objectContaining({ name: "Zuivel" })] }),
+      })
+    );
+  });
+
   it("lists stores for the API endpoint", async () => {
     const stores = [
       {
@@ -183,6 +281,7 @@ describe("stores procedures", () => {
         searchAddress: null,
         sortOrder: 0,
         version: 1,
+        aisles: [],
       },
     ];
 
@@ -194,13 +293,14 @@ describe("stores procedures", () => {
     expect(result).toEqual(stores);
   });
 
-  it("creates and returns a store for the API endpoint", async () => {
+  it("creates and returns a store for the API endpoint, with no aisles", async () => {
     storesRepository.checkStoreNameExistsInHousehold.mockResolvedValue(false);
     storesRepository.createStore.mockImplementation(
       async (id: string, data: Record<string, unknown>) => ({
         id,
         ...data,
         version: 1,
+        aisles: [],
       })
     );
 
@@ -215,7 +315,13 @@ describe("stores procedures", () => {
       expect.objectContaining({
         name: "Market",
         userId: ctx.user.id,
+        aisles: [],
       })
+    );
+    // The REST create knows nothing of aisles: a Store made through it has none.
+    expect(storesRepository.createStore).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.not.objectContaining({ aisles: expect.anything() })
     );
     expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(
       ctx.householdKey,
@@ -231,7 +337,7 @@ describe("stores procedures", () => {
 
     storesRepository.checkStoreNameExistsInHousehold.mockResolvedValue(false);
     storesRepository.createStore.mockImplementation(
-      async (id: string, data: Record<string, unknown>) => ({ id, ...data, version: 1 })
+      async (id: string, data: Record<string, unknown>) => ({ id, ...data, version: 1, aisles: [] })
     );
 
     const caller = openApiStoresRouter.createCaller(createMockCallerContext(ctx));

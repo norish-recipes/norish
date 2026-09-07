@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} antwortete, aber Norish fand dort keine Preise.",
     "checkAnswered": "{store} antwortete. Norish sucht dort, sobald Sie eine Ware hinzufügen.",
     "checkNoAnswer": "{store} antwortete nicht. Die Suchadresse stimmt möglicherweise nicht.",
-    "checkNoAddress": "Norish fand keine Suchseite für {store}. Fügen Sie eine Suche ein, die Sie dort ausgeführt haben."
+    "checkNoAddress": "Norish fand keine Suchseite für {store}. Fügen Sie eine Suche ein, die Sie dort ausgeführt haben.",
+    "aisles": "Gänge",
+    "aislesHint": "Benennen Sie die Gänge dieses Geschäfts in der Reihenfolge, in der Sie sie durchlaufen. Einkäufe werden nach Gang angezeigt.",
+    "aisleNamePlaceholder": "z. B. Molkerei",
+    "addAisle": "Gang hinzufügen",
+    "removeAisle": "Gang entfernen",
+    "dragAisle": "Zum Sortieren ziehen",
+    "aisleDuplicate": "Dieses Geschäft hat bereits einen Gang mit diesem Namen"
   },
   "panel": {
     "addTitle": "Einkauf hinzufügen",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Zur Einkaufsliste hinzufügen",
     "ingredientsAdded": "Zutaten zur Einkaufsliste hinzugefügt.",
     "ingredientsFailed": "Fehler beim Hinzufügen der Zutaten zur Einkaufsliste.",
-    "addToGroceries": "Zur Einkaufsliste hinzufügen"
+    "addToGroceries": "Zur Einkaufsliste hinzufügen",
+    "aisle": "Gang",
+    "noAisle": "Kein Gang"
   },
   "picker": {
     "searchPlaceholder": "Tippen, um den Shop zu durchsuchen",

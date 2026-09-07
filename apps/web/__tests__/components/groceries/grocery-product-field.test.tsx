@@ -134,6 +134,7 @@ function store(id: string, name: string, searchAddress: string | null): StoreDto
     sortOrder: 0,
     website: `https://${id}.example`,
     searchAddress,
+    aisles: [],
   } as unknown as StoreDto;
 }
 

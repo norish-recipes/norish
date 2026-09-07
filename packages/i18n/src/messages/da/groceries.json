@@ -65,7 +65,14 @@
     "checkNoProducts": "{store} svarede, men Norish fandt ingen priser der.",
     "checkAnswered": "{store} svarede. Norish søger der, når du tilføjer en vare.",
     "checkNoAnswer": "{store} svarede ikke. Søgeadressen er måske forkert.",
-    "checkNoAddress": "Norish fandt ingen søgeside for {store}. Indsæt en søgning, du har lavet der."
+    "checkNoAddress": "Norish fandt ingen søgeside for {store}. Indsæt en søgning, du har lavet der.",
+    "aisles": "Gange",
+    "aislesHint": "Navngiv gangene i denne butik i den rækkefølge, du går dem. Indkøb vises pr. gang.",
+    "aisleNamePlaceholder": "f.eks. Mejeri",
+    "addAisle": "Tilføj gang",
+    "removeAisle": "Fjern gang",
+    "dragAisle": "Træk for at ændre rækkefølgen",
+    "aisleDuplicate": "Denne butik har allerede en gang med det navn"
   },
   "panel": {
     "addTitle": "Tilføj indkøbsvare",
@@ -102,7 +109,9 @@
     "addSelectedToGroceries": "Tilføj til indkøbsliste",
     "ingredientsAdded": "Ingredienser tilføjet til indkøbslisten.",
     "ingredientsFailed": "Kunne ikke tilføje ingredienser til indkøbslisten.",
-    "addToGroceries": "Tilføj til indkøbsliste"
+    "addToGroceries": "Tilføj til indkøbsliste",
+    "aisle": "Gang",
+    "noAisle": "Ingen gang"
   },
   "picker": {
     "searchPlaceholder": "Skriv for at søge i butikken",
