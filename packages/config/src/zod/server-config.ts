@@ -475,7 +475,7 @@ export function transcriptionProviderSupportsModelListing(
  * Sites that break as a site changes (Instagram most of all) are fixed in yt-dlp
  * releases, so this trails the newest release rather than leading it.
  */
-export const DEFAULT_YT_DLP_VERSION = "2026.07.04";
+export const DEFAULT_YT_DLP_VERSION = "2026.08.19";
 
 export const VideoConfigSchema = z.object({
   enabled: z.boolean(),
