@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -20,8 +19,9 @@ import type {
 } from "@norish/shared/contracts";
 
 import { AisleHeading } from "./aisle-heading";
-import { partitionByAisle } from "./aisle-partition";
 import {
+  aisleContainerId,
+  SortableAisleContainer,
   SortableGroceryItem,
   SortableStoreContainer,
   UNSORTED_CONTAINER,
@@ -69,7 +69,7 @@ function StoreSectionComponent({
   const t = useTranslations("groceries.store");
 
   // Get DnD context for ordered items and drag state
-  const { activeId: _activeId, getItemsForContainer } = useDndGroceryContext();
+  const { activeId, overContainerId, getItemsForContainer } = useDndGroceryContext();
 
   // Get container ID for this store
   const containerId = store?.id ?? UNSORTED_CONTAINER;
@@ -128,9 +128,6 @@ function StoreSectionComponent({
   // The flat list prices every row as its own purchase.
   const priceLines = useMemo(() => groceries.map(lineOf), [groceries]);
 
-  // Get ordered item IDs from DnD context - this updates during drag
-  const orderedItemIds = getItemsForContainer(containerId);
-
   // Build a map for quick grocery lookup - uses ALL groceries so we can
   // render items that are dragged from other stores during drag operations
   const groceryMap = useMemo(() => {
@@ -141,20 +138,42 @@ function StoreSectionComponent({
     return map;
   }, [allGroceries]);
 
-  // Active groceries in DnD-ordered sequence
-  const activeGroceries = useMemo(() => {
-    // Use DnD context order
-    const ordered: GroceryDto[] = [];
-    for (const id of orderedItemIds) {
-      const grocery = groceryMap.get(id);
+  // Active groceries of one container in DnD-ordered sequence - updates during drag
+  const activeIn = useCallback(
+    (container: string): GroceryDto[] => {
+      const ordered: GroceryDto[] = [];
 
-      // Only include if it's not done and not transitioning
-      if (grocery && !grocery.isDone && !transitioningIds.has(grocery.id)) {
-        ordered.push(grocery);
+      for (const id of getItemsForContainer(container)) {
+        const grocery = groceryMap.get(id);
+
+        // Only include if it's not done and not transitioning
+        if (grocery && !grocery.isDone && !transitioningIds.has(grocery.id)) {
+          ordered.push(grocery);
+        }
       }
-    }
-    return ordered;
-  }, [orderedItemIds, groceryMap, transitioningIds]);
+
+      return ordered;
+    },
+    [getItemsForContainer, groceryMap, transitioningIds]
+  );
+
+  // The block's shape: unfiled rows first, under no heading, then every aisle
+  // of the Store in its order, filled or not. A row's aisle is what its Store
+  // files its name under, which the drag state was built from (ADR-0031).
+  const aisles = store?.aisles;
+  const { unfiled, blocks, activeGroceries } = useMemo(() => {
+    const unfiledRows = activeIn(containerId);
+    const aisleBlocks = (aisles ?? []).map((aisle) => ({
+      aisle,
+      rows: activeIn(aisleContainerId(aisle.id)),
+    }));
+
+    return {
+      unfiled: unfiledRows,
+      blocks: aisleBlocks,
+      activeGroceries: [...unfiledRows, ...aisleBlocks.flatMap((block) => block.rows)],
+    };
+  }, [activeIn, containerId, aisles]);
 
   // Done groceries (including transitioning) - sorted by sortOrder
   const doneGroceries = useMemo(() => {
@@ -163,17 +182,6 @@ function StoreSectionComponent({
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [groceries, transitioningIds]);
 
-  // The block's shape: unfiled rows first, under no heading, then every aisle
-  // of the Store in its order, filled or not. A row's aisle is what its Store
-  // files its name under, and nothing on the row itself (ADR-0031).
-  const { aisleFor } = useStoresContext();
-  const aisles = store?.aisles;
-  const storeId = store?.id ?? null;
-  const { unfiled, blocks } = useMemo(
-    () =>
-      partitionByAisle(activeGroceries, aisles ?? [], (grocery) => aisleFor(storeId, grocery.name)),
-    [activeGroceries, aisles, aisleFor, storeId]
-  );
   const firstActiveId = activeGroceries[0]?.id;
   const lastActiveId = doneGroceries.length === 0 ? activeGroceries.at(-1)?.id : undefined;
   const renderActive = (grocery: GroceryDto) => {
@@ -299,12 +307,20 @@ function StoreSectionComponent({
             {/* Unfiled rows first, under no heading, so they are noticed and filed */}
             {unfiled.map(renderActive)}
 
-            {/* Every aisle of the Store, in its order, whether or not anything is filed under it */}
+            {/* Every aisle of the Store, in its order, a droppable whether or not anything is filed under it */}
             {blocks.map(({ aisle, rows }) => (
-              <div key={aisle.id} className="divide-border divide-y" data-aisle-id={aisle.id}>
-                <AisleHeading empty={rows.length === 0} name={aisle.name} />
+              <SortableAisleContainer
+                key={aisle.id}
+                activeId={activeId}
+                aisleId={aisle.id}
+                header={
+                  <AisleHeading aisleId={aisle.id} empty={rows.length === 0} name={aisle.name} />
+                }
+                itemIds={getItemsForContainer(aisleContainerId(aisle.id))}
+                overContainerId={overContainerId}
+              >
                 {rows.map(renderActive)}
-              </div>
+              </SortableAisleContainer>
             ))}
 
             {/* Done items - not sortable, just rendered */}

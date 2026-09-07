@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -20,8 +20,9 @@ import type {
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import { AisleHeading } from "./aisle-heading";
-import { partitionByAisle } from "./aisle-partition";
 import {
+  aisleContainerId,
+  SortableAisleContainer,
   SortableGroupedStoreContainer,
   SortableGroupItem,
   useDndGroupedGroceryContext,
@@ -71,7 +72,8 @@ function GroupedStoreSectionComponent({
   const t = useTranslations("groceries.store");
 
   // Get DnD context for ordered group keys
-  const { getGroupKeysForContainer } = useDndGroupedGroceryContext();
+  const { activeGroupKey, overContainerId, getGroupKeysForContainer } =
+    useDndGroupedGroceryContext();
 
   // Get container ID for this store
   const containerId = store?.id ?? "unsorted";
@@ -105,36 +107,48 @@ function GroupedStoreSectionComponent({
     return map;
   }, [allGroups]);
 
-  // Get ordered group keys from DnD context - this updates during drag
-  const orderedGroupKeys = getGroupKeysForContainer(containerId);
+  // Active groups of one container in DnD-ordered sequence (not done) - updates during drag
+  const activeIn = useCallback(
+    (container: string): GroceryGroup[] => {
+      const ordered: GroceryGroup[] = [];
 
-  // Active groups in DnD-ordered sequence (not done)
-  const activeGroups = useMemo(() => {
-    const ordered: GroceryGroup[] = [];
-    for (const groupKey of orderedGroupKeys) {
-      const group = groupMap.get(groupKey);
+      for (const groupKey of getGroupKeysForContainer(container)) {
+        const group = groupMap.get(groupKey);
 
-      // Only include if it's not all done
-      if (group && !group.allDone) {
-        ordered.push(group);
+        // Only include if it's not all done
+        if (group && !group.allDone) {
+          ordered.push(group);
+        }
       }
-    }
-    return ordered;
-  }, [orderedGroupKeys, groupMap]);
+
+      return ordered;
+    },
+    [getGroupKeysForContainer, groupMap]
+  );
+
+  // The block's shape: unfiled groups first, under no heading, then every
+  // aisle of the Store in its order, filled or not. A group is per aisle per
+  // Store, and the drag state was built from that (ADR-0031).
+  const aisles = store?.aisles;
+  const { unfiled, blocks, activeGroups } = useMemo(() => {
+    const unfiledGroups = activeIn(containerId);
+    const aisleBlocks = (aisles ?? []).map((aisle) => ({
+      aisle,
+      rows: activeIn(aisleContainerId(aisle.id)),
+    }));
+
+    return {
+      unfiled: unfiledGroups,
+      blocks: aisleBlocks,
+      activeGroups: [...unfiledGroups, ...aisleBlocks.flatMap((block) => block.rows)],
+    };
+  }, [activeIn, containerId, aisles]);
 
   // Done groups - sorted by sortOrder, not draggable
   const doneGroups = useMemo(() => {
     return groups.filter((g) => g.allDone);
   }, [groups]);
 
-  // The block's shape: unfiled groups first, under no heading, then every
-  // aisle of the Store in its order, filled or not. A group is per aisle per
-  // Store and carries the aisle it was grouped under (ADR-0031).
-  const aisles = store?.aisles;
-  const { unfiled, blocks } = useMemo(
-    () => partitionByAisle(activeGroups, aisles ?? [], (group) => group.aisleId),
-    [activeGroups, aisles]
-  );
   const firstActiveKey = activeGroups[0]?.groupKey;
   const lastActiveKey = doneGroups.length === 0 ? activeGroups.at(-1)?.groupKey : undefined;
   const renderActive = (group: GroceryGroup) => (
@@ -255,12 +269,20 @@ function GroupedStoreSectionComponent({
             {/* Unfiled groups first, under no heading, so they are noticed and filed */}
             {unfiled.map(renderActive)}
 
-            {/* Every aisle of the Store, in its order, whether or not anything is filed under it */}
+            {/* Every aisle of the Store, in its order, a droppable whether or not anything is filed under it */}
             {blocks.map(({ aisle, rows }) => (
-              <div key={aisle.id} className="divide-border divide-y" data-aisle-id={aisle.id}>
-                <AisleHeading empty={rows.length === 0} name={aisle.name} />
+              <SortableAisleContainer
+                key={aisle.id}
+                activeId={activeGroupKey}
+                aisleId={aisle.id}
+                header={
+                  <AisleHeading aisleId={aisle.id} empty={rows.length === 0} name={aisle.name} />
+                }
+                itemIds={getGroupKeysForContainer(aisleContainerId(aisle.id))}
+                overContainerId={overContainerId}
+              >
                 {rows.map(renderActive)}
-              </div>
+              </SortableAisleContainer>
             ))}
 
             {/* Done groups - not sortable, just rendered */}

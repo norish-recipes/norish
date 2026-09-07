@@ -33,6 +33,8 @@ export function DndGroupedGroceryProvider({
   stores,
   groupedGroceries,
   onReorderGroups,
+  aisleFor,
+  onFileName,
 }: DndGroupedGroceryProviderProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -66,6 +68,8 @@ export function DndGroupedGroceryProvider({
     stores,
     groupedGroceries,
     onReorderGroups,
+    aisleFor,
+    onFileName,
   });
 
   const contextValue = useMemo<DndGroupedGroceryContextValue>(

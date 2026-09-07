@@ -51,8 +51,9 @@ export function GroceryList({
 }: GroceryListProps) {
   const t = useTranslations("groceries.empty");
   const { units: customUnits } = useUnitsQuery();
-  // Where each Store files each name: the one place a grocery's aisle comes from (ADR-0031).
-  const { aisleFor } = useStoresContext();
+  // Where each Store files each name — the one place a grocery's aisle comes
+  // from (ADR-0031) — and the one write a drop into an aisle makes.
+  const { aisleFor, fileName } = useStoresContext();
 
   // Group groceries by storeId
   const groupedGroceries = useMemo(() => {
@@ -141,8 +142,10 @@ export function GroceryList({
 
     return (
       <DndGroupedGroceryProvider
+        aisleFor={aisleFor}
         groupedGroceries={ingredientGroups}
         stores={stores}
+        onFileName={fileName}
         onReorderGroups={onReorderInStore ?? (() => {})}
       >
         <div className="flex flex-col gap-3 p-1">
@@ -208,10 +211,12 @@ export function GroceryList({
   // Normal mode - with DnD
   return (
     <DndGroceryProvider
+      aisleFor={aisleFor}
       getRecipeNameForGrocery={getRecipeNameForGrocery}
       groceries={groceries}
       recurringGroceries={recurringGroceries}
       stores={stores}
+      onFileName={fileName}
       onReorderInStore={onReorderInStore ?? (() => {})}
     >
       <div className="flex flex-col gap-3 p-1">
