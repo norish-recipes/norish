@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type {
   AisleDto,
@@ -8,6 +8,7 @@ import type {
   StoreDto,
   StoreSearchAddressResult,
 } from "@norish/shared/contracts";
+import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type {
@@ -17,10 +18,12 @@ import type {
   StoresQueryResult,
   StoreUpdateDraft,
 } from "./types";
+import type { StoreAislesData } from "./use-store-aisles";
 import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
 } from "../optimistic-updates";
+import { mergeAisleFiling } from "./use-store-aisles";
 
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
   useStoresQuery: () => StoresQueryResult;
@@ -49,6 +52,7 @@ export function createUseStoresMutations({
 }: CreateUseStoresMutationsOptions) {
   return function useStoresMutations(): StoresMutationsResult {
     const trpc = useTRPC();
+    const queryClient = useQueryClient();
     const { setStoresData, invalidate, stores } = useStoresQuery();
 
     const getStoreVersion = (storeId: string): number =>
@@ -62,6 +66,7 @@ export function createUseStoresMutations({
     const deleteMutation = useMutation(trpc.stores.delete.mutationOptions());
     const reorderMutation = useMutation(trpc.stores.reorder.mutationOptions());
     const checkMutation = useMutation(trpc.stores.checkSearchAddress.mutationOptions());
+    const fileMutation = useMutation(trpc.stores.fileName.mutationOptions());
 
     const createStore = (data: StoreCreateDto): Promise<string> => {
       // Client-minted id, honoured on insert so a queued offline create stays
@@ -202,12 +207,40 @@ export function createUseStoresMutations({
         return result;
       });
 
+    /**
+     * File a grocery name at a Store: what the Store remembers changes on this
+     * screen at once, by the same merge every housemate's screen will run when
+     * the event lands, and the write goes the way every grocery mutation goes —
+     * optimistic here, through the Outbox when the backend is out of reach
+     * (ADR-0004), last writer winning. Nothing lives on the grocery row, so
+     * there is no row to roll back: a refusal simply re-reads what is filed.
+     */
+    const fileName = (storeId: string, name: string, aisleId: string | null) => {
+      const normalizedName = normalizeGroceryName(name);
+
+      if (!normalizedName) return;
+      const aisleLinksKey = trpc.stores.aisleLinks.queryKey();
+
+      queryClient.setQueryData<StoreAislesData>(aisleLinksKey, (prev) =>
+        mergeAisleFiling(prev ?? [], { storeId, normalizedName, aisleId })
+      );
+      fileMutation.mutate(
+        { storeId, name, aisleId },
+        {
+          onError: invalidateUnlessPreserved(() =>
+            queryClient.invalidateQueries({ queryKey: aisleLinksKey })
+          ),
+        }
+      );
+    };
+
     return {
       createStore,
       updateStore,
       deleteStore,
       reorderStores,
       checkSearchAddress,
+      fileName,
       isCreating: createMutation.isPending,
       isUpdating: updateMutation.isPending,
       isDeleting: deleteMutation.isPending,

@@ -58,6 +58,8 @@ export interface GroceryGroup {
   normalizedName: string;
   normalizedUnit: string;
   storeId: string | null;
+  /** The aisle its Store files the group's name under, or null: groups are per aisle per Store (ADR-0031). */
+  aisleId: string | null;
   totalAmount: number | null;
   displayUnit: string | null;
   canAggregate: boolean;
@@ -67,13 +69,20 @@ export interface GroceryGroup {
   primaryId: string;
 }
 
+const noAisle = (): string | null => null;
+
 /**
- * Group groceries by exact normalized name within each store.
+ * Group groceries by exact normalized name within each store — and within
+ * each aisle: a group never straddles aisles, so "kip" filed in Vlees and
+ * "kip (diepvries)" filed in Diepvries are two groups even though they fold
+ * to one grouping name (ADR-0031). `aisleOf` answers with the aisle a Store
+ * files a grocery's own name under, or null.
  */
 export function groupGroceriesByIngredient(
   groceries: GroceryDto[],
   getRecipeNameForGrocery: (grocery: GroceryDto) => string | null,
-  customUnits?: UnitsMap
+  customUnits?: UnitsMap,
+  aisleOf: (grocery: GroceryDto) => string | null = noAisle
 ): Map<string | null, GroceryGroup[]> {
   const storeGroceries = new Map<string | null, GroceryDto[]>();
 
@@ -89,23 +98,26 @@ export function groupGroceriesByIngredient(
   const result = new Map<string | null, GroceryGroup[]>();
 
   for (const [storeId, storeItems] of storeGroceries) {
-    // Group by exact normalized name
-    const nameGroups = new Map<string, GroceryDto[]>();
+    // Group by exact normalized name, per aisle
+    const nameGroups = new Map<string, { aisleId: string | null; items: GroceryDto[] }>();
 
     for (const grocery of storeItems) {
       const normalizedName = normalizeIngredientNameForGrouping(grocery.name);
 
       if (!normalizedName) continue;
+      const aisleId = aisleOf(grocery);
+      const key = `${aisleId ?? ""}|${normalizedName}`;
 
-      if (!nameGroups.has(normalizedName)) {
-        nameGroups.set(normalizedName, []);
+      if (!nameGroups.has(key)) {
+        nameGroups.set(key, { aisleId, items: [] });
       }
-      nameGroups.get(normalizedName)!.push(grocery);
+      nameGroups.get(key)!.items.push(grocery);
     }
 
     const groups: GroceryGroup[] = [];
 
-    for (const [normalizedName, items] of nameGroups) {
+    for (const { aisleId, items } of nameGroups.values()) {
+      const normalizedName = normalizeIngredientNameForGrouping(items[0]?.name ?? null);
       const sortedItems = [...items].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
       const normalizedUnits = sortedItems.map((g) => normalizeUnitForGrouping(g.unit, customUnits));
@@ -141,7 +153,7 @@ export function groupGroceriesByIngredient(
       const allDone = sortedItems.every((g) => g.isDone);
       const anyDone = sortedItems.some((g) => g.isDone);
 
-      const groupKey = `${storeId ?? "unsorted"}|${normalizedName}|${displayUnit ?? "count"}`;
+      const groupKey = `${storeId ?? "unsorted"}|${aisleId ?? ""}|${normalizedName}|${displayUnit ?? "count"}`;
 
       groups.push({
         groupKey,
@@ -149,6 +161,7 @@ export function groupGroceriesByIngredient(
         normalizedName,
         normalizedUnit: displayUnit ?? "",
         storeId,
+        aisleId,
         totalAmount,
         displayUnit,
         canAggregate,

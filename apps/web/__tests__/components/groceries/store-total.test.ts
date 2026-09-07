@@ -47,6 +47,7 @@ function group(groceries: GroceryDto[]): GroceryGroup {
     normalizedName: groceries[0]?.name ?? "",
     normalizedUnit: "",
     storeId: "store-a",
+    aisleId: null,
     totalAmount: null,
     displayUnit: null,
     canAggregate: true,

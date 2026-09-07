@@ -13,7 +13,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./fixture";
-import { createPlainStore, readStoreAisles } from "./grocery-aisles-support";
+import { createPlainStore, readAisleFiling, readStoreAisles } from "./grocery-aisles-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -67,6 +67,54 @@ async function rowsOf(storeName: string = STORE): Promise<string[]> {
 /** The aisle headings of the Store's block, top to bottom. */
 function headingsOf(storeName: string = STORE) {
   return storeBlock(storeName).getByTestId("aisle-heading");
+}
+
+/** One aisle's block within the Store's: its heading and what is filed under it. */
+function aisleBlock(aisleName: string, storeName: string = STORE) {
+  return storeBlock(storeName)
+    .locator("[data-aisle-id]")
+    .filter({ has: page.getByTestId("aisle-heading").filter({ hasText: aisleName }) });
+}
+
+/** The rows filed under one aisle, top to bottom. */
+async function rowsIn(aisleName: string, storeName: string = STORE): Promise<string[]> {
+  return aisleBlock(aisleName, storeName)
+    .locator("[data-grocery-name]")
+    .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-grocery-name") ?? ""));
+}
+
+/** The rows at the top of the Store's block, under no heading. */
+async function unfiledRows(storeName: string = STORE): Promise<string[]> {
+  return storeBlock(storeName)
+    .locator("[data-grocery-name]")
+    .evaluateAll((rows) =>
+      rows
+        .filter((row) => row.closest("[data-aisle-id]") === null)
+        .map((row) => row.getAttribute("data-grocery-name") ?? "")
+    );
+}
+
+/** Open a grocery's panel and choose an aisle in its Aisle field, then Save. */
+async function fileFromPanel(name: string, aisleName: string): Promise<void> {
+  await page.getByText(name, { exact: true }).first().click();
+  const field = page.getByTestId("aisle-selector");
+
+  await expect(field).toBeVisible();
+  await field.getByRole("button").click();
+  await page.getByRole("option", { name: aisleName, exact: true }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+}
+
+/** Switch the grouped list on or off from the view menu. */
+async function setGrouped(on: boolean): Promise<void> {
+  await page.getByRole("button", { name: "View Mode" }).click();
+  const item = page.getByRole("menuitem", { name: /Group ingredients/ });
+  const isOn = (await item.getByRole("switch").getAttribute("aria-checked")) === "true";
+
+  if (isOn !== on) await item.click();
+  else await page.keyboard.press("Escape");
+  await expect(page.locator(`[data-grocery-grouping="${on ? "grouped" : "flat"}"]`)).toBeVisible();
 }
 
 /** Open the Store in the store editor. */
@@ -136,4 +184,87 @@ test("a Store given two aisles shows both headings, with the list unchanged abov
       await firstHeading.elementHandle()
     )
   ).toBe(true);
+});
+
+test("filing a name from the panel moves the row and its same-named sibling, here and after a reload", async () => {
+  // Two lines, one name: an Aisle Link is a fact about the name, so filing
+  // one files both (ADR-0031).
+  await addGrocery("halfvolle melk");
+  expect(await unfiledRows()).toEqual(["halfvolle melk", "komkommer", "kwark", "halfvolle melk"]);
+
+  await fileFromPanel("halfvolle melk", "Zuivel");
+
+  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBe("Zuivel");
+  expect(await rowsIn("Zuivel")).toEqual(["halfvolle melk", "halfvolle melk"]);
+  expect(await unfiledRows()).toEqual(["komkommer", "kwark"]);
+  await expect(aisleBlock("Zuivel").getByTestId("aisle-heading")).toHaveAttribute(
+    "data-aisle-empty",
+    "false"
+  );
+
+  // Where a shopper actually arrives: a fresh list, filed by what the Store remembers.
+  await page.reload();
+  await expect(headingsOf()).toHaveText(["Groente", "Zuivel"]);
+  expect(await rowsIn("Zuivel")).toEqual(["halfvolle melk", "halfvolle melk"]);
+  expect(await unfiledRows()).toEqual(["komkommer", "kwark"]);
+
+  // The panel reads what the Store remembers, and "No aisle" forgets it.
+  await page.getByText("komkommer", { exact: true }).first().click();
+  await expect(page.getByTestId("aisle-selector").getByRole("button")).toContainText("No aisle");
+  await page.getByRole("button", { name: "Close panel" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+
+  await fileFromPanel("kwark", "Zuivel");
+  await expect.poll(() => readAisleFiling(STORE, "kwark")).toBe("Zuivel");
+  expect(await rowsIn("Zuivel")).toEqual(["halfvolle melk", "halfvolle melk", "kwark"]);
+
+  await fileFromPanel("kwark", "No aisle");
+  await expect.poll(() => readAisleFiling(STORE, "kwark")).toBeNull();
+  expect(await unfiledRows()).toEqual(["komkommer", "kwark"]);
+});
+
+test("renaming an aisle keeps what is filed under it; removing it returns the rows to the top", async () => {
+  await openStoreEditor();
+  await page.getByTestId("aisle-row-name").nth(1).fill("Zuivel en kaas");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
+  await closeStoreManager();
+
+  await expect(headingsOf()).toHaveText(["Groente", "Zuivel en kaas"]);
+  expect(await rowsIn("Zuivel en kaas")).toEqual(["halfvolle melk", "halfvolle melk"]);
+  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBe("Zuivel en kaas");
+
+  // Removing the aisle needs no confirmation; what was under it is simply unfiled.
+  await openStoreEditor();
+  await page.getByTestId("remove-aisle").nth(1).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
+  await closeStoreManager();
+
+  await expect(headingsOf()).toHaveText(["Groente"]);
+  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBeNull();
+  await page.reload();
+  expect(await unfiledRows()).toEqual(["halfvolle melk", "komkommer", "kwark", "halfvolle melk"]);
+});
+
+test("in the grouped list, kip and kip (diepvries) are two groups once filed apart", async () => {
+  await addGrocery("kip");
+  await addGrocery("kip (diepvries)");
+
+  await setGrouped(true);
+  // One grouping name, so one group, while neither is filed.
+  await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(1);
+  await setGrouped(false);
+
+  // Filed apart — "kip" in Groente, "kip (diepvries)" left at the top — they
+  // are two Aisle Links, and so two groups.
+  await fileFromPanel("kip", "Groente");
+  await expect.poll(() => readAisleFiling(STORE, "kip")).toBe("Groente");
+  expect(await readAisleFiling(STORE, "kip diepvries")).toBeNull();
+
+  await setGrouped(true);
+  await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(2);
+  expect(await rowsIn("Groente")).toEqual(["kip"]);
+  expect(await unfiledRows()).toContain("kip");
+  await setGrouped(false);
 });

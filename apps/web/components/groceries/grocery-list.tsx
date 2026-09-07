@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
@@ -50,6 +51,8 @@ export function GroceryList({
 }: GroceryListProps) {
   const t = useTranslations("groceries.empty");
   const { units: customUnits } = useUnitsQuery();
+  // Where each Store files each name: the one place a grocery's aisle comes from (ADR-0031).
+  const { aisleFor } = useStoresContext();
 
   // Group groceries by storeId
   const groupedGroceries = useMemo(() => {
@@ -96,12 +99,14 @@ export function GroceryList({
   const ingredientGroups = useMemo(() => {
     if (!groupSimilarIngredients) return null;
 
+    // Groups are per aisle per Store, so a filing that lands regroups the list.
     return groupGroceriesByIngredient(
       groceries,
       getRecipeNameForGrocery ?? (() => null),
-      customUnits
+      customUnits,
+      (grocery) => aisleFor(grocery.storeId, grocery.name)
     );
-  }, [groupSimilarIngredients, groceries, getRecipeNameForGrocery, customUnits]);
+  }, [groupSimilarIngredients, groceries, getRecipeNameForGrocery, customUnits, aisleFor]);
 
   // Check if there are any groceries at all
   const hasGroceries = groceries.length > 0;

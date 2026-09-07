@@ -128,10 +128,11 @@ function GroupedStoreSectionComponent({
   }, [groups]);
 
   // The block's shape: unfiled groups first, under no heading, then every
-  // aisle of the Store in its order, filled or not (ADR-0031).
+  // aisle of the Store in its order, filled or not. A group is per aisle per
+  // Store and carries the aisle it was grouped under (ADR-0031).
   const aisles = store?.aisles;
   const { unfiled, blocks } = useMemo(
-    () => partitionByAisle(activeGroups, aisles ?? [], () => null),
+    () => partitionByAisle(activeGroups, aisles ?? [], (group) => group.aisleId),
     [activeGroups, aisles]
   );
   const firstActiveKey = activeGroups[0]?.groupKey;

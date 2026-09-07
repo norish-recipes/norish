@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -163,11 +164,15 @@ function StoreSectionComponent({
   }, [groceries, transitioningIds]);
 
   // The block's shape: unfiled rows first, under no heading, then every aisle
-  // of the Store in its order, filled or not (ADR-0031).
+  // of the Store in its order, filled or not. A row's aisle is what its Store
+  // files its name under, and nothing on the row itself (ADR-0031).
+  const { aisleFor } = useStoresContext();
   const aisles = store?.aisles;
+  const storeId = store?.id ?? null;
   const { unfiled, blocks } = useMemo(
-    () => partitionByAisle(activeGroceries, aisles ?? [], () => null),
-    [activeGroceries, aisles]
+    () =>
+      partitionByAisle(activeGroceries, aisles ?? [], (grocery) => aisleFor(storeId, grocery.name)),
+    [activeGroceries, aisles, aisleFor, storeId]
   );
   const firstActiveId = activeGroceries[0]?.id;
   const lastActiveId = doneGroceries.length === 0 ? activeGroceries.at(-1)?.id : undefined;

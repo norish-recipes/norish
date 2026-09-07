@@ -80,6 +80,40 @@ vi.mock("@/hooks/stores/use-parsed-grocery-name", () => ({
   useParsedGroceryName: (raw: string) => raw.trim(),
 }));
 
+/** Where each Store files each name, as the database holds it. */
+const AISLE_LINKS: Record<string, string> = { "store-c|cola": "aisle-frisdrank" };
+const fileName = vi.fn();
+
+vi.mock("@/hooks/stores/use-store-aisles", () => ({
+  useStoreAisles: () => ({
+    aisleFor: (storeId: string | null, name: string | null) =>
+      AISLE_LINKS[`${storeId}|${(name ?? "").toLowerCase()}`] ?? null,
+    isLoading: false,
+  }),
+  useFileName: () => fileName,
+}));
+
+// The Aisle field itself is not what these are about; a plain select drives
+// exactly the callback the real one does.
+vi.mock("@/components/groceries/aisle-selector", () => ({
+  AisleSelector: ({ aisles, selectedAisleId, onSelectionChange }: any) => (
+    <select
+      data-testid="aisle-selector"
+      value={selectedAisleId ?? "none"}
+      onChange={(event) =>
+        onSelectionChange(event.target.value === "none" ? null : event.target.value)
+      }
+    >
+      <option value="none">noAisle</option>
+      {aisles.map((aisle: { id: string; name: string }) => (
+        <option key={aisle.id} value={aisle.id}>
+          {aisle.name}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
 vi.mock("@/hooks/stores/use-store-products-mutations", () => ({
   useChooseProduct: () => chooseProduct,
 }));
@@ -177,7 +211,18 @@ function store(id: string, name: string): StoreDto {
   } as unknown as StoreDto;
 }
 
-const STORES = [store("store-a", "Store A"), store("store-b", "Store B")];
+/** A Store with aisles: a plain one, with no shop behind it, which aisles need none of. */
+const WITH_AISLES = {
+  ...store("store-c", "Store C"),
+  website: null,
+  searchAddress: null,
+  aisles: [
+    { id: "aisle-frisdrank", storeId: "store-c", name: "Frisdrank", sortOrder: 0, version: 1 },
+    { id: "aisle-zuivel", storeId: "store-c", name: "Zuivel", sortOrder: 1, version: 1 },
+  ],
+} as unknown as StoreDto;
+
+const STORES = [store("store-a", "Store A"), store("store-b", "Store B"), WITH_AISLES];
 
 const GROCERY = {
   id: "grocery-1",
@@ -191,7 +236,152 @@ const GROCERY = {
 
 beforeEach(() => {
   chooseProduct.mockClear();
+  fileName.mockClear();
   ASKED_ON_THE_LIST.clear();
+});
+
+describe("the Aisle field, in both panels", () => {
+  function aisleField() {
+    return screen.queryByTestId("aisle-selector");
+  }
+
+  it("is there only for a Store with aisles, once there is a name, directly under the Store", () => {
+    render(
+      <AddGroceryPanel
+        open={true}
+        stores={STORES}
+        onCreate={() => undefined}
+        onCreateRecurring={() => undefined}
+        onOpenChange={() => undefined}
+      />
+    );
+
+    // No Store, then a Store without aisles: the panel a shopper already knows.
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "cola" } });
+    expect(aisleField()).not.toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-a" } });
+    expect(aisleField()).not.toBeInTheDocument();
+
+    // A Store with aisles, and a name typed: the field, under the Store.
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    const field = aisleField();
+
+    expect(field).toBeInTheDocument();
+    expect(
+      screen.getByTestId("store-selector").compareDocumentPosition(field!) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    // Its options are the Store's aisles in order, and "No aisle".
+    expect(Array.from((field as HTMLSelectElement).options).map((o) => o.textContent)).toEqual([
+      "noAisle",
+      "Frisdrank",
+      "Zuivel",
+    ]);
+
+    // The name gone, the field goes with it.
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "" } });
+    expect(aisleField()).not.toBeInTheDocument();
+  });
+
+  it("shows what the Store remembers for the name, and swaps with the Store", () => {
+    render(
+      <EditGroceryPanel
+        grocery={{ ...GROCERY, storeId: "store-c" } as GroceryDto}
+        open={true}
+        recurringGrocery={null}
+        stores={STORES}
+        onDelete={() => undefined}
+        onOpenChange={() => undefined}
+        onSave={() => undefined}
+      />
+    );
+
+    // Store C files "cola" under Frisdrank: filing reads as correcting a fact.
+    expect(aisleField()).toHaveValue("aisle-frisdrank");
+
+    // Another Store has no aisles: no field, and nothing of Store C's carried over.
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-a" } });
+    expect(aisleField()).not.toBeInTheDocument();
+
+    // Back again, the field reads what the Store remembers, not a stale choice.
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    expect(aisleField()).toHaveValue("aisle-frisdrank");
+  });
+
+  it("writes nothing until Save, and then only a choice that differs from what was remembered", () => {
+    const onSave = vi.fn();
+
+    render(
+      <EditGroceryPanel
+        grocery={{ ...GROCERY, storeId: "store-c" } as GroceryDto}
+        open={true}
+        recurringGrocery={null}
+        stores={STORES}
+        onDelete={() => undefined}
+        onOpenChange={() => undefined}
+        onSave={onSave}
+      />
+    );
+
+    fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
+    expect(aisleField()).toHaveValue("aisle-zuivel");
+    expect(fileName).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId("action-save"));
+
+    expect(onSave).toHaveBeenCalled();
+    expect(fileName).toHaveBeenCalledExactlyOnceWith("store-c", "cola", "aisle-zuivel");
+  });
+
+  it("leaves a name the shopper did not re-file exactly as the Store remembered it", () => {
+    render(
+      <EditGroceryPanel
+        grocery={{ ...GROCERY, storeId: "store-c" } as GroceryDto}
+        open={true}
+        recurringGrocery={null}
+        stores={STORES}
+        onDelete={() => undefined}
+        onOpenChange={() => undefined}
+        onSave={() => undefined}
+      />
+    );
+
+    // Chosen, then chosen back: what the Store remembered, so nothing to write.
+    fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
+    fireEvent.change(aisleField()!, { target: { value: "aisle-frisdrank" } });
+    fireEvent.click(screen.getByTestId("action-save"));
+
+    expect(fileName).not.toHaveBeenCalled();
+  });
+
+  it("files a new name from the panel that adds it, and forgets one with No aisle", () => {
+    render(
+      <AddGroceryPanel
+        open={true}
+        stores={STORES}
+        onCreate={() => undefined}
+        onCreateRecurring={() => undefined}
+        onOpenChange={() => undefined}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "melk" } });
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    expect(aisleField()).toHaveValue("none");
+
+    fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
+    fireEvent.click(screen.getByRole("button", { name: "add" }));
+
+    expect(fileName).toHaveBeenCalledExactlyOnceWith("store-c", "melk", "aisle-zuivel");
+
+    // The next grocery, a name the Store files already: "No aisle" forgets it.
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "cola" } });
+    expect(aisleField()).toHaveValue("aisle-frisdrank");
+    fireEvent.change(aisleField()!, { target: { value: "none" } });
+    fireEvent.click(screen.getByRole("button", { name: "add" }));
+
+    expect(fileName).toHaveBeenLastCalledWith("store-c", "cola", null);
+  });
 });
 
 describe("EditGroceryPanel, on a grocery the Store is still being asked about", () => {
