@@ -1,21 +1,14 @@
-import type { StoreDto } from "@norish/shared/contracts";
+import type { AisleFilingInput, StoreDto } from "@norish/shared/contracts";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import type { AisleResolver, ContainerId, ItemsState, ReorderUpdate } from "./types";
 import { placeOfContainer, storeContainers } from "./utils";
 
-/** One name to file at one Store, or to forget there (null). */
-export interface Filing {
-  storeId: string;
-  name: string;
-  aisleId: string | null;
-}
-
 export interface DropPlan {
   /** Every row whose place changed: a per-Store sort order, and the Store on the one that moved Store. */
   updates: ReorderUpdate[];
-  /** What the drop teaches the target Store, in the order to write it: after the reorder. */
-  filings: Filing[];
+  /** What the drop teaches the target Store — a name filed under an aisle, or under none — written after the reorder. */
+  filings: AisleFilingInput[];
 }
 
 interface DropInput {
@@ -81,7 +74,7 @@ export function planDrop(input: DropInput): DropPlan {
   renumber(target.storeId);
   if (changedStore) renumber(origin.storeId);
 
-  const filings: Filing[] = [];
+  const filings: AisleFilingInput[] = [];
 
   if (target.storeId !== null && (!changedStore || target.aisleId !== null)) {
     const seen = new Set<string>();

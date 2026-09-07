@@ -20,7 +20,7 @@ export type ItemsState = Record<ContainerId, string[]>;
 export type AisleResolver = (storeId: string | null, name: string | null) => string | null;
 
 /** File a name at a Store under an aisle, or under none (null), which forgets it. */
-export type FileName = (storeId: string, name: string, aisleId: string | null) => void;
+export type FileGroceryName = (storeId: string, name: string, aisleId: string | null) => void;
 
 /** One row's or group's new place: a sort order per Store, and the Store where that changed. */
 export interface ReorderUpdate {
@@ -47,7 +47,7 @@ export interface DndGroceryProviderProps {
   onReorderInStore: (updates: ReorderUpdate[]) => void;
   /** Where each Store files each name; a drop into an aisle is a filing. */
   aisleFor: AisleResolver;
-  onFileName: FileName;
+  onFileGroceryName: FileGroceryName;
   getRecipeNameForGrocery?: (grocery: GroceryDto) => string | null;
 }
 
@@ -73,5 +73,5 @@ export interface DndGroupedGroceryProviderProps {
   onReorderGroups: (updates: ReorderUpdate[]) => void;
   /** Where each Store files each name; dropping a group into an aisle files every name in it. */
   aisleFor: AisleResolver;
-  onFileName: FileName;
+  onFileGroceryName: FileGroceryName;
 }

@@ -16,7 +16,7 @@ import {
 import { assertHouseholdAccess } from "../mocks/permissions";
 
 const aislesRepository = vi.hoisted(() => ({
-  fileName: vi.fn(),
+  fileGroceryName: vi.fn(),
   getAisleById: vi.fn(),
   listAisleLinksByStoreIds: vi.fn(),
 }));
@@ -50,7 +50,7 @@ describe("filing a name at a Store", () => {
     storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
     assertHouseholdAccess.mockResolvedValue(undefined);
     aislesRepository.getAisleById.mockResolvedValue({ id: ZUIVEL, storeId: STORE, name: "Zuivel" });
-    aislesRepository.fileName.mockImplementation(
+    aislesRepository.fileGroceryName.mockImplementation(
       async (storeId: string, name: string, aisleId: string | null) => ({
         storeId,
         normalizedName: name.trim().toLowerCase(),
@@ -60,9 +60,9 @@ describe("filing a name at a Store", () => {
   });
 
   it("files the name under the aisle and tells the household where it now is", async () => {
-    const filing = await caller.fileName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
+    const filing = await caller.fileGroceryName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
 
-    expect(aislesRepository.fileName).toHaveBeenCalledWith(STORE, "Melk", ZUIVEL);
+    expect(aislesRepository.fileGroceryName).toHaveBeenCalledWith(STORE, "Melk", ZUIVEL);
     expect(filing).toEqual({ storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL });
     expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "aisleFiled", {
       filing: { storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL },
@@ -70,9 +70,9 @@ describe("filing a name at a Store", () => {
   });
 
   it("forgets a name filed under null, and says so in the same event", async () => {
-    await caller.fileName({ storeId: STORE, name: "melk", aisleId: null });
+    await caller.fileGroceryName({ storeId: STORE, name: "melk", aisleId: null });
 
-    expect(aislesRepository.fileName).toHaveBeenCalledWith(STORE, "melk", null);
+    expect(aislesRepository.fileGroceryName).toHaveBeenCalledWith(STORE, "melk", null);
     expect(aislesRepository.getAisleById).not.toHaveBeenCalled();
     expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "aisleFiled", {
       filing: { storeId: STORE, normalizedName: "melk", aisleId: null },
@@ -80,8 +80,8 @@ describe("filing a name at a Store", () => {
   });
 
   it("says the same thing twice when filed twice, so a repeat merges as a no-op", async () => {
-    await caller.fileName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
-    await caller.fileName({ storeId: STORE, name: " melk ", aisleId: ZUIVEL });
+    await caller.fileGroceryName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
+    await caller.fileGroceryName({ storeId: STORE, name: " melk ", aisleId: ZUIVEL });
 
     const [first, second] = storeEmitter.emitToHousehold.mock.calls.map((call) => call[2]);
 
@@ -92,9 +92,9 @@ describe("filing a name at a Store", () => {
     assertHouseholdAccess.mockRejectedValue(new TRPCError({ code: "FORBIDDEN" }));
 
     await expect(
-      caller.fileName({ storeId: OTHER_STORE, name: "melk", aisleId: ZUIVEL })
+      caller.fileGroceryName({ storeId: OTHER_STORE, name: "melk", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    expect(aislesRepository.fileName).not.toHaveBeenCalled();
+    expect(aislesRepository.fileGroceryName).not.toHaveBeenCalled();
     expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
   });
 
@@ -106,21 +106,21 @@ describe("filing a name at a Store", () => {
     });
 
     await expect(
-      caller.fileName({ storeId: STORE, name: "melk", aisleId: ZUIVEL })
+      caller.fileGroceryName({ storeId: STORE, name: "melk", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
 
     aislesRepository.getAisleById.mockResolvedValue(null);
     await expect(
-      caller.fileName({ storeId: STORE, name: "melk", aisleId: ZUIVEL })
+      caller.fileGroceryName({ storeId: STORE, name: "melk", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
-    expect(aislesRepository.fileName).not.toHaveBeenCalled();
+    expect(aislesRepository.fileGroceryName).not.toHaveBeenCalled();
   });
 
   it("writes and announces nothing for a name that folds to nothing", async () => {
-    aislesRepository.fileName.mockResolvedValue(null);
+    aislesRepository.fileGroceryName.mockResolvedValue(null);
 
     await expect(
-      caller.fileName({ storeId: STORE, name: "!?", aisleId: ZUIVEL })
+      caller.fileGroceryName({ storeId: STORE, name: "!?", aisleId: ZUIVEL })
     ).resolves.toBeNull();
     expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
   });

@@ -1,6 +1,6 @@
 # 02 — Filing from the panel
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 01
 
 Spec: `.scratch/grocery-aisles/spec.md` · Decision: ADR-0031
@@ -23,10 +23,10 @@ Client side: a shared hook beside the prices hook answers which aisle a Store fi
 
 ## Acceptance criteria
 
-- [ ] The Aisle field appears in the add and edit panels only when the chosen Store has aisles and the name is non-empty; it shows what the Store remembers, swaps with the Store, and writes nothing until Save (component tests).
-- [ ] Filing writes one Aisle Link per Store and normalized name, last writer winning; null forgets; removing an aisle forgets its links; deleting a Store forgets everything; the household's links read in one query (repository tests).
-- [ ] Filing under another household's Store, or into an aisle that is not the Store's, is refused; filing and unfiling emit a link event whose repeat merges as a no-op (tRPC tests).
-- [ ] Filing one row moves every same-named row at that Store on every household screen; a rename and a store move re-derive; a removed aisle unfiles its rows.
-- [ ] Groups are per aisle per Store in the grouped view.
-- [ ] E2E: filing through the panel moves the row and its same-named sibling; removing the aisle returns them to the top; "kip" and "kip (diepvries)" become two groups once filed apart.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.
+- [x] The Aisle field appears in the add and edit panels only when the chosen Store has aisles and the name is non-empty; it shows what the Store remembers, swaps with the Store, and writes nothing until Save (component tests).
+- [x] Filing writes one Aisle Link per Store and normalized name, last writer winning; null forgets; removing an aisle forgets its links; deleting a Store forgets everything; the household's links read in one query (repository tests).
+- [x] Filing under another household's Store, or into an aisle that is not the Store's, is refused; filing and unfiling emit a link event whose repeat merges as a no-op (tRPC tests).
+- [x] Filing one row moves every same-named row at that Store on every household screen; a rename and a store move re-derive; a removed aisle unfiles its rows.
+- [x] Groups are per aisle per Store in the grouped view.
+- [x] E2E: filing through the panel moves the row and its same-named sibling; removing the aisle returns them to the top; "kip" and "kip (diepvries)" become two groups once filed apart.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.

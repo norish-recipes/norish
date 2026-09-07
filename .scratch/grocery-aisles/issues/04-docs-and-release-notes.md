@@ -1,6 +1,6 @@
 # 04 — Docs and release notes
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 02, 03
 
 Spec: `.scratch/grocery-aisles/spec.md` · Decision: ADR-0031
@@ -18,8 +18,12 @@ The current release-notes checkpoint page gains a feature section for aisles in 
 
 ## Acceptance criteria
 
-- [ ] An Aisles page under Groceries documents setup, filing by drag and panel, the memory, unfiled rows and the not-yet list, with screenshots.
-- [ ] The release notes for the current checkpoint cover aisles in the established structure.
-- [ ] The ADR index lists ADR-0031 as Accepted.
-- [ ] `pnpm i18n:check` passes and every new string uses Aisle.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm test:e2e` and `pnpm build` pass.
+- [x] An Aisles page under Groceries documents setup, filing by drag and panel, the memory, unfiled rows and the not-yet list, with screenshots.
+- [x] The release notes for the current checkpoint cover aisles in the established structure.
+- [x] The ADR index lists ADR-0031 as Accepted.
+- [x] `pnpm i18n:check` passes and every new string uses Aisle.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm test:e2e` and `pnpm build` pass.
+
+## Comments
+
+- 2026-09-07: implemented across six commits on `feat/grocery-categories` (design record, tickets 01–04, E2E fixes), then a two-axis `/code-review` against `6ce62f45` whose findings were fixed in a follow-up commit: a held Aisle choice no longer survives a Store swap or a closed Add panel, an aisle removed in the editor is never reported as a name's aisle, aisle names are capped at 100 characters in the editor too, the not-yet list matches the spec's Out of Scope, the grouped E2E scenario files "kip" and "kip (diepvries)" into two different aisles, and the filing procedure is `stores.fileGroceryName`. Screenshots come from `.scratch/grocery-aisles/docs-screenshots.e2e.ts`.

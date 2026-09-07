@@ -13,7 +13,7 @@ import { duplicateAisleName } from "@norish/shared/lib/aisles";
 import { deriveSearchAddress } from "@norish/shared/lib/search-address";
 
 import type { EditingAisle } from "./store-aisles-editor";
-import { StoreAislesEditor } from "./store-aisles-editor";
+import { AISLE_NAME_MAX, StoreAislesEditor } from "./store-aisles-editor";
 import { StoreSearchAddressField } from "./store-search-address-field";
 
 export type { EditingAisle } from "./store-aisles-editor";
@@ -44,7 +44,7 @@ export function canSaveStore(editing: EditingStore): boolean {
   return (
     editing.name.trim() !== "" &&
     (link === "" || deriveSearchAddress(link) !== null) &&
-    aisleNames.every((name) => name.trim() !== "") &&
+    aisleNames.every((name) => name.trim() !== "" && name.trim().length <= AISLE_NAME_MAX) &&
     duplicateAisleName(aisleNames) === null
   );
 }

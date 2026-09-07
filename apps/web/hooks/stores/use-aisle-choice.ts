@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { StoreDto } from "@norish/shared/contracts";
 
-import { useFileName, useStoreAisles } from "./use-store-aisles";
+import { useFileGroceryName, useStoreAisles } from "./use-store-aisles";
 
 /**
  * Which aisle a grocery's name is filed under, as the grocery panel holds it.
@@ -26,21 +26,36 @@ export function useAisleChoice(options: {
   const { groceryName, store, resetOn } = options;
   const storeId = store?.id ?? null;
   const { aisleFor } = useStoreAisles();
-  const fileName = useFileName();
-  // Held for one Store and one grocery, read back through that key rather
-  // than cleared in an effect, so a field mounted for another Store never
-  // sees the last Store's choice for even one render.
+  const fileGroceryName = useFileGroceryName();
+  // Held for one Store and one opening of the panel. It is read back through
+  // that key, so a field mounted for another Store never sees the last
+  // Store's choice for even one render — and let go the moment either
+  // changes, so a Store swapped away from and back, or a panel closed and
+  // reopened, reads what the Store remembers rather than a stale choice.
   const [held, setHeld] = useState<{
     storeId: string | null;
-    about: unknown;
+    resetToken: unknown;
     aisleId: string | null;
   } | null>(null);
-  const current = held !== null && held.storeId === storeId && held.about === resetOn ? held : null;
-  const remembered = aisleFor(storeId, groceryName);
-  // What the Store remembers, unless the shopper has chosen otherwise here.
-  const aisleId = current ? current.aisleId : remembered;
+
+  useEffect(() => {
+    setHeld(null);
+  }, [storeId, resetOn]);
+
+  const current =
+    held !== null && held.storeId === storeId && held.resetToken === resetOn ? held : null;
+  // What the Store remembers — an aisle it still has; one removed in the
+  // editor is no answer — unless the shopper has chosen otherwise here.
+  const remembered = useCallback(() => {
+    const filedUnder = aisleFor(storeId, groceryName);
+
+    return filedUnder !== null && store?.aisles.some((aisle) => aisle.id === filedUnder)
+      ? filedUnder
+      : null;
+  }, [aisleFor, storeId, groceryName, store]);
+  const aisleId = current ? current.aisleId : remembered();
   const setAisleId = useCallback(
-    (next: string | null) => setHeld({ storeId, about: resetOn, aisleId: next }),
+    (next: string | null) => setHeld({ storeId, resetToken: resetOn, aisleId: next }),
     [storeId, resetOn]
   );
 
@@ -52,9 +67,9 @@ export function useAisleChoice(options: {
     setHeld(null);
     if (!chosen || !storeId || !groceryName) return;
     // Only a choice that differs from what the Store remembered is written.
-    if (chosen.aisleId === aisleFor(storeId, groceryName)) return;
-    fileName(storeId, groceryName, chosen.aisleId);
-  }, [current, storeId, groceryName, aisleFor, fileName]);
+    if (chosen.aisleId === remembered()) return;
+    fileGroceryName(storeId, groceryName, chosen.aisleId);
+  }, [current, storeId, groceryName, remembered, fileGroceryName]);
 
   return {
     /** The Store's aisles, when it has any; the field is shown only then. */

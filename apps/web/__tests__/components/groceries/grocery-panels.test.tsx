@@ -82,7 +82,7 @@ vi.mock("@/hooks/stores/use-parsed-grocery-name", () => ({
 
 /** Where each Store files each name, as the database holds it. */
 const AISLE_LINKS: Record<string, string> = { "store-c|cola": "aisle-frisdrank" };
-const fileName = vi.fn();
+const fileGroceryName = vi.fn();
 
 vi.mock("@/hooks/stores/use-store-aisles", () => ({
   useStoreAisles: () => ({
@@ -90,7 +90,7 @@ vi.mock("@/hooks/stores/use-store-aisles", () => ({
       AISLE_LINKS[`${storeId}|${(name ?? "").toLowerCase()}`] ?? null,
     isLoading: false,
   }),
-  useFileName: () => fileName,
+  useFileGroceryName: () => fileGroceryName,
 }));
 
 // The Aisle field itself is not what these are about; a plain select drives
@@ -236,7 +236,7 @@ const GROCERY = {
 
 beforeEach(() => {
   chooseProduct.mockClear();
-  fileName.mockClear();
+  fileGroceryName.mockClear();
   ASKED_ON_THE_LIST.clear();
 });
 
@@ -325,12 +325,12 @@ describe("the Aisle field, in both panels", () => {
 
     fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
     expect(aisleField()).toHaveValue("aisle-zuivel");
-    expect(fileName).not.toHaveBeenCalled();
+    expect(fileGroceryName).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByTestId("action-save"));
 
     expect(onSave).toHaveBeenCalled();
-    expect(fileName).toHaveBeenCalledExactlyOnceWith("store-c", "cola", "aisle-zuivel");
+    expect(fileGroceryName).toHaveBeenCalledExactlyOnceWith("store-c", "cola", "aisle-zuivel");
   });
 
   it("leaves a name the shopper did not re-file exactly as the Store remembered it", () => {
@@ -351,7 +351,68 @@ describe("the Aisle field, in both panels", () => {
     fireEvent.change(aisleField()!, { target: { value: "aisle-frisdrank" } });
     fireEvent.click(screen.getByTestId("action-save"));
 
-    expect(fileName).not.toHaveBeenCalled();
+    expect(fileGroceryName).not.toHaveBeenCalled();
+  });
+
+  it("drops a choice when the Store is swapped, and one from a panel closed without adding", () => {
+    const { rerender } = render(
+      <EditGroceryPanel
+        grocery={{ ...GROCERY, storeId: "store-c" } as GroceryDto}
+        open={true}
+        recurringGrocery={null}
+        stores={STORES}
+        onDelete={() => undefined}
+        onOpenChange={() => undefined}
+        onSave={() => undefined}
+      />
+    );
+
+    // Chosen at Store C, then away to Store A and back: Store C's own memory,
+    // not the choice, is what the field reads.
+    fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-a" } });
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    expect(aisleField()).toHaveValue("aisle-frisdrank");
+    fireEvent.click(screen.getByTestId("action-save"));
+    expect(fileGroceryName).not.toHaveBeenCalled();
+
+    // The add panel stays mounted between openings: a choice made and then
+    // abandoned with Close must not surface for the next name.
+    rerender(
+      <AddGroceryPanel
+        open={true}
+        stores={STORES}
+        onCreate={() => undefined}
+        onCreateRecurring={() => undefined}
+        onOpenChange={() => undefined}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "melk" } });
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
+    rerender(
+      <AddGroceryPanel
+        open={false}
+        stores={STORES}
+        onCreate={() => undefined}
+        onCreateRecurring={() => undefined}
+        onOpenChange={() => undefined}
+      />
+    );
+    rerender(
+      <AddGroceryPanel
+        open={true}
+        stores={STORES}
+        onCreate={() => undefined}
+        onCreateRecurring={() => undefined}
+        onOpenChange={() => undefined}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "kaas" } });
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    expect(aisleField()).toHaveValue("none");
+    fireEvent.click(screen.getByRole("button", { name: "add" }));
+    expect(fileGroceryName).not.toHaveBeenCalled();
   });
 
   it("files a new name from the panel that adds it, and forgets one with No aisle", () => {
@@ -372,7 +433,7 @@ describe("the Aisle field, in both panels", () => {
     fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
     fireEvent.click(screen.getByRole("button", { name: "add" }));
 
-    expect(fileName).toHaveBeenCalledExactlyOnceWith("store-c", "melk", "aisle-zuivel");
+    expect(fileGroceryName).toHaveBeenCalledExactlyOnceWith("store-c", "melk", "aisle-zuivel");
 
     // The next grocery, a name the Store files already: "No aisle" forgets it.
     fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "cola" } });
@@ -380,7 +441,7 @@ describe("the Aisle field, in both panels", () => {
     fireEvent.change(aisleField()!, { target: { value: "none" } });
     fireEvent.click(screen.getByRole("button", { name: "add" }));
 
-    expect(fileName).toHaveBeenLastCalledWith("store-c", "cola", null);
+    expect(fileGroceryName).toHaveBeenLastCalledWith("store-c", "cola", null);
   });
 });
 

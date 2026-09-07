@@ -13,6 +13,7 @@ import type { Page } from "@playwright/test";
 import type { FakeShop } from "../harness/fake-shop";
 import { createFakeShop } from "../harness/fake-shop";
 import { expect, test } from "./fixture";
+import { dragRowTo } from "./grocery-dnd-support";
 import {
   createShopStore,
   readGroceryAmount,
@@ -71,36 +72,9 @@ function rowFor(name: string) {
 
 /** Move a grocery into another Store's section the way a shopper does. */
 async function dragGroceryToStore(name: string, storeName: string): Promise<void> {
-  // dnd-kit marks its own activator, which sits inside the row in the grouped
-  // list and just outside it in the plain one.
-  const row = rowFor(name);
-  const inside = row.locator("button[aria-roledescription]");
-  const handle =
-    (await inside.count()) > 0
-      ? inside.first()
-      : row.locator("xpath=..").locator("button[aria-roledescription]").first();
   const target = page.locator(`[data-store-drop-target]`).filter({ hasText: storeName }).first();
 
-  // Both ends of the drag have to be on screen at once for the pointer to
-  // travel between them, and this list is longer than the default viewport.
-  await page.setViewportSize({ width: 1280, height: 1600 });
-  await handle.scrollIntoViewIfNeeded();
-
-  const from = await handle.boundingBox();
-  const to = await target.boundingBox();
-
-  if (!from || !to) throw new Error("The row or the Store's heading is not on screen");
-
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-  await page.mouse.down();
-  // dnd-kit's pointer sensor waits for 8px before it calls this a drag.
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 + 20, { steps: 5 });
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 25 });
-  await page.waitForTimeout(200);
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2 + 6, { steps: 5 });
-  await page.waitForTimeout(200);
-  await page.mouse.up();
-  await page.waitForTimeout(300);
+  await dragRowTo(page, rowFor(name), target);
 }
 
 test("a name the shop states unmistakably is priced without being asked", async () => {

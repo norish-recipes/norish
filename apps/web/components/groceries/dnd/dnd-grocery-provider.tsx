@@ -34,7 +34,7 @@ export function DndGroceryProvider({
   recurringGroceries,
   onReorderInStore,
   aisleFor,
-  onFileName,
+  onFileGroceryName,
   getRecipeNameForGrocery,
 }: DndGroceryProviderProps) {
   const sensors = useSensors(
@@ -73,7 +73,7 @@ export function DndGroceryProvider({
     recurringGroceries,
     onReorderInStore,
     aisleFor,
-    onFileName,
+    onFileGroceryName,
     getRecipeNameForGrocery,
   });
 

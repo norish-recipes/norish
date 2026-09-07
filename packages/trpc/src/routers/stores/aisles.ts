@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 
 import type { AisleFiled, AisleLinkDto } from "@norish/shared/contracts";
 import {
-  fileName as fileNameAtStore,
+  fileGroceryName as fileGroceryNameAtStore,
   getAisleById,
   listAisleLinksByStoreIds,
 } from "@norish/db/repositories/aisles";
@@ -34,7 +34,7 @@ const aisleLinks = authedProcedure.query(async ({ ctx }): Promise<AisleLinkDto[]
  * wins — the last shopper to file is right — and the event that follows is
  * merged by store and normalized name, so a repeat is a no-op everywhere.
  */
-const fileName = authedProcedure
+const fileGroceryName = authedProcedure
   .input(AisleFilingSchema)
   .mutation(async ({ ctx, input }): Promise<AisleFiled | null> => {
     await assertStoreAccess(ctx, input.storeId);
@@ -48,7 +48,7 @@ const fileName = authedProcedure
       }
     }
 
-    const filing = await fileNameAtStore(input.storeId, input.name, input.aisleId);
+    const filing = await fileGroceryNameAtStore(input.storeId, input.name, input.aisleId);
 
     if (!filing) return null;
 
@@ -63,5 +63,5 @@ const fileName = authedProcedure
 
 export const aisleProcedures = router({
   aisleLinks,
-  fileName,
+  fileGroceryName,
 });

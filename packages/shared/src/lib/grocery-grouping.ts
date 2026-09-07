@@ -99,7 +99,10 @@ export function groupGroceriesByIngredient(
 
   for (const [storeId, storeItems] of storeGroceries) {
     // Group by exact normalized name, per aisle
-    const nameGroups = new Map<string, { aisleId: string | null; items: GroceryDto[] }>();
+    const nameGroups = new Map<
+      string,
+      { aisleId: string | null; normalizedName: string; items: GroceryDto[] }
+    >();
 
     for (const grocery of storeItems) {
       const normalizedName = normalizeIngredientNameForGrouping(grocery.name);
@@ -109,15 +112,14 @@ export function groupGroceriesByIngredient(
       const key = `${aisleId ?? ""}|${normalizedName}`;
 
       if (!nameGroups.has(key)) {
-        nameGroups.set(key, { aisleId, items: [] });
+        nameGroups.set(key, { aisleId, normalizedName, items: [] });
       }
       nameGroups.get(key)!.items.push(grocery);
     }
 
     const groups: GroceryGroup[] = [];
 
-    for (const { aisleId, items } of nameGroups.values()) {
-      const normalizedName = normalizeIngredientNameForGrouping(items[0]?.name ?? null);
+    for (const { aisleId, normalizedName, items } of nameGroups.values()) {
       const sortedItems = [...items].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
       const normalizedUnits = sortedItems.map((g) => normalizeUnitForGrouping(g.unit, customUnits));

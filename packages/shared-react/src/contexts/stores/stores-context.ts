@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, createElement, useContext, useMemo, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useMemo, useState } from "react";
 
 import type {
   ResolvedProductLink,
@@ -37,7 +37,7 @@ export type StoresContextValue = {
     website: string | null
   ) => Promise<StoreSearchAddressResult>;
   /** File a grocery name at a Store under one of its aisles, or under none, which forgets it. */
-  fileName: (storeId: string, name: string, aisleId: string | null) => void;
+  fileGroceryName: (storeId: string, name: string, aisleId: string | null) => void;
   // Prices
   /** The Store Product a grocery resolves to, or null where its Store answered with a Miss. */
   priceFor: (storeId: string | null, name: string | null) => StoreProductDto | null;
@@ -97,7 +97,21 @@ export function createStoresContext({
     useStorePricesSubscription();
 
     // Where each Store files each name, and a housemate's filing as it lands.
-    const { aisleFor } = useStoreAisles();
+    // An aisle the Store no longer has — removed in the editor, its links gone
+    // by cascade on the server — is not an answer: the name is unfiled until
+    // the links are read again.
+    const { aisleFor: filedUnder } = useStoreAisles();
+    const aisleFor = useCallback(
+      (storeId: string | null, name: string | null) => {
+        const aisleId = filedUnder(storeId, name);
+
+        if (aisleId === null) return null;
+        const store = stores.find((candidate) => candidate.id === storeId);
+
+        return store?.aisles.some((aisle) => aisle.id === aisleId) ? aisleId : null;
+      },
+      [filedUnder, stores]
+    );
 
     useStoreAislesSubscription();
 

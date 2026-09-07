@@ -53,7 +53,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       delete: { mutationOptions: vi.fn(() => ({ mutationFn: mockDeleteMutation })) },
       reorder: { mutationOptions: vi.fn() },
       checkSearchAddress: { mutationOptions: vi.fn() },
-      fileName: { mutationOptions: vi.fn() },
+      fileGroceryName: { mutationOptions: vi.fn() },
       aisleLinks: { queryKey: vi.fn(() => ["stores", "aisleLinks"]) },
     },
   }),

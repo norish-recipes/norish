@@ -32,6 +32,7 @@ import { GroceryItem } from "./grocery-item";
 import { getStoreColorClasses } from "./store-colors";
 import { StoreHeadingTotal } from "./store-heading-total";
 import { lineOf } from "./store-total";
+import { useAisleBlocks } from "./use-aisle-blocks";
 
 interface StoreSectionProps {
   store: StoreDto | null; // null = Unsorted
@@ -157,24 +158,6 @@ function StoreSectionComponent({
     [getItemsForContainer, groceryMap, transitioningIds]
   );
 
-  // The block's shape: unfiled rows first, under no heading, then every aisle
-  // of the Store in its order, filled or not. A row's aisle is what its Store
-  // files its name under, which the drag state was built from (ADR-0031).
-  const aisles = store?.aisles;
-  const { unfiled, blocks, activeGroceries } = useMemo(() => {
-    const unfiledRows = activeIn(containerId);
-    const aisleBlocks = (aisles ?? []).map((aisle) => ({
-      aisle,
-      rows: activeIn(aisleContainerId(aisle.id)),
-    }));
-
-    return {
-      unfiled: unfiledRows,
-      blocks: aisleBlocks,
-      activeGroceries: [...unfiledRows, ...aisleBlocks.flatMap((block) => block.rows)],
-    };
-  }, [activeIn, containerId, aisles]);
-
   // Done groceries (including transitioning) - sorted by sortOrder
   const doneGroceries = useMemo(() => {
     return groceries
@@ -182,6 +165,12 @@ function StoreSectionComponent({
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [groceries, transitioningIds]);
 
+  // The block's shape, read off the drag state (ADR-0031).
+  const {
+    unfiled,
+    blocks,
+    active: activeGroceries,
+  } = useAisleBlocks(containerId, store?.aisles, activeIn);
   const firstActiveId = activeGroceries[0]?.id;
   const lastActiveId = doneGroceries.length === 0 ? activeGroceries.at(-1)?.id : undefined;
   const renderActive = (grocery: GroceryDto) => {

@@ -7,8 +7,8 @@ export const useStoreAisles = sharedStoresHooks.useStoreAisles;
 export const useStoreAislesSubscription = sharedStoresHooks.useStoreAislesSubscription;
 
 /** File a grocery name at a Store: the one write behind the panel's Aisle field and a drop into an aisle. */
-export function useFileName() {
-  return useStoresMutations().fileName;
+export function useFileGroceryName() {
+  return useStoresMutations().fileGroceryName;
 }
 
-export { aisleKey, mergeAisleFiling, type StoreAislesResult } from "@norish/shared-react/hooks";
+export type { StoreAislesResult } from "@norish/shared-react/hooks";

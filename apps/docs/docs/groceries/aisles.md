@@ -99,9 +99,14 @@ Deliberately, for now:
 
 - no starter set of aisles: every household types its own;
 - no guessing an aisle from words, a shop's own taxonomy, or an AI;
-- no aisle-level totals, mark-all-done or delete-done, and no collapsing an
-  aisle;
-- no copying aisles between Stores;
+- no aisle-level totals, mark-all-done or delete-done, no collapsing an aisle,
+  and no heading over the unfiled rows;
+- two lines with the identical name at one Store cannot sit in different
+  aisles;
+- no copying aisles between Stores, and no sharing one aisle list across
+  Stores;
+- no REST endpoint for filing, and no aisles on the REST create;
+- the recipe view is untouched: aisles belong to the store view;
 - aisles are a web surface: the mobile app shows the list as it did.
 
 ## For self-hosting operators

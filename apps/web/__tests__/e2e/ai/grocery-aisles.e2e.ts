@@ -14,6 +14,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "./fixture";
 import { createPlainStore, readAisleFiling, readStoreAisles } from "./grocery-aisles-support";
+import { dragRowTo as dragRow } from "./grocery-dnd-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -107,35 +108,7 @@ async function unfiledRows(storeName: string = STORE): Promise<string[]> {
 
 /** Move a grocery's row onto a drop target the way a shopper does. */
 async function dragRowTo(name: string, target: ReturnType<Page["locator"]>): Promise<void> {
-  // dnd-kit marks its own activator, which sits inside the row in the grouped
-  // list and just outside it in the plain one.
-  const row = page.locator(`[data-grocery-name="${name}"]`).first();
-  const inside = row.locator("button[aria-roledescription]");
-  const handle =
-    (await inside.count()) > 0
-      ? inside.first()
-      : row.locator("xpath=..").locator("button[aria-roledescription]").first();
-
-  // Both ends of the drag have to be on screen at once for the pointer to
-  // travel between them.
-  await page.setViewportSize({ width: 1280, height: 1600 });
-  await handle.scrollIntoViewIfNeeded();
-
-  const from = await handle.boundingBox();
-  const to = await target.boundingBox();
-
-  if (!from || !to) throw new Error("The row or the drop target is not on screen");
-
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-  await page.mouse.down();
-  // dnd-kit's pointer sensor waits for 8px before it calls this a drag.
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 + 20, { steps: 5 });
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 25 });
-  await page.waitForTimeout(200);
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2 + 4, { steps: 5 });
-  await page.waitForTimeout(200);
-  await page.mouse.up();
-  await page.waitForTimeout(300);
+  await dragRow(page, page.locator(`[data-grocery-name="${name}"]`).first(), target);
 }
 
 /** An aisle's heading, the drop target for filing by drag. */
@@ -189,7 +162,12 @@ async function openStoreEditor(storeName: string = STORE): Promise<void> {
 }
 
 async function closeStoreManager(): Promise<void> {
-  await page.getByRole("button", { name: "Close panel" }).last().click();
+  // The editor that just closed lingers in the DOM for its closing animation,
+  // with a Close button of its own; the manager's is the one to press.
+  await page
+    .getByRole("dialog", { name: "Manage Stores" })
+    .getByRole("button", { name: "Close panel" })
+    .click();
   await expect(page.getByRole("dialog")).toBeHidden();
 }
 
@@ -326,30 +304,29 @@ test("in the grouped list, kip and kip (diepvries) are two groups once filed apa
   await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(1);
   await setGrouped(false);
 
-  // Filed apart — "kip" in Groente, "kip (diepvries)" left at the top — they
-  // are two Aisle Links, and so two groups.
-  await fileFromPanel("kip", "Groente");
-  await expect.poll(() => readAisleFiling(STORE, "kip")).toBe("Groente");
-  expect(await readAisleFiling(STORE, "kip diepvries")).toBeNull();
-
-  await setGrouped(true);
-  await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(2);
-  expect(await rowsIn("Groente")).toEqual(["kip"]);
-  expect(await unfiledRows()).toContain("kip");
-  await setGrouped(false);
-});
-
-test("dragging a row into an aisle files its name, and the same-named row follows", async () => {
-  await page.goto("/groceries");
-  // Two rows named "halfvolle melk" sit unfiled since the aisle was removed.
-  await expect(headingsOf()).toHaveText(["Groente"]);
-
+  // Filed apart — "kip" in Groente, "kip (diepvries)" in Zuivel — they are two
+  // Aisle Links, and so two groups, though they fold to one grouping name.
   await openStoreEditor();
   await page.getByTestId("aisle-name").fill("Zuivel");
   await page.getByTestId("aisle-name").press("Enter");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
   await closeStoreManager();
+  await fileFromPanel("kip", "Groente");
+  await fileFromPanel("kip (diepvries)", "Zuivel");
+  await expect.poll(() => readAisleFiling(STORE, "kip")).toBe("Groente");
+  await expect.poll(() => readAisleFiling(STORE, "kip diepvries")).toBe("Zuivel");
+
+  await setGrouped(true);
+  await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(2);
+  expect(await rowsIn("Groente")).toEqual(["kip"]);
+  expect(await rowsIn("Zuivel")).toEqual(["kip"]);
+  await setGrouped(false);
+});
+
+test("dragging a row into an aisle files its name, and the same-named row follows", async () => {
+  await page.goto("/groceries");
+  // Two rows named "halfvolle melk" sit unfiled since their aisle was removed.
   await expect(headingsOf()).toHaveText(["Groente", "Zuivel"]);
 
   await dragRowTo("halfvolle melk", aisleTarget("Zuivel"));

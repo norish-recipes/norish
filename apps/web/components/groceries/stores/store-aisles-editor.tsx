@@ -10,6 +10,9 @@ import { useTranslations } from "next-intl";
 import { duplicateAisleName, foldAisleName } from "@norish/shared/lib/aisles";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
+/** Aisle names are one to a hundred characters; the fields stop at the hundredth. */
+export const AISLE_NAME_MAX = 100;
+
 /** An aisle as it is being typed: a client-minted id (ADR-0003) and a name. */
 export interface EditingAisle {
   id: string;
@@ -92,6 +95,7 @@ export function StoreAislesEditor({ aisles, onChange, open }: StoreAislesEditorP
           <Input
             className={FIELD_CLASS}
             data-testid="aisle-name"
+            maxLength={AISLE_NAME_MAX}
             placeholder={t("aisleNamePlaceholder")}
             style={FIELD_STYLE}
             variant="secondary"
@@ -163,6 +167,7 @@ function AisleRow({ aisle, labels, onRename, onRemove }: AisleRowProps) {
         <Input
           className={FIELD_CLASS}
           data-testid="aisle-row-name"
+          maxLength={AISLE_NAME_MAX}
           style={FIELD_STYLE}
           variant="secondary"
         />

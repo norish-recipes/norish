@@ -42,7 +42,7 @@ export function useGroupedGroceryDnd({
   groupedGroceries,
   onReorderGroups,
   aisleFor,
-  onFileName,
+  onFileGroceryName,
 }: Omit<DndGroupedGroceryProviderProps, "children">): UseGroupedGroceryDndResult {
   const [activeGroupKey, setActiveGroupKey] = useState<string | null>(null);
   const [overContainerId, setOverContainerId] = useState<ContainerId | null>(null);
@@ -283,14 +283,15 @@ export function useGroupedGroceryDnd({
         });
 
         if (updates.length > 0) onReorderGroups(updates);
-        for (const filing of filings) onFileName(filing.storeId, filing.name, filing.aisleId);
+        for (const filing of filings)
+          onFileGroceryName(filing.storeId, filing.name, filing.aisleId);
       }
 
       setActiveGroupKey(null);
       setOverContainerId(null);
       clonedGroupItems.current = null;
     },
-    [findContainer, groupItems, groupMap, stores, aisleFor, onReorderGroups, onFileName]
+    [findContainer, groupItems, groupMap, stores, aisleFor, onReorderGroups, onFileGroceryName]
   );
 
   const handleDragCancel = useCallback(() => {

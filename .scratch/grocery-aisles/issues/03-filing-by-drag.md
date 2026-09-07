@@ -1,6 +1,6 @@
 # 03 — Filing by drag
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 02
 
 Spec: `.scratch/grocery-aisles/spec.md` · Decision: ADR-0031
@@ -19,9 +19,9 @@ The drag container model gains a level: a droppable per aisle inside each Store 
 
 ## Acceptance criteria
 
-- [ ] Dropping a row into an aisle of its Store files the name; dropping it into the unfiled area forgets it; sort order within the aisle is kept.
-- [ ] Dropping a row into another Store's aisle assigns the Store and then files; dropping into another Store's unfiled area assigns only.
-- [ ] Dragging a group files every distinct name in the group.
-- [ ] Same-named rows follow a drag on every household screen.
-- [ ] E2E: drag a row into an aisle and see its sibling follow; drag it back to the top and see both unfile; drag a row into another Store's aisle and see it there.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm test:e2e` and `pnpm build` pass.
+- [x] Dropping a row into an aisle of its Store files the name; dropping it into the unfiled area forgets it; sort order within the aisle is kept.
+- [x] Dropping a row into another Store's aisle assigns the Store and then files; dropping into another Store's unfiled area assigns only.
+- [x] Dragging a group files every distinct name in the group.
+- [x] Same-named rows follow a drag on every household screen.
+- [x] E2E: drag a row into an aisle and see its sibling follow; drag it back to the top and see both unfile; drag a row into another Store's aisle and see it there.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm test:e2e` and `pnpm build` pass.

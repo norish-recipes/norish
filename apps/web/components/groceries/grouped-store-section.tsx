@@ -32,6 +32,7 @@ import { GroupedGroceryItem } from "./grouped-grocery-item";
 import { getStoreColorClasses } from "./store-colors";
 import { StoreHeadingTotal } from "./store-heading-total";
 import { lineOfGroup } from "./store-total";
+import { useAisleBlocks } from "./use-aisle-blocks";
 
 interface GroupedStoreSectionProps {
   store: StoreDto | null; // null = Unsorted
@@ -126,29 +127,17 @@ function GroupedStoreSectionComponent({
     [getGroupKeysForContainer, groupMap]
   );
 
-  // The block's shape: unfiled groups first, under no heading, then every
-  // aisle of the Store in its order, filled or not. A group is per aisle per
-  // Store, and the drag state was built from that (ADR-0031).
-  const aisles = store?.aisles;
-  const { unfiled, blocks, activeGroups } = useMemo(() => {
-    const unfiledGroups = activeIn(containerId);
-    const aisleBlocks = (aisles ?? []).map((aisle) => ({
-      aisle,
-      rows: activeIn(aisleContainerId(aisle.id)),
-    }));
-
-    return {
-      unfiled: unfiledGroups,
-      blocks: aisleBlocks,
-      activeGroups: [...unfiledGroups, ...aisleBlocks.flatMap((block) => block.rows)],
-    };
-  }, [activeIn, containerId, aisles]);
-
   // Done groups - sorted by sortOrder, not draggable
   const doneGroups = useMemo(() => {
     return groups.filter((g) => g.allDone);
   }, [groups]);
 
+  // The block's shape, read off the drag state; a group is per aisle per Store (ADR-0031).
+  const {
+    unfiled,
+    blocks,
+    active: activeGroups,
+  } = useAisleBlocks(containerId, store?.aisles, activeIn);
   const firstActiveKey = activeGroups[0]?.groupKey;
   const lastActiveKey = doneGroups.length === 0 ? activeGroups.at(-1)?.groupKey : undefined;
   const renderActive = (group: GroceryGroup) => (

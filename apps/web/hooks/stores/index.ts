@@ -18,8 +18,7 @@ export { useStoresCacheHelpers, type StoresCacheHelpers } from "./use-stores-cac
 export {
   useStoreAisles,
   useStoreAislesSubscription,
-  useFileName,
-  aisleKey,
+  useFileGroceryName,
   type StoreAislesResult,
 } from "./use-store-aisles";
 export { useProductLink, useShopSearch, useStoreProducts } from "./use-store-products-query";

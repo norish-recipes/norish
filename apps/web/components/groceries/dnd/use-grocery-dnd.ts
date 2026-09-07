@@ -42,7 +42,7 @@ export function useGroceryDnd({
   recurringGroceries,
   onReorderInStore,
   aisleFor,
-  onFileName,
+  onFileGroceryName,
   getRecipeNameForGrocery,
 }: Omit<DndGroceryProviderProps, "children">): UseGroceryDndResult {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -262,14 +262,15 @@ export function useGroceryDnd({
         });
 
         if (updates.length > 0) onReorderInStore(updates);
-        for (const filing of filings) onFileName(filing.storeId, filing.name, filing.aisleId);
+        for (const filing of filings)
+          onFileGroceryName(filing.storeId, filing.name, filing.aisleId);
       }
 
       setActiveId(null);
       setOverContainerId(null);
       clonedItems.current = null;
     },
-    [findContainer, items, groceries, stores, aisleFor, onReorderInStore, onFileName]
+    [findContainer, items, groceries, stores, aisleFor, onReorderInStore, onFileGroceryName]
   );
 
   const handleDragCancel = useCallback(() => {

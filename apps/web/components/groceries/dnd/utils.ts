@@ -48,22 +48,33 @@ export function storeContainers(storeId: string | null, stores: StoreDto[]): Con
 }
 
 /**
- * The container a grocery sits in: its Store's aisle where the Store files
- * its name, the Store's unfiled area where it does not or the aisle is gone,
- * and `unsorted` without a Store. Nothing on the row says which (ADR-0031).
+ * The container for a place: `unsorted` without a Store, the Store's aisle
+ * where it still has that aisle, and the Store's unfiled area where the aisle
+ * is null or gone.
  */
-export function getContainerIdForGrocery(
-  grocery: Pick<GroceryDto, "storeId" | "name">,
-  stores: StoreDto[] = [],
-  aisleFor: AisleResolver = () => null
+export function containerFor(
+  storeId: string | null,
+  aisleId: string | null,
+  stores: StoreDto[]
 ): ContainerId {
-  if (!grocery.storeId) return UNSORTED_CONTAINER;
-  const aisleId = aisleFor(grocery.storeId, grocery.name);
-  const store = stores.find((candidate) => candidate.id === grocery.storeId);
+  if (!storeId) return UNSORTED_CONTAINER;
+  const store = stores.find((candidate) => candidate.id === storeId);
 
   return aisleId !== null && store?.aisles.some((aisle) => aisle.id === aisleId)
     ? aisleContainerId(aisleId)
-    : grocery.storeId;
+    : storeId;
+}
+
+/**
+ * The container a grocery sits in: where its Store files its name. Nothing on
+ * the row says which (ADR-0031).
+ */
+export function getContainerIdForGrocery(
+  grocery: Pick<GroceryDto, "storeId" | "name">,
+  stores: StoreDto[],
+  aisleFor: AisleResolver
+): ContainerId {
+  return containerFor(grocery.storeId, aisleFor(grocery.storeId, grocery.name), stores);
 }
 
 /** Converts a Store-level container ID back to storeId (UNSORTED_CONTAINER => null) */
@@ -108,7 +119,7 @@ function emptyContainers(stores: StoreDto[]): ItemsState {
 export function buildItemsState(
   groceries: GroceryDto[],
   stores: StoreDto[],
-  aisleFor: AisleResolver = () => null
+  aisleFor: AisleResolver
 ): ItemsState {
   const items = emptyContainers(stores);
 
@@ -143,11 +154,7 @@ export function buildGroupItemsState(
     for (const group of groups) {
       // Only include groups that are not all done
       if (group.allDone) continue;
-      const containerId = getContainerIdForGrocery(
-        { storeId, name: null },
-        stores,
-        () => group.aisleId
-      );
+      const containerId = containerFor(storeId, group.aisleId, stores);
 
       (items[containerId] ??= []).push(group.groupKey);
     }

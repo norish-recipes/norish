@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  fileName,
+  fileGroceryName,
   getAisleById,
   listAisleLinksByStoreIds,
   listAislesByStoreIds,
@@ -202,12 +202,12 @@ describe("aisles and aisle links", () => {
     });
 
     it("keeps one link per Store and name, last writer winning, folding the name", async () => {
-      await expect(fileName(storeId, "Melk", ZUIVEL)).resolves.toEqual({
+      await expect(fileGroceryName(storeId, "Melk", ZUIVEL)).resolves.toEqual({
         storeId,
         normalizedName: "melk",
         aisleId: ZUIVEL,
       });
-      await fileName(storeId, "  MELK!  ", BROOD);
+      await fileGroceryName(storeId, "  MELK!  ", BROOD);
 
       const links = await getTestDb().select().from(aisleLinks);
 
@@ -216,9 +216,9 @@ describe("aisles and aisle links", () => {
     });
 
     it("forgets a name filed under null, and says so", async () => {
-      await fileName(storeId, "melk", ZUIVEL);
+      await fileGroceryName(storeId, "melk", ZUIVEL);
 
-      await expect(fileName(storeId, "Melk", null)).resolves.toEqual({
+      await expect(fileGroceryName(storeId, "Melk", null)).resolves.toEqual({
         storeId,
         normalizedName: "melk",
         aisleId: null,
@@ -227,13 +227,13 @@ describe("aisles and aisle links", () => {
     });
 
     it("files nothing for a name that folds to nothing", async () => {
-      await expect(fileName(storeId, " !? ", ZUIVEL)).resolves.toBeNull();
+      await expect(fileGroceryName(storeId, " !? ", ZUIVEL)).resolves.toBeNull();
       await expect(getTestDb().select().from(aisleLinks)).resolves.toEqual([]);
     });
 
     it("forgets the links of an aisle that is removed", async () => {
-      await fileName(storeId, "melk", ZUIVEL);
-      await fileName(storeId, "brood", BROOD);
+      await fileGroceryName(storeId, "melk", ZUIVEL);
+      await fileGroceryName(storeId, "brood", BROOD);
 
       await updateStore({ id: storeId, aisles: [{ id: BROOD, name: "Brood" }] });
 
@@ -249,8 +249,8 @@ describe("aisles and aisle links", () => {
         aisles: [{ id: GROENTE, name: "Groente" }],
       });
 
-      await fileName(storeId, "melk", ZUIVEL);
-      await fileName(other.id, "appels", GROENTE);
+      await fileGroceryName(storeId, "melk", ZUIVEL);
+      await fileGroceryName(other.id, "appels", GROENTE);
 
       const links = await listAisleLinksByStoreIds([storeId, other.id]);
 
@@ -264,7 +264,7 @@ describe("aisles and aisle links", () => {
     });
 
     it("goes with the Store, aisles and all", async () => {
-      await fileName(storeId, "melk", ZUIVEL);
+      await fileGroceryName(storeId, "melk", ZUIVEL);
       const [store] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
       await deleteStore(storeId, store!.version, false, []);

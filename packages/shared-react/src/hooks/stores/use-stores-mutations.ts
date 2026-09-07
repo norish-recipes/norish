@@ -66,7 +66,7 @@ export function createUseStoresMutations({
     const deleteMutation = useMutation(trpc.stores.delete.mutationOptions());
     const reorderMutation = useMutation(trpc.stores.reorder.mutationOptions());
     const checkMutation = useMutation(trpc.stores.checkSearchAddress.mutationOptions());
-    const fileMutation = useMutation(trpc.stores.fileName.mutationOptions());
+    const fileMutation = useMutation(trpc.stores.fileGroceryName.mutationOptions());
 
     const createStore = (data: StoreCreateDto): Promise<string> => {
       // Client-minted id, honoured on insert so a queued offline create stays
@@ -215,7 +215,7 @@ export function createUseStoresMutations({
      * (ADR-0004), last writer winning. Nothing lives on the grocery row, so
      * there is no row to roll back: a refusal simply re-reads what is filed.
      */
-    const fileName = (storeId: string, name: string, aisleId: string | null) => {
+    const fileGroceryName = (storeId: string, name: string, aisleId: string | null) => {
       const normalizedName = normalizeGroceryName(name);
 
       if (!normalizedName) return;
@@ -240,7 +240,7 @@ export function createUseStoresMutations({
       deleteStore,
       reorderStores,
       checkSearchAddress,
-      fileName,
+      fileGroceryName,
       isCreating: createMutation.isPending,
       isUpdating: updateMutation.isPending,
       isDeleting: deleteMutation.isPending,

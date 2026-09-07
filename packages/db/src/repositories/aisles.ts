@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -93,6 +93,8 @@ export async function saveStoreAisles(
   }
 
   for (const [index, aisle] of input.entries()) {
+    // A known aisle is rewritten only where its name or place changed, so a
+    // Store saved for its colour leaves its aisles' versions alone.
     await tx
       .insert(aisles)
       .values({ id: aisle.id, storeId, name: aisle.name, sortOrder: index })
@@ -104,7 +106,10 @@ export async function saveStoreAisles(
           updatedAt: new Date(),
           version: sql`${aisles.version} + 1`,
         },
-        setWhere: eq(aisles.storeId, storeId),
+        setWhere: and(
+          eq(aisles.storeId, storeId),
+          or(ne(aisles.name, aisle.name), ne(aisles.sortOrder, index))
+        ),
       });
   }
 
@@ -142,7 +147,7 @@ export async function listAisleLinksByStoreIds(storeIds: string[]): Promise<Aisl
  * the last shopper to file is right. Returns what the Store now files the name
  * under, or null where the name folds to nothing and nothing was written.
  */
-export async function fileName(
+export async function fileGroceryName(
   storeId: string,
   name: string,
   aisleId: string | null
