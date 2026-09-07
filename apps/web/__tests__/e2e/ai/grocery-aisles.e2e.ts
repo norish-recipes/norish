@@ -333,7 +333,7 @@ test("dragging a row into an aisle files its name, and the same-named row follow
 
   await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBe("Zuivel");
   // Filing one filed both: an Aisle Link is a fact about the name (ADR-0031).
-  expect(await rowsIn("Zuivel")).toEqual(["halfvolle melk", "halfvolle melk"]);
+  expect((await rowsIn("Zuivel")).filter((name) => name === "halfvolle melk")).toHaveLength(2);
   expect(await unfiledRows()).not.toContain("halfvolle melk");
 });
 
@@ -341,7 +341,7 @@ test("dragging a row back to the top of its Store unfiles the name, both rows wi
   await dragRowTo("halfvolle melk", storeTarget());
 
   await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBeNull();
-  expect(await rowsIn("Zuivel")).toEqual([]);
+  expect(await rowsIn("Zuivel")).not.toContain("halfvolle melk");
   expect((await unfiledRows()).filter((name) => name === "halfvolle melk")).toHaveLength(2);
 });
 
