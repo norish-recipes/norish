@@ -19,6 +19,7 @@ import {
   updateRecipeWithRefs,
 } from "@norish/db/repositories/recipes";
 import * as schema from "@norish/db/schema";
+import { deriveStepIngredientAmount } from "@norish/shared/lib/step-ingredients";
 
 import { getTestDb } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -129,6 +130,26 @@ describe("Step Ingredients", () => {
         { ingredientOrder: 1, share: 1, order: 0 },
         { ingredientOrder: 0, share: 0.5, order: 1 },
       ]);
+    });
+
+    it("keeps a share at the precision an entered amount needs to read back as itself", async () => {
+      // "150 of the 650 g" is entered as an amount and stored as the quotient.
+      // A column rounding that to four decimals read back as 150.02 g on the
+      // recipe page (issue #550); the stored share must multiply back exactly.
+      const input = dualSystemInsert();
+
+      input.recipeIngredients[1]!.amount = 650;
+      input.steps[1]!.stepIngredients = [{ ingredientOrder: 1, share: 150 / 650, order: 0 }];
+
+      const created = await createRecipeWithRefs(randomUUID(), user.id, input);
+      const recipe = await getRecipeFull(created!.recipeId);
+      const step = recipe!.steps.find(
+        (candidate) => candidate.systemUsed === "metric" && Number(candidate.order) === 1
+      );
+      const ref = step?.stepIngredients[0];
+
+      expect(ref?.share).toBe(150 / 650);
+      expect(deriveStepIngredientAmount(650, ref!.share)).toBe(150);
     });
 
     it("lands each system's references on that system's own line rows", async () => {

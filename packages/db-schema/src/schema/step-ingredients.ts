@@ -14,6 +14,12 @@ import { steps } from "./steps";
  * displayed amount is always derived at render time as share × the line's
  * current amount, never stored, so it follows edits and the active system.
  * Deleting the step or the ingredient line deletes the reference with it.
+ *
+ * The share is an unconstrained numeric on purpose. An amount typed against
+ * a line ("150 of the 650 g") becomes the quotient, and only a share kept to
+ * the full precision of that division multiplies back to the typed amount:
+ * a four-decimal column turned 150 g into 150.02 g on the reading surface
+ * (issue #550).
  */
 export const stepIngredients = pgTable(
   "step_ingredients",
@@ -25,7 +31,7 @@ export const stepIngredients = pgTable(
     recipeIngredientId: uuid("recipe_ingredient_id")
       .notNull()
       .references(() => recipeIngredients.id, { onDelete: "cascade" }),
-    share: numeric("share", { precision: 8, scale: 4 }).notNull().default("1"),
+    share: numeric("share").notNull().default("1"),
     order: numeric("order").default("0"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
