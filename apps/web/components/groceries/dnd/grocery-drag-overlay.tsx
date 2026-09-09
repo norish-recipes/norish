@@ -37,8 +37,9 @@ export function GroceryDragOverlay({
       </div>
 
       <GroceryCheckbox
-        aria-label={grocery.name || t("unnamedItem")}
         isDisabled
+        storeColored
+        aria-label={grocery.name || t("unnamedItem")}
         isSelected={grocery.isDone}
         size="lg"
       />

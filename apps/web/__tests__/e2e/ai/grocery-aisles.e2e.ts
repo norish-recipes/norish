@@ -431,6 +431,9 @@ test("an empty Store is its heading alone, takes a dropped row, and reads All do
 
   await expect(heading).toBeVisible();
   await expect(heading.getByTestId("store-dot")).toBeVisible();
+  // The dot holds no glyph, and the only drawing in the heading is its chevron.
+  await expect(heading.getByTestId("store-dot").locator("svg")).toHaveCount(0);
+  await expect(heading.locator("svg")).toHaveCount(1);
   await expect(heading.getByTestId("store-meta")).toHaveText("0 items");
   await expect(storeBlock(slager).getByTestId("store-card")).toHaveCount(0);
 

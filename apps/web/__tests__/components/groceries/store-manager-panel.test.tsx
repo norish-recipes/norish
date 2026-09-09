@@ -126,11 +126,11 @@ describe("StoreManagerPanel", () => {
     // Setting up a Store is its name, its shop link, its colour and its aisles.
     expect(screen.queryByText("storeIcon")).not.toBeInTheDocument();
     const names = ["green", "rose", "teal", "amber", "red", "grey", "blue", "violet"];
-    const swatches = names.map((name) =>
-      screen.getByRole("button", { name: `colorNames.${name}` })
-    );
 
-    expect(swatches).toHaveLength(8);
+    for (const name of names) {
+      expect(screen.getByRole("button", { name: `colorNames.${name}` })).toBeInTheDocument();
+    }
+    expect(screen.getAllByRole("button", { name: /^colorNames\./ })).toHaveLength(8);
     expect(screen.getByRole("button", { name: "colorNames.red" })).toHaveAttribute(
       "aria-pressed",
       "true"

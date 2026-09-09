@@ -31,8 +31,9 @@ export function GroupDragOverlay({ group }: GroupDragOverlayProps) {
       </div>
 
       <GroceryCheckbox
-        aria-label={group.displayName || t("unnamedItem")}
         isDisabled
+        storeColored
+        aria-label={group.displayName || t("unnamedItem")}
         isIndeterminate={group.anyDone && !group.allDone}
         isSelected={group.allDone}
         size="lg"

@@ -143,7 +143,9 @@ test("a name the Store already knows is priced with no outbound request at all",
 
   // The Product Link is keyed by name, so it outlives the list line that
   // prompted it: next week's "melk" is priced without asking the shop again.
-  await page.getByText("melk").first().click();
+  // Exactly "melk": the aisles scenarios share this database and carry a
+  // "halfvolle melk" of their own, which sits earlier on the page.
+  await page.getByText("melk", { exact: true }).first().click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(priced).toBeHidden();
 

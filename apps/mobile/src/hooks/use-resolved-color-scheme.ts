@@ -1,7 +1,8 @@
+import type { ResolvedColorScheme } from "@/lib/color-scheme";
 import { useColorScheme } from "react-native";
 import { useAppearancePreference } from "@/context/appearance-preference-context";
 
-export type ResolvedColorScheme = "light" | "dark";
+export type { ResolvedColorScheme } from "@/lib/color-scheme";
 
 /**
  * The scheme the app is drawn in right now: the one the user chose, or the

@@ -44,7 +44,7 @@ last aisle.
 ![A Store's card shown by aisle, with unfiled rows at the top](/img/screenshots/groceries-aisles-list.png)
 
 A grocery the Store has never been told about is **unfiled**: it sits at the
-top of the block, under no heading, where it is noticed and filed. Norish never
+top of the card, under no heading, where it is noticed and filed. Norish never
 guesses an aisle from words, and no AI is involved, so you are never shown milk
 in the bread aisle because a word looked like bread.
 

@@ -53,6 +53,7 @@ function GroceryItemComponent({
     >
       <GroceryCheckbox
         delayChangeOnSelect
+        storeColored
         aria-label={grocery.name || t("unnamedItem")}
         isSelected={grocery.isDone}
         size="lg"

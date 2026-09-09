@@ -123,6 +123,7 @@ function GroupedGroceryItemComponent({
         {/* Group checkbox - toggles all items */}
         <GroceryCheckbox
           delayChangeOnSelect
+          storeColored
           aria-label={group.displayName || t("unnamedItem")}
           isIndeterminate={group.anyDone && !group.allDone}
           isSelected={group.allDone}
@@ -243,6 +244,7 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
     <div className="flex min-h-11 items-center gap-3 px-4 py-2.5">
       <GroceryCheckbox
         delayChangeOnSelect
+        storeColored
         aria-label={grocery.name || "Grocery item"}
         isSelected={grocery.isDone}
         size="md"

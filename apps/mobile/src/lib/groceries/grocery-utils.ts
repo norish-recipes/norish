@@ -1,4 +1,4 @@
-import type { ResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import type { ResolvedColorScheme } from "@/lib/color-scheme";
 
 import type { RecipeMap } from "@norish/shared-react/hooks";
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
