@@ -1,6 +1,6 @@
 # 04: Quieter rows and counted aisles
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 01, and 03 in practice (both rewrite the same section components; land this after it)
 
 Spec: `.scratch/redesign-groceries-page/spec.md`
@@ -22,9 +22,9 @@ Aisle headings are one size smaller, medium weight, still uppercase and muted. A
 
 ## Acceptance criteria
 
-- [ ] Checkbox ring and done fill take the Store's colour in all three views; Unsorted rows keep the accent; By Recipe rows take their assigned Store's colour.
-- [ ] A single manual row has no subtitle in either view; recipe name, recurrence pill and Store Product still appear when present; a mixed group's breakdown line still names manual sources.
-- [ ] The handle is smaller and fainter in the same place, and every existing drag E2E still passes unchanged.
-- [ ] Aisle headings are smaller with a trailing count when filled, fainter and uncounted when empty.
-- [ ] E2E: a filled Aisle heading shows its count and an empty one none; in the grouped view a single manual row shows no subtitle.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.
+- [x] Checkbox ring and done fill take the Store's colour in all three views; Unsorted rows keep the accent; By Recipe rows take their assigned Store's colour.
+- [x] A single manual row has no subtitle in either view; recipe name, recurrence pill and Store Product still appear when present; a mixed group's breakdown line still names manual sources.
+- [x] The handle is smaller and fainter in the same place, and every existing drag E2E still passes unchanged.
+- [x] Aisle headings are smaller with a trailing count when filled, fainter and uncounted when empty.
+- [x] E2E: a filled Aisle heading shows its count and an empty one none; in the grouped view a single manual row shows no subtitle.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.

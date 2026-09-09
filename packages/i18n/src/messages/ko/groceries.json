@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "정렬되지 않음",
-    "noItems": "이 매장에는 상품이 없습니다.",
     "storeActions": "매장 작업",
     "markAllDone": "모두 완료로 표시",
     "deleteDone": "삭제 완료",
     "done": "{count}개 완료",
-    "total": "아직 살 것",
-    "doneHeading": "완료"
+    "allDone": "모두 완료",
+    "total": "아직 살 것"
   },
   "storeManager": {
     "title": "매장 관리",

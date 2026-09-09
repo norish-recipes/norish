@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Sin asignar",
-    "noItems": "No hay productos en esta tienda",
     "storeActions": "Acciones de la tienda",
     "markAllDone": "Marcar todo como comprado",
     "deleteDone": "Eliminar productos comprados",
     "done": "{count} comprados",
-    "total": "Falta por comprar",
-    "doneHeading": "Hecho"
+    "allDone": "Todo listo",
+    "total": "Falta por comprar"
   },
   "storeManager": {
     "title": "Gestionar tiendas",

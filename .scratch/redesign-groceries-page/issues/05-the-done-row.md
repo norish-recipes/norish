@@ -1,6 +1,6 @@
 # 05: The done row
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 03
 
 Spec: `.scratch/redesign-groceries-page/spec.md`
@@ -19,8 +19,8 @@ As a shopper ticks things off, the Store's card gets shorter. Ticked rows no lon
 
 ## Acceptance criteria
 
-- [ ] In all three views the done rows fold into one "N done" row at the bottom of the card, closed on load, opening and closing on tap.
-- [ ] Ticking folds a row into the tail after the existing delay and the count updates; unticking from the open tail returns the row to its Aisle.
-- [ ] A section with nothing done shows no done row; a fully ticked Store shows the done row alone under All done.
-- [ ] E2E: the existing done-heading assertions are rewritten against the done row; ticking, opening, unticking and the row's return are covered.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.
+- [x] In all three views the done rows fold into one "N done" row at the bottom of the card, closed on load, opening and closing on tap.
+- [x] Ticking folds a row into the tail after the existing delay and the count updates; unticking from the open tail returns the row to its Aisle.
+- [x] A section with nothing done shows no done row; a fully ticked Store shows the done row alone under All done.
+- [x] E2E: the existing done-heading assertions are rewritten against the done row; ticking, opening, unticking and the row's return are covered.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.

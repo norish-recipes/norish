@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Unsortiert",
-    "noItems": "Keine Einträge in diesem Geschäft",
     "storeActions": "Aktionen",
     "markAllDone": "Alle abhaken",
     "deleteDone": "Erledigte löschen",
     "done": "{count} erledigt",
-    "total": "Noch zu kaufen",
-    "doneHeading": "Erledigt"
+    "allDone": "Alles erledigt",
+    "total": "Noch zu kaufen"
   },
   "storeManager": {
     "title": "Geschäfte verwalten",

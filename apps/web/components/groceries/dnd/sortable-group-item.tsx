@@ -40,12 +40,12 @@ export function SortableGroupItem({ group, children }: SortableGroupItemProps) {
   const dragHandle = (
     <button
       ref={setActivatorNodeRef}
-      className="text-muted flex h-8 w-8 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+      className="text-muted/60 flex h-8 w-8 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
       type="button"
       {...attributes}
       {...listeners}
     >
-      <Bars3Icon className="h-5 w-5" />
+      <Bars3Icon className="h-4 w-4" />
     </button>
   );
 

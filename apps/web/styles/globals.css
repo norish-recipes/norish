@@ -12,6 +12,11 @@
 
 @layer theme {
   :root {
+    /* A Store's colour, read by the dot and the checkboxes under its section
+       (components/groceries/store-colors.ts). The page ground declares the
+       accent, so a checkbox outside any Store's section — Unsorted, a recipe
+       section, the dashboard, a drag ghost — paints as it always did. */
+    --store-color: var(--accent);
     --font-inter: "Inter Variable", system-ui, sans-serif;
     /* The landing's serif, carried in for the auth headings only. */
     --font-fraunces: "Fraunces Variable", ui-serif, Georgia, serif;

@@ -85,10 +85,19 @@ export function GroceryCheckbox({
     [delayChangeOnSelect, isDisabled, isSelected, onChange]
   );
 
+  // HeroUI paints the control's rest fill from `--default`, its ring from
+  // `--field-border` and the ticked fill from `--accent`; remapping those on
+  // the root is what turns the ring and fill into the Store's colour. A
+  // Store's section declares `--store-color`; the page ground declares the
+  // accent as its default, so outside a section this checkbox paints as it
+  // always did.
+  const storeColourTokens =
+    "[--accent:var(--store-color)] [--border-width-field:2px] [--default:transparent] [--field-border:var(--store-color)] [--field-border-hover:var(--store-color)]";
+
   return (
     <Checkbox
       aria-label={ariaLabel}
-      className={`${indicatorSize} ${className}`}
+      className={`${storeColourTokens} ${indicatorSize} ${className}`}
       isDisabled={isDisabled}
       isIndeterminate={visualSelected ? false : isIndeterminate}
       isSelected={visualSelected}
@@ -96,10 +105,11 @@ export function GroceryCheckbox({
       onChange={handleChange}
     >
       <Checkbox.Content>
+        {/* The ring in the Store's colour at rest, filled with it when ticked or indeterminate */}
         <Checkbox.Control
           className={`${controlSize} data-[indeterminate=true]:border-accent data-[indeterminate=true]:bg-accent data-[selected=true]:border-accent data-[selected=true]:bg-accent rounded-full before:rounded-full`}
         >
-          <Checkbox.Indicator className="text-accent-foreground" />
+          <Checkbox.Indicator className="text-white" />
         </Checkbox.Control>
       </Checkbox.Content>
     </Checkbox>

@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Usorteret",
-    "noItems": "Ingen varer i denne butik",
     "storeActions": "Butikshandlinger",
     "markAllDone": "Markér alle som færdige",
     "deleteDone": "Slet færdige",
     "done": "{count} færdige",
-    "total": "Mangler at købe",
-    "doneHeading": "Færdig"
+    "allDone": "Alt færdigt",
+    "total": "Mangler at købe"
   },
   "storeManager": {
     "title": "Administrer butikker",

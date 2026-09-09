@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
-import { AisleHeading, DoneHeading } from "./aisle-heading";
+import { AisleHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
@@ -15,12 +15,13 @@ import {
   SortableGroupItem,
   useDndGroupedGroceryContext,
 } from "./dnd";
+import { DoneRow } from "./done-row";
 import { GroupedGroceryItem } from "./grouped-grocery-item";
 import { storeColorStyle } from "./store-colors";
 import { StoreHeading } from "./store-heading";
-import { StoreHeadingTotal } from "./store-heading-total";
 import { lineOfGroup } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";
+import { useStoreTotal } from "./use-store-total";
 
 interface GroupedStoreSectionProps {
   store: StoreDto | null; // null = Unsorted
@@ -66,8 +67,6 @@ function GroupedStoreSectionComponent({
 
   // Get container ID for this store
   const containerId = store?.id ?? "unsorted";
-  // The Store's colour is one property on its section; Unsorted has none.
-  const headerTint = store ? "bg-(--store-color)/10" : "bg-surface-secondary";
 
   // Calculate counts from original groceries
   const activeCount = groceries.filter((g) => !g.isDone).length;
@@ -76,16 +75,19 @@ function GroupedStoreSectionComponent({
   // heading adds up one Line Cost per group rather than per line — what is
   // under the heading is exactly what it sums.
   const priceLines = useMemo(() => groups.map(lineOfGroup), [groups]);
+  const total = useStoreTotal(priceLines, store?.id ?? null);
 
   // Build a map for quick group lookup - uses ALL groups so we can
   // render groups that are dragged from other stores during drag operations
   const groupMap = useMemo(() => {
     const map = new Map<string, GroceryGroup>();
+
     for (const storeGroups of allGroups.values()) {
       for (const group of storeGroups) {
         map.set(group.groupKey, group);
       }
     }
+
     return map;
   }, [allGroups]);
 
@@ -121,6 +123,10 @@ function GroupedStoreSectionComponent({
   } = useAisleBlocks(containerId, store?.aisles, activeIn);
   const firstActiveKey = activeGroups[0]?.groupKey;
   const lastActiveKey = doneGroups.length === 0 ? activeGroups.at(-1)?.groupKey : undefined;
+  // The card holds something to show — a group, the done tail, or an aisle's
+  // heading to drag into — or the section is its heading alone.
+  const hasCard =
+    isExpanded && (activeGroups.length > 0 || doneGroups.length > 0 || blocks.length > 0);
   const renderActive = (group: GroceryGroup) => (
     <SortableGroupItem key={group.groupKey} group={group}>
       {({ dragHandle }) => (
@@ -143,30 +149,26 @@ function GroupedStoreSectionComponent({
     <StoreHeading
       actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone } : undefined}
       activeCount={activeCount}
-      className={headerTint}
       doneCount={doneCount}
       dot={store !== null}
       dropTarget={store?.id ?? "unsorted"}
       expanded={isExpanded}
       name={store?.name ?? t("unsorted")}
-      total={<StoreHeadingTotal lines={priceLines} storeId={store?.id ?? null} />}
+      total={total}
       onExpandedChange={setIsExpanded}
     />
   );
+
   return (
     <motion.div
       className="relative"
       data-store-id={store?.id ?? "unsorted"}
-      style={store ? storeColorStyle(store.color) : undefined}
+      style={storeColorStyle(store?.color ?? null)}
     >
-      {/* Entire section wrapped in SortableGroupedStoreContainer - header + groups are droppable */}
-      <SortableGroupedStoreContainer
-        header={headerElement}
-        headerBgClass={headerTint}
-        storeId={store?.id ?? null}
-      >
-        {/* Groups area - only shown when expanded */}
-        {isExpanded ? (
+      {/* The whole section is the droppable: a drop on the heading lands in the Store */}
+      <SortableGroupedStoreContainer header={headerElement} storeId={store?.id ?? null}>
+        {/* The card, where there is a group, a done tail or an aisle to show; otherwise the heading stands alone */}
+        {hasCard ? (
           <div className="divide-border divide-y">
             {/* Unfiled groups first, under no heading, so they are noticed and filed */}
             {unfiled.map(renderActive)}
@@ -177,9 +179,7 @@ function GroupedStoreSectionComponent({
                 key={aisle.id}
                 activeId={activeGroupKey}
                 aisleId={aisle.id}
-                header={
-                  <AisleHeading aisleId={aisle.id} empty={rows.length === 0} name={aisle.name} />
-                }
+                header={<AisleHeading aisleId={aisle.id} count={rows.length} name={aisle.name} />}
                 itemIds={getGroupKeysForContainer(aisleContainerId(aisle.id))}
                 overContainerId={overContainerId}
               >
@@ -187,31 +187,21 @@ function GroupedStoreSectionComponent({
               </SortableAisleContainer>
             ))}
 
-            {/* The done tail, said so where aisle headings would otherwise claim it */}
-            {blocks.length > 0 && doneGroups.length > 0 && <DoneHeading />}
-
-            {/* Done groups - not sortable, just rendered */}
-            {doneGroups.map((group, index) => {
-              const isFirst = index === 0 && activeGroups.length === 0;
-              const isLast = index === doneGroups.length - 1;
-              return (
-                <div key={group.groupKey}>
+            {/* The done tail, folded into one row that opens on tap; not sortable */}
+            {doneGroups.length > 0 && (
+              <DoneRow count={doneGroups.length}>
+                {doneGroups.map((group, index) => (
                   <GroupedGroceryItem
+                    key={group.groupKey}
                     group={group}
-                    isFirst={isFirst}
-                    isLast={isLast}
+                    isLast={index === doneGroups.length - 1}
                     recurringGroceries={recurringGroceries}
                     onEdit={onEdit}
                     onToggle={onToggle}
                     onToggleGroup={onToggleGroup}
                   />
-                </div>
-              );
-            })}
-
-            {/* Empty state - only when nothing is here and the Store has no aisles to show its shape */}
-            {activeGroups.length === 0 && doneGroups.length === 0 && blocks.length === 0 && (
-              <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
+                ))}
+              </DoneRow>
             )}
           </div>
         ) : null}

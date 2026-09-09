@@ -6,9 +6,10 @@
  * aisle, or from the grocery's own panel, and watches a same-named row follow,
  * because an Aisle Link is a fact about a name at a Store (ADR-0031); unfiles
  * by dragging back to the top; renames and removes an aisle and sees the rows
- * come back unfiled. The real Norish server, database, Redis, tRPC and
- * realtime are all in the path; nothing outbound is, because a plain Store
- * needs no shop.
+ * come back unfiled; ticks a row and watches it fold into the Store's done
+ * row; drops a row on a Store that is nothing but a heading. The real Norish
+ * server, database, Redis, tRPC and realtime are all in the path; nothing
+ * outbound is, because a plain Store needs no shop.
  */
 import type { Page } from "@playwright/test";
 
@@ -79,6 +80,13 @@ async function rowsOf(storeName: string = STORE): Promise<string[]> {
 /** The aisle headings of the Store's block, top to bottom. */
 function headingsOf(storeName: string = STORE) {
   return storeBlock(storeName).getByTestId("aisle-heading");
+}
+
+/** The aisle names of the Store's block, top to bottom; a filled heading also carries its count. */
+async function aisleNamesOf(storeName: string = STORE): Promise<string[]> {
+  return headingsOf(storeName).evaluateAll((headings) =>
+    headings.map((heading) => heading.getAttribute("data-aisle-name") ?? "")
+  );
 }
 
 /** One aisle's block within the Store's: its heading and what is filed under it. */
@@ -204,7 +212,7 @@ test("a Store given two aisles shows both headings, with the list unchanged abov
   await expect.poll(() => readStoreAisles(STORE)).toEqual(["Groente", "Zuivel"]);
   // Every aisle is a heading, in the Store's order, empty ones quieter; and
   // nothing has been filed, so every row still sits at the top, as it was.
-  await expect(headingsOf()).toHaveText(["Groente", "Zuivel"]);
+  await expect.poll(() => aisleNamesOf()).toEqual(["Groente", "Zuivel"]);
   await expect(headingsOf().first()).toHaveAttribute("data-aisle-empty", "true");
   expect(await rowsOf()).toEqual(before);
 
@@ -242,10 +250,13 @@ test("filing a name from the panel moves the row and its same-named sibling, her
     "data-aisle-empty",
     "false"
   );
+  // A filled aisle's heading says how many lines are under it; an empty one says nothing.
+  await expect(aisleBlock("Zuivel").getByTestId("aisle-count")).toHaveText("2");
+  await expect(aisleBlock("Groente").getByTestId("aisle-count")).toHaveCount(0);
 
   // Where a shopper actually arrives: a fresh list, filed by what the Store remembers.
   await page.reload();
-  await expect(headingsOf()).toHaveText(["Groente", "Zuivel"]);
+  await expect.poll(() => aisleNamesOf()).toEqual(["Groente", "Zuivel"]);
   expect(await rowsIn("Zuivel")).toEqual(["halfvolle melk", "halfvolle melk"]);
   expect(sorted(await unfiledRows())).toEqual(["komkommer", "kwark"]);
 
@@ -271,7 +282,7 @@ test("renaming an aisle keeps what is filed under it; removing it returns the ro
   await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
   await closeStoreManager();
 
-  await expect(headingsOf()).toHaveText(["Groente", "Zuivel en kaas"]);
+  await expect.poll(() => aisleNamesOf()).toEqual(["Groente", "Zuivel en kaas"]);
   expect(await rowsIn("Zuivel en kaas")).toEqual(["halfvolle melk", "halfvolle melk"]);
   await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBe("Zuivel en kaas");
 
@@ -282,10 +293,10 @@ test("renaming an aisle keeps what is filed under it; removing it returns the ro
   await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
   await closeStoreManager();
 
-  await expect(headingsOf()).toHaveText(["Groente"]);
+  await expect.poll(() => aisleNamesOf()).toEqual(["Groente"]);
   await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBeNull();
   await page.reload();
-  await expect(headingsOf()).toHaveText(["Groente"]);
+  await expect.poll(() => aisleNamesOf()).toEqual(["Groente"]);
   await expect(storeBlock().locator("[data-grocery-name]")).toHaveCount(4);
   expect(sorted(await unfiledRows())).toEqual([
     "halfvolle melk",
@@ -302,6 +313,8 @@ test("in the grouped list, kip and kip (diepvries) are two groups once filed apa
   await setGrouped(true);
   // One grouping name, so one group, while neither is filed.
   await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(1);
+  // Two manual sources in one group: the breakdown line still names them.
+  await expect(storeBlock().locator("[data-grocery-name='kip']")).toContainText("Manual Items");
   await setGrouped(false);
 
   // Filed apart — "kip" in Groente, "kip (diepvries)" in Zuivel — they are two
@@ -321,13 +334,20 @@ test("in the grouped list, kip and kip (diepvries) are two groups once filed apa
   await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(2);
   expect(await rowsIn("Groente")).toEqual(["kip"]);
   expect(await rowsIn("Zuivel")).toEqual(["kip"]);
+  // Each is now a single manual row, with nothing more to say: no "Manual Items" line under it.
+  await expect(storeBlock().locator("[data-grocery-name='kip']").first()).not.toContainText(
+    "Manual Items"
+  );
+  await expect(storeBlock().locator("[data-grocery-name='kip']").last()).not.toContainText(
+    "Manual Items"
+  );
   await setGrouped(false);
 });
 
 test("dragging a row into an aisle files its name, and the same-named row follows", async () => {
   await page.goto("/groceries");
   // Two rows named "halfvolle melk" sit unfiled since their aisle was removed.
-  await expect(headingsOf()).toHaveText(["Groente", "Zuivel"]);
+  await expect.poll(() => aisleNamesOf()).toEqual(["Groente", "Zuivel"]);
 
   await dragRowTo("halfvolle melk", aisleTarget("Zuivel"));
 
@@ -367,33 +387,68 @@ test("dragging a row into another Store's aisle moves it there and files it ther
   expect(await readAisleFiling(STORE, "kwark")).toBeNull();
 });
 
-test("a ticked grocery sinks into the Store's done tail, under a heading of its own", async () => {
+test("a ticked grocery folds into the Store's done row; unticked from there, it returns to its aisle", async () => {
   await page.goto("/groceries");
-  await expect(storeBlock().getByTestId("done-heading")).toBeHidden();
+  // "kip" is filed in Groente, and nothing in this Store is done yet.
+  await expect.poll(() => rowsIn("Groente")).toContain("kip");
+  const doneRow = () => storeBlock().getByTestId("done-heading");
+
+  await expect(doneRow()).toBeHidden();
 
   // The visible checkbox, clicked the way a shopper clicks it; the input
   // behind it is hidden from the pointer.
-  const tick = () =>
-    storeBlock()
-      .locator('[data-grocery-name="komkommer"]')
-      .locator('[data-slot="checkbox"]')
-      .click();
+  const kip = () => storeBlock().locator('[data-grocery-name="kip"]');
 
-  await tick();
+  await kip().locator('[data-slot="checkbox"]').click();
 
-  await expect(storeBlock().getByTestId("done-heading")).toBeVisible();
-  // Under the last aisle heading, and above the ticked row.
-  const lastHeading = headingsOf().last();
-  const doneHeading = storeBlock().getByTestId("done-heading");
+  // The row leaves its aisle for one closed row at the bottom of the card that counts it.
+  await expect(doneRow()).toBeVisible();
+  await expect(doneRow()).toHaveAttribute("data-state", "closed");
+  await expect(doneRow()).toContainText("1 done");
+  await expect(kip()).toHaveCount(0);
+  expect(await rowsIn("Groente")).not.toContain("kip");
 
-  expect(
-    await doneHeading.evaluate(
-      (heading, aisle) =>
-        Boolean(aisle.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING),
-      await lastHeading.elementHandle()
-    )
-  ).toBe(true);
+  // Opened, the done row shows it struck through, checkbox filled.
+  await doneRow().getByRole("button").first().click();
+  await expect(doneRow()).toHaveAttribute("data-state", "open");
+  await expect(kip()).toBeVisible();
+  await expect(kip().locator(".line-through")).toBeVisible();
 
-  await tick();
-  await expect(storeBlock().getByTestId("done-heading")).toBeHidden();
+  // Unticking it there returns it to Groente, and the done row goes with it.
+  await kip().locator('[data-slot="checkbox"]').click();
+  await expect(doneRow()).toBeHidden();
+  await expect.poll(() => rowsIn("Groente")).toContain("kip");
+});
+
+test("an empty Store is its heading alone, takes a dropped row, and reads All done once that is ticked", async () => {
+  const slager = "Slager";
+
+  await createPlainStore(slager);
+  await page.goto("/groceries");
+
+  // A heading on the ground — the dot, the name, what is left — and no card under it.
+  const heading = storeTarget(slager);
+
+  await expect(heading).toBeVisible();
+  await expect(heading.getByTestId("store-dot")).toBeVisible();
+  await expect(heading.getByTestId("store-meta")).toHaveText("0 items");
+  await expect(storeBlock(slager).getByTestId("store-card")).toHaveCount(0);
+
+  // A bare heading is still somewhere to drop a row; the card grows under it.
+  await dragRowTo("komkommer", heading);
+
+  await expect(storeBlock(slager).getByTestId("store-card")).toBeVisible();
+  await expect.poll(() => rowsOf(slager)).toEqual(["komkommer"]);
+  await expect(heading.getByTestId("store-meta")).toHaveText("1 item");
+
+  // Everything ticked: the dot becomes a check, the meta says so, the card is the done row alone.
+  await storeBlock(slager)
+    .locator('[data-grocery-name="komkommer"]')
+    .locator('[data-slot="checkbox"]')
+    .click();
+
+  await expect(heading.getByTestId("store-meta")).toHaveText("All done");
+  await expect(heading.getByTestId("store-dot")).toHaveAttribute("data-store-done", "true");
+  await expect(storeBlock(slager).getByTestId("done-heading")).toContainText("1 done");
+  await expect(storeBlock(slager).locator("[data-grocery-name]")).toHaveCount(0);
 });

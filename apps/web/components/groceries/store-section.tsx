@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
-import { AisleHeading, DoneHeading } from "./aisle-heading";
+import { AisleHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
@@ -15,12 +15,13 @@ import {
   UNSORTED_CONTAINER,
   useDndGroceryContext,
 } from "./dnd";
+import { DoneRow } from "./done-row";
 import { GroceryItem } from "./grocery-item";
 import { storeColorStyle } from "./store-colors";
 import { StoreHeading } from "./store-heading";
-import { StoreHeadingTotal } from "./store-heading-total";
 import { lineOf } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";
+import { useStoreTotal } from "./use-store-total";
 
 interface StoreSectionProps {
   store: StoreDto | null; // null = Unsorted
@@ -40,6 +41,7 @@ interface StoreSectionProps {
 
 // Delay before reordering after toggle (ms)
 const REORDER_DELAY = 600;
+
 function StoreSectionComponent({
   store,
   groceries,
@@ -70,6 +72,7 @@ function StoreSectionComponent({
   // Cleanup timeouts on unmount
   useEffect(() => {
     const timeouts = timeoutRefs.current;
+
     return () => {
       timeouts.forEach((timeout) => clearTimeout(timeout));
     };
@@ -87,36 +90,41 @@ function StoreSectionComponent({
 
         // Clear any existing timeout for this id
         const existingTimeout = timeoutRefs.current.get(id);
+
         if (existingTimeout) clearTimeout(existingTimeout);
 
         // Remove from transitioning after delay
         const timeout = setTimeout(() => {
           setTransitioningIds((prev) => {
             const next = new Set(prev);
+
             next.delete(id);
+
             return next;
           });
           timeoutRefs.current.delete(id);
         }, REORDER_DELAY);
+
         timeoutRefs.current.set(id, timeout);
       }
     },
     [onToggle]
   );
-  // The Store's colour is one property on its section; Unsorted has none.
-  const headerTint = store ? "bg-(--store-color)/10" : "bg-surface-secondary";
   const activeCount = groceries.filter((g) => !g.isDone).length;
   const doneCount = groceries.filter((g) => g.isDone).length;
   // The flat list prices every row as its own purchase.
   const priceLines = useMemo(() => groceries.map(lineOf), [groceries]);
+  const total = useStoreTotal(priceLines, store?.id ?? null);
 
   // Build a map for quick grocery lookup - uses ALL groceries so we can
   // render items that are dragged from other stores during drag operations
   const groceryMap = useMemo(() => {
     const map = new Map<string, GroceryDto>();
+
     for (const g of allGroceries) {
       map.set(g.id, g);
     }
+
     return map;
   }, [allGroceries]);
 
@@ -154,6 +162,10 @@ function StoreSectionComponent({
   } = useAisleBlocks(containerId, store?.aisles, activeIn);
   const firstActiveId = activeGroceries[0]?.id;
   const lastActiveId = doneGroceries.length === 0 ? activeGroceries.at(-1)?.id : undefined;
+  // The card holds something to show — a row, the done tail, or an aisle's
+  // heading to drag into — or the section is its heading alone.
+  const hasCard =
+    isExpanded && (activeGroceries.length > 0 || doneGroceries.length > 0 || blocks.length > 0);
   const renderActive = (grocery: GroceryDto) => {
     const recurringGrocery = grocery.recurringGroceryId
       ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
@@ -181,31 +193,27 @@ function StoreSectionComponent({
     <StoreHeading
       actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone } : undefined}
       activeCount={activeCount}
-      className={headerTint}
       doneCount={doneCount}
       dot={store !== null}
       dropTarget={store?.id ?? "unsorted"}
       expanded={isExpanded}
       name={store?.name ?? t("unsorted")}
-      total={<StoreHeadingTotal lines={priceLines} storeId={store?.id ?? null} />}
+      total={total}
       onExpandedChange={setIsExpanded}
     />
   );
+
   return (
     <motion.div
       ref={sectionRef}
       className="relative"
       data-store-id={store?.id ?? "unsorted"}
-      style={store ? storeColorStyle(store.color) : undefined}
+      style={storeColorStyle(store?.color ?? null)}
     >
-      {/* Entire section wrapped in SortableStoreContainer - header + items are droppable */}
-      <SortableStoreContainer
-        header={headerElement}
-        headerBgClass={headerTint}
-        storeId={store?.id ?? null}
-      >
-        {/* Items area - only shown when expanded */}
-        {isExpanded ? (
+      {/* The whole section is the droppable: a drop on the heading lands in the Store */}
+      <SortableStoreContainer header={headerElement} storeId={store?.id ?? null}>
+        {/* The card, where there is a row, a done tail or an aisle to show; otherwise the heading stands alone */}
+        {hasCard ? (
           <div className="divide-border divide-y">
             {/* Unfiled rows first, under no heading, so they are noticed and filed */}
             {unfiled.map(renderActive)}
@@ -216,9 +224,7 @@ function StoreSectionComponent({
                 key={aisle.id}
                 activeId={activeId}
                 aisleId={aisle.id}
-                header={
-                  <AisleHeading aisleId={aisle.id} empty={rows.length === 0} name={aisle.name} />
-                }
+                header={<AisleHeading aisleId={aisle.id} count={rows.length} name={aisle.name} />}
                 itemIds={getItemsForContainer(aisleContainerId(aisle.id))}
                 overContainerId={overContainerId}
               >
@@ -226,36 +232,29 @@ function StoreSectionComponent({
               </SortableAisleContainer>
             ))}
 
-            {/* The done tail, said so where aisle headings would otherwise claim it */}
-            {blocks.length > 0 && doneGroceries.length > 0 && <DoneHeading />}
+            {/* The done tail, folded into one row that opens on tap; not sortable */}
+            {doneGroceries.length > 0 && (
+              <DoneRow count={doneGroceries.length}>
+                {doneGroceries.map((grocery, index) => {
+                  const recurringGrocery = grocery.recurringGroceryId
+                    ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
+                    : null;
 
-            {/* Done items - not sortable, just rendered */}
-            {doneGroceries.map((grocery, index) => {
-              const recurringGrocery = grocery.recurringGroceryId
-                ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
-                : null;
-              const isFirst = index === 0 && activeGroceries.length === 0;
-              const isLast = index === doneGroceries.length - 1;
-              return (
-                <div key={grocery.id}>
-                  <GroceryItem
-                    grocery={grocery}
-                    isFirst={isFirst}
-                    isLast={isLast}
-                    recipeName={getRecipeNameForGrocery?.(grocery)}
-                    recurringGrocery={recurringGrocery}
-                    store={store}
-                    onDelete={onDelete}
-                    onEdit={onEdit}
-                    onToggle={handleToggle}
-                  />
-                </div>
-              );
-            })}
-
-            {/* Empty state - only when nothing is here and the Store has no aisles to show its shape */}
-            {activeGroceries.length === 0 && doneGroceries.length === 0 && blocks.length === 0 && (
-              <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
+                  return (
+                    <GroceryItem
+                      key={grocery.id}
+                      grocery={grocery}
+                      isLast={index === doneGroceries.length - 1}
+                      recipeName={getRecipeNameForGrocery?.(grocery)}
+                      recurringGrocery={recurringGrocery}
+                      store={store}
+                      onDelete={onDelete}
+                      onEdit={onEdit}
+                      onToggle={handleToggle}
+                    />
+                  );
+                })}
+              </DoneRow>
             )}
           </div>
         ) : null}

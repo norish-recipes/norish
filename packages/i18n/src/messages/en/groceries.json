@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Unsorted",
-    "noItems": "No items in this store",
     "storeActions": "Store actions",
     "markAllDone": "Mark all done",
     "deleteDone": "Delete done",
     "done": "{count} done",
-    "total": "Still to buy",
-    "doneHeading": "Done"
+    "allDone": "All done",
+    "total": "Still to buy"
   },
   "storeManager": {
     "title": "Manage Stores",

@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Nieposortowane",
-    "noItems": "Brak produktów w tym sklepie",
     "storeActions": "Akcje sklepu",
     "markAllDone": "Zaznacz wszystkie",
     "deleteDone": "Usuń zaznaczone",
     "done": "{count} gotowe",
-    "total": "Jeszcze do kupienia",
-    "doneHeading": "Zrobione"
+    "allDone": "Wszystko gotowe",
+    "total": "Jeszcze do kupienia"
   },
   "storeManager": {
     "title": "Zarządzaj sklepami",

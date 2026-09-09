@@ -1,6 +1,6 @@
 # 03: Headings on the ground, rows in a card
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 02
 
 Spec: `.scratch/redesign-groceries-page/spec.md`
@@ -23,10 +23,10 @@ The same shape applies to the grouped view, to the By Recipe view (no dot, count
 
 ## Acceptance criteria
 
-- [ ] Each section is a heading on the ground over a white card, in the flat, grouped and By Recipe views, light and dark, phone and desktop; no tinted header remains.
-- [ ] The heading meta reads the remaining count and the total, or the count alone, or "All done" with the check-in-dot when nothing remains and something is done.
-- [ ] A collapsed or empty section is its heading alone; the empty-card sentence is gone.
-- [ ] E2E: a Store heading shows its remaining count and total and no icon; an empty Store is a bare heading that still receives a dropped row and grows its card; a fully ticked Store reads All done.
-- [ ] Dragging shows the ring on a targeted card and the soft fill on a targeted bare heading, and nothing on the page moves at drag start.
-- [ ] The skeleton follows the new shape.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.
+- [x] Each section is a heading on the ground over a white card, in the flat, grouped and By Recipe views, light and dark, phone and desktop; no tinted header remains.
+- [x] The heading meta reads the remaining count and the total, or the count alone, or "All done" with the check-in-dot when nothing remains and something is done.
+- [x] A collapsed or empty section is its heading alone; the empty-card sentence is gone.
+- [x] E2E: a Store heading shows its remaining count and total and no icon; an empty Store is a bare heading that still receives a dropped row and grows its card; a fully ticked Store reads All done.
+- [x] Dragging shows the ring on a targeted card and the soft fill on a targeted bare heading, and nothing on the page moves at drag start.
+- [x] The skeleton follows the new shape.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.

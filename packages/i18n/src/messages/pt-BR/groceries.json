@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Sem classificação",
-    "noItems": "Nenhum item nesta loja",
     "storeActions": "Ações da loja",
     "markAllDone": "Marcar tudo como concluído",
     "deleteDone": "Excluir concluídos",
     "done": "{count} concluído(s)",
-    "total": "Ainda por comprar",
-    "doneHeading": "Feito"
+    "allDone": "Tudo feito",
+    "total": "Ainda por comprar"
   },
   "storeManager": {
     "title": "Gerenciar lojas",

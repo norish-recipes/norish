@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { formatShelfPrice } from "@/lib/format-price";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -9,7 +9,9 @@ import {
 } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Label } from "@heroui/react";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { StoreTotal } from "./store-total";
 
 /** Mark all done and Delete done: what a section's kebab holds, and all it holds. */
 export interface StoreHeadingActions {
@@ -24,74 +26,99 @@ interface StoreHeadingProps {
   dot?: boolean;
   activeCount: number;
   doneCount: number;
-  /** What is still to buy costs this, rendered by the list, which knows how it prices its rows. */
-  total?: ReactNode;
+  /** What is still to buy costs this; null where nothing under the heading is priced, or the section has no Store. */
+  total?: StoreTotal | null;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   /** The kebab's actions; absent where the section has no kebab, as a recipe's has not. */
   actions?: StoreHeadingActions;
   /** What the drag helpers find a Store's heading by; a recipe section is no drop target. */
   dropTarget?: string;
-  className?: string;
 }
 
 /**
  * The heading of one section of the list — a Store's, Unsorted's or a
- * recipe's — shared by the flat, the grouped and the By Recipe view so that
+ * recipe's — directly on the page ground, with the section's rows in a card
+ * beneath it. Shared by the flat, the grouped and the By Recipe view so that
  * there is one place the shape lives: the dot where there is a Store, the
  * name, what is left and what it costs, the chevron that folds the section,
  * and the kebab with Mark all done and Delete done.
+ *
+ * The colour appears only where it marks: the dot, which becomes a filled
+ * circle with a check once everything under the heading is ticked, when the
+ * meta reads All done in place of the count.
  */
 export function StoreHeading({
   name,
   dot = false,
   activeCount,
   doneCount,
-  total,
+  total = null,
   expanded,
   onExpandedChange,
   actions,
   dropTarget,
-  className = "",
 }: StoreHeadingProps) {
   const t = useTranslations("groceries.store");
+  const tItem = useTranslations("groceries.item");
+  const locale = useLocale();
+  const allDone = activeCount === 0 && doneCount > 0;
 
   return (
     <div
-      className={`flex w-full items-center gap-3 rounded-t-xl px-4 py-3 ${className}`}
+      className="flex w-full items-center gap-2 py-1.5 pr-1 pl-2"
       data-store-drop-target={dropTarget}
     >
       <button
-        className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:opacity-90"
+        aria-expanded={expanded}
+        className="flex min-w-0 flex-1 items-center gap-2.5 text-left transition-opacity hover:opacity-80"
         type="button"
         onClick={() => onExpandedChange(!expanded)}
       >
-        {/* The Store's mark: a dot in its colour, and nothing more */}
+        {/* The Store's mark: a dot in its colour, or a check in a disc of it once the Store is done */}
         {dot && (
-          <span
-            aria-hidden
-            className="h-2.5 w-2.5 shrink-0 rounded-full bg-(--store-color)"
-            data-testid="store-dot"
-          />
-        )}
-
-        {/* Name and count */}
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="truncate font-semibold">{name}</span>
-          <span className="text-muted shrink-0 text-sm">
-            {activeCount > 0 && <span>{activeCount}</span>}
-            {doneCount > 0 && (
-              <span className="text-muted ml-1">({t("done", { count: doneCount })})</span>
+          <span aria-hidden className="flex h-4 w-4 shrink-0 items-center justify-center">
+            {allDone ? (
+              <span
+                className="flex h-4 w-4 items-center justify-center rounded-full bg-(--store-color)"
+                data-store-done="true"
+                data-testid="store-dot"
+              >
+                <CheckIcon className="h-3 w-3 text-white" />
+              </span>
+            ) : (
+              <span
+                className="h-2.5 w-2.5 rounded-full bg-(--store-color)"
+                data-testid="store-dot"
+              />
             )}
           </span>
-        </div>
+        )}
 
-        {total}
+        <span className="min-w-0 truncate font-semibold">{name}</span>
 
-        {/* Expand/collapse chevron */}
+        {/* What is left and what it costs, or that nothing is left */}
+        <span className="text-muted shrink-0 text-sm tabular-nums" data-testid="store-meta">
+          {allDone ? (
+            t("allDone")
+          ) : (
+            <>
+              {tItem("items", { count: activeCount })}
+              {total && (
+                <>
+                  {" · "}
+                  <span data-testid="store-total" title={t("total")}>
+                    {formatShelfPrice(locale, total.amount, total.currency)}
+                  </span>
+                </>
+              )}
+            </>
+          )}
+        </span>
+
         <motion.div
           animate={{ rotate: expanded ? 180 : 0 }}
-          className="text-muted shrink-0"
+          className="text-muted ml-auto shrink-0"
           transition={{ duration: 0.2 }}
         >
           <ChevronDownIcon className="h-5 w-5" />

@@ -300,6 +300,8 @@ test("700 g of a 500 g pack is two packs, on the row and at the heading", async 
     Number(text?.match(/\d+[.,]\d{2}/)?.[0].replace(",", ".") ?? 0);
 
   await expect(section.getByTestId("store-total")).toBeVisible();
+  // The heading reads what is left and what it costs, in one line.
+  await expect(section.getByTestId("store-meta")).toContainText(/\d+ items · /);
   const heading = money(await section.getByTestId("store-total").textContent());
   const costs = await section.getByTestId("grocery-line-cost").allTextContents();
   const sum = costs.map(money).reduce((total, cost) => Math.round((total + cost) * 100) / 100, 0);

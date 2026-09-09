@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Non trié",
-    "noItems": "Aucun article dans ce magasin",
     "storeActions": "Actions du magasin",
     "markAllDone": "Tout marquer comme fait",
     "deleteDone": "Supprimer les articles faits",
     "done": "{count} effectués",
-    "total": "Reste à acheter",
-    "doneHeading": "Fait"
+    "allDone": "Tout est fait",
+    "total": "Reste à acheter"
   },
   "storeManager": {
     "title": "Gérer les magasins",

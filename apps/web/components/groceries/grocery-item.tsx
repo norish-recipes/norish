@@ -9,6 +9,7 @@ import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/c
 
 import { GroceryCheckbox } from "./grocery-checkbox";
 import { GroceryPrice } from "./grocery-price";
+import { storeColorStyle } from "./store-colors";
 import { lineOf } from "./store-total";
 
 interface GroceryItemProps {
@@ -25,6 +26,7 @@ interface GroceryItemProps {
 
 function GroceryItemComponent({
   grocery,
+  store,
   recurringGrocery,
   recipeName,
   onToggle,
@@ -36,19 +38,22 @@ function GroceryItemComponent({
     isFirst && isLast ? "rounded-lg" : isFirst ? "rounded-t-lg" : isLast ? "rounded-b-lg" : "";
   const t = useTranslations("groceries.item");
   const { formatAmountUnit } = useUnitFormatter();
-  const hasSubtitle = Boolean(recurringGrocery || recipeName);
 
   const amountDisplay = formatAmountUnit(grocery.amount, grocery.unit);
 
   return (
     <div
-      className={`bg-surface flex items-center gap-3 px-4 py-3 pl-10 ${roundedClass} ${hasSubtitle ? "min-h-[72px]" : "min-h-14"}`}
+      className={`bg-surface flex min-h-12 items-center gap-3 px-4 py-3 pl-10 ${roundedClass}`}
       data-grocery-name={grocery.name ?? ""}
       data-testid="grocery-row"
+      // In the By Recipe view the row is the only thing that knows its Store,
+      // so its checkbox takes that Store's colour from here; under a Store's
+      // own heading this says what the section already says.
+      style={store ? storeColorStyle(store.color) : undefined}
     >
       <GroceryCheckbox
-        aria-label={grocery.name || t("unnamedItem")}
         delayChangeOnSelect
+        aria-label={grocery.name || t("unnamedItem")}
         isSelected={grocery.isDone}
         size="lg"
         onChange={(checked) => onToggle(grocery.id, checked)}

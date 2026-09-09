@@ -68,6 +68,25 @@ function checkboxOf(name: string) {
   return rowFor(name).locator('[data-slot="checkbox"]').first();
 }
 
+/**
+ * A ticked row folds into the Store's done row, closed until tapped; open it
+ * so the row can be looked at. A row un-done by a stale refetch would be back
+ * among the active rows instead, and the done row gone with it.
+ */
+async function openDoneRow(): Promise<void> {
+  const doneRow = page
+    .locator("[data-store-id]")
+    .filter({ has: page.locator("[data-store-drop-target]").filter({ hasText: STORE }) })
+    .last()
+    .getByTestId("done-heading");
+
+  await expect(doneRow).toBeVisible();
+  if ((await doneRow.getAttribute("data-state")) !== "open") {
+    await doneRow.getByRole("button").first().click();
+  }
+  await expect(doneRow).toHaveAttribute("data-state", "open");
+}
+
 test("a grocery ticked after another was added to its Store stays done", async () => {
   await page.goto("/groceries");
   await addGrocery("versie-appel");
@@ -85,6 +104,7 @@ test("a grocery ticked after another was added to its Store stays done", async (
     .toBe(true);
   // Long enough for a stale-driven refetch, were there one, to have un-done it.
   await page.waitForTimeout(3000);
+  await openDoneRow();
   await expect(rowFor("versie-appel").getByRole("checkbox")).toBeChecked();
   expect((await readGrocery("versie-appel"))?.isDone).toBe(true);
 });
@@ -98,5 +118,6 @@ test("and so does the one added last, with nothing moved since", async () => {
     })
     .toBe(true);
   await page.waitForTimeout(3000);
+  await openDoneRow();
   await expect(rowFor("versie-peer").getByRole("checkbox")).toBeChecked();
 });

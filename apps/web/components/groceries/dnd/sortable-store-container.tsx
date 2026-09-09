@@ -19,29 +19,27 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) =>
 
 interface SortableStoreContainerProps {
   storeId: string | null; // null = unsorted
-  /** Content to render inside the sortable area (the grocery items) */
-  children: ReactNode;
-  /** Header element to render - will be part of the droppable area */
-  header?: ReactNode;
-  /** Background class for the header */
-  headerBgClass?: string;
+  /** The heading, on the page ground; part of the droppable, so a collapsed or empty Store still takes a drop. */
+  header: ReactNode;
+  /** What the card holds, or null where the section is its heading alone. */
+  children: ReactNode | null;
 }
 
-/** Wraps a store section as a droppable container. Uses useSortable for proper drag detection. */
-export function SortableStoreContainer({
-  storeId,
-  children,
-  header,
-  headerBgClass = "",
-}: SortableStoreContainerProps) {
+/**
+ * One Store's section as a droppable: its heading on the ground and, where
+ * there is anything to show, the card beneath it. Nothing is added to or
+ * taken from the page when a drag starts; while a drag is over the section
+ * the card takes the accent ring, and a heading with no card under it a soft
+ * accent fill, so a collapsed or empty Store still says it will take the row.
+ */
+export function SortableStoreContainer({ storeId, header, children }: SortableStoreContainerProps) {
   const containerId: ContainerId = storeId ?? UNSORTED_CONTAINER;
 
   // Get items from DnD context - this updates during drag
   const { getItemsForContainer, overContainerId, activeId } = useDndGroceryContext();
   const itemIds = getItemsForContainer(containerId);
 
-  // Use useSortable for containers (like reference implementation)
-  // This makes the whole container (including header) a valid drop target
+  // The whole section, heading included, is the drop target
   const { active, over, setNodeRef, transition } = useSortable({
     id: containerId,
     data: {
@@ -60,13 +58,12 @@ export function SortableStoreContainer({
   // Show visual indicator when dragging over this container
   const showDropIndicator =
     activeId !== null && (overContainerId === containerId || isOverContainer);
+  const hasCard = children !== null;
 
   return (
     <div
       ref={setNodeRef}
-      className={`border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-all duration-200 ${
-        showDropIndicator ? "ring-accent ring-2" : ""
-      }`}
+      className="flex flex-col gap-1.5"
       data-is-over={isOverContainer}
       data-store-id={containerId}
       style={{
@@ -74,13 +71,26 @@ export function SortableStoreContainer({
         // Don't transform containers, only their items
       }}
     >
-      {/* Header is part of the droppable area */}
-      {header && <div className={headerBgClass}>{header}</div>}
+      <div
+        className={`rounded-lg transition-colors duration-200 ${
+          showDropIndicator && !hasCard ? "bg-accent-soft" : ""
+        }`}
+      >
+        {header}
+      </div>
 
-      {/* Items area with sortable context */}
-      <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-        {children}
-      </SortableContext>
+      {hasCard && (
+        <div
+          className={`border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-shadow duration-200 ${
+            showDropIndicator ? "ring-accent ring-2" : ""
+          }`}
+          data-testid="store-card"
+        >
+          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+            {children}
+          </SortableContext>
+        </div>
+      )}
     </div>
   );
 }

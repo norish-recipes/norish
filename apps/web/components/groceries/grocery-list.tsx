@@ -148,7 +148,7 @@ export function GroceryList({
         onFileGroceryName={fileGroceryName}
         onReorderGroups={onReorderInStore ?? (() => {})}
       >
-        <div className="flex flex-col gap-3 p-1">
+        <div className="flex flex-col gap-4 p-1">
           {/* Unsorted section */}
           <motion.div
             key="unsorted"
@@ -219,7 +219,7 @@ export function GroceryList({
       onFileGroceryName={fileGroceryName}
       onReorderInStore={onReorderInStore ?? (() => {})}
     >
-      <div className="flex flex-col gap-3 p-1">
+      <div className="flex flex-col gap-4 p-1">
         {/* Unsorted section - always rendered when dragging or has items, so it's a valid drop target */}
         <motion.div
           key="unsorted"
