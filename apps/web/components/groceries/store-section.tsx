@@ -162,9 +162,9 @@ function StoreSectionComponent({
   } = useAisleBlocks(containerId, store?.aisles, activeIn);
   const firstActiveId = activeGroceries[0]?.id;
   const lastActiveId = doneGroceries.length === 0 ? activeGroceries.at(-1)?.id : undefined;
-  // The card holds something to show — a row, the done tail, or an aisle's
-  // heading to drag into — or the section is its heading alone.
-  const hasCard =
+  // There is something to show under the heading — a row, the done tail, or an
+  // aisle's heading to drag into — or the card is its heading bar alone.
+  const hasRows =
     isExpanded && (activeGroceries.length > 0 || doneGroceries.length > 0 || blocks.length > 0);
   const renderActive = (grocery: GroceryDto) => {
     const recurringGrocery = grocery.recurringGroceryId
@@ -212,8 +212,8 @@ function StoreSectionComponent({
     >
       {/* The whole section is the droppable: a drop on the heading lands in the Store */}
       <SortableStoreContainer header={headerElement} storeId={store?.id ?? null}>
-        {/* The card, where there is a row, a done tail or an aisle to show; otherwise the heading stands alone */}
-        {hasCard ? (
+        {/* The rows, where there is a row, a done tail or an aisle to show; otherwise the heading bar stands alone */}
+        {hasRows ? (
           <div className="divide-border divide-y">
             {/* Unfiled rows first, under no heading, so they are noticed and filed */}
             {unfiled.map(renderActive)}

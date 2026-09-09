@@ -126,3 +126,7 @@ Mobile has no automated seam; it is type-checked with the shared table and looke
 - The two docs-screenshot specs share a database and must never run in the same Playwright invocation.
 - Mobile compiles with the React Compiler; a hook alias that is not `use`-prefixed gets memoised into a conditional hook call. Keep that in mind when the shared table is read from a hook there.
 - Tickets follow from this spec, one file per ticket under this directory.
+
+## Post-review changes
+
+Mike's feedback on the first build, applied in the follow-up commits and taking precedence over the decisions above where they differ: the heading is a bar with a background at the top of the Store's card, not bare text on the page ground, so a section is one card again — heading bar over rows — and a collapsed or empty Store is the bar alone, which still takes a drop (the card's ring says so; the soft fill is gone with the bare heading). Unsorted is not rendered while it holds nothing, as on the phone. Aisle headings are `text-sm`, one size larger than first built. And on the grocery panel: the product details panel holds everything about a product — name, price, currency, pack size and the product's page — all of it yours to overwrite, and the price fields are there from the start rather than only after the shop has been asked and failed; a by-hand product may therefore carry a page.

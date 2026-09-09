@@ -19,7 +19,7 @@ export function AisleHeading({ aisleId, name, count }: AisleHeadingProps) {
 
   return (
     <div
-      className={`flex items-baseline gap-1.5 px-4 pt-2.5 pb-1 text-xs font-medium tracking-wide uppercase ${
+      className={`flex items-baseline gap-1.5 px-4 pt-2.5 pb-1 text-sm font-medium tracking-wide uppercase ${
         empty ? "text-muted/50" : "text-muted"
       }`}
       data-aisle-drop-target={aisleId}

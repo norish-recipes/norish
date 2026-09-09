@@ -19,16 +19,16 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) =>
 
 interface SortableGroupedStoreContainerProps {
   storeId: string | null; // null = unsorted
-  /** The heading, on the page ground; part of the droppable, so a collapsed or empty Store still takes a drop. */
+  /** The heading bar at the top of the card; part of the droppable, so a collapsed or empty Store still takes a drop. */
   header: ReactNode;
-  /** What the card holds, or null where the section is its heading alone. */
+  /** The groups under the heading, or null where the card is its heading bar alone. */
   children: ReactNode | null;
 }
 
 /**
  * The grouped list's counterpart of SortableStoreContainer: one Store's
- * section as a droppable, its heading on the ground and the card of groups
- * beneath it where there is anything to show, with the same drop feedback.
+ * section as one card, its heading bar on top and the groups beneath it
+ * where there is anything to show, with the same drop feedback.
  */
 export function SortableGroupedStoreContainer({
   storeId,
@@ -61,34 +61,27 @@ export function SortableGroupedStoreContainer({
   // Show visual indicator when dragging over this container
   const showDropIndicator =
     activeGroupKey !== null && (overContainerId === containerId || isOverContainer);
-  const hasCard = children !== null;
+  const hasRows = children !== null;
 
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col gap-1.5"
+      className={`border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-shadow duration-200 ${
+        showDropIndicator ? "ring-accent ring-2" : ""
+      }`}
       data-is-over={isOverContainer}
       data-store-id={containerId}
+      data-testid="store-card"
       style={{
         transition,
         // Don't transform containers, only their items
       }}
     >
-      <div
-        className={`rounded-lg transition-colors duration-200 ${
-          showDropIndicator && !hasCard ? "bg-accent-soft" : ""
-        }`}
-      >
-        {header}
-      </div>
+      {/* The heading bar; a drop on it lands in the Store, rows or no rows */}
+      <div className="bg-surface-secondary">{header}</div>
 
-      {hasCard && (
-        <div
-          className={`border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-shadow duration-200 ${
-            showDropIndicator ? "ring-accent ring-2" : ""
-          }`}
-          data-testid="store-card"
-        >
+      {hasRows && (
+        <div className="border-border border-t" data-testid="store-rows">
           <SortableContext items={groupKeys} strategy={verticalListSortingStrategy}>
             {children}
           </SortableContext>

@@ -243,24 +243,26 @@ function RecipeSectionComponent({
     return stores.find((s) => s.id === grocery.storeId) ?? null;
   };
 
-  // A recipe's rows in a card under its heading; collapsed, the heading alone.
-  const hasCard = isExpanded && groceries.length > 0;
+  // A recipe's rows under its heading bar, in one card; collapsed, the bar alone.
+  const hasRows = isExpanded && groceries.length > 0;
 
   return (
-    <motion.div className="relative flex flex-col gap-1.5">
-      <StoreHeading
-        activeCount={activeCount}
-        doneCount={doneCount}
-        expanded={isExpanded}
-        name={recipeName}
-        onExpandedChange={setIsExpanded}
-      />
+    <motion.div
+      className="border-border bg-surface shadow-surface relative overflow-hidden rounded-xl border"
+      data-testid="store-card"
+    >
+      <div className="bg-surface-secondary">
+        <StoreHeading
+          activeCount={activeCount}
+          doneCount={doneCount}
+          expanded={isExpanded}
+          name={recipeName}
+          onExpandedChange={setIsExpanded}
+        />
+      </div>
 
-      {hasCard && (
-        <div
-          className="border-border bg-surface shadow-surface overflow-hidden rounded-xl border"
-          data-testid="store-card"
-        >
+      {hasRows && (
+        <div className="border-border border-t" data-testid="store-rows">
           <DndContext
             collisionDetection={closestCenter}
             sensors={sensors}

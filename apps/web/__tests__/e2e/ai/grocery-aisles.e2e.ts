@@ -426,7 +426,7 @@ test("an empty Store is its heading alone, takes a dropped row, and reads All do
   await createPlainStore(slager);
   await page.goto("/groceries");
 
-  // A heading on the ground — the dot, the name, what is left — and no card under it.
+  // A heading bar — the dot, the name, what is left — and no rows under it.
   const heading = storeTarget(slager);
 
   await expect(heading).toBeVisible();
@@ -435,12 +435,12 @@ test("an empty Store is its heading alone, takes a dropped row, and reads All do
   await expect(heading.getByTestId("store-dot").locator("svg")).toHaveCount(0);
   await expect(heading.locator("svg")).toHaveCount(1);
   await expect(heading.getByTestId("store-meta")).toHaveText("0 items");
-  await expect(storeBlock(slager).getByTestId("store-card")).toHaveCount(0);
+  await expect(storeBlock(slager).getByTestId("store-rows")).toHaveCount(0);
 
-  // A bare heading is still somewhere to drop a row; the card grows under it.
+  // A bare heading is still somewhere to drop a row; the rows grow under it.
   await dragRowTo("komkommer", heading);
 
-  await expect(storeBlock(slager).getByTestId("store-card")).toBeVisible();
+  await expect(storeBlock(slager).getByTestId("store-rows")).toBeVisible();
   await expect.poll(() => rowsOf(slager)).toEqual(["komkommer"]);
   await expect(heading.getByTestId("store-meta")).toHaveText("1 item");
 

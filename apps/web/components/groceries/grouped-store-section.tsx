@@ -123,9 +123,9 @@ function GroupedStoreSectionComponent({
   } = useAisleBlocks(containerId, store?.aisles, activeIn);
   const firstActiveKey = activeGroups[0]?.groupKey;
   const lastActiveKey = doneGroups.length === 0 ? activeGroups.at(-1)?.groupKey : undefined;
-  // The card holds something to show — a group, the done tail, or an aisle's
-  // heading to drag into — or the section is its heading alone.
-  const hasCard =
+  // There is something to show under the heading — a group, the done tail, or
+  // an aisle's heading to drag into — or the card is its heading bar alone.
+  const hasRows =
     isExpanded && (activeGroups.length > 0 || doneGroups.length > 0 || blocks.length > 0);
   const renderActive = (group: GroceryGroup) => (
     <SortableGroupItem key={group.groupKey} group={group}>
@@ -167,8 +167,8 @@ function GroupedStoreSectionComponent({
     >
       {/* The whole section is the droppable: a drop on the heading lands in the Store */}
       <SortableGroupedStoreContainer header={headerElement} storeId={store?.id ?? null}>
-        {/* The card, where there is a group, a done tail or an aisle to show; otherwise the heading stands alone */}
-        {hasCard ? (
+        {/* The groups, where there is a group, a done tail or an aisle to show; otherwise the heading bar stands alone */}
+        {hasRows ? (
           <div className="divide-border divide-y">
             {/* Unfiled groups first, under no heading, so they are noticed and filed */}
             {unfiled.map(renderActive)}

@@ -38,8 +38,8 @@ interface StoreHeadingProps {
 
 /**
  * The heading of one section of the list — a Store's, Unsorted's or a
- * recipe's — directly on the page ground, with the section's rows in a card
- * beneath it. Shared by the flat, the grouped and the By Recipe view so that
+ * recipe's — the bar at the top of the section's card, with the rows beneath
+ * it. Shared by the flat, the grouped and the By Recipe view so that
  * there is one place the shape lives: the dot where there is a Store, the
  * name, what is left and what it costs, the chevron that folds the section,
  * and the kebab with Mark all done and Delete done.
@@ -65,10 +65,7 @@ export function StoreHeading({
   const allDone = activeCount === 0 && doneCount > 0;
 
   return (
-    <div
-      className="flex w-full items-center gap-2 py-1.5 pr-1 pl-2"
-      data-store-drop-target={dropTarget}
-    >
+    <div className="flex w-full items-center gap-2 px-3 py-2.5" data-store-drop-target={dropTarget}>
       <button
         aria-expanded={expanded}
         className="flex min-w-0 flex-1 items-center gap-2.5 text-left transition-opacity hover:opacity-80"
