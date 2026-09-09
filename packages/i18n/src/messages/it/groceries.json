@@ -27,7 +27,8 @@
     "markAllDone": "Segna tutto come fatto",
     "deleteDone": "Elimina completati",
     "done": "{count} completati",
-    "total": "Ancora da comprare"
+    "total": "Ancora da comprare",
+    "doneHeading": "Fatto"
   },
   "storeManager": {
     "title": "Gestisci negozi",

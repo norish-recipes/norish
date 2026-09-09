@@ -27,7 +27,8 @@
     "markAllDone": "Zaznacz wszystkie",
     "deleteDone": "Usuń zaznaczone",
     "done": "{count} gotowe",
-    "total": "Jeszcze do kupienia"
+    "total": "Jeszcze do kupienia",
+    "doneHeading": "Zrobione"
   },
   "storeManager": {
     "title": "Zarządzaj sklepami",

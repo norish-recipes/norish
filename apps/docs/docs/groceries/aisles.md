@@ -37,7 +37,8 @@ in the Store's order, whether or not anything is filed under it, an empty one
 quieter than a filled one, so the shop's shape is always visible and there is
 always a place to drag a row. The Store's heading, its total, "Mark all done"
 and "Delete done" stay exactly as they are, and ticked groceries sink into the
-Store's done tail as they always did.
+Store's done tail as they always did, now under a heading of its own, **Done**,
+so they never read as filed in the last aisle.
 
 ![A Store's block shown by aisle, with unfiled rows at the top](/img/screenshots/groceries-aisles-list.png)
 

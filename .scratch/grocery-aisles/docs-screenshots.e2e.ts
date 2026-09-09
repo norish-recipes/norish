@@ -109,7 +109,14 @@ test("captures the list by aisle, with unfiled rows at the top", async () => {
   await fileFromPanel("bananen", "Groente & fruit");
   await fileFromPanel("kipfilet", "Vlees");
   await fileFromPanel("volkorenbrood", "Brood");
-  // "spinazie" stays unfiled, at the top, where it is noticed.
+  // "spinazie" stays unfiled, at the top, where it is noticed; "kipfilet" is
+  // ticked, so the done tail shows under its own heading.
+  await page
+    .locator('[data-grocery-name="kipfilet"]')
+    .first()
+    .locator('[data-slot="checkbox"]')
+    .click();
+  await expect(page.getByTestId("done-heading")).toBeVisible();
 
   await page.reload();
   await expect(page.getByTestId("aisle-heading").first()).toBeVisible();

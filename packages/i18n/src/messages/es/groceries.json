@@ -27,7 +27,8 @@
     "markAllDone": "Marcar todo como comprado",
     "deleteDone": "Eliminar productos comprados",
     "done": "{count} comprados",
-    "total": "Falta por comprar"
+    "total": "Falta por comprar",
+    "doneHeading": "Hecho"
   },
   "storeManager": {
     "title": "Gestionar tiendas",

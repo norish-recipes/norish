@@ -27,7 +27,8 @@
     "markAllDone": "Merk alle som ferdige",
     "deleteDone": "Slett ferdige",
     "done": "{count} ferdige",
-    "total": "Igjen å kjøpe"
+    "total": "Igjen å kjøpe",
+    "doneHeading": "Ferdig"
   },
   "storeManager": {
     "title": "Administrer butikker",

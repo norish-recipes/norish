@@ -31,6 +31,8 @@ type CreateGroceriesResult =
 type CreateRecurringResult = {
   recurringGrocery: RecurringGroceryDto;
   grocery: GroceryDto;
+  /** The siblings the new line shifted down, at their new versions. */
+  shifted?: GroceryDto[];
 };
 
 function createOptimisticGrocery({
@@ -186,12 +188,23 @@ function applyRecurringCreatedToCache(prev: GroceriesData, result: CreateRecurri
   const existingRecurring = prev.recurringGroceries.some(
     (existing) => existing.id === recurringGrocery.id
   );
+  // The siblings the new line shifted down carry new versions: what the
+  // server says they are now replaces the shift guessed here (ADR-0004).
+  const shiftedById = new Map((result.shifted ?? []).map((row) => [row.id, row]));
+  const withShifted = (rows: GroceryDto[]) =>
+    rows.map((row) => {
+      const shifted = shiftedById.get(row.id);
+
+      return shifted ? { ...row, ...shifted } : row;
+    });
 
   return {
     ...prev,
-    groceries: existingGrocery
-      ? prev.groceries.map((existing) => (existing.id === grocery.id ? grocery : existing))
-      : applyCreatedGroceriesToCache(prev.groceries, [grocery]),
+    groceries: withShifted(
+      existingGrocery
+        ? prev.groceries.map((existing) => (existing.id === grocery.id ? grocery : existing))
+        : applyCreatedGroceriesToCache(prev.groceries, [grocery])
+    ),
     recurringGroceries: existingRecurring
       ? prev.recurringGroceries.map((existing) =>
           existing.id === recurringGrocery.id ? recurringGrocery : existing

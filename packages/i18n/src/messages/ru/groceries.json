@@ -27,7 +27,8 @@
     "markAllDone": "Отметить всё как выполненное",
     "deleteDone": "Удалить выполненные",
     "done": "{count, plural, one {# выполнено} few {# выполнено} many {# выполнено} other {# выполнено}}",
-    "total": "Ещё купить"
+    "total": "Ещё купить",
+    "doneHeading": "Готово"
   },
   "storeManager": {
     "title": "Управление магазинами",

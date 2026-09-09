@@ -135,7 +135,10 @@ describe("recurring groceries procedures", () => {
       createRecurringGrocery.mockResolvedValue(
         createMockRecurringGrocery({ id: clientId, name: "Weekly Milk" })
       );
-      createGrocery.mockResolvedValue(createMockGrocery({ id: crypto.randomUUID() }));
+      createGrocery.mockResolvedValue({
+        created: createMockGrocery({ id: crypto.randomUUID() }),
+        shifted: [],
+      });
 
       const caller = recurringGroceriesProcedures.createCaller(createMockCallerContext(ctx));
 
@@ -667,7 +670,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
     const mockGrocery = createMockGrocery({ id: "g1", name: "melk", storeId });
 
     createRecurringGrocery.mockResolvedValue(mockRecurring);
-    createGrocery.mockResolvedValue(mockGrocery);
+    createGrocery.mockResolvedValue({ created: mockGrocery, shifted: [] });
 
     const caller = recurringGroceriesProcedures.createCaller(createMockCallerContext(ctx));
 

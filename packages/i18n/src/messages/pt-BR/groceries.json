@@ -27,7 +27,8 @@
     "markAllDone": "Marcar tudo como concluído",
     "deleteDone": "Excluir concluídos",
     "done": "{count} concluído(s)",
-    "total": "Ainda por comprar"
+    "total": "Ainda por comprar",
+    "doneHeading": "Feito"
   },
   "storeManager": {
     "title": "Gerenciar lojas",

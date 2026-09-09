@@ -267,11 +267,13 @@ describe("StoreManagerPanel, a Store's aisles", () => {
 
     fireEvent.click(screen.getByTestId("action-save"));
 
+    // A known aisle carries the version it was read at (ADR-0004); a new one
+    // has none yet.
     expect(updateStore).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "store-dirk",
         aisles: [
-          { id: "aisle-zuivel", name: "Zuivel en kaas" },
+          { id: "aisle-zuivel", name: "Zuivel en kaas", version: 1 },
           { id: expect.any(String), name: "Groente" },
         ],
       })

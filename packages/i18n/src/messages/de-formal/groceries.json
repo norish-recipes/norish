@@ -27,7 +27,8 @@
     "markAllDone": "Alle abhaken",
     "deleteDone": "Erledigte löschen",
     "done": "{count} erledigt",
-    "total": "Noch zu kaufen"
+    "total": "Noch zu kaufen",
+    "doneHeading": "Erledigt"
   },
   "storeManager": {
     "title": "Geschäfte verwalten",

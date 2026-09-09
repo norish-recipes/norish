@@ -42,14 +42,17 @@ export const AisleSelectSchema = createSelectSchema(aisles).omit({
 });
 
 /**
- * An aisle as the Store editor sends it: a client-minted id (ADR-0003) and a
- * name. Its position in the list is its order. A known id is renamed and
- * repositioned, a new id is created, and an aisle absent from the list is
- * deleted with its Aisle Links.
+ * An aisle as the Store editor sends it: a client-minted id (ADR-0003), a
+ * name, and for a known aisle the version the editor saw. Its position in the
+ * list is its order. A known id is renamed and repositioned where its version
+ * still holds (ADR-0004: the first writer wins, a later one is dropped), a new
+ * id is created, and an aisle absent from the list is deleted with its Aisle
+ * Links.
  */
 export const AisleInputSchema = z.object({
   id: z.uuid(),
   name: AisleNameSchema,
+  version: z.number().int().positive().optional(),
 });
 
 export const StoreAislesInputSchema = z.array(AisleInputSchema);

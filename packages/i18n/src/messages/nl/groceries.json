@@ -27,7 +27,8 @@
     "markAllDone": "Markeer alles als gekocht",
     "deleteDone": "Verwijder gekocht",
     "done": "{count} gedaan",
-    "total": "Nog te kopen"
+    "total": "Nog te kopen",
+    "doneHeading": "Gedaan"
   },
   "storeManager": {
     "title": "Winkels beheren",

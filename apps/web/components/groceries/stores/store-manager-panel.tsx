@@ -73,7 +73,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       color: store.color as StoreColor,
       icon: store.icon,
       link: store.searchAddress ?? store.website ?? "",
-      aisles: sortAisles(store.aisles).map(({ id, name }) => ({ id, name })),
+      aisles: sortAisles(store.aisles).map(({ id, name, version }) => ({ id, name, version })),
     });
   };
   const handleSave = async () => {
@@ -91,8 +91,13 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       (before.searchAddress ?? null) !== searchAddress;
 
     let savedId = editingStore.id;
-    // The whole list, in order: the aisles are saved with the Store, in one write.
-    const aisles = editingStore.aisles.map(({ id, name }) => ({ id, name: name.trim() }));
+    // The whole list, in order: the aisles are saved with the Store, in one
+    // write, each known aisle at the version it was read at (ADR-0004).
+    const aisles = editingStore.aisles.map(({ id, name, version }) => ({
+      id,
+      name: name.trim(),
+      ...(version === undefined ? {} : { version }),
+    }));
 
     if (editingStore.id) {
       updateStore({

@@ -18,7 +18,7 @@ import type {
   StoreDto,
 } from "@norish/shared/contracts";
 
-import { AisleHeading } from "./aisle-heading";
+import { AisleHeading, DoneHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
@@ -311,6 +311,9 @@ function StoreSectionComponent({
                 {rows.map(renderActive)}
               </SortableAisleContainer>
             ))}
+
+            {/* The done tail, said so where aisle headings would otherwise claim it */}
+            {blocks.length > 0 && doneGroceries.length > 0 && <DoneHeading />}
 
             {/* Done items - not sortable, just rendered */}
             {doneGroceries.map((grocery, index) => {

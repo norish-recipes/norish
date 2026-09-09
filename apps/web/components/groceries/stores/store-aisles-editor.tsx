@@ -13,10 +13,11 @@ import { createClientId } from "@norish/shared/lib/operation-helpers";
 /** Aisle names are one to a hundred characters; the fields stop at the hundredth. */
 export const AISLE_NAME_MAX = 100;
 
-/** An aisle as it is being typed: a client-minted id (ADR-0003) and a name. */
+/** An aisle as it is being typed: a client-minted id (ADR-0003), a name, and the version a known one was read at. */
 export interface EditingAisle {
   id: string;
   name: string;
+  version?: number;
 }
 
 interface StoreAislesEditorProps {

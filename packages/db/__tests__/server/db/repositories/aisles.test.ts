@@ -130,6 +130,67 @@ describe("aisles and aisle links", () => {
       ]);
     });
 
+    it("applies a rename made against the version the aisle has, and drops one made against an older one", async () => {
+      const saved = await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] });
+      const version = saved!.aisles[0]!.version;
+
+      // A housemate renames it first; the rename bumps the version.
+      const theirs = await updateStore({
+        id: storeId,
+        aisles: [{ id: ZUIVEL, name: "Zuivel en kaas", version }],
+      });
+
+      expect(theirs!.aisles[0]).toMatchObject({ name: "Zuivel en kaas", version: version + 1 });
+
+      // Ours was made against the version we read, which is no longer the
+      // aisle's: the first writer won (ADR-0004), and nothing is parked or
+      // half-renamed.
+      const ours = await updateStore({
+        id: storeId,
+        aisles: [{ id: ZUIVEL, name: "Melk en kaas", version }],
+      });
+
+      expect(ours!.aisles[0]).toMatchObject({ name: "Zuivel en kaas", version: version + 1 });
+    });
+
+    it("bumps an aisle's version only when its name or place changed", async () => {
+      const saved = await updateStore({
+        id: storeId,
+        aisles: [
+          { id: ZUIVEL, name: "Zuivel" },
+          { id: BROOD, name: "Brood" },
+        ],
+      });
+      const [zuivel, brood] = saved!.aisles;
+
+      const again = await updateStore({
+        id: storeId,
+        color: "sky",
+        aisles: [
+          { id: ZUIVEL, name: "Zuivel" },
+          { id: BROOD, name: "Brood" },
+        ],
+      });
+
+      expect(again!.aisles.map((aisle) => aisle.version)).toEqual([
+        zuivel!.version,
+        brood!.version,
+      ]);
+
+      const moved = await updateStore({
+        id: storeId,
+        aisles: [
+          { id: BROOD, name: "Brood" },
+          { id: ZUIVEL, name: "Zuivel" },
+        ],
+      });
+
+      expect(moved!.aisles.map((aisle) => [aisle.id, aisle.version])).toEqual([
+        [BROOD, brood!.version + 1],
+        [ZUIVEL, zuivel!.version + 1],
+      ]);
+    });
+
     it("leaves the aisles alone when an update says nothing about them", async () => {
       await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] });
 

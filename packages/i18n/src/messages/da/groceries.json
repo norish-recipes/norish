@@ -27,7 +27,8 @@
     "markAllDone": "Markér alle som færdige",
     "deleteDone": "Slet færdige",
     "done": "{count} færdige",
-    "total": "Mangler at købe"
+    "total": "Mangler at købe",
+    "doneHeading": "Færdig"
   },
   "storeManager": {
     "title": "Administrer butikker",

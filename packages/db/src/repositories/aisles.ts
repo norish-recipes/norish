@@ -78,11 +78,18 @@ export async function saveStoreAisles(
     await tx.delete(aisles).where(and(eq(aisles.storeId, storeId), inArray(aisles.id, gone)));
   }
 
+  // An edit made against a version the aisle no longer has is not applied:
+  // the first writer won (ADR-0004), and a housemate's rename stands.
+  const current = (aisle: { id: string; version: number }) => {
+    const next = wanted.get(aisle.id);
+
+    return next !== undefined && (next.version === undefined || next.version === aisle.version);
+  };
   // Renames first step aside, so "Zuivel" and "Brood" can change places.
   const renamed = existing.filter((aisle) => {
     const next = wanted.get(aisle.id);
 
-    return next !== undefined && next.name !== aisle.name;
+    return next !== undefined && next.name !== aisle.name && current(aisle);
   });
 
   for (const aisle of renamed) {
@@ -108,7 +115,8 @@ export async function saveStoreAisles(
         },
         setWhere: and(
           eq(aisles.storeId, storeId),
-          or(ne(aisles.name, aisle.name), ne(aisles.sortOrder, index))
+          or(ne(aisles.name, aisle.name), ne(aisles.sortOrder, index)),
+          ...(aisle.version === undefined ? [] : [eq(aisles.version, aisle.version)])
         ),
       });
   }

@@ -19,7 +19,7 @@ import type {
 } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
-import { AisleHeading } from "./aisle-heading";
+import { AisleHeading, DoneHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
@@ -273,6 +273,9 @@ function GroupedStoreSectionComponent({
                 {rows.map(renderActive)}
               </SortableAisleContainer>
             ))}
+
+            {/* The done tail, said so where aisle headings would otherwise claim it */}
+            {blocks.length > 0 && doneGroups.length > 0 && <DoneHeading />}
 
             {/* Done groups - not sortable, just rendered */}
             {doneGroups.map((group, index) => {

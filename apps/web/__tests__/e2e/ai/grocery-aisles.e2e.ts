@@ -366,3 +366,34 @@ test("dragging a row into another Store's aisle moves it there and files it ther
   expect(await rowsOf(STORE)).not.toContain("kwark");
   expect(await readAisleFiling(STORE, "kwark")).toBeNull();
 });
+
+test("a ticked grocery sinks into the Store's done tail, under a heading of its own", async () => {
+  await page.goto("/groceries");
+  await expect(storeBlock().getByTestId("done-heading")).toBeHidden();
+
+  // The visible checkbox, clicked the way a shopper clicks it; the input
+  // behind it is hidden from the pointer.
+  const tick = () =>
+    storeBlock()
+      .locator('[data-grocery-name="komkommer"]')
+      .locator('[data-slot="checkbox"]')
+      .click();
+
+  await tick();
+
+  await expect(storeBlock().getByTestId("done-heading")).toBeVisible();
+  // Under the last aisle heading, and above the ticked row.
+  const lastHeading = headingsOf().last();
+  const doneHeading = storeBlock().getByTestId("done-heading");
+
+  expect(
+    await doneHeading.evaluate(
+      (heading, aisle) =>
+        Boolean(aisle.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING),
+      await lastHeading.elementHandle()
+    )
+  ).toBe(true);
+
+  await tick();
+  await expect(storeBlock().getByTestId("done-heading")).toBeHidden();
+});

@@ -31,19 +31,25 @@ type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
 
 /**
  * The aisles as the Store will carry them once the save lands, for the
- * optimistic row: a known aisle keeps its version, a new one starts at 1, and
+ * optimistic row: a known aisle keeps its version unless its name or place
+ * changed, in which case the server will bump it; a new one starts at 1; and
  * the position in the list is the order (ADR-0031).
  */
 function optimisticAisles(storeId: string, input: AisleInput[], before: AisleDto[]): AisleDto[] {
   const known = new Map(before.map((aisle) => [aisle.id, aisle]));
 
-  return input.map((aisle, index) => ({
-    id: aisle.id,
-    storeId,
-    name: aisle.name,
-    sortOrder: index,
-    version: known.get(aisle.id)?.version ?? 1,
-  }));
+  return input.map((aisle, index) => {
+    const was = known.get(aisle.id);
+    const changed = was !== undefined && (was.name !== aisle.name || was.sortOrder !== index);
+
+    return {
+      id: aisle.id,
+      storeId,
+      name: aisle.name,
+      sortOrder: index,
+      version: was === undefined ? 1 : was.version + (changed ? 1 : 0),
+    };
+  });
 }
 
 export function createUseStoresMutations({

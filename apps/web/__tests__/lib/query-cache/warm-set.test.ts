@@ -134,6 +134,13 @@ function makeTrpc() {
         }),
         queryKey: () => [["stores", "list"], { type: "query" }],
       },
+      aisleLinks: {
+        queryOptions: () => ({
+          queryKey: [["stores", "aisleLinks"], { type: "query" }],
+          queryFn: async () => [],
+        }),
+        queryKey: () => [["stores", "aisleLinks"], { type: "query" }],
+      },
     },
     calendar: {
       listItems: {

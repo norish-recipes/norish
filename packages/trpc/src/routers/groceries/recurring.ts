@@ -82,7 +82,7 @@ const createRecurring = authedProcedure
         storeId: input.storeId ?? null,
       };
 
-      const grocery = await createGrocery(id, groceryData, ctx.userIds);
+      const { created: grocery, shifted } = await createGrocery(id, groceryData, ctx.userIds);
 
       // A repeating grocery is a grocery on the list like any other: its Store
       // is asked what it knows about the name, exactly as the add panel asks.
@@ -92,12 +92,19 @@ const createRecurring = authedProcedure
         { userId: ctx.user.id, recurringId: created.id, groceryId: id },
         "Recurring grocery created"
       );
+      // The siblings it made room among carry new versions now; every screen
+      // hears so, or its next write on one of them is refused as stale.
+      if (shifted.length > 0) {
+        groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+          changedGroceries: shifted,
+        });
+      }
       groceryEmitter.emitToHousehold(ctx.householdKey, "recurringCreated", {
         recurringGrocery: created,
         grocery,
       });
 
-      return { recurringGrocery: created, grocery };
+      return { recurringGrocery: created, grocery, shifted };
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create recurring grocery");
       groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
