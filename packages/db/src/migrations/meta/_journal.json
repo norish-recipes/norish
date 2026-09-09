@@ -358,6 +358,13 @@
       "when": 1788806993586,
       "tag": "0050_aisles",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1788940423951,
+      "tag": "0051_drop_store_icon",
+      "breakpoints": true
     }
   ]
 }

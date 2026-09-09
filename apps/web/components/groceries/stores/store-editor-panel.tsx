@@ -1,6 +1,5 @@
 "use client";
 
-import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
 import { STORE_COLOR_KEYS, storeColorStyle, storeHue } from "@/components/groceries/store-colors";
 import Panel from "@/components/Panel/Panel";
@@ -23,7 +22,6 @@ export interface EditingStore {
   id: string | null;
   name: string;
   color: StoreColor;
-  icon: string;
   /** What the user pasted: the shop's website, or a search they ran there. */
   link: string;
   /** The Store's aisles, in the order the household walks them. */
@@ -131,29 +129,6 @@ export function StoreEditorPanel({
                       type="button"
                       onClick={() => onChange({ ...editing, color })}
                     />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Icon picker */}
-            <div>
-              <p className="text-muted mb-2 text-sm font-medium">{t("storeIcon")}</p>
-              <div className="flex flex-wrap gap-2" style={storeColorStyle(editing.color)}>
-                {STORE_ICON_NAMES.map((iconName) => {
-                  const isSelected = editing.icon === iconName;
-
-                  return (
-                    <button
-                      key={iconName}
-                      aria-label={iconName}
-                      aria-pressed={isSelected}
-                      className={`rounded-lg p-2 transition-colors ${isSelected ? "bg-(--store-color)/10 text-(--store-color)" : "bg-surface-secondary text-muted hover:bg-surface-tertiary"}`}
-                      type="button"
-                      onClick={() => onChange({ ...editing, icon: iconName })}
-                    >
-                      <DynamicHeroIcon className="h-5 w-5" iconName={iconName} />
-                    </button>
                   );
                 })}
               </div>

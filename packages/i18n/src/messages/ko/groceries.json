@@ -48,7 +48,6 @@
       "blue": "파랑",
       "violet": "보라"
     },
-    "storeIcon": "아이콘",
     "confirmDelete": "{storeName}을(를) 삭제하시겠습니까?",
     "deleteWarning": "이 매장의 항목은 미분류로 이동됩니다.",
     "noStoresYet": "아직 매장이 없습니다.",

@@ -48,7 +48,6 @@
       "blue": "Blauw",
       "violet": "Violet"
     },
-    "storeIcon": "Icoon",
     "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
     "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend.",
     "noStoresYet": "Nog geen winkels",

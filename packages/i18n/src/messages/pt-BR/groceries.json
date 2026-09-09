@@ -48,7 +48,6 @@
       "blue": "Azul",
       "violet": "Violeta"
     },
-    "storeIcon": "Ícone",
     "confirmDelete": "Tem certeza de que deseja excluir {storeName}?",
     "deleteWarning": "Os itens desta loja serão movidos para Sem classificação.",
     "noStoresYet": "Ainda não há lojas",

@@ -48,7 +48,6 @@
       "blue": "Blue",
       "violet": "Violet"
     },
-    "storeIcon": "Icon",
     "confirmDelete": "Are you sure you want to delete {storeName}?",
     "deleteWarning": "Items in this store will be moved to Unsorted.",
     "noStoresYet": "No stores yet",

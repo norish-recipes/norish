@@ -1,13 +1,6 @@
 "use client";
 
 import { memo, useCallback, useMemo, useState } from "react";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  EllipsisVerticalIcon,
-  TrashIcon,
-} from "@heroicons/react/16/solid";
-import { Button, Dropdown, Label } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
@@ -22,9 +15,9 @@ import {
   SortableGroupItem,
   useDndGroupedGroceryContext,
 } from "./dnd";
-import { DynamicHeroIcon } from "./dynamic-hero-icon";
 import { GroupedGroceryItem } from "./grouped-grocery-item";
 import { storeColorStyle } from "./store-colors";
+import { StoreHeading } from "./store-heading";
 import { StoreHeadingTotal } from "./store-heading-total";
 import { lineOfGroup } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";
@@ -75,7 +68,6 @@ function GroupedStoreSectionComponent({
   const containerId = store?.id ?? "unsorted";
   // The Store's colour is one property on its section; Unsorted has none.
   const headerTint = store ? "bg-(--store-color)/10" : "bg-surface-secondary";
-  const discFill = store ? "bg-(--store-color)" : "bg-muted";
 
   // Calculate counts from original groceries
   const activeCount = groceries.filter((g) => !g.isDone).length;
@@ -146,92 +138,20 @@ function GroupedStoreSectionComponent({
     </SortableGroupItem>
   );
 
-  // Header element - passed to SortableGroupedStoreContainer so it's part of droppable area
+  // The heading, handed to the container so a drop on it lands in the Store
   const headerElement = (
-    <div
-      className={`flex w-full items-center gap-3 px-4 py-3 ${headerTint} rounded-t-xl`}
-      data-store-drop-target={store?.id ?? "unsorted"}
-    >
-      <button
-        className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:opacity-90"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {/* Icon */}
-        <div className={`shrink-0 rounded-full p-1.5 ${discFill}`}>
-          {store ? (
-            <DynamicHeroIcon className="h-4 w-4 text-white" iconName={store.icon} />
-          ) : (
-            <div className="h-4 w-4" />
-          )}
-        </div>
-
-        {/* Name and count */}
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="truncate font-semibold">{store?.name ?? t("unsorted")}</span>
-          <span className="text-muted shrink-0 text-sm">
-            {activeCount > 0 && <span>{activeCount}</span>}
-            {doneCount > 0 && (
-              <span className="text-muted ml-1">
-                (
-                {t("done", {
-                  count: doneCount,
-                })}
-                )
-              </span>
-            )}
-          </span>
-        </div>
-
-        {/* What is still to buy at this Store costs this */}
-        <StoreHeadingTotal lines={priceLines} storeId={store?.id ?? null} />
-
-        {/* Expand/collapse chevron */}
-        <motion.div
-          animate={{
-            rotate: isExpanded ? 180 : 0,
-          }}
-          className="text-muted shrink-0"
-          transition={{
-            duration: 0.2,
-          }}
-        >
-          <ChevronDownIcon className="h-5 w-5" />
-        </motion.div>
-      </button>
-
-      {/* Bulk actions dropdown */}
-      {groceries.length > 0 && (
-        <Dropdown>
-          <Button isIconOnly className="shrink-0" size="sm" variant="tertiary">
-            <EllipsisVerticalIcon className="h-5 w-5" />
-          </Button>
-          <Dropdown.Popover className="bg-overlay">
-            <Dropdown.Menu aria-label={t("storeActions")}>
-              <Dropdown.Item
-                id="mark-done"
-                key="mark-done"
-                textValue={t("markAllDone")}
-                onPress={() => onMarkAllDone?.()}
-              >
-                {<CheckIcon className="h-4 w-4" />}
-                <Label>{t("markAllDone")}</Label>
-              </Dropdown.Item>
-              <Dropdown.Item
-                id="delete-done"
-                key="delete-done"
-                className="text-danger"
-                textValue={t("deleteDone")}
-                onPress={() => onDeleteDone?.()}
-                variant="danger"
-              >
-                {<TrashIcon className="h-4 w-4" />}
-                <Label>{t("deleteDone")}</Label>
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
-      )}
-    </div>
+    <StoreHeading
+      actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone } : undefined}
+      activeCount={activeCount}
+      className={headerTint}
+      doneCount={doneCount}
+      dot={store !== null}
+      dropTarget={store?.id ?? "unsorted"}
+      expanded={isExpanded}
+      name={store?.name ?? t("unsorted")}
+      total={<StoreHeadingTotal lines={priceLines} storeId={store?.id ?? null} />}
+      onExpandedChange={setIsExpanded}
+    />
   );
   return (
     <motion.div

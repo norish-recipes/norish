@@ -56,7 +56,6 @@ const MARKT_STORE = {
   userId: "user-1",
   name: "Markt",
   color: "primary",
-  icon: "ShoppingBagIcon",
   website: null,
   searchAddress: null,
   sortOrder: 0,

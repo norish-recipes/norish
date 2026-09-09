@@ -20,7 +20,6 @@ vi.mock("@tanstack/react-query", async () => {
           version: 6,
           name: "Pantry",
           color: "primary",
-          icon: "ShoppingBagIcon",
           website: null,
           searchAddress: null,
           sortOrder: 0,

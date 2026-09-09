@@ -130,7 +130,6 @@ function store(id: string, name: string, searchAddress: string | null): StoreDto
     id,
     name,
     color: "blue",
-    icon: "ShoppingCartIcon",
     sortOrder: 0,
     website: `https://${id}.example`,
     searchAddress,

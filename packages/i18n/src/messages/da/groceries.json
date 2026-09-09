@@ -48,7 +48,6 @@
       "blue": "Blå",
       "violet": "Violet"
     },
-    "storeIcon": "Ikon",
     "confirmDelete": "Er du sikker på, at du vil slette {storeName}?",
     "deleteWarning": "Varer i denne butik flyttes til Usorteret.",
     "noStoresYet": "Ingen butikker endnu",

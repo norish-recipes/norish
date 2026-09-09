@@ -48,7 +48,6 @@
       "blue": "Blau",
       "violet": "Violett"
     },
-    "storeIcon": "Symbol",
     "confirmDelete": "Möchtest du {storeName} wirklich löschen?",
     "deleteWarning": "Einträge in diesem Geschäft werden in \"Unsortiert\" verschoben.",
     "noStoresYet": "Noch keine Geschäfte",

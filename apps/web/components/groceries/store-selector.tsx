@@ -7,7 +7,6 @@ import { Label, ListBox, Select } from "@heroui/react";
 
 import type { StoreDto } from "@norish/shared/contracts";
 
-import { DynamicHeroIcon } from "./dynamic-hero-icon";
 import { storeColorStyle } from "./store-colors";
 
 type StoreSelectorProps = {
@@ -74,22 +73,19 @@ export function StoreSelector({
       <Select.Popover UNSTABLE_portalContainer={portalContainer}>
         <ListBox>
           <ListBox.Item id="none" textValue={noStoreDescription ?? noStoreLabel}>
-            <div className="flex items-center gap-2">
-              <div className="bg-muted shrink-0 rounded-full p-1">
-                <div className="h-3 w-3" />
-              </div>
-              <span className={noStoreDescription ? "text-muted" : ""}>
-                {noStoreDescription ?? noStoreLabel}
-              </span>
-            </div>
+            <span className={noStoreDescription ? "text-muted" : ""}>
+              {noStoreDescription ?? noStoreLabel}
+            </span>
             <ListBox.ItemIndicator />
           </ListBox.Item>
           {sortedStores.map((store) => (
             <ListBox.Item key={store.id} id={store.id} textValue={store.name}>
               <div className="flex items-center gap-2" style={storeColorStyle(store.color)}>
-                <div className="shrink-0 rounded-full bg-(--store-color) p-1">
-                  <DynamicHeroIcon className="h-3 w-3 text-white" iconName={store.icon} />
-                </div>
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 rounded-full bg-(--store-color)"
+                  data-testid="store-dot"
+                />
                 <span>{store.name}</span>
               </div>
               <ListBox.ItemIndicator />

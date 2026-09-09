@@ -203,7 +203,6 @@ function store(id: string, name: string): StoreDto {
     id,
     name,
     color: "blue",
-    icon: "ShoppingCartIcon",
     sortOrder: 0,
     website: `https://${id}.example`,
     searchAddress: `https://${id}.example/search?q={query}`,

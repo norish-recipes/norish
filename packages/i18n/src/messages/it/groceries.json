@@ -48,7 +48,6 @@
       "blue": "Blu",
       "violet": "Viola"
     },
-    "storeIcon": "Icona",
     "confirmDelete": "Sei sicuro di voler eliminare {storeName}?",
     "deleteWarning": "Gli articoli in questo negozio verranno spostati in Non ordinati.",
     "noStoresYet": "Nessun negozio ancora",

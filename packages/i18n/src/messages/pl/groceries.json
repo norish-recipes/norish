@@ -48,7 +48,6 @@
       "blue": "Niebieski",
       "violet": "Fioletowy"
     },
-    "storeIcon": "Ikona",
     "confirmDelete": "Czy na pewno chcesz usunąć {storeName}?",
     "deleteWarning": "Produkty z tego sklepu zostaną przeniesione do Nieposortowanych.",
     "noStoresYet": "Brak sklepów",

@@ -81,8 +81,7 @@ vi.mock("@/components/groceries/stores/delete-store-modal", () => ({
 const DIRK = {
   id: "store-dirk",
   name: "Dirk",
-  color: "green",
-  icon: "ShoppingBagIcon",
+  color: "danger",
   sortOrder: 0,
   website: "https://www.dirk.nl",
   searchAddress: "https://www.dirk.nl/zoeken/producten/{query}",
@@ -118,6 +117,28 @@ describe("StoreManagerPanel", () => {
     );
     // The list stays where it was, under the editor.
     expect(screen.getByText("Dirk")).toBeInTheDocument();
+  });
+
+  it("offers eight colours named by what they look like, the Store's own pressed, and no icon", () => {
+    render(<StoreManagerPanel open={true} stores={[DIRK]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("icon-edit"));
+
+    // Setting up a Store is its name, its shop link, its colour and its aisles.
+    expect(screen.queryByText("storeIcon")).not.toBeInTheDocument();
+    const names = ["green", "rose", "teal", "amber", "red", "grey", "blue", "violet"];
+    const swatches = names.map((name) =>
+      screen.getByRole("button", { name: `colorNames.${name}` })
+    );
+
+    expect(swatches).toHaveLength(8);
+    expect(screen.getByRole("button", { name: "colorNames.red" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(screen.getByRole("button", { name: "colorNames.green" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
   });
 
   it("saves an edit from the editor's own footer and closes it", () => {
@@ -172,7 +193,6 @@ describe("StoreManagerPanel", () => {
     expect(createStore).toHaveBeenCalledWith({
       name: "Jumbo",
       color: "primary",
-      icon: "ShoppingBagIcon",
       website: null,
       searchAddress: null,
       aisles: [],
@@ -204,15 +224,15 @@ describe("StoreManagerPanel, a Store's aisles", () => {
     ],
   } as unknown as StoreDto;
 
-  it("shows the Store's aisles in the Store's order, under the icon picker", () => {
+  it("shows the Store's aisles in the Store's order, directly under the colour picker", () => {
     render(<StoreManagerPanel open={true} stores={[WITH_AISLES]} onOpenChange={() => undefined} />);
     fireEvent.click(screen.getByTestId("icon-edit"));
 
     expect(aisleNames()).toEqual(["Zuivel", "Brood"]);
-    const icons = screen.getByText("storeIcon");
+    const colours = screen.getByText("storeColor");
     const aisles = screen.getByTestId("store-aisles");
 
-    expect(icons.compareDocumentPosition(aisles) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(colours.compareDocumentPosition(aisles) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("adds an aisle with Enter or the plus, renames one in place and removes one with its X", () => {
