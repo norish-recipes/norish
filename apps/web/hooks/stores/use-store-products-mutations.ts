@@ -21,12 +21,7 @@ export function useChooseProduct() {
   const mutation = useMutation(trpc.stores.chooseProduct.mutationOptions());
   const pricesKey = trpc.stores.groceryPrices.queryKey();
 
-  return (
-    storeId: string,
-    name: string,
-    choice: StoreProductChoice,
-    pack?: PackSizeDto | null
-  ) =>
+  return (storeId: string, name: string, choice: StoreProductChoice, pack?: PackSizeDto | null) =>
     mutation
       .mutateAsync({ storeId, name, choice, ...(pack === undefined ? {} : { pack }) })
       .then(() => queryClient.invalidateQueries({ queryKey: pricesKey }))
