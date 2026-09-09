@@ -1,6 +1,6 @@
 # 06: Docs, screenshots and release notes
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 02, 03, 04, 05
 
 Spec: `.scratch/redesign-groceries-page/spec.md`
@@ -18,7 +18,7 @@ A docs reader sees the page as it now is. The Aisles page and the 0.23.0-beta re
 
 ## Acceptance criteria
 
-- [ ] No docs page or release note mentions an icon picker.
-- [ ] Every groceries screenshot shows the new heading, dot and card; the dashboard shots are confirmed unaffected or re-shot.
-- [ ] The current release-notes checkpoint carries a paragraph on the redesign.
-- [ ] The docs site builds.
+- [x] No docs page or release note mentions an icon picker.
+- [x] Every groceries screenshot shows the new heading, dot and card; the dashboard shots are confirmed unaffected or re-shot.
+- [x] The current release-notes checkpoint carries a paragraph on the redesign.
+- [x] The docs site builds.

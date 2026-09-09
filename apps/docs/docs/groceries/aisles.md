@@ -17,13 +17,13 @@ can have a route through it.
 
 ## Giving a Store its aisles
 
-Open **Manage Stores**, edit a store, and under the icon picker you find its
+Open **Manage Stores**, edit a store, and under the colour you find its
 **Aisles**. Type a name and press Enter or the plus to add one, type over a
 name to rename it, drag the handle to reorder, and press the X to remove one.
 A name the Store already has, in any case, is refused where you type it, so
 "Zuivel" and "zuivel" cannot both exist.
 
-![The store editor, with the Store's aisles under the icon picker](/img/screenshots/groceries-aisles-editor.png)
+![The store editor, with the Store's aisles under the colour picker](/img/screenshots/groceries-aisles-editor.png)
 
 Nothing is written until you press **Save**: the aisles are saved with the
 Store, in one go, so you can experiment freely and removing an aisle needs no
@@ -32,15 +32,16 @@ Your household shares them through the Store it already shares.
 
 ## The list by aisle
 
-Once a Store has aisles, its block shows every one of them as a slim heading,
-in the Store's order, whether or not anything is filed under it, an empty one
-quieter than a filled one, so the shop's shape is always visible and there is
-always a place to drag a row. The Store's heading, its total, "Mark all done"
-and "Delete done" stay exactly as they are, and ticked groceries sink into the
-Store's done tail as they always did, now under a heading of its own, **Done**,
-so they never read as filed in the last aisle.
+Once a Store has aisles, its card shows every one of them as a slim heading,
+in the Store's order, whether or not anything is filed under it, so the shop's
+shape is always visible and there is always a place to drag a row. A filled
+aisle's heading is followed by how many lines are under it; an empty one is
+quieter and carries no count. The Store's heading, its total, "Mark all done"
+and "Delete done" stay exactly as they are, and ticked groceries fold into the
+**done row** at the bottom of the card, so they never read as filed in the
+last aisle.
 
-![A Store's block shown by aisle, with unfiled rows at the top](/img/screenshots/groceries-aisles-list.png)
+![A Store's card shown by aisle, with unfiled rows at the top](/img/screenshots/groceries-aisles-list.png)
 
 A grocery the Store has never been told about is **unfiled**: it sits at the
 top of the block, under no heading, where it is noticed and filed. Norish never
