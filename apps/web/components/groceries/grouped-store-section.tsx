@@ -11,12 +11,7 @@ import { Button, Dropdown, Label } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type {
-  GroceryDto,
-  RecurringGroceryDto,
-  StoreColor,
-  StoreDto,
-} from "@norish/shared/contracts";
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import { AisleHeading, DoneHeading } from "./aisle-heading";
@@ -29,7 +24,7 @@ import {
 } from "./dnd";
 import { DynamicHeroIcon } from "./dynamic-hero-icon";
 import { GroupedGroceryItem } from "./grouped-grocery-item";
-import { getStoreColorClasses } from "./store-colors";
+import { storeColorStyle } from "./store-colors";
 import { StoreHeadingTotal } from "./store-heading-total";
 import { lineOfGroup } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";
@@ -78,15 +73,9 @@ function GroupedStoreSectionComponent({
 
   // Get container ID for this store
   const containerId = store?.id ?? "unsorted";
-  const colorClasses = store
-    ? getStoreColorClasses(store.color as StoreColor)
-    : {
-        bg: "bg-muted",
-        bgLight: "bg-surface-secondary",
-        text: "text-muted",
-        border: "border-border-secondary",
-        ring: "ring-border",
-      };
+  // The Store's colour is one property on its section; Unsorted has none.
+  const headerTint = store ? "bg-(--store-color)/10" : "bg-surface-secondary";
+  const discFill = store ? "bg-(--store-color)" : "bg-muted";
 
   // Calculate counts from original groceries
   const activeCount = groceries.filter((g) => !g.isDone).length;
@@ -160,7 +149,7 @@ function GroupedStoreSectionComponent({
   // Header element - passed to SortableGroupedStoreContainer so it's part of droppable area
   const headerElement = (
     <div
-      className={`flex w-full items-center gap-3 px-4 py-3 ${colorClasses.bgLight} rounded-t-xl`}
+      className={`flex w-full items-center gap-3 px-4 py-3 ${headerTint} rounded-t-xl`}
       data-store-drop-target={store?.id ?? "unsorted"}
     >
       <button
@@ -168,7 +157,7 @@ function GroupedStoreSectionComponent({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {/* Icon */}
-        <div className={`shrink-0 rounded-full p-1.5 ${colorClasses.bg}`}>
+        <div className={`shrink-0 rounded-full p-1.5 ${discFill}`}>
           {store ? (
             <DynamicHeroIcon className="h-4 w-4 text-white" iconName={store.icon} />
           ) : (
@@ -245,11 +234,15 @@ function GroupedStoreSectionComponent({
     </div>
   );
   return (
-    <motion.div className="relative" data-store-id={store?.id ?? "unsorted"}>
+    <motion.div
+      className="relative"
+      data-store-id={store?.id ?? "unsorted"}
+      style={store ? storeColorStyle(store.color) : undefined}
+    >
       {/* Entire section wrapped in SortableGroupedStoreContainer - header + groups are droppable */}
       <SortableGroupedStoreContainer
         header={headerElement}
-        headerBgClass={colorClasses.bgLight}
+        headerBgClass={headerTint}
         storeId={store?.id ?? null}
       >
         {/* Groups area - only shown when expanded */}

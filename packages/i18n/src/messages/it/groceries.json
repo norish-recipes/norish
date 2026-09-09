@@ -38,6 +38,16 @@
     "storeName": "Nome negozio",
     "storeNamePlaceholder": "es. Supermercato",
     "storeColor": "Colore",
+    "colorNames": {
+      "green": "Verde",
+      "rose": "Rosa",
+      "teal": "Verde acqua",
+      "amber": "Ambra",
+      "red": "Rosso",
+      "grey": "Grigio",
+      "blue": "Blu",
+      "violet": "Viola"
+    },
     "storeIcon": "Icona",
     "confirmDelete": "Sei sicuro di voler eliminare {storeName}?",
     "deleteWarning": "Gli articoli in questo negozio verranno spostati in Non ordinati.",

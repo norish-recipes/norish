@@ -1,6 +1,6 @@
 # 01: One hue table for web and mobile
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: none (can start immediately)
 
 Spec: `.scratch/redesign-groceries-page/spec.md`
@@ -24,9 +24,9 @@ This ticket is the prefactor for the rest of the redesign: once the property is 
 
 ## Acceptance criteria
 
-- [ ] The shared package exports the hue table keyed by the eight existing colour keys, and a pure test beside the aisle helpers' test asserts every key is present and no two keys share a light hex or a dark hex.
-- [ ] The web reads the table through one CSS custom property per section; heading tint, icon disc, picker swatches, selector chip and manager row all show the new hues, in light and dark.
-- [ ] The picker's eight swatches are labelled by colour name, and the names exist in all fourteen locales.
-- [ ] Mobile reads the table, its own tint map is gone, its Unsorted section is grey, and it type-checks.
-- [ ] A Store's stored colour value is unchanged by the update; no migration.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.
+- [x] The shared package exports the hue table keyed by the eight existing colour keys, and a pure test beside the aisle helpers' test asserts every key is present and no two keys share a light hex or a dark hex.
+- [x] The web reads the table through one CSS custom property per section; heading tint, icon disc, picker swatches, selector chip and manager row all show the new hues, in light and dark.
+- [x] The picker's eight swatches are labelled by colour name, and the names exist in all fourteen locales.
+- [x] Mobile reads the table, its own tint map is gone, its Unsorted section is grey, and it type-checks.
+- [x] A Store's stored colour value is unchanged by the update; no migration.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm test:e2e` and `pnpm build` pass.

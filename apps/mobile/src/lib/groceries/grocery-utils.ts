@@ -1,5 +1,8 @@
-import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { ResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+
 import type { RecipeMap } from "@norish/shared-react/hooks";
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
+import { STORE_HUES, storeHue } from "@norish/shared/lib/store-colors";
 
 export type GrocerySection = {
   id: string;
@@ -8,22 +11,9 @@ export type GrocerySection = {
   items: GroceryDto[];
 };
 
-// TODO: This needs cleaning up when both heroui apps are on v3.
-export const STORE_COLOR_TINTS: Record<string, string> = {
-  primary: "#0EA5E9",
-  secondary: "#8B5CF6",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  danger: "#FB7185",
-  slate: "#64748B",
-  sky: "#0EA5E9",
-  violet: "#8B5CF6",
-};
-
 const UNSORTED_SECTION = {
   id: "unsorted",
   title: "Unsorted",
-  tintColor: "#8B5CF6",
 };
 
 export function formatAmountUnit(amount: number | null, unit: string | null): string {
@@ -37,8 +27,14 @@ export function formatAmountUnit(amount: number | null, unit: string | null): st
   return [formattedAmount, unit].filter(Boolean).join(" ");
 }
 
-export function storeTintColor(store: StoreDto): string {
-  return STORE_COLOR_TINTS[store.color] ?? STORE_COLOR_TINTS.primary;
+/** The Store's colour as the web draws it, in the hex for the scheme the app is in. */
+export function storeTintColor(store: StoreDto, scheme: ResolvedColorScheme): string {
+  return storeHue(store.color)[scheme];
+}
+
+/** Unsorted is not a Store and has no colour of its own: it takes the grey hue, which no Store's would collide with as its old purple did. */
+function unsortedTintColor(scheme: ResolvedColorScheme): string {
+  return STORE_HUES.slate[scheme];
 }
 
 function groceryRecipeId(grocery: GroceryDto, recipeMap: RecipeMap): string | null {
@@ -90,11 +86,13 @@ export function splitSectionItems(
 export function buildStoreSections({
   groceries,
   stores,
+  scheme,
   frozenIds = new Set(),
 }: {
   groceries: GroceryDto[];
   stores: StoreDto[];
   recipeMap: RecipeMap;
+  scheme: ResolvedColorScheme;
   frozenIds?: ReadonlySet<string>;
 }): GrocerySection[] {
   const sections: GrocerySection[] = [];
@@ -103,6 +101,7 @@ export function buildStoreSections({
   if (unsortedItems.length > 0) {
     sections.push({
       ...UNSORTED_SECTION,
+      tintColor: unsortedTintColor(scheme),
       items: sortByCompletion(unsortedItems, frozenIds),
     });
   }
@@ -114,7 +113,7 @@ export function buildStoreSections({
     sections.push({
       id: store.id,
       title: store.name,
-      tintColor: storeTintColor(store),
+      tintColor: storeTintColor(store, scheme),
       items: sortByCompletion(storeItems, frozenIds),
     });
   }

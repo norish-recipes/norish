@@ -38,6 +38,16 @@
     "storeName": "Име на магазина",
     "storeNamePlaceholder": "напр. Супермаркет",
     "storeColor": "Цвят",
+    "colorNames": {
+      "green": "Зелено",
+      "rose": "Розово",
+      "teal": "Тюркоазено",
+      "amber": "Кехлибарено",
+      "red": "Червено",
+      "grey": "Сиво",
+      "blue": "Синьо",
+      "violet": "Виолетово"
+    },
     "storeIcon": "Икона",
     "confirmDelete": "Наистина ли искаш да изтриеш {storeName}?",
     "deleteWarning": "Продуктите в този магазин ще бъдат преместени в „Некатегоризирани“.",

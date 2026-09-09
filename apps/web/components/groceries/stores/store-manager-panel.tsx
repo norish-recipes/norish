@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { DynamicHeroIcon } from "@/components/groceries/dynamic-hero-icon";
-import { getStoreColorClasses } from "@/components/groceries/store-colors";
+import { storeColorKey, storeColorStyle } from "@/components/groceries/store-colors";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -17,7 +17,6 @@ import { useTranslations } from "next-intl";
 
 import type {
   SearchAddressOutcome,
-  StoreColor,
   StoreDto,
   StoreSearchAddressResult,
 } from "@norish/shared/contracts";
@@ -70,7 +69,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
     setEditingStore({
       id: store.id,
       name: store.name,
-      color: store.color as StoreColor,
+      color: storeColorKey(store.color),
       icon: store.icon,
       link: store.searchAddress ?? store.website ?? "",
       aisles: sortAisles(store.aisles).map(({ id, name, version }) => ({ id, name, version })),
@@ -271,7 +270,6 @@ function StoreListItem({
   onDelete,
 }: StoreListItemProps) {
   const controls = useDragControls();
-  const colorClasses = getStoreColorClasses(store.color as StoreColor);
 
   return (
     <Reorder.Item
@@ -296,8 +294,11 @@ function StoreListItem({
       </div>
 
       {/* Icon with color */}
-      <div className={`shrink-0 rounded-full p-1.5 ${colorClasses.bgLight}`}>
-        <DynamicHeroIcon className={`h-5 w-5 ${colorClasses.text}`} iconName={store.icon} />
+      <div
+        className="shrink-0 rounded-full bg-(--store-color)/10 p-1.5"
+        style={storeColorStyle(store.color)}
+      >
+        <DynamicHeroIcon className="h-5 w-5 text-(--store-color)" iconName={store.icon} />
       </div>
 
       {/* Name */}

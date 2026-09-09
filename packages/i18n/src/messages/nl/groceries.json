@@ -38,6 +38,16 @@
     "storeName": "Winkelnaam",
     "storeNamePlaceholder": "bijv. Supermarkt",
     "storeColor": "Kleur",
+    "colorNames": {
+      "green": "Groen",
+      "rose": "Roze",
+      "teal": "Blauwgroen",
+      "amber": "Amber",
+      "red": "Rood",
+      "grey": "Grijs",
+      "blue": "Blauw",
+      "violet": "Violet"
+    },
     "storeIcon": "Icoon",
     "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
     "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend.",

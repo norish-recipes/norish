@@ -1,13 +1,14 @@
-import type { StoreDto } from "@norish/shared/contracts";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PanelButton } from "@/components/shell/panel-button";
 import { ShellSheet } from "@/components/shell/sheet";
+import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { storeTintColor } from "@/lib/groceries/grocery-utils";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { StoreDto } from "@norish/shared/contracts";
 import type { RecurrenceTranslations } from "@norish/shared/lib/recurrence/formatter";
 import { formatRecurrenceSummary } from "@norish/shared/lib/recurrence/formatter";
 
@@ -60,6 +61,7 @@ export function GroceryEditorSheet({
     initialValue?.recurrence ?? EMPTY_VALUE.recurrence
   );
   const [recurrenceSheetOpen, setRecurrenceSheetOpen] = useState(false);
+  const scheme = useResolvedColorScheme();
   const [foregroundColor, mutedColor, surfaceColor, separatorColor, accentColor] = useThemeColor([
     "foreground",
     "muted",
@@ -225,7 +227,7 @@ export function GroceryEditorSheet({
                   key={store.id}
                   label={store.name}
                   selected={store.id === storeId}
-                  tintColor={storeTintColor(store)}
+                  tintColor={storeTintColor(store, scheme)}
                   foregroundColor={foregroundColor}
                   mutedColor={mutedColor}
                   surfaceColor={surfaceColor}

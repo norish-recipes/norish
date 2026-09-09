@@ -5,10 +5,10 @@ import { useMemo } from "react";
 import { usePanelPortalContainer } from "@/components/Panel/Panel";
 import { Label, ListBox, Select } from "@heroui/react";
 
-import type { StoreColor, StoreDto } from "@norish/shared/contracts";
+import type { StoreDto } from "@norish/shared/contracts";
 
 import { DynamicHeroIcon } from "./dynamic-hero-icon";
-import { getStoreColorClasses } from "./store-colors";
+import { storeColorStyle } from "./store-colors";
 
 type StoreSelectorProps = {
   stores: StoreDto[];
@@ -84,21 +84,17 @@ export function StoreSelector({
             </div>
             <ListBox.ItemIndicator />
           </ListBox.Item>
-          {sortedStores.map((store) => {
-            const colorClasses = getStoreColorClasses(store.color as StoreColor);
-
-            return (
-              <ListBox.Item key={store.id} id={store.id} textValue={store.name}>
-                <div className="flex items-center gap-2">
-                  <div className={`shrink-0 rounded-full p-1 ${colorClasses.bg}`}>
-                    <DynamicHeroIcon className="h-3 w-3 text-white" iconName={store.icon} />
-                  </div>
-                  <span>{store.name}</span>
+          {sortedStores.map((store) => (
+            <ListBox.Item key={store.id} id={store.id} textValue={store.name}>
+              <div className="flex items-center gap-2" style={storeColorStyle(store.color)}>
+                <div className="shrink-0 rounded-full bg-(--store-color) p-1">
+                  <DynamicHeroIcon className="h-3 w-3 text-white" iconName={store.icon} />
                 </div>
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            );
-          })}
+                <span>{store.name}</span>
+              </div>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
         </ListBox>
       </Select.Popover>
     </Select>

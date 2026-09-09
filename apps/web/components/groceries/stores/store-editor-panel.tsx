@@ -2,7 +2,7 @@
 
 import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
-import { getStoreColorClasses, STORE_COLOR_OPTIONS } from "@/components/groceries/store-colors";
+import { STORE_COLOR_KEYS, storeColorStyle, storeHue } from "@/components/groceries/store-colors";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Input, Label, TextField } from "@heroui/react";
@@ -118,16 +118,16 @@ export function StoreEditorPanel({
             <div>
               <p className="text-muted mb-2 text-sm font-medium">{t("storeColor")}</p>
               <div className="flex flex-wrap gap-2">
-                {STORE_COLOR_OPTIONS.map((color) => {
-                  const colorClasses = getStoreColorClasses(color);
+                {STORE_COLOR_KEYS.map((color) => {
                   const isSelected = editing.color === color;
 
                   return (
                     <button
                       key={color}
-                      aria-label={color}
+                      aria-label={t(`colorNames.${storeHue(color).name}`)}
                       aria-pressed={isSelected}
-                      className={`h-8 w-8 rounded-full transition-transform ${colorClasses.bg} ${isSelected ? "scale-110 ring-2 ring-offset-2" : ""} ${colorClasses.ring}`}
+                      className={`h-8 w-8 rounded-full bg-(--store-color) ring-(--store-color) transition-transform ${isSelected ? "scale-110 ring-2 ring-offset-2" : ""}`}
+                      style={storeColorStyle(color)}
                       type="button"
                       onClick={() => onChange({ ...editing, color })}
                     />
@@ -139,17 +139,16 @@ export function StoreEditorPanel({
             {/* Icon picker */}
             <div>
               <p className="text-muted mb-2 text-sm font-medium">{t("storeIcon")}</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" style={storeColorStyle(editing.color)}>
                 {STORE_ICON_NAMES.map((iconName) => {
                   const isSelected = editing.icon === iconName;
-                  const colorClasses = getStoreColorClasses(editing.color);
 
                   return (
                     <button
                       key={iconName}
                       aria-label={iconName}
                       aria-pressed={isSelected}
-                      className={`rounded-lg p-2 transition-colors ${isSelected ? `${colorClasses.bgLight} ${colorClasses.text}` : "bg-surface-secondary text-muted hover:bg-surface-tertiary"}`}
+                      className={`rounded-lg p-2 transition-colors ${isSelected ? "bg-(--store-color)/10 text-(--store-color)" : "bg-surface-secondary text-muted hover:bg-surface-tertiary"}`}
                       type="button"
                       onClick={() => onChange({ ...editing, icon: iconName })}
                     >

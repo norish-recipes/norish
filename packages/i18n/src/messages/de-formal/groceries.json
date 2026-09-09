@@ -38,6 +38,16 @@
     "storeName": "Name des Geschäfts",
     "storeNamePlaceholder": "z.B. Supermarkt",
     "storeColor": "Farbe",
+    "colorNames": {
+      "green": "Grün",
+      "rose": "Rosa",
+      "teal": "Petrol",
+      "amber": "Bernstein",
+      "red": "Rot",
+      "grey": "Grau",
+      "blue": "Blau",
+      "violet": "Violett"
+    },
     "storeIcon": "Symbol",
     "confirmDelete": "Möchten Sie {storeName} wirklich löschen?",
     "deleteWarning": "Einträge in diesem Geschäft werden in \"Unsortiert\" verschoben.",

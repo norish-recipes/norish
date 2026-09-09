@@ -5,6 +5,7 @@ import { GroceryEditorSheet } from "@/components/shell/sheet/grocery-editor-shee
 import { DEFAULT_GROCERY_RECURRENCE_SETTINGS } from "@/components/shell/sheet/grocery-recurrence-sheet";
 import { useGroceriesContext } from "@/context/groceries-context";
 import { useStoresContext } from "@/context/stores-context";
+import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import {
   buildRecipeSections,
   buildStoreSections,
@@ -46,6 +47,7 @@ export function GroceriesScreen() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const { stores, isLoading: storesLoading } = useStoresContext();
   const [foregroundColor, mutedColor] = useThemeColor(["foreground", "muted"] as const);
+  const scheme = useResolvedColorScheme();
 
   const sections = useMemo(
     () =>
@@ -54,6 +56,7 @@ export function GroceriesScreen() {
             groceries,
             stores,
             recipeMap,
+            scheme,
             frozenIds,
           })
         : buildRecipeSections({
@@ -62,7 +65,7 @@ export function GroceriesScreen() {
             recipeMap,
             frozenIds,
           }),
-    [groceries, stores, recipeMap, viewMode, frozenIds]
+    [groceries, stores, recipeMap, scheme, viewMode, frozenIds]
   );
 
   const isLoading = groceriesLoading || storesLoading;

@@ -38,6 +38,16 @@
     "storeName": "Butiksnavn",
     "storeNamePlaceholder": "f.eks. Supermarked",
     "storeColor": "Farve",
+    "colorNames": {
+      "green": "Grøn",
+      "rose": "Rosa",
+      "teal": "Blågrøn",
+      "amber": "Rav",
+      "red": "Rød",
+      "grey": "Grå",
+      "blue": "Blå",
+      "violet": "Violet"
+    },
     "storeIcon": "Ikon",
     "confirmDelete": "Er du sikker på, at du vil slette {storeName}?",
     "deleteWarning": "Varer i denne butik flyttes til Usorteret.",
