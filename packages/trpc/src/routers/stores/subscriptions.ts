@@ -146,6 +146,26 @@ const onLinkUpdated = authedProcedure.subscription(async function* ({ ctx, signa
   }
 });
 
+const onAisleFiled = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = storeEmitter.householdEvent(ctx.householdKey, "aisleFiled");
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as StoreSubscriptionEvents["aisleFiled"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from aisle filing events"
+    );
+  }
+});
+
 export const storesSubscriptions = router({
   onCreated,
   onUpdated,
@@ -153,4 +173,5 @@ export const storesSubscriptions = router({
   onReordered,
   onProductUpdated,
   onLinkUpdated,
+  onAisleFiled,
 });

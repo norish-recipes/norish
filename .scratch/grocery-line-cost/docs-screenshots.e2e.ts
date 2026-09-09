@@ -208,3 +208,22 @@ test("captures the product field, a picked product and what is refused", async (
   await closePanels();
   await desktop();
 });
+
+test("captures the list on the dark ground, as a working picture", async ({ browser, aiStack }) => {
+  // The same list, drawn dark: the dots and the checkbox rings must still read.
+  const dark = await browser.newContext({
+    baseURL: aiStack.baseURL,
+    storageState: { cookies: aiStack.ownerCookies, origins: [] },
+    viewport: { width: 1100, height: 820 },
+    deviceScaleFactor: 1.5,
+    reducedMotion: "reduce",
+    colorScheme: "dark",
+  });
+  const darkPage = await dark.newPage();
+
+  await darkPage.goto("/groceries");
+  await expect(darkPage.locator("[data-store-drop-target]").first()).toBeVisible();
+  await darkPage.waitForTimeout(500);
+  await darkPage.screenshot({ path: path.join(SHOTS, `${TAG}-list-desktop-dark.png`) });
+  await dark.close();
+});

@@ -101,11 +101,32 @@ export async function listGroceriesByHousehold(
   return listGroceriesByUsers(userIds, options);
 }
 
+/**
+ * What a create leaves behind: the rows made, and every active sibling in the
+ * same Store that was shifted down to make room at the top — its sort order
+ * and, with it, its version moved, and a client that goes on holding the old
+ * version has its next write refused as stale (ADR-0004). The shifted rows
+ * are handed back so the answer and the household's `updated` event carry
+ * them.
+ */
+export interface CreatedGroceries {
+  created: GroceryDto[];
+  shifted: GroceryDto[];
+}
+
+function parseRows(rows: unknown[], what: string): GroceryDto[] {
+  const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
+
+  if (!parsed.success) throw new Error(`Failed to parse ${what}`);
+
+  return parsed.data;
+}
+
 export async function createGroceries(
   items: { id: string; groceries: GroceryInsertDto }[],
   householdUserIds: string[]
-): Promise<GroceryDto[]> {
-  if (!items.length) return [];
+): Promise<CreatedGroceries> {
+  if (!items.length) return { created: [], shifted: [] };
 
   const prepared = items.map(({ id, groceries }) => {
     const parsed = GroceryInsertBaseSchema.safeParse(groceries);
@@ -130,8 +151,10 @@ export async function createGroceries(
     }
 
     // Increment sortOrder for each store group
+    const shifted: GroceryDto[] = [];
+
     for (const [storeId, storeItems] of storeGroups) {
-      await trx
+      const rows = await trx
         .update(groceries)
         .set({
           sortOrder: sql`${groceries.sortOrder} + ${storeItems.length}`,
@@ -144,7 +167,10 @@ export async function createGroceries(
             eq(groceries.isDone, false),
             storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId)
           )
-        );
+        )
+        .returning();
+
+      shifted.push(...parseRows(rows, "shifted groceries"));
     }
 
     const nextSortOrderByStore = new Map<string | null, number>();
@@ -164,11 +190,7 @@ export async function createGroceries(
 
     const inserted = await trx.insert(groceries).values(valuesToInsert).returning();
 
-    const parsed = z.array(GrocerySelectBaseSchema).safeParse(inserted);
-
-    if (!parsed.success) throw new Error("Failed to parse created groceries");
-
-    return parsed.data;
+    return { created: parseRows(inserted, "created groceries"), shifted };
   });
 }
 
@@ -176,14 +198,14 @@ export async function createGrocery(
   id: string,
   input: GroceryInsertDto,
   householdUserIds: string[]
-): Promise<GroceryDto> {
+): Promise<{ created: GroceryDto; shifted: GroceryDto[] }> {
   const parsed = GroceryInsertBaseSchema.safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid GroceryInsertDto");
 
   return await db.transaction(async (trx) => {
     // Increment sortOrder for all unchecked items in the same store (or null store)
-    await trx
+    const rows = await trx
       .update(groceries)
       .set({
         sortOrder: sql`${groceries.sortOrder} + 1`,
@@ -196,7 +218,8 @@ export async function createGrocery(
           eq(groceries.isDone, false),
           input.storeId ? eq(groceries.storeId, input.storeId) : isNull(groceries.storeId)
         )
-      );
+      )
+      .returning();
 
     // Insert new grocery at sortOrder 0 (top of list)
     const [row] = await trx
@@ -208,7 +231,7 @@ export async function createGrocery(
 
     if (!validated.success) throw new Error("Failed to parse created grocery");
 
-    return validated.data;
+    return { created: validated.data, shifted: parseRows(rows, "shifted groceries") };
   });
 }
 

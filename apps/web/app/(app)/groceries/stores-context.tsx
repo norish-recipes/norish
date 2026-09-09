@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  useStoreAisles,
+  useStoreAislesSubscription,
   useStorePrices,
   useStorePricesSubscription,
   useStoresMutations,
@@ -16,6 +18,8 @@ const sharedStoresContext = createStoresContext({
   useStoresSubscription,
   useStorePrices,
   useStorePricesSubscription,
+  useStoreAisles,
+  useStoreAislesSubscription,
 });
 
 export const StoresContextProvider = sharedStoresContext.StoresContextProvider;

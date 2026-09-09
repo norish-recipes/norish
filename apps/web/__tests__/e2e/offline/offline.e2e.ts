@@ -56,6 +56,20 @@ function readOutbox(target: Page) {
   );
 }
 
+/**
+ * A ticked row folds into its section's done row, which is closed on every
+ * load; open every closed one so a done row can be looked at.
+ */
+async function openDoneRows(target: Page): Promise<void> {
+  await expect(target.getByTestId("done-heading").first()).toBeVisible();
+  for (const doneRow of await target
+    .locator('[data-testid="done-heading"][data-state="closed"]')
+    .all()) {
+    await doneRow.getByRole("button").first().click();
+  }
+  await expect(target.locator('[data-testid="done-heading"][data-state="closed"]')).toHaveCount(0);
+}
+
 async function addGroceryViaUi(target: Page, name: string) {
   await target.getByRole("button", { name: "Add Item" }).click();
   await target.getByPlaceholder("e.g., 2 lbs chicken breast").fill(name);
@@ -274,14 +288,19 @@ test("an offline grocery toggle survives navigation and a document cold launch",
 
   await expect(groceryCheckbox).not.toBeChecked();
   await groceryCheckbox.press("Space");
-  await expect(groceryCheckbox).toBeChecked();
+  // A ticked row folds into its section's done row, closed on every load;
+  // open it to look at the row.
+  await openDoneRows(page);
+  await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
   await expect.poll(() => readOutbox(page)).toHaveLength(1);
 
   await page.goto("/calendar");
   await page.goto("/groceries");
+  await openDoneRows(page);
   await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
 
   await page.reload();
+  await openDoneRows(page);
   await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
 
   const [entry] = await readOutbox(page);
@@ -387,6 +406,7 @@ test("the dormant queue replays only once its owner signs in again", async () =>
   await expect(page.getByText("E2E Dormant Milk").first()).toBeVisible();
   // Same for the queued toggle: the row is done because the server says so, so
   // the Offline check-off survived the whole round trip and applied once.
+  await openDoneRows(page);
   await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
 });
 

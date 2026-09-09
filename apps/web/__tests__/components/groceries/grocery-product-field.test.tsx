@@ -130,10 +130,10 @@ function store(id: string, name: string, searchAddress: string | null): StoreDto
     id,
     name,
     color: "blue",
-    icon: "ShoppingCartIcon",
     sortOrder: 0,
     website: `https://${id}.example`,
     searchAddress,
+    aisles: [],
   } as unknown as StoreDto;
 }
 
@@ -365,7 +365,7 @@ describe("GroceryProductField", () => {
 
       expect(onChoice).toHaveBeenLastCalledWith(null);
       expect(field()).toHaveValue("");
-      expect(screen.queryByTestId("product-by-hand-price")).not.toBeInTheDocument();
+      expect(screen.getByTestId("product-by-hand-price")).toHaveValue("");
     } finally {
       vi.useRealTimers();
     }
@@ -426,8 +426,10 @@ describe("GroceryProductField", () => {
     });
 
     expect(screen.queryByTestId("product-searching")).not.toBeInTheDocument();
-    // Nor may it offer to type a price for a shop it never asked.
-    expect(screen.queryByTestId("product-by-hand")).not.toBeInTheDocument();
+    // The price fields are there all the same, empty: a shopper never waits
+    // on a shop to type what they saw on the shelf.
+    expect(screen.getByTestId("product-by-hand")).toBeInTheDocument();
+    expect(screen.getByTestId("product-by-hand-price")).toHaveValue("");
   });
 
   it("says nothing was found only once the shop has actually answered nothing", async () => {
@@ -1326,7 +1328,7 @@ describe("GroceryProductField", () => {
         />
       );
 
-      expect(screen.getByTestId("product-pack-size")).toHaveValue("150 g");
+      expect(screen.getByTestId("product-pack-quantity")).toHaveValue("150");
 
       // A name typed over a product on Sale corrects that product: the
       // correction carries its Sale, the deal's words, its size and its pack,
@@ -1349,8 +1351,8 @@ describe("GroceryProductField", () => {
         })
       );
       // The pack stays on the panel too: the amount above still counts it.
-      expect(screen.getByTestId("product-pack-size")).toHaveValue("150 g");
-      expect(screen.getByTestId("product-details")).toHaveTextContent("EUR · 150 g");
+      expect(screen.getByTestId("product-pack-quantity")).toHaveValue("150");
+      expect(screen.getByTestId("product-details")).toHaveTextContent("€2.19 · 150 g");
 
       // A price typed at or above the regular one is no Sale any more; the
       // shop's words stay, since they are the shop's and not a number.
@@ -1379,11 +1381,82 @@ describe("GroceryProductField", () => {
 
       const row = screen.getByTestId("product-details");
 
-      // The currency and the pack: what nothing else on the panel shows. The
-      // name is in the product field right above it.
+      // The price and the pack, in one line; the name is in the product field
+      // right above it.
       expect(row).toHaveTextContent("productDetails");
-      expect(row).toHaveTextContent("EUR · 1 L");
+      expect(row).toHaveTextContent("€1.99 · 1 L");
       expect(row).not.toHaveTextContent("Coca-Cola");
+    });
+
+    it("holds everything about the product, all of it the shopper's to overwrite", () => {
+      const onChoice = vi.fn();
+
+      render(
+        <GroceryProductField
+          choice={null}
+          groceryName="cola"
+          linkedProduct={product("prod-a", "store-a", "Coca-Cola 1 L", 1.99)}
+          store={STORE_A}
+          onChoice={onChoice}
+        />
+      );
+
+      // Prefilled from the product the fields describe.
+      expect(screen.getByTestId("product-by-hand-name")).toHaveValue("Coca-Cola 1 L");
+      expect(screen.getByTestId("product-details-price")).toHaveValue("1.99");
+      expect(screen.getByTestId("product-by-hand-currency")).toHaveValue("EUR");
+      expect(screen.getByTestId("product-pack-quantity")).toHaveValue("1");
+      expect(screen.getByTestId("product-by-hand-page")).toHaveValue(
+        "https://store-a.example/p/prod-a"
+      );
+
+      // A page typed over the product's rides on the choice, as does the pack.
+      fireEvent.change(screen.getByTestId("product-by-hand-page"), {
+        target: { value: "https://store-a.example/p/cola-family" },
+      });
+      fireEvent.change(screen.getByTestId("product-pack-quantity"), { target: { value: "2" } });
+
+      expect(onChoice).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          kind: "manual",
+          pageUrl: "https://store-a.example/p/cola-family",
+          pack: expect.objectContaining({ quantity: 2, unit: "liter" }),
+        })
+      );
+      // The link beside the field follows what was typed.
+      expect(screen.getByTestId("product-page-link")).toHaveAttribute(
+        "href",
+        "https://store-a.example/p/cola-family"
+      );
+    });
+
+    it("refuses a page that is not a web address, and half a pack, before Save", () => {
+      const onValidityChange = vi.fn();
+
+      render(
+        <GroceryProductField
+          choice={null}
+          groceryName="cola"
+          linkedProduct={product("prod-a", "store-a", "Coca-Cola 1 L", 1.99)}
+          store={STORE_A}
+          onChoice={() => undefined}
+          onValidityChange={onValidityChange}
+        />
+      );
+
+      fireEvent.change(screen.getByTestId("product-by-hand-page"), {
+        target: { value: "not a page" },
+      });
+      expect(screen.getByTestId("product-page-error")).toBeInTheDocument();
+      expect(onValidityChange).toHaveBeenLastCalledWith(false);
+
+      fireEvent.change(screen.getByTestId("product-by-hand-page"), { target: { value: "" } });
+      expect(onValidityChange).toHaveBeenLastCalledWith(true);
+
+      // An amount without a unit is half a pack, and said so.
+      fireEvent.change(screen.getByTestId("product-pack-quantity"), { target: { value: "" } });
+      expect(screen.getByTestId("product-pack-error")).toBeInTheDocument();
+      expect(onValidityChange).toHaveBeenLastCalledWith(false);
     });
   });
 

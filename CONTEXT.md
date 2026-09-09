@@ -110,6 +110,10 @@ _Avoid_: Item, Product (a Store Product is the shop's, a Grocery is the househol
 A place the household shops, named, coloured and ordered by them, that groceries are grouped under. A Store may additionally point at a real shop's website, which is what lets it carry a Search Address and Store Products. A Store without a website is an ordinary Store and always was: pricing is something a Store gains, never something it requires.
 _Avoid_: Shop, Supermarket (a Store may be a market stall, a butcher, or nothing but a heading)
 
+**Unsorted**:
+The groceries assigned to no Store, kept together and shown before every Store so they are noticed and given one. It is not a Store and never becomes one: it has no colour, no Aisles, no Search Address and no Store Products. It is a different absence from unfiled: an unsorted grocery has no Store, an unfiled grocery has a Store but no Aisle within it.
+_Avoid_: Unassigned, No store, Unfiled (that is a grocery with a Store but no Aisle), Store "None" (it is not a Store)
+
 **Search Address**:
 The Store's search page with a `{query}` slot standing where the search term goes — `https://www.ah.nl/zoeken?query={query}`, `https://www.dirk.nl/zoeken/producten/{query}`. It is derived from whatever the user pastes rather than demanded of them: a homepage Norish finds a search form on, or a search the user ran themselves, whose term is replaced by the slot. A Store has at most one, and it is editable, because a guess that reads the wrong slot must be one keystroke from correct.
 _Avoid_: Search template, URL pattern (the user pastes an address they already have, and never authors a template), Query URL
@@ -149,6 +153,14 @@ _Avoid_: Price (that is the Shelf Price), Subtotal, Amount (that is the grocery'
 **Sale**:
 A Shelf Price the shop presents with the regular price it replaces beside it, together with the shop's own words for the deal. It is whatever the shop shows as the price, so a deal the shop keeps as a label over its regular price is shown in words and not priced, and Norish never guesses whether a card or a membership stands behind a number. A Sale lasts until the shop presents another price.
 _Avoid_: Discount, Promotion, Offer (the shop's markup word, which is not always a markdown), Bonus
+
+**Aisle**:
+A heading within a Store, named and ordered by the household, standing for where in that shop things are found: groceries under a Store are shown by Aisle, in the order the household walks them. Aisles belong to their Store, so a household shares them through the store it already shares, and a Store with no Aisles shows its groceries exactly as it always has. A grocery outside any Aisle is unfiled, and unfiled groceries are shown first, under no heading, so they are noticed and filed.
+_Avoid_: Category (a meal category is something else in Norish), Department, Section (that is the Store's own block in the list)
+
+**Aisle Link**:
+Where a Store has learned a grocery name is found: a Store, a normalized grocery name, and one of that Store's Aisles. Like a Product Link it is keyed by name rather than by Grocery, so filing one "melk" files every "melk" at that Store, the memory outlives the list line that prompted it, and a rename or a move to another Store asks what that name is filed under there instead of carrying the old answer along. A name the Store has never been told about stays unfiled; Norish never guesses an Aisle from words.
+_Avoid_: Assignment (a Grocery is assigned to a Store, linked to a Store Product, and filed in an Aisle), Placement, Preference (the store preference is a different memory, kept per person)
 
 ### Imports & AI
 

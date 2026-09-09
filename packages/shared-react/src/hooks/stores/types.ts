@@ -46,6 +46,8 @@ export type StoresMutationsResult = {
     searchAddress: string | null,
     website: string | null
   ) => Promise<StoreSearchAddressResult>;
+  /** File a grocery name at a Store under one of its aisles, or under none (null), which forgets it. */
+  fileGroceryName: (storeId: string, name: string, aisleId: string | null) => void;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;

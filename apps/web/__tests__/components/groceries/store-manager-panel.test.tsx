@@ -81,11 +81,11 @@ vi.mock("@/components/groceries/stores/delete-store-modal", () => ({
 const DIRK = {
   id: "store-dirk",
   name: "Dirk",
-  color: "green",
-  icon: "ShoppingBagIcon",
+  color: "danger",
   sortOrder: 0,
   website: "https://www.dirk.nl",
   searchAddress: "https://www.dirk.nl/zoeken/producten/{query}",
+  aisles: [],
 } as unknown as StoreDto;
 
 function nameField(): HTMLElement {
@@ -117,6 +117,28 @@ describe("StoreManagerPanel", () => {
     );
     // The list stays where it was, under the editor.
     expect(screen.getByText("Dirk")).toBeInTheDocument();
+  });
+
+  it("offers eight colours named by what they look like, the Store's own pressed, and no icon", () => {
+    render(<StoreManagerPanel open={true} stores={[DIRK]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("icon-edit"));
+
+    // Setting up a Store is its name, its shop link, its colour and its aisles.
+    expect(screen.queryByText("storeIcon")).not.toBeInTheDocument();
+    const names = ["green", "rose", "teal", "amber", "red", "grey", "blue", "violet"];
+
+    for (const name of names) {
+      expect(screen.getByRole("button", { name: `colorNames.${name}` })).toBeInTheDocument();
+    }
+    expect(screen.getAllByRole("button", { name: /^colorNames\./ })).toHaveLength(8);
+    expect(screen.getByRole("button", { name: "colorNames.red" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(screen.getByRole("button", { name: "colorNames.green" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
   });
 
   it("saves an edit from the editor's own footer and closes it", () => {
@@ -171,10 +193,128 @@ describe("StoreManagerPanel", () => {
     expect(createStore).toHaveBeenCalledWith({
       name: "Jumbo",
       color: "primary",
-      icon: "ShoppingBagIcon",
       website: null,
       searchAddress: null,
+      aisles: [],
     });
     expect(screen.queryByRole("region", { name: "addStore" })).not.toBeInTheDocument();
+  });
+});
+
+/** The names in the editor's aisle list, top to bottom. */
+function aisleNames(): string[] {
+  return screen.getAllByTestId("aisle-row-name").map((input) => (input as HTMLInputElement).value);
+}
+
+function addAisle(name: string, how: "enter" | "plus" = "enter"): void {
+  fireEvent.change(screen.getByTestId("aisle-name"), { target: { value: name } });
+  if (how === "enter") {
+    fireEvent.keyDown(screen.getByTestId("aisle-name"), { key: "Enter" });
+  } else {
+    fireEvent.click(screen.getByTestId("add-aisle"));
+  }
+}
+
+describe("StoreManagerPanel, a Store's aisles", () => {
+  const WITH_AISLES = {
+    ...DIRK,
+    aisles: [
+      { id: "aisle-brood", storeId: "store-dirk", name: "Brood", sortOrder: 1, version: 1 },
+      { id: "aisle-zuivel", storeId: "store-dirk", name: "Zuivel", sortOrder: 0, version: 1 },
+    ],
+  } as unknown as StoreDto;
+
+  it("shows the Store's aisles in the Store's order, directly under the colour picker", () => {
+    render(<StoreManagerPanel open={true} stores={[WITH_AISLES]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("icon-edit"));
+
+    expect(aisleNames()).toEqual(["Zuivel", "Brood"]);
+    const colours = screen.getByText("storeColor");
+    const aisles = screen.getByTestId("store-aisles");
+
+    expect(colours.compareDocumentPosition(aisles) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("adds an aisle with Enter or the plus, renames one in place and removes one with its X", () => {
+    render(<StoreManagerPanel open={true} stores={[DIRK]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("icon-edit"));
+
+    addAisle("Zuivel");
+    addAisle("Brood", "plus");
+    expect(aisleNames()).toEqual(["Zuivel", "Brood"]);
+    // The field is ready for the next one.
+    expect(screen.getByTestId("aisle-name")).toHaveValue("");
+
+    fireEvent.change(screen.getAllByTestId("aisle-row-name")[0]!, {
+      target: { value: "Zuivel en kaas" },
+    });
+    expect(aisleNames()).toEqual(["Zuivel en kaas", "Brood"]);
+
+    fireEvent.click(screen.getAllByTestId("remove-aisle")[1]!);
+    expect(aisleNames()).toEqual(["Zuivel en kaas"]);
+  });
+
+  it("refuses an aisle the Store already has, whatever its case", () => {
+    render(<StoreManagerPanel open={true} stores={[DIRK]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("icon-edit"));
+
+    addAisle("Zuivel");
+    addAisle(" zuivel ");
+
+    expect(screen.getByTestId("aisle-duplicate")).toHaveTextContent("aisleDuplicate");
+    expect(screen.getByTestId("add-aisle")).toBeDisabled();
+    expect(aisleNames()).toEqual(["Zuivel"]);
+    // Save is not gated by a refused add: the list itself is fine.
+    expect(screen.getByTestId("action-save")).toBeEnabled();
+
+    // Renaming one aisle onto another's name is refused too, and Save waits.
+    addAisle("Brood");
+    fireEvent.change(screen.getAllByTestId("aisle-row-name")[1]!, { target: { value: "ZUIVEL" } });
+    expect(screen.getByTestId("aisle-list-duplicate")).toBeInTheDocument();
+    expect(screen.getByTestId("action-save")).toBeDisabled();
+  });
+
+  it("writes nothing until Save, and then the whole list with the Store", () => {
+    render(<StoreManagerPanel open={true} stores={[WITH_AISLES]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("icon-edit"));
+
+    addAisle("Groente");
+    fireEvent.click(screen.getAllByTestId("remove-aisle")[1]!);
+    fireEvent.change(screen.getAllByTestId("aisle-row-name")[0]!, {
+      target: { value: "Zuivel en kaas" },
+    });
+    expect(updateStore).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId("action-save"));
+
+    // A known aisle carries the version it was read at (ADR-0004); a new one
+    // has none yet.
+    expect(updateStore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "store-dirk",
+        aisles: [
+          { id: "aisle-zuivel", name: "Zuivel en kaas", version: 1 },
+          { id: expect.any(String), name: "Groente" },
+        ],
+      })
+    );
+  });
+
+  it("creates a new Store with its aisles in one go", async () => {
+    render(<StoreManagerPanel open={true} stores={[DIRK]} onOpenChange={() => undefined} />);
+    fireEvent.click(screen.getByTestId("action-add"));
+    fireEvent.change(nameField(), { target: { value: "Jumbo" } });
+    addAisle("Zuivel");
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("action-create"));
+    });
+
+    expect(createStore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Jumbo",
+        aisles: [{ id: expect.any(String), name: "Zuivel" }],
+      })
+    );
   });
 });

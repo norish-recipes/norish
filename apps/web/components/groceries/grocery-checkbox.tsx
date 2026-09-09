@@ -24,6 +24,13 @@ type GroceryCheckboxProps = {
   isDisabled?: boolean;
   delayChangeOnSelect?: boolean;
   size?: "md" | "lg";
+  /**
+   * Whether the ring and fill take the Store's colour, as a row of the
+   * groceries list does. Off, the checkbox looks as HeroUI draws it, which is
+   * what the dashboard's panel, a recipe's ingredients and a cookbook picker
+   * want.
+   */
+  storeColored?: boolean;
   className?: string;
   onChange?: (isSelected: boolean) => void;
 };
@@ -35,6 +42,7 @@ export function GroceryCheckbox({
   isDisabled = false,
   delayChangeOnSelect = false,
   size = "lg",
+  storeColored = false,
   className = "",
   onChange,
 }: GroceryCheckboxProps) {
@@ -85,10 +93,20 @@ export function GroceryCheckbox({
     [delayChangeOnSelect, isDisabled, isSelected, onChange]
   );
 
+  // HeroUI paints the control's rest fill from `--default`, its ring from
+  // `--field-border` and the ticked fill from `--accent`; remapping those on
+  // the root is what turns the ring and fill into the Store's colour. A
+  // Store's section declares `--store-color`; the page ground declares the
+  // accent as its default, so a row under Unsorted or a recipe keeps the
+  // accent.
+  const storeColourTokens = storeColored
+    ? "[--accent:var(--store-color)] [--border-width-field:2px] [--default:transparent] [--field-border:var(--store-color)] [--field-border-hover:var(--store-color)]"
+    : "";
+
   return (
     <Checkbox
       aria-label={ariaLabel}
-      className={`${indicatorSize} ${className}`}
+      className={`${storeColourTokens} ${indicatorSize} ${className}`}
       isDisabled={isDisabled}
       isIndeterminate={visualSelected ? false : isIndeterminate}
       isSelected={visualSelected}
@@ -96,10 +114,11 @@ export function GroceryCheckbox({
       onChange={handleChange}
     >
       <Checkbox.Content>
+        {/* The ring in the Store's colour at rest, filled with it when ticked or indeterminate */}
         <Checkbox.Control
           className={`${controlSize} data-[indeterminate=true]:border-accent data-[indeterminate=true]:bg-accent data-[selected=true]:border-accent data-[selected=true]:bg-accent rounded-full before:rounded-full`}
         >
-          <Checkbox.Indicator className="text-accent-foreground" />
+          <Checkbox.Indicator className={storeColored ? "text-white" : "text-accent-foreground"} />
         </Checkbox.Control>
       </Checkbox.Content>
     </Checkbox>

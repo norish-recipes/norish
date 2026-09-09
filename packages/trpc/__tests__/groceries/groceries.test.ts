@@ -186,8 +186,10 @@ describe("groceries openapi procedures", () => {
 
     listGroceriesByUsers.mockResolvedValue([]);
     createGroceries.mockImplementation(
-      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
-        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
+      async (items: Array<{ id: string; groceries: { name: string | null } }>) => ({
+        created: items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name })),
+        shifted: [],
+      })
     );
 
     const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
@@ -213,8 +215,10 @@ describe("groceries openapi procedures", () => {
     // No existing groceries → no merge, so the create path runs.
     listGroceriesByUsers.mockResolvedValue([]);
     createGroceries.mockImplementation(
-      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
-        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
+      async (items: Array<{ id: string; groceries: { name: string | null } }>) => ({
+        created: items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name })),
+        shifted: [],
+      })
     );
 
     // Exercise the create helper directly: the internal `create` procedure validates
@@ -236,8 +240,10 @@ describe("groceries openapi procedures", () => {
 
     listGroceriesByUsers.mockResolvedValue([]);
     createGroceries.mockImplementation(
-      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
-        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
+      async (items: Array<{ id: string; groceries: { name: string | null } }>) => ({
+        created: items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name })),
+        shifted: [],
+      })
     );
 
     const result = await createGroceriesData(ctx, [
@@ -266,6 +272,31 @@ describe("groceries openapi procedures", () => {
     expect(createGroceries).not.toHaveBeenCalled();
     expect(updateGroceries).toHaveBeenCalledWith([{ id: existing.id, amount: 3, storeId }]);
     expect(result.ids).toEqual([existing.id]);
+  });
+
+  it("hands back and announces the siblings a create shifted, with their new versions", async () => {
+    // Making room at the top moved the siblings' sort order and version; a
+    // screen still holding the old version would have its next write on one
+    // of them refused as stale. So the answer carries them, and so does the
+    // household's updated event.
+    const sibling = createMockGrocery({ id: "sibling", name: "Peer", sortOrder: 1, version: 2 });
+
+    listGroceriesByUsers.mockResolvedValue([]);
+    createGroceries.mockImplementation(
+      async (items: Array<{ id: string; groceries: { name: string | null } }>) => ({
+        created: items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name })),
+        shifted: [sibling],
+      })
+    );
+
+    const result = await createGroceriesData(ctx, [
+      { name: "Apple", unit: null, amount: 1, isDone: false },
+    ]);
+
+    expect(result.updatedGroceries).toEqual([sibling]);
+    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "updated", {
+      changedGroceries: [sibling],
+    });
   });
 
   it("keeps the existing store when the merged-in grocery has none", async () => {
@@ -430,7 +461,7 @@ describe("grocery emitter", () => {
   it("emits created event after successful creation", async () => {
     const mockGroceries = [createMockGrocery({ id: "new-1", name: "New Item" })];
 
-    createGroceries.mockResolvedValue(mockGroceries);
+    createGroceries.mockResolvedValue({ created: mockGroceries, shifted: [] });
 
     groceryEmitter.emitToHousehold("household-1", "created", { groceries: mockGroceries });
 

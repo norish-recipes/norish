@@ -68,6 +68,25 @@ describe("chooseProduct", () => {
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });
 
+  it("writes the page a shopper gives a by-hand product", async () => {
+    storeProductsRepository.getStoreProductById.mockResolvedValue(null);
+    storeProductsRepository.createManualProduct.mockResolvedValue({
+      id: MANUAL_ID,
+      storeId: STORE,
+      isManual: true,
+    });
+
+    await caller.chooseProduct({
+      storeId: STORE,
+      name: "oude kaas",
+      choice: { ...manualChoice, pageUrl: "https://www.dirk.nl/p/oude-kaas" },
+    });
+
+    expect(storeProductsRepository.createManualProduct).toHaveBeenCalledWith(
+      expect.objectContaining({ pageUrl: "https://www.dirk.nl/p/oude-kaas" })
+    );
+  });
+
   it("creates a by-hand product for a price nobody typed before", async () => {
     storeProductsRepository.getStoreProductById.mockResolvedValue(null);
     storeProductsRepository.createManualProduct.mockResolvedValue({
@@ -150,6 +169,7 @@ describe("chooseProduct", () => {
       price: 6.5,
       currency: "EUR",
       size: null,
+      pageUrl: null,
     });
     expect(storeProductsRepository.createManualProduct).not.toHaveBeenCalled();
     expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(

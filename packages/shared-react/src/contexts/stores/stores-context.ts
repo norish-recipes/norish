@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, createElement, useContext, useMemo, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useMemo, useState } from "react";
 
 import type {
   ResolvedProductLink,
@@ -10,6 +10,7 @@ import type {
 } from "@norish/shared/contracts";
 
 import type {
+  StoreAislesResult,
   StoreGrocerySnapshot,
   StorePricesResult,
   StoresMutationsResult,
@@ -35,11 +36,16 @@ export type StoresContextValue = {
     searchAddress: string | null,
     website: string | null
   ) => Promise<StoreSearchAddressResult>;
+  /** File a grocery name at a Store under one of its aisles, or under none, which forgets it. */
+  fileGroceryName: (storeId: string, name: string, aisleId: string | null) => void;
   // Prices
   /** The Store Product a grocery resolves to, or null where its Store answered with a Miss. */
   priceFor: (storeId: string | null, name: string | null) => StoreProductDto | null;
   /** What its Store knows about the name: a link, a Miss, a Pending Link, or nothing. */
   linkFor: (storeId: string | null, name: string | null) => ResolvedProductLink | null;
+  // Aisles
+  /** The aisle a Store files a name under, or null where it has never been told (ADR-0031). */
+  aisleFor: (storeId: string | null, name: string | null) => string | null;
   // UI
   storeManagerOpen: boolean;
   setStoreManagerOpen: (open: boolean) => void;
@@ -52,6 +58,9 @@ type CreateStoresContextOptions = {
   /** Prices are a web surface for now; a client that has none passes neither. */
   useStorePrices?: () => StorePricesResult;
   useStorePricesSubscription?: () => void;
+  /** Aisles too: a client that ignores them files nothing and shows one flat list. */
+  useStoreAisles?: () => StoreAislesResult;
+  useStoreAislesSubscription?: () => void;
 };
 
 const useNoPrices = (): StorePricesResult => ({
@@ -60,6 +69,8 @@ const useNoPrices = (): StorePricesResult => ({
   isLoading: false,
 });
 const useNoPricesSubscription = () => undefined;
+const useNoAisles = (): StoreAislesResult => ({ aisleFor: () => null, isLoading: false });
+const useNoAislesSubscription = () => undefined;
 
 export function createStoresContext({
   useStoresQuery,
@@ -67,6 +78,8 @@ export function createStoresContext({
   useStoresSubscription,
   useStorePrices = useNoPrices,
   useStorePricesSubscription = useNoPricesSubscription,
+  useStoreAisles = useNoAisles,
+  useStoreAislesSubscription = useNoAislesSubscription,
 }: CreateStoresContextOptions) {
   const StoresContext = createContext<StoresContextValue | null>(null);
 
@@ -83,6 +96,25 @@ export function createStoresContext({
 
     useStorePricesSubscription();
 
+    // Where each Store files each name, and a housemate's filing as it lands.
+    // An aisle the Store no longer has — removed in the editor, its links gone
+    // by cascade on the server — is not an answer: the name is unfiled until
+    // the links are read again.
+    const { aisleFor: filedUnder } = useStoreAisles();
+    const aisleFor = useCallback(
+      (storeId: string | null, name: string | null) => {
+        const aisleId = filedUnder(storeId, name);
+
+        if (aisleId === null) return null;
+        const store = stores.find((candidate) => candidate.id === storeId);
+
+        return store?.aisles.some((aisle) => aisle.id === aisleId) ? aisleId : null;
+      },
+      [filedUnder, stores]
+    );
+
+    useStoreAislesSubscription();
+
     // UI State
     const [storeManagerOpen, setStoreManagerOpen] = useState(false);
 
@@ -93,10 +125,11 @@ export function createStoresContext({
         ...storeMutations,
         priceFor,
         linkFor,
+        aisleFor,
         storeManagerOpen,
         setStoreManagerOpen,
       }),
-      [stores, isLoading, storeMutations, priceFor, linkFor, storeManagerOpen]
+      [stores, isLoading, storeMutations, priceFor, linkFor, aisleFor, storeManagerOpen]
     );
 
     return createElement(StoresContext.Provider, { value }, children);

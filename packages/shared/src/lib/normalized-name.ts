@@ -36,3 +36,10 @@ export function nameWords(name: string): string[] {
 export function productLinkKey(storeId: string, normalizedName: string): string {
   return `${storeId}|${normalizedName}`;
 }
+
+/**
+ * The key of an Aisle Link, which is keyed exactly as a Product Link is: a
+ * Store and a normalized grocery name (ADR-0031). One spelling, so the aisle
+ * cache, the repository and the router never disagree on it.
+ */
+export const aisleLinkKey = productLinkKey;

@@ -53,6 +53,15 @@ describe("deriveStepIngredientAmount", () => {
     expect(deriveStepIngredientAmount(null, 0.5)).toBeNull();
     expect(deriveStepIngredientAmount(undefined, 1)).toBeNull();
   });
+
+  it("gives back exactly the amount an entry was divided from", () => {
+    // "150 of the 650 g" is stored as 150 / 650 and must read as 150 g again,
+    // not 150.02 — which is what a share rounded to four decimals yields
+    // (issue #550). Only the full-precision quotient multiplies back cleanly.
+    expect(deriveStepIngredientAmount(650, 150 / 650)).toBe(150);
+    expect(deriveStepIngredientAmount(650, 500 / 650)).toBe(500);
+    expect(deriveStepIngredientAmount(650, 0.2308)).toBe(150.02);
+  });
 });
 
 describe("resolveStepIngredients", () => {

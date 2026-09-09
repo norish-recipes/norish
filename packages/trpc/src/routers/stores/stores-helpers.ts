@@ -9,7 +9,8 @@ import {
   listStoresByUserIds,
 } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { StoreCreateSchema } from "@norish/shared/contracts/zod";
+import { StoreCreateInputSchema } from "@norish/shared/contracts/zod";
+import { duplicateAisleName } from "@norish/shared/lib/aisles";
 
 import { storeEmitter } from "./emitter";
 
@@ -44,9 +45,24 @@ export async function listStoresData(ctx: StoreProcedureContext) {
   return stores;
 }
 
+/**
+ * A Store's aisle names are unique regardless of case, checked here the way a
+ * duplicate Store name is, so the editor's refusal and the server's agree.
+ */
+export function assertAisleNamesUnique(aisles: { name: string }[] | undefined): void {
+  const duplicate = duplicateAisleName((aisles ?? []).map((aisle) => aisle.name));
+
+  if (duplicate !== null) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: `This store already has an aisle named ${duplicate}`,
+    });
+  }
+}
+
 export async function createStoreData(
   ctx: StoreProcedureContext,
-  input: z.infer<typeof StoreCreateSchema>
+  input: z.infer<typeof StoreCreateInputSchema>
 ) {
   const storeId = input.id ?? crypto.randomUUID();
 
@@ -60,15 +76,18 @@ export async function createStoreData(
       message: "A store with this name already exists",
     });
   }
+  assertAisleNamesUnique(input.aisles);
 
   const storeData = {
     userId: ctx.user.id,
     name: input.name,
     color: input.color ?? "primary",
-    icon: input.icon ?? "ShoppingBagIcon",
     sortOrder: 0,
     website: input.website ?? null,
     searchAddress: input.searchAddress ?? null,
+    // A new Store can be made with its aisles in one go; the REST create,
+    // which knows nothing of aisles, makes one with none.
+    ...(input.aisles === undefined ? {} : { aisles: input.aisles }),
   };
 
   const createdStore = await createStore(storeId, storeData);

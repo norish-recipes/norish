@@ -22,11 +22,11 @@
   },
   "store": {
     "unsorted": "Non trié",
-    "noItems": "Aucun article dans ce magasin",
     "storeActions": "Actions du magasin",
     "markAllDone": "Tout marquer comme fait",
     "deleteDone": "Supprimer les articles faits",
     "done": "{count} effectués",
+    "allDone": "Tout est fait",
     "total": "Reste à acheter"
   },
   "storeManager": {
@@ -37,7 +37,16 @@
     "storeName": "Nom du magasin",
     "storeNamePlaceholder": "ex. : Supermarché",
     "storeColor": "Couleur",
-    "storeIcon": "Icône",
+    "colorNames": {
+      "green": "Vert",
+      "rose": "Rose",
+      "teal": "Sarcelle",
+      "amber": "Ambre",
+      "red": "Rouge",
+      "grey": "Gris",
+      "blue": "Bleu",
+      "violet": "Violet"
+    },
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer {storeName} ?",
     "deleteWarning": "Les articles de ce magasin seront déplacés vers Non trié.",
     "noStoresYet": "Aucun magasin pour le moment",
@@ -65,7 +74,14 @@
     "checkNoProducts": "{store} a répondu, mais Norish n'y a trouvé aucun prix.",
     "checkAnswered": "{store} a répondu. Norish y cherchera dès que vous ajouterez une course.",
     "checkNoAnswer": "{store} n'a pas répondu. L'adresse de recherche est peut-être fausse.",
-    "checkNoAddress": "Norish n'a pas trouvé de page de recherche pour {store}. Collez une recherche que vous y avez faite."
+    "checkNoAddress": "Norish n'a pas trouvé de page de recherche pour {store}. Collez une recherche que vous y avez faite.",
+    "aisles": "Rayons",
+    "aislesHint": "Nommez les rayons de ce magasin dans l’ordre où vous les parcourez. Les courses sont affichées par rayon.",
+    "aisleNamePlaceholder": "p. ex. Produits laitiers",
+    "addAisle": "Ajouter un rayon",
+    "removeAisle": "Supprimer le rayon",
+    "dragAisle": "Glisser pour réordonner",
+    "aisleDuplicate": "Ce magasin a déjà un rayon portant ce nom"
   },
   "panel": {
     "addTitle": "Ajouter un article",
@@ -102,7 +118,9 @@
     "addSelectedToGroceries": "Ajouter aux courses",
     "ingredientsAdded": "Ingrédients ajoutés à la liste de courses.",
     "ingredientsFailed": "Échec de l'ajout des ingrédients à la liste de courses.",
-    "addToGroceries": "Ajouter aux courses"
+    "addToGroceries": "Ajouter aux courses",
+    "aisle": "Rayon",
+    "noAisle": "Aucun rayon"
   },
   "picker": {
     "searchPlaceholder": "Tapez pour chercher dans la boutique",
@@ -118,6 +136,11 @@
     "cannotSearch": "Cette boutique ne peut pas être cherchée",
     "cannotSearchHint": "Norish n'a pas pu tirer de page de recherche du lien de {store}. Corrigez-le dans Gérer les magasins et les prix suivront.",
     "packSize": "Conditionnement",
+    "packAmount": "Quantité par paquet",
+    "packUnit": "Unité",
+    "productPage": "Page du produit",
+    "invalidUrl": "Saisissez une adresse web, comme https://www.dirk.nl/…",
+    "invalidPack": "Saisissez une quantité et une unité, ou aucune des deux",
     "amount": "Quantité à acheter",
     "useCalculatedAmount": "Utiliser la quantité calculée",
     "productDetails": "Détails du produit",

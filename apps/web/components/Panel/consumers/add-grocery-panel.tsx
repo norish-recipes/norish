@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AisleSelector } from "@/components/groceries/aisle-selector";
 import { GroceryProductField } from "@/components/groceries/grocery-product-field";
 import { GroceryRecurrenceControl } from "@/components/groceries/grocery-recurrence-control";
 import { StoreSelector } from "@/components/groceries/store-selector";
 import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useProductChoice } from "@/hooks/stores";
+import { useAisleChoice, useProductChoice } from "@/hooks/stores";
 import { useRecurrenceDetection } from "@/hooks/use-recurrence-detection";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -74,6 +75,13 @@ export default function AddGroceryPanel({
     selectedStoreId,
     resetOn: open,
   });
+  // Where the chosen Store files this name; a new name can be taught to the
+  // Store the moment it is typed.
+  const aisle = useAisleChoice({
+    groceryName: price.groceryName,
+    store: price.store,
+    resetOn: open,
+  });
   const handleSubmit = () => {
     const trimmed = itemName.trim();
 
@@ -84,8 +92,11 @@ export default function AddGroceryPanel({
       onCreate(trimmed, selectedStoreId, purchaseAmount);
     }
 
-    // The picker's choice is written here and nowhere else.
+    // The picker's choice is written here and nowhere else — and the aisle
+    // after the grocery is created, only where it differs from what the Store
+    // remembered.
     price.commit();
+    aisle.commit();
 
     // Reset form but keep panel open for batch adding; `commit` has already
     // put the price stage back.
@@ -144,6 +155,15 @@ export default function AddGroceryPanel({
               stores={stores}
               onSelectionChange={setSelectedStoreId}
             />
+
+            {/* Where in that shop this is found: only for a Store with aisles, once there is a name */}
+            {price.store && aisle.aisles.length > 0 && price.groceryName !== "" && (
+              <AisleSelector
+                aisles={aisle.aisles}
+                selectedAisleId={aisle.aisleId}
+                onSelectionChange={aisle.setAisleId}
+              />
+            )}
 
             {/* Which of that shop's products this is */}
             {price.store && (

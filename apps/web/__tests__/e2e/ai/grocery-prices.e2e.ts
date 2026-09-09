@@ -13,6 +13,7 @@ import type { Page } from "@playwright/test";
 import type { FakeShop } from "../harness/fake-shop";
 import { createFakeShop } from "../harness/fake-shop";
 import { expect, test } from "./fixture";
+import { dragRowTo } from "./grocery-dnd-support";
 import {
   createShopStore,
   readGroceryAmount,
@@ -71,36 +72,9 @@ function rowFor(name: string) {
 
 /** Move a grocery into another Store's section the way a shopper does. */
 async function dragGroceryToStore(name: string, storeName: string): Promise<void> {
-  // dnd-kit marks its own activator, which sits inside the row in the grouped
-  // list and just outside it in the plain one.
-  const row = rowFor(name);
-  const inside = row.locator("button[aria-roledescription]");
-  const handle =
-    (await inside.count()) > 0
-      ? inside.first()
-      : row.locator("xpath=..").locator("button[aria-roledescription]").first();
   const target = page.locator(`[data-store-drop-target]`).filter({ hasText: storeName }).first();
 
-  // Both ends of the drag have to be on screen at once for the pointer to
-  // travel between them, and this list is longer than the default viewport.
-  await page.setViewportSize({ width: 1280, height: 1600 });
-  await handle.scrollIntoViewIfNeeded();
-
-  const from = await handle.boundingBox();
-  const to = await target.boundingBox();
-
-  if (!from || !to) throw new Error("The row or the Store's heading is not on screen");
-
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-  await page.mouse.down();
-  // dnd-kit's pointer sensor waits for 8px before it calls this a drag.
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 + 20, { steps: 5 });
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 25 });
-  await page.waitForTimeout(200);
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2 + 6, { steps: 5 });
-  await page.waitForTimeout(200);
-  await page.mouse.up();
-  await page.waitForTimeout(300);
+  await dragRowTo(page, rowFor(name), target);
 }
 
 test("a name the shop states unmistakably is priced without being asked", async () => {
@@ -169,7 +143,9 @@ test("a name the Store already knows is priced with no outbound request at all",
 
   // The Product Link is keyed by name, so it outlives the list line that
   // prompted it: next week's "melk" is priced without asking the shop again.
-  await page.getByText("melk").first().click();
+  // Exactly "melk": the aisles scenarios share this database and carry a
+  // "halfvolle melk" of their own, which sits earlier on the page.
+  await page.getByText("melk", { exact: true }).first().click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(priced).toBeHidden();
 
@@ -219,15 +195,29 @@ test("a shop that answers nothing takes a price by hand, with no button to press
   await page.goto("/groceries");
   await addGroceryToShop("sterrenstof");
   await page.getByText("sterrenstof").first().click();
+  // The price fields are there before the shop has been asked at all.
+  await expect(page.getByTestId("product-by-hand-price")).toBeVisible();
   await page.getByTestId("grocery-product-field").fill("sterrenstof");
   await expect(page.getByTestId("product-by-hand")).toBeVisible({ timeout: 30_000 });
 
   await page.getByTestId("product-by-hand-price").fill("3.50");
+  // Everything about the product is behind the details row, its page too.
+  await page.getByTestId("product-details").click();
+  await page.getByTestId("product-by-hand-page").fill("https://www.dirk.nl/p/sterrenstof");
+  await page.getByRole("button", { name: "Done", exact: true }).click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect
     .poll(async () => (await readStoredLink("sterrenstof"))?.price, { timeout: 30_000 })
     .toBe("3.50");
+
+  // Reopened, the panel offers the page that was typed.
+  await page.getByText("sterrenstof").first().click();
+  await expect(page.getByTestId("product-page-link")).toHaveAttribute(
+    "href",
+    "https://www.dirk.nl/p/sterrenstof"
+  );
+  await page.getByRole("button", { name: "Close panel" }).click();
 });
 
 test("a product chosen while adding is not overruled by the lookup queued for it", async () => {
@@ -326,6 +316,8 @@ test("700 g of a 500 g pack is two packs, on the row and at the heading", async 
     Number(text?.match(/\d+[.,]\d{2}/)?.[0].replace(",", ".") ?? 0);
 
   await expect(section.getByTestId("store-total")).toBeVisible();
+  // The heading reads what is left and what it costs, in one line.
+  await expect(section.getByTestId("store-meta")).toContainText(/\d+ items · /);
   const heading = money(await section.getByTestId("store-total").textContent());
   const costs = await section.getByTestId("grocery-line-cost").allTextContents();
   const sum = costs.map(money).reduce((total, cost) => Math.round((total + cost) * 100) / 100, 0);

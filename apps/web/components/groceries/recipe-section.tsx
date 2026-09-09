@@ -18,14 +18,14 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { BookOpenIcon, ChevronDownIcon, TagIcon } from "@heroicons/react/16/solid";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
 import { GroceryDragOverlay, SortableGroceryItem } from "./dnd";
+import { DoneRow } from "./done-row";
 import { GroceryItem } from "./grocery-item";
+import { StoreHeading } from "./store-heading";
 
 function sortGroceries(groceries: GroceryDto[], transitioningIds: Set<string>): GroceryDto[] {
   return [...groceries].sort((a, b) => {
@@ -45,7 +45,8 @@ function sortGroceries(groceries: GroceryDto[], transitioningIds: Set<string>): 
 const REORDER_DELAY = 600;
 
 interface RecipeSectionProps {
-  recipeId: string | null; // null = Manual items
+  /** The recipe, or null for the groceries that came from none; the section keys on it. */
+  recipeId: string | null;
   recipeName: string;
   groceries: GroceryDto[];
   recurringGroceries: RecurringGroceryDto[];
@@ -58,7 +59,6 @@ interface RecipeSectionProps {
 }
 
 function RecipeSectionComponent({
-  recipeId,
   recipeName,
   groceries,
   recurringGroceries,
@@ -70,7 +70,6 @@ function RecipeSectionComponent({
   defaultExpanded = true,
 }: RecipeSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const t = useTranslations("groceries.store");
 
   // Track items that are transitioning (just toggled) - delay their reorder
   const [transitioningIds, setTransitioningIds] = useState<Set<string>>(new Set());
@@ -244,54 +243,26 @@ function RecipeSectionComponent({
     return stores.find((s) => s.id === grocery.storeId) ?? null;
   };
 
+  // A recipe's rows under its heading bar, in one card; collapsed, the bar alone.
+  const hasRows = isExpanded && groceries.length > 0;
+
   return (
-    <motion.div className="relative">
-      <div className="border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-all duration-200">
-        {/* Header */}
-        <div
-          className={`flex w-full items-center gap-3 px-4 py-3 ${
-            recipeId ? "bg-accent-soft dark:bg-accent/30" : "bg-surface-secondary"
-          }`}
-        >
-          <button
-            className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:opacity-90"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {/* Icon */}
-            <div
-              className={`shrink-0 rounded-full p-1.5 ${recipeId ? "bg-accent-soft0" : "bg-muted"}`}
-            >
-              {recipeId ? (
-                <BookOpenIcon className="h-4 w-4 text-white" />
-              ) : (
-                <TagIcon className="h-4 w-4 text-white" />
-              )}
-            </div>
+    <motion.div
+      className="border-border bg-surface shadow-surface relative overflow-hidden rounded-xl border"
+      data-testid="store-card"
+    >
+      <div className="bg-surface-secondary">
+        <StoreHeading
+          activeCount={activeCount}
+          doneCount={doneCount}
+          expanded={isExpanded}
+          name={recipeName}
+          onExpandedChange={setIsExpanded}
+        />
+      </div>
 
-            {/* Name and count */}
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="truncate font-semibold">{recipeName}</span>
-              <span className="text-muted shrink-0 text-sm">
-                {activeCount > 0 && <span>{activeCount}</span>}
-                {doneCount > 0 && (
-                  <span className="text-muted ml-1">({t("done", { count: doneCount })})</span>
-                )}
-              </span>
-            </div>
-
-            {/* Expand/collapse chevron */}
-            <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              className="text-muted shrink-0"
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronDownIcon className="h-5 w-5" />
-            </motion.div>
-          </button>
-        </div>
-
-        {/* Items with drag-and-drop for reordering */}
-        {isExpanded && (
+      {hasRows && (
+        <div className="border-border border-t" data-testid="store-rows">
           <DndContext
             collisionDetection={closestCenter}
             sensors={sensors}
@@ -300,7 +271,7 @@ function RecipeSectionComponent({
             onDragStart={handleDragStart}
           >
             <div className="divide-border divide-y">
-              {/* Active (not done) items - sortable */}
+              {/* Active (not done) items - sortable; each checkbox in the colour of the Store it is assigned to */}
               <SortableContext items={orderedIds} strategy={verticalListSortingStrategy}>
                 {orderedActiveGroceries.map((grocery, index) => {
                   const recurringGrocery = grocery.recurringGroceryId
@@ -328,33 +299,30 @@ function RecipeSectionComponent({
                 })}
               </SortableContext>
 
-              {/* Done items - not sortable */}
-              {doneGroceries.map((grocery, index) => {
-                const recurringGrocery = grocery.recurringGroceryId
-                  ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
-                  : null;
-                const store = getStoreForGrocery(grocery);
-                const isFirst = index === 0 && orderedActiveGroceries.length === 0;
-                const isLast = index === doneGroceries.length - 1;
+              {/* The done tail, folded into one row that opens on tap; not sortable */}
+              {doneGroceries.length > 0 && (
+                <DoneRow count={doneGroceries.length}>
+                  {doneGroceries.map((grocery, index) => {
+                    const recurringGrocery = grocery.recurringGroceryId
+                      ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ??
+                        null)
+                      : null;
+                    const store = getStoreForGrocery(grocery);
 
-                return (
-                  <div key={grocery.id}>
-                    <GroceryItem
-                      grocery={grocery}
-                      isFirst={isFirst}
-                      isLast={isLast}
-                      recurringGrocery={recurringGrocery}
-                      store={store}
-                      onDelete={onDelete}
-                      onEdit={onEdit}
-                      onToggle={handleToggle}
-                    />
-                  </div>
-                );
-              })}
-
-              {groceries.length === 0 && (
-                <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
+                    return (
+                      <GroceryItem
+                        key={grocery.id}
+                        grocery={grocery}
+                        isLast={index === doneGroceries.length - 1}
+                        recurringGrocery={recurringGrocery}
+                        store={store}
+                        onDelete={onDelete}
+                        onEdit={onEdit}
+                        onToggle={handleToggle}
+                      />
+                    );
+                  })}
+                </DoneRow>
               )}
             </div>
 
@@ -367,8 +335,8 @@ function RecipeSectionComponent({
               ) : null}
             </DragOverlay>
           </DndContext>
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }

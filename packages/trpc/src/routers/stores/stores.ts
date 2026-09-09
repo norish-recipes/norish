@@ -14,6 +14,7 @@ import {
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
+  StoreCreateInputSchema,
   StoreCreateSchema,
   StoreDeleteSchema,
   StoreReorderSchema,
@@ -25,7 +26,7 @@ import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { groceryEmitter } from "../groceries/emitter";
 import { storeEmitter } from "./emitter";
-import { createStoreData, listStoresData } from "./stores-helpers";
+import { assertAisleNamesUnique, createStoreData, listStoresData } from "./stores-helpers";
 import {
   createStoreOutputSchema,
   listStoresOutputSchema,
@@ -36,7 +37,7 @@ const list = authedProcedure.query(async ({ ctx }) => {
   return listStoresData(ctx);
 });
 
-const create = authedProcedure.input(StoreCreateSchema).mutation(async ({ ctx, input }) => {
+const create = authedProcedure.input(StoreCreateInputSchema).mutation(async ({ ctx, input }) => {
   try {
     const createdStore = await createStoreData(ctx, input);
 
@@ -103,6 +104,9 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
       });
     }
   }
+  // The aisles ride on the same save, whole and in order, and two of them
+  // cannot share a name.
+  assertAisleNamesUnique(input.aisles);
 
   try {
     const updatedStore = await updateStore(input);

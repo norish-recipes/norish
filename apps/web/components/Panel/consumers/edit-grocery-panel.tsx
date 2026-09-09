@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AisleSelector } from "@/components/groceries/aisle-selector";
 import { GroceryProductField } from "@/components/groceries/grocery-product-field";
 import { GroceryRecurrenceControl } from "@/components/groceries/grocery-recurrence-control";
 import { StoreSelector } from "@/components/groceries/store-selector";
 import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useProductChoice } from "@/hooks/stores";
+import { useAisleChoice, useProductChoice } from "@/hooks/stores";
 import { useRecurrenceDetection } from "@/hooks/use-recurrence-detection";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -90,6 +91,12 @@ export default function EditGroceryPanel({
     selectedStoreId,
     resetOn: grocery.id,
   });
+  // Where the chosen Store files this name, re-read when the Store is swapped.
+  const aisle = useAisleChoice({
+    groceryName: price.groceryName,
+    store: price.store,
+    resetOn: grocery.id,
+  });
   const handleStoreChange = (storeId: string | null) => {
     setSelectedStoreId(storeId);
     setHasStoreChanged(storeId !== (grocery.storeId ?? null));
@@ -109,8 +116,11 @@ export default function EditGroceryPanel({
       purchaseAmount
     );
 
-    // The picker's choice is written here and nowhere else.
+    // The picker's choice is written here and nowhere else — and the aisle
+    // after the grocery is updated, only where it differs from what the Store
+    // remembered.
     price.commit();
+    aisle.commit();
 
     onOpenChange(false);
   };
@@ -163,6 +173,15 @@ export default function EditGroceryPanel({
               stores={stores}
               onSelectionChange={handleStoreChange}
             />
+
+            {/* Where in that shop this is found: only for a Store with aisles, once there is a name */}
+            {price.store && aisle.aisles.length > 0 && price.groceryName !== "" && (
+              <AisleSelector
+                aisles={aisle.aisles}
+                selectedAisleId={aisle.aisleId}
+                onSelectionChange={aisle.setAisleId}
+              />
+            )}
 
             {/* Which of that shop's products this is */}
             {price.store && (

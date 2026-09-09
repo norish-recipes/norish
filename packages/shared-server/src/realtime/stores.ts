@@ -1,5 +1,10 @@
 import type { TypedRedisEmitter } from "@norish/shared-server/redis/pubsub";
-import type { ResolvedProductLink, StoreDto, StoreProductDto } from "@norish/shared/contracts";
+import type {
+  AisleFiled,
+  ResolvedProductLink,
+  StoreDto,
+  StoreProductDto,
+} from "@norish/shared/contracts";
 import { createTypedEmitter } from "@norish/shared-server/redis/pubsub";
 
 export type StoreSubscriptionEvents = {
@@ -11,6 +16,11 @@ export type StoreSubscriptionEvents = {
   productUpdated: { product: StoreProductDto };
   /** What a Store now knows a name means; merged by store and normalized name. */
   linkUpdated: { link: ResolvedProductLink };
+  /**
+   * Where a Store now files a name, or null where it has forgotten it; merged
+   * by store and normalized name, a null removing the entry (ADR-0031).
+   */
+  aisleFiled: { filing: AisleFiled };
 };
 
 declare global {

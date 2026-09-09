@@ -22,11 +22,11 @@
   },
   "store": {
     "unsorted": "Nieposortowane",
-    "noItems": "Brak produktów w tym sklepie",
     "storeActions": "Akcje sklepu",
     "markAllDone": "Zaznacz wszystkie",
     "deleteDone": "Usuń zaznaczone",
     "done": "{count} gotowe",
+    "allDone": "Wszystko gotowe",
     "total": "Jeszcze do kupienia"
   },
   "storeManager": {
@@ -37,7 +37,16 @@
     "storeName": "Nazwa sklepu",
     "storeNamePlaceholder": "np. Supermarket",
     "storeColor": "Kolor",
-    "storeIcon": "Ikona",
+    "colorNames": {
+      "green": "Zielony",
+      "rose": "Różowy",
+      "teal": "Morski",
+      "amber": "Bursztynowy",
+      "red": "Czerwony",
+      "grey": "Szary",
+      "blue": "Niebieski",
+      "violet": "Fioletowy"
+    },
     "confirmDelete": "Czy na pewno chcesz usunąć {storeName}?",
     "deleteWarning": "Produkty z tego sklepu zostaną przeniesione do Nieposortowanych.",
     "noStoresYet": "Brak sklepów",
@@ -65,7 +74,14 @@
     "checkNoProducts": "{store} odpowiedział, ale Norish nie znalazł tam cen.",
     "checkAnswered": "{store} odpowiedział. Norish poszuka tam, gdy dodasz zakup.",
     "checkNoAnswer": "{store} nie odpowiedział. Adres wyszukiwania może być błędny.",
-    "checkNoAddress": "Norish nie znalazł strony wyszukiwania dla {store}. Wklej wyszukiwanie, które tam wykonano."
+    "checkNoAddress": "Norish nie znalazł strony wyszukiwania dla {store}. Wklej wyszukiwanie, które tam wykonano.",
+    "aisles": "Alejki",
+    "aislesHint": "Nazwij alejki tego sklepu w kolejności, w jakiej je przechodzisz. Zakupy są pokazywane według alejek.",
+    "aisleNamePlaceholder": "np. Nabiał",
+    "addAisle": "Dodaj alejkę",
+    "removeAisle": "Usuń alejkę",
+    "dragAisle": "Przeciągnij, aby zmienić kolejność",
+    "aisleDuplicate": "Ten sklep ma już alejkę o tej nazwie"
   },
   "panel": {
     "addTitle": "Dodaj zakup",
@@ -102,7 +118,9 @@
     "addSelectedToGroceries": "Dodaj do zakupów",
     "ingredientsAdded": "Składniki dodane do listy zakupów.",
     "ingredientsFailed": "Nie udało się dodać składników do listy zakupów.",
-    "addToGroceries": "Dodaj do zakupów"
+    "addToGroceries": "Dodaj do zakupów",
+    "aisle": "Alejka",
+    "noAisle": "Bez alejki"
   },
   "picker": {
     "searchPlaceholder": "Wpisz, aby szukać w sklepie",
@@ -118,6 +136,11 @@
     "cannotSearch": "W tym sklepie nie można szukać",
     "cannotSearchHint": "Norish nie odczytał strony wyszukiwania z linku sklepu {store}. Popraw go w Zarządzaj sklepami, a ceny się pojawią.",
     "packSize": "Wielkość opakowania",
+    "packAmount": "Ilość w opakowaniu",
+    "packUnit": "Jednostka",
+    "productPage": "Strona produktu",
+    "invalidUrl": "Wpisz adres strony, np. https://www.dirk.nl/…",
+    "invalidPack": "Podaj zarówno ilość, jak i jednostkę, albo żadnej z nich",
     "amount": "Ilość do kupienia",
     "useCalculatedAmount": "Użyj obliczonej ilości",
     "productDetails": "Szczegóły produktu",

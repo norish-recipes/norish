@@ -1,13 +1,13 @@
 import "@/global.css";
 
 import React, { useEffect } from "react";
-import { StyleSheet, useColorScheme } from "react-native";
+import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { StorageUnavailableScreen } from "@/components/shell/storage-unavailable-screen";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
 } from "@/context/appearance-preference-context";
-import { StorageUnavailableScreen } from "@/components/shell/storage-unavailable-screen";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { GroceriesProvider } from "@/context/groceries-context";
 import { HouseholdProvider } from "@/context/household-context";
@@ -19,15 +19,16 @@ import { RecipesProvider } from "@/context/recipes-context";
 import { StoresProvider } from "@/context/stores-context";
 import { UserProvider } from "@/context/user-context";
 import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
-import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { useCacheHydration } from "@/hooks/use-cache-hydration";
 import { useCacheInvalidationOnReconnect } from "@/hooks/use-cache-lifecycle";
+import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
+import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { TrpcProvider } from "@/providers/trpc-provider";
 import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import * as SplashScreen from "expo-splash-screen";
 import { HeroUINativeProvider } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
@@ -57,8 +58,8 @@ export default function RootLayout() {
 // ============================================================================
 
 function RootLayoutContent() {
-  const { hydrated, mode } = useAppearancePreference();
-  const systemColorScheme = useColorScheme();
+  const { hydrated } = useAppearancePreference();
+  const effectiveScheme = useResolvedColorScheme();
 
   const backendBaseUrl = useBackendBaseUrl();
   const cacheReady = useCacheHydration();
@@ -80,8 +81,6 @@ function RootLayoutContent() {
   if (boot.phase === "loading") {
     return null;
   }
-
-  const effectiveScheme = mode === "system" ? (systemColorScheme ?? "light") : mode;
 
   const theme = effectiveScheme === "dark" ? DarkTheme : DefaultTheme;
 

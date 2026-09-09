@@ -22,11 +22,11 @@
   },
   "store": {
     "unsorted": "Sem classificação",
-    "noItems": "Nenhum item nesta loja",
     "storeActions": "Ações da loja",
     "markAllDone": "Marcar tudo como concluído",
     "deleteDone": "Excluir concluídos",
     "done": "{count} concluído(s)",
+    "allDone": "Tudo feito",
     "total": "Ainda por comprar"
   },
   "storeManager": {
@@ -37,7 +37,16 @@
     "storeName": "Nome da loja",
     "storeNamePlaceholder": "ex.: Supermercado",
     "storeColor": "Cor",
-    "storeIcon": "Ícone",
+    "colorNames": {
+      "green": "Verde",
+      "rose": "Rosa",
+      "teal": "Azul-petróleo",
+      "amber": "Âmbar",
+      "red": "Vermelho",
+      "grey": "Cinza",
+      "blue": "Azul",
+      "violet": "Violeta"
+    },
     "confirmDelete": "Tem certeza de que deseja excluir {storeName}?",
     "deleteWarning": "Os itens desta loja serão movidos para Sem classificação.",
     "noStoresYet": "Ainda não há lojas",
@@ -65,7 +74,14 @@
     "checkNoProducts": "{store} respondeu, mas o Norish não encontrou preços lá.",
     "checkAnswered": "{store} respondeu. O Norish vai buscar lá quando você adicionar um item.",
     "checkNoAnswer": "{store} não respondeu. O endereço de busca pode estar errado.",
-    "checkNoAddress": "O Norish não encontrou uma página de busca para {store}. Cole uma busca que você fez lá."
+    "checkNoAddress": "O Norish não encontrou uma página de busca para {store}. Cole uma busca que você fez lá.",
+    "aisles": "Corredores",
+    "aislesHint": "Nomeie os corredores desta loja na ordem em que você os percorre. As compras são mostradas por corredor.",
+    "aisleNamePlaceholder": "ex.: Laticínios",
+    "addAisle": "Adicionar corredor",
+    "removeAisle": "Remover corredor",
+    "dragAisle": "Arraste para reordenar",
+    "aisleDuplicate": "Esta loja já tem um corredor com esse nome"
   },
   "panel": {
     "addTitle": "Adicionar item",
@@ -102,7 +118,9 @@
     "addSelectedToGroceries": "Adicionar à lista de compras",
     "ingredientsAdded": "Ingredientes adicionados à lista de compras.",
     "ingredientsFailed": "Falha ao adicionar ingredientes à lista de compras.",
-    "addToGroceries": "Adicionar à lista de compras"
+    "addToGroceries": "Adicionar à lista de compras",
+    "aisle": "Corredor",
+    "noAisle": "Sem corredor"
   },
   "picker": {
     "searchPlaceholder": "Digite para buscar na loja",
@@ -118,6 +136,11 @@
     "cannotSearch": "Não dá para buscar nesta loja",
     "cannotSearchHint": "O Norish não conseguiu tirar uma página de busca do link de {store}. Corrija em Gerenciar lojas e os preços virão.",
     "packSize": "Tamanho da embalagem",
+    "packAmount": "Quantidade por embalagem",
+    "packUnit": "Unidade",
+    "productPage": "Página do produto",
+    "invalidUrl": "Digite um endereço web, como https://www.dirk.nl/…",
+    "invalidPack": "Informe uma quantidade e uma unidade, ou nenhuma das duas",
     "amount": "Quantidade a comprar",
     "useCalculatedAmount": "Usar a quantidade calculada",
     "productDetails": "Detalhes do produto",

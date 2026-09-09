@@ -11,7 +11,8 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 import type { ContainerId, DndGroceryProviderProps, ItemsState } from "./types";
 import { createMultiContainerCollisionDetection } from "./collision-detection";
-import { buildItemsState, containerIdToStoreId, findContainerForItem } from "./utils";
+import { planDrop } from "./drop-plan";
+import { buildItemsState, findContainerForItem } from "./utils";
 
 interface UseGroceryDndResult {
   // State
@@ -40,21 +41,32 @@ export function useGroceryDnd({
   stores,
   recurringGroceries,
   onReorderInStore,
+  aisleFor,
+  onFileGroceryName,
   getRecipeNameForGrocery,
 }: Omit<DndGroceryProviderProps, "children">): UseGroceryDndResult {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overContainerId, setOverContainerId] = useState<ContainerId | null>(null);
-  const [items, setItems] = useState<ItemsState>(() => buildItemsState(groceries, stores));
+  const [items, setItems] = useState<ItemsState>(() =>
+    buildItemsState(groceries, stores, aisleFor)
+  );
   const clonedItems = useRef<ItemsState | null>(null);
   const lastOverId = useRef<string | null>(null);
   const recentlyMovedToNewContainer = useRef(false);
 
-  const prevGroceriesRef = useRef<GroceryDto[]>(groceries);
+  // Sync items state when groceries, stores or filings change from an external
+  // source: a housemate's filing moves a row between containers too.
+  const source = { groceries, stores, aisleFor };
+  const prevSourceRef = useRef(source);
 
-  // Sync items state when groceries/stores change from external source
-  if (!activeId && groceries !== prevGroceriesRef.current) {
-    prevGroceriesRef.current = groceries;
-    const newItems = buildItemsState(groceries, stores);
+  if (
+    !activeId &&
+    (groceries !== prevSourceRef.current.groceries ||
+      stores !== prevSourceRef.current.stores ||
+      aisleFor !== prevSourceRef.current.aisleFor)
+  ) {
+    prevSourceRef.current = source;
+    const newItems = buildItemsState(groceries, stores, aisleFor);
     const itemsChanged =
       JSON.stringify(Object.keys(newItems).sort()) !== JSON.stringify(Object.keys(items).sort()) ||
       Object.keys(newItems).some(
@@ -230,62 +242,35 @@ export function useGroceryDnd({
         return;
       }
 
-      // Build updates for backend based on current items state
-      // (all reordering was already done in handleDragOver)
-      if (originalItems) {
-        const originalContainer = findContainerForItem(active.id as string, originalItems);
-        const wasCrossContainerMove = originalContainer !== currentContainer;
+      // Commit what the drag arranged (handleDragOver already moved the row):
+      // the reorder first, then what the drop teaches the Store, in that order.
+      const originalContainer = originalItems
+        ? findContainerForItem(active.id as string, originalItems)
+        : null;
+      const moved = groceries.find((grocery) => grocery.id === active.id);
 
-        const updates: { id: string; sortOrder: number; storeId?: string | null }[] = [];
-
-        // Update original container if item moved out
-        if (wasCrossContainerMove && originalContainer) {
-          const currentOriginalItems = items[originalContainer] ?? [];
-
-          currentOriginalItems.forEach((id, index) => {
-            updates.push({ id, sortOrder: index });
-          });
-        }
-
-        // Update destination container with current positions
-        const finalItems = items[currentContainer] ?? [];
-
-        finalItems.forEach((id, index) => {
-          const update: { id: string; sortOrder: number; storeId?: string | null } = {
-            id,
-            sortOrder: index,
-          };
-
-          if (id === active.id && wasCrossContainerMove) {
-            update.storeId = containerIdToStoreId(currentContainer);
-          }
-          updates.push(update);
+      if (originalContainer && moved) {
+        const { updates, filings } = planDrop({
+          items,
+          originContainer: originalContainer,
+          targetContainer: currentContainer,
+          stores,
+          aisleFor,
+          movedIds: [moved.id],
+          movedNames: moved.name ? [moved.name] : [],
+          idsOf: (id) => [id],
         });
 
-        // Deduplicate (prefer entries with storeId set)
-        const updateMap = new Map<
-          string,
-          { id: string; sortOrder: number; storeId?: string | null }
-        >();
-
-        for (const update of updates) {
-          const existing = updateMap.get(update.id);
-
-          if (!existing || update.storeId !== undefined) {
-            updateMap.set(update.id, update);
-          }
-        }
-
-        if (updateMap.size > 0) {
-          onReorderInStore(Array.from(updateMap.values()));
-        }
+        if (updates.length > 0) onReorderInStore(updates);
+        for (const filing of filings)
+          onFileGroceryName(filing.storeId, filing.name, filing.aisleId);
       }
 
       setActiveId(null);
       setOverContainerId(null);
       clonedItems.current = null;
     },
-    [findContainer, items, onReorderInStore]
+    [findContainer, items, groceries, stores, aisleFor, onReorderInStore, onFileGroceryName]
   );
 
   const handleDragCancel = useCallback(() => {

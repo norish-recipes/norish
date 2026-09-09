@@ -22,11 +22,11 @@
   },
   "store": {
     "unsorted": "Usortert",
-    "noItems": "Ingen varer i denne butikken",
     "storeActions": "Butikkhandlinger",
     "markAllDone": "Merk alle som ferdige",
     "deleteDone": "Slett ferdige",
     "done": "{count} ferdige",
+    "allDone": "Alt ferdig",
     "total": "Igjen å kjøpe"
   },
   "storeManager": {
@@ -37,7 +37,16 @@
     "storeName": "Butikknavn",
     "storeNamePlaceholder": "f.eks. Supermarked",
     "storeColor": "Farge",
-    "storeIcon": "Ikon",
+    "colorNames": {
+      "green": "Grønn",
+      "rose": "Rosa",
+      "teal": "Blågrønn",
+      "amber": "Rav",
+      "red": "Rød",
+      "grey": "Grå",
+      "blue": "Blå",
+      "violet": "Fiolett"
+    },
     "confirmDelete": "Er du sikker på at du vil slette {storeName}?",
     "deleteWarning": "Varer i denne butikken flyttes til Usortert.",
     "noStoresYet": "Ingen butikker ennå",
@@ -65,7 +74,14 @@
     "checkNoProducts": "{store} svarte, men Norish fant ingen priser der.",
     "checkAnswered": "{store} svarte. Norish søker der når du legger til en vare.",
     "checkNoAnswer": "{store} svarte ikke. Søkeadressen kan være feil.",
-    "checkNoAddress": "Norish fant ingen søkeside for {store}. Lim inn et søk du gjorde der."
+    "checkNoAddress": "Norish fant ingen søkeside for {store}. Lim inn et søk du gjorde der.",
+    "aisles": "Ganger",
+    "aislesHint": "Gi gangene i denne butikken navn i den rekkefølgen du går dem. Innkjøp vises per gang.",
+    "aisleNamePlaceholder": "f.eks. Meieri",
+    "addAisle": "Legg til gang",
+    "removeAisle": "Fjern gang",
+    "dragAisle": "Dra for å endre rekkefølgen",
+    "aisleDuplicate": "Denne butikken har allerede en gang med det navnet"
   },
   "panel": {
     "addTitle": "Legg til handlevare",
@@ -102,7 +118,9 @@
     "addSelectedToGroceries": "Legg til i handleliste",
     "ingredientsAdded": "Ingredienser lagt til i handlelisten.",
     "ingredientsFailed": "Kunne ikke legge til ingredienser i handlelisten.",
-    "addToGroceries": "Legg til i handleliste"
+    "addToGroceries": "Legg til i handleliste",
+    "aisle": "Gang",
+    "noAisle": "Ingen gang"
   },
   "picker": {
     "searchPlaceholder": "Skriv for å søke i butikken",
@@ -118,6 +136,11 @@
     "cannotSearch": "Denne butikken kan ikke søkes i",
     "cannotSearchHint": "Norish klarte ikke å lese en søkeside ut av butikklenken til {store}. Rett den under Administrer butikker, så følger prisene.",
     "packSize": "Pakkestørrelse",
+    "packAmount": "Mengde per pakke",
+    "packUnit": "Enhet",
+    "productPage": "Produktside",
+    "invalidUrl": "Skriv inn en nettadresse, som https://www.dirk.nl/…",
+    "invalidPack": "Skriv inn både en mengde og en enhet, eller ingen av delene",
     "amount": "Antall å kjøpe",
     "useCalculatedAmount": "Bruk beregnet antall",
     "productDetails": "Produktdetaljer",
