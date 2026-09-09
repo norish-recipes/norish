@@ -195,15 +195,29 @@ test("a shop that answers nothing takes a price by hand, with no button to press
   await page.goto("/groceries");
   await addGroceryToShop("sterrenstof");
   await page.getByText("sterrenstof").first().click();
+  // The price fields are there before the shop has been asked at all.
+  await expect(page.getByTestId("product-by-hand-price")).toBeVisible();
   await page.getByTestId("grocery-product-field").fill("sterrenstof");
   await expect(page.getByTestId("product-by-hand")).toBeVisible({ timeout: 30_000 });
 
   await page.getByTestId("product-by-hand-price").fill("3.50");
+  // Everything about the product is behind the details row, its page too.
+  await page.getByTestId("product-details").click();
+  await page.getByTestId("product-by-hand-page").fill("https://www.dirk.nl/p/sterrenstof");
+  await page.getByRole("button", { name: "Done", exact: true }).click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect
     .poll(async () => (await readStoredLink("sterrenstof"))?.price, { timeout: 30_000 })
     .toBe("3.50");
+
+  // Reopened, the panel offers the page that was typed.
+  await page.getByText("sterrenstof").first().click();
+  await expect(page.getByTestId("product-page-link")).toHaveAttribute(
+    "href",
+    "https://www.dirk.nl/p/sterrenstof"
+  );
+  await page.getByRole("button", { name: "Close panel" }).click();
 });
 
 test("a product chosen while adding is not overruled by the lookup queued for it", async () => {

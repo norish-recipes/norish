@@ -229,6 +229,26 @@ describe("store products, product links and misses", () => {
   });
 
   describe("a by-hand price is the last word", () => {
+    it("takes over the product the Store read from the page a by-hand product is typed for", async () => {
+      // A page is one product at a Store: the shopper's word replaces the
+      // reading in place, keeps its id, and is by hand from then on.
+      const read = await upsertReadProduct(reading());
+      const manual = await createManualProduct({
+        id: crypto.randomUUID(),
+        storeId,
+        name: "Oude kaas, de goede",
+        price: 4.5,
+        currency: "EUR",
+        pageUrl: PAGE,
+      });
+
+      expect(manual.id).toBe(read.id);
+      expect(manual).toMatchObject({ isManual: true, price: 4.5, pageUrl: PAGE });
+      const after = await upsertReadProduct(reading());
+
+      expect(after).toMatchObject({ id: read.id, price: 4.5, name: "Oude kaas, de goede" });
+    });
+
     it("leaves a by-hand product untouched when a page states otherwise", async () => {
       const manual = await createManualProduct({
         id: crypto.randomUUID(),

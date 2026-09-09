@@ -68,6 +68,8 @@ export const StoreProductManualCreateSchema = z.object({
   price: z.number().nonnegative(),
   currency: CurrencyCodeSchema,
   size: z.string().max(80).nullish(),
+  // The product's own page at the shop, where the shopper has one to give.
+  pageUrl: httpUrlSchema.nullish(),
   pack: PackSizeSchema.nullish(),
   ...SaleFields,
 });
@@ -78,6 +80,8 @@ export const StoreProductManualUpdateSchema = z.object({
   price: z.number().nonnegative().optional(),
   currency: CurrencyCodeSchema.optional(),
   size: z.string().max(80).nullish(),
+  // The product's own page at the shop, where the shopper has one to give.
+  pageUrl: httpUrlSchema.nullish(),
   pack: PackSizeSchema.nullish(),
   ...SaleFields,
 });
@@ -114,6 +118,8 @@ export const StoreProductChoiceSchema = z.object({
       price: z.number().nonnegative(),
       currency: CurrencyCodeSchema,
       size: z.string().max(80).nullish(),
+      // The product's own page at the shop, where the shopper has one to give.
+      pageUrl: httpUrlSchema.nullish(),
       // What a correction inherits from the product it corrects.
       pack: PackSizeSchema.nullish(),
       ...SaleFields,

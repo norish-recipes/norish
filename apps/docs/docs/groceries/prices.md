@@ -135,10 +135,11 @@ so, so you can see it working rather than guess.
 
 Picking one fills in **Amount to buy** and **Price**, and **Open at
 Dirk** beside the field takes you to the product's own page at the shop, in
-a new tab, for a product Norish read there. The **Product details** row
-under them sums up the currency and the pack; tap it and those
-open in a panel of their own, the way the recurrence editor does, for the
-rare correction. Nothing is written until you press **Save** or **Add** —
+a new tab. The **Product details** row under them sums up the price and the
+pack; tap it and everything about the product opens in a panel of its own,
+the way the recurrence editor does: its name, price and currency, what one
+price buys as an amount and a unit, and its page at the shop — all of it
+yours to overwrite. Nothing is written until you press **Save** or **Add** —
 what you do in the dropdown changes nothing your household sees until then.
 Norish asks the shop only once you use the field, so opening a grocery to
 rename it sends nobody to a supermarket, and a Store with no shop link shows
@@ -156,13 +157,16 @@ is fixed rather than quietly dropping it.
 Some shops answer with nothing Norish can read, and some cannot be searched at
 all — a shop link Norish could not make a search page out of. A shop that does
 not answer at all — down, or turning the visit away — is reported as exactly
-that, not as a shop with nothing on its shelf. In every case the field offers to
-take a price by hand: a name, prefilled with the
-grocery's, and the price and currency you saw. There is nothing to press — a
-price you have typed is your choice, and Save writes it like any other. That
-makes a Store Product like any other, except that nothing Norish reads will
-ever overwrite it: a price you typed is the last word. Type over it later and
-it is the same product, corrected, not a second one beside it.
+that, not as a shop with nothing on its shelf. You never wait on any of it:
+the price fields are there from the moment the panel opens, so a price you
+saw on the shelf can be typed before the shop has answered, or instead of
+asking it. There is nothing to press — a price you have typed is your choice,
+and Save writes it like any other. That makes a Store Product like any other,
+except that nothing Norish reads will ever overwrite it: a price you typed is
+the last word. Type over it later and it is the same product, corrected, not
+a second one beside it. Give it the product's page in its details and Norish
+keeps the page for the link beside the field, still without ever reading it
+over you; a page the Store had already read becomes that product, corrected.
 
 ## Sales
 

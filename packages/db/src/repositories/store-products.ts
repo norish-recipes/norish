@@ -328,27 +328,38 @@ export async function upsertReadProduct(
 
 /**
  * A Store Product someone typed: for a shop Norish cannot read, or one of the
- * shop's own corrected by hand, which keeps the Sale and the pack it had.
+ * shop's own corrected by hand, which keeps the Sale and the pack it had. It
+ * may carry the product's page. A page is one product at a Store, so a
+ * by-hand product typed for a page the Store already read takes that
+ * product over — the shopper's word over the reading, in place — rather than
+ * standing beside it; from then on it is by hand, and no reading replaces it.
  */
 export async function createManualProduct(
   input: StoreProductManualCreateInput
 ): Promise<StoreProductDto> {
+  const typed = {
+    name: input.name,
+    price: money(input.price),
+    currency: input.currency,
+    size: input.size ?? null,
+    ...packColumns(input.pack),
+    packByHand: Boolean(input.pack),
+    regularPrice: input.regularPrice == null ? null : money(input.regularPrice),
+    dealWords: input.dealWords ?? null,
+    pricedAt: new Date(),
+    isManual: true,
+  };
   const [row] = await db
     .insert(storeProducts)
     .values({
       id: input.id,
       storeId: input.storeId,
-      name: input.name,
-      pageUrl: null,
-      price: money(input.price),
-      currency: input.currency,
-      size: input.size ?? null,
-      ...packColumns(input.pack),
-      packByHand: Boolean(input.pack),
-      regularPrice: input.regularPrice == null ? null : money(input.regularPrice),
-      dealWords: input.dealWords ?? null,
-      pricedAt: new Date(),
-      isManual: true,
+      pageUrl: input.pageUrl ?? null,
+      ...typed,
+    })
+    .onConflictDoUpdate({
+      target: [storeProducts.storeId, storeProducts.pageUrl],
+      set: { ...typed, updatedAt: new Date(), version: sql`${storeProducts.version} + 1` },
     })
     .returning();
 
@@ -367,6 +378,7 @@ export async function updateManualProduct(
       ...(input.price === undefined ? {} : { price: money(input.price), pricedAt: new Date() }),
       ...(input.currency === undefined ? {} : { currency: input.currency }),
       ...(input.size === undefined ? {} : { size: input.size ?? null }),
+      ...(input.pageUrl === undefined ? {} : { pageUrl: input.pageUrl ?? null }),
       ...(input.pack === undefined
         ? {}
         : { ...packColumns(input.pack), packByHand: Boolean(input.pack) }),

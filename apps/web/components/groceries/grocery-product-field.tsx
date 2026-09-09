@@ -32,6 +32,8 @@ import { nameWords } from "@norish/shared/lib/normalized-name";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 import { saleRegularPrice } from "@norish/shared/lib/sale";
+import { httpUrlSchema } from "@norish/shared/lib/schema";
+import { isUnitId } from "@norish/shared/lib/units";
 
 /** How long a shopper stops typing before the shop is asked. */
 const SEARCH_DEBOUNCE_MS = 400;
@@ -210,9 +212,11 @@ function answers(name: string, term: string): boolean {
  * A Store with no shop behind it has no such field at all — pricing is
  * something a Store gains, and an ordinary Store is a heading. A Store that
  * points at a shop Norish could not make a search out of keeps the field, dead
- * and saying why, because there is a link to go and correct — and offers the
- * price fields beneath it, because an unreadable shop costs the shopper a
- * price, not the feature.
+ * and saying why, because there is a link to go and correct. The price fields
+ * are beneath it from the start, whatever the shop has or has not said: a
+ * shopper never waits on a lookup to type what they saw on the shelf, and
+ * everything about the product — its name, price, currency, pack and page —
+ * is theirs to overwrite behind the details row.
  *
  * Nothing here writes anything: the choice is held by the panel and committed
  * by its own Save or Add, because writing on tap reads as "it saved without me
@@ -249,6 +253,11 @@ export function GroceryProductField({
   const [manualPrice, setManualPrice] = useState("");
   const [manualName, setManualName] = useState(groceryName);
   const [manualCurrency, setManualCurrency] = useState("");
+  // What one price buys, and the product's page: prefilled from the product
+  // the fields describe, and the shopper's to overwrite like the rest.
+  const [manualPackQuantity, setManualPackQuantity] = useState("");
+  const [manualPackUnit, setManualPackUnit] = useState("");
+  const [manualUrl, setManualUrl] = useState("");
   const [manualId] = useState(createClientId);
   // The product's name, currency and pack live behind a row of their own,
   // opened the way the recurrence editor is: what a shopper touches every
@@ -345,7 +354,16 @@ export function GroceryProductField({
     manualPrice.trim() !== "" && !(Number.isFinite(typedPrice) && typedPrice >= 0);
   const currencyInvalid =
     manualCurrency.trim() !== "" && !/^[A-Za-z]{3}$/.test(manualCurrency.trim());
-  const valid = !priceInvalid && !currencyInvalid;
+  const trimmedUrl = manualUrl.trim();
+  const urlInvalid = trimmedUrl !== "" && !httpUrlSchema.safeParse(trimmedUrl).success;
+  const typedQuantity = Number(manualPackQuantity.replace(",", "."));
+  const quantityTyped = manualPackQuantity.trim() !== "";
+  const unitTyped = manualPackUnit !== "";
+  // A pack is an amount and a unit, or nothing at all; half a pack is said so.
+  const packInvalid =
+    quantityTyped !== unitTyped ||
+    (quantityTyped && !(Number.isFinite(typedQuantity) && typedQuantity > 0));
+  const valid = !priceInvalid && !currencyInvalid && !urlInvalid && !packInvalid;
   const hasTypedPrice = manualPrice.trim() !== "" && !priceInvalid && !currencyInvalid;
 
   useEffect(() => {
@@ -356,14 +374,26 @@ export function GroceryProductField({
   // takes its complaint with it.
   useEffect(() => () => onValidityChange?.(true), [onValidityChange]);
 
-  /** The fields below say what this costs, until somebody types over them. */
-  const showAs = useCallback((name: string, price: number, priceCurrency: string) => {
-    setByHand(false);
-    setManualName(name);
-    setManualPrice(String(price));
-    setManualCurrency(priceCurrency);
-    heldByHand.current = "";
-  }, []);
+  /** The fields say what this is and costs, until somebody types over them. */
+  const showAs = useCallback(
+    (
+      name: string,
+      price: number,
+      priceCurrency: string,
+      pack: PackSize | null,
+      productPage: string | null
+    ) => {
+      setByHand(false);
+      setManualName(name);
+      setManualPrice(String(price));
+      setManualCurrency(priceCurrency);
+      setManualPackQuantity(pack ? String(pack.quantity) : "");
+      setManualPackUnit(pack?.unit ?? "");
+      setManualUrl(productPage ?? "");
+      heldByHand.current = "";
+    },
+    []
+  );
 
   /** This row is the answer, however it came to be: tapped, or unmistakable. */
   const take = useCallback(
@@ -371,7 +401,7 @@ export function GroceryProductField({
       answeredWith.current = row.name;
       setPicked(row.key);
       setTerm(row.name);
-      showAs(row.name, row.price, row.currency);
+      showAs(row.name, row.price, row.currency, row.pack, row.pageUrl);
       onChoice(row.choice);
     },
     [onChoice, showAs]
@@ -416,6 +446,9 @@ export function GroceryProductField({
     setByHand(false);
     setManualPrice("");
     setManualCurrency("");
+    setManualPackQuantity("");
+    setManualPackUnit("");
+    setManualUrl("");
     onChoice(null);
   }, [onChoice]);
 
@@ -448,9 +481,14 @@ export function GroceryProductField({
   useEffect(() => {
     if (byHand) return;
     if (linkedProduct) {
+      const linkedPack = packSizeOf(linkedProduct);
+
       setManualName(linkedProduct.name);
       setManualPrice(String(linkedProduct.price));
       setManualCurrency(linkedProduct.currency);
+      setManualPackQuantity(linkedPack ? String(linkedPack.quantity) : "");
+      setManualPackUnit(linkedPack?.unit ?? "");
+      setManualUrl(linkedProduct.pageUrl ?? "");
 
       return;
     }
@@ -458,6 +496,9 @@ export function GroceryProductField({
     if (!pickedRef.current) {
       setManualPrice("");
       setManualCurrency("");
+      setManualPackQuantity("");
+      setManualPackUnit("");
+      setManualUrl("");
     }
   }, [byHand, groceryName, linkedProduct]);
 
@@ -479,9 +520,15 @@ export function GroceryProductField({
   const selectedDealWords = picked
     ? (selectedRow?.dealWords ?? null)
     : (linkedProduct?.dealWords ?? null);
-  // The product's own page at the shop, for the product the fields describe;
-  // a product typed by hand has none anywhere.
-  const pageUrl = picked ? (selectedRow?.pageUrl ?? null) : (linkedProduct?.pageUrl ?? null);
+  // The product's own page at the shop, as the fields hold it: prefilled from
+  // the product they describe, or typed. Only a web address is one.
+  const pageUrl = trimmedUrl !== "" && !urlInvalid ? trimmedUrl : null;
+  // The pack the fields hold: an amount and a unit, prefilled from the product
+  // they describe or typed, and by weight where that product was.
+  const typedPack: PackSize | null =
+    quantityTyped && unitTyped && !packInvalid && isUnitId(manualPackUnit)
+      ? { quantity: typedQuantity, unit: manualPackUnit, byWeight: selectedPack?.byWeight ?? false }
+      : null;
 
   // A price typed over a by-hand product corrects that product — the one the
   // shopper made earlier for this name, or one they picked from what the Store
@@ -505,9 +552,9 @@ export function GroceryProductField({
   // decided by the price typed against the regular one, as everywhere else.
   useEffect(() => {
     if (!byHand) return;
-    const packWords = JSON.stringify(selectedPack);
+    const packWords = JSON.stringify(typedPack);
     const held = hasTypedPrice
-      ? `${manualTarget}|${manualName}|${typedPrice}|${currency}|${selectedSize ?? ""}|${packWords}|${selectedRegularPrice ?? ""}|${selectedDealWords ?? ""}`
+      ? `${manualTarget}|${manualName}|${typedPrice}|${currency}|${selectedSize ?? ""}|${packWords}|${pageUrl ?? ""}|${selectedRegularPrice ?? ""}|${selectedDealWords ?? ""}`
       : `picked|${picked ?? ""}`;
 
     if (heldByHand.current === held) return;
@@ -521,7 +568,8 @@ export function GroceryProductField({
             price: typedPrice,
             currency,
             size: selectedSize ?? null,
-            pack: selectedPack,
+            pack: typedPack,
+            pageUrl,
             regularPrice: saleRegularPrice(typedPrice, selectedRegularPrice),
             dealWords: selectedDealWords,
           }
@@ -536,27 +584,37 @@ export function GroceryProductField({
     groceryName,
     manualTarget,
     onChoice,
+    pageUrl,
     picked,
     pickedChoice,
     selectedSize,
-    selectedPack,
+    typedPack,
     selectedRegularPrice,
     selectedDealWords,
   ]);
 
+  // The pack in words: the shop's own where it has them and nothing was typed
+  // over them, else Norish's for the pack the fields hold.
+  const packEdited = JSON.stringify(typedPack) !== JSON.stringify(selectedPack);
   const packDetail =
-    selectedPack && (!selectedSize || (!picked && linkedProduct?.packByHand))
-      ? formatPackSize(selectedPack, packWords)
+    typedPack && (packEdited || !selectedSize || (!picked && linkedProduct?.packByHand))
+      ? formatPackSize(typedPack, packWords)
       : (selectedSize ?? "");
-  // What the details row says is behind it: the currency and the pack, which
-  // nothing else on the panel shows. The name is in the product field above.
-  const detailsSummary = [currency, packDetail].filter(Boolean).join(" · ");
-
-  // The fields are the answer to "what does this cost", so they are there
-  // whenever there is an answer to show or one to be typed — and always for a
-  // shop that cannot be searched, where typing one is the only way to a price.
-  const showsPrice =
-    Boolean(picked) || Boolean(linkedProduct) || foundNothing || noAnswer || byHand || !canSearch;
+  // What the details row says is behind it: the price and the pack. The name
+  // is in the product field above.
+  const detailsSummary = [
+    hasTypedPrice ? formatShelfPrice(locale, typedPrice, currency) : currency,
+    packDetail,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const detailsProblem = currencyInvalid
+    ? t("invalidCurrency")
+    : urlInvalid
+      ? t("invalidUrl")
+      : packInvalid
+        ? t("invalidPack")
+        : null;
 
   // Hooks first, and only then: a Store that points at no shop has nothing to
   // ask and nothing to show.
@@ -674,7 +732,8 @@ export function GroceryProductField({
         </p>
       )}
 
-      {showsPrice && (
+      {/* What it costs, there from the start: nobody waits on a shop to type a price */}
+      {
         <div className="flex flex-col gap-3 pt-1" data-testid="product-by-hand">
           {foundNothing && !picked && (
             <p className="text-muted text-xs">{t("nothingFound", { store: store.name })}</p>
@@ -740,11 +799,9 @@ export function GroceryProductField({
           >
             <span className="shrink-0">{t("productDetails")}</span>
             <span
-              className={`flex min-w-0 items-center gap-1 text-sm ${currencyInvalid ? "text-danger" : "text-muted"}`}
+              className={`flex min-w-0 items-center gap-1 text-sm ${detailsProblem ? "text-danger" : "text-muted"}`}
             >
-              <span className="truncate">
-                {currencyInvalid ? t("invalidCurrency") : detailsSummary}
-              </span>
+              <span className="truncate">{detailsProblem ?? detailsSummary}</span>
               <ChevronRightIcon aria-hidden className="h-4 w-4 shrink-0" />
             </span>
           </Button>
@@ -754,7 +811,13 @@ export function GroceryProductField({
             currencyInvalid={currencyInvalid}
             name={manualName}
             open={detailsOpen}
-            pack={packDetail}
+            packInvalid={Boolean(packInvalid)}
+            packQuantity={manualPackQuantity}
+            packUnit={manualPackUnit}
+            pageUrl={manualUrl}
+            pageUrlInvalid={urlInvalid}
+            price={manualPrice}
+            priceInvalid={priceInvalid}
             suggestedCurrency={suggestedCurrency}
             onCurrencyChange={(value) => {
               setByHand(true);
@@ -765,9 +828,25 @@ export function GroceryProductField({
               setManualName(value);
             }}
             onOpenChange={setDetailsOpen}
+            onPackQuantityChange={(value) => {
+              setByHand(true);
+              setManualPackQuantity(value);
+            }}
+            onPackUnitChange={(value) => {
+              setByHand(true);
+              setManualPackUnit(value);
+            }}
+            onPageUrlChange={(value) => {
+              setByHand(true);
+              setManualUrl(value);
+            }}
+            onPriceChange={(value) => {
+              setByHand(true);
+              setManualPrice(value);
+            }}
           />
         </div>
-      )}
+      }
     </div>
   );
 }

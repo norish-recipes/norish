@@ -464,9 +464,10 @@ describe("EditGroceryPanel, on a grocery the Store is still being asked about", 
     });
 
     // Nothing linked is not an answer yet: the queue is asking, so the field
-    // neither searches the shop for the name nor offers to type a price.
+    // neither searches the shop for the name nor fills a price in; the price
+    // fields stand empty, ready for one the shopper types.
     expect(screen.queryByTestId("product-searching")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("product-by-hand")).not.toBeInTheDocument();
+    expect(screen.getByTestId("product-by-hand-price")).toHaveValue("");
   });
 });
 
@@ -576,7 +577,7 @@ describe("EditGroceryPanel, the product's details", () => {
     // the panel until it is opened.
     const row = screen.getByTestId("product-details");
 
-    expect(row).toHaveTextContent("EUR · 1 L");
+    expect(row).toHaveTextContent(/€.+ · 1 L/);
     expect(screen.queryByTestId("product-by-hand-name")).not.toBeInTheDocument();
 
     fireEvent.click(row);
@@ -691,6 +692,6 @@ describe("AddGroceryPanel, adding one grocery after another", () => {
     fireEvent.click(screen.getByRole("button", { name: "add" }));
 
     expect(screen.getByTestId("grocery-product-field")).toHaveValue("");
-    expect(screen.queryByTestId("product-by-hand")).not.toBeInTheDocument();
+    expect(screen.getByTestId("product-by-hand-price")).toHaveValue("");
   });
 });
