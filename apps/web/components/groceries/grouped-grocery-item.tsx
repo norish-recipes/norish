@@ -12,6 +12,8 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryCheckbox } from "./grocery-checkbox";
+import { GroceryPrice } from "./grocery-price";
+import { lineOfGroup } from "./store-total";
 
 /**
  * Format inline source breakdown showing recipe names and amounts.
@@ -90,8 +92,10 @@ function GroupedGroceryItemComponent({
 
   // Edit first item when clicking on single item, or expand when multiple
   const handleContentClick = useCallback(() => {
-    if (isSingleItem) {
-      onEdit(group.sources[0].grocery);
+    const only = isSingleItem ? group.sources[0] : undefined;
+
+    if (only) {
+      onEdit(only.grocery);
     } else {
       setIsExpanded(!isExpanded);
     }
@@ -107,7 +111,11 @@ function GroupedGroceryItemComponent({
     : null;
 
   return (
-    <div className={`bg-surface ${roundedClass}`}>
+    <div
+      className={`bg-surface ${roundedClass}`}
+      data-grocery-name={group.displayName ?? ""}
+      data-testid="grocery-row"
+    >
       {/* Main row */}
       <div
         className={`flex items-center gap-3 px-4 py-3 ${
@@ -128,47 +136,50 @@ function GroupedGroceryItemComponent({
 
         {/* Clickable content area */}
         <button
-          className="flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-0.5 text-left"
+          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           type="button"
           onClick={handleContentClick}
         >
-          {/* Main row: aggregated amount + name */}
-          <div className="flex w-full items-baseline gap-1.5">
-            {/* Highlighted aggregated amount */}
-            {aggregatedDisplay && (
+          <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+            {/* Main row: aggregated amount + name */}
+            <div className="flex w-full items-baseline gap-1.5">
+              {/* Highlighted aggregated amount */}
+              {aggregatedDisplay && (
+                <span
+                  className={`shrink-0 font-medium ${group.allDone ? "text-muted" : "text-accent"}`}
+                >
+                  {aggregatedDisplay}
+                </span>
+              )}
               <span
-                className={`shrink-0 font-medium ${group.allDone ? "text-muted" : "text-accent"}`}
+                className={`truncate text-base ${
+                  group.allDone ? "text-muted line-through" : "text-foreground"
+                }`}
               >
-                {aggregatedDisplay}
+                {group.displayName || t("unnamedItem")}
+              </span>
+            </div>
+
+            {/* Single item: show recipe name or recurrence */}
+            {isSingleItem && !singleRecurringGrocery && (
+              <span className="text-muted mt-0.5 truncate text-xs">
+                {singleSource?.recipeName ?? manualLabel}
               </span>
             )}
-            <span
-              className={`truncate text-base ${
-                group.allDone ? "text-muted line-through" : "text-foreground"
-              }`}
-            >
-              {group.displayName || t("unnamedItem")}
-            </span>
-          </div>
 
-          {/* Single item: show recipe name or recurrence */}
-          {isSingleItem && !singleRecurringGrocery && (
-            <span className="text-muted mt-0.5 truncate text-xs">
-              {singleSource?.recipeName ?? manualLabel}
-            </span>
-          )}
+            {/* Single item: show recurring pill */}
+            {isSingleItem && singleRecurringGrocery && (
+              <RecurrencePill className="mt-0.5" recurringGrocery={singleRecurringGrocery} />
+            )}
 
-          {/* Single item: show recurring pill */}
-          {isSingleItem && singleRecurringGrocery && (
-            <RecurrencePill className="mt-0.5" recurringGrocery={singleRecurringGrocery} />
-          )}
-
-          {/* Multiple items: show inline recipe breakdown */}
-          {!isSingleItem && (
-            <span className="text-muted mt-0.5 truncate text-xs">
-              {formatInlineSourceBreakdown(group.sources, formatAmountUnit, manualLabel)}
-            </span>
-          )}
+            {/* Multiple items: show inline recipe breakdown */}
+            {!isSingleItem && (
+              <span className="text-muted mt-0.5 truncate text-xs">
+                {formatInlineSourceBreakdown(group.sources, formatAmountUnit, manualLabel)}
+              </span>
+            )}
+          </span>
+          <GroceryPrice line={lineOfGroup(group)} />
         </button>
 
         {/* Expand/collapse button for groups */}

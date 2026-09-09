@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useStoresContext } from "@/app/(app)/groceries/stores-context";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
@@ -50,6 +51,9 @@ export function GroceryList({
 }: GroceryListProps) {
   const t = useTranslations("groceries.empty");
   const { units: customUnits } = useUnitsQuery();
+  // Where each Store files each name — the one place a grocery's aisle comes
+  // from (ADR-0031) — and the one write a drop into an aisle makes.
+  const { aisleFor, fileGroceryName } = useStoresContext();
 
   // Group groceries by storeId
   const groupedGroceries = useMemo(() => {
@@ -96,12 +100,14 @@ export function GroceryList({
   const ingredientGroups = useMemo(() => {
     if (!groupSimilarIngredients) return null;
 
+    // Groups are per aisle per Store, so a filing that lands regroups the list.
     return groupGroceriesByIngredient(
       groceries,
       getRecipeNameForGrocery ?? (() => null),
-      customUnits
+      customUnits,
+      (grocery) => aisleFor(grocery.storeId, grocery.name)
     );
-  }, [groupSimilarIngredients, groceries, getRecipeNameForGrocery, customUnits]);
+  }, [groupSimilarIngredients, groceries, getRecipeNameForGrocery, customUnits, aisleFor]);
 
   // Check if there are any groceries at all
   const hasGroceries = groceries.length > 0;
@@ -136,8 +142,10 @@ export function GroceryList({
 
     return (
       <DndGroupedGroceryProvider
+        aisleFor={aisleFor}
         groupedGroceries={ingredientGroups}
         stores={stores}
+        onFileGroceryName={fileGroceryName}
         onReorderGroups={onReorderInStore ?? (() => {})}
       >
         <div className="flex flex-col gap-3 p-1">
@@ -203,10 +211,12 @@ export function GroceryList({
   // Normal mode - with DnD
   return (
     <DndGroceryProvider
+      aisleFor={aisleFor}
       getRecipeNameForGrocery={getRecipeNameForGrocery}
       groceries={groceries}
       recurringGroceries={recurringGroceries}
       stores={stores}
+      onFileGroceryName={fileGroceryName}
       onReorderInStore={onReorderInStore ?? (() => {})}
     >
       <div className="flex flex-col gap-3 p-1">

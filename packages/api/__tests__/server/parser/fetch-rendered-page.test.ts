@@ -9,6 +9,10 @@
  * manufacture a Windows Chrome fingerprint and a coin-flip referer on top of
  * those; two browser identities disagreeing is worse than either alone, so the
  * absence of Norish-authored identity is pinned here as behaviour.
+ *
+ * The one thing Norish does add is the caller's own reading of whether the
+ * rendered page is the page it asked for: a shop's bot check and a shop's
+ * empty results page are the same two kilobytes to everybody else.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -111,6 +115,36 @@ describe("fetchRenderedPage – rendered-page contract", () => {
     ]);
 
     expect(contextOptions()).toEqual({ extraHTTPHeaders: { Authorization: "Bearer abc123" } });
+  });
+
+  it("reads the page once when the caller has no reading of its own", async () => {
+    await fetchRenderedPage("https://example.com/recipe");
+
+    expect(mockContent).toHaveBeenCalledOnce();
+  });
+
+  it("waits for a page that answered with a bot check to become itself", async () => {
+    mockContent
+      .mockResolvedValueOnce("<html>a bot check</html>")
+      .mockResolvedValue("<html>the shop</html>");
+
+    await expect(
+      fetchRenderedPage("https://example.com/zoeken", undefined, (html) =>
+        html.includes("the shop")
+      )
+    ).resolves.toBe("<html>the shop</html>");
+  });
+
+  it("counts a page it cannot read mid-navigation as one still becoming itself", async () => {
+    mockContent
+      .mockRejectedValueOnce(new Error("the page is navigating and changing the content"))
+      .mockResolvedValue("<html>the shop</html>");
+
+    await expect(
+      fetchRenderedPage("https://example.com/zoeken", undefined, (html) =>
+        html.includes("the shop")
+      )
+    ).resolves.toBe("<html>the shop</html>");
   });
 
   it("closes the context when navigation fails, and reports no HTML", async () => {

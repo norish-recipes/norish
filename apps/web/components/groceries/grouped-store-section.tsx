@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -19,7 +19,10 @@ import type {
 } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
+import { AisleHeading, DoneHeading } from "./aisle-heading";
 import {
+  aisleContainerId,
+  SortableAisleContainer,
   SortableGroupedStoreContainer,
   SortableGroupItem,
   useDndGroupedGroceryContext,
@@ -27,6 +30,9 @@ import {
 import { DynamicHeroIcon } from "./dynamic-hero-icon";
 import { GroupedGroceryItem } from "./grouped-grocery-item";
 import { getStoreColorClasses } from "./store-colors";
+import { StoreHeadingTotal } from "./store-heading-total";
+import { lineOfGroup } from "./store-total";
+import { useAisleBlocks } from "./use-aisle-blocks";
 
 interface GroupedStoreSectionProps {
   store: StoreDto | null; // null = Unsorted
@@ -67,7 +73,8 @@ function GroupedStoreSectionComponent({
   const t = useTranslations("groceries.store");
 
   // Get DnD context for ordered group keys
-  const { getGroupKeysForContainer } = useDndGroupedGroceryContext();
+  const { activeGroupKey, overContainerId, getGroupKeysForContainer } =
+    useDndGroupedGroceryContext();
 
   // Get container ID for this store
   const containerId = store?.id ?? "unsorted";
@@ -84,6 +91,10 @@ function GroupedStoreSectionComponent({
   // Calculate counts from original groceries
   const activeCount = groceries.filter((g) => !g.isDone).length;
   const doneCount = groceries.filter((g) => g.isDone).length;
+  // The grouped list shows one row per group and one price on it, so the
+  // heading adds up one Line Cost per group rather than per line — what is
+  // under the heading is exactly what it sums.
+  const priceLines = useMemo(() => groups.map(lineOfGroup), [groups]);
 
   // Build a map for quick group lookup - uses ALL groups so we can
   // render groups that are dragged from other stores during drag operations
@@ -97,27 +108,54 @@ function GroupedStoreSectionComponent({
     return map;
   }, [allGroups]);
 
-  // Get ordered group keys from DnD context - this updates during drag
-  const orderedGroupKeys = getGroupKeysForContainer(containerId);
+  // Active groups of one container in DnD-ordered sequence (not done) - updates during drag
+  const activeIn = useCallback(
+    (container: string): GroceryGroup[] => {
+      const ordered: GroceryGroup[] = [];
 
-  // Active groups in DnD-ordered sequence (not done)
-  const activeGroups = useMemo(() => {
-    const ordered: GroceryGroup[] = [];
-    for (const groupKey of orderedGroupKeys) {
-      const group = groupMap.get(groupKey);
+      for (const groupKey of getGroupKeysForContainer(container)) {
+        const group = groupMap.get(groupKey);
 
-      // Only include if it's not all done
-      if (group && !group.allDone) {
-        ordered.push(group);
+        // Only include if it's not all done
+        if (group && !group.allDone) {
+          ordered.push(group);
+        }
       }
-    }
-    return ordered;
-  }, [orderedGroupKeys, groupMap]);
+
+      return ordered;
+    },
+    [getGroupKeysForContainer, groupMap]
+  );
 
   // Done groups - sorted by sortOrder, not draggable
   const doneGroups = useMemo(() => {
     return groups.filter((g) => g.allDone);
   }, [groups]);
+
+  // The block's shape, read off the drag state; a group is per aisle per Store (ADR-0031).
+  const {
+    unfiled,
+    blocks,
+    active: activeGroups,
+  } = useAisleBlocks(containerId, store?.aisles, activeIn);
+  const firstActiveKey = activeGroups[0]?.groupKey;
+  const lastActiveKey = doneGroups.length === 0 ? activeGroups.at(-1)?.groupKey : undefined;
+  const renderActive = (group: GroceryGroup) => (
+    <SortableGroupItem key={group.groupKey} group={group}>
+      {({ dragHandle }) => (
+        <GroupedGroceryItem
+          dragHandle={dragHandle}
+          group={group}
+          isFirst={group.groupKey === firstActiveKey}
+          isLast={group.groupKey === lastActiveKey}
+          recurringGroceries={recurringGroceries}
+          onEdit={onEdit}
+          onToggle={onToggle}
+          onToggleGroup={onToggleGroup}
+        />
+      )}
+    </SortableGroupItem>
+  );
 
   // Header element - passed to SortableGroupedStoreContainer so it's part of droppable area
   const headerElement = (
@@ -154,6 +192,9 @@ function GroupedStoreSectionComponent({
             )}
           </span>
         </div>
+
+        {/* What is still to buy at this Store costs this */}
+        <StoreHeadingTotal lines={priceLines} storeId={store?.id ?? null} />
 
         {/* Expand/collapse chevron */}
         <motion.div
@@ -214,27 +255,27 @@ function GroupedStoreSectionComponent({
         {/* Groups area - only shown when expanded */}
         {isExpanded ? (
           <div className="divide-border divide-y">
-            {/* Active (not done) groups - sortable */}
-            {activeGroups.map((group, index) => {
-              const isFirst = index === 0;
-              const isLast = index === activeGroups.length - 1 && doneGroups.length === 0;
-              return (
-                <SortableGroupItem key={group.groupKey} group={group}>
-                  {({ dragHandle }) => (
-                    <GroupedGroceryItem
-                      dragHandle={dragHandle}
-                      group={group}
-                      isFirst={isFirst}
-                      isLast={isLast}
-                      recurringGroceries={recurringGroceries}
-                      onEdit={onEdit}
-                      onToggle={onToggle}
-                      onToggleGroup={onToggleGroup}
-                    />
-                  )}
-                </SortableGroupItem>
-              );
-            })}
+            {/* Unfiled groups first, under no heading, so they are noticed and filed */}
+            {unfiled.map(renderActive)}
+
+            {/* Every aisle of the Store, in its order, a droppable whether or not anything is filed under it */}
+            {blocks.map(({ aisle, rows }) => (
+              <SortableAisleContainer
+                key={aisle.id}
+                activeId={activeGroupKey}
+                aisleId={aisle.id}
+                header={
+                  <AisleHeading aisleId={aisle.id} empty={rows.length === 0} name={aisle.name} />
+                }
+                itemIds={getGroupKeysForContainer(aisleContainerId(aisle.id))}
+                overContainerId={overContainerId}
+              >
+                {rows.map(renderActive)}
+              </SortableAisleContainer>
+            ))}
+
+            {/* The done tail, said so where aisle headings would otherwise claim it */}
+            {blocks.length > 0 && doneGroups.length > 0 && <DoneHeading />}
 
             {/* Done groups - not sortable, just rendered */}
             {doneGroups.map((group, index) => {
@@ -255,8 +296,8 @@ function GroupedStoreSectionComponent({
               );
             })}
 
-            {/* Empty state */}
-            {activeGroups.length === 0 && doneGroups.length === 0 && (
+            {/* Empty state - only when nothing is here and the Store has no aisles to show its shape */}
+            {activeGroups.length === 0 && doneGroups.length === 0 && blocks.length === 0 && (
               <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
             )}
           </div>

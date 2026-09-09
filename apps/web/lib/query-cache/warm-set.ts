@@ -94,6 +94,11 @@ interface WarmSetTRPC {
       queryOptions: () => object;
       queryKey: () => readonly unknown[];
     };
+    /** Where each Store files each name; without it an offline list is one flat block per Store. */
+    aisleLinks: {
+      queryOptions: () => object;
+      queryKey: () => readonly unknown[];
+    };
   };
   calendar: {
     listItems: {
@@ -313,6 +318,7 @@ async function warmLists(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<b
   const results = await Promise.allSettled([
     queryClient.fetchQuery(withWarmGcTime(trpc.groceries.list.queryOptions()) as never),
     queryClient.fetchQuery(withWarmGcTime(trpc.stores.list.queryOptions()) as never),
+    queryClient.fetchQuery(withWarmGcTime(trpc.stores.aisleLinks.queryOptions()) as never),
     ...calendarRanges().map((range) =>
       queryClient.fetchQuery(withWarmGcTime(trpc.calendar.listItems.queryOptions(range)) as never)
     ),

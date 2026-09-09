@@ -1,5 +1,7 @@
 "use client";
 
+import { createClientId } from "@norish/shared/lib/operation-helpers";
+
 import type { ArchiveDownloadHandoff } from "./archive-download-protocol";
 import {
   ARCHIVE_DOWNLOAD_HANDOFF_TIMEOUT_MS,
@@ -162,7 +164,7 @@ function claimInHiddenFrame(token: string): () => void {
 }
 
 function newToken(): string {
-  return crypto.randomUUID();
+  return createClientId();
 }
 
 /**

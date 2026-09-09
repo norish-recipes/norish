@@ -1,0 +1,1 @@
+ALTER TABLE "groceries" ADD COLUMN "purchase_amount" numeric(10, 3);

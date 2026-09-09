@@ -34,6 +34,7 @@ export const groceries = pgTable(
     name: text("name"),
     unit: text("unit"),
     amount: numeric("amount", { precision: 10, scale: 3 }),
+    purchaseAmount: numeric("purchase_amount", { precision: 10, scale: 3 }),
     isDone: boolean("is_done").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

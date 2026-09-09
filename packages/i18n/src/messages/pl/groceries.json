@@ -26,7 +26,9 @@
     "storeActions": "Akcje sklepu",
     "markAllDone": "Zaznacz wszystkie",
     "deleteDone": "Usuń zaznaczone",
-    "done": "{count} gotowe"
+    "done": "{count} gotowe",
+    "total": "Jeszcze do kupienia",
+    "doneHeading": "Zrobione"
   },
   "storeManager": {
     "title": "Zarządzaj sklepami",
@@ -49,7 +51,29 @@
     "deleteItems": "Usuń produkty",
     "deleteItemsDescription": "Usuń wszystkie produkty ze sklepu",
     "noItems": "Ten sklep nie ma produktów.",
-    "create": "Utwórz"
+    "create": "Utwórz",
+    "shopLink": "Link do sklepu",
+    "shopLinkPlaceholder": "https://przyklad.pl",
+    "shopLinkHint": "Wklej stronę sklepu albo wyszukiwanie, które właśnie tam wykonano.",
+    "searchAddressFound": "Norish będzie szukać w tym sklepie przez:",
+    "searchAddressExample": "Na przykład: {url}",
+    "websiteOnly": "Zapisano jako stronę sklepu. Norish poszuka jego strony wyszukiwania.",
+    "searchAddressManualHint": "Możesz też sam wkleić adres wyszukiwania, z {placeholder} w miejscu hasła.",
+    "linkInvalid": "To nie wygląda na adres internetowy.",
+    "sampleTerm": "mleko",
+    "checkingShop": "Sprawdzanie {store}…",
+    "checkFoundProducts": "{store} odpowiedział: {count, plural, one {# produkt z ceną} few {# produkty z ceną} many {# produktów z ceną} other {# produktu z ceną}}.",
+    "checkNoProducts": "{store} odpowiedział, ale Norish nie znalazł tam cen.",
+    "checkAnswered": "{store} odpowiedział. Norish poszuka tam, gdy dodasz zakup.",
+    "checkNoAnswer": "{store} nie odpowiedział. Adres wyszukiwania może być błędny.",
+    "checkNoAddress": "Norish nie znalazł strony wyszukiwania dla {store}. Wklej wyszukiwanie, które tam wykonano.",
+    "aisles": "Alejki",
+    "aislesHint": "Nazwij alejki tego sklepu w kolejności, w jakiej je przechodzisz. Zakupy są pokazywane według alejek.",
+    "aisleNamePlaceholder": "np. Nabiał",
+    "addAisle": "Dodaj alejkę",
+    "removeAisle": "Usuń alejkę",
+    "dragAisle": "Przeciągnij, aby zmienić kolejność",
+    "aisleDuplicate": "Ten sklep ma już alejkę o tej nazwie"
   },
   "panel": {
     "addTitle": "Dodaj zakup",
@@ -61,7 +85,7 @@
     "recurrence": "Powtarzanie",
     "savePreference": "Zapamiętaj sklep dla tego produktu",
     "addAnother": "Dodaj kolejny",
-    "addRepeat": "+ Dodaj powtarzanie",
+    "addRepeat": "Skonfiguruj powtarzanie",
     "recurrenceEnabled": "Powtarzane",
     "recurrenceSheet": {
       "title": "Powtarzanie",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Dodaj do zakupów",
     "ingredientsAdded": "Składniki dodane do listy zakupów.",
     "ingredientsFailed": "Nie udało się dodać składników do listy zakupów.",
-    "addToGroceries": "Dodaj do zakupów"
+    "addToGroceries": "Dodaj do zakupów",
+    "aisle": "Alejka",
+    "noAisle": "Bez alejki"
+  },
+  "picker": {
+    "searchPlaceholder": "Wpisz, aby szukać w sklepie",
+    "searching": "Szukanie w {store}…",
+    "knownGroup": "Już znane",
+    "shopGroup": "Ze sklepu",
+    "nothingFound": "Norish nic nie znalazł w {store}. Możesz sam wpisać cenę.",
+    "noAnswer": "{store} nie odpowiedział. Spróbuj ponownie za chwilę albo wpisz cenę samodzielnie.",
+    "byHandName": "Nazwa produktu",
+    "byHandPrice": "Cena",
+    "byHandCurrency": "Waluta",
+    "productLabel": "Produkt w {store}",
+    "cannotSearch": "W tym sklepie nie można szukać",
+    "cannotSearchHint": "Norish nie odczytał strony wyszukiwania z linku sklepu {store}. Popraw go w Zarządzaj sklepami, a ceny się pojawią.",
+    "packSize": "Wielkość opakowania",
+    "amount": "Ilość do kupienia",
+    "useCalculatedAmount": "Użyj obliczonej ilości",
+    "productDetails": "Szczegóły produktu",
+    "invalidPrice": "Wpisz cenę, np. 2,49",
+    "invalidCurrency": "Waluta to trzy litery, np. EUR",
+    "openPage": "Otwórz w {store}"
+  },
+  "price": {
+    "pending": "Sprawdzanie ceny",
+    "perUnit": "za {unit}",
+    "pieces": "{count, plural, one {sztuka} few {sztuki} many {sztuk} other {sztuki}}",
+    "packs": "{count} × {size}",
+    "onePack": "policzono jako jedno opakowanie",
+    "sale": "Promocja",
+    "regularPrice": "Cena regularna {price}"
   }
 }

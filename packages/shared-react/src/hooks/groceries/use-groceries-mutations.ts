@@ -31,6 +31,8 @@ type CreateGroceriesResult =
 type CreateRecurringResult = {
   recurringGrocery: RecurringGroceryDto;
   grocery: GroceryDto;
+  /** The siblings the new line shifted down, at their new versions. */
+  shifted?: GroceryDto[];
 };
 
 function createOptimisticGrocery({
@@ -41,6 +43,7 @@ function createOptimisticGrocery({
   isDone,
   storeId,
   recipeIngredientId = null,
+  purchaseAmount,
 }: {
   id: string;
   name: string | null;
@@ -49,12 +52,14 @@ function createOptimisticGrocery({
   isDone: boolean;
   storeId: string | null;
   recipeIngredientId?: string | null;
+  purchaseAmount?: number | null;
 }): GroceryDto {
   return {
     id,
     version: 1,
     name,
     amount,
+    purchaseAmount,
     unit,
     isDone,
     recipeIngredientId,
@@ -183,12 +188,23 @@ function applyRecurringCreatedToCache(prev: GroceriesData, result: CreateRecurri
   const existingRecurring = prev.recurringGroceries.some(
     (existing) => existing.id === recurringGrocery.id
   );
+  // The siblings the new line shifted down carry new versions: what the
+  // server says they are now replaces the shift guessed here (ADR-0004).
+  const shiftedById = new Map((result.shifted ?? []).map((row) => [row.id, row]));
+  const withShifted = (rows: GroceryDto[]) =>
+    rows.map((row) => {
+      const shifted = shiftedById.get(row.id);
+
+      return shifted ? { ...row, ...shifted } : row;
+    });
 
   return {
     ...prev,
-    groceries: existingGrocery
-      ? prev.groceries.map((existing) => (existing.id === grocery.id ? grocery : existing))
-      : applyCreatedGroceriesToCache(prev.groceries, [grocery]),
+    groceries: withShifted(
+      existingGrocery
+        ? prev.groceries.map((existing) => (existing.id === grocery.id ? grocery : existing))
+        : applyCreatedGroceriesToCache(prev.groceries, [grocery])
+    ),
     recurringGroceries: existingRecurring
       ? prev.recurringGroceries.map((existing) =>
           existing.id === recurringGrocery.id ? recurringGrocery : existing
@@ -250,7 +266,11 @@ export function createUseGroceriesMutations({
     const markAllDoneMutation = useMutation(trpc.groceries.markAllDone.mutationOptions());
     const deleteDoneMutation = useMutation(trpc.groceries.deleteDone.mutationOptions());
 
-    const createGrocery = (raw: string, storeId?: string | null) => {
+    const createGrocery = (
+      raw: string,
+      storeId?: string | null,
+      purchaseAmount?: number | null
+    ) => {
       const parsed = parseIngredientWithDefaults(raw, units)[0]!;
       const clientId = createClientId();
       const requestedStoreId = storeId ?? null;
@@ -260,6 +280,7 @@ export function createUseGroceriesMutations({
         id: clientId,
         name: parsed.description,
         amount: parsed.quantity,
+        ...(purchaseAmount !== undefined ? { purchaseAmount } : {}),
         unit: parsed.unitOfMeasure,
         isDone: false,
         storeId: requestedStoreId,
@@ -270,6 +291,7 @@ export function createUseGroceriesMutations({
         id: clientId,
         name: groceryData.name,
         amount: groceryData.amount ?? null,
+        purchaseAmount,
         unit: groceryData.unit ?? null,
         isDone: groceryData.isDone,
         storeId: optimisticStoreId,
@@ -362,7 +384,8 @@ export function createUseGroceriesMutations({
     const createRecurringGrocery = (
       raw: string,
       pattern: RecurrencePattern,
-      storeId?: string | null
+      storeId?: string | null,
+      purchaseAmount?: number | null
     ): void => {
       const parsed = parseIngredientWithDefaults(raw, units)[0]!;
       const today = getTodayString();
@@ -374,6 +397,7 @@ export function createUseGroceriesMutations({
           id: createClientId(),
           name: parsed.description,
           amount: parsed.quantity ?? null,
+          ...(purchaseAmount !== undefined ? { purchaseAmount } : {}),
           unit: parsed.unitOfMeasure,
           recurrenceRule: pattern.rule,
           recurrenceInterval: pattern.interval || 1,
@@ -467,7 +491,12 @@ export function createUseGroceriesMutations({
       );
     };
 
-    const updateGrocery = (id: string, raw: string, storeId?: string | null) => {
+    const updateGrocery = (
+      id: string,
+      raw: string,
+      storeId?: string | null,
+      purchaseAmount?: number | null
+    ) => {
       const parsed = parseIngredientWithDefaults(raw, units)[0]!;
 
       setGroceriesData((prev) => {
@@ -477,6 +506,7 @@ export function createUseGroceriesMutations({
             ? {
                 ...g,
                 amount: parsed.quantity,
+                ...(purchaseAmount !== undefined ? { purchaseAmount } : {}),
                 unit: parsed.unitOfMeasure,
                 name: parsed.description,
                 version: g.version + 1,
@@ -493,9 +523,11 @@ export function createUseGroceriesMutations({
         raw: string;
         version: number;
         storeId?: string | null;
+        purchaseAmount?: number | null;
       } = {
         groceryId: id,
         raw,
+        purchaseAmount,
         version: getGroceryVersion(id),
       };
 
@@ -512,7 +544,8 @@ export function createUseGroceriesMutations({
       groceryId: string,
       raw: string,
       pattern: RecurrencePattern | null,
-      storeId?: string | null
+      storeId?: string | null,
+      purchaseAmount?: number | null
     ) => {
       const parsed = parseIngredientWithDefaults(raw, units)[0]!;
 
@@ -530,6 +563,7 @@ export function createUseGroceriesMutations({
                 ? {
                     ...g,
                     amount: parsed.quantity,
+                    ...(purchaseAmount !== undefined ? { purchaseAmount } : {}),
                     unit: parsed.unitOfMeasure,
                     name: parsed.description,
                     version: g.version + 1,
@@ -561,6 +595,7 @@ export function createUseGroceriesMutations({
             recurringVersion: getRecurringVersion(recurringGroceryId),
             groceryId,
             groceryVersion: getGroceryVersion(groceryId),
+            purchaseAmount,
             ...(storeId !== undefined ? { storeId } : {}),
             data: {
               name: parsed.description,
@@ -586,6 +621,7 @@ export function createUseGroceriesMutations({
                 ? {
                     ...g,
                     amount: parsed.quantity,
+                    ...(purchaseAmount !== undefined ? { purchaseAmount } : {}),
                     unit: parsed.unitOfMeasure,
                     name: parsed.description,
                     recurringGroceryId: null,
@@ -606,6 +642,7 @@ export function createUseGroceriesMutations({
             recurringVersion: getRecurringVersion(recurringGroceryId),
             groceryId,
             groceryVersion: getGroceryVersion(groceryId),
+            purchaseAmount,
             raw,
             ...(storeId !== undefined ? { storeId } : {}),
           },

@@ -15,6 +15,7 @@ export * from "./caldav-sync-status";
 export * from "./groceries";
 export * from "./recurring-groceries";
 export * from "./stores";
+export * from "./store-products";
 export * from "./user";
 export * from "./favorites";
 export * from "./ratings";

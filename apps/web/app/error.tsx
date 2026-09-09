@@ -8,8 +8,19 @@ const log = createClientLogger("Error");
 
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    log.error({ err: error }, "Unhandled error");
+    // Spelled out rather than handed over whole: the dev server forwards this
+    // console line to a terminal by stringifying it, and an Error stringifies
+    // to "[object Error]" — which is how a crash reaches a maintainer saying
+    // nothing at all.
+    log.error(
+      {
+        err: error.message,
+        name: error.name,
+        digest: (error as Error & { digest?: string }).digest,
+        stack: error.stack,
+      },
+      "Unhandled error"
+    );
   }, [error]);
 
   return (

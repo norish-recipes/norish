@@ -26,7 +26,9 @@
     "storeActions": "Aktionen",
     "markAllDone": "Alle abhaken",
     "deleteDone": "Erledigte löschen",
-    "done": "{count} erledigt"
+    "done": "{count} erledigt",
+    "total": "Noch zu kaufen",
+    "doneHeading": "Erledigt"
   },
   "storeManager": {
     "title": "Geschäfte verwalten",
@@ -49,7 +51,29 @@
     "deleteItems": "Einträge löschen",
     "deleteItemsDescription": "Entferne alle Einträge in diesem Geschäft",
     "noItems": "Dieses Geschäft hat keine Einträge.",
-    "create": "Erstellen"
+    "create": "Erstellen",
+    "shopLink": "Shop-Link",
+    "shopLinkPlaceholder": "https://beispiel.de",
+    "shopLinkHint": "Füge die Website des Shops ein oder eine Suche, die du dort gerade ausgeführt hast.",
+    "searchAddressFound": "Norish sucht in diesem Shop mit:",
+    "searchAddressExample": "Zum Beispiel: {url}",
+    "websiteOnly": "Als Website des Shops gespeichert. Norish sucht nach der Suchseite.",
+    "searchAddressManualHint": "Du kannst auch selbst eine Suchadresse einfügen, mit {placeholder} an der Stelle des Suchbegriffs.",
+    "linkInvalid": "Das sieht nicht nach einer Webadresse aus.",
+    "sampleTerm": "Milch",
+    "checkingShop": "{store} wird geprüft…",
+    "checkFoundProducts": "{store} antwortete mit {count, plural, one {# Produkt mit Preis} other {# Produkten mit Preis}}.",
+    "checkNoProducts": "{store} antwortete, aber Norish fand dort keine Preise.",
+    "checkAnswered": "{store} antwortete. Norish sucht dort, sobald du eine Ware hinzufügst.",
+    "checkNoAnswer": "{store} antwortete nicht. Die Suchadresse stimmt möglicherweise nicht.",
+    "checkNoAddress": "Norish fand keine Suchseite für {store}. Füge eine Suche ein, die du dort ausgeführt hast.",
+    "aisles": "Gänge",
+    "aislesHint": "Benenne die Gänge dieses Geschäfts in der Reihenfolge, in der du sie durchläufst. Einkäufe werden nach Gang angezeigt.",
+    "aisleNamePlaceholder": "z. B. Molkerei",
+    "addAisle": "Gang hinzufügen",
+    "removeAisle": "Gang entfernen",
+    "dragAisle": "Zum Sortieren ziehen",
+    "aisleDuplicate": "Dieses Geschäft hat bereits einen Gang mit diesem Namen"
   },
   "panel": {
     "addTitle": "Einkauf hinzufügen",
@@ -61,7 +85,7 @@
     "recurrence": "Wiederholung",
     "savePreference": "Geschäft für diesen Eintrag merken",
     "addAnother": "Weiteren hinzufügen",
-    "addRepeat": "+ Wiederholung hinzufügen",
+    "addRepeat": "Wiederholung einrichten",
     "recurrenceEnabled": "Wiederkehrend",
     "recurrenceSheet": {
       "title": "Wiederholung",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Zur Einkaufsliste hinzufügen",
     "ingredientsAdded": "Zutaten zur Einkaufsliste hinzugefügt.",
     "ingredientsFailed": "Fehler beim Hinzufügen der Zutaten zur Einkaufsliste.",
-    "addToGroceries": "Zur Einkaufsliste hinzufügen"
+    "addToGroceries": "Zur Einkaufsliste hinzufügen",
+    "aisle": "Gang",
+    "noAisle": "Kein Gang"
+  },
+  "picker": {
+    "searchPlaceholder": "Tippen, um den Shop zu durchsuchen",
+    "searching": "{store} wird durchsucht…",
+    "knownGroup": "Bereits bekannt",
+    "shopGroup": "Aus dem Shop",
+    "nothingFound": "Norish hat bei {store} nichts gefunden. Du kannst den Preis selbst eingeben.",
+    "noAnswer": "{store} hat nicht geantwortet. Versuch es gleich noch einmal, oder gib den Preis selbst ein.",
+    "byHandName": "Produktname",
+    "byHandPrice": "Preis",
+    "byHandCurrency": "Währung",
+    "productLabel": "Produkt bei {store}",
+    "cannotSearch": "Dieser Shop kann nicht durchsucht werden",
+    "cannotSearchHint": "Norish konnte aus dem Shop-Link von {store} keine Suchseite lesen. Korrigiere ihn unter Shops verwalten, dann folgen die Preise.",
+    "packSize": "Packungsgröße",
+    "amount": "Kaufmenge",
+    "useCalculatedAmount": "Berechnete Anzahl verwenden",
+    "productDetails": "Produktdetails",
+    "invalidPrice": "Gib einen Preis ein, z. B. 2,49",
+    "invalidCurrency": "Eine Währung besteht aus drei Buchstaben, z. B. EUR",
+    "openPage": "Bei {store} öffnen"
+  },
+  "price": {
+    "pending": "Preis wird nachgeschlagen",
+    "perUnit": "pro {unit}",
+    "pieces": "{count, plural, one {Stück} other {Stück}}",
+    "packs": "{count} × {size}",
+    "onePack": "als eine Packung berechnet",
+    "sale": "Angebot",
+    "regularPrice": "Normalpreis {price}"
   }
 }

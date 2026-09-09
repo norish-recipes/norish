@@ -2,23 +2,90 @@ import type { UniqueIdentifier } from "@dnd-kit/core";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
+import { sortAisles } from "@norish/shared/lib/aisles";
 
-import type { ContainerId, GroupItemsState, ItemsState } from "./types";
-import { UNSORTED_CONTAINER } from "./types";
+import type { AisleResolver, ContainerId, GroupItemsState, ItemsState } from "./types";
+import { AISLE_CONTAINER_PREFIX, UNSORTED_CONTAINER } from "./types";
 
-/** Maps grocery.storeId to container ID (null => UNSORTED_CONTAINER) */
-export function getContainerIdForGrocery(grocery: GroceryDto): ContainerId {
-  return grocery.storeId ?? UNSORTED_CONTAINER;
+/** The container of one aisle, inside its Store's block. */
+export function aisleContainerId(aisleId: string): ContainerId {
+  return `${AISLE_CONTAINER_PREFIX}${aisleId}`;
 }
 
-/** Converts container ID back to storeId (UNSORTED_CONTAINER => null) */
+/** The aisle a container stands for, or null for a Store's own unfiled area and for `unsorted`. */
+export function aisleOfContainer(containerId: ContainerId): string | null {
+  return containerId.startsWith(AISLE_CONTAINER_PREFIX)
+    ? containerId.slice(AISLE_CONTAINER_PREFIX.length)
+    : null;
+}
+
+/** Where a container is: which Store (null for `unsorted`) and which of its aisles (null for the unfiled area). */
+export function placeOfContainer(
+  containerId: ContainerId,
+  stores: StoreDto[]
+): { storeId: string | null; aisleId: string | null } {
+  const aisleId = aisleOfContainer(containerId);
+
+  if (aisleId !== null) {
+    const store = stores.find((candidate) => candidate.aisles.some((a) => a.id === aisleId));
+
+    return { storeId: store?.id ?? null, aisleId };
+  }
+
+  return { storeId: containerIdToStoreId(containerId), aisleId: null };
+}
+
+/**
+ * A Store's containers in the order its block shows them: the unfiled area
+ * first, then every aisle in the Store's order. Sort order is one number per
+ * Store, so a drop re-numbers exactly these, in exactly this order.
+ */
+export function storeContainers(storeId: string | null, stores: StoreDto[]): ContainerId[] {
+  if (storeId === null) return [UNSORTED_CONTAINER];
+  const store = stores.find((candidate) => candidate.id === storeId);
+
+  return [storeId, ...sortAisles(store?.aisles ?? []).map((aisle) => aisleContainerId(aisle.id))];
+}
+
+/**
+ * The container for a place: `unsorted` without a Store, the Store's aisle
+ * where it still has that aisle, and the Store's unfiled area where the aisle
+ * is null or gone.
+ */
+export function containerFor(
+  storeId: string | null,
+  aisleId: string | null,
+  stores: StoreDto[]
+): ContainerId {
+  if (!storeId) return UNSORTED_CONTAINER;
+  const store = stores.find((candidate) => candidate.id === storeId);
+
+  return aisleId !== null && store?.aisles.some((aisle) => aisle.id === aisleId)
+    ? aisleContainerId(aisleId)
+    : storeId;
+}
+
+/**
+ * The container a grocery sits in: where its Store files its name. Nothing on
+ * the row says which (ADR-0031).
+ */
+export function getContainerIdForGrocery(
+  grocery: Pick<GroceryDto, "storeId" | "name">,
+  stores: StoreDto[],
+  aisleFor: AisleResolver
+): ContainerId {
+  return containerFor(grocery.storeId, aisleFor(grocery.storeId, grocery.name), stores);
+}
+
+/** Converts a Store-level container ID back to storeId (UNSORTED_CONTAINER => null) */
 export function containerIdToStoreId(containerId: ContainerId): string | null {
   return containerId === UNSORTED_CONTAINER ? null : containerId;
 }
 
-/** Check if an ID is a container (store or unsorted) vs a grocery item */
+/** Check if an ID is a container (store, aisle or unsorted) vs a grocery item */
 export function isContainerId(id: UniqueIdentifier, stores: StoreDto[]): boolean {
   if (id === UNSORTED_CONTAINER) return true;
+  if (typeof id === "string" && aisleOfContainer(id) !== null) return true;
 
   return stores.some((s) => s.id === id);
 }
@@ -37,69 +104,59 @@ export function findContainerForItem(
   return null;
 }
 
-/** Build initial items state from groceries (active items only, sorted by sortOrder) */
-export function buildItemsState(groceries: GroceryDto[], stores: StoreDto[]): ItemsState {
-  const items: ItemsState = {
-    [UNSORTED_CONTAINER]: [],
-  };
+/** Every container the list has: unsorted, each Store's unfiled area, and each aisle. */
+function emptyContainers(stores: StoreDto[]): ItemsState {
+  const items: ItemsState = { [UNSORTED_CONTAINER]: [] };
 
-  // Initialize all store containers
   for (const store of stores) {
-    items[store.id] = [];
-  }
-
-  // Group active groceries by container
-  const activeGroceries = groceries.filter((g) => !g.isDone);
-
-  for (const grocery of activeGroceries) {
-    const containerId = getContainerIdForGrocery(grocery);
-
-    if (!items[containerId]) {
-      items[containerId] = [];
-    }
-    items[containerId].push(grocery.id);
-  }
-
-  // Sort each container by sortOrder
-  for (const containerId of Object.keys(items)) {
-    items[containerId].sort((aId, bId) => {
-      const a = groceries.find((g) => g.id === aId);
-      const b = groceries.find((g) => g.id === bId);
-
-      return (a?.sortOrder ?? 0) - (b?.sortOrder ?? 0);
-    });
+    for (const containerId of storeContainers(store.id, stores)) items[containerId] = [];
   }
 
   return items;
 }
 
-/** Build initial group items state (groups not all done) */
+/** Build initial items state from groceries (active items only, sorted by sortOrder) */
+export function buildItemsState(
+  groceries: GroceryDto[],
+  stores: StoreDto[],
+  aisleFor: AisleResolver
+): ItemsState {
+  const items = emptyContainers(stores);
+
+  // Group active groceries by container
+  const activeGroceries = groceries.filter((g) => !g.isDone);
+
+  for (const grocery of activeGroceries) {
+    const containerId = getContainerIdForGrocery(grocery, stores, aisleFor);
+
+    (items[containerId] ??= []).push(grocery.id);
+  }
+
+  // Sort each container by sortOrder
+  const order = new Map(groceries.map((g) => [g.id, g.sortOrder ?? 0]));
+
+  for (const containerId of Object.keys(items)) {
+    items[containerId].sort((aId, bId) => (order.get(aId) ?? 0) - (order.get(bId) ?? 0));
+  }
+
+  return items;
+}
+
+/** Build initial group items state (groups not all done), each group in the aisle it was grouped under */
 export function buildGroupItemsState(
   groupedGroceries: Map<string | null, GroceryGroup[]>,
   stores: StoreDto[]
 ): GroupItemsState {
-  const items: GroupItemsState = {
-    [UNSORTED_CONTAINER]: [],
-  };
-
-  // Initialize all store containers
-  for (const store of stores) {
-    items[store.id] = [];
-  }
+  const items = emptyContainers(stores);
 
   // Add group keys to appropriate containers
   for (const [storeId, groups] of groupedGroceries) {
-    const containerId = storeId ?? UNSORTED_CONTAINER;
-
-    if (!items[containerId]) {
-      items[containerId] = [];
-    }
-
-    // Only include groups that are not all done
     for (const group of groups) {
-      if (!group.allDone) {
-        items[containerId].push(group.groupKey);
-      }
+      // Only include groups that are not all done
+      if (group.allDone) continue;
+      const containerId = containerFor(storeId, group.aisleId, stores);
+
+      (items[containerId] ??= []).push(group.groupKey);
     }
   }
 

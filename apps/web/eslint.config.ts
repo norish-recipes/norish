@@ -56,5 +56,12 @@ export default defineConfig(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+  },
+  {
+    // The browser scenarios drive a harness served from localhost, which is a
+    // secure context, and their `page.evaluate` bodies cannot import from the
+    // app anyway. The secure-context restriction is about shipped client code.
+    files: ["__tests__/e2e/**/*.ts"],
+    rules: { "no-restricted-syntax": "off" },
   }
 );

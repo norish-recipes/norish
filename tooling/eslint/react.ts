@@ -18,6 +18,24 @@ const jsxA11yRecommended = (jsxA11y as { flatConfigs?: { recommended?: FlatConfi
 export const reactConfig = defineConfig(
   {
     files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      // `crypto.randomUUID` exists only in a secure context. A self-hosted
+      // Norish is routinely reached over plain HTTP on a LAN name, where it is
+      // simply undefined and the component throws on render. Guarded forms
+      // (`globalThis.crypto?.randomUUID` with a fallback) are deliberately not
+      // matched.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "MemberExpression[object.name='crypto'][property.name='randomUUID']",
+          message:
+            "crypto.randomUUID is undefined outside a secure context. Use createClientId() from @norish/shared/lib/operation-helpers.",
+        },
+      ],
+    },
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx"],
     plugins: {
       ...reactRecommended?.plugins,
       ...reactJsxRuntime?.plugins,

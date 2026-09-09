@@ -38,6 +38,7 @@ export { createAutoCategorizationQueue } from "./auto-categorization/queue";
 export { createAllergyDetectionQueue } from "./allergy-detection/queue";
 export { createCaldavSyncQueue } from "./caldav-sync/queue";
 export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
+export { createStoreLookupQueue } from "./store-lookup/queue";
 
 // Producers
 export { addImportJob } from "./recipe-import/producer";
@@ -56,6 +57,7 @@ export {
 } from "./enrichment/identity";
 export { addCaldavSyncJob } from "./caldav-sync/producer";
 export { initializeScheduledJobs } from "./scheduled-tasks/producer";
+export { addStoreMatchJob, addStoreRefreshJob } from "./store-lookup/producer";
 
 // Workers
 export { startRecipeImportWorker, stopRecipeImportWorker } from "./recipe-import/worker";
@@ -84,6 +86,7 @@ export {
 } from "./ingredient-linking/worker";
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
+export { startStoreLookupWorker, stopStoreLookupWorker } from "./store-lookup/worker";
 
 // Types from @norish/shared/contracts
 export type {
@@ -96,6 +99,7 @@ export type {
   RecipeEnrichmentJobData,
   CaldavSyncJobData,
   CaldavSyncOperation,
+  StoreLookupJobData,
 } from "@norish/queue/contracts/job-types";
 
 // Types from scheduled-tasks

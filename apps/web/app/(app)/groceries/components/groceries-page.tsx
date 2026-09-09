@@ -74,7 +74,8 @@ export function GroceriesPage() {
   const handleEditSave = (
     itemName: string,
     pattern: RecurrencePattern | null,
-    storeId?: string | null
+    storeId?: string | null,
+    purchaseAmount?: number | null
   ) => {
     if (!editingGrocery) return;
     if (editingRecurringGrocery) {
@@ -84,19 +85,21 @@ export function GroceriesPage() {
         editingGrocery.id,
         itemName,
         pattern,
-        storeId
+        storeId,
+        purchaseAmount
       );
     } else if (pattern) {
       // Convert regular grocery to recurring without racing an update against the delete.
       createRecurringGrocery(
         itemName,
         pattern,
-        storeId !== undefined ? storeId : editingGrocery.storeId
+        storeId !== undefined ? storeId : editingGrocery.storeId,
+        purchaseAmount
       );
       deleteGroceries([editingGrocery.id]);
     } else {
       // Simple update
-      updateGrocery(editingGrocery.id, itemName, storeId);
+      updateGrocery(editingGrocery.id, itemName, storeId, purchaseAmount);
     }
   };
   const handleEditDelete = () => {

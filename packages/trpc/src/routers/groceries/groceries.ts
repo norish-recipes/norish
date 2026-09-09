@@ -34,6 +34,8 @@ import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { noticeGroceries } from "../stores/pricing";
+import { assertStoreAccess } from "../stores/stores-helpers";
 import { groceryEmitter } from "./emitter";
 import {
   assignGroceryToStoreData,
@@ -73,7 +75,7 @@ const create = authedProcedure
   });
 
 const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, input }) => {
-  const { groceryId, raw, version, storeId } = input;
+  const { groceryId, raw, version, storeId, purchaseAmount } = input;
 
   log.debug({ userId: ctx.user.id, groceryId }, "Updating grocery");
 
@@ -89,6 +91,9 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       }
 
       await assertHouseholdAccess(ctx.user.id, ownerId);
+      // The Store the grocery is filed under, and priced through, is the
+      // household's own — as it is for a drag or an assignment.
+      if (storeId) await assertStoreAccess(ctx, storeId);
 
       const units = await getUnits();
       const parsedIngredient = parseIngredientWithDefaults(raw, units)[0];
@@ -105,6 +110,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         version,
         name: parsedIngredient.description,
         amount: parsedIngredient.quantity,
+        purchaseAmount,
         unit: parsedIngredient.unitOfMeasure,
       };
 
@@ -144,6 +150,10 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
         await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
       }
+
+      // A rename asks a new question rather than carrying the old answer to a
+      // name it was never about.
+      await noticeGroceries(ctx, updatedGroceries);
 
       log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
       groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
@@ -485,6 +495,18 @@ const reorderInStore = authedProcedure
         }
 
         log.info({ userId: ctx.user.id, count: updated.length }, "Groceries reordered");
+
+        // Dragging a grocery into another Store asks that Store the same
+        // question its panel would: what that Store already knows reaches the
+        // list there and then, and a name it does not know goes to the lookup
+        // queue. Without this a dragged grocery is unpriced until the whole
+        // list is fetched again.
+        const moved = new Set(updates.filter((u) => u.storeId !== undefined).map((u) => u.id));
+        const movedGroceries = updated.filter((grocery) => moved.has(grocery.id));
+
+        if (movedGroceries.length > 0) {
+          await noticeGroceries(ctx, movedGroceries);
+        }
 
         // Save store preferences for any items that changed stores
         if (savePreference) {

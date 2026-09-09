@@ -26,7 +26,9 @@
     "storeActions": "Actions du magasin",
     "markAllDone": "Tout marquer comme fait",
     "deleteDone": "Supprimer les articles faits",
-    "done": "{count} effectués"
+    "done": "{count} effectués",
+    "total": "Reste à acheter",
+    "doneHeading": "Fait"
   },
   "storeManager": {
     "title": "Gérer les magasins",
@@ -49,7 +51,29 @@
     "deleteItems": "Supprimer les articles",
     "deleteItemsDescription": "Supprimer tous les articles de ce magasin",
     "noItems": "Ce magasin n'a aucun article.",
-    "create": "Créer"
+    "create": "Créer",
+    "shopLink": "Lien de la boutique",
+    "shopLinkPlaceholder": "https://exemple.fr",
+    "shopLinkHint": "Collez le site de la boutique, ou une recherche que vous venez d'y faire.",
+    "searchAddressFound": "Norish cherchera dans cette boutique avec :",
+    "searchAddressExample": "Par exemple : {url}",
+    "websiteOnly": "Enregistré comme site de la boutique. Norish cherchera sa page de recherche.",
+    "searchAddressManualHint": "Vous pouvez aussi coller vous-même une adresse de recherche, avec {placeholder} à la place du terme.",
+    "linkInvalid": "Cela ne ressemble pas à une adresse web.",
+    "sampleTerm": "lait",
+    "checkingShop": "Vérification de {store}…",
+    "checkFoundProducts": "{store} a répondu avec {count, plural, one {# produit avec un prix} other {# produits avec un prix}}.",
+    "checkNoProducts": "{store} a répondu, mais Norish n'y a trouvé aucun prix.",
+    "checkAnswered": "{store} a répondu. Norish y cherchera dès que vous ajouterez une course.",
+    "checkNoAnswer": "{store} n'a pas répondu. L'adresse de recherche est peut-être fausse.",
+    "checkNoAddress": "Norish n'a pas trouvé de page de recherche pour {store}. Collez une recherche que vous y avez faite.",
+    "aisles": "Rayons",
+    "aislesHint": "Nommez les rayons de ce magasin dans l’ordre où vous les parcourez. Les courses sont affichées par rayon.",
+    "aisleNamePlaceholder": "p. ex. Produits laitiers",
+    "addAisle": "Ajouter un rayon",
+    "removeAisle": "Supprimer le rayon",
+    "dragAisle": "Glisser pour réordonner",
+    "aisleDuplicate": "Ce magasin a déjà un rayon portant ce nom"
   },
   "panel": {
     "addTitle": "Ajouter un article",
@@ -61,7 +85,7 @@
     "recurrence": "Récurrence",
     "savePreference": "Se souvenir du magasin pour cet article",
     "addAnother": "Ajouter un autre",
-    "addRepeat": "+ Ajouter une répétition",
+    "addRepeat": "Configurer la récurrence",
     "recurrenceEnabled": "Récurrent",
     "recurrenceSheet": {
       "title": "Répétition",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Ajouter aux courses",
     "ingredientsAdded": "Ingrédients ajoutés à la liste de courses.",
     "ingredientsFailed": "Échec de l'ajout des ingrédients à la liste de courses.",
-    "addToGroceries": "Ajouter aux courses"
+    "addToGroceries": "Ajouter aux courses",
+    "aisle": "Rayon",
+    "noAisle": "Aucun rayon"
+  },
+  "picker": {
+    "searchPlaceholder": "Tapez pour chercher dans la boutique",
+    "searching": "Recherche dans {store}…",
+    "knownGroup": "Déjà connus",
+    "shopGroup": "De la boutique",
+    "nothingFound": "Norish n'a rien trouvé chez {store}. Vous pouvez saisir le prix vous-même.",
+    "noAnswer": "{store} n'a pas répondu. Réessayez dans un instant, ou saisissez le prix vous-même.",
+    "byHandName": "Nom du produit",
+    "byHandPrice": "Prix",
+    "byHandCurrency": "Devise",
+    "productLabel": "Produit chez {store}",
+    "cannotSearch": "Cette boutique ne peut pas être cherchée",
+    "cannotSearchHint": "Norish n'a pas pu tirer de page de recherche du lien de {store}. Corrigez-le dans Gérer les magasins et les prix suivront.",
+    "packSize": "Conditionnement",
+    "amount": "Quantité à acheter",
+    "useCalculatedAmount": "Utiliser la quantité calculée",
+    "productDetails": "Détails du produit",
+    "invalidPrice": "Saisissez un prix, par exemple 2,49",
+    "invalidCurrency": "Une devise comporte trois lettres, comme EUR",
+    "openPage": "Ouvrir chez {store}"
+  },
+  "price": {
+    "pending": "Recherche du prix",
+    "perUnit": "par {unit}",
+    "pieces": "{count, plural, one {pièce} other {pièces}}",
+    "packs": "{count} × {size}",
+    "onePack": "compté comme un seul paquet",
+    "sale": "Promo",
+    "regularPrice": "Prix normal {price}"
   }
 }

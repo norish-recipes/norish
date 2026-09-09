@@ -26,7 +26,9 @@
     "storeActions": "Winkelacties",
     "markAllDone": "Markeer alles als gekocht",
     "deleteDone": "Verwijder gekocht",
-    "done": "{count} gedaan"
+    "done": "{count} gedaan",
+    "total": "Nog te kopen",
+    "doneHeading": "Gedaan"
   },
   "storeManager": {
     "title": "Winkels beheren",
@@ -49,7 +51,29 @@
     "deleteItems": "Items verwijderen",
     "deleteItemsDescription": "Verwijder alle items in deze winkel",
     "noItems": "Deze winkel heeft geen items.",
-    "create": "Aanmaken"
+    "create": "Aanmaken",
+    "shopLink": "Winkellink",
+    "shopLinkPlaceholder": "https://voorbeeld.nl",
+    "shopLinkHint": "Plak de website van de winkel, of een zoekopdracht die je er net deed.",
+    "searchAddressFound": "Norish zoekt in deze winkel met:",
+    "searchAddressExample": "Bijvoorbeeld: {url}",
+    "websiteOnly": "Opgeslagen als de website van de winkel. Norish zoekt de zoekpagina op.",
+    "searchAddressManualHint": "Je kunt ook zelf een zoekadres plakken, met {placeholder} waar de zoekterm komt.",
+    "linkInvalid": "Dat lijkt geen webadres.",
+    "sampleTerm": "melk",
+    "checkingShop": "{store} wordt gecontroleerd…",
+    "checkFoundProducts": "{store} gaf {count, plural, one {# product met een prijs} other {# producten met een prijs}}.",
+    "checkNoProducts": "{store} antwoordde, maar Norish vond er geen prijzen.",
+    "checkAnswered": "{store} antwoordde. Norish zoekt er zodra je een boodschap toevoegt.",
+    "checkNoAnswer": "{store} antwoordde niet. Het zoekadres klopt misschien niet.",
+    "checkNoAddress": "Norish vond geen zoekpagina voor {store}. Plak een zoekopdracht die je er deed.",
+    "aisles": "Gangpaden",
+    "aislesHint": "Geef de gangpaden van deze winkel een naam, in de volgorde waarin je erdoor loopt. Boodschappen worden per gangpad getoond.",
+    "aisleNamePlaceholder": "bijv. Zuivel",
+    "addAisle": "Gangpad toevoegen",
+    "removeAisle": "Gangpad verwijderen",
+    "dragAisle": "Sleep om te herordenen",
+    "aisleDuplicate": "Deze winkel heeft al een gangpad met die naam"
   },
   "panel": {
     "addTitle": "Boodschap toevoegen",
@@ -61,7 +85,7 @@
     "recurrence": "Herhaling",
     "savePreference": "Onthoud winkel voor dit item",
     "addAnother": "Voeg nog een toe",
-    "addRepeat": "+ Herhaling toevoegen",
+    "addRepeat": "Herhaling instellen",
     "recurrenceEnabled": "Terugkerend",
     "recurrenceSheet": {
       "title": "Herhaling",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Voeg toe aan boodschappen",
     "ingredientsAdded": "Ingrediënten toegevoegd aan boodschappenlijst.",
     "ingredientsFailed": "Kan ingrediënten niet toevoegen aan boodschappenlijst.",
-    "addToGroceries": "Toevoegen aan boodschappen"
+    "addToGroceries": "Toevoegen aan boodschappen",
+    "aisle": "Gangpad",
+    "noAisle": "Geen gangpad"
+  },
+  "picker": {
+    "searchPlaceholder": "Typ om in de winkel te zoeken",
+    "searching": "Bezig met zoeken in {store}…",
+    "knownGroup": "Al bekend",
+    "shopGroup": "Uit de winkel",
+    "nothingFound": "Norish vond niets bij {store}. Je kunt de prijs zelf typen.",
+    "noAnswer": "{store} gaf geen antwoord. Probeer het zo nog eens, of typ de prijs zelf.",
+    "byHandName": "Productnaam",
+    "byHandPrice": "Prijs",
+    "byHandCurrency": "Valuta",
+    "productLabel": "Product bij {store}",
+    "cannotSearch": "Deze winkel kan niet doorzocht worden",
+    "cannotSearchHint": "Norish kon geen zoekpagina uit de winkellink van {store} lezen. Pas hem aan bij Winkels beheren en de prijzen volgen.",
+    "packSize": "Verpakking",
+    "amount": "Aantal te kopen",
+    "useCalculatedAmount": "Berekend aantal gebruiken",
+    "productDetails": "Productgegevens",
+    "invalidPrice": "Vul een prijs in, zoals 2,49",
+    "invalidCurrency": "Een valuta bestaat uit drie letters, zoals EUR",
+    "openPage": "Openen bij {store}"
+  },
+  "price": {
+    "pending": "Prijs wordt opgezocht",
+    "perUnit": "per {unit}",
+    "pieces": "{count, plural, one {stuk} other {stuks}}",
+    "packs": "{count} × {size}",
+    "onePack": "geteld als één verpakking",
+    "sale": "Aanbieding",
+    "regularPrice": "Normale prijs {price}"
   }
 }

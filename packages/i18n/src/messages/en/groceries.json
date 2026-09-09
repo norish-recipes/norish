@@ -26,7 +26,9 @@
     "storeActions": "Store actions",
     "markAllDone": "Mark all done",
     "deleteDone": "Delete done",
-    "done": "{count} done"
+    "done": "{count} done",
+    "total": "Still to buy",
+    "doneHeading": "Done"
   },
   "storeManager": {
     "title": "Manage Stores",
@@ -49,7 +51,29 @@
     "deleteItems": "Delete items",
     "deleteItemsDescription": "Remove all items in this store",
     "noItems": "This store has no items.",
-    "create": "Create"
+    "create": "Create",
+    "shopLink": "Shop link",
+    "shopLinkPlaceholder": "https://example.com",
+    "shopLinkHint": "Paste the shop's website, or a search you just ran there.",
+    "searchAddressFound": "Norish will search this shop with:",
+    "searchAddressExample": "For example: {url}",
+    "websiteOnly": "Saved as the shop's website. Norish will look for its search page.",
+    "searchAddressManualHint": "You can also paste a search address yourself, with {placeholder} where the term goes.",
+    "linkInvalid": "That does not look like a web address.",
+    "sampleTerm": "milk",
+    "checkingShop": "Checking {store}…",
+    "checkFoundProducts": "{store} answered with {count, plural, one {# priced product} other {# priced products}}.",
+    "checkNoProducts": "{store} answered, but Norish found no prices there.",
+    "checkAnswered": "{store} answered. Norish will search it when you add a grocery.",
+    "checkNoAnswer": "{store} did not answer. The search address may be wrong.",
+    "checkNoAddress": "Norish could not find a search page for {store}. Paste a search you ran there.",
+    "aisles": "Aisles",
+    "aislesHint": "Name the aisles of this shop in the order you walk them. Groceries are shown by aisle.",
+    "aisleNamePlaceholder": "e.g., Dairy",
+    "addAisle": "Add aisle",
+    "removeAisle": "Remove aisle",
+    "dragAisle": "Drag to reorder",
+    "aisleDuplicate": "This store already has an aisle with that name"
   },
   "panel": {
     "addTitle": "Add Grocery",
@@ -61,7 +85,7 @@
     "recurrence": "Recurrence",
     "savePreference": "Remember store for this item",
     "addAnother": "Add another",
-    "addRepeat": "Tap to configure",
+    "addRepeat": "Configure recurrence",
     "recurrenceEnabled": "Recurring",
     "recurrenceSheet": {
       "title": "Recurrence",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Add to groceries",
     "ingredientsAdded": "Ingredients added to grocery list.",
     "ingredientsFailed": "Failed to add ingredients to grocery list.",
-    "addToGroceries": "Add to Groceries"
+    "addToGroceries": "Add to Groceries",
+    "aisle": "Aisle",
+    "noAisle": "No aisle"
+  },
+  "picker": {
+    "searchPlaceholder": "Type to search the shop",
+    "searching": "Searching {store}…",
+    "knownGroup": "Already known",
+    "shopGroup": "From the shop",
+    "nothingFound": "Norish found nothing at {store}. You can type the price yourself.",
+    "noAnswer": "{store} did not answer. Try again in a moment, or type the price yourself.",
+    "byHandName": "Product name",
+    "byHandPrice": "Price",
+    "byHandCurrency": "Currency",
+    "productLabel": "Product at {store}",
+    "cannotSearch": "This shop cannot be searched",
+    "cannotSearchHint": "Norish could not read a search page out of {store}'s shop link. Correct it in Manage Stores and prices follow.",
+    "packSize": "Pack size",
+    "amount": "Amount to buy",
+    "useCalculatedAmount": "Use calculated amount",
+    "productDetails": "Product details",
+    "invalidPrice": "Enter a price, like 2.49",
+    "invalidCurrency": "A currency is three letters, like EUR",
+    "openPage": "Open at {store}"
+  },
+  "price": {
+    "pending": "Looking up the price",
+    "perUnit": "per {unit}",
+    "pieces": "{count, plural, one {piece} other {pieces}}",
+    "packs": "{count} × {size}",
+    "onePack": "priced as one pack",
+    "sale": "Sale",
+    "regularPrice": "Regular price {price}"
   }
 }

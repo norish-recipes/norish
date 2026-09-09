@@ -26,7 +26,9 @@
     "storeActions": "Ações da loja",
     "markAllDone": "Marcar tudo como concluído",
     "deleteDone": "Excluir concluídos",
-    "done": "{count} concluído(s)"
+    "done": "{count} concluído(s)",
+    "total": "Ainda por comprar",
+    "doneHeading": "Feito"
   },
   "storeManager": {
     "title": "Gerenciar lojas",
@@ -49,7 +51,29 @@
     "deleteItems": "Excluir itens",
     "deleteItemsDescription": "Remover todos os itens desta loja",
     "noItems": "Esta loja não tem itens.",
-    "create": "Criar"
+    "create": "Criar",
+    "shopLink": "Link da loja",
+    "shopLinkPlaceholder": "https://exemplo.com.br",
+    "shopLinkHint": "Cole o site da loja, ou uma busca que você acabou de fazer nela.",
+    "searchAddressFound": "O Norish vai buscar nesta loja com:",
+    "searchAddressExample": "Por exemplo: {url}",
+    "websiteOnly": "Salvo como site da loja. O Norish vai procurar a página de busca.",
+    "searchAddressManualHint": "Você também pode colar um endereço de busca, com {placeholder} onde vai o termo.",
+    "linkInvalid": "Isso não parece um endereço da web.",
+    "sampleTerm": "leite",
+    "checkingShop": "Verificando {store}…",
+    "checkFoundProducts": "{store} respondeu com {count, plural, one {# produto com preço} other {# produtos com preço}}.",
+    "checkNoProducts": "{store} respondeu, mas o Norish não encontrou preços lá.",
+    "checkAnswered": "{store} respondeu. O Norish vai buscar lá quando você adicionar um item.",
+    "checkNoAnswer": "{store} não respondeu. O endereço de busca pode estar errado.",
+    "checkNoAddress": "O Norish não encontrou uma página de busca para {store}. Cole uma busca que você fez lá.",
+    "aisles": "Corredores",
+    "aislesHint": "Nomeie os corredores desta loja na ordem em que você os percorre. As compras são mostradas por corredor.",
+    "aisleNamePlaceholder": "ex.: Laticínios",
+    "addAisle": "Adicionar corredor",
+    "removeAisle": "Remover corredor",
+    "dragAisle": "Arraste para reordenar",
+    "aisleDuplicate": "Esta loja já tem um corredor com esse nome"
   },
   "panel": {
     "addTitle": "Adicionar item",
@@ -61,7 +85,7 @@
     "recurrence": "Recorrência",
     "savePreference": "Lembrar loja para este item",
     "addAnother": "Adicionar outro",
-    "addRepeat": "Toque para configurar",
+    "addRepeat": "Configurar recorrência",
     "recurrenceEnabled": "Recorrente",
     "recurrenceSheet": {
       "title": "Recorrência",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Adicionar à lista de compras",
     "ingredientsAdded": "Ingredientes adicionados à lista de compras.",
     "ingredientsFailed": "Falha ao adicionar ingredientes à lista de compras.",
-    "addToGroceries": "Adicionar à lista de compras"
+    "addToGroceries": "Adicionar à lista de compras",
+    "aisle": "Corredor",
+    "noAisle": "Sem corredor"
+  },
+  "picker": {
+    "searchPlaceholder": "Digite para buscar na loja",
+    "searching": "Buscando em {store}…",
+    "knownGroup": "Já conhecidos",
+    "shopGroup": "Da loja",
+    "nothingFound": "O Norish não encontrou nada em {store}. Você pode digitar o preço.",
+    "noAnswer": "{store} não respondeu. Tente novamente em instantes, ou digite o preço você mesmo.",
+    "byHandName": "Nome do produto",
+    "byHandPrice": "Preço",
+    "byHandCurrency": "Moeda",
+    "productLabel": "Produto em {store}",
+    "cannotSearch": "Não dá para buscar nesta loja",
+    "cannotSearchHint": "O Norish não conseguiu tirar uma página de busca do link de {store}. Corrija em Gerenciar lojas e os preços virão.",
+    "packSize": "Tamanho da embalagem",
+    "amount": "Quantidade a comprar",
+    "useCalculatedAmount": "Usar a quantidade calculada",
+    "productDetails": "Detalhes do produto",
+    "invalidPrice": "Informe um preço, como 2,49",
+    "invalidCurrency": "Uma moeda tem três letras, como EUR",
+    "openPage": "Abrir em {store}"
+  },
+  "price": {
+    "pending": "Procurando o preço",
+    "perUnit": "por {unit}",
+    "pieces": "{count, plural, one {unidade} other {unidades}}",
+    "packs": "{count} × {size}",
+    "onePack": "contado como uma embalagem",
+    "sale": "Oferta",
+    "regularPrice": "Preço normal {price}"
   }
 }

@@ -26,7 +26,9 @@
     "storeActions": "Действия за магазина",
     "markAllDone": "Маркирай всички като изпълнени",
     "deleteDone": "Изтрий изпълнените",
-    "done": "{count} изпълнени"
+    "done": "{count} изпълнени",
+    "total": "Остава да купите",
+    "doneHeading": "Готово"
   },
   "storeManager": {
     "title": "Управление на магазини",
@@ -49,7 +51,29 @@
     "deleteItems": "Изтрий продуктите",
     "deleteItemsDescription": "Премахни всички продукти в този магазин",
     "noItems": "Този магазин няма продукти.",
-    "create": "Създай"
+    "create": "Създай",
+    "shopLink": "Връзка към магазина",
+    "shopLinkPlaceholder": "https://primer.bg",
+    "shopLinkHint": "Поставете сайта на магазина или търсене, което току-що направихте там.",
+    "searchAddressFound": "Norish ще търси в този магазин чрез:",
+    "searchAddressExample": "Например: {url}",
+    "websiteOnly": "Запазено като сайт на магазина. Norish ще потърси страницата за търсене.",
+    "searchAddressManualHint": "Можете и сами да поставите адрес за търсене, с {placeholder} на мястото на думата.",
+    "linkInvalid": "Това не прилича на уеб адрес.",
+    "sampleTerm": "мляко",
+    "checkingShop": "Проверяваме {store}…",
+    "checkFoundProducts": "{store} отговори с {count, plural, one {# продукт с цена} other {# продукта с цена}}.",
+    "checkNoProducts": "{store} отговори, но Norish не намери цени там.",
+    "checkAnswered": "{store} отговори. Norish ще търси там, когато добавите покупка.",
+    "checkNoAnswer": "{store} не отговори. Адресът за търсене може да е грешен.",
+    "checkNoAddress": "Norish не намери страница за търсене за {store}. Поставете търсене, което сте направили там.",
+    "aisles": "Пътеки",
+    "aislesHint": "Именувайте пътеките на този магазин в реда, в който ги обхождате. Покупките се показват по пътеки.",
+    "aisleNamePlaceholder": "напр. Млечни продукти",
+    "addAisle": "Добави пътека",
+    "removeAisle": "Премахни пътека",
+    "dragAisle": "Плъзнете, за да пренаредите",
+    "aisleDuplicate": "Този магазин вече има пътека с това име"
   },
   "panel": {
     "addTitle": "Добавяне на продукт",
@@ -61,7 +85,7 @@
     "recurrence": "Повторение",
     "savePreference": "Запомни магазина за този продукт",
     "addAnother": "Добави още един",
-    "addRepeat": "Докосни, за да настроиш",
+    "addRepeat": "Настройване на повторение",
     "recurrenceEnabled": "Повтарящ се",
     "recurrenceSheet": {
       "title": "Повторение",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Добави в продуктите",
     "ingredientsAdded": "Съставките са добавени в списъка с продукти.",
     "ingredientsFailed": "Добавянето на съставките в списъка с продукти не бе успешно.",
-    "addToGroceries": "Добави в продуктите"
+    "addToGroceries": "Добави в продуктите",
+    "aisle": "Пътека",
+    "noAisle": "Без пътека"
+  },
+  "picker": {
+    "searchPlaceholder": "Пишете, за да търсите в магазина",
+    "searching": "Търсим в {store}…",
+    "knownGroup": "Вече известни",
+    "shopGroup": "От магазина",
+    "nothingFound": "Norish не намери нищо в {store}. Можете сами да въведете цената.",
+    "noAnswer": "{store} не отговори. Опитайте отново след малко или въведете цената сами.",
+    "byHandName": "Име на продукта",
+    "byHandPrice": "Цена",
+    "byHandCurrency": "Валута",
+    "productLabel": "Продукт в {store}",
+    "cannotSearch": "В този магазин не може да се търси",
+    "cannotSearchHint": "Norish не можа да извлече страница за търсене от връзката на {store}. Поправете я в „Управление на магазини“ и цените ще последват.",
+    "packSize": "Размер на опаковката",
+    "amount": "Количество за покупка",
+    "useCalculatedAmount": "Използване на изчисленото количество",
+    "productDetails": "Данни за продукта",
+    "invalidPrice": "Въведете цена, например 2,49",
+    "invalidCurrency": "Валутата е три букви, например EUR",
+    "openPage": "Отвори в {store}"
+  },
+  "price": {
+    "pending": "Търсене на цената",
+    "perUnit": "за {unit}",
+    "pieces": "{count, plural, one {брой} other {броя}}",
+    "packs": "{count} × {size}",
+    "onePack": "броено като една опаковка",
+    "sale": "Промоция",
+    "regularPrice": "Редовна цена {price}"
   }
 }

@@ -26,7 +26,9 @@
     "storeActions": "Butikkhandlinger",
     "markAllDone": "Merk alle som ferdige",
     "deleteDone": "Slett ferdige",
-    "done": "{count} ferdige"
+    "done": "{count} ferdige",
+    "total": "Igjen å kjøpe",
+    "doneHeading": "Ferdig"
   },
   "storeManager": {
     "title": "Administrer butikker",
@@ -49,7 +51,29 @@
     "deleteItems": "Slett varer",
     "deleteItemsDescription": "Fjern alle varer i denne butikken",
     "noItems": "Denne butikken har ingen varer.",
-    "create": "Opprett"
+    "create": "Opprett",
+    "shopLink": "Butikklenke",
+    "shopLinkPlaceholder": "https://eksempel.no",
+    "shopLinkHint": "Lim inn butikkens nettsted, eller et søk du nettopp gjorde der.",
+    "searchAddressFound": "Norish søker i denne butikken med:",
+    "searchAddressExample": "For eksempel: {url}",
+    "websiteOnly": "Lagret som butikkens nettsted. Norish leter etter søkesiden.",
+    "searchAddressManualHint": "Du kan også lime inn en søkeadresse selv, med {placeholder} der søkeordet skal stå.",
+    "linkInvalid": "Det ser ikke ut som en nettadresse.",
+    "sampleTerm": "melk",
+    "checkingShop": "Sjekker {store}…",
+    "checkFoundProducts": "{store} svarte med {count, plural, one {# produkt med pris} other {# produkter med pris}}.",
+    "checkNoProducts": "{store} svarte, men Norish fant ingen priser der.",
+    "checkAnswered": "{store} svarte. Norish søker der når du legger til en vare.",
+    "checkNoAnswer": "{store} svarte ikke. Søkeadressen kan være feil.",
+    "checkNoAddress": "Norish fant ingen søkeside for {store}. Lim inn et søk du gjorde der.",
+    "aisles": "Ganger",
+    "aislesHint": "Gi gangene i denne butikken navn i den rekkefølgen du går dem. Innkjøp vises per gang.",
+    "aisleNamePlaceholder": "f.eks. Meieri",
+    "addAisle": "Legg til gang",
+    "removeAisle": "Fjern gang",
+    "dragAisle": "Dra for å endre rekkefølgen",
+    "aisleDuplicate": "Denne butikken har allerede en gang med det navnet"
   },
   "panel": {
     "addTitle": "Legg til handlevare",
@@ -61,7 +85,7 @@
     "recurrence": "Gjentakelse",
     "savePreference": "Husk butikk for denne varen",
     "addAnother": "Legg til enda en",
-    "addRepeat": "+ Legg til gjentakelse",
+    "addRepeat": "Sett opp gjentakelse",
     "recurrenceEnabled": "Gjentakende",
     "recurrenceSheet": {
       "title": "Gjentakelse",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Legg til i handleliste",
     "ingredientsAdded": "Ingredienser lagt til i handlelisten.",
     "ingredientsFailed": "Kunne ikke legge til ingredienser i handlelisten.",
-    "addToGroceries": "Legg til i handleliste"
+    "addToGroceries": "Legg til i handleliste",
+    "aisle": "Gang",
+    "noAisle": "Ingen gang"
+  },
+  "picker": {
+    "searchPlaceholder": "Skriv for å søke i butikken",
+    "searching": "Søker i {store}…",
+    "knownGroup": "Allerede kjent",
+    "shopGroup": "Fra butikken",
+    "nothingFound": "Norish fant ingenting hos {store}. Du kan skrive prisen selv.",
+    "noAnswer": "{store} svarte ikke. Prøv igjen om et øyeblikk, eller skriv inn prisen selv.",
+    "byHandName": "Produktnavn",
+    "byHandPrice": "Pris",
+    "byHandCurrency": "Valuta",
+    "productLabel": "Produkt hos {store}",
+    "cannotSearch": "Denne butikken kan ikke søkes i",
+    "cannotSearchHint": "Norish klarte ikke å lese en søkeside ut av butikklenken til {store}. Rett den under Administrer butikker, så følger prisene.",
+    "packSize": "Pakkestørrelse",
+    "amount": "Antall å kjøpe",
+    "useCalculatedAmount": "Bruk beregnet antall",
+    "productDetails": "Produktdetaljer",
+    "invalidPrice": "Skriv inn en pris, f.eks. 2,49",
+    "invalidCurrency": "En valuta er tre bokstaver, f.eks. EUR",
+    "openPage": "Åpne hos {store}"
+  },
+  "price": {
+    "pending": "Slår opp prisen",
+    "perUnit": "per {unit}",
+    "pieces": "{count, plural, one {stk.} other {stk.}}",
+    "packs": "{count} × {size}",
+    "onePack": "telt som én pakke",
+    "sale": "Tilbud",
+    "regularPrice": "Ordinær pris {price}"
   }
 }

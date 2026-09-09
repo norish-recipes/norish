@@ -27,6 +27,8 @@ import {
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
 
+import { noticeGroceries } from "../stores/pricing";
+import { assertStoreAccess } from "../stores/stores-helpers";
 import { groceryEmitter } from "./emitter";
 
 export type GroceryProcedureContext = {
@@ -40,6 +42,7 @@ type GroceryMergeCandidate = {
   name: string | null;
   unit: string | null;
   amount: number | null;
+  purchaseAmount?: number | null;
   isDone: boolean;
   recipeIngredientId: string | null;
   recurringGroceryId: string | null;
@@ -47,7 +50,8 @@ type GroceryMergeCandidate = {
   sortOrder: number;
 };
 
-function normalizeGroceryName(name: string | null): string {
+/** The key two list lines are merged under; not the Product Link's folding. */
+function normalizeForMerge(name: string | null): string {
   return (name ?? "").toLowerCase().trim();
 }
 
@@ -91,7 +95,7 @@ export async function createGroceriesData(
   const existingByKey = new Map<string, GroceryMergeCandidate>();
 
   for (const grocery of existingGroceries) {
-    const normalizedName = normalizeGroceryName(grocery.name);
+    const normalizedName = normalizeForMerge(grocery.name);
 
     if (normalizedName && !grocery.isDone) {
       const recipeKey = grocery.recipeIngredientId ?? "manual";
@@ -111,6 +115,7 @@ export async function createGroceriesData(
       name: string | null;
       unit: string | null;
       amount: number | null;
+      purchaseAmount?: number | null;
       isDone: boolean;
       recipeIngredientId: string | null;
       recurringGroceryId: string | null;
@@ -121,15 +126,25 @@ export async function createGroceriesData(
     [];
   const returnIds: string[] = [];
 
+  // A Store the client files a grocery under is the household's own; the
+  // grocery is priced through it, and another household's Store is not a
+  // heading here.
+  const named = new Set(input.map((grocery) => grocery.storeId).filter((id): id is string => !!id));
+
+  for (const storeId of named) await assertStoreAccess(ctx, storeId);
+
   for (const grocery of input) {
-    const normalizedName = normalizeGroceryName(grocery.name);
+    const normalizedName = normalizeForMerge(grocery.name);
     const recipeKey = grocery.recipeIngredientId ?? "manual";
     const recurringKey = grocery.recurringGroceryId ?? "none";
     const lookupKey = normalizedName ? `${normalizedName}|${recipeKey}|${recurringKey}` : null;
     const existing = lookupKey ? existingByKey.get(lookupKey) : null;
 
     const shouldMerge =
-      existing && (existing.unit === grocery.unit || (!existing.unit && !grocery.unit));
+      existing &&
+      existing.purchaseAmount == null &&
+      grocery.purchaseAmount == null &&
+      (existing.unit === grocery.unit || (!existing.unit && !grocery.unit));
 
     if (shouldMerge && existing) {
       const existingAmount = existing.amount ?? 1;
@@ -168,6 +183,7 @@ export async function createGroceriesData(
         name: grocery.name,
         unit: grocery.unit,
         amount: grocery.amount,
+        purchaseAmount: grocery.purchaseAmount,
         isDone: grocery.isDone ?? false,
         recipeIngredientId: grocery.recipeIngredientId ?? null,
         recurringGroceryId: grocery.recurringGroceryId ?? null,
@@ -182,6 +198,7 @@ export async function createGroceriesData(
         name: grocery.name,
         unit: grocery.unit,
         amount: grocery.amount,
+        purchaseAmount: grocery.purchaseAmount,
         isDone: false,
         recipeIngredientId: grocery.recipeIngredientId ?? null,
         recurringGroceryId: null,
@@ -207,12 +224,31 @@ export async function createGroceriesData(
   let createdGroceries: GroceryDto[] = [];
 
   if (groceriesToCreate.length > 0) {
-    createdGroceries = await createGroceries(groceriesToCreate, ctx.userIds);
+    const made = await createGroceries(groceriesToCreate, ctx.userIds);
+
+    createdGroceries = made.created;
     log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");
 
     if (createdGroceries.length > 0) {
       groceryEmitter.emitToHousehold(ctx.householdKey, "created", {
         groceries: createdGroceries,
+      });
+    }
+
+    // Making room at the top moved every active sibling's sort order, and
+    // with it its version. A screen that goes on holding the old version has
+    // its next write on that row refused as stale (ADR-0004), so the shifted
+    // rows ride back on the answer and out to the household as an update; a
+    // row merged and then shifted is reported as the shift left it.
+    if (made.shifted.length > 0) {
+      const shiftedIds = new Set(made.shifted.map((grocery) => grocery.id));
+
+      updatedGroceries = [
+        ...updatedGroceries.filter((grocery) => !shiftedIds.has(grocery.id)),
+        ...made.shifted,
+      ];
+      groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+        changedGroceries: made.shifted,
       });
     }
   }
@@ -227,11 +263,17 @@ export async function createGroceriesData(
     .map((id) => groceriesById.get(id))
     .filter((grocery): grocery is GroceryDto => grocery !== undefined);
 
+  // A name the Store already knows is priced in this same response, with no
+  // outbound request; a name it does not goes to the lookup queue, so adding
+  // six things in a row stays as fast as it was.
+  const prices = await noticeGroceries(ctx, returnedGroceries);
+
   return {
     ids: returnIds,
     createdGroceries,
     updatedGroceries,
     returnedGroceries,
+    prices,
   };
 }
 
@@ -388,6 +430,10 @@ export async function assignGroceryToStoreData(
   }
 
   log.info({ userId: ctx.user.id, groceryId, storeId }, "Grocery assigned to store");
+
+  // Moving a grocery to another Store asks that Store a new question; the old
+  // Store's answer was never about this one.
+  await noticeGroceries(ctx, [updated]);
 
   if (savePreference && storeId && grocery.name) {
     const normalized = normalizeIngredientName(grocery.name);

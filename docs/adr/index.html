@@ -224,11 +224,7 @@
   <body>
     <main>
       <header>
-        <h1>
-          Norish Architecture Decisions<span class="status-pill"
-            >ADR-0011 implemented</span
-          >
-        </h1>
+        <h1>Norish Architecture Decisions<span class="status-pill">ADR-0011 implemented</span></h1>
         <p class="meta">
           Updated August 9, 2026 · branch <code>rc/0.21.0-beta</code> · source decisions in
           <code>docs/adr/offline</code> · <code>docs/adr/releases</code> ·
@@ -590,8 +586,8 @@
             >ADR-0011 — Recovery reconciles after terminal Replay</a
           >
           <p>
-            <b>Implemented.</b> Realtime remains the fast path; one post-Replay active-query
-            refetch is the cache-consistency guarantee.
+            <b>Implemented.</b> Realtime remains the fast path; one post-Replay active-query refetch
+            is the cache-consistency guarantee.
           </p>
         </li>
         <li>
@@ -599,8 +595,8 @@
             >ADR-0012 — Cuisines and Tags share a shape and differ in governance</a
           >
           <p>
-            <b>Accepted.</b> Cuisines are a curated vocabulary in their own table; Tags stay an
-            open folksonomy. Rejects a database enum, a config list, and reusing Tags.
+            <b>Accepted.</b> Cuisines are a curated vocabulary in their own table; Tags stay an open
+            folksonomy. Rejects a database enum, a config list, and reusing Tags.
           </p>
         </li>
         <li>
@@ -617,11 +613,10 @@
             >ADR-0015 — Norish issues every model request through one runtime</a
           >
           <p>
-            <b>Accepted and implemented.</b> The caller-less executor is deleted and rebuilt as
-            the AI Runtime: one seam for structured generation and transcription, typed thrown
-            errors carrying retryability, enrichment features in shared-server, extraction with
-            the parser. Rejects adopting the executor, a dedicated AI package, and a result
-            union.
+            <b>Accepted and implemented.</b> The caller-less executor is deleted and rebuilt as the
+            AI Runtime: one seam for structured generation and transcription, typed thrown errors
+            carrying retryability, enrichment features in shared-server, extraction with the parser.
+            Rejects adopting the executor, a dedicated AI package, and a result union.
           </p>
         </li>
         <li>
@@ -630,9 +625,9 @@
           >
           <p>
             <b>Accepted and implemented.</b> The runtime accepts a prompt name plus appended
-            sections, never a finished string, so a hardcoded prompt is unrepresentable; new
-            input arrives appended so customised prompts survive upgrades. Rejects placeholder
-            templates for new content and image extraction's string surgery.
+            sections, never a finished string, so a hardcoded prompt is unrepresentable; new input
+            arrives appended so customised prompts survive upgrades. Rejects placeholder templates
+            for new content and image extraction's string surgery.
           </p>
         </li>
         <li>
@@ -640,10 +635,10 @@
             >ADR-0017 — The prompts row stores only overrides</a
           >
           <p>
-            <b>Accepted and implemented.</b> The stored prompts row carries only texts that
-            differ from the shipped defaults; reads merge over the shipped files, saves strip
-            default-equal fields, and boot prunes legacy rows against every default any release
-            shipped. Rejects seeded default copies and the row-level isOverridden freeze.
+            <b>Accepted and implemented.</b> The stored prompts row carries only texts that differ
+            from the shipped defaults; reads merge over the shipped files, saves strip default-equal
+            fields, and boot prunes legacy rows against every default any release shipped. Rejects
+            seeded default copies and the row-level isOverridden freeze.
           </p>
         </li>
         <li>
@@ -651,11 +646,10 @@
             >ADR-0018 — Automatic provenance fills the group's gaps</a
           >
           <p>
-            <b>Accepted and implemented.</b> Automatic Recipe Provenance keeps every supplied
-            slot and fills only the absent ones; inference receives the supplied slots as
-            settled facts, and only a complete group suppresses the run. Rejects whole-group
-            suppression by any single value, merging blind to the model, and append-merging
-            supplied Cuisines.
+            <b>Accepted and implemented.</b> Automatic Recipe Provenance keeps every supplied slot
+            and fills only the absent ones; inference receives the supplied slots as settled facts,
+            and only a complete group suppresses the run. Rejects whole-group suppression by any
+            single value, merging blind to the model, and append-merging supplied Cuisines.
           </p>
         </li>
         <li>
@@ -663,25 +657,23 @@
             >ADR-0019 — Obscura is the only rendered-page engine</a
           >
           <p>
-            <b>Accepted and implemented.</b> URL imports render in one Norish-owned Obscura
-            sidecar, repackaged from upstream's render+stealth release archive at a pinned
-            version, started with stealth always on, reached with official Playwright Core over
-            CDP; private-network protection is retained. Rejects upstream's render-only image,
-            a from-source build, a Chrome fallback or per-site engine policy, and any
-            Norish-authored fingerprint beside Obscura's.
+            <b>Accepted and implemented.</b> URL imports render in one Norish-owned Obscura sidecar,
+            repackaged from upstream's render+stealth release archive at a pinned version, started
+            with stealth always on, reached with official Playwright Core over CDP; private-network
+            protection is retained. Rejects upstream's render-only image, a from-source build, a
+            Chrome fallback or per-site engine policy, and any Norish-authored fingerprint beside
+            Obscura's.
           </p>
         </li>
         <li>
-          <a href="ui/0020-norish-does-not-fake-glass.md"
-            >ADR-0020 — Norish does not fake glass</a
-          >
+          <a href="ui/0020-norish-does-not-fake-glass.md">ADR-0020 — Norish does not fake glass</a>
           <p>
-            <b>Accepted.</b> Every <code>backdrop-blur</code> and see-through fill is removed
-            from the web app; anything that floats is an opaque object with a surface fill,
-            border and shadow, and the four <code>cssGlassBackdrop*</code> tokens are deleted so
-            there is nothing left to reach for. Rejects the narrower rule of keeping blur over
-            photos and video, which is the concession that seeded the pattern everywhere else.
-            Scoped to the web: native platform blur is a real compositor effect and is untouched.
+            <b>Accepted.</b> Every <code>backdrop-blur</code> and see-through fill is removed from
+            the web app; anything that floats is an opaque object with a surface fill, border and
+            shadow, and the four <code>cssGlassBackdrop*</code> tokens are deleted so there is
+            nothing left to reach for. Rejects the narrower rule of keeping blur over photos and
+            video, which is the concession that seeded the pattern everywhere else. Scoped to the
+            web: native platform blur is a real compositor effect and is untouched.
           </p>
         </li>
         <li>
@@ -702,14 +694,14 @@
             >ADR-0022 — Recipe Archives are portability, not backup</a
           >
           <p>
-            <b>Accepted.</b> The <code>.norishrecipes</code> export is an ownership-free
-            exchange of recipe content: importing one makes the importer the owner, identity
-            travels only as display-name attribution plus the exporter's own rating and
-            favourite, and no PII rides inside. Cuisine names attach only where the receiving
-            vocabulary already knows them and are dropped visibly otherwise; the Norish parser
-            inherits the shared archive loop unchanged, overwrite on match included. Rejects
-            ownership-preserving restore, auto-created or tag-demoted cuisines, a skip-on-match
-            special case, and server-side export artifacts.
+            <b>Accepted.</b> The <code>.norishrecipes</code> export is an ownership-free exchange of
+            recipe content: importing one makes the importer the owner, identity travels only as
+            display-name attribution plus the exporter's own rating and favourite, and no PII rides
+            inside. Cuisine names attach only where the receiving vocabulary already knows them and
+            are dropped visibly otherwise; the Norish parser inherits the shared archive loop
+            unchanged, overwrite on match included. Rejects ownership-preserving restore,
+            auto-created or tag-demoted cuisines, a skip-on-match special case, and server-side
+            export artifacts.
           </p>
         </li>
         <li>
@@ -718,11 +710,11 @@
           >
           <p>
             <b>Accepted and implemented.</b> One Dish Colour is extracted server-side from a
-            recipe's primary image and kept on the recipe; the page container scopes it as hue
-            and clamped saturation only, so lightness stays with the reader's theme and contrast
-            is unchanged by construction. Rejects browser-side extraction on render, using the
-            colour directly with luminance-chosen text, and tinting the page while leaving cards
-            neutral. Not a reversal of ADR-0020: a tinted surface is still an opaque object.
+            recipe's primary image and kept on the recipe; the page container scopes it as hue and
+            clamped saturation only, so lightness stays with the reader's theme and contrast is
+            unchanged by construction. Rejects browser-side extraction on render, using the colour
+            directly with luminance-chosen text, and tinting the page while leaving cards neutral.
+            Not a reversal of ADR-0020: a tinted surface is still an opaque object.
           </p>
         </li>
         <li>
@@ -734,10 +726,10 @@
             <b>Proposed.</b> The AI Runtime gains <code>generateImage</code> beside
             <code>generateStructured</code> and <code>transcribe</code>, reading its own provider
             block rather than the server's, because only four of eleven providers expose an image
-            model at all. One feature, two requests: a structured call writes a short English
-            visual brief, and the image model draws from it. Rejects a lone
-            <code>imageModel</code> field beside <code>visionModel</code>, an OpenAI-compatible
-            endpoint as the only route, and going straight from recipe to image model.
+            model at all. One feature, two requests: a structured call writes a short English visual
+            brief, and the image model draws from it. Rejects a lone <code>imageModel</code> field
+            beside <code>visionModel</code>, an OpenAI-compatible endpoint as the only route, and
+            going straight from recipe to image model.
           </p>
         </li>
         <li>
@@ -747,10 +739,10 @@
           <p>
             <b>Proposed.</b> A Generated Image is always order 0, and writing one deletes the row
             and file that held that slot; a recipe holds at most one. Eligibility is the
-            counterweight &mdash; automatic runs and default sweeps skip any recipe that already
-            has an image, so only a manual action or an explicit overwrite sweep can reach stored
-            media. Rejects demoting instead of deleting, sparing supplied photographs, and a
-            confirmation on the manual action.
+            counterweight &mdash; automatic runs and default sweeps skip any recipe that already has
+            an image, so only a manual action or an explicit overwrite sweep can reach stored media.
+            Rejects demoting instead of deleting, sparing supplied photographs, and a confirmation
+            on the manual action.
           </p>
         </li>
         <li>
@@ -773,41 +765,63 @@
           >
           <p>
             <b>Accepted.</b> A Cookbook carries a <code>userId</code> and is seen, edited and
-            deleted under the existing <code>RECIPE_PERMISSION_POLICY</code> &mdash; no new
-            setting and no second rule. Filing a recipe needs view on the recipe and edit on the
-            cookbook, and never writes the recipe row, so membership is the cookbook's business
-            rather than the recipe's. Rejects household-owned cookbooks, always-personal
-            cookbooks, deriving visibility from the edit level, and requiring edit rights on the
-            recipe.
+            deleted under the existing <code>RECIPE_PERMISSION_POLICY</code> &mdash; no new setting
+            and no second rule. Filing a recipe needs view on the recipe and edit on the cookbook,
+            and never writes the recipe row, so membership is the cookbook's business rather than
+            the recipe's. Rejects household-owned cookbooks, always-personal cookbooks, deriving
+            visibility from the edit level, and requiring edit rights on the recipe.
           </p>
         </li>
         <li>
-          <a href="groceries/0028-a-grocery-is-priced-only-through-a-store-product.md"
-            >ADR-0028 &mdash; A grocery is priced only through a Store Product</a
+          <a href="groceries/0028-store-pages-are-read-with-a-structured-data-ladder.md"
+            >ADR-0028 &mdash; Store pages are read with a structured-data ladder, not a model</a
           >
           <p>
-            <b>Accepted.</b> A price lives only on a Store Product, one specific item a store
-            sells, and a grocery is priced by pointing at one through a household-wide Product
-            Link keyed by store and normalised name; totals derive at read time and are stored
-            nowhere. A Set Price outranks the refreshed Store Price until cleared, a Sale is the
-            store's claim alone, and a line buys whole packs. Rejects a price column on the
-            grocery, price fields on the Store Preference, per-member links, and comparing
-            stores.
+            <b>Accepted.</b> Results pages are read as JSON-LD <code>ItemList</code> for names and
+            URLs plus a DOM pass for prices, merged on URL; product pages supply the authoritative
+            Shelf Price from <code>Product</code> JSON-LD. Dirk prices only 32 of 198 results in
+            JSON-LD but all 198 in the DOM, and AH's results page has no JSON-LD and is
+            <code>noindex</code>, so neither a purist JSON-LD reader nor a model is the answer.
+            Plain fetch first, Obscura on escalation; Shelf Prices are overwritten with no history.
+            Rejects a model-based reader, per-shop adapters, and JSON-LD only.
           </p>
         </li>
         <li>
-          <a href="groceries/0029-one-switch-gates-every-price-visit.md"
-            >ADR-0029 &mdash; One switch gates every Price Visit, and a visit borrows any
-            member's login</a
+          <a href="groceries/0029-line-cost-is-pack-arithmetic-over-what-the-shop-presents.md"
+            >ADR-0029 &mdash; Line Cost is pack arithmetic over what the shop presents</a
           >
           <p>
-            <b>Accepted.</b> One deployment setting, off by default, allows or forbids every
-            Price Visit &mdash; lookups, refreshes, pasted pages and picker searches alike
-            &mdash; because the retailer sees one server whichever it is; off means prices by
-            hand, a complete mode. A visit carries the Site Auth Tokens any household member
-            holds for the store's domain, the asker's own first and one member's at random
-            otherwise. Rejects gating only the quiet work, no setting, no tokens ever, and the
-            store creator's tokens.
+            <b>Accepted.</b> A grocery's amount is priced as whole packs of the Store Product's Pack
+            Size, rounded up strictly; a bare number is packs unless the shop counts the pack in
+            pieces; what is sold loose is priced by weight, which amends ADR-0028's rejection of
+            per-unit prices. A Sale is only what the shop presents beside its price, so Dirk's
+            markdowns are priced and AH's "2 voor €5.50" is shown as words. Rejects a rounding
+            tolerance, deal arithmetic, card-word vocabularies, and a per-line pack override.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0030-shoppers-override-the-purchase-amount.md"
+            >ADR-0030 &mdash; Shoppers override the purchase amount</a
+          >
+          <p>
+            <b>Accepted.</b> A grocery's requirement and the amount bought are different facts, so a
+            grocery carries an optional Purchase Amount that multiplies the Shelf Price and leaves
+            the amount and unit intact; clearing it restores the calculation. Amends ADR-0029: the
+            panel exposes the amount to buy rather than the Pack Size, which stays reader metadata,
+            and a bare count multiplies a known Shelf Price with no Pack Size.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0031-an-aisle-is-a-fact-about-a-name-at-a-store.md"
+            >ADR-0031 &mdash; An Aisle is a fact about a name at a Store, not about a list line</a
+          >
+          <p>
+            <b>Accepted.</b> Aisles are ordered headings owned by a Store, and an Aisle Link — a
+            Store, a normalized grocery name, an Aisle — is keyed by name like a Product Link, so a
+            grocery's aisle is derived and nothing is stored on the row. Filing one "melk" files
+            every "melk" at that store and the memory outlives the line; two lines with the identical
+            name can never sit in different aisles, by design. Groups are per aisle per store. Aisles
+            travel on the Store DTO and its subscription; filing is tRPC only.
           </p>
         </li>
       </ul>

@@ -125,6 +125,7 @@ function GroceriesUiProvider({
       closeRecurrencePanel,
       addGroceryPanelOpen,
       editingGrocery,
+      setEditingGrocery,
       viewMode,
       setViewMode,
       groupSimilarIngredients,

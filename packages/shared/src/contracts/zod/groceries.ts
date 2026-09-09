@@ -5,6 +5,8 @@ import { groceries } from "@norish/db-schema/schema";
 
 import { clientMintedId } from "./common";
 
+export const PurchaseAmountSchema = z.number().positive().max(9999999).nullable().optional();
+
 export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   .omit({
     userId: true,
@@ -15,6 +17,7 @@ export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   })
   .extend({
     amount: z.coerce.number().nullable(),
+    purchaseAmount: z.coerce.number().nullable().optional(),
     recipeIngredientId: z.uuid().nullable(),
     recurringGroceryId: z.uuid().nullable(),
     storeId: z.uuid().nullable(),
@@ -23,6 +26,7 @@ export const GrocerySelectBaseSchema = createSelectSchema(groceries)
 
 // Insert schema with explicit fields to avoid drizzle-zod type inference issues
 export const GroceryInsertBaseSchema = z.object({
+  purchaseAmount: PurchaseAmountSchema,
   userId: z.string(),
   name: z.string().nullable(),
   unit: z.string().nullable(),
@@ -36,6 +40,7 @@ export const GroceryInsertBaseSchema = z.object({
 
 // Base update schema with explicit field definitions
 export const GroceryUpdateBaseSchema = z.object({
+  purchaseAmount: PurchaseAmountSchema,
   id: z.uuid(),
   version: z.number().int().positive().optional(),
   name: z.string().nullable().optional(),
@@ -61,6 +66,7 @@ const GroceryStoreReorderInputSchema = GroceryVersionInputSchema.extend({
 
 // Create schema without userId (added server-side)
 export const GroceryCreateSchema = z.object({
+  purchaseAmount: PurchaseAmountSchema,
   id: clientMintedId,
   name: z.string().nullable(),
   unit: z.string().nullable(),
@@ -73,6 +79,7 @@ export const GroceryCreateSchema = z.object({
 
 // tRPC input schemas
 export const GroceryUpdateInputSchema = z.object({
+  purchaseAmount: PurchaseAmountSchema,
   groceryId: z.string(),
   raw: z.string(),
   version: z.number().int().positive(),
@@ -80,6 +87,7 @@ export const GroceryUpdateInputSchema = z.object({
 });
 
 export const DetachRecurringGroceryInputSchema = z.object({
+  purchaseAmount: PurchaseAmountSchema,
   recurringGroceryId: z.uuid(),
   recurringVersion: z.number().int().positive(),
   groceryId: z.uuid(),

@@ -25,6 +25,7 @@ import {
   startScheduledTasksWorker,
   stopScheduledTasksWorker,
 } from "@norish/queue/scheduled-tasks/worker";
+import { startStoreLookupWorker, stopStoreLookupWorker } from "@norish/queue/store-lookup/worker";
 import { createLogger } from "@norish/shared-server/logger";
 
 const log = createLogger("bullmq");
@@ -64,6 +65,10 @@ export async function startWorkers(): Promise<void> {
 
   // Scheduled tasks (always-running for cron jobs)
   startScheduledTasksWorker();
+
+  // Store lookups run always-on: a grocery is priced while the user is still
+  // looking at the list, and a lazy worker is where the `delay` trap lives.
+  startStoreLookupWorker();
   await initializeScheduledJobs(getQueues().scheduledTasks);
 
   log.info("All BullMQ workers started (lazy workers waiting for jobs)");
@@ -81,6 +86,7 @@ export async function stopWorkers(): Promise<void> {
 
   // Stop the always-running scheduled tasks worker
   await stopScheduledTasksWorker();
+  await stopStoreLookupWorker();
 
   // Close all queue connections via registry
   await closeAllQueues();

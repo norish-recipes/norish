@@ -26,7 +26,9 @@
     "storeActions": "Butikshandlinger",
     "markAllDone": "Markér alle som færdige",
     "deleteDone": "Slet færdige",
-    "done": "{count} færdige"
+    "done": "{count} færdige",
+    "total": "Mangler at købe",
+    "doneHeading": "Færdig"
   },
   "storeManager": {
     "title": "Administrer butikker",
@@ -49,7 +51,29 @@
     "deleteItems": "Slet varer",
     "deleteItemsDescription": "Fjern alle varer i denne butik",
     "noItems": "Denne butik har ingen varer.",
-    "create": "Opret"
+    "create": "Opret",
+    "shopLink": "Butikslink",
+    "shopLinkPlaceholder": "https://eksempel.dk",
+    "shopLinkHint": "Indsæt butikkens hjemmeside, eller en søgning du lige har lavet der.",
+    "searchAddressFound": "Norish søger i denne butik med:",
+    "searchAddressExample": "For eksempel: {url}",
+    "websiteOnly": "Gemt som butikkens hjemmeside. Norish leder efter søgesiden.",
+    "searchAddressManualHint": "Du kan også selv indsætte en søgeadresse, med {placeholder} hvor søgeordet skal stå.",
+    "linkInvalid": "Det ligner ikke en webadresse.",
+    "sampleTerm": "mælk",
+    "checkingShop": "Tjekker {store}…",
+    "checkFoundProducts": "{store} svarede med {count, plural, one {# produkt med pris} other {# produkter med pris}}.",
+    "checkNoProducts": "{store} svarede, men Norish fandt ingen priser der.",
+    "checkAnswered": "{store} svarede. Norish søger der, når du tilføjer en vare.",
+    "checkNoAnswer": "{store} svarede ikke. Søgeadressen er måske forkert.",
+    "checkNoAddress": "Norish fandt ingen søgeside for {store}. Indsæt en søgning, du har lavet der.",
+    "aisles": "Gange",
+    "aislesHint": "Navngiv gangene i denne butik i den rækkefølge, du går dem. Indkøb vises pr. gang.",
+    "aisleNamePlaceholder": "f.eks. Mejeri",
+    "addAisle": "Tilføj gang",
+    "removeAisle": "Fjern gang",
+    "dragAisle": "Træk for at ændre rækkefølgen",
+    "aisleDuplicate": "Denne butik har allerede en gang med det navn"
   },
   "panel": {
     "addTitle": "Tilføj indkøbsvare",
@@ -61,7 +85,7 @@
     "recurrence": "Gentagelse",
     "savePreference": "Husk butik for denne vare",
     "addAnother": "Tilføj endnu en",
-    "addRepeat": "+ Tilføj gentagelse",
+    "addRepeat": "Indstil gentagelse",
     "recurrenceEnabled": "Gentages",
     "recurrenceSheet": {
       "title": "Gentagelse",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Tilføj til indkøbsliste",
     "ingredientsAdded": "Ingredienser tilføjet til indkøbslisten.",
     "ingredientsFailed": "Kunne ikke tilføje ingredienser til indkøbslisten.",
-    "addToGroceries": "Tilføj til indkøbsliste"
+    "addToGroceries": "Tilføj til indkøbsliste",
+    "aisle": "Gang",
+    "noAisle": "Ingen gang"
+  },
+  "picker": {
+    "searchPlaceholder": "Skriv for at søge i butikken",
+    "searching": "Søger i {store}…",
+    "knownGroup": "Allerede kendt",
+    "shopGroup": "Fra butikken",
+    "nothingFound": "Norish fandt intet hos {store}. Du kan selv skrive prisen.",
+    "noAnswer": "{store} svarede ikke. Prøv igen om et øjeblik, eller skriv prisen selv.",
+    "byHandName": "Produktnavn",
+    "byHandPrice": "Pris",
+    "byHandCurrency": "Valuta",
+    "productLabel": "Produkt hos {store}",
+    "cannotSearch": "Denne butik kan ikke søges",
+    "cannotSearchHint": "Norish kunne ikke læse en søgeside ud af butikslinket til {store}. Ret det under Administrer butikker, så følger priserne.",
+    "packSize": "Pakkestørrelse",
+    "amount": "Antal at købe",
+    "useCalculatedAmount": "Brug beregnet antal",
+    "productDetails": "Produktoplysninger",
+    "invalidPrice": "Indtast en pris, f.eks. 2,49",
+    "invalidCurrency": "En valuta er tre bogstaver, f.eks. EUR",
+    "openPage": "Åbn hos {store}"
+  },
+  "price": {
+    "pending": "Slår prisen op",
+    "perUnit": "pr. {unit}",
+    "pieces": "{count, plural, one {stk.} other {stk.}}",
+    "packs": "{count} × {size}",
+    "onePack": "talt som én pakke",
+    "sale": "Tilbud",
+    "regularPrice": "Normalpris {price}"
   }
 }

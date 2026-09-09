@@ -17,6 +17,7 @@ import type {
   PasteImportJobData,
   RecipeEnrichmentJobData,
   RecipeImportJobData,
+  StoreLookupJobData,
 } from "@norish/queue/contracts/job-types";
 import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getConfig } from "@norish/db/repositories/server-config";
@@ -37,6 +38,7 @@ import { createPasteImportQueue } from "./paste-import/queue";
 import { createRecipeImportQueue } from "./recipe-import/queue";
 import { createRecipeProvenanceQueue } from "./recipe-provenance/queue";
 import { createScheduledTasksQueue } from "./scheduled-tasks/queue";
+import { createStoreLookupQueue } from "./store-lookup/queue";
 
 const log = createLogger("queue:registry");
 
@@ -69,6 +71,7 @@ interface QueueRegistry {
   imageGeneration: Queue<RecipeEnrichmentJobData>;
   caldavSync: Queue<CaldavSyncJobData>;
   scheduledTasks: Queue<ScheduledTaskJobData>;
+  storeLookup: Queue<StoreLookupJobData>;
 }
 
 async function loadJobRetention(): Promise<JobRetentionConfig> {
@@ -126,6 +129,7 @@ export async function initializeQueues(): Promise<QueueRegistry> {
       imageGeneration: createImageGenerationQueue(removalOptions),
       caldavSync: createCaldavSyncQueue(removalOptions),
       scheduledTasks: createScheduledTasksQueue(removalOptions),
+      storeLookup: createStoreLookupQueue(removalOptions),
     };
 
     globalForRegistry.queueRegistry = created;
@@ -175,6 +179,7 @@ export function getQueueByName(name: QueueName): Queue {
     [QUEUE_NAMES.IMAGE_GENERATION]: getQueues().imageGeneration,
     [QUEUE_NAMES.CALDAV_SYNC]: getQueues().caldavSync,
     [QUEUE_NAMES.SCHEDULED_TASKS]: getQueues().scheduledTasks,
+    [QUEUE_NAMES.STORE_LOOKUP]: getQueues().storeLookup,
   };
 
   return byName[name];
@@ -217,6 +222,7 @@ export async function closeAllQueues(): Promise<void> {
     registry.imageGeneration.close(),
     registry.caldavSync.close(),
     registry.scheduledTasks.close(),
+    registry.storeLookup.close(),
   ]);
 
   globalForRegistry.queueRegistry = null;

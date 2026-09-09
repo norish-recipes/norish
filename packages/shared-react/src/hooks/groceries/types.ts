@@ -51,22 +51,29 @@ export type GroceryCreateData = {
 };
 
 export type GroceriesMutationsResult = {
-  createGrocery: (raw: string, storeId?: string | null) => void;
+  createGrocery: (raw: string, storeId?: string | null, purchaseAmount?: number | null) => void;
   createGroceriesFromData: (groceries: GroceryCreateData[]) => Promise<string[]>;
   createRecurringGrocery: (
     raw: string,
     pattern: RecurrencePattern,
-    storeId?: string | null
+    storeId?: string | null,
+    purchaseAmount?: number | null
   ) => void;
   toggleGroceries: (ids: string[], isDone: boolean) => void;
   toggleRecurringGrocery: (recurringGroceryId: string, groceryId: string, isDone: boolean) => void;
-  updateGrocery: (id: string, raw: string, storeId?: string | null) => void;
+  updateGrocery: (
+    id: string,
+    raw: string,
+    storeId?: string | null,
+    purchaseAmount?: number | null
+  ) => void;
   updateRecurringGrocery: (
     recurringGroceryId: string,
     groceryId: string,
     raw: string,
     pattern: RecurrencePattern | null,
-    storeId?: string | null
+    storeId?: string | null,
+    purchaseAmount?: number | null
   ) => void;
   deleteGroceries: (ids: string[]) => void;
   deleteRecurringGrocery: (recurringGroceryId: string) => void;

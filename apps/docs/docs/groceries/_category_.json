@@ -1,0 +1,9 @@
+{
+  "label": "Groceries",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "title": "Groceries",
+    "description": "The household's shopping list: stores, and what the things on it cost."
+  }
+}

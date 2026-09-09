@@ -3,7 +3,9 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import Fuse from "fuse.js";
 import z from "zod";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type {
+  AisleDto,
   IngredientStorePreferenceDto,
   StoreDto,
   StoreInsertDto,
@@ -18,6 +20,8 @@ import {
   StoreSelectBaseSchema,
   StoreUpdateBaseSchema,
 } from "@norish/shared/contracts/zod";
+
+import { listAislesByStoreIds, saveStoreAisles } from "./aisles";
 
 // Fuse.js configuration for ingredient name fuzzy matching
 // threshold: 0 = exact match, 1 = match anything
@@ -34,16 +38,40 @@ const FUSE_OPTIONS: IFuseOptions<IngredientStorePreferenceDto> = {
   shouldSort: true,
 };
 
+/**
+ * A Store travels with its aisles (ADR-0031): every row read here is handed
+ * back with the Store's ordered aisle list attached, in one query for however
+ * many Stores, before it is parsed as a Store.
+ */
+async function withAisles(
+  rows: (typeof stores.$inferSelect)[],
+  tx: typeof db | DbTransaction = db
+): Promise<StoreDto[]> {
+  const aisles = await listAislesByStoreIds(
+    rows.map((row) => row.id),
+    tx
+  );
+  const byStore = new Map<string, AisleDto[]>();
+
+  for (const aisle of aisles) {
+    byStore.set(aisle.storeId, [...(byStore.get(aisle.storeId) ?? []), aisle]);
+  }
+  const parsed = z
+    .array(StoreSelectBaseSchema)
+    .safeParse(rows.map((row) => ({ ...row, aisles: byStore.get(row.id) ?? [] })));
+
+  if (!parsed.success) throw new Error("Failed to parse stores");
+
+  return parsed.data;
+}
+
 export async function getStoreById(id: string): Promise<StoreDto | null> {
   const [row] = await db.select().from(stores).where(eq(stores.id, id)).limit(1);
 
   if (!row) return null;
+  const [store] = await withAisles([row]);
 
-  const parsed = StoreSelectBaseSchema.safeParse(row);
-
-  if (!parsed.success) throw new Error("Failed to parse store by id");
-
-  return parsed.data;
+  return store ?? null;
 }
 
 export async function listStoresByUserIds(userIds: string[]): Promise<StoreDto[]> {
@@ -55,11 +83,7 @@ export async function listStoresByUserIds(userIds: string[]): Promise<StoreDto[]
     .where(inArray(stores.userId, userIds))
     .orderBy(stores.sortOrder);
 
-  const parsed = z.array(StoreSelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse stores");
-
-  return parsed.data;
+  return withAisles(rows);
 }
 
 export async function checkStoreNameExistsInHousehold(
@@ -92,58 +116,69 @@ export async function createStore(id: string, input: StoreInsertDto): Promise<St
   const parsed = StoreInsertBaseSchema.safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid StoreInsertDto");
+  const { aisles, ...columns } = parsed.data;
 
-  // Get max sort order for user's stores
-  const [maxOrder] = await db
-    .select({ max: sql<number>`COALESCE(MAX(${stores.sortOrder}), -1)` })
-    .from(stores)
-    .where(eq(stores.userId, input.userId));
+  return await db.transaction(async (trx) => {
+    // Get max sort order for user's stores
+    const [maxOrder] = await trx
+      .select({ max: sql<number>`COALESCE(MAX(${stores.sortOrder}), -1)` })
+      .from(stores)
+      .where(eq(stores.userId, input.userId));
 
-  const sortOrder = (maxOrder?.max ?? -1) + 1;
+    const sortOrder = (maxOrder?.max ?? -1) + 1;
 
-  const [row] = await db
-    .insert(stores)
-    .values({ id, ...parsed.data, sortOrder })
-    .returning();
+    const [row] = await trx
+      .insert(stores)
+      .values({ id, ...columns, sortOrder })
+      .returning();
 
-  const validated = StoreSelectBaseSchema.safeParse(row);
+    if (!row) throw new Error("Failed to create store");
+    // A new Store can be made with its aisles in one go.
+    if (aisles) await saveStoreAisles(row.id, aisles, trx);
+    const [store] = await withAisles([row], trx);
 
-  if (!validated.success) throw new Error("Failed to parse created store");
+    if (!store) throw new Error("Failed to parse created store");
 
-  return validated.data;
+    return store;
+  });
 }
 
 export async function updateStore(input: StoreUpdateDto): Promise<StoreDto | null> {
   const parsed = StoreUpdateBaseSchema.safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid StoreUpdateDto");
+  const { aisles, ...columns } = parsed.data;
 
   const whereConditions = [eq(stores.id, input.id)];
 
-  if (parsed.data.version) {
-    whereConditions.push(eq(stores.version, parsed.data.version));
+  if (columns.version) {
+    whereConditions.push(eq(stores.version, columns.version));
   }
 
-  const [row] = await db
-    .update(stores)
-    .set({ ...parsed.data, updatedAt: new Date(), version: sql`${stores.version} + 1` })
-    .where(and(...whereConditions))
-    .returning();
+  return await db.transaction(async (trx) => {
+    const [row] = await trx
+      .update(stores)
+      .set({ ...columns, updatedAt: new Date(), version: sql`${stores.version} + 1` })
+      .where(and(...whereConditions))
+      .returning();
 
-  if (!row) return null;
+    if (!row) return null;
+    // The aisles are saved with the Store, in the same write, so a stale
+    // update that is ignored leaves them exactly as they were too.
+    if (aisles !== undefined) await saveStoreAisles(row.id, aisles, trx);
+    const [store] = await withAisles([row], trx);
 
-  const validated = StoreSelectBaseSchema.safeParse(row);
+    if (!store) throw new Error("Failed to parse updated store");
 
-  if (!validated.success) throw new Error("Failed to parse updated store");
-
-  return validated.data;
+    return store;
+  });
 }
 
 export async function reorderStores(
   storeUpdates: { id: string; version: number }[]
 ): Promise<StoreDto[]> {
   return await db.transaction(async (trx) => {
-    const updatedStores: StoreDto[] = [];
+    const updatedRows: (typeof stores.$inferSelect)[] = [];
 
     for (let i = 0; i < storeUpdates.length; i++) {
       const storeUpdate = storeUpdates[i];
@@ -156,16 +191,10 @@ export async function reorderStores(
         .where(and(eq(stores.id, storeUpdate.id), eq(stores.version, storeUpdate.version)))
         .returning();
 
-      if (row) {
-        const validated = StoreSelectBaseSchema.safeParse(row);
-
-        if (!validated.success)
-          throw new Error(`Failed to parse reordered store (id=${storeUpdate.id})`);
-        updatedStores.push(validated.data);
-      }
+      if (row) updatedRows.push(row);
     }
 
-    return updatedStores;
+    return withAisles(updatedRows, trx);
   });
 }
 

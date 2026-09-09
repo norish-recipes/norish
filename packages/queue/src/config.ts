@@ -28,6 +28,7 @@ export const QUEUE_NAMES = {
   RECIPE_PROVENANCE: "recipe-provenance",
   INGREDIENT_LINKING: "ingredient-linking",
   IMAGE_GENERATION: "image-generation",
+  STORE_LOOKUP: "store-lookup",
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -69,6 +70,7 @@ export const STALLED_INTERVAL = {
   [QUEUE_NAMES.RECIPE_PROVENANCE]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.INGREDIENT_LINKING]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.IMAGE_GENERATION]: 60_000, // 1 min - background enhancement
+  [QUEUE_NAMES.STORE_LOOKUP]: 60_000, // 1 min - always-on, one visit at a time
 } as const;
 
 /**
@@ -90,6 +92,10 @@ export const WORKER_CONCURRENCY = {
   // must trickle rather than burst: 1, not the 2 the other enrichment
   // queues run at.
   [QUEUE_NAMES.IMAGE_GENERATION]: 1,
+  // One visit at a time, paced inside the processor: this is the whole
+  // good-citizen fence in front of somebody else's supermarket. Raising it,
+  // or adding a second queue that races this one at the same shop, undoes it.
+  [QUEUE_NAMES.STORE_LOOKUP]: 1,
 } as const;
 
 /**
@@ -140,6 +146,7 @@ export const HANGING_THRESHOLD_MS: Record<QueueName, number> = {
   [QUEUE_NAMES.RECIPE_PROVENANCE]: 15 * 60_000,
   [QUEUE_NAMES.INGREDIENT_LINKING]: 15 * 60_000,
   [QUEUE_NAMES.IMAGE_GENERATION]: 15 * 60_000,
+  [QUEUE_NAMES.STORE_LOOKUP]: 10 * 60_000,
 };
 
 export type QueueRemovalOptions = Pick<DefaultJobOptions, "removeOnComplete" | "removeOnFail">;
@@ -305,6 +312,18 @@ export const ingredientLinkingJobOptions: DefaultJobOptions = {
     age: 3600,
     count: 500,
   },
+  removeOnFail: FALLBACK_REMOVAL,
+};
+
+/**
+ * A shop that is down is down; a lookup that failed is retried once and then
+ * left alone, because the grocery it was for is unpriced rather than broken.
+ * **Never add `delay` when enqueuing on this queue** — see the producer.
+ */
+export const storeLookupJobOptions: DefaultJobOptions = {
+  attempts: 2,
+  backoff: { type: "exponential", delay: 10_000 },
+  removeOnComplete: { age: 3600, count: 500 },
   removeOnFail: FALLBACK_REMOVAL,
 };
 

@@ -1,0 +1,5 @@
+# Shoppers override the purchase amount
+
+A grocery's requirement and the amount bought are different facts: 800 g may require two products, while the shopper chooses to buy three. Store the optional Purchase Amount on the grocery, leaving its amount and unit intact. It is local to this shopping trip, including for recurring groceries; it never changes a Store Product or another grocery linked to it. Clearing it restores calculation. Groups add explicitly chosen purchases to the combined automatic requirements, and creates with an override stay separate from automatic lines rather than silently merging away that choice.
+
+This amends ADR-0029: the grocery panel exposes Purchase Amount instead of Pack Size, and rows show the total with purchase amount times Shelf Price. Pack Size remains reader metadata for converting requirements. A missing Pack Size does not prevent a bare count or container count from multiplying the known Shelf Price. Sale detection and deal arithmetic are unchanged; promotion details sit apart from the product name.

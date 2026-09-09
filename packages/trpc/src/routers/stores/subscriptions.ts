@@ -106,9 +106,72 @@ const onReordered = authedProcedure.subscription(async function* ({ ctx, signal 
   }
 });
 
+const onProductUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = storeEmitter.householdEvent(ctx.householdKey, "productUpdated");
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as StoreSubscriptionEvents["productUpdated"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from store product events"
+    );
+  }
+});
+
+const onLinkUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = storeEmitter.householdEvent(ctx.householdKey, "linkUpdated");
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as StoreSubscriptionEvents["linkUpdated"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from product link events"
+    );
+  }
+});
+
+const onAisleFiled = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = storeEmitter.householdEvent(ctx.householdKey, "aisleFiled");
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as StoreSubscriptionEvents["aisleFiled"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from aisle filing events"
+    );
+  }
+});
+
 export const storesSubscriptions = router({
   onCreated,
   onUpdated,
   onDeleted,
   onReordered,
+  onProductUpdated,
+  onLinkUpdated,
+  onAisleFiled,
 });

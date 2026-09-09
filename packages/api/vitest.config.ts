@@ -1,6 +1,20 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+const packageDir = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
+  resolve: {
+    alias: [
+      {
+        // Tests exercise the sources, not the copy of this package that pnpm
+        // injects into node_modules; the copy goes stale on every edit.
+        find: /^@norish\/api(?=\/|$)/,
+        replacement: path.resolve(packageDir, "src"),
+      },
+    ],
+  },
   test: {
     environment: "node",
     globals: true,

@@ -104,3 +104,13 @@ export interface RecipeEnrichmentJobData {
    */
   replaceExisting?: boolean;
 }
+
+/**
+ * One job of the always-on `storeLookup` queue. A match job answers "what does
+ * this grocery name mean at this shop"; a refresh job re-reads Shelf Prices
+ * that have gone stale. Match jobs carry the higher priority: a user's new
+ * grocery jumps a stale batch.
+ */
+export type StoreLookupJobData =
+  | { kind: "match"; storeId: string; name: string; householdKey: string }
+  | { kind: "refresh"; storeId: string; productIds: string[]; householdKey: string };

@@ -309,6 +309,55 @@
       "when": 1788354876718,
       "tag": "0043_site_auth_token_account",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1788517874841,
+      "tag": "0044_store_search_address",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1788519125577,
+      "tag": "0045_store_products",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1788705212828,
+      "tag": "0046_pending_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1788706520173,
+      "tag": "0047_pack_size",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1788708141497,
+      "tag": "0048_sale",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1788770323663,
+      "tag": "0049_grocery_purchase_amount",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1788806993586,
+      "tag": "0050_aisles",
+      "breakpoints": true
     }
   ]
 }

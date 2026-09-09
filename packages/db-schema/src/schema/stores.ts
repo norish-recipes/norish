@@ -13,6 +13,10 @@ export const stores = pgTable(
     name: text("name").notNull(),
     color: text("color").notNull().default("primary"),
     icon: text("icon").notNull().default("ShoppingBagIcon"),
+    /** The shop's own website, when the Store stands for a real one. */
+    website: text("website"),
+    /** The shop's search page with a `{query}` slot where the term goes. */
+    searchAddress: text("search_address"),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

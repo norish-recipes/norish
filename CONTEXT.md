@@ -103,75 +103,60 @@ _Avoid_: Collection (names the shape, and collides with the Library), Folder (su
 ### Groceries & Stores
 
 **Grocery**:
-A line on the household's shopping list: a name, and when known an amount and a unit, whether typed in, taken from a recipe's ingredient or planted by a recurring grocery. Every member's lines are one list, each belongs to one store or is Unsorted, and buying it ticks it off rather than removing it.
-_Avoid_: Item (ambiguous once products exist), Shopping list entry
+A line on the household's shopping list: a name, optionally an amount and unit, optionally assigned to a Store. It is transient by design — it is ticked off and cleared every week — so nothing worth keeping may live on it alone. What a shop sells is a Store Product; the two are never the same thing.
+_Avoid_: Item, Product (a Store Product is the shop's, a Grocery is the household's)
 
 **Store**:
-A place a household shops, used to sort the grocery list into the trips that will actually happen. It is made by one member and seen by the whole household, and a grocery that belongs to no store is Unsorted rather than lost.
-_Avoid_: Shop (collides with the verb), Category (a store is a destination, not a kind of item), Container (names what it was before it could be anything else)
+A place the household shops, named, coloured and ordered by them, that groceries are grouped under. A Store may additionally point at a real shop's website, which is what lets it carry a Search Address and Store Products. A Store without a website is an ordinary Store and always was: pricing is something a Store gains, never something it requires.
+_Avoid_: Shop, Supermarket (a Store may be a market stall, a butcher, or nothing but a heading)
 
-**Unsorted**:
-The store-less part of the grocery list, always present and shown first. It is a place rather than a store, so nothing in it can have a Product Link and everything in it is Unpriced.
-_Avoid_: No store, Uncategorised
-
-**Store Preference**:
-A member's remembered store for a grocery name, learned every time they put that name into a store and consulted whenever a new grocery arrives without one; when the member has none, another member's is borrowed, and a near name stands in for an exact one. It is personal because where you buy milk is personal, unlike which carton the store sells.
-_Avoid_: Ingredient store preference (the code's name), Auto-detect (names the interface's promise, not the thing)
-
-**Store Website**:
-The address of a store's own site, kept on the store so that it stands for a real shop rather than a label. It is the one thing a person must supply for Norish to know anything about the store beyond its name.
-_Avoid_: Store URL (names the format, not the thing)
-
-**Product Search**:
-The address at which a Store Website answers a search, with a place for the term. Norish tries to work it out from the Store Website on its own and a person may correct it; a store without one still has a website, it just cannot be searched.
-_Avoid_: Search URL template, Search endpoint (implementation words)
+**Search Address**:
+The Store's search page with a `{query}` slot standing where the search term goes — `https://www.ah.nl/zoeken?query={query}`, `https://www.dirk.nl/zoeken/producten/{query}`. It is derived from whatever the user pastes rather than demanded of them: a homepage Norish finds a search form on, or a search the user ran themselves, whose term is replaced by the slot. A Store has at most one, and it is editable, because a guess that reads the wrong slot must be one keystroke from correct.
+_Avoid_: Search template, URL pattern (the user pastes an address they already have, and never authors a template), Query URL
 
 **Store Product**:
-One specific item a store sells: its name in the store's own words, its price in whatever currency the store advertises, and, when it came from the Store Website, the page it lives on. It is the only thing in Norish that carries a price, and a store is assumed to trade in one currency, so a total simply adds its products up. A product made by hand has no page and takes the currency its store's other products advertise, or the instance's default locale when there are none yet. Any number of grocery names may point at one product, which is how "milk", "melk" and "halfvolle melk" all become the same carton (ADR-0028).
-_Avoid_: SKU, Listing, Item (ambiguous between a product and a grocery)
+Something a Store sells, as Norish last read it: a name, the page it lives on, and its Shelf Price. It belongs to its Store, so a household shares products through the store it already shares. A Store Product may also be typed by hand for a shop Norish cannot read; a hand-made one has no page, so nothing ever overwrites what its owner typed.
+_Avoid_: Grocery (that is the list line), Article, SKU
+
+**Shelf Price**:
+What the shop charges for its unit of sale of a Store Product — one pack, or one kilo of what is sold loose — in the shop's own currency and the shop's own words for the size ("150 gram", "1,5 l", "per stuk", "per kg"): the number on the shelf edge, not the comparable price per kilo printed beside a pack. Norish keeps only the price it last read and the moment it read it; a Shelf Price has no history, and the one it replaces is gone.
+_Avoid_: Unit price, Price per unit (both mean the comparison number beside a pack to a shopper, which Norish does not show)
 
 **Product Link**:
-A grocery name's remembered pointer at a Store Product in one store, so that the next "milk" bound for that store is priced without anyone asking. There is exactly one per store and name for the whole household: which store you buy milk at may be personal, which is why a store preference is per member, but which carton that store sells is a fact about the store, so the last person to choose chose for everybody. A link is either chosen by a person or matched by a Product Lookup, and a chosen link is never revisited by automation: a person's pick outranks Norish's, exactly as Supplied Recipe Data outranks Recipe Enrichment.
-_Avoid_: Product preference (hides that a lookup can make one too), Mapping
+What a Store has learned a grocery name means: a Store, a normalized grocery name, and the Store Product it resolves to. It is deliberately keyed by name rather than by Grocery, so it outlives the list line that prompted it — next week's "melk" is priced without asking the shop again — and so a rename asks a new question instead of carrying the old answer to a name it was never about.
+_Avoid_: Match, Mapping, Assignment (a Grocery is assigned to a Store; it is linked to a Store Product)
 
-**Product Lookup**:
-Norish searching a store's own site for every grocery name waiting at that store that has no Product Link yet, in one paced walk rather than a burst, and linking the best candidate when it is a close enough match. It works without AI, reading what the store's pages state outright; AI, when enabled, only extends it to pages that state nothing plainly and to searching in the store's own language. It is quiet background work in the manner of Automatic Recipe Enrichment: it never blocks the list, and a name it cannot place stays unpriced with its candidates kept for the picker.
-_Avoid_: Price scraping (names the mechanism and its worst reputation), Auto-link
+**Miss**:
+A Product Link that resolved to nothing, holding when it was last tried. It exists so a name the shop does not stock is not searched again every time the list is opened. A Miss is not an error: it shows the user an unpriced Grocery and an invitation to pick or type a price, and nothing else.
+_Avoid_: Failure, Not found, Unmatched
 
-**Price Visit**:
-Any reading of a Store Website by Norish on a household's behalf: a Product Lookup's walk, a Price Refresh, a pasted product page, a search from the picker. One deployment setting allows or forbids all of them together, off until an administrator says otherwise, and with it off every Store Product is made by hand and every price is a Set Price. There is no finer switch: a person asking and Norish acting on its own are the same visit to the retailer. A visit carries the Site Auth Tokens any household member holds for the store's domain, the asking person's own first when there is one and one member's chosen at random otherwise, so a store that prices its shelves behind a login is read as that member sees it (ADR-0029).
-_Avoid_: Scrape, Crawl (Norish reads pages one at a time and never follows links)
+**Pending Link**:
+A Product Link the Store has been asked for and has not yet answered. It is a fact about the Store rather than about the screen that asked, so every member of the household sees the same waiting row until it becomes a link or a Miss; a shop that says nothing leaves no Pending Link behind, and the name is asked again later.
+_Avoid_: Loading, In flight, Lookup (that is the queue's work, not the link's state)
 
-**Store Price**:
-The price a Store Product's page states, as Norish last read it. It is refreshed, never typed.
+**Pack Size**:
+What one Shelf Price buys, as a quantity and a unit: 500 grams, 1.5 litres, 6 pieces, or a kilo of what is sold loose. Norish reads it out of the shop's size words, and its owner may set it by hand when the reading is wrong; a hand-set Pack Size is the last word and no later reading replaces it.
+_Avoid_: Size (that is the shop's words), Unit (that is the grocery's own measure), Package, Quantity
 
-**Set Price**:
-A price a person typed onto a Store Product. It outranks the Store Price for everything shown and counted until the person clears it, while the Store Price goes on being refreshed underneath, so clearing it lands on the store's latest figure. A product made by hand has only a Set Price.
-_Avoid_: Manual price, Override (says what it does to the other price rather than what it is)
+**Purchase Amount**:
+How many of a Store Product the household intends to buy for a Grocery. Calculated from the grocery requirement unless the shopper chooses an amount; that choice leaves the original requirement intact and applies to this shopping trip.
+_Avoid_: Pack Size (what one product holds), Amount (the grocery's original measure)
+
+**Line Cost**:
+What a Grocery costs at its Store: as many whole packs as its amount needs, at the Shelf Price, or its weight at a by-weight price. A bare number is a number of packs, unless the shop counts the pack in pieces, in which case it is a number of pieces. A grocery whose measure cannot be matched against the Pack Size, or that states no amount, costs one pack; a count still multiplies the Shelf Price when no Pack Size is known. A chosen Purchase Amount takes precedence. A Store's total is the sum of the Line Costs still to buy under it, and a deal that only pays off across packs is shown in the shop's words and never worked into the number.
+_Avoid_: Price (that is the Shelf Price), Subtotal, Amount (that is the grocery's measure)
 
 **Sale**:
-A Store Product whose page states a regular price alongside a lower current one. It is entirely the store's claim: Norish never infers one from a price falling and a person never declares one, because a person who knows about an offer simply sets the price. A sale lasts exactly as long as the store keeps stating it, so it ends at the first refresh that no longer sees the regular price.
-_Avoid_: Discount, Offer, Deal (all suggest something Norish worked out)
+A Shelf Price the shop presents with the regular price it replaces beside it, together with the shop's own words for the deal. It is whatever the shop shows as the price, so a deal the shop keeps as a label over its regular price is shown in words and not priced, and Norish never guesses whether a card or a membership stands behind a number. A Sale lasts until the shop presents another price.
+_Avoid_: Discount, Promotion, Offer (the shop's markup word, which is not always a markdown), Bonus
 
-**Price Refresh**:
-Norish re-reading the page of every Store Product that an undone grocery points at, once a day in the background and paced per Store Website, plus whenever a person asks for it on a store. A product nobody is buying this week is left alone and is read again the moment it returns to a list with a price older than a day. Every Store Price carries the moment it was read, so a refresh that fails leaves an ageing price rather than a missing one, and Norish says how old a price is once it is older than the daily window.
-_Avoid_: Price sync, Polling
+**Aisle**:
+A heading within a Store, named and ordered by the household, standing for where in that shop things are found: groceries under a Store are shown by Aisle, in the order the household walks them. Aisles belong to their Store, so a household shares them through the store it already shares, and a Store with no Aisles shows its groceries exactly as it always has. A grocery outside any Aisle is unfiled, and unfiled groceries are shown first, under no heading, so they are noticed and filed.
+_Avoid_: Category (a meal category is something else in Norish), Department, Section (that is the Store's own block in the list)
 
-**Pack Count**:
-How many of its Store Product a grocery line is counted as buying: one unless a person says otherwise, and never worked out from the line's amount, because nobody buys half a bag and the store's package sizes are prose. When grouped rows merge several recipes' flour, the group buys its packs once. A grocery's cost is its product's price times its Pack Count.
-_Avoid_: Quantity (already means the recipe amount), Multiplier
-
-**Trip Total**:
-What the whole grocery list costs: every grocery with a Product Link, done or not, at its product's price times its Pack Count. It is an estimate by construction and always travels with its Unpriced count.
-_Avoid_: Budget (nobody set one), Cart (nothing is being bought through Norish)
-
-**Open Total**:
-The Trip Total of the groceries not yet ticked off. Before the trip it and the Trip Total agree; in the aisle it is what is left to get. Each store shows its own Open Total, and the list shows both totals side by side.
-_Avoid_: Remaining, Outstanding (sounds like a debt)
-
-**Unpriced**:
-A grocery that has no Product Link, or whose product has neither a Store Price nor a Set Price, or whose price is stated in another currency than the rest. It counts for nothing in a total and is counted beside it, because the count is what tells a person whether the total can be trusted.
-_Avoid_: Missing price, Unknown
+**Aisle Link**:
+Where a Store has learned a grocery name is found: a Store, a normalized grocery name, and one of that Store's Aisles. Like a Product Link it is keyed by name rather than by Grocery, so filing one "melk" files every "melk" at that Store, the memory outlives the list line that prompted it, and a rename or a move to another Store asks what that name is filed under there instead of carrying the old answer along. A name the Store has never been told about stays unfiled; Norish never guesses an Aisle from words.
+_Avoid_: Assignment (a Grocery is assigned to a Store, linked to a Store Product, and filed in an Aisle), Placement, Preference (the store preference is a different memory, kept per person)
 
 ### Imports & AI
 

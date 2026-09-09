@@ -1,0 +1,9 @@
+# An Aisle is a fact about a name at a Store, not about a list line
+
+A household wants its groceries shown by Aisle, in the order they walk the shop, and wants a name filed once and remembered. The obvious shape is an aisle column on the grocery plus a memory table consulted on create, rename and move — the shape the per-person store preference already has. We chose the other one: an Aisle Link is a Store, a normalized grocery name and one of the Store's Aisles, keyed by name exactly as a Product Link is, and a grocery's aisle is *derived* from it. Nothing is stored on the grocery row.
+
+Filing and remembering are therefore one act: filing one "melk" files every "melk" at that Store, on every household member's screen, and the memory outlives the list line that prompted it. A rename or a move to another Store asks what that name is filed under there, rather than carrying an answer to a name or a shop it was never about. A row and its memory can never disagree, so grouped mode needs no rule for a group whose members hold different aisles beyond the one we chose: groups are per Aisle per Store, so "kip" filed in Vlees and "kip (diepvries)" filed in Diepvries are two groups even though they fold to one grouping name.
+
+The trade-off is deliberate: two lines with the identical name at one Store can never sit in different Aisles. A shopper who wants frozen chicken in the freezer aisle names it so, and that name is then remembered forever at that store. A name the Store has never been told about stays unfiled; Norish never guesses an Aisle from words, and no AI is involved.
+
+Aisles travel with their Store: an ordered list read on the Store, saved by the Store's own update, pushed on the store subscription, and so visible read-only on `GET /api/v1/stores`. Filing has no REST endpoint; it is a tRPC mutation like product linking.

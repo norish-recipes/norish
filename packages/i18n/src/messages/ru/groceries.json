@@ -26,7 +26,9 @@
     "storeActions": "Действия с магазином",
     "markAllDone": "Отметить всё как выполненное",
     "deleteDone": "Удалить выполненные",
-    "done": "{count, plural, one {# выполнено} few {# выполнено} many {# выполнено} other {# выполнено}}"
+    "done": "{count, plural, one {# выполнено} few {# выполнено} many {# выполнено} other {# выполнено}}",
+    "total": "Ещё купить",
+    "doneHeading": "Готово"
   },
   "storeManager": {
     "title": "Управление магазинами",
@@ -49,7 +51,29 @@
     "deleteItems": "Удалить позиции",
     "deleteItemsDescription": "Удалить все позиции из этого магазина",
     "noItems": "В этом магазине нет позиций.",
-    "create": "Создать"
+    "create": "Создать",
+    "shopLink": "Ссылка на магазин",
+    "shopLinkPlaceholder": "https://primer.ru",
+    "shopLinkHint": "Вставьте сайт магазина или поиск, который вы там только что сделали.",
+    "searchAddressFound": "Norish будет искать в этом магазине по адресу:",
+    "searchAddressExample": "Например: {url}",
+    "websiteOnly": "Сохранено как сайт магазина. Norish поищет страницу поиска.",
+    "searchAddressManualHint": "Вы также можете сами вставить адрес поиска, поставив {placeholder} на месте запроса.",
+    "linkInvalid": "Это не похоже на веб-адрес.",
+    "sampleTerm": "молоко",
+    "checkingShop": "Проверяем {store}…",
+    "checkFoundProducts": "{store} ответил: {count, plural, one {# товар с ценой} few {# товара с ценой} many {# товаров с ценой} other {# товара с ценой}}.",
+    "checkNoProducts": "{store} ответил, но Norish не нашёл там цен.",
+    "checkAnswered": "{store} ответил. Norish поищет там, когда вы добавите покупку.",
+    "checkNoAnswer": "{store} не ответил. Адрес поиска может быть неверным.",
+    "checkNoAddress": "Norish не нашёл страницу поиска для {store}. Вставьте поиск, который вы там сделали.",
+    "aisles": "Ряды",
+    "aislesHint": "Назовите ряды этого магазина в том порядке, в котором вы их обходите. Покупки показываются по рядам.",
+    "aisleNamePlaceholder": "напр., Молочные продукты",
+    "addAisle": "Добавить ряд",
+    "removeAisle": "Удалить ряд",
+    "dragAisle": "Перетащите, чтобы изменить порядок",
+    "aisleDuplicate": "В этом магазине уже есть ряд с таким названием"
   },
   "panel": {
     "addTitle": "Добавить позицию",
@@ -61,7 +85,7 @@
     "recurrence": "Повтор",
     "savePreference": "Запомнить магазин для этой позиции",
     "addAnother": "Добавить ещё",
-    "addRepeat": "+ Добавить повтор",
+    "addRepeat": "Настроить повтор",
     "recurrenceEnabled": "Повторяется",
     "recurrenceSheet": {
       "title": "Повтор",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "Добавить в список покупок",
     "ingredientsAdded": "Ингредиенты добавлены в список покупок.",
     "ingredientsFailed": "Не удалось добавить ингредиенты в список покупок.",
-    "addToGroceries": "Добавить в список покупок"
+    "addToGroceries": "Добавить в список покупок",
+    "aisle": "Ряд",
+    "noAisle": "Без ряда"
+  },
+  "picker": {
+    "searchPlaceholder": "Введите, чтобы искать в магазине",
+    "searching": "Ищем в {store}…",
+    "knownGroup": "Уже известно",
+    "shopGroup": "Из магазина",
+    "nothingFound": "Norish ничего не нашёл в {store}. Вы можете ввести цену сами.",
+    "noAnswer": "{store} не ответил. Попробуйте ещё раз через минуту или введите цену сами.",
+    "byHandName": "Название товара",
+    "byHandPrice": "Цена",
+    "byHandCurrency": "Валюта",
+    "productLabel": "Товар в {store}",
+    "cannotSearch": "В этом магазине нельзя искать",
+    "cannotSearchHint": "Norish не смог получить страницу поиска из ссылки магазина {store}. Исправьте её в «Управление магазинами», и цены появятся.",
+    "packSize": "Размер упаковки",
+    "amount": "Количество к покупке",
+    "useCalculatedAmount": "Использовать рассчитанное количество",
+    "productDetails": "Сведения о товаре",
+    "invalidPrice": "Введите цену, например 2,49",
+    "invalidCurrency": "Валюта состоит из трёх букв, например EUR",
+    "openPage": "Открыть в {store}"
+  },
+  "price": {
+    "pending": "Ищем цену",
+    "perUnit": "за {unit}",
+    "pieces": "{count, plural, one {штука} few {штуки} many {штук} other {штуки}}",
+    "packs": "{count} × {size}",
+    "onePack": "посчитано как одна упаковка",
+    "sale": "Скидка",
+    "regularPrice": "Обычная цена {price}"
   }
 }

@@ -26,7 +26,9 @@
     "storeActions": "매장 작업",
     "markAllDone": "모두 완료로 표시",
     "deleteDone": "삭제 완료",
-    "done": "{count}개 완료"
+    "done": "{count}개 완료",
+    "total": "아직 살 것",
+    "doneHeading": "완료"
   },
   "storeManager": {
     "title": "매장 관리",
@@ -49,7 +51,29 @@
     "deleteItems": "항목 삭제",
     "deleteItemsDescription": "이 매장의 모든 항목을 제거합니다",
     "noItems": "이 매장에는 항목이 없습니다.",
-    "create": "만들기"
+    "create": "만들기",
+    "shopLink": "상점 링크",
+    "shopLinkPlaceholder": "https://example.kr",
+    "shopLinkHint": "상점 웹사이트나 방금 상점에서 한 검색 주소를 붙여넣으세요.",
+    "searchAddressFound": "Norish는 이 상점을 다음 주소로 검색합니다:",
+    "searchAddressExample": "예: {url}",
+    "websiteOnly": "상점 웹사이트로 저장했습니다. Norish가 검색 페이지를 찾아봅니다.",
+    "searchAddressManualHint": "검색 주소를 직접 붙여넣을 수도 있습니다. 검색어 자리에 {placeholder}를 넣으세요.",
+    "linkInvalid": "웹 주소처럼 보이지 않습니다.",
+    "sampleTerm": "우유",
+    "checkingShop": "{store} 확인 중…",
+    "checkFoundProducts": "{store}에서 가격이 있는 상품 {count}개를 찾았습니다.",
+    "checkNoProducts": "{store}는 응답했지만 Norish가 가격을 찾지 못했습니다.",
+    "checkAnswered": "{store}가 응답했습니다. 장보기를 추가하면 Norish가 검색합니다.",
+    "checkNoAnswer": "{store}가 응답하지 않았습니다. 검색 주소가 틀렸을 수 있습니다.",
+    "checkNoAddress": "{store}의 검색 페이지를 찾지 못했습니다. 그곳에서 한 검색을 붙여넣으세요.",
+    "aisles": "통로",
+    "aislesHint": "이 매장의 통로에 다니는 순서대로 이름을 붙이세요. 장보기 목록은 통로별로 표시됩니다.",
+    "aisleNamePlaceholder": "예: 유제품",
+    "addAisle": "통로 추가",
+    "removeAisle": "통로 삭제",
+    "dragAisle": "드래그하여 순서 변경",
+    "aisleDuplicate": "이 매장에는 이미 같은 이름의 통로가 있습니다"
   },
   "panel": {
     "addTitle": "장보기 추가",
@@ -61,7 +85,7 @@
     "recurrence": "반복",
     "savePreference": "이 항목의 매장 기억",
     "addAnother": "하나 더 추가",
-    "addRepeat": "+ 반복 추가",
+    "addRepeat": "반복 설정",
     "recurrenceEnabled": "반복",
     "recurrenceSheet": {
       "title": "반복",
@@ -86,6 +110,38 @@
     "addSelectedToGroceries": "장보기에 추가",
     "ingredientsAdded": "장보기 목록에 재료가 추가되었습니다.",
     "ingredientsFailed": "장보기 목록에 재료를 추가하지 못했습니다.",
-    "addToGroceries": "장보기에 추가"
+    "addToGroceries": "장보기에 추가",
+    "aisle": "통로",
+    "noAisle": "통로 없음"
+  },
+  "picker": {
+    "searchPlaceholder": "입력하여 상점 검색",
+    "searching": "{store} 검색 중…",
+    "knownGroup": "이미 아는 상품",
+    "shopGroup": "매장에서",
+    "nothingFound": "{store}에서 아무것도 찾지 못했습니다. 가격을 직접 입력할 수 있습니다.",
+    "noAnswer": "{store}에서 응답이 없습니다. 잠시 후 다시 시도하거나 가격을 직접 입력하세요.",
+    "byHandName": "상품 이름",
+    "byHandPrice": "가격",
+    "byHandCurrency": "통화",
+    "productLabel": "{store}의 상품",
+    "cannotSearch": "이 상점은 검색할 수 없습니다",
+    "cannotSearchHint": "Norish가 {store}의 상점 링크에서 검색 페이지를 읽지 못했습니다. 상점 관리에서 고치면 가격이 따라옵니다.",
+    "packSize": "포장 단위",
+    "amount": "구매 수량",
+    "useCalculatedAmount": "계산된 수량 사용",
+    "productDetails": "제품 상세 정보",
+    "invalidPrice": "가격을 입력하세요 (예: 2.49)",
+    "invalidCurrency": "통화는 세 글자입니다 (예: EUR)",
+    "openPage": "{store}에서 열기"
+  },
+  "price": {
+    "pending": "가격을 찾는 중",
+    "perUnit": "{unit}당",
+    "pieces": "{count, plural, other {개}}",
+    "packs": "{count} × {size}",
+    "onePack": "1개 포장으로 계산됨",
+    "sale": "할인",
+    "regularPrice": "정가 {price}"
   }
 }
