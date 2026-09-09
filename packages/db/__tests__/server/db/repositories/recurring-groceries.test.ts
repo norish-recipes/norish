@@ -181,7 +181,7 @@ describe("recurring groceries transactional writes", () => {
       const db = getTestDb();
       const [store] = await db
         .insert(stores)
-        .values({ userId: testUserId, name: "Bakery", color: "primary", icon: "ShoppingBagIcon" })
+        .values({ userId: testUserId, name: "Bakery", color: "primary" })
         .returning();
 
       const outcome = await updateRecurringGroceryWithGrocery(

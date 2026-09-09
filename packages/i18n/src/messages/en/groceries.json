@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Unsorted",
-    "noItems": "No items in this store",
     "storeActions": "Store actions",
     "markAllDone": "Mark all done",
     "deleteDone": "Delete done",
     "done": "{count} done",
-    "total": "Still to buy",
-    "doneHeading": "Done"
+    "allDone": "All done",
+    "total": "Still to buy"
   },
   "storeManager": {
     "title": "Manage Stores",
@@ -38,7 +37,16 @@
     "storeName": "Store name",
     "storeNamePlaceholder": "e.g., Supermarket",
     "storeColor": "Color",
-    "storeIcon": "Icon",
+    "colorNames": {
+      "green": "Green",
+      "rose": "Rose",
+      "teal": "Teal",
+      "amber": "Amber",
+      "red": "Red",
+      "grey": "Grey",
+      "blue": "Blue",
+      "violet": "Violet"
+    },
     "confirmDelete": "Are you sure you want to delete {storeName}?",
     "deleteWarning": "Items in this store will be moved to Unsorted.",
     "noStoresYet": "No stores yet",
@@ -128,6 +136,11 @@
     "cannotSearch": "This shop cannot be searched",
     "cannotSearchHint": "Norish could not read a search page out of {store}'s shop link. Correct it in Manage Stores and prices follow.",
     "packSize": "Pack size",
+    "packAmount": "Amount per pack",
+    "packUnit": "Unit",
+    "productPage": "Product page",
+    "invalidUrl": "Enter a web address, like https://www.dirk.nl/…",
+    "invalidPack": "Enter both an amount and a unit, or neither",
     "amount": "Amount to buy",
     "useCalculatedAmount": "Use calculated amount",
     "productDetails": "Product details",

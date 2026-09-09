@@ -82,7 +82,6 @@ export async function createStoreData(
     userId: ctx.user.id,
     name: input.name,
     color: input.color ?? "primary",
-    icon: input.icon ?? "ShoppingBagIcon",
     sortOrder: 0,
     website: input.website ?? null,
     searchAddress: input.searchAddress ?? null,

@@ -132,7 +132,7 @@ export function GroceryListByRecipe({
   }
 
   return (
-    <div className="flex flex-col gap-3 p-1">
+    <div className="flex flex-col gap-4 p-1">
       {recipeGroups.map((group) => (
         <motion.div
           key={group.recipeId ?? "manual"}

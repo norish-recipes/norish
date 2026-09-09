@@ -143,7 +143,9 @@ test("a name the Store already knows is priced with no outbound request at all",
 
   // The Product Link is keyed by name, so it outlives the list line that
   // prompted it: next week's "melk" is priced without asking the shop again.
-  await page.getByText("melk").first().click();
+  // Exactly "melk": the aisles scenarios share this database and carry a
+  // "halfvolle melk" of their own, which sits earlier on the page.
+  await page.getByText("melk", { exact: true }).first().click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(priced).toBeHidden();
 
@@ -193,15 +195,29 @@ test("a shop that answers nothing takes a price by hand, with no button to press
   await page.goto("/groceries");
   await addGroceryToShop("sterrenstof");
   await page.getByText("sterrenstof").first().click();
+  // The price fields are there before the shop has been asked at all.
+  await expect(page.getByTestId("product-by-hand-price")).toBeVisible();
   await page.getByTestId("grocery-product-field").fill("sterrenstof");
   await expect(page.getByTestId("product-by-hand")).toBeVisible({ timeout: 30_000 });
 
   await page.getByTestId("product-by-hand-price").fill("3.50");
+  // Everything about the product is behind the details row, its page too.
+  await page.getByTestId("product-details").click();
+  await page.getByTestId("product-by-hand-page").fill("https://www.dirk.nl/p/sterrenstof");
+  await page.getByRole("button", { name: "Done", exact: true }).click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect
     .poll(async () => (await readStoredLink("sterrenstof"))?.price, { timeout: 30_000 })
     .toBe("3.50");
+
+  // Reopened, the panel offers the page that was typed.
+  await page.getByText("sterrenstof").first().click();
+  await expect(page.getByTestId("product-page-link")).toHaveAttribute(
+    "href",
+    "https://www.dirk.nl/p/sterrenstof"
+  );
+  await page.getByRole("button", { name: "Close panel" }).click();
 });
 
 test("a product chosen while adding is not overruled by the lookup queued for it", async () => {
@@ -300,6 +316,8 @@ test("700 g of a 500 g pack is two packs, on the row and at the heading", async 
     Number(text?.match(/\d+[.,]\d{2}/)?.[0].replace(",", ".") ?? 0);
 
   await expect(section.getByTestId("store-total")).toBeVisible();
+  // The heading reads what is left and what it costs, in one line.
+  await expect(section.getByTestId("store-meta")).toContainText(/\d+ items · /);
   const heading = money(await section.getByTestId("store-total").textContent());
   const costs = await section.getByTestId("grocery-line-cost").allTextContents();
   const sum = costs.map(money).reduce((total, cost) => Math.round((total + cost) * 100) / 100, 0);

@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Usorteret",
-    "noItems": "Ingen varer i denne butik",
     "storeActions": "Butikshandlinger",
     "markAllDone": "Markér alle som færdige",
     "deleteDone": "Slet færdige",
     "done": "{count} færdige",
-    "total": "Mangler at købe",
-    "doneHeading": "Færdig"
+    "allDone": "Alt færdigt",
+    "total": "Mangler at købe"
   },
   "storeManager": {
     "title": "Administrer butikker",
@@ -38,7 +37,16 @@
     "storeName": "Butiksnavn",
     "storeNamePlaceholder": "f.eks. Supermarked",
     "storeColor": "Farve",
-    "storeIcon": "Ikon",
+    "colorNames": {
+      "green": "Grøn",
+      "rose": "Rosa",
+      "teal": "Blågrøn",
+      "amber": "Rav",
+      "red": "Rød",
+      "grey": "Grå",
+      "blue": "Blå",
+      "violet": "Violet"
+    },
     "confirmDelete": "Er du sikker på, at du vil slette {storeName}?",
     "deleteWarning": "Varer i denne butik flyttes til Usorteret.",
     "noStoresYet": "Ingen butikker endnu",
@@ -128,6 +136,11 @@
     "cannotSearch": "Denne butik kan ikke søges",
     "cannotSearchHint": "Norish kunne ikke læse en søgeside ud af butikslinket til {store}. Ret det under Administrer butikker, så følger priserne.",
     "packSize": "Pakkestørrelse",
+    "packAmount": "Mængde pr. pakke",
+    "packUnit": "Enhed",
+    "productPage": "Produktside",
+    "invalidUrl": "Indtast en webadresse, som https://www.dirk.nl/…",
+    "invalidPack": "Indtast både en mængde og en enhed, eller ingen af delene",
     "amount": "Antal at købe",
     "useCalculatedAmount": "Brug beregnet antal",
     "productDetails": "Produktoplysninger",

@@ -1,25 +1,13 @@
 "use client";
 
 import { memo, useCallback, useMemo, useState } from "react";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  EllipsisVerticalIcon,
-  TrashIcon,
-} from "@heroicons/react/16/solid";
-import { Button, Dropdown, Label } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type {
-  GroceryDto,
-  RecurringGroceryDto,
-  StoreColor,
-  StoreDto,
-} from "@norish/shared/contracts";
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
-import { AisleHeading, DoneHeading } from "./aisle-heading";
+import { AisleHeading } from "./aisle-heading";
 import {
   aisleContainerId,
   SortableAisleContainer,
@@ -27,12 +15,13 @@ import {
   SortableGroupItem,
   useDndGroupedGroceryContext,
 } from "./dnd";
-import { DynamicHeroIcon } from "./dynamic-hero-icon";
+import { DoneRow } from "./done-row";
 import { GroupedGroceryItem } from "./grouped-grocery-item";
-import { getStoreColorClasses } from "./store-colors";
-import { StoreHeadingTotal } from "./store-heading-total";
+import { storeColorStyle } from "./store-colors";
+import { StoreHeading } from "./store-heading";
 import { lineOfGroup } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";
+import { useStoreTotal } from "./use-store-total";
 
 interface GroupedStoreSectionProps {
   store: StoreDto | null; // null = Unsorted
@@ -78,15 +67,6 @@ function GroupedStoreSectionComponent({
 
   // Get container ID for this store
   const containerId = store?.id ?? "unsorted";
-  const colorClasses = store
-    ? getStoreColorClasses(store.color as StoreColor)
-    : {
-        bg: "bg-muted",
-        bgLight: "bg-surface-secondary",
-        text: "text-muted",
-        border: "border-border-secondary",
-        ring: "ring-border",
-      };
 
   // Calculate counts from original groceries
   const activeCount = groceries.filter((g) => !g.isDone).length;
@@ -95,16 +75,19 @@ function GroupedStoreSectionComponent({
   // heading adds up one Line Cost per group rather than per line — what is
   // under the heading is exactly what it sums.
   const priceLines = useMemo(() => groups.map(lineOfGroup), [groups]);
+  const total = useStoreTotal(priceLines, store?.id ?? null);
 
   // Build a map for quick group lookup - uses ALL groups so we can
   // render groups that are dragged from other stores during drag operations
   const groupMap = useMemo(() => {
     const map = new Map<string, GroceryGroup>();
+
     for (const storeGroups of allGroups.values()) {
       for (const group of storeGroups) {
         map.set(group.groupKey, group);
       }
     }
+
     return map;
   }, [allGroups]);
 
@@ -140,6 +123,10 @@ function GroupedStoreSectionComponent({
   } = useAisleBlocks(containerId, store?.aisles, activeIn);
   const firstActiveKey = activeGroups[0]?.groupKey;
   const lastActiveKey = doneGroups.length === 0 ? activeGroups.at(-1)?.groupKey : undefined;
+  // There is something to show under the heading — a group, the done tail, or
+  // an aisle's heading to drag into — or the card is its heading bar alone.
+  const hasRows =
+    isExpanded && (activeGroups.length > 0 || doneGroups.length > 0 || blocks.length > 0);
   const renderActive = (group: GroceryGroup) => (
     <SortableGroupItem key={group.groupKey} group={group}>
       {({ dragHandle }) => (
@@ -157,103 +144,31 @@ function GroupedStoreSectionComponent({
     </SortableGroupItem>
   );
 
-  // Header element - passed to SortableGroupedStoreContainer so it's part of droppable area
+  // The heading, handed to the container so a drop on it lands in the Store
   const headerElement = (
-    <div
-      className={`flex w-full items-center gap-3 px-4 py-3 ${colorClasses.bgLight} rounded-t-xl`}
-      data-store-drop-target={store?.id ?? "unsorted"}
-    >
-      <button
-        className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:opacity-90"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {/* Icon */}
-        <div className={`shrink-0 rounded-full p-1.5 ${colorClasses.bg}`}>
-          {store ? (
-            <DynamicHeroIcon className="h-4 w-4 text-white" iconName={store.icon} />
-          ) : (
-            <div className="h-4 w-4" />
-          )}
-        </div>
-
-        {/* Name and count */}
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="truncate font-semibold">{store?.name ?? t("unsorted")}</span>
-          <span className="text-muted shrink-0 text-sm">
-            {activeCount > 0 && <span>{activeCount}</span>}
-            {doneCount > 0 && (
-              <span className="text-muted ml-1">
-                (
-                {t("done", {
-                  count: doneCount,
-                })}
-                )
-              </span>
-            )}
-          </span>
-        </div>
-
-        {/* What is still to buy at this Store costs this */}
-        <StoreHeadingTotal lines={priceLines} storeId={store?.id ?? null} />
-
-        {/* Expand/collapse chevron */}
-        <motion.div
-          animate={{
-            rotate: isExpanded ? 180 : 0,
-          }}
-          className="text-muted shrink-0"
-          transition={{
-            duration: 0.2,
-          }}
-        >
-          <ChevronDownIcon className="h-5 w-5" />
-        </motion.div>
-      </button>
-
-      {/* Bulk actions dropdown */}
-      {groceries.length > 0 && (
-        <Dropdown>
-          <Button isIconOnly className="shrink-0" size="sm" variant="tertiary">
-            <EllipsisVerticalIcon className="h-5 w-5" />
-          </Button>
-          <Dropdown.Popover className="bg-overlay">
-            <Dropdown.Menu aria-label={t("storeActions")}>
-              <Dropdown.Item
-                id="mark-done"
-                key="mark-done"
-                textValue={t("markAllDone")}
-                onPress={() => onMarkAllDone?.()}
-              >
-                {<CheckIcon className="h-4 w-4" />}
-                <Label>{t("markAllDone")}</Label>
-              </Dropdown.Item>
-              <Dropdown.Item
-                id="delete-done"
-                key="delete-done"
-                className="text-danger"
-                textValue={t("deleteDone")}
-                onPress={() => onDeleteDone?.()}
-                variant="danger"
-              >
-                {<TrashIcon className="h-4 w-4" />}
-                <Label>{t("deleteDone")}</Label>
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
-      )}
-    </div>
+    <StoreHeading
+      actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone } : undefined}
+      activeCount={activeCount}
+      doneCount={doneCount}
+      dot={store !== null}
+      dropTarget={store?.id ?? "unsorted"}
+      expanded={isExpanded}
+      name={store?.name ?? t("unsorted")}
+      total={total}
+      onExpandedChange={setIsExpanded}
+    />
   );
+
   return (
-    <motion.div className="relative" data-store-id={store?.id ?? "unsorted"}>
-      {/* Entire section wrapped in SortableGroupedStoreContainer - header + groups are droppable */}
-      <SortableGroupedStoreContainer
-        header={headerElement}
-        headerBgClass={colorClasses.bgLight}
-        storeId={store?.id ?? null}
-      >
-        {/* Groups area - only shown when expanded */}
-        {isExpanded ? (
+    <motion.div
+      className="relative"
+      data-store-id={store?.id ?? "unsorted"}
+      style={storeColorStyle(store?.color ?? null)}
+    >
+      {/* The whole section is the droppable: a drop on the heading lands in the Store */}
+      <SortableGroupedStoreContainer header={headerElement} storeId={store?.id ?? null}>
+        {/* The groups, where there is a group, a done tail or an aisle to show; otherwise the heading bar stands alone */}
+        {hasRows ? (
           <div className="divide-border divide-y">
             {/* Unfiled groups first, under no heading, so they are noticed and filed */}
             {unfiled.map(renderActive)}
@@ -264,9 +179,7 @@ function GroupedStoreSectionComponent({
                 key={aisle.id}
                 activeId={activeGroupKey}
                 aisleId={aisle.id}
-                header={
-                  <AisleHeading aisleId={aisle.id} empty={rows.length === 0} name={aisle.name} />
-                }
+                header={<AisleHeading aisleId={aisle.id} count={rows.length} name={aisle.name} />}
                 itemIds={getGroupKeysForContainer(aisleContainerId(aisle.id))}
                 overContainerId={overContainerId}
               >
@@ -274,31 +187,21 @@ function GroupedStoreSectionComponent({
               </SortableAisleContainer>
             ))}
 
-            {/* The done tail, said so where aisle headings would otherwise claim it */}
-            {blocks.length > 0 && doneGroups.length > 0 && <DoneHeading />}
-
-            {/* Done groups - not sortable, just rendered */}
-            {doneGroups.map((group, index) => {
-              const isFirst = index === 0 && activeGroups.length === 0;
-              const isLast = index === doneGroups.length - 1;
-              return (
-                <div key={group.groupKey}>
+            {/* The done tail, folded into one row that opens on tap; not sortable */}
+            {doneGroups.length > 0 && (
+              <DoneRow count={doneGroups.length}>
+                {doneGroups.map((group, index) => (
                   <GroupedGroceryItem
+                    key={group.groupKey}
                     group={group}
-                    isFirst={isFirst}
-                    isLast={isLast}
+                    isLast={index === doneGroups.length - 1}
                     recurringGroceries={recurringGroceries}
                     onEdit={onEdit}
                     onToggle={onToggle}
                     onToggleGroup={onToggleGroup}
                   />
-                </div>
-              );
-            })}
-
-            {/* Empty state - only when nothing is here and the Store has no aisles to show its shape */}
-            {activeGroups.length === 0 && doneGroups.length === 0 && blocks.length === 0 && (
-              <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
+                ))}
+              </DoneRow>
             )}
           </div>
         ) : null}

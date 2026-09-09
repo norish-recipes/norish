@@ -19,20 +19,21 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) =>
 
 interface SortableGroupedStoreContainerProps {
   storeId: string | null; // null = unsorted
-  /** Content to render inside the sortable area (the grouped grocery items) */
-  children: ReactNode;
-  /** Header element to render - will be part of the droppable area */
-  header?: ReactNode;
-  /** Background class for the header */
-  headerBgClass?: string;
+  /** The heading bar at the top of the card; part of the droppable, so a collapsed or empty Store still takes a drop. */
+  header: ReactNode;
+  /** The groups under the heading, or null where the card is its heading bar alone. */
+  children: ReactNode | null;
 }
 
-/** Wraps a grouped store section as a droppable container. Uses useSortable for proper drag detection. */
+/**
+ * The grouped list's counterpart of SortableStoreContainer: one Store's
+ * section as one card, its heading bar on top and the groups beneath it
+ * where there is anything to show, with the same drop feedback.
+ */
 export function SortableGroupedStoreContainer({
   storeId,
-  children,
   header,
-  headerBgClass = "",
+  children,
 }: SortableGroupedStoreContainerProps) {
   const containerId: ContainerId = storeId ?? UNSORTED_CONTAINER;
 
@@ -41,8 +42,7 @@ export function SortableGroupedStoreContainer({
     useDndGroupedGroceryContext();
   const groupKeys = getGroupKeysForContainer(containerId);
 
-  // Use useSortable for containers (like reference implementation)
-  // This makes the whole container (including header) a valid drop target
+  // The whole section, heading included, is the drop target
   const { active, over, setNodeRef, transition } = useSortable({
     id: containerId,
     data: {
@@ -61,27 +61,32 @@ export function SortableGroupedStoreContainer({
   // Show visual indicator when dragging over this container
   const showDropIndicator =
     activeGroupKey !== null && (overContainerId === containerId || isOverContainer);
+  const hasRows = children !== null;
 
   return (
     <div
       ref={setNodeRef}
-      className={`border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-all duration-200 ${
+      className={`border-border bg-surface shadow-surface overflow-hidden rounded-xl border transition-shadow duration-200 ${
         showDropIndicator ? "ring-accent ring-2" : ""
       }`}
       data-is-over={isOverContainer}
       data-store-id={containerId}
+      data-testid="store-card"
       style={{
         transition,
         // Don't transform containers, only their items
       }}
     >
-      {/* Header is part of the droppable area */}
-      {header && <div className={headerBgClass}>{header}</div>}
+      {/* The heading bar; a drop on it lands in the Store, rows or no rows */}
+      <div className="bg-surface-secondary">{header}</div>
 
-      {/* Groups area with sortable context */}
-      <SortableContext items={groupKeys} strategy={verticalListSortingStrategy}>
-        {children}
-      </SortableContext>
+      {hasRows && (
+        <div className="border-border border-t" data-testid="store-rows">
+          <SortableContext items={groupKeys} strategy={verticalListSortingStrategy}>
+            {children}
+          </SortableContext>
+        </div>
+      )}
     </div>
   );
 }

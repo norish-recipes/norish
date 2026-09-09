@@ -70,19 +70,19 @@ export const StoreInsertBaseSchema = z.object({
   userId: z.string(),
   name: z.string().min(1, "Store name is required").max(100),
   color: StoreColorSchema.default("primary"),
-  icon: z.string().default("ShoppingBagIcon"),
   sortOrder: z.number().int().default(0),
   website: StoreWebsiteSchema.nullish(),
   searchAddress: StoreSearchAddressSchema.nullish(),
   aisles: StoreAislesInputSchema.optional(),
 });
 
-// Store create schema: the public REST create, which makes a Store with no aisles
+// Store create schema: the public REST create, which makes a Store with no
+// aisles. A Store once carried an icon; a create that still sends one, from
+// an older client or a REST caller, is accepted and the field dropped.
 export const StoreCreateSchema = z.object({
   id: clientMintedId,
   name: z.string().min(1, "Store name is required").max(100),
   color: StoreColorSchema.default("primary"),
-  icon: z.string().default("ShoppingBagIcon"),
   website: StoreWebsiteSchema.nullish(),
   searchAddress: StoreSearchAddressSchema.nullish(),
 });
@@ -99,7 +99,6 @@ export const StoreUpdateBaseSchema = z.object({
   version: z.number().int().positive().optional(),
   name: z.string().min(1).max(100).optional(),
   color: StoreColorSchema.optional(),
-  icon: z.string().optional(),
   sortOrder: z.number().int().optional(),
   website: StoreWebsiteSchema.nullish(),
   searchAddress: StoreSearchAddressSchema.nullish(),
@@ -112,7 +111,6 @@ export const StoreUpdateInputSchema = z.object({
   version: z.number().int().positive(),
   name: z.string().min(1).max(100).optional(),
   color: StoreColorSchema.optional(),
-  icon: z.string().optional(),
   website: StoreWebsiteSchema.nullish(),
   searchAddress: StoreSearchAddressSchema.nullish(),
   aisles: StoreAislesInputSchema.optional(),

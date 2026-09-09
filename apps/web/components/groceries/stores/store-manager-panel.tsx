@@ -1,8 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { DynamicHeroIcon } from "@/components/groceries/dynamic-hero-icon";
-import { getStoreColorClasses } from "@/components/groceries/store-colors";
+import { storeColorKey, storeColorStyle } from "@/components/groceries/store-colors";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -17,7 +16,6 @@ import { useTranslations } from "next-intl";
 
 import type {
   SearchAddressOutcome,
-  StoreColor,
   StoreDto,
   StoreSearchAddressResult,
 } from "@norish/shared/contracts";
@@ -61,7 +59,6 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       id: null,
       name: "",
       color: "primary",
-      icon: "ShoppingBagIcon",
       link: "",
       aisles: [],
     });
@@ -70,8 +67,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
     setEditingStore({
       id: store.id,
       name: store.name,
-      color: store.color as StoreColor,
-      icon: store.icon,
+      color: storeColorKey(store.color),
       link: store.searchAddress ?? store.website ?? "",
       aisles: sortAisles(store.aisles).map(({ id, name, version }) => ({ id, name, version })),
     });
@@ -104,7 +100,6 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
         id: editingStore.id,
         name: storeName,
         color: editingStore.color,
-        icon: editingStore.icon,
         website,
         searchAddress,
         aisles,
@@ -113,7 +108,6 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       savedId = await createStore({
         name: storeName,
         color: editingStore.color,
-        icon: editingStore.icon,
         website,
         searchAddress,
         aisles,
@@ -271,7 +265,6 @@ function StoreListItem({
   onDelete,
 }: StoreListItemProps) {
   const controls = useDragControls();
-  const colorClasses = getStoreColorClasses(store.color as StoreColor);
 
   return (
     <Reorder.Item
@@ -295,10 +288,13 @@ function StoreListItem({
         <Bars3Icon className="h-5 w-5" />
       </div>
 
-      {/* Icon with color */}
-      <div className={`shrink-0 rounded-full p-1.5 ${colorClasses.bgLight}`}>
-        <DynamicHeroIcon className={`h-5 w-5 ${colorClasses.text}`} iconName={store.icon} />
-      </div>
+      {/* The Store's mark: a dot in its colour */}
+      <span
+        aria-hidden
+        className="h-2.5 w-2.5 shrink-0 rounded-full bg-(--store-color)"
+        data-testid="store-dot"
+        style={storeColorStyle(store.color)}
+      />
 
       {/* Name */}
       <span className="flex-1 truncate font-medium">{store.name}</span>

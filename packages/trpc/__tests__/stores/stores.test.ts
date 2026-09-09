@@ -146,7 +146,6 @@ describe("stores procedures", () => {
       id: storeA,
       name: "Pantry",
       color: "primary",
-      icon: "Cart",
       sortOrder: 0,
       version: 3,
     };
@@ -182,7 +181,6 @@ describe("stores procedures", () => {
       userId: ctx.user.id,
       name: "Dirk",
       color: "primary",
-      icon: "ShoppingBagIcon",
       website: null,
       searchAddress: null,
       sortOrder: 0,
@@ -276,7 +274,6 @@ describe("stores procedures", () => {
         userId: ctx.user.id,
         name: "Pantry",
         color: "primary",
-        icon: "ShoppingBagIcon",
         website: null,
         searchAddress: null,
         sortOrder: 0,
@@ -308,7 +305,6 @@ describe("stores procedures", () => {
     const result = await caller.createStore({
       name: "Market",
       color: "primary",
-      icon: "ShoppingBagIcon",
     });
 
     expect(result).toEqual(
@@ -332,6 +328,27 @@ describe("stores procedures", () => {
     );
   });
 
+  it("accepts a create that still sends an icon, and the Store made carries none", async () => {
+    // A Store once had an icon. A client built before it went, or a REST
+    // caller, may still send one; it is dropped rather than refused, and the
+    // Store is created without it.
+    storesRepository.checkStoreNameExistsInHousehold.mockResolvedValue(false);
+    storesRepository.createStore.mockImplementation(
+      async (id: string, data: Record<string, unknown>) => ({ id, ...data, version: 1, aisles: [] })
+    );
+
+    const caller = openApiStoresRouter.createCaller(createMockCallerContext(ctx));
+    const sent: Record<string, unknown> = { name: "Market", icon: "ShoppingBagIcon" };
+    const result = await caller.createStore(sent);
+
+    expect(result).toEqual(expect.objectContaining({ name: "Market" }));
+    expect(result).not.toHaveProperty("icon");
+    expect(storesRepository.createStore).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.not.objectContaining({ icon: expect.anything() })
+    );
+  });
+
   it("inserts the store with the client-minted id when one is supplied", async () => {
     const clientId = crypto.randomUUID();
 
@@ -345,7 +362,6 @@ describe("stores procedures", () => {
       id: clientId,
       name: "Market",
       color: "primary",
-      icon: "ShoppingBagIcon",
     });
 
     expect(storesRepository.createStore).toHaveBeenCalledWith(clientId, expect.anything());

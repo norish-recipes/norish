@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Non trié",
-    "noItems": "Aucun article dans ce magasin",
     "storeActions": "Actions du magasin",
     "markAllDone": "Tout marquer comme fait",
     "deleteDone": "Supprimer les articles faits",
     "done": "{count} effectués",
-    "total": "Reste à acheter",
-    "doneHeading": "Fait"
+    "allDone": "Tout est fait",
+    "total": "Reste à acheter"
   },
   "storeManager": {
     "title": "Gérer les magasins",
@@ -38,7 +37,16 @@
     "storeName": "Nom du magasin",
     "storeNamePlaceholder": "ex. : Supermarché",
     "storeColor": "Couleur",
-    "storeIcon": "Icône",
+    "colorNames": {
+      "green": "Vert",
+      "rose": "Rose",
+      "teal": "Sarcelle",
+      "amber": "Ambre",
+      "red": "Rouge",
+      "grey": "Gris",
+      "blue": "Bleu",
+      "violet": "Violet"
+    },
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer {storeName} ?",
     "deleteWarning": "Les articles de ce magasin seront déplacés vers Non trié.",
     "noStoresYet": "Aucun magasin pour le moment",
@@ -128,6 +136,11 @@
     "cannotSearch": "Cette boutique ne peut pas être cherchée",
     "cannotSearchHint": "Norish n'a pas pu tirer de page de recherche du lien de {store}. Corrigez-le dans Gérer les magasins et les prix suivront.",
     "packSize": "Conditionnement",
+    "packAmount": "Quantité par paquet",
+    "packUnit": "Unité",
+    "productPage": "Page du produit",
+    "invalidUrl": "Saisissez une adresse web, comme https://www.dirk.nl/…",
+    "invalidPack": "Saisissez une quantité et une unité, ou aucune des deux",
     "amount": "Quantité à acheter",
     "useCalculatedAmount": "Utiliser la quantité calculée",
     "productDetails": "Détails du produit",

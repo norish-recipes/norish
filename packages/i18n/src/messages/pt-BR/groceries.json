@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Sem classificação",
-    "noItems": "Nenhum item nesta loja",
     "storeActions": "Ações da loja",
     "markAllDone": "Marcar tudo como concluído",
     "deleteDone": "Excluir concluídos",
     "done": "{count} concluído(s)",
-    "total": "Ainda por comprar",
-    "doneHeading": "Feito"
+    "allDone": "Tudo feito",
+    "total": "Ainda por comprar"
   },
   "storeManager": {
     "title": "Gerenciar lojas",
@@ -38,7 +37,16 @@
     "storeName": "Nome da loja",
     "storeNamePlaceholder": "ex.: Supermercado",
     "storeColor": "Cor",
-    "storeIcon": "Ícone",
+    "colorNames": {
+      "green": "Verde",
+      "rose": "Rosa",
+      "teal": "Azul-petróleo",
+      "amber": "Âmbar",
+      "red": "Vermelho",
+      "grey": "Cinza",
+      "blue": "Azul",
+      "violet": "Violeta"
+    },
     "confirmDelete": "Tem certeza de que deseja excluir {storeName}?",
     "deleteWarning": "Os itens desta loja serão movidos para Sem classificação.",
     "noStoresYet": "Ainda não há lojas",
@@ -128,6 +136,11 @@
     "cannotSearch": "Não dá para buscar nesta loja",
     "cannotSearchHint": "O Norish não conseguiu tirar uma página de busca do link de {store}. Corrija em Gerenciar lojas e os preços virão.",
     "packSize": "Tamanho da embalagem",
+    "packAmount": "Quantidade por embalagem",
+    "packUnit": "Unidade",
+    "productPage": "Página do produto",
+    "invalidUrl": "Digite um endereço web, como https://www.dirk.nl/…",
+    "invalidPack": "Informe uma quantidade e uma unidade, ou nenhuma das duas",
     "amount": "Quantidade a comprar",
     "useCalculatedAmount": "Usar a quantidade calculada",
     "productDetails": "Detalhes do produto",

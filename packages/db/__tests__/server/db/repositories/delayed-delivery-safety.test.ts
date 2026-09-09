@@ -90,7 +90,7 @@ describe("delayed-delivery repository safety", () => {
     const db = getTestDb();
     const [store] = await db
       .insert(stores)
-      .values({ userId: testUserId, name: "Pantry", color: "primary", icon: "ShoppingBagIcon" })
+      .values({ userId: testUserId, name: "Pantry", color: "primary" })
       .returning();
     const [snapshotted] = await db
       .insert(groceries)
@@ -114,7 +114,7 @@ describe("delayed-delivery repository safety", () => {
     const db = getTestDb();
     const [store] = await db
       .insert(stores)
-      .values({ userId: testUserId, name: "Bakery", color: "primary", icon: "ShoppingBagIcon" })
+      .values({ userId: testUserId, name: "Bakery", color: "primary" })
       .returning();
     const [snapshotted] = await db
       .insert(groceries)

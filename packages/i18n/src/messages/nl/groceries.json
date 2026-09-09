@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "Ongeordend",
-    "noItems": "Geen items in deze winkel",
     "storeActions": "Winkelacties",
     "markAllDone": "Markeer alles als gekocht",
     "deleteDone": "Verwijder gekocht",
     "done": "{count} gedaan",
-    "total": "Nog te kopen",
-    "doneHeading": "Gedaan"
+    "allDone": "Alles gedaan",
+    "total": "Nog te kopen"
   },
   "storeManager": {
     "title": "Winkels beheren",
@@ -38,7 +37,16 @@
     "storeName": "Winkelnaam",
     "storeNamePlaceholder": "bijv. Supermarkt",
     "storeColor": "Kleur",
-    "storeIcon": "Icoon",
+    "colorNames": {
+      "green": "Groen",
+      "rose": "Roze",
+      "teal": "Blauwgroen",
+      "amber": "Amber",
+      "red": "Rood",
+      "grey": "Grijs",
+      "blue": "Blauw",
+      "violet": "Violet"
+    },
     "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
     "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend.",
     "noStoresYet": "Nog geen winkels",
@@ -128,6 +136,11 @@
     "cannotSearch": "Deze winkel kan niet doorzocht worden",
     "cannotSearchHint": "Norish kon geen zoekpagina uit de winkellink van {store} lezen. Pas hem aan bij Winkels beheren en de prijzen volgen.",
     "packSize": "Verpakking",
+    "packAmount": "Hoeveelheid per verpakking",
+    "packUnit": "Eenheid",
+    "productPage": "Productpagina",
+    "invalidUrl": "Voer een webadres in, zoals https://www.dirk.nl/…",
+    "invalidPack": "Vul een hoeveelheid én een eenheid in, of geen van beide",
     "amount": "Aantal te kopen",
     "useCalculatedAmount": "Berekend aantal gebruiken",
     "productDetails": "Productgegevens",

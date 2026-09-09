@@ -22,13 +22,12 @@
   },
   "store": {
     "unsorted": "정렬되지 않음",
-    "noItems": "이 매장에는 상품이 없습니다.",
     "storeActions": "매장 작업",
     "markAllDone": "모두 완료로 표시",
     "deleteDone": "삭제 완료",
     "done": "{count}개 완료",
-    "total": "아직 살 것",
-    "doneHeading": "완료"
+    "allDone": "모두 완료",
+    "total": "아직 살 것"
   },
   "storeManager": {
     "title": "매장 관리",
@@ -38,7 +37,16 @@
     "storeName": "매장명",
     "storeNamePlaceholder": "예: 슈퍼마켓",
     "storeColor": "색상",
-    "storeIcon": "아이콘",
+    "colorNames": {
+      "green": "초록",
+      "rose": "장미색",
+      "teal": "청록",
+      "amber": "호박색",
+      "red": "빨강",
+      "grey": "회색",
+      "blue": "파랑",
+      "violet": "보라"
+    },
     "confirmDelete": "{storeName}을(를) 삭제하시겠습니까?",
     "deleteWarning": "이 매장의 항목은 미분류로 이동됩니다.",
     "noStoresYet": "아직 매장이 없습니다.",
@@ -128,6 +136,11 @@
     "cannotSearch": "이 상점은 검색할 수 없습니다",
     "cannotSearchHint": "Norish가 {store}의 상점 링크에서 검색 페이지를 읽지 못했습니다. 상점 관리에서 고치면 가격이 따라옵니다.",
     "packSize": "포장 단위",
+    "packAmount": "포장 단위 수량",
+    "packUnit": "단위",
+    "productPage": "제품 페이지",
+    "invalidUrl": "https://www.dirk.nl/… 같은 웹 주소를 입력하세요",
+    "invalidPack": "수량과 단위를 모두 입력하거나 둘 다 비워 두세요",
     "amount": "구매 수량",
     "useCalculatedAmount": "계산된 수량 사용",
     "productDetails": "제품 상세 정보",

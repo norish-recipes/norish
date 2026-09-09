@@ -148,30 +148,32 @@ export function GroceryList({
         onFileGroceryName={fileGroceryName}
         onReorderGroups={onReorderInStore ?? (() => {})}
       >
-        <div className="flex flex-col gap-3 p-1">
-          {/* Unsorted section */}
-          <motion.div
-            key="unsorted"
-            layout
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 500, damping: 35 }}
-          >
-            <GroupedStoreSection
-              allGroups={ingredientGroups}
-              groceries={unsortedGroceries}
-              groups={ingredientGroups.get(null) ?? []}
-              recurringGroceries={recurringGroceries}
-              store={null}
-              onDelete={onDelete}
-              onDeleteDone={() => onDeleteDoneInStore?.(null)}
-              onEdit={onEdit}
-              onMarkAllDone={() => onMarkAllDoneInStore?.(null)}
-              onToggle={onToggle}
-              onToggleGroup={onToggleGroup}
-            />
-          </motion.div>
+        <div className="flex flex-col gap-4 p-1">
+          {/* Unsorted: the groceries assigned to no Store, shown only while there are any */}
+          {unsortedGroceries.length > 0 && (
+            <motion.div
+              key="unsorted"
+              layout
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            >
+              <GroupedStoreSection
+                allGroups={ingredientGroups}
+                groceries={unsortedGroceries}
+                groups={ingredientGroups.get(null) ?? []}
+                recurringGroceries={recurringGroceries}
+                store={null}
+                onDelete={onDelete}
+                onDeleteDone={() => onDeleteDoneInStore?.(null)}
+                onEdit={onEdit}
+                onMarkAllDone={() => onMarkAllDoneInStore?.(null)}
+                onToggle={onToggle}
+                onToggleGroup={onToggleGroup}
+              />
+            </motion.div>
+          )}
 
           {/* Store sections */}
           {sortedStores.map((store) => {
@@ -219,29 +221,31 @@ export function GroceryList({
       onFileGroceryName={fileGroceryName}
       onReorderInStore={onReorderInStore ?? (() => {})}
     >
-      <div className="flex flex-col gap-3 p-1">
-        {/* Unsorted section - always rendered when dragging or has items, so it's a valid drop target */}
-        <motion.div
-          key="unsorted"
-          layout
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          initial={{ opacity: 0, scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 500, damping: 35 }}
-        >
-          <StoreSection
-            allGroceries={groceries}
-            getRecipeNameForGrocery={getRecipeNameForGrocery}
-            groceries={unsortedGroceries}
-            recurringGroceries={recurringGroceries}
-            store={null}
-            onDelete={onDelete}
-            onDeleteDone={() => onDeleteDoneInStore?.(null)}
-            onEdit={onEdit}
-            onMarkAllDone={() => onMarkAllDoneInStore?.(null)}
-            onToggle={onToggle}
-          />
-        </motion.div>
+      <div className="flex flex-col gap-4 p-1">
+        {/* Unsorted: the groceries assigned to no Store, shown only while there are any */}
+        {unsortedGroceries.length > 0 && (
+          <motion.div
+            key="unsorted"
+            layout
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 500, damping: 35 }}
+          >
+            <StoreSection
+              allGroceries={groceries}
+              getRecipeNameForGrocery={getRecipeNameForGrocery}
+              groceries={unsortedGroceries}
+              recurringGroceries={recurringGroceries}
+              store={null}
+              onDelete={onDelete}
+              onDeleteDone={() => onDeleteDoneInStore?.(null)}
+              onEdit={onEdit}
+              onMarkAllDone={() => onMarkAllDoneInStore?.(null)}
+              onToggle={onToggle}
+            />
+          </motion.div>
+        )}
 
         {/* Store sections */}
         {storeWithGroceries.map(({ store, groceries: storeGroceries }) => (
