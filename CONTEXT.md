@@ -110,6 +110,10 @@ _Avoid_: Item, Product (a Store Product is the shop's, a Grocery is the househol
 A place the household shops, named, coloured and ordered by them, that groceries are grouped under. A Store may additionally point at a real shop's website, which is what lets it carry a Search Address and Store Products. A Store without a website is an ordinary Store and always was: pricing is something a Store gains, never something it requires.
 _Avoid_: Shop, Supermarket (a Store may be a market stall, a butcher, or nothing but a heading)
 
+**Unsorted**:
+The groceries assigned to no Store, kept together and shown before every Store so they are noticed and given one. It is not a Store and never becomes one: it has no colour, no Aisles, no Search Address and no Store Products. It is a different absence from unfiled: an unsorted grocery has no Store, an unfiled grocery has a Store but no Aisle within it.
+_Avoid_: Unassigned, No store, Unfiled (that is a grocery with a Store but no Aisle), Store "None" (it is not a Store)
+
 **Search Address**:
 The Store's search page with a `{query}` slot standing where the search term goes — `https://www.ah.nl/zoeken?query={query}`, `https://www.dirk.nl/zoeken/producten/{query}`. It is derived from whatever the user pastes rather than demanded of them: a homepage Norish finds a search form on, or a search the user ran themselves, whose term is replaced by the slot. A Store has at most one, and it is editable, because a guess that reads the wrong slot must be one keystroke from correct.
 _Avoid_: Search template, URL pattern (the user pastes an address they already have, and never authors a template), Query URL
