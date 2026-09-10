@@ -644,8 +644,9 @@ describe("GroceryProductField", () => {
       // Two colas answer "cola", so nothing has been chosen yet.
       expect(onChoice).not.toHaveBeenCalled();
 
+      // The product's own name, one letter slipped: near enough to be it.
       act(() => {
-        fireEvent.change(field(), { target: { value: "zero" } });
+        fireEvent.change(field(), { target: { value: "Cola Zero 1,5L" } });
       });
       act(() => {
         vi.advanceTimersByTime(500);
@@ -665,7 +666,7 @@ describe("GroceryProductField", () => {
         vi.advanceTimersByTime(500);
       });
 
-      expect(lastAskedTerm()).toBe("zero");
+      expect(lastAskedTerm()).toBe("Cola Zero 1,5L");
     } finally {
       vi.useRealTimers();
     }

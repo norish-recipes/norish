@@ -23,9 +23,10 @@ export interface FakeShopProduct {
 }
 
 export const FAKE_SHOP_PRODUCTS: FakeShopProduct[] = [
-  { slug: "oude-kaas", name: "Oude kaas 500 g", price: "4.99", size: "500 g" },
-  { slug: "halfvolle-melk", name: "Halfvolle melk 1 L", price: "1.29", size: "1 L" },
-  { slug: "roomboter", name: "Roomboter 250 g", price: "2.49", size: "250 g" },
+  { slug: "oude-kaas", name: "Oude kaas", price: "4.99", size: "500 g" },
+  { slug: "halfvolle-melk", name: "Halfvolle melk", price: "1.29", size: "1 L" },
+  { slug: "volle-melk", name: "Volle melk", price: "1.39", size: "1 L" },
+  { slug: "roomboter", name: "Roomboter", price: "2.49", size: "250 g" },
   { slug: "bruin-brood", name: "Bruin brood", price: "1.79", size: "800 g" },
   { slug: "tarwebloem", name: "Tarwebloem", price: "1.15", size: "500 g" },
   {
