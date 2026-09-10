@@ -8,7 +8,8 @@
     "viewMode": "Mode d'affichage",
     "manageStores": "Gérer les magasins",
     "storeViewOptions": "Options d'affichage par magasin",
-    "groupIngredients": "Grouper les ingrédients"
+    "groupIngredients": "Grouper les ingrédients",
+    "clearList": "Vider la liste"
   },
   "empty": {
     "title": "Votre liste de courses vous attend",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Non trié",
     "storeActions": "Actions du magasin",
+    "recipeActions": "Actions de la recette",
     "markAllDone": "Tout marquer comme fait",
     "deleteDone": "Supprimer les articles faits",
+    "clearAll": "Tout vider",
     "done": "{count} effectués",
     "allDone": "Tout est fait",
     "total": "Reste à acheter"
@@ -148,6 +151,13 @@
     "invalidPrice": "Saisissez un prix, par exemple 2,49",
     "invalidCurrency": "Une devise comporte trois lettres, comme EUR",
     "openPage": "Ouvrir chez {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Vider la liste ?",
+    "listDescription": "Cela supprimera {count, plural, one {# article} other {# articles}} de votre liste de courses. Cette action est irréversible.",
+    "sectionTitle": "Vider {name} ?",
+    "sectionDescription": "Cela supprimera {count, plural, one {# article} other {# articles}} de {name}. Cette action est irréversible.",
+    "confirm": "Vider"
   },
   "price": {
     "pending": "Recherche du prix",

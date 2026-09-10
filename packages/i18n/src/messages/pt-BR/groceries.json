@@ -8,7 +8,8 @@
     "viewMode": "Modo de visualização",
     "manageStores": "Gerenciar lojas",
     "storeViewOptions": "Opções de visualização por loja",
-    "groupIngredients": "Agrupar ingredientes"
+    "groupIngredients": "Agrupar ingredientes",
+    "clearList": "Limpar lista"
   },
   "empty": {
     "title": "Sua lista de compras espera por você",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Sem classificação",
     "storeActions": "Ações da loja",
+    "recipeActions": "Ações da receita",
     "markAllDone": "Marcar tudo como concluído",
     "deleteDone": "Excluir concluídos",
+    "clearAll": "Limpar tudo",
     "done": "{count} concluído(s)",
     "allDone": "Tudo feito",
     "total": "Ainda por comprar"
@@ -148,6 +151,13 @@
     "invalidPrice": "Informe um preço, como 2,49",
     "invalidCurrency": "Uma moeda tem três letras, como EUR",
     "openPage": "Abrir em {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Limpar a lista?",
+    "listDescription": "Isso removerá {count, plural, one {# item} other {# itens}} da sua lista de compras. Essa ação não pode ser desfeita.",
+    "sectionTitle": "Limpar {name}?",
+    "sectionDescription": "Isso removerá {count, plural, one {# item} other {# itens}} de {name}. Essa ação não pode ser desfeita.",
+    "confirm": "Limpar"
   },
   "price": {
     "pending": "Procurando o preço",

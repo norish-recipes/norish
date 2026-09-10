@@ -37,6 +37,7 @@ interface GroupedStoreSectionProps {
   defaultExpanded?: boolean;
   onMarkAllDone?: () => void;
   onDeleteDone?: () => void;
+  onClearAll?: () => void;
 }
 
 /**
@@ -57,6 +58,7 @@ function GroupedStoreSectionComponent({
   defaultExpanded = true,
   onMarkAllDone,
   onDeleteDone,
+  onClearAll,
 }: GroupedStoreSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const t = useTranslations("groceries.store");
@@ -147,7 +149,7 @@ function GroupedStoreSectionComponent({
   // The heading, handed to the container so a drop on it lands in the Store
   const headerElement = (
     <StoreHeading
-      actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone } : undefined}
+      actions={groceries.length > 0 ? { onMarkAllDone, onDeleteDone, onClearAll } : undefined}
       activeCount={activeCount}
       doneCount={doneCount}
       dot={store !== null}

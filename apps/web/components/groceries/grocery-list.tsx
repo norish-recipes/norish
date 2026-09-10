@@ -30,6 +30,7 @@ interface GroceryListProps {
   ) => void;
   onMarkAllDoneInStore?: (storeId: string | null) => void;
   onDeleteDoneInStore?: (storeId: string | null) => void;
+  onClearAllInStore?: (storeId: string | null, storeName: string) => void;
   getRecipeNameForGrocery?: (grocery: GroceryDto) => string | null;
   /** Whether to group similar ingredients together */
   groupSimilarIngredients?: boolean;
@@ -46,10 +47,12 @@ export function GroceryList({
   onReorderInStore,
   onMarkAllDoneInStore,
   onDeleteDoneInStore,
+  onClearAllInStore,
   getRecipeNameForGrocery,
   groupSimilarIngredients = false,
 }: GroceryListProps) {
   const t = useTranslations("groceries.empty");
+  const tStore = useTranslations("groceries.store");
   const { units: customUnits } = useUnitsQuery();
   // Where each Store files each name — the one place a grocery's aisle comes
   // from (ADR-0031) — and the one write a drop into an aisle makes.
@@ -165,6 +168,7 @@ export function GroceryList({
                 groups={ingredientGroups.get(null) ?? []}
                 recurringGroceries={recurringGroceries}
                 store={null}
+                onClearAll={() => onClearAllInStore?.(null, tStore("unsorted"))}
                 onDelete={onDelete}
                 onDeleteDone={() => onDeleteDoneInStore?.(null)}
                 onEdit={onEdit}
@@ -195,6 +199,7 @@ export function GroceryList({
                   groups={storeGroups}
                   recurringGroceries={recurringGroceries}
                   store={store}
+                  onClearAll={() => onClearAllInStore?.(store.id, store.name)}
                   onDelete={onDelete}
                   onDeleteDone={() => onDeleteDoneInStore?.(store.id)}
                   onEdit={onEdit}
@@ -238,6 +243,7 @@ export function GroceryList({
               groceries={unsortedGroceries}
               recurringGroceries={recurringGroceries}
               store={null}
+              onClearAll={() => onClearAllInStore?.(null, tStore("unsorted"))}
               onDelete={onDelete}
               onDeleteDone={() => onDeleteDoneInStore?.(null)}
               onEdit={onEdit}
@@ -263,6 +269,7 @@ export function GroceryList({
               groceries={storeGroceries}
               recurringGroceries={recurringGroceries}
               store={store}
+              onClearAll={() => onClearAllInStore?.(store.id, store.name)}
               onDelete={onDelete}
               onDeleteDone={() => onDeleteDoneInStore?.(store.id)}
               onEdit={onEdit}

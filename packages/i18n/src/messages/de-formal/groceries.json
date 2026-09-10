@@ -8,7 +8,8 @@
     "viewMode": "Ansicht",
     "manageStores": "Geschäfte verwalten",
     "storeViewOptions": "Optionen Geschäftsansicht",
-    "groupIngredients": "Zutaten gruppieren"
+    "groupIngredients": "Zutaten gruppieren",
+    "clearList": "Liste leeren"
   },
   "empty": {
     "title": "Ihre Einkaufsliste wartet",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Unsortiert",
     "storeActions": "Aktionen",
+    "recipeActions": "Rezeptaktionen",
     "markAllDone": "Alle abhaken",
     "deleteDone": "Erledigte löschen",
+    "clearAll": "Alle löschen",
     "done": "{count} erledigt",
     "allDone": "Alles erledigt",
     "total": "Noch zu kaufen"
@@ -148,6 +151,13 @@
     "invalidPrice": "Geben Sie einen Preis ein, z. B. 2,49",
     "invalidCurrency": "Eine Währung besteht aus drei Buchstaben, z. B. EUR",
     "openPage": "Bei {store} öffnen"
+  },
+  "clearConfirm": {
+    "listTitle": "Liste leeren?",
+    "listDescription": "Dadurch werden {count, plural, one {# Eintrag} other {# Einträge}} aus Ihrer Einkaufsliste entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "sectionTitle": "{name} leeren?",
+    "sectionDescription": "Dadurch werden {count, plural, one {# Eintrag} other {# Einträge}} aus {name} entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "confirm": "Leeren"
   },
   "price": {
     "pending": "Preis wird nachgeschlagen",

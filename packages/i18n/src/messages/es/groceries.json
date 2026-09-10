@@ -8,7 +8,8 @@
     "viewMode": "Modo de vista",
     "manageStores": "Gestionar tiendas",
     "storeViewOptions": "Opciones de vista de tienda",
-    "groupIngredients": "Agrupar ingredientes"
+    "groupIngredients": "Agrupar ingredientes",
+    "clearList": "Vaciar lista"
   },
   "empty": {
     "title": "Tu lista de la compra te espera",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Sin asignar",
     "storeActions": "Acciones de la tienda",
+    "recipeActions": "Acciones de la receta",
     "markAllDone": "Marcar todo como comprado",
     "deleteDone": "Eliminar productos comprados",
+    "clearAll": "Vaciar todo",
     "done": "{count} comprados",
     "allDone": "Todo listo",
     "total": "Falta por comprar"
@@ -148,6 +151,13 @@
     "invalidPrice": "Introduce un precio, por ejemplo 2,49",
     "invalidCurrency": "Una moneda tiene tres letras, como EUR",
     "openPage": "Abrir en {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "¿Vaciar la lista?",
+    "listDescription": "Esto eliminará {count, plural, one {# producto} other {# productos}} de tu lista de la compra. Esta acción no se puede deshacer.",
+    "sectionTitle": "¿Vaciar {name}?",
+    "sectionDescription": "Esto eliminará {count, plural, one {# producto} other {# productos}} de {name}. Esta acción no se puede deshacer.",
+    "confirm": "Vaciar"
   },
   "price": {
     "pending": "Buscando el precio",

@@ -8,7 +8,8 @@
     "viewMode": "Изглед",
     "manageStores": "Управление на магазини",
     "storeViewOptions": "Опции за изглед по магазин",
-    "groupIngredients": "Групиране на съставките"
+    "groupIngredients": "Групиране на съставките",
+    "clearList": "Изчисти списъка"
   },
   "empty": {
     "title": "Списъкът с продукти те очаква",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Некатегоризирани",
     "storeActions": "Действия за магазина",
+    "recipeActions": "Действия за рецептата",
     "markAllDone": "Маркирай всички като изпълнени",
     "deleteDone": "Изтрий изпълнените",
+    "clearAll": "Изчисти всичко",
     "done": "{count} изпълнени",
     "allDone": "Всичко е готово",
     "total": "Остава да купите"
@@ -148,6 +151,13 @@
     "invalidPrice": "Въведете цена, например 2,49",
     "invalidCurrency": "Валутата е три букви, например EUR",
     "openPage": "Отвори в {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Изчистване на списъка?",
+    "listDescription": "Това ще премахне {count, plural, one {# продукт} other {# продукта}} от списъка за пазаруване. Това действие не може да бъде отменено.",
+    "sectionTitle": "Изчистване на {name}?",
+    "sectionDescription": "Това ще премахне {count, plural, one {# продукт} other {# продукта}} от {name}. Това действие не може да бъде отменено.",
+    "confirm": "Изчисти"
   },
   "price": {
     "pending": "Търсене на цената",
