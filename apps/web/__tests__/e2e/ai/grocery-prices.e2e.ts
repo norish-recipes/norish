@@ -458,3 +458,32 @@ test("a purchase amount chosen during creation is saved with the grocery", async
     "€4.60 (4 × €1.15)"
   );
 });
+
+test("a linked product is unlinked from the panel, and the row is unpriced", async () => {
+  await page.goto("/groceries");
+  await page.getByText("bakbloem", { exact: true }).first().click();
+  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Tarwebloem");
+
+  await page.getByTestId("product-unlink").click();
+  await expect(page.getByTestId("grocery-product-field")).toHaveValue("");
+  await expect(page.getByTestId("product-by-hand-price")).toHaveValue("");
+  // Nothing is written until the panel's own Save.
+  expect((await readStoredLink("bakbloem"))?.productName).toBe("Tarwebloem");
+
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+
+  // The Store now knows the name as one it has no product for — a Miss — so
+  // the row carries no price and the shop is not asked about it again.
+  await expect
+    .poll(
+      async () => {
+        const link = await readStoredLink("bakbloem");
+
+        return link ? (link.productName ?? "miss") : "gone";
+      },
+      { timeout: 30_000 }
+    )
+    .toBe("miss");
+  await expect(rowFor("bakbloem").getByTestId("grocery-price")).toBeHidden();
+  await expect(rowFor("bakbloem").getByTestId("grocery-price-pending")).toBeHidden();
+});

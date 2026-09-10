@@ -123,6 +123,7 @@
     "noAisle": "No aisle"
   },
   "picker": {
+    "unlink": "Unlink product",
     "searchPlaceholder": "Type to search the shop",
     "searching": "Searching {store}…",
     "knownGroup": "Already known",

@@ -123,6 +123,7 @@
     "noAisle": "통로 없음"
   },
   "picker": {
+    "unlink": "상품 연결 해제",
     "searchPlaceholder": "입력하여 상점 검색",
     "searching": "{store} 검색 중…",
     "knownGroup": "이미 아는 상품",

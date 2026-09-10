@@ -109,6 +109,9 @@ export const StoreProductChoiceSchema = z.object({
   storeId: z.uuid(),
   name: z.string().min(1).max(300),
   choice: z.discriminatedUnion("kind", [
+    // The shopper says the grocery is none of the Store's products: the name
+    // becomes a Miss, unpriced and not asked of the shop again on its own.
+    z.object({ kind: z.literal("none") }),
     z.object({ kind: z.literal("product"), storeProductId: z.uuid() }),
     z.object({ kind: z.literal("candidate"), candidate: StoreCandidateSchema }),
     z.object({

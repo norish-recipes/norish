@@ -250,6 +250,9 @@ export function GroceryProductField({
   // Whether the fields below still show the shop's own numbers, or the
   // shopper's. Only a shopper who typed over them owns them.
   const [byHand, setByHand] = useState(false);
+  // The shopper has said the linked product is not it, and nothing has been
+  // chosen in its place: the field stays empty rather than reading the link.
+  const [unlinked, setUnlinked] = useState(false);
   const [manualPrice, setManualPrice] = useState("");
   const [manualName, setManualName] = useState(groceryName);
   const [manualCurrency, setManualCurrency] = useState("");
@@ -399,6 +402,7 @@ export function GroceryProductField({
   const take = useCallback(
     (row: ProductRow) => {
       answeredWith.current = row.name;
+      setUnlinked(false);
       setPicked(row.key);
       setTerm(row.name);
       showAs(row.name, row.price, row.currency, row.pack, row.pageUrl);
@@ -452,6 +456,17 @@ export function GroceryProductField({
     onChoice(null);
   }, [onChoice]);
 
+  /**
+   * The product the grocery is linked to is not it, says the shopper. The
+   * field empties, and the panel's own Save writes a Miss: unpriced, and not
+   * asked of the shop again until somebody types in here.
+   */
+  const unlink = useCallback(() => {
+    untake();
+    setUnlinked(true);
+    onChoice({ kind: "none" });
+  }, [onChoice, untake]);
+
   // A row the field took for the grocery's own name follows that name. A
   // shopper who goes on typing after the field took "kaas" for them is no
   // longer asking about "kaas", so the row is let go and the new name is held
@@ -479,7 +494,7 @@ export function GroceryProductField({
   // panel has its whole shape from the first frame. A name with nothing linked
   // and nothing picked has no price to show yet — not the last name's.
   useEffect(() => {
-    if (byHand) return;
+    if (byHand || unlinked) return;
     if (linkedProduct) {
       const linkedPack = packSizeOf(linkedProduct);
 
@@ -500,7 +515,7 @@ export function GroceryProductField({
       setManualPackUnit("");
       setManualUrl("");
     }
-  }, [byHand, groceryName, linkedProduct]);
+  }, [byHand, groceryName, linkedProduct, unlinked]);
 
   // The product the fields describe: the row that is picked, else what the
   // grocery is linked to. Its pack, size words, regular price and deal words
@@ -573,7 +588,7 @@ export function GroceryProductField({
             regularPrice: saleRegularPrice(typedPrice, selectedRegularPrice),
             dealWords: selectedDealWords,
           }
-        : pickedChoice
+        : (pickedChoice ?? (unlinked ? { kind: "none" } : null))
     );
   }, [
     byHand,
@@ -591,6 +606,7 @@ export function GroceryProductField({
     typedPack,
     selectedRegularPrice,
     selectedDealWords,
+    unlinked,
   ]);
 
   // The pack in words: the shop's own where it has them and nothing was typed
@@ -719,6 +735,18 @@ export function GroceryProductField({
           </ListBox>
         </ComboBox.Popover>
       </ComboBox>
+
+      {linkedProduct && !unlinked && (
+        <Button
+          className="self-start"
+          data-testid="product-unlink"
+          size="sm"
+          variant="outline"
+          onPress={unlink}
+        >
+          {t("unlink")}
+        </Button>
+      )}
 
       {!canSearch && (
         <p className="text-muted text-xs" data-testid="product-cannot-search">

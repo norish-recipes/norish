@@ -34,6 +34,8 @@ Norish links a grocery to one of the shop's products by itself only when the pro
 
 Everything else is yours to decide. Open the grocery and use the **Product** field: typing shows what the Store already knows and what the shop answers, with the price beside each. Typing a product's own name fills it in.
 
+To undo a link, open the grocery and press **Unlink product**. The row loses its price, and the Store treats the name as one it has no product for until you pick or type one.
+
 ![The product field, with the shop's answers to pick from](/img/screenshots/groceries-picker.png)
 
 ## How much to buy

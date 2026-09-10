@@ -123,6 +123,7 @@
     "noAisle": "Geen gangpad"
   },
   "picker": {
+    "unlink": "Product ontkoppelen",
     "searchPlaceholder": "Typ om in de winkel te zoeken",
     "searching": "Bezig met zoeken in {store}…",
     "knownGroup": "Al bekend",
