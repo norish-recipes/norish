@@ -11,10 +11,9 @@
  * Playwright resolves from the monorepo root. The account should already hold
  * the seeded story described in assets/screenshots/README.md. Staged details
  * handled here: cooking mode advances to step 2 (whose ingredient chips sit
- * under the instruction), the groceries page collapses the Unsorted group so
- * the store groups fit the frame, the mobile dashboard is captured in list
- * view, and the recipe page alone uses a wider web viewport so the page
- * reads less cramped.
+ * under the instruction), the mobile dashboard is captured in list view, and
+ * the recipe page alone uses a wider web viewport so the page reads less
+ * cramped.
  *
  * `NORISH_FORMS=mobile` (or `web`) takes half the set. The README's one
  * session rule still holds — a half run is for retaking a form whose layout
@@ -157,12 +156,6 @@ for (const [form, viewport] of Object.entries(FORMS)) {
 
     await page.goto(`${BASE}/groceries`, { waitUntil: "networkidle" }).catch(() => {});
     await settle(page, `groceries-${form}-${theme}`);
-    await page
-      .getByRole("button", { name: /^Unsorted/ })
-      .first()
-      .click({ timeout: 6000 })
-      .catch(() => {});
-    await page.waitForTimeout(900);
     await shoot("groceries");
 
     await context.close();
