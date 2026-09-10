@@ -123,6 +123,7 @@
     "noAisle": "Без пътека"
   },
   "picker": {
+    "unlink": "Премахни връзката с продукта",
     "searchPlaceholder": "Пишете, за да търсите в магазина",
     "searching": "Търсим в {store}…",
     "knownGroup": "Вече известни",

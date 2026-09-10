@@ -78,12 +78,12 @@ async function dragGroceryToStore(name: string, storeName: string): Promise<void
 }
 
 test("a name the shop states unmistakably is priced without being asked", async () => {
-  await addGroceryToShop("kaas");
+  await addGroceryToShop("oude kaas");
 
   // The Store has been asked and has not answered: the row says so with a
   // loader — a Pending Link, written before the job — rather than a blank
   // that reads as failure.
-  await expect(rowFor("kaas").getByTestId("grocery-price-pending")).toBeVisible({
+  await expect(rowFor("oude kaas").getByTestId("grocery-price-pending")).toBeVisible({
     timeout: 15_000,
   });
 
@@ -93,21 +93,20 @@ test("a name the shop states unmistakably is priced without being asked", async 
   const price = page.getByTestId("grocery-price").first();
 
   await expect(price).toContainText(/4[.,]99/, { timeout: 60_000 });
-  await expect(rowFor("kaas").getByTestId("grocery-price-pending")).toBeHidden();
-  await expect(price).toContainText("500 g");
+  await expect(rowFor("oude kaas").getByTestId("grocery-price-pending")).toBeHidden();
   // The row says which of the shop's products that price is for.
-  await expect(page.getByTestId("grocery-product").first()).toHaveText("Oude kaas 500 g");
-  expect((await readStoredLink("kaas"))?.productName).toBe("Oude kaas 500 g");
+  await expect(page.getByTestId("grocery-product").first()).toHaveText("Oude kaas");
+  expect((await readStoredLink("oude kaas"))?.productName).toBe("Oude kaas");
 });
 
 test("the grocery's own panel says which product it is, and can be pointed at another", async () => {
   const visitsBefore = shop.visits.length;
 
-  await page.getByText("kaas").first().click();
+  await page.getByText("oude kaas", { exact: true }).first().click();
 
   // The field reads what is linked now rather than opening empty, and says
   // what it costs.
-  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Oude kaas 500 g");
+  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Oude kaas");
   await expect(page.getByTestId("product-by-hand-price")).toHaveValue("4.99");
 
   // Opening a grocery whose product is known asks the shop nothing at all.
@@ -119,14 +118,14 @@ test("the grocery's own panel says which product it is, and can be pointed at an
   await page.getByRole("option", { name: /Roomboter/ }).click({ timeout: 30_000 });
 
   // Still nothing written: the panel's own Save is what commits a choice.
-  expect((await readStoredLink("kaas"))?.productName).toBe("Oude kaas 500 g");
+  expect((await readStoredLink("oude kaas"))?.productName).toBe("Oude kaas");
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
 
   await expect
-    .poll(async () => (await readStoredLink("kaas"))?.productName, { timeout: 30_000 })
-    .toBe("Roomboter 250 g");
-  await expect(page.getByTestId("grocery-product").first()).toHaveText("Roomboter 250 g");
+    .poll(async () => (await readStoredLink("oude kaas"))?.productName, { timeout: 30_000 })
+    .toBe("Roomboter");
+  await expect(page.getByTestId("grocery-product").first()).toHaveText("Roomboter");
 });
 
 test("the shop was visited once for the search and once for the product's own page", () => {
@@ -135,23 +134,25 @@ test("the shop was visited once for the search and once for the product's own pa
 });
 
 test("a name the Store already knows is priced with no outbound request at all", async () => {
-  await addGroceryToShop("melk");
+  // "Volle melk", not "melk": a bare word that sits inside two of the shop's
+  // names is offered, never taken. And not "halfvolle melk": the aisles
+  // scenarios share this database and carry one of their own.
+  await addGroceryToShop("volle melk");
 
-  const priced = page.getByTestId("grocery-price").filter({ hasText: /1[.,]29/ });
+  const priced = page.getByTestId("grocery-price").filter({ hasText: /1[.,]39/ });
 
   await expect(priced).toBeVisible({ timeout: 60_000 });
 
   // The Product Link is keyed by name, so it outlives the list line that
-  // prompted it: next week's "melk" is priced without asking the shop again.
-  // Exactly "melk": the aisles scenarios share this database and carry a
-  // "halfvolle melk" of their own, which sits earlier on the page.
-  await page.getByText("melk", { exact: true }).first().click();
+  // prompted it: next week's "volle melk" is priced without asking the shop
+  // again.
+  await page.getByText("volle melk", { exact: true }).first().click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(priced).toBeHidden();
 
   const visitsBefore = shop.visits.length;
 
-  await addGroceryToShop("melk");
+  await addGroceryToShop("volle melk");
 
   await expect(priced).toBeVisible();
   expect(shop.visits.length).toBe(visitsBefore);
@@ -169,13 +170,12 @@ test("a name the shop does not state is left to the shopper, and priced on Save"
   await page.reload();
   await page.getByText("beleg").first().click();
   // The shop has nothing under "beleg", so the shopper searches it for
-  // something it does have. One product answers "brood", and a row a shopper
-  // would not hesitate over is taken by the field itself rather than offered
-  // back to be tapped — the shopper typed the choice already.
+  // something it does have. One product answers "brood", but a word that
+  // merely sits inside a name has not named it: the row is offered, and the
+  // shopper taps it.
   await page.getByTestId("grocery-product-field").fill("brood");
-  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Bruin brood", {
-    timeout: 30_000,
-  });
+  await page.getByRole("option", { name: /Bruin brood/ }).click({ timeout: 30_000 });
+  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Bruin brood");
 
   // Nothing is written until the panel's own Save.
   expect((await readStoredLink("beleg"))?.productName ?? null).toBeNull();
@@ -228,10 +228,11 @@ test("a product chosen while adding is not overruled by the lookup queued for it
   await page.getByRole("option", { name: STORE_NAME }).click();
 
   // "kaasplakken" would find nothing and be written off as a Miss; the
-  // shopper says otherwise, and a shopper's answer is the answer. The one
-  // product answering "Roomboter" is taken by the field for the typed term.
+  // shopper says otherwise, and a shopper's answer is the answer. A typed
+  // term that is a product's own name is taken by the field itself rather
+  // than offered back to be tapped — the shopper typed the choice already.
   await page.getByTestId("grocery-product-field").fill("Roomboter");
-  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Roomboter 250 g", {
+  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Roomboter", {
     timeout: 30_000,
   });
   await page.getByRole("button", { name: "Add", exact: true }).click();
@@ -240,7 +241,7 @@ test("a product chosen while adding is not overruled by the lookup queued for it
   // Long enough for the always-on lookup queue to have had its say.
   await page.waitForTimeout(10_000);
 
-  expect((await readStoredLink("kaasplakken"))?.productName).toBe("Roomboter 250 g");
+  expect((await readStoredLink("kaasplakken"))?.productName).toBe("Roomboter");
 });
 
 test("a grocery dragged into another Store is priced there, on the list", async () => {
@@ -252,7 +253,7 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   await page.goto("/groceries");
   await addGroceryToShop("roomboter");
 
-  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Roomboter 250 g", {
+  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Roomboter", {
     timeout: 60_000,
   });
 
@@ -262,8 +263,8 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   // The Store select is the panel's first; the Pack Size unit select sits under the product.
   await page.locator("[data-slot='select-trigger']").first().click();
   await page.getByRole("option", { name: second }).click();
-  await page.getByTestId("grocery-product-field").fill("brood");
-  // The one product answering "brood" is taken by the field for the typed term.
+  await page.getByTestId("grocery-product-field").fill("bruin brood");
+  // A typed term that is a product's own name is taken by the field itself.
   await expect(page.getByTestId("grocery-product-field")).toHaveValue("Bruin brood", {
     timeout: 30_000,
   });
@@ -289,7 +290,7 @@ test("a grocery dragged into another Store is priced there, on the list", async 
   await expect
     .poll(async () => readGroceryStore("roomboter"), { timeout: 30_000 })
     .toBe(STORE_NAME);
-  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Roomboter 250 g", {
+  await expect(rowFor("roomboter").getByTestId("grocery-product")).toHaveText("Roomboter", {
     timeout: 30_000,
   });
 });
@@ -417,6 +418,7 @@ test("editing the purchase amount preserves the requirement and survives reload"
   await expect
     .poll(async () => {
       const grocery = await readGroceryAmount("tarwebloem");
+
       return grocery?.purchaseAmount;
     })
     .toBe(3);
@@ -455,4 +457,33 @@ test("a purchase amount chosen during creation is saved with the grocery", async
   await expect(rowFor("bakbloem").getByTestId("grocery-line-cost")).toContainText(
     "€4.60 (4 × €1.15)"
   );
+});
+
+test("a linked product is unlinked from the panel, and the row is unpriced", async () => {
+  await page.goto("/groceries");
+  await page.getByText("bakbloem", { exact: true }).first().click();
+  await expect(page.getByTestId("grocery-product-field")).toHaveValue("Tarwebloem");
+
+  await page.getByTestId("product-unlink").click();
+  await expect(page.getByTestId("grocery-product-field")).toHaveValue("");
+  await expect(page.getByTestId("product-by-hand-price")).toHaveValue("");
+  // Nothing is written until the panel's own Save.
+  expect((await readStoredLink("bakbloem"))?.productName).toBe("Tarwebloem");
+
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+
+  // The Store now knows the name as one it has no product for — a Miss — so
+  // the row carries no price and the shop is not asked about it again.
+  await expect
+    .poll(
+      async () => {
+        const link = await readStoredLink("bakbloem");
+
+        return link ? (link.productName ?? "miss") : "gone";
+      },
+      { timeout: 30_000 }
+    )
+    .toBe("miss");
+  await expect(rowFor("bakbloem").getByTestId("grocery-price")).toBeHidden();
+  await expect(rowFor("bakbloem").getByTestId("grocery-price-pending")).toBeHidden();
 });

@@ -57,7 +57,7 @@ const screens: Screenful[] = [
     body: "Groceries that went into store 'Y' will go into store 'Y' the next time you need it. When doing groceries with your partner split up, the list stays in sync in realtime.",
     web: "groceries-web",
     mobile: "groceries-mobile",
-    alt: "A shared Norish grocery list grouped by shop, with one group folded away and items ticked off",
+    alt: "A Norish grocery list under one shop, sorted by aisle and priced from the shop's own pages, with a weekly item due today",
   },
 ];
 

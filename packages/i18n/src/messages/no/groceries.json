@@ -123,6 +123,7 @@
     "noAisle": "Ingen gang"
   },
   "picker": {
+    "unlink": "Fjern kobling til produkt",
     "searchPlaceholder": "Skriv for å søke i butikken",
     "searching": "Søker i {store}…",
     "knownGroup": "Allerede kjent",

@@ -123,6 +123,7 @@
     "noAisle": "Kein Gang"
   },
   "picker": {
+    "unlink": "Produkt entkoppeln",
     "searchPlaceholder": "Tippen, um den Shop zu durchsuchen",
     "searching": "{store} wird durchsucht…",
     "knownGroup": "Bereits bekannt",

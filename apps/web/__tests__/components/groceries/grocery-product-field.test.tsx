@@ -644,8 +644,9 @@ describe("GroceryProductField", () => {
       // Two colas answer "cola", so nothing has been chosen yet.
       expect(onChoice).not.toHaveBeenCalled();
 
+      // The product's own name, one letter slipped: near enough to be it.
       act(() => {
-        fireEvent.change(field(), { target: { value: "zero" } });
+        fireEvent.change(field(), { target: { value: "Cola Zero 1,5L" } });
       });
       act(() => {
         vi.advanceTimersByTime(500);
@@ -665,10 +666,39 @@ describe("GroceryProductField", () => {
         vi.advanceTimersByTime(500);
       });
 
-      expect(lastAskedTerm()).toBe("zero");
+      expect(lastAskedTerm()).toBe("Cola Zero 1,5L");
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("unlinks the product on the shopper's say-so, and holds nothing in its place", async () => {
+    const chosen: unknown[] = [];
+    const linked = product("prod-b", "store-b", "Cola B 1 L", 1.49);
+
+    render(
+      <GroceryProductField
+        choice={null}
+        groceryName="cola"
+        linkedProduct={linked}
+        store={STORE_B}
+        onChoice={(choice) => chosen.push(choice)}
+      />
+    );
+
+    expect(field()).toHaveValue("Cola B 1 L");
+    expect(screen.getByTestId("product-by-hand-price")).toHaveValue("1.49");
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("product-unlink"));
+    });
+
+    // The field and the price empty rather than reading the link back, and
+    // what is held is the unlinking itself: Save writes a Miss, not nothing.
+    expect(field()).toHaveValue("");
+    expect(screen.getByTestId("product-by-hand-price")).toHaveValue("");
+    expect(chosen.at(-1)).toEqual({ kind: "none" });
+    expect(screen.queryByTestId("product-unlink")).toBeNull();
   });
 
   it("chooses nothing where two of the shop's products answer equally well", async () => {

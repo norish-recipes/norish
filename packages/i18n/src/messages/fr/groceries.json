@@ -123,6 +123,7 @@
     "noAisle": "Aucun rayon"
   },
   "picker": {
+    "unlink": "Dissocier le produit",
     "searchPlaceholder": "Tapez pour chercher dans la boutique",
     "searching": "Recherche dans {store}…",
     "knownGroup": "Déjà connus",

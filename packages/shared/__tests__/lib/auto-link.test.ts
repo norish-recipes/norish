@@ -29,19 +29,63 @@ describe("chooseUnmistakable", () => {
     expect(chosen?.name).toBe("Oude kaas");
   });
 
-  it("links a candidate whose name holds every word of the grocery's, when only one does", () => {
-    const chosen = chooseUnmistakable(
-      [candidate("Halfvolle melk 1L"), candidate("Melkchocolade reep"), candidate("Roomboter")],
-      "melk"
-    );
-
-    expect(chosen?.name).toBe("Halfvolle melk 1L");
+  // "snoepjes" sits inside "Fortuin salmiak snoepjes" and inside half the
+  // sweets aisle: a name that merely holds the grocery's is offered, not taken.
+  it("links nothing to a candidate whose name merely holds the grocery's", () => {
+    expect(
+      chooseUnmistakable([candidate("Fortuin salmiak snoepjes"), candidate("Drop")], "snoepjes?")
+    ).toBeNull();
+    expect(
+      chooseUnmistakable(
+        [candidate("Halfvolle melk 1L"), candidate("Melkchocolade reep"), candidate("Roomboter")],
+        "melk"
+      )
+    ).toBeNull();
   });
 
-  it("links nothing when the words appear in two candidates", () => {
+  it("links a name typed with a slip of the fingers", () => {
+    expect(chooseUnmistakable([candidate("Snoepjes"), candidate("Drop")], "sneopjes")?.name).toBe(
+      "Snoepjes"
+    );
+    expect(chooseUnmistakable([candidate("Snoepjes")], "snoepje")?.name).toBe("Snoepjes");
+    expect(chooseUnmistakable([candidate("Halfvolle melk")], "halfvole melk")?.name).toBe(
+      "Halfvolle melk"
+    );
+    expect(chooseUnmistakable([candidate("Geitenkaas plakken")], "geitekaas plaken")?.name).toBe(
+      "Geitenkaas plakken"
+    );
+  });
+
+  it("allows a short name no slip, a longer one a second", () => {
+    // One letter of four is a different word.
+    expect(chooseUnmistakable([candidate("Meel")], "melk")).toBeNull();
+    expect(chooseUnmistakable([candidate("Kaars")], "kaas")).toBeNull();
+    // Two of eight is too many; two of nine is a name typed wrong twice.
+    expect(chooseUnmistakable([candidate("Snoepjes")], "snoepies")?.name).toBe("Snoepjes");
+    expect(chooseUnmistakable([candidate("Snoepjes")], "snoepis")).toBeNull();
+    expect(chooseUnmistakable([candidate("Roomboter")], "roomboten")?.name).toBe("Roomboter");
+    expect(chooseUnmistakable([candidate("Roomboter")], "roombote")?.name).toBe("Roomboter");
+  });
+
+  it("takes the nearest name where several are within reach", () => {
     expect(
-      chooseUnmistakable([candidate("Halfvolle melk 1L"), candidate("Volle melk 1L")], "melk")
+      chooseUnmistakable(
+        [candidate("Halfvolle mel", "b"), candidate("Halfvolle melk", "a")],
+        "halfvole melk"
+      )?.url
+    ).toBe("https://shop.example.nl/p/a");
+  });
+
+  it("links nothing when two different names are equally near", () => {
+    expect(
+      chooseUnmistakable([candidate("Sneepjes", "a"), candidate("Snoopjes", "b")], "sneopjes")
     ).toBeNull();
+  });
+
+  // Fuse finds a name inside a longer one for nothing; a name is read from
+  // both sides so that "oude kaas" is not the "jonge kaas" it sits inside.
+  it("links nothing to a longer name the grocery's merely sits inside", () => {
+    expect(chooseUnmistakable([candidate("Jonge kaas")], "oude kaas")).toBeNull();
   });
 
   // A name that matches to the letter is the thing asked for, however many
@@ -61,6 +105,15 @@ describe("chooseUnmistakable", () => {
       chooseUnmistakable(
         [candidate("Oude kaas", "a", 4.99, "500 g"), candidate("Oude kaas", "b", 4.99, "1 kg")],
         "oude kaas"
+      )?.url
+    ).toBe("https://shop.example.nl/p/a");
+  });
+
+  it("takes the first of several products carrying the name a slip away", () => {
+    expect(
+      chooseUnmistakable(
+        [candidate("Snoepjes", "a", 1.99), candidate("Snoepjes", "b", 2.49)],
+        "sneopjes"
       )?.url
     ).toBe("https://shop.example.nl/p/a");
   });
@@ -88,30 +141,13 @@ describe("chooseUnmistakable", () => {
     expect(chosen?.url).toBe("https://shop.example.nl/p/wi446406");
   });
 
-  it("counts a product listed twice once when holding the grocery's words against it", () => {
-    const chosen = chooseUnmistakable(
-      [
-        candidate("Halfvolle melk 1L", "a"),
-        candidate("Halfvolle melk 1L", "b"),
-        candidate("Roomboter"),
-      ],
-      "melk"
-    );
-
-    expect(chosen?.url).toBe("https://shop.example.nl/p/a");
-  });
-
-  it("links nothing when a word of the grocery's name is missing", () => {
-    expect(chooseUnmistakable([candidate("Halfvolle melk 1L")], "oude melk")).toBeNull();
-  });
-
   it("links nothing out of nothing", () => {
     expect(chooseUnmistakable([], "melk")).toBeNull();
     expect(chooseUnmistakable([candidate("Melk")], "   ")).toBeNull();
   });
 
   it("folds diacritics and punctuation on both sides", () => {
-    expect(chooseUnmistakable([candidate("Crème fraîche 200g")], "creme fraiche")?.name).toBe(
+    expect(chooseUnmistakable([candidate("Crème fraîche 200g")], "creme fraiche 200g")?.name).toBe(
       "Crème fraîche 200g"
     );
   });

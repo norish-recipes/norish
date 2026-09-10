@@ -123,6 +123,7 @@
     "noAisle": "Nessuna corsia"
   },
   "picker": {
+    "unlink": "Scollega prodotto",
     "searchPlaceholder": "Scrivi per cercare nel negozio",
     "searching": "Ricerca in {store}…",
     "knownGroup": "Già noti",

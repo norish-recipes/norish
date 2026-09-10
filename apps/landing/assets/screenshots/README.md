@@ -29,10 +29,10 @@ a mismatched size almost always means the capture came from a different
 session than the rest of the set.
 
 `scripts/capture-shots.mjs` takes all twenty in one run against a signed-in
-account (see the header of that file for usage). It also handles the two
-staged details: cooking mode is captured on step 2, whose ingredient chips sit
-under the instruction, and the groceries page is captured with the Unsorted
-group collapsed so the store groups fit the frame.
+account (see the header of that file for usage). It also handles the staged
+detail that cooking mode is captured on step 2, whose ingredient chips sit
+under the instruction. The groceries page no longer needs staging: a list
+under one Store, sorted by aisle, fills the frame on its own.
 
 ## One instance, one story
 
@@ -46,12 +46,18 @@ one app:
   lunch, captured on step 2 with the step's own ingredient chips (the bread
   and the parsley) under the instruction
 - the hero fragment and its dish photo are that same recipe again
-- the grocery list keeps the week's recipe ingredients under Dirk, each item
-  naming the recipe it came from, with the weekly Coke recurring and due
-  today, some items already ticked, and the Unsorted group collapsed
+- the grocery list is Dirk's, sorted by aisle and priced from the shop's own
+  pages: a Sale on the goat's cheese, bananas by the kilo, the weekly milk
+  recurring and due today, one item already ticked away into the done row
 - the rest of the week's dinners are already planned, boerenkoolstamppot on
   Thursday and more through Saturday
 
 When retaking, keep it to one signed-in account on one day, keep every visible
 recipe photographed, and keep a week planned that tells the same connected
 story: the dish you open is the dish you cook, plan and shop for.
+
+The four groceries captures are the exception, retaken on 2026-09-10 when the
+list gained aisles and prices: they come from the E2E production stack and
+its harness-served shop, with the same avatar, because the local dev login
+was unavailable. The spec that takes them is kept at
+`.scratch/redesign-groceries-page/landing-shots.e2e.ts`.

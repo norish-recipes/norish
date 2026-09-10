@@ -68,6 +68,18 @@ describe("chooseProduct", () => {
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });
 
+  it("writes a Miss for a shopper who unlinks the product", async () => {
+    await caller.chooseProduct({ storeId: STORE, name: "oude kaas", choice: { kind: "none" } });
+
+    expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
+      STORE,
+      "oude kaas",
+      null
+    );
+    expect(storeProductsRepository.createManualProduct).not.toHaveBeenCalled();
+    expect(storeProductsRepository.upsertReadProduct).not.toHaveBeenCalled();
+  });
+
   it("writes the page a shopper gives a by-hand product", async () => {
     storeProductsRepository.getStoreProductById.mockResolvedValue(null);
     storeProductsRepository.createManualProduct.mockResolvedValue({

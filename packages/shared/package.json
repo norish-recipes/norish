@@ -1,6 +1,6 @@
 {
   "name": "@norish/shared",
-  "version": "0.23.0-beta",
+  "version": "0.23.1-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -34,6 +34,7 @@
     "better-auth": "catalog:",
     "date-fns": "catalog:",
     "drizzle-zod": "0.8.3",
+    "fuse.js": "catalog:",
     "fraction.js": "^5.3.4",
     "html-entities": "catalog:",
     "jsonrepair": "3.15.0",

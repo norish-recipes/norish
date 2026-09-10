@@ -123,6 +123,7 @@
     "noAisle": "Без ряда"
   },
   "picker": {
+    "unlink": "Отвязать товар",
     "searchPlaceholder": "Введите, чтобы искать в магазине",
     "searching": "Ищем в {store}…",
     "knownGroup": "Уже известно",

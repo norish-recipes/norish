@@ -1,9 +1,8 @@
 ---
-
 sidebar_position: 1
 title: Prices
 description: Point a Store at a real shop and see what the groceries on your list cost there, using the shop's own pages and no AI provider.
---------------------------------------------------------------------------------------------------------------------------------------------
+---
 
 # Prices
 
@@ -28,6 +27,16 @@ The shop's product name sits underneath. If it is on sale, the regular total is 
 
 The Store heading adds up everything still to buy. Groceries without a price are left out of that total, and ticking a grocery removes its price from it.
 When similar ingredients are grouped, the group is priced as one purchase. So 300 g and 400 g of flour become 700 g when deciding how much to buy.
+
+## Which product
+
+Norish links a grocery to one of the shop's products by itself only when the product's name is the grocery's name, give or take a typo on longer names. A product whose name merely contains the grocery's, "snoepjes" inside "Fortuin salmiak snoepjes", is not taken: it could as well be any other bag of sweets.
+
+Everything else is yours to decide. Open the grocery and use the **Product** field: typing shows what the Store already knows and what the shop answers, with the price beside each. Typing a product's own name fills it in.
+
+To undo a link, open the grocery and press **Unlink product**. The row loses its price, and the Store treats the name as one it has no product for until you pick or type one.
+
+![The product field, with the shop's answers to pick from](/img/screenshots/groceries-picker.png)
 
 ## How much to buy
 

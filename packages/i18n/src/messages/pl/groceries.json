@@ -123,6 +123,7 @@
     "noAisle": "Bez alejki"
   },
   "picker": {
+    "unlink": "Odłącz produkt",
     "searchPlaceholder": "Wpisz, aby szukać w sklepie",
     "searching": "Szukanie w {store}…",
     "knownGroup": "Już znane",

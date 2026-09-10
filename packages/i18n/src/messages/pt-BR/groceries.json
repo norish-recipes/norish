@@ -123,6 +123,7 @@
     "noAisle": "Sem corredor"
   },
   "picker": {
+    "unlink": "Desvincular produto",
     "searchPlaceholder": "Digite para buscar na loja",
     "searching": "Buscando em {store}…",
     "knownGroup": "Já conhecidos",
