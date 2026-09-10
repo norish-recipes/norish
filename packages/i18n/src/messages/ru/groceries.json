@@ -8,7 +8,8 @@
     "viewMode": "Режим отображения",
     "manageStores": "Управление магазинами",
     "storeViewOptions": "Настройки отображения магазинов",
-    "groupIngredients": "Группировать ингредиенты"
+    "groupIngredients": "Группировать ингредиенты",
+    "clearList": "Очистить список"
   },
   "empty": {
     "title": "Ваш список покупок ждёт",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Без категории",
     "storeActions": "Действия с магазином",
+    "recipeActions": "Действия с рецептом",
     "markAllDone": "Отметить всё как выполненное",
     "deleteDone": "Удалить выполненные",
+    "clearAll": "Очистить всё",
     "done": "{count, plural, one {# выполнено} few {# выполнено} many {# выполнено} other {# выполнено}}",
     "allDone": "Всё готово",
     "total": "Ещё купить"
@@ -148,6 +151,13 @@
     "invalidPrice": "Введите цену, например 2,49",
     "invalidCurrency": "Валюта состоит из трёх букв, например EUR",
     "openPage": "Открыть в {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Очистить список?",
+    "listDescription": "Это удалит {count, plural, one {# товар} few {# товара} many {# товаров} other {# товара}} из списка покупок. Это действие нельзя отменить.",
+    "sectionTitle": "Очистить {name}?",
+    "sectionDescription": "Это удалит {count, plural, one {# товар} few {# товара} many {# товаров} other {# товара}} из {name}. Это действие нельзя отменить.",
+    "confirm": "Очистить"
   },
   "price": {
     "pending": "Ищем цену",

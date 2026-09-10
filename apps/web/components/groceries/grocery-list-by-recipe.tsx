@@ -26,6 +26,7 @@ interface GroceryListByRecipeProps {
   onEdit: (grocery: GroceryDto) => void;
   onDelete: (id: string) => void;
   onReorder?: (updates: { id: string; sortOrder: number }[]) => void;
+  onClearRecipe?: (ids: string[], name: string) => void;
 }
 
 interface RecipeGroup {
@@ -43,6 +44,7 @@ export function GroceryListByRecipe({
   onEdit,
   onDelete,
   onReorder,
+  onClearRecipe,
 }: GroceryListByRecipeProps) {
   const t = useTranslations("groceries");
 
@@ -148,6 +150,12 @@ export function GroceryListByRecipe({
             recipeName={group.recipeName}
             recurringGroceries={recurringGroceries}
             stores={stores}
+            onClearRecipe={() =>
+              onClearRecipe?.(
+                group.groceries.map((g) => g.id),
+                group.recipeName
+              )
+            }
             onDelete={onDelete}
             onEdit={onEdit}
             onReorder={onReorder}

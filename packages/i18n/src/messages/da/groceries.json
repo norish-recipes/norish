@@ -8,7 +8,8 @@
     "viewMode": "Visningstilstand",
     "manageStores": "Administrer butikker",
     "storeViewOptions": "Butikvisningsindstillinger",
-    "groupIngredients": "Gruppér ingredienser"
+    "groupIngredients": "Gruppér ingredienser",
+    "clearList": "Ryd listen"
   },
   "empty": {
     "title": "Din indkøbsliste venter",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Usorteret",
     "storeActions": "Butikshandlinger",
+    "recipeActions": "Opskrifthandlinger",
     "markAllDone": "Markér alle som færdige",
     "deleteDone": "Slet færdige",
+    "clearAll": "Ryd alle",
     "done": "{count} færdige",
     "allDone": "Alt færdigt",
     "total": "Mangler at købe"
@@ -148,6 +151,13 @@
     "invalidPrice": "Indtast en pris, f.eks. 2,49",
     "invalidCurrency": "En valuta er tre bogstaver, f.eks. EUR",
     "openPage": "Åbn hos {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Ryd listen?",
+    "listDescription": "Dette fjerner {count, plural, one {# vare} other {# varer}} fra din indkøbsliste. Dette kan ikke fortrydes.",
+    "sectionTitle": "Ryd {name}?",
+    "sectionDescription": "Dette fjerner {count, plural, one {# vare} other {# varer}} fra {name}. Dette kan ikke fortrydes.",
+    "confirm": "Ryd"
   },
   "price": {
     "pending": "Slår prisen op",

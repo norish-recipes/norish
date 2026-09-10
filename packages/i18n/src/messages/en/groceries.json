@@ -8,7 +8,8 @@
     "viewMode": "View Mode",
     "manageStores": "Manage Stores",
     "storeViewOptions": "Store View Options",
-    "groupIngredients": "Group ingredients"
+    "groupIngredients": "Group ingredients",
+    "clearList": "Clear list"
   },
   "empty": {
     "title": "Your grocery list awaits",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Unsorted",
     "storeActions": "Store actions",
+    "recipeActions": "Recipe actions",
     "markAllDone": "Mark all done",
     "deleteDone": "Delete done",
+    "clearAll": "Clear all",
     "done": "{count} done",
     "allDone": "All done",
     "total": "Still to buy"
@@ -148,6 +151,13 @@
     "invalidPrice": "Enter a price, like 2.49",
     "invalidCurrency": "A currency is three letters, like EUR",
     "openPage": "Open at {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Clear list?",
+    "listDescription": "This will remove {count, plural, one {# item} other {# items}} from your grocery list. This cannot be undone.",
+    "sectionTitle": "Clear {name}?",
+    "sectionDescription": "This will remove {count, plural, one {# item} other {# items}} from {name}. This cannot be undone.",
+    "confirm": "Clear"
   },
   "price": {
     "pending": "Looking up the price",

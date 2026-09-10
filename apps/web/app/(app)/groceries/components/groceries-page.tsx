@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
+import { ClearGroceriesModal } from "@/components/groceries/clear-groceries-modal";
 import { AddGroceryPanel } from "@/components/Panel/consumers";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
@@ -11,6 +13,7 @@ import {
   CheckIcon,
   Cog6ToothIcon,
   PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Header, Label, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -54,6 +57,31 @@ export function GroceriesPage() {
     setGroupSimilarIngredients,
   } = useGroceriesUiContext();
   const t = useTranslations("groceries.page");
+
+  type ClearScope =
+    | { kind: "all" }
+    | { kind: "store"; storeId: string | null; name: string }
+    | { kind: "recipe"; ids: string[]; name: string };
+  const [clearScope, setClearScope] = useState<ClearScope | null>(null);
+  const handleClearConfirm = () => {
+    if (!clearScope) return;
+    if (clearScope.kind === "all") {
+      deleteGroceries(groceries.map((g) => g.id));
+    } else if (clearScope.kind === "store") {
+      deleteGroceries(groceries.filter((g) => g.storeId === clearScope.storeId).map((g) => g.id));
+    } else {
+      deleteGroceries(clearScope.ids);
+    }
+  };
+  const clearItemCount =
+    clearScope?.kind === "all"
+      ? groceries.length
+      : clearScope?.kind === "store"
+        ? groceries.filter((g) => g.storeId === clearScope.storeId).length
+        : (clearScope?.ids.length ?? 0);
+  const clearScopeName =
+    clearScope?.kind === "store" || clearScope?.kind === "recipe" ? clearScope.name : null;
+
   const handleToggle = (id: string, isDone: boolean) => {
     toggleGroceries([id], isDone);
   };
@@ -210,6 +238,19 @@ export function GroceriesPage() {
                       {<Cog6ToothIcon className="h-4 w-4" />}
                       <Label>{t("manageStores")}</Label>
                     </Dropdown.Item>
+                    {groceries.length > 0 && (
+                      <Dropdown.Item
+                        key="clear-list"
+                        className="text-danger"
+                        id="clear-list"
+                        textValue={t("clearList")}
+                        variant="danger"
+                        onPress={() => setClearScope({ kind: "all" })}
+                      >
+                        {<TrashIcon className="h-4 w-4" />}
+                        <Label>{t("clearList")}</Label>
+                      </Dropdown.Item>
+                    )}
                   </Dropdown.Section>
                 </Dropdown.Menu>
               </Dropdown.Popover>
@@ -226,6 +267,7 @@ export function GroceriesPage() {
               groupSimilarIngredients={groupSimilarIngredients}
               recurringGroceries={recurringGroceries}
               stores={stores}
+              onClearAllInStore={(storeId, name) => setClearScope({ kind: "store", storeId, name })}
               onDelete={handleDelete}
               onDeleteDoneInStore={deleteDoneInStore}
               onEdit={handleEdit}
@@ -240,6 +282,7 @@ export function GroceriesPage() {
               recipeMap={recipeMap}
               recurringGroceries={recurringGroceries}
               stores={stores}
+              onClearRecipe={(ids, name) => setClearScope({ kind: "recipe", ids, name })}
               onDelete={handleDelete}
               onEdit={handleEdit}
               onReorder={reorderGroceriesInStore}
@@ -288,6 +331,14 @@ export function GroceriesPage() {
           onSave={handleEditSave}
         />
       )}
+
+      <ClearGroceriesModal
+        isOpen={clearScope !== null}
+        itemCount={clearItemCount}
+        scopeName={clearScopeName}
+        onClose={() => setClearScope(null)}
+        onConfirm={handleClearConfirm}
+      />
     </>
   );
 }

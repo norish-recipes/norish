@@ -8,7 +8,8 @@
     "viewMode": "Modalità di visualizzazione",
     "manageStores": "Gestisci negozi",
     "storeViewOptions": "Opzioni vista negozio",
-    "groupIngredients": "Raggruppa ingredienti"
+    "groupIngredients": "Raggruppa ingredienti",
+    "clearList": "Svuota lista"
   },
   "empty": {
     "title": "La tua lista della spesa ti aspetta",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Non ordinati",
     "storeActions": "Azioni negozio",
+    "recipeActions": "Azioni ricetta",
     "markAllDone": "Segna tutto come fatto",
     "deleteDone": "Elimina completati",
+    "clearAll": "Svuota tutto",
     "done": "{count} completati",
     "allDone": "Tutto fatto",
     "total": "Ancora da comprare"
@@ -148,6 +151,13 @@
     "invalidPrice": "Inserisci un prezzo, ad esempio 2,49",
     "invalidCurrency": "Una valuta ha tre lettere, come EUR",
     "openPage": "Apri su {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Svuotare la lista?",
+    "listDescription": "Questo rimuoverà {count, plural, one {# articolo} other {# articoli}} dalla tua lista della spesa. Questa azione non può essere annullata.",
+    "sectionTitle": "Svuotare {name}?",
+    "sectionDescription": "Questo rimuoverà {count, plural, one {# articolo} other {# articoli}} da {name}. Questa azione non può essere annullata.",
+    "confirm": "Svuota"
   },
   "price": {
     "pending": "Ricerca del prezzo in corso",

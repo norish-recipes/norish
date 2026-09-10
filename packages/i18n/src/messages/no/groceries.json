@@ -8,7 +8,8 @@
     "viewMode": "Visningsmodus",
     "manageStores": "Administrer butikker",
     "storeViewOptions": "Butikkvisningsinnstillinger",
-    "groupIngredients": "Grupper ingredienser"
+    "groupIngredients": "Grupper ingredienser",
+    "clearList": "Tøm listen"
   },
   "empty": {
     "title": "Handlelisten din venter",
@@ -23,8 +24,10 @@
   "store": {
     "unsorted": "Usortert",
     "storeActions": "Butikkhandlinger",
+    "recipeActions": "Oppskrifthandlinger",
     "markAllDone": "Merk alle som ferdige",
     "deleteDone": "Slett ferdige",
+    "clearAll": "Fjern alle",
     "done": "{count} ferdige",
     "allDone": "Alt ferdig",
     "total": "Igjen å kjøpe"
@@ -148,6 +151,13 @@
     "invalidPrice": "Skriv inn en pris, f.eks. 2,49",
     "invalidCurrency": "En valuta er tre bokstaver, f.eks. EUR",
     "openPage": "Åpne hos {store}"
+  },
+  "clearConfirm": {
+    "listTitle": "Tømme listen?",
+    "listDescription": "Dette fjerner {count, plural, one {# vare} other {# varer}} fra handlelisten din. Dette kan ikke angres.",
+    "sectionTitle": "Tømme {name}?",
+    "sectionDescription": "Dette fjerner {count, plural, one {# vare} other {# varer}} fra {name}. Dette kan ikke angres.",
+    "confirm": "Tøm"
   },
   "price": {
     "pending": "Slår opp prisen",
