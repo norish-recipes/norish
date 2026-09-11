@@ -8,7 +8,8 @@
     "viewMode": "Modalità di visualizzazione",
     "manageStores": "Gestisci negozi",
     "storeViewOptions": "Opzioni vista negozio",
-    "groupIngredients": "Raggruppa ingredienti"
+    "groupIngredients": "Raggruppa ingredienti",
+    "pantry": "Dispensa"
   },
   "empty": {
     "title": "La tua lista della spesa ti aspetta",
@@ -83,6 +84,15 @@
     "dragAisle": "Trascina per riordinare",
     "aisleDuplicate": "Questo negozio ha già una corsia con quel nome"
   },
+  "pantry": {
+    "title": "Dispensa",
+    "hint": "Quello che hai già in casa. Gli ingredienti nella dispensa restano fuori dalla lista quando aggiungi una ricetta.",
+    "empty": "Ancora niente nella dispensa",
+    "namePlaceholder": "es. Olio d'oliva",
+    "add": "Aggiungi alla dispensa",
+    "remove": "Rimuovi dalla dispensa",
+    "duplicate": "È già nella tua dispensa"
+  },
   "panel": {
     "addTitle": "Aggiungi articolo",
     "editTitle": "Modifica articolo",
@@ -120,7 +130,8 @@
     "ingredientsFailed": "Aggiunta degli ingredienti alla lista della spesa non riuscita.",
     "addToGroceries": "Aggiungi alla spesa",
     "aisle": "Corsia",
-    "noAisle": "Nessuna corsia"
+    "noAisle": "Nessuna corsia",
+    "inPantry": "Nella tua dispensa"
   },
   "picker": {
     "unlink": "Scollega prodotto",

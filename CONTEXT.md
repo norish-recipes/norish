@@ -162,6 +162,14 @@ _Avoid_: Category (a meal category is something else in Norish), Department, Sec
 Where a Store has learned a grocery name is found: a Store, a normalized grocery name, and one of that Store's Aisles. Like a Product Link it is keyed by name rather than by Grocery, so filing one "melk" files every "melk" at that Store, the memory outlives the list line that prompted it, and a rename or a move to another Store asks what that name is filed under there instead of carrying the old answer along. A name the Store has never been told about stays unfiled; Norish never guesses an Aisle from words.
 _Avoid_: Assignment (a Grocery is assigned to a Store, linked to a Store Product, and filed in an Aisle), Placement, Preference (the store preference is a different memory, kept per person)
 
+**Pantry**:
+The household's list of what it already has at home, kept so a recipe's staples are not bought again every week. It is one list per household, shared the way Stores are, and holds names and nothing else: no amounts, no dates. It is edited in a panel of the groceries page and consulted in one place, when a recipe is added to the groceries.
+_Avoid_: Inventory (promises quantities Norish does not track), Stock, Cupboard
+
+**Pantry Ingredient**:
+One Ingredient Name the household has at home; the row points at it, as a recipe line does, and the name and its fold are read from it. An ingredient is *in the pantry* only when its folded name equals a Pantry Ingredient's, using the one folding a Product Link and an Aisle Link use; Norish never guesses from words (ADR-0036). When a recipe is added to the groceries, its stocked lines are shown apart and left off the list unless ticked. A Pantry Ingredient is never a Grocery: it is what stops a Grocery being made.
+_Avoid_: Staple (a judgement about the food, not a fact about the household), Stocked ingredient (names the ingredient's state, not the thing the household keeps)
+
 ### Imports & AI
 
 **Recipe Archive**:

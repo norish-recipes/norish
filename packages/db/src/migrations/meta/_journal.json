@@ -379,6 +379,13 @@
       "when": 1789853837958,
       "tag": "0053_store_product_link_suggestion",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1790003549831,
+      "tag": "0054_pantry_ingredients",
+      "breakpoints": true
     }
   ]
 }

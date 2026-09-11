@@ -8,7 +8,8 @@
     "viewMode": "보기 모드",
     "manageStores": "매장 관리",
     "storeViewOptions": "매장 보기 옵션",
-    "groupIngredients": "재료 묶기"
+    "groupIngredients": "재료 묶기",
+    "pantry": "팬트리"
   },
   "empty": {
     "title": "아직 장보기 목록이 비어 있어요",
@@ -83,6 +84,15 @@
     "dragAisle": "드래그하여 순서 변경",
     "aisleDuplicate": "이 매장에는 이미 같은 이름의 통로가 있습니다"
   },
+  "pantry": {
+    "title": "팬트리",
+    "hint": "집에 이미 있는 재료입니다. 레시피를 추가할 때 팬트리에 있는 재료는 목록에서 제외됩니다.",
+    "empty": "팬트리가 비어 있습니다",
+    "namePlaceholder": "예: 올리브 오일",
+    "add": "팬트리에 추가",
+    "remove": "팬트리에서 제거",
+    "duplicate": "이미 팬트리에 있습니다"
+  },
   "panel": {
     "addTitle": "장보기 추가",
     "editTitle": "장보기 편집",
@@ -120,7 +130,8 @@
     "ingredientsFailed": "장보기 목록에 재료를 추가하지 못했습니다.",
     "addToGroceries": "장보기에 추가",
     "aisle": "통로",
-    "noAisle": "통로 없음"
+    "noAisle": "통로 없음",
+    "inPantry": "팬트리에 있음"
   },
   "picker": {
     "unlink": "상품 연결 해제",

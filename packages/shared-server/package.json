@@ -53,6 +53,7 @@
     "./realtime/recipes": "./src/realtime/recipes.ts",
     "./realtime/resume": "./src/realtime/resume.ts",
     "./realtime/stores": "./src/realtime/stores.ts",
+    "./realtime/pantry": "./src/realtime/pantry.ts",
     "./redis/client": "./src/redis/client.ts",
     "./redis/url": "./src/redis/url.ts"
   },
