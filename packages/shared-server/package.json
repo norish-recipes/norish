@@ -46,6 +46,7 @@
     "./realtime/recipe-enrichment": "./src/realtime/recipe-enrichment.ts",
     "./realtime/recipes": "./src/realtime/recipes.ts",
     "./realtime/stores": "./src/realtime/stores.ts",
+    "./realtime/pantry": "./src/realtime/pantry.ts",
     "./redis/client": "./src/redis/client.ts",
     "./redis/pubsub": "./src/redis/pubsub.ts",
     "./redis/subscription-multiplexer": "./src/redis/subscription-multiplexer.ts"

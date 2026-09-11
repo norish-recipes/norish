@@ -8,7 +8,8 @@
     "viewMode": "Ansicht",
     "manageStores": "Geschäfte verwalten",
     "storeViewOptions": "Optionen Geschäftsansicht",
-    "groupIngredients": "Zutaten gruppieren"
+    "groupIngredients": "Zutaten gruppieren",
+    "pantry": "Vorratskammer"
   },
   "empty": {
     "title": "Ihre Einkaufsliste wartet",
@@ -83,6 +84,15 @@
     "dragAisle": "Zum Sortieren ziehen",
     "aisleDuplicate": "Dieses Geschäft hat bereits einen Gang mit diesem Namen"
   },
+  "pantry": {
+    "title": "Vorratskammer",
+    "hint": "Was Sie bereits zu Hause haben. Zutaten aus Ihrer Vorratskammer bleiben von der Liste, wenn Sie ein Rezept hinzufügen.",
+    "empty": "Noch nichts in Ihrer Vorratskammer",
+    "namePlaceholder": "z. B. Olivenöl",
+    "add": "Zur Vorratskammer hinzufügen",
+    "remove": "Aus der Vorratskammer entfernen",
+    "duplicate": "Das ist bereits in Ihrer Vorratskammer"
+  },
   "panel": {
     "addTitle": "Einkauf hinzufügen",
     "editTitle": "Einkauf bearbeiten",
@@ -120,7 +130,8 @@
     "ingredientsFailed": "Fehler beim Hinzufügen der Zutaten zur Einkaufsliste.",
     "addToGroceries": "Zur Einkaufsliste hinzufügen",
     "aisle": "Gang",
-    "noAisle": "Kein Gang"
+    "noAisle": "Kein Gang",
+    "inPantry": "In Ihrer Vorratskammer"
   },
   "picker": {
     "unlink": "Produkt entkoppeln",

@@ -8,7 +8,8 @@
     "viewMode": "Visningstilstand",
     "manageStores": "Administrer butikker",
     "storeViewOptions": "Butikvisningsindstillinger",
-    "groupIngredients": "Gruppér ingredienser"
+    "groupIngredients": "Gruppér ingredienser",
+    "pantry": "Spisekammer"
   },
   "empty": {
     "title": "Din indkøbsliste venter",
@@ -83,6 +84,15 @@
     "dragAisle": "Træk for at ændre rækkefølgen",
     "aisleDuplicate": "Denne butik har allerede en gang med det navn"
   },
+  "pantry": {
+    "title": "Spisekammer",
+    "hint": "Det, du allerede har derhjemme. Ingredienser i dit spisekammer holdes ude af listen, når du tilføjer en opskrift.",
+    "empty": "Intet i dit spisekammer endnu",
+    "namePlaceholder": "f.eks. Olivenolie",
+    "add": "Tilføj til spisekammer",
+    "remove": "Fjern fra spisekammer",
+    "duplicate": "Det er allerede i dit spisekammer"
+  },
   "panel": {
     "addTitle": "Tilføj indkøbsvare",
     "editTitle": "Rediger indkøbsvare",
@@ -120,7 +130,8 @@
     "ingredientsFailed": "Kunne ikke tilføje ingredienser til indkøbslisten.",
     "addToGroceries": "Tilføj til indkøbsliste",
     "aisle": "Gang",
-    "noAisle": "Ingen gang"
+    "noAisle": "Ingen gang",
+    "inPantry": "I dit spisekammer"
   },
   "picker": {
     "unlink": "Fjern kobling til produkt",

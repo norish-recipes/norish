@@ -33,3 +33,4 @@ export * from "./user-allergies";
 export * from "./site-auth-tokens";
 export * from "./store-products";
 export * from "./aisles";
+export * from "./pantry";

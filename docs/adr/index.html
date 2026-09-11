@@ -824,6 +824,21 @@
             travel on the Store DTO and its subscription; filing is tRPC only.
           </p>
         </li>
+        <li>
+          <a href="groceries/0032-a-pantry-ingredient-is-a-name-matched-exactly.md"
+            >ADR-0032 &mdash; A Pantry Ingredient is a name matched exactly, and nothing is stored on the
+            recipe or the grocery</a
+          >
+          <p>
+            <b>Accepted.</b> A Pantry Ingredient is a household fact — a name and its folded form, owned
+            like a Store and read across the household — and an ingredient is in the pantry only on
+            an exact match of folded names, with the Product Link's folding and no looser rule. The
+            pantry is consulted once, when a recipe is added to the groceries: stocked lines are
+            shown apart, unticked, and left off the list unless ticked. Nothing is stored on the
+            recipe ingredient or the grocery row; the Pantry has its own router and subscription and
+            no REST endpoint.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>
