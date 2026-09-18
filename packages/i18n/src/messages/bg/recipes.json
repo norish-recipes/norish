@@ -290,7 +290,8 @@
     "removeLabel": "Премахни {name}"
   },
   "ingredientInput": {
-    "placeholder": "напр. 2 чаши брашно"
+    "placeholder": "напр. 2 чаши брашно",
+    "nameSuggestions": "Предложения за съставки"
   },
   "wakeLock": {
     "keepScreenOn": "Дръж екрана включен",

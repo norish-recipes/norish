@@ -1,15 +1,29 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import type { SmartTextInputNameSuggestion } from "@/components/shared/smart-text-input";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { IngredientIllustration } from "@/components/recipes/ingredient-illustration";
 import SmartTextInput from "@/components/shared/smart-text-input";
-import { useUnitsQuery } from "@/hooks/config";
+import { useHiddenItemsIfProvided } from "@/context/hidden-items-context";
+import { useIngredientNamesQuery, useUnitsQuery } from "@/hooks/config";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type { UnitsMap } from "@norish/config/zod/server-config";
+import type {
+  IngredientLookup,
+  IngredientLookupEntry,
+} from "@norish/shared/lib/ingredient-pictures";
 import { MeasurementSystem } from "@norish/shared/contracts";
 import { debounce, parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import {
+  findIngredientForName,
+  ingredientLineNamePart,
+  replaceIngredientLineName,
+  suggestIngredientNames,
+} from "@norish/shared/lib/ingredient-pictures";
 
 export interface ParsedIngredient {
   id?: string;
@@ -52,6 +66,7 @@ export default function IngredientInput({
   onSystemDetected: _onSystemDetected,
 }: IngredientInputProps) {
   const { units } = useUnitsQuery();
+  const { ingredients: known, lookup } = useIngredientNamesQuery();
   const t = useTranslations("recipes.ingredientInput");
   const [items, setItems] = useState<IngredientItem[]>([createItem("")]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
@@ -218,6 +233,8 @@ export default function IngredientInput({
       {items.map((item, index) => (
         <IngredientRow
           key={item.id}
+          known={known}
+          pictureLookup={lookup}
           dragConstraintsRef={dragConstraintsRef}
           index={index}
           ingredientNumber={getIngredientNumber(index)}
@@ -225,6 +242,8 @@ export default function IngredientInput({
           isLast={index === items.length - 1}
           item={item}
           showRemove={items.length > 1 && !!item.text}
+          suggestionsLabel={t("nameSuggestions")}
+          units={units}
           onBlur={() => handleBlur(index)}
           onKeyDown={(e) =>
             handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
@@ -243,8 +262,28 @@ function normalizeIngredientItems(next: IngredientItem[]): IngredientItem[] {
 }
 
 // Separate component for each row to use useDragControls
+/**
+ * The name a row's text is stored under — what is left once the amount and
+ * unit are parsed away — exactly as the save path parses it, so the picture a
+ * row shows while typing is the one the saved line will show.
+ */
+function storedNameOf(text: string, units: UnitsMap): string {
+  const trimmed = text.trim();
+
+  if (!trimmed) return "";
+
+  const parsed = parseIngredientWithDefaults(trimmed, units);
+
+  return parsed?.[0]?.description || trimmed;
+}
+
 interface IngredientRowProps {
   item: IngredientItem;
+  units: UnitsMap;
+  /** Every Ingredient Name Norish knows, for suggestions and the row's picture (ADR-0037). */
+  known: readonly IngredientLookupEntry[];
+  pictureLookup: IngredientLookup;
+  suggestionsLabel: string;
   index: number;
   ingredientNumber: number | null;
   isLast: boolean;
@@ -258,6 +297,10 @@ interface IngredientRowProps {
 }
 function IngredientRow({
   item,
+  units,
+  known,
+  pictureLookup,
+  suggestionsLabel,
   index,
   ingredientNumber,
   isLast,
@@ -270,7 +313,41 @@ function IngredientRow({
   onRemove,
 }: IngredientRowProps) {
   const controls = useDragControls();
+  const picturesHidden = useHiddenItemsIfProvided().includes("ingredientPictures");
   const canDrag = !isLast && !!item.text.trim();
+  const isHeading = item.text.trim().startsWith("#");
+  const pictureUrl = useMemo(
+    () =>
+      isHeading
+        ? null
+        : (findIngredientForName(pictureLookup, storedNameOf(item.text, units))?.imageUrl ?? null),
+    [pictureLookup, isHeading, item.text, units]
+  );
+  const getSuggestions = useCallback(
+    (value: string): SmartTextInputNameSuggestion[] => {
+      if (known.length === 0) return [];
+
+      const part = ingredientLineNamePart(value, units);
+
+      if (!part) return [];
+
+      return suggestIngredientNames(part.name, known).map((suggestion) => ({
+        key: suggestion.key,
+        label: suggestion.name,
+        imageUrl: suggestion.imageUrl,
+        apply: () => ({
+          value: replaceIngredientLineName(value, part, suggestion.name),
+          caret: part.start + suggestion.name.length,
+        }),
+      }));
+    },
+    [known, units]
+  );
+  const nameSuggestions = useMemo(
+    () => ({ label: suggestionsLabel, get: getSuggestions }),
+    [suggestionsLabel, getSuggestions]
+  );
+
   return (
     <Reorder.Item
       className="flex items-start gap-2"
@@ -302,10 +379,18 @@ function IngredientRow({
         {ingredientNumber !== null ? `${ingredientNumber}.` : ""}
       </div>
 
+      {/* The picture the row's name matches; the slot is kept while any picture exists so rows line up */}
+      {!picturesHidden && pictureLookup.size > 0 && (
+        <div className="flex h-10 w-8 flex-shrink-0 items-center justify-center">
+          <IngredientIllustration imageUrl={pictureUrl} size="sm" />
+        </div>
+      )}
+
       {/* Input field */}
       <div className="flex-1">
         <SmartTextInput
           minRows={1}
+          nameSuggestions={nameSuggestions}
           placeholder={index === 0 ? ingredientPlaceholder : ""}
           value={item.text}
           onBlur={onBlur}

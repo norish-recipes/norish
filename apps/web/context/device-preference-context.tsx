@@ -91,5 +91,10 @@ export function createDevicePreferenceContext<V>(
     return context;
   }
 
-  return { Provider, usePreference };
+  /** The state where a provider exists, and null where none does (a signed-out page). */
+  function useOptionalPreference(): DevicePreferenceState<V> | null {
+    return useContext(Context);
+  }
+
+  return { Provider, usePreference, useOptionalPreference };
 }

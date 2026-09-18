@@ -290,7 +290,8 @@
     "removeLabel": "Retirer {name}"
   },
   "ingredientInput": {
-    "placeholder": "ex. : 2 tasses de farine"
+    "placeholder": "ex. : 2 tasses de farine",
+    "nameSuggestions": "Suggestions d'ingrédients"
   },
   "wakeLock": {
     "keepScreenOn": "Garder l’écran allumé",

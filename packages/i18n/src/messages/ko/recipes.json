@@ -290,7 +290,8 @@
     "removeLabel": "{name} 제거"
   },
   "ingredientInput": {
-    "placeholder": "예: 밀가루 2컵"
+    "placeholder": "예: 밀가루 2컵",
+    "nameSuggestions": "재료 추천"
   },
   "wakeLock": {
     "keepScreenOn": "화면 켜짐 유지",

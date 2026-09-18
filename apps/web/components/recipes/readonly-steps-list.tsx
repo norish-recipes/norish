@@ -33,6 +33,7 @@ type IngredientLike = {
   unit?: string | null;
   systemUsed: string;
   order: number;
+  picture?: { imageUrl: string } | null;
 };
 
 export type ReadonlyStepsListProps = {

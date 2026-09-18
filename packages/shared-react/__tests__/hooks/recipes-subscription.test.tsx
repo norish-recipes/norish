@@ -28,6 +28,8 @@ vi.mock("@trpc/tanstack-react-query", async () => {
 const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
 const LIBRARY_KEY = [["library", "list"], { input: {}, type: "infinite" }];
 const CALENDAR_KEY = [["calendar", "listItems"]];
+const NAMES_KEY = [["ingredients", "list"], { type: "query" }];
+const ADMIN_NAMES_PATH = [["admin", "ingredients", "list"]];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id }, type: "query" }];
 
 function procedure(name: string) {
@@ -53,6 +55,16 @@ const useTRPC = (() => ({
   },
   calendar: {
     listItems: { queryKey: () => CALENDAR_KEY },
+  },
+  // Recipe writes mint Ingredient Names, so the cache helpers reach their
+  // lists too (ADR-0037).
+  ingredients: {
+    list: { queryKey: () => NAMES_KEY },
+  },
+  admin: {
+    ingredients: {
+      list: { pathKey: () => ADMIN_NAMES_PATH },
+    },
   },
 })) as unknown as CreateRecipeHooksOptions["useTRPC"];
 
@@ -175,7 +187,6 @@ describe("useRecipesSubscription", () => {
   it("invalidates the calendar for an update that is not an enrichment, by its real key", () => {
     emit("onUpdated", { recipe: fullRecipe({ name: "Renamed" }) });
 
-    expect(invalidateQueries).toHaveBeenCalledTimes(1);
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CALENDAR_KEY });
   });
 
@@ -197,5 +208,20 @@ describe("useRecipesSubscription", () => {
     const list = queryClient.getQueryData<{ pages: { recipes: RecipeDashboardDTO[] }[] }>(LIST_KEY);
 
     expect(list?.pages[0]?.recipes.map((r) => r.id)).toEqual(["recipe-2", "recipe-1"]);
+  });
+
+  describe("ingredient names", () => {
+    it.each([
+      ["onCreated", { recipe: dashboardRecipe({ id: "recipe-2" }) }],
+      ["onImported", { recipe: dashboardRecipe({ id: "recipe-2" }) }],
+      ["onDeleted", { id: "recipe-1" }],
+      ["onUpdated", { recipe: fullRecipe({ name: "Edited" }), source: "user" }],
+      ["onRecipeBatchCreated", { recipes: [dashboardRecipe({ id: "recipe-2" })] }],
+    ])("re-reads the names a %s may have changed", (event, payload) => {
+      emit(event, payload);
+
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: NAMES_KEY });
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ADMIN_NAMES_PATH });
+    });
   });
 });

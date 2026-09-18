@@ -290,7 +290,8 @@
     "removeLabel": "Remover {name}"
   },
   "ingredientInput": {
-    "placeholder": "ex.: 2 xícaras de farinha"
+    "placeholder": "ex.: 2 xícaras de farinha",
+    "nameSuggestions": "Sugestões de ingredientes"
   },
   "wakeLock": {
     "keepScreenOn": "Manter tela ligada",

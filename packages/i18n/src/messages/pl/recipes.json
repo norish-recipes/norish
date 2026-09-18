@@ -290,7 +290,8 @@
     "removeLabel": "Usuń {name}"
   },
   "ingredientInput": {
-    "placeholder": "np. 2 szklanki mąki"
+    "placeholder": "np. 2 szklanki mąki",
+    "nameSuggestions": "Podpowiedzi składników"
   },
   "wakeLock": {
     "keepScreenOn": "Utrzymaj ekran włączony",

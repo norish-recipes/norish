@@ -25,6 +25,8 @@ export type RecipesCacheHelpers = {
     updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
   ) => void;
   invalidate: () => void;
+  /** Re-read the Ingredient Names a recipe write may have minted (ADR-0037). */
+  invalidateIngredientNames: () => void;
   addPendingRecipe: (id: string) => void;
   replacePendingRecipe: (fromId: string, toId: string) => void;
   replaceOldestOptimisticPendingRecipe: (recipeId: string) => void;
@@ -42,6 +44,13 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
     // that reaches the recipe lists has to reach it too (ADR-0026).
     const libraryBaseKey = trpc.library.list.queryKey({});
     const libraryPath = useMemo(() => [libraryBaseKey[0]], [libraryBaseKey]);
+
+    // Saving or importing a recipe mints Ingredient Names as a side effect, so
+    // the lists built from them — the editor's suggestions and grocery pictures
+    // on every device, and the administration list with its recipe counts —
+    // are stale the moment a recipe changes (ADR-0037).
+    const ingredientNamesKey = useMemo(() => trpc.ingredients.list.queryKey(), [trpc]);
+    const adminIngredientsPath = useMemo(() => trpc.admin.ingredients.list.pathKey(), [trpc]);
 
     const pendingKey = trpc.recipes.getPending.queryKey();
 
@@ -70,6 +79,11 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
       queryClient.invalidateQueries({ queryKey: recipesPath });
       queryClient.invalidateQueries({ queryKey: libraryPath });
     }, [queryClient, recipesPath, libraryPath]);
+
+    const invalidateIngredientNames = useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ingredientNamesKey });
+      queryClient.invalidateQueries({ queryKey: adminIngredientsPath });
+    }, [queryClient, ingredientNamesKey, adminIngredientsPath]);
 
     const addPendingRecipe = useCallback(
       (recipeId: string) => {
@@ -145,6 +159,7 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
     return {
       setAllRecipesData,
       invalidate,
+      invalidateIngredientNames,
       addPendingRecipe,
       replacePendingRecipe,
       replaceOldestOptimisticPendingRecipe,

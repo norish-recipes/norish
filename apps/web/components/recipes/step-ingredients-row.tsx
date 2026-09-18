@@ -1,5 +1,7 @@
 "use client";
 
+import { IngredientIllustration } from "@/components/recipes/ingredient-illustration";
+import { useHiddenItemsIfProvided } from "@/context/hidden-items-context";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Chip } from "@heroui/react";
@@ -17,6 +19,8 @@ type IngredientLike = {
   unit?: string | null;
   systemUsed: string;
   order: number;
+  /** The picture the line's name resolves to (ADR-0037). */
+  picture?: { imageUrl: string } | null;
 };
 
 export type StepIngredientsRowProps = {
@@ -45,6 +49,7 @@ function StepIngredientsRowContent({
   formatUnitOnly,
 }: StepIngredientsRowContentProps) {
   const { mode } = useAmountDisplayPreference();
+  const picturesHidden = useHiddenItemsIfProvided().includes("ingredientPictures");
   const resolved = resolveStepIngredients(
     refs,
     ingredients.map((ingredient) => ({
@@ -60,6 +65,17 @@ function StepIngredientsRowContent({
 
   if (resolved.length === 0) return null;
 
+  // The picture belongs to the line a chip resolves to, found the same way.
+  const pictureByOrder = new Map<number, string>();
+
+  for (const ingredient of picturesHidden ? [] : ingredients) {
+    const imageUrl = ingredient.picture?.imageUrl;
+
+    if (ingredient.systemUsed === systemUsed && imageUrl && !pictureByOrder.has(ingredient.order)) {
+      pictureByOrder.set(ingredient.order, imageUrl);
+    }
+  }
+
   return (
     <ul className="flex flex-wrap gap-1.5">
       {resolved.map((item) => {
@@ -70,10 +86,17 @@ function StepIngredientsRowContent({
         return (
           <Chip<"li">
             key={`${item.ingredientOrder}`}
-            className="rounded-full px-2.5 py-1 text-sm"
+            className={`rounded-full py-1 pr-2.5 text-sm ${
+              pictureByOrder.has(item.ingredientOrder) ? "gap-1.5 pl-1" : "pl-2.5"
+            }`}
             render={(props) => <li {...props} />}
             variant="tertiary"
           >
+            <IngredientIllustration
+              className="rounded-full"
+              imageUrl={pictureByOrder.get(item.ingredientOrder)}
+              size="xs"
+            />
             {label}
           </Chip>
         );

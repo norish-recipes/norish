@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { GroceryCheckbox } from "@/components/groceries/grocery-checkbox";
 import { AnimatedNumber } from "@/components/recipes/animated-number";
+import { IngredientIllustration } from "@/components/recipes/ingredient-illustration";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { useHiddenItemsIfProvided } from "@/context/hidden-items-context";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useLocale } from "next-intl";
@@ -18,6 +20,8 @@ type IngredientLike = {
   unit: string | null;
   systemUsed: string;
   order: number;
+  /** The picture the line's name resolves to (ADR-0037). */
+  picture?: { imageUrl: string } | null;
 };
 
 export type ReadonlyIngredientsListProps = {
@@ -43,6 +47,7 @@ function ReadonlyIngredientsListContent({
 }: ReadonlyIngredientsListContentProps) {
   const [uncontrolledChecked, setUncontrolledChecked] = useState<Set<number>>(() => new Set());
   const { mode } = useAmountDisplayPreference();
+  const picturesHidden = useHiddenItemsIfProvided().includes("ingredientPictures");
 
   const checked = controlledCheckedIndices ?? uncontrolledChecked;
 
@@ -108,14 +113,19 @@ function ReadonlyIngredientsListContent({
           const amount = formatAmount(it.amount, mode);
           const unit = it.unit ? formatUnitOnly(it.unit, it.amount) : "";
           const isChecked = checked.has(idx);
+          const pictureUrl = picturesHidden ? null : (it.picture?.imageUrl ?? null);
           const wrapperClassName = interactive
-            ? `group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 select-none ${
-                isChecked ? "bg-surface-secondary/50" : "hover:bg-surface-secondary"
-              }`
-            : "flex items-start gap-3 rounded-xl px-3 py-2.5";
+            ? `group flex cursor-pointer items-center gap-3 rounded-xl px-3 transition-all duration-200 select-none ${
+                pictureUrl ? "py-1.5" : "py-2.5"
+              } ${isChecked ? "bg-surface-secondary/50" : "hover:bg-surface-secondary"}`
+            : `flex gap-3 rounded-xl px-3 ${pictureUrl ? "items-center py-1.5" : "items-start py-2.5"}`;
 
           return (
-            <li key={`${it.ingredientName}-${idx}`}>
+            <li
+              key={`${it.ingredientName}-${idx}`}
+              data-ingredient-name={it.ingredientName}
+              data-testid="ingredient-row"
+            >
               <div
                 aria-pressed={interactive ? isChecked : undefined}
                 className={wrapperClassName}
@@ -133,8 +143,18 @@ function ReadonlyIngredientsListContent({
                       onChange={() => toggle(idx)}
                     />
                   </span>
-                ) : (
+                ) : pictureUrl ? null : (
                   <span className="bg-surface-secondary mt-1 h-2.5 w-2.5 shrink-0 rounded-full" />
+                )}
+
+                {pictureUrl && (
+                  <IngredientIllustration
+                    className={`transition-opacity duration-200 ${
+                      interactive && isChecked ? "opacity-50" : ""
+                    }`}
+                    imageUrl={pictureUrl}
+                    size="md"
+                  />
                 )}
 
                 <div

@@ -10,6 +10,20 @@ const mockInfiniteQueryOptions = vi.fn();
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
+    // Recipe writes mint Ingredient Names, so the cache helpers reach their
+    // lists too (ADR-0037).
+    ingredients: {
+      list: {
+        queryKey: () => [["ingredients", "list"], { type: "query" }],
+      },
+    },
+    admin: {
+      ingredients: {
+        list: {
+          pathKey: () => [["admin", "ingredients", "list"]],
+        },
+      },
+    },
     // The Library holds the same recipes in one interleaved list, so the cache
     // helpers reach it too (ADR-0026).
     library: {

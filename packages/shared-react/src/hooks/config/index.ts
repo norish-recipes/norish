@@ -1,5 +1,6 @@
 import type { CreateConfigHooksOptions } from "./types";
 import { createUseCuisinesQuery } from "./use-cuisines-query";
+import { createUseIngredientNamesQuery } from "./use-ingredient-names-query";
 import { createUseLocaleConfigQuery } from "./use-locale-config-query";
 import { createUseRecurrenceConfigQuery } from "./use-recurrence-config-query";
 import { createUseTagsQuery } from "./use-tags-query";
@@ -20,6 +21,7 @@ export { normalizeLocaleConfig } from "./normalize-locale-config";
 export { createUseLocaleConfigQuery } from "./use-locale-config-query";
 export { createUseTagsQuery } from "./use-tags-query";
 export { createUseCuisinesQuery } from "./use-cuisines-query";
+export { createUseIngredientNamesQuery } from "./use-ingredient-names-query";
 export { createUseUnitsQuery } from "./use-units-query";
 export { createUseRecurrenceConfigQuery } from "./use-recurrence-config-query";
 export { createUseTimerKeywordsQuery } from "./use-timer-keywords-query";
@@ -32,6 +34,7 @@ export function createConfigHooks(options: CreateConfigHooksOptions) {
     useLocaleConfigQuery: createUseLocaleConfigQuery(options),
     useTagsQuery: createUseTagsQuery(options),
     useCuisinesQuery: createUseCuisinesQuery(options),
+    useIngredientNamesQuery: createUseIngredientNamesQuery(options),
     useUnitsQuery: createUseUnitsQuery(options),
     useRecurrenceConfigQuery: createUseRecurrenceConfigQuery(options),
     useTimerKeywordsQuery: createUseTimerKeywordsQuery(options),

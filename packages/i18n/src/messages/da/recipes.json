@@ -290,7 +290,8 @@
     "removeLabel": "Fjern {name}"
   },
   "ingredientInput": {
-    "placeholder": "f.eks. 2 dl mel"
+    "placeholder": "f.eks. 2 dl mel",
+    "nameSuggestions": "Ingrediensforslag"
   },
   "wakeLock": {
     "keepScreenOn": "Hold skærm tændt",

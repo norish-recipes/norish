@@ -290,7 +290,8 @@
     "removeLabel": "{name} verwijderen"
   },
   "ingredientInput": {
-    "placeholder": "bijv. 2 kopjes bloem"
+    "placeholder": "bijv. 2 kopjes bloem",
+    "nameSuggestions": "Ingrediëntsuggesties"
   },
   "wakeLock": {
     "keepScreenOn": "Scherm aan houden",

@@ -48,6 +48,20 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         }),
       },
     },
+    // Recipe writes mint Ingredient Names, so the cache helpers reach their
+    // lists too (ADR-0037).
+    ingredients: {
+      list: {
+        queryKey: () => [["ingredients", "list"], { type: "query" }],
+      },
+    },
+    admin: {
+      ingredients: {
+        list: {
+          pathKey: () => [["admin", "ingredients", "list"]],
+        },
+      },
+    },
     recipes: {
       list: {
         queryKey: (params: unknown) => [["recipes", "list"], { input: params, type: "infinite" }],

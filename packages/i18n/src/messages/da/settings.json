@@ -132,7 +132,8 @@
           "favorites": "Favoritter",
           "conversion": "Ingredienskonvertering",
           "timers": "Opskriftstimere",
-          "cookbooks": "Kogebøger"
+          "cookbooks": "Kogebøger",
+          "ingredientPictures": "Ingrediensbilleder"
         }
       },
       "todaySection": {

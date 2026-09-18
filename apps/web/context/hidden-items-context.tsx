@@ -15,7 +15,7 @@ import { hiddenItemsPreference } from "@/lib/hidden-items";
  * navigation answered by the service worker's cached HTML self-read the
  * cookie on the device — no network on any path.
  */
-const { Provider, usePreference } = createDevicePreferenceContext(
+const { Provider, usePreference, useOptionalPreference } = createDevicePreferenceContext(
   hiddenItemsPreference,
   "HiddenItemsContext"
 );
@@ -38,4 +38,15 @@ export function useHiddenItemsState(): DevicePreferenceState<readonly string[]> 
 
 export function useHiddenItems(): readonly string[] {
   return usePreference()[0];
+}
+
+const NOTHING_HIDDEN: readonly string[] = [];
+
+/**
+ * The hidden list for a component that also renders outside the signed-in
+ * shell, such as the public share page. A recipe read by someone signed out
+ * shows everything, so no provider means nothing is hidden.
+ */
+export function useHiddenItemsIfProvided(): readonly string[] {
+  return useOptionalPreference()?.[0] ?? NOTHING_HIDDEN;
 }

@@ -132,7 +132,8 @@
           "favorites": "Избранное",
           "conversion": "Конвертация ингредиентов",
           "timers": "Таймеры рецептов",
-          "cookbooks": "Кулинарные книги"
+          "cookbooks": "Кулинарные книги",
+          "ingredientPictures": "Картинки ингредиентов"
         }
       },
       "todaySection": {

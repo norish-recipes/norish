@@ -290,7 +290,8 @@
     "removeLabel": "Quitar {name}"
   },
   "ingredientInput": {
-    "placeholder": "p. ej., 400 g harina"
+    "placeholder": "p. ej., 400 g harina",
+    "nameSuggestions": "Sugerencias de ingredientes"
   },
   "wakeLock": {
     "keepScreenOn": "Mantener la pantalla encendida",

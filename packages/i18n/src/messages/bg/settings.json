@@ -132,7 +132,8 @@
           "favorites": "Любими",
           "conversion": "Преобразуване на съставки",
           "timers": "Таймери за рецепти",
-          "cookbooks": "Готварски книги"
+          "cookbooks": "Готварски книги",
+          "ingredientPictures": "Картинки на съставки"
         }
       },
       "todaySection": {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
+import { GroceryIngredientPicture } from "@/components/groceries/grocery-ingredient-picture";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -340,7 +341,8 @@ export default function MiniGroceries({
           }
         }}
       >
-        <div className="flex min-w-0 flex-1 flex-col">
+        <GroceryIngredientPicture name={editedIngredients[item.id]?.name ?? item.ingredientName} />
+        <div className="ml-3 flex min-w-0 flex-1 flex-col first:ml-0">
           {isEditing ? (
             <Input
               className="text-base"

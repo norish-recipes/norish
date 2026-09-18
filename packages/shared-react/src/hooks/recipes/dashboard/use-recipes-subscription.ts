@@ -30,6 +30,7 @@ export function createUseRecipesSubscription(
     const {
       setAllRecipesData,
       invalidate,
+      invalidateIngredientNames,
       replaceOldestOptimisticPendingRecipe,
       removePendingRecipe,
     } = dependencies.useRecipesCacheHelpers();
@@ -105,6 +106,7 @@ export function createUseRecipesSubscription(
       onEvent: ({ recipe }) => {
         removePendingRecipe(recipe.id);
         addRecipeToList(recipe);
+        invalidateIngredientNames();
       },
     });
 
@@ -123,6 +125,7 @@ export function createUseRecipesSubscription(
         replaceOldestOptimisticPendingRecipe(pendingId);
         removePendingRecipe(pendingId);
         addRecipeToList(payload.recipe);
+        invalidateIngredientNames();
         callbacks.onImported?.(payload);
       },
     });
@@ -137,6 +140,8 @@ export function createUseRecipesSubscription(
         // changes neither.
         if (source !== "enrichment") {
           void queryClient.invalidateQueries({ queryKey: trpc.calendar.listItems.queryKey() });
+          // An edited line can mint a name; enrichment never touches them.
+          invalidateIngredientNames();
         }
       },
     });
@@ -146,6 +151,8 @@ export function createUseRecipesSubscription(
       onEvent: ({ id }) => {
         removeRecipeFromList(id);
         void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
+        // The names outlive the recipe; what changes is how many use them.
+        invalidateIngredientNames();
       },
     });
 
@@ -207,6 +214,7 @@ export function createUseRecipesSubscription(
             };
           }
         );
+        invalidateIngredientNames();
       },
     });
   };

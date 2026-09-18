@@ -290,7 +290,8 @@
     "removeLabel": "Убрать {name}"
   },
   "ingredientInput": {
-    "placeholder": "например, 2 стакана муки"
+    "placeholder": "например, 2 стакана муки",
+    "nameSuggestions": "Подсказки ингредиентов"
   },
   "wakeLock": {
     "keepScreenOn": "Не выключать экран",

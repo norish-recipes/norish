@@ -132,7 +132,8 @@
           "favorites": "Ulubione",
           "conversion": "Konwersja składników",
           "timers": "Minutniki przepisów",
-          "cookbooks": "Książki kucharskie"
+          "cookbooks": "Książki kucharskie",
+          "ingredientPictures": "Obrazki składników"
         }
       },
       "todaySection": {

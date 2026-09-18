@@ -12,6 +12,7 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryCheckbox } from "./grocery-checkbox";
+import { GroceryIngredientPicture } from "./grocery-ingredient-picture";
 import { GroceryPrice } from "./grocery-price";
 import { lineOfGroup } from "./store-total";
 
@@ -130,6 +131,8 @@ function GroupedGroceryItemComponent({
           size="lg"
           onChange={handleGroupToggle}
         />
+
+        <GroceryIngredientPicture dimmed={group.allDone} name={group.displayName} />
 
         {/* Clickable content area */}
         <button

@@ -133,7 +133,8 @@
           "favorites": "Favorieten",
           "conversion": "Ingrediëntconversie",
           "timers": "Recepttimers",
-          "cookbooks": "Kookboeken"
+          "cookbooks": "Kookboeken",
+          "ingredientPictures": "Ingrediëntafbeeldingen"
         }
       },
       "todaySection": {

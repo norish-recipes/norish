@@ -290,7 +290,8 @@
     "removeLabel": "Remove {name}"
   },
   "ingredientInput": {
-    "placeholder": "e.g., 2 cups flour"
+    "placeholder": "e.g., 2 cups flour",
+    "nameSuggestions": "Ingredient suggestions"
   },
   "wakeLock": {
     "keepScreenOn": "Keep Screen on",

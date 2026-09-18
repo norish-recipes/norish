@@ -132,7 +132,8 @@
           "favorites": "Favoriten",
           "conversion": "Zutatenumrechnung",
           "timers": "Rezept-Timer",
-          "cookbooks": "Kochbücher"
+          "cookbooks": "Kochbücher",
+          "ingredientPictures": "Zutatenbilder"
         }
       },
       "todaySection": {

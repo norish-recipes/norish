@@ -290,7 +290,8 @@
     "removeLabel": "Rimuovi {name}"
   },
   "ingredientInput": {
-    "placeholder": "es. 2 tazze di farina"
+    "placeholder": "es. 2 tazze di farina",
+    "nameSuggestions": "Suggerimenti di ingredienti"
   },
   "wakeLock": {
     "keepScreenOn": "Mantieni schermo acceso",
