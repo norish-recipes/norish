@@ -89,6 +89,7 @@
     "hint": "Lo que ya tienes en casa. Los ingredientes de tu despensa no se añaden a la lista al añadir una receta.",
     "empty": "Aún no hay nada en tu despensa",
     "namePlaceholder": "p. ej. Aceite de oliva",
+    "suggestions": "Sugerencias de ingredientes",
     "add": "Añadir a la despensa",
     "remove": "Quitar de la despensa",
     "duplicate": "Eso ya está en tu despensa"

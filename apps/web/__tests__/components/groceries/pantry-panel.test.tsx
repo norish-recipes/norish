@@ -11,6 +11,19 @@ import "@testing-library/jest-dom";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 
+// A Pantry Ingredient shows the picture its name matches (ADR-0037); this test
+// is about the list itself, so no name has one.
+const known = vi.hoisted(() => ({
+  ingredients: [
+    { id: "o", name: "Olive oil", imageUrl: "/o.webp" },
+    { id: "s", name: "Sea salt", imageUrl: null },
+  ],
+}));
+
+vi.mock("@/hooks/config/use-ingredient-names-query", () => ({
+  useIngredientNamesQuery: () => ({ ingredients: known.ingredients, lookup: new Map() }),
+}));
+
 const addPantryIngredient = vi.fn(async () => "new");
 const removePantryIngredient = vi.fn();
 let items: PantryIngredientDto[] = [];
@@ -97,6 +110,71 @@ describe("PantryPanel", () => {
 
     expect(addPantryIngredient).toHaveBeenCalledWith("Flour");
     expect(field).toHaveValue("");
+  });
+
+  it("offers the names Norish knows, and picking one fills the field", async () => {
+    render(<PantryPanel open onOpenChange={() => undefined} />);
+    const field = screen.getByTestId("pantry-name");
+
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "sea sa" } });
+    });
+
+    const suggestions = screen.getAllByTestId("name-suggestion");
+
+    expect(suggestions).toHaveLength(1);
+    expect(suggestions[0]).toHaveTextContent("Sea salt");
+
+    await act(async () => {
+      fireEvent.click(suggestions[0]!);
+    });
+
+    expect(field).toHaveValue("Sea salt");
+    expect(screen.queryByTestId("name-suggestions")).not.toBeInTheDocument();
+    expect(addPantryIngredient).not.toHaveBeenCalled();
+
+    // The name is added by the gesture that always added it.
+    await act(async () => {
+      fireEvent.keyDown(field, { key: "Enter" });
+    });
+    expect(addPantryIngredient).toHaveBeenCalledWith("Sea salt");
+  });
+
+  it("takes the highlighted name with Enter, and leaves Enter alone otherwise", async () => {
+    render(<PantryPanel open onOpenChange={() => undefined} />);
+    const field = screen.getByTestId("pantry-name");
+
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "sea sa" } });
+    });
+    await act(async () => {
+      fireEvent.keyDown(field, { key: "ArrowDown" });
+    });
+    await act(async () => {
+      fireEvent.keyDown(field, { key: "Enter" });
+    });
+
+    expect(field).toHaveValue("Sea salt");
+    expect(addPantryIngredient).not.toHaveBeenCalled();
+
+    // Nothing highlighted: Enter adds what was typed, suggestions or not.
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "oat milk" } });
+    });
+    await act(async () => {
+      fireEvent.keyDown(field, { key: "Enter" });
+    });
+    expect(addPantryIngredient).toHaveBeenCalledWith("oat milk");
+  });
+
+  it("leaves out a name the Pantry already holds", async () => {
+    render(<PantryPanel open onOpenChange={() => undefined} />);
+
+    await act(async () => {
+      fireEvent.change(screen.getByTestId("pantry-name"), { target: { value: "oli" } });
+    });
+
+    expect(screen.queryByTestId("name-suggestions")).not.toBeInTheDocument();
   });
 
   it("refuses a name the Pantry already holds, by its folded form", async () => {

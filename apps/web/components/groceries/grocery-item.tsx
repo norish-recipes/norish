@@ -2,13 +2,13 @@
 
 import { memo } from "react";
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { IngredientNamePicture } from "@/components/ingredients/ingredient-name-picture";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
 import { GroceryCheckbox } from "./grocery-checkbox";
-import { GroceryIngredientPicture } from "./grocery-ingredient-picture";
 import { GroceryPrice } from "./grocery-price";
 import { storeColorStyle } from "./store-colors";
 import { lineOf } from "./store-total";
@@ -61,7 +61,7 @@ function GroceryItemComponent({
         onChange={(checked) => onToggle(grocery.id, checked)}
       />
 
-      <GroceryIngredientPicture dimmed={grocery.isDone} name={grocery.name} />
+      <IngredientNamePicture dimmed={grocery.isDone} name={grocery.name} />
 
       {/* Clickable content area */}
       <button

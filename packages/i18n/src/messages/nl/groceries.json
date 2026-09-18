@@ -89,6 +89,7 @@
     "hint": "Wat je al in huis hebt. Ingrediënten uit je voorraadkast blijven van de lijst als je een recept toevoegt.",
     "empty": "Nog niets in je voorraadkast",
     "namePlaceholder": "bijv. Olijfolie",
+    "suggestions": "Ingrediëntsuggesties",
     "add": "Toevoegen aan voorraadkast",
     "remove": "Verwijderen uit voorraadkast",
     "duplicate": "Dat zit al in je voorraadkast"

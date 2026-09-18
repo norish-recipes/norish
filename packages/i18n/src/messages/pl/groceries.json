@@ -89,6 +89,7 @@
     "hint": "To, co już masz w domu. Składniki ze spiżarni nie trafiają na listę, gdy dodajesz przepis.",
     "empty": "W spiżarni nie ma jeszcze niczego",
     "namePlaceholder": "np. Oliwa z oliwek",
+    "suggestions": "Podpowiedzi składników",
     "add": "Dodaj do spiżarni",
     "remove": "Usuń ze spiżarni",
     "duplicate": "To już jest w Twojej spiżarni"

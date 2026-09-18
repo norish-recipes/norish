@@ -89,6 +89,7 @@
     "hint": "Det, du allerede har derhjemme. Ingredienser i dit spisekammer holdes ude af listen, når du tilføjer en opskrift.",
     "empty": "Intet i dit spisekammer endnu",
     "namePlaceholder": "f.eks. Olivenolie",
+    "suggestions": "Ingrediensforslag",
     "add": "Tilføj til spisekammer",
     "remove": "Fjern fra spisekammer",
     "duplicate": "Det er allerede i dit spisekammer"

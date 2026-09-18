@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { memo, useCallback, useState } from "react";
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { IngredientNamePicture } from "@/components/ingredients/ingredient-name-picture";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
@@ -12,7 +13,6 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryCheckbox } from "./grocery-checkbox";
-import { GroceryIngredientPicture } from "./grocery-ingredient-picture";
 import { GroceryPrice } from "./grocery-price";
 import { lineOfGroup } from "./store-total";
 
@@ -132,7 +132,7 @@ function GroupedGroceryItemComponent({
           onChange={handleGroupToggle}
         />
 
-        <GroceryIngredientPicture dimmed={group.allDone} name={group.displayName} />
+        <IngredientNamePicture dimmed={group.allDone} name={group.displayName} />
 
         {/* Clickable content area */}
         <button

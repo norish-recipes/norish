@@ -89,6 +89,7 @@
     "hint": "Det du allerede har hjemme. Ingredienser i spiskammeret holdes utenfor listen når du legger til en oppskrift.",
     "empty": "Ingenting i spiskammeret ennå",
     "namePlaceholder": "f.eks. Olivenolje",
+    "suggestions": "Ingrediensforslag",
     "add": "Legg til i spiskammeret",
     "remove": "Fjern fra spiskammeret",
     "duplicate": "Det er allerede i spiskammeret"

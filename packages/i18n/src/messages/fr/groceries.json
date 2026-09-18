@@ -89,6 +89,7 @@
     "hint": "Ce que vous avez déjà chez vous. Les ingrédients de votre garde-manger ne sont pas ajoutés à la liste quand vous ajoutez une recette.",
     "empty": "Rien dans votre garde-manger pour l'instant",
     "namePlaceholder": "p. ex. Huile d'olive",
+    "suggestions": "Suggestions d'ingrédients",
     "add": "Ajouter au garde-manger",
     "remove": "Retirer du garde-manger",
     "duplicate": "C'est déjà dans votre garde-manger"

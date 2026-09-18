@@ -89,6 +89,7 @@
     "hint": "Was du bereits zu Hause hast. Zutaten aus deiner Vorratskammer bleiben von der Liste, wenn du ein Rezept hinzufügst.",
     "empty": "Noch nichts in deiner Vorratskammer",
     "namePlaceholder": "z. B. Olivenöl",
+    "suggestions": "Zutatenvorschläge",
     "add": "Zur Vorratskammer hinzufügen",
     "remove": "Aus der Vorratskammer entfernen",
     "duplicate": "Das ist bereits in deiner Vorratskammer"

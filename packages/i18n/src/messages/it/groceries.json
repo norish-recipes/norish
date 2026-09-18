@@ -89,6 +89,7 @@
     "hint": "Quello che hai già in casa. Gli ingredienti nella dispensa restano fuori dalla lista quando aggiungi una ricetta.",
     "empty": "Ancora niente nella dispensa",
     "namePlaceholder": "es. Olio d'oliva",
+    "suggestions": "Suggerimenti di ingredienti",
     "add": "Aggiungi alla dispensa",
     "remove": "Rimuovi dalla dispensa",
     "duplicate": "È già nella tua dispensa"

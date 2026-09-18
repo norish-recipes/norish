@@ -89,6 +89,7 @@
     "hint": "What you already have at home. Ingredients in your pantry are left off the list when you add a recipe.",
     "empty": "Nothing in your pantry yet",
     "namePlaceholder": "e.g., Olive oil",
+    "suggestions": "Ingredient suggestions",
     "add": "Add to pantry",
     "remove": "Remove from pantry",
     "duplicate": "That is already in your pantry"

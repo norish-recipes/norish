@@ -11,6 +11,12 @@ import "@testing-library/jest-dom";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 
+// A grocery line shows the picture its name matches (ADR-0037); this test is
+// about the Pantry split, so no name has one.
+vi.mock("@/hooks/config/use-ingredient-names-query", () => ({
+  useIngredientNamesQuery: () => ({ ingredients: [], lookup: new Map() }),
+}));
+
 const createGroceriesFromData = vi.fn(async (_lines: { name: string }[]) => undefined);
 let pantry: PantryIngredientDto[] = [];
 let pantryLoading = false;

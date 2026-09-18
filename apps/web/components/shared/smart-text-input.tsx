@@ -1,6 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  NameSuggestionList,
+  nameSuggestionOptionId,
+} from "@/components/ingredients/name-suggestion-list";
 import { useRecipeAutocomplete } from "@/hooks/recipes";
 import { Avatar, ListBox, Spinner, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -20,7 +24,6 @@ export interface SmartTextInputIngredientSuggestion {
 export interface SmartTextInputNameSuggestion {
   key: string;
   label: string;
-  detail?: string;
   imageUrl?: string | null;
   /** The text once this suggestion is picked, and where the caret goes. */
   apply: () => { value: string; caret: number };
@@ -90,6 +93,7 @@ export default function SmartTextInput({
 }: SmartTextInputProps) {
   const [autocomplete, setAutocomplete] = useState<AutocompleteState>(null);
   const [nameSuggestions, setNameSuggestions] = useState<SmartTextInputNameSuggestion[]>([]);
+  const nameSuggestionsListId = useId();
   const [highlighted, setHighlighted] = useState(-1);
   const [openAbove, setOpenAbove] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -329,6 +333,16 @@ export default function SmartTextInput({
     <div ref={containerRef} className="relative w-full">
       <TextArea
         ref={setTextareaRef}
+        aria-activedescendant={
+          showNameSuggestions && highlighted >= 0
+            ? nameSuggestionOptionId(nameSuggestionsListId, highlighted)
+            : undefined
+        }
+        // A textarea stays a textarea: making it a combobox would cost the
+        // multiline semantics a pasted ingredient list needs. The list is tied
+        // to it by `aria-controls`, and the highlighted option is announced
+        // through `aria-activedescendant`.
+        aria-controls={showNameSuggestions ? nameSuggestionsListId : undefined}
         className="border-border dark:border-border-tertiary w-full text-base"
         placeholder={placeholder}
         rows={minRows}
@@ -339,48 +353,19 @@ export default function SmartTextInput({
       />
 
       {showNameSuggestions && (
-        <ul
-          aria-label={nameSuggestionsSource?.label}
-          className={`bg-surface absolute right-0 left-0 z-50 max-h-64 overflow-auto rounded-xl p-1 shadow-lg ${
-            openAbove ? "bottom-full mb-1" : "top-full mt-1"
-          }`}
-          data-testid="name-suggestions"
-          role="listbox"
-        >
-          {nameSuggestions.map((suggestion, index) => (
-            // Keyboard use stays in the textarea (arrows and Enter above), so the
-            // option itself only answers the pointer.
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-            <li
-              key={suggestion.key}
-              aria-selected={index === highlighted}
-              className={`flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 ${
-                index === highlighted ? "bg-surface-secondary" : "hover:bg-surface-secondary"
-              }`}
-              data-testid="name-suggestion"
-              role="option"
-              // Keep the textarea focused: the pick happens on click.
-              onClick={() => handleNameSuggestionSelect(suggestion)}
-              onMouseDown={(event) => event.preventDefault()}
-              onMouseEnter={() => setHighlighted(index)}
-            >
-              {suggestion.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- immutable versioned URL
-                <img
-                  alt=""
-                  className="size-7 shrink-0 rounded-md bg-white object-cover"
-                  src={suggestion.imageUrl}
-                />
-              ) : (
-                <span aria-hidden className="bg-surface-secondary size-7 shrink-0 rounded-md" />
-              )}
-              <span className="min-w-0 truncate text-sm font-medium">{suggestion.label}</span>
-              {suggestion.detail && (
-                <span className="text-muted min-w-0 truncate text-xs">{suggestion.detail}</span>
-              )}
-            </li>
-          ))}
-        </ul>
+        <NameSuggestionList
+          highlighted={highlighted}
+          id={nameSuggestionsListId}
+          label={nameSuggestionsSource?.label ?? ""}
+          openAbove={openAbove}
+          suggestions={nameSuggestions}
+          onHighlight={setHighlighted}
+          onPick={(index) => {
+            const picked = nameSuggestions[index];
+
+            if (picked) handleNameSuggestionSelect(picked);
+          }}
+        />
       )}
 
       {showAutocomplete && (
