@@ -7,6 +7,7 @@ import AIProcessingCard from "./ai-processing-card";
 import { AuthProvidersCard } from "./auth-providers";
 import ContentDetectionCard from "./content-detection-card";
 import GeneralCard from "./general-card";
+import IngredientsCard from "./ingredients-card";
 import JobQueueCard from "./job-queue-card";
 import PermissionPolicyCard from "./permission-policy-card";
 import AdminShareLinksCard from "./share-links-card";
@@ -28,6 +29,7 @@ function AdminSettingsContent() {
       <AdminShareLinksCard />
       <AuthProvidersCard />
       <ContentDetectionCard />
+      <IngredientsCard />
       <AIProcessingCard />
       <JobQueueCard />
       <SystemCard />
