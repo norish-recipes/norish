@@ -119,6 +119,7 @@ export function mapRecipeToPublicRecipeView(
       unit: ingredient.unit ?? null,
       systemUsed: ingredient.systemUsed,
       order: ingredient.order,
+      picture: ingredient.picture ?? null,
     })),
     steps: (recipe.steps ?? []).map((step) => ({
       step: step.step,

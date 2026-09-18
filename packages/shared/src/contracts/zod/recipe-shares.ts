@@ -122,6 +122,8 @@ export const PublicRecipeIngredientSchema = z.object({
   unit: z.string().nullable(),
   systemUsed: z.enum(measurementSystems),
   order: z.coerce.number(),
+  /** The line's Ingredient Illustration, when its name resolves to one (ADR-0037). */
+  picture: z.object({ imageUrl: z.string() }).nullable().optional(),
 });
 
 export const PublicRecipeImageSchema = z.object({

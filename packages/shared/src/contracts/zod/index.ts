@@ -3,6 +3,7 @@ export * from "./recipe";
 export * from "./tag";
 export * from "./cuisine";
 export * from "./ingredient";
+export * from "./ingredient-pictures";
 export * from "./recipe-ingredients";
 export * from "./steps";
 export * from "./step-images";

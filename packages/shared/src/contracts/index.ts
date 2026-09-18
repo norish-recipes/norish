@@ -1,6 +1,7 @@
 export type * from "./dto/user";
 export type * from "./dto/household";
 export type * from "./dto/ingredient";
+export type * from "./dto/ingredient-pictures";
 export type * from "./dto/recipe";
 export type * from "./dto/tag";
 export type * from "./dto/cuisine";

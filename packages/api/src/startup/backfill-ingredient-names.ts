@@ -9,8 +9,8 @@ const BATCH_SIZE = 500;
 
 /**
  * Fold the Ingredient Names stored before names were folded, so the Pantry can
- * match them (ADR-0036). New names are folded when they are written; only this
- * pass ever reads old ones.
+ * match them (ADR-0036) and they can show a picture (ADR-0037). New names are
+ * folded when they are written; only this pass ever reads old ones.
  *
  * The folding is the JavaScript grocery folding rather than a SQL
  * approximation, so a name folded here and a name folded in a browser always

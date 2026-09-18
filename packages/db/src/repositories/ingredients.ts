@@ -36,8 +36,9 @@ const IngredientArraySchema = z.array(IngredientSelectBaseSchema);
 
 /**
  * The columns a new Ingredient Name row is written with: the name and its
- * folded form, which is what the Pantry matches on (ADR-0036). Used by every
- * path that mints Ingredient Names, so a name is folded the moment it exists.
+ * folded form, which is what the Pantry matches on (ADR-0036) and what lets a
+ * name show a picture (ADR-0037). Used by every path that mints Ingredient
+ * Names, so a name is folded the moment it exists.
  */
 function ingredientNameRowValues(names: readonly string[]) {
   return names.map((name) => ({ name, normalizedName: normalizeGroceryName(name) }));

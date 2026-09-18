@@ -1107,7 +1107,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
           order: true,
           version: true,
         },
-        with: { ingredient: { columns: { name: true } } },
+        with: { ingredient: { columns: { name: true, imageUrl: true } } },
         orderBy: (ingredients, { asc }) => [asc(ingredients.order)],
       },
       steps: {
@@ -1228,6 +1228,8 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       unit: ri.unit ?? null,
       systemUsed: ri.systemUsed,
       ingredientName: ri.ingredient?.name ?? "",
+      // The picture is the Ingredient Name's own, and nothing else (ADR-0037).
+      picture: ri.ingredient?.imageUrl ? { imageUrl: ri.ingredient.imageUrl } : null,
       order: ri.order,
       version: ri.version,
     })),

@@ -26,6 +26,12 @@ export const RecipeIngredientsWithIdSchema = RecipeIngredientsSelectBaseSchema.o
   ingredientId: z.string().nullable(),
   amount: z.number().nullable(),
   order: z.coerce.number(),
+  /**
+   * The Ingredient Illustration the line's name resolves to, if any — derived
+   * from the name at read time, never supplied (ADR-0037). Optional so
+   * payloads cached before pictures existed still parse.
+   */
+  picture: z.object({ imageUrl: z.string() }).nullable().optional(),
 });
 
 export const RecipeIngredientSelectWithNameSchema = RecipeIngredientsSelectBaseSchema.extend({
