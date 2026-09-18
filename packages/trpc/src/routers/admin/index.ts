@@ -5,6 +5,7 @@ import { adminConfigProcedures } from "./config";
 import { contentConfigProcedures } from "./content-config";
 import { cuisinesProcedures } from "./cuisines";
 import { generalProcedures } from "./general";
+import { ingredientsAdminProcedures } from "./ingredients";
 import { jobQueueProcedures } from "./job-queue";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
@@ -26,6 +27,9 @@ export const adminRouter = router({
 
   // Cuisine vocabulary governance; the list itself is read from `config.cuisines`
   cuisines: cuisinesProcedures,
+
+  // Ingredient Names: pictures, and removing unused names
+  ingredients: ingredientsAdminProcedures,
 
   // Job queue monitoring
   jobs: jobQueueProcedures,

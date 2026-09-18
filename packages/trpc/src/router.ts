@@ -7,6 +7,7 @@ import { cookbooksRouter } from "./routers/cookbooks";
 import { favoritesRouter } from "./routers/favorites";
 import { groceriesRouter } from "./routers/groceries";
 import { householdsAppRouter } from "./routers/households";
+import { ingredientsRouter } from "./routers/ingredients";
 import { libraryRouter } from "./routers/library";
 import { pantryRouter } from "./routers/pantry";
 import { permissionsRouter } from "./routers/permissions";
@@ -36,6 +37,7 @@ export const appRouter = router({
   stores: storesRouter,
   pantry: pantryRouter,
   siteAuthTokens: siteAuthTokensRouter,
+  ingredients: ingredientsRouter,
 });
 
 // Export type definition of API
