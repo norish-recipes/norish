@@ -58,6 +58,7 @@ export const STALLED_INTERVAL = {
   [QUEUE_NAMES.INGREDIENT_LINKING]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.IMAGE_GENERATION]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.STORE_LOOKUP]: 60_000, // 1 min - always-on, one visit at a time
+  [QUEUE_NAMES.INGREDIENT_ILLUSTRATION]: 60_000, // 1 min - administrator-requested pictures
 } as const;
 
 /**
@@ -83,6 +84,9 @@ export const WORKER_CONCURRENCY = {
   // good-citizen fence in front of somebody else's supermarket. Raising it,
   // or adding a second queue that races this one at the same shop, undoes it.
   [QUEUE_NAMES.STORE_LOOKUP]: 1,
+  // Billed per picture like Image Generation, and a "generate missing" run
+  // can queue every ingredient: trickle, never burst.
+  [QUEUE_NAMES.INGREDIENT_ILLUSTRATION]: 1,
 } as const;
 
 /**
@@ -134,6 +138,7 @@ export const HANGING_THRESHOLD_MS: Record<QueueName, number> = {
   [QUEUE_NAMES.INGREDIENT_LINKING]: 15 * 60_000,
   [QUEUE_NAMES.IMAGE_GENERATION]: 15 * 60_000,
   [QUEUE_NAMES.STORE_LOOKUP]: 10 * 60_000,
+  [QUEUE_NAMES.INGREDIENT_ILLUSTRATION]: 15 * 60_000,
 };
 
 export type QueueRemovalOptions = Pick<DefaultJobOptions, "removeOnComplete" | "removeOnFail">;
@@ -315,6 +320,19 @@ export const storeLookupJobOptions: DefaultJobOptions = {
 };
 
 export const imageGenerationJobOptions: DefaultJobOptions = {
+  attempts: 3,
+  backoff: {
+    type: "exponential",
+    delay: 2000, // 2s, 4s, 8s
+  },
+  removeOnComplete: {
+    age: 3600,
+    count: 500,
+  },
+  removeOnFail: FALLBACK_REMOVAL,
+};
+
+export const ingredientIllustrationJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
     type: "exponential",

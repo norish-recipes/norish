@@ -1,0 +1,11 @@
+A small, simple illustration of one food ingredient, drawn to sit beside that
+ingredient's line in a recipe so a reader can recognise it at a glance.
+
+Flat illustration style with clean dark outlines, soft shading and a limited,
+natural palette true to the ingredient's real colours. Show the ingredient
+whole, in its most recognisable everyday form as bought, centred and filling
+most of a square frame, on a plain white background with no shadow or props.
+No text, no labels, no people, no hands, no packaging, no brand marks, no
+frame or border.
+
+The ingredient:

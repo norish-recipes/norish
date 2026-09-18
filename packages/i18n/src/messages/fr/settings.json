@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt pour la description visuelle...",
       "imageGenerationStyle": "Prompt de style d'image",
       "imageGenerationStyleDescription": "Envoyé au modèle d'image, avec la description visuelle ajoutée après. Définit le rendu partagé par toutes les images générées.",
-      "imageGenerationStylePlaceholder": "Prompt pour le style d'image..."
+      "imageGenerationStylePlaceholder": "Prompt pour le style d'image...",
+      "ingredientIllustrationStyle": "Prompt d'illustration d'ingrédient",
+      "ingredientIllustrationStyleDescription": "Envoyé au modèle d'image, avec le nom de l'ingrédient ajouté après. Définit le rendu partagé par toutes les images d'ingrédients.",
+      "ingredientIllustrationStylePlaceholder": "Prompt pour les images d'ingrédients..."
     },
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {
@@ -865,7 +868,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Génération d'images",
-        "store-lookup": "Recherche en boutique"
+        "store-lookup": "Recherche en boutique",
+        "ingredient-illustration": "Images d'ingrédients"
       },
       "summary": {
         "failed": "{count} failed"

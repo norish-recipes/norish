@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt für die visuelle Beschreibung...",
       "imageGenerationStyle": "Bildstil-Prompt",
       "imageGenerationStyleDescription": "Wird mit der angehängten visuellen Beschreibung an das Bildmodell gesendet. Bestimmt den Stil aller generierten Bilder.",
-      "imageGenerationStylePlaceholder": "Prompt für den Bildstil..."
+      "imageGenerationStylePlaceholder": "Prompt für den Bildstil...",
+      "ingredientIllustrationStyle": "Zutatenillustration-Prompt",
+      "ingredientIllustrationStyleDescription": "Wird mit dem angehängten Namen der Zutat an das Bildmodell gesendet. Bestimmt den Stil aller Zutatenbilder.",
+      "ingredientIllustrationStylePlaceholder": "Prompt für Zutatenbilder..."
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {
@@ -865,7 +868,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Bildgenerierung",
-        "store-lookup": "Geschäftsabfrage"
+        "store-lookup": "Geschäftsabfrage",
+        "ingredient-illustration": "Zutatenbilder"
       },
       "summary": {
         "failed": "{count} failed"

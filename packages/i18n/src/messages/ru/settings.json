@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Промпт для визуального описания...",
       "imageGenerationStyle": "Промпт стиля изображения",
       "imageGenerationStyleDescription": "Отправляется модели изображений вместе с визуальным описанием. Задаёт вид, общий для всех сгенерированных изображений.",
-      "imageGenerationStylePlaceholder": "Промпт для стиля изображения..."
+      "imageGenerationStylePlaceholder": "Промпт для стиля изображения...",
+      "ingredientIllustrationStyle": "Промпт иллюстрации ингредиента",
+      "ingredientIllustrationStyleDescription": "Отправляется модели изображений вместе с названием ингредиента. Задаёт вид, общий для всех изображений ингредиентов.",
+      "ingredientIllustrationStylePlaceholder": "Промпт для изображений ингредиентов..."
     },
     "unsavedChanges": "Несохранённые изменения",
     "jsonEditor": {
@@ -865,7 +868,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Генерация изображений",
-        "store-lookup": "Поиск в магазине"
+        "store-lookup": "Поиск в магазине",
+        "ingredient-illustration": "Картинки ингредиентов"
       },
       "summary": {
         "failed": "{count} failed"

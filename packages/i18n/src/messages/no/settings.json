@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt for den visuelle beskrivelsen...",
       "imageGenerationStyle": "Bildestil-prompt",
       "imageGenerationStyleDescription": "Sendes til bildemodellen med den visuelle beskrivelsen lagt til etter. Bestemmer uttrykket alle genererte bilder deler.",
-      "imageGenerationStylePlaceholder": "Prompt for bildestilen..."
+      "imageGenerationStylePlaceholder": "Prompt for bildestilen...",
+      "ingredientIllustrationStyle": "Ingrediensillustrasjon-prompt",
+      "ingredientIllustrationStyleDescription": "Sendes til bildemodellen med navnet på ingrediensen lagt til etter. Bestemmer uttrykket alle ingrediensbilder deler.",
+      "ingredientIllustrationStylePlaceholder": "Prompt for ingrediensbilder..."
     },
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {
@@ -865,7 +868,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Bildegenerering",
-        "store-lookup": "Butikkoppslag"
+        "store-lookup": "Butikkoppslag",
+        "ingredient-illustration": "Ingrediensbilder"
       },
       "summary": {
         "failed": "{count} failed"

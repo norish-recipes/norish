@@ -69,6 +69,7 @@ export const JOB_PIPELINES: Record<QueueName, string[]> = {
   [QUEUE_NAMES.CALDAV_SYNC]: [],
   [QUEUE_NAMES.SCHEDULED_TASKS]: ["running"],
   [QUEUE_NAMES.STORE_LOOKUP]: ["searching", "reading-product", "saving-link"],
+  [QUEUE_NAMES.INGREDIENT_ILLUSTRATION]: ["ai-request", "saving"],
 };
 
 /**

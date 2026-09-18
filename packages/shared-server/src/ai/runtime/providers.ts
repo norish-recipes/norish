@@ -263,8 +263,18 @@ export interface ImageModelConfig {
   model: ImageModel;
   providerName: string;
   /** Providers differ in whether they take a size or an aspect ratio. */
-  landscape: { size?: `${number}x${number}`; aspectRatio?: `${number}:${number}` };
+  landscape: ImageShapeRequest;
+  /** A square picture, for an Ingredient Illustration (ADR-0037). */
+  square: ImageShapeRequest;
 }
+
+export interface ImageShapeRequest {
+  size?: `${number}x${number}`;
+  aspectRatio?: `${number}:${number}`;
+}
+
+/** Every image model Norish can build accepts a 1024×1024 square, or a 1:1 ratio. */
+const SQUARE_SIZE: ImageShapeRequest = { size: "1024x1024" };
 
 /**
  * The widest landscape OpenAI's image models accept. The DALL·E family tops
@@ -299,6 +309,7 @@ export function createImageModelFromConfig(config: {
         model: createOpenAI({ apiKey, fetch: customFetch }).image(model),
         providerName: "OpenAI",
         landscape: { size: openAILandscapeSize(model) },
+        square: SQUARE_SIZE,
       };
     }
 
@@ -309,6 +320,7 @@ export function createImageModelFromConfig(config: {
         model: createGoogle({ apiKey, fetch: customFetch }).image(model),
         providerName: "Google AI",
         landscape: { aspectRatio: "16:9" },
+        square: { aspectRatio: "1:1" },
       };
     }
 
@@ -323,6 +335,7 @@ export function createImageModelFromConfig(config: {
         model: azure.image(model),
         providerName: "Azure OpenAI",
         landscape: { size: openAILandscapeSize(model) },
+        square: SQUARE_SIZE,
       };
     }
 
@@ -339,6 +352,7 @@ export function createImageModelFromConfig(config: {
         // provider turns a size into exactly that — so, as for the other
         // self-hosted route, ask for the stored shape itself.
         landscape: { size: "1280x720" },
+        square: SQUARE_SIZE,
       };
     }
 
@@ -359,6 +373,7 @@ export function createImageModelFromConfig(config: {
         // No published size list to lean on, so ask for exactly the stored
         // shape: self-hosted image servers generally accept arbitrary sizes.
         landscape: { size: "1280x720" },
+        square: SQUARE_SIZE,
       };
     }
   }

@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "시각적 설명을 위한 프롬프트...",
       "imageGenerationStyle": "이미지 스타일 프롬프트",
       "imageGenerationStyleDescription": "시각적 설명과 함께 이미지 모델로 전송됩니다. 생성되는 모든 이미지가 공유하는 스타일을 정합니다.",
-      "imageGenerationStylePlaceholder": "이미지 스타일을 위한 프롬프트..."
+      "imageGenerationStylePlaceholder": "이미지 스타일을 위한 프롬프트...",
+      "ingredientIllustrationStyle": "재료 일러스트 프롬프트",
+      "ingredientIllustrationStyleDescription": "재료 이름과 함께 이미지 모델로 전송됩니다. 모든 재료 그림이 공유하는 스타일을 정합니다.",
+      "ingredientIllustrationStylePlaceholder": "재료 그림을 위한 프롬프트..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {
@@ -865,7 +868,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "이미지 생성",
-        "store-lookup": "매장 조회"
+        "store-lookup": "매장 조회",
+        "ingredient-illustration": "재료 그림"
       },
       "summary": {
         "failed": "{count} failed"

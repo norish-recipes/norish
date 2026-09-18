@@ -80,12 +80,17 @@ import {
 // ============================================================================
 
 /**
- * Prompts that start a structured-generation request. The image style prompt
- * is the one exception: it is sent to an image model, which takes a single
- * prompt and no system turn, so it can never be the base of a structured
- * request and needs no system message.
+ * Prompts sent to an image model, which takes a single prompt and no system
+ * turn: the dish's style prompt, and the Ingredient Illustration's.
  */
-export type StructuredPromptName = Exclude<PromptName, "image-generation-style">;
+export type ImagePromptName = "image-generation-style" | "ingredient-illustration-style";
+
+/**
+ * Prompts that start a structured-generation request — every prompt but the
+ * image prompts, which can never be the base of a structured request and need
+ * no system message.
+ */
+export type StructuredPromptName = Exclude<PromptName, ImagePromptName>;
 
 /**
  * System messages are not configuration. They encode invariants the code
@@ -534,9 +539,14 @@ async function transcribeWithProvider(
 
 export interface GenerateImageOptions {
   /** The administrator-editable prompt the request starts from. */
-  prompt: "image-generation-style";
+  prompt: ImagePromptName;
   /** Input blocks appended after the prompt, blank-line separated (ADR-0016). */
   sections?: readonly string[];
+  /**
+   * The picture's shape: a recipe's landscape hero image (the default), or the
+   * square an Ingredient Illustration is drawn in (ADR-0037).
+   */
+  shape?: "landscape" | "square";
 }
 
 export interface GeneratedImageBytes {
@@ -550,7 +560,8 @@ export interface GeneratedImageBytes {
  * Reads the Image Generation block rather than the server's AI provider
  * (ADR-0024), with endpoint and key falling back to the AI configuration when
  * the provider matches. The provider is asked for its widest supported
- * landscape; cropping to the stored size is the save path's job. There is no
+ * landscape, or a square when asked; cropping to the stored size is the save
+ * path's job. There is no
  * image timeout: the request runs under the existing AI timeout on the shared
  * transport (ADR-0015).
  *
@@ -559,7 +570,7 @@ export interface GeneratedImageBytes {
  * and provider failures follow the SDK's own retryability.
  */
 export async function generateImage(options: GenerateImageOptions): Promise<GeneratedImageBytes> {
-  const { prompt: promptName, sections = [] } = options;
+  const { prompt: promptName, sections = [], shape = "landscape" } = options;
 
   const [aiConfig, imageConfig] = await Promise.all([
     getAIConfig(true),
@@ -606,7 +617,7 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
     const result = await generateImageWithModel({
       model: imageModel.model,
       prompt,
-      ...imageModel.landscape,
+      ...(shape === "square" ? imageModel.square : imageModel.landscape),
       // Image calls are billed per request, so the SDK's silent in-call
       // retries are disabled: the queue's attempts are the one retry budget.
       maxRetries: 0,

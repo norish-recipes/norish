@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt for writing the visual brief...",
       "imageGenerationStyle": "Image Style Prompt",
       "imageGenerationStyleDescription": "Sent to the image model, with the visual brief appended after it. Sets the look every generated picture shares.",
-      "imageGenerationStylePlaceholder": "Prompt for the image style..."
+      "imageGenerationStylePlaceholder": "Prompt for the image style...",
+      "ingredientIllustrationStyle": "Ingredient Illustration Prompt",
+      "ingredientIllustrationStyleDescription": "Sent to the image model with the ingredient's name appended after it. Sets the look every ingredient picture shares.",
+      "ingredientIllustrationStylePlaceholder": "Prompt for ingredient pictures..."
     },
     "unsavedChanges": "Unsaved changes",
     "jsonEditor": {
@@ -865,7 +868,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Image generation",
-        "store-lookup": "Store lookup"
+        "store-lookup": "Store lookup",
+        "ingredient-illustration": "Ingredient pictures"
       },
       "summary": {
         "failed": "{count} failed"

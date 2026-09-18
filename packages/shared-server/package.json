@@ -13,6 +13,8 @@
     "./media/avatar-cleanup": "./src/media/avatar-cleanup.ts",
     "./media/dish-color": "./src/media/dish-color.ts",
     "./media/generated-image": "./src/media/generated-image.ts",
+    "./media/ingredient-illustration": "./src/media/ingredient-illustration.ts",
+    "./media/ingredient-illustration-paths": "./src/media/ingredient-illustration-paths.ts",
     "./recipes/randomizer": "./src/recipes/randomizer.ts",
     "./config/defaults": "./src/config/defaults.ts",
     "./archive/parser": "./src/archive/parser.ts",

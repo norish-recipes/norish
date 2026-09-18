@@ -146,6 +146,7 @@ export const PromptsConfigSchema = z.object({
   allergyDetection: z.string().optional(),
   imageGenerationBrief: z.string().optional(),
   imageGenerationStyle: z.string().optional(),
+  ingredientIllustrationStyle: z.string().optional(),
   isOverridden: z.boolean().optional(),
 });
 

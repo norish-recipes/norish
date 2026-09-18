@@ -169,6 +169,38 @@ describe("generateImage", () => {
     expect(captured[0]!.body.height).toBe(720);
   });
 
+  it("draws a square through Ollama as a width and a height", async () => {
+    mockGetImageGenerationConfig.mockResolvedValue(
+      imageConfig({ provider: "ollama", model: "x/z-image-turbo", endpoint: baseUrl })
+    );
+    reply = () => ({ status: 200, body: { model: "x/z-image-turbo", images: [imageBase64] } });
+
+    await generateImage({
+      prompt: "ingredient-illustration-style",
+      sections: ["Red onion"],
+      shape: "square",
+    });
+
+    expect(captured[0]!.url).toBe("/api/generate");
+    expect(captured[0]!.body.width).toBe(1024);
+    expect(captured[0]!.body.height).toBe(1024);
+  });
+
+  it("draws an Ingredient Illustration square, from its own prompt", async () => {
+    await generateImage({
+      prompt: "ingredient-illustration-style",
+      sections: ["Red onion"],
+      shape: "square",
+    });
+
+    expect(captured[0]!.body.size).toBe("1024x1024");
+
+    const prompt = captured[0]!.body.prompt as string;
+
+    expect(prompt).toMatch(/illustration of one food ingredient/i);
+    expect(prompt).toMatch(/The ingredient:\s+Red onion$/);
+  });
+
   it("refuses non-retryably when AI is disabled, without a request", async () => {
     mockGetAIConfig.mockResolvedValue(aiConfig({ enabled: false }));
 

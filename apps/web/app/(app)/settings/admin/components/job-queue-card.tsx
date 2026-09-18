@@ -49,6 +49,7 @@ const QUEUE_OPTIONS = [
   "recipe-provenance",
   "ingredient-linking",
   "image-generation",
+  "ingredient-illustration",
   "caldav-sync",
   "scheduled-tasks",
 ] as const;

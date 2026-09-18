@@ -558,6 +558,50 @@ export async function saveGeneratedImageBytes(bytes: Buffer, recipeId: string): 
   });
 }
 
+/** The edge of the square an Ingredient Illustration is stored at (ADR-0037). */
+const INGREDIENT_ILLUSTRATION_SIZE = 512;
+
+/**
+ * Normalize picture bytes into an Ingredient Illustration: validated like any
+ * upload, HEIC decoded, auto-rotated, cover-cropped to a 512px square and
+ * encoded as WebP, which keeps an uploaded cut-out's transparency. Pure media
+ * work — where the file lands is the caller's business.
+ */
+export async function toIngredientIllustrationWebp(bytes: Buffer): Promise<Buffer> {
+  if (bytes.length > SERVER_CONFIG.MAX_IMAGE_FILE_SIZE) {
+    throw new Error(
+      `Image too large: ${bytes.length} bytes (max: ${SERVER_CONFIG.MAX_IMAGE_FILE_SIZE})`
+    );
+  }
+
+  const ext = extFromBuffer(bytes);
+
+  if (!isValidImageBuffer(bytes) || !ext) {
+    throw new Error("Buffer is not a valid image");
+  }
+
+  let source = bytes;
+
+  if (ext === ".heic") {
+    const output = (await convert({
+      buffer: new Uint8Array(bytes) as unknown as ArrayBuffer,
+      format: "PNG",
+    })) as ArrayBuffer;
+
+    source = Buffer.from(new Uint8Array(output));
+  }
+
+  return await sharp(source)
+    .rotate()
+    .resize({
+      width: INGREDIENT_ILLUSTRATION_SIZE,
+      height: INGREDIENT_ILLUSTRATION_SIZE,
+      fit: "cover",
+    })
+    .webp({ quality: 82 })
+    .toBuffer();
+}
+
 /**
  * Save step image bytes to recipe steps directory.
  * Path: uploads/recipes/{recipeId}/steps/{hash}.jpg

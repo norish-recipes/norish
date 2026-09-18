@@ -12,6 +12,7 @@ import { startAutoTaggingWorker } from "@norish/queue/auto-tagging/worker";
 import { startCaldavSyncWorker } from "@norish/queue/caldav-sync/worker";
 import { startImageGenerationWorker } from "@norish/queue/image-generation/worker";
 import { startImageImportWorker } from "@norish/queue/image-import/worker";
+import { startIngredientIllustrationWorker } from "@norish/queue/ingredient-illustration/worker";
 import { startIngredientLinkingWorker } from "@norish/queue/ingredient-linking/worker";
 import { stopAllLazyWorkers } from "@norish/queue/lazy-worker-manager";
 import { startNutritionEstimationWorker } from "@norish/queue/nutrition-estimation/worker";
@@ -60,6 +61,7 @@ export async function startWorkers(): Promise<void> {
     startRecipeProvenanceWorker(),
     startIngredientLinkingWorker(),
     startImageGenerationWorker(),
+    startIngredientIllustrationWorker(),
     startCaldavSyncWorker(),
   ]);
 

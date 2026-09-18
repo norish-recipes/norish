@@ -114,3 +114,10 @@ export interface RecipeEnrichmentJobData {
 export type StoreLookupJobData =
   | { kind: "match"; storeId: string; name: string; householdKey: string }
   | { kind: "refresh"; storeId: string; productIds: string[]; householdKey: string };
+
+/** One Ingredient Illustration to draw for an Ingredient Name (ADR-0037). */
+export interface IngredientIllustrationJobData {
+  ingredientId: string;
+  /** The administrator who asked, for the job monitor's record. */
+  requestedByUserId: string;
+}

@@ -43,5 +43,8 @@
   "imageGenerationStyle": [
     "A photograph of the dish described below, shot for a recipe page.\n\nThree-quarter view of a single serving on a neutral surface in soft natural\ndaylight, realistic colours and textures, the dish filling most of the\nframe but leave some breathing room. Ensure it is an image like the recipe would be served.\nNo people, no hands, no text, no watermarks, no brand packaging.\n\nThe dish:",
     "A photograph of the dish described below, shot for a recipe page.\n\nThree-quarter view of a single serving on a neutral surface in soft natural\ndaylight, realistic colours and textures, the dish filling most of the\nframe. No people, no hands, no text, no watermarks, no brand packaging.\n\nThe dish:"
+  ],
+  "ingredientIllustrationStyle": [
+    "A small, simple illustration of one food ingredient, drawn to sit beside that\ningredient's line in a recipe so a reader can recognise it at a glance.\n\nFlat illustration style with clean dark outlines, soft shading and a limited,\nnatural palette true to the ingredient's real colours. Show the ingredient\nwhole, in its most recognisable everyday form as bought, centred and filling\nmost of a square frame, on a plain white background with no shadow or props.\nNo text, no labels, no people, no hands, no packaging, no brand marks, no\nframe or border.\n\nThe ingredient:"
   ]
 }
