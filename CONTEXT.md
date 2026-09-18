@@ -54,6 +54,14 @@ _Avoid_: Ingredient Link (suggests a hyperlink in the text rather than a usage r
 **Ingredient Linking**:
 The Recipe Enrichment kind that infers Step Ingredients. It is a gap-filler in every case — automatic or manual, it only ever adds links to steps that have none, so it can never replace or remove what a person attached and needs no supplied-data suppression: a step that already has Step Ingredients is simply not its business. Heading rows are never linked. A step that genuinely uses nothing stays bare and may be examined again by later runs.
 
+**Ingredient Name**:
+The ingredient a recipe line points at, and the text that line shows. Names are de-duplicated as they are written, regardless of case: "eggs" and "Eggs" are one ingredient, "large eggs" another. An administrator can give it an Ingredient Illustration; a name a recipe uses or a Pantry holds cannot be deleted, and renaming it changes the text of every line that uses it.
+_Avoid_: Ingredient Line (that is the recipe's row with its amount), Catalog Ingredient (the separate catalog this replaced)
+
+**Ingredient Illustration**:
+The small picture belonging to an Ingredient Name, shown beside every line that points at it — and, for a grocery row, beside text that folds to its name — on a recipe's ingredient list, in cooking mode, on a step's ingredient chips, in the editor and on the grocery list — so an ingredient can be recognised at a glance. It is uploaded or drawn by AI from the name, square and in the one style its Prompt sets; unlike a Generated Image, nothing records which, because nothing acts on the difference. It is decoration beside the name, never a replacement for it.
+_Avoid_: Ingredient Icon (suggests a symbol set), Ingredient Image (a recipe's images are of the dish)
+
 **Image Generation**:
 The Recipe Enrichment kind that draws a recipe a picture of its dish. It is the only kind whose output is invented rather than inferred: a tag, a category or a provenance note can be right or wrong about the recipe, while a Generated Image can only be apt or unconvincing. An automatic run is the strictest gap-filler in the product: any stored image at all, of any origin, and it stands down — while a manual request and an administrator's refresh run whatever is stored (ADR-0025). It is also the one kind that cannot follow the server's configured AI provider, because most providers cannot draw at all (ADR-0024).
 _Avoid_: Auto Image (names the automatic path only), Image Inference (nothing is inferred; the picture is invented)
@@ -63,7 +71,7 @@ A picture of a dish that AI drew rather than a camera captured, stored in the re
 _Avoid_: AI Photo (it is a photograph of nothing), Placeholder Image (it is the recipe's real primary image, not a stand-in for one)
 
 **Hidden Item**:
-Something a reader has chosen not to be shown: Recipe Provenance, Nutrition Information, a recipe's notes, its rating, favourites, the cookbooks it is in, the measurement conversion control, or recipe timers. Hiding belongs to that reader alone and is kept per device, like every visibility preference — a cramped phone can hide what a desktop keeps. It suppresses the item everywhere it would appear for them, so hiding the rating takes the recipe page's stars, the Library chip and the rating filter together, while the items that exist only on the recipe page simply make it slimmer. It settles nothing about the recipe: what is stored, what may be edited and what Recipe Enrichment produces are all unchanged, and a recipe read by someone signed out shows everything. An origin flag beside a recipe's title is chrome rather than Recipe Provenance, so it stays when Recipe Provenance is hidden.
+Something a reader has chosen not to be shown: Recipe Provenance, Nutrition Information, a recipe's notes, its rating, favourites, the cookbooks it is in, the measurement conversion control, recipe timers, or Ingredient Illustrations. Hiding belongs to that reader alone and is kept per device, like every visibility preference — a cramped phone can hide what a desktop keeps. It suppresses the item everywhere it would appear for them, so hiding the rating takes the recipe page's stars, the Library chip and the rating filter together, while the items that exist only on the recipe page simply make it slimmer. It settles nothing about the recipe: what is stored, what may be edited and what Recipe Enrichment produces are all unchanged, and a recipe read by someone signed out shows everything. An origin flag beside a recipe's title is chrome rather than Recipe Provenance, so it stays when Recipe Provenance is hidden.
 _Avoid_: Disabled (suggests the thing stops working), Hidden Section (not every hidden item is a section), Display Preference (names where it is stored, not what it is)
 
 **Glance Bar**:
@@ -173,7 +181,7 @@ _Avoid_: Staple (a judgement about the food, not a fact about the household), St
 ### Imports & AI
 
 **Recipe Archive**:
-The portable file a Norish instance writes so recipes can leave it: every recipe the exporter can see, complete with its media, the author's display name as attribution, and the exporter's own rating and favourite mark. It carries recipe content rather than the exporter's Library, so cookbooks stay behind and an importer receives loose recipes to file as they please. It is an exchange of recipe content, never a backup — whoever imports it owns what that creates, and no accounts, emails, or instance state travel inside, so an archive is safe to hand around. Cuisine names travel as words and attach only where the receiving instance's curated vocabulary already knows them; an archive never extends a vocabulary its administrator owns. Norish reads foreign archives (Mela, Paprika, Mealie, Tandoor) through the same import door as its own.
+The portable file a Norish instance writes so recipes can leave it: every recipe the exporter can see, complete with its media, the author's display name as attribution, and the exporter's own rating and favourite mark. It carries recipe content rather than the exporter's Library, so cookbooks stay behind and an importer receives loose recipes to file as they please. It is an exchange of recipe content, never a backup — whoever imports it owns what that creates, and no accounts, emails, or instance state travel inside, so an archive is safe to hand around. Cuisine names travel as words and attach only where the receiving instance's curated vocabulary already knows them; an archive never extends a vocabulary its administrator owns. Ingredient Names travel as words too, and the receiving instance matches them against its own Ingredient Illustrations. Norish reads foreign archives (Mela, Paprika, Mealie, Tandoor) through the same import door as its own.
 _Avoid_: Export (the act, not the artifact), Backup (promises restoration an archive refuses to make), Instance export (suggests instance state is inside)
 
 **AI Runtime**:
@@ -181,7 +189,7 @@ The single seam through which Norish issues a model request — structured gener
 _Avoid_: AI executor (names the deleted prototype that had no callers), AI client (suggests a per-provider object, which is what the runtime hides)
 
 **Prompt**:
-The administrator-editable base every language-model request starts from. There are eleven, one per request shape, each stored in configuration with a shipped default, and the runtime will not accept a finished prompt string in their place — which is what makes every request tunable by construction (ADR-0016). A Decision is the one request shape that has none: its criteria are the domain's own option set and its instructions are code-owned, so there is no wording to tune (ADR-0035).
+The administrator-editable base every language-model request starts from. There are twelve, one per request shape, each stored in configuration with a shipped default, and the runtime will not accept a finished prompt string in their place — which is what makes every request tunable by construction (ADR-0016). A Decision is the one request shape that has none: its criteria are the domain's own option set and its instructions are code-owned, so there is no wording to tune (ADR-0035).
 _Avoid_: Prompt template (implies placeholders a feature fills; a Prompt is appended to, not filled in)
 
 **Prompt Section**:

@@ -283,7 +283,9 @@ The confirmation also offers **Overwrite existing data**, which turns the behavi
 
 ![The Prompts panel in admin settings](/img/screenshots/admin-prompts.png)
 
-All prompts norish uses are customisable under the [admin settings](./admin-settings.md)
+All prompts norish uses are customisable under the [admin settings](./admin-settings.md),
+including the Ingredient Illustration prompt that sets the style of
+[ingredient pictures](../recipes/ingredient-pictures.md).
 
 ## Video import
 

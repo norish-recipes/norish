@@ -26,6 +26,8 @@ can choose not to see:
 - **Ingredient conversion**, the measurement conversion control on the recipe
   page
 - **Recipe timers**, the automatic timer detection in recipe steps.
+- **Ingredient pictures**, the small [ingredient pictures](./ingredient-pictures.md)
+  beside ingredient lines, step ingredients, editor rows and grocery items.
 
 ![The Hidden Items control in user settings](/img/screenshots/hidden-items-settings.png)
 

@@ -18,6 +18,14 @@ On the **Groceries** page, open the menu next to **Add Item** and choose
 
 ![The Pantry panel, with a few names in it](/img/screenshots/groceries-pantry-panel.png)
 
+As you type, Norish suggests ingredient names it already knows, the same way the
+recipe editor does: use the arrow keys and **Enter**, or click one, to fill the
+field, then **Enter** or the plus to add it. Names already in your pantry are
+left out, and you can type anything the suggestions do not offer.
+
+A name that has an [ingredient picture](../recipes/ingredient-pictures.md) shows
+it here too, so the cupboard reads as quickly as the shopping list does.
+
 ## Adding a recipe
 
 When you add a recipe to your groceries, the ingredients you have at home are

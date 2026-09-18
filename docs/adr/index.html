@@ -897,6 +897,23 @@
             no REST endpoint.
           </p>
         </li>
+        <li>
+          <a href="recipes/0037-an-ingredient-name-owns-its-picture.md"
+            >ADR-0037 &mdash; An Ingredient Name owns its picture</a
+          >
+          <p>
+            <b>Accepted.</b> A picture is a column on the Ingredient Name row, and a line shows the
+            picture of the row it points at &mdash; read along the foreign key that already carries
+            the name, in the query that already runs. Nothing resolves a picture from text at read
+            time on the server; the one text match is a grocery row, which has no ingredient of its
+            own, and it folds under the grocery folding in the browser so it works offline. A name a
+            recipe uses or a Pantry holds cannot be deleted. Pictures are drawn square through the
+            existing image entry point from the name alone and stored as versioned files. Rejects
+            resolving the picture at read time, a separate catalog, a per-line link, fuzzy matching
+            and per-household pictures; leaves one food arriving under two names to a decision of
+            its own.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>
