@@ -21,6 +21,8 @@ The URL and video import pipelines gain three questions that nothing asks today,
 
 **Question 3** is a Score, three levels — `["Not a usable recipe: missing ingredients or steps", "Usable but incomplete: some ingredients, steps, times or servings missing", "Complete"]` — on the JSON the structured parser returned (`tryStructuredParser`'s adapted output, before normalisation). `INCOMPLETE_PARSE_MAX_SCORE = 0.9`: an expected score at or below it sends the page through `extractWithAIPreference` as `alwaysUseAI` would; above it, the parse is kept. `alwaysUseAI` keeps meaning "always" and is checked first. Today success is "has a name", so a title with two ingredients ships; this is the fix, per page, without the global switch.
 
+None of the three has an administrator switch: they are Norish's own algorithm, they only ever make an import cheaper or refuse a page that was never a recipe, and the maintainer's rule is that what the Decision Model does for the algorithm is not a household preference. They run whenever a Decision Model is configured.
+
 All three go through a small helper in the parser (`packages/api/src/parser/import-triage.ts`) that owns the constants, composes the state, calls `decide`, and swallows every `AIError` into "no opinion" with a warn log — so each call site reads as `(await triage.isRecipe(text)) ?? keywordRule(text)`.
 
 Each question is one Decision; do not batch the page and the parse into one request, since they are asked at different points and the second may not happen.
@@ -35,6 +37,7 @@ Recording, in this ticket's comments, the observed latency of question 1 on a 50
 - [ ] With no Decision Model, or any `AIError` from `decide`: every path is today's (the keyword rule, the length thresholds, "has a name"), and the existing parser and processor tests pass untouched.
 - [ ] Boundary tests on all three constants.
 - [ ] The processor entry-point test from `.scratch/import-and-provider-fixes/issues/04` still covers all four video paths.
+- [ ] There is no use switch for triage; the Uses group in the admin form says so.
 - [ ] Latency recorded in the comments.
 - [ ] Repo gates green: lint, full test run, internationalization check, production build.
 

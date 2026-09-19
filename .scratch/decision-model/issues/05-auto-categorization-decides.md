@@ -19,7 +19,7 @@ Shape of the conversion, in the same file:
 const CATEGORY_THRESHOLD = 0.6; // a category the model is at least this sure of is set
 
 export async function categorizeRecipe(recipe) {
-  if (await isDecisionModelConfigured()) {
+  if (await isDecisionUseEnabled("autoCategorization")) {
     const decided = await decideCategories(recipe).catch(warnAndFallBack);
     if (decided && decided.length > 0) return decided;
   }
@@ -39,10 +39,10 @@ Extraction's own category normalisation (`extraction-normalizer.ts`, the matcher
 
 - [ ] With a Decision Model configured, `categorizeRecipe` issues one `decide` call with four Boolean questions and no `generateStructured` call when at least one category clears the threshold.
 - [ ] With nothing clearing the threshold, the language model is asked and its answer is used, matched as today.
-- [ ] With the Decision Model unconfigured, disabled, or throwing any `AIError`, behaviour is byte-for-byte today's: one `generateStructured` call, the matcher, the same result.
+- [ ] With the Decision Model unconfigured, disabled, its Auto-categorization use switched off, or throwing any `AIError`, behaviour is byte-for-byte today's: one `generateStructured` call, the matcher, the same result.
 - [ ] The threshold is a named constant with a boundary test (0.59 not set, 0.60 set).
 - [ ] The worker's empty-list rule and the coordinator's supplied-data skip are unchanged (existing tests still pass untouched).
-- [ ] Feature tests mock `decide`, `generateStructured` and `isDecisionModelConfigured` from the runtime and loader, nothing else.
+- [ ] Feature tests mock `decide`, `generateStructured` and `isDecisionUseEnabled` from the runtime and loader, nothing else.
 - [ ] Repo gates green: lint, full test run, internationalization check, production build.
 
 ## Non-goals

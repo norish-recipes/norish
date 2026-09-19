@@ -78,7 +78,8 @@ The work is sequenced so that the provider lands before any feature uses it, and
 - **No timeout, no temperature, no max tokens.** The one AI timeout governs a Decision (ADR-0015). Jev takes no Generation Preferences, so ADR-0014 has nothing to drop.
 - **No environment variables.** The AI, transcription and image blocks are documented as admin-settings configuration, and `.env.example` deliberately points at Settings => Admin for all of them. Seeding from `TYPESAFE_API_KEY` is a possible follow-up, not part of this work.
 - The global AI switch gates Decisions: `aiConfig.enabled` false means `decide` throws `AIDisabledError` like every other entry point. A Decision Model configured on a server whose language-model provider is unconfigured or broken still works — the two are independent — but only when AI is switched on.
-- **Admin form.** A _Decision Model_ section joins the AI & Processing accordion after Image Generation: provider select, API key (secret input, masked, revealable, preserved when omitted on save), model field defaulting to `jev-latest`, endpoint under an "advanced" disclosure, a **Test** button that issues one trivial Boolean question and reports success or the provider's error, and the standard unsaved-changes and dirty-section handling. Translations in all fourteen locales; the i18n gate is the check.
+- **Uses are the administrator's, the algorithm's are not.** The block carries a `uses` record of switches — Auto-categorization, Allergy detection, Recipe Provenance, Grocery linking, Recipe validation — each **on by default** the moment a Decision Model is configured, so enabling Jev enables everything it can do for a household and an administrator switches off what they do not want. Import triage (ticket 07) has no switch: it serves Norish's own import algorithm, only ever makes an import cheaper or refuses a page that was never a recipe, and is not a household preference. The loader answers one question, `isDecisionUseEnabled(use)`, which is false whenever no Decision Model is configured.
+- **Admin form.** A _Decision Model_ section joins the AI & Processing accordion after Image Generation: provider select, API key (secret input, masked, revealable, preserved when omitted on save), model field defaulting to `jev-latest`, endpoint under an "advanced" disclosure, a **Test** button that issues one trivial Boolean question and reports success or the provider's error, a **Uses** group of switches below the connection fields, and the standard unsaved-changes and dirty-section handling. Translations in all fourteen locales; the i18n gate is the check.
 
 ### The runtime's fourth entry point
 
@@ -95,8 +96,8 @@ The work is sequenced so that the provider lands before any feature uses it, and
 
 A converted kind reads as one function with two branches, in this order:
 
-1. If the Decision Model is configured, compose the state, ask, and act on the answer **when it clears the feature's threshold**.
-2. Otherwise — not configured, a `decide` failure of any retryability, or an answer below threshold — take the path the kind has today.
+1. If the Decision Model is configured and the kind's use is on, compose the state, ask, and act on the answer **when it clears the feature's threshold**.
+2. Otherwise — not configured, the use switched off, a `decide` failure of any retryability, or an answer below threshold — take the path the kind has today.
 
 The fallback is a call to the same function the kind calls now, not a copy of it; the structured-generation path is neither deleted nor changed by the conversion. A `decide` failure is logged at warn and never surfaces: the kind either succeeds on the fallback or fails the way it fails today. The coordinator, the queue, the lifecycle contract and Supplied Recipe Data precedence are untouched — a Decision changes _how a kind decides_, never _whether it runs_ or _what it may overwrite_.
 
@@ -114,12 +115,12 @@ The inventory below is what the codebase actually decides today with heuristics 
 
 **New questions — nothing asks these today**
 
-| Question                              | Today                                                                                                                                                                                             | As a Decision                                                                                                                                                                                                                                                                                | Ticket |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Is this page a recipe at all?         | `isPageLikelyRecipe`: lowercase the HTML, count hits from an administrator-editable list of ~70 words across nine languages, require two — the gate on whether an AI extraction is attempted      | One Boolean on the sanitized page text, asked only when the structured parser found nothing. A clear "no" refuses the import with the message the parser already has; anything else proceeds to extraction as today. The keyword list stays as the path when no Decision Model is configured | 07     |
-| Does this caption hold a recipe?      | Five character-count thresholds in the Instagram processor (50, 50, 50, 200, 50) standing in for the question                                                                                     | The same Boolean on the caption, deciding whether to extract from it before paying for a transcription, and whether a photo post is importable at all. Thresholds stay as the fallback                                                                                                       | 07     |
-| Is the structured parse good enough?  | Success is "has a name"; whether AI runs anyway is one global switch (`alwaysUseAI`)                                                                                                              | A Score (incomplete → usable → complete) on the parsed recipe. Below the constant, AI extraction runs for this page as if `alwaysUseAI` were on; the switch keeps meaning "always", but a server without it stops shipping a title with two ingredients                                      | 07     |
-| Which offered product is the grocery? | `chooseUnmistakable` auto-links only an exact or near-exact name and deliberately has no threshold (the 0.23.1 tightening); everything else is _offered_ in the grocery panel in the shop's order | A Choice over the offered candidates plus `none`, used only to **order** the offered list and mark a best guess. It never links: the auto-link rule and ADR-0029/0030 are untouched; the maintainer confirmed the ordered list is welcome on that condition                                  | 09     |
+| Question                              | Today                                                                                                                                                                                             | As a Decision                                                                                                                                                                                                                                                                                                                                                             | Ticket |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Is this page a recipe at all?         | `isPageLikelyRecipe`: lowercase the HTML, count hits from an administrator-editable list of ~70 words across nine languages, require two — the gate on whether an AI extraction is attempted      | One Boolean on the sanitized page text, asked only when the structured parser found nothing. A clear "no" refuses the import with the message the parser already has; anything else proceeds to extraction as today. The keyword list stays as the path when no Decision Model is configured                                                                              | 07     |
+| Does this caption hold a recipe?      | Five character-count thresholds in the Instagram processor (50, 50, 50, 200, 50) standing in for the question                                                                                     | The same Boolean on the caption, deciding whether to extract from it before paying for a transcription, and whether a photo post is importable at all. Thresholds stay as the fallback                                                                                                                                                                                    | 07     |
+| Is the structured parse good enough?  | Success is "has a name"; whether AI runs anyway is one global switch (`alwaysUseAI`)                                                                                                              | A Score (incomplete → usable → complete) on the parsed recipe. Below the constant, AI extraction runs for this page as if `alwaysUseAI` were on; the switch keeps meaning "always", but a server without it stops shipping a title with two ingredients                                                                                                                   | 07     |
+| Which offered product is the grocery? | `chooseUnmistakable` auto-links only an exact or near-exact name and deliberately has no threshold (the 0.23.1 tightening); everything else is _offered_ in the grocery panel in the shop's order | A Choice over the candidates plus `none`, asked after the name rule declines. A pick the model is sure of (above `LINK_THRESHOLD`) is **linked** and priced like an unmistakable match; otherwise nothing is linked and the offered list is **ordered** by probability with a marked best guess. Unlinking works as before; the name rule and ADR-0029/0030 are untouched | 09     |
 
 **Verification — a Decision checks what the language model claimed**
 
@@ -128,7 +129,11 @@ The inventory below is what the codebase actually decides today with heuristics 
 | Tags (all strategies), Step Ingredients, Cuisines from the language-model provenance path                     | One Boolean per claim; a claim the Decision is clearly sure is wrong is dropped, doubt keeps it                                                                      | enforce     | 10     |
 | Categories and allergens from the language-model fallbacks, country, recipe extraction faithfulness (a Score) | Same questions, logged only, to measure the disagreement rate first. Allergens are never enforced: dropping an allergen tag is the one removal that can hurt someone | shadow      | 10     |
 
-Verification only removes or flags, never adds; it sits in each kind between the language-model call and the domain rules, and a `decide` failure keeps every claim.
+Verification only removes or flags, never adds; it sits in each kind between the language-model call and the domain rules, and a `decide` failure keeps every claim. The Recipe validation use switch governs enforce; shadow logging is the algorithm's and always runs.
+
+**Recipe Validation — the eighth enrichment kind, on stored recipes**
+
+Ticket 10 only sees a claim as it is made. Ticket 11 adds a kind that reads a stored recipe and asks the same questions of everything it already claims — every tag, category, Cuisine, Step Ingredient and country — plus whether its Nutrition Information is plausible. A clear "no" removes the claim; an implausible nutrition group is cleared and estimated again. It runs only on the deliberate paths, the actions menu (**Validate recipe**) and the bulk sweep under Overwrite existing data, because it removes and those are the paths the product already lets replace what is stored. Allergy tags are never removed.
 
 **Considered and not planned** (recorded so the next reader does not redo the survey)
 
@@ -143,7 +148,7 @@ Verification only removes or flags, never adds; it sits in each kind between the
 
 ### Vocabulary
 
-Added to `CONTEXT.md` under _Imports & AI_ (ticket 02): **Decision Model**, **Decision**, **Clear Case** (an answer above a feature's threshold). The _AI Runtime_ entry gains its fourth entry point; the _Prompt_ entry narrows from "every AI request" to "every language-model request" and names the exception.
+Added to `CONTEXT.md` under _Imports & AI_ (ticket 02): **Decision Model**, **Decision**, **Clear Case** (an answer above a feature's threshold), **Decision Use** (one thing the Decision Model does for a household, switchable by an administrator; import triage is not one). Under _Recipes_, **Recipe Validation** joins the kinds (ticket 11). The _AI Runtime_ entry gains its fourth entry point; the _Prompt_ entry narrows from "every AI request" to "every language-model request" and names the exception.
 
 ### Decision record
 
@@ -151,7 +156,7 @@ ADR-0035 — _Decisions are the runtime's fourth entry point, on their own provi
 
 ### Docs and release notes
 
-Per `docs/agents/feature-docs.md`: the AI provider configuration page gains a _Decision Model_ section (what it is, what it speeds up, what it cannot do, the settings, a screenshot of the block), the Recipe Enrichment page notes which kinds use it and which claims the verification pass may drop, the grocery pricing page notes the ordered product list, and the Target Version's release notes get a Features entry. The AI SDK line move gets an Upgrade note only if anything a self-hoster configures changes — the intention is that nothing does.
+Per `docs/agents/feature-docs.md`: the AI provider configuration page gains a _Decision Model_ section (what it is, what it speeds up, what it cannot do, the settings and the Uses switches, a screenshot of the block, and a mermaid diagram of the runtime's four entry points, the Decision-first branch with its fallback, and the verification pass), the Recipe Enrichment page notes which kinds use it and which claims the verification pass may drop, the grocery pricing page notes the ordered product list, and the Target Version's release notes get a Features entry. The AI SDK line move gets an Upgrade note only if anything a self-hoster configures changes — the intention is that nothing does.
 
 ### Sequence
 
@@ -165,17 +170,18 @@ Per `docs/agents/feature-docs.md`: the AI provider configuration page gains a _D
 | 06  | Allergy detection asks a Decision first                                            | First conversions    | ready-for-agent |
 | 07  | Import triage: is this a recipe, does this caption hold one, is the parse complete | New questions        | ready-for-agent |
 | 08  | Recipe Provenance settles country and Cuisines by Decision                         | Second conversions   | ready-for-agent |
-| 09  | Offered products are ordered by a Decision, never linked by one                    | Second conversions   | ready-for-agent |
+| 09  | A Decision orders the offered products, and links one it is sure of                | Second conversions   | ready-for-agent |
 | 10  | The verification pass: a Decision checks what the language model claimed           | Verification         | ready-for-agent |
-| 11  | Docs, screenshots and release notes                                                | Ships last           | ready-for-agent |
+| 11  | Recipe Validation: an enrichment kind that checks what a recipe already claims     | Verification         | ready-for-agent |
+| 12  | Docs, screenshots and release notes, with mermaid diagrams of the internals        | Ships last           | ready-for-agent |
 
-02–04 land together as one PR after 01; 05 through 10 are each their own PR, 08 after 05 and 10 after 05 and 06; 11 rides the last of them. The maintainer confirmed 08 and 09 as good fits on 2026-09-19 and asked for 10.
+02–04 land together as one PR after 01; 05 through 11 are each their own PR, 08 after 05, 10 after 05 and 06, 11 after 10; 12 rides the last of them. The maintainer confirmed 08 and 09 as good fits on 2026-09-19, asked for 10 and 11, the use switches, the high-probability link in 09, and the diagrams in 12.
 
 ## Non-goals
 
 - Replacing the language-model provider. Extraction, nutrition, provenance notes, unit conversion, ingredient linking and image generation are generation and stay generation.
 - Guessing an Aisle for a grocery. The grocery-aisles spec says Norish never guesses an Aisle from words, and a Decision Model does not reopen that.
-- Exposing thresholds or question wording as settings.
+- Exposing thresholds or question wording as settings. Which _uses_ run is a setting; how sure each has to be is not.
 - A Decision that writes anything a person or an import source supplied. Precedence rules are unchanged.
 - Reaching Jev through Vercel's AI Gateway. It is one enum member away when wanted.
 - Persisting token usage or per-decision probabilities. Logged, like every other request.

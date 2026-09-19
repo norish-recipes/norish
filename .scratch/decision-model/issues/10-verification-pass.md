@@ -2,12 +2,13 @@
 
 Status: ready-for-agent
 Blocked by: 04, 05, 06
+See also: 11, the Recipe Validation kind, which reuses this helper on stored recipes
 
 Spec: `.scratch/decision-model/spec.md`
 
 ## What to build
 
-After a language-model request returns a claim about a recipe, and before the feature applies its domain rules, a Decision checks the claim. Verification only ever **removes or flags**; it never adds. It runs only when a Decision Model is configured, and a `decide` failure keeps the claim untouched, so the language-model path is never worse for having it. It ships in two modes per kind, decided by a code constant: **enforce** (a claim the Decision is clearly sure is wrong is dropped) and **shadow** (the verdict is logged, nothing changes) — so a kind can gather a disagreement rate on real recipes before its verdicts are trusted.
+After a language-model request returns a claim about a recipe, and before the feature applies its domain rules, a Decision checks the claim. Verification only ever **removes or flags**; it never adds. It runs whenever a Decision Model is configured, and a `decide` failure keeps the claim untouched, so the language-model path is never worse for having it. The **Recipe validation** use switch governs enforce: with it off, every kind runs in shadow mode and nothing is dropped, because dropping a claim is something a household sees and shadow logging is not. It ships in two modes per kind, decided by a code constant: **enforce** (a claim the Decision is clearly sure is wrong is dropped) and **shadow** (the verdict is logged, nothing changes) — so a kind can gather a disagreement rate on real recipes before its verdicts are trusted.
 
 ## Notes
 
@@ -39,6 +40,7 @@ Extraction lives in `packages/api/src/parser/`, not in enrichment, so its call g
 - [ ] Auto-tagging, Ingredient Linking and language-model Cuisines drop claims at or below `DROP_THRESHOLD` in enforce mode; boundary test at 0.20 / 0.21.
 - [ ] Categories, allergens, country and extraction log verdicts in shadow mode and change nothing; a test proves the allergen kind cannot be set to enforce.
 - [ ] Each verified kind's log line carries `mode`, `claimed`, `kept`, `dropped` and the feature name.
+- [ ] With the Recipe validation use off, enforce kinds behave as shadow: verdicts logged, nothing dropped.
 - [ ] Existing tests for every touched kind pass untouched with the Decision Model unconfigured.
 - [ ] Ingredient Linking's gap-fill rule is unchanged: a dropped link leaves the step bare, never re-links it.
 - [ ] Repo gates green: lint, full test run, internationalization check, production build.

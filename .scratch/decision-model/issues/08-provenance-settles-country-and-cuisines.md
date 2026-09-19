@@ -8,7 +8,7 @@ Decision records: ADR-0012 (Cuisines are curated), ADR-0018 (automatic provenanc
 
 ## What to build
 
-Under the `existing` cuisine strategy, and when a Decision Model is configured, Recipe Provenance asks a Decision first: a Choice over ISO-3166-1 alpha-2 country codes and one Boolean per Cuisine in the administrator's vocabulary. A clear country and its clear Cuisines become **settled slots**, and the language model is then asked to write the region and the note around them — the exact shape ADR-0018's gap-fill already gives Supplied Recipe Data. When the country is unclear, the strategy is `extend`, or there is no Decision Model, the whole group is inferred by the language model as today.
+Under the `existing` cuisine strategy, and when a Decision Model is configured with its Recipe Provenance use on, Recipe Provenance asks a Decision first: a Choice over ISO-3166-1 alpha-2 country codes and one Boolean per Cuisine in the administrator's vocabulary. A clear country and its clear Cuisines become **settled slots**, and the language model is then asked to write the region and the note around them — the exact shape ADR-0018's gap-fill already gives Supplied Recipe Data. When the country is unclear, the strategy is `extend`, or there is no Decision Model, the whole group is inferred by the language model as today.
 
 ## Decided
 
@@ -28,7 +28,7 @@ Everything in `packages/shared/src/lib/recipe-enrichment.ts` (`fillProvenanceGap
 ## Acceptance criteria
 
 - [ ] Under `existing` with a Decision Model: a clear country and Cuisines are settled by one `decide` call, and one `generateStructured` call writes the region and note to them; the stored group is consistent (the note names the settled country).
-- [ ] An unclear country, the `extend` strategy, or no Decision Model: today's single language-model inference, byte-for-byte.
+- [ ] An unclear country, the `extend` strategy, no Decision Model, or the Recipe Provenance use switched off: today's single language-model inference, byte-for-byte.
 - [ ] No Cuisine outside the vocabulary is ever minted on the Decision path.
 - [ ] A manual run replaces the whole stored group with the composed claim, and the note names the settled country.
 - [ ] Boundary tests on both constants; existing provenance tests pass untouched.

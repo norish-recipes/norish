@@ -7,7 +7,7 @@ Spec: `.scratch/decision-model/spec.md`
 
 ## What to build
 
-When a Decision Model is configured, allergy detection asks one Boolean per household allergen — does this recipe contain X — in a single request, and tags the recipe from the answers. This is the one enrichment kind whose output matters for someone's health, so the rule is deliberately two-sided: an allergen the model is clearly sure about is tagged, one it is clearly sure is absent is not, and a recipe with any allergen in the doubtful band is handed whole to the language model as today. When the Decision Model is not configured or fails, the language model path runs unchanged.
+When a Decision Model is configured and its Allergy detection use is on, allergy detection asks one Boolean per household allergen — does this recipe contain X — in a single request, and tags the recipe from the answers. This is the one enrichment kind whose output matters for someone's health, so the rule is deliberately two-sided: an allergen the model is clearly sure about is tagged, one it is clearly sure is absent is not, and a recipe with any allergen in the doubtful band is handed whole to the language model as today. When the Decision Model is not configured or fails, the language model path runs unchanged.
 
 ## Notes
 
@@ -35,7 +35,7 @@ The log line names the path and, on the Decision path, the count of allergens ta
 
 - [ ] With a Decision Model configured and every allergen outside the doubtful band, one `decide` call with N Boolean questions and no `generateStructured` call; the tagged set is exactly the allergens at or above `PRESENT_THRESHOLD`.
 - [ ] With any allergen inside the band, the language model is asked and its answer is used, filtered as today; the Decision's answers are not merged in.
-- [ ] With the Decision Model unconfigured, disabled, or throwing any `AIError`, behaviour is today's.
+- [ ] With the Decision Model unconfigured, disabled, its Allergy detection use switched off, or throwing any `AIError`, behaviour is today's.
 - [ ] Boundary tests on both constants.
 - [ ] The empty-list and no-ingredient short-circuits are unchanged.
 - [ ] The coordinator's `no-household-allergies` skip and the automatic switch are unchanged.
