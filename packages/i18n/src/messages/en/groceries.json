@@ -128,6 +128,7 @@
     "searching": "Searching {store}…",
     "knownGroup": "Already known",
     "shopGroup": "From the shop",
+    "suggested": "Suggested",
     "nothingFound": "Norish found nothing at {store}. You can type the price yourself.",
     "noAnswer": "{store} did not answer. Try again in a moment, or type the price yourself.",
     "byHandName": "Product name",

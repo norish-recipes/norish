@@ -57,6 +57,9 @@ const SHOP: Record<
   "store-b": [{ name: "Cola B 1 L", url: "https://b.example/p/cola-1l", price: 1.49, size: "1 L" }],
 };
 
+/** The page the lookup's Decision marked as its best guess, if any. */
+const SUGGESTED = { current: null as string | null };
+
 function answer(storeId: string | null, term: string) {
   const words = term
     .toLowerCase()
@@ -94,6 +97,7 @@ vi.mock("@/hooks/stores", () => ({
           pack: readPackSize(candidate.size) ?? undefined,
           regularPrice: candidate.regularPrice,
           dealWords: candidate.dealWords,
+          ...(candidate.url === SUGGESTED.current ? { suggested: true } : {}),
         })),
         answered: true,
       },
@@ -183,6 +187,7 @@ beforeEach(() => {
   KNOWN["store-a"] = [];
   KNOWN["store-b"] = [];
   SHOP_IS_DOWN.current = false;
+  SUGGESTED.current = null;
 });
 
 describe("GroceryProductField", () => {
@@ -1022,6 +1027,67 @@ describe("GroceryProductField", () => {
 
     // "cola" and "Halfvolle melk 1 L" share the letter l and nothing else.
     expect(options().join("|")).not.toContain("Halfvolle melk");
+  });
+
+  it("marks the shop's answer the Decision Model suggested, and takes nothing for the shopper", async () => {
+    SUGGESTED.current = "https://a.example/p/cola-zero";
+
+    render(
+      <GroceryProductField
+        choice={null}
+        groceryName="cola"
+        linkedProduct={null}
+        store={STORE_A}
+        onChoice={() => undefined}
+      />
+    );
+
+    await act(async () => {
+      field().focus();
+    });
+
+    const badges = screen.getAllByTestId("product-option-suggested");
+
+    expect(badges).toHaveLength(1);
+    expect(badges[0]?.closest("[data-testid='product-option']")).toHaveTextContent(
+      "Cola Zero 1,5 L"
+    );
+    expect(badges[0]).toHaveTextContent("suggested");
+    // A suggestion is offered, never taken: the field is still the shopper's to answer.
+    expect(field()).toHaveValue("");
+  });
+
+  it("carries the suggestion to the Store's own copy of the suggested product", async () => {
+    SUGGESTED.current = "https://a.example/p/cola-zero";
+    KNOWN["store-a"] = [
+      {
+        ...product("known-zero", "store-a", "Cola Zero 1,5 L", 2.29),
+        pageUrl: "https://a.example/p/cola-zero",
+      } as StoreProductDto,
+    ];
+
+    render(
+      <GroceryProductField
+        choice={null}
+        groceryName="cola"
+        linkedProduct={null}
+        store={STORE_A}
+        onChoice={() => undefined}
+      />
+    );
+
+    await act(async () => {
+      field().focus();
+    });
+
+    const badges = screen.getAllByTestId("product-option-suggested");
+
+    expect(badges).toHaveLength(1);
+    expect(badges[0]?.closest("[data-testid='product-option']")).toHaveTextContent(
+      "Cola Zero 1,5 L"
+    );
+    // The shop's twin of the known product is folded away, so the mark is on the row that stands.
+    expect(options().filter((text) => text.includes("Cola Zero"))).toHaveLength(1);
   });
 
   it("says which rows the Store already knew and which the shop just answered", async () => {

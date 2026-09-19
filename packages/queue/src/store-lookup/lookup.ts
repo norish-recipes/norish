@@ -28,6 +28,7 @@ import { resolveSearchAddress } from "@norish/shared/lib/search-address";
 
 import { requireQueueApiHandler } from "../api-handlers";
 import { paceStoreVisit, visitKey } from "./pace";
+import { decideProduct } from "./product-decision";
 
 const log = createLogger("queue:store-lookup");
 
@@ -176,14 +177,26 @@ export async function matchGroceryName(input: {
     return gaveUp();
   }
 
-  const chosen = chooseUnmistakable(candidates, name);
+  // Two linking routes, in a fixed order (ADR-0035): the name rule, which
+  // is unchanged, and behind it a Decision the name rule declined — linking
+  // when it is sure enough, and otherwise ranking what is offered so the
+  // Miss carries the order the panel shows. No Decision Model, the use off,
+  // or a failed Decision is today's Miss in the shop's own order.
+  const unmistakable = chooseUnmistakable(candidates, name);
+  const decided = unmistakable ? null : await decideProduct(name, candidates);
+  const chosen = unmistakable ?? decided?.linked ?? null;
 
   if (!chosen) {
     log.info(
-      { storeId, groceryName: name, candidates: candidates.length },
+      {
+        storeId,
+        groceryName: name,
+        candidates: candidates.length,
+        suggested: decided?.suggestion?.best ?? null,
+      },
       "No unmistakable match; a Miss"
     );
-    await linkIfUnanswered(storeId, name, null);
+    await linkIfUnanswered(storeId, name, null, decided?.suggestion ?? null);
     await announceLink(householdKey, storeId, name);
 
     return { matched: false };
@@ -209,7 +222,12 @@ export async function matchGroceryName(input: {
   await announceLink(householdKey, storeId, name);
   if (linked) {
     log.info(
-      { storeId, groceryName: name, productId: product.id },
+      {
+        storeId,
+        groceryName: name,
+        productId: product.id,
+        route: unmistakable ? "unmistakable-name" : "decision",
+      },
       "Linked a grocery name to a Store Product"
     );
   } else {

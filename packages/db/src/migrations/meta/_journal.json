@@ -372,6 +372,13 @@
       "when": 1788961054113,
       "tag": "0052_step_ingredient_share_precision",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1789853837958,
+      "tag": "0053_store_product_link_suggestion",
+      "breakpoints": true
     }
   ]
 }

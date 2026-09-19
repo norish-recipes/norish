@@ -38,9 +38,11 @@ vi.mock("@norish/db/repositories/stores", () => storesRepository);
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/stores", () => import("../mocks/realtime/stores"));
 vi.mock("@norish/trpc/routers/stores/pricing", () => ({ priceTheList: vi.fn(async () => []) }));
-vi.mock("@norish/queue/store-lookup/lookup", () => ({
-  searchStore: vi.fn(async () => ({ candidates: [], answered: true })),
+const lookup = vi.hoisted(() => ({
+  searchStore: vi.fn(async () => ({ candidates: [] as unknown[], answered: true })),
 }));
+
+vi.mock("@norish/queue/store-lookup/lookup", () => lookup);
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -358,5 +360,77 @@ describe("chooseProduct", () => {
     await expect(
       caller.chooseProduct({ storeId: STORE, name: "oude kaas", choice: manualChoice })
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("searchShop", () => {
+  const ctx = createMockAuthedContext(createMockUser(), createMockHousehold());
+  const caller = storeProductProcedures.createCaller(createMockCallerContext(ctx));
+  const offered = [
+    { name: "Oude kaas 500 g", url: "https://www.dirk.nl/p/a", price: 7.99, currency: "EUR" },
+    { name: "Oude kaas 1 kg", url: "https://www.dirk.nl/p/b", price: 13.99, currency: "EUR" },
+    { name: "Jonge kaas", url: "https://www.dirk.nl/p/c", price: 6.49, currency: "EUR" },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
+    storesRepository.getStoreById.mockResolvedValue({
+      id: STORE,
+      searchAddress: "https://www.dirk.nl/zoeken/producten/{query}",
+    });
+    assertHouseholdAccess.mockResolvedValue(undefined);
+    lookup.searchStore.mockResolvedValue({ candidates: offered, answered: true });
+    storeProductsRepository.resolveProductLink.mockResolvedValue(null);
+  });
+
+  it("offers the shop's answers in the shop's order when the Store holds no suggestion", async () => {
+    const result = await caller.searchShop({ storeId: STORE, term: "oude kaas" });
+
+    expect(result).toEqual({ candidates: offered, answered: true });
+    expect(storeProductsRepository.resolveProductLink).toHaveBeenCalledWith(STORE, "oude kaas");
+  });
+
+  it("orders the offered products by the Decision kept with the Miss, marking the best guess", async () => {
+    storeProductsRepository.resolveProductLink.mockResolvedValue({
+      storeId: STORE,
+      normalizedName: "oude kaas",
+      triedAt: new Date(),
+      product: null,
+      suggestion: {
+        ranked: [
+          { url: "https://www.dirk.nl/p/b", probability: 0.6 },
+          { url: "https://www.dirk.nl/p/a", probability: 0.3 },
+        ],
+        best: "https://www.dirk.nl/p/b",
+      },
+    });
+
+    const result = await caller.searchShop({ storeId: STORE, term: "oude kaas" });
+
+    expect(result.candidates.map((candidate) => candidate.url)).toEqual([
+      "https://www.dirk.nl/p/b",
+      "https://www.dirk.nl/p/a",
+      "https://www.dirk.nl/p/c",
+    ]);
+    expect(result.candidates[0]).toMatchObject({ suggested: true });
+    expect(result.candidates.filter((candidate) => candidate.suggested)).toHaveLength(1);
+  });
+
+  it("ignores a suggestion once the name is linked: the question it ranked answers for is closed", async () => {
+    storeProductsRepository.resolveProductLink.mockResolvedValue({
+      storeId: STORE,
+      normalizedName: "oude kaas",
+      triedAt: new Date(),
+      product: { id: "product-1" },
+      suggestion: {
+        ranked: [{ url: "https://www.dirk.nl/p/c", probability: 0.9 }],
+        best: "https://www.dirk.nl/p/c",
+      },
+    });
+
+    const result = await caller.searchShop({ storeId: STORE, term: "oude kaas" });
+
+    expect(result.candidates).toEqual(offered);
   });
 });

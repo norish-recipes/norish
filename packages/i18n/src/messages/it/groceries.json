@@ -128,6 +128,7 @@
     "searching": "Ricerca in {store}…",
     "knownGroup": "Già noti",
     "shopGroup": "Dal negozio",
+    "suggested": "Suggerito",
     "nothingFound": "Norish non ha trovato nulla da {store}. Puoi scrivere tu il prezzo.",
     "noAnswer": "{store} non ha risposto. Riprova tra un momento, oppure inserisci il prezzo tu stesso.",
     "byHandName": "Nome del prodotto",

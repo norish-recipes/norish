@@ -20,6 +20,12 @@ export interface StoreCandidate {
   regularPrice?: number;
   /** The shop's own words for a deal, on Sale or not: "2 voor €5.50", "ACTIE". */
   dealWords?: string;
+  /**
+   * The Decision Model's best guess for the grocery this list was offered
+   * for, where it cleared the suggestion bar (ADR-0035). Set only on the
+   * offered list the grocery panel reads, never by a page reader.
+   */
+  suggested?: boolean;
 }
 
 /** The authoritative reading of a product page: its Shelf Price. */

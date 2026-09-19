@@ -80,6 +80,8 @@ interface ProductRow {
   regularPrice: number | null;
   /** The shop's own words for its deal, on Sale or not. */
   dealWords: string | null;
+  /** The Decision Model's best guess for this grocery, where it was sure enough to say. */
+  suggested: boolean;
   choice: StoreProductChoice;
 }
 
@@ -104,11 +106,16 @@ function candidateRow(candidate: PricedCandidate, words: PackSizeWords): Product
     pack: candidate.pack ?? null,
     regularPrice: saleRegularPrice(candidate.price, candidate.regularPrice),
     dealWords: candidate.dealWords ?? null,
+    suggested: candidate.suggested === true,
     choice: { kind: "candidate", candidate },
   };
 }
 
-function productRow(product: StoreProductDto, words: PackSizeWords): ProductRow {
+function productRow(
+  product: StoreProductDto,
+  words: PackSizeWords,
+  suggested: boolean = false
+): ProductRow {
   const pack = packSizeOf(product);
 
   return {
@@ -122,6 +129,7 @@ function productRow(product: StoreProductDto, words: PackSizeWords): ProductRow 
     pack,
     regularPrice: saleRegularPrice(product.price, product.regularPrice),
     dealWords: product.dealWords,
+    suggested,
     choice: { kind: "product", storeProductId: product.id },
   };
 }
@@ -134,17 +142,29 @@ function RowContent({
   row,
   locale,
   regularPriceLabel,
+  suggestedLabel,
 }: {
   row: ProductRow;
   locale: string;
   regularPriceLabel: (price: string) => string;
+  suggestedLabel: string;
 }) {
   const regular =
     row.regularPrice === null ? null : formatShelfPrice(locale, row.regularPrice, row.currency);
 
   return (
     <div className="flex w-full items-center justify-between gap-3">
-      <span className="min-w-0 flex-1 truncate">{row.name}</span>
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="min-w-0 truncate">{row.name}</span>
+        {row.suggested && (
+          <span
+            className="bg-accent/10 text-accent shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase"
+            data-testid="product-option-suggested"
+          >
+            {suggestedLabel}
+          </span>
+        )}
+      </span>
       <span className="text-muted shrink-0 text-xs tabular-nums">
         <SalePrice
           price={formatShelfPrice(locale, row.price, row.currency)}
@@ -312,6 +332,10 @@ export function GroceryProductField({
   // One product, one row. A result the Store already has a product for is that
   // product: it carries the price Norish read from the product's own page, and
   // it is what a link can point at.
+  // The shop's answers arrive in the order the lookup's Decision put them,
+  // best guess first and marked; a product the Store already holds for one of
+  // those pages carries the mark to the row that stands for it.
+  const suggestedPage = candidates.find((candidate) => candidate.suggested)?.url ?? null;
   const known = stored
     .filter(
       (product) =>
@@ -319,7 +343,10 @@ export function GroceryProductField({
         product.id === picked ||
         answers(product.name, searchedTerm || groceryName)
     )
-    .map((product) => productRow(product, packWords));
+    .sort((a, b) => Number(b.pageUrl === suggestedPage) - Number(a.pageUrl === suggestedPage))
+    .map((product) =>
+      productRow(product, packWords, product.pageUrl !== null && product.pageUrl === suggestedPage)
+    );
   const fromShop = candidates
     .filter((candidate) => !storedByPage.has(candidate.url))
     .map((candidate) => candidateRow(candidate, packWords));
@@ -706,6 +733,7 @@ export function GroceryProductField({
                       locale={locale}
                       regularPriceLabel={(price) => tPrice("regularPrice", { price })}
                       row={row}
+                      suggestedLabel={t("suggested")}
                     />
                   </ListBox.Item>
                 ))}
@@ -727,6 +755,7 @@ export function GroceryProductField({
                       locale={locale}
                       regularPriceLabel={(price) => tPrice("regularPrice", { price })}
                       row={row}
+                      suggestedLabel={t("suggested")}
                     />
                   </ListBox.Item>
                 ))}

@@ -128,6 +128,7 @@
     "searching": "Søger i {store}…",
     "knownGroup": "Allerede kendt",
     "shopGroup": "Fra butikken",
+    "suggested": "Foreslået",
     "nothingFound": "Norish fandt intet hos {store}. Du kan selv skrive prisen.",
     "noAnswer": "{store} svarede ikke. Prøv igen om et øjeblik, eller skriv prisen selv.",
     "byHandName": "Produktnavn",

@@ -27,6 +27,7 @@ import {
   StoreProductsListInputSchema,
   StoreShopSearchSchema,
 } from "@norish/shared/contracts/zod";
+import { orderBySuggestion } from "@norish/shared/lib/product-link";
 import { resolveSearchAddress } from "@norish/shared/lib/search-address";
 
 import { authedProcedure } from "../../middleware";
@@ -116,13 +117,24 @@ const searchShop = authedProcedure
     // the queue at the same shop. Whether the shop answered at all travels
     // with the answer: a shop that is down has not said it stocks nothing.
     const { candidates, answered } = await searchStore(store.searchAddress, input.term);
+    // What the lookup's Decision said about these products, kept with the
+    // Miss for this name (ADR-0035): the offered list is ordered by it, most
+    // likely first, with the best guess marked. One indexed row, no request.
+    const link = await resolveProductLink(input.storeId, input.term);
+    const offered = orderBySuggestion(candidates, link?.product ? null : link?.suggestion);
 
     log.info(
-      { userId: ctx.user.id, storeId: input.storeId, count: candidates.length, answered },
+      {
+        userId: ctx.user.id,
+        storeId: input.storeId,
+        count: candidates.length,
+        answered,
+        suggested: offered.some((candidate) => candidate.suggested),
+      },
       "Searched a shop for the picker"
     );
 
-    return { candidates, answered };
+    return { candidates: offered, answered };
   });
 
 function hostOf(address: string | null | undefined): string | null {

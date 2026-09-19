@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   listStaleProducts: vi.fn(),
   noteProductUnreadable: vi.fn(),
   publish: vi.fn(async () => undefined),
+  decideProduct: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/stores", () => ({ getStoreById: mocks.getStoreById }));
@@ -37,6 +38,9 @@ vi.mock("@norish/db/repositories/store-products", () => ({
 }));
 vi.mock("@norish/shared-server/realtime/stores", () => ({
   stores: { publish: mocks.publish },
+}));
+vi.mock("@norish/queue/store-lookup/product-decision", () => ({
+  decideProduct: mocks.decideProduct,
 }));
 
 const STORE = "11111111-1111-4111-8111-111111111111";
@@ -92,6 +96,8 @@ describe("matchGroceryName", () => {
       Promise.resolve({ id: "product-1", ...reading })
     );
     mocks.linkIfUnanswered.mockResolvedValue(true);
+    // No Decision Model: the name rule alone decides, as it always has.
+    mocks.decideProduct.mockResolvedValue(null);
   });
 
   it("searches the shop with the grocery's own name", async () => {
@@ -232,8 +238,115 @@ describe("matchGroceryName", () => {
     });
 
     expect(result).toEqual({ matched: false });
-    expect(mocks.linkIfUnanswered).toHaveBeenCalledWith(STORE, "oude kaas", null);
+    expect(mocks.linkIfUnanswered).toHaveBeenCalledWith(STORE, "oude kaas", null, null);
     expect(mocks.upsertReadProduct).not.toHaveBeenCalled();
+  });
+
+  describe("the Decision behind the name rule", () => {
+    const offered = [
+      candidate("Oude kaas 500 g", PRODUCT_PAGE),
+      candidate("Oude kaas 1 kg", "https://www.dirk.nl/boodschappen/kaas/oude-kaas/97753", 13.99),
+    ];
+
+    it("asks the Decision only once the name rule has declined", async () => {
+      useShop({
+        candidates: [candidate("Oude kaas")],
+        product: { name: "Oude kaas", price: 7.99, currency: "EUR" },
+      });
+
+      await matchGroceryName({ storeId: STORE, name: "oude kaas", householdKey: HOUSEHOLD });
+
+      expect(mocks.decideProduct).not.toHaveBeenCalled();
+      expect(mocks.linkIfUnanswered).toHaveBeenCalledWith(STORE, "oude kaas", "product-1");
+    });
+
+    it("links and prices the product the Decision is sure of, as an unmistakable match is", async () => {
+      const visited = useShop({
+        candidates: offered,
+        product: { name: "1 de Beste Oude kaas 48+", price: 8.49, currency: "EUR", size: "500 g" },
+      });
+
+      mocks.decideProduct.mockResolvedValue({ linked: offered[0], suggestion: null });
+
+      const result = await matchGroceryName({
+        storeId: STORE,
+        name: "oude kaas",
+        householdKey: HOUSEHOLD,
+      });
+
+      expect(result).toEqual({ matched: true });
+      expect(mocks.decideProduct).toHaveBeenCalledWith("oude kaas", offered);
+      // The results page names it; its own page states the price to keep.
+      expect(visited).toContain(PRODUCT_PAGE);
+      expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "1 de Beste Oude kaas 48+", price: 8.49 })
+      );
+      // Through the same conditional write, so a shopper who answered in the
+      // meantime, or unlinked before, is never overruled.
+      expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(
+        STORE,
+        "oude kaas",
+        "product-1"
+      );
+    });
+
+    it("keeps the Decision's ranking with the Miss when it is not sure enough to link", async () => {
+      useShop({ candidates: offered });
+      const suggestion = {
+        ranked: [
+          { url: offered[1]!.url, probability: 0.6 },
+          { url: PRODUCT_PAGE, probability: 0.3 },
+        ],
+        best: offered[1]!.url,
+      };
+
+      mocks.decideProduct.mockResolvedValue({ linked: null, suggestion });
+
+      const result = await matchGroceryName({
+        storeId: STORE,
+        name: "oude kaas",
+        householdKey: HOUSEHOLD,
+      });
+
+      expect(result).toEqual({ matched: false });
+      expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(
+        STORE,
+        "oude kaas",
+        null,
+        suggestion
+      );
+      expect(mocks.upsertReadProduct).not.toHaveBeenCalled();
+      expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
+        householdKey: HOUSEHOLD,
+      });
+    });
+
+    it("does not overrule a shopper who answered while the Decision was being made", async () => {
+      useShop({
+        candidates: offered,
+        product: { name: "Oude kaas", price: 7.99, currency: "EUR" },
+      });
+      mocks.decideProduct.mockResolvedValue({ linked: offered[0], suggestion: null });
+      mocks.linkIfUnanswered.mockResolvedValue(false);
+
+      await expect(
+        matchGroceryName({ storeId: STORE, name: "oude kaas", householdKey: HOUSEHOLD })
+      ).resolves.toEqual({ matched: false });
+    });
+
+    it("writes today's Miss, in the shop's order, when the Decision decided nothing", async () => {
+      useShop({ candidates: offered });
+      mocks.decideProduct.mockResolvedValue(null);
+
+      await matchGroceryName({ storeId: STORE, name: "oude kaas", householdKey: HOUSEHOLD });
+
+      expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(
+        STORE,
+        "oude kaas",
+        null,
+        null
+      );
+    });
   });
 
   it("links the first of several products carrying exactly the grocery's name", async () => {
@@ -313,7 +426,7 @@ describe("matchGroceryName", () => {
     // The conditional write turns the pending row into the Miss; nothing
     // deletes it first, or the household would see the row go blank between.
     expect(mocks.clearPendingLink).not.toHaveBeenCalled();
-    expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, "oude kaas", null);
+    expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, "oude kaas", null, null);
   });
 
   it("leaves alone a name somebody answered while the job was queued", async () => {
@@ -360,7 +473,9 @@ describe("matchGroceryName", () => {
     expect(result).toEqual({ matched: false });
     expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, "oude kaas", "product-1");
     // Whatever the link now says is what the household hears.
-    expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), { householdKey: HOUSEHOLD });
+    expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
+      householdKey: HOUSEHOLD,
+    });
   });
 
   it("writes a Miss only where nobody has answered", async () => {
@@ -370,7 +485,7 @@ describe("matchGroceryName", () => {
 
     // The conditional write, never the unconditional one: a Miss found by the
     // queue must not erase a product a shopper picked in the meantime.
-    expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, "oude kaas", null);
+    expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, "oude kaas", null, null);
   });
 
   it("still answers a name the Store knows only as a Miss", async () => {
@@ -410,8 +525,14 @@ describe("matchGroceryName", () => {
 
     await matchGroceryName({ storeId: STORE, name: "oude kaas", householdKey: HOUSEHOLD });
 
-    expect(mocks.publish).toHaveBeenCalledWith("productUpdated", expect.objectContaining({ product: expect.objectContaining({ id: "product-1" }) }), { householdKey: HOUSEHOLD });
-    expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), { householdKey: HOUSEHOLD });
+    expect(mocks.publish).toHaveBeenCalledWith(
+      "productUpdated",
+      expect.objectContaining({ product: expect.objectContaining({ id: "product-1" }) }),
+      { householdKey: HOUSEHOLD }
+    );
+    expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
+      householdKey: HOUSEHOLD,
+    });
   });
 });
 

@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  jsonb,
   numeric,
   pgTable,
   text,
@@ -11,6 +12,18 @@ import {
 
 import { versionColumn } from "./shared";
 import { stores } from "./stores";
+
+/**
+ * A Decision's ranking of the products a lookup offered for a grocery name.
+ * Declared here, beside the column that stores it, because the schema
+ * package sits below the contracts that re-export it.
+ */
+export interface ProductSuggestion {
+  /** The offered products' page URLs, most likely first, with the probability of each. */
+  ranked: { url: string; probability: number }[];
+  /** The page URL of the best guess, where its probability cleared the suggestion bar. */
+  best: string | null;
+}
 
 /**
  * A Store Product: something a Store sells, as Norish last read it. It belongs
@@ -87,6 +100,16 @@ export const storeProductLinks = pgTable(
     }),
     /** When the shop last answered for this name; null while it is still being asked. */
     triedAt: timestamp("tried_at", { withTimezone: true }),
+    /**
+     * What the Decision Model said about the products the shop offered for
+     * this name, kept with the Miss it was not sure enough to turn into a
+     * link (ADR-0035): the offered products most likely first, each with its
+     * probability, and the one marked as the best guess where it cleared the
+     * bar. Read when the grocery panel offers the shop's answers, so opening
+     * the panel spends nothing. Null on a link, a Pending Link, or a Miss
+     * nothing was asked about.
+     */
+    suggestion: jsonb("suggestion").$type<ProductSuggestion>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
