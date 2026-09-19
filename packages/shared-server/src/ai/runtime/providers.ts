@@ -13,7 +13,7 @@ import type { ImageModel, TranscriptionModel } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAzure } from "@ai-sdk/azure";
 import { createDeepSeek } from "@ai-sdk/deepseek";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createGoogle } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -223,7 +223,7 @@ function createProviderModels(
     case "google": {
       if (!apiKey) throw new Error("API Key is required for Google AI provider");
 
-      const google = createGoogleGenerativeAI({ apiKey, fetch: customFetch });
+      const google = createGoogle({ apiKey, fetch: customFetch });
 
       return {
         model: google(model),
@@ -301,7 +301,7 @@ export function createImageModelFromConfig(config: {
       if (!apiKey) throw new Error("API Key is required for Google AI provider");
 
       return {
-        model: createGoogleGenerativeAI({ apiKey, fetch: customFetch }).image(model),
+        model: createGoogle({ apiKey, fetch: customFetch }).image(model),
         providerName: "Google AI",
         landscape: { aspectRatio: "16:9" },
       };

@@ -22,10 +22,10 @@ import { extname } from "node:path";
 import type { z } from "zod";
 import {
   asSchema,
-  experimental_transcribe,
   generateImage as generateImageWithModel,
   generateText,
   Output,
+  transcribe as transcribeWithModel,
 } from "ai";
 
 import type { AIConfig, TranscriptionProvider } from "@norish/config/zod/server-config";
@@ -189,7 +189,7 @@ async function requestObject<T>({
   // Vision selection is implicit: the presence of images selects the vision
   // model, so images cannot be silently dropped by a forgotten flag.
   const useVision = images.length > 0;
-  const system = jsonMode
+  const instructions = jsonMode
     ? `${SYSTEM_MESSAGES[promptName]}\n\n${await jsonModeInstruction(schema)}`
     : SYSTEM_MESSAGES[promptName];
 
@@ -207,7 +207,7 @@ async function requestObject<T>({
   const result = await generateText({
     model: useVision ? visionModel : model,
     output: Output.object({ schema }),
-    system,
+    instructions,
     temperature: config.temperature,
     maxOutputTokens: config.maxTokens,
     abortSignal: AbortSignal.timeout(config.timeoutMs),
@@ -219,8 +219,8 @@ async function requestObject<T>({
               content: [
                 { type: "text" as const, text: prompt },
                 ...images.map((image) => ({
-                  type: "image" as const,
-                  image: image.data,
+                  type: "file" as const,
+                  data: image.data,
                   mediaType: image.mimeType,
                 })),
               ],
@@ -423,7 +423,7 @@ async function transcribeWithProvider(
     case "openai":
     case "groq":
     case "azure": {
-      const result = await experimental_transcribe({
+      const result = await transcribeWithModel({
         model: createTranscriptionModel(provider, { apiKey, model, endpoint, timeoutMs }),
         audio: await readFile(audioPath),
         abortSignal: AbortSignal.timeout(timeoutMs),

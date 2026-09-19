@@ -1,6 +1,6 @@
 # 01 — The AI SDK line moves to 7
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: None — can start immediately
 
 Spec: `.scratch/decision-model/spec.md`
@@ -62,3 +62,17 @@ The E2E fake provider (`apps/web/__tests__/e2e/harness/ai-provider.ts`) speaks t
 ## Comments
 
 - Filed 2026-09-19 with the spec.
+- 2026-09-19 — **Breaking changes that touch Norish**, from the SDK's own 6 → 7 migration guide (shipped inside the `ai` package at `docs/08-migration-guides/23-migration-guide-7-0.mdx`; ai-sdk.dev is unreachable from the agent sandbox). Everything else in the guide is agents, streaming, UI, telemetry and tool-loop surface Norish never touched.
+  - Node.js 22 minimum and ESM-only packages: already true for every workspace (`"type": "module"`, `.nvmrc` 22.22).
+  - `experimental_transcribe` → `transcribe` (deprecated alias kept). Renamed in `runtime.ts`.
+  - `generateText`'s `system` → `instructions` (deprecated fallback kept). Renamed in `requestObject`; the `SYSTEM_MESSAGES` table keeps its name because a system message is still what the providers call it.
+  - The `{ type: "image", image, mediaType }` user-message part is deprecated for `{ type: "file", data, mediaType }`; the provider specification (V4) drops the image part entirely. Renamed in `requestObject`'s vision branch.
+  - `LanguageModelMiddleware` is now the V4 middleware; `wrapLanguageModel` up-converts V2/V3 models through a proxy and always returns a V4 model. **This is the one that bit**: `withTemperatureFallback` guarded on `specificationVersion === "v3"`, and every 4-line provider now reports `"v4"`, so after the bump the middleware was silently skipped for every production model while the unit test (a hand-built v3 fake) still passed. The two `provider-temperature.test.ts` transport tests caught it. Guard and middleware moved to `"v4"`; the test fake follows.
+  - `createGoogleGenerativeAI` → `createGoogle` (alias kept). Renamed in `providers.ts`.
+  - `result.usage.inputTokens/outputTokens/totalTokens`, `Output.object`, `asSchema`, `generateImage`, `APICallError`, `NoObjectGeneratedError`, `NoImageGeneratedError`, `result.image.uint8Array/mediaType`, `openai-compatible`'s `supportsStructuredOutputs`, and `ai-sdk-ollama`'s `createOllama({ baseURL, fetch })` / `ollama(model, { structuredOutputs })` are unchanged on the 7 line, so `requestObject`, `generateImage` and `transcribeWithProvider` needed no other change.
+  - Not applicable: system messages inside `messages` being rejected (Norish only ever passes the top-level option), request/response bodies excluded from results, `usage` summing all steps (Norish is single-step), telemetry defaults (no integration registered), the Anthropic cache-token metadata removal, OpenAI reasoning summaries, xAI.
+  - The E2E fake provider needed no change: `@ai-sdk/openai-compatible` 3 still sends `POST {baseURL}/chat/completions` with `response_format` and reads `choices[0].message.content`, and the image route is unchanged. `apps/web/__tests__/e2e/harness/ai-provider.test.ts` (14 tests) passes against the 7-line client.
+- 2026-09-19 — **ADR-0024 image-provider re-check** on the installed 4-line packages (`@ai-sdk/*` 4.0.x, `deepseek` 3.0.x, `openai-compatible` 3.0.x, `ai-sdk-ollama` 4.3.0). Anthropic, Mistral, DeepSeek, Groq and Perplexity still expose no image model: each provider's `imageModel` throws `NoSuchModelError`. OpenAI, Azure, Google and the OpenAI-compatible provider still do. **Ollama gained one**: `ai-sdk-ollama` exposes `ollama.imageModel(modelId)` (an `OllamaImageModel` against Ollama's experimental image models such as `x/z-image-turbo`), added in its 3.8.0 and carried into 4.x. Per this ticket that is a follow-up, not part of the move — filed as `.scratch/image-generation/issues/10-ollama-image-model.md`; the `ImageGenerationProviderSchema` enum and its comment are left as they are until that ticket decides.
+- 2026-09-19 — Fallback not needed: the move was a same-day change with no provider capability missing, so `decide` (ticket 04) can be built on `@ai-sdk/typesafe-ai` as the spec prefers.
+- 2026-09-19 — One test changed beyond renames: `errors.test.ts` built a `NoObjectGeneratedError` with `response`, `usage` and `finishReason` set to `undefined`; the 7-line constructor no longer accepts `undefined` there, so the fixture now carries a minimal response, an all-undefined usage record and a `stop` finish reason. The assertion is untouched.
+- 2026-09-19 — Gate note: `packages/queue`'s `paste-import/worker.integration.test.ts` and the repository integration tests start PostgreSQL through testcontainers, and the browser E2E suite (`apps/web/__tests__/e2e/ai/`) needs the Docker-hosted Postgres, Redis and Obscura; none of them can run in the sandbox this was done in (no Docker) and the queue one fails identically on the base branch there. Every suite that can run here passes, including the harness's wire-compatibility test the E2E AI suite rests on; CI has Docker and is the check for the two acceptance boxes that need it.

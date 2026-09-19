@@ -42,9 +42,19 @@ describe("toAIError", () => {
     const sdkError = new NoObjectGeneratedError({
       message: "No object generated",
       text: "not json",
-      response: undefined,
-      usage: undefined,
-      finishReason: undefined,
+      response: { id: "resp", timestamp: new Date(0), modelId: "test-model" },
+      usage: {
+        inputTokens: undefined,
+        inputTokenDetails: {
+          noCacheTokens: undefined,
+          cacheReadTokens: undefined,
+          cacheWriteTokens: undefined,
+        },
+        outputTokens: undefined,
+        outputTokenDetails: { textTokens: undefined, reasoningTokens: undefined },
+        totalTokens: undefined,
+      },
+      finishReason: "stop",
     });
 
     const error = toAIError(sdkError);

@@ -82,7 +82,7 @@ function withCause(rejection: APICallError, retryError: unknown): APICallError {
 }
 
 const temperatureFallbackMiddleware: LanguageModelMiddleware = {
-  specificationVersion: "v3",
+  specificationVersion: "v4",
 
   async wrapGenerate({ doGenerate, params, model }) {
     // Nothing to fall back from, so stay out of the way entirely.
@@ -126,10 +126,11 @@ const temperatureFallbackMiddleware: LanguageModelMiddleware = {
  */
 export function withTemperatureFallback(model: LanguageModel): LanguageModel {
   // Models are only ever built as instances here, and every provider Norish
-  // ships speaks v3. A bare model-id string has no provider to call through, and
-  // a v2 model predates the middleware this wraps it in; both pass through
-  // untouched rather than being wrapped in something they cannot answer.
-  if (typeof model === "string" || model.specificationVersion !== "v3") return model;
+  // ships speaks v4. A bare model-id string has no provider to call through, and
+  // an older-specification model predates the middleware this wraps it in; both
+  // pass through untouched rather than being wrapped in something they cannot
+  // answer.
+  if (typeof model === "string" || model.specificationVersion !== "v4") return model;
 
   return wrapLanguageModel({ model, middleware: temperatureFallbackMiddleware });
 }
