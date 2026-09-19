@@ -11,7 +11,7 @@ A recipe whose creation transaction has succeeded and whose stored state can be 
 _Avoid_: Complete Recipe (suggests optional fields must be present)
 
 **Recipe Enrichment**:
-Optional AI-assisted processing that adds or refreshes recipe tags, allergy indications, meal categories, nutrition values, provenance, Step Ingredients, or a picture of the dish after a recipe is usable. It includes both automatic runs for newly usable recipes and manually requested runs; its outcome does not determine whether recipe creation or import succeeded.
+Optional AI-assisted processing that adds or refreshes recipe tags, allergy indications, meal categories, nutrition values, provenance, Step Ingredients, or a picture of the dish after a recipe is usable. It includes both automatic runs for newly usable recipes and manually requested runs; its outcome does not determine whether recipe creation or import succeeded. A run's own claims may be checked by the Decision Model before they are written (Enrichment Validation); what is already stored is never re-judged, so a person's tags, categories and links stay out of its reach.
 _Avoid_: Post-Import Enrichment (excludes manual creation and manual runs)
 
 **Automatic Recipe Enrichment**:
@@ -169,11 +169,11 @@ The portable file a Norish instance writes so recipes can leave it: every recipe
 _Avoid_: Export (the act, not the artifact), Backup (promises restoration an archive refuses to make), Instance export (suggests instance state is inside)
 
 **AI Runtime**:
-The single seam through which Norish issues a model request — structured generation, transcription, and image generation, all on one shared transport. A feature never constructs a provider client, never reads Generation Preferences, and never calls the SDK: it hands the runtime its Prompt's name and its Prompt Sections, plus a schema where there is something to validate, and gets a result or a typed error that says whether retrying is worth it (ADR-0015, ADR-0024). It owns all AI egress but no longer reads one configuration: structured generation follows the server's AI provider, transcription and image generation each follow their own.
+The single seam through which Norish issues a model request — structured generation, transcription, image generation, and a Decision, all on one shared transport. A feature never constructs a provider client, never reads Generation Preferences, and never calls the SDK: it hands the runtime its Prompt's name and its Prompt Sections, plus a schema where there is something to validate — or, for a Decision, a state and typed questions — and gets a result or a typed error that says whether retrying is worth it (ADR-0015, ADR-0024, ADR-0035). It owns all AI egress but no longer reads one configuration: structured generation follows the server's AI provider, transcription, image generation and Decisions each follow their own block.
 _Avoid_: AI executor (names the deleted prototype that had no callers), AI client (suggests a per-provider object, which is what the runtime hides)
 
 **Prompt**:
-The administrator-editable base every AI request starts from. There are eleven, one per request shape, each stored in configuration with a shipped default, and the runtime will not accept a finished prompt string in their place — which is what makes every request tunable by construction (ADR-0016).
+The administrator-editable base every language-model request starts from. There are eleven, one per request shape, each stored in configuration with a shipped default, and the runtime will not accept a finished prompt string in their place — which is what makes every request tunable by construction (ADR-0016). A Decision is the one request shape that has none: its criteria are the domain's own option set and its instructions are code-owned, so there is no wording to tune (ADR-0035).
 _Avoid_: Prompt template (implies placeholders a feature fills; a Prompt is appended to, not filled in)
 
 **Prompt Section**:
@@ -183,6 +183,26 @@ _Avoid_: Prompt variable (names the rejected placeholder mechanism)
 **Generation Preference**:
 A generation parameter Norish asks a model for — temperature today — that the model is free to refuse. Norish never claims to know in advance which parameters a model accepts, because a self-hoster chooses the model. A refused preference is dropped and the request answered without it, so a preference is never the reason a feature fails (ADR-0014).
 _Avoid_: Model Capability (claims foreknowledge Norish does not have), Generation Setting (a setting is honoured, a preference may be declined)
+
+**Decision Model**:
+The optional second AI provider that answers closed questions and generates nothing: TypeSafe's Jev today. Given a state and named questions it returns, for every question, a pick and a probability for every option — much faster and cheaper than a language model for the same decision, and honest about how sure it is. Configured on its own with its own key, beside the Image Generation block it structurally resembles; it follows the global AI switch and is never required by any feature, which keeps its language-model or heuristic path and takes it whenever the Decision Model is unconfigured, switched off for that use, or fails (ADR-0035).
+_Avoid_: Decision provider (names the settings block, not the thing), Classifier (it also scores and ranks), Jev (a product name; the glossary names the role)
+
+**Decision**:
+One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the four categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
+_Avoid_: Evaluation (the SDK's word; it reads as judging quality), Classification (only one of the three question shapes)
+
+**Clear Case**:
+A Decision answer above the asking feature's threshold, and therefore acted on. Anything below is handed to the path the feature had before: the language model, the heuristic, or a person. The threshold is a named constant in the feature's own file with a test at the boundary, never a setting and never the runtime's.
+_Avoid_: Confident answer (TypeSafe's confidence is a separate statistic from the probability the threshold reads)
+
+**Decision Use**:
+One thing the Decision Model does for a household — categorising, allergy tagging, provenance, grocery linking, validating enrichments — chosen by an administrator from one list, all selected by default once a Decision Model is configured. What the Decision Model does for Norish's own algorithms (import triage) is not a Decision Use and is not in the list: those questions only ever make an import cheaper or refuse a page that was never a recipe, and there is nothing for a household to opt out of.
+_Avoid_: Decision feature (a feature is the kind; the use is whether the kind asks)
+
+**Enrichment Validation**:
+The check every enrichment run's output gets from the Decision Model before it is written: a claim the model is clearly sure is wrong is not written, an estimate clearly out of reason sends the run back to ask again. It sees only the run's own claims, never what is stored, which is what keeps a person's own tags, categories and links out of its reach.
+_Avoid_: Recipe validation (suggests the stored recipe is judged; it is not), Cleanup
 
 **Unclassified Post**:
 A post whose source gave no evidence either way about a video stream. It is not a post without video: reading that silence as absence is what sent reels down the caption-only path, losing the video and the creator.

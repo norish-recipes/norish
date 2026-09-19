@@ -570,6 +570,10 @@
         "title": "Bildgenerierung",
         "subtitle": "Zeichnet ein Bild des Gerichts für Rezepte ohne Foto"
       },
+      "decisionModel": {
+        "title": "Entscheidungsmodell",
+        "subtitle": "Schnelle, günstige Antworten auf geschlossene Fragen"
+      },
       "prompts": {
         "title": "Prompts",
         "subtitle": "Passe KI-Anweisungen für Rezept-Verarbeitung an"
@@ -731,6 +735,40 @@
       "modelPlaceholder": "z. B. gpt-image-1",
       "modelDescription": "Das Modell, das das Bild zeichnet. Es muss ein Bildmodell sein, kein Textmodell.",
       "fallbackHint": "Gleicher Anbieter wie deine KI-Konfiguration: Endpoint und API-Schlüssel werden von dort übernommen, sofern du sie hier nicht setzt."
+    },
+    "decisionConfig": {
+      "description": "Das Entscheidungsmodell beantwortet geschlossene Fragen — ist das ein Frühstück, enthält es Erdnüsse, welches dieser Produkte ist der Einkauf — viel schneller und günstiger als ein Sprachmodell und mit einem ehrlichen Maß dafür, wie sicher es ist. Es ist optional: Jede Funktion arbeitet auch ohne weiter, und es ersetzt nie den KI-Anbieter oben.",
+      "provider": "Entscheidungsanbieter",
+      "providers": {
+        "disabled": "Deaktiviert",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-Schlüssel",
+      "apiKeyPlaceholder": "API-Schlüssel eingeben...",
+      "apiKeyDescription": "Einen Schlüssel bekommst du in deinem Konto auf typesafe.ai",
+      "model": "Entscheidungsmodell",
+      "modelDescription": "jev-latest folgt der neuesten Version von TypeSafe. Leer lassen, um sie zu verwenden.",
+      "advanced": "Erweitert",
+      "endpoint": "Endpoint-URL",
+      "endpointDescription": "Für einen Proxy oder ein Gateway; ansonsten leer lassen.",
+      "uses": "Entscheidungsmodell verwenden für",
+      "usesDescription": "Sobald ein Entscheidungsmodell konfiguriert ist, ist alles ausgewählt; wähle ab, was dem KI-Anbieter überlassen bleiben soll. Die Import-Triage nutzt das Entscheidungsmodell immer und steht nicht in der Liste.",
+      "usesPlaceholder": "Nichts",
+      "useNames": {
+        "autoCategorization": "Automatische Kategorisierung",
+        "autoCategorizationDescription": "Entscheiden, ob ein Rezept ein Frühstück, Mittagessen, Abendessen oder Snack ist",
+        "allergyDetection": "Allergieerkennung",
+        "allergyDetectionDescription": "Entscheiden, welche Allergene des Haushalts ein Rezept enthält",
+        "recipeProvenance": "Rezept-Herkunft",
+        "recipeProvenanceDescription": "Land und Küchen festlegen, bevor die Notiz geschrieben wird",
+        "groceryLinking": "Einkäufe verknüpfen",
+        "groceryLinkingDescription": "Die angebotenen Produkte eines Geschäfts ordnen und eines verknüpfen, bei dem es sicher ist",
+        "validateEnrichments": "Anreicherungen prüfen",
+        "validateEnrichmentsDescription": "Die eigenen Aussagen jedes Anreicherungslaufs prüfen, bevor sie gespeichert werden"
+      },
+      "testConnection": "Verbindung testen",
+      "connectionSuccess": "Verbindung erfolgreich",
+      "aiDisabledHint": "KI ist auf diesem Server deaktiviert. Aktiviere sie in der KI-Konfiguration, um das Entscheidungsmodell zu testen und zu nutzen."
     },
     "promptsConfig": {
       "recipeExtraction": "Rezept-Extraktions-Prompt",

@@ -570,6 +570,10 @@
         "title": "Afbeeldingen Genereren",
         "subtitle": "Teken een foto van het gerecht voor recepten zonder afbeelding"
       },
+      "decisionModel": {
+        "title": "Beslismodel",
+        "subtitle": "Snelle, goedkope antwoorden op gesloten vragen"
+      },
       "prompts": {
         "title": "Prompts",
         "subtitle": "Pas AI-instructies aan voor receptverwerking"
@@ -731,6 +735,40 @@
       "modelPlaceholder": "bijv. gpt-image-1",
       "modelDescription": "Het model dat de afbeelding tekent. Het moet een afbeeldingsmodel zijn, geen tekstmodel.",
       "fallbackHint": "Zelfde provider als je AI-configuratie: endpoint en API-sleutel vallen daarop terug tenzij je ze hier instelt."
+    },
+    "decisionConfig": {
+      "description": "Het Beslismodel beantwoordt gesloten vragen — is dit een ontbijt, zitten er pinda's in, welk van deze producten is de boodschap — veel sneller en goedkoper dan een taalmodel, en met een eerlijke maat voor hoe zeker het is. Het is optioneel: elke functie blijft werken zonder, en het vervangt nooit de AI-provider hierboven.",
+      "provider": "Beslisprovider",
+      "providers": {
+        "disabled": "Uitgeschakeld",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-sleutel",
+      "apiKeyPlaceholder": "Voer API-sleutel in...",
+      "apiKeyDescription": "Haal een sleutel op in je account op typesafe.ai",
+      "model": "Beslismodel",
+      "modelDescription": "jev-latest volgt de nieuwste release van TypeSafe. Laat leeg om die te gebruiken.",
+      "advanced": "Geavanceerd",
+      "endpoint": "Endpoint URL",
+      "endpointDescription": "Voor een proxy of gateway; laat anders leeg.",
+      "uses": "Gebruik het Beslismodel voor",
+      "usesDescription": "Alles is geselecteerd zodra een Beslismodel is ingesteld; deselecteer wat het aan de AI-provider moet overlaten. Importtriage gebruikt het Beslismodel altijd en staat niet in de lijst.",
+      "usesPlaceholder": "Niets",
+      "useNames": {
+        "autoCategorization": "Automatisch categoriseren",
+        "autoCategorizationDescription": "Bepaal of een recept een ontbijt, lunch, diner of snack is",
+        "allergyDetection": "Allergiedetectie",
+        "allergyDetectionDescription": "Bepaal welke allergenen van het huishouden een recept bevat",
+        "recipeProvenance": "Receptherkomst",
+        "recipeProvenanceDescription": "Leg het land en de Keukens vast voordat de notitie wordt geschreven",
+        "groceryLinking": "Boodschappen koppelen",
+        "groceryLinkingDescription": "Rangschik de aangeboden producten van een winkel en koppel er een waar het zeker van is",
+        "validateEnrichments": "Verrijkingen valideren",
+        "validateEnrichmentsDescription": "Controleer de eigen claims van elke verrijkingsrun voordat ze worden opgeslagen"
+      },
+      "testConnection": "Test verbinding",
+      "connectionSuccess": "Verbinding succesvol",
+      "aiDisabledHint": "AI is uitgeschakeld op deze server. Schakel het in bij AI-configuratie om het Beslismodel te testen en te gebruiken."
     },
     "promptsConfig": {
       "recipeExtraction": "Receptextractie Prompt",

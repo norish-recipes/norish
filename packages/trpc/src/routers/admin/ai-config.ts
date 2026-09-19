@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import type {
   AIConfig,
+  DecisionConfig,
   ImageGenerationConfig,
   VideoConfig,
 } from "@norish/config/zod/server-config";
@@ -10,6 +11,8 @@ import { testAIEndpoint as testAIEndpointFn } from "@norish/auth/connection-test
 import {
   AIConfigInputSchema,
   AIConfigSchema,
+  DecisionConfigSchema,
+  DecisionProviderSchema,
   ImageGenerationConfigSchema,
   ServerConfigKeys,
   TranscriptionProviderSchema,
@@ -23,6 +26,7 @@ import {
   listTranscriptionModels,
   ModelListingError,
 } from "@norish/shared-server/ai/providers/listing";
+import { testDecisionModel } from "@norish/shared-server/ai/runtime/runtime";
 import {
   getAutomaticEnrichmentConfig,
   getRecipePermissionPolicy,
@@ -165,6 +169,56 @@ const updateImageGenerationConfig = adminProcedure
     });
 
     return { success: true };
+  });
+
+/**
+ * Update the Decision Model block (ADR-0035): its own provider, key, model,
+ * endpoint and the uses an administrator selected. Sensitive because of the
+ * key; an omitted key preserves the stored one and a provider change drops
+ * it, exactly as the sibling blocks do.
+ */
+const updateDecisionConfig = adminProcedure
+  .input(DecisionConfigSchema)
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id, provider: input.provider }, "Updating Decision Model config");
+
+    const stored = await getConfig<DecisionConfig>(ServerConfigKeys.DECISION_CONFIG);
+
+    await setConfig(ServerConfigKeys.DECISION_CONFIG, input, ctx.user.id, true, {
+      dropSecrets: providerChangedFrom(stored?.provider, input.provider) ? ["apiKey"] : [],
+    });
+
+    return { success: true };
+  });
+
+/**
+ * Test the Decision Model: one trivial Boolean question through the AI
+ * Runtime, against the settings as typed. A key omitted from the form means
+ * the stored one, as the AI test does, so a saved key can be re-tested
+ * without being retyped. The provider's own reason comes back on failure — a
+ * refused key reads as a refused key.
+ */
+const testDecisionEndpoint = adminProcedure
+  .input(
+    z.object({
+      provider: DecisionProviderSchema,
+      apiKey: z.string().optional(),
+      model: z.string().optional(),
+      endpoint: z.url().optional(),
+    })
+  )
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id, provider: input.provider }, "Testing Decision Model");
+
+    let apiKey = input.apiKey;
+
+    if (!apiKey) {
+      const stored = await getConfig<DecisionConfig>(ServerConfigKeys.DECISION_CONFIG, true);
+
+      apiKey = stored?.provider === input.provider ? stored.apiKey : undefined;
+    }
+
+    return await testDecisionModel({ ...input, apiKey });
   });
 
 /**
@@ -339,7 +393,9 @@ export const aiConfigProcedures = router({
   updateAIConfig,
   updateVideoConfig,
   updateImageGenerationConfig,
+  updateDecisionConfig,
   testAIEndpoint,
+  testDecisionEndpoint,
   listAvailableModels,
   listAvailableTranscriptionModels,
   enrichAllRecipes,

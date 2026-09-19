@@ -11,6 +11,7 @@
  * how Norish reacts to it.
  */
 
+import { InvalidResponseDataError } from "@ai-sdk/provider";
 import { APICallError, NoImageGeneratedError, NoObjectGeneratedError } from "ai";
 
 export abstract class AIError extends Error {
@@ -109,6 +110,17 @@ export function isRequestShapeRejection(error: unknown): boolean {
 }
 
 /**
+ * Whether the provider refused the credential itself, as opposed to the
+ * request or its own health — the one failure an administrator can only fix
+ * by typing a different key.
+ */
+export function isCredentialRejection(error: unknown): boolean {
+  if (!APICallError.isInstance(error)) return false;
+
+  return error.statusCode === 401 || error.statusCode === 403;
+}
+
+/**
  * Turn whatever a model call threw into a typed AI error, carrying the
  * original as `cause`.
  */
@@ -125,6 +137,14 @@ export function toAIError(error: unknown): AIError {
     // The provider answered but produced no usable image — the image-model
     // sibling of a schema mismatch, and just as worth a retry.
     return new AIResponseError("The model returned no usable image.", { cause: error });
+  }
+
+  if (InvalidResponseDataError.isInstance(error)) {
+    // The Decision Model answered, but not every question, or not with a
+    // usable distribution — the evaluation sibling of a schema mismatch.
+    return new AIResponseError("The Decision Model's answers did not match the questions asked.", {
+      cause: error,
+    });
   }
 
   if (APICallError.isInstance(error)) {

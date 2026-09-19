@@ -862,6 +862,25 @@
             delivery buffer, not a transactional outbox.
           </p>
         </li>
+        <li>
+          <a href="ai/0035-decisions-are-the-runtimes-fourth-entry-point.md"
+            >ADR-0035 &mdash; Decisions are the runtime's fourth entry point, on their own
+            provider</a
+          >
+          <p>
+            <b>Proposed.</b> The AI Runtime gains <code>decide</code> beside
+            <code>generateStructured</code>, <code>transcribe</code> and <code>generateImage</code>:
+            typed Choice, Score and Boolean questions in, a pick and a probability distribution
+            back, from a Decision Model (TypeSafe's Jev) configured in its own block with its own
+            key and no fallback to the AI configuration's. A Decision has no Prompt (the scoped
+            exception to ADR-0016): its criteria are the domain's own option set. Thresholds are
+            named constants in code; which uses run is one multi-select, all on by default. The
+            Decision Model is never required &mdash; every converted kind keeps its fallback. The AI
+            SDK line moved to 7 for it. Rejects a Jev member in the AI provider enum, a
+            <code>decisionModel</code> field beside <code>model</code>, a separate
+            <code>packages/decisions</code>, and thresholds as settings.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

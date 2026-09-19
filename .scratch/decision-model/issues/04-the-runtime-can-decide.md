@@ -1,6 +1,6 @@
 # 04 — The AI Runtime can decide
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 01, 03
 
 Spec: `.scratch/decision-model/spec.md`
@@ -23,7 +23,7 @@ export interface DecideOptions<Q extends DecisionQuestions> {
   questions: Q;
 }
 export async function decide<Q extends DecisionQuestions>(
-  options: DecideOptions<Q>,
+  options: DecideOptions<Q>
 ): Promise<DecisionResult<Q>>;
 ```
 
@@ -84,3 +84,5 @@ driven through `AIProviderControl` with a `decision` directive beside `success` 
 ## Comments
 
 - Filed 2026-09-19 with the spec.
+- 2026-09-19 — Implemented on the AI SDK provider route (ticket 01 did not stall). `decide<Q>({ feature, state, questions })` in `runtime.ts` with the runtime's own `DecisionQuestions`/`DecisionAnswer`/`DecisionResult` types (Choice labels and answer keys checked at compile time; `const` generic so inline question objects keep their literal keys); `createDecisionModelFromConfig` in `providers.ts` on `createTypeSafeAi({ apiKey, baseURL, fetch })` over the shared transport; `experimental_evaluate` with `maxRetries: 0` under `AbortSignal.timeout(aiConfig.timeoutMs)`. `rg "typesafe-ai|experimental_evaluate" packages apps --glob '!node_modules'` hits only `ai/runtime/` plus the E2E harness. Gating: AI off → `AIDisabledError`; no block / disabled / no key → `AIConfigurationError` ("No Decision Model is configured…"); provider failures → `toAIError` (the provider raises `APICallError` as documented, so 401 does not retry and 429 does); a missing answer or a distribution that does not add up arrives as the SDK's `InvalidResponseDataError`, which `errors.ts` now maps to `AIResponseError` (the one extension). One info line per Decision with feature, provider, resolved model id, question count, input and output tokens; the state is logged nowhere. Also `testDecisionModel(config)` for the admin Test button (explicit settings, one Boolean, a credential rejection phrased as such). Tests: `__tests__/ai/runtime/decide.test.ts` (15 cases against a local fake speaking TypeSafe's wire shape). E2E: the fake provider serves `POST …/v1/systemone` from a `decision` lane (`decideWith`, `enqueueDecision`, `failDecisionPermanently` = 401, `failDecisionRetryably`, `decisionRequestCount`) and `ai-provider.test.ts` drives it through the real `@ai-sdk/typesafe-ai` client (5 cases).
+- 2026-09-19 — **Not done: the measurements.** Recording the latency of a 4-question Decision on a 30-ingredient recipe, TypeSafe's rate-limit headers, and whether a ~40-Boolean request is accepted needs a real TypeSafe key, which this environment does not have. Left `ready-for-human` for that one box; everything else on the list is checked. Ticket 05 shipped without those numbers on the strength of the spec's rule that the Decision Model is never required and ships unconfigured, so nobody pays for a Decision until an administrator stores a key.

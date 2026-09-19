@@ -1,6 +1,6 @@
 # 02 — Vocabulary and the decision record
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: None — can start immediately (lands in the same PR as 03/04)
 
 Spec: `.scratch/decision-model/spec.md`
@@ -42,3 +42,4 @@ Add ADR-0035 to `docs/adr/index.html` beside ADR-0024.
 ## Comments
 
 - Filed 2026-09-19 with the spec.
+- 2026-09-19 — Implemented. Five glossary entries (Decision Model, Decision, Clear Case, Decision Use, Enrichment Validation) with _Avoid_ lines under _Imports & AI_; the AI Runtime entry names the fourth entry point and that a Decision reads its own block, the Prompt entry narrows to language-model requests and names the exception, the Recipe Enrichment entry says a run's own claims may be validated and stored data never is. ADR-0035 at `docs/adr/ai/0035-decisions-are-the-runtimes-fourth-entry-point.md` (highest existing id was 0034), linked from `docs/adr/index.html` after ADR-0034. Prettier clean.

@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import AIConfigForm from "./ai-config-form";
 import BulkEnrichmentForm from "./bulk-enrichment-form";
 import CuisineVocabularyForm from "./cuisine-vocabulary-form";
+import DecisionModelForm from "./decision-model-form";
 import ImageGenerationForm from "./image-generation-form";
 import PromptsForm from "./prompts-form";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
@@ -19,6 +20,7 @@ export default function AIProcessingCard() {
     ai: false,
     video: false,
     imageGeneration: false,
+    decisionModel: false,
     prompts: false,
   });
 
@@ -98,6 +100,26 @@ export default function AIProcessingCard() {
             <Accordion.Panel>
               <Accordion.Body>
                 <ImageGenerationForm onDirtyChange={updateDirtySection("imageGeneration")} />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          <Accordion.Item id="decisionModel">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex min-w-0 flex-col items-start gap-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {t("decisionModel.title")}
+                    {dirtySections.decisionModel && <UnsavedChangesChip />}
+                  </div>
+                  <span className="text-muted text-sm">{t("decisionModel.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <DecisionModelForm onDirtyChange={updateDirtySection("decisionModel")} />
               </Accordion.Body>
             </Accordion.Panel>
           </Accordion.Item>

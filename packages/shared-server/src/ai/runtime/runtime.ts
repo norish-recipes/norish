@@ -2,9 +2,10 @@
  * The AI Runtime — the single seam through which Norish issues a model
  * request.
  *
- * Three entry points, because Norish makes three genuinely different kinds of
- * request: structured generation, transcription, and image generation
- * (ADR-0015, ADR-0024). All are built on the shared transport. The runtime
+ * Four entry points, because Norish makes four genuinely different kinds of
+ * request: structured generation, transcription, image generation, and a
+ * Decision (ADR-0015, ADR-0024, ADR-0035). All are built on the shared
+ * transport. The runtime
  * owns what every caller would otherwise do for itself: the enabled check,
  * model selection, Generation Preferences, the model call, token logging, and
  * turning provider failures into typed errors.
@@ -13,7 +14,9 @@
  * Preferences, and never calls the SDK. It passes the name of an
  * administrator-editable prompt plus the sections it wants appended — never a
  * finished prompt string — so a feature cannot ship a hardcoded prompt,
- * because there is no parameter to pass one through.
+ * because there is no parameter to pass one through. A Decision is the one
+ * request with no prompt at all: its questions' criteria are the domain's own
+ * option set, and their instructions are code-owned like the system messages.
  */
 
 import { createReadStream } from "node:fs";
@@ -22,20 +25,29 @@ import { extname } from "node:path";
 import type { z } from "zod";
 import {
   asSchema,
+  experimental_evaluate as evaluate,
   generateImage as generateImageWithModel,
   generateText,
   Output,
   transcribe as transcribeWithModel,
 } from "ai";
 
-import type { AIConfig, TranscriptionProvider } from "@norish/config/zod/server-config";
+import type {
+  AIConfig,
+  DecisionConfig,
+  DecisionProvider,
+  TranscriptionProvider,
+} from "@norish/config/zod/server-config";
 import {
   isCloudTranscriptionProvider,
+  isDecisionConfigValid,
   isImageGenerationConfigValid,
+  resolveDecisionSettings,
   resolveImageGenerationSettings,
 } from "@norish/config/zod/server-config";
 import {
   getAIConfig,
+  getDecisionConfig,
   getImageGenerationConfig,
   getVideoConfig,
 } from "@norish/shared-server/config/server-config-loader";
@@ -48,11 +60,13 @@ import {
   AIDisabledError,
   AIProviderError,
   AIResponseError,
+  isCredentialRejection,
   isRequestShapeRejection,
   toAIError,
 } from "./errors";
 import {
   canDegradeToJsonMode,
+  createDecisionModelFromConfig,
   createGenericTranscriptionClient,
   createImageModelFromConfig,
   createModelsFromConfig,
@@ -589,5 +603,347 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
     );
 
     throw aiError;
+  }
+}
+
+// ============================================================================
+// Decisions (ADR-0035)
+// ============================================================================
+
+/** A JSON value a feature may put into a Decision's state. */
+export type DecisionJson =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly DecisionJson[]
+  | { readonly [key: string]: DecisionJson };
+
+/**
+ * What a Decision is asked about: text, or the feature's own structured
+ * input — the analogue of its Prompt Sections, composed by the feature and
+ * structured where the recipe is structured, never a finished prose prompt.
+ */
+export type DecisionState = string | { readonly [key: string]: DecisionJson };
+
+/** Pick one of up to 255 named options. The labels are the answer schema. */
+export interface DecisionChoiceQuestion<Label extends string = string> {
+  readonly type: "choice";
+  readonly instructions: string;
+  /** Option label to its description, or null for none. */
+  readonly criteria: Readonly<Record<Label, string | null>>;
+}
+
+/** Place the state on an ordered rubric of two to ten levels, lowest first. */
+export interface DecisionScoreQuestion {
+  readonly type: "score";
+  readonly instructions: string;
+  readonly criteria: readonly (string | null)[];
+}
+
+/** Yes or no, answered as the probability of yes. */
+export interface DecisionBooleanQuestion {
+  readonly type: "boolean";
+  readonly instructions: string;
+  readonly criteria?: { readonly true?: string | null; readonly false?: string | null };
+}
+
+export type DecisionQuestion =
+  DecisionChoiceQuestion | DecisionScoreQuestion | DecisionBooleanQuestion;
+
+/** The questions of one Decision, keyed by the ids their answers come back under. */
+export type DecisionQuestions = Record<string, DecisionQuestion>;
+
+/**
+ * One answer: the pick, the full distribution the pick was read from, and
+ * TypeSafe's separate confidence statistic where the provider reports one.
+ * No threshold lives here — how sure is sure enough is the feature's constant.
+ */
+export type DecisionAnswer<Q extends DecisionQuestion> = Q extends {
+  type: "choice";
+  criteria: infer Criteria;
+}
+  ? {
+      type: "choice";
+      choice: Extract<keyof Criteria, string>;
+      probabilities: Record<Extract<keyof Criteria, string>, number>;
+      confidence?: number;
+    }
+  : Q extends { type: "score" }
+    ? {
+        type: "score";
+        /** Fractional position in [0, levels - 1]: the probability-weighted mean. */
+        score: number;
+        /** Keyed by zero-based level index. */
+        probabilities: Record<string, number>;
+        confidence?: number;
+      }
+    : {
+        type: "boolean";
+        /** P(true), in [0, 1]. */
+        probability: number;
+      };
+
+export interface DecisionResult<Q extends DecisionQuestions> {
+  answers: { [Id in keyof Q]: DecisionAnswer<Q[Id]> };
+  /** The model that answered — the release behind `jev-latest`, for instance. */
+  model: string;
+}
+
+export interface DecideOptions<Q extends DecisionQuestions> {
+  /**
+   * The feature's identity: labels the log line and names the caller. No
+   * Prompt is loaded — a Decision has none (ADR-0035).
+   */
+  feature: string;
+  state: DecisionState;
+  questions: Q;
+}
+
+/** The answer shape the SDK hands back, before it is typed per question. */
+type ProviderAnswer =
+  | { type: "choice"; choice: string; probabilities?: Record<string, number> }
+  | { type: "score"; score: number; probabilities?: Record<string, number> }
+  | { type: "boolean"; probability: number };
+
+/** TypeSafe's per-question confidence, read from the provider metadata it publishes. */
+function readConfidence(metadata: unknown): Record<string, number> {
+  const typesafe =
+    metadata && typeof metadata === "object" && "typesafe" in metadata
+      ? (metadata as { typesafe?: unknown }).typesafe
+      : undefined;
+  const confidence =
+    typesafe && typeof typesafe === "object" && "confidence" in typesafe
+      ? (typesafe as { confidence?: unknown }).confidence
+      : undefined;
+
+  if (!confidence || typeof confidence !== "object") return {};
+
+  return Object.fromEntries(
+    Object.entries(confidence as Record<string, unknown>).flatMap(([id, value]) =>
+      typeof value === "number" ? [[id, value]] : []
+    )
+  );
+}
+
+interface DecisionRequest<Q extends DecisionQuestions> {
+  feature: string;
+  state: DecisionState;
+  questions: Q;
+  settings: {
+    provider: Exclude<DecisionProvider, "disabled">;
+    apiKey?: string;
+    model: string;
+    endpoint: string;
+  };
+  timeoutMs: number;
+}
+
+/** One Decision Model round trip: every question asked together, every answer typed. */
+async function requestDecision<Q extends DecisionQuestions>({
+  feature,
+  state,
+  questions,
+  settings,
+  timeoutMs,
+}: DecisionRequest<Q>): Promise<DecisionResult<Q>> {
+  const decisionModel = createDecisionModelFromConfig({ ...settings, timeoutMs });
+  const asked: DecisionQuestions = questions;
+
+  // The state is the recipe (or the page), so it stays out of the log.
+  aiLogger.debug(
+    {
+      feature,
+      provider: decisionModel.providerName,
+      model: settings.model,
+      questions: Object.keys(asked),
+    },
+    "Sending Decision request"
+  );
+
+  const result = await evaluate({
+    model: decisionModel.model,
+    state,
+    questions: asked,
+    abortSignal: AbortSignal.timeout(timeoutMs),
+    // Like image generation, the SDK's silent in-call retries are off: the
+    // queue's attempts are the one retry budget.
+    maxRetries: 0,
+  });
+
+  const confidence = readConfidence(result.providerMetadata);
+  const answers: Record<string, DecisionAnswer<DecisionQuestion>> = {};
+
+  for (const id of Object.keys(asked)) {
+    const answer: ProviderAnswer | undefined = result.answers[id];
+
+    if (!answer) {
+      throw new AIResponseError(`The Decision Model did not answer "${id}".`);
+    }
+
+    switch (answer.type) {
+      case "choice":
+        if (!answer.probabilities) {
+          throw new AIResponseError(`The Decision Model gave no distribution for "${id}".`);
+        }
+        answers[id] = {
+          type: "choice",
+          choice: answer.choice,
+          probabilities: answer.probabilities,
+          ...(confidence[id] !== undefined ? { confidence: confidence[id] } : {}),
+        };
+        break;
+      case "score":
+        if (!answer.probabilities) {
+          throw new AIResponseError(`The Decision Model gave no distribution for "${id}".`);
+        }
+        answers[id] = {
+          type: "score",
+          score: answer.score,
+          probabilities: answer.probabilities,
+          ...(confidence[id] !== undefined ? { confidence: confidence[id] } : {}),
+        };
+        break;
+      case "boolean":
+        answers[id] = { type: "boolean", probability: answer.probability };
+        break;
+    }
+  }
+
+  aiLogger.info(
+    {
+      feature,
+      provider: decisionModel.providerName,
+      model: result.response.modelId,
+      questions: Object.keys(asked).length,
+      inputTokens: result.usage.inputTokens ?? 0,
+      outputTokens: result.usage.outputTokens ?? 0,
+    },
+    "Decision completed"
+  );
+
+  return {
+    // Built one question at a time above; the mapped type is what that loop
+    // guarantees, keyed exactly as the questions were.
+    answers: answers as DecisionResult<Q>["answers"],
+    model: result.response.modelId,
+  };
+}
+
+/**
+ * Ask the Decision Model every question at once and return typed answers
+ * with their full distributions.
+ *
+ * Reads the Decision block rather than the server's AI provider (ADR-0035),
+ * follows the global AI switch, and runs under the one AI timeout on the
+ * shared transport (ADR-0015). Thresholds belong to the feature: nothing here
+ * decides whether an answer is sure enough.
+ *
+ * Throws an {@link AIError} on failure: disabled AI and a missing block never
+ * retry, an answer that does not match the questions always does, and
+ * provider failures follow the SDK's own retryability. A feature that has a
+ * fallback catches all of them alike and takes it.
+ */
+export async function decide<const Q extends DecisionQuestions>(
+  options: DecideOptions<Q>
+): Promise<DecisionResult<Q>> {
+  const { feature, state, questions } = options;
+
+  const [aiConfig, decisionConfig] = await Promise.all([
+    getAIConfig(true),
+    getDecisionConfig(true),
+  ]);
+
+  if (!aiConfig?.enabled) {
+    aiLogger.info({ feature }, "AI features are disabled, refusing AI request");
+    throw new AIDisabledError();
+  }
+
+  if (!isDecisionConfigValid(decisionConfig)) {
+    throw new AIConfigurationError(
+      "No Decision Model is configured. Set one in the admin settings."
+    );
+  }
+
+  const settings = {
+    ...resolveDecisionSettings(decisionConfig),
+    provider: decisionConfig.provider,
+  };
+
+  try {
+    return await requestDecision({
+      feature,
+      state,
+      questions,
+      settings,
+      timeoutMs: aiConfig.timeoutMs,
+    });
+  } catch (error) {
+    const aiError = toAIError(error);
+
+    aiLogger.error(
+      {
+        err: error,
+        feature,
+        provider: settings.provider,
+        model: settings.model,
+        retryable: aiError.retryable,
+      },
+      "Decision failed"
+    );
+
+    throw aiError;
+  }
+}
+
+/** How long the admin's Test button waits, whatever the AI timeout is tuned to. */
+const DECISION_TEST_TIMEOUT_MS = 15_000;
+
+/**
+ * The admin form's Test button: one trivial Boolean question against the
+ * settings as typed, not as stored, so a typo is caught before a queue
+ * worker discovers it. Answers success or the provider's own reason, and
+ * follows the global AI switch like every other request.
+ */
+export async function testDecisionModel(
+  config: Pick<DecisionConfig, "provider" | "apiKey" | "model" | "endpoint">
+): Promise<{ success: boolean; error?: string }> {
+  const aiConfig = await getAIConfig(true);
+
+  if (!aiConfig?.enabled) {
+    return { success: false, error: new AIDisabledError().message };
+  }
+
+  if (config.provider === "disabled") {
+    return { success: false, error: "Select a Decision Model provider first." };
+  }
+
+  if (!config.apiKey) {
+    return { success: false, error: "An API key is required for TypeSafe AI." };
+  }
+
+  const settings = { ...resolveDecisionSettings(config), provider: config.provider };
+
+  try {
+    await requestDecision({
+      feature: "decision-model-test",
+      state: "test",
+      questions: { isTest: { type: "boolean", instructions: "Is this a test?" } },
+      settings,
+      timeoutMs: Math.min(aiConfig.timeoutMs, DECISION_TEST_TIMEOUT_MS),
+    });
+
+    return { success: true };
+  } catch (error) {
+    aiLogger.warn(
+      { err: error, provider: settings.provider, model: settings.model },
+      "Decision Model test failed"
+    );
+
+    if (isCredentialRejection(error)) {
+      return { success: false, error: "The Decision Model provider rejected the API key." };
+    }
+
+    return { success: false, error: toAIError(error).message };
   }
 }

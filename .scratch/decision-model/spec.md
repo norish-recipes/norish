@@ -161,11 +161,11 @@ Per `docs/agents/feature-docs.md`: the AI provider configuration page gains a _D
 
 | #   | Ticket                                                                             | Phase                | Status          |
 | --- | ---------------------------------------------------------------------------------- | -------------------- | --------------- |
-| 01  | The AI SDK line moves to 7                                                         | Prerequisite, own PR | ready-for-agent |
-| 02  | Vocabulary and the decision record (ADR-0035)                                      | Foundation           | ready-for-agent |
-| 03  | The Decision Model configuration block and its admin form                          | Foundation           | ready-for-agent |
-| 04  | The AI Runtime can decide (`decide`, provider, errors, E2E fake, measurements)     | Foundation           | ready-for-agent |
-| 05  | Auto-categorization asks a Decision first                                          | First conversions    | ready-for-agent |
+| 01  | The AI SDK line moves to 7                                                         | Prerequisite, own PR | resolved        |
+| 02  | Vocabulary and the decision record (ADR-0035)                                      | Foundation           | resolved        |
+| 03  | The Decision Model configuration block and its admin form                          | Foundation           | resolved        |
+| 04  | The AI Runtime can decide (`decide`, provider, errors, E2E fake, measurements)     | Foundation           | ready-for-human |
+| 05  | Auto-categorization asks a Decision first                                          | First conversions    | resolved        |
 | 06  | Allergy detection asks a Decision first                                            | First conversions    | ready-for-agent |
 | 07  | Import triage: is this a recipe, does this caption hold one, is the parse complete | New questions        | ready-for-agent |
 | 08  | Recipe Provenance settles country and Cuisines by Decision                         | Second conversions   | ready-for-agent |

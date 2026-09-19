@@ -570,6 +570,10 @@
         "title": "Génération d'images",
         "subtitle": "Dessine une photo du plat pour les recettes sans image"
       },
+      "decisionModel": {
+        "title": "Modèle de décision",
+        "subtitle": "Des réponses rapides et peu coûteuses aux questions fermées"
+      },
       "prompts": {
         "title": "Prompts",
         "subtitle": "Personnalisez les instructions IA pour le traitement des recettes"
@@ -731,6 +735,40 @@
       "modelPlaceholder": "p. ex. gpt-image-1",
       "modelDescription": "Le modèle qui dessine l'image. Ce doit être un modèle d'image, pas un modèle de texte.",
       "fallbackHint": "Même fournisseur que votre configuration IA : le endpoint et la clé API en sont repris sauf si vous les définissez ici."
+    },
+    "decisionConfig": {
+      "description": "Le modèle de décision répond aux questions fermées — est-ce un petit-déjeuner, contient-il des cacahuètes, lequel de ces produits est la course — bien plus vite et pour moins cher qu'un modèle de langage, avec une mesure honnête de sa certitude. Il est facultatif : chaque fonctionnalité continue de fonctionner sans lui, et il ne remplace jamais le fournisseur d'IA ci-dessus.",
+      "provider": "Fournisseur de décision",
+      "providers": {
+        "disabled": "Désactivé",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "Clé API",
+      "apiKeyPlaceholder": "Saisir la clé API...",
+      "apiKeyDescription": "Obtenez une clé depuis votre compte sur typesafe.ai",
+      "model": "Modèle de décision",
+      "modelDescription": "jev-latest suit la version la plus récente de TypeSafe. Laissez vide pour l'utiliser.",
+      "advanced": "Avancé",
+      "endpoint": "URL du endpoint",
+      "endpointDescription": "Pour un proxy ou une passerelle ; laissez vide sinon.",
+      "uses": "Utiliser le modèle de décision pour",
+      "usesDescription": "Tout est sélectionné dès qu'un modèle de décision est configuré ; désélectionnez ce qu'il doit laisser au fournisseur d'IA. Le tri des imports utilise toujours le modèle de décision et n'est pas dans la liste.",
+      "usesPlaceholder": "Rien",
+      "useNames": {
+        "autoCategorization": "Catégorisation automatique",
+        "autoCategorizationDescription": "Décider si une recette est un petit-déjeuner, un déjeuner, un dîner ou une collation",
+        "allergyDetection": "Détection des allergies",
+        "allergyDetectionDescription": "Décider quels allergènes du foyer une recette contient",
+        "recipeProvenance": "Provenance des recettes",
+        "recipeProvenanceDescription": "Fixer le pays et les Cuisines avant la rédaction de la note",
+        "groceryLinking": "Liaison des courses",
+        "groceryLinkingDescription": "Classer les produits proposés par un magasin et en lier un dont il est sûr",
+        "validateEnrichments": "Valider les enrichissements",
+        "validateEnrichmentsDescription": "Vérifier les affirmations de chaque enrichissement avant leur enregistrement"
+      },
+      "testConnection": "Tester la connexion",
+      "connectionSuccess": "Connexion réussie",
+      "aiDisabledHint": "L'IA est désactivée sur ce serveur. Activez-la dans la configuration de l'IA pour tester et utiliser le modèle de décision."
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt d'extraction de recette",

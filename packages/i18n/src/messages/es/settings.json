@@ -570,6 +570,10 @@
         "title": "Generación de Imágenes",
         "subtitle": "Dibuja una foto del plato para recetas sin imagen"
       },
+      "decisionModel": {
+        "title": "Modelo de decisión",
+        "subtitle": "Respuestas rápidas y baratas a preguntas cerradas"
+      },
       "prompts": {
         "title": "Prompts",
         "subtitle": "Personaliza las instrucciones de IA para el procesamiento de recetas"
@@ -731,6 +735,40 @@
       "modelPlaceholder": "p. ej. gpt-image-1",
       "modelDescription": "El modelo que dibuja la imagen. Debe ser un modelo de imagen, no de texto.",
       "fallbackHint": "Mismo proveedor que tu configuración de IA: el endpoint y la clave API se toman de ella salvo que los definas aquí."
+    },
+    "decisionConfig": {
+      "description": "El modelo de decisión responde preguntas cerradas — ¿es un desayuno?, ¿contiene cacahuetes?, ¿cuál de estos productos es el artículo? — mucho más rápido y barato que un modelo de lenguaje, y con una medida honesta de su certeza. Es opcional: cada función sigue funcionando sin él, y nunca sustituye al proveedor de IA de arriba.",
+      "provider": "Proveedor de decisión",
+      "providers": {
+        "disabled": "Desactivado",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "Clave API",
+      "apiKeyPlaceholder": "Introduce la clave API...",
+      "apiKeyDescription": "Obtén una clave desde tu cuenta en typesafe.ai",
+      "model": "Modelo de decisión",
+      "modelDescription": "jev-latest sigue la versión más reciente de TypeSafe. Déjalo vacío para usarla.",
+      "advanced": "Avanzado",
+      "endpoint": "URL del endpoint",
+      "endpointDescription": "Para un proxy o gateway; déjalo vacío en caso contrario.",
+      "uses": "Usar el modelo de decisión para",
+      "usesDescription": "Todo queda seleccionado en cuanto se configura un modelo de decisión; deselecciona lo que deba dejar al proveedor de IA. La clasificación de importaciones siempre usa el modelo de decisión y no está en la lista.",
+      "usesPlaceholder": "Nada",
+      "useNames": {
+        "autoCategorization": "Categorización automática",
+        "autoCategorizationDescription": "Decidir si una receta es desayuno, comida, cena o tentempié",
+        "allergyDetection": "Detección de alergias",
+        "allergyDetectionDescription": "Decidir qué alérgenos del hogar contiene una receta",
+        "recipeProvenance": "Procedencia de la receta",
+        "recipeProvenanceDescription": "Fijar el país y las Cocinas antes de escribir la nota",
+        "groceryLinking": "Vinculación de la compra",
+        "groceryLinkingDescription": "Ordenar los productos ofrecidos por una tienda y vincular uno del que esté seguro",
+        "validateEnrichments": "Validar enriquecimientos",
+        "validateEnrichmentsDescription": "Comprobar las afirmaciones de cada enriquecimiento antes de guardarlas"
+      },
+      "testConnection": "Probar conexión",
+      "connectionSuccess": "Conexión correcta",
+      "aiDisabledHint": "La IA está desactivada en este servidor. Actívala en la configuración de IA para probar y usar el modelo de decisión."
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt de extracción de recetas",

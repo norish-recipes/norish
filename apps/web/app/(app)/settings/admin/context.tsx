@@ -13,6 +13,7 @@ import type {
   AuthProviderOIDC,
   AuthProviderOIDCInput,
   ContentIndicatorsConfig,
+  DecisionConfig,
   I18nLocaleConfig,
   ImageGenerationConfig,
   PromptsConfig,
@@ -41,6 +42,7 @@ interface AdminSettingsContextValue {
   aiConfig: AIConfig | undefined;
   videoConfig: VideoConfig | undefined;
   imageGenerationConfig: ImageGenerationConfig | undefined;
+  decisionConfig: DecisionConfig | undefined;
   schedulerCleanupMonths: number | undefined;
   recipePermissionPolicy: RecipePermissionPolicy | undefined;
   prompts: PromptsConfig | undefined;
@@ -76,6 +78,7 @@ interface AdminSettingsContextValue {
   updateImageGenerationConfig: (
     config: ImageGenerationConfig
   ) => Promise<{ success: boolean; error?: string }>;
+  updateDecisionConfig: (config: DecisionConfig) => Promise<{ success: boolean; error?: string }>;
   updatePrompts: (config: PromptsConfigInput) => Promise<{ success: boolean; error?: string }>;
   updateTimerKeywords: (
     config: TimerKeywordsInput
@@ -91,6 +94,9 @@ interface AdminSettingsContextValue {
   ) => Promise<{ success: boolean; error?: string }>;
   testAIEndpoint: (
     config: Pick<AIConfig, "provider" | "endpoint" | "apiKey">
+  ) => Promise<{ success: boolean; error?: string }>;
+  testDecisionEndpoint: (
+    config: Pick<DecisionConfig, "provider" | "apiKey" | "model" | "endpoint">
   ) => Promise<{ success: boolean; error?: string }>;
   restartServer: () => Promise<void>;
 
@@ -130,6 +136,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const videoConfig = configs[ServerConfigKeys.VIDEO_CONFIG] as VideoConfig | undefined;
   const imageGenerationConfig = configs[ServerConfigKeys.IMAGE_GENERATION_CONFIG] as
     ImageGenerationConfig | undefined;
+  const decisionConfig = configs[ServerConfigKeys.DECISION_CONFIG] as DecisionConfig | undefined;
   const schedulerCleanupMonths = configs[ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS] as
     number | undefined;
   const recipePermissionPolicy = configs[ServerConfigKeys.RECIPE_PERMISSION_POLICY] as
@@ -229,6 +236,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     [mutations]
   );
 
+  const updateDecision = useCallback(
+    async (config: DecisionConfig) => {
+      return mutations.updateDecisionConfig(config);
+    },
+    [mutations]
+  );
+
   const updatePromptsConfig = useCallback(
     async (config: PromptsConfigInput) => {
       return mutations.updatePrompts(config);
@@ -278,6 +292,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     [mutations]
   );
 
+  const testDecision = useCallback(
+    async (config: Pick<DecisionConfig, "provider" | "apiKey" | "model" | "endpoint">) => {
+      return mutations.testDecisionEndpoint(config);
+    },
+    [mutations]
+  );
+
   const restart = useCallback(async () => {
     await mutations.restartServer();
   }, [mutations]);
@@ -306,6 +327,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     aiConfig,
     videoConfig,
     imageGenerationConfig,
+    decisionConfig,
     schedulerCleanupMonths,
     recipePermissionPolicy,
     prompts,
@@ -324,6 +346,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     updateAIConfig: updateAI,
     updateVideoConfig: updateVideo,
     updateImageGenerationConfig: updateImageGeneration,
+    updateDecisionConfig: updateDecision,
     updatePrompts: updatePromptsConfig,
     updateTimerKeywords: updateTimerKeywordsConfig,
     updateSchedulerMonths: updateScheduler,
@@ -331,6 +354,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     restoreDefaultConfig: restoreDefault,
     testAuthProvider: testAuth,
     testAIEndpoint: testAI,
+    testDecisionEndpoint: testDecision,
     restartServer: restart,
     fetchConfigSecret: fetchSecret,
     refresh,

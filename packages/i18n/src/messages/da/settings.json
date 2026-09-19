@@ -570,6 +570,10 @@
         "title": "Billedgenerering",
         "subtitle": "Tegn et billede af retten til opskrifter uden billede"
       },
+      "decisionModel": {
+        "title": "Beslutningsmodel",
+        "subtitle": "Hurtige, billige svar på lukkede spørgsmål"
+      },
       "prompts": {
         "title": "Prompt-tekster",
         "subtitle": "Tilpas AI-instruktioner til opskriftbehandling"
@@ -731,6 +735,40 @@
       "modelPlaceholder": "f.eks. gpt-image-1",
       "modelDescription": "Modellen der tegner billedet. Det skal være en billedmodel, ikke en tekstmodel.",
       "fallbackHint": "Samme udbyder som din AI-konfiguration: endpoint og API-nøgle falder tilbage til den, medmindre du angiver dem her."
+    },
+    "decisionConfig": {
+      "description": "Beslutningsmodellen besvarer lukkede spørgsmål — er dette en morgenmad, indeholder den jordnødder, hvilket af disse produkter er varen — langt hurtigere og billigere end en sprogmodel og med et ærligt mål for, hvor sikker den er. Den er valgfri: alle funktioner fungerer fortsat uden den, og den erstatter aldrig AI-udbyderen ovenfor.",
+      "provider": "Beslutningsudbyder",
+      "providers": {
+        "disabled": "Deaktiveret",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-nøgle",
+      "apiKeyPlaceholder": "Indtast API-nøgle...",
+      "apiKeyDescription": "Hent en nøgle fra din konto på typesafe.ai",
+      "model": "Beslutningsmodel",
+      "modelDescription": "jev-latest følger TypeSafes nyeste udgivelse. Lad feltet stå tomt for at bruge den.",
+      "advanced": "Avanceret",
+      "endpoint": "Endpoint-URL",
+      "endpointDescription": "Til en proxy eller gateway; lad ellers feltet stå tomt.",
+      "uses": "Brug beslutningsmodellen til",
+      "usesDescription": "Alt er valgt, så snart en beslutningsmodel er sat op; fravælg det, den skal overlade til AI-udbyderen. Importtriage bruger altid beslutningsmodellen og er ikke på listen.",
+      "usesPlaceholder": "Intet",
+      "useNames": {
+        "autoCategorization": "Automatisk kategorisering",
+        "autoCategorizationDescription": "Afgør om en opskrift er morgenmad, frokost, aftensmad eller snack",
+        "allergyDetection": "Allergiregistrering",
+        "allergyDetectionDescription": "Afgør hvilke af husstandens allergener en opskrift indeholder",
+        "recipeProvenance": "Opskriftens oprindelse",
+        "recipeProvenanceDescription": "Fastlæg land og Køkkener, før noten skrives",
+        "groceryLinking": "Kobling af varer",
+        "groceryLinkingDescription": "Sortér en butiks tilbudte produkter og kobl et, den er sikker på",
+        "validateEnrichments": "Validér berigelser",
+        "validateEnrichmentsDescription": "Kontrollér hver berigelseskørsels egne påstande, før de gemmes"
+      },
+      "testConnection": "Test forbindelse",
+      "connectionSuccess": "Forbindelse lykkedes",
+      "aiDisabledHint": "AI er deaktiveret på denne server. Slå det til under AI-konfiguration for at teste og bruge beslutningsmodellen."
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt til opskriftudtrækning",

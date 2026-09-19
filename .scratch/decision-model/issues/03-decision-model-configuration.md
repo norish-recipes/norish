@@ -1,6 +1,6 @@
 # 03 — The Decision Model configuration block and its admin form
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 02 (words first; can be developed in parallel and land together)
 
 Spec: `.scratch/decision-model/spec.md`
@@ -80,3 +80,4 @@ Seeding: none. The block ships unconfigured and is admin-only, like Image Genera
 ## Comments
 
 - Filed 2026-09-19 with the spec.
+- 2026-09-19 — Implemented. `ServerConfigKeys.DECISION_CONFIG = "decision_config"`, sensitive; `DecisionProviderSchema`, `DecisionUseSchema`, `DECISION_USES`, `DecisionConfigSchema`, `DEFAULT_DECISION_MODEL`/`DEFAULT_DECISION_ENDPOINT`, `resolveDecisionSettings(config)`, `isDecisionConfigValid(config)` (one argument, a type predicate) and `isDecisionUseSelected(config, use)` in `packages/config/src/zod/server-config.ts`. Loader: `getDecisionConfig(includeSecrets)` (null on a fresh server, null with a warn when a stored row no longer parses), `isDecisionModelConfigured()`, `isDecisionUseEnabled(use)` — the last is also false while AI is globally off, so "AI off" means no Decision leaves the server either. tRPC: `updateDecisionConfig` (drops the key on a provider change) and `testDecisionEndpoint` (stored key when omitted, through the runtime's `testDecisionModel`, so a 401 reads as a rejected key). Admin: `decision-model-form.tsx` after Image Generation in the AI & Processing accordion — provider select, `SecretInput` key, model field with the `jev-latest` placeholder, endpoint under an _Advanced_ disclosure, one **Use the Decision Model for** multi-select built like the automatic-enrichment one (all selected by default, inert while disabled), Test button and chip, dirty tracking; context and mutation hooks gained `decisionConfig`, `updateDecisionConfig`, `testDecisionEndpoint`. Translations in all fourteen locales (`settings.admin.decisionConfig`, `settings.admin.aiProcessing.decisionModel`); i18n gate green. Tests: `packages/config/__tests__/config/decision-config.test.ts` and the Decision block suite in `server-config-loader.test.ts`. No env seeding, no model listing, as specified.
