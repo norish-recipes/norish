@@ -15,6 +15,7 @@ import { isDecisionUseEnabled } from "@norish/shared-server/config/server-config
 const mocked = vi.hoisted(() => ({
   decide: vi.fn(),
   generateStructured: vi.fn(),
+  verifyClaims: vi.fn(),
 }));
 
 const logger = vi.hoisted(() => ({
@@ -27,6 +28,11 @@ const logger = vi.hoisted(() => ({
 vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
   decide: mocked.decide,
   generateStructured: mocked.generateStructured,
+}));
+
+vi.mock("@norish/shared-server/ai/enrichment/verification", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-server/ai/enrichment/verification")>()),
+  verifyClaims: mocked.verifyClaims,
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
@@ -65,6 +71,10 @@ describe("categorizeRecipe", () => {
     vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
     mocked.decide.mockResolvedValue(decided({ Breakfast: 0.95 }));
     mocked.generateStructured.mockResolvedValue({ categories: ["Dinner"] });
+    // Validation keeps everything unless a test says otherwise.
+    mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
+      Promise.resolve({ kept: claims, dropped: [], mode: "off" })
+    );
   });
 
   it("refuses a recipe with no ingredients before asking anything", async () => {
@@ -80,6 +90,8 @@ describe("categorizeRecipe", () => {
       const categories = await categorizeRecipe(recipe);
 
       expect(categories).toEqual(["Breakfast"]);
+      // A Decision's answer is not validated again: it already is a Decision.
+      expect(mocked.verifyClaims).not.toHaveBeenCalled();
       expect(mocked.decide).toHaveBeenCalledTimes(1);
       expect(mocked.decide).toHaveBeenCalledWith({
         feature: "auto-categorization",
@@ -197,6 +209,47 @@ describe("categorizeRecipe", () => {
       mocked.generateStructured.mockRejectedValue(new AIConfigurationError("no key"));
 
       await expect(categorizeRecipe(recipe)).rejects.toBeInstanceOf(AIConfigurationError);
+    });
+  });
+
+  describe("Enrichment Validation of the language-model path", () => {
+    beforeEach(() => {
+      vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+    });
+
+    it("checks the matched categories and writes the survivors", async () => {
+      mocked.generateStructured.mockResolvedValue({ categories: ["Dinner", "brunch"] });
+      mocked.verifyClaims.mockResolvedValue({
+        kept: [{ id: "Dinner" }],
+        dropped: [{ claim: { id: "Breakfast" }, probability: 0.05 }],
+        mode: "enforce",
+      });
+
+      const categories = await categorizeRecipe(recipe);
+
+      expect(mocked.verifyClaims).toHaveBeenCalledWith({
+        feature: "auto-categorization",
+        state: {
+          title: "Overnight oats",
+          description: "Oats soaked in milk, eaten cold.",
+          ingredients: ["rolled oats", "milk", "chia seeds", "honey"],
+        },
+        claims: [
+          { id: "Dinner", question: expect.stringMatching(/dinner/i) },
+          { id: "Breakfast", question: expect.stringMatching(/breakfast/i) },
+        ],
+      });
+      expect(categories).toEqual(["Dinner"]);
+    });
+
+    it("returns an empty list when every category was dropped, leaving the worker's rule to it", async () => {
+      mocked.verifyClaims.mockResolvedValue({
+        kept: [],
+        dropped: [{ claim: { id: "Dinner" }, probability: 0.01 }],
+        mode: "enforce",
+      });
+
+      await expect(categorizeRecipe(recipe)).resolves.toEqual([]);
     });
   });
 });

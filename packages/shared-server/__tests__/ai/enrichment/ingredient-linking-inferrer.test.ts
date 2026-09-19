@@ -15,10 +15,16 @@ import { AIDisabledError, AIProviderError } from "@norish/shared-server/ai/runti
 
 const mocked = vi.hoisted(() => ({
   generateStructured: vi.fn(),
+  verifyClaims: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
   generateStructured: mocked.generateStructured,
+}));
+
+vi.mock("@norish/shared-server/ai/enrichment/verification", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-server/ai/enrichment/verification")>()),
+  verifyClaims: mocked.verifyClaims,
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -49,6 +55,10 @@ function respondWith(output: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Validation keeps everything unless a test says otherwise.
+  mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
+    Promise.resolve({ kept: claims, dropped: [], mode: "off" })
+  );
 });
 
 describe("inferStepIngredients", () => {
@@ -212,5 +222,82 @@ describe("inferStepIngredients", () => {
 
     expect(error).toBeInstanceOf(AIProviderError);
     expect((error as AIProviderError).retryable).toBe(true);
+  });
+});
+
+describe("Enrichment Validation", () => {
+  it("checks every proposed link as a question in prompt numbers, on the numbered recipe", async () => {
+    respondWith({
+      links: [
+        {
+          step: 1,
+          ingredients: [
+            { line: 1, share: 1, amount: null },
+            { line: 2, share: 1, amount: null },
+          ],
+        },
+        { step: 2, ingredients: [{ line: 3, share: 0.5, amount: null }] },
+      ],
+    });
+
+    await inferStepIngredients(RECIPE);
+
+    expect(mocked.verifyClaims).toHaveBeenCalledWith({
+      feature: "ingredient-linking",
+      state: {
+        title: "Spiced Stew",
+        ingredients: ["1. 5 g salt", "2. 3 g pepper", "3. 50 ml water"],
+        steps: ["1. Add the spices.", "2. Add half the water."],
+      },
+      claims: [
+        {
+          id: "1:1",
+          question: expect.stringMatching(/step 1 .*Add the spices.*line 1 .*5 g salt/),
+        },
+        { id: "1:2", question: expect.stringMatching(/line 2 .*3 g pepper/) },
+        {
+          id: "2:3",
+          question: expect.stringMatching(/step 2 .*half the water.*line 3 .*50 ml water/),
+        },
+      ],
+    });
+  });
+
+  it("does not write a disputed link, and leaves a step bare when every link of it was disputed", async () => {
+    respondWith({
+      links: [
+        {
+          step: 1,
+          ingredients: [
+            { line: 1, share: 1, amount: null },
+            { line: 2, share: 1, amount: null },
+          ],
+        },
+        { step: 2, ingredients: [{ line: 3, share: 0.5, amount: null }] },
+      ],
+    });
+    mocked.verifyClaims.mockResolvedValue({
+      kept: [{ id: "1:2" }],
+      dropped: [
+        { claim: { id: "1:1" }, probability: 0.1 },
+        { claim: { id: "2:3" }, probability: 0.05 },
+      ],
+      mode: "enforce",
+    });
+
+    const claim = await inferStepIngredients(RECIPE);
+
+    // The surviving ref is renumbered from zero: the write needs a contiguous order.
+    expect(claim.links).toEqual([
+      { stepOrder: 1, refs: [{ ingredientOrder: 2, share: 1, order: 0 }] },
+    ]);
+  });
+
+  it("validates nothing invented: a link to a number the prompt never printed is dropped first", async () => {
+    respondWith({ links: [{ step: 1, ingredients: [{ line: 42, share: 1, amount: null }] }] });
+
+    await inferStepIngredients(RECIPE);
+
+    expect(mocked.verifyClaims).toHaveBeenCalledWith(expect.objectContaining({ claims: [] }));
   });
 });

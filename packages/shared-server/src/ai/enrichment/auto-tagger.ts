@@ -7,6 +7,7 @@ import type { AutoTaggingOutput } from "./auto-tagging.schema";
 import { generateStructured } from "../runtime/runtime";
 import { buildAutoTaggingSections } from "./auto-tagging-prompt";
 import { autoTaggingSchema } from "./auto-tagging.schema";
+import { verifyClaims } from "./verification";
 
 // Re-export types for consumers
 export type { AutoTaggingOutput, RecipeForTagging };
@@ -50,7 +51,24 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<s
     new Set(output.tags.map((t) => t.toLowerCase().trim()).filter((t) => t.length > 0))
   );
 
-  aiLogger.info({ title: recipe.title, tags: normalizedTags }, "Auto-tagging completed");
+  // The run's own claims, checked before they are written (Enrichment
+  // Validation). Only what the model just proposed is here — never a tag
+  // already on the recipe, which this function never sees.
+  const { kept } = await verifyClaims({
+    feature: "auto-tagging",
+    state: {
+      title: recipe.title,
+      description: recipe.description ?? "",
+      ingredients: recipe.ingredients,
+    },
+    claims: normalizedTags.map((tag) => ({
+      id: tag,
+      question: `Does the tag "${tag}" apply to this recipe?`,
+    })),
+  });
+  const tags = kept.map((claim) => claim.id);
 
-  return normalizedTags;
+  aiLogger.info({ title: recipe.title, tags }, "Auto-tagging completed");
+
+  return tags;
 }

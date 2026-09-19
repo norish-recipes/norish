@@ -13,6 +13,7 @@ import { aiLogger } from "@norish/shared-server/logger";
 
 import { decide, generateStructured } from "../runtime/runtime";
 import { matchCategory } from "./category-matcher";
+import { verifyClaims } from "./verification";
 
 /**
  * A category the Decision Model is at least this sure of is set. Below it the
@@ -32,6 +33,15 @@ export interface RecipeSummary {
   title: string;
   description: string | null;
   ingredients: string[];
+}
+
+/** The structured recipe every Decision here is asked about. */
+function recipeState(recipe: RecipeSummary) {
+  return {
+    title: recipe.title,
+    description: recipe.description ?? "",
+    ingredients: recipe.ingredients,
+  };
 }
 
 /**
@@ -56,18 +66,20 @@ async function decideCategories(recipe: RecipeSummary): Promise<RecipeCategory[]
   const { answers } = await decide({
     feature: "auto-categorization",
     // Structured, since the recipe is structured.
-    state: {
-      title: recipe.title,
-      description: recipe.description ?? "",
-      ingredients: recipe.ingredients,
-    },
+    state: recipeState(recipe),
     questions: CATEGORY_QUESTIONS,
   });
 
   return CATEGORIES.filter((category) => answers[category].probability >= CATEGORY_THRESHOLD);
 }
 
-/** The request this kind has always made: the words, then the matcher. */
+/**
+ * The request this kind has always made: the words, then the matcher, then
+ * the run's own claims checked before they are written (Enrichment
+ * Validation). A category the Decision Model is clearly sure is wrong is not
+ * written; when none survives, the worker's empty-list rule makes the run a
+ * retryable failure as it always has.
+ */
 async function categorizeWithLanguageModel(recipe: RecipeSummary): Promise<RecipeCategory[]> {
   const output = await generateStructured({
     prompt: "auto-categorization",
@@ -83,13 +95,24 @@ async function categorizeWithLanguageModel(recipe: RecipeSummary): Promise<Recip
   });
 
   // Model answers are matched onto the four categories; anything else drops.
-  return Array.from(
+  const matched = Array.from(
     new Set(
       output.categories
         .map((category) => matchCategory(category))
         .filter((category): category is RecipeCategory => Boolean(category))
     )
   );
+
+  const { kept } = await verifyClaims({
+    feature: "auto-categorization",
+    state: recipeState(recipe),
+    claims: matched.map((category) => ({
+      id: category,
+      question: CATEGORY_QUESTIONS[category].instructions,
+    })),
+  });
+
+  return kept.map((claim) => claim.id);
 }
 
 export async function categorizeRecipe(recipe: RecipeSummary): Promise<RecipeCategory[]> {

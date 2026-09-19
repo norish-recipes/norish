@@ -30,6 +30,7 @@ import { aiLogger } from "@norish/shared-server/logger";
 
 import type {
   DecisionBooleanQuestion,
+  DecisionJson,
   DecisionScoreQuestion,
   DecisionState,
 } from "../runtime/runtime";
@@ -57,6 +58,15 @@ export const ALLERGEN_DROP_THRESHOLD = 0.05;
  * it is measured against a real key.
  */
 export const MAX_QUESTIONS_PER_DECISION = 40;
+
+/**
+ * A structured value as a Decision's state. The round trip through JSON is
+ * what the wire does anyway; here it drops the `undefined` members a
+ * schema-inferred object may carry and which the state type has no room for.
+ */
+export function asDecisionState(value: object): { readonly [key: string]: DecisionJson } {
+  return JSON.parse(JSON.stringify(value));
+}
 
 /** Whether a verdict changes the run's output, or is only logged. */
 export type ValidationMode = "enforce" | "shadow";
@@ -124,7 +134,9 @@ async function probabilitiesOf(
     const { answers } = await decide({ feature: `${feature}:validation`, state, questions });
 
     for (const claim of batch) {
-      probabilities.set(claim.id, answers[claim.id].probability);
+      // `decide` has already thrown for a question it did not answer; the
+      // fallback only satisfies strict indexing.
+      probabilities.set(claim.id, answers[claim.id]?.probability ?? 1);
     }
   }
 

@@ -1,8 +1,19 @@
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { NutritionEstimate } from "./nutrition.schema";
+import type { ValidationMode } from "./verification";
+import { AIResponseError } from "../runtime/errors";
 import { generateStructured } from "../runtime/runtime";
 import { nutritionEstimationSchema } from "./nutrition.schema";
+import { verifyClaims } from "./verification";
+
+/**
+ * Whether an estimate the Decision Model finds out of reason fails the run
+ * so the queue asks the language model again. Shadow until the disagreement
+ * rate is known; the group is atomic, so a failed run writes nothing rather
+ * than half a group. Promotion is this one constant, with the rate.
+ */
+const NUTRITION_VALIDATION_MODE: ValidationMode = "shadow";
 
 // Re-export type for consumers
 export type { NutritionEstimate };
@@ -49,6 +60,38 @@ export async function estimateNutritionFromIngredients(
       ingredients: ingredientsList,
     },
   });
+
+  // The estimate, checked before it is written (Enrichment Validation): one
+  // question per figure, on the same ingredient list the model estimated from.
+  const { dropped, mode } = await verifyClaims({
+    feature: "nutrition-estimation",
+    state: { recipeName, servings, ingredients: ingredientsList.split("\n") },
+    claims: [
+      {
+        id: "calories",
+        question: `Is ${output.calories} kcal per serving within reason for this recipe?`,
+      },
+      {
+        id: "fat",
+        question: `Is ${output.fat} g of fat per serving within reason for this recipe?`,
+      },
+      {
+        id: "carbs",
+        question: `Is ${output.carbs} g of carbohydrates per serving within reason for this recipe?`,
+      },
+      {
+        id: "protein",
+        question: `Is ${output.protein} g of protein per serving within reason for this recipe?`,
+      },
+    ],
+    mode: NUTRITION_VALIDATION_MODE,
+  });
+
+  if (mode === "enforce" && dropped.length > 0) {
+    throw new AIResponseError(
+      `The Decision Model finds the estimated ${dropped.map(({ claim }) => claim.id).join(", ")} out of reason; asking again.`
+    );
+  }
 
   aiLogger.info(
     {

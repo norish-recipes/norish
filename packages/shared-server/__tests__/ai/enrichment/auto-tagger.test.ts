@@ -15,10 +15,16 @@ import { getTagStrategy } from "@norish/shared-server/config/server-config-loade
 
 const mocked = vi.hoisted(() => ({
   generateStructured: vi.fn(),
+  verifyClaims: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
   generateStructured: mocked.generateStructured,
+}));
+
+vi.mock("@norish/shared-server/ai/enrichment/verification", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-server/ai/enrichment/verification")>()),
+  verifyClaims: mocked.verifyClaims,
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
@@ -51,6 +57,10 @@ describe("Auto-Tagger", () => {
     vi.clearAllMocks();
     vi.mocked(getTagStrategy).mockResolvedValue("predefined");
     mocked.generateStructured.mockResolvedValue({ tags: [] });
+    // Validation keeps everything unless a test says otherwise.
+    mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
+      Promise.resolve({ kept: claims, dropped: [], mode: "off" })
+    );
   });
 
   describe("generateTagsForRecipe", () => {
@@ -137,6 +147,60 @@ describe("Auto-Tagger", () => {
       mocked.generateStructured.mockRejectedValue(new Error("API rate limit exceeded"));
 
       await expect(generateTagsForRecipe(mockRecipe)).rejects.toThrow("API rate limit exceeded");
+    });
+  });
+
+  describe("Enrichment Validation", () => {
+    it("checks only the tags this run proposed, and writes the survivors", async () => {
+      mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Quick", "Vegan"] });
+      mocked.verifyClaims.mockResolvedValue({
+        kept: [{ id: "italian" }, { id: "quick" }],
+        dropped: [{ claim: { id: "vegan" }, probability: 0.02 }],
+        mode: "enforce",
+      });
+
+      const tags = await generateTagsForRecipe(mockRecipe);
+
+      expect(mocked.verifyClaims).toHaveBeenCalledWith({
+        feature: "auto-tagging",
+        state: {
+          title: "Spaghetti Carbonara",
+          description: "Classic Italian pasta dish",
+          ingredients: mockRecipe.ingredients,
+        },
+        claims: [
+          { id: "italian", question: expect.stringMatching(/"italian"/) },
+          { id: "quick", question: expect.stringMatching(/"quick"/) },
+          { id: "vegan", question: expect.stringMatching(/"vegan"/) },
+        ],
+      });
+      expect(tags).toEqual(["italian", "quick"]);
+    });
+
+    it("never hands stored tags to validation: a person's tag is not in the run's claims", async () => {
+      // predefined_db offers the instance's stored tags to the model as
+      // input; they are not claims, so a stored "vegetarian" that the model
+      // did not propose is never judged and cannot be dropped.
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
+      vi.mocked(listAllTagNames).mockResolvedValue(["vegetarian", "dinner"]);
+      mocked.generateStructured.mockResolvedValue({ tags: ["Italian"] });
+
+      await generateTagsForRecipe(mockRecipe);
+
+      expect(mocked.verifyClaims).toHaveBeenCalledWith(
+        expect.objectContaining({ claims: [{ id: "italian", question: expect.any(String) }] })
+      );
+    });
+
+    it("returns an empty list when every claim was dropped, leaving the worker's rule to it", async () => {
+      mocked.generateStructured.mockResolvedValue({ tags: ["Nonsense"] });
+      mocked.verifyClaims.mockResolvedValue({
+        kept: [],
+        dropped: [{ claim: { id: "nonsense" }, probability: 0.01 }],
+        mode: "enforce",
+      });
+
+      await expect(generateTagsForRecipe(mockRecipe)).resolves.toEqual([]);
     });
   });
 });
