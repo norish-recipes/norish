@@ -61,7 +61,13 @@ describe("asking a Store what a name means", () => {
       expect.not.objectContaining({ delay: expect.anything() })
     );
 
-    const pending = { storeId: STORE, normalizedName: "oude kaas", triedAt: null, product: null };
+    const pending = {
+      storeId: STORE,
+      normalizedName: "oude kaas",
+      triedAt: null,
+      product: null,
+      suggestion: null,
+    };
 
     expect(links).toEqual([pending]);
     expect(stores.publish).toHaveBeenCalledWith(
@@ -83,7 +89,13 @@ describe("asking a Store what a name means", () => {
     storeProductsRepository.resolveProductLinks.mockResolvedValue([miss]);
 
     const links = await priceTheList(ctx);
-    const pending = { storeId: STORE, normalizedName: "kaas", triedAt: null, product: null };
+    const pending = {
+      storeId: STORE,
+      normalizedName: "kaas",
+      triedAt: null,
+      product: null,
+      suggestion: null,
+    };
 
     expect(links).toEqual([miss, pending]);
     expect(stores.publish).toHaveBeenCalledExactlyOnceWith(
@@ -107,7 +119,13 @@ describe("asking a Store what a name means", () => {
   });
 
   it("leaves a fresh Pending Link to the job already asking, and still reports it", async () => {
-    const pending = { storeId: STORE, normalizedName: "kaas", triedAt: null, product: null };
+    const pending = {
+      storeId: STORE,
+      normalizedName: "kaas",
+      triedAt: null,
+      product: null,
+      suggestion: null,
+    };
 
     storeProductsRepository.resolveProductLinks.mockResolvedValue([pending]);
     // The repository refuses to re-stamp a row younger than the window.
@@ -120,7 +138,13 @@ describe("asking a Store what a name means", () => {
   });
 
   it("asks again for a Pending Link a dead worker left behind, without listing it twice", async () => {
-    const stale = { storeId: STORE, normalizedName: "kaas", triedAt: null, product: null };
+    const stale = {
+      storeId: STORE,
+      normalizedName: "kaas",
+      triedAt: null,
+      product: null,
+      suggestion: null,
+    };
 
     storeProductsRepository.resolveProductLinks.mockResolvedValue([stale]);
     storeProductsRepository.markLinkPending.mockResolvedValue(true);
