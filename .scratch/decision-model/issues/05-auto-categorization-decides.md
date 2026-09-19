@@ -1,6 +1,6 @@
 # 05 — Auto-categorization asks a Decision first
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 04
 
 Spec: `.scratch/decision-model/spec.md`
@@ -53,3 +53,4 @@ Extraction's own category normalisation (`extraction-normalizer.ts`, the matcher
 ## Comments
 
 - Filed 2026-09-19 with the spec.
+- 2026-09-19 — Implemented. `auto-categorizer.ts` reads as one function with two branches: `isDecisionUseEnabled("autoCategorization")` → `decideCategories` (a JSON state of title, description and ingredients; four Booleans keyed Breakfast/Lunch/Dinner/Snack; the keys whose probability is at least `CATEGORY_THRESHOLD = 0.6`), and otherwise — unconfigured, use off, any `decide` failure (warn log, never the job's failure), or nothing clearing the threshold — `categorizeWithLanguageModel`, the request the kind has always made, renamed and unchanged, matcher included. The completion log line carries `path: "decision" | "language-model"`. Worker, coordinator and `extraction-normalizer.ts` untouched. Tests: `__tests__/ai/enrichment/auto-categorizer.test.ts` mocks `decide`, `generateStructured` and `isDecisionUseEnabled` and nothing else — the boundary test pins 0.60 set and 0.59 not.
