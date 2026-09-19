@@ -22,20 +22,20 @@ DecisionConfigSchema = z.object({
   apiKey: z.string().optional(),
   model: z.string().optional(),          // effective default "jev-latest"
   endpoint: z.url().optional(),          // TypeSafe base URL; default https://api.typesafe.ai/v1
-  uses: DecisionUsesSchema.partial().optional(),
+  uses: z.array(DecisionUseSchema).optional(),   // absent = every use
 })
 
-DecisionUsesSchema = z.object({
-  autoCategorization: z.boolean(),   // ticket 05
-  allergyDetection: z.boolean(),     // ticket 06
-  recipeProvenance: z.boolean(),     // ticket 08
-  groceryLinking: z.boolean(),       // ticket 09
-  recipeValidation: z.boolean(),     // tickets 10 and 11
-})
-DEFAULT_DECISION_USES = { every key: true }
+DecisionUseSchema = z.enum([
+  "autoCategorization",   // ticket 05
+  "allergyDetection",     // ticket 06
+  "recipeProvenance",     // ticket 08
+  "groceryLinking",       // ticket 09
+  "validateEnrichments",  // ticket 10
+])
+DECISION_USES = DecisionUseSchema.options   // the default: all of them
 ```
 
-**Uses.** The maintainer's rule: an administrator decides what the Decision Model does for _people_ — which kinds ask it, whether it links groceries, whether it validates recipes — and every use is **on by default** the moment a Decision Model is configured. What it does for Norish's own algorithms is not a setting: import triage (ticket 07) always runs when a Decision Model exists, because those questions only ever make an import cheaper or refuse a page that was never a recipe, and there is nothing for a household to opt out of. The transform backfills a stored block that predates a use with `true`, exactly as `AIConfigSchema` backfills `automaticEnrichment`; the loader exposes `isDecisionUseEnabled(use)`, which is `false` whenever no Decision Model is configured, so a feature asks one question.
+**Uses.** The maintainer's rule: an administrator decides what the Decision Model does for _people_ — which kinds ask it, whether it links groceries, whether it validates recipes — and every use is **on by default** the moment a Decision Model is configured. What it does for Norish's own algorithms is not a setting: import triage (ticket 07) always runs when a Decision Model exists, because those questions only ever make an import cheaper or refuse a page that was never a recipe, and there is nothing for a household to opt out of. The shape is a list rather than a record of booleans because the control is a **multi-select** (below): the stored value is the selection. A block with no `uses` means every use, so a stored block that predates a use gains it; a use that is added in a later release is therefore on for everyone until an administrator deselects it, which is the maintainer's default. The loader exposes `isDecisionUseEnabled(use)`, which is `false` whenever no Decision Model is configured, so a feature asks one question.
 
 plus the two pure helpers the runtime, the coordinator and the form all ask: `resolveDecisionSettings(config)` (fills the model and endpoint defaults) and `isDecisionConfigValid(config)` (provider not disabled, key present). There is **no** fallback to the AI block's key — the provider never matches — so the helper takes one argument, not two.
 
@@ -52,7 +52,7 @@ Admin form (`apps/web/app/(app)/settings/admin/components/decision-model-form.ts
 - Test button and result chip, as the AI form has.
 - Dirty tracking through `onDirtyChange`, the unsaved-changes chip, and the context's `updateDecisionConfig`.
 - A one-paragraph description at the top saying what the Decision Model is for and that it is optional, in the register of the Image Generation description.
-- Below the connection fields, a **Uses** group of switches, one per `DecisionUsesSchema` key, in `SwitchRow`s like the automatic-enrichment switches: Auto-categorization, Allergy detection, Recipe Provenance, Grocery linking, Recipe validation. All on by default; disabled (greyed, not hidden) while the provider is `disabled`, with a description line saying import triage always uses the Decision Model and is not a switch.
+- Below the connection fields, one **Use the Decision Model for** row: a `Select` with `selectionMode="multiple"`, built exactly like the **Automatic enrichment** multi-select in `ai-config-form.tsx` (same truncated joined-names trigger, same `ListBox`), listing Auto-categorization, Allergy detection, Recipe Provenance, Grocery linking, Validate enrichments. Everything selected by default; disabled (not hidden) while the provider is `disabled`; the row's description says import triage always uses the Decision Model and is not in the list. One control, not five switches.
 
 The admin context (`settings/admin/context.tsx`) gains `decisionConfig` and `updateDecisionConfig`. Translations under `settings.admin.decisionConfig` in all fourteen locales.
 
@@ -66,9 +66,9 @@ Seeding: none. The block ships unconfigured and is admin-only, like Image Genera
 - [ ] Test reports a bad key as a bad key (the provider's 401 message), and a reachable key as success.
 - [ ] Global AI off leaves the block editable but the Test button explains AI is off (mirror the AI form's behaviour).
 - [ ] Interface strings exist for every enabled locale; the i18n gate passes.
-- [ ] Config schema tests cover the helpers and the defaults, including the `uses` backfill for a stored block without it.
-- [ ] `isDecisionUseEnabled` is false for every use when no Decision Model is configured, true by default once one is, and follows the stored switch after a save.
-- [ ] The Uses switches round-trip and are inert while the provider is disabled.
+- [ ] Config schema tests cover the helpers and the defaults, including that a stored block without `uses` means every use.
+- [ ] `isDecisionUseEnabled` is false for every use when no Decision Model is configured, true for all by default once one is, and follows the stored selection after a save.
+- [ ] The multi-select round-trips a partial selection and is inert while the provider is disabled.
 - [ ] Repo gates green: lint, full test run, internationalization check, production build.
 
 ## Non-goals

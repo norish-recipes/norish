@@ -8,7 +8,7 @@ Decision records: ADR-0028, ADR-0029, ADR-0030
 
 ## What to build
 
-When a grocery's Store search returns products and the auto-link rule (`packages/shared/src/lib/auto-link.ts`, `chooseUnmistakable`) declines to link — the normal case after the 0.23.1 tightening — a Decision Model with its Grocery linking use on asks one Choice over the candidates plus `none`. Two outcomes:
+When a grocery's Store search returns products and the auto-link rule (`packages/shared/src/lib/auto-link.ts`, `chooseUnmistakable`) declines to link — the normal case after the 0.23.1 tightening — a Decision Model with its Grocery linking use selected asks one Choice over the candidates plus `none`. Two outcomes:
 
 - The chosen product's probability clears `LINK_THRESHOLD` (start at 0.9): the grocery is **linked** to it, exactly as an unmistakable name match links today, and the row gets its price.
 - It does not: nothing is linked. The grocery panel's offered list is **ordered** by the Decision and the top candidate is marked as a suggestion when it clears the lower `SUGGESTION_THRESHOLD`.
