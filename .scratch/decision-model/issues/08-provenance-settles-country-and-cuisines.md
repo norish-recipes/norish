@@ -1,6 +1,6 @@
 # 08 — Recipe Provenance settles the country and Cuisines by Decision, and writes the note around them
 
-Status: needs-triage
+Status: ready-for-agent
 Blocked by: 04, 05
 
 Spec: `.scratch/decision-model/spec.md`
@@ -10,9 +10,9 @@ Decision records: ADR-0012 (Cuisines are curated), ADR-0018 (automatic provenanc
 
 Under the `existing` cuisine strategy, and when a Decision Model is configured, Recipe Provenance asks a Decision first: a Choice over ISO-3166-1 alpha-2 country codes and one Boolean per Cuisine in the administrator's vocabulary. A clear country and its clear Cuisines become **settled slots**, and the language model is then asked to write the region and the note around them — the exact shape ADR-0018's gap-fill already gives Supplied Recipe Data. When the country is unclear, the strategy is `extend`, or there is no Decision Model, the whole group is inferred by the language model as today.
 
-## Why it is filed for triage rather than ready
+## Decided
 
-The win is accuracy and vocabulary discipline rather than cost: the language-model request still happens for the note. Two subtleties need a maintainer's eye before an agent starts:
+The maintainer confirmed this as a good fit on 2026-09-19 (see Comments). The two subtleties below are settled as follows: a manual run is one claim composed from two sources, the Decision settling the country and Cuisines and the language model writing region and note to them, and it replaces the stored group as a whole; the Levenshtein resolver stays for the language-model path only, and the two paths are compared in this ticket's comments once both exist.
 
 - **Manual runs replace the whole group** (CONTEXT.md, _Recipe Provenance_). With settled slots from a Decision, a manual run would be "Decision settles, language model fills the rest" — still a full replacement of what was stored, but composed from two sources. Confirm that reads as one claim to the person who asked.
 - **The note explains the whole claim** (the docs' reason for suppressing automatic provenance on any supplied part). A note written to a settled country is what the gap-fill already does for supplied countries, so this is consistent; but the Levenshtein resolver in `cuisine-resolver.ts` becomes unnecessary on this path and stays for the language-model path, and two paths minting Cuisines differently should be looked at once.
@@ -30,10 +30,11 @@ Everything in `packages/shared/src/lib/recipe-enrichment.ts` (`fillProvenanceGap
 - [ ] Under `existing` with a Decision Model: a clear country and Cuisines are settled by one `decide` call, and one `generateStructured` call writes the region and note to them; the stored group is consistent (the note names the settled country).
 - [ ] An unclear country, the `extend` strategy, or no Decision Model: today's single language-model inference, byte-for-byte.
 - [ ] No Cuisine outside the vocabulary is ever minted on the Decision path.
-- [ ] The manual-run semantics are confirmed in the comments by a maintainer before implementation.
+- [ ] A manual run replaces the whole stored group with the composed claim, and the note names the settled country.
 - [ ] Boundary tests on both constants; existing provenance tests pass untouched.
 - [ ] Repo gates green: lint, full test run, internationalization check, production build.
 
 ## Comments
 
-- Filed 2026-09-19 with the spec. Maintainer decision requested on the two subtleties above.
+- Filed 2026-09-19 with the spec.
+- 2026-09-19: Maintainer confirmed the fit and the manual-run semantics above. Promoted to ready-for-agent.
