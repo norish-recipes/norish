@@ -16,7 +16,7 @@
 # workflow reads.
 
 ARG OBSCURA_REPO=https://github.com/h4ckf0r0day/obscura
-ARG OBSCURA_VERSION=0.2.0
+ARG OBSCURA_VERSION=0.2.2
 
 # Only here to fetch: the runtime image below has no shell to do it in.
 FROM debian:12-slim AS fetch

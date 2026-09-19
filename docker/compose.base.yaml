@@ -14,7 +14,7 @@ services:
   # server with stealth on and private-network protection intact, so it needs
   # no command of its own — see docker/obscura/README.md.
   obscura:
-    image: norishapp/obscura:0.2.0-norish.1
+    image: norishapp/obscura:0.2.2-norish.1
     restart: unless-stopped
 
   # Redis for real-time events
