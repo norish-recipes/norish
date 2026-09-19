@@ -321,6 +321,22 @@ export function createImageModelFromConfig(config: {
       };
     }
 
+    case "ollama": {
+      if (!endpoint) throw new Error("Endpoint is required for Ollama provider");
+
+      return {
+        model: createOllama({
+          baseURL: normalizeOllamaEndpoint(endpoint),
+          fetch: customFetch,
+        }).imageModel(model),
+        providerName: "Ollama",
+        // Ollama's image models take a width and a height, and the SDK
+        // provider turns a size into exactly that — so, as for the other
+        // self-hosted route, ask for the stored shape itself.
+        landscape: { size: "1280x720" },
+      };
+    }
+
     case "lm-studio":
     case "generic-openai": {
       if (!endpoint) throw new Error("Endpoint is required for this provider");

@@ -153,17 +153,18 @@ creating a near-duplicate. The list itself is managed under
 ![Image Generation settings](/img/screenshots/admin-image-generation.png)
 
 Image generation is the one enrichment kind that needs its own provider,
-because most AI providers cannot draw: Anthropic, Mistral, DeepSeek, Groq,
-Perplexity and Ollama expose no image model at all. So a self-hoster running a
-local text model can still point image generation somewhere else. Configure it
-under **Settings => Admin => AI & Processing => Image Generation**:
+because most AI providers cannot draw: Anthropic, Mistral, DeepSeek, Groq and
+Perplexity expose no image model at all. So a self-hoster running a local text
+model can still point image generation somewhere else, or at an Ollama server
+running one of its image models. Configure it under
+**Settings => Admin => AI & Processing => Image Generation**:
 
-| Field              | Notes                                                                                                                                             |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Image Provider** | OpenAI, Google AI, Azure OpenAI, LM Studio, or a generic OpenAI-compatible endpoint, only providers that can actually generate images are offered |
-| **Endpoint URL**   | For LM Studio and generic endpoints; optional custom resource URL for Azure                                                                       |
-| **API Key**        | For the cloud providers                                                                                                                           |
-| **Image Model**    | Must be an image model, e.g. `gpt-image-1` or `imagen-4.0-generate-001`, not a text model                                                         |
+| Field              | Notes                                                                                                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Image Provider** | OpenAI, Google AI, Azure OpenAI, Ollama, LM Studio, or a generic OpenAI-compatible endpoint, only providers that can actually generate images are offered |
+| **Endpoint URL**   | For Ollama, LM Studio and generic endpoints; optional custom resource URL for Azure                                                                       |
+| **API Key**        | For the cloud providers                                                                                                                                   |
+| **Image Model**    | Must be an image model, e.g. `gpt-image-1`, `imagen-4.0-generate-001` or Ollama's `x/z-image-turbo`, not a text model                                     |
 
 When the image provider is the **same** provider as your AI configuration, the
 endpoint and API key fall back to it, so you don't type a key twice.

@@ -726,10 +726,11 @@
             <b>Proposed.</b> The AI Runtime gains <code>generateImage</code> beside
             <code>generateStructured</code> and <code>transcribe</code>, reading its own provider
             block rather than the server's, because only four of eleven providers expose an image
-            model at all. One feature, two requests: a structured call writes a short English visual
-            brief, and the image model draws from it. Rejects a lone <code>imageModel</code> field
-            beside <code>visionModel</code>, an OpenAI-compatible endpoint as the only route, and
-            going straight from recipe to image model.
+            model at all (five since the AI SDK 7 line: Ollama joined, amendment of 2026-09-19). One
+            feature, two requests: a structured call writes a short English visual brief, and the
+            image model draws from it. Rejects a lone <code>imageModel</code> field beside
+            <code>visionModel</code>, an OpenAI-compatible endpoint as the only route, and going
+            straight from recipe to image model.
           </p>
         </li>
         <li>

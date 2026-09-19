@@ -154,13 +154,13 @@ describe("ImageGenerationConfigSchema", () => {
   }
 
   it("accepts only providers whose SDK package exposes an image model", () => {
-    for (const provider of ["openai", "google", "azure", "lm-studio", "generic-openai"]) {
+    for (const provider of ["openai", "google", "azure", "ollama", "lm-studio", "generic-openai"]) {
       expect(ImageGenerationConfigSchema.parse({ provider, model: "m" }).provider).toBe(provider);
     }
     expect(ImageGenerationConfigSchema.parse({ provider: "disabled" }).provider).toBe("disabled");
   });
 
-  it.each(["anthropic", "mistral", "deepseek", "groq", "perplexity", "ollama"])(
+  it.each(["anthropic", "mistral", "deepseek", "groq", "perplexity"])(
     "refuses %s, which exposes no image model",
     (provider) => {
       expect(() => ImageGenerationConfigSchema.parse({ provider, model: "m" })).toThrow();
@@ -226,15 +226,21 @@ describe("ImageGenerationConfigSchema", () => {
       ).toBe(false);
     });
 
-    it("requires an endpoint for the local providers", () => {
-      const local = imageConfig({ provider: "lm-studio", apiKey: undefined, endpoint: undefined });
+    it.each([
+      ["lm-studio", "http://localhost:1234"],
+      ["ollama", "http://localhost:11434"],
+    ] as const)("requires an endpoint for %s, and no key", (provider, endpoint) => {
+      const local = imageConfig({ provider, apiKey: undefined, endpoint: undefined });
 
       expect(isImageGenerationConfigValid(local, null)).toBe(false);
+      expect(isImageGenerationConfigValid(imageConfig({ ...local, endpoint }), null)).toBe(true);
+    });
+
+    it("borrows the AI configuration's Ollama endpoint when the provider matches", () => {
+      const local = imageConfig({ provider: "ollama", apiKey: undefined, endpoint: undefined });
+
       expect(
-        isImageGenerationConfigValid(
-          imageConfig({ ...local, endpoint: "http://localhost:1234" }),
-          null
-        )
+        isImageGenerationConfigValid(local, { provider: "ollama", endpoint: "http://ollama:11434" })
       ).toBe(true);
     });
   });

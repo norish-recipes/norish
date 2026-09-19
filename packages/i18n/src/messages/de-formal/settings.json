@@ -718,6 +718,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (Lokal)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Generisch OpenAI-kompatibel"
       },

@@ -1,6 +1,6 @@
 # 10 — Ollama as an Image Generation provider
 
-Status: needs-triage
+Status: resolved
 Blocked by: None
 
 Spec: `.scratch/image-generation/spec.md`
@@ -13,9 +13,9 @@ Decide whether Ollama joins the Image Generation provider enum, and if so add it
 
 ## Acceptance criteria
 
-- [ ] A decision is recorded: Ollama is, or deliberately is not, an Image Generation provider, with the reason.
-- [ ] If added: a self-hoster running Ollama with an image model can select it in Settings => Admin => AI & Processing => Image Generation and generate a recipe image through it.
-- [ ] The comment on `ImageGenerationProviderSchema` and ADR-0024's provider list say what is true of the installed packages.
+- [x] A decision is recorded: Ollama is, or deliberately is not, an Image Generation provider, with the reason.
+- [x] If added: a self-hoster running Ollama with an image model can select it in Settings => Admin => AI & Processing => Image Generation and generate a recipe image through it.
+- [x] The comment on `ImageGenerationProviderSchema` and ADR-0024's provider list say what is true of the installed packages.
 - [ ] Repo gates green.
 
 ## Non-goals
@@ -25,3 +25,4 @@ Decide whether Ollama joins the Image Generation provider enum, and if so add it
 ## Comments
 
 - Filed 2026-09-19 from the ADR-0024 re-check in the AI SDK 7 move.
+- 2026-09-19: **Added.** The maintainer asked for it as the follow-up to the line move. Ollama joins `ImageGenerationProviderSchema`, `IMAGE_GENERATION_PROVIDERS_ENABLED` and the endpoint-needing set; `createImageModelFromConfig` builds `createOllama({ baseURL, fetch }).imageModel(model)` and asks for `1280x720`, which the provider sends as `width`/`height` to `POST {endpoint}/api/generate`; the admin form offers it with the `http://localhost:11434` placeholder; the label exists in all fourteen locales; the config tests move Ollama from the refused list to the accepted one and cover the endpoint rule and the matching-provider endpoint borrow; the runtime test drives a real HTTP round trip on the native route. ADR-0024 carries a dated amendment and the docs page names Ollama. Release notes: the editable docs still carry the shipped `0.23.1-beta` label and no `0.24.0` checkpoint exists yet, so the line ("Ollama can draw: pick it as the Image Provider") goes into the next Target Version's notes when the checkpoint is made.

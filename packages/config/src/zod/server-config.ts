@@ -497,15 +497,18 @@ export type VideoConfig = z.infer<typeof VideoConfigSchema>;
 
 /**
  * Providers whose installed AI SDK package exposes an image model, plus
- * `disabled` (ADR-0024). Anthropic, Mistral, DeepSeek, Groq, Perplexity and
- * Ollama expose none, which is why Image Generation reads its own provider
- * block rather than the server's. This is a fact about the installed provider
- * packages, not about any model — re-check it when the AI SDK line moves.
+ * `disabled` (ADR-0024). Anthropic, Mistral, DeepSeek, Groq and Perplexity
+ * expose none, which is why Image Generation reads its own provider block
+ * rather than the server's. Ollama joined when the AI SDK line moved to 7:
+ * `ai-sdk-ollama` 4 exposes an image model for Ollama's experimental image
+ * models. This is a fact about the installed provider packages, not about any
+ * model — re-check it when the AI SDK line moves.
  */
 export const ImageGenerationProviderSchema = z.enum([
   "openai",
   "google",
   "azure",
+  "ollama",
   "lm-studio",
   "generic-openai",
   "disabled",
@@ -518,6 +521,7 @@ export const IMAGE_GENERATION_PROVIDERS_ENABLED = [
   "openai",
   "google",
   "azure",
+  "ollama",
   "lm-studio",
   "generic-openai",
 ] as const satisfies readonly ImageGenerationProvider[];
@@ -531,6 +535,7 @@ export const IMAGE_GENERATION_PROVIDERS_CLOUD = [
 
 /** Providers that require an endpoint URL. Azure's is optional, as in the AI block. */
 export const IMAGE_GENERATION_PROVIDERS_NEED_ENDPOINT = [
+  "ollama",
   "lm-studio",
   "generic-openai",
 ] as const satisfies readonly ImageGenerationProvider[];

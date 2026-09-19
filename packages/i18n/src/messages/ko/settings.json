@@ -718,6 +718,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama(로컬)",
         "lmStudio": "LM Studio",
         "genericOpenai": "일반 OpenAI 호환"
       },
