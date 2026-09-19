@@ -1,5 +1,7 @@
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { extractSanitizedBody } from "@norish/api/parser/extraction-sanitizer";
 import { fetchRenderedPage } from "@norish/api/parser/fetch";
+import { isParseComplete, isRecipe } from "@norish/api/parser/import-triage";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
 import { adaptRecipeScrapersResponse } from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
@@ -204,12 +206,25 @@ export async function parseRecipeFromUrl(
   }
 
   const structured = await tryStructuredParser(url, html, recipeId);
-
-  if (structured.recipe) return { recipe: structured.recipe, usedAI: false };
-
   const aiEnabled = await isAIEnabled();
 
-  if (aiEnabled && (await isPageLikelyRecipe(html))) {
+  if (structured.recipe) {
+    // Import triage, question 3: a parse the Decision Model scores as
+    // incomplete goes through AI extraction as `alwaysUseAI` would, and the
+    // parse is kept when extraction has nothing better. No Decision Model,
+    // or no opinion, and success means what it always has: a name.
+    if (aiEnabled && (await isParseComplete(structured.recipe)) === false) {
+      log.info({ url }, "Structured parse judged incomplete, attempting AI extraction");
+
+      const recipe = await extractWithAIPreference(html, recipeId, url, false);
+
+      if (recipe) return { recipe, usedAI: true };
+    }
+
+    return { recipe: structured.recipe, usedAI: false };
+  }
+
+  if (aiEnabled && (await isPageWorthExtracting(html))) {
     log.info(
       {
         url,
@@ -230,6 +245,17 @@ export async function parseRecipeFromUrl(
 
   log.error({ url }, "All extraction methods failed");
   throw new Error("Cannot parse recipe.");
+}
+
+/**
+ * Import triage, question 1: whether a page the structured parser found
+ * nothing on is worth an AI extraction. The Decision Model's answer where
+ * there is one — a clear "no" refuses the import with the message the parser
+ * already uses, anything else proceeds — and the content-indicator rule
+ * otherwise. The keyword list keeps its meaning and its admin editor.
+ */
+async function isPageWorthExtracting(html: string): Promise<boolean> {
+  return (await isRecipe(extractSanitizedBody(html))) ?? (await isPageLikelyRecipe(html));
 }
 
 export async function isPageLikelyRecipe(html: string): Promise<boolean> {
