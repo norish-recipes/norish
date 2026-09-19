@@ -201,7 +201,7 @@ One thing the Decision Model does for a household — categorising, allergy tagg
 _Avoid_: Decision feature (a feature is the kind; the use is whether the kind asks)
 
 **Enrichment Validation**:
-The check every enrichment run's output gets from the Decision Model before it is written: a claim the model is clearly sure is wrong is not written, an estimate clearly out of reason sends the run back to ask again. It sees only the run's own claims, never what is stored, which is what keeps a person's own tags, categories and links out of its reach.
+The check every enrichment run's output gets from the Decision Model before it is written: a claim the model is clearly sure is wrong is not written, and an estimate clearly out of reason sends the run back to ask again once that check is promoted from shadow. It sees only the run's own claims, never what is stored, which is what keeps a person's own tags, categories and links out of its reach. Tags, categories, Cuisines and Step Ingredients are enforced from the start; the nutrition estimate, the provenance country and recipe extraction's faithfulness are logged only until their disagreement rate is known. The Validate enrichments use governs enforcing; the logging is the algorithm's and always runs.
 _Avoid_: Recipe validation (suggests the stored recipe is judged; it is not), Cleanup
 
 **Unclassified Post**:

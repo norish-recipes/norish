@@ -1,6 +1,6 @@
 # 09 — A Decision orders the offered products, and links one it is sure of
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 04
 
 Spec: `.scratch/decision-model/spec.md`
@@ -45,3 +45,4 @@ Both thresholds are named constants; ticket 04's measurements and a comment in t
 - Filed 2026-09-19 with the spec.
 - 2026-09-19: Maintainer confirmed the fit. Promoted to ready-for-agent.
 - 2026-09-19: Maintainer: the Decision may link when its probability is high. `LINK_THRESHOLD` added; the lookup worker becomes the place it runs.
+- 2026-09-19 — Implemented. `packages/queue/src/store-lookup/product-decision.ts` owns `LINK_THRESHOLD = 0.9`, `SUGGESTION_THRESHOLD = 0.5`, `MAX_CANDIDATES = 100` and the one Choice (`p1..pN` over `distinctProducts`, plus `none`; state `{ grocery: { name }, candidates }` — the lookup job carries the name only, so no amount or unit). `lookup.ts` asks it only after `chooseUnmistakable` returns null; a sure pick is read from its page, upserted and linked through the same `linkIfUnanswered`, so a shopper who answered meanwhile, or unlinked before (a Miss with `triedAt` is never re-queued), is not overruled. Otherwise the Miss carries the ranking in a new `store_product_links.suggestion` jsonb column (migration `0053_store_product_link_suggestion`), which `stores.searchShop` reads to order the offered list (`orderBySuggestion`, pure, in `packages/shared/src/lib/product-link.ts`) and mark the best guess; `upsertProductLink` and a link clear it. The picker shows a **Suggested** mark (`groceries.picker.suggested`, 14 locales) and takes nothing. Thresholds are the ticket's starting points, untuned against a real key. Tests: `product-decision.test.ts` (9), `lookup.test.ts` (+5), `product-link.test.ts` (5), `products.test.ts` (+3), `grocery-product-field.test.tsx` (+2); the repository case needs Postgres in Docker and is left to CI.

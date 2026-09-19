@@ -27,6 +27,13 @@ saved. Importing or creating a recipe never waits for it, and never fails
 because of it. If AI is unavailable or an enrichment doesn't work out, you still
 have your recipe, and every enrichment can be run manually later.
 
+Your administrator may add a
+[Decision Model](../configuration/ai-provider.md#decision-model) that answers
+some of these questions faster; nothing on your recipe changes depending on
+which model decided. When one is configured, a run's own tags, categories,
+cuisines and step ingredients are checked before they are written, while
+anything you entered yourself is never touched.
+
 ## Automatic enrichment
 
 Your administrator chooses which of the seven run automatically for newly

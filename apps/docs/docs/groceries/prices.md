@@ -34,6 +34,19 @@ Norish links a grocery to one of the shop's products by itself only when the pro
 
 Everything else is yours to decide. Open the grocery and use the **Product** field: typing shows what the Store already knows and what the shop answers, with the price beside each. Typing a product's own name fills it in.
 
+When your administrator has configured a [Decision Model](../configuration/ai-provider.md#decision-model) with _Grocery linking_ selected, it is asked which of the shop's products is the grocery once the name rule has declined. A product it is sure of is linked and priced as a name match would be; otherwise nothing is linked, the shop's answers are offered most likely first, and its best guess carries a **Suggested** mark. Unlinking works as before, and a product you unlink is not linked again on its say-so.
+
+```mermaid
+flowchart TD
+  S[The shop's search results] --> N{"A product's name is the grocery's,<br/>to the letter or a slip?"}
+  N -- yes --> L[Linked and priced]
+  N -- no --> D{Decision Model with<br/>Grocery linking on?}
+  D -- no --> M[Miss: offered in the shop's order]
+  D -- yes --> P{Sure enough to link?}
+  P -- yes --> L
+  P -- no --> O[Miss: offered most likely first,<br/>best guess marked]
+```
+
 To undo a link, open the grocery and press **Unlink product**. The row loses its price, and the Store treats the name as one it has no product for until you pick or type one.
 
 ![The product field, with the shop's answers to pick from](/img/screenshots/groceries-picker.png)

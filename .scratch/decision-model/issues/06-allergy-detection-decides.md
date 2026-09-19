@@ -1,6 +1,6 @@
 # 06 — Allergy detection asks a Decision first
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 04
 
 Spec: `.scratch/decision-model/spec.md`
@@ -50,3 +50,4 @@ The log line names the path and, on the Decision path, the count of allergens ta
 ## Comments
 
 - Filed 2026-09-19 with the spec.
+- 2026-09-19 — Implemented. `allergy-detector.ts` reads as one function with two branches: `isDecisionUseEnabled("allergyDetection")` → one Boolean per household allergen in a single request (`PRESENT_THRESHOLD = 0.7` tags, `ABSENT_THRESHOLD = 0.15` clears, anything between for any one allergen sends the whole recipe on, nothing merged), and otherwise the request the kind has always made. Its language-model claims go through ticket 10's `verifyClaims` under `ALLERGEN_DROP_THRESHOLD = 0.05`. Log line carries `path`, `tagged`, `doubtful`. The 40-allergen test sends one request of 40 questions; the provider's real question limit is still unmeasured (ticket 04), so `MAX_QUESTIONS_PER_DECISION = 40` in `verification.ts` is the conservative chunk for validation and provenance, and the thresholds here are the spec's starting points, untuned. Tests: `__tests__/ai/enrichment/allergy-detector.test.ts` (17 cases).

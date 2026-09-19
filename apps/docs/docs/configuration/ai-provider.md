@@ -17,6 +17,10 @@ AI enables:
 - **Recipe Enrichment**: tags, allergy indications, meal categories, nutrition values, ingredient to step linking, and a generated picture of the dish.
 - **Unit conversion** between metric and US units
 
+An optional second provider, the [Decision Model](#decision-model), answers the
+closed questions among these faster and cheaper, and checks the AI provider's
+answers before they are written. Nothing needs it.
+
 ## Enable AI via the environment
 
 :::note
@@ -75,15 +79,19 @@ AI provider cannot make a save fail.
 Under **Settings => Admin => AI**, each kind has its own switch. They apply to
 every newly created recipe, manual entry and every import path alike.
 
-| Switch                   | What it does automatically                                                                | Default |
-| ------------------------ | ----------------------------------------------------------------------------------------- | ------- |
-| **Auto-tagging**         | Adds suggested tags without removing existing ones                                        | Off     |
-| **Allergy detection**    | Adds allergy tags for your household's configured allergies                               | On      |
-| **Auto-categorization**  | Sets meal categories on recipes that have none                                            | Off     |
-| **Nutrition estimation** | Estimates calories, fat, carbs, and protein when the recipe doesn't already have all four | Off     |
-| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note                                 | Off     |
-| **Ingredient Linking**   | Links ingredient lines to the steps that have none                                        | Off     |
-| **Image Generation**     | Draws a picture of the dish for new recipes that have no image at all                     | Off     |
+| Switch                   | What it does automatically                                                                | Default | Asks the Decision Model first                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------- |
+| **Auto-tagging**         | Adds suggested tags without removing existing ones                                        | Off     | No; its tags are checked before they are written                      |
+| **Allergy detection**    | Adds allergy tags for your household's configured allergies                               | On      | Yes, one question per household allergen                              |
+| **Auto-categorization**  | Sets meal categories on recipes that have none                                            | Off     | Yes, one question per category                                        |
+| **Nutrition estimation** | Estimates calories, fat, carbs, and protein when the recipe doesn't already have all four | Off     | No; the estimate is checked, logged only for now                      |
+| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note                                 | Off     | Yes, for the country and the Cuisines, under _Only existing cuisines_ |
+| **Ingredient Linking**   | Links ingredient lines to the steps that have none                                        | Off     | No; its links are checked before they are written                     |
+| **Image Generation**     | Draws a picture of the dish for new recipes that have no image at all                     | Off     | No                                                                    |
+
+A kind that asks the [Decision Model](#decision-model) first falls back to the
+AI provider whenever there is none, its use is switched off, it fails, or it
+is not sure enough. Nothing on the recipe says which model decided.
 
 Enabling AI globally does not switch these on by itself, each is opt-in
 (except allergy detection, which keeps the behaviour of the setting it
@@ -196,6 +204,94 @@ other image, nothing in the interface marks it as generated, and it sets the
 recipe page's tint the way a photograph would. When the recipe travels in a
 [Recipe Archive](../recipes/recipe-archive.md), the receiving instance is told
 which images were generated.
+
+### Decision Model
+
+The Decision Model is a second, optional AI provider that answers **closed
+questions** and generates nothing. Given a recipe or a page and a set of named
+questions, it answers every question in one request with a pick and a real
+probability: is this a breakfast dish, does this recipe contain gluten, which
+of these products is the grocery. It is much faster and much cheaper than a
+language model for the same decision, and because its probabilities are honest,
+Norish acts on the clear cases itself and hands only the unclear ones to your
+AI provider or to you. Today it is TypeSafe AI's Jev.
+
+It is never required. Every feature keeps its AI-provider or heuristic path and
+takes it whenever no Decision Model is configured, the use is switched off, a
+request fails, or the answer is not sure enough. A server without one behaves
+exactly as before.
+
+Configure it under **Settings => Admin => AI & Processing => Decision Model**:
+
+| Field                          | Notes                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Provider**                   | _Disabled_ or _TypeSafe AI_                                                                                                                                                                                                                                                            |
+| **API Key**                    | From your TypeSafe AI account. The block always carries its own key; nothing is borrowed from the AI provider                                                                                                                                                                          |
+| **Model**                      | Defaults to `jev-latest`, which follows TypeSafe's newest release                                                                                                                                                                                                                      |
+| **Endpoint** (advanced)        | TypeSafe's base URL, for a proxy or gateway                                                                                                                                                                                                                                            |
+| **Use the Decision Model for** | One multi-select: _Auto-categorization_, _Allergy detection_, _Recipe Provenance_, _Grocery linking_, _Validate enrichments_. **Everything is selected** the moment a Decision Model is configured; deselect what it should leave to the AI provider. Import triage is not in the list |
+
+**Test** sends one trivial question with the settings as typed and reports
+success or the provider's own error, so a mistyped key is caught before a queue
+worker discovers it. Decisions follow the global AI switch and the AI timeout,
+and their token usage is logged beside the AI provider's, labelled by feature.
+
+What it speeds up:
+
+- **Auto-categorization** asks four questions instead of asking a language
+  model to write the words.
+- **Allergy detection** asks one question per household allergen. An allergen
+  it is clearly sure about is tagged, one it is clearly sure is absent is not,
+  and a recipe with any allergen in between goes to the AI provider whole.
+- **Recipe Provenance**, under _Only existing cuisines_, settles the country and
+  the Cuisines by Decision and has the AI provider write the region and the
+  note around them, so a Cuisine outside your list is never invented.
+- **Import triage** — not a use, always on with a Decision Model — asks whether
+  a page is a recipe before an AI extraction is attempted, whether an Instagram
+  or Facebook caption holds one before a transcription is paid for, and whether
+  a structured parse is complete enough to keep. A page that is clearly not a
+  recipe is refused in seconds rather than after a failed extraction.
+- **Grocery linking** ranks the products a shop offered for a grocery and links
+  one it is sure of; see [Prices](../groceries/prices.md#which-product).
+
+What it checks: with _Validate enrichments_ selected, every enrichment run's
+**own** output is checked before it is written. A tag, category, Cuisine or
+step link the Decision Model is clearly sure is wrong is not written. It only
+ever sees what the run just proposed — never what is already stored — so a tag
+you typed, a category an import supplied or a link you attached is never
+touched, on any kind, automatic or manual. A calorie estimate or a provenance
+country it disagrees with is logged for now and changes nothing; those checks
+are promoted once their disagreement rate is known. With the use deselected,
+verdicts are logged and nothing is dropped.
+
+What it cannot do: extract a recipe, estimate nutrition, write a provenance
+note, convert units, link a step's ingredient shares, or draw a dish. Those
+are generation and stay with your AI provider.
+
+How it fits together:
+
+```mermaid
+flowchart TD
+  K[Enrichment kind or import step] --> U{Decision Model configured<br/>and this use on?}
+  U -- yes --> D[decide]
+  D --> C{Clear Case?}
+  C -- yes --> W[Written to the recipe]
+  C -- "no, or the Decision failed" --> G[generateStructured<br/>your AI provider]
+  U -- no --> G
+  G --> V{Validate enrichments<br/>one question per claim}
+  V -- kept --> W
+  V -- "clearly wrong" --> X[Not written]
+  subgraph R[AI Runtime: the one seam to every model]
+    D
+    G
+    T[transcribe]
+    I[generateImage]
+  end
+```
+
+The AI Runtime has four entry points; a Decision is the fourth. A feature never
+talks to a model itself, and what is written to a recipe is decided by the
+feature's own threshold, never by a setting.
 
 ### Run it on your whole library
 

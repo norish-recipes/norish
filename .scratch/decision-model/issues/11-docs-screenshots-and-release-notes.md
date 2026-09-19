@@ -1,6 +1,6 @@
 # 11 — Docs, screenshots and release notes
 
-Status: ready-for-agent
+Status: ready-for-human
 Blocked by: 03, 04, 05, 06, 07, 08, 09, 10
 
 Spec: `.scratch/decision-model/spec.md`
@@ -26,3 +26,4 @@ Convention: `docs/agents/feature-docs.md`
 ## Comments
 
 - Filed 2026-09-19 with the spec.
+- 2026-09-19 — Docs written: `ai-provider.md` gains the Decision Model section (settings table, the uses multi-select, what it speeds up, what it checks and why stored data is untouched, what it cannot do, the mermaid diagram of the runtime's four entry points with the Decision-first branch and the validation step) and a _Asks the Decision Model first_ column on the Recipe Enrichment table; `recipes/enrichment.md` says nothing on the recipe changes by model and a run's own claims are checked while a person's are never touched; `groceries/prices.md` describes the link-or-rank behaviour with the lookup-ladder diagram; `release-notes/0.24.0-beta.md` gains `### Decision Model` under Features (no Upgrade note: the AI SDK move changed nothing a self-hoster configures, and the new column is an ordinary migration). `@docusaurus/theme-mermaid` added, `markdown.mermaid: true`, both diagrams render in the built site. `CONTEXT.md`'s Enrichment Validation entry and ADR-0035's consequences were corrected for the shadow launch modes and the grocery-linking threshold. **Not done: the screenshot** `admin-decision-model.png` — it needs the running admin form, which this environment (no Postgres, no Redis) cannot start; left `ready-for-human` for that one box.

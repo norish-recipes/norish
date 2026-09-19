@@ -1,6 +1,6 @@
 # 10 — Every enrichment run validates its own output
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 04, 05, 06
 
 Spec: `.scratch/decision-model/spec.md`
@@ -66,3 +66,4 @@ Extraction lives in `packages/api/src/parser/`, so its call imports the same hel
 - Filed 2026-09-19 at the maintainer's request.
 - 2026-09-19: Maintainer: an allergen the model is highly confident is absent may be dropped too; it gets its own strict constant rather than a blanket exemption.
 - 2026-09-19: Maintainer: validate the existing enrichments' output, not a new kind; manual data must never be removed. Rewritten so validation only sees the run's own claims before they are written; the separate "Recipe Validation kind" ticket is withdrawn.
+- 2026-09-19 — Implemented. `packages/shared-server/src/ai/enrichment/verification.ts`: `verifyClaims({ feature, state, claims, mode?, dropThreshold? })` — one Boolean per claim (`{ id, question }`), chunked at `MAX_QUESTIONS_PER_DECISION = 40`, `DROP_THRESHOLD = 0.2`, `ALLERGEN_DROP_THRESHOLD = 0.05`, enforce only when `isDecisionUseEnabled("validateEnrichments")` and the kind did not force `shadow`, every claim kept on any `AIError` or with no Decision Model; one log line with `feature`, `mode`, `claimed`, `kept`, `dropped` and the disputed ids. `shadowScore` for extraction's three-level faithfulness rubric. Wired in each kind's own file between the language-model answer and the return: auto-tagging (enforce), auto-categorization's language-model path (enforce; an emptied list leaves the worker's rule to it), Ingredient Linking (enforce, links keyed `step:line` in prompt numbers, a step whose every link was disputed stays bare), Recipe Provenance Cuisines (enforce, before the resolver, so nothing disputed is minted under `extend`) and country (shadow, `COUNTRY_VALIDATION_MODE`), nutrition (shadow, `NUTRITION_VALIDATION_MODE`, four questions, atomic failure once enforced), allergy detection's language-model path (enforce under the strict constant), recipe extraction (shadow score). Decision-first answers are not validated again. Stored data is never read by construction — no repository is imported. Tests: `verification.test.ts` (16) plus cases in every kind's suite.

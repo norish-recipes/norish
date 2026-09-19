@@ -1,6 +1,6 @@
 # 08 — Recipe Provenance settles the country and Cuisines by Decision, and writes the note around them
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 04, 05
 
 Spec: `.scratch/decision-model/spec.md`
@@ -38,3 +38,4 @@ Everything in `packages/shared/src/lib/recipe-enrichment.ts` (`fillProvenanceGap
 
 - Filed 2026-09-19 with the spec.
 - 2026-09-19: Maintainer confirmed the fit and the manual-run semantics above. Promoted to ready-for-agent.
+- 2026-09-19 — Implemented. Under `existing` with `isDecisionUseEnabled("recipeProvenance")`, `provenance-inferrer.ts` asks one Choice over the country codes (`countryChoiceCriteria()`: the platform's region names less pseudo-locales, exceptional reservations and deprecated aliases — 251 options, pinned ≤ 255 by a test) and one Boolean per vocabulary Cuisine (`cuisine:<name>` keys), split across requests above `MAX_QUESTIONS_PER_DECISION`. `COUNTRY_THRESHOLD = 0.6` on the chosen option settles the country; `CUISINE_THRESHOLD = 0.6` settles Cuisines; a supplied slot is not asked. Settled slots join the supplied section and `buildProvenanceSchema` drops them, so the language model writes the region, the written country name and the note around them. An unclear country settles nothing (Cuisines included); no Cuisine clearing leaves the Cuisines to the language model and the resolver. A manual run withholds the stored slots, so the Decision settles everything and the composed claim replaces the whole group. The two paths minting Cuisines: the Decision path never touches the resolver (its keys are vocabulary rows), the language-model path keeps Levenshtein and is now validated first (ticket 10). Tests: `provenance-inferrer.test.ts` (+18).

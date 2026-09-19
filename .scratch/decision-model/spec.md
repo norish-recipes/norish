@@ -166,12 +166,12 @@ Per `docs/agents/feature-docs.md`: the AI provider configuration page gains a _D
 | 03  | The Decision Model configuration block and its admin form                          | Foundation           | resolved        |
 | 04  | The AI Runtime can decide (`decide`, provider, errors, E2E fake, measurements)     | Foundation           | ready-for-human |
 | 05  | Auto-categorization asks a Decision first                                          | First conversions    | resolved        |
-| 06  | Allergy detection asks a Decision first                                            | First conversions    | ready-for-agent |
-| 07  | Import triage: is this a recipe, does this caption hold one, is the parse complete | New questions        | ready-for-agent |
-| 08  | Recipe Provenance settles country and Cuisines by Decision                         | Second conversions   | ready-for-agent |
-| 09  | A Decision orders the offered products, and links one it is sure of                | Second conversions   | ready-for-agent |
-| 10  | Every enrichment run validates its own output                                      | Validation           | ready-for-agent |
-| 11  | Docs, screenshots and release notes, with mermaid diagrams of the internals        | Ships last           | ready-for-agent |
+| 06  | Allergy detection asks a Decision first                                            | First conversions    | resolved        |
+| 07  | Import triage: is this a recipe, does this caption hold one, is the parse complete | New questions        | resolved        |
+| 08  | Recipe Provenance settles country and Cuisines by Decision                         | Second conversions   | resolved        |
+| 09  | A Decision orders the offered products, and links one it is sure of                | Second conversions   | resolved        |
+| 10  | Every enrichment run validates its own output                                      | Validation           | resolved        |
+| 11  | Docs, screenshots and release notes, with mermaid diagrams of the internals        | Ships last           | ready-for-human |
 
 02–04 land together as one PR after 01; 05 through 10 are each their own PR, 08 after 05, 10 after 05 and 06; 11 rides the last of them. The maintainer confirmed 08 and 09 as good fits on 2026-09-19, asked for 10 as validation of the existing enrichments' output (never of stored data), one multi-select for the uses, the high-probability link in 09, and the diagrams in 11.
 

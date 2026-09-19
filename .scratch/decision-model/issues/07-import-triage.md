@@ -1,6 +1,6 @@
 # 07 — Import triage: three cheap questions before the expensive step
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 04
 
 Spec: `.scratch/decision-model/spec.md`
@@ -51,3 +51,4 @@ Recording, in this ticket's comments, the observed latency of question 1 on a 50
 
 - Filed 2026-09-19 with the spec.
 - Future candidates found in the sweep, not planned: measurement-system inference (`determine-recipe-system.ts`, a 2-way Choice), the `1:30` timer ambiguity (`timer-parser.ts`), recurrence phrases, image-candidate ranking (`parsers/images.ts`), store-page price reading. Each is deterministic enough or client-side today.
+- 2026-09-19 — Implemented. `packages/api/src/parser/import-triage.ts` owns `NOT_A_RECIPE_THRESHOLD = 0.15`, `INCOMPLETE_PARSE_MAX_SCORE = 0.9` and the three-level rubric, composes the state (page text capped at 50 000 characters; the parsed recipe as JSON), and turns any `AIError` or the absence of a Decision Model into `null` with a warn log. Call sites: `parser/index.ts` asks `isRecipe(extractSanitizedBody(html))` where `isPageLikelyRecipe` used to be the gate (the keyword rule is the `??` fallback) and `isParseComplete` on a successful structured parse when AI is enabled (`alwaysUseAI` is checked first and skips it; a failed extraction keeps the parse); `video/processors/instagram.ts` asks `isRecipe(caption)` where the 50/200/50 length thresholds stood, each length staying as the fallback. The two `> 50` checks inside `extractCaptionFromHtml` are HTML-parsing heuristics about which meta tag to read, not a question about the caption, and are unchanged. The Uses group's description already says import triage is not in the list. **Not done:** the latency of question 1 on a 50 000-character page needs a real key (see ticket 04). Tests: `import-triage.test.ts` (12), `import-flow.test.ts` (+8), `instagram-processor.test.ts` (+5).

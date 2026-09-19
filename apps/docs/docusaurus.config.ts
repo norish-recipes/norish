@@ -23,7 +23,11 @@ const config: Config = {
     hooks: {
       onBrokenMarkdownLinks: "warn",
     },
+    // The AI provider and prices pages draw how a Decision fits the runtime.
+    mermaid: true,
   },
+
+  themes: ["@docusaurus/theme-mermaid"],
 
   i18n: {
     defaultLocale: "en",
