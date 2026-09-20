@@ -49,7 +49,13 @@ export type TypeSafeAnswer =
   | { type: "score"; score: number; probabilities: Record<string, number>; confidence?: number }
   | { type: "noul"; noul: number };
 
-/** A deterministic Decision: `answers` is returned keyed by the asked question ids. */
+/**
+ * A deterministic Decision: `answers` is returned keyed by the asked question
+ * ids. Only the ids a request asked are answered — the SDK refuses an answer
+ * to a question it did not ask — so one persistent default can carry the
+ * answers to every question a scenario's flow asks, at whatever point each
+ * is asked (triage on the page, the kind on the recipe, validation after).
+ */
 export interface DecisionDirective {
   kind: "decision";
   answers: Record<string, TypeSafeAnswer>;
@@ -325,6 +331,25 @@ class Controller implements AIProviderControl {
 
 type Lane = "chat" | "image" | "decision";
 
+/**
+ * The directive's answers for the question ids the request asked. A body
+ * without a readable `questions` map gets every answer, so a malformed
+ * request still fails on the SDK's side rather than being masked here.
+ */
+function answersAsked(
+  body: unknown,
+  answers: Record<string, TypeSafeAnswer>
+): Record<string, TypeSafeAnswer> {
+  const questions =
+    body && typeof body === "object" && "questions" in body
+      ? (body as { questions?: unknown }).questions
+      : null;
+
+  if (!questions || typeof questions !== "object") return answers;
+
+  return Object.fromEntries(Object.entries(answers).filter(([id]) => id in questions));
+}
+
 function extractModel(body: unknown): string {
   if (body && typeof body === "object" && "model" in body) {
     const model = (body as { model?: unknown }).model;
@@ -390,7 +415,7 @@ async function handleRequest(
   await controller.waitForGate();
 
   if (directive.kind === "decision") {
-    sendJson(res, 200, buildDecisionBody(directive.answers, directive.model));
+    sendJson(res, 200, buildDecisionBody(answersAsked(parsed, directive.answers), directive.model));
 
     return;
   }

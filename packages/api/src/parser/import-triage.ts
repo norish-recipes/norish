@@ -33,6 +33,17 @@ import { parserLogger as log } from "@norish/shared-server/logger";
 export const NOT_A_RECIPE_THRESHOLD = 0.15;
 
 /**
+ * At or above this probability a caption clearly holds a recipe: the one
+ * affirmative action triage takes, sending a video's caption to extraction
+ * before a transcription is paid for. Between the two constants the answer is
+ * unclear, and the call site's own rule decides as it did before.
+ */
+export const CLEARLY_A_RECIPE_THRESHOLD = 0.85;
+
+/** What triage made of a text: a clear no, a clear yes, or neither. */
+export type RecipeVerdict = "no" | "unclear" | "yes";
+
+/**
  * The three levels a structured parse is scored on, lowest first. The score
  * is the probability-weighted position on this rubric, from 0 to 2.
  */
@@ -67,12 +78,14 @@ async function opinion<T>(question: string, ask: () => Promise<T>): Promise<T | 
 }
 
 /**
- * Whether this text is a cooking recipe. `false` only when the Decision
- * Model is clearly sure it is not; `true` for anything else it answered;
- * `null` when it was not asked or could not answer, so the caller falls back
- * to the rule it has.
+ * Whether this text is a cooking recipe, as one of three verdicts: `"no"`
+ * when the Decision Model is clearly sure it is not, `"yes"` when it is
+ * clearly sure it is, `"unclear"` in between; `null` when it was not asked
+ * or could not answer, so the caller falls back to the rule it has. Ask it
+ * once per text: a caller with two decisions to make reads both off the one
+ * verdict.
  */
-export async function isRecipe(text: string): Promise<boolean | null> {
+export async function judgeRecipe(text: string): Promise<RecipeVerdict | null> {
   const trimmed = text.trim();
 
   if (trimmed === "") return null;
@@ -88,15 +101,33 @@ export async function isRecipe(text: string): Promise<boolean | null> {
         },
       },
     });
-    const refused = answers.isRecipe.probability <= NOT_A_RECIPE_THRESHOLD;
+    const { probability } = answers.isRecipe;
+    const verdict: RecipeVerdict =
+      probability <= NOT_A_RECIPE_THRESHOLD
+        ? "no"
+        : probability >= CLEARLY_A_RECIPE_THRESHOLD
+          ? "yes"
+          : "unclear";
 
     log.info(
-      { feature: "import-triage", probability: answers.isRecipe.probability, refused },
+      { feature: "import-triage", probability, verdict },
       "Import triage judged whether the text is a recipe"
     );
 
-    return !refused;
+    return verdict;
   });
+}
+
+/**
+ * Whether this text is a cooking recipe. `false` only when the Decision
+ * Model is clearly sure it is not; `true` for anything else it answered;
+ * `null` when it was not asked or could not answer, so the caller falls back
+ * to the rule it has. Refusal is the only action this answer carries.
+ */
+export async function isRecipe(text: string): Promise<boolean | null> {
+  const verdict = await judgeRecipe(text);
+
+  return verdict === null ? null : verdict !== "no";
 }
 
 /**

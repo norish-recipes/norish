@@ -37,7 +37,7 @@ const boundary = vi.hoisted(() => ({
   extractRecipeFromVideo: vi.fn(),
   extractRecipeWithAI: vi.fn(),
   fetchRenderedPage: vi.fn(),
-  isRecipe: vi.fn(),
+  judgeRecipe: vi.fn(),
 }));
 
 vi.mock("@norish/api/video/yt-dlp", () => ({
@@ -64,7 +64,7 @@ vi.mock("@norish/api/parser/recipe-extraction", () => ({
   extractRecipeWithAI: boundary.extractRecipeWithAI,
 }));
 vi.mock("@norish/api/parser/fetch", () => ({ fetchRenderedPage: boundary.fetchRenderedPage }));
-vi.mock("@norish/api/parser/import-triage", () => ({ isRecipe: boundary.isRecipe }));
+vi.mock("@norish/api/parser/import-triage", () => ({ judgeRecipe: boundary.judgeRecipe }));
 vi.mock("@norish/api/video/cleanup", () => ({ cleanupFile: vi.fn() }));
 vi.mock("@norish/shared-server/logger", () => ({
   videoLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -116,7 +116,7 @@ beforeEach(() => {
   mediaIsAvailable();
   boundary.downloadImage.mockResolvedValue("recipes/recipe-1/thumb.jpg");
   // No Decision Model: import triage has no opinion and the length rules stand.
-  boundary.isRecipe.mockResolvedValue(null);
+  boundary.judgeRecipe.mockResolvedValue(null);
 });
 
 describe("a post yt-dlp reports a video stream for", () => {
@@ -227,12 +227,12 @@ describe("import triage with a Decision Model", () => {
       metadata({ videoStream: "absent", description: LONG_CAPTION })
     );
     boundary.fetchRenderedPage.mockResolvedValue("");
-    boundary.isRecipe.mockResolvedValue(false);
+    boundary.judgeRecipe.mockResolvedValue("no");
 
     await expect(process()).rejects.toThrow(
       "Instagram image posts are only supported if the caption contains a recipe"
     );
-    expect(boundary.isRecipe).toHaveBeenCalledWith(LONG_CAPTION.trim());
+    expect(boundary.judgeRecipe).toHaveBeenCalledWith(LONG_CAPTION.trim());
     expect(boundary.extractRecipeWithAI).not.toHaveBeenCalled();
   });
 
@@ -242,7 +242,7 @@ describe("import triage with a Decision Model", () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "absent", description: terse })
     );
-    boundary.isRecipe.mockResolvedValue(true);
+    boundary.judgeRecipe.mockResolvedValue("yes");
     boundary.extractRecipeWithAI.mockResolvedValue(recipe());
 
     const result = await process();
@@ -257,7 +257,7 @@ describe("import triage with a Decision Model", () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "present", duration: 47, description: SHORT_CAPTION })
     );
-    boundary.isRecipe.mockResolvedValue(true);
+    boundary.judgeRecipe.mockResolvedValue("yes");
     boundary.extractRecipeFromVideo.mockResolvedValue(recipe());
 
     const result = await process();
@@ -277,7 +277,7 @@ describe("import triage with a Decision Model", () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "present", duration: 47, description: LONG_CAPTION })
     );
-    boundary.isRecipe.mockResolvedValue(false);
+    boundary.judgeRecipe.mockResolvedValue("no");
     boundary.downloadVideoAudio.mockResolvedValue("/tmp/a.mp3");
     boundary.transcribe.mockResolvedValue("first, boil the water");
     boundary.extractRecipeFromVideo.mockResolvedValue(recipe());
@@ -289,11 +289,59 @@ describe("import triage with a Decision Model", () => {
     expect(boundary.extractRecipeFromVideo.mock.calls[0]?.[0]).toContain("first, boil the water");
   });
 
+  it("transcribes a video post whose short caption triage found unclear: only a clear yes skips the audio", async () => {
+    boundary.getVideoMetadata.mockResolvedValue(
+      metadata({ videoStream: "present", duration: 47, description: SHORT_CAPTION })
+    );
+    boundary.judgeRecipe.mockResolvedValue("unclear");
+    boundary.downloadVideoAudio.mockResolvedValue("/tmp/a.mp3");
+    boundary.transcribe.mockResolvedValue("first, boil the water");
+    boundary.extractRecipeFromVideo.mockResolvedValue(recipe());
+
+    await process();
+
+    // Unclear leaves the length rule in charge, and a short caption never
+    // paid for an extraction before the audio under that rule.
+    expect(boundary.transcribe).toHaveBeenCalledWith("/tmp/a.mp3");
+    expect(boundary.extractRecipeFromVideo).toHaveBeenCalledTimes(1);
+  });
+
+  it("extracts from a long caption triage found unclear, as the length rule always did", async () => {
+    boundary.getVideoMetadata.mockResolvedValue(
+      metadata({ videoStream: "present", duration: 47, description: LONG_CAPTION })
+    );
+    boundary.judgeRecipe.mockResolvedValue("unclear");
+    boundary.extractRecipeFromVideo.mockResolvedValue(recipe());
+
+    await process();
+
+    expect(boundary.transcribe).not.toHaveBeenCalled();
+  });
+
+  it("asks triage about a video's caption once, and reads the audio-failure fallback off the same verdict", async () => {
+    boundary.getVideoMetadata.mockResolvedValue(
+      metadata({ videoStream: "present", duration: 47, description: SHORT_CAPTION })
+    );
+    boundary.judgeRecipe.mockResolvedValue("unclear");
+    boundary.downloadVideoAudio.mockRejectedValue(new Error("no audio stream"));
+    boundary.extractRecipeWithAI.mockResolvedValue(recipe());
+
+    const result = await process();
+
+    expect(result.name).toBe("Pasta");
+    expect(boundary.judgeRecipe).toHaveBeenCalledTimes(1);
+    expect(boundary.extractRecipeWithAI).toHaveBeenCalledWith(
+      SHORT_CAPTION,
+      RECIPE_ID,
+      URL_UNDER_TEST
+    );
+  });
+
   it("keeps the length rules when triage has no opinion", async () => {
     boundary.getVideoMetadata.mockResolvedValue(
       metadata({ videoStream: "present", duration: 47, description: SHORT_CAPTION })
     );
-    boundary.isRecipe.mockResolvedValue(null);
+    boundary.judgeRecipe.mockResolvedValue(null);
     boundary.downloadVideoAudio.mockResolvedValue("/tmp/a.mp3");
     boundary.transcribe.mockResolvedValue("first, boil the water");
     boundary.extractRecipeFromVideo.mockResolvedValue(recipe());

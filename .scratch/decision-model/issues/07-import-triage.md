@@ -1,6 +1,6 @@
 # 07 — Import triage: three cheap questions before the expensive step
 
-Status: resolved
+Status: ready-for-human
 Blocked by: 04
 
 Spec: `.scratch/decision-model/spec.md`
@@ -31,15 +31,15 @@ Recording, in this ticket's comments, the observed latency of question 1 on a 50
 
 ## Acceptance criteria
 
-- [ ] With a Decision Model configured: a non-recipe page whose structured parse failed is refused after one `decide` call and no `generateStructured` call; a recipe page proceeds to extraction as today.
-- [ ] With a Decision Model configured: an Instagram photo post whose caption clearly holds no recipe fails with the existing message; a video post whose caption clearly holds one is extracted from the caption before transcription.
-- [ ] With a Decision Model configured: a structured parse scored as incomplete is sent through AI extraction; a complete one is kept; `alwaysUseAI` still forces extraction regardless.
-- [ ] With no Decision Model, or any `AIError` from `decide`: every path is today's (the keyword rule, the length thresholds, "has a name"), and the existing parser and processor tests pass untouched.
-- [ ] Boundary tests on all three constants.
-- [ ] The processor entry-point test from `.scratch/import-and-provider-fixes/issues/04` still covers all four video paths.
-- [ ] There is no use switch for triage; the Uses group in the admin form says so.
+- [x] With a Decision Model configured: a non-recipe page whose structured parse failed is refused after one `decide` call and no `generateStructured` call; a recipe page proceeds to extraction as today.
+- [x] With a Decision Model configured: an Instagram photo post whose caption clearly holds no recipe fails with the existing message; a video post whose caption clearly holds one is extracted from the caption before transcription.
+- [x] With a Decision Model configured: a structured parse scored as incomplete is sent through AI extraction; a complete one is kept; `alwaysUseAI` still forces extraction regardless.
+- [x] With no Decision Model, or any `AIError` from `decide`: every path is today's (the keyword rule, the length thresholds, "has a name"), and the existing parser and processor tests pass untouched.
+- [x] Boundary tests on all three constants.
+- [x] The processor entry-point test from `.scratch/import-and-provider-fixes/issues/04` still covers all four video paths.
+- [x] There is no use switch for triage; the Uses group in the admin form says so.
 - [ ] Latency recorded in the comments.
-- [ ] Repo gates green: lint, full test run, internationalization check, production build.
+- [x] Repo gates green: lint, full test run, internationalization check, production build.
 
 ## Non-goals
 
@@ -52,3 +52,4 @@ Recording, in this ticket's comments, the observed latency of question 1 on a 50
 - Filed 2026-09-19 with the spec.
 - Future candidates found in the sweep, not planned: measurement-system inference (`determine-recipe-system.ts`, a 2-way Choice), the `1:30` timer ambiguity (`timer-parser.ts`), recurrence phrases, image-candidate ranking (`parsers/images.ts`), store-page price reading. Each is deterministic enough or client-side today.
 - 2026-09-19 — Implemented. `packages/api/src/parser/import-triage.ts` owns `NOT_A_RECIPE_THRESHOLD = 0.15`, `INCOMPLETE_PARSE_MAX_SCORE = 0.9` and the three-level rubric, composes the state (page text capped at 50 000 characters; the parsed recipe as JSON), and turns any `AIError` or the absence of a Decision Model into `null` with a warn log. Call sites: `parser/index.ts` asks `isRecipe(extractSanitizedBody(html))` where `isPageLikelyRecipe` used to be the gate (the keyword rule is the `??` fallback) and `isParseComplete` on a successful structured parse when AI is enabled (`alwaysUseAI` is checked first and skips it; a failed extraction keeps the parse); `video/processors/instagram.ts` asks `isRecipe(caption)` where the 50/200/50 length thresholds stood, each length staying as the fallback. The two `> 50` checks inside `extractCaptionFromHtml` are HTML-parsing heuristics about which meta tag to read, not a question about the caption, and are unchanged. The Uses group's description already says import triage is not in the list. **Not done:** the latency of question 1 on a 50 000-character page needs a real key (see ticket 04). Tests: `import-triage.test.ts` (12), `import-flow.test.ts` (+8), `instagram-processor.test.ts` (+5).
+- 2026-09-20 — Review fix, and the status corrected: the ticket was marked resolved with the latency item undone, so it now waits for a person like tickets 04 and 11 — the latency of question 1 on a 50 000-character page needs a real key, and that measurement decides whether the Score question is worth its round trip. Two code changes. (1) A video's caption went to extraction on "not clearly no" rather than the clear "yes" this ticket names: a caption at probability 0.3 paid a language-model extraction the 200-character rule would have skipped. `judgeRecipe(text)` now returns `"no" | "unclear" | "yes" | null` with `CLEARLY_A_RECIPE_THRESHOLD = 0.85` beside the refusal constant; `isRecipe` reads its refusal off it unchanged. In `instagram.ts` only a clear "yes" skips the audio, a clear "no" goes straight to it, and "unclear" leaves the 201-character rule in charge as before; the photo post and the audio-failure fallback keep refusal-only. (2) The audio-failure path asked triage about the same caption twice; the one verdict now serves both places. Boundary tests on the new constant, and five Instagram cases including asked-once.

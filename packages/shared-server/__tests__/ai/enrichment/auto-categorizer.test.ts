@@ -2,20 +2,23 @@
  * Auto-Categorizer Tests
  *
  * The AI Runtime is the single mocked AI seam — `decide` and
- * `generateStructured` — plus the loader's one question, whether this use of
- * the Decision Model is on. Nothing else is wired.
+ * `generateStructured` — plus the loader's two questions, whether a Decision
+ * Model is configured and whether a use of it is on. Nothing else is wired:
+ * Enrichment Validation runs for real, through the same `decide`.
  *
  * @vitest-environment node
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AIConfigurationError, AIProviderError } from "@norish/shared-server/ai/runtime/errors";
-import { isDecisionUseEnabled } from "@norish/shared-server/config/server-config-loader";
+import {
+  isDecisionModelConfigured,
+  isDecisionUseEnabled,
+} from "@norish/shared-server/config/server-config-loader";
 
 const mocked = vi.hoisted(() => ({
   decide: vi.fn(),
   generateStructured: vi.fn(),
-  verifyClaims: vi.fn(),
 }));
 
 const logger = vi.hoisted(() => ({
@@ -30,12 +33,8 @@ vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
   generateStructured: mocked.generateStructured,
 }));
 
-vi.mock("@norish/shared-server/ai/enrichment/verification", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@norish/shared-server/ai/enrichment/verification")>()),
-  verifyClaims: mocked.verifyClaims,
-}));
-
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
+  isDecisionModelConfigured: vi.fn(),
   isDecisionUseEnabled: vi.fn(),
 }));
 
@@ -71,10 +70,9 @@ describe("categorizeRecipe", () => {
     vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
     mocked.decide.mockResolvedValue(decided({ Breakfast: 0.95 }));
     mocked.generateStructured.mockResolvedValue({ categories: ["Dinner"] });
-    // Validation keeps everything unless a test says otherwise.
-    mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
-      Promise.resolve({ kept: claims, dropped: [], mode: "off" })
-    );
+    // No Decision Model for validation unless a test says otherwise: every
+    // claim is kept unjudged.
+    vi.mocked(isDecisionModelConfigured).mockResolvedValue(false);
   });
 
   it("refuses a recipe with no ingredients before asking anything", async () => {
@@ -87,11 +85,13 @@ describe("categorizeRecipe", () => {
 
   describe("with a Decision Model configured", () => {
     it("asks four Boolean questions on the structured recipe and no language model", async () => {
+      vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
+
       const categories = await categorizeRecipe(recipe);
 
       expect(categories).toEqual(["Breakfast"]);
-      // A Decision's answer is not validated again: it already is a Decision.
-      expect(mocked.verifyClaims).not.toHaveBeenCalled();
+      // A Decision's answer is not validated again: it already is a Decision,
+      // so the one request is the only one even with validation available.
       expect(mocked.decide).toHaveBeenCalledTimes(1);
       expect(mocked.decide).toHaveBeenCalledWith({
         feature: "auto-categorization",
@@ -213,43 +213,73 @@ describe("categorizeRecipe", () => {
   });
 
   describe("Enrichment Validation of the language-model path", () => {
+    /** The validation Decision: one probability per claim id. */
+    function verdicts(probabilities: Record<string, number>) {
+      return {
+        model: "jev",
+        answers: Object.fromEntries(
+          Object.entries(probabilities).map(([id, probability]) => [
+            id,
+            { type: "boolean", probability },
+          ])
+        ),
+      };
+    }
+
     beforeEach(() => {
-      vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+      // The kind's own use is off, so the language model answers; the
+      // Validate enrichments use is on, so its claims are judged for real.
+      vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
+      vi.mocked(isDecisionUseEnabled).mockImplementation((use) =>
+        Promise.resolve(use === "validateEnrichments")
+      );
     });
 
     it("checks the matched categories and writes the survivors", async () => {
       mocked.generateStructured.mockResolvedValue({ categories: ["Dinner", "brunch"] });
-      mocked.verifyClaims.mockResolvedValue({
-        kept: [{ id: "Dinner" }],
-        dropped: [{ claim: { id: "Breakfast" }, probability: 0.05 }],
-        mode: "enforce",
-      });
+      mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.9, Breakfast: 0.05 }));
 
       const categories = await categorizeRecipe(recipe);
 
-      expect(mocked.verifyClaims).toHaveBeenCalledWith({
-        feature: "auto-categorization",
+      expect(mocked.decide).toHaveBeenCalledTimes(1);
+      expect(mocked.decide).toHaveBeenCalledWith({
+        feature: "auto-categorization:validation",
         state: {
           title: "Overnight oats",
           description: "Oats soaked in milk, eaten cold.",
           ingredients: ["rolled oats", "milk", "chia seeds", "honey"],
         },
-        claims: [
-          { id: "Dinner", question: expect.stringMatching(/dinner/i) },
-          { id: "Breakfast", question: expect.stringMatching(/breakfast/i) },
-        ],
+        questions: {
+          Dinner: { type: "boolean", instructions: expect.stringMatching(/dinner/i) },
+          Breakfast: { type: "boolean", instructions: expect.stringMatching(/breakfast/i) },
+        },
       });
       expect(categories).toEqual(["Dinner"]);
     });
 
     it("returns an empty list when every category was dropped, leaving the worker's rule to it", async () => {
-      mocked.verifyClaims.mockResolvedValue({
-        kept: [],
-        dropped: [{ claim: { id: "Dinner" }, probability: 0.01 }],
-        mode: "enforce",
-      });
+      mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.01 }));
 
       await expect(categorizeRecipe(recipe)).resolves.toEqual([]);
+    });
+
+    it("keeps a disputed category when the Validate enrichments use is off: the verdict is only logged", async () => {
+      vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+      mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.01 }));
+
+      await expect(categorizeRecipe(recipe)).resolves.toEqual(["Dinner"]);
+      expect(mocked.decide).toHaveBeenCalledTimes(1);
+    });
+
+    it("never validates stored data: a category already on the recipe is neither a question nor a casualty", async () => {
+      // The kind only ever sees title, description and ingredients; a stored
+      // category riding along on the input is not this run's claim.
+      const stored = { ...recipe, categories: ["Snack"] };
+
+      mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.9, Snack: 0.01 }));
+
+      await expect(categorizeRecipe(stored)).resolves.toEqual(["Dinner"]);
+      expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toEqual(["Dinner"]);
     });
   });
 });

@@ -333,6 +333,21 @@ describe("the Decision route", () => {
     expect(provider.control.requests.at(-1)?.path).toBe("/v1/systemone");
   });
 
+  it("answers only the questions a request asked, so one default serves a whole flow", async () => {
+    // The SDK refuses an answer to a question it did not ask; a default that
+    // also holds the answers to later questions must not fail the first.
+    provider.control.decideWith({
+      isRecipe: { type: "noul", noul: 0.99 },
+      Breakfast: { type: "noul", noul: 0.04 },
+      mealtime: { type: "choice", choice: "dinner", probabilities: { lunch: 0.1, dinner: 0.9 } },
+    });
+
+    const result = await ask();
+
+    expect(Object.keys(result.answers).sort()).toEqual(["Breakfast", "mealtime"]);
+    expect(result.answers.Breakfast).toEqual({ type: "boolean", probability: 0.04 });
+  });
+
   it("consumes one-shot Decision directives before the default, independently of the chat lane", async () => {
     provider.control.succeedWith({ note: "text answer" });
     provider.control.decideWith({

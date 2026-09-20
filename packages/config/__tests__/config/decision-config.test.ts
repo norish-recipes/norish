@@ -14,6 +14,7 @@ import {
   isDecisionConfigValid,
   isDecisionUseSelected,
   resolveDecisionSettings,
+  selectedDecisionUses,
   SENSITIVE_CONFIG_KEYS,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
@@ -106,6 +107,24 @@ describe("isDecisionConfigValid", () => {
     // the AI provider, so there is nothing to borrow.
     expect(isDecisionConfigValid.length).toBe(1);
     expect(isDecisionConfigValid(decisionConfig())).toBe(true);
+  });
+});
+
+describe("selectedDecisionUses", () => {
+  it("stores every use selected as no list, so a use added later is on for the block", () => {
+    expect(selectedDecisionUses([...DECISION_USES])).toBeUndefined();
+    expect(selectedDecisionUses([...DECISION_USES].reverse())).toBeUndefined();
+    expect(
+      isDecisionUseSelected(decisionConfig({ uses: selectedDecisionUses([...DECISION_USES]) }), "validateEnrichments")
+    ).toBe(true);
+  });
+
+  it("stores a partial selection as the list, in the vocabulary's order", () => {
+    expect(selectedDecisionUses(["validateEnrichments", "autoCategorization"])).toEqual([
+      "autoCategorization",
+      "validateEnrichments",
+    ]);
+    expect(selectedDecisionUses([])).toEqual([]);
   });
 });
 

@@ -881,7 +881,10 @@ export async function decide<const Q extends DecisionQuestions>(
   } catch (error) {
     const aiError = toAIError(error);
 
-    aiLogger.error(
+    // Warn, not error: every feature that decides has a fallback and says at
+    // its own level what the failure meant, so the runtime's line is the
+    // provider detail beside it, not a second alarm for a handled case.
+    aiLogger.warn(
       {
         err: error,
         feature,

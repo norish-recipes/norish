@@ -21,6 +21,7 @@ import {
   DECISION_USES,
   DEFAULT_DECISION_ENDPOINT,
   DEFAULT_DECISION_MODEL,
+  selectedDecisionUses,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
 
@@ -136,7 +137,9 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
         endpoint: endpoint || undefined,
         // An empty key preserves the stored one on the server.
         apiKey: apiKey || undefined,
-        uses,
+        // Every use selected is stored as no list, so the block keeps meaning
+        // "every use" and a use added later is on for it (ADR-0035).
+        uses: selectedDecisionUses(uses),
       });
       setApiKey("");
     } finally {

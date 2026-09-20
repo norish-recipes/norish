@@ -330,7 +330,9 @@ async function decideProvenance(
       const answer = answers[id];
 
       if (answer.type === "choice") {
-        if (answer.probabilities[answer.choice] < COUNTRY_THRESHOLD) return null;
+        // The runtime has already refused a distribution without the chosen
+        // entry; a missing probability here is "not sure", never "settled".
+        if ((answer.probabilities[answer.choice] ?? 0) < COUNTRY_THRESHOLD) return null;
         originCountry = answer.choice;
       } else if (answer.type === "boolean" && answer.probability >= CUISINE_THRESHOLD) {
         const cuisine = vocabulary.find((entry) => cuisineQuestionId(entry) === id);
@@ -427,7 +429,18 @@ export async function inferRecipeProvenance(
     : (output.originCountry ?? null);
   const originCountry = normalizeOriginCountry(claimedCountry);
 
-  if (!settled.country && originCountry !== null) {
+  // Validation sees only the claims this run made. A supplied slot the
+  // language model echoed back is stored data, not a claim: it is never
+  // judged, so a disputed supplied country cannot fail every retry once
+  // country validation is promoted, and the shadow rate counts only the
+  // model's own words.
+  const suppliedCountry = normalizeOriginCountry(recipe.supplied?.originCountry);
+  const suppliedCuisineNames = new Set(
+    (recipe.supplied?.cuisineNames ?? []).map((name) => name.trim().toLowerCase())
+  );
+  const echoesSupplied = (name: string) => suppliedCuisineNames.has(name.trim().toLowerCase());
+
+  if (!settled.country && originCountry !== null && originCountry !== suppliedCountry) {
     // The language model's country, checked in shadow: the verdict is logged,
     // and would fail the run for a retry once this is promoted to enforce.
     const { dropped, mode } = await verifyClaims({
@@ -449,19 +462,23 @@ export async function inferRecipeProvenance(
   if (settled.cuisines) {
     cuisineIds = (decided?.cuisines ?? []).map((cuisine) => cuisine.id);
   } else {
-    const proposed = Array.isArray(output.cuisines) ? output.cuisines : [];
+    const proposed = (Array.isArray(output.cuisines) ? output.cuisines : []).filter(
+      (name): name is string => typeof name === "string" && name.trim() !== ""
+    );
     // The language model's Cuisines, checked before they are resolved: a
-    // disputed name is neither attached nor, under `extend`, minted.
+    // disputed name is neither attached nor, under `extend`, minted. A name
+    // that only repeats a supplied Cuisine is not this run's claim.
     const { kept } = await verifyClaims({
       feature: "recipe-provenance",
       state: recipeState(recipe),
       claims: proposed
-        .filter((name) => typeof name === "string" && name.trim() !== "")
+        .filter((name) => !echoesSupplied(name))
         .map((name) => ({ id: name, question: cuisineQuestion(name) })),
     });
+    const keptNames = new Set(kept.map((claim) => claim.id));
 
     cuisineIds = await resolveProposedCuisines(
-      kept.map((claim) => claim.id),
+      proposed.filter((name) => echoesSupplied(name) || keptNames.has(name)),
       vocabulary,
       strategy
     );

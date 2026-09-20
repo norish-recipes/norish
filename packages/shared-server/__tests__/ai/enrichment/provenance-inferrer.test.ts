@@ -305,6 +305,45 @@ describe("supplied slots", () => {
     expect(sentRequest().sections).toEqual([]);
   });
 
+  it("never validates a supplied slot the model echoed: stored data is not this run's claim", async () => {
+    // A person's country and Cuisine come back in the answer, as the section
+    // asked. They are not claims: only the model's own Cuisine is judged, and
+    // a disputed supplied value could never fail the run once country
+    // validation is promoted.
+    respondWith({ ...RESPONSE, cuisines: ["Italian", "Japanese"] });
+    mocked.verifyClaims.mockResolvedValue({
+      kept: [],
+      dropped: [{ claim: { id: "Japanese" }, probability: 0.02 }],
+      mode: "enforce",
+    });
+
+    const claim = await inferRecipeProvenance({
+      ...ITALIAN_RECIPE,
+      supplied: { originCountry: "it", cuisineNames: ["italian"] },
+    });
+
+    expect(mocked.verifyClaims).toHaveBeenCalledTimes(1);
+    expect(mocked.verifyClaims).toHaveBeenCalledWith(
+      expect.objectContaining({ claims: [{ id: "Japanese", question: expect.any(String) }] })
+    );
+    // The supplied Cuisine is kept whatever the verdict; the model's own was dropped.
+    expect(claim).toMatchObject({ originCountry: "IT", cuisineIds: ["id-italian"] });
+  });
+
+  it("validates a country the model chose against the supplied slots' silence", async () => {
+    respondWith({ ...RESPONSE, originCountry: "NL" });
+
+    await inferRecipeProvenance({
+      ...ITALIAN_RECIPE,
+      supplied: { originCountry: "IT", cuisineNames: ["Italian"] },
+    });
+
+    // Contradicting the section is the model's own claim, so it is judged.
+    expect(mocked.verifyClaims).toHaveBeenCalledWith(
+      expect.objectContaining({ claims: [{ id: "NL", question: expect.any(String) }] })
+    );
+  });
+
   it("appends no section when the supplied slots are blank noise", async () => {
     respondWith(RESPONSE);
 
@@ -567,6 +606,23 @@ describe("the Decision path", () => {
     expect(request.schema.shape).toHaveProperty("cuisines");
     expect(request.sections).toEqual([]);
     expect(claim.originCountry).toBe("FR");
+  });
+
+  it("settles nothing on a distribution that leaves the chosen country out", async () => {
+    // Defensive: the runtime refuses such a response first. Should one get
+    // through, a missing probability reads as "not sure", never as settled.
+    mocked.decide.mockResolvedValue({
+      model: "jev",
+      answers: {
+        ...decided({ choice: "IT", probability: 0.93 }, { Italian: 0.9 }).answers,
+        country: { type: "choice", choice: "IT", probabilities: { NL: 0.4 } },
+      },
+    });
+    respondWith({ ...NOTE_ONLY, originCountry: "IT", cuisines: ["Italian"] });
+
+    await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    expect(sentRequest().schema.shape).toHaveProperty("originCountry");
   });
 
   it("settles a Cuisine at exactly the threshold and not one just below it", async () => {

@@ -108,7 +108,8 @@ export interface VerifiedClaims<Claim extends ClaimToVerify> {
   mode: ValidationMode | "off";
 }
 
-function chunk<T>(items: readonly T[], size: number): T[][] {
+/** Consecutive slices of at most `size`; a kind asking its own Decisions splits its questions the same way. */
+export function chunk<T>(items: readonly T[], size: number): T[][] {
   const chunks: T[][] = [];
 
   for (let start = 0; start < items.length; start += size) {

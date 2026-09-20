@@ -702,6 +702,22 @@ export type ConfiguredDecisionConfig = DecisionConfig & {
 };
 
 /**
+ * The `uses` list to store for a selection: `undefined` when every use is
+ * selected, so a saved block keeps meaning "every use" and a use added in a
+ * later release is on for it, exactly as for a block that never stored a
+ * list; the selection itself otherwise.
+ */
+export function selectedDecisionUses(
+  selected: readonly DecisionUse[]
+): DecisionUse[] | undefined {
+  const chosen = new Set(selected);
+
+  if (DECISION_USES.every((use) => chosen.has(use))) return undefined;
+
+  return DECISION_USES.filter((use) => chosen.has(use));
+}
+
+/**
  * Whether a stored (and valid) block has this use selected. A block with no
  * `uses` list means every use.
  */

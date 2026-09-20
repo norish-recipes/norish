@@ -22,7 +22,12 @@ import { aiLogger } from "@norish/shared-server/logger";
 
 import type { DecisionBooleanQuestion } from "../runtime/runtime";
 import { decide, generateStructured } from "../runtime/runtime";
-import { ALLERGEN_DROP_THRESHOLD, verifyClaims } from "./verification";
+import {
+  ALLERGEN_DROP_THRESHOLD,
+  MAX_QUESTIONS_PER_DECISION,
+  chunk,
+  verifyClaims,
+} from "./verification";
 
 /**
  * At or above this probability of presence the allergen is tagged. Below
@@ -79,32 +84,35 @@ function allergenQuestion(allergen: string): DecisionBooleanQuestion {
 
 /**
  * Ask the Decision Model one Boolean per household allergen, keyed by the
- * allergen name as stored. Returns the allergens at or above the present
- * threshold, or null when any allergen sits in the doubtful band — the
- * unclear case, which is not an answer. Throws whatever `decide` throws.
+ * allergen name as stored, in as many requests as the question limit needs.
+ * Returns the allergens at or above the present threshold and the ones in
+ * the doubtful band — any of which makes the whole run the unclear case,
+ * which is not an answer. Throws whatever `decide` throws.
  */
 async function decideAllergens(
   recipe: RecipeForAllergyDetection,
   allergiesToDetect: string[]
 ): Promise<{ present: string[]; doubtful: string[] }> {
-  const questions: Record<string, DecisionBooleanQuestion> = Object.fromEntries(
-    allergiesToDetect.map((allergen) => [allergen, allergenQuestion(allergen)])
-  );
-
-  const { answers } = await decide({
-    feature: "allergy-detection",
-    state: recipeState(recipe),
-    questions,
-  });
-
   const present: string[] = [];
   const doubtful: string[] = [];
 
-  for (const allergen of allergiesToDetect) {
-    const { probability } = answers[allergen];
+  for (const batch of chunk(allergiesToDetect, MAX_QUESTIONS_PER_DECISION)) {
+    const questions: Record<string, DecisionBooleanQuestion> = Object.fromEntries(
+      batch.map((allergen) => [allergen, allergenQuestion(allergen)])
+    );
 
-    if (probability >= PRESENT_THRESHOLD) present.push(allergen);
-    else if (probability > ABSENT_THRESHOLD) doubtful.push(allergen);
+    const { answers } = await decide({
+      feature: "allergy-detection",
+      state: recipeState(recipe),
+      questions,
+    });
+
+    for (const allergen of batch) {
+      const { probability } = answers[allergen];
+
+      if (probability >= PRESENT_THRESHOLD) present.push(allergen);
+      else if (probability > ABSENT_THRESHOLD) doubtful.push(allergen);
+    }
   }
 
   return { present, doubtful };

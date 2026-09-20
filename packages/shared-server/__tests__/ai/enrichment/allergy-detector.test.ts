@@ -2,21 +2,24 @@
  * Allergy Detector Tests
  *
  * The AI Runtime is the single mocked AI seam — `decide` and
- * `generateStructured` — plus the loader's one question, whether this use of
- * the Decision Model is on, and the validation helper the language-model
- * path hands its claims to. Nothing else is wired.
+ * `generateStructured` — plus the loader's two questions, whether a Decision
+ * Model is configured and whether a use of it is on. Nothing else is wired:
+ * the Enrichment Validation the language-model path hands its claims to
+ * runs for real, through the same `decide`.
  *
  * @vitest-environment node
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AIConfigurationError, AIProviderError } from "@norish/shared-server/ai/runtime/errors";
-import { isDecisionUseEnabled } from "@norish/shared-server/config/server-config-loader";
+import {
+  isDecisionModelConfigured,
+  isDecisionUseEnabled,
+} from "@norish/shared-server/config/server-config-loader";
 
 const mocked = vi.hoisted(() => ({
   decide: vi.fn(),
   generateStructured: vi.fn(),
-  verifyClaims: vi.fn(),
 }));
 
 const logger = vi.hoisted(() => ({
@@ -31,12 +34,8 @@ vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
   generateStructured: mocked.generateStructured,
 }));
 
-vi.mock("@norish/shared-server/ai/enrichment/verification", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@norish/shared-server/ai/enrichment/verification")>()),
-  verifyClaims: mocked.verifyClaims,
-}));
-
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
+  isDecisionModelConfigured: vi.fn(),
   isDecisionUseEnabled: vi.fn(),
 }));
 
@@ -74,10 +73,9 @@ describe("detectAllergiesInRecipe", () => {
     vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
     mocked.decide.mockResolvedValue(decided(CLEAR));
     mocked.generateStructured.mockResolvedValue({ detectedAllergens: ["Gluten", "Dairy"] });
-    // Validation keeps everything unless a test says otherwise.
-    mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
-      Promise.resolve({ kept: claims, dropped: [], mode: "off" })
-    );
+    // No Decision Model for validation unless a test says otherwise: every
+    // claim is kept unjudged.
+    vi.mocked(isDecisionModelConfigured).mockResolvedValue(false);
   });
 
   it("answers an empty allergen list without asking anything", async () => {
@@ -115,8 +113,19 @@ describe("detectAllergiesInRecipe", () => {
         },
       });
       expect(mocked.generateStructured).not.toHaveBeenCalled();
-      expect(mocked.verifyClaims).not.toHaveBeenCalled();
       expect(vi.mocked(isDecisionUseEnabled)).toHaveBeenCalledWith("allergyDetection");
+    });
+
+    it("does not validate its own Decision again, even with validation available", async () => {
+      vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
+
+      await expect(detectAllergiesInRecipe(recipe, HOUSEHOLD)).resolves.toEqual([
+        "gluten",
+        "nuts",
+        "dairy",
+      ]);
+      // The one request is the only one: a Decision's answer already is a Decision.
+      expect(mocked.decide).toHaveBeenCalledTimes(1);
     });
 
     it("tags an allergen at exactly the present threshold and not one just below it", async () => {
@@ -199,6 +208,29 @@ describe("detectAllergiesInRecipe", () => {
       expect(mocked.generateStructured).not.toHaveBeenCalled();
     });
 
+    it("splits a household larger than one Decision carries into several requests", async () => {
+      const household = Array.from({ length: 41 }, (_, index) => `Allergen ${index + 1}`);
+
+      mocked.decide.mockImplementation(({ questions }: { questions: Record<string, unknown> }) =>
+        Promise.resolve(
+          decided(
+            Object.fromEntries(
+              Object.keys(questions).map((allergen) => [
+                allergen,
+                allergen === "Allergen 41" ? 0.95 : 0.01,
+              ])
+            )
+          )
+        )
+      );
+
+      await expect(detectAllergiesInRecipe(recipe, household)).resolves.toEqual(["allergen 41"]);
+      expect(mocked.decide).toHaveBeenCalledTimes(2);
+      expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toHaveLength(40);
+      expect(Object.keys(mocked.decide.mock.calls[1]?.[0].questions)).toEqual(["Allergen 41"]);
+      expect(mocked.generateStructured).not.toHaveBeenCalled();
+    });
+
     it.each([
       ["a non-retryable failure", new AIConfigurationError("no model")],
       ["a retryable failure", new AIProviderError("overloaded", { retryable: true })],
@@ -260,34 +292,64 @@ describe("detectAllergiesInRecipe", () => {
       ]);
     });
 
-    it("validates its own claims under the strict allergen constant and writes the survivors", async () => {
-      mocked.verifyClaims.mockResolvedValue({
-        kept: [{ id: "gluten", question: "q" }],
-        dropped: [{ claim: { id: "dairy", question: "q" }, probability: 0.02 }],
-        mode: "enforce",
+    describe("Enrichment Validation", () => {
+      beforeEach(() => {
+        // The kind's own use is off, so the language model answers; the
+        // Validate enrichments use is on, so its claims are judged for real.
+        vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
+        vi.mocked(isDecisionUseEnabled).mockImplementation((use) =>
+          Promise.resolve(use === "validateEnrichments")
+        );
       });
 
-      await expect(detectAllergiesInRecipe(recipe, HOUSEHOLD)).resolves.toEqual(["gluten"]);
-      expect(mocked.verifyClaims).toHaveBeenCalledWith({
-        feature: "allergy-detection",
-        state: {
-          title: "Pesto pasta",
-          description: "Basil pesto over spaghetti.",
-          ingredients: recipe.ingredients,
-        },
-        claims: [
-          { id: "gluten", question: expect.stringMatching(/contain gluten/) },
-          { id: "dairy", question: expect.stringMatching(/contain dairy/) },
-        ],
-        dropThreshold: 0.05,
+      it("validates its own claims under the strict allergen constant and writes the survivors", async () => {
+        mocked.decide.mockResolvedValue(decided({ gluten: 0.9, dairy: 0.02 }));
+
+        await expect(detectAllergiesInRecipe(recipe, HOUSEHOLD)).resolves.toEqual(["gluten"]);
+        expect(mocked.decide).toHaveBeenCalledTimes(1);
+        expect(mocked.decide).toHaveBeenCalledWith({
+          feature: "allergy-detection:validation",
+          state: {
+            title: "Pesto pasta",
+            description: "Basil pesto over spaghetti.",
+            ingredients: recipe.ingredients,
+          },
+          questions: {
+            gluten: { type: "boolean", instructions: expect.stringMatching(/contain gluten/) },
+            dairy: { type: "boolean", instructions: expect.stringMatching(/contain dairy/) },
+          },
+        });
       });
-    });
 
-    it("validates nothing when the language model claimed nothing", async () => {
-      mocked.generateStructured.mockResolvedValue({ detectedAllergens: [] });
+      it("drops an allergen at exactly one in twenty and keeps one just above it", async () => {
+        mocked.decide.mockResolvedValue(decided({ gluten: 0.05, dairy: 0.06 }));
 
-      await expect(detectAllergiesInRecipe(recipe, HOUSEHOLD)).resolves.toEqual([]);
-      expect(mocked.verifyClaims).not.toHaveBeenCalled();
+        await expect(detectAllergiesInRecipe(recipe, HOUSEHOLD)).resolves.toEqual(["dairy"]);
+      });
+
+      it("validates nothing when the language model claimed nothing", async () => {
+        mocked.generateStructured.mockResolvedValue({ detectedAllergens: [] });
+
+        await expect(detectAllergiesInRecipe(recipe, HOUSEHOLD)).resolves.toEqual([]);
+        expect(mocked.decide).not.toHaveBeenCalled();
+      });
+
+      it("never validates stored data: an allergy tag already on the recipe is neither a question nor a casualty", async () => {
+        // The kind only ever sees title, description and ingredients; a
+        // stored tag riding along on the input is not this run's claim.
+        const stored = { ...recipe, allergyIndications: ["nuts"] };
+
+        mocked.decide.mockResolvedValue(decided({ gluten: 0.9, dairy: 0.9, nuts: 0.01 }));
+
+        await expect(detectAllergiesInRecipe(stored, HOUSEHOLD)).resolves.toEqual([
+          "gluten",
+          "dairy",
+        ]);
+        expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toEqual([
+          "gluten",
+          "dairy",
+        ]);
+      });
     });
 
     it("propagates the runtime's failure", async () => {

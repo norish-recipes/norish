@@ -276,8 +276,11 @@ flowchart TD
   U -- yes --> D[decide]
   D --> C{Clear Case?}
   C -- yes --> W[Written to the recipe]
-  C -- "no, or the Decision failed" --> G[generateStructured<br/>your AI provider]
-  U -- no --> G
+  C -- "no, or the Decision failed" --> F{What ran<br/>before there was one}
+  U -- no --> F
+  F -- "an enrichment kind" --> G[generateStructured<br/>your AI provider]
+  F -- "import triage,<br/>grocery linking" --> H[Today's own rule:<br/>keyword count, caption length,<br/>the shop's order]
+  H --> W
   G --> V{Validate enrichments<br/>one question per claim}
   V -- kept --> W
   V -- "clearly wrong" --> X[Not written]

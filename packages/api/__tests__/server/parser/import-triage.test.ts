@@ -26,8 +26,10 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 const {
   isRecipe,
+  judgeRecipe,
   isParseComplete,
   NOT_A_RECIPE_THRESHOLD,
+  CLEARLY_A_RECIPE_THRESHOLD,
   INCOMPLETE_PARSE_MAX_SCORE,
   PARSE_COMPLETENESS_LEVELS,
 } = await import("@norish/api/parser/import-triage");
@@ -99,6 +101,44 @@ describe("isRecipe", () => {
       expect.objectContaining({ err: failure, feature: "import-triage" }),
       expect.stringMatching(/no opinion/i)
     );
+  });
+});
+
+describe("judgeRecipe", () => {
+  it("says a clear yes at exactly the affirmative constant and unclear just below it", async () => {
+    expect(CLEARLY_A_RECIPE_THRESHOLD).toBe(0.85);
+
+    mocked.decide.mockResolvedValue(recipeAnswer(0.85));
+    await expect(judgeRecipe("Ingredients: 2 eggs")).resolves.toBe("yes");
+
+    mocked.decide.mockResolvedValue(recipeAnswer(0.84));
+    await expect(judgeRecipe("Ingredients: 2 eggs")).resolves.toBe("unclear");
+  });
+
+  it("says a clear no at exactly the refusal constant and unclear just above it", async () => {
+    mocked.decide.mockResolvedValue(recipeAnswer(0.15));
+    await expect(judgeRecipe("Our terms of service")).resolves.toBe("no");
+
+    mocked.decide.mockResolvedValue(recipeAnswer(0.16));
+    await expect(judgeRecipe("Our terms of service")).resolves.toBe("unclear");
+  });
+
+  it("is the one question isRecipe reads its refusal off: unclear is not a refusal", async () => {
+    mocked.decide.mockResolvedValue(recipeAnswer(0.3));
+
+    await expect(isRecipe("Toast. Butter. Jam.")).resolves.toBe(true);
+    expect(mocked.decide).toHaveBeenCalledTimes(1);
+  });
+
+  it("has no opinion on empty text, without a Decision Model, or on a failure", async () => {
+    await expect(judgeRecipe(" ")).resolves.toBeNull();
+
+    vi.mocked(isDecisionModelConfigured).mockResolvedValue(false);
+    await expect(judgeRecipe("Ingredients: 2 eggs")).resolves.toBeNull();
+
+    vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
+    mocked.decide.mockRejectedValue(new AIProviderError("down", { retryable: true }));
+    await expect(judgeRecipe("Ingredients: 2 eggs")).resolves.toBeNull();
   });
 });
 
