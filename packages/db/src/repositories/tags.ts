@@ -88,7 +88,14 @@ export async function getOrCreateTagByName(name: string): Promise<TagDto> {
 
   const existing = await findTagByName(cleaned);
 
-  if (existing) return existing;
+  if (existing) {
+    const existingRecord = existing as any;
+    if (existingRecord.name !== cleaned) {
+      await db.update(tags).set({ name: cleaned }).where(eq(tags.id, existingRecord.id));
+      existingRecord.name = cleaned;
+    }
+    return existing;
+  }
 
   return createTag(cleaned);
 }
@@ -99,16 +106,38 @@ export async function getOrCreateManyTags(names: string[]): Promise<TagDto[]> {
   if (cleaned.length === 0) return [];
 
   return await db.transaction(async (tx) => {
+    const caseMap = new Map<string, string>();
+    for (const name of cleaned) {
+      caseMap.set(name.toLowerCase(), name);
+    }
+    const uniqueNames = Array.from(caseMap.values());
+
     await tx
       .insert(tags)
-      .values(cleaned.map((name) => ({ name })))
+      .values(uniqueNames.map((name) => ({ name })))
       .onConflictDoNothing();
 
-    const lowers = Array.from(new Set(cleaned.map((n) => n.toLowerCase())));
-    const rows = await tx
+    const lowers = Array.from(caseMap.keys());
+    let rows = await tx
       .select()
       .from(tags)
       .where(inArray(sql`lower(${tags.name})`, lowers));
+
+    let needsRefetch = false;
+    for (const row of rows) {
+      const requested = caseMap.get(row.name.toLowerCase());
+      if (requested && row.name !== requested) {
+        await tx.update(tags).set({ name: requested }).where(eq(tags.id, row.id));
+        needsRefetch = true;
+      }
+    }
+
+    if (needsRefetch) {
+      rows = await tx
+        .select()
+        .from(tags)
+        .where(inArray(sql`lower(${tags.name})`, lowers));
+    }
 
     const parsed = TagArraySchema.safeParse(rows);
 
@@ -123,16 +152,38 @@ export async function getOrCreateManyTagsTx(tx: any, names: string[]): Promise<T
 
   if (cleaned.length === 0) return [];
 
+  const caseMap = new Map<string, string>();
+  for (const name of cleaned) {
+    caseMap.set(name.toLowerCase(), name);
+  }
+  const uniqueNames = Array.from(caseMap.values());
+
   await tx
     .insert(tags)
-    .values(cleaned.map((name: string) => ({ name })))
+    .values(uniqueNames.map((name: string) => ({ name })))
     .onConflictDoNothing();
 
-  const lowers = Array.from(new Set(cleaned.map((n) => n.toLowerCase())));
-  const rows = await tx
+  const lowers = Array.from(caseMap.keys());
+  let rows = await tx
     .select()
     .from(tags)
     .where(inArray(sql`lower(${tags.name})`, lowers));
+
+  let needsRefetch = false;
+  for (const row of rows) {
+    const requested = caseMap.get(row.name.toLowerCase());
+    if (requested && row.name !== requested) {
+      await tx.update(tags).set({ name: requested }).where(eq(tags.id, row.id));
+      needsRefetch = true;
+    }
+  }
+
+  if (needsRefetch) {
+    rows = await tx
+      .select()
+      .from(tags)
+      .where(inArray(sql`lower(${tags.name})`, lowers));
+  }
 
   const parsed = TagArraySchema.safeParse(rows);
 

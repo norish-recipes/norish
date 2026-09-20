@@ -103,7 +103,17 @@ export async function getOrCreateIngredientByName(name: string): Promise<Ingredi
 
   const existing = await findIngredientByName(cleaned);
 
-  if (existing) return existing;
+  if (existing) {
+    const existingRecord = existing as any;
+    if (existingRecord.name !== cleaned) {
+      await db
+        .update(ingredients)
+        .set({ name: cleaned })
+        .where(eq(ingredients.id, existingRecord.id));
+      existingRecord.name = cleaned;
+    }
+    return existing;
+  }
 
   return createIngredient(cleaned);
 }
@@ -134,17 +144,39 @@ export async function getOrCreateManyIngredients(names: string[]): Promise<Ingre
   if (cleaned.length === 0) return [];
 
   return await db.transaction(async (tx) => {
+    const caseMap = new Map<string, string>();
+    for (const name of cleaned) {
+      caseMap.set(name.toLowerCase(), name);
+    }
+    const uniqueNames = Array.from(caseMap.values());
+
     await tx
       .insert(ingredients)
-      .values(cleaned.map((name) => ({ name })))
+      .values(uniqueNames.map((name) => ({ name })))
       .onConflictDoNothing();
 
-    const lowers = Array.from(new Set(cleaned.map((n) => n.toLowerCase())));
+    const lowers = Array.from(caseMap.keys());
 
-    const rows = await tx
+    let rows = await tx
       .select()
       .from(ingredients)
       .where(inArray(sql`lower(${ingredients.name})`, lowers));
+
+    let needsRefetch = false;
+    for (const row of rows) {
+      const requested = caseMap.get(row.name.toLowerCase());
+      if (requested && row.name !== requested) {
+        await tx.update(ingredients).set({ name: requested }).where(eq(ingredients.id, row.id));
+        needsRefetch = true;
+      }
+    }
+
+    if (needsRefetch) {
+      rows = await tx
+        .select()
+        .from(ingredients)
+        .where(inArray(sql`lower(${ingredients.name})`, lowers));
+    }
 
     const parsed = IngredientArraySchema.safeParse(rows);
 
@@ -162,16 +194,38 @@ export async function getOrCreateManyIngredientsTx(
 
   if (cleaned.length === 0) return [];
 
+  const caseMap = new Map<string, string>();
+  for (const name of cleaned) {
+    caseMap.set(name.toLowerCase(), name);
+  }
+  const uniqueNames = Array.from(caseMap.values());
+
   await tx
     .insert(ingredients)
-    .values(cleaned.map((name: string) => ({ name })))
+    .values(uniqueNames.map((name: string) => ({ name })))
     .onConflictDoNothing();
 
-  const lowers = Array.from(new Set(cleaned.map((n) => n.toLowerCase())));
-  const rows = await tx
+  const lowers = Array.from(caseMap.keys());
+  let rows = await tx
     .select()
     .from(ingredients)
     .where(inArray(sql`lower(${ingredients.name})`, lowers));
+
+  let needsRefetch = false;
+  for (const row of rows) {
+    const requested = caseMap.get(row.name.toLowerCase());
+    if (requested && row.name !== requested) {
+      await tx.update(ingredients).set({ name: requested }).where(eq(ingredients.id, row.id));
+      needsRefetch = true;
+    }
+  }
+
+  if (needsRefetch) {
+    rows = await tx
+      .select()
+      .from(ingredients)
+      .where(inArray(sql`lower(${ingredients.name})`, lowers));
+  }
 
   const parsed = IngredientArraySchema.safeParse(rows);
 
