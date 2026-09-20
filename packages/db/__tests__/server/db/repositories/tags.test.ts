@@ -91,4 +91,29 @@ describe("Tags Repository", () => {
 
     expect(allergies).toEqual([{ tagId: tag!.id }]);
   });
+
+  it("updates tag casing if requested with a different casing", async () => {
+    const user = await createTestUser();
+    const secondRecipe = await createTestRecipe(user.id, { name: "Recipe 2" });
+
+    // Create a tag with lowercase
+    await db.transaction(async (tx) => {
+      await attachTagsToRecipeByInputTx(tx, testRecipe.id, ["typescript"]);
+    });
+
+    expect(await getRecipeTagNames(testRecipe.id)).toEqual(["typescript"]);
+
+    // Attach to a second recipe but use uppercase
+    await db.transaction(async (tx) => {
+      await attachTagsToRecipeByInputTx(tx, secondRecipe.id, ["TypeScript"]);
+    });
+
+    // Both should now reflect the updated casing because the underlying tag was updated
+    expect(await getRecipeTagNames(testRecipe.id)).toEqual(["TypeScript"]);
+    expect(await getRecipeTagNames(secondRecipe.id)).toEqual(["TypeScript"]);
+
+    const allTags = await listAllTagNames();
+    expect(allTags).toContain("TypeScript");
+    expect(allTags).not.toContain("typescript");
+  });
 });
