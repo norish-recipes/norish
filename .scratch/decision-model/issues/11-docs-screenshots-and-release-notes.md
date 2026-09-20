@@ -18,10 +18,10 @@ Convention: `docs/agents/feature-docs.md`
 
 ## Acceptance criteria
 
-- [ ] The configuration page, the enrichment page and the release notes are updated with the glossary's vocabulary.
-- [ ] The screenshot exists and is embedded; both mermaid diagrams render in the built site.
-- [ ] `pnpm format` and `pnpm build` pass in `apps/docs`.
-- [ ] The glossary and ADR match the shipped behaviour.
+- [x] The configuration page, the enrichment page and the release notes are updated with the glossary's vocabulary.
+- [ ] The screenshot exists and is embedded (needs a running admin form; see Comments); both mermaid diagrams render in the built site (done).
+- [x] `pnpm format` and `pnpm build` pass in `apps/docs`.
+- [x] The glossary and ADR match the shipped behaviour.
 
 ## Comments
 

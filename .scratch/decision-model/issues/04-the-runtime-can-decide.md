@@ -23,7 +23,7 @@ export interface DecideOptions<Q extends DecisionQuestions> {
   questions: Q;
 }
 export async function decide<Q extends DecisionQuestions>(
-  options: DecideOptions<Q>
+  options: DecideOptions<Q>,
 ): Promise<DecisionResult<Q>>;
 ```
 
@@ -65,16 +65,16 @@ driven through `AIProviderControl` with a `decision` directive beside `success` 
 
 ## Acceptance criteria
 
-- [ ] `decide` exists in `runtime.ts` with the typed signature above; `rg "typesafe-ai|experimental_evaluate"` hits only `ai/runtime/`.
-- [ ] Disabled AI, an unconfigured block and a bad key each throw the documented error class with the documented retryability.
-- [ ] A Choice, a Score and a Boolean question round-trip with their full distributions and confidence.
-- [ ] A missing answer is `AIResponseError`; a 429 is retryable; a 401 is not.
-- [ ] The request runs under the AI timeout on the shared transport with SDK retries off.
-- [ ] One info log line per Decision with the fields above; the state never appears at info.
-- [ ] The E2E fake serves `/v1/systemone` and a harness unit test covers the directive.
+- [x] `decide` exists in `runtime.ts` with the typed signature above; `rg "typesafe-ai|experimental_evaluate"` hits only `ai/runtime/`.
+- [x] Disabled AI, an unconfigured block and a bad key each throw the documented error class with the documented retryability.
+- [x] A Choice, a Score and a Boolean question round-trip with their full distributions and confidence.
+- [x] A missing answer is `AIResponseError`; a 429 is retryable; a 401 is not.
+- [x] The request runs under the AI timeout on the shared transport with SDK retries off.
+- [x] One info log line per Decision with the fields above; the state never appears at info.
+- [x] The E2E fake serves `/v1/systemone` and a harness unit test covers the directive.
 - [ ] The measurements are recorded in the comments.
-- [ ] ADR-0035 and the glossary match what shipped.
-- [ ] Repo gates green: lint, full test run, internationalization check, production build.
+- [x] ADR-0035 and the glossary match what shipped.
+- [x] Repo gates green: lint, full test run, internationalization check, production build.
 
 ## Non-goals
 

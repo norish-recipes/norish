@@ -1,6 +1,6 @@
 # Decision Model: Jev answers the questions a language model was never the right tool for
 
-Status: ready-for-agent
+Status: ready-for-human
 
 Reference: TypeSafe AI's Jev, reached through the AI SDK's TypeSafe provider
 (`@ai-sdk/typesafe-ai`, https://ai-sdk.dev/providers/ai-sdk-providers/typesafe-ai).
@@ -174,6 +174,10 @@ Per `docs/agents/feature-docs.md`: the AI provider configuration page gains a _D
 | 11  | Docs, screenshots and release notes, with mermaid diagrams of the internals        | Ships last           | ready-for-human |
 
 02–04 land together as one PR after 01; 05 through 10 are each their own PR, 08 after 05, 10 after 05 and 06; 11 rides the last of them. The maintainer confirmed 08 and 09 as good fits on 2026-09-19, asked for 10 as validation of the existing enrichments' output (never of stored data), one multi-select for the uses, the high-probability link in 09, and the diagrams in 11.
+
+### What is left for a person
+
+Everything in the sequence is implemented on the branch except two boxes an agent sandbox cannot tick: ticket 04's measurements against a real TypeSafe key (latency, rate-limit headers, the per-request question limit), and ticket 11's screenshot of the Decision Model block, which needs the admin form running against Postgres and Redis. Both tickets are `ready-for-human` for exactly that.
 
 ## Non-goals
 
