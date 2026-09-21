@@ -159,7 +159,7 @@ export default function MiniGroceries({
   // the Pantry is shown apart and left off the list unless it is ticked.
   const { items: pantryIngredients, isLoading: pantryLoading } = usePantryQuery();
 
-  const inPantry = useCallback(
+  const isInPantry = useCallback(
     (item: GroceryIngredient) =>
       pantryIngredientFor(
         pantryIngredients,
@@ -167,14 +167,14 @@ export default function MiniGroceries({
       ) !== null,
     [pantryIngredients, editedIngredients]
   );
-  const { toBuy, stocked } = useMemo(() => {
+  const { toBuy, inPantry } = useMemo(() => {
     const buy: typeof scaledIngredients = [];
     const have: typeof scaledIngredients = [];
 
-    for (const item of scaledIngredients) (inPantry(item) ? have : buy).push(item);
+    for (const item of scaledIngredients) (isInPantry(item) ? have : buy).push(item);
 
-    return { toBuy: buy, stocked: have };
-  }, [scaledIngredients, inPantry]);
+    return { toBuy: buy, inPantry: have };
+  }, [scaledIngredients, isInPantry]);
 
   useEffect(() => {
     hasInitialized.current = false;
@@ -187,7 +187,8 @@ export default function MiniGroceries({
 
   useEffect(() => {
     // Selection starts from what is to buy, so the Pantry has to have
-    // answered before the first pick: a stocked line is never pre-ticked.
+    // answered before the first pick: a line in the Pantry is never
+    // pre-ticked.
     if (pantryLoading) return;
     const currentIds = scaledIngredients.map((i) => i.id).filter(Boolean);
     const toBuyIds = toBuy.map((i) => i.id).filter(Boolean);
@@ -212,33 +213,34 @@ export default function MiniGroceries({
   /* Count the visible rows that are selected rather than `selectedIds.length`,
      so an id left behind by an ingredient that has since disappeared cannot
      make the list look fully selected. The count, and "select all", are about
-     what is to buy; a stocked line is ticked on its own. */
+     what is to buy; a line in the Pantry is ticked on its own. */
   const selectedCount = useMemo(
     () => toBuy.filter((item) => selectedIds.includes(item.id)).length,
     [toBuy, selectedIds]
   );
-  const stockedSelectedCount = useMemo(
-    () => stocked.filter((item) => selectedIds.includes(item.id)).length,
-    [stocked, selectedIds]
+  const inPantrySelectedCount = useMemo(
+    () => inPantry.filter((item) => selectedIds.includes(item.id)).length,
+    [inPantry, selectedIds]
   );
   const allSelected = toBuy.length > 0 && selectedCount === toBuy.length;
-  const allStockedSelected = stocked.length > 0 && stockedSelectedCount === stocked.length;
+  const allInPantrySelected = inPantry.length > 0 && inPantrySelectedCount === inPantry.length;
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
-  const toggleSelectAll = () => {
-    const stockedSelected = stocked.map((item) => item.id).filter((id) => selectedIds.includes(id));
+  /**
+   * One section's select-all. Each section answers for its own lines and
+   * leaves the other section's ticks exactly as they were, which is why the
+   * other section's selection is carried across rather than recomputed.
+   */
+  const toggleSection = (
+    section: GroceryIngredient[],
+    other: GroceryIngredient[],
+    allOfSectionSelected: boolean
+  ) => {
+    const otherSelected = other.map((item) => item.id).filter((id) => selectedIds.includes(id));
 
     setSelectedIds(
-      allSelected ? stockedSelected : [...toBuy.map((item) => item.id), ...stockedSelected]
-    );
-  };
-  /** The pantry section's own select-all, which leaves the lines to buy as they are. */
-  const toggleSelectAllStocked = () => {
-    const toBuySelected = toBuy.map((item) => item.id).filter((id) => selectedIds.includes(id));
-
-    setSelectedIds(
-      allStockedSelected ? toBuySelected : [...toBuySelected, ...stocked.map((item) => item.id)]
+      allOfSectionSelected ? otherSelected : [...otherSelected, ...section.map((item) => item.id)]
     );
   };
   const handleEditStart = (id: string) => {
@@ -293,6 +295,66 @@ export default function MiniGroceries({
           variant: "warning",
         });
       });
+  };
+
+  /** One ingredient line, to buy or in the Pantry alike: a name, its amount, and a tick. */
+  const renderRow = (item: GroceryIngredient) => {
+    const isEditing = editingId === item.id;
+
+    return (
+      <div
+        key={item.id}
+        className="flex cursor-pointer items-center px-2 py-2"
+        role="button"
+        tabIndex={0}
+        onClick={(e) => !isEditing && !isCheckboxEvent(e) && handleEditStart(item.id)}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && !isEditing && !isCheckboxEvent(e)) {
+            e.preventDefault();
+            handleEditStart(item.id);
+          }
+        }}
+      >
+        <div className="flex min-w-0 flex-1 flex-col">
+          {isEditing ? (
+            <Input
+              className="text-base"
+              size="sm"
+              style={{
+                fontSize: "16px",
+              }}
+              value={editValue}
+              variant="underlined"
+              onBlur={handleEditSubmit}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleEditSubmit();
+                if (e.key === "Escape") setEditingId(null);
+              }}
+            />
+          ) : (
+            <>
+              <span className="truncate text-base font-semibold">
+                {editedIngredients[item.id]?.name ?? item.ingredientName}
+              </span>
+              {(editedIngredients[item.id]?.amount ?? item.amount) ? (
+                <span className="text-accent mt-[-3px] text-xs font-medium">
+                  {editedIngredients[item.id]?.amount ?? item.amount}{" "}
+                  {editedIngredients[item.id]?.unit ?? item.unit ?? ""}
+                </span>
+              ) : null}
+            </>
+          )}
+        </div>
+        <GroceryCheckbox
+          aria-label={item.ingredientName}
+          className="ml-2 shrink-0"
+          isSelected={selectedIds.includes(item.id)}
+          size="md"
+          onChange={() => toggleSelect(item.id)}
+        />
+      </div>
+    );
   };
 
   return (
@@ -350,7 +412,7 @@ export default function MiniGroceries({
                         data-testid="toggle-all"
                         size="sm"
                         variant="tertiary"
-                        onPress={toggleSelectAll}
+                        onPress={() => toggleSection(toBuy, inPantry, allSelected)}
                       >
                         {allSelected ? tActions("deselectAll") : tActions("selectAll")}
                       </Button>
@@ -360,13 +422,13 @@ export default function MiniGroceries({
                     </div>
                   </div>
                 )}
-                {toBuy.length > 0 && stocked.length > 0 && (
+                {toBuy.length > 0 && inPantry.length > 0 && (
                   <Separator
                     className="bg-surface-tertiary/40 my-2"
                     data-testid="pantry-separator"
                   />
                 )}
-                {stocked.length > 0 && (
+                {inPantry.length > 0 && (
                   <div data-testid="pantry-section">
                     <div className="mb-1 flex items-center justify-between px-2">
                       <span className="text-muted text-xs font-medium">{t("inPantry")}</span>
@@ -375,13 +437,13 @@ export default function MiniGroceries({
                         data-testid="toggle-all-pantry"
                         size="sm"
                         variant="tertiary"
-                        onPress={toggleSelectAllStocked}
+                        onPress={() => toggleSection(inPantry, toBuy, allInPantrySelected)}
                       >
-                        {allStockedSelected ? tActions("deselectAll") : tActions("selectAll")}
+                        {allInPantrySelected ? tActions("deselectAll") : tActions("selectAll")}
                       </Button>
                     </div>
                     <div className="divide-border/40 flex flex-col divide-y">
-                      {stocked.map(renderRow)}
+                      {inPantry.map(renderRow)}
                     </div>
                   </div>
                 )}
@@ -396,7 +458,7 @@ export default function MiniGroceries({
           <ActionButtonGroup>
             <ActionButton
               action="add"
-              isDisabled={selectedCount + stockedSelectedCount === 0}
+              isDisabled={selectedCount + inPantrySelectedCount === 0}
               onPress={handleConfirm}
             >
               {tActions("add")}
@@ -406,64 +468,4 @@ export default function MiniGroceries({
       )}
     </Panel>
   );
-
-  /** One ingredient line, to buy or stocked alike: a name, its amount, and a tick. */
-  function renderRow(item: GroceryIngredient) {
-    const isEditing = editingId === item.id;
-
-    return (
-      <div
-        key={item.id}
-        className="flex cursor-pointer items-center px-2 py-2"
-        role="button"
-        tabIndex={0}
-        onClick={(e) => !isEditing && !isCheckboxEvent(e) && handleEditStart(item.id)}
-        onKeyDown={(e) => {
-          if ((e.key === "Enter" || e.key === " ") && !isEditing && !isCheckboxEvent(e)) {
-            e.preventDefault();
-            handleEditStart(item.id);
-          }
-        }}
-      >
-        <div className="flex min-w-0 flex-1 flex-col">
-          {isEditing ? (
-            <Input
-              className="text-base"
-              size="sm"
-              style={{
-                fontSize: "16px",
-              }}
-              value={editValue}
-              variant="underlined"
-              onBlur={handleEditSubmit}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleEditSubmit();
-                if (e.key === "Escape") setEditingId(null);
-              }}
-            />
-          ) : (
-            <>
-              <span className="truncate text-base font-semibold">
-                {editedIngredients[item.id]?.name ?? item.ingredientName}
-              </span>
-              {(editedIngredients[item.id]?.amount ?? item.amount) ? (
-                <span className="text-accent mt-[-3px] text-xs font-medium">
-                  {editedIngredients[item.id]?.amount ?? item.amount}{" "}
-                  {editedIngredients[item.id]?.unit ?? item.unit ?? ""}
-                </span>
-              ) : null}
-            </>
-          )}
-        </div>
-        <GroceryCheckbox
-          aria-label={item.ingredientName}
-          className="ml-2 shrink-0"
-          isSelected={selectedIds.includes(item.id)}
-          size="md"
-          onChange={() => toggleSelect(item.id)}
-        />
-      </div>
-    );
-  }
 }

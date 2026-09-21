@@ -1,8 +1,11 @@
 import type { QueryKey } from "@tanstack/react-query";
+import type { createTRPCContext } from "@trpc/tanstack-react-query";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
+import type { AppRouter } from "@norish/trpc/client";
 
-import type { TrpcHookBinding } from "../stores/types";
+type TrpcContext = ReturnType<typeof createTRPCContext<AppRouter>>;
+export type TrpcHookBinding = ReturnType<TrpcContext["useTRPC"]>;
 
 export type PantryData = PantryIngredientDto[];
 

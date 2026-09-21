@@ -1,7 +1,5 @@
 "use client";
 
-import { sharedPantryHooks } from "./shared-pantry-hooks";
-
-export type { PantryMutationsResult, PantryQueryResult } from "@norish/shared-react/hooks";
-
-export const { usePantryQuery, usePantryMutations, usePantrySubscription } = sharedPantryHooks;
+export { usePantryQuery, type PantryData, type PantryQueryResult } from "./use-pantry-query";
+export { usePantryMutations, type PantryMutationsResult } from "./use-pantry-mutations";
+export { usePantrySubscription } from "./use-pantry-subscription";
