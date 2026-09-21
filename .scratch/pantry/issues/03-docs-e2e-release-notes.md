@@ -7,7 +7,7 @@ Spec: `.scratch/pantry/spec.md`
 
 ## What to build
 
-The pantry browser spec in the `ai` Playwright project with its support module (seeded recipe, database readers); CONTEXT.md entries for Pantry and Pantry Ingredient; ADR-0036 and its index entry; the Pantry docs page under Groceries with two screenshots shot off the running app; a Pantry feature section on the `0.23.1-beta` release-notes page.
+The pantry browser spec in the `ai` Playwright project with its support module (seeded recipe, database readers); CONTEXT.md entries for Pantry and Pantry Ingredient; ADR-0036 and its index entry; the Pantry docs page under Groceries with two screenshots shot off the running app; a Pantry feature section on the `0.24.0-beta` release-notes page.
 
 ## Acceptance criteria
 

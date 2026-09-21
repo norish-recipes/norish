@@ -41,7 +41,7 @@ A household **Pantry**: a list of names, edited in a panel of the groceries page
 
 **The add-to-groceries panel.** Lines whose name (as edited in the panel) is in the pantry are split off below a separator under an "In your pantry" heading with its own select-all, unticked; the top count and select-all concern the lines to buy, the pantry's select-all the stocked lines, and neither touches the other; the footer Add is enabled when anything at all is ticked; the create payload is unchanged and in recipe order.
 
-**Copy, docs and release notes.** New strings in every one of the fourteen locales. A Pantry page under Groceries in the docs with two screenshots, and a feature section on the `0.23.1-beta` release-notes page.
+**Copy, docs and release notes.** New strings in every one of the fourteen locales. A Pantry page under Groceries in the docs with two screenshots, and a feature section on the `0.24.0-beta` release-notes page.
 
 ## Testing Decisions
 
