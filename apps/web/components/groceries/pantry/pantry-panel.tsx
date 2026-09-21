@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
 import Panel from "@/components/Panel/Panel";
 import { IconActionButton } from "@/components/shared/action-button";
-import { usePantryMutations, usePantryQuery, usePantrySubscription } from "@/hooks/pantry";
+import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, FieldError, Input, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -32,8 +32,6 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
   const { items } = usePantryQuery();
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const [draft, setDraft] = useState("");
-
-  usePantrySubscription();
 
   useEffect(() => {
     if (!open) setDraft("");

@@ -9,7 +9,7 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import { useGroceriesMutations } from "@/hooks/groceries";
-import { usePantryQuery, usePantrySubscription } from "@/hooks/pantry";
+import { usePantryQuery } from "@/hooks/pantry";
 import {
   useLinkedRecipeIngredients,
   useRecipeIngredients,
@@ -158,8 +158,6 @@ export default function MiniGroceries({
   // What the household already has: a line whose name (as edited here) is in
   // the Pantry is shown apart and left off the list unless it is ticked.
   const { items: pantryIngredients, isLoading: pantryLoading } = usePantryQuery();
-
-  usePantrySubscription();
 
   const inPantry = useCallback(
     (item: GroceryIngredient) =>

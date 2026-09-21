@@ -18,7 +18,6 @@ let items: PantryIngredientDto[] = [];
 vi.mock("@/hooks/pantry", () => ({
   usePantryQuery: () => ({ items, isLoading: false }),
   usePantryMutations: () => ({ addPantryIngredient, removePantryIngredient }),
-  usePantrySubscription: () => undefined,
 }));
 
 vi.mock("next-intl", () => ({

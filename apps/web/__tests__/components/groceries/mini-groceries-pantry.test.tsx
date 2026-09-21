@@ -50,7 +50,6 @@ vi.mock("@/hooks/groceries", () => ({
 }));
 vi.mock("@/hooks/pantry", () => ({
   usePantryQuery: () => ({ items: pantry, isLoading: pantryLoading }),
-  usePantrySubscription: () => undefined,
 }));
 vi.mock("@/hooks/recipes/use-recipe-ingredients", () => ({
   useRecipeIngredients: () => ({
