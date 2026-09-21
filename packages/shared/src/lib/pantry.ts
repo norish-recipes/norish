@@ -20,11 +20,14 @@ export function pantryIngredientFor(
   return items.find((item) => item.normalizedName === normalized) ?? null;
 }
 
-/** The Pantry as a person reads it: by name, in their own alphabet. */
+/**
+ * The Pantry as a person reads it: by name, in their own alphabet. The locale
+ * is the reader's, not the runtime's — "ö" files with "o" in German and after
+ * "z" in Swedish, and a server and a browser must not disagree about it.
+ */
 export function sortPantryIngredients<T extends Pick<PantryIngredientDto, "name">>(
-  items: readonly T[]
+  items: readonly T[],
+  locale: string
 ): T[] {
-  return [...items].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-  );
+  return [...items].sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: "base" }));
 }

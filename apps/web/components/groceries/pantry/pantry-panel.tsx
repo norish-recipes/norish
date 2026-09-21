@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
 import Panel from "@/components/Panel/Panel";
 import { IconActionButton } from "@/components/shared/action-button";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, FieldError, Input, TextField } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
@@ -29,9 +29,11 @@ interface PantryPanelProps {
  */
 export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
   const t = useTranslations("groceries.pantry");
+  const locale = useLocale();
   const { items } = usePantryQuery();
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const [draft, setDraft] = useState("");
+  const field = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) setDraft("");
@@ -39,12 +41,15 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
 
   const draftFolded = normalizeGroceryName(draft);
   const draftDuplicate = draftFolded !== "" && pantryIngredientFor(items, draft) !== null;
-  const sorted = sortPantryIngredients(items);
+  const sorted = sortPantryIngredients(items, locale);
 
   const add = () => {
     if (draftFolded === "" || draftDuplicate) return;
     void addPantryIngredient(draft.trim()).catch(() => undefined);
     setDraft("");
+    // The field is where the next name goes, whether the last one was added
+    // from the keyboard or by pressing the plus.
+    field.current?.focus();
   };
 
   return (
@@ -85,6 +90,7 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
             onChange={setDraft}
           >
             <Input
+              ref={field}
               className={FIELD_CLASS}
               data-testid="pantry-name"
               maxLength={PANTRY_NAME_MAX}

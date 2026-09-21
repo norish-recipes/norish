@@ -37,9 +37,16 @@ describe("pantryIngredientFor", () => {
 describe("sortPantryIngredients", () => {
   it("orders by name regardless of case and leaves the input alone", () => {
     const input = [item("salt", "salt"), item("Flour", "flour"), item("eggs", "eggs")];
-    const sorted = sortPantryIngredients(input);
+    const sorted = sortPantryIngredients(input, "en");
 
     expect(sorted.map((i) => i.name)).toEqual(["eggs", "Flour", "salt"]);
     expect(input.map((i) => i.name)).toEqual(["salt", "Flour", "eggs"]);
+  });
+
+  it("orders in the reader's alphabet, not the runtime's", () => {
+    const input = [item("Zucchini", "zucchini"), item("Öl", "ol")];
+
+    expect(sortPantryIngredients(input, "de").map((i) => i.name)).toEqual(["Öl", "Zucchini"]);
+    expect(sortPantryIngredients(input, "sv").map((i) => i.name)).toEqual(["Zucchini", "Öl"]);
   });
 });

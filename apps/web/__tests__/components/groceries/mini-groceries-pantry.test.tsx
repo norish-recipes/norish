@@ -143,6 +143,43 @@ describe("MiniGroceries with a Pantry", () => {
     expect(names(createGroceriesFromData.mock.calls[0]![0] as never)).toEqual(["chicken breast"]);
   });
 
+  it("unticks a line the Pantry claims while the panel is open", async () => {
+    pantry = [];
+    const view = render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(screen.getByRole("checkbox", { name: "olive oil" })).toBeChecked();
+
+    // A housemate puts olive oil in the Pantry while this panel is open.
+    pantry = [stocked("Olive oil", "olive oil")];
+    view.rerender(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    const section = screen.getByTestId("pantry-section");
+
+    expect(within(section).getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("action-add"));
+    });
+
+    expect(names(createGroceriesFromData.mock.calls[0]![0] as never)).toEqual([
+      "chicken breast",
+      "Salt",
+    ]);
+  });
+
+  it("ticks a line the Pantry gives back while the panel is open", async () => {
+    const view = render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(screen.getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
+
+    // A housemate runs out and takes olive oil back out of the Pantry.
+    pantry = [stocked("salt", "salt")];
+    view.rerender(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(screen.getByRole("checkbox", { name: "olive oil" })).toBeChecked();
+    expect(screen.getByText("selectedCount 2 2")).toBeInTheDocument();
+  });
+
   it("adds a stocked line once it is ticked, and select-all leaves the Pantry alone", async () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 

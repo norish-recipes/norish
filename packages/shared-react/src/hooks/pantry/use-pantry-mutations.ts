@@ -37,9 +37,10 @@ export function createUsePantryMutations({
         setPantryData((prev) =>
           mergePantryAdded(prev ?? [], {
             id: payload.id,
+            // The Ingredient Name the server will point at is not known
+            // here, any more than the member is. Nothing on screen reads
+            // either, and the echo replaces this row under its own id.
             userId: "",
-            // The row the server will point at is not known here, any more
-            // than the member is; the echo carries both.
             ingredientId: "",
             name: payload.name,
             normalizedName: normalizeGroceryName(payload.name),

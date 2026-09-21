@@ -69,6 +69,13 @@ describe("mergePantryAdded / mergePantryRemoved", () => {
     expect(mergePantryAdded(once, SALT)).toEqual([OLIVE, SALT]);
   });
 
+  it("lets the announced row replace the tentative one it echoes", () => {
+    const tentative = { ...OLIVE, userId: "", ingredientId: "" };
+    const merged = mergePantryAdded([tentative], OLIVE);
+
+    expect(merged).toEqual([OLIVE]);
+  });
+
   it("removes by id, and removing what is gone changes nothing", () => {
     const held = [OLIVE, SALT];
     const gone = mergePantryRemoved(held, "olive");

@@ -13,6 +13,14 @@ import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
+/**
+ * The Ingredient Name's fold as every read of the Pantry returns it. A fold is
+ * null only on a row written before names were folded, and an empty fold
+ * matches nothing, which is what a null means everywhere else — so it is read,
+ * and ordered, as the empty name rather than sorting off the end.
+ */
+const FOLDED_NAME = sql<string>`coalesce(${ingredients.normalizedName}, '')`;
+
 function parsePantryIngredients(rows: unknown[]): PantryIngredientDto[] {
   const parsed = PantryIngredientsSchema.safeParse(rows);
 
@@ -25,9 +33,6 @@ function parsePantryIngredients(rows: unknown[]): PantryIngredientDto[] {
  * A Pantry Ingredient as the household reads it: the row, plus the name it points
  * at. A Pantry Ingredient holds no name of its own, so every read joins the
  * Ingredient Name — the same join a recipe line makes for its own name.
- * A fold is null only on a row written before names were folded, which the
- * startup backfill fills in; until then it matches nothing, which is what an
- * empty fold means everywhere else.
  */
 function pantryColumns() {
   return {
@@ -36,7 +41,7 @@ function pantryColumns() {
     ingredientId: pantryIngredients.ingredientId,
     version: pantryIngredients.version,
     name: ingredients.name,
-    normalizedName: sql<string>`coalesce(${ingredients.normalizedName}, '')`,
+    normalizedName: FOLDED_NAME,
   };
 }
 
@@ -54,7 +59,7 @@ export async function listPantryIngredientsByUserIds(
     .from(pantryIngredients)
     .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId))
     .where(inArray(pantryIngredients.userId, userIds))
-    .orderBy(asc(ingredients.normalizedName), asc(pantryIngredients.createdAt));
+    .orderBy(asc(FOLDED_NAME), asc(pantryIngredients.createdAt));
 
   return parsePantryIngredients(rows);
 }
