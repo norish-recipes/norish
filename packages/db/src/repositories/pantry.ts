@@ -4,8 +4,8 @@ import z from "zod";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
 import {
+  ensureIngredientNameFolded,
   getOrCreateIngredientByName,
-  setIngredientNormalizedNames,
 } from "@norish/db/repositories/ingredients";
 import { ingredients, pantryIngredients } from "@norish/db/schema";
 import { PantryIngredientSelectSchema } from "@norish/shared/contracts/zod";
@@ -92,36 +92,34 @@ export async function findPantryIngredientInHousehold(
 }
 
 /**
- * Put a name in the Pantry. The name is the Ingredient Name it points at,
- * minted here where Norish has not seen it — the same get-or-create editing a
- * recipe makes, because a pantry name and a recipe line's name are one kind of
- * thing. The id is the client's (ADR-0003). A name that folds to nothing is
- * not an item and is refused, as is a name this member already has: the row
- * constraint holds one Ingredient Name per member, and the fold, which is the
- * looser rule, is held here.
+ * Put a name in the Pantry, or answer with the item the household already
+ * has by that folded name — `created` says which, and only a create is worth
+ * announcing. The rule that a name is in a Pantry once lives here and only
+ * here: the caller asks to add and is told what the Pantry holds, rather than
+ * looking first and racing its own answer.
+ *
+ * The name is the Ingredient Name it points at, minted here where Norish has
+ * not seen it — the same get-or-create editing a recipe makes, because a
+ * pantry name and a recipe line's name are one kind of thing. The id is the
+ * client's (ADR-0003). A name that folds to nothing is not an item and is
+ * refused; the row constraint holds one Ingredient Name per member, and the
+ * looser rule, one *folded* name across the household, is the lookup above.
  */
-export async function createPantryIngredient(
+export async function addPantryIngredient(
   id: string,
-  input: { userId: string; name: string }
-): Promise<PantryIngredientDto> {
+  input: { userId: string; userIds: string[]; name: string }
+): Promise<{ item: PantryIngredientDto; created: boolean }> {
   const normalizedName = normalizeGroceryName(input.name);
 
   if (!normalizedName) throw new Error("A pantry ingredient needs a name");
 
-  const held = await findPantryIngredientInHousehold([input.userId], normalizedName);
+  const held = await findPantryIngredientInHousehold(input.userIds, normalizedName);
 
-  if (held) throw new Error("The pantry already holds that name");
+  if (held) return { item: held, created: false };
 
-  const ingredient = await getOrCreateIngredientByName(input.name.trim());
-
-  // A name minted before names were folded carries no fold, and a Pantry
-  // Ingredient whose name has no fold matches nothing. Fold it as it is taken
-  // into a Pantry rather than waiting for the next startup.
-  if (ingredient.normalizedName === null) {
-    await setIngredientNormalizedNames([
-      { id: ingredient.id, normalizedName: normalizeGroceryName(ingredient.name) },
-    ]);
-  }
+  const ingredient = await ensureIngredientNameFolded(
+    await getOrCreateIngredientByName(input.name.trim())
+  );
 
   const [row] = await db
     .insert(pantryIngredients)
@@ -134,7 +132,7 @@ export async function createPantryIngredient(
 
   if (!item) throw new Error("Failed to create pantry ingredient");
 
-  return item;
+  return { item, created: true };
 }
 
 /** One Pantry Ingredient with its name, however it was reached. */

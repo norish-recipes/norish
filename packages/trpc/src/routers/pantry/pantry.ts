@@ -3,9 +3,8 @@ import { TRPCError } from "@trpc/server";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
-  createPantryIngredient,
+  addPantryIngredient,
   deletePantryIngredient,
-  findPantryIngredientInHousehold,
   getPantryIngredientOwnerId,
   listPantryIngredientsByUserIds,
 } from "@norish/db/repositories/pantry";
@@ -15,7 +14,6 @@ import {
   PantryIngredientAddSchema,
   PantryIngredientRemoveSchema,
 } from "@norish/shared/contracts/zod";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -26,28 +24,22 @@ const list = authedProcedure.query(async ({ ctx }): Promise<PantryIngredientDto[
 });
 
 /**
- * Put a name in the Pantry. The name is folded here, so "Olive Oil" and
- * " olive oil! " are one item; a name the household already has is that
- * item, and nothing is written or announced for it. Returns the item's id.
+ * Put a name in the Pantry. The name is folded by the repository, so "Olive
+ * Oil" and " olive oil! " are one item; a name the household already has is
+ * that item, and nothing is written or announced for it. Returns the item's
+ * id, which is the client's own for a name that was not there (ADR-0003).
  */
 const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ ctx, input }) => {
-  const normalizedName = normalizeGroceryName(input.name);
-
-  if (!normalizedName) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "A pantry ingredient needs a name" });
-  }
-
-  const existing = await findPantryIngredientInHousehold(ctx.userIds, normalizedName);
-
-  if (existing) return existing.id;
-
-  const item = await createPantryIngredient(input.id ?? crypto.randomUUID(), {
+  const { item, created } = await addPantryIngredient(input.id ?? crypto.randomUUID(), {
     userId: ctx.user.id,
+    userIds: ctx.userIds,
     name: input.name,
   });
 
-  log.info({ userId: ctx.user.id, pantryIngredientId: item.id }, "Pantry ingredient added");
-  void pantry.publish("added", { item }, { householdKey: ctx.householdKey });
+  if (created) {
+    log.info({ userId: ctx.user.id, pantryIngredientId: item.id }, "Pantry ingredient added");
+    void pantry.publish("added", { item }, { householdKey: ctx.householdKey });
+  }
 
   return item.id;
 });

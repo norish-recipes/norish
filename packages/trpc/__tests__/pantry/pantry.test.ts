@@ -18,9 +18,8 @@ import { assertHouseholdAccess } from "../mocks/permissions";
 import { pantry } from "../mocks/realtime/pantry";
 
 const pantryRepository = vi.hoisted(() => ({
-  createPantryIngredient: vi.fn(),
+  addPantryIngredient: vi.fn(),
   deletePantryIngredient: vi.fn(),
-  findPantryIngredientInHousehold: vi.fn(),
   getPantryIngredientOwnerId: vi.fn(),
   listPantryIngredientsByUserIds: vi.fn(),
 }));
@@ -43,14 +42,16 @@ describe("the Pantry", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     assertHouseholdAccess.mockResolvedValue(undefined);
-    pantryRepository.findPantryIngredientInHousehold.mockResolvedValue(null);
-    pantryRepository.createPantryIngredient.mockImplementation(
+    pantryRepository.addPantryIngredient.mockImplementation(
       async (id: string, input: { userId: string; name: string }) => ({
-        id,
-        userId: input.userId,
-        name: input.name.trim(),
-        normalizedName: input.name.trim().toLowerCase(),
-        version: 1,
+        item: {
+          id,
+          userId: input.userId,
+          name: input.name.trim(),
+          normalizedName: input.name.trim().toLowerCase(),
+          version: 1,
+        },
+        created: true,
       })
     );
     pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(ctx.user.id);
@@ -67,12 +68,9 @@ describe("the Pantry", () => {
   it("adds a name under the client's id and tells the household", async () => {
     await expect(caller.add({ id: OLIVE, name: "Olive Oil" })).resolves.toBe(OLIVE);
 
-    expect(pantryRepository.findPantryIngredientInHousehold).toHaveBeenCalledWith(
-      ctx.userIds,
-      "olive oil"
-    );
-    expect(pantryRepository.createPantryIngredient).toHaveBeenCalledWith(OLIVE, {
+    expect(pantryRepository.addPantryIngredient).toHaveBeenCalledWith(OLIVE, {
       userId: ctx.user.id,
+      userIds: ctx.userIds,
       name: "Olive Oil",
     });
     expect(pantry.publish).toHaveBeenCalledWith(
@@ -86,20 +84,22 @@ describe("the Pantry", () => {
     const id = await caller.add({ name: "Salt" });
 
     expect(id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(pantryRepository.createPantryIngredient).toHaveBeenCalledWith(id, expect.anything());
+    expect(pantryRepository.addPantryIngredient).toHaveBeenCalledWith(id, expect.anything());
   });
 
-  it("answers with the item the household already has, writing and announcing nothing", async () => {
-    pantryRepository.findPantryIngredientInHousehold.mockResolvedValue({ id: EXISTING });
+  it("answers with the item the household already has, announcing nothing", async () => {
+    pantryRepository.addPantryIngredient.mockResolvedValue({
+      item: { id: EXISTING },
+      created: false,
+    });
 
     await expect(caller.add({ id: OLIVE, name: " olive  OIL! " })).resolves.toBe(EXISTING);
-    expect(pantryRepository.createPantryIngredient).not.toHaveBeenCalled();
     expect(pantry.publish).not.toHaveBeenCalled();
   });
 
   it("refuses a name that folds to nothing", async () => {
     await expect(caller.add({ name: "!?" })).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    expect(pantryRepository.createPantryIngredient).not.toHaveBeenCalled();
+    expect(pantryRepository.addPantryIngredient).not.toHaveBeenCalled();
   });
 
   it("removes an item and tells the household which", async () => {

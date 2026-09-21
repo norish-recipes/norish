@@ -14,7 +14,7 @@ import {
   setIngredientNormalizedNames,
 } from "@norish/db/repositories/ingredients";
 import {
-  createPantryIngredient,
+  addPantryIngredient,
   deletePantryIngredient,
   findPantryIngredientInHousehold,
   getPantryIngredientOwnerId,
@@ -48,7 +48,11 @@ describe("pantry ingredients", () => {
   });
 
   it("points at an Ingredient Name, minting it where Norish has none", async () => {
-    const item = await createPantryIngredient(OLIVE, { userId, name: "  Olive Oil " });
+    const { item } = await addPantryIngredient(OLIVE, {
+      userId,
+      userIds: [userId],
+      name: "  Olive Oil ",
+    });
 
     expect(item).toMatchObject({
       id: OLIVE,
@@ -74,7 +78,11 @@ describe("pantry ingredients", () => {
     // Simulate a row written before the column existed.
     await db.update(ingredients).set({ normalizedName: null }).where(eq(ingredients.id, stale.id));
 
-    const item = await createPantryIngredient(OLIVE, { userId, name: "Olive Oil" });
+    const { item } = await addPantryIngredient(OLIVE, {
+      userId,
+      userIds: [userId],
+      name: "Olive Oil",
+    });
 
     expect(item.normalizedName).toBe("olive oil");
     await expect(findPantryIngredientInHousehold([userId], "olive oil")).resolves.toMatchObject({
@@ -84,7 +92,11 @@ describe("pantry ingredients", () => {
 
   it("takes the Ingredient Name a recipe already minted, rather than a second one", async () => {
     const known = await getOrCreateIngredientByName("Olive Oil");
-    const item = await createPantryIngredient(OLIVE, { userId, name: "olive oil" });
+    const { item } = await addPantryIngredient(OLIVE, {
+      userId,
+      userIds: [userId],
+      name: "olive oil",
+    });
 
     expect(item.ingredientId).toBe(known.id);
     await expect(
@@ -92,22 +104,52 @@ describe("pantry ingredients", () => {
     ).resolves.toHaveLength(1);
   });
 
-  it("holds one folded name per member", async () => {
-    await createPantryIngredient(OLIVE, { userId, name: "Olive Oil" });
+  it("holds one folded name per household, and answers with the one it holds", async () => {
+    const { item: held } = await addPantryIngredient(OLIVE, {
+      userId,
+      userIds: [userId],
+      name: "Olive Oil",
+    });
+    const again = await addPantryIngredient(SALT, {
+      userId,
+      userIds: [userId],
+      name: "olive  oil!",
+    });
 
-    await expect(createPantryIngredient(SALT, { userId, name: "olive  oil!" })).rejects.toThrow();
+    expect(again).toEqual({ item: held, created: false });
     await expect(listPantryIngredientsByUserIds([userId])).resolves.toHaveLength(1);
   });
 
+  it("answers a housemate with the item the household already has", async () => {
+    const housemate = await createTestUser();
+
+    await addPantryIngredient(OLIVE, { userId, userIds: [userId], name: "Olive Oil" });
+
+    const { item, created } = await addPantryIngredient(SALT, {
+      userId: housemate.id,
+      userIds: [userId, housemate.id],
+      name: "olive oil",
+    });
+
+    expect(created).toBe(false);
+    expect(item.id).toBe(OLIVE);
+  });
+
   it("refuses a name that folds to nothing", async () => {
-    await expect(createPantryIngredient(OLIVE, { userId, name: "!?" })).rejects.toThrow();
+    await expect(
+      addPantryIngredient(OLIVE, { userId, userIds: [userId], name: "!?" })
+    ).rejects.toThrow();
   });
 
   it("reads the whole household's Pantry in one query, by name", async () => {
     const housemate = await createTestUser();
 
-    await createPantryIngredient(SALT, { userId, name: "Salt" });
-    await createPantryIngredient(OLIVE, { userId: housemate.id, name: "olive oil" });
+    await addPantryIngredient(SALT, { userId, userIds: [userId], name: "Salt" });
+    await addPantryIngredient(OLIVE, {
+      userId: housemate.id,
+      userIds: [housemate.id],
+      name: "olive oil",
+    });
 
     const items = await listPantryIngredientsByUserIds([userId, housemate.id]);
 
@@ -120,7 +162,11 @@ describe("pantry ingredients", () => {
     const housemate = await createTestUser();
     const stranger = await createTestUser();
 
-    await createPantryIngredient(OLIVE, { userId: housemate.id, name: "Olive Oil" });
+    await addPantryIngredient(OLIVE, {
+      userId: housemate.id,
+      userIds: [housemate.id],
+      name: "Olive Oil",
+    });
 
     await expect(
       findPantryIngredientInHousehold([userId, housemate.id], "olive oil")
@@ -132,7 +178,7 @@ describe("pantry ingredients", () => {
   });
 
   it("removes an item, and says so only the first time", async () => {
-    await createPantryIngredient(OLIVE, { userId, name: "Olive Oil" });
+    await addPantryIngredient(OLIVE, { userId, userIds: [userId], name: "Olive Oil" });
 
     await expect(deletePantryIngredient(OLIVE)).resolves.toBe(true);
     await expect(deletePantryIngredient(OLIVE)).resolves.toBe(false);
@@ -142,7 +188,11 @@ describe("pantry ingredients", () => {
 
   it("goes with the Ingredient Name it points at", async () => {
     const db = getTestDb();
-    const item = await createPantryIngredient(OLIVE, { userId, name: "Olive Oil" });
+    const { item } = await addPantryIngredient(OLIVE, {
+      userId,
+      userIds: [userId],
+      name: "Olive Oil",
+    });
 
     await db.delete(ingredients).where(eq(ingredients.id, item.ingredientId));
 
@@ -152,7 +202,7 @@ describe("pantry ingredients", () => {
   it("goes with the member who typed it", async () => {
     const db = getTestDb();
 
-    await createPantryIngredient(OLIVE, { userId, name: "Olive Oil" });
+    await addPantryIngredient(OLIVE, { userId, userIds: [userId], name: "Olive Oil" });
     await db.delete(users).where(eq(users.id, userId));
 
     await expect(

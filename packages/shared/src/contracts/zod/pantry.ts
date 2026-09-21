@@ -2,15 +2,21 @@ import { createSelectSchema } from "drizzle-zod";
 import z from "zod";
 
 import { pantryIngredients } from "@norish/db-schema/schema";
+import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import { clientMintedId } from "./common";
 
-/** A Pantry Ingredient's name: one to a hundred characters, with the whitespace around it gone. */
+/**
+ * A Pantry Ingredient's name: one to a hundred characters, with the whitespace
+ * around it gone, and something left once it is folded — "!?" is punctuation,
+ * not a name, and would match nothing in a Pantry.
+ */
 export const PantryIngredientNameSchema = z
   .string()
   .trim()
   .min(1, "Pantry ingredient name is required")
-  .max(100);
+  .max(100)
+  .refine((name) => normalizeGroceryName(name) !== "", "Pantry ingredient name is required");
 
 /**
  * A Pantry Ingredient as the household reads it. The row holds only the Ingredient

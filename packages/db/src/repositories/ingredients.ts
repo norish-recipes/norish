@@ -334,3 +334,22 @@ export async function setIngredientNormalizedNames(
       AND ${ingredients.normalizedName} IS NULL
   `);
 }
+
+/**
+ * The Ingredient Name with a fold on it. A name minted before names were
+ * folded carries none, and a Pantry Ingredient whose name has no fold matches
+ * nothing, so a reader that needs the fold now folds it now rather than
+ * waiting for the next startup. Folding lives in this module and nowhere
+ * else: on mint, in this repair, and in the batch the backfill drives.
+ */
+export async function ensureIngredientNameFolded(
+  ingredient: IngredientDto
+): Promise<IngredientDto> {
+  if (ingredient.normalizedName !== null) return ingredient;
+
+  const normalizedName = normalizeGroceryName(ingredient.name);
+
+  await setIngredientNormalizedNames([{ id: ingredient.id, normalizedName }]);
+
+  return { ...ingredient, normalizedName };
+}

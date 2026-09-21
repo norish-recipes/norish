@@ -13,7 +13,7 @@ The Pantry travels on its own router and its own subscription rather than on the
 ## Consequences
 
 - A Pantry Ingredient is `(userId, ingredientId)`; the name and its fold are read from the Ingredient Name it points at, so every read of the Pantry joins `ingredients` the way a recipe line does.
-- One Ingredient Name appears once per member, held by a row constraint. The looser rules — one *folded* name per member, and once per household — are held in the repository and the procedure, the way a Store name is, because two names that fold alike may still be two Ingredient Names and the rows span user ids.
+- One Ingredient Name appears once per member, held by a row constraint. The looser rule — one *folded* name across the household — is held in the repository, which answers an add with the item the household already holds rather than writing a second, because two names that fold alike may still be two Ingredient Names and the rows span user ids. It is one rule in one place: the procedure asks to add and is told what the Pantry holds.
 - Deleting an Ingredient Name takes the Pantry Ingredients pointing at it, as it takes the recipe lines. Nothing else about a Pantry Ingredient outlives it.
 - Matching is `normalizeGroceryName(ingredient) === item.normalizedName`, in one shared helper the add-to-groceries panel and the Pantry panel's duplicate check both ask; no other rule may be added beside it.
 - The recipe ingredient and the grocery row carry nothing about the pantry; the add-to-groceries panel derives the split at render time, so a Pantry Ingredient added by a housemate reshapes the panel at once.
