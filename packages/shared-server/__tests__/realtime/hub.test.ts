@@ -415,3 +415,53 @@ describe("Redis reconnect", () => {
     expect(handler).toHaveBeenCalledWith(envelope(1));
   });
 });
+
+describe("refcounting across a Redis round trip", () => {
+  beforeEach(async () => {
+    await startRealtimeHub();
+  });
+
+  it("keeps a listener that registers while the last listener's UNSUBSCRIBE is in flight", async () => {
+    const first = new AbortController();
+
+    getRealtimeHub().subscribe(CHANNEL, { signal: first.signal });
+    await settle();
+    expect(subscriber.calls).toEqual([`subscribe:${CHANNEL}`]);
+
+    // Hold the UNSUBSCRIBE round trip open, the way a busy Redis would.
+    let releaseUnsubscribe!: () => void;
+
+    subscriber.unsubscribe.mockImplementationOnce(async (channel?: string) => {
+      subscriber.calls.push(`unsubscribe:${channel ?? "*"}`);
+      await new Promise<void>((resolve) => {
+        releaseUnsubscribe = resolve;
+      });
+      if (channel) subscriber.subscribed.delete(channel);
+
+      return subscriber.subscribed.size;
+    });
+    first.abort();
+    await settle();
+    expect(subscriber.calls).toEqual([`subscribe:${CHANNEL}`, `unsubscribe:${CHANNEL}`]);
+
+    // The client's reset after a lag lands in that window: a new listener on
+    // the same channel, registered before Redis has answered the UNSUBSCRIBE.
+    const second = getRealtimeHub().subscribe(CHANNEL)[Symbol.asyncIterator]();
+    const pending = second.next();
+
+    releaseUnsubscribe();
+    await settle();
+    await settle();
+
+    expect(subscriber.calls).toEqual([
+      `subscribe:${CHANNEL}`,
+      `unsubscribe:${CHANNEL}`,
+      `subscribe:${CHANNEL}`,
+    ]);
+    expect(getRealtimeHub().stats()).toMatchObject({ channels: 1, listeners: 1 });
+
+    deliver(subscriber, 1);
+    await expect(pending).resolves.toEqual({ value: envelope(1), done: false });
+    await second.return?.();
+  });
+});

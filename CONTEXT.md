@@ -319,7 +319,7 @@ The opaque, identity-bound token attached to every delivered Realtime Event that
 The per-channel Redis Stream holding recent Realtime Events — about a thousand, for a day — written by the same atomic script that publishes them. A delivery buffer, not an Outbox: a publish can still be lost between the database commit and the buffer, and nothing reconciles the two.
 
 **Scope Change**:
-An identity change — household created, joined or left, member kicked, admin transferred, account deleted — after which the server closes the user's sockets so every subscription restarts against the current identity, and a Cursor minted under the old identity is refused (ADR-0033).
+An identity change — household created, joined or left, member kicked, account deleted — after which the server closes the user's sockets so every subscription restarts against the current identity, and a Cursor minted under the old identity is refused (ADR-0033).
 
 ### Releases & Docs
 

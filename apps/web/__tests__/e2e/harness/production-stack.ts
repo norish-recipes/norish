@@ -24,7 +24,7 @@ export interface HarnessUser {
 }
 
 interface ProductionStackOptions {
-  project: "offline" | "ai";
+  project: "offline" | "ai" | "realtime";
   port: number;
   databaseName: string;
   users: readonly [HarnessUser, HarnessUser];
@@ -35,6 +35,12 @@ interface ProductionStackOptions {
    * no business restating it.
    */
   environment?: Record<string, string>;
+  /**
+   * Keep the server's stdout and stderr in memory (they still reach the
+   * terminal) so a scenario can assert what the server logged. A project that
+   * asserts on log lines lowers `LOG_LEVEL` in `environment` to match.
+   */
+  captureLogs?: boolean;
 }
 
 export interface ProductionServer {
@@ -51,6 +57,33 @@ function ensureBuilt(): void {
 
 function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+/**
+ * A host port nobody is listening on right now. Redis gets a fixed binding to
+ * it rather than a kernel-assigned one, because Docker re-assigns ephemeral
+ * host ports on a container restart and a fixed binding survives one — which
+ * is what lets a scenario restart Redis under a server that keeps its URL.
+ */
+function freeHostPort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+
+    probe.unref();
+    probe.once("error", reject);
+    probe.listen(0, "127.0.0.1", () => {
+      const address = probe.address();
+
+      if (!address || typeof address === "string") {
+        probe.close();
+        reject(new Error("Could not allocate a host port for Redis"));
+
+        return;
+      }
+
+      probe.close(() => resolve(address.port));
+    });
+  });
 }
 
 function portIsOpen(port: number): Promise<boolean> {
@@ -100,6 +133,7 @@ export class ProductionStack {
   private activeServer: ProductionServer | null = null;
   private databaseConnectionUrl: string | null = null;
   private redisConnectionUrl: string | null = null;
+  private capturedLogs: string[] = [];
 
   constructor(private readonly options: ProductionStackOptions) {
     this.baseURL = `http://localhost:${options.port}`;
@@ -114,6 +148,49 @@ export class ProductionStack {
     return this.databaseConnectionUrl;
   }
 
+  get redisUrl(): string {
+    if (!this.redisConnectionUrl) {
+      throw new Error(`[${this.options.project}] Redis is not provisioned`);
+    }
+
+    return this.redisConnectionUrl;
+  }
+
+  /** Everything the server wrote since the last `clearLogs()`, one entry per line. */
+  logs(): readonly string[] {
+    return this.capturedLogs;
+  }
+
+  clearLogs(): void {
+    this.capturedLogs = [];
+  }
+
+  /** Run one `redis-cli` command inside the Redis container and return its output. */
+  async redisCli(command: string, ...args: string[]): Promise<string> {
+    if (!this.redis) {
+      throw new Error(`[${this.options.project}] Redis is not provisioned`);
+    }
+
+    return (await this.redis.executeCliCmd(command, args)).trim();
+  }
+
+  /**
+   * Restart the Redis container in place, the way an operator would: a
+   * SIGTERM, which lets Redis write its snapshot, so sessions and the Resume
+   * Buffer come back with it (testcontainers' default is an immediate kill,
+   * after which every session is gone and every request is anonymous). Its
+   * host port is a fixed binding, so it survives the restart and the
+   * server's clients reconnect on their own — which is the point.
+   */
+  async restartRedis(): Promise<void> {
+    if (!this.redis) {
+      throw new Error(`[${this.options.project}] Redis is not provisioned`);
+    }
+
+    // Milliseconds: testcontainers converts this to Docker's seconds itself.
+    await this.redis.restart({ timeout: 10_000 });
+  }
+
   async start(): Promise<void> {
     ensureBuilt();
     mkdirSync(this.uploadsDir, { recursive: true });
@@ -121,13 +198,16 @@ export class ProductionStack {
     let phase = "container provisioning";
 
     try {
+      const redisHostPort = await freeHostPort();
       const [postgresResult, redisResult] = await Promise.allSettled([
         new PostgreSqlContainer("postgres:17-alpine")
           .withDatabase(this.options.databaseName)
           .withUsername(this.options.databaseName)
           .withPassword(this.options.databaseName)
           .start(),
-        new RedisContainer("redis:8.6.2-alpine").start(),
+        new RedisContainer("redis:8.6.2-alpine")
+          .withExposedPorts({ container: 6379, host: redisHostPort })
+          .start(),
       ]);
 
       if (postgresResult.status === "fulfilled") this.postgres = postgresResult.value;
@@ -193,11 +273,16 @@ export class ProductionStack {
       );
     }
 
+    const capture = this.options.captureLogs === true;
     const child: ChildProcess = spawn(process.execPath, [DIST_SERVER_ENTRY], {
       cwd: WEB_DIR,
       env: this.serverEnvironment(),
-      stdio: ["ignore", "inherit", "inherit"],
+      stdio: ["ignore", capture ? "pipe" : "inherit", capture ? "pipe" : "inherit"],
     });
+
+    if (capture) {
+      this.captureOutput(child);
+    }
     const exited = new Promise<void>((resolve) => child.once("exit", () => resolve()));
     let stopped = false;
     const server: ProductionServer = {
@@ -299,6 +384,33 @@ export class ProductionStack {
           rm(path.join(E2E_RUNTIME_DIR, this.options.project), { recursive: true, force: true }),
       },
     ]);
+  }
+
+  /** Tee the child's output to this process and keep a copy, line by line. */
+  private captureOutput(child: ChildProcess): void {
+    const streams: Array<[NodeJS.ReadableStream | null, NodeJS.WriteStream]> = [
+      [child.stdout, process.stdout],
+      [child.stderr, process.stderr],
+    ];
+
+    for (const [source, sink] of streams) {
+      if (!source) continue;
+
+      let rest = "";
+
+      source.setEncoding("utf8");
+      source.on("data", (chunk: string) => {
+        sink.write(chunk);
+        const lines = (rest + chunk).split("\n");
+
+        rest = lines.pop() ?? "";
+        this.capturedLogs.push(...lines);
+      });
+      source.on("end", () => {
+        if (rest) this.capturedLogs.push(rest);
+        rest = "";
+      });
+    }
   }
 
   private serverEnvironment(): NodeJS.ProcessEnv {

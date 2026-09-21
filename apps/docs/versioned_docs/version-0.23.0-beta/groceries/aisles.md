@@ -13,7 +13,7 @@ additionally have **Aisles**, you could also see this as categories.
 
 Open **Manage Stores**, edit a store, and under the colour you find the
 **Aisles**. Type a name and press Enter or the plus to add one, type over a
-name to rename it, drag the handle to reorder, and press the __X__ to remove one.
+name to rename it, drag the handle to reorder, and press the **X** to remove one.
 
 ![The store editor, with the Store's aisles under the colour picker](/img/screenshots/groceries-aisles-editor.png)
 
@@ -41,7 +41,7 @@ There are two ways to add groceries to an aisle.
 
 **Drag the row** into an aisle. Dragging it back to the top of the Store
 unfiles it. Dragging a row into another Store's aisle moves it to that Store
-and aisles. Dragging it into another Store's top area moves it there and 
+and aisles. Dragging it into another Store's top area moves it there and
 leaves that Store's own memory to place it.
 
 **Or using the edit panel** Directly under the Store selector, a Store
@@ -57,11 +57,11 @@ So if you put “melk” in Zuivel at a Store, every “melk” at that Store wi
 
 That same rule applies everywhere:
 
-* **Rename a grocery:** it will appear in the aisle the Store remembers for its new name.
-* **Move a grocery to another Store:** the new Store uses its own aisle memory. Nothing carries over between Stores.
-* **Rename an aisle:** everything assigned to it stays there.
-* **Remove an aisle:** the groceries that belonged to it become unassigned.
-* **Delete a Store:** its aisles and all of its grocery-to-aisle memory are deleted with it.
+- **Rename a grocery:** it will appear in the aisle the Store remembers for its new name.
+- **Move a grocery to another Store:** the new Store uses its own aisle memory. Nothing carries over between Stores.
+- **Rename an aisle:** everything assigned to it stays there.
+- **Remove an aisle:** the groceries that belonged to it become unassigned.
+- **Delete a Store:** its aisles and all of its grocery-to-aisle memory are deleted with it.
 
 Because the Store remembers aisles by grocery name, two groceries with exactly the same name at the same Store can’t belong to different aisles.
 

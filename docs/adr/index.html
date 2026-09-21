@@ -830,7 +830,7 @@
             >ADR-0032 &mdash; Realtime is one hub, one catalogue, one idiom</a
           >
           <p>
-            <b>Proposed.</b> The old realtime layer is deleted, not adapted. Every Realtime Event is
+            <b>Accepted.</b> The old realtime layer is deleted, not adapted. Every Realtime Event is
             declared once, client-safely, with its Scope and zod schema; published through one
             validated domain object that never throws to its caller; fanned out by one per-process
             Realtime Hub with a single Redis subscriber and bounded queues; consumed through one
@@ -844,7 +844,7 @@
             >ADR-0033 &mdash; A scope change restarts the socket</a
           >
           <p>
-            <b>Proposed.</b> A subscription's identity is fixed at start. Household and account
+            <b>Accepted.</b> A subscription's identity is fixed at start. Household and account
             changes publish their announcing event, awaited, then an internal invalidation that
             closes the user's sockets with 4000; everything restarts against the current identity
             and a Cursor minted under the old one is refused. Rejects re-keying live subscriptions.
@@ -855,7 +855,7 @@
             >ADR-0034 &mdash; Resume is a bounded buffer, not a guarantee</a
           >
           <p>
-            <b>Proposed.</b> Amends ADR-0011: every non-internal publish is appended to a
+            <b>Accepted.</b> Amends ADR-0011: every non-internal publish is appended to a
             per-channel Redis Stream (about a thousand entries, a day) in the same script that
             publishes it; subscriptions are tracked with an opaque identity-bound Cursor and resume
             from it on reconnect, or end Lagged. Recovery remains the guarantee; the stream is a

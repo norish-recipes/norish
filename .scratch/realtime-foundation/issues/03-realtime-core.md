@@ -40,3 +40,5 @@
   - `@trpc/client` was added as a devDependency of `@norish/trpc` for `ws-resume.test.ts`.
   - `redis/channel-metadata.ts` and its moved test stay until 04 deletes `pubsub.ts`, its last importer.
   - `RealtimeEventScope` no longer includes `global`; the old transport still emits `global` channels through a cast until 04 removes it.
+- 2026-09-21, found by the realtime browser suite (ticket 10): `reconcile()` decided whether to drop a channel's state from the `wanted` it computed *before* awaiting the `UNSUBSCRIBE`. A listener registering during that round trip (a client's reset after a lag, a reconnect) was added to the state, its own step was queued, and then the finishing step deleted the state with the listener inside it — the queued step found no state, never `SUBSCRIBE`d, and `dispatch` never found the listener again: a subscription that had yielded its Cursor Mark and would never deliver. The refcount is now re-read after the round trip; `hub.test.ts` › "keeps a listener that registers while the last listener's UNSUBSCRIBE is in flight" is red on the old code.
+

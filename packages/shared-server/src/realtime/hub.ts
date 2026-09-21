@@ -143,6 +143,11 @@ interface ChannelState {
   chain: Promise<void>;
 }
 
+/** How many callbacks and iterables a channel currently serves. */
+function refcount(state: ChannelState): number {
+  return state.handlers.size + state.listeners.size;
+}
+
 class RedisRealtimeHub implements RealtimeHub {
   private subscriber: Redis | null = null;
   private starting: Promise<void> | null = null;
@@ -338,7 +343,7 @@ class RedisRealtimeHub implements RealtimeHub {
     let listeners = 0;
 
     for (const state of this.channels.values()) {
-      listeners += state.handlers.size + state.listeners.size;
+      listeners += refcount(state);
     }
 
     return { channels: this.channels.size, listeners, dropped: this.dropped };
@@ -383,7 +388,7 @@ class RedisRealtimeHub implements RealtimeHub {
 
       if (!subscriber || !current || current !== state) return;
 
-      const wanted = current.handlers.size + current.listeners.size > 0;
+      const wanted = refcount(current) > 0;
 
       if (wanted && !current.subscribed) {
         await subscriber.subscribe(channel);
@@ -395,7 +400,13 @@ class RedisRealtimeHub implements RealtimeHub {
         log.trace({ channel }, "Unsubscribed channel");
       }
 
-      if (!wanted && !current.subscribed && this.channels.get(channel) === current) {
+      // Decided again after the round trip: a listener that registered while
+      // the UNSUBSCRIBE was in flight lives in this state and has its own step
+      // queued behind this one. Dropping the state here would strand it —
+      // registered, never subscribed, never delivered to.
+      const stillWanted = refcount(current) > 0;
+
+      if (!stillWanted && !current.subscribed && this.channels.get(channel) === current) {
         this.channels.delete(channel);
       }
     });

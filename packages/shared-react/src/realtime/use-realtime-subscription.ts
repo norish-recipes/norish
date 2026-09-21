@@ -78,8 +78,10 @@ export function useRealtimeSubscription<P>(
 ) {
   const queryClient = useQueryClient();
 
+  // tRPC reads `"enabled" in opts`, not its value: a key that is present but
+  // undefined disables the subscription. Only a stated choice is passed on.
   const options = procedure.subscriptionOptions(undefined, {
-    enabled: handlers.enabled,
+    ...(handlers.enabled === undefined ? {} : { enabled: handlers.enabled }),
     onData: (data) => {
       if (!isTrackedItem(data)) {
         throw new TypeError("Expected a tracked realtime item");

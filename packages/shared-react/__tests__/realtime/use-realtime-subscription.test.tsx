@@ -11,7 +11,11 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
-import { CURSOR_MARK, ENVELOPE_VERSION, REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
+import {
+  CURSOR_MARK,
+  ENVELOPE_VERSION,
+  REALTIME_LAGGED,
+} from "@norish/shared/contracts/realtime/envelope";
 
 import type { RealtimeSubscriptionHandlers } from "../../src/realtime/use-realtime-subscription";
 import {
@@ -26,14 +30,25 @@ type Observer = {
 };
 
 /** One `subscribe` per subscription the hook opens, with the input it was given. */
-const subscriptions: Array<{ input: unknown; observer: Observer; unsubscribe: ReturnType<typeof vi.fn> }> = [];
+const subscriptions: Array<{
+  input: unknown;
+  observer: Observer;
+  unsubscribe: ReturnType<typeof vi.fn>;
+}> = [];
+
+/** The options the hook handed `subscriptionOptions`, one per call. */
+const optionCalls: Array<Record<string, unknown>> = [];
 
 const procedure = {
   subscriptionOptions(input: undefined, opts: Record<string, unknown>) {
+    optionCalls.push(opts);
+
     return {
       ...opts,
       queryKey: [["fake", "onEvent"], { type: "any" }],
-      enabled: opts.enabled ?? true,
+      // As @trpc/tanstack-react-query resolves it: the key's presence decides,
+      // not its value, so `{ enabled: undefined }` is a disabled subscription.
+      enabled: "enabled" in opts ? !!opts.enabled : true,
       subscribe(observer: Observer) {
         const unsubscribe = vi.fn();
 
@@ -99,6 +114,7 @@ function current() {
 
 beforeEach(() => {
   subscriptions.length = 0;
+  optionCalls.length = 0;
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -210,5 +226,20 @@ describe("useRealtimeSubscription", () => {
     render({ onEvent: vi.fn(), enabled: false });
 
     expect(subscriptions).toHaveLength(0);
+  });
+
+  it("states no `enabled` to tRPC when the caller stated none, so the subscription opens", () => {
+    render({ onEvent: vi.fn() });
+
+    expect(optionCalls).toHaveLength(1);
+    expect("enabled" in optionCalls[0]!).toBe(false);
+    expect(subscriptions).toHaveLength(1);
+  });
+
+  it("passes a stated `enabled: true` through", () => {
+    render({ onEvent: vi.fn(), enabled: true });
+
+    expect(optionCalls[0]).toMatchObject({ enabled: true });
+    expect(subscriptions).toHaveLength(1);
   });
 });

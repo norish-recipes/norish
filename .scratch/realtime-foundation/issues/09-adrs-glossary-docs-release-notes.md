@@ -12,12 +12,18 @@
 
 **Spec:** `.scratch/realtime-foundation/spec.md` § Release shape
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
-- [ ] Index entries read **Accepted.**; ADR bodies match the shipped code
-- [ ] `CONTEXT.md` `### Realtime` verified against the code
-- [ ] `websocket.md` in the docs sidebar; `server-runtime.md` links it
-- [ ] Release notes updated: two improvement bullets, two upgrade notes
-- [ ] `pnpm format` and `pnpm build` in `apps/docs` green; the four root gates green
+- [x] Index entries read **Accepted.**; ADR bodies match the shipped code
+- [x] `CONTEXT.md` `### Realtime` verified against the code
+- [x] `websocket.md` in the docs sidebar; `server-runtime.md` links it
+- [x] Release notes updated: two improvement bullets, two upgrade notes
+- [x] `pnpm format` and `pnpm build` in `apps/docs` green; the four root gates green
 
 ## Comments
+
+- Implemented on `rc/0.24.0-beta` (2026-09-21).
+  - ADR-0032, ADR-0033 and ADR-0034 are **Accepted** in `docs/adr/index.html`. Two details had drifted and are corrected in the bodies and the glossary: an **admin transfer is not a Scope Change** (the household key does not change, and `transferAdmin` never publishes `connection.invalidate` — only create, join, leave, kick and account deletion do), and the Resume Buffer key is the channel with its `norish:` prefix *replaced* by `norish:stream:`, not `norish:stream:<channel>`. Everything else in the three ADRs and in `CONTEXT.md` § Realtime names something that exists (`CURSOR_MARK`, `RealtimeLaggedError` and its six reasons, `RESUME_MAXLEN = 1000`, `RESUME_TTL_SECONDS = 86400`, the 4000/4401/1012 codes).
+  - `apps/docs/docs/configuration/websocket.md` is the new page (endpoint, nginx/Caddy/Traefik, the 25 s rule, the Origin check, close codes, Redis expectations, troubleshooting); `server-runtime.md` links it beside `REDIS_URL` and under `TRUSTED_ORIGINS`.
+  - The docs checkpoint was due (`v0.23.1-beta` is tagged and `docs/` still carried its label), so `pnpm docs_update 0.24.0-beta` ran first, then `release-notes/0.24.0-beta.md` was written (release-notes positions renumbered). The docs format gate was already red on seven untouched pages (trailing whitespace in `site-authentication.md`, `aisles.md`, `0.23.1-beta.md` and their frozen copies); they are formatted in the checkpoint commit so the gate is green.
+  - No new user-facing strings; `pnpm i18n:check` unaffected.
