@@ -3,9 +3,9 @@
  *
  * What a household member actually does: opens the Pantry from the groceries
  * page and types what is at home; is refused a name already there; adds a
- * recipe to the groceries and sees what is stocked shown apart and left off
- * the list; ticks a stocked line to add it anyway; takes a name out of the
- * Pantry and sees the recipe's line become one to buy again. The real Norish
+ * recipe to the groceries and sees what the Pantry holds shown apart and off
+ * the list; ticks one of those lines to add it anyway; takes a name out of
+ * the Pantry and sees the recipe's line become one to buy again. The real Norish
  * server, database, Redis, tRPC and realtime are all in the path; nothing
  * outbound is.
  */
@@ -95,12 +95,12 @@ test("a name typed into the Pantry is kept, folded, and refused a second time", 
   await expect.poll(readPantryNames).toEqual(["olive oil"]);
 });
 
-test("a stocked ingredient is shown apart and left off the list", async () => {
+test("an ingredient in the Pantry is shown apart and left off the list", async () => {
   const panel = await openAddToGroceries();
-  const stocked = panel.getByTestId("pantry-section");
+  const held = panel.getByTestId("pantry-section");
 
-  await expect(stocked).toContainText("In your pantry");
-  await expect(stocked.getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
+  await expect(held).toContainText("In your pantry");
+  await expect(held.getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
   await expect(panel.getByRole("checkbox", { name: "chicken breast" })).toBeChecked();
   await expect(panel.getByText("1 of 1 selected")).toBeVisible();
 
@@ -109,7 +109,7 @@ test("a stocked ingredient is shown apart and left off the list", async () => {
   await expect.poll(readGroceryNames).toEqual(["chicken breast"]);
 });
 
-test("a stocked ingredient ticked is added anyway", async () => {
+test("an ingredient in the Pantry, ticked, is added anyway", async () => {
   const panel = await openAddToGroceries();
 
   await tick(panel, "chicken breast");

@@ -82,7 +82,7 @@ test("captures the Pantry panel with a few names in it", async () => {
   await expect(page.getByRole("dialog")).toBeHidden();
 });
 
-test("captures the add-to-groceries panel with the stocked lines apart", async () => {
+test("captures the add-to-groceries panel with the Pantry's lines apart", async () => {
   await page.goto(`/recipes/${recipeId}`);
   await page.getByRole("button", { name: "Add", exact: true }).first().click();
 

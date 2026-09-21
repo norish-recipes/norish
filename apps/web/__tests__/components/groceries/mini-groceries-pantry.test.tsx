@@ -11,7 +11,7 @@ import "@testing-library/jest-dom";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 
-const createGroceriesFromData = vi.fn(async () => undefined);
+const createGroceriesFromData = vi.fn(async (_lines: { name: string }[]) => undefined);
 let pantry: PantryIngredientDto[] = [];
 let pantryLoading = false;
 
@@ -114,7 +114,9 @@ function stocked(name: string, normalizedName: string): PantryIngredientDto {
   };
 }
 
-const names = (payload: { name: string }[]) => payload.map((line) => line.name);
+/** The names the panel asked for, in the order it asked. */
+const addedNames = () =>
+  (createGroceriesFromData.mock.calls[0]?.[0] ?? []).map((line) => line.name);
 
 describe("MiniGroceries with a Pantry", () => {
   beforeEach(() => {
@@ -140,7 +142,7 @@ describe("MiniGroceries with a Pantry", () => {
       fireEvent.click(screen.getByTestId("action-add"));
     });
 
-    expect(names(createGroceriesFromData.mock.calls[0]![0] as never)).toEqual(["chicken breast"]);
+    expect(addedNames()).toEqual(["chicken breast"]);
   });
 
   it("unticks a line the Pantry claims while the panel is open", async () => {
@@ -161,10 +163,7 @@ describe("MiniGroceries with a Pantry", () => {
       fireEvent.click(screen.getByTestId("action-add"));
     });
 
-    expect(names(createGroceriesFromData.mock.calls[0]![0] as never)).toEqual([
-      "chicken breast",
-      "Salt",
-    ]);
+    expect(addedNames()).toEqual(["chicken breast", "Salt"]);
   });
 
   it("ticks a line the Pantry gives back while the panel is open", async () => {
@@ -196,10 +195,7 @@ describe("MiniGroceries with a Pantry", () => {
     });
 
     // In the recipe's own order, stocked or not.
-    expect(names(createGroceriesFromData.mock.calls[0]![0] as never)).toEqual([
-      "olive oil",
-      "chicken breast",
-    ]);
+    expect(addedNames()).toEqual(["olive oil", "chicken breast"]);
   });
 
   it("ticks and unticks every stocked line with the pantry's own select-all, and nothing else", () => {
