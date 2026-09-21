@@ -10,6 +10,7 @@ import {
   listPantryIngredientsByUserIds,
 } from "@norish/db/repositories/pantry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { pantry } from "@norish/shared-server/realtime/pantry";
 import {
   PantryIngredientAddSchema,
   PantryIngredientRemoveSchema,
@@ -18,7 +19,6 @@ import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { pantryEmitter } from "./emitter";
 
 /** The household's Pantry, every member's items in one round trip. */
 const list = authedProcedure.query(async ({ ctx }): Promise<PantryIngredientDto[]> => {
@@ -47,7 +47,7 @@ const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ c
   });
 
   log.info({ userId: ctx.user.id, pantryIngredientId: item.id }, "Pantry ingredient added");
-  pantryEmitter.emitToHousehold(ctx.householdKey, "added", { item });
+  void pantry.publish("added", { item }, { householdKey: ctx.householdKey });
 
   return item.id;
 });
@@ -66,7 +66,7 @@ const remove = authedProcedure
 
     if (removed) {
       log.info({ userId: ctx.user.id, pantryIngredientId: input.id }, "Pantry ingredient removed");
-      pantryEmitter.emitToHousehold(ctx.householdKey, "removed", { itemId: input.id });
+      void pantry.publish("removed", { itemId: input.id }, { householdKey: ctx.householdKey });
     }
 
     return input.id;

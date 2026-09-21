@@ -15,6 +15,7 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { assertHouseholdAccess } from "../mocks/permissions";
+import { pantry } from "../mocks/realtime/pantry";
 
 const pantryRepository = vi.hoisted(() => ({
   createPantryIngredient: vi.fn(),
@@ -24,11 +25,9 @@ const pantryRepository = vi.hoisted(() => ({
   listPantryIngredientsByUserIds: vi.fn(),
 }));
 
-const pantryEmitter = vi.hoisted(() => ({ emitToHousehold: vi.fn() }));
-
 vi.mock("@norish/db/repositories/pantry", () => pantryRepository);
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/pantry/emitter", () => ({ pantryEmitter }));
+vi.mock("@norish/shared-server/realtime/pantry", () => import("../mocks/realtime/pantry"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -76,9 +75,11 @@ describe("the Pantry", () => {
       userId: ctx.user.id,
       name: "Olive Oil",
     });
-    expect(pantryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "added", {
-      item: expect.objectContaining({ id: OLIVE, name: "Olive Oil" }),
-    });
+    expect(pantry.publish).toHaveBeenCalledWith(
+      "added",
+      { item: expect.objectContaining({ id: OLIVE, name: "Olive Oil" }) },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("mints an id when the client sent none", async () => {
@@ -93,7 +94,7 @@ describe("the Pantry", () => {
 
     await expect(caller.add({ id: OLIVE, name: " olive  OIL! " })).resolves.toBe(EXISTING);
     expect(pantryRepository.createPantryIngredient).not.toHaveBeenCalled();
-    expect(pantryEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(pantry.publish).not.toHaveBeenCalled();
   });
 
   it("refuses a name that folds to nothing", async () => {
@@ -106,16 +107,18 @@ describe("the Pantry", () => {
 
     expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, ctx.user.id);
     expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE);
-    expect(pantryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "removed", {
-      itemId: OLIVE,
-    });
+    expect(pantry.publish).toHaveBeenCalledWith(
+      "removed",
+      { itemId: OLIVE },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("announces nothing for an item already gone", async () => {
     pantryRepository.deletePantryIngredient.mockResolvedValue(false);
 
     await caller.remove({ id: OLIVE });
-    expect(pantryEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(pantry.publish).not.toHaveBeenCalled();
   });
 
   it("refuses to remove another household's item, or one that does not exist", async () => {
@@ -125,6 +128,6 @@ describe("the Pantry", () => {
     pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(null);
     await expect(caller.remove({ id: OLIVE })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(pantryRepository.deletePantryIngredient).not.toHaveBeenCalled();
-    expect(pantryEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(pantry.publish).not.toHaveBeenCalled();
   });
 });
