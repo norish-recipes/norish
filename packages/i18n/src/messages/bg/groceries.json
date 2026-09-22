@@ -123,6 +123,7 @@
     "editPlaceholder": "напр. мляко всяка седмица",
     "servings": "Порции",
     "selectedCount": "Избрани {selected} от {total}",
+    "pantryUnavailable": "Килерът не можа да бъде прочетен, затова още нищо не е отметнато. Отметнете това, което трябва да купите.",
     "loadingIngredients": "Зареждане на съставките...",
     "noIngredients": "Няма съставки.",
     "addSelectedToGroceries": "Добави в продуктите",

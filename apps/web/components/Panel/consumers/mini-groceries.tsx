@@ -160,7 +160,11 @@ export default function MiniGroceries({
   const knownInPantryIds = useRef<Set<string>>(new Set());
   // What the household already has: a line whose name (as edited here) is in
   // the Pantry is shown apart and left off the list unless it is ticked.
-  const { items: pantryIngredients, isLoading: pantryLoading } = usePantryQuery();
+  const {
+    items: pantryIngredients,
+    isLoading: pantryLoading,
+    isUnavailable: pantryUnavailable,
+  } = usePantryQuery();
 
   const isInPantry = useCallback(
     (item: GroceryIngredient) =>
@@ -192,8 +196,9 @@ export default function MiniGroceries({
   useEffect(() => {
     // Selection starts from what is to buy, so the Pantry has to have
     // answered before the first pick: a line in the Pantry is never
-    // pre-ticked.
-    if (pantryLoading) return;
+    // pre-ticked. A Pantry that cannot be read has not answered either, so
+    // nothing is ticked: the person ticks what they need, and is told why.
+    if (pantryLoading || pantryUnavailable) return;
     const currentIds = scaledIngredients.map((i) => i.id).filter(Boolean);
     const toBuyIds = new Set(toBuy.map((item) => item.id));
     const inPantryIds = new Set(inPantry.map((item) => item.id));
@@ -231,7 +236,7 @@ export default function MiniGroceries({
 
       return Array.from(next);
     });
-  }, [scaledIngredients, toBuy, inPantry, pantryLoading]);
+  }, [scaledIngredients, toBuy, inPantry, pantryLoading, pantryUnavailable]);
   /* Count the visible rows that are selected rather than `selectedIds.length`,
      so an id left behind by an ingredient that has since disappeared cannot
      make the list look fully selected. The count, and "select all", are about
@@ -411,6 +416,12 @@ export default function MiniGroceries({
             </div>
 
             <Separator className="bg-surface-tertiary/40 mb-2" />
+
+            {pantryUnavailable && (
+              <p className="text-muted mb-2 px-2 text-xs" data-testid="pantry-unavailable">
+                {t("pantryUnavailable")}
+              </p>
+            )}
 
             {scaledIngredients.length === 0 ? (
               <div className="text-muted flex flex-1 items-center justify-center text-base">

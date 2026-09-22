@@ -123,6 +123,7 @@
     "editPlaceholder": "z.B. Milch jede Woche",
     "servings": "Portionen",
     "selectedCount": "{selected} von {total} ausgewählt",
+    "pantryUnavailable": "Ihre Vorratskammer konnte nicht gelesen werden, daher ist noch nichts angehakt. Haken Sie an, was Sie kaufen müssen.",
     "loadingIngredients": "Zutaten werden geladen...",
     "noIngredients": "Keine Zutaten.",
     "addSelectedToGroceries": "Zur Einkaufsliste hinzufügen",

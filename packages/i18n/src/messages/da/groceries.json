@@ -123,6 +123,7 @@
     "editPlaceholder": "f.eks. mælk hver uge",
     "servings": "Portioner",
     "selectedCount": "{selected} af {total} valgt",
+    "pantryUnavailable": "Dit spisekammer kunne ikke læses, så intet er markeret endnu. Markér det, du skal købe.",
     "loadingIngredients": "Indlæser ingredienser...",
     "noIngredients": "Ingen ingredienser.",
     "addSelectedToGroceries": "Tilføj til indkøbsliste",

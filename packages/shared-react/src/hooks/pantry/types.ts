@@ -13,6 +13,11 @@ export type PantryQueryResult = {
   items: PantryIngredientDto[];
   error: unknown;
   isLoading: boolean;
+  /**
+   * The Pantry could not be read and no earlier answer is cached: nothing is
+   * known, which an empty `items` alone would misreport as nothing at home.
+   */
+  isUnavailable: boolean;
   queryKey: QueryKey;
   setPantryData: (updater: (prev: PantryData | undefined) => PantryData | undefined) => void;
   invalidate: () => void;

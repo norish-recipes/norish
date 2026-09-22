@@ -123,6 +123,7 @@
     "editPlaceholder": "es. latte ogni settimana",
     "servings": "Porzioni",
     "selectedCount": "{selected} di {total} selezionati",
+    "pantryUnavailable": "Non è stato possibile leggere la dispensa, quindi non c'è ancora nulla di selezionato. Seleziona ciò che devi comprare.",
     "loadingIngredients": "Caricamento ingredienti...",
     "noIngredients": "Nessun ingrediente.",
     "addSelectedToGroceries": "Aggiungi alla spesa",

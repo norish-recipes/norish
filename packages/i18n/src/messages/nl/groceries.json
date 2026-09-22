@@ -123,6 +123,7 @@
     "editPlaceholder": "bijv. melk elke week",
     "servings": "Porties",
     "selectedCount": "{selected} van {total} geselecteerd",
+    "pantryUnavailable": "Je voorraadkast kon niet worden gelezen, dus er is nog niets aangevinkt. Vink aan wat je moet kopen.",
     "loadingIngredients": "Ingrediënten laden...",
     "noIngredients": "Geen ingrediënten.",
     "addSelectedToGroceries": "Voeg toe aan boodschappen",

@@ -62,6 +62,17 @@ function Probe({
   );
 }
 
+/** Whether the hook says nothing is known, as the add-to-groceries panel asks. */
+function StatusProbe({
+  usePantryQuery,
+}: {
+  usePantryQuery: ReturnType<typeof createUsePantryQuery>;
+}) {
+  const { isUnavailable } = usePantryQuery();
+
+  return <span data-testid="pantry-status">{isUnavailable ? "unavailable" : "known"}</span>;
+}
+
 describe("mergePantryAdded / mergePantryRemoved", () => {
   it("adds an item once, however often it is announced", () => {
     const once = mergePantryAdded([], OLIVE);
@@ -110,5 +121,49 @@ describe("usePantryQuery", () => {
 
     await waitFor(() => expect(screen.getAllByTestId("pantry")[0]?.textContent).toBe("Olive Oil"));
     expect(screen.getAllByTestId("pantry")[1]?.textContent).toBe("not in the pantry");
+  });
+
+  it("says nothing is known when the Pantry cannot be read and nothing is cached", async () => {
+    const usePantryQuery = createUsePantryQuery({
+      useTRPC: () =>
+        fakeTrpc(() => {
+          throw new Error("pantry down");
+        }),
+    });
+
+    render(
+      <QueryClientProvider client={client}>
+        <StatusProbe usePantryQuery={usePantryQuery} />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("pantry-status").textContent).toBe("unavailable")
+    );
+  });
+
+  it("knows a Pantry it has read, and still knows it when a later read fails", async () => {
+    let down = false;
+    const usePantryQuery = createUsePantryQuery({
+      useTRPC: () =>
+        fakeTrpc(() => {
+          if (down) throw new Error("pantry down");
+
+          return [OLIVE];
+        }),
+    });
+
+    render(
+      <QueryClientProvider client={client}>
+        <StatusProbe usePantryQuery={usePantryQuery} />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId("pantry-status").textContent).toBe("known"));
+
+    down = true;
+    await client.refetchQueries({ queryKey: ["pantry", "list"] });
+
+    expect(screen.getByTestId("pantry-status").textContent).toBe("known");
   });
 });

@@ -123,6 +123,7 @@
     "editPlaceholder": "e.g., milk every week",
     "servings": "Servings",
     "selectedCount": "{selected} of {total} selected",
+    "pantryUnavailable": "Your pantry could not be read, so nothing is ticked yet. Tick what you need to buy.",
     "loadingIngredients": "Loading ingredients...",
     "noIngredients": "No ingredients.",
     "addSelectedToGroceries": "Add to groceries",

@@ -123,6 +123,7 @@
     "editPlaceholder": "f.eks. melk hver uke",
     "servings": "Porsjoner",
     "selectedCount": "{selected} av {total} valgt",
+    "pantryUnavailable": "Spiskammeret kunne ikke leses, så ingenting er huket av ennå. Huk av det du må kjøpe.",
     "loadingIngredients": "Laster ingredienser...",
     "noIngredients": "Ingen ingredienser.",
     "addSelectedToGroceries": "Legg til i handleliste",

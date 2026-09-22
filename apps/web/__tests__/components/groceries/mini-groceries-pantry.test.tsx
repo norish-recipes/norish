@@ -14,6 +14,7 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 const createGroceriesFromData = vi.fn(async (_lines: { name: string }[]) => undefined);
 let pantry: PantryIngredientDto[] = [];
 let pantryLoading = false;
+let pantryUnavailable = false;
 
 const INGREDIENTS = [
   {
@@ -49,7 +50,11 @@ vi.mock("@/hooks/groceries", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData }),
 }));
 vi.mock("@/hooks/pantry", () => ({
-  usePantryQuery: () => ({ items: pantry, isLoading: pantryLoading }),
+  usePantryQuery: () => ({
+    items: pantry,
+    isLoading: pantryLoading,
+    isUnavailable: pantryUnavailable,
+  }),
 }));
 vi.mock("@/hooks/recipes/use-recipe-ingredients", () => ({
   useRecipeIngredients: () => ({
@@ -123,6 +128,7 @@ describe("MiniGroceries with a Pantry", () => {
     vi.clearAllMocks();
     pantry = [pantryIngredient("Olive oil", "olive oil"), pantryIngredient("salt", "salt")];
     pantryLoading = false;
+    pantryUnavailable = false;
   });
 
   it("shows what the household has apart, unticked, and leaves it off the list", async () => {
@@ -131,7 +137,6 @@ describe("MiniGroceries with a Pantry", () => {
     const section = screen.getByTestId("pantry-section");
 
     expect(within(section).getByText("inPantry")).toBeInTheDocument();
-    expect(screen.queryByText("inPantryHint")).toBeNull();
     expect(screen.getByTestId("pantry-separator")).toBeInTheDocument();
     expect(within(section).getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
     expect(within(section).getByRole("checkbox", { name: "Salt" })).not.toBeChecked();
@@ -214,6 +219,45 @@ describe("MiniGroceries with a Pantry", () => {
     expect(screen.getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Salt" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "chicken breast" })).toBeChecked();
+  });
+
+  it("ticks nothing until the Pantry has answered", () => {
+    pantryLoading = true;
+    const view = render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(screen.getAllByRole("checkbox").some((box) => (box as HTMLInputElement).checked)).toBe(
+      false
+    );
+    expect(screen.getByTestId("action-add")).toBeDisabled();
+
+    pantryLoading = false;
+    view.rerender(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(screen.getByRole("checkbox", { name: "chicken breast" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
+  });
+
+  it("ticks nothing, and says why, when the Pantry cannot be read", async () => {
+    pantry = [];
+    pantryUnavailable = true;
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(screen.getByTestId("pantry-unavailable")).toHaveTextContent("pantryUnavailable");
+    expect(screen.queryByTestId("pantry-section")).toBeNull();
+    expect(screen.getAllByRole("checkbox").some((box) => (box as HTMLInputElement).checked)).toBe(
+      false
+    );
+    expect(screen.getByTestId("action-add")).toBeDisabled();
+
+    // What is needed is one tick away, and only what was ticked is added.
+    fireEvent.click(screen.getByRole("checkbox", { name: "chicken breast" }));
+    expect(screen.getByTestId("action-add")).toBeEnabled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("action-add"));
+    });
+
+    expect(addedNames()).toEqual(["chicken breast"]);
   });
 
   it("shows no pantry section, and ticks everything, when the Pantry has none of it", () => {

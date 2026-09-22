@@ -123,6 +123,7 @@
     "editPlaceholder": "예: 매주 우유",
     "servings": "인분",
     "selectedCount": "{total}개 중 {selected}개 선택됨",
+    "pantryUnavailable": "팬트리를 읽을 수 없어 아직 아무것도 선택되지 않았습니다. 구매할 재료를 선택하세요.",
     "loadingIngredients": "재료 불러오는 중...",
     "noIngredients": "재료가 없습니다.",
     "addSelectedToGroceries": "장보기에 추가",

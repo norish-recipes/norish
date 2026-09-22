@@ -123,6 +123,7 @@
     "editPlaceholder": "ex.: leite toda semana",
     "servings": "Porções",
     "selectedCount": "{selected} de {total} selecionados",
+    "pantryUnavailable": "Não foi possível ler sua despensa, então nada está marcado ainda. Marque o que você precisa comprar.",
     "loadingIngredients": "Carregando ingredientes...",
     "noIngredients": "Nenhum ingrediente.",
     "addSelectedToGroceries": "Adicionar à lista de compras",

@@ -123,6 +123,7 @@
     "editPlaceholder": "np. mleko co tydzień",
     "servings": "Porcje",
     "selectedCount": "Zaznaczono {selected} z {total}",
+    "pantryUnavailable": "Nie udało się odczytać spiżarni, więc nic nie jest jeszcze zaznaczone. Zaznacz to, co musisz kupić.",
     "loadingIngredients": "Ładowanie składników...",
     "noIngredients": "Brak składników.",
     "addSelectedToGroceries": "Dodaj do zakupów",

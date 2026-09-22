@@ -123,6 +123,7 @@
     "editPlaceholder": "например, молоко каждую неделю",
     "servings": "Порции",
     "selectedCount": "Выбрано {selected} из {total}",
+    "pantryUnavailable": "Не удалось прочитать кладовую, поэтому пока ничего не отмечено. Отметьте то, что нужно купить.",
     "loadingIngredients": "Загрузка ингредиентов...",
     "noIngredients": "Нет ингредиентов.",
     "addSelectedToGroceries": "Добавить в список покупок",

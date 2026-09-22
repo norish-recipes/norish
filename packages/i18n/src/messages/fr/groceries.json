@@ -123,6 +123,7 @@
     "editPlaceholder": "ex. : lait toutes les semaines",
     "servings": "Portions",
     "selectedCount": "{selected} sur {total} sélectionnés",
+    "pantryUnavailable": "Votre garde-manger n'a pas pu être lu, donc rien n'est encore coché. Cochez ce que vous devez acheter.",
     "loadingIngredients": "Chargement des ingrédients…",
     "noIngredients": "Aucun ingrédient.",
     "addSelectedToGroceries": "Ajouter aux courses",

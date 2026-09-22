@@ -9,6 +9,9 @@ export function createUsePantryQuery({ useTRPC }: CreatePantryHooksOptions) {
     const queryKey = trpc.pantry.list.queryKey();
     const { data, error, isLoading } = useQuery(trpc.pantry.list.queryOptions());
     const items = data ?? [];
+    // A failed read with nothing cached is the one state a screen cannot tell
+    // from an empty Pantry by the items alone.
+    const isUnavailable = error != null && data === undefined;
 
     const setPantryData = (updater: (prev: PantryData | undefined) => PantryData | undefined) => {
       queryClient.setQueryData<PantryData>(queryKey, updater);
@@ -18,6 +21,6 @@ export function createUsePantryQuery({ useTRPC }: CreatePantryHooksOptions) {
       queryClient.invalidateQueries({ queryKey });
     };
 
-    return { items, error, isLoading, queryKey, setPantryData, invalidate };
+    return { items, error, isLoading, isUnavailable, queryKey, setPantryData, invalidate };
   };
 }
