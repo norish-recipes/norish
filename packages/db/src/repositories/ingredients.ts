@@ -2,6 +2,7 @@ import { asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { IngredientDto } from "@norish/shared/contracts/dto/ingredient";
 import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 import type {
@@ -27,6 +28,9 @@ import {
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
+
+/** The connection a caller is already inside, or the shared one. */
+type Db = typeof db | DbTransaction;
 
 const IngredientArraySchema = z.array(IngredientSelectBaseSchema);
 
@@ -313,7 +317,8 @@ export async function listIngredientNamesMissingNormalizedName(
  * are left alone, so two servers backfilling at once cannot undo each other.
  */
 export async function setIngredientNormalizedNames(
-  rows: ReadonlyArray<{ id: string; normalizedName: string }>
+  rows: ReadonlyArray<{ id: string; normalizedName: string }>,
+  tx: Db = db
 ): Promise<void> {
   if (rows.length === 0) return;
 
@@ -326,7 +331,7 @@ export async function setIngredientNormalizedNames(
     sql`, `
   );
 
-  await db.execute(sql`
+  await tx.execute(sql`
     UPDATE ${ingredients}
     SET normalized_name = folded.normalized_name
     FROM unnest(ARRAY[${ids}]::uuid[], ARRAY[${folded}]::text[]) AS folded(id, normalized_name)
@@ -343,13 +348,14 @@ export async function setIngredientNormalizedNames(
  * else: on mint, in this repair, and in the batch the backfill drives.
  */
 export async function ensureIngredientNameFolded(
-  ingredient: IngredientDto
+  ingredient: IngredientDto,
+  tx: Db = db
 ): Promise<IngredientDto> {
   if (ingredient.normalizedName !== null) return ingredient;
 
   const normalizedName = normalizeGroceryName(ingredient.name);
 
-  await setIngredientNormalizedNames([{ id: ingredient.id, normalizedName }]);
+  await setIngredientNormalizedNames([{ id: ingredient.id, normalizedName }], tx);
 
   return { ...ingredient, normalizedName };
 }

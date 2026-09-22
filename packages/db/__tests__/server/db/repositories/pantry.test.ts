@@ -135,6 +135,28 @@ describe("pantry ingredients", () => {
     expect(item.id).toBe(OLIVE);
   });
 
+  it("gives two members adding one name at the same moment one item between them", async () => {
+    const housemate = await createTestUser();
+    const userIds = [userId, housemate.id];
+
+    // Two connections open and idle first, so neither add spends the other's
+    // whole transaction waiting for one. Then neither can see the other's row
+    // when it looks; the lock makes the second wait for the first, and then
+    // find what it wrote.
+    await Promise.all([
+      listPantryIngredientsByUserIds(userIds),
+      listPantryIngredientsByUserIds(userIds),
+    ]);
+    const [mine, theirs] = await Promise.all([
+      addPantryIngredient(OLIVE, { userId, userIds, name: "Olive Oil" }),
+      addPantryIngredient(SALT, { userId: housemate.id, userIds, name: "olive oil!" }),
+    ]);
+
+    expect([mine.created, theirs.created].sort()).toEqual([false, true]);
+    expect(mine.item.id).toBe(theirs.item.id);
+    await expect(listPantryIngredientsByUserIds(userIds)).resolves.toHaveLength(1);
+  });
+
   it("refuses a name that folds to nothing", async () => {
     await expect(
       addPantryIngredient(OLIVE, { userId, userIds: [userId], name: "!?" })

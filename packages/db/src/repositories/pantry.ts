@@ -2,15 +2,19 @@ import type { SQL } from "drizzle-orm";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
 import {
   ensureIngredientNameFolded,
-  getOrCreateIngredientByName,
+  getOrCreateManyIngredientsTx,
 } from "@norish/db/repositories/ingredients";
 import { ingredients, pantryIngredients } from "@norish/db/schema";
 import { PantryIngredientSelectSchema } from "@norish/shared/contracts/zod";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
+
+/** The connection a caller is already inside, or the shared one. */
+type Db = typeof db | DbTransaction;
 
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
@@ -35,8 +39,8 @@ function parsePantryIngredients(rows: unknown[]): PantryIngredientDto[] {
  * Ingredient holds no name of its own, so the Ingredient Name is joined the
  * way a recipe line joins its own; whatever condition follows is the reader's.
  */
-function selectPantry() {
-  return db
+function selectPantry(tx: Db = db) {
+  return tx
     .select({
       id: pantryIngredients.id,
       userId: pantryIngredients.userId,
@@ -51,9 +55,10 @@ function selectPantry() {
 
 /** The one Pantry Ingredient a condition names, or null where it names none. */
 async function findOnePantryIngredient(
-  where: SQL | undefined
+  where: SQL | undefined,
+  tx: Db = db
 ): Promise<PantryIngredientDto | null> {
-  const [row] = await selectPantry().where(where).limit(1);
+  const [row] = await selectPantry(tx).where(where).limit(1);
 
   if (!row) return null;
 
@@ -87,12 +92,14 @@ export async function listPantryIngredientsByUserIds(
  */
 export async function findPantryIngredientInHousehold(
   userIds: string[],
-  normalizedName: string
+  normalizedName: string,
+  tx: Db = db
 ): Promise<PantryIngredientDto | null> {
   if (userIds.length === 0 || !normalizedName) return null;
 
   return findOnePantryIngredient(
-    and(inArray(pantryIngredients.userId, userIds), eq(ingredients.normalizedName, normalizedName))
+    and(inArray(pantryIngredients.userId, userIds), eq(ingredients.normalizedName, normalizedName)),
+    tx
   );
 }
 
@@ -100,8 +107,11 @@ export async function findPantryIngredientInHousehold(
  * Put a name in the Pantry, or answer with the item the household already
  * has by that folded name — `created` says which, and only a create is worth
  * announcing. The rule that a name is in a Pantry once lives here and only
- * here: the caller asks to add and is told what the Pantry holds, rather than
- * looking first and racing its own answer.
+ * here, and it holds under concurrency: the check and the write are one
+ * transaction under an advisory lock on the folded name, so two members
+ * adding names that fold alike at the same moment get one row between them,
+ * the second waiting for the first and then finding what it wrote. Nothing
+ * else takes that lock, and it goes with the transaction.
  *
  * The name is the Ingredient Name it points at, minted here where Norish has
  * not seen it — the same get-or-create editing a recipe makes, because a
@@ -118,31 +128,41 @@ export async function addPantryIngredient(
 
   if (!normalizedName) throw new Error("A pantry ingredient needs a name");
 
-  const held = await findPantryIngredientInHousehold(input.userIds, normalizedName);
+  return await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`pantry:${normalizedName}`}::text))`
+    );
 
-  if (held) return { item: held, created: false };
+    const held = await findPantryIngredientInHousehold(input.userIds, normalizedName, tx);
 
-  const ingredient = await ensureIngredientNameFolded(
-    await getOrCreateIngredientByName(input.name.trim())
-  );
+    if (held) return { item: held, created: false };
 
-  const [row] = await db
-    .insert(pantryIngredients)
-    .values({ id, userId: input.userId, ingredientId: ingredient.id })
-    .returning({ id: pantryIngredients.id });
+    const [minted] = await getOrCreateManyIngredientsTx(tx, [input.name.trim()]);
 
-  if (!row) throw new Error("Failed to create pantry ingredient");
+    if (!minted) throw new Error("Failed to create pantry ingredient");
 
-  const item = await findPantryIngredient(row.id);
+    const ingredient = await ensureIngredientNameFolded(minted, tx);
+    const [row] = await tx
+      .insert(pantryIngredients)
+      .values({ id, userId: input.userId, ingredientId: ingredient.id })
+      .returning({ id: pantryIngredients.id });
 
-  if (!item) throw new Error("Failed to create pantry ingredient");
+    if (!row) throw new Error("Failed to create pantry ingredient");
 
-  return { item, created: true };
+    const item = await findPantryIngredient(row.id, tx);
+
+    if (!item) throw new Error("Failed to create pantry ingredient");
+
+    return { item, created: true };
+  });
 }
 
 /** One Pantry Ingredient with its name, however it was reached. */
-export async function findPantryIngredient(id: string): Promise<PantryIngredientDto | null> {
-  return findOnePantryIngredient(eq(pantryIngredients.id, id));
+export async function findPantryIngredient(
+  id: string,
+  tx: Db = db
+): Promise<PantryIngredientDto | null> {
+  return findOnePantryIngredient(eq(pantryIngredients.id, id), tx);
 }
 
 /** Whose Pantry Ingredient this is: the authorization primitive, as for a Store. */
