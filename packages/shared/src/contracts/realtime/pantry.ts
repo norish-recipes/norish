@@ -6,7 +6,8 @@
 
 import { z } from "zod";
 
-import { PantryIngredientSelectSchema } from "../zod/pantry";
+import { PantryIngredientSelectSchema } from "@norish/shared/contracts/zod/pantry";
+
 import { defineRealtimeCatalogue } from "./catalogue";
 
 export const pantryRealtime = defineRealtimeCatalogue("pantry", {

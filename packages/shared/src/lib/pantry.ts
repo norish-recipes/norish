@@ -1,5 +1,5 @@
-import type { PantryIngredientDto } from "../contracts/dto/pantry";
-import { normalizeGroceryName } from "./normalized-name";
+import type { PantryIngredientDto } from "@norish/shared/contracts";
+import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 /**
  * The Pantry Ingredient a name is, or null where the household has none by that
