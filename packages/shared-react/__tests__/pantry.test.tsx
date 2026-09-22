@@ -56,7 +56,9 @@ function Probe({
   const { items } = usePantryQuery();
 
   return (
-    <span data-testid="pantry">{pantryIngredientFor(items, name)?.name ?? "not stocked"}</span>
+    <span data-testid="pantry">
+      {pantryIngredientFor(items, name)?.name ?? "not in the pantry"}
+    </span>
   );
 }
 
@@ -96,7 +98,7 @@ describe("usePantryQuery", () => {
     client.clear();
   });
 
-  it("hands the Pantry to whoever asks whether a name is stocked", async () => {
+  it("hands the Pantry to whoever asks whether a name is in it", async () => {
     const usePantryQuery = createUsePantryQuery({ useTRPC: () => fakeTrpc(() => [OLIVE]) });
 
     render(
@@ -107,6 +109,6 @@ describe("usePantryQuery", () => {
     );
 
     await waitFor(() => expect(screen.getAllByTestId("pantry")[0]?.textContent).toBe("Olive Oil"));
-    expect(screen.getAllByTestId("pantry")[1]?.textContent).toBe("not stocked");
+    expect(screen.getAllByTestId("pantry")[1]?.textContent).toBe("not in the pantry");
   });
 });

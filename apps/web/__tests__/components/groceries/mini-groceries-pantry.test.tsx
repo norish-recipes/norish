@@ -103,7 +103,7 @@ vi.mock("@/components/groceries/grocery-checkbox", () => ({
   isCheckboxEvent: (e: any) => e.target?.type === "checkbox",
 }));
 
-function stocked(name: string, normalizedName: string): PantryIngredientDto {
+function pantryIngredient(name: string, normalizedName: string): PantryIngredientDto {
   return {
     id: `p-${normalizedName}`,
     userId: "u1",
@@ -121,7 +121,7 @@ const addedNames = () =>
 describe("MiniGroceries with a Pantry", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    pantry = [stocked("Olive oil", "olive oil"), stocked("salt", "salt")];
+    pantry = [pantryIngredient("Olive oil", "olive oil"), pantryIngredient("salt", "salt")];
     pantryLoading = false;
   });
 
@@ -152,7 +152,7 @@ describe("MiniGroceries with a Pantry", () => {
     expect(screen.getByRole("checkbox", { name: "olive oil" })).toBeChecked();
 
     // A housemate puts olive oil in the Pantry while this panel is open.
-    pantry = [stocked("Olive oil", "olive oil")];
+    pantry = [pantryIngredient("Olive oil", "olive oil")];
     view.rerender(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     const section = screen.getByTestId("pantry-section");
@@ -172,14 +172,14 @@ describe("MiniGroceries with a Pantry", () => {
     expect(screen.getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
 
     // A housemate runs out and takes olive oil back out of the Pantry.
-    pantry = [stocked("salt", "salt")];
+    pantry = [pantryIngredient("salt", "salt")];
     view.rerender(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     expect(screen.getByRole("checkbox", { name: "olive oil" })).toBeChecked();
     expect(screen.getByText("selectedCount 2 2")).toBeInTheDocument();
   });
 
-  it("adds a stocked line once it is ticked, and select-all leaves the Pantry alone", async () => {
+  it("adds a line in the Pantry once it is ticked, and select-all leaves the Pantry alone", async () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     fireEvent.click(screen.getByRole("checkbox", { name: "olive oil" }));
@@ -194,11 +194,11 @@ describe("MiniGroceries with a Pantry", () => {
       fireEvent.click(screen.getByTestId("action-add"));
     });
 
-    // In the recipe's own order, stocked or not.
+    // In the recipe's own order, in the Pantry or not.
     expect(addedNames()).toEqual(["olive oil", "chicken breast"]);
   });
 
-  it("ticks and unticks every stocked line with the pantry's own select-all, and nothing else", () => {
+  it("ticks and unticks every line in the Pantry with its own select-all, and nothing else", () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     const pantryToggle = screen.getByTestId("toggle-all-pantry");
@@ -228,11 +228,11 @@ describe("MiniGroceries with a Pantry", () => {
     expect(screen.getByText("selectedCount 3 3")).toBeInTheDocument();
   });
 
-  it("keeps the footer add disabled until something, stocked or not, is ticked", () => {
+  it("keeps the footer add disabled until something, in the Pantry or not, is ticked", () => {
     pantry = [
-      stocked("olive oil", "olive oil"),
-      stocked("chicken breast", "chicken breast"),
-      stocked("salt", "salt"),
+      pantryIngredient("olive oil", "olive oil"),
+      pantryIngredient("chicken breast", "chicken breast"),
+      pantryIngredient("salt", "salt"),
     ];
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 

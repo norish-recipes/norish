@@ -68,7 +68,7 @@ export function seedRecipeWithIngredients(name: string, lines: string[]): Promis
 
 /**
  * The Pantry as the database has it: every folded name, in order. A Pantry
- * Item holds no name of its own, so this reads the Ingredient Name it points
+ * Ingredient holds no name of its own, so this reads the Ingredient Name it points
  * at, the same join the repository makes.
  */
 export function readPantryNames(): Promise<string[]> {

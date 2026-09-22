@@ -4,7 +4,14 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
 
 function item(name: string, normalizedName: string): PantryIngredientDto {
-  return { id: `id-${normalizedName}`, userId: "u1", name, normalizedName, version: 1 };
+  return {
+    id: `id-${normalizedName}`,
+    userId: "u1",
+    ingredientId: `i-${normalizedName}`,
+    name,
+    normalizedName,
+    version: 1,
+  };
 }
 
 const pantry = [
