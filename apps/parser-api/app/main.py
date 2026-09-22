@@ -290,7 +290,7 @@ def _run_scraper(html: str, url: str) -> tuple[Any, Literal["supported", "wild"]
     try:
         return scrape_html(html=html, org_url=url, best_image=True), "supported"
     except WebsiteNotImplementedError:
-        return scrape_html(html=html, org_url=url, wild_mode=True, best_image=True), "wild"
+        return scrape_html(html=html, org_url=url, supported_only=False, best_image=True), "wild"
 
 
 @app.get("/health")
