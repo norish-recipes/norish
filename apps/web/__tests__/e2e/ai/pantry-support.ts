@@ -1,18 +1,4 @@
-import { Client } from "pg";
-
-import { databaseUrl } from "./database";
-
-async function withDatabase<T>(run: (database: Client) => Promise<T>): Promise<T> {
-  const database = new Client({ connectionString: databaseUrl() });
-
-  await database.connect();
-
-  try {
-    return await run(database);
-  } finally {
-    await database.end();
-  }
-}
+import { withDatabase } from "./database";
 
 /**
  * The state this scenario reads: its recipes, its groceries and the Ingredient

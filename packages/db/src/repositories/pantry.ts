@@ -1,3 +1,4 @@
+import type { SQL } from "drizzle-orm";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
@@ -30,19 +31,33 @@ function parsePantryIngredients(rows: unknown[]): PantryIngredientDto[] {
 }
 
 /**
- * A Pantry Ingredient as the household reads it: the row, plus the name it points
- * at. A Pantry Ingredient holds no name of its own, so every read joins the
- * Ingredient Name — the same join a recipe line makes for its own name.
+ * Every read of the Pantry: the row, plus the name it points at. A Pantry
+ * Ingredient holds no name of its own, so the Ingredient Name is joined the
+ * way a recipe line joins its own; whatever condition follows is the reader's.
  */
-function pantryColumns() {
-  return {
-    id: pantryIngredients.id,
-    userId: pantryIngredients.userId,
-    ingredientId: pantryIngredients.ingredientId,
-    version: pantryIngredients.version,
-    name: ingredients.name,
-    normalizedName: FOLDED_NAME,
-  };
+function selectPantry() {
+  return db
+    .select({
+      id: pantryIngredients.id,
+      userId: pantryIngredients.userId,
+      ingredientId: pantryIngredients.ingredientId,
+      version: pantryIngredients.version,
+      name: ingredients.name,
+      normalizedName: FOLDED_NAME,
+    })
+    .from(pantryIngredients)
+    .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId));
+}
+
+/** The one Pantry Ingredient a condition names, or null where it names none. */
+async function findOnePantryIngredient(
+  where: SQL | undefined
+): Promise<PantryIngredientDto | null> {
+  const [row] = await selectPantry().where(where).limit(1);
+
+  if (!row) return null;
+
+  return parsePantryIngredients([row])[0] ?? null;
 }
 
 /**
@@ -54,10 +69,7 @@ export async function listPantryIngredientsByUserIds(
 ): Promise<PantryIngredientDto[]> {
   if (userIds.length === 0) return [];
 
-  const rows = await db
-    .select(pantryColumns())
-    .from(pantryIngredients)
-    .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId))
+  const rows = await selectPantry()
     .where(inArray(pantryIngredients.userId, userIds))
     .orderBy(asc(FOLDED_NAME), asc(pantryIngredients.createdAt));
 
@@ -79,21 +91,9 @@ export async function findPantryIngredientInHousehold(
 ): Promise<PantryIngredientDto | null> {
   if (userIds.length === 0 || !normalizedName) return null;
 
-  const [row] = await db
-    .select(pantryColumns())
-    .from(pantryIngredients)
-    .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId))
-    .where(
-      and(
-        inArray(pantryIngredients.userId, userIds),
-        eq(ingredients.normalizedName, normalizedName)
-      )
-    )
-    .limit(1);
-
-  if (!row) return null;
-
-  return parsePantryIngredients([row])[0] ?? null;
+  return findOnePantryIngredient(
+    and(inArray(pantryIngredients.userId, userIds), eq(ingredients.normalizedName, normalizedName))
+  );
 }
 
 /**
@@ -142,16 +142,7 @@ export async function addPantryIngredient(
 
 /** One Pantry Ingredient with its name, however it was reached. */
 export async function findPantryIngredient(id: string): Promise<PantryIngredientDto | null> {
-  const [row] = await db
-    .select(pantryColumns())
-    .from(pantryIngredients)
-    .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId))
-    .where(eq(pantryIngredients.id, id))
-    .limit(1);
-
-  if (!row) return null;
-
-  return parsePantryIngredients([row])[0] ?? null;
+  return findOnePantryIngredient(eq(pantryIngredients.id, id));
 }
 
 /** Whose Pantry Ingredient this is: the authorization primitive, as for a Store. */

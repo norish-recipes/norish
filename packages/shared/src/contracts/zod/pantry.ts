@@ -6,6 +6,9 @@ import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import { clientMintedId } from "./common";
 
+/** A Pantry Ingredient name is at most this long; the field that takes one stops there too. */
+export const PANTRY_INGREDIENT_NAME_MAX_LENGTH = 100;
+
 /**
  * A Pantry Ingredient's name: one to a hundred characters, with the whitespace
  * around it gone, and something left once it is folded — "!?" is punctuation,
@@ -15,7 +18,7 @@ export const PantryIngredientNameSchema = z
   .string()
   .trim()
   .min(1, "Pantry ingredient name is required")
-  .max(100)
+  .max(PANTRY_INGREDIENT_NAME_MAX_LENGTH)
   .refine((name) => normalizeGroceryName(name) !== "", "Pantry ingredient name is required");
 
 /**

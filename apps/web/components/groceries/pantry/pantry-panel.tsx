@@ -9,11 +9,9 @@ import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, FieldError, Input, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
-
-/** Pantry Ingredient names are one to a hundred characters; the field stops at the hundredth. */
-export const PANTRY_NAME_MAX = 100;
 
 interface PantryPanelProps {
   open: boolean;
@@ -93,7 +91,7 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
               ref={field}
               className={FIELD_CLASS}
               data-testid="pantry-name"
-              maxLength={PANTRY_NAME_MAX}
+              maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
               placeholder={t("namePlaceholder")}
               style={FIELD_STYLE}
               variant="secondary"

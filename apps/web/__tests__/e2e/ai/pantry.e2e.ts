@@ -9,7 +9,7 @@
  * server, database, Redis, tRPC and realtime are all in the path; nothing
  * outbound is.
  */
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { expect, test } from "./fixture";
 import {
@@ -43,7 +43,7 @@ test.afterAll(async () => {
 });
 
 /** The Pantry panel, opened from the groceries page's menu. */
-async function openPantry(): Promise<ReturnType<Page["getByRole"]>> {
+async function openPantry(): Promise<Locator> {
   await page.goto("/groceries");
   await page.getByRole("button", { name: "View Mode" }).click();
   await page.getByRole("menuitem", { name: "Pantry" }).click();
@@ -59,7 +59,7 @@ async function openPantry(): Promise<ReturnType<Page["getByRole"]>> {
  * Tick or untick a line by pressing its visible control: the checkbox's input
  * sits behind the control, which is what takes the pointer.
  */
-async function tick(panel: ReturnType<Page["getByRole"]>, name: string): Promise<void> {
+async function tick(panel: Locator, name: string): Promise<void> {
   await panel
     .getByRole("checkbox", { name })
     .locator("xpath=ancestor::*[@data-slot='checkbox'][1]")
@@ -67,7 +67,7 @@ async function tick(panel: ReturnType<Page["getByRole"]>, name: string): Promise
 }
 
 /** The recipe's add-to-groceries panel, opened from its ingredients card. */
-async function openAddToGroceries(): Promise<ReturnType<Page["getByRole"]>> {
+async function openAddToGroceries(): Promise<Locator> {
   await page.goto(`/recipes/${recipeId}`);
   await page.getByRole("button", { name: "Add", exact: true }).first().click();
 

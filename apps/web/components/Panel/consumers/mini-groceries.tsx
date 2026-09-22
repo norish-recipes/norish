@@ -250,15 +250,13 @@ export default function MiniGroceries({
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
   /**
-   * One section's select-all. Each section answers for its own lines and
-   * leaves the other section's ticks exactly as they were, which is why the
-   * other section's selection is carried across rather than recomputed.
+   * One section's select-all: every line ticked, or none once every line
+   * already is. Each section answers for its own lines and leaves the other
+   * section's ticks exactly as they were, which is why the other section's
+   * selection is carried across rather than recomputed.
    */
-  const toggleSection = (
-    section: GroceryIngredient[],
-    other: GroceryIngredient[],
-    allOfSectionSelected: boolean
-  ) => {
+  const toggleSection = (section: GroceryIngredient[], other: GroceryIngredient[]) => {
+    const allOfSectionSelected = section.every((item) => selectedIds.includes(item.id));
     const otherSelected = other.map((item) => item.id).filter((id) => selectedIds.includes(id));
 
     setSelectedIds(
@@ -434,7 +432,7 @@ export default function MiniGroceries({
                         data-testid="toggle-all"
                         size="sm"
                         variant="tertiary"
-                        onPress={() => toggleSection(toBuy, inPantry, allSelected)}
+                        onPress={() => toggleSection(toBuy, inPantry)}
                       >
                         {allSelected ? tActions("deselectAll") : tActions("selectAll")}
                       </Button>
@@ -459,7 +457,7 @@ export default function MiniGroceries({
                         data-testid="toggle-all-pantry"
                         size="sm"
                         variant="tertiary"
-                        onPress={() => toggleSection(inPantry, toBuy, allInPantrySelected)}
+                        onPress={() => toggleSection(inPantry, toBuy)}
                       >
                         {allInPantrySelected ? tActions("deselectAll") : tActions("selectAll")}
                       </Button>
