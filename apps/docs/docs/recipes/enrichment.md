@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 title: Recipe enrichment
 description: How Norish adds tags, allergy indications, meal categories, nutrition, provenance, step ingredients, and a picture of the dish to your recipes with AI, and how to run each one yourself.
 ---

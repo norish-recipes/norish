@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Step ingredients
 description: Each step can carry the ingredient lines it uses, with amounts computed at the moment you read them — including AI filling in the steps you haven't linked yourself.
 ---
