@@ -115,6 +115,9 @@
       "failed": "No se ha podido importar la receta",
       "failedWithAI": "No se ha podido importar la receta con IA"
     },
+    "clipboard": {
+      "title": "¿Importar una receta desde el enlace que has copiado?"
+    },
     "paste": {
       "title": "Importar pegando el texto",
       "label": "Texto de la receta o JSON-LD",

@@ -120,6 +120,9 @@
       "failed": "Importeren van recept mislukt",
       "failedWithAI": "Importeren van recept met AI mislukt"
     },
+    "clipboard": {
+      "title": "Recept importeren van de link die je hebt gekopieerd?"
+    },
     "paste": {
       "title": "Importeren vanuit klembord",
       "label": "Recepttekst of JSON-LD",

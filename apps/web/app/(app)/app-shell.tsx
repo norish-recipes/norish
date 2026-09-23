@@ -3,6 +3,7 @@ import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 import { Navbar } from "@/components/navbar/navbar";
+import ClipboardImportPrompt from "@/components/shared/clipboard-import-prompt";
 import { TimerDock } from "@/components/timer-dock";
 import { AmountDisplayProvider } from "@/context/amount-display-context";
 import { ArchiveImportProvider } from "@/context/archive-import-context";
@@ -89,6 +90,7 @@ export function AppShell({
                                   </main>
                                 </div>
                                 <TimerDock />
+                                <ClipboardImportPrompt />
                               </RecipePageColorProvider>
                             </AmountDisplayProvider>
                           </TodaysMealsVisibilityProvider>

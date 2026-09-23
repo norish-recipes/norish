@@ -120,6 +120,9 @@
       "failed": "Kunne ikke importere oppskrift",
       "failedWithAI": "Kunne ikke importere oppskrift med AI"
     },
+    "clipboard": {
+      "title": "Importere en oppskrift fra lenken du kopierte?"
+    },
     "paste": {
       "title": "Importer fra liming",
       "label": "Oppskrifttekst eller JSON-LD",

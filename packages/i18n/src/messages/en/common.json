@@ -120,6 +120,9 @@
       "failed": "Failed to import recipe",
       "failedWithAI": "Failed to import recipe with AI"
     },
+    "clipboard": {
+      "title": "Import a recipe from the link you copied?"
+    },
     "paste": {
       "title": "Import from paste",
       "label": "Recipe text or JSON-LD",

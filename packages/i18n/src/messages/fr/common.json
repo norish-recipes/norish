@@ -120,6 +120,9 @@
       "failed": "Échec de l'importation de la recette",
       "failedWithAI": "Échec de l'importation de la recette avec l'IA"
     },
+    "clipboard": {
+      "title": "Importer une recette depuis le lien que vous avez copié ?"
+    },
     "paste": {
       "title": "Importer depuis le presse papier",
       "label": "Texte de la recette ou JSON-LD",

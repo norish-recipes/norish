@@ -120,6 +120,9 @@
       "failed": "Kunne ikke importere opskrift",
       "failedWithAI": "Kunne ikke importere opskrift med AI"
     },
+    "clipboard": {
+      "title": "Importér en opskrift fra det link, du har kopieret?"
+    },
     "paste": {
       "title": "Importer fra indsætning",
       "label": "Opskrifttekst eller JSON-LD",

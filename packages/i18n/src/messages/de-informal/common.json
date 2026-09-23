@@ -120,6 +120,9 @@
       "failed": "Fehler beim Importieren des Rezepts",
       "failedWithAI": "Fehler beim Importieren des Rezepts mit KI"
     },
+    "clipboard": {
+      "title": "Rezept von dem Link importieren, den du kopiert hast?"
+    },
     "paste": {
       "title": "Aus Paste importieren",
       "label": "Rezept-Text oder JSON-LD",
