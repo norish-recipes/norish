@@ -85,7 +85,10 @@ test("a name typed into the Pantry is kept, folded, and refused a second time", 
   await expect(panel.getByTestId("pantry-empty")).toBeVisible();
   await panel.getByTestId("pantry-name").fill("Olive Oil");
   await panel.getByTestId("pantry-name").press("Enter");
-  await expect(panel.locator('[data-pantry-ingredient="olive oil"]')).toHaveText("Olive Oil");
+  // The item points at the Ingredient Name the seeded recipe already minted,
+  // so once the echo replaces the tentative row it reads as that name, not
+  // as typed. Asserting the typed casing raced the echo.
+  await expect(panel.locator('[data-pantry-ingredient="olive oil"]')).toHaveText("olive oil");
   await expect.poll(readPantryNames).toEqual(["olive oil"]);
 
   await panel.getByTestId("pantry-name").fill(" olive  oil! ");
