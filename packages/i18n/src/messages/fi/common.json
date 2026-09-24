@@ -120,6 +120,9 @@
       "failed": "Reseptin tuonti epäonnistui",
       "failedWithAI": "Reseptin tuonti tekoälyllä epäonnistui"
     },
+    "clipboard": {
+      "title": "Tuodaanko resepti kopioimastasi linkistä?"
+    },
     "paste": {
       "title": "Tuo liittämällä",
       "label": "Reseptin teksti tai JSON-LD",

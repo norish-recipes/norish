@@ -8,7 +8,8 @@
     "viewMode": "Näkymä",
     "manageStores": "Hallinnoi kauppoja",
     "storeViewOptions": "Kauppanäkymän asetukset",
-    "groupIngredients": "Ryhmittele ainesosat"
+    "groupIngredients": "Ryhmittele ainesosat",
+    "pantry": "Ruokakomero"
   },
   "empty": {
     "title": "Ostoslistasi odottaa",
@@ -83,6 +84,15 @@
     "dragAisle": "Raahaa järjestääksesi",
     "aisleDuplicate": "Tässä kaupassa on jo samanniminen osasto"
   },
+  "pantry": {
+    "title": "Ruokakomero",
+    "hint": "Mitä sinulla on jo kotona. Ruokakomerossa olevia ainesosia ei lisätä listalle, kun lisäät reseptin.",
+    "empty": "Ruokakomerossa ei ole vielä mitään",
+    "namePlaceholder": "esim. oliiviöljy",
+    "add": "Lisää ruokakomeroon",
+    "remove": "Poista ruokakomerosta",
+    "duplicate": "Tämä on jo ruokakomerossasi"
+  },
   "panel": {
     "addTitle": "Lisää ostos",
     "editTitle": "Muokkaa ostosta",
@@ -113,6 +123,7 @@
     "editPlaceholder": "esim. maito joka viikko",
     "servings": "Annokset",
     "selectedCount": "{selected} / {total} valittu",
+    "pantryUnavailable": "Ruokakomeroa ei voitu lukea, joten mitään ei ole vielä valittu. Valitse, mitä sinun täytyy ostaa.",
     "loadingIngredients": "Ladataan ainesosia...",
     "noIngredients": "Ei ainesosia.",
     "addSelectedToGroceries": "Lisää ostoslistalle",
@@ -120,7 +131,8 @@
     "ingredientsFailed": "Ainesosien lisääminen ostoslistalle epäonnistui.",
     "addToGroceries": "Lisää ostoslistalle",
     "aisle": "Osasto",
-    "noAisle": "Ei osastoa"
+    "noAisle": "Ei osastoa",
+    "inPantry": "Ruokakomerossasi"
   },
   "picker": {
     "unlink": "Poista tuotelinkitys",

@@ -570,6 +570,10 @@
         "title": "Kuvien luonti",
         "subtitle": "Piirrä kuva ruoasta resepteille, joilla sitä ei ole"
       },
+      "decisionModel": {
+        "title": "Päätösmalli",
+        "subtitle": "Nopeat ja edulliset vastaukset suljettuihin kysymyksiin"
+      },
       "prompts": {
         "title": "Kehotteet",
         "subtitle": "Mukauta tekoälyn ohjeita reseptien käsittelyyn"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (paikallinen)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Yleinen OpenAI-yhteensopiva"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "esim. gpt-image-1",
       "modelDescription": "Malli, joka piirtää kuvan. Sen on oltava kuvamalli, ei tekstimalli.",
       "fallbackHint": "Sama palveluntarjoaja kuin tekoälyasetuksissasi: päätepiste ja API-avain periytyvät sieltä, ellet aseta niitä tässä."
+    },
+    "decisionConfig": {
+      "provider": "Päätösmallin palveluntarjoaja",
+      "providers": {
+        "disabled": "Pois käytöstä",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-avain",
+      "apiKeyPlaceholder": "Syötä API-avain...",
+      "apiKeyDescription": "Hae avain typesafe.ai-tililtäsi",
+      "model": "Päätösmalli",
+      "uses": "Käytä päätösmallia seuraaviin",
+      "usesPlaceholder": "Ei mihinkään",
+      "useNames": {
+        "autoCategorization": "Automaattinen luokittelu",
+        "autoCategorizationDescription": "Päätä, onko resepti aamiainen, lounas, päivällinen vai välipala",
+        "autoTagging": "Automaattiset tunnisteet",
+        "autoTaggingDescription": "Valitse tunnisteet ennalta määritetystä listasta ja vahvista jokainen tekoälyn ehdottama tunniste",
+        "allergyDetection": "Allergeenien tunnistus",
+        "allergyDetectionDescription": "Päätä, mitä kotitalouden allergeeneja resepti sisältää",
+        "recipeProvenance": "Reseptin alkuperä",
+        "recipeProvenanceDescription": "Ratkaise maa ja ruokakulttuurit ennen kuin muistiinpano kirjoitetaan",
+        "groceryLinking": "Ostosten linkitys",
+        "groceryLinkingDescription": "Järjestä kaupan tarjoamat tuotteet ja linkitä se, josta ollaan varmoja",
+        "validateEnrichments": "Rikastusten tarkistus",
+        "validateEnrichmentsDescription": "Tarkista jokaisen rikastusajon omat väitteet ennen kuin ne tallennetaan"
+      },
+      "testConnection": "Testaa yhteys",
+      "connectionSuccess": "Yhteys onnistui",
+      "aiDisabledHint": "Tekoäly on poistettu käytöstä tällä palvelimella. Ota se käyttöön tekoälyasetuksissa, jotta voit testata ja käyttää päätösmallia."
     },
     "promptsConfig": {
       "recipeExtraction": "Reseptin poiminnan kehote",
@@ -812,7 +847,10 @@
         "ai-request": "Tekoälypyyntö",
         "syncing-event": "Synkronoi kalenteritapahtuma",
         "deleting-event": "Poista kalenteritapahtuma",
-        "running": "Aja tehtävä"
+        "running": "Aja tehtävä",
+        "searching": "Hae kaupasta",
+        "reading-product": "Lue tuotesivu",
+        "saving-link": "Tallenna linkki"
       },
       "queues": {
         "recipe-import": "Reseptien tuonti",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Ainesosien linkitys",
         "caldav-sync": "CalDAV-synkronointi",
         "scheduled-tasks": "Ajastetut tehtävät",
-        "image-generation": "Kuvien luonti"
+        "image-generation": "Kuvien luonti",
+        "store-lookup": "Kaupan haku"
       },
       "summary": {
         "failed": "{count} epäonnistui"
@@ -859,6 +898,7 @@
           "finished": "Valmistui",
           "duration": "Kesto",
           "attempts": "Yritykset",
+          "models": "Mallit",
           "runsAt": "Ajetaan",
           "nextRun": "Seuraava ajo"
         },
