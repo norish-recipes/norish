@@ -12,6 +12,10 @@ export type TimerKeywords = {
   seconds?: string[];
 };
 
+const DECIMAL_NUMBER = "\\d+(?:[.,]\\d+)?";
+
+const parseDecimal = (value: string): number => parseFloat(value.replace(",", "."));
+
 /**
  * Parse timer durations from text using configurable keywords
  *
@@ -145,8 +149,9 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
 
   // Pattern to match "number + unit" (e.g., "15 minuten", "20 minutes")
   // Keywords should include all forms (singular, plural, abbreviations) directly
+  // The decimal separator may be "." or "," ("1,5 uur"); a comma followed by a space stays a list separator
   const TIME_PATTERN = new RegExp(
-    `(\\d+(?:\\.\\d+)?)\\s*(${timeUnits})(?=$|\\s|[.,!?;:()\\[\\]{}\"'])`,
+    `(${DECIMAL_NUMBER})\\s*(${timeUnits})(?=$|\\s|[.,!?;:()\\[\\]{}\"'])`,
     "gi"
   );
 
@@ -161,7 +166,7 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
       continue;
     }
 
-    const primaryNumber = parseFloat(primaryNumberRaw);
+    const primaryNumber = parseDecimal(primaryNumberRaw);
     const unit = unitRaw.toLowerCase();
     const matchStart = match.index;
     const matchEnd = match.index + match[0].length;
@@ -174,7 +179,7 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
       // Pattern to find a number before this match (looks for last number in the preceding text)
       // This handles: "12 tot 15", "12-15", "12 to 15", "12 or 15", etc.
       // Exclude commas from range detection to avoid treating "10 mins, 5 hrs" as a range
-      const priorNumberPattern = /(\d+(?:\.\d+)?)\s*[^\s,]*\s*$/;
+      const priorNumberPattern = new RegExp(`(${DECIMAL_NUMBER})\\s*[^\\s,]*\\s*$`);
       const priorMatch = beforeText.match(priorNumberPattern);
 
       let rangeStart: number | null = null;
@@ -185,7 +190,7 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
         const priorIndex = priorMatch.index;
 
         if (priorValue && priorIndex !== undefined) {
-          rangeStart = parseFloat(priorValue);
+          rangeStart = parseDecimal(priorValue);
           // Adjust the full match start to include the range start
           fullMatchStart = matchStart - (beforeText.length - priorIndex);
         }
