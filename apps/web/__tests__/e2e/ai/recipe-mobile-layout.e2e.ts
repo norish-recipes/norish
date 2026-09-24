@@ -71,38 +71,34 @@ async function swipe(deltaX: number, deltaY: number): Promise<void> {
         const startY = rect.top + rect.height / 2;
         const options = { bubbles: true, cancelable: true, pointerType: "touch" as const };
 
+        const startTouch = new Touch({
+          identifier: 1,
+          target: element,
+          clientX: startX,
+          clientY: startY,
+        });
+        const endTouch = new Touch({
+          identifier: 1,
+          target: element,
+          clientX: startX + delta.x,
+          clientY: startY + delta.y,
+        });
+
+        // Two gestures share the area: the horizontal swipe listens to pointer
+        // events on the shell, the vertical paging to touch events on the step
+        // view, which reads the start point from `touches`.
         element.dispatchEvent(
           new PointerEvent("pointerdown", { ...options, clientX: startX, clientY: startY })
         );
-        // Dispatch touch events for the new native step navigation listeners
-        try {
-          const touchStart = new Touch({
-            identifier: 1,
-            target: element,
-            clientX: startX,
-            clientY: startY,
-          });
-          element.dispatchEvent(
-            new TouchEvent("touchstart", {
-              bubbles: true,
-              cancelable: true,
-              changedTouches: [touchStart],
-            })
-          );
-        } catch (e) {
-          // Fallback if Touch constructor isn't supported, just pass a mock object
-          element.dispatchEvent(
-            new CustomEvent("touchstart", {
-              bubbles: true,
-              cancelable: true,
-              detail: { clientX: startX, clientY: startY },
-            })
-          );
-          const eStart = new Event("touchstart", { bubbles: true, cancelable: true });
-          (eStart as any).changedTouches = [{ clientX: startX, clientY: startY }];
-          element.dispatchEvent(eStart);
-        }
-
+        element.dispatchEvent(
+          new TouchEvent("touchstart", {
+            bubbles: true,
+            cancelable: true,
+            touches: [startTouch],
+            targetTouches: [startTouch],
+            changedTouches: [startTouch],
+          })
+        );
         element.dispatchEvent(
           new PointerEvent("pointerup", {
             ...options,
@@ -110,25 +106,13 @@ async function swipe(deltaX: number, deltaY: number): Promise<void> {
             clientY: startY + delta.y,
           })
         );
-        try {
-          const touchEnd = new Touch({
-            identifier: 1,
-            target: element,
-            clientX: startX + delta.x,
-            clientY: startY + delta.y,
-          });
-          element.dispatchEvent(
-            new TouchEvent("touchend", {
-              bubbles: true,
-              cancelable: true,
-              changedTouches: [touchEnd],
-            })
-          );
-        } catch (e) {
-          const eEnd = new Event("touchend", { bubbles: true, cancelable: true });
-          (eEnd as any).changedTouches = [{ clientX: startX + delta.x, clientY: startY + delta.y }];
-          element.dispatchEvent(eEnd);
-        }
+        element.dispatchEvent(
+          new TouchEvent("touchend", {
+            bubbles: true,
+            cancelable: true,
+            changedTouches: [endTouch],
+          })
+        );
       },
       { x: deltaX, y: deltaY }
     );
