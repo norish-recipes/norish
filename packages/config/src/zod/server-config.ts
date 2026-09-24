@@ -708,9 +708,7 @@ export type ConfiguredDecisionConfig = DecisionConfig & {
  * later release is on for it, exactly as for a block that never stored a
  * list; the selection itself otherwise.
  */
-export function selectedDecisionUses(
-  selected: readonly DecisionUse[]
-): DecisionUse[] | undefined {
+export function selectedDecisionUses(selected: readonly DecisionUse[]): DecisionUse[] | undefined {
   const chosen = new Set(selected);
 
   if (DECISION_USES.every((use) => chosen.has(use))) return undefined;

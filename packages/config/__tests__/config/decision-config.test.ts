@@ -116,7 +116,10 @@ describe("selectedDecisionUses", () => {
     expect(selectedDecisionUses([...DECISION_USES])).toBeUndefined();
     expect(selectedDecisionUses([...DECISION_USES].reverse())).toBeUndefined();
     expect(
-      isDecisionUseSelected(decisionConfig({ uses: selectedDecisionUses([...DECISION_USES]) }), "validateEnrichments")
+      isDecisionUseSelected(
+        decisionConfig({ uses: selectedDecisionUses([...DECISION_USES]) }),
+        "validateEnrichments"
+      )
     ).toBe(true);
   });
 
