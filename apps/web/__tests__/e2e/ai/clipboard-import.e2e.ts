@@ -71,7 +71,7 @@ test("a link into Norish itself is not offered", async ({ page, aiStack }) => {
   await expect(page.getByText(ASK)).toBeHidden();
 });
 
-test("a link copied on another page is offered there, and Import lands on the dashboard", async ({
+test("a link copied on another page is offered there, and Import keeps you there", async ({
   page,
 }) => {
   await page.goto("/groceries");
@@ -85,6 +85,6 @@ test("a link copied on another page is offered there, and Import lands on the da
     page.getByRole("button", { name: "Import", exact: true }).click()
   );
   await expect(ask).toBeHidden();
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByTestId("add-library-button")).toBeVisible();
+  await expect(page.getByText("Importing recipe...")).toBeVisible();
+  await expect(page).toHaveURL(/\/groceries$/);
 });

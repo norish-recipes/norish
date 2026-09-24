@@ -10,6 +10,8 @@ import type { Job } from "bullmq";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
+import { readStepProgress } from "@norish/queue/job-steps";
+import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
@@ -99,6 +101,83 @@ describe("processImportJob", () => {
       "user-1",
       expect.objectContaining({ name: "Imported Stew", dishColor: "#7c4a1e" })
     );
+  });
+
+  it("leaves what the parser saw on the parsing step when the parse fails", async () => {
+    const pythonParser = { recipe: { title: "" }, parser: { scraper: "SchemaScraper" } };
+
+    parseRecipeFromUrl.mockRejectedValue(
+      new ErrorWithDetail("Python parser returned recipe data without a valid title", {
+        pythonParser,
+      })
+    );
+
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+    const job = {
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      progress: 0,
+      updateProgress: vi.fn(async (progress: unknown) => {
+        job.progress = progress;
+      }),
+      log: vi.fn(async () => 0),
+      data: {
+        url: "https://example.com/untitled",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+      },
+    };
+
+    await expect(
+      processRecipeImportJob(job as unknown as Job<RecipeImportJobData>)
+    ).rejects.toThrow("without a valid title");
+
+    const timeline = readStepProgress(job.progress)?.attempts[0]?.timeline ?? [];
+
+    expect(timeline.at(-1)).toMatchObject({ id: "parsing", detail: { pythonParser } });
+  });
+
+  it("leaves the parser diagnostics on the parsing step when AI extraction stood in", async () => {
+    const pythonParser = { ok: true, recipe: { title: null } };
+    const page = { title: "Stew", text: "Stew" };
+
+    parseRecipeFromUrl.mockResolvedValue({
+      recipe: PARSED_RECIPE,
+      usedAI: true,
+      parserDiagnostics: { pythonParser, page },
+    });
+
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+    const job = {
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      progress: 0,
+      updateProgress: vi.fn(async (progress: unknown) => {
+        job.progress = progress;
+      }),
+      log: vi.fn(async () => 0),
+      data: {
+        url: "https://example.com/untitled",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+      },
+    };
+
+    await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>);
+
+    const timeline = readStepProgress(job.progress)?.attempts[0]?.timeline ?? [];
+
+    expect(timeline.find((event) => event.id === "parsing")?.detail).toEqual({
+      usedAI: true,
+      pythonParser,
+      page,
+    });
   });
 
   describe("site authentication tokens", () => {

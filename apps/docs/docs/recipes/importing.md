@@ -34,9 +34,10 @@ are on asks:
 
 ![Norish asking to import a copied link](/img/screenshots/import-clipboard-prompt.png)
 
-**Import** queues the import exactly as the URL dialog would and takes you to
-the dashboard, where the new card fills in. Close the message, or let it go,
-and nothing happens. A tab asks about a link once: a link you passed on is not
+**Import** queues the import exactly as the URL dialog would and leaves you
+where you are: the new card fills in on the dashboard, and a message offers to
+open the recipe once it is in. Close the ask, or let it go, and nothing
+happens. A tab asks about a link once: a link you passed on is not
 raised again on the next page or visit, while a new one is, and a link into
 your own Norish is never offered. Offline, the import is
 [Queued](../offline.md) like any other change and runs once your server is

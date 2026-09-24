@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRecipesContext } from "@/context/recipes-context";
+import { useRecipesMutations } from "@/hooks/recipes";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -42,10 +42,12 @@ function isOwnLink(url: string): boolean {
  * It reads the clipboard when a page opens and whenever the window regains
  * focus, which is the moment someone comes back from copying a link
  * elsewhere. A tab asks about a link once: a dismissed ask is not repeated on
- * the next page or reload, and a fresh link is asked about anew. Import goes
- * through the same import as the URL dialog, which lands on the dashboard
- * where the pending card is, and offline it is Queued in the Outbox like any
- * other change, so there is no reason not to ask. Only a browser that hands
+ * the next page or reload, and a fresh link is asked about anew. Import
+ * queues the same import as the URL dialog but leaves you where you are: the
+ * pending card is on the dashboard, and the finished import announces itself
+ * with a View action on whatever page you are on. Offline it is Queued in the
+ * Outbox like any other change, so there is no reason not to ask. Only a
+ * browser that hands
  * the clipboard over without a gesture (Chromium, once permission is given)
  * ever shows it; elsewhere the read is refused and nothing happens, the same
  * deal the URL modal's clipboard prefill makes.
@@ -53,8 +55,17 @@ function isOwnLink(url: string): boolean {
 export default function ClipboardImportPrompt() {
   const t = useTranslations("common.import.clipboard");
   const tActions = useTranslations("common.actions");
-  const { importRecipe } = useRecipesContext();
+  const tPaste = useTranslations("common.import.paste");
+  const { importRecipe } = useRecipesMutations();
   const isReadingRef = useRef(false);
+  // The import and the strings are read through a ref so the clipboard is
+  // read on mount and on focus only, never again because a render handed the
+  // effect a fresh function.
+  const latestRef = useRef({ importRecipe, t, tActions, tPaste });
+
+  useEffect(() => {
+    latestRef.current = { importRecipe, t, tActions, tPaste };
+  });
 
   useEffect(() => {
     let isCancelled = false;
@@ -69,14 +80,18 @@ export default function ClipboardImportPrompt() {
         if (isCancelled || !url || isOwnLink(url) || readOffered() === url) return;
 
         rememberOffered(url);
+        const { t, tActions } = latestRef.current;
         const key = toast(t("title"), {
           description: <span className="line-clamp-2 break-all">{url}</span>,
           timeout: PROMPT_TIMEOUT_MS,
           actionProps: {
             children: tActions("import"),
             onPress: () => {
+              const { importRecipe, tPaste } = latestRef.current;
+
               toast.close(key);
               importRecipe(url);
+              toast(tPaste("importing"), { description: tPaste("inProgress"), variant: "default" });
             },
           },
         });
@@ -92,7 +107,7 @@ export default function ClipboardImportPrompt() {
       isCancelled = true;
       window.removeEventListener("focus", offerClipboardLink);
     };
-  }, [importRecipe, t, tActions]);
+  }, []);
 
   return null;
 }

@@ -12,8 +12,8 @@ vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,
 }));
 
-vi.mock("@/context/recipes-context", () => ({
-  useRecipesContext: () => ({ importRecipe: importRecipeMock }),
+vi.mock("@/hooks/recipes", () => ({
+  useRecipesMutations: () => ({ importRecipe: importRecipeMock }),
 }));
 
 vi.mock("@heroui/react", () => ({
@@ -66,7 +66,7 @@ describe("ClipboardImportPrompt", () => {
     vi.restoreAllMocks();
   });
 
-  it("asks about a copied link, and Import imports it", async () => {
+  it("asks about a copied link, and Import imports it where you are", async () => {
     const readText = stubClipboard(LINK);
 
     render(<ClipboardImportPrompt />);
@@ -89,6 +89,12 @@ describe("ClipboardImportPrompt", () => {
 
     expect(toastCloseMock).toHaveBeenCalledWith("toast-key");
     expect(importRecipeMock).toHaveBeenCalledWith(LINK);
+    // The import is announced in place; nothing here navigates.
+    expect(toastMock).toHaveBeenCalledTimes(2);
+    expect(toastMock).toHaveBeenLastCalledWith(
+      "common.import.paste.importing",
+      expect.objectContaining({ description: "common.import.paste.inProgress" })
+    );
   });
 
   it("asks nothing when the clipboard holds no link", async () => {

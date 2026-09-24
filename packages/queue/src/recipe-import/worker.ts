@@ -16,6 +16,7 @@ import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 import { credentialSetsForUrl, rotateCredentialSet } from "@norish/shared/lib/site-auth-tokens";
 
 import { defineLazyWorker, QUEUE_NAMES, RECIPE_IMPORT_PROCESSING_TIMEOUT_MS } from "../config";
@@ -95,14 +96,21 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     () => parseRecipeFromUrl(url, recipeId, job.data.forceAI, credentials?.tokens),
     RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
     "Recipe import parsing"
-  );
+  ).catch(async (error: unknown) => {
+    // A parse that fails with what the parser saw (the Python parser's reply
+    // and a summary of the page) leaves it on the parsing step, so the job
+    // monitor shows why.
+    if (error instanceof ErrorWithDetail) await completeStep(job, error.detail);
+
+    throw error;
+  });
 
   log.debug({ parseResult }, "Recipe parse result");
   if (!parseResult.recipe) {
     throw new Error("Failed to parse recipe from URL");
   }
 
-  await completeStep(job, { usedAI: parseResult.usedAI });
+  await completeStep(job, { usedAI: parseResult.usedAI, ...parseResult.parserDiagnostics });
 
   await reportStep(job, "saving");
   // The Dish Colour is taken from the image the import just stored.
