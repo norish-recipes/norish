@@ -37,7 +37,9 @@
     "format": "turbo run format -- --write",
     "format:check": "turbo run format",
     "deps:cycles": "node tooling/monorepo/scripts/check-circular-deps.mjs && node tooling/monorepo/scripts/check-workspace-imports.mjs",
-    "i18n:check": "pnpm --filter @norish/i18n run check:locale-keys"
+    "i18n:check": "pnpm --filter @norish/i18n run check:locale-keys",
+    "version:sync": "node tooling/monorepo/scripts/sync-version.mjs",
+    "version:check": "node tooling/monorepo/scripts/sync-version.mjs --check"
   },
   "devDependencies": {
     "@norish/prettier-config": "workspace:*",
