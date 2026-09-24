@@ -1,0 +1,906 @@
+{
+  "page": {
+    "title": "Asetukset",
+    "ariaLabel": "Asetusvälilehdet"
+  },
+  "tabs": {
+    "user": "Käyttäjä",
+    "household": "Kotitalous",
+    "caldav": "CalDAV",
+    "admin": "Ylläpito"
+  },
+  "user": {
+    "profile": {
+      "title": "Profiili",
+      "nameLabel": "Nimi",
+      "namePlaceholder": "Nimesi",
+      "emailLabel": "Sähköposti",
+      "avatarHint": "Vaihda kuva napsauttamalla profiilikuvaasi",
+      "deleteAvatar": "Poista profiilikuva",
+      "saveChanges": "Tallenna muutokset"
+    },
+    "allergies": {
+      "title": "Allergiat",
+      "description": "Lisää ruoka-allergiasi, niin saat varoituksen suunnitellessasi reseptejä, jotka sisältävät allergeeneja. Näiden tietojen perusteella sinua varoitetaan, kun suunniteltu resepti sisältää allergioihisi sopivia ainesosia.",
+      "placeholder": "Kirjoita allergiat (esim. gluteeni, pähkinät, maito)...",
+      "saveButton": "Tallenna allergiat"
+    },
+    "apiKeys": {
+      "title": "API-avaimet",
+      "description": "API-avaimet mahdollistavat ohjelmallisen pääsyn Norishin rajapintaan. Käytä niitä integraatioihin, pikakomentoihin ja automaatioon.",
+      "docsLink": "Avaa API-dokumentaatio",
+      "keyNameLabel": "Avaimen nimi (valinnainen)",
+      "keyNamePlaceholder": "esim. iOS-pikakomento",
+      "createKey": "Luo avain",
+      "yourKeys": "API-avaimesi",
+      "noKeys": "Ei vielä API-avaimia. Luo yksi päästäksesi alkuun.",
+      "tableHeaders": {
+        "name": "NIMI",
+        "keyPrefix": "AVAIMEN ALKU",
+        "created": "LUOTU",
+        "status": "TILA",
+        "actions": "TOIMINNOT"
+      },
+      "unnamed": "Nimetön",
+      "active": "Aktiivinen",
+      "disabled": "Pois käytöstä",
+      "disableKey": "Poista avain käytöstä",
+      "enableKey": "Ota avain käyttöön",
+      "deleteKey": "Poista avain",
+      "generatedModal": {
+        "title": "API-avain luotu",
+        "warning": "Tallenna tämä avain nyt! Et näe sitä enää uudelleen. Tallennamme vain tiivisteen emmekä voi palauttaa tätä avainta.",
+        "hint": "Käytä tätä avainta <code>x-api-key</code>-otsakkeessa API-pyyntöjä tehdessäsi.",
+        "confirmButton": "Olen tallentanut sen"
+      },
+      "deleteModal": {
+        "title": "Poista API-avain",
+        "message": "Haluatko varmasti poistaa tämän API-avaimen? Kaikki sitä käyttävät sovellukset menettävät pääsyn välittömästi. Tätä ei voi kumota.",
+        "confirmButton": "Poista avain"
+      }
+    },
+    "archiveImport": {
+      "title": "Tuo reseptiarkisto",
+      "description": "Tuo reseptejä Norishin (.norishrecipes), Melan (.melarecipes), Paprikan (.paprikarecipes) tai Mealien/Tandoorin (.zip) vienneistä"
+    },
+    "archiveExport": {
+      "title": "Vie reseptiarkisto",
+      "description": "Lataa kaikki näkemäsi reseptit.",
+      "button": "Vie"
+    },
+    "siteAuthTokens": {
+      "title": "Sivustojen tunnistautumistunnisteet",
+      "description": "Lisää otsakkeita tai evästeitä, jotka lähetetään tuotaessa reseptejä tietyiltä sivustoilta. Hyödyllinen sivustoille, jotka vaativat kirjautumisen (esim. Instagram, Facebook).",
+      "accountsDescription": "Nimeä tili, kun sinulla on sivustolle useampi kuin yksi kirjautuminen. Jokainen tuonti käyttää tällöin satunnaisesti valittua sivuston tiliä, jolloin yksikään kirjautuminen ei kanna kaikkia tuonteja. Ilman tilin nimeä jätetty tunniste lähetetään kaikissa oman verkkotunnuksensa tuonneissa.",
+      "domain": "Verkkotunnus",
+      "domainPlaceholder": "esim. instagram.com",
+      "account": "Tili",
+      "accountPlaceholder": "esim. oma_tunnus (valinnainen)",
+      "accountShared": "Kaikki tilit",
+      "name": "Nimi",
+      "namePlaceholder": "esim. Cookie tai Authorization",
+      "value": "Arvo",
+      "valuePlaceholder": "Tunnisteen tai evästeen arvo",
+      "type": "Tyyppi",
+      "typeHeader": "Otsake",
+      "typeCookie": "Eväste",
+      "addButton": "Lisää tunniste",
+      "noTokens": "Sivustojen tunnistautumistunnisteita ei ole määritetty.",
+      "tableHeaders": {
+        "domain": "VERKKOTUNNUS",
+        "account": "TILI",
+        "name": "NIMI",
+        "type": "TYYPPI",
+        "created": "LUOTU",
+        "actions": "TOIMINNOT"
+      },
+      "deleteModal": {
+        "title": "Poista tunniste",
+        "message": "Haluatko varmasti poistaa tämän tunnistautumistunnisteen? Tuonnit tältä sivustolta voivat lakata toimimasta.",
+        "confirmButton": "Poista tunniste"
+      }
+    },
+    "dangerZone": {
+      "title": "Vaaravyöhyke",
+      "description": "Kun poistat tilisi, paluuta ei ole. Ole varma päätöksestäsi.",
+      "deleteButton": "Poista tilini",
+      "deleteModal": {
+        "title": "Poista tili",
+        "permanentWarning": "Tämä toiminto on pysyvä eikä sitä voi kumota!",
+        "dataWarning": "Henkilökohtaiset tietosi, mukaan lukien ostokset, kalenterimerkinnät ja muistiinpanot, poistetaan pysyvästi.",
+        "recipesNote": "Luomasi reseptit säilyvät, mutta niitä ei enää liitetä tiliisi.",
+        "adminNote": "Jos olet sellaisen kotitalouden ylläpitäjä, jossa on muita jäseniä, sinun on ensin siirrettävä ylläpito-oikeudet.",
+        "confirmButton": "Poista tilini"
+      }
+    },
+    "preferences": {
+      "title": "Asetukset",
+      "description": "Mukauta käyttökokemustasi.",
+      "language": {
+        "title": "Kieli",
+        "description": "Valitse haluamasi kieli"
+      },
+      "hidden": {
+        "title": "Piilotetut osiot",
+        "description": "Valitse, mitä et halua näkyviin. Oletuksena kaikki näytetään, ja tämä muuttaa vain omaa näkymääsi.",
+        "placeholder": "Mitään ei ole piilotettu",
+        "options": {
+          "provenance": "Alkuperä",
+          "nutrition": "Ravintosisältö",
+          "notes": "Muistiinpanot",
+          "rating": "Arvosanat",
+          "favorites": "Suosikit",
+          "conversion": "Ainesosien muunnos",
+          "timers": "Reseptien ajastimet",
+          "cookbooks": "Keittokirjat"
+        }
+      },
+      "todaySection": {
+        "title": "Tänään-osio",
+        "description": "Valitse, miten etusivun Tänään-osio näytetään tällä laitteella",
+        "options": {
+          "always": "Aina näkyvissä",
+          "planned": "Vain suunnitellut ateriat",
+          "hidden": "Piilotettu"
+        }
+      },
+      "recipePageColor": {
+        "title": "Reseptisivun väri",
+        "description": "Sävytä jokainen reseptisivu sen oman kuvan väreillä tai pidä teeman perusvärit tällä laitteella",
+        "options": {
+          "dish": "Ruoan kuvasta",
+          "theme": "Teeman perusvärit"
+        }
+      },
+      "applyError": "Asetuksen käyttöönotto epäonnistui"
+    },
+    "shareLinks": {
+      "title": "Reseptien jakolinkit",
+      "description": "Tarkastele ja hallinnoi kaikkia luomiasi julkisia reseptilinkkejä.",
+      "empty": "Jakolinkkejä ei löytynyt.",
+      "table": {
+        "recipe": "RESEPTI",
+        "status": "TILA",
+        "created": "LUOTU",
+        "expires": "VANHENEE",
+        "actions": "TOIMINNOT"
+      },
+      "revokeModal": {
+        "title": "Mitätöi linkki",
+        "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes otat sen uudelleen käyttöön.",
+        "confirm": "Mitätöi"
+      },
+      "reactivateModal": {
+        "title": "Ota linkki uudelleen käyttöön",
+        "message": "Tämä reseptin {recipeName} linkki aktivoituu uudelleen.",
+        "confirm": "Ota käyttöön"
+      },
+      "deleteModal": {
+        "title": "Poista linkki",
+        "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
+        "confirm": "Poista linkki"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "Kotitalouden asetukset",
+    "info": {
+      "yourRole": "Roolisi",
+      "admin": "Ylläpitäjä",
+      "member": "Jäsen",
+      "members": "Jäsenet",
+      "leaveButton": "Poistu kotitaloudesta",
+      "leaveModal": {
+        "title": "Poistu kotitaloudesta",
+        "confirmMessage": "Haluatko varmasti poistua kotitaloudesta {name}?",
+        "adminWarning": "Olet ylläpitäjä. Sinun on siirrettävä ylläpito-oikeudet ennen poistumista.",
+        "confirmButton": "Poistu kotitaloudesta"
+      }
+    },
+    "members": {
+      "title": "Jäsenet",
+      "tableHeaders": {
+        "name": "NIMI",
+        "role": "ROOLI",
+        "actions": "TOIMINNOT"
+      },
+      "you": "Sinä",
+      "kickButton": "Poista",
+      "makeAdminButton": "Tee ylläpitäjäksi",
+      "kickModal": {
+        "title": "Poista käyttäjä",
+        "confirmMessage": "Haluatko varmasti poistaa käyttäjän {name} kotitaloudesta?",
+        "warning": "Hän menettää pääsyn kaikkiin jaettuihin resepteihin, ostoksiin ja kalenterimerkintöihin.",
+        "confirmButton": "Poista käyttäjä"
+      },
+      "transferModal": {
+        "title": "Siirrä ylläpito-oikeudet",
+        "confirmMessage": "Haluatko varmasti siirtää ylläpito-oikeudet käyttäjälle {name}?",
+        "warning": "Sinusta tulee tavallinen jäsen, etkä voi enää poistaa käyttäjiä tai hallinnoida liittymiskoodeja.",
+        "confirmButton": "Siirrä ylläpito"
+      },
+      "toasts": {
+        "kickFailed": "Käyttäjän poistaminen epäonnistui",
+        "transferSuccess": "Ylläpito siirrettiin käyttäjälle {name}",
+        "transferFailed": "Ylläpidon siirto epäonnistui"
+      }
+    },
+    "joinCode": {
+      "title": "Liittymiskoodi",
+      "shareDescription": "Jaa tämä koodi muille kutsuaksesi heidät kotitalouteesi.",
+      "expiresIn": "Vanhenee:",
+      "regenerateButton": "Luo uudelleen",
+      "expired": "Vanhentunut",
+      "noCodeDescription": "Ei aktiivista liittymiskoodia. Luo koodi kutsuaksesi uusia jäseniä.",
+      "generateButton": "Luo liittymiskoodi",
+      "copySuccess": "Liittymiskoodi kopioitu",
+      "copyFailed": "Liittymiskoodin kopiointi epäonnistui"
+    },
+    "create": {
+      "title": "Luo kotitalous",
+      "description": "Luo uusi kotitalous jakaaksesi reseptejä ja ostoksia perheen tai ystävien kanssa.",
+      "nameLabel": "Kotitalouden nimi",
+      "namePlaceholder": "esim. Perhe Virtanen",
+      "submitButton": "Luo kotitalous"
+    },
+    "join": {
+      "title": "Liity kotitalouteen",
+      "description": "Anna liittymiskoodi liittyäksesi olemassa olevaan kotitalouteen.",
+      "codeLabel": "Liittymiskoodi",
+      "codePlaceholder": "8-merkkinen koodi",
+      "submitButton": "Liity kotitalouteen"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "Määritä CalDAV-synkronointi",
+      "description": "Yhdistä CalDAV-yhteensopiva kalenterisi synkronoidaksesi ateriasuunnitelmasi automaattisesti",
+      "gettingStarted": "CalDAV:n käytön aloittaminen",
+      "providerDescription": "Tarvitset CalDAV-yhteensopivan kalenteripalvelun. Suosittuja palveluntarjoajia ovat:",
+      "serverUrlLabel": "Palvelimen osoite",
+      "serverUrlDescription": "CalDAV-palvelimesi perusosoite (esim. https://dav.example.com)",
+      "serverUrlPlaceholder": "https://dav.example.com",
+      "usernameLabel": "Käyttäjätunnus",
+      "usernamePlaceholder": "käyttäjätunnus",
+      "passwordLabel": "Salasana",
+      "passwordPlaceholder": "Kirjoita salasana",
+      "calendarLabel": "Kalenteri",
+      "calendarPlaceholder": "Valitse kalenteri",
+      "calendarPlaceholderDisabled": "Testaa yhteys ensin",
+      "calendarDescription": "Valitse, minkä kalenterin kanssa ateriasuunnitelmat synkronoidaan",
+      "calendarDescriptionDisabled": "Testaa yhteys ladataksesi käytettävissä olevat kalenterit",
+      "timeFormat": "Muoto: HH:MM-HH:MM",
+      "timeFormatError": "Muodon on oltava HH:MM-HH:MM",
+      "breakfastTime": "Aamiaisen aika",
+      "lunchTime": "Lounaan aika",
+      "dinnerTime": "Päivällisen aika",
+      "snackTime": "Välipalan aika",
+      "testConnection": "Testaa yhteys",
+      "saveConfiguration": "Tallenna asetukset"
+    },
+    "config": {
+      "title": "CalDAV-asetukset",
+      "editTitle": "Muokkaa CalDAV-asetuksia",
+      "serverUrl": "Palvelimen osoite",
+      "enabled": "Käytössä",
+      "disabled": "Pois käytöstä",
+      "editButton": "Muokkaa",
+      "deleteButton": "Poista",
+      "saveChanges": "Tallenna muutokset",
+      "advancedSettings": "Lisäasetukset",
+      "timezone": "Aikavyöhyke: {timezone}",
+      "connectionStatus": {
+        "connected": "Yhdistetty",
+        "checking": "Tarkistetaan...",
+        "disconnected": "Ei yhteyttä",
+        "unknown": "Tuntematon"
+      }
+    },
+    "deleteModal": {
+      "title": "Poista CalDAV-asetukset",
+      "confirmMessage": "Haluatko varmasti poistaa CalDAV-asetuksesi?",
+      "deleteEventsLabel": "Poista synkronoidut tapahtumat",
+      "deleteEventsDescription": "Poista kaikki CalDAV-kalenteriisi luodut tapahtumat",
+      "confirmButton": "Poista"
+    },
+    "syncStatus": {
+      "title": "Synkronoinnin tila",
+      "syncNow": "Synkronoi nyt",
+      "clearFilter": "Tyhjennä suodatin",
+      "clickToFilter": "Suodata napsauttamalla merkkiä",
+      "showingItems": "Näytetään {start}-{end} / {total} kohdetta",
+      "tableHeaders": {
+        "item": "KOHDE",
+        "type": "TYYPPI",
+        "date": "PÄIVÄ",
+        "meal": "ATERIA",
+        "status": "TILA",
+        "lastSync": "VIIMEISIN SYNKRONOINTI",
+        "error": "VIRHE"
+      },
+      "statuses": {
+        "synced": "Synkronoitu",
+        "pending": "Odottaa",
+        "failed": "Epäonnistui",
+        "removed": "Poistettu"
+      },
+      "emptyFiltered": "Kohteita tilassa {status} ei löytynyt",
+      "emptyDefault": "Synkronointimerkintöjä ei löytynyt",
+      "errorDetails": "Virheen tiedot",
+      "pagination": "Sivu {current} / {total}"
+    }
+  },
+  "admin": {
+    "shareLinks": {
+      "title": "Reseptien jakojen valvonta",
+      "description": "Tarkastele palvelimen julkisia reseptilinkkejä ja valvo niiden elinkaarta.",
+      "empty": "Jakolinkkejä ei löytynyt.",
+      "table": {
+        "recipe": "RESEPTI",
+        "owner": "OMISTAJA",
+        "status": "TILA",
+        "created": "LUOTU",
+        "expires": "VANHENEE",
+        "actions": "TOIMINNOT"
+      },
+      "revokeModal": {
+        "title": "Mitätöi linkki",
+        "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes se otetaan uudelleen käyttöön.",
+        "confirm": "Mitätöi"
+      },
+      "reactivateModal": {
+        "title": "Ota linkki uudelleen käyttöön",
+        "message": "Tämä reseptin {recipeName} linkki aktivoituu uudelleen.",
+        "confirm": "Ota käyttöön"
+      },
+      "deleteModal": {
+        "title": "Poista linkki",
+        "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
+        "confirm": "Poista linkki"
+      }
+    },
+    "general": {
+      "title": "Yleiset",
+      "allowRegistration": "Salli uusien käyttäjien rekisteröityminen",
+      "registrationDescription": "Kun tämä on pois käytöstä, vain olemassa olevat käyttäjät voivat kirjautua sisään",
+      "locales": "Käytössä olevat kielet",
+      "localesDescription": "Valitse, mistä kielistä käyttäjät voivat valita",
+      "defaultLocale": "Oletuskieli",
+      "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
+      "saveLocales": "Tallenna kieliasetukset",
+      "localesSaved": "Kieliasetukset tallennettu",
+      "localesError": "Kieliasetusten tallennus epäonnistui",
+      "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
+      "export": {
+        "title": "Reseptiarkisto",
+        "description": "Lataa kaikki tämän palvelimen reseptit.",
+        "button": "Vie reseptiarkisto"
+      }
+    },
+    "users": {
+      "title": "Käyttäjät",
+      "description": "Hallinnoi kaikkia, joilla on tili tällä palvelimella.",
+      "table": {
+        "user": "Käyttäjä",
+        "role": "Rooli",
+        "household": "Kotitalous",
+        "joined": "Liittynyt",
+        "actions": "Toiminnot"
+      },
+      "roles": {
+        "owner": "Omistaja",
+        "admin": "Ylläpitäjä"
+      },
+      "noHousehold": "Ei kotitaloutta",
+      "loading": "Ladataan käyttäjiä…",
+      "empty": "Ei vielä käyttäjiä.",
+      "loadFailed": "Käyttäjälistaa ei voitu ladata.",
+      "actions": {
+        "makeAdmin": "Tee ylläpitäjäksi",
+        "revokeAdmin": "Poista ylläpito-oikeudet",
+        "delete": "Poista käyttäjä"
+      },
+      "deleteTitle": "Poistetaanko {name}?",
+      "deleteConfirm": "Tämä poistaa käyttäjän tilin pysyvästi ja irrottaa hänet kotitaloudestaan. Tätä ei voi kumota.",
+      "deleteSuccess": "{name} poistettiin",
+      "countSummary": "{count, plural, one {# käyttäjä} other {# käyttäjää}} yhteensä"
+    },
+    "registration": {
+      "title": "Rekisteröityminen",
+      "allowRegistration": "Salli uusien käyttäjien rekisteröityminen",
+      "description": "Kun tämä on pois käytöstä, vain olemassa olevat käyttäjät voivat kirjautua sisään"
+    },
+    "permissions": {
+      "title": "Reseptien käyttöoikeudet",
+      "description": "Määritä, kuka voi katsella, muokata ja poistaa reseptejä. Palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "viewRecipes": "Reseptien katselu",
+      "viewDescription": "Kuka näkee reseptit etusivulla",
+      "editRecipes": "Reseptien muokkaus",
+      "editDescription": "Kuka voi muuttaa reseptin tietoja",
+      "deleteRecipes": "Reseptien poisto",
+      "deleteDescription": "Kuka voi poistaa reseptejä",
+      "levels": {
+        "everyone": "Kaikki",
+        "everyoneDescription": "Kaikki kirjautuneet käyttäjät",
+        "household": "Kotitalous",
+        "householdDescription": "Reseptin omistaja ja hänen kotitaloutensa jäsenet",
+        "owner": "Vain omistaja",
+        "ownerDescription": "Vain reseptin omistaja"
+      },
+      "note": "Huom: Ostokset ja kalenterimerkinnät noudattavat kotitalouden sääntöjä automaattisesti; kotitalouden jäsenet voivat aina muokata ja poistaa saman kotitalouden kenen tahansa jäsenen merkintöjä."
+    },
+    "system": {
+      "title": "Järjestelmäasetukset",
+      "cleanup": {
+        "title": "Siivousajastin",
+        "label": "Siivouskuukaudet",
+        "description": "Poista suunnitellut ateriat, jotka ovat tätä useamman kuukauden vanhoja"
+      },
+      "server": {
+        "title": "Palvelimen hallinta",
+        "restartLabel": "Käynnistä palvelin uudelleen",
+        "restartDescription": "Ota käyttöön asetusmuutokset, jotka vaativat uudelleenkäynnistyksen",
+        "restartButton": "Käynnistä palvelin uudelleen"
+      }
+    },
+    "restart": {
+      "title": "Käynnistä palvelin uudelleen",
+      "confirmMessage": "Haluatko varmasti käynnistää palvelimen uudelleen?",
+      "importantTitle": "Tärkeää:",
+      "warning1": "Kaikki aktiiviset yhteydet katkaistaan",
+      "warning2": "Palvelin ei ole käytettävissä muutamaan sekuntiin",
+      "warning3": "Varmista, että asennuksessasi on määritetty <code>restart: always</code>, muuten palvelin ei käynnisty automaattisesti takaisin",
+      "confirmButton": "Käynnistä nyt uudelleen"
+    },
+    "authProviders": {
+      "title": "Kirjautumistavat",
+      "requiresRestart": "Vaatii uudelleenkäynnistyksen",
+      "description": "Määritä kirjautumistavat. Muutokset tulevat voimaan vasta palvelimen uudelleenkäynnistyksen jälkeen.",
+      "passwordAuth": {
+        "title": "Sähköposti ja salasana",
+        "description": "Salli käyttäjien kirjautua sähköpostilla ja salasanalla"
+      },
+      "oauthDescription": "Määritä OAuth-palveluntarjoajat kertakirjautumista varten.",
+      "oidc": {
+        "title": "OIDC-palveluntarjoaja",
+        "subtitle": "Yleinen OpenID Connect",
+        "fields": {
+          "name": "Palveluntarjoajan nimi",
+          "namePlaceholder": "esim. Authentik, Keycloak",
+          "issuer": "Myöntäjän osoite",
+          "issuerPlaceholder": "https://your-idp.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client secret",
+          "wellknown": "Well-known-osoite (valinnainen)",
+          "wellknownPlaceholder": "Johdetaan myöntäjästä automaattisesti, jos ei asetettu"
+        },
+        "claimMapping": {
+          "title": "Claim-kartoitus",
+          "description": "Määritä roolit ja kotitaloudet automaattisesti OIDC-claimien perusteella. Ylläpitäjäryhmään kuuluvat käyttäjät saavat palvelimen ylläpito-oikeudet. Kotitalousryhmään kuuluvat käyttäjät liitetään automaattisesti kyseiseen kotitalouteen.",
+          "securityWarning": "Varoitus: Claim-kartoituksen käyttöönotto antaa identiteetintarjoajallesi vallan hallita ylläpito-oikeuksia ja kotitalouksien jäsenyyksiä. Ota tämä käyttöön vain, jos luotat OIDC-palveluntarjoajaasi täysin ja olet määrittänyt ryhmäclaimit oikein.",
+          "scopes": "Lisäscopet",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "Pilkulla eroteltu lista pyydettävistä OAuth-lisäscopeista (esim. groups Keycloakille)",
+          "groupsClaim": "Ryhmäclaim",
+          "groupsClaimDescription": "Käyttäjän ryhmät tai roolit sisältävän claimin nimi",
+          "adminGroup": "Ylläpitäjäryhmä",
+          "adminGroupDescription": "Ryhmän nimi, joka antaa palvelimen ylläpitäjän roolin (kirjainkoolla ei ole väliä)",
+          "householdPrefix": "Kotitalouden etuliite",
+          "householdPrefixDescription": "Kotitalousryhmien nimien etuliite (esim. norish_household_family => kotitalous 'family')"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientSecret": "Client secret"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Client secret"
+        }
+      },
+      "form": {
+        "testSuccess": "Yhteys onnistui",
+        "removeTitle": "Poista {provider}",
+        "removeConfirm": "Haluatko varmasti poistaa tämän palveluntarjoajan?"
+      },
+      "envBadge": {
+        "db": "Hallitaan tietokannasta",
+        "env": "Hallitaan ympäristömuuttujista"
+      }
+    },
+    "contentDetection": {
+      "title": "Sisällön tunnistus",
+      "description": "Määritä, miten reseptit tunnistetaan ja jäsennetään verkkosivuilta.",
+      "contentIndicators": {
+        "title": "Sisältötunnisteet",
+        "subtitle": "Avainsanat, jotka tunnistavat reseptisivut",
+        "description": "Skeematunnisteet havaitsevat rakenteisen reseptidatan (JSON-LD, mikrodata). Sisältötunnisteet ovat avainsanoja, jotka viittaavat siihen, että sivu sisältää reseptin.",
+        "timersEnabled": {
+          "title": "Ota reseptiajastimet käyttöön",
+          "description": "Tunnista ja näytä interaktiiviset ajastimet resepteissä"
+        }
+      },
+      "units": {
+        "title": "Mittayksiköt",
+        "subtitle": "Mittayksiköiden määritykset jäsennystä varten",
+        "description": "Määritä mittayksiköt lyhenteineen, monikkomuotoineen ja vaihtoehtoisine kirjoitusasuineen. Käytetään ainesosien määriä jäsennettäessä."
+      },
+      "recurrence": {
+        "title": "Toistokaavat",
+        "subtitle": "Luonnollisen kielen kaavat toistuville kohteille",
+        "description": "Määritä kielikohtaiset kaavat toistosääntöjen jäsentämiseen luonnollisesta kielestä (esim. 'joka viikko', 'om de dag')."
+      },
+      "timerKeywords": {
+        "title": "Ajastimien avainsanat",
+        "subtitle": "Aikayksiköiden avainsanat ajastimien tunnistukseen",
+        "description": "Määritä avainsanat, joilla ajastimet tunnistetaan reseptin ohjeista. Tukee useita kieliä.",
+        "enableToggle": "Ota ajastimien tunnistus käyttöön",
+        "hoursLabel": "Tuntien avainsanat",
+        "hoursPlaceholder": "tunti, tuntia, t, h",
+        "hoursHelp": "Tuntien avainsanat (esim. hour, stunde, heure, tunti)",
+        "minutesLabel": "Minuuttien avainsanat",
+        "minutesPlaceholder": "minuutti, minuuttia, min, m",
+        "minutesHelp": "Minuuttien avainsanat (esim. minute, minuten, minuutti)",
+        "secondsLabel": "Sekuntien avainsanat",
+        "secondsPlaceholder": "sekunti, sekuntia, sek, s",
+        "secondsHelp": "Sekuntien avainsanat (esim. second, sekunde, sekunti)",
+        "unsavedChanges": "Tallentamattomia muutoksia"
+      }
+    },
+    "aiProcessing": {
+      "title": "Tekoäly ja käsittely",
+      "description": "Määritä tekoälytoiminnot reseptien poimintaan ja videoiden käsittelyyn.",
+      "aiConfig": {
+        "title": "Tekoälyasetukset",
+        "subtitle": "Reseptien jäsennys ja poiminta"
+      },
+      "video": {
+        "title": "Videoiden käsittely",
+        "subtitle": "Sosiaalisen median videoiden poiminta ja litterointi"
+      },
+      "imageGeneration": {
+        "title": "Kuvien luonti",
+        "subtitle": "Piirrä kuva ruoasta resepteille, joilla sitä ei ole"
+      },
+      "prompts": {
+        "title": "Kehotteet",
+        "subtitle": "Mukauta tekoälyn ohjeita reseptien käsittelyyn"
+      },
+      "cuisines": {
+        "title": "Ruokakulttuurit",
+        "subtitle": "Sanasto, josta reseptit ja tekoäly valitsevat"
+      },
+      "bulkEnrichment": {
+        "title": "Joukkorikastus",
+        "subtitle": "Aja käytössä olevat rikastukset kaikille resepteille",
+        "description": "Asettaa jonoon jokaisen rikastustyypin, jonka automaattinen kytkin on päällä, kaikille tämän palvelimen resepteille. Oletuksena täydennetään vain puuttuvat tiedot; vahvistuksessa voi valita myös olemassa olevien korvaamisen.",
+        "button": "Rikasta kaikki reseptit",
+        "confirmTitle": "Ajetaanko rikastus kaikille resepteille?",
+        "confirmMessage": "Tämä asettaa jonoon tekoälytyötä jokaiselle tämän palvelimen reseptille. Jokainen rikastustyyppi, jonka automaattinen kytkin on päällä, ajetaan siellä missä tietoja puuttuu.",
+        "replaceExisting": "Korvaa olemassa olevat tiedot",
+        "replaceExistingDescription": "Tee kategoriat, ravintosisältö, alkuperä ja työvaiheiden ainesosat uudelleen myös silloin, kun resepti jo sisältää ne. Tunnisteita ja allergiamerkintöjä ainoastaan lisätään.",
+        "replaceWarning": "Tätä ei voi kumota. Myös itse syöttämäsi tiedot korvataan, mukaan lukien käsin linkittämäsi työvaiheiden ainesosat: mikään ei kirjaa, mitkä arvot ovat tekoälyn tuottamia.",
+        "costWarning": "Tämä voi olla raskas toiminto: jos reseptejä on paljon, se voi kestää kauan ja kuluttaa maksullisella tekoälypalvelulla huomattavasti krediittejä.",
+        "confirmButton": "Aja kaikille resepteille",
+        "confirmButtonReplace": "Korvaa kaikki reseptit",
+        "queued": "{queued, plural, =0 {Ei jonotettuja ajoja} one {# ajo jonossa} other {# ajoa jonossa}}, {recipes, plural, one {# reseptille} other {# reseptille}}",
+        "aiDisabled": "Tekoäly on pois käytöstä tällä palvelimella. Ota tekoäly ensin käyttöön.",
+        "error": "Joukkorikastuksen käynnistys epäonnistui",
+        "imageCount": "{count, plural, =0 {Ajo ei luo yhtään kuvaa.} one {Ajo luo # kuvan.} other {Ajo luo # kuvaa.}}"
+      }
+    },
+    "aiConfig": {
+      "enableAI": "Ota tekoälytoiminnot käyttöön",
+      "enableAIDescription": "Käytä tekoälyä reseptien poimintaan jäsentämättömästä sisällöstä",
+      "configureWarning": "Määritä tekoälypalvelun asetukset alla ottaaksesi tekoälytoiminnot käyttöön.",
+      "provider": "Tekoälypalvelu",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama (paikallinen)",
+        "lmStudio": "LM Studio (paikallinen)",
+        "genericOpenai": "Yleinen OpenAI-yhteensopiva"
+      },
+      "endpointUrl": "Päätepisteen osoite",
+      "azureEndpoint": "Azure-resurssin osoite (valinnainen)",
+      "azureEndpointDescription": "Mukautettu Azure OpenAI -päätepiste. Jätä tyhjäksi käyttääksesi oletusta.",
+      "model": "Malli",
+      "visionModel": "Konenäkömalli (valinnainen)",
+      "visionModelDescription": "Valinnainen: Käytä eri mallia kuva- ja konenäkötehtäviin. Jätä tyhjäksi käyttääksesi yllä olevaa mallia.",
+      "apiKey": "API-avain",
+      "apiKeyPlaceholder": "Kirjoita API-avain",
+      "temperature": "Lämpötila: {value}",
+      "temperatureHint": "Pienempi = keskittyneempi, suurempi = luovempi",
+      "maxTokens": "Tokenien enimmäismäärä",
+      "requestTimeout": "Pyynnön aikakatkaisu (ms)",
+      "alwaysUseAI": "Käytä aina tekoälytuontia",
+      "alwaysUseAIDescription": "Ohita rakenteiset jäsentimet ja poimi reseptit vain tekoälyllä",
+      "connectionSuccess": "Yhteys onnistui",
+      "testConnection": "Testaa yhteys",
+      "vision": "konenäkö",
+      "automaticEnrichment": "Reseptien automaattinen rikastus",
+      "automaticEnrichmentDescription": "Valitse, mikä tekoälyrikastus ajetaan automaattisesti uusille resepteille. Jäsenet voivat silti ajaa kunkin käsin, kun tekoäly on käytössä.",
+      "automaticEnrichmentPlaceholder": "Mitään ei ajeta automaattisesti",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Tunnisteiden luonti",
+        "autoTaggingDescription": "Lisää tekoälyn ehdottamat tunnisteet uusiin resepteihin poistamatta olemassa olevia tunnisteita",
+        "allergyDetection": "Allergeenien tunnistus",
+        "allergyDetectionDescription": "Lisää allergiaan liittyvät tunnisteet automaattisesti reseptejä tuotaessa",
+        "autoCategorization": "Automaattinen luokittelu",
+        "autoCategorizationDescription": "Aseta ateriakategoriat uusiin resepteihin, joilla niitä ei ole",
+        "nutritionEstimation": "Ravintosisällön arviointi",
+        "nutritionEstimationDescription": "Arvioi kalorit, rasva, hiilihydraatit ja proteiini uusille resepteille, joissa niitä ei ole annettu",
+        "recipeProvenance": "Reseptin alkuperä",
+        "recipeProvenanceDescription": "Selvitä maa, alue, ruokakulttuurit ja lyhyt huomautus uusille resepteille täydentäen vain sen, mikä vielä puuttuu",
+        "ingredientLinking": "Ainesosien linkitys",
+        "ingredientLinkingDescription": "Linkitä jokainen työvaihe käyttämiinsä ainesosariveihin niissä vaiheissa, joissa linkkejä ei ole",
+        "imageGeneration": "Kuvien luonti",
+        "imageGenerationDescription": "Piirrä kuva ruoasta uusille resepteille, joilla ei ole lainkaan kuvaa"
+      },
+      "tagStrategy": "Sallitut tunnisteet",
+      "tagStrategyDescription": "Mitä tunnisteita tunnisteiden luonti saa käyttää, ajetaanpa se automaattisesti tai käsin",
+      "tagStrategies": {
+        "predefined": "Vain ennalta määritellyt tunnisteet",
+        "predefinedDb": "Ennalta määritellyt ja olemassa olevat tunnisteet",
+        "freeform": "Tekoäly saa luoda uusia tunnisteita"
+      },
+      "cuisineStrategy": "Sallitut ruokakulttuurit",
+      "cuisineStrategyDescription": "Saako alkuperän päättely lisätä ruokakulttuureita sanastoosi vai ainoastaan valita siitä",
+      "cuisineStrategies": {
+        "existing": "Vain olemassa olevat ruokakulttuurit",
+        "extend": "Tekoäly saa lisätä uusia ruokakulttuureita"
+      }
+    },
+    "modelListing": {
+      "empty": "Malleja ei palautunut. Tarkista API-avain tai päätepiste, tai kirjoita mallin nimi.",
+      "refused": "{provider} hylkäsi pyynnön ({status}). Tarkista API-avain.",
+      "unreachable": "Palvelua {provider} ei tavoitettu. Tarkista päätepiste."
+    },
+    "videoConfig": {
+      "enableVideo": "Ota videoiden jäsennys käyttöön",
+      "enableVideoDescription": "Poimi reseptejä TikTokista, Instagramista, YouTube Shortsista, Facebookista, Pinterestistä ja muualta",
+      "configureWarning": "Määritä litterointipalvelu alla ottaaksesi videoiden käsittelyn käyttöön.",
+      "aiDisabledWarning": "Ota tekoälyasetukset käyttöön ennen videoiden käsittelyn kytkemistä päälle.",
+      "maxLength": "Videon enimmäispituus (sekuntia)",
+      "maxLengthDescription": "Pidemmät videot vievät enemmän aikaa ja resursseja",
+      "maxFileSize": "Videotiedoston enimmäiskoko",
+      "maxFileSizeDescription": "Ladattavien videotiedostojen enimmäiskoko",
+      "ytDlpVersion": "yt-dlp-versio",
+      "ytDlpVersionDescription": "Tämän palvelimen käyttämä yt-dlp-versio. Ei muutettavissa täällä.",
+      "ytDlpVersionMissing": "yt-dlp-ohjelmaa ei löytynyt",
+      "ytDlpVersionUnknown": "Ei voitu tarkistaa",
+      "ytDlpVersionLoading": "Tarkistetaan …",
+      "ytDlpProxy": "yt-dlp-välityspalvelin",
+      "ytDlpProxyDescription": "HTTP- tai SOCKS5-välityspalvelin yt-dlp:lle",
+      "transcription": "Litterointi",
+      "transcriptionDescription": "Muunna videon ääni tekstiksi reseptin poimintaa varten",
+      "transcriptionProvider": "Litterointipalvelu",
+      "transcriptionProviderDescription": "Vain OpenAI ja OpenAI-yhteensopivat päätepisteet tukevat Whisper-litterointia",
+      "transcriptionProviders": {
+        "disabled": "Pois käytöstä",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
+        "genericOpenai": "Yleinen OpenAI-yhteensopiva"
+      },
+      "transcriptionEndpoint": "Päätepisteen osoite",
+      "transcriptionEndpointDescription": "OpenAI-yhteensopiva päätepiste Whisper-tuella tai Ollama-päätepiste",
+      "transcriptionModel": "Malli",
+      "transcriptionModelDescription": "Litterointiin käytettävä Whisper-malli",
+      "transcriptionModelPlaceholder": "Valitse tai kirjoita mallin nimi",
+      "transcriptionApiKey": "API-avain",
+      "transcriptionApiKeyDescription": "Käyttää tekoälyasetusten API-avainta, jos tätä ei ole asetettu",
+      "transcriptionApiKeyPlaceholder": "Jätä tyhjäksi käyttääksesi tekoälyasetusten avainta",
+      "transcriptionApiKeyOptional": "API-avain (valinnainen)",
+      "transcriptionApiKeyOptionalDescription": "Useimmat paikalliset Whisper-palvelimet eivät vaadi API-avainta",
+      "transcriptionApiKeyOptionalPlaceholder": "Jätä tyhjäksi paikallisia palvelimia varten"
+    },
+    "imageGenerationConfig": {
+      "description": "Kuvien luonti käyttää omaa palveluntarjoajaansa, koska useimmat tekoälypalvelut eivät osaa piirtää. Kuvat luodaan tällä palvelulla; yllä oleva tekoälypalvelu hoitaa kaiken muun.",
+      "provider": "Kuvapalvelu",
+      "providers": {
+        "disabled": "Pois käytöstä",
+        "openai": "OpenAI",
+        "google": "Google AI",
+        "azure": "Azure OpenAI",
+        "lmStudio": "LM Studio",
+        "genericOpenai": "Yleinen OpenAI-yhteensopiva"
+      },
+      "endpoint": "Päätepisteen osoite",
+      "endpointOptional": "Valinnainen: mukautettu Azure-resurssin osoite",
+      "apiKey": "API-avain",
+      "apiKeyPlaceholder": "Kirjoita API-avain...",
+      "apiKeyInherited": "Käytetään tekoälyasetustesi API-avainta.",
+      "model": "Kuvamalli",
+      "modelPlaceholder": "esim. gpt-image-1",
+      "modelDescription": "Malli, joka piirtää kuvan. Sen on oltava kuvamalli, ei tekstimalli.",
+      "fallbackHint": "Sama palveluntarjoaja kuin tekoälyasetuksissasi: päätepiste ja API-avain periytyvät sieltä, ellet aseta niitä tässä."
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Reseptin poiminnan kehote",
+      "recipeExtractionDescription": "Tätä kehotetta käytetään poimittaessa reseptitietoja verkkosivuilta tai videoiden litteroinneista.",
+      "recipeExtractionPlaceholder": "Kirjoita reseptin poiminnan kehote...",
+      "imageExtraction": "Kuvasta poiminnan kehote",
+      "imageExtractionDescription": "Tätä kehotetta käytetään poimittaessa reseptitietoja lähetetyistä kuvista, kuten keittokirjan tai reseptikortin valokuvista.",
+      "imageExtractionPlaceholder": "Kirjoita kuvasta poiminnan kehote...",
+      "unitConversion": "Yksikkömuunnoksen kehote",
+      "unitConversionDescription": "Tätä kehotetta käytetään muunnettaessa reseptin mittoja metrisen ja amerikkalaisen järjestelmän välillä. Käytettävissä olevat muuttujat: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "Kirjoita yksikkömuunnoksen kehote...",
+      "nutritionEstimation": "Ravintosisällön arvioinnin kehote",
+      "nutritionEstimationDescription": "Tätä kehotetta käytetään arvioitaessa reseptin ravintosisältöä. Käytettävissä olevat muuttujat: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "Kirjoita ravintosisällön arvioinnin kehote...",
+      "autoTagging": "Tunnisteiden luonnin kehote",
+      "autoTaggingDescription": "Tätä kehotetta käytetään tunnisteiden luomiseen tuoduille resepteille. Määritä tunnistesäännöt ja ennalta määriteltyjen tunnisteiden lista.",
+      "autoTaggingPlaceholder": "Kirjoita tunnisteiden luonnin kehote...",
+      "autoCategorization": "Automaattisen luokittelun kehote",
+      "autoCategorizationDescription": "Tätä kehotetta käytetään reseptien lajitteluun ateriakategorioihin (aamiainen, lounas, päivällinen, välipala).",
+      "autoCategorizationPlaceholder": "Kirjoita automaattisen luokittelun kehote...",
+      "allergyDetection": "Allergeenien tunnistuksen kehote",
+      "allergyDetectionDescription": "Tätä kehotetta käytetään kotitalouden määrittämien allergeenien tunnistamiseen reseptin ainesosista.",
+      "allergyDetectionPlaceholder": "Kirjoita allergeenien tunnistuksen kehote...",
+      "recipeProvenance": "Reseptin alkuperän kehote",
+      "recipeProvenanceDescription": "Tätä kehotetta käytetään selvittämään, mistä resepti on peräisin. Sen tuottama huomautus kirjoitetaan reseptin omalla kielellä. Käytettävissä olevat muuttujat: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Kirjoita reseptin alkuperän kehote...",
+      "ingredientLinking": "Ainesosien linkityksen kehote",
+      "ingredientLinkingDescription": "Käytetään linkitettäessä jokainen työvaihe käyttämiinsä ainesosariveihin",
+      "ingredientLinkingPlaceholder": "Kehote ainesosien linkittämiseen työvaiheisiin...",
+      "imageGenerationBrief": "Kuvabriefin kehote",
+      "imageGenerationBriefDescription": "Käytetään muuntamaan resepti lyhyeksi visuaaliseksi briefiksi ennen kuvan luontia. Resepti liitetään kehotteen perään.",
+      "imageGenerationBriefPlaceholder": "Kehote visuaalisen briefin kirjoittamiseen...",
+      "imageGenerationStyle": "Kuvatyylin kehote",
+      "imageGenerationStyleDescription": "Lähetetään kuvamallille, ja visuaalinen brief liitetään sen perään. Määrittää ilmeen, joka on yhteinen kaikille luoduille kuville.",
+      "imageGenerationStylePlaceholder": "Kehote kuvan tyylille..."
+    },
+    "unsavedChanges": "Tallentamattomia muutoksia",
+    "jsonEditor": {
+      "placeholder": "Kirjoita JSON-asetukset...",
+      "invalidJson": "Virheellinen JSON-muoto",
+      "failedToSave": "Tallennus epäonnistui",
+      "failedToRestore": "Oletusten palautus epäonnistui"
+    },
+    "jobQueue": {
+      "title": "Työjonot",
+      "description": "Seuraa taustatöitä kaikissa jonoissa: tila, nykyinen vaihe, kesto ja virheet.",
+      "empty": "Töitä ei löytynyt",
+      "filters": {
+        "queue": "Jono",
+        "allQueues": "Kaikki jonot"
+      },
+      "status": {
+        "waiting": "Odottaa",
+        "active": "Käynnissä",
+        "delayed": "Viivästetty",
+        "completed": "Valmis",
+        "failed": "Epäonnistui",
+        "paused": "Keskeytetty",
+        "prioritized": "Priorisoitu",
+        "unknown": "Tuntematon",
+        "hanging": "Jumissa"
+      },
+      "stepStatus": {
+        "done": "Valmis",
+        "failed": "Epäonnistui",
+        "running": "Käynnissä",
+        "skipped": "Ohitettu",
+        "pending": "Odottaa"
+      },
+      "steps": {
+        "dedupe-check": "Tarkista olemassa olevat",
+        "fetch-allergies": "Hae allergiat",
+        "parsing": "Jäsennä resepti",
+        "saving": "Tallenna resepti",
+        "post-processing": "Jälkikäsittely",
+        "preparing-images": "Valmistele kuvat",
+        "ai-extraction": "Tekoälypoiminta",
+        "parsing-text": "Jäsennä liitetty teksti",
+        "creating-recipes": "Luo reseptit",
+        "ai-request": "Tekoälypyyntö",
+        "syncing-event": "Synkronoi kalenteritapahtuma",
+        "deleting-event": "Poista kalenteritapahtuma",
+        "running": "Aja tehtävä"
+      },
+      "queues": {
+        "recipe-import": "Reseptien tuonti",
+        "image-recipe-import": "Kuvatuonti",
+        "paste-recipe-import": "Liitetyn tekstin tuonti",
+        "nutrition-estimation": "Ravintosisällön arviointi",
+        "auto-tagging": "Tunnisteiden luonti",
+        "auto-categorization": "Automaattinen luokittelu",
+        "allergy-detection": "Allergeenien tunnistus",
+        "recipe-provenance": "Reseptin alkuperä",
+        "ingredient-linking": "Ainesosien linkitys",
+        "caldav-sync": "CalDAV-synkronointi",
+        "scheduled-tasks": "Ajastetut tehtävät",
+        "image-generation": "Kuvien luonti"
+      },
+      "summary": {
+        "failed": "{count} epäonnistui"
+      },
+      "table": {
+        "job": "Työ",
+        "status": "Tila",
+        "step": "Vaihe",
+        "duration": "Kesto",
+        "created": "Luotu",
+        "runsAt": "Ajetaan {time}"
+      },
+      "detail": {
+        "title": "Työn tiedot",
+        "notFound": "Työtä ei löytynyt. Se on voitu siivota pois.",
+        "sections": {
+          "error": "Virhe",
+          "pipelineSteps": "Käsittelyvaiheet",
+          "input": "Syöte",
+          "logs": "Lokit",
+          "errors": "Virheet"
+        },
+        "fields": {
+          "queue": "Jono",
+          "jobId": "Työn tunnus",
+          "description": "Kuvaus",
+          "recipe": "Resepti",
+          "created": "Luotu",
+          "started": "Aloitettu",
+          "finished": "Valmistui",
+          "duration": "Kesto",
+          "attempts": "Yritykset",
+          "runsAt": "Ajetaan",
+          "nextRun": "Seuraava ajo"
+        },
+        "attempt": "Yritys {number}",
+        "stackTrace": "Kutsupino"
+      },
+      "actions": {
+        "retry": "Yritä uudelleen",
+        "remove": "Poista"
+      },
+      "removeModal": {
+        "message": "Poistetaanko tämä työ pysyvästi?",
+        "confirm": "Poista työ"
+      },
+      "retention": {
+        "title": "Töiden säilytys",
+        "keepCompleted": "Säilytä valmiit työt",
+        "keepFailed": "Säilytä epäonnistuneet työt",
+        "maxAgeDays": "Enimmäisikä (päivää)",
+        "description": "Kuinka monta päättynyttä työtä jonoa kohden säilytetään seurantaa varten. Muutokset vaativat palvelimen uudelleenkäynnistyksen."
+      },
+      "pagination": "Sivu {current} / {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Ruokakulttuurit ovat sinun ylläpitämäsi sanasto. Nimet näytetään täsmälleen sellaisina kuin ne on tähän kirjoitettu, kaikilla kielillä.",
+      "namePlaceholder": "Ruokakulttuurin nimi",
+      "addLabel": "Lisää ruokakulttuuri",
+      "renameLabel": "Nimeä {name} uudelleen",
+      "deleteLabel": "Poista {name}",
+      "deleteConfirm": "Poistetaanko \"{name}\"? Sitä käyttävät reseptit menettävät sen.",
+      "empty": "Ei vielä ruokakulttuureita.",
+      "duplicate": "Samanniminen ruokakulttuuri on jo olemassa.",
+      "saveFailed": "Ruokakulttuuria ei voitu tallentaa."
+    }
+  },
+  "archiveExport": {
+    "progress": "Viedään… {size}",
+    "errors": {
+      "failedTitle": "Vienti epäonnistui",
+      "failedDescription": "Reseptiarkistoa ei voitu ladata. Yritä uudelleen.",
+      "signedOut": "Istuntosi on vanhentunut. Kirjaudu uudelleen sisään viedäksesi.",
+      "notAllowed": "Sinulla ei ole oikeutta viedä tätä."
+    }
+  }
+}
