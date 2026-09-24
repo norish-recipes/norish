@@ -20,10 +20,6 @@ General settings for the Norish server process. Most have sensible defaults;
 | `PORT`       | Server port                                  | `3000`                                 |
 | `REDIS_URL`  | Redis connection URL for events and jobs     | `redis://localhost:6379`               |
 
-Redis carries the job queues and the live updates that reach open browsers
-over the WebSocket; what a reverse proxy must pass through for those, and what
-Norish keeps in Redis for them, is on [WebSocket & realtime](./websocket.md).
-
 :::info Generate a `MASTER_KEY`
 `MASTER_KEY` derives the encryption keys used to protect stored secrets. Generate
 a strong one and keep it stable — changing it invalidates previously encrypted

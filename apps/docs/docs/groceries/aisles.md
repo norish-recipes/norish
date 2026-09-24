@@ -9,7 +9,7 @@ description: Give a Store the aisles of the shop it stands for, and your list is
 A **Store** in Norish is a heading your groceries sit under. A Store can
 additionally have **Aisles**, you could also see this as categories.
 
-## Giving a Store its aisles
+## Adding aisles to a store
 
 Open **Manage Stores**, edit a store, and under the colour you find the
 **Aisles**. Type a name and press Enter or the plus to add one, type over a
@@ -19,28 +19,20 @@ name to rename it, drag the handle to reorder, and press the **X** to remove one
 
 ## The list by aisle
 
-Once a Store has aisles, its card shows every one of them as a slim heading,
-in the Store's order, whether or not anything is filed under it, so the shop's
-shape is always visible and there is always a place to drag a row. A filled
-aisle's heading is followed by how many lines are under it; an empty one is
-quieter and carries no count. The Store's heading, its total, "Mark all done"
-and "Delete done" stay exactly as they are, and ticked groceries fold into the
-**done row** at the bottom of the card, so they never read as filed in the
-last aisle.
+Once a Store has aisles, its card shows every one of them, this is
+done purposefully to make drag and drop easy.
 
 ![A Store's card shown by aisle, with unfiled rows at the top](/img/screenshots/groceries-aisles-list.png)
 
-A grocery the Store has never been told about is **unfiled**: it sits at the
-top of the card, under no heading, where it is noticed and filed. Norish never
-guesses an aisle from words, and no AI is involved, so you are never shown milk
-in the bread aisle because a word looked like bread.
+An unknown grocery, e.g. one that's added for the first time. Will default
+to no aisle at the top of a store or the unsorted section.
 
 ## Adding groceries to an aisle
 
 There are two ways to add groceries to an aisle.
 
 **Drag the row** into an aisle. Dragging it back to the top of the Store
-unfiles it. Dragging a row into another Store's aisle moves it to that Store
+unlinks it. Dragging a row into another Store's aisle moves it to that Store
 and aisles. Dragging it into another Store's top area moves it there and
 leaves that Store's own memory to place it.
 

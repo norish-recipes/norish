@@ -30,9 +30,8 @@ have your recipe, and every enrichment can be run manually later.
 Your administrator may add a
 [Decision Model](../configuration/ai-provider.md#decision-model) that answers
 some of these questions faster; nothing on your recipe changes depending on
-which model decided. When one is configured, a run's own tags, categories,
-cuisines and step ingredients are checked before they are written, while
-anything you entered yourself is never touched.
+which model decided. When one is configured some enrichments are checked
+against the decision model before writing.
 
 ## Automatic enrichment
 

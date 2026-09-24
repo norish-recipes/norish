@@ -1,33 +1,27 @@
 ---
 sidebar_position: 3
 title: Pantry
-description: Tell Norish what you already have at home, and a recipe's staples stay off your grocery list unless you ask for them.
+description: Tell Norish what you alerady have at home, and a recipe's staples stay off your grocery list unless you ask for them.
 ---
 
 # Pantry
 
-The **Pantry** is the household's list of what it already has at home: olive
-oil, salt, flour, whatever you never need to buy again this week. It is shared
-with your household the way your Stores are, and it holds names and nothing
-else — no amounts, no dates.
+The **Pantry** defineswhat is already in the the house. Groceries
+listed in the pantry won't be added to the grocery list unless
+explicitly marked.
 
 ## Filling your pantry
 
 On the **Groceries** page, open the menu next to **Add Item** and choose
 **Pantry**. Type a name and press Enter or the plus to add it, and press the
-**X** to take one out. Each name is kept the moment you add it, so the whole
-cupboard can be typed in one sitting. A name that is already in the pantry is
-refused where you type it, regardless of case or punctuation.
+**X** to take one out. The pantry is case insensitive.
 
 ![The Pantry panel, with a few names in it](/img/screenshots/groceries-pantry-panel.png)
 
 ## Adding a recipe
 
 When you add a recipe to your groceries, the ingredients you have at home are
-shown apart under **In your pantry**, unticked, and are left off the list.
-Everything else is ticked and added as before. If you are out of something
-after all, tick it and it is added along with the rest; the tick is for this
-recipe and changes nothing in the pantry.
+shown apart under **In your pantry**.
 
 ![The add-to-groceries panel, with olive oil under "In your pantry"](/img/screenshots/groceries-pantry-section.png)
 
@@ -35,12 +29,16 @@ recipe and changes nothing in the pantry.
 
 - An ingredient is in the pantry only when its name **is** a pantry name:
   "olive oil" in the pantry does not catch "extra virgin olive oil" in a
-  recipe, and "salt" is never mistaken for "salted butter". Norish never
-  guesses from words, and no AI is involved.
-- The pantry only ever holds back what a recipe would add. It never removes,
-  hides or greys a grocery that is already on your list, and a name you type
-  into the list yourself is added whether or not it is in the pantry.
+  recipe, and "salt" is never mistaken for "salted butter".
 - Pantry names carry no amounts and no expiry dates.
-- The pantry is a web feature for now; the phone app leaves it alone.
+
+:::note
+There is a feature planned to make ingredients more than just a string.
+This will therefore improve the pantry feature as well. One of these improvements is:
+An ingredient is a base ingredient e.g. Chicken breast. Each base ingredient
+Can have several alternatives e.g. Diced chicken breasts. This will allow the 
+pantry to detect alternatives if wanted.
+:::
+
 
 [Aisles](./aisles.md) · [Prices](./prices.md)

@@ -212,7 +212,7 @@ Configure it under **Settings => Admin => AI & Processing => Decision Model**:
 | **Model**                      | Defaults to `jev-latest` release                                                                                                                                                                                                                                                                       |
 | **Use the Decision Model for** | One multi-select: _Auto-categorization_, _Auto-tagging_, _Allergy detection_, _Recipe Provenance_, _Grocery linking_, _Validate enrichments_. **Everything is selected** the moment a Decision Model is configured; deselect what it should leave to the AI provider. Import triage is not in the list |
 
-What it speeds up:
+What it does:
 
 - **Auto-categorization** asks four questions instead of asking a language
   model to write the words.

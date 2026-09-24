@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: The recipe page
-description: How a recipe reads on your phone — the Glance Bar, one card per section in cooking order, the floating Cook button, cooking mode with Ready At, and pages tinted by the dish itself.
+description: How a recipe reads on your phone, the Glance Bar, one card per section in cooking order, the floating Cook button, cooking mode with Ready At, and pages tinted by the dish itself.
 ---
 
 # The recipe page
@@ -18,19 +18,6 @@ The Glance Bar restates what the sections below show. It holds nothing of its
 own: change the servings and the bar follows, hide Nutrition Information (a
 [Hidden Item](./hidden-items.md)) and its calories entry leaves with the
 card, and a recipe that stores none of the three simply has no bar.
-
-## A recipe with a video
-
-When a recipe's gallery holds a video, that video is what plays at the top of
-the page: muted, on a loop, cropped to the header's shape the way a photo is.
-An **expand** button sits beside the back arrow, and it opens the video full
-screen — the whole frame instead of the crop, so a portrait video is finally
-whole, with its sound on and its progress bar, mute and exit within reach. It
-carries on from where it had got to, and picks up again in the header when you
-leave full screen.
-
-On a wide screen the player shows that same bar on the video itself when you
-hover it, so there is no separate button to press.
 
 ## One card per section, in cooking order
 

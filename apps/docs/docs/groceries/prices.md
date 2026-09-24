@@ -32,9 +32,9 @@ When similar ingredients are grouped, the group is priced as one purchase. So 30
 
 Norish links a grocery to one of the shop's products by itself only when the product's name is the grocery's name, give or take a typo on longer names. A product whose name merely contains the grocery's, "snoepjes" inside "Fortuin salmiak snoepjes", is not taken: it could as well be any other bag of sweets.
 
-Everything else is yours to decide. Open the grocery and use the **Product** field: typing shows what the Store already knows and what the shop answers, with the price beside each. Typing a product's own name fills it in.
+Everything else is yours to decide. Open the grocery and use the **Product** field: typing shows what the Store already knows and what the shop answers.
 
-When your administrator has configured a [Decision Model](../configuration/ai-provider.md#decision-model) with _Grocery linking_ selected, it is asked which of the shop's products is the grocery once the name rule has declined. Its pick is linked and priced as a name match would be when it rates that product likelier than every alternative together; otherwise nothing is linked and the shop's answers are offered most likely first. A wrong pick is one tap to undo: unlinking works as before, and a product you unlink is not linked again on its say-so.
+When your administrator has configured a [Decision Model](../configuration/ai-provider.md#decision-model) with _Grocery linking_ selected, it is asked which of the shop's products is the grocery once the name rule has declined. Its pick is linked and priced as a name match would be when it rates that product likelier than every alternative together; otherwise nothing is linked and the shop's answers are offered most likely first.
 
 ```mermaid
 flowchart TD
