@@ -42,7 +42,7 @@ example `http://192.168.1.100:3000,https://norish.example.com`. The WebSocket
 refuses an upgrade from a browser origin it does not trust, so a proxy that
 rewrites `Host` needs the public origin listed here when that origin is not the
 one in `AUTH_URL` either — see
-[WebSocket & realtime](./websocket.md#the-origin-check).
+[WebSocket & realtime](./websocket.md#origin-check).
 
 ## Auth rate limiting
 
