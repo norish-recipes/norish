@@ -9,7 +9,8 @@
  * and retryable-failure responses without contacting an external AI provider.
  */
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { APICallError, generateImage, generateText, Output } from "ai";
+import { createTypeSafeAi } from "@ai-sdk/typesafe-ai";
+import { APICallError, experimental_evaluate, generateImage, generateText, Output } from "ai";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -275,6 +276,129 @@ describe("the image-generation route", () => {
     provider.control.succeedWith({ note: "text answer" });
 
     const failure = await drawImage().then(
+      () => null,
+      (error: unknown) => error
+    );
+
+    expect(APICallError.isInstance(failure)).toBe(true);
+    expect((failure as InstanceType<typeof APICallError>).statusCode).toBe(500);
+  });
+});
+
+describe("the Decision route", () => {
+  // The exact client the production runtime builds for the Decision block.
+  function harnessDecisionModel() {
+    return createTypeSafeAi({ apiKey: "e2e-key", baseURL: `${provider.url}/v1` }).evaluationModel(
+      "jev-latest"
+    );
+  }
+
+  function ask() {
+    return experimental_evaluate({
+      model: harnessDecisionModel(),
+      state: { title: "Lentil stew" },
+      questions: {
+        Breakfast: { type: "boolean", instructions: "Is this a breakfast dish?" },
+        mealtime: {
+          type: "choice",
+          instructions: "When is it eaten?",
+          criteria: { lunch: null, dinner: null },
+        },
+      },
+      maxRetries: 0,
+    });
+  }
+
+  it("returns the directed answers through the real SDK provider", async () => {
+    provider.control.decideWith(
+      {
+        Breakfast: { type: "noul", noul: 0.04 },
+        mealtime: {
+          type: "choice",
+          choice: "dinner",
+          confidence: 0.91,
+          probabilities: { lunch: 0.1, dinner: 0.9 },
+        },
+      },
+      "jev-2026-09-01"
+    );
+
+    const result = await ask();
+
+    expect(result.answers.Breakfast).toEqual({ type: "boolean", probability: 0.04 });
+    expect(result.answers.mealtime).toMatchObject({ type: "choice", choice: "dinner" });
+    expect(result.response.modelId).toBe("jev-2026-09-01");
+    expect(result.providerMetadata).toEqual({ typesafe: { confidence: { mealtime: 0.91 } } });
+    expect(provider.control.decisionRequestCount).toBe(1);
+    expect(provider.control.requests.at(-1)?.path).toBe("/v1/systemone");
+  });
+
+  it("answers only the questions a request asked, so one default serves a whole flow", async () => {
+    // The SDK refuses an answer to a question it did not ask; a default that
+    // also holds the answers to later questions must not fail the first.
+    provider.control.decideWith({
+      isRecipe: { type: "noul", noul: 0.99 },
+      Breakfast: { type: "noul", noul: 0.04 },
+      mealtime: { type: "choice", choice: "dinner", probabilities: { lunch: 0.1, dinner: 0.9 } },
+    });
+
+    const result = await ask();
+
+    expect(Object.keys(result.answers).sort()).toEqual(["Breakfast", "mealtime"]);
+    expect(result.answers.Breakfast).toEqual({ type: "boolean", probability: 0.04 });
+  });
+
+  it("consumes one-shot Decision directives before the default, independently of the chat lane", async () => {
+    provider.control.succeedWith({ note: "text answer" });
+    provider.control.decideWith({
+      Breakfast: { type: "noul", noul: 0.9 },
+      mealtime: { type: "choice", choice: "lunch", probabilities: { lunch: 1, dinner: 0 } },
+    });
+    provider.control.enqueueDecision({
+      kind: "decision",
+      answers: {
+        Breakfast: { type: "noul", noul: 0.1 },
+        mealtime: { type: "choice", choice: "dinner", probabilities: { lunch: 0, dinner: 1 } },
+      },
+    });
+
+    const first = await ask();
+    const second = await ask();
+
+    expect(first.answers.Breakfast.probability).toBe(0.1);
+    expect(second.answers.Breakfast.probability).toBe(0.9);
+    expect(provider.control.decisionRequestCount).toBe(2);
+  });
+
+  it("can be directed to reject the key like a real 401", async () => {
+    provider.control.failDecisionPermanently();
+
+    const failure = await ask().then(
+      () => null,
+      (error: unknown) => error
+    );
+
+    expect(APICallError.isInstance(failure)).toBe(true);
+    expect((failure as InstanceType<typeof APICallError>).statusCode).toBe(401);
+    expect((failure as InstanceType<typeof APICallError>).isRetryable).toBe(false);
+  });
+
+  it("can be directed to fail retryably", async () => {
+    provider.control.failDecisionRetryably();
+
+    const failure = await ask().then(
+      () => null,
+      (error: unknown) => error
+    );
+
+    expect(APICallError.isInstance(failure)).toBe(true);
+    expect((failure as InstanceType<typeof APICallError>).isRetryable).toBe(true);
+  });
+
+  it("fails loudly when no Decision directive is configured", async () => {
+    provider.control.succeedWith({ note: "text answer" });
+
+    const failure = await ask().then(
       () => null,
       (error: unknown) => error
     );

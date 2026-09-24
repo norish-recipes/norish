@@ -14,3 +14,7 @@ Where AI code lives is now a sentence rather than a dependency-graph accident: *
 - The two transcription providers the AI SDK cannot serve — the generic OpenAI-compatible endpoint and Ollama — keep their raw clients as escape hatches _inside_ the provider boundary. Wrapping them in adapters purely to unify a return type was rejected as buying type symmetry with two shims that do nothing else.
 - There are no barrels: consumers import deep paths, matching the exports maps. The deleted barrels died of having no importers; adding one back re-creates the problem ADR-0014 named.
 - Adding an AI feature that bypasses the runtime — importing `generateText`, building a provider client in a feature file — is a decision to reopen this ADR, not a shortcut.
+
+## Amendment, 2026-09-21
+
+The runtime records one more thing per request, beside the usage log line: which provider and model answered, and whether the request completed or failed, on a per-job model-use ledger (`ai/runtime/model-use-ledger.ts`, AsyncLocalStorage like the operation context). The queue writes it onto the job's attempt and the admin job detail shows it. This is model identity, not token usage, so the sentence above still holds for usage; what changes is that the runtime now has one deliberate output channel besides its return value, and it is a monitoring record a worker opens and closes, never something a feature reads. Persisting usage remains the separate feature it was.

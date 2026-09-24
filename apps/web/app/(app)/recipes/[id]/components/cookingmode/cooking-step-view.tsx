@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
 import { StepIngredientsRow } from "@/components/recipes/step-ingredients-row";
 import { BookOpenIcon } from "@heroicons/react/20/solid";
-import { Chip, Surface } from "@heroui/react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { Chip, ScrollShadow, Surface } from "@heroui/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
@@ -17,246 +17,156 @@ type CookingStepViewProps = Pick<
   "activeStep" | "displayIngredients" | "recipe"
 > & {
   steps: ResolvedCookingModeStep[];
+  onStepChange?: (step: number) => void;
 };
 
-/**
- * Room each peek takes: two clamped lines of the step's own type size. Both
- * edges reserve it whether or not there is a neighbour to put in it, which is
- * what puts the step a cook is on in the middle of the screen on the first and
- * last pages as well as in between.
- */
-const PEEK_BLOCK_PX = 88;
+const REDUCED_MOTION_TRANSITION = { duration: 0.15, ease: "linear" };
+const PAGE_TRANSITION = { duration: 0.5, ease: [0.22, 1, 0.36, 1] };
 
-/** What a long step leaves free instead, so the swipe still has somewhere to start. */
-const SWIPE_EDGE_PX = 32;
-
-/**
- * Marks the region a long step scrolls inside. A vertical drag that starts in
- * here is a scroll, so it must not also turn the page — cooking mode reads
- * this to suppress that one gesture and nothing else.
- */
-export const STEP_SCROLL_ATTRIBUTE = "data-cooking-step-scroll";
-
-/** Marks a reserved edge, so the flanking of the step is testable without class names. */
-const STEP_PEEK_ATTRIBUTE = "data-cooking-step-peek";
-
-/**
- * The page turn's pace: the odometer's (animated-number.tsx), slow enough to
- * read as the strip of steps travelling and brisk enough not to hold up a
- * cook mid-swipe.
- */
-const PAGE_TRANSITION = { duration: 0.4, ease: [0.22, 0.61, 0.36, 1] } as const;
-
-/** The turn under reduced motion: announce the change, move nothing. */
-const REDUCED_MOTION_TRANSITION = { duration: 0.15, ease: "linear" } as const;
-
-/**
- * The steps read as one vertical strip and a turn moves the whole strip: the
- * page on screen slides fully out one edge while the next slides in from the
- * other, in lockstep. `custom` carries the turn's direction — +1 forward,
- * -1 back — and AnimatePresence's own `custom` prop re-aims the leaving page
- * at exit time, because a page stops receiving props the moment its step is
- * no longer the active one.
- */
-const pageVariants = {
-  center: { y: "0%" },
-  enter: (direction: number) => ({ y: direction > 0 ? "100%" : "-100%" }),
-  exit: (direction: number) => ({ y: direction > 0 ? "-100%" : "100%" }),
-};
-
-/** Under reduced motion the pages trade places as a brief crossfade instead. */
-const reducedMotionVariants = {
-  center: { opacity: 1 },
-  enter: { opacity: 0 },
-  exit: { opacity: 0 },
-};
-
-/**
- * A neighbouring step, in the step's own words at the step's own size and
- * faded almost out. Shrinking it to a caption would read as a footnote about
- * the step rather than as the step either side of it.
- */
-function StepPeek({ text, edge }: { text: string; edge: "top" | "bottom" }) {
-  return (
-    <p
-      className={`text-foreground line-clamp-2 text-2xl leading-relaxed font-medium opacity-25 md:text-3xl md:leading-relaxed ${
-        edge === "top"
-          ? "[mask-image:linear-gradient(to_bottom,transparent,black)]"
-          : "[mask-image:linear-gradient(to_top,transparent,black)]"
-      }`}
-    >
-      {text}
-    </p>
-  );
-}
-
-type StepPageProps = Pick<CookingStepViewProps, "displayIngredients" | "recipe"> & {
-  direction: 1 | -1;
-  next?: ResolvedCookingModeStep;
-  previous?: ResolvedCookingModeStep;
-  step: ResolvedCookingModeStep;
-};
-
-/**
- * One page of the strip: a step flanked by its peeks. Each page is its own
- * instance, keyed by step — the fit measurement, the collapsed-peeks answer
- * and a long step's scroll position all belong to the page, so a page
- * mid-exit keeps its own layout and a fresh page always starts at the top.
- */
-function StepPage({ direction, displayIngredients, next, previous, recipe, step }: StepPageProps) {
-  const prefersReducedMotion = useReducedMotion();
-  const pageRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [peeksFit, setPeeksFit] = useState(true);
-
-  const measure = useCallback(() => {
-    const page = pageRef.current;
-    const content = contentRef.current;
-
-    if (!page || !content) return;
-
-    // Measured against the page rather than against the current layout, so
-    // collapsing the peeks can never change the answer and flip it back.
-    setPeeksFit(content.scrollHeight <= page.clientHeight - PEEK_BLOCK_PX * 2);
-  }, []);
-
-  useLayoutEffect(measure, [measure, step]);
-
-  useEffect(() => {
-    const page = pageRef.current;
-    const content = contentRef.current;
-
-    if (!page || !content || typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver(measure);
-
-    observer.observe(page);
-    observer.observe(content);
-
-    return () => observer.disconnect();
-  }, [measure]);
-
-  // One number for both edges, so the height the layout reserves and the height
-  // the fit is measured against cannot say different things.
-  const slotHeight = peeksFit ? PEEK_BLOCK_PX : SWIPE_EDGE_PX;
-
-  return (
-    <motion.div
-      ref={pageRef}
-      animate="center"
-      className="absolute inset-0 flex flex-col px-5 py-3 md:px-8 md:py-4"
-      custom={direction}
-      exit="exit"
-      initial="enter"
-      transition={prefersReducedMotion ? REDUCED_MOTION_TRANSITION : PAGE_TRANSITION}
-      variants={prefersReducedMotion ? reducedMotionVariants : pageVariants}
-    >
-      {/* Reserved either way: an empty edge on the first page keeps the step
-          where it was on the page before it. Each peek lives in the same
-          centred column as the step itself — a peek that starts at the page
-          edge while the step starts at the column edge reads as two layouts
-          on one screen. */}
-      <div
-        aria-hidden
-        className="mx-auto flex w-full max-w-3xl shrink-0 items-end overflow-hidden"
-        style={{ height: slotHeight }}
-        {...{ [STEP_PEEK_ATTRIBUTE]: "top" }}
-      >
-        {peeksFit && previous ? <StepPeek edge="top" text={previous.text} /> : null}
-      </div>
-
-      <div
-        className={`flex min-h-0 flex-1 ${
-          peeksFit ? "items-center overflow-hidden" : "items-start overflow-y-auto"
-        }`}
-        {...(peeksFit ? {} : { [STEP_SCROLL_ATTRIBUTE]: "true" })}
-      >
-        <div ref={contentRef} className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-          {step.heading ? (
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <Chip color="accent" variant="soft">
-                <BookOpenIcon className="size-4 translate-y-px" />
-                <Chip.Label>{step.heading}</Chip.Label>
-              </Chip>
-            </div>
-          ) : null}
-
-          <div className="text-foreground min-w-0 text-2xl leading-relaxed font-medium md:text-3xl md:leading-relaxed">
-            <SmartInstruction
-              recipeId={recipe.id}
-              recipeName={recipe.name}
-              stepIndex={step.originalIndex}
-              text={step.text}
-            />
-          </div>
-
-          {step.stepIngredients.length > 0 && (
-            // The current step's ingredients and amounts, in front of the
-            // cook exactly when hands are full — derived from the same
-            // servings-adjusted lines the ingredients view shows. A Step
-            // Ingredient is a share of a line, not a word in the sentence,
-            // so it stays a chip row rather than a decoration on the prose.
-            <StepIngredientsRow
-              ingredients={displayIngredients}
-              refs={step.stepIngredients}
-              systemUsed={recipe.systemUsed}
-            />
-          )}
-
-          <StepImages step={step} />
-        </div>
-      </div>
-
-      <div
-        aria-hidden
-        className="mx-auto flex w-full max-w-3xl shrink-0 items-start overflow-hidden"
-        style={{ height: slotHeight }}
-        {...{ [STEP_PEEK_ATTRIBUTE]: "bottom" }}
-      >
-        {peeksFit && next ? <StepPeek edge="bottom" text={next.text} /> : null}
-      </div>
-    </motion.div>
-  );
-}
-
-/**
- * One step per screen, centred, with the steps either side peeking at the
- * edges so a cook keeps their bearings without leaving the step they are on.
- * A step too long for what the peeks leave takes the whole page and scrolls
- * inside it — context is never worth the words a cook is trying to read — and
- * the vertical swipe keeps working from the strips at the top and bottom.
- *
- * Turning the page moves it: forward slides the strip up, back slides it
- * down, whichever control turned it — swipe, chevron, arrow key. A swap with
- * no travel reads as a repaint and gives no sense of where in the recipe the
- * cook just went.
- *
- * The step carries no number of its own: the bottom bar counts the steps, and
- * a badge above the prose pulls the eye off the one thing this screen is for.
- */
 export function CookingStepView({
   activeStep,
   displayIngredients,
   recipe,
   steps,
+  onStepChange,
 }: CookingStepViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
-  // Which way this turn travels, decided during render so it is settled
-  // before the entering page mounts. The ref survives the pages themselves
-  // coming and going, and mutating it is idempotent under a re-render.
-  const lastStepRef = useRef(activeStep);
-  const directionRef = useRef<1 | -1>(1);
+  const prefersReducedMotion = useReducedMotion();
 
-  if (activeStep !== lastStepRef.current) {
-    directionRef.current = activeStep > lastStepRef.current ? 1 : -1;
-    lastStepRef.current = activeStep;
-  }
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [wrapperY, setWrapperY] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const [enableTransitions, setEnableTransitions] = useState(false);
 
-  const step = steps[activeStep];
-  const previous = activeStep > 0 ? steps[activeStep - 1] : undefined;
-  const next = activeStep < steps.length - 1 ? steps[activeStep + 1] : undefined;
+  useEffect(() => {
+    const t = setTimeout(() => setEnableTransitions(true), 50);
+    return () => clearTimeout(t);
+  }, []);
 
-  if (!step) {
+  const measureAndCenter = useCallback(() => {
+    if (!containerRef.current || !stepRefs.current[activeStep]) return;
+
+    const currentHeight = containerRef.current.clientHeight;
+    setContainerHeight(currentHeight);
+
+    const activeCard = stepRefs.current[activeStep]!;
+
+    // offsetTop is relative to the offsetParent (will be the relative wrapper)
+    const activeOffsetTop = activeCard.offsetTop;
+    const activeHeight = activeCard.offsetHeight;
+
+    const targetY = currentHeight / 2 - (activeOffsetTop + activeHeight / 2);
+    setWrapperY(targetY);
+  }, [activeStep]);
+
+  useEffect(() => {
+    measureAndCenter();
+    window.addEventListener("resize", measureAndCenter);
+    return () => window.removeEventListener("resize", measureAndCenter);
+  }, [measureAndCenter]);
+
+  // Handle content size changes
+  useEffect(() => {
+    const activeCard = stepRefs.current[activeStep];
+    const container = containerRef.current;
+    if (!activeCard || !container) return;
+
+    const observer = new ResizeObserver(() => measureAndCenter());
+    observer.observe(activeCard);
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [activeStep, measureAndCenter]);
+
+  // Wheel Handler
+  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const lockWheel = () => {
+    wheelTimeoutRef.current = setTimeout(() => {
+      wheelTimeoutRef.current = null;
+    }, 600);
+  };
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (wheelTimeoutRef.current || !onStepChange) return;
+
+      const target = e.target as HTMLElement;
+      const scrollable = target.closest(".can-scroll-natively");
+      if (scrollable) {
+        if (
+          e.deltaY > 0 &&
+          scrollable.scrollTop + scrollable.clientHeight < scrollable.scrollHeight - 1
+        )
+          return;
+        if (e.deltaY < 0 && scrollable.scrollTop > 0) return;
+      }
+
+      if (e.deltaY > 30 && activeStep < steps.length - 1) {
+        onStepChange(activeStep + 1);
+        lockWheel();
+      } else if (e.deltaY < -30 && activeStep > 0) {
+        onStepChange(activeStep - 1);
+        lockWheel();
+      }
+    },
+    [activeStep, steps.length, onStepChange]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (wheelTimeoutRef.current) clearTimeout(wheelTimeoutRef.current);
+    };
+  }, []);
+
+  // Touch Gesture Handler
+  const touchStartRef = useRef<{
+    y: number;
+    isAtTop: boolean;
+    isAtBottom: boolean;
+  } | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+
+    let isAtTop = true;
+    let isAtBottom = true;
+
+    const target = e.target as HTMLElement;
+    const scrollable = target.closest(".can-scroll-natively");
+    if (scrollable) {
+      isAtTop = scrollable.scrollTop <= 0;
+      isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
+    }
+
+    touchStartRef.current = { y: e.touches[0].clientY, isAtTop, isAtBottom };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchStartRef.current || !onStepChange) return;
+
+      const { y: startY, isAtTop, isAtBottom } = touchStartRef.current;
+      touchStartRef.current = null;
+
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+
+      const deltaY = touch.clientY - startY;
+
+      if (Math.abs(deltaY) < 50) return;
+
+      if (deltaY < -50 && isAtBottom && activeStep < steps.length - 1) {
+        onStepChange(activeStep + 1);
+      } else if (deltaY > 50 && isAtTop && activeStep > 0) {
+        onStepChange(activeStep - 1);
+      }
+    },
+    [activeStep, steps.length, onStepChange]
+  );
+
+  if (!steps.length) {
     return (
       <Surface
         className="text-muted flex min-h-64 items-center justify-center p-6"
@@ -267,22 +177,109 @@ export function CookingStepView({
     );
   }
 
+  // 75% max height guarantees at least 12.5% empty space top and bottom, forcing adjacent steps to peek even on small screens with massive active steps.
+  const maxCardHeight = containerHeight > 0 ? containerHeight * 0.75 : 500;
+
   return (
-    // The frame the pages travel through. Opening cooking mode does not
-    // animate — the first page is simply there — and the clip keeps a page
-    // mid-turn from sliding over the header or the bottom bar.
-    <div className="relative h-full min-h-0 overflow-hidden">
-      <AnimatePresence custom={directionRef.current} initial={false}>
-        <StepPage
-          key={activeStep}
-          direction={directionRef.current}
-          displayIngredients={displayIngredients}
-          next={next}
-          previous={previous}
-          recipe={recipe}
-          step={step}
-        />
-      </AnimatePresence>
+    <div
+      ref={containerRef}
+      className="@container relative h-full w-full touch-pan-y overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]"
+      onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => {
+        touchStartRef.current = null;
+      }}
+    >
+      <motion.div
+        layout="position"
+        className="relative flex w-full flex-col"
+        style={{ gap: "2rem" }}
+        animate={{ y: wrapperY }}
+        transition={prefersReducedMotion || !enableTransitions ? { duration: 0 } : PAGE_TRANSITION}
+      >
+        {steps.map((step) => {
+          const i = step.originalIndex;
+          const isCenter = i === activeStep;
+          const isPrev = i < activeStep;
+          const isNext = i > activeStep;
+
+          const marginClass = isCenter ? "my-auto" : isPrev ? "mt-auto mb-0" : "mt-0 mb-auto";
+
+          return (
+            <div
+              key={i}
+              ref={(el) => {
+                stepRefs.current[i] = el;
+              }}
+              className="flex w-full shrink-0 flex-col"
+              style={{
+                minHeight: "max(35cqh, calc(100cqh - 30rem))",
+                maxHeight: `${maxCardHeight}px`,
+              }}
+            >
+              <motion.div
+                layout="position"
+                initial={false}
+                animate={{
+                  opacity: isCenter ? 1 : 0.25,
+                  scale: isCenter ? 1 : 0.95,
+                }}
+                transition={
+                  prefersReducedMotion || !enableTransitions ? { duration: 0 } : PAGE_TRANSITION
+                }
+                className={`mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-5 md:px-8 ${
+                  isCenter ? "pointer-events-auto" : "pointer-events-none"
+                }`}
+              >
+                <ScrollShadow
+                  size={64}
+                  hideScrollBar={false}
+                  className={`flex min-h-0 w-full flex-1 [scrollbar-gutter:stable] flex-col ${
+                    isCenter ? "can-scroll-natively overflow-y-auto" : "overflow-hidden"
+                  }`}
+                >
+                  <motion.div
+                    layout="position"
+                    transition={
+                      prefersReducedMotion || !enableTransitions ? { duration: 0 } : PAGE_TRANSITION
+                    }
+                    className={`flex flex-col gap-6 py-4 ${marginClass}`}
+                  >
+                    {step.heading ? (
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <Chip color="accent" variant="soft">
+                          <BookOpenIcon className="size-4 translate-y-px" />
+                          <Chip.Label>{step.heading}</Chip.Label>
+                        </Chip>
+                      </div>
+                    ) : null}
+
+                    <div className="text-foreground min-w-0 text-2xl leading-relaxed font-medium md:text-3xl md:leading-relaxed">
+                      <SmartInstruction
+                        recipeId={recipe.id}
+                        recipeName={recipe.name}
+                        stepIndex={step.originalIndex}
+                        text={step.text}
+                      />
+                    </div>
+
+                    {step.stepIngredients.length > 0 && (
+                      <StepIngredientsRow
+                        ingredients={displayIngredients}
+                        refs={step.stepIngredients}
+                        systemUsed={recipe.systemUsed}
+                      />
+                    )}
+
+                    <StepImages step={step} />
+                  </motion.div>
+                </ScrollShadow>
+              </motion.div>
+            </div>
+          );
+        })}
+      </motion.div>
     </div>
   );
 }

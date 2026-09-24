@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recipesRouter } from "../../src/routers/recipes";
 import { canAccessResource } from "../mocks/permissions";
-import { recipeEmitter } from "../mocks/recipe-emitter";
+import { recipes } from "../mocks/realtime/recipes";
 // Import mocks for assertions
 import {
   createRecipeWithRefs,
@@ -50,7 +50,7 @@ vi.mock("@norish/db", async (importOriginal) => {
 });
 vi.mock("@norish/db/repositories/recipes", () => import("../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/recipes/emitter", () => import("../mocks/recipe-emitter"));
+vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 // The Dish Colour helpers are pinned by their own suite
@@ -460,7 +460,6 @@ describe("recipes procedures", () => {
       return recipesRouter.createCaller({
         ...ctx,
         connectionId: null,
-        multiplexer: null,
         operationId: null,
       });
     }
@@ -540,7 +539,11 @@ describe("recipes procedures", () => {
               const dto = await dashboardRecipe(createdId);
 
               if (dto) {
-                recipeEmitter.emitToHousehold(ctx.householdKey, "created", { recipe: dto });
+                void recipes.publish(
+                  "created",
+                  { recipe: dto },
+                  { householdKey: ctx.householdKey }
+                );
               }
             }
 
@@ -558,9 +561,13 @@ describe("recipes procedures", () => {
 
       expect(result).toBe("test-uuid");
       expect(createRecipeWithRefs).toHaveBeenCalled();
-      expect(recipeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "created", {
-        recipe: mockDashboard,
-      });
+      expect(recipes.publish).toHaveBeenCalledWith(
+        "created",
+        {
+          recipe: mockDashboard,
+        },
+        { householdKey: ctx.householdKey }
+      );
     });
   });
 
@@ -596,7 +603,11 @@ describe("recipes procedures", () => {
             const updated = await getRecipeFull(input.recipeId);
 
             if (updated) {
-              recipeEmitter.emitToHousehold(ctx.householdKey, "updated", { recipe: updated });
+              void recipes.publish(
+                "updated",
+                { recipe: updated },
+                { householdKey: ctx.householdKey }
+              );
             }
 
             return { success: true };
@@ -610,9 +621,13 @@ describe("recipes procedures", () => {
       });
 
       expect(updateRecipeCategories).toHaveBeenCalledWith("recipe-1", ["Dinner", "Snack"]);
-      expect(recipeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "updated", {
-        recipe: expect.objectContaining({ id: "recipe-1" }),
-      });
+      expect(recipes.publish).toHaveBeenCalledWith(
+        "updated",
+        {
+          recipe: expect.objectContaining({ id: "recipe-1" }),
+        },
+        { householdKey: ctx.householdKey }
+      );
       expect(result).toEqual({ success: true });
     });
   });
@@ -644,7 +659,7 @@ describe("recipes procedures", () => {
             }
 
             await deleteRecipeById(input.id);
-            recipeEmitter.emitToHousehold(ctx.householdKey, "deleted", { id: input.id });
+            void recipes.publish("deleted", { id: input.id }, { householdKey: ctx.householdKey });
 
             return { success: true };
           }),
@@ -662,9 +677,13 @@ describe("recipes procedures", () => {
         ctx.isServerAdmin
       );
       expect(deleteRecipeById).toHaveBeenCalledWith("r1");
-      expect(recipeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "deleted", {
-        id: "r1",
-      });
+      expect(recipes.publish).toHaveBeenCalledWith(
+        "deleted",
+        {
+          id: "r1",
+        },
+        { householdKey: ctx.householdKey }
+      );
       expect(result).toEqual({ success: true });
     });
 
@@ -729,7 +748,7 @@ describe("recipes procedures", () => {
             }
 
             await deleteRecipeById(input.id);
-            recipeEmitter.emitToHousehold(ctx.householdKey, "deleted", { id: input.id });
+            void recipes.publish("deleted", { id: input.id }, { householdKey: ctx.householdKey });
 
             return { success: true };
           }),
@@ -751,7 +770,6 @@ describe("recipes procedures", () => {
       return recipesRouter.createCaller({
         ...ctx,
         connectionId: null,
-        multiplexer: null,
         operationId: null,
       });
     }

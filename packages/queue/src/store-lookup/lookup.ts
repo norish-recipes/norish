@@ -21,13 +21,15 @@ import {
 } from "@norish/db/repositories/store-products";
 import { getStoreById } from "@norish/db/repositories/stores";
 import { createLogger } from "@norish/shared-server/logger";
-import { storeEmitter } from "@norish/shared-server/realtime/stores";
+import { stores } from "@norish/shared-server/realtime/stores";
 import { chooseUnmistakable } from "@norish/shared/lib/auto-link";
 import { pricedCandidates } from "@norish/shared/lib/currency";
 import { resolveSearchAddress } from "@norish/shared/lib/search-address";
 
+import type { DecisionVerdict } from "./product-decision";
 import { requireQueueApiHandler } from "../api-handlers";
 import { paceStoreVisit, visitKey } from "./pace";
+import { decideProduct } from "./product-decision";
 
 const log = createLogger("queue:store-lookup");
 
@@ -39,14 +41,32 @@ export function staleBefore(now: Date = new Date()): Date {
   return new Date(now.getTime() - SHELF_PRICE_MAX_AGE_MS);
 }
 
+/**
+ * What a match reports beside its steps, for the job monitor: whether the
+ * shop answered and how much it offered, which route linked — the name rule,
+ * the Decision, or neither, a Miss — and the product it linked; the Decision's
+ * verdict where one was asked, and in words why it was not; and then whether
+ * the link was written, or a shopper answered first.
+ */
+export type LookupStepDetail =
+  | { answered: false }
+  | {
+      answered: true;
+      candidates: number;
+      linked: "name" | "decision" | null;
+      product?: string;
+      decision: DecisionVerdict | string;
+    }
+  | { written: boolean };
+
 async function announceLink(householdKey: string, storeId: string, name: string): Promise<void> {
   const link = await resolveProductLink(storeId, name);
 
-  if (link) storeEmitter.emitToHousehold(householdKey, "linkUpdated", { link });
+  if (link) void stores.publish("linkUpdated", { link }, { householdKey });
 }
 
 function announceProduct(householdKey: string, product: StoreProductDto): void {
-  storeEmitter.emitToHousehold(householdKey, "productUpdated", { product });
+  void stores.publish("productUpdated", { product }, { householdKey });
 }
 
 /**
@@ -135,6 +155,7 @@ export async function matchGroceryName(input: {
   name: string;
   householdKey: string;
   onStep?: (step: string) => Promise<void>;
+  onStepDone?: (detail: LookupStepDetail) => Promise<void>;
 }): Promise<{ matched: boolean }> {
   const { storeId, name, householdKey } = input;
   const store = await getStoreById(storeId);
@@ -172,18 +193,47 @@ export async function matchGroceryName(input: {
 
   if (!shopAnswered) {
     log.info({ storeId, groceryName: name }, "The shop did not answer a lookup");
+    await input.onStepDone?.({ answered: false });
 
     return gaveUp();
   }
 
-  const chosen = chooseUnmistakable(candidates, name);
+  // Two linking routes, in a fixed order (ADR-0035): the name rule, which
+  // is unchanged, and behind it a Decision the name rule declined — linking
+  // when it is sure enough, and otherwise ranking what is offered so the
+  // Miss carries the order the panel shows. No Decision Model, the use off,
+  // or a failed Decision is today's Miss in the shop's own order.
+  const unmistakable = chooseUnmistakable(candidates, name);
+  const decided = unmistakable ? null : await decideProduct(name, candidates);
+  const chosen = unmistakable ?? (decided?.asked ? decided.linked : null);
+  const decision: DecisionVerdict | string = unmistakable
+    ? "not asked: the name rule linked first"
+    : decided?.asked
+      ? decided.verdict
+      : (decided?.reason ?? "not asked");
+
+  await input.onStepDone?.({
+    answered: true,
+    candidates: candidates.length,
+    linked: unmistakable ? "name" : chosen ? "decision" : null,
+    ...(chosen ? { product: chosen.name } : {}),
+    decision,
+  });
 
   if (!chosen) {
     log.info(
-      { storeId, groceryName: name, candidates: candidates.length },
+      { storeId, groceryName: name, candidates: candidates.length, decision },
       "No unmistakable match; a Miss"
     );
-    await linkIfUnanswered(storeId, name, null);
+    await input.onStep?.("saving-link");
+    const written = await linkIfUnanswered(
+      storeId,
+      name,
+      null,
+      decided?.asked ? decided.suggestion : null
+    );
+
+    await input.onStepDone?.({ written });
     await announceLink(householdKey, storeId, name);
 
     return { matched: false };
@@ -201,15 +251,21 @@ export async function matchGroceryName(input: {
 
   if (!reading) return gaveUp();
 
-  await input.onStep?.("saving");
+  await input.onStep?.("saving-link");
   const product = await upsertReadProduct(reading);
   const linked = await linkIfUnanswered(storeId, name, product.id);
 
+  await input.onStepDone?.({ written: linked });
   announceProduct(householdKey, product);
   await announceLink(householdKey, storeId, name);
   if (linked) {
     log.info(
-      { storeId, groceryName: name, productId: product.id },
+      {
+        storeId,
+        groceryName: name,
+        productId: product.id,
+        route: unmistakable ? "unmistakable-name" : "decision",
+      },
       "Linked a grocery name to a Store Product"
     );
   } else {

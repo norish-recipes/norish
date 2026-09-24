@@ -77,7 +77,6 @@ export function createMockCallerContext(
     user: ctx.user,
     household: ctx.household,
     connectionId: null,
-    multiplexer: null,
     operationId: null,
   };
 }

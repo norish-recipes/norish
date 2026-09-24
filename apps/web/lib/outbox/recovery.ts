@@ -14,6 +14,9 @@
  * something, which is the one case where startup did change server state.
  * A `resync` — coming back online, or a socket that dropped and reconnected —
  * always refreshes, because there the client genuinely may have missed changes.
+ * A `queued` recovery follows a mutation admitted to the Outbox while Live:
+ * the reads are current and only that write is behind, so it too refreshes
+ * only when Replay actually sent something.
  */
 
 import type { OutboxStore } from "@/lib/outbox/outbox-store";
@@ -35,9 +38,10 @@ interface RecoveryDependencies {
 
 /**
  * Why recovery was asked to run. `startup` means the reads were just fetched by
- * the page itself; anything else means they may have fallen behind.
+ * the page itself and `queued` that a write was just admitted while Live, so
+ * the reads are current either way; `resync` means they may have fallen behind.
  */
-export type RecoveryReason = "startup" | "resync";
+export type RecoveryReason = "startup" | "resync" | "queued";
 
 export interface Recovery {
   recover(reason?: RecoveryReason): Promise<void>;
@@ -66,7 +70,7 @@ export function createRecovery({
 
   /** Coalesced triggers take the stronger reason: one resync makes the run one. */
   function request(reason: RecoveryReason): void {
-    requestedReason = requestedReason === "resync" || reason === "resync" ? "resync" : "startup";
+    requestedReason = requestedReason === "resync" || reason === "resync" ? "resync" : reason;
   }
 
   function notify(): void {

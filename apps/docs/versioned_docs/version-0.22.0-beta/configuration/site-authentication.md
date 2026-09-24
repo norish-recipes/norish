@@ -22,13 +22,13 @@ Tokens are encrypted at rest with a key derived from the server's
 
 Each token has five parts.
 
-| Field       | What goes in it                                                       |
-| ----------- | --------------------------------------------------------------------- |
-| **Domain**  | The site the token is for, for example `instagram.com`                |
+| Field                  | What goes in it                                           |
+| ---------------------- | --------------------------------------------------------- |
+| **Domain**             | The site the token is for, for example `instagram.com`    |
 | **Account (optional)** | Which of your logins on that site it belongs to see below |
-| **Name**    | The cookie name, or the header name                                   |
-| **Value**   | The cookie value, or the header value                                 |
-| **Type**    | **Cookie** or **Header**                                              |
+| **Name**               | The cookie name, or the header name                       |
+| **Value**              | The cookie value, or the header value                     |
+| **Type**               | **Cookie** or **Header**                                  |
 
 **Domain** matches by suffix, so `instagram.com` covers `www.instagram.com` and
 any other subdomain. A bare word works too: `instagram` matches

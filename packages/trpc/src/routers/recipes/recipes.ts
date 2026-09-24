@@ -43,6 +43,7 @@ import {
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { recipes } from "@norish/shared-server/realtime/recipes";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
@@ -50,10 +51,8 @@ import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
-import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { recipeEmitter } from "./emitter";
 import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
 import {
   randomRecipeInputSchema,
@@ -224,12 +223,10 @@ export const createRecipeProcedure = authedProcedure
           log.info({ userId: ctx.user.id, recipeId: createdId }, "Recipe created");
           const policy = await getRecipePermissionPolicy();
 
-          emitByPolicy(
-            recipeEmitter,
-            policy.view,
-            { userId: ctx.user.id, householdKey: ctx.householdKey },
+          void recipes.publish(
             "created",
-            { recipe: dashboardDto }
+            { recipe: dashboardDto },
+            { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
           );
         }
 
@@ -271,12 +268,10 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
         log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
         const policy = await getRecipePermissionPolicy();
 
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
+        void recipes.publish(
           "updated",
-          { recipe: updatedRecipe }
+          { recipe: updatedRecipe },
+          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
         );
       }
     })
@@ -316,12 +311,10 @@ const updateCategories = authedProcedure
     if (updated) {
       const policy = await getRecipePermissionPolicy();
 
-      emitByPolicy(
-        recipeEmitter,
-        policy.view,
-        { userId: ctx.user.id, householdKey: ctx.householdKey },
+      void recipes.publish(
         "updated",
-        { recipe: updated }
+        { recipe: updated },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
       );
     }
 
@@ -349,12 +342,10 @@ const deleteProcedure = authedProcedure
         log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
         const policy = await getRecipePermissionPolicy();
 
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
+        void recipes.publish(
           "deleted",
-          { id }
+          { id },
+          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
         );
       })
       .catch((err) => handleRecipeError(ctx, err, "delete recipe", { recipeId: id }));
@@ -503,12 +494,10 @@ const convertMeasurements = authedProcedure
 
             const policy = await getRecipePermissionPolicy();
 
-            emitByPolicy(
-              recipeEmitter,
-              policy.view,
-              { userId: ctx.user.id, householdKey: ctx.householdKey },
+            void recipes.publish(
               "converted",
-              { recipe: { ...recipe, systemUsed: targetSystem } }
+              { recipe: { ...recipe, systemUsed: targetSystem } },
+              { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
             );
 
             return null; // Signal to stop chain
@@ -559,12 +548,10 @@ const convertMeasurements = authedProcedure
               log.info({ userId: ctx.user.id, recipeId }, "Recipe measurements converted");
               const policy = await getRecipePermissionPolicy();
 
-              emitByPolicy(
-                recipeEmitter,
-                policy.view,
-                { userId: ctx.user.id, householdKey: ctx.householdKey },
+              void recipes.publish(
                 "converted",
-                { recipe: { ...updatedRecipe, systemUsed: targetSystem } }
+                { recipe: { ...updatedRecipe, systemUsed: targetSystem } },
+                { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
               );
             }
           });

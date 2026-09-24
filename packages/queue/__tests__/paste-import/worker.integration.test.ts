@@ -12,8 +12,8 @@ let getAverageRating: typeof import("@norish/db/repositories/ratings").getAverag
 let getUserRatingWithVersion: typeof import("@norish/db/repositories/ratings").getUserRatingWithVersion;
 
 const mocked = vi.hoisted(() => ({
-  publishRecipeBecameUsable: vi.fn(),
-  emitByPolicy: vi.fn(),
+  publishRecipeBecameUsable: vi.fn(async () => undefined),
+  publishRecipe: vi.fn(async () => undefined),
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
@@ -34,15 +34,11 @@ vi.mock("@norish/queue/registry", () => ({
 }));
 
 vi.mock("@norish/shared-server/realtime/recipe-enrichment", () => ({
-  publishRecipeBecameUsable: mocked.publishRecipeBecameUsable,
-}));
-
-vi.mock("@norish/shared-server/realtime/policy", () => ({
-  emitByPolicy: mocked.emitByPolicy,
+  recipeEnrichment: { publish: mocked.publishRecipeBecameUsable },
 }));
 
 vi.mock("@norish/shared-server/realtime/recipes", () => ({
-  recipeEmitter: {},
+  recipes: { publish: mocked.publishRecipe },
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -75,7 +71,7 @@ describe("processPasteImportJob integration", () => {
 
     userId = user.id;
     mocked.publishRecipeBecameUsable.mockReset();
-    mocked.emitByPolicy.mockReset();
+    mocked.publishRecipe.mockReset();
   });
 
   afterAll(async () => {

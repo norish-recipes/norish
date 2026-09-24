@@ -120,6 +120,9 @@
       "failed": "Importazione della ricetta non riuscita",
       "failedWithAI": "Importazione della ricetta con IA non riuscita"
     },
+    "clipboard": {
+      "title": "Importare una ricetta dal link che hai copiato?"
+    },
     "paste": {
       "title": "Importa da testo incollato",
       "label": "Testo della ricetta o JSON-LD",

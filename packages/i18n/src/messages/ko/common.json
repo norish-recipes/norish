@@ -120,6 +120,9 @@
       "failed": "레시피를 가져오지 못했습니다.",
       "failedWithAI": "AI를 사용하여 레시피를 가져오지 못했습니다."
     },
+    "clipboard": {
+      "title": "복사한 링크에서 레시피를 가져올까요?"
+    },
     "paste": {
       "title": "붙여넣기로 가져오기",
       "label": "레시피 텍스트 또는 JSON-LD",

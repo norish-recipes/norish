@@ -1,15 +1,15 @@
 import { TRPCError } from "@trpc/server";
 
 import type { PermissionAction } from "@norish/auth/permissions";
+import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { RecipeListContext } from "@norish/db";
+import type { ClientEventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
 import { canAccessResource } from "@norish/auth/permissions";
 import { getCookbookRow } from "@norish/db/repositories/cookbooks";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-
-import type { CookbookSubscriptionEvents } from "./emitter";
-import { emitByPolicy } from "../../helpers";
-import { cookbookEmitter } from "./emitter";
+import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
 export type CookbookUserContext = {
   user: { id: string };
@@ -73,18 +73,23 @@ export async function assertCookbookAccess(
  * Broadcast a cookbook event to whoever the view policy says may see it —
  * the same reach the cookbook itself has.
  */
-export async function emitCookbookEvent<K extends keyof CookbookSubscriptionEvents & string>(
+export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealtime>>(
   ctx: Pick<CookbookUserContext, "user" | "householdKey">,
-  event: K,
-  data: CookbookSubscriptionEvents[K]
+  event: E,
+  data: PayloadOf<CookbooksRealtime, E>
 ): Promise<void> {
   const policy = await getRecipePermissionPolicy();
+  // Every cookbook event is policy-scoped; the generic `TargetFor` cannot see
+  // that for an open `E`, so the target shape is pinned here once.
+  const publish = cookbooks.publish as (
+    event: E,
+    payload: PayloadOf<CookbooksRealtime, E>,
+    target: { viewPolicy: PermissionLevel; userId: string; householdKey: string }
+  ) => Promise<void>;
 
-  emitByPolicy(
-    cookbookEmitter,
-    policy.view,
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    event,
-    data
-  );
+  await publish(event, data, {
+    viewPolicy: policy.view,
+    userId: ctx.user.id,
+    householdKey: ctx.householdKey,
+  });
 }

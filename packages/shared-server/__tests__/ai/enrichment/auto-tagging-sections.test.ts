@@ -8,6 +8,8 @@
  * @vitest-environment node
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { listAllTagNames } from "@norish/db/repositories/tags";
@@ -22,8 +24,37 @@ vi.mock("@norish/db/repositories/tags", () => ({
   listAllTagNames: vi.fn(),
 }));
 
-const { buildAutoTaggingSections } =
+const { buildAutoTaggingSections, parsePredefinedTags } =
   await import("@norish/shared-server/ai/enrichment/auto-tagging-prompt");
+
+describe("parsePredefinedTags", () => {
+  it("reads every tag the shipped prompt lists", () => {
+    const prompt = readFileSync(
+      join(__dirname, "../../../src/ai/prompts/auto-tagging.txt"),
+      "utf-8"
+    );
+    const tags = parsePredefinedTags(prompt);
+
+    expect(tags).toHaveLength(37);
+    expect(tags.slice(0, 3)).toEqual(["vegetarian", "vegan", "gluten-free"]);
+    expect(tags).toContain("side dish");
+    expect(tags.at(-1)).toBe("kid-friendly");
+    // The rules after the list are not tags.
+    expect(tags.some((tag) => tag.includes("do not"))).toBe(false);
+  });
+
+  it("reads an edited list as it stands: on the heading's line, trimmed, lowercased, deduplicated", () => {
+    expect(
+      parsePredefinedTags(
+        "Tag it.\n\npredefined tags: Quick ,  Vegan,\nquick, ,Soup\n\nRules follow."
+      )
+    ).toEqual(["quick", "vegan", "soup"]);
+  });
+
+  it("lists nothing when the prompt has no predefined tags heading", () => {
+    expect(parsePredefinedTags("Assign any tags you like.")).toEqual([]);
+  });
+});
 
 describe("buildAutoTaggingSections", () => {
   const mockRecipe = {

@@ -25,11 +25,11 @@ import {
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
 
 import { noticeGroceries } from "../stores/pricing";
 import { assertStoreAccess } from "../stores/stores-helpers";
-import { groceryEmitter } from "./emitter";
 
 export type GroceryProcedureContext = {
   user: { id: string };
@@ -215,9 +215,13 @@ export async function createGroceriesData(
     log.info({ userId: ctx.user.id, count: updatedGroceries.length }, "Groceries merged");
 
     if (updatedGroceries.length > 0) {
-      groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-        changedGroceries: updatedGroceries,
-      });
+      void groceries.publish(
+        "updated",
+        {
+          changedGroceries: updatedGroceries,
+        },
+        { householdKey: ctx.householdKey }
+      );
     }
   }
 
@@ -230,9 +234,13 @@ export async function createGroceriesData(
     log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");
 
     if (createdGroceries.length > 0) {
-      groceryEmitter.emitToHousehold(ctx.householdKey, "created", {
-        groceries: createdGroceries,
-      });
+      void groceries.publish(
+        "created",
+        {
+          groceries: createdGroceries,
+        },
+        { householdKey: ctx.householdKey }
+      );
     }
 
     // Making room at the top moved every active sibling's sort order, and
@@ -247,9 +255,13 @@ export async function createGroceriesData(
         ...updatedGroceries.filter((grocery) => !shiftedIds.has(grocery.id)),
         ...made.shifted,
       ];
-      groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-        changedGroceries: made.shifted,
-      });
+      void groceries.publish(
+        "updated",
+        {
+          changedGroceries: made.shifted,
+        },
+        { householdKey: ctx.householdKey }
+      );
     }
   }
 
@@ -281,9 +293,9 @@ export async function toggleGroceriesData(
   ctx: GroceryProcedureContext,
   input: z.infer<typeof GroceryToggleSchema>
 ) {
-  const { groceries, isDone } = input;
-  const groceryIds = groceries.map((grocery) => grocery.id);
-  const versionById = new Map(groceries.map((grocery) => [grocery.id, grocery.version]));
+  const { groceries: toggles, isDone } = input;
+  const groceryIds = toggles.map((grocery) => grocery.id);
+  const versionById = new Map(toggles.map((grocery) => [grocery.id, grocery.version]));
 
   log.debug({ userId: ctx.user.id, count: groceryIds.length, isDone }, "Toggling groceries");
 
@@ -328,17 +340,25 @@ export async function toggleGroceriesData(
         ? "Stale grocery toggle; requesting client refresh"
         : "Grocery toggle partially applied due to stale versions; requesting client refresh"
     );
-    groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-      reason: "Groceries were updated elsewhere",
-    });
+    void groceries.publish(
+      "stale",
+      {
+        reason: "Groceries were updated elsewhere",
+      },
+      { householdKey: ctx.householdKey }
+    );
   }
 
   log.debug({ userId: ctx.user.id, count: updated.length, isDone }, "Groceries toggled");
 
   if (updated.length > 0) {
-    groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-      changedGroceries: updated,
-    });
+    void groceries.publish(
+      "updated",
+      {
+        changedGroceries: updated,
+      },
+      { householdKey: ctx.householdKey }
+    );
   }
 
   return updated;
@@ -369,14 +389,22 @@ export async function deleteGroceriesData(
       { userId: ctx.user.id, staleGroceryIds: result.staleIds },
       "Stale grocery delete mutations; requesting client refresh"
     );
-    groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-      reason: "Groceries were updated elsewhere",
-    });
+    void groceries.publish(
+      "stale",
+      {
+        reason: "Groceries were updated elsewhere",
+      },
+      { householdKey: ctx.householdKey }
+    );
   }
 
   if (result.deletedIds.length > 0) {
     log.info({ userId: ctx.user.id, count: result.deletedIds.length }, "Groceries deleted");
-    groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", { groceryIds: result.deletedIds });
+    void groceries.publish(
+      "deleted",
+      { groceryIds: result.deletedIds },
+      { householdKey: ctx.householdKey }
+    );
   }
 
   return result;
@@ -422,9 +450,13 @@ export async function assignGroceryToStoreData(
       { userId: ctx.user.id, groceryId, storeId, version },
       "Stale grocery assign-to-store; requesting client refresh"
     );
-    groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-      reason: "Grocery was updated elsewhere",
-    });
+    void groceries.publish(
+      "stale",
+      {
+        reason: "Grocery was updated elsewhere",
+      },
+      { householdKey: ctx.householdKey }
+    );
 
     return null;
   }
@@ -442,9 +474,13 @@ export async function assignGroceryToStoreData(
     log.debug({ userId: ctx.user.id, normalized, storeId }, "Saved ingredient store preference");
   }
 
-  groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-    changedGroceries: [updated],
-  });
+  void groceries.publish(
+    "updated",
+    {
+      changedGroceries: [updated],
+    },
+    { householdKey: ctx.householdKey }
+  );
 
   return updated;
 }

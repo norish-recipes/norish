@@ -9,8 +9,8 @@ import {
   getCaldavConfigWithoutPassword,
   saveCaldavConfig,
 } from "../mocks/caldav-config";
-import { caldavEmitter } from "../mocks/caldav-emitter";
 import { getCaldavSyncStatusesByUser, getSyncStatusSummary } from "../mocks/caldav-sync-status";
+import { caldav } from "../mocks/realtime/caldav";
 import {
   createMockAuthedContext,
   createMockCaldavConfig,
@@ -25,7 +25,7 @@ import {
 // Setup mocks before any imports that use them
 vi.mock("@norish/db/repositories/caldav-config", () => import("../mocks/caldav-config"));
 vi.mock("@norish/db/repositories/caldav-sync-status", () => import("../mocks/caldav-sync-status"));
-vi.mock("@norish/trpc/routers/caldav/emitter", () => import("../mocks/caldav-emitter"));
+vi.mock("@norish/shared-server/realtime/caldav", () => import("../mocks/realtime/caldav"));
 vi.mock("@norish/trpc/routers/caldav/sync-service", () => import("../mocks/caldav-calendar-sync"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
@@ -99,7 +99,11 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
         const savedConfig = await getCaldavConfigWithoutPassword(userId);
 
         // Emit event
-        caldavEmitter.emitToUser(userId, "configSaved", { config: savedConfig });
+        void caldav.publish(
+          "syncEvent",
+          { type: "configSaved", data: { config: savedConfig } },
+          { userId }
+        );
 
         // If enabled, trigger sync
         if (input.enabled) {
@@ -150,7 +154,11 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
         await deleteCaldavConfig(userId);
 
-        caldavEmitter.emitToUser(userId, "configSaved", { config: null });
+        void caldav.publish(
+          "syncEvent",
+          { type: "configSaved", data: { config: null } },
+          { userId }
+        );
 
         return { success: true };
       }),
@@ -185,9 +193,16 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
     triggerSync: t.procedure.mutation(async () => {
       const userId = ctx.user.id;
 
-      caldavEmitter.emitToUser(userId, "syncStarted", {
-        timestamp: new Date().toISOString(),
-      });
+      void caldav.publish(
+        "syncEvent",
+        {
+          type: "syncStarted",
+          data: {
+            timestamp: new Date().toISOString(),
+          },
+        },
+        { userId }
+      );
 
       retryFailedSyncs(userId);
 
@@ -197,9 +212,16 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
     syncAll: t.procedure.mutation(async () => {
       const userId = ctx.user.id;
 
-      caldavEmitter.emitToUser(userId, "syncStarted", {
-        timestamp: new Date().toISOString(),
-      });
+      void caldav.publish(
+        "syncEvent",
+        {
+          type: "syncStarted",
+          data: {
+            timestamp: new Date().toISOString(),
+          },
+        },
+        { userId }
+      );
 
       syncAllFutureItems(userId);
 
@@ -301,9 +323,16 @@ describe("CalDAV tRPC Procedures", () => {
       const result = await caller.saveConfig(validInput);
 
       expect(saveCaldavConfig).toHaveBeenCalledWith(testUser.id, validInput);
-      expect(caldavEmitter.emitToUser).toHaveBeenCalledWith(testUser.id, "configSaved", {
-        config: mockSavedConfig,
-      });
+      expect(caldav.publish).toHaveBeenCalledWith(
+        "syncEvent",
+        {
+          type: "configSaved",
+          data: {
+            config: mockSavedConfig,
+          },
+        },
+        { userId: testUser.id }
+      );
       expect(result).toEqual(mockSavedConfig);
     });
 
@@ -410,9 +439,16 @@ describe("CalDAV tRPC Procedures", () => {
       const result = await caller.deleteConfig({ deleteEvents: false });
 
       expect(deleteCaldavConfig).toHaveBeenCalledWith(testUser.id);
-      expect(caldavEmitter.emitToUser).toHaveBeenCalledWith(testUser.id, "configSaved", {
-        config: null,
-      });
+      expect(caldav.publish).toHaveBeenCalledWith(
+        "syncEvent",
+        {
+          type: "configSaved",
+          data: {
+            config: null,
+          },
+        },
+        { userId: testUser.id }
+      );
       expect(result.success).toBe(true);
     });
   });
@@ -488,10 +524,10 @@ describe("CalDAV tRPC Procedures", () => {
       const caller = createTestCaller(testCtx);
       const result = await caller.triggerSync();
 
-      expect(caldavEmitter.emitToUser).toHaveBeenCalledWith(
-        testUser.id,
-        "syncStarted",
-        expect.objectContaining({ timestamp: expect.any(String) })
+      expect(caldav.publish).toHaveBeenCalledWith(
+        "syncEvent",
+        { type: "syncStarted", data: expect.objectContaining({ timestamp: expect.any(String) }) },
+        { userId: testUser.id }
       );
       expect(retryFailedSyncs).toHaveBeenCalledWith(testUser.id);
       expect(result.started).toBe(true);
@@ -503,10 +539,10 @@ describe("CalDAV tRPC Procedures", () => {
       const caller = createTestCaller(testCtx);
       const result = await caller.syncAll();
 
-      expect(caldavEmitter.emitToUser).toHaveBeenCalledWith(
-        testUser.id,
-        "syncStarted",
-        expect.objectContaining({ timestamp: expect.any(String) })
+      expect(caldav.publish).toHaveBeenCalledWith(
+        "syncEvent",
+        { type: "syncStarted", data: expect.objectContaining({ timestamp: expect.any(String) }) },
+        { userId: testUser.id }
       );
       expect(syncAllFutureItems).toHaveBeenCalledWith(testUser.id);
       expect(result.started).toBe(true);

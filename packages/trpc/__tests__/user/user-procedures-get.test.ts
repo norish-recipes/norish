@@ -27,20 +27,12 @@ vi.mock("@norish/db", () => ({
   updateUserLocale: vi.fn(),
 }));
 
-vi.mock("@norish/trpc/routers/households/emitter", () => ({
-  householdEmitter: { emitToHousehold: vi.fn() },
-}));
+vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));
 
-vi.mock("@norish/trpc/connection-manager", () => ({
-  emitConnectionInvalidation: vi.fn(),
-}));
+vi.mock("@norish/shared-server/realtime/connection", () => import("../mocks/realtime/connection"));
 
 vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn(),
-}));
-
-vi.mock("@norish/shared-server/redis/subscription-multiplexer", () => ({
-  getOrCreateMultiplexer: vi.fn(),
 }));
 
 vi.mock("@norish/api/startup/media-cleanup", () => ({
@@ -88,7 +80,6 @@ describe("userProcedures.get", () => {
       userIds: ["user-1"],
       householdUserIds: ["user-1"],
       isServerAdmin: false,
-      multiplexer: null,
     } as any);
 
     const result = await caller.get();

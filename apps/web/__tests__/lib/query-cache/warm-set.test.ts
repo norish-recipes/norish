@@ -142,6 +142,15 @@ function makeTrpc() {
         queryKey: () => [["stores", "aisleLinks"], { type: "query" }],
       },
     },
+    pantry: {
+      list: {
+        queryOptions: () => ({
+          queryKey: [["pantry", "list"], { type: "query" }],
+          queryFn: async () => [],
+        }),
+        queryKey: () => [["pantry", "list"], { type: "query" }],
+      },
+    },
     calendar: {
       listItems: {
         queryOptions: (range: { startISO: string; endISO: string }) => ({

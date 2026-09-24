@@ -120,6 +120,9 @@
       "failed": "Nie udało się zaimportować przepisu",
       "failedWithAI": "Nie udało się zaimportować przepisu z AI"
     },
+    "clipboard": {
+      "title": "Zaimportować przepis ze skopiowanego linku?"
+    },
     "paste": {
       "title": "Importuj przez wklejenie",
       "label": "Tekst przepisu lub JSON-LD",

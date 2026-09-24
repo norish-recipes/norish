@@ -1,0 +1,1 @@
+ALTER TABLE "store_product_links" ADD COLUMN "suggestion" jsonb;

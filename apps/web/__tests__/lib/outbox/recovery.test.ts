@@ -89,6 +89,22 @@ describe("Recovery", () => {
     expect(calls).toEqual(["replay", "refetch", "warm"]);
   });
 
+  it("does not refresh reads for a queued admission when Replay sent nothing", async () => {
+    // A mutation admitted while Live: the reads never fell behind, so the run
+    // owes them nothing unless it actually delivers the write.
+    await recovery().recover("queued");
+
+    expect(calls).toEqual(["warm"]);
+  });
+
+  it("refreshes reads once a queued admission is delivered", async () => {
+    await store.enqueue(entry());
+
+    await recovery().recover("queued");
+
+    expect(calls).toEqual(["replay", "refetch", "warm"]);
+  });
+
   it("refreshes reads on a resync even with an empty Outbox", async () => {
     await recovery().recover("resync");
 

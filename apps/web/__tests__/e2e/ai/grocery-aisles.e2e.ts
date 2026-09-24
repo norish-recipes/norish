@@ -344,6 +344,21 @@ test("in the grouped list, kip and kip (diepvries) are two groups once filed apa
   await setGrouped(false);
 });
 
+test("in the grouped list, a measured line and an unmeasured one of a name stay two rows", async () => {
+  // Two lines of one name sit unfiled here: "halfvolle melk" as it was typed,
+  // and "1 l halfvolle melk". A group states one total, so folding them into
+  // one row would read as two litres of milk nobody asked for (#562).
+  await setGrouped(true);
+
+  const melk = storeBlock().locator('[data-grocery-name="halfvolle melk"]');
+
+  await expect(melk).toHaveCount(2);
+  // Each is a single line's row, with nothing to break down under it.
+  await expect(melk.first()).not.toContainText("Manual Items");
+  await expect(melk.last()).not.toContainText("Manual Items");
+  await setGrouped(false);
+});
+
 test("dragging a row into an aisle files its name, and the same-named row follows", async () => {
   await page.goto("/groceries");
   // Two rows named "halfvolle melk" sit unfiled since their aisle was removed.

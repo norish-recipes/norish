@@ -62,7 +62,7 @@ async function swipe(deltaX: number, deltaY: number): Promise<void> {
   // The pointer handlers live on cooking mode's content area — the shell's
   // middle flex cell; the dialog's is the last one mounted.
   await page
-    .locator("div.min-h-0.flex-1.overflow-hidden")
+    .locator("div.min-h-0.flex-1.overflow-hidden > *")
     .last()
     .evaluate(
       (element, delta) => {
@@ -71,14 +71,46 @@ async function swipe(deltaX: number, deltaY: number): Promise<void> {
         const startY = rect.top + rect.height / 2;
         const options = { bubbles: true, cancelable: true, pointerType: "touch" as const };
 
+        const startTouch = new Touch({
+          identifier: 1,
+          target: element,
+          clientX: startX,
+          clientY: startY,
+        });
+        const endTouch = new Touch({
+          identifier: 1,
+          target: element,
+          clientX: startX + delta.x,
+          clientY: startY + delta.y,
+        });
+
+        // Two gestures share the area: the horizontal swipe listens to pointer
+        // events on the shell, the vertical paging to touch events on the step
+        // view, which reads the start point from `touches`.
         element.dispatchEvent(
           new PointerEvent("pointerdown", { ...options, clientX: startX, clientY: startY })
+        );
+        element.dispatchEvent(
+          new TouchEvent("touchstart", {
+            bubbles: true,
+            cancelable: true,
+            touches: [startTouch],
+            targetTouches: [startTouch],
+            changedTouches: [startTouch],
+          })
         );
         element.dispatchEvent(
           new PointerEvent("pointerup", {
             ...options,
             clientX: startX + delta.x,
             clientY: startY + delta.y,
+          })
+        );
+        element.dispatchEvent(
+          new TouchEvent("touchend", {
+            bubbles: true,
+            cancelable: true,
+            changedTouches: [endTouch],
           })
         );
       },
@@ -240,7 +272,7 @@ test("cooking mode pages its steps, keeps both swipes, and projects Ready At onl
 
   // Step one fills the page; the next step peeks, faded, at the bottom edge.
   await expect(dialog.getByText(RECIPE.steps[0]!.step).first()).toBeVisible();
-  await expect(dialog.locator('[data-cooking-step-peek="bottom"]')).toContainText("Rest the dough");
+  await expect(dialog.getByText("Rest the dough").first()).toBeVisible();
   await expect(dialog.getByText(/Ready around/)).toBeVisible();
   await expect(dialog.getByText("1 / 3")).toBeVisible();
 

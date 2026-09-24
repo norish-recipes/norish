@@ -5,12 +5,11 @@ import {
 } from "@norish/db/repositories/ratings";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { ratings } from "@norish/shared-server/realtime/ratings";
 import { RatingGetInputSchema, RatingInputSchema } from "@norish/shared/contracts/zod";
 
-import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { ratingsEmitter } from "./emitter";
 
 interface UserContext {
   user: { id: string };
@@ -20,12 +19,10 @@ interface UserContext {
 async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: string): Promise<void> {
   const policy = await getRecipePermissionPolicy();
 
-  emitByPolicy(
-    ratingsEmitter,
-    policy.view,
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
+  void ratings.publish(
     "ratingFailed",
-    { recipeId, reason }
+    { recipeId, reason },
+    { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
   );
 }
 
@@ -47,12 +44,10 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
 
       log.info({ userId: ctx.user.id, recipeId, rating, isNew: result.isNew }, "Recipe rated");
 
-      emitByPolicy(
-        ratingsEmitter,
-        policy.view,
-        { userId: ctx.user.id, householdKey: ctx.householdKey },
+      void ratings.publish(
         "ratingUpdated",
-        { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount }
+        { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
       );
     })
     .catch((err) => {

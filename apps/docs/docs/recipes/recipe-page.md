@@ -1,7 +1,7 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 title: The recipe page
-description: How a recipe reads on your phone — the Glance Bar, one card per section in cooking order, the floating Cook button, cooking mode with Ready At, and pages tinted by the dish itself.
+description: How a recipe reads on your phone, the Glance Bar, one card per section in cooking order, the floating Cook button, cooking mode with Ready At, and pages tinted by the dish itself.
 ---
 
 # The recipe page

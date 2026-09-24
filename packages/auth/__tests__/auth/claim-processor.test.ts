@@ -31,15 +31,12 @@ vi.mock("@norish/shared-server/cache/household", () => ({
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
-vi.mock("@norish/shared-server/realtime/connection-invalidation", () => ({
+vi.mock("@norish/shared-server/realtime/connection", () => ({
   emitConnectionInvalidation: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/realtime/households", () => ({
-  householdEmitter: {
-    emit: vi.fn(),
-    emitToHousehold: vi.fn(),
-  },
+  households: { publish: vi.fn(async () => undefined) },
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({

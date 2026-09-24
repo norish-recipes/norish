@@ -30,7 +30,7 @@ import {
 
 vi.mock("@norish/db/repositories/planned-items", () => import("../mocks/planned-items"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/calendar/emitter", () => import("../mocks/calendar-emitter"));
+vi.mock("@norish/shared-server/realtime/calendar", () => import("../mocks/realtime/calendar"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

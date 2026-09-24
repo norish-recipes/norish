@@ -11,12 +11,18 @@
  * Inference reads only the stored recipe. Which steps may be written — the
  * gap-filling — is not decided here: the worker and the repository write
  * skip steps that already have Step Ingredients.
+ *
+ * The claim's links are validated before they are returned (Enrichment
+ * Validation): a link the Decision Model answers "no" to is not
+ * written, and the step stays bare for a later run. Only the links this run
+ * proposed are judged — a link a cook attached is not in the claim.
  */
 
 import { aiLogger } from "@norish/shared-server/logger";
 
 import { generateStructured } from "../runtime/runtime";
 import { ingredientLinkingSchema } from "./ingredient-linking.schema";
+import { verifyClaims } from "./verification";
 
 export interface IngredientLineForLinking {
   /** The line's order within its measurement system — the reference key. */
@@ -100,28 +106,62 @@ export async function inferStepIngredients(
     },
   });
 
-  // Map prompt numbering back onto row orders, dropping anything the model
-  // invented. An empty claim is a valid answer, not a failure: a recipe
-  // whose steps genuinely use nothing stays bare.
-  const links: InferredStepLinks[] = [];
+  // The claim in prompt numbers, with anything the model invented dropped,
+  // each link phrased as the question that checks it.
+  const proposed: {
+    step: number;
+    line: number;
+    candidate: { share: number | null; amount: number | null };
+  }[] = [];
 
   for (const entry of output.links ?? []) {
     const step = linkableSteps[entry.step - 1];
 
     if (!step) continue;
 
-    const refs = (entry.ingredients ?? []).flatMap((candidate, index) => {
+    for (const candidate of entry.ingredients ?? []) {
       const line = linkableLines[candidate.line - 1];
 
-      if (!line) return [];
+      if (!line) continue;
 
-      return [
-        { ingredientOrder: line.order, share: toShare(candidate, line.amount), order: index },
-      ];
-    });
+      proposed.push({ step: entry.step, line: candidate.line, candidate });
+    }
+  }
+
+  const { kept } = await verifyClaims({
+    feature: "ingredient-linking",
+    state: {
+      title: recipe.title,
+      ingredients: linkableLines.map((line, index) => `${index + 1}. ${line.text}`),
+      steps: linkableSteps.map((step, index) => `${index + 1}. ${step.text}`),
+    },
+    claims: proposed.map(({ step, line }) => ({
+      id: `${step}:${line}`,
+      question: `Does step ${step} ("${linkableSteps[step - 1]?.text}") use ingredient line ${line} ("${linkableLines[line - 1]?.text}")?`,
+    })),
+  });
+  const keptIds = new Set(kept.map((claim) => claim.id));
+
+  // Map prompt numbering back onto row orders. An empty claim is a valid
+  // answer, not a failure: a recipe whose steps genuinely use nothing stays
+  // bare, and so does a step whose every link was disputed.
+  const links: InferredStepLinks[] = [];
+
+  for (const step of linkableSteps.map((row, index) => ({ row, number: index + 1 }))) {
+    const refs = proposed
+      .filter((link) => link.step === step.number && keptIds.has(`${link.step}:${link.line}`))
+      .map((link, index) => {
+        const line = linkableLines[link.line - 1]!;
+
+        return {
+          ingredientOrder: line.order,
+          share: toShare(link.candidate, line.amount),
+          order: index,
+        };
+      });
 
     if (refs.length > 0) {
-      links.push({ stepOrder: step.order, refs });
+      links.push({ stepOrder: step.row.order, refs });
     }
   }
 

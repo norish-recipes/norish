@@ -9,7 +9,6 @@
 import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import {
   addRecipeImages,
   createRecipeWithRefs,
@@ -21,8 +20,7 @@ import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-c
 import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
-import { emitByPolicy } from "@norish/shared-server/realtime/policy";
-import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
+import { recipes } from "@norish/shared-server/realtime/recipes";
 
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { announceUsableRecipe } from "../enrichment/announce";
@@ -41,13 +39,17 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
-  const ctx: PolicyEmitContext = { userId, householdKey };
+  const ctx = { userId, householdKey };
 
   // Emit import started event (shows skeleton)
-  emitByPolicy(recipeEmitter, viewPolicy, ctx, "importStarted", {
-    recipeId,
-    url: `[${files.length} image(s)]`,
-  });
+  void recipes.publish(
+    "importStarted",
+    {
+      recipeId,
+      url: `[${files.length} image(s)]`,
+    },
+    { viewPolicy: viewPolicy, ...ctx }
+  );
 
   // Vision parsing reads the images; every inference happens afterwards.
   // A failure throws with its own message — extraction, not this worker,
@@ -93,11 +95,15 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
     // Emit imported event (replaces skeleton with actual recipe)
     // Image import is always AI-based, so no processing will follow - show imported toast
-    emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
-      recipe: dashboardDto,
-      pendingRecipeId: recipeId,
-      toast: "imported",
-    });
+    void recipes.publish(
+      "imported",
+      {
+        recipe: dashboardDto,
+        pendingRecipeId: recipeId,
+        toast: "imported",
+      },
+      { viewPolicy: viewPolicy, ...ctx }
+    );
   }
 
   // Vision parsing is a reader, not an inference step: an image import enters
@@ -130,13 +136,17 @@ async function handleJobFailed(
 
   // Emit failed event (removes skeleton)
   const policy = await getRecipePermissionPolicy();
-  const ctx: PolicyEmitContext = { userId, householdKey };
+  const ctx = { userId, householdKey };
 
-  emitByPolicy(recipeEmitter, policy.view, ctx, "failed", {
-    reason: error.message || "Failed to import recipe from images",
-    recipeId,
-    url: `[${files.length} image(s)]`,
-  });
+  void recipes.publish(
+    "failed",
+    {
+      reason: error.message || "Failed to import recipe from images",
+      recipeId,
+      url: `[${files.length} image(s)]`,
+    },
+    { viewPolicy: policy.view, ...ctx }
+  );
 }
 
 /**

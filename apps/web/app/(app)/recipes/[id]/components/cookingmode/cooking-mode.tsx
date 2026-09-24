@@ -18,7 +18,6 @@ import { cssFloatingDockPill } from "@norish/web/config/css-tokens";
 import type { CookingModeView } from "./types";
 import { useRecipeContextRequired } from "../../context";
 import { resolveCookingModeSteps } from "./cooking-mode-steps";
-import { STEP_SCROLL_ATTRIBUTE } from "./cooking-step-view";
 import { DesktopCookingModeDialog } from "./desktop-cooking-mode-dialog";
 import { MobileCookingModeDialog } from "./mobile-cooking-mode-dialog";
 import { useIsDesktopCookingMode } from "./use-is-desktop-cooking-mode";
@@ -27,12 +26,6 @@ import { clampStep } from "./utils";
 type SwipePoint = {
   x: number;
   y: number;
-  /**
-   * The drag began inside a long step's own scroll region, so it is a scroll
-   * rather than a page turn. Only the vertical gesture is suppressed —
-   * reaching the ingredients sideways still works from anywhere.
-   */
-  startedInStepScroll: boolean;
 };
 
 type CookingModeProps = {
@@ -74,6 +67,7 @@ export default function CookingMode({
   // Ready At is fixed when the Cooking Session begins, not on page load: it
   // is the moment the cook started plus the recipe's total time.
   const [readyAt, setReadyAt] = useState<Date | null>(null);
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(() => new Set());
   const wakeLockOwnedRef = useRef(false);
   const swipeStartRef = useRef<SwipePoint | null>(null);
 
@@ -172,9 +166,6 @@ export default function CookingMode({
     swipeStartRef.current = {
       x: event.clientX,
       y: event.clientY,
-      startedInStepScroll: Boolean(
-        target instanceof Element && target.closest(`[${STEP_SCROLL_ATTRIBUTE}]`)
-      ),
     };
   }, []);
   const handlePointerUp = useCallback(
@@ -196,14 +187,6 @@ export default function CookingMode({
         setActiveView(deltaX < 0 ? "ingredients" : "steps");
 
         return;
-      }
-
-      if (start.startedInStepScroll) {
-        return;
-      }
-
-      if (activeView === "steps" && absY > absX && absY > SWIPE_THRESHOLD) {
-        setActiveStep((step) => clampStep(step + (deltaY < 0 ? 1 : -1), steps.length));
       }
     },
     [activeView, steps.length]
@@ -230,6 +213,8 @@ export default function CookingMode({
     onStepChange: setActiveStep,
     onTimersOpenChange: setAreTimersOpen,
     onViewChange: setActiveView,
+    checkedIngredients,
+    onCheckedIngredientsChange: setCheckedIngredients,
   };
 
   const open = () => {
@@ -238,6 +223,7 @@ export default function CookingMode({
     setActiveView("steps");
     setActiveStep(0);
     setAreTimersOpen(false);
+    setCheckedIngredients(new Set());
     setReadyAt(
       recipe.totalMinutes && recipe.totalMinutes > 0
         ? new Date(Date.now() + recipe.totalMinutes * 60_000)

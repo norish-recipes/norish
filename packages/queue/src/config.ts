@@ -9,29 +9,16 @@ import type { DefaultJobOptions, Job, Processor, WorkerOptions } from "bullmq";
 
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 
-import { createLazyWorker, stopLazyWorker } from "./lazy-worker-manager";
-import { getBullClient } from "./redis/bullmq";
-
 /**
  * Queue names for all background job queues
  */
-export const QUEUE_NAMES = {
-  RECIPE_IMPORT: "recipe-import",
-  IMAGE_IMPORT: "image-recipe-import",
-  PASTE_IMPORT: "paste-recipe-import",
-  CALDAV_SYNC: "caldav-sync",
-  SCHEDULED_TASKS: "scheduled-tasks",
-  NUTRITION_ESTIMATION: "nutrition-estimation",
-  AUTO_TAGGING: "auto-tagging",
-  AUTO_CATEGORIZATION: "auto-categorization",
-  ALLERGY_DETECTION: "allergy-detection",
-  RECIPE_PROVENANCE: "recipe-provenance",
-  INGREDIENT_LINKING: "ingredient-linking",
-  IMAGE_GENERATION: "image-generation",
-  STORE_LOOKUP: "store-lookup",
-} as const;
+import type { QueueName } from "./queue-names";
+import { createLazyWorker, stopLazyWorker } from "./lazy-worker-manager";
+import { QUEUE_NAMES } from "./queue-names";
+import { getBullClient } from "./redis/bullmq";
 
-export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
+export { QUEUE_NAMES };
+export type { QueueName };
 
 export interface LazyWorkerController {
   start: () => Promise<void>;

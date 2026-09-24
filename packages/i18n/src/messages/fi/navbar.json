@@ -1,0 +1,63 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Uusi resepti",
+      "description": "Kirjoita oma resepti"
+    },
+    "importUrl": {
+      "title": "Tuo osoitteesta",
+      "description": "Liitä reseptin linkki"
+    },
+    "settings": {
+      "title": "Asetukset",
+      "description": "Hallinnoi tiliäsi"
+    },
+    "logout": "Kirjaudu ulos",
+    "signOutConfirm": {
+      "title": "Hylätäänkö synkronoimattomat muutokset?",
+      "description": "{count, plural, one {# offline-tilassa tehty muutos ei ole vielä tavoittanut palvelinta.} other {# offline-tilassa tehtyä muutosta ei ole vielä tavoittanut palvelinta.}} Uloskirjautuminen hylkää jonossa olevat muutokset pysyvästi ja poistaa tilisi offline-tiedot tältä laitteelta."
+    },
+    "version": {
+      "updateAvailable": "v{version} saatavilla"
+    }
+  },
+  "theme": {
+    "title": "Teema",
+    "loading": "Ladataan…",
+    "light": "Vaalea tila",
+    "dark": "Tumma tila",
+    "system": "Järjestelmän oletus"
+  },
+  "nav": {
+    "home": "Reseptit",
+    "calendar": "Kalenteri",
+    "groceries": "Ostokset"
+  },
+  "mobile": {
+    "searchPlaceholder": "Hae reseptejä...",
+    "toggleSearch": "Näytä tai piilota haku",
+    "goBack": "Takaisin"
+  },
+  "archiveImporter": {
+    "uploading": "Lähetetään…",
+    "uploadFile": "Lähetä tiedosto",
+    "dragDrop": "tai raahaa ja pudota",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Lähetä reseptiarkisto",
+    "uploadingFile": "Lähetetään tiedostoa…",
+    "processing": "Käsitellään: {details}",
+    "complete": "Valmis: {details}",
+    "imported": "{count} tuotu",
+    "errors": "{count, plural, one {# virhe} other {# virhettä}}",
+    "ofTotal": "{current} / {total}",
+    "progressLabel": "Tuonnin edistyminen",
+    "showNotes": "Näytä {count, plural, one {# tuontihuomautus} other {# tuontihuomautusta}}",
+    "hideNotes": "Piilota {count, plural, one {# tuontihuomautus} other {# tuontihuomautusta}}",
+    "toasts": {
+      "startTitle": "Reseptien tuonti aloitettu",
+      "startDescription": "{count, plural, one {Tuodaan # resepti…} other {Tuodaan # reseptiä…}}",
+      "completeTitle": "Reseptien tuonti valmis",
+      "completeDescription": "{imported, plural, one {Tuotiin # resepti} other {Tuotiin # reseptiä}}{notes, plural, =0 {} one {, joista # sisältää huomautuksen} other {, joista # sisältää huomautuksia}}{errors, plural, =0 {} one {, # virhe} other {, # virhettä}}"
+    }
+  }
+}

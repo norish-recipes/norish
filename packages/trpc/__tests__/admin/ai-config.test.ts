@@ -59,7 +59,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 function createCaller(admin = true) {
   const ctx = createMockAdminContext(admin ? createMockAdminUser() : createMockUser());
 
-  return aiConfigProcedures.createCaller({ ...ctx, multiplexer: null } as never);
+  return aiConfigProcedures.createCaller(ctx as never);
 }
 
 const ALL_ON = {

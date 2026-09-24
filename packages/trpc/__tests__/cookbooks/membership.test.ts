@@ -10,7 +10,6 @@
 import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { cookbookEmitter } from "../mocks/cookbook-emitter";
 import {
   addRecipeToCookbook,
   createCookbook,
@@ -21,6 +20,7 @@ import {
   removeRecipeFromCookbook,
 } from "../mocks/cookbooks-repository";
 import { canAccessResource } from "../mocks/permissions";
+import { cookbooks } from "../mocks/realtime/cookbooks";
 import * as recipesRepository from "../mocks/recipes-repository";
 import { createMockHousehold, createMockUser } from "../recipes/test-utils";
 
@@ -28,7 +28,7 @@ vi.mock("@norish/db/repositories/cookbooks", () => import("../mocks/cookbooks-re
 vi.mock("@norish/db/repositories/recipes", () => import("../mocks/recipes-repository"));
 vi.mock("@norish/db", () => import("../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/shared-server/realtime/cookbooks", () => import("../mocks/cookbook-emitter"));
+vi.mock("@norish/shared-server/realtime/cookbooks", () => import("../mocks/realtime/cookbooks"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
@@ -49,7 +49,6 @@ function callerFor(user = createMockUser()) {
     user,
     household: { id: household.id, name: household.name, users: household.users },
     connectionId: null,
-    multiplexer: null,
     operationId: null,
   } as never);
 }
@@ -158,10 +157,10 @@ describe("cookbook membership", () => {
       isMember: true,
     });
 
-    expect(cookbookEmitter.emitToHousehold).toHaveBeenCalledWith(
-      "test-household-id",
+    expect(cookbooks.publish).toHaveBeenCalledWith(
       "membershipChanged",
-      { cookbookId: COOKBOOK_ID, recipeId: RECIPE_ID, isMember: true }
+      { cookbookId: COOKBOOK_ID, recipeId: RECIPE_ID, isMember: true },
+      { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
     );
   });
 

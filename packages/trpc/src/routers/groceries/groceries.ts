@@ -24,6 +24,7 @@ import {
 } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
   AssignGroceryToStoreInputSchema,
   DeleteDoneGroceriesInputSchema,
@@ -36,7 +37,6 @@ import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { noticeGroceries } from "../stores/pricing";
 import { assertStoreAccess } from "../stores/stores-helpers";
-import { groceryEmitter } from "./emitter";
 import {
   assignGroceryToStoreData,
   createGroceriesData,
@@ -67,9 +67,13 @@ const create = authedProcedure
       return result;
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create groceries");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: "Failed to create grocery items",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: "Failed to create grocery items",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -136,9 +140,13 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
           { userId: ctx.user.id, groceryId, version },
           "Stale grocery update; requesting client refresh"
         );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-          reason: "Grocery was updated elsewhere",
-        });
+        void groceries.publish(
+          "stale",
+          {
+            reason: "Grocery was updated elsewhere",
+          },
+          { householdKey: ctx.householdKey }
+        );
 
         return;
       }
@@ -156,15 +164,23 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       await noticeGroceries(ctx, updatedGroceries);
 
       log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-        changedGroceries: updatedGroceries,
-      });
+      void groceries.publish(
+        "updated",
+        {
+          changedGroceries: updatedGroceries,
+        },
+        { householdKey: ctx.householdKey }
+      );
     })
     .catch((err) => {
       log.error({ err, userId: ctx.user.id, groceryId }, "Failed to update grocery");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err.message || "Failed to update grocery",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: err.message || "Failed to update grocery",
+        },
+        { userId: ctx.user.id }
+      );
     });
 
   return { success: true };
@@ -179,9 +195,13 @@ const toggle = authedProcedure.input(GroceryToggleSchema).mutation(async ({ ctx,
     const groceryIds = input.groceries.map((grocery) => grocery.id);
 
     log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to toggle groceries");
-    groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-      reason: err instanceof Error ? err.message : "Failed to update groceries",
-    });
+    void groceries.publish(
+      "failed",
+      {
+        reason: err instanceof Error ? err.message : "Failed to update groceries",
+      },
+      { userId: ctx.user.id }
+    );
     throw err;
   }
 });
@@ -197,9 +217,13 @@ const deleteGroceries = authedProcedure
       const groceryIds = input.groceries.map((grocery) => grocery.id);
 
       log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to delete groceries");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err instanceof Error ? err.message : "Failed to delete groceries",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: err instanceof Error ? err.message : "Failed to delete groceries",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -256,9 +280,13 @@ export const createGroceryProcedure = authedProcedure
       return grocery;
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create grocery via API");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: "Failed to create grocery item",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: "Failed to create grocery item",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -292,9 +320,13 @@ export const markGroceryDoneProcedure = authedProcedure
         { err, userId: ctx.user.id, groceryId: input.id },
         "Failed to mark grocery done via API"
       );
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err instanceof Error ? err.message : "Failed to update grocery",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: err instanceof Error ? err.message : "Failed to update grocery",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -328,9 +360,13 @@ export const markGroceryUndoneProcedure = authedProcedure
         { err, userId: ctx.user.id, groceryId: input.id },
         "Failed to mark grocery undone via API"
       );
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err instanceof Error ? err.message : "Failed to update grocery",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: err instanceof Error ? err.message : "Failed to update grocery",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -363,9 +399,13 @@ export const deleteGroceryProcedure = authedProcedure
         { err, userId: ctx.user.id, groceryId: input.id },
         "Failed to delete grocery via API"
       );
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err instanceof Error ? err.message : "Failed to delete grocery",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: err instanceof Error ? err.message : "Failed to delete grocery",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -401,9 +441,13 @@ export const assignGroceryToStoreProcedure = authedProcedure
         { err, userId: ctx.user.id, groceryId: input.id, storeId: input.storeId },
         "Failed to assign grocery to store via API"
       );
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err instanceof Error ? err.message : "Failed to assign grocery to store",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: err instanceof Error ? err.message : "Failed to assign grocery to store",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -421,9 +465,13 @@ const assignToStore = authedProcedure
         { err, userId: ctx.user.id, groceryId: input.groceryId, storeId: input.storeId },
         "Failed to assign grocery to store"
       );
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err instanceof Error ? err.message : "Failed to assign grocery to store",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: err instanceof Error ? err.message : "Failed to assign grocery to store",
+        },
+        { userId: ctx.user.id }
+      );
       throw err;
     }
   });
@@ -489,9 +537,13 @@ const reorderInStore = authedProcedure
               ? "Stale grocery reorder; requesting client refresh"
               : "Grocery reorder partially applied due to stale versions; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-            reason: "Groceries were updated elsewhere",
-          });
+          void groceries.publish(
+            "stale",
+            {
+              reason: "Groceries were updated elsewhere",
+            },
+            { householdKey: ctx.householdKey }
+          );
         }
 
         log.info({ userId: ctx.user.id, count: updated.length }, "Groceries reordered");
@@ -536,16 +588,24 @@ const reorderInStore = authedProcedure
         }
 
         if (updated.length > 0) {
-          groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-            changedGroceries: updated,
-          });
+          void groceries.publish(
+            "updated",
+            {
+              changedGroceries: updated,
+            },
+            { householdKey: ctx.householdKey }
+          );
         }
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, updates }, "Failed to reorder groceries");
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: err.message || "Failed to reorder groceries",
-        });
+        void groceries.publish(
+          "failed",
+          {
+            reason: err.message || "Failed to reorder groceries",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };
@@ -554,34 +614,46 @@ const reorderInStore = authedProcedure
 const markAllDone = authedProcedure
   .input(MarkAllDoneGroceriesInputSchema)
   .mutation(({ ctx, input }) => {
-    const { storeId, groceries } = input;
+    const { storeId, groceries: targets } = input;
 
     log.info({ userId: ctx.user.id, storeId }, "Marking all groceries done in store");
 
-    markAllDoneInStore(ctx.userIds, storeId, groceries)
+    markAllDoneInStore(ctx.userIds, storeId, targets)
       .then((updated) => {
-        if (updated.length < groceries.length) {
+        if (updated.length < targets.length) {
           log.info(
-            { userId: ctx.user.id, requested: groceries.length, applied: updated.length },
+            { userId: ctx.user.id, requested: targets.length, applied: updated.length },
             "Stale grocery mark-all-done mutations; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-            reason: "Groceries were updated elsewhere",
-          });
+          void groceries.publish(
+            "stale",
+            {
+              reason: "Groceries were updated elsewhere",
+            },
+            { householdKey: ctx.householdKey }
+          );
         }
 
         if (updated.length > 0) {
           log.info({ userId: ctx.user.id, count: updated.length }, "Groceries marked done");
-          groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-            changedGroceries: updated,
-          });
+          void groceries.publish(
+            "updated",
+            {
+              changedGroceries: updated,
+            },
+            { householdKey: ctx.householdKey }
+          );
         }
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, storeId }, "Failed to mark groceries as done");
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: err.message || "Failed to mark groceries as done",
-        });
+        void groceries.publish(
+          "failed",
+          {
+            reason: err.message || "Failed to mark groceries as done",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };
@@ -590,32 +662,44 @@ const markAllDone = authedProcedure
 const deleteDone = authedProcedure
   .input(DeleteDoneGroceriesInputSchema)
   .mutation(({ ctx, input }) => {
-    const { storeId, groceries } = input;
+    const { storeId, groceries: targets } = input;
 
     log.info({ userId: ctx.user.id, storeId }, "Deleting done groceries in store");
 
-    deleteDoneInStore(ctx.userIds, storeId, groceries)
+    deleteDoneInStore(ctx.userIds, storeId, targets)
       .then((deletedIds) => {
-        if (deletedIds.length < groceries.length) {
+        if (deletedIds.length < targets.length) {
           log.info(
-            { userId: ctx.user.id, requested: groceries.length, applied: deletedIds.length },
+            { userId: ctx.user.id, requested: targets.length, applied: deletedIds.length },
             "Stale grocery delete-done mutations; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-            reason: "Groceries were updated elsewhere",
-          });
+          void groceries.publish(
+            "stale",
+            {
+              reason: "Groceries were updated elsewhere",
+            },
+            { householdKey: ctx.householdKey }
+          );
         }
 
         if (deletedIds.length > 0) {
           log.info({ userId: ctx.user.id, count: deletedIds.length }, "Done groceries deleted");
-          groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", { groceryIds: deletedIds });
+          void groceries.publish(
+            "deleted",
+            { groceryIds: deletedIds },
+            { householdKey: ctx.householdKey }
+          );
         }
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete done groceries");
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: err.message || "Failed to delete done groceries",
-        });
+        void groceries.publish(
+          "failed",
+          {
+            reason: err.message || "Failed to delete done groceries",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };

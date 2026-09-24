@@ -570,6 +570,10 @@
         "title": "Bildegenerering",
         "subtitle": "Tegn et bilde av retten for oppskrifter uten bilde"
       },
+      "decisionModel": {
+        "title": "Beslutningsmodell",
+        "subtitle": "Raske, rimelige svar på lukkede spørsmål"
+      },
       "prompts": {
         "title": "Prompt-tekster",
         "subtitle": "Tilpass AI-instruksjoner for oppskriftbehandling"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (Lokal)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Generisk OpenAI-kompatibel"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "f.eks. gpt-image-1",
       "modelDescription": "Modellen som tegner bildet. Den må være en bildemodell, ikke en tekstmodell.",
       "fallbackHint": "Samme leverandør som AI-konfigurasjonen din: endepunkt og API-nøkkel hentes derfra med mindre du angir dem her."
+    },
+    "decisionConfig": {
+      "provider": "Beslutningsleverandør",
+      "providers": {
+        "disabled": "Deaktivert",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-nøkkel",
+      "apiKeyPlaceholder": "Skriv inn API-nøkkel...",
+      "apiKeyDescription": "Hent en nøkkel fra kontoen din på typesafe.ai",
+      "model": "Beslutningsmodell",
+      "uses": "Bruk beslutningsmodellen til",
+      "usesPlaceholder": "Ingenting",
+      "useNames": {
+        "autoCategorization": "Automatisk kategorisering",
+        "autoCategorizationDescription": "Avgjør om en oppskrift er frokost, lunsj, middag eller snacks",
+        "autoTagging": "Automatiske tagger",
+        "autoTaggingDescription": "Velg tagger fra den forhåndsdefinerte listen, og bekreft hver tagg AI-en foreslår",
+        "allergyDetection": "Allergideteksjon",
+        "allergyDetectionDescription": "Avgjør hvilke av husstandens allergener en oppskrift inneholder",
+        "recipeProvenance": "Oppskriftens opphav",
+        "recipeProvenanceDescription": "Fastsett land og Kjøkken før notatet skrives",
+        "groceryLinking": "Kobling av varer",
+        "groceryLinkingDescription": "Sorter en butikks tilbudte produkter og koble ett den er sikker på",
+        "validateEnrichments": "Valider berikelser",
+        "validateEnrichmentsDescription": "Kontroller hver berikelseskjørings egne påstander før de lagres"
+      },
+      "testConnection": "Test tilkobling",
+      "connectionSuccess": "Tilkobling vellykket",
+      "aiDisabledHint": "AI er deaktivert på denne serveren. Slå det på under AI-konfigurasjon for å teste og bruke beslutningsmodellen."
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt for oppskriftuttrekking",
@@ -812,7 +847,10 @@
         "ai-request": "AI request",
         "syncing-event": "Sync calendar event",
         "deleting-event": "Delete calendar event",
-        "running": "Run task"
+        "running": "Run task",
+        "searching": "Search the shop",
+        "reading-product": "Read the product page",
+        "saving-link": "Save the link"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Ingredienskobling",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
-        "image-generation": "Bildegenerering"
+        "image-generation": "Bildegenerering",
+        "store-lookup": "Butikkoppslag"
       },
       "summary": {
         "failed": "{count} failed"
@@ -859,6 +898,7 @@
           "finished": "Finished",
           "duration": "Duration",
           "attempts": "Attempts",
+          "models": "Modeller",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },

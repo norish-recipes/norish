@@ -21,7 +21,7 @@ import {
   MATCH_RETRY_WINDOW_MS,
 } from "@norish/queue/store-lookup/producer";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { storeEmitter } from "@norish/shared-server/realtime/stores";
+import { stores } from "@norish/shared-server/realtime/stores";
 import { normalizeGroceryName, productLinkKey } from "@norish/shared/lib/normalized-name";
 import { isPendingLink, pendingLink } from "@norish/shared/lib/product-link";
 
@@ -143,7 +143,7 @@ export async function noticeGroceries(
   const links = [...known, ...fresh];
 
   for (const link of links) {
-    storeEmitter.emitToHousehold(ctx.householdKey, "linkUpdated", { link });
+    void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
   }
 
   return links;
@@ -164,7 +164,7 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
   const { known, fresh } = await resolveAndQueue(ctx, groceries);
 
   for (const link of fresh) {
-    storeEmitter.emitToHousehold(ctx.householdKey, "linkUpdated", { link });
+    void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
   }
   const links = [...known, ...fresh];
   const productIds = links

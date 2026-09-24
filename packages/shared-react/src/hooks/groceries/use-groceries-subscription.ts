@@ -1,19 +1,11 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
-
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryDto } from "@norish/shared/contracts";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { GroceriesRealtime } from "@norish/shared/contracts/realtime/groceries";
 
 import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
-type GrocerySubscriptionEventPayloads = {
-  created: { groceries: GroceryDto[] };
-  updated: { changedGroceries: GroceryDto[] };
-  deleted: { groceryIds: string[] };
-  recurringCreated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
-  recurringUpdated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
-  recurringDeleted: { recurringGroceryId: string };
-  failed: { reason: string };
-  stale: { reason: string };
-};
+type Payload<E extends EventName<GroceriesRealtime>> = PayloadOf<GroceriesRealtime, E>;
 
 export type GroceriesSubscriptionErrorAdapter = {
   showErrorToast: (reason: string) => void;
@@ -63,151 +55,138 @@ export function createUseGroceriesSubscription({
     const { setGroceriesData, invalidate } = useGroceriesCacheHelpers();
     const errorAdapter = useErrorAdapter();
 
-    // onCreated
-    useSubscription(
-      trpc.groceries.onCreated.subscriptionOptions(undefined, {
-        onData: (payload: GrocerySubscriptionEventPayloads["created"]) => {
-          setGroceriesData((prev) => {
-            if (!prev) return prev;
+    // A lagged subscription refetches the list: the one domain these events touch.
+    const lag = { onLag: invalidate };
 
-            const existing = prev.groceries ?? [];
-            const incoming = payload.groceries;
-            const newGroceries = incoming.filter((g) => !existing.some((eg) => eg.id === g.id));
+    useRealtimeSubscription<Payload<"created">>(trpc.groceries.onCreated, {
+      ...lag,
+      onEvent: (payload) => {
+        setGroceriesData((prev) => {
+          if (!prev) return prev;
 
-            if (newGroceries.length === 0) return prev;
+          const existing = prev.groceries ?? [];
+          const incoming = payload.groceries;
+          const newGroceries = incoming.filter((g) => !existing.some((eg) => eg.id === g.id));
 
-            return {
-              ...prev,
-              groceries: applyCreatedGroceriesToCache(existing, newGroceries),
-            };
+          if (newGroceries.length === 0) return prev;
+
+          return {
+            ...prev,
+            groceries: applyCreatedGroceriesToCache(existing, newGroceries),
+          };
+        });
+      },
+    });
+
+    useRealtimeSubscription<Payload<"updated">>(trpc.groceries.onUpdated, {
+      ...lag,
+      onEvent: (payload) => {
+        setGroceriesData((prev) => {
+          if (!prev) return prev;
+
+          const updated = payload.changedGroceries;
+          const updatedList = prev.groceries.map((e) => {
+            const match = updated.find((i) => i.id === e.id);
+
+            return match ? { ...e, ...match } : e;
           });
-        },
-      })
-    );
 
-    // onUpdated
-    useSubscription(
-      trpc.groceries.onUpdated.subscriptionOptions(undefined, {
-        onData: (payload: GrocerySubscriptionEventPayloads["updated"]) => {
-          setGroceriesData((prev) => {
-            if (!prev) return prev;
+          return { ...prev, groceries: updatedList };
+        });
+      },
+    });
 
-            const updated = payload.changedGroceries;
-            const updatedList = prev.groceries.map((e) => {
-              const match = updated.find((i) => i.id === e.id);
+    useRealtimeSubscription<Payload<"deleted">>(trpc.groceries.onDeleted, {
+      ...lag,
+      onEvent: (payload) => {
+        setGroceriesData((prev) => {
+          if (!prev) return prev;
 
-              return match ? { ...e, ...match } : e;
-            });
+          const filtered = prev.groceries.filter((g) => !payload.groceryIds.includes(g.id));
 
-            return { ...prev, groceries: updatedList };
-          });
-        },
-      })
-    );
+          if (filtered.length === prev.groceries.length) return prev;
 
-    // onDeleted
-    useSubscription(
-      trpc.groceries.onDeleted.subscriptionOptions(undefined, {
-        onData: (payload: GrocerySubscriptionEventPayloads["deleted"]) => {
-          setGroceriesData((prev) => {
-            if (!prev) return prev;
+          return { ...prev, groceries: filtered };
+        });
+      },
+    });
 
-            const filtered = prev.groceries.filter((g) => !payload.groceryIds.includes(g.id));
+    useRealtimeSubscription<Payload<"recurringCreated">>(trpc.groceries.onRecurringCreated, {
+      ...lag,
+      onEvent: (payload) => {
+        setGroceriesData((prev) => {
+          if (!prev) return prev;
 
-            if (filtered.length === prev.groceries.length) return prev;
+          const { grocery: newGrocery, recurringGrocery: newRecurring } = payload;
 
-            return { ...prev, groceries: filtered };
-          });
-        },
-      })
-    );
+          const groceries = prev.groceries.some((g) => g.id === newGrocery.id)
+            ? prev.groceries.map((g) => (g.id === newGrocery.id ? newGrocery : g))
+            : applyCreatedGroceriesToCache(prev.groceries, [newGrocery]);
 
-    // onRecurringCreated
-    useSubscription(
-      trpc.groceries.onRecurringCreated.subscriptionOptions(undefined, {
-        onData: (payload: GrocerySubscriptionEventPayloads["recurringCreated"]) => {
-          setGroceriesData((prev) => {
-            if (!prev) return prev;
+          const recurringGroceries = prev.recurringGroceries.some((r) => r.id === newRecurring.id)
+            ? prev.recurringGroceries.map((r) => (r.id === newRecurring.id ? newRecurring : r))
+            : [newRecurring, ...prev.recurringGroceries];
 
-            const { grocery: newGrocery, recurringGrocery: newRecurring } = payload;
+          return { ...prev, groceries, recurringGroceries };
+        });
+      },
+    });
 
-            const groceries = prev.groceries.some((g) => g.id === newGrocery.id)
-              ? prev.groceries.map((g) => (g.id === newGrocery.id ? newGrocery : g))
-              : applyCreatedGroceriesToCache(prev.groceries, [newGrocery]);
+    useRealtimeSubscription<Payload<"recurringUpdated">>(trpc.groceries.onRecurringUpdated, {
+      ...lag,
+      onEvent: (payload) => {
+        setGroceriesData((prev) => {
+          if (!prev) return prev;
 
-            const recurringGroceries = prev.recurringGroceries.some((r) => r.id === newRecurring.id)
-              ? prev.recurringGroceries.map((r) => (r.id === newRecurring.id ? newRecurring : r))
-              : [newRecurring, ...prev.recurringGroceries];
+          const { recurringGrocery: updatedRecurring, grocery: updatedGrocery } = payload;
 
-            return { ...prev, groceries, recurringGroceries };
-          });
-        },
-      })
-    );
+          return {
+            ...prev,
+            groceries: prev.groceries.map((g) => (g.id === updatedGrocery.id ? updatedGrocery : g)),
+            recurringGroceries: prev.recurringGroceries.map((r) =>
+              r.id === updatedRecurring.id ? updatedRecurring : r
+            ),
+          };
+        });
+      },
+    });
 
-    // onRecurringUpdated
-    useSubscription(
-      trpc.groceries.onRecurringUpdated.subscriptionOptions(undefined, {
-        onData: (payload: GrocerySubscriptionEventPayloads["recurringUpdated"]) => {
-          setGroceriesData((prev) => {
-            if (!prev) return prev;
-
-            const { recurringGrocery: updatedRecurring, grocery: updatedGrocery } = payload;
-
-            return {
-              ...prev,
-              groceries: prev.groceries.map((g) =>
-                g.id === updatedGrocery.id ? updatedGrocery : g
-              ),
-              recurringGroceries: prev.recurringGroceries.map((r) =>
-                r.id === updatedRecurring.id ? updatedRecurring : r
-              ),
-            };
-          });
-        },
-      })
-    );
-
-    // onRecurringDeleted
     // Only the recurring definition is removed here. When linked groceries are
     // deleted along with it, the server emits a separate "deleted" event; when
     // the recurring is merely detached, the groceries live on and arrive via
     // "updated" with recurringGroceryId cleared.
-    useSubscription(
-      trpc.groceries.onRecurringDeleted.subscriptionOptions(undefined, {
-        onData: (payload: GrocerySubscriptionEventPayloads["recurringDeleted"]) => {
-          setGroceriesData((prev) => {
-            if (!prev) return prev;
+    useRealtimeSubscription<Payload<"recurringDeleted">>(trpc.groceries.onRecurringDeleted, {
+      ...lag,
+      onEvent: (payload) => {
+        setGroceriesData((prev) => {
+          if (!prev) return prev;
 
-            return {
-              ...prev,
-              recurringGroceries: prev.recurringGroceries.filter(
-                (r) => r.id !== payload.recurringGroceryId
-              ),
-            };
-          });
-        },
-      })
-    );
+          return {
+            ...prev,
+            recurringGroceries: prev.recurringGroceries.filter(
+              (r) => r.id !== payload.recurringGroceryId
+            ),
+          };
+        });
+      },
+    });
 
-    // onFailed
-    useSubscription(
-      trpc.groceries.onFailed.subscriptionOptions(undefined, {
-        onData: (payload: GrocerySubscriptionEventPayloads["failed"]) => {
-          errorAdapter.showErrorToast(payload.reason);
-          invalidate();
-        },
-      })
-    );
+    // The failing member alone hears about a validation failure (scope `user`).
+    useRealtimeSubscription<Payload<"failed">>(trpc.groceries.onFailed, {
+      ...lag,
+      onEvent: (payload) => {
+        errorAdapter.showErrorToast(payload.reason);
+        invalidate();
+      },
+    });
 
-    // onStale: a version-guarded write lost a race and was dropped. Silently
-    // refetch so any optimistic state converges to the DB — no error toast.
-    useSubscription(
-      trpc.groceries.onStale.subscriptionOptions(undefined, {
-        onData: () => {
-          invalidate();
-        },
-      })
-    );
+    // A version-guarded write lost a race and was dropped. Silently refetch so
+    // any optimistic state converges to the DB — no error toast.
+    useRealtimeSubscription<Payload<"stale">>(trpc.groceries.onStale, {
+      ...lag,
+      onEvent: () => {
+        invalidate();
+      },
+    });
   };
 }

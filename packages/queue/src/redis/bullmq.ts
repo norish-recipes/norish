@@ -14,6 +14,7 @@ import Redis from "ioredis";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { createLogger } from "@norish/shared-server/logger";
+import { parseRedisUrl } from "@norish/shared-server/redis/url";
 
 const log = createLogger("redis:bullmq");
 
@@ -26,28 +27,11 @@ const globalForBull = globalThis as unknown as {
 };
 
 /**
- * Parse Redis URL into connection options
- */
-function parseRedisUrl(url: string): { host: string; port: number; password?: string } {
-  const parsed = new URL(url);
-
-  return {
-    host: parsed.hostname,
-    port: parseInt(parsed.port || "6379", 10),
-    password: parsed.password || undefined,
-  };
-}
-
-/**
  * Base Redis options optimized for BullMQ
  */
 function getBaseOptions(): RedisOptions {
-  const { host, port, password } = parseRedisUrl(SERVER_CONFIG.REDIS_URL);
-
   return {
-    host,
-    port,
-    password,
+    ...parseRedisUrl(SERVER_CONFIG.REDIS_URL),
     maxRetriesPerRequest: null,
 
     // Performance optimizations

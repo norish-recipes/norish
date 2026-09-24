@@ -31,3 +31,9 @@ vi.mock("next/headers", () => ({
   }),
   headers: () => new Headers(),
 }));
+
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

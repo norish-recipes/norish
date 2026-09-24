@@ -7,6 +7,7 @@ import type { JobStepEvent } from "@norish/queue/job-steps";
 import type {
   AdminJobAttemptDTO,
   AdminJobDetailDTO,
+  AdminJobModelDTO,
   AdminJobRowDTO,
   AdminJobState,
   AdminJobStepDTO,
@@ -49,6 +50,16 @@ const MAX_LOG_LINES = 200;
  * Pretty-print a value as JSON, truncating long strings (e.g. base64
  * image payloads) so responses stay small.
  */
+/** How long a step's detail may be and still sit on one line beside the step. */
+const ONE_LINE_DETAIL_LENGTH = 80;
+
+/** A step's detail as the modal shows it: one line where it fits, laid out where it does not. */
+function detailJson(detail: unknown): string {
+  const compact = safeStringify(detail, 0);
+
+  return compact.length <= ONE_LINE_DETAIL_LENGTH ? compact : safeStringify(detail, 2);
+}
+
 function safeStringify(value: unknown, indent: number = 2): string {
   try {
     const json = JSON.stringify(
@@ -136,7 +147,7 @@ function deriveStepsForAttempt(input: {
       id: event.id,
       status,
       durationMs,
-      detailJson: event.detail === undefined ? null : safeStringify(event.detail, 0),
+      detailJson: event.detail === undefined ? null : detailJson(event.detail),
       error: isLast && outcome === "failed" ? errorMessage : null,
     };
   });
@@ -254,6 +265,28 @@ function groupLogsByAttempt(logs: string[]): Map<number, string[]> {
   }
 
   return byAttempt;
+}
+
+/**
+ * The models the job used, from the latest attempt that asked one: each
+ * provider, model and outcome once, in the order first asked, so a Decision
+ * that failed and the language model that answered instead both show.
+ */
+function deriveModels(progress: unknown): AdminJobModelDTO[] {
+  const attempts = readStepProgress(progress)?.attempts ?? [];
+  const latest = [...attempts].reverse().find((entry) => (entry.models?.length ?? 0) > 0);
+  const seen = new Set<string>();
+  const models: AdminJobModelDTO[] = [];
+
+  for (const { provider, model, outcome } of latest?.models ?? []) {
+    const key = `${provider}\u0000${model}\u0000${outcome}`;
+
+    if (seen.has(key)) continue;
+    seen.add(key);
+    models.push({ provider, model, outcome });
+  }
+
+  return models;
 }
 
 function toRowDTO(queueName: QueueName, job: Job, state: AdminJobState): AdminJobRowDTO {
@@ -394,6 +427,7 @@ const detail = adminProcedure
       failedReason: fullFailedReason,
       dataJson: safeStringify(job.data),
       returnValueJson: job.returnvalue == null ? null : safeStringify(job.returnvalue),
+      models: deriveModels(job.progress),
       attempts: deriveAttempts({
         queue: input.queue,
         progress: job.progress,

@@ -1,11 +1,18 @@
 "use client";
 
-import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
+import { useState } from "react";
+import {
+  GroceryList,
+  GroceryListByRecipe,
+  PantryPanel,
+  StoreManagerPanel,
+} from "@/components/groceries";
 import { AddGroceryPanel } from "@/components/Panel/consumers";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
 import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 import {
+  ArchiveBoxIcon,
   BookOpenIcon,
   BuildingStorefrontIcon,
   CheckIcon,
@@ -54,6 +61,9 @@ export function GroceriesPage() {
     setGroupSimilarIngredients,
   } = useGroceriesUiContext();
   const t = useTranslations("groceries.page");
+  // The Pantry is a panel of the groceries page, opened from the same menu as
+  // the store manager; nothing else on the page needs to know it is open.
+  const [pantryOpen, setPantryOpen] = useState(false);
   const handleToggle = (id: string, isDone: boolean) => {
     toggleGroceries([id], isDone);
   };
@@ -210,6 +220,15 @@ export function GroceriesPage() {
                       {<Cog6ToothIcon className="h-4 w-4" />}
                       <Label>{t("manageStores")}</Label>
                     </Dropdown.Item>
+                    <Dropdown.Item
+                      key="pantry"
+                      id="pantry"
+                      textValue={t("pantry")}
+                      onPress={() => setPantryOpen(true)}
+                    >
+                      {<ArchiveBoxIcon className="h-4 w-4" />}
+                      <Label>{t("pantry")}</Label>
+                    </Dropdown.Item>
                   </Dropdown.Section>
                 </Dropdown.Menu>
               </Dropdown.Popover>
@@ -276,6 +295,8 @@ export function GroceriesPage() {
         stores={stores}
         onOpenChange={setStoreManagerOpen}
       />
+
+      <PantryPanel open={pantryOpen} onOpenChange={setPantryOpen} />
 
       {editingGrocery && (
         <EditGroceryPanel

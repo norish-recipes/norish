@@ -140,6 +140,15 @@ const MESSAGE_LOADERS: Record<LocaleCatalogCode, Partial<Record<MessageSection, 
     navbar: () => import("./messages/bg/navbar.json"),
     auth: () => import("./messages/bg/auth.json"),
   },
+  fi: {
+    common: () => import("./messages/fi/common.json"),
+    recipes: () => import("./messages/fi/recipes.json"),
+    groceries: () => import("./messages/fi/groceries.json"),
+    calendar: () => import("./messages/fi/calendar.json"),
+    settings: () => import("./messages/fi/settings.json"),
+    navbar: () => import("./messages/fi/navbar.json"),
+    auth: () => import("./messages/fi/auth.json"),
+  },
 };
 
 export async function loadLocaleMessages(locale: string): Promise<Record<string, unknown>> {

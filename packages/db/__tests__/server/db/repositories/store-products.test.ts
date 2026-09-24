@@ -400,6 +400,41 @@ describe("store products, product links and misses", () => {
       });
     });
 
+    it("keeps the Decision's ranking with a Miss, and drops it with a link or a shopper's answer", async () => {
+      const suggestion = {
+        ranked: [
+          { url: PAGE, probability: 0.6 },
+          { url: OTHER_PAGE, probability: 0.3 },
+        ],
+      };
+
+      await expect(linkIfUnanswered(storeId, "kaas", null, suggestion)).resolves.toBe(true);
+      expect(await resolveProductLink(storeId, "kaas")).toMatchObject({
+        product: null,
+        suggestion,
+      });
+      expect(await resolveProductLinks([{ storeId, name: "kaas" }])).toMatchObject([
+        { suggestion },
+      ]);
+
+      // A link answers the question the ranking was for, so it carries none.
+      const read = await upsertReadProduct(reading());
+
+      await expect(linkIfUnanswered(storeId, "kaas", read.id, suggestion)).resolves.toBe(true);
+      expect(await resolveProductLink(storeId, "kaas")).toMatchObject({
+        product: expect.objectContaining({ id: read.id }),
+        suggestion: null,
+      });
+
+      // And so does a shopper's own answer — a Miss they wrote by unlinking included.
+      await linkIfUnanswered(storeId, "melk", null, suggestion);
+      await upsertProductLink(storeId, "melk", null);
+      expect(await resolveProductLink(storeId, "melk")).toMatchObject({
+        product: null,
+        suggestion: null,
+      });
+    });
+
     it("lets the queue answer a name it only knew as a Miss", async () => {
       await upsertProductLink(storeId, "kaas", null);
       const read = await upsertReadProduct(reading());

@@ -570,6 +570,10 @@
         "title": "Generowanie Obrazów",
         "subtitle": "Narysuj zdjęcie potrawy dla przepisów bez obrazu"
       },
+      "decisionModel": {
+        "title": "Model decyzyjny",
+        "subtitle": "Szybkie, tanie odpowiedzi na pytania zamknięte"
+      },
       "prompts": {
         "title": "Prompty",
         "subtitle": "Dostosuj instrukcje AI do przetwarzania przepisów"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (lokalnie)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Ogólny zgodny z OpenAI"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "np. gpt-image-1",
       "modelDescription": "Model, który rysuje obraz. Musi to być model obrazów, nie model tekstowy.",
       "fallbackHint": "Ten sam dostawca co w konfiguracji AI: endpoint i klucz API są z niej przejmowane, chyba że ustawisz je tutaj."
+    },
+    "decisionConfig": {
+      "provider": "Dostawca decyzji",
+      "providers": {
+        "disabled": "Wyłączone",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "Klucz API",
+      "apiKeyPlaceholder": "Wprowadź klucz API...",
+      "apiKeyDescription": "Klucz uzyskasz na swoim koncie w typesafe.ai",
+      "model": "Model decyzyjny",
+      "uses": "Używaj modelu decyzyjnego do",
+      "usesPlaceholder": "Nic",
+      "useNames": {
+        "autoCategorization": "Automatyczna kategoryzacja",
+        "autoCategorizationDescription": "Ustalić, czy przepis to śniadanie, obiad, kolacja czy przekąska",
+        "autoTagging": "Automatyczne tagowanie",
+        "autoTaggingDescription": "Wybrać tagi z predefiniowanej listy i potwierdzić każdy tag zaproponowany przez AI",
+        "allergyDetection": "Wykrywanie alergenów",
+        "allergyDetectionDescription": "Ustalić, które alergeny gospodarstwa zawiera przepis",
+        "recipeProvenance": "Pochodzenie przepisu",
+        "recipeProvenanceDescription": "Ustalić kraj i Kuchnie, zanim powstanie notatka",
+        "groceryLinking": "Łączenie zakupów",
+        "groceryLinkingDescription": "Uporządkować produkty oferowane przez sklep i połączyć ten, którego jest pewny",
+        "validateEnrichments": "Walidacja wzbogaceń",
+        "validateEnrichmentsDescription": "Sprawdzić własne ustalenia każdego wzbogacenia przed ich zapisem"
+      },
+      "testConnection": "Testuj połączenie",
+      "connectionSuccess": "Połączenie udane",
+      "aiDisabledHint": "AI jest wyłączone na tym serwerze. Włącz je w konfiguracji AI, aby testować i używać modelu decyzyjnego."
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt ekstrakcji przepisu",
@@ -812,7 +847,10 @@
         "ai-request": "AI request",
         "syncing-event": "Sync calendar event",
         "deleting-event": "Delete calendar event",
-        "running": "Run task"
+        "running": "Run task",
+        "searching": "Search the shop",
+        "reading-product": "Read the product page",
+        "saving-link": "Save the link"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Wiązanie składników",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
-        "image-generation": "Generowanie obrazów"
+        "image-generation": "Generowanie obrazów",
+        "store-lookup": "Wyszukiwanie w sklepie"
       },
       "summary": {
         "failed": "{count} failed"
@@ -859,6 +898,7 @@
           "finished": "Finished",
           "duration": "Duration",
           "attempts": "Attempts",
+          "models": "Modele",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },

@@ -7,7 +7,8 @@ import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
-import { reportStep } from "../job-steps";
+import { instrumentProcessor } from "../instrumented-processor";
+import { completeStep, reportStep } from "../job-steps";
 import { matchGroceryName, refreshProducts } from "./lookup";
 
 const log = createLogger("worker:store-lookup");
@@ -28,17 +29,19 @@ async function processStoreLookup(job: Job<StoreLookupJobData>): Promise<void> {
       name,
       householdKey,
       onStep: (step) => reportStep(job, step),
+      onStepDone: (detail) => completeStep(job, detail),
     });
 
     return;
   }
 
-  await reportStep(job, "searching");
+  await reportStep(job, "reading-product", { asked: job.data.productIds.length });
   const { refreshed } = await refreshProducts({
     productIds: job.data.productIds,
     householdKey: job.data.householdKey,
   });
 
+  await completeStep(job, { refreshed });
   log.debug({ jobId: job.id, refreshed }, "Refreshed stale Shelf Prices");
 }
 
@@ -60,17 +63,23 @@ export async function forgetFailedLookup(
  * Always-on, concurrency 1. Always-on because a grocery must be priced while
  * the user is still looking at the list, and because a lazy worker is where
  * the `delay` trap lives; concurrency 1 because one visit at a time to
- * somebody else's supermarket is the whole good-citizen fence.
+ * somebody else's supermarket is the whole good-citizen fence. Built by hand
+ * rather than through the lazy worker manager, so it wraps its processor
+ * itself: the models a lookup asks reach the job monitor all the same.
  */
 export function startStoreLookupWorker(): void {
   if (globalForWorker.storeLookupWorker) return;
 
-  const worker = new Worker<StoreLookupJobData>(QUEUE_NAMES.STORE_LOOKUP, processStoreLookup, {
-    connection: getBullClient(),
-    ...baseWorkerOptions,
-    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.STORE_LOOKUP],
-    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.STORE_LOOKUP],
-  });
+  const worker = new Worker<StoreLookupJobData>(
+    QUEUE_NAMES.STORE_LOOKUP,
+    instrumentProcessor(processStoreLookup),
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.STORE_LOOKUP],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.STORE_LOOKUP],
+    }
+  );
 
   worker.on("failed", (job, error) => {
     log.error({ jobId: job?.id, err: error }, "Store lookup failed");

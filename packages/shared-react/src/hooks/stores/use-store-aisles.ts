@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { AisleFiled, AisleLinkDto } from "@norish/shared/contracts";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 import { aisleLinkKey, normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import type { CreateStoresHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 export type StoreAislesData = AisleLinkDto[];
 
@@ -82,17 +84,13 @@ export function createUseStoreAislesSubscription({ useTRPC }: CreateStoresHooksO
     const queryClient = useQueryClient();
     const queryKey = trpc.stores.aisleLinks.queryKey();
 
-    useSubscription(
-      trpc.stores.onAisleFiled.subscriptionOptions(undefined, {
-        // Typed as the transport hands it over, like every other store handler.
-        onData: ({ payload }: any) => {
-          const filing = payload.filing as AisleFiled;
-
-          queryClient.setQueryData<StoreAislesData>(queryKey, (prev) =>
-            mergeAisleFiling(prev ?? [], filing)
-          );
-        },
-      })
-    );
+    useRealtimeSubscription<PayloadOf<StoresRealtime, "aisleFiled">>(trpc.stores.onAisleFiled, {
+      onEvent: ({ filing }) => {
+        queryClient.setQueryData<StoreAislesData>(queryKey, (prev) =>
+          mergeAisleFiling(prev ?? [], filing)
+        );
+      },
+      lagQueryKeys: [queryKey],
+    });
   };
 }

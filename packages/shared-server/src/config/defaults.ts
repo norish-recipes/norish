@@ -29,7 +29,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return {
         enabled: false,
         provider: "openai",
-        model: "gpt-5-mini",
+        model: "gpt-6-luna",
         temperature: 1.0,
         maxTokens: 10000,
       };

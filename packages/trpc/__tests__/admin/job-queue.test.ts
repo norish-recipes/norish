@@ -80,7 +80,7 @@ function createMockQueue(jobs: ReturnType<typeof createMockJob>[] = []) {
 function createCaller(admin = true) {
   const ctx = createMockAdminContext(admin ? createMockAdminUser() : createMockUser());
 
-  return jobQueueProcedures.createCaller({ ...ctx, multiplexer: null } as never);
+  return jobQueueProcedures.createCaller(ctx as never);
 }
 
 describe("admin job queue procedures", () => {
@@ -221,6 +221,76 @@ describe("admin job queue procedures", () => {
       expect(detail.logsTotal).toBe(2);
       expect(detail.failedReason).toBe("boom");
       expect(detail.attempts[0]?.stack).toContain("Error: boom");
+    });
+
+    it("lists the models the latest attempt asked, each once, failures marked", async () => {
+      const jev = { provider: "typesafe", model: "jev-2026-09-01", outcome: "completed" };
+      const gpt = { provider: "openai", model: "gpt-4o-mini", outcome: "completed" };
+      const job = createMockJob({
+        attemptsMade: 2,
+        progress: {
+          step: "saving",
+          updatedAt: 3_000,
+          attempts: [
+            {
+              attempt: 1,
+              timeline: [{ id: "ai-request", startedAt: 1_000 }],
+              models: [{ ...gpt, outcome: "failed" }],
+            },
+            {
+              attempt: 2,
+              timeline: [{ id: "ai-request", startedAt: 2_000 }],
+              models: [{ ...jev, outcome: "failed" }, jev, jev, gpt],
+            },
+          ],
+        },
+      });
+
+      registryMock.queues.set(QUEUE_NAMES.AUTO_CATEGORIZATION, createMockQueue([job]));
+
+      const detail = await createCaller().detail({
+        queue: QUEUE_NAMES.AUTO_CATEGORIZATION,
+        jobId: "job-1",
+      });
+
+      expect(detail.models).toEqual([{ ...jev, outcome: "failed" }, jev, gpt]);
+    });
+
+    it("falls back to the last attempt that asked a model while a retry is still running", async () => {
+      const gpt = { provider: "openai", model: "gpt-4o-mini", outcome: "failed" };
+      const job = createMockJob({
+        attemptsMade: 1,
+        finishedOn: null,
+        getState: vi.fn().mockResolvedValue("active"),
+        progress: {
+          step: "ai-request",
+          updatedAt: 3_000,
+          attempts: [
+            { attempt: 1, timeline: [{ id: "ai-request", startedAt: 1_000 }], models: [gpt] },
+            { attempt: 2, timeline: [{ id: "ai-request", startedAt: 2_000 }] },
+          ],
+        },
+      });
+
+      registryMock.queues.set(QUEUE_NAMES.AUTO_TAGGING, createMockQueue([job]));
+
+      const detail = await createCaller().detail({
+        queue: QUEUE_NAMES.AUTO_TAGGING,
+        jobId: "job-1",
+      });
+
+      expect(detail.models).toEqual([gpt]);
+    });
+
+    it("has no models for a job that never asked one", async () => {
+      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, createMockQueue([createMockJob()]));
+
+      const detail = await createCaller().detail({
+        queue: QUEUE_NAMES.RECIPE_IMPORT,
+        jobId: "job-1",
+      });
+
+      expect(detail.models).toEqual([]);
     });
 
     it("groups worker logs under their attempt", async () => {

@@ -33,8 +33,10 @@ jobs:
     name: Read pin
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # No `image` output: its value contains the Docker Hub username, which is a
+    # secret, so Actions drops it from job outputs ("may contain secret"). The
+    # jobs that need the image name read it from pin.env themselves.
     outputs:
-      image: ${{ steps.pin.outputs.image }}
       tag: ${{ steps.pin.outputs.tag }}
       repo: ${{ steps.pin.outputs.repo }}
       version: ${{ steps.pin.outputs.version }}
@@ -103,6 +105,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Read image name
+        run: |
+          set -euo pipefail
+          set -a
+          . docker/obscura/pin.env
+          set +a
+          echo "IMAGE=${OBSCURA_IMAGE}" >> "$GITHUB_ENV"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -120,7 +130,6 @@ jobs:
         id: mode
         env:
           PUBLISH: ${{ github.event_name == 'workflow_dispatch' }}
-          IMAGE: ${{ needs.pin.outputs.image }}
         run: |
           set -euo pipefail
           if [ "$PUBLISH" = "true" ]; then
@@ -174,6 +183,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Read image name
+        run: |
+          set -euo pipefail
+          set -a
+          . docker/obscura/pin.env
+          set +a
+          echo "IMAGE=${OBSCURA_IMAGE}" >> "$GITHUB_ENV"
+
       - name: Download digests
         uses: actions/download-artifact@v8
         with:
@@ -195,7 +212,6 @@ jobs:
       - name: Create manifest
         working-directory: /tmp/digests
         env:
-          IMAGE: ${{ needs.pin.outputs.image }}
           TAG: ${{ needs.pin.outputs.tag }}
         run: |
           set -euo pipefail
@@ -215,6 +231,5 @@ jobs:
       # record of what landed, for whoever reads it later.
       - name: Show what was published
         env:
-          IMAGE: ${{ needs.pin.outputs.image }}
           TAG: ${{ needs.pin.outputs.tag }}
         run: docker buildx imagetools inspect "${IMAGE}:${TAG}"

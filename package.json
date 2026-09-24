@@ -1,6 +1,6 @@
 {
   "name": "norish",
-  "version": "0.23.1-beta",
+  "version": "0.24.0-beta",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.34.5",
@@ -33,12 +33,13 @@
     "lint": "turbo run lint --concurrency=1",
     "lint:fix": "turbo run lint --concurrency=1 -- --fix",
     "typecheck": "turbo run typecheck",
-    "typecheck:mobile": "pnpm --filter @norish/trpc run typecheck && pnpm --filter @norish/mobile exec tsc --noEmit",
     "typecheck:web": "pnpm --filter @norish/web run typecheck",
     "format": "turbo run format -- --write",
     "format:check": "turbo run format",
     "deps:cycles": "node tooling/monorepo/scripts/check-circular-deps.mjs && node tooling/monorepo/scripts/check-workspace-imports.mjs",
-    "i18n:check": "pnpm --filter @norish/i18n run check:locale-keys"
+    "i18n:check": "pnpm --filter @norish/i18n run check:locale-keys",
+    "version:sync": "node tooling/monorepo/scripts/sync-version.mjs",
+    "version:check": "node tooling/monorepo/scripts/sync-version.mjs --check"
   },
   "devDependencies": {
     "@norish/prettier-config": "workspace:*",

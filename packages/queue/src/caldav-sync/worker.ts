@@ -1,9 +1,9 @@
 import type { Job } from "bullmq";
 
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
-import type { CaldavSubscriptionEvents } from "@norish/shared-server/realtime/caldav";
 import type { Slot } from "@norish/shared/contracts";
 import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/caldav-sync-status";
+import type { CaldavSyncEventData } from "@norish/shared/contracts/realtime/caldav";
 import {
   createCaldavSyncStatus,
   getCaldavSyncStatusByItemId,
@@ -11,16 +11,14 @@ import {
 } from "@norish/db/repositories/caldav-sync-status";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createLogger } from "@norish/shared-server/logger";
-import { caldavEmitter } from "@norish/shared-server/realtime/caldav";
+import { caldav } from "@norish/shared-server/realtime/caldav";
 
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:caldav-sync");
 
-type CaldavItemStatusUpdatedPayload = CaldavSubscriptionEvents["itemStatusUpdated"] & {
-  version: number;
-};
+type CaldavItemStatusUpdatedPayload = CaldavSyncEventData["itemStatusUpdated"];
 
 /**
  * Process a single CalDAV sync job.
@@ -48,7 +46,7 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
       version: existingStatus.version,
     } as CaldavItemStatusUpdatedPayload;
 
-    caldavEmitter.emitToUser(userId, "itemStatusUpdated", payload);
+    void caldav.publish("syncEvent", { type: "itemStatusUpdated", data: payload }, { userId });
   }
 
   if (operation === "delete") {
@@ -100,12 +98,19 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
     version: persistedStatus.version,
   } as CaldavItemStatusUpdatedPayload;
 
-  caldavEmitter.emitToUser(userId, "itemStatusUpdated", successPayload);
+  void caldav.publish("syncEvent", { type: "itemStatusUpdated", data: successPayload }, { userId });
 
-  caldavEmitter.emitToUser(userId, "syncCompleted", {
-    itemId,
-    caldavEventUid: uid,
-  });
+  void caldav.publish(
+    "syncEvent",
+    {
+      type: "syncCompleted",
+      data: {
+        itemId,
+        caldavEventUid: uid,
+      },
+    },
+    { userId }
+  );
 }
 
 async function handleJobFailed(
@@ -169,14 +174,21 @@ async function handleJobFailed(
     version: persistedStatus.version,
   } as CaldavItemStatusUpdatedPayload;
 
-  caldavEmitter.emitToUser(userId, "itemStatusUpdated", failurePayload);
+  void caldav.publish("syncEvent", { type: "itemStatusUpdated", data: failurePayload }, { userId });
 
   if (isFinalFailure) {
-    caldavEmitter.emitToUser(userId, "syncFailed", {
-      itemId,
-      errorMessage,
-      retryCount: job.attemptsMade,
-    });
+    void caldav.publish(
+      "syncEvent",
+      {
+        type: "syncFailed",
+        data: {
+          itemId,
+          errorMessage,
+          retryCount: job.attemptsMade,
+        },
+      },
+      { userId }
+    );
   }
 }
 

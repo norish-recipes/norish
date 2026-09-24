@@ -29,8 +29,9 @@ import {
   reorderGroceriesInStore,
   updateGroceries,
 } from "../mocks/db";
-import { groceryEmitter } from "../mocks/grocery-emitter";
 import { assertHouseholdAccess } from "../mocks/permissions";
+import { groceries } from "../mocks/realtime/groceries";
+import { stores } from "../mocks/realtime/stores";
 import { listRecurringGroceriesByUsers } from "../mocks/recurring-groceries";
 // Import test utilities
 import {
@@ -55,19 +56,17 @@ const storeProductsRepository = vi.hoisted(() => ({
   listStaleProducts: vi.fn(async () => []),
 }));
 
-const storeEmitter = vi.hoisted(() => ({ emitToHousehold: vi.fn() }));
-
 // Setup mocks before any imports that use them
 vi.mock("@norish/db", () => import("../mocks/db"));
 vi.mock("@norish/db/repositories/stores", () => storesRepository);
 vi.mock("@norish/db/repositories/store-products", () => storeProductsRepository);
-vi.mock("@norish/shared-server/realtime/stores", () => ({ storeEmitter }));
+vi.mock("@norish/shared-server/realtime/stores", () => import("../mocks/realtime/stores"));
 vi.mock(
   "@norish/db/repositories/recurring-groceries",
   () => import("../mocks/recurring-groceries")
 );
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/groceries/emitter", () => import("../mocks/grocery-emitter"));
+vi.mock("@norish/shared-server/realtime/groceries", () => import("../mocks/realtime/groceries"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 vi.mock("@norish/shared/lib/helpers", () => import("../mocks/helpers"));
 vi.mock("@norish/shared-server/logger", () => ({
@@ -209,6 +208,28 @@ describe("groceries openapi procedures", () => {
     );
   });
 
+  it("toasts a failed create to the actor alone, never the household", async () => {
+    listGroceriesByUsers.mockResolvedValue([]);
+    createGroceries.mockRejectedValue(new Error("db down"));
+
+    const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.createGrocery({ name: "Milk", amount: 1, unit: "pcs", isDone: false })
+    ).rejects.toThrow("db down");
+
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "failed",
+      { reason: "Failed to create grocery item" },
+      { userId: ctx.user.id }
+    );
+    expect(groceries.publish).not.toHaveBeenCalledWith(
+      "failed",
+      expect.anything(),
+      expect.objectContaining({ householdKey: expect.anything() })
+    );
+  });
+
   it("inserts a new grocery with the client-minted id when one is supplied", async () => {
     const clientId = crypto.randomUUID();
 
@@ -294,9 +315,13 @@ describe("groceries openapi procedures", () => {
     ]);
 
     expect(result.updatedGroceries).toEqual([sibling]);
-    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "updated", {
-      changedGroceries: [sibling],
-    });
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "updated",
+      {
+        changedGroceries: [sibling],
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("keeps the existing store when the merged-in grocery has none", async () => {
@@ -463,11 +488,19 @@ describe("grocery emitter", () => {
 
     createGroceries.mockResolvedValue({ created: mockGroceries, shifted: [] });
 
-    groceryEmitter.emitToHousehold("household-1", "created", { groceries: mockGroceries });
+    void groceries.publish(
+      "created",
+      { groceries: mockGroceries },
+      { householdKey: "household-1" }
+    );
 
-    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith("household-1", "created", {
-      groceries: mockGroceries,
-    });
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "created",
+      {
+        groceries: mockGroceries,
+      },
+      { householdKey: "household-1" }
+    );
   });
 
   it("emits updated event after successful update", async () => {
@@ -475,11 +508,19 @@ describe("grocery emitter", () => {
 
     updateGroceries.mockResolvedValue(mockUpdated);
 
-    groceryEmitter.emitToHousehold("household-1", "updated", { changedGroceries: mockUpdated });
+    void groceries.publish(
+      "updated",
+      { changedGroceries: mockUpdated },
+      { householdKey: "household-1" }
+    );
 
-    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith("household-1", "updated", {
-      changedGroceries: mockUpdated,
-    });
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "updated",
+      {
+        changedGroceries: mockUpdated,
+      },
+      { householdKey: "household-1" }
+    );
   });
 
   it("emits deleted event after successful deletion", async () => {
@@ -487,11 +528,15 @@ describe("grocery emitter", () => {
 
     deleteGroceryByIds.mockResolvedValue(undefined);
 
-    groceryEmitter.emitToHousehold("household-1", "deleted", { groceryIds });
+    void groceries.publish("deleted", { groceryIds }, { householdKey: "household-1" });
 
-    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith("household-1", "deleted", {
-      groceryIds,
-    });
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "deleted",
+      {
+        groceryIds,
+      },
+      { householdKey: "household-1" }
+    );
   });
 });
 
@@ -558,14 +603,16 @@ describe("stale grocery updates", () => {
       { userId: ctx.user.id, groceryId, version: 4 },
       "Stale grocery update; requesting client refresh"
     );
-    expect(groceryEmitter.emitToHousehold).not.toHaveBeenCalledWith(
-      ctx.householdKey,
-      "updated",
-      expect.anything()
-    );
-    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "stale", {
-      reason: expect.any(String),
+    expect(groceries.publish).not.toHaveBeenCalledWith("updated", expect.anything(), {
+      householdKey: ctx.householdKey,
     });
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "stale",
+      {
+        reason: expect.any(String),
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("saves the ingredient store preference when the update carries a store change", async () => {
@@ -623,9 +670,13 @@ describe("stale grocery updates", () => {
 
     // Dragging a grocery into another Store asks that Store the same question
     // the panel would: what it already knows reaches the list there and then.
-    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "linkUpdated", {
-      link,
-    });
+    expect(stores.publish).toHaveBeenCalledWith(
+      "linkUpdated",
+      {
+        link,
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("passes storeId through to updateGroceries when provided", async () => {

@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { recipes } from "../mocks/realtime/recipes";
 import {
   createMockAuthedContext,
   createMockFullRecipe,
@@ -12,7 +13,6 @@ import {
 const assertRecipeAccessMock = vi.hoisted(() => vi.fn());
 const createRecipeShareMock = vi.hoisted(() => vi.fn());
 const deleteRecipeShareMock = vi.hoisted(() => vi.fn());
-const emitByPolicyMock = vi.hoisted(() => vi.fn());
 const getActiveRecipeShareByTokenMock = vi.hoisted(() => vi.fn());
 const getTimerKeywordsMock = vi.hoisted(() => vi.fn());
 const getRecipePermissionPolicyMock = vi.hoisted(() => vi.fn());
@@ -32,9 +32,7 @@ vi.mock("../../src/routers/recipes/helpers", () => ({
   assertRecipeAccess: assertRecipeAccessMock,
 }));
 
-vi.mock("../../src/helpers", () => ({
-  emitByPolicy: emitByPolicyMock,
-}));
+vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: getRecipePermissionPolicyMock,
@@ -74,14 +72,12 @@ describe("recipe share procedures", () => {
   const authedCtx = {
     ...createMockAuthedContext(user, household),
     connectionId: null,
-    multiplexer: null,
     operationId: null,
   };
   const publicCtx = {
     user: null,
     household: null,
     connectionId: null,
-    multiplexer: null,
     operationId: null,
   };
 
@@ -127,17 +123,18 @@ describe("recipe share procedures", () => {
       recipeId,
       expiresIn: "forever",
     });
-    expect(emitByPolicyMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "household",
-      { userId: user.id, householdKey: authedCtx.householdKey },
-      "shareCreated",
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "shareEvent",
       {
-        type: "created",
-        recipeId,
-        shareId,
-        version: 1,
-      }
+        kind: "created",
+        share: {
+          type: "created",
+          recipeId,
+          shareId,
+          version: 1,
+        },
+      },
+      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
     );
     expect(result.url).toBe("/share/token-1");
   });
@@ -343,17 +340,18 @@ describe("recipe share procedures", () => {
 
     await caller.shareUpdate({ id: shareId, version: 1, expiresIn: "1month" });
 
-    expect(emitByPolicyMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "household",
-      { userId: user.id, householdKey: authedCtx.householdKey },
-      "shareUpdated",
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "shareEvent",
       {
-        type: "updated",
-        recipeId,
-        shareId,
-        version: 2,
-      }
+        kind: "updated",
+        share: {
+          type: "updated",
+          recipeId,
+          shareId,
+          version: 2,
+        },
+      },
+      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
     );
   });
 
@@ -390,17 +388,18 @@ describe("recipe share procedures", () => {
 
     await caller.shareRevoke({ id: shareId, version: 2 });
 
-    expect(emitByPolicyMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "household",
-      { userId: user.id, householdKey: authedCtx.householdKey },
-      "shareRevoked",
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "shareEvent",
       {
-        type: "revoked",
-        recipeId,
-        shareId,
-        version: 3,
-      }
+        kind: "revoked",
+        share: {
+          type: "revoked",
+          recipeId,
+          shareId,
+          version: 3,
+        },
+      },
+      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
     );
   });
 
@@ -423,17 +422,18 @@ describe("recipe share procedures", () => {
 
     await caller.shareDelete({ id: shareId, version: 4 });
 
-    expect(emitByPolicyMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "household",
-      { userId: user.id, householdKey: authedCtx.householdKey },
-      "shareDeleted",
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "shareEvent",
       {
-        type: "deleted",
-        recipeId,
-        shareId,
-        version: 4,
-      }
+        kind: "deleted",
+        share: {
+          type: "deleted",
+          recipeId,
+          shareId,
+          version: 4,
+        },
+      },
+      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
     );
   });
 });

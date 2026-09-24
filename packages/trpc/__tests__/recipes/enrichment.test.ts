@@ -36,7 +36,7 @@ vi.mock("@norish/db", async (importOriginal) => {
 
 vi.mock("@norish/db/repositories/recipes", () => import("../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/recipes/emitter", () => import("../mocks/recipe-emitter"));
+vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 vi.mock("@norish/queue", async (importOriginal) => {

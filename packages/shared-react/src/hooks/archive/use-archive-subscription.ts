@@ -1,8 +1,11 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
-
+import type { ArchiveRealtime } from "@norish/shared/contracts/realtime/archive";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type { ArchiveImportCacheHelpers, CreateArchiveHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
+
+type Payload<E extends EventName<ArchiveRealtime>> = PayloadOf<ArchiveRealtime, E>;
 
 const log = createClientLogger("ArchiveImportSubscription");
 
@@ -25,59 +28,63 @@ export function createUseArchiveSubscription({
     const { setImportState } = useArchiveImportCacheHelpers();
     const toastAdapter = useToastAdapter();
 
-    useSubscription(
-      trpc.archive.onArchiveProgress.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          log.debug({ payload }, "Progress event received");
-          setImportState((prev) => {
-            if (!prev || !prev.isImporting) {
-              return {
-                current: payload.current,
-                total: payload.total,
-                imported: payload.imported,
-                notes: [],
-                isImporting: true,
-                errors: payload.errors,
-              };
-            }
+    // An import's progress is not a query: a lag has nothing to refetch, and
+    // the next progress event carries the whole count again.
+    const lag = {
+      onLag: () => log.warn("Archive import subscription lagged; awaiting next event"),
+    };
 
-            const allErrors = [...(prev.errors || []), ...payload.errors];
-
+    useRealtimeSubscription<Payload<"archiveProgress">>(trpc.archive.onArchiveProgress, {
+      ...lag,
+      onEvent: (payload) => {
+        log.debug({ payload }, "Progress event received");
+        setImportState((prev) => {
+          if (!prev || !prev.isImporting) {
             return {
-              ...prev,
               current: payload.current,
+              total: payload.total,
               imported: payload.imported,
-              errors: allErrors,
-            };
-          });
-        },
-      })
-    );
-
-    useSubscription(
-      trpc.archive.onArchiveCompleted.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          log.debug({ payload }, "Completion event received");
-          setImportState((prev) => {
-            const total = prev?.total ?? payload.imported + payload.errors.length;
-
-            return {
-              current: total,
-              total: total,
-              imported: payload.imported,
-              notes: payload.notes,
-              isImporting: false,
+              notes: [],
+              isImporting: true,
               errors: payload.errors,
             };
-          });
+          }
 
-          toastAdapter.showCompletionToast(
-            payload.imported,
-            payload.notes.length,
-            payload.errors.length
-          );
-        },
-      })
-    );
+          const allErrors = [...(prev.errors || []), ...payload.errors];
+
+          return {
+            ...prev,
+            current: payload.current,
+            imported: payload.imported,
+            errors: allErrors,
+          };
+        });
+      },
+    });
+
+    useRealtimeSubscription<Payload<"archiveCompleted">>(trpc.archive.onArchiveCompleted, {
+      ...lag,
+      onEvent: (payload) => {
+        log.debug({ payload }, "Completion event received");
+        setImportState((prev) => {
+          const total = prev?.total ?? payload.imported + payload.errors.length;
+
+          return {
+            current: total,
+            total: total,
+            imported: payload.imported,
+            notes: payload.notes,
+            isImporting: false,
+            errors: payload.errors,
+          };
+        });
+
+        toastAdapter.showCompletionToast(
+          payload.imported,
+          payload.notes.length,
+          payload.errors.length
+        );
+      },
+    });
   };
 }

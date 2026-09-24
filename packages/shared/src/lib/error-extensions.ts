@@ -7,3 +7,18 @@ export class OperationTimeoutError extends Error {
     this.name = "OperationTimeoutError";
   }
 }
+
+/**
+ * A failure that carries what the failing code was looking at, so a job can
+ * record it on the step it died in and the job monitor can show why, not
+ * only that. The detail must be JSON-able.
+ */
+export class ErrorWithDetail extends Error {
+  constructor(
+    message: string,
+    public readonly detail: unknown
+  ) {
+    super(message);
+    this.name = "ErrorWithDetail";
+  }
+}

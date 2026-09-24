@@ -23,7 +23,11 @@ const config: Config = {
     hooks: {
       onBrokenMarkdownLinks: "warn",
     },
+    // The AI provider and prices pages draw how a Decision fits the runtime.
+    mermaid: true,
   },
+
+  themes: ["@docusaurus/theme-mermaid"],
 
   i18n: {
     defaultLocale: "en",
@@ -45,7 +49,7 @@ const config: Config = {
           // version (don't hand-edit the label — let the script do it).
           lastVersion: "current",
           versions: {
-            current: { label: "0.23.1-beta" },
+            current: { label: "0.24.0-beta" },
           },
         },
         blog: false,

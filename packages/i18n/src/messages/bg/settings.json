@@ -570,6 +570,10 @@
         "title": "Генериране на изображения",
         "subtitle": "Нарисувай снимка на ястието за рецепти без изображение"
       },
+      "decisionModel": {
+        "title": "Модел за решения",
+        "subtitle": "Бързи и евтини отговори на затворени въпроси"
+      },
       "prompts": {
         "title": "Промптове",
         "subtitle": "Персонализирай AI инструкциите за обработка на рецепти"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (локален)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Общ OpenAI-съвместим"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "напр. gpt-image-1",
       "modelDescription": "Моделът, който рисува изображението. Трябва да е модел за изображения, а не текстов модел.",
       "fallbackHint": "Същият доставчик като AI конфигурацията: крайната точка и API ключът се вземат от нея, освен ако не ги зададете тук."
+    },
+    "decisionConfig": {
+      "provider": "Доставчик на решения",
+      "providers": {
+        "disabled": "Изключено",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API ключ",
+      "apiKeyPlaceholder": "Въведете API ключ...",
+      "apiKeyDescription": "Вземете ключ от акаунта си в typesafe.ai",
+      "model": "Модел за решения",
+      "uses": "Използвай модела за решения за",
+      "usesPlaceholder": "Нищо",
+      "useNames": {
+        "autoCategorization": "Автоматично категоризиране",
+        "autoCategorizationDescription": "Да реши дали рецептата е закуска, обяд, вечеря или снак",
+        "autoTagging": "Автоматично етикетиране",
+        "autoTaggingDescription": "Да избере етикети от предварително зададения списък и да потвърди всеки етикет, предложен от ИИ",
+        "allergyDetection": "Откриване на алергени",
+        "allergyDetectionDescription": "Да реши кои алергени на домакинството съдържа рецептата",
+        "recipeProvenance": "Произход на рецептата",
+        "recipeProvenanceDescription": "Да определи държавата и Кухните, преди да бъде написана бележката",
+        "groceryLinking": "Свързване на покупки",
+        "groceryLinkingDescription": "Да подреди предложените от магазина продукти и да свърже един, в който е сигурен",
+        "validateEnrichments": "Проверка на обогатяванията",
+        "validateEnrichmentsDescription": "Да провери собствените твърдения на всяко обогатяване, преди да бъдат записани"
+      },
+      "testConnection": "Тествай връзката",
+      "connectionSuccess": "Връзката е успешна",
+      "aiDisabledHint": "AI е изключен на този сървър. Включете го в AI конфигурацията, за да тествате и използвате модела за решения."
     },
     "promptsConfig": {
       "recipeExtraction": "Промпт за извличане на рецепта",
@@ -812,7 +847,10 @@
         "ai-request": "AI заявка",
         "syncing-event": "Синхронизиране на събитие от календара",
         "deleting-event": "Изтриване на събитие от календара",
-        "running": "Изпълнение на задача"
+        "running": "Изпълнение на задача",
+        "searching": "Търсене в магазина",
+        "reading-product": "Четене на продуктовата страница",
+        "saving-link": "Запазване на връзката"
       },
       "queues": {
         "recipe-import": "Импортиране на рецепта",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Свързване на съставките",
         "caldav-sync": "Синхронизиране с CalDAV",
         "scheduled-tasks": "Планирани задачи",
-        "image-generation": "Генериране на изображения"
+        "image-generation": "Генериране на изображения",
+        "store-lookup": "Търсене в магазин"
       },
       "summary": {
         "failed": "{count} неуспешни"
@@ -859,6 +898,7 @@
           "finished": "Завършена",
           "duration": "Продължителност",
           "attempts": "Опити",
+          "models": "Модели",
           "runsAt": "Изпълнява се в",
           "nextRun": "Следващо изпълнение"
         },

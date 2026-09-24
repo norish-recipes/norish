@@ -19,6 +19,7 @@ import {
 } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
   clientMintedId,
   DetachRecurringGroceryInputSchema,
@@ -30,7 +31,6 @@ import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recu
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { noticeGroceries } from "../stores/pricing";
-import { groceryEmitter } from "./emitter";
 
 const createRecurring = authedProcedure
   .input(
@@ -95,21 +95,33 @@ const createRecurring = authedProcedure
       // The siblings it made room among carry new versions now; every screen
       // hears so, or its next write on one of them is refused as stale.
       if (shifted.length > 0) {
-        groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-          changedGroceries: shifted,
-        });
+        void groceries.publish(
+          "updated",
+          {
+            changedGroceries: shifted,
+          },
+          { householdKey: ctx.householdKey }
+        );
       }
-      groceryEmitter.emitToHousehold(ctx.householdKey, "recurringCreated", {
-        recurringGrocery: created,
-        grocery,
-      });
+      void groceries.publish(
+        "recurringCreated",
+        {
+          recurringGrocery: created,
+          grocery,
+        },
+        { householdKey: ctx.householdKey }
+      );
 
       return { recurringGrocery: created, grocery, shifted };
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create recurring grocery");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: "Failed to create recurring grocery",
-      });
+      void groceries.publish(
+        "failed",
+        {
+          reason: "Failed to create recurring grocery",
+        },
+        { userId: ctx.user.id }
+      );
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to create recurring grocery",
@@ -164,9 +176,13 @@ const updateRecurring = authedProcedure
             { userId: ctx.user.id, recurringGroceryId, groceryId },
             "Stale recurring grocery update; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-            reason: "Recurring grocery was updated elsewhere",
-          });
+          void groceries.publish(
+            "stale",
+            {
+              reason: "Recurring grocery was updated elsewhere",
+            },
+            { householdKey: ctx.householdKey }
+          );
 
           return;
         }
@@ -184,19 +200,27 @@ const updateRecurring = authedProcedure
           { userId: ctx.user.id, recurringGroceryId, groceryId },
           "Recurring grocery updated"
         );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
-          recurringGrocery: outcome.value.recurringGrocery,
-          grocery: outcome.value.grocery,
-        });
+        void groceries.publish(
+          "recurringUpdated",
+          {
+            recurringGrocery: outcome.value.recurringGrocery,
+            grocery: outcome.value.grocery,
+          },
+          { householdKey: ctx.householdKey }
+        );
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to update recurring grocery"
         );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: err.message || "Failed to update recurring grocery",
-        });
+        void groceries.publish(
+          "failed",
+          {
+            reason: err.message || "Failed to update recurring grocery",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };
@@ -249,9 +273,13 @@ const detachRecurring = authedProcedure
             { userId: ctx.user.id, recurringGroceryId, groceryId },
             "Stale recurring grocery detach; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-            reason: "Grocery was updated elsewhere",
-          });
+          void groceries.publish(
+            "stale",
+            {
+              reason: "Grocery was updated elsewhere",
+            },
+            { householdKey: ctx.householdKey }
+          );
 
           return;
         }
@@ -269,21 +297,33 @@ const detachRecurring = authedProcedure
           { userId: ctx.user.id, recurringGroceryId, groceryId },
           "Recurring grocery detached"
         );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringDeleted", {
-          recurringGroceryId,
-        });
-        groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-          changedGroceries: [outcome.value],
-        });
+        void groceries.publish(
+          "recurringDeleted",
+          {
+            recurringGroceryId,
+          },
+          { householdKey: ctx.householdKey }
+        );
+        void groceries.publish(
+          "updated",
+          {
+            changedGroceries: [outcome.value],
+          },
+          { householdKey: ctx.householdKey }
+        );
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to detach recurring grocery"
         );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: err.message || "Failed to detach recurring grocery",
-        });
+        void groceries.publish(
+          "failed",
+          {
+            reason: err.message || "Failed to detach recurring grocery",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };
@@ -318,9 +358,13 @@ const deleteRecurring = authedProcedure
             { userId: ctx.user.id, recurringGroceryId, version },
             "Stale recurring grocery delete; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-            reason: "Recurring grocery was updated elsewhere",
-          });
+          void groceries.publish(
+            "stale",
+            {
+              reason: "Recurring grocery was updated elsewhere",
+            },
+            { householdKey: ctx.householdKey }
+          );
 
           return;
         }
@@ -328,23 +372,35 @@ const deleteRecurring = authedProcedure
         log.info({ userId: ctx.user.id, recurringGroceryId }, "Recurring grocery deleted");
 
         if (result.deletedGroceryIds.length > 0) {
-          groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", {
-            groceryIds: result.deletedGroceryIds,
-          });
+          void groceries.publish(
+            "deleted",
+            {
+              groceryIds: result.deletedGroceryIds,
+            },
+            { householdKey: ctx.householdKey }
+          );
         }
 
-        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringDeleted", {
-          recurringGroceryId,
-        });
+        void groceries.publish(
+          "recurringDeleted",
+          {
+            recurringGroceryId,
+          },
+          { householdKey: ctx.householdKey }
+        );
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to delete recurring grocery"
         );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: err.message || "Failed to delete recurring grocery",
-        });
+        void groceries.publish(
+          "failed",
+          {
+            reason: err.message || "Failed to delete recurring grocery",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };
@@ -429,27 +485,39 @@ const checkRecurring = authedProcedure
             { userId: ctx.user.id, recurringGroceryId, groceryId },
             "Stale recurring grocery check; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
-            reason: "Grocery was updated elsewhere",
-          });
+          void groceries.publish(
+            "stale",
+            {
+              reason: "Grocery was updated elsewhere",
+            },
+            { householdKey: ctx.householdKey }
+          );
 
           return;
         }
 
         log.debug({ userId: ctx.user.id, recurringGroceryId, isDone }, "Recurring grocery checked");
-        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
-          recurringGrocery: outcome.value.recurringGrocery ?? recurringGrocery,
-          grocery: outcome.value.grocery,
-        });
+        void groceries.publish(
+          "recurringUpdated",
+          {
+            recurringGrocery: outcome.value.recurringGrocery ?? recurringGrocery,
+            grocery: outcome.value.grocery,
+          },
+          { householdKey: ctx.householdKey }
+        );
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to check recurring grocery"
         );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: err.message || "Failed to check recurring grocery",
-        });
+        void groceries.publish(
+          "failed",
+          {
+            reason: err.message || "Failed to check recurring grocery",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };

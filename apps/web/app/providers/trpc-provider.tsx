@@ -33,7 +33,14 @@ export const { TRPCProvider, TRPCProviderWrapper, useConnectionStatus, useTRPC, 
     // organically). Do not pass wsLazyEnabled:false here without revisiting
     // forced-Offline (an eager socket would connect despite the dev link).
     extraLinks: OFFLINE_FORCED_AVAILABLE ? [createForcedOfflineLink<AppRouter>()] : [],
-    // Recovery owns reconnect Replay followed by the final active-query refetch
-    // and Warm Set top-up, so the bundle must not start a competing invalidation.
-    invalidateOnReconnect: false,
+    // The server closed the socket with 4401: the session is gone, and no
+    // reconnect will bring it back. Sign in again, then come back here.
+    onWebSocketUnauthorized: () => {
+      if (typeof window === "undefined") return;
+
+      const loginUrl = new URL("/login", window.location.origin);
+
+      loginUrl.searchParams.set("callbackUrl", window.location.pathname + window.location.search);
+      window.location.assign(loginUrl.toString());
+    },
   });

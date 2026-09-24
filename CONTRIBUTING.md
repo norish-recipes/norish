@@ -58,7 +58,7 @@ pnpm dev
 | Command              | Description                              |
 | -------------------- | ---------------------------------------- |
 | `pnpm dev`           | Start development server with hot reload |
-| `pnpm dev:mobile`    | Start Expo mobile workspace              |
+| `pnpm dev:mobile`    | Start the parked Expo mobile workspace   |
 | `pnpm build`         | Create production build                  |
 | `pnpm start`         | Run production server                    |
 | `pnpm test`          | Run tests via Turbo (all workspaces)     |
@@ -76,7 +76,7 @@ pnpm dev
 norish/
 ├── apps/             # App workspaces
 │   ├── web/          # Next.js app (App Router + server entry)
-│   └── mobile/       # Expo app workspace (@norish/mobile)
+│   └── mobile/       # Expo app workspace (@norish/mobile) — parked pending a rewrite; not covered by the gates
 ├── packages/         # Shared libraries
 │   ├── api/          # Server API logic (routers, AI, parsing)
 │   ├── auth/         # Auth helpers
@@ -243,12 +243,13 @@ pnpm --filter @norish/web run test
 # Run a specific test file (from within the workspace directory)
 cd apps/web && pnpm exec vitest run __tests__/hooks/recipes/use-recipes-query.test.ts
 
-# Build once and run the complete browser E2E gate (Offline + AI projects)
+# Build once and run the complete browser E2E gate (Offline + AI + Realtime projects)
 pnpm test:e2e
 
 # Run one project against an existing production build
 pnpm --filter @norish/web run test:e2e --project=offline
 pnpm --filter @norish/web run test:e2e --project=ai
+pnpm --filter @norish/web run test:e2e --project=realtime
 ```
 
 ## Adding Translations

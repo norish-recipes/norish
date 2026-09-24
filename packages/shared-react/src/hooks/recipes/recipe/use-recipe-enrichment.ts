@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@trpc/tanstack-react-query";
 
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 import type {
   RecipeEnrichmentKind,
   RecipeEnrichmentLifecycleEventDto,
@@ -14,6 +15,7 @@ import {
 } from "@norish/shared/lib/recipe-enrichment";
 
 import type { CreateRecipeHooksOptions } from "../types";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 
 export type RecipeEnrichmentStateMap = Record<RecipeEnrichmentKind, RecipeEnrichmentLifecycleState>;
 
@@ -39,19 +41,6 @@ export interface RecipeEnrichmentCallbacks {
 export interface EnrichmentRequestInput {
   recipeId: string;
   kind: RecipeEnrichmentKind;
-}
-
-/**
- * Narrow a realtime frame to a lifecycle event.
- *
- * Subscriptions arrive typed as `unknown` because the envelope wrapper is not
- * part of the generated router types, so this is where the shape is checked
- * rather than asserted.
- */
-function asLifecycleEvent(data: unknown): RecipeEnrichmentLifecycleEventDto | null {
-  const payload = (data as { payload?: unknown } | null)?.payload;
-
-  return isRecipeEnrichmentLifecycleEvent(payload) ? payload : null;
 }
 
 type EnrichmentMutation = { mutate: (input: EnrichmentRequestInput) => void };
@@ -273,30 +262,30 @@ export function createUseRecipeEnrichment({ useTRPC }: CreateRecipeHooksOptions)
       [queryClient, statusKey]
     );
 
-    useSubscription(
-      trpc.recipes.onEnrichment.subscriptionOptions(undefined, {
-        enabled: !!recipeId,
-        onData: (data: unknown) => {
-          const payload = asLifecycleEvent(data);
+    useRealtimeSubscription<PayloadOf<RecipesRealtime, "enrichment">>(trpc.recipes.onEnrichment, {
+      enabled: !!recipeId,
+      // The status query is the recovery read: a lagged subscription refetches it.
+      lagQueryKeys: [statusKey],
+      onEvent: (payload) => {
+        // The catalogue declares this payload with `z.custom`, which validates
+        // nothing at runtime yet, so the shape is still checked here.
+        if (!isRecipeEnrichmentLifecycleEvent(payload) || payload.recipeId !== recipeId) return;
 
-          if (!payload || payload.recipeId !== recipeId) return;
+        const applied = applyLifecycle(payload);
 
-          const applied = applyLifecycle(payload);
+        // Only the requester of a manual run hears about its failure. Retained
+        // failed status stays visible to everyone who can see the recipe.
+        const isOwnManualFailure =
+          payload.state === "failed" &&
+          payload.origin === "manual" &&
+          !!currentUserId &&
+          payload.requestedByUserId === currentUserId;
 
-          // Only the requester of a manual run hears about its failure. Retained
-          // failed status stays visible to everyone who can see the recipe.
-          const isOwnManualFailure =
-            payload.state === "failed" &&
-            payload.origin === "manual" &&
-            !!currentUserId &&
-            payload.requestedByUserId === currentUserId;
-
-          if (applied && isOwnManualFailure) {
-            callbacks.onManualError?.(payload.kind, new Error("Enrichment failed"));
-          }
-        },
-      })
-    );
+        if (applied && isOwnManualFailure) {
+          callbacks.onManualError?.(payload.kind, new Error("Enrichment failed"));
+        }
+      },
+    });
 
     const mutation: EnrichmentMutation = useMutation(
       trpc.recipes.requestEnrichment.mutationOptions({

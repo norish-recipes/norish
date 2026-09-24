@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
+import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Label, Modal, TextField } from "@heroui/react";
@@ -26,30 +27,16 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
     }
     onOpenChange(open);
   }
+  // A link already on the clipboard is what the person most likely came to
+  // import, so it is offered as the field's value, never over something typed.
   useEffect(() => {
-    if (!isOpen || typeof navigator === "undefined" || !navigator.clipboard?.readText) {
-      return;
-    }
+    if (!isOpen) return;
     let isCancelled = false;
 
-    async function fillUrlFromClipboard() {
-      try {
-        const clipboardText = (await navigator.clipboard.readText()).trim();
-
-        if (!clipboardText) {
-          return;
-        }
-        const parsedUrl = new URL(clipboardText);
-        const isHttpUrl = parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
-
-        if (isHttpUrl && !isCancelled) {
-          setImportUrl((currentValue) =>
-            currentValue.trim() === "" ? clipboardText : currentValue
-          );
-        }
-      } catch {}
-    }
-    void fillUrlFromClipboard();
+    void readClipboardUrl().then((clipboardUrl) => {
+      if (!clipboardUrl || isCancelled) return;
+      setImportUrl((currentValue) => (currentValue.trim() === "" ? clipboardUrl : currentValue));
+    });
 
     return () => {
       isCancelled = true;

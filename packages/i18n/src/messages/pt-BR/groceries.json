@@ -8,7 +8,8 @@
     "viewMode": "Modo de visualização",
     "manageStores": "Gerenciar lojas",
     "storeViewOptions": "Opções de visualização por loja",
-    "groupIngredients": "Agrupar ingredientes"
+    "groupIngredients": "Agrupar ingredientes",
+    "pantry": "Despensa"
   },
   "empty": {
     "title": "Sua lista de compras espera por você",
@@ -83,6 +84,15 @@
     "dragAisle": "Arraste para reordenar",
     "aisleDuplicate": "Esta loja já tem um corredor com esse nome"
   },
+  "pantry": {
+    "title": "Despensa",
+    "hint": "O que você já tem em casa. Ingredientes da sua despensa ficam fora da lista quando você adiciona uma receita.",
+    "empty": "Nada na sua despensa ainda",
+    "namePlaceholder": "ex.: Azeite",
+    "add": "Adicionar à despensa",
+    "remove": "Remover da despensa",
+    "duplicate": "Isso já está na sua despensa"
+  },
   "panel": {
     "addTitle": "Adicionar item",
     "editTitle": "Editar item",
@@ -113,6 +123,7 @@
     "editPlaceholder": "ex.: leite toda semana",
     "servings": "Porções",
     "selectedCount": "{selected} de {total} selecionados",
+    "pantryUnavailable": "Não foi possível ler sua despensa, então nada está marcado ainda. Marque o que você precisa comprar.",
     "loadingIngredients": "Carregando ingredientes...",
     "noIngredients": "Nenhum ingrediente.",
     "addSelectedToGroceries": "Adicionar à lista de compras",
@@ -120,7 +131,8 @@
     "ingredientsFailed": "Falha ao adicionar ingredientes à lista de compras.",
     "addToGroceries": "Adicionar à lista de compras",
     "aisle": "Corredor",
-    "noAisle": "Sem corredor"
+    "noAisle": "Sem corredor",
+    "inPantry": "Na sua despensa"
   },
   "picker": {
     "unlink": "Desvincular produto",

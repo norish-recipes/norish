@@ -85,6 +85,13 @@ export interface MediaCarouselProps {
   onImageClick?: (index: number) => void;
   onActiveItemChange?: (item: MediaItem, index: number) => void;
   onActiveVideoControlsVisibilityChange?: (visible: boolean) => void;
+  /**
+   * The way into the visible video's fullscreen, or `null` whenever the
+   * visible item is not a video the browser can expand. The surrounding page
+   * draws the control, because the player's own sits in the band a recipe
+   * hero covers with its fade and title (#563).
+   */
+  onActiveVideoFullscreenChange?: (enterFullscreen: (() => void) | null) => void;
   className?: string;
   aspectRatio?: "video" | "square" | "4/3";
   rounded?: boolean;
@@ -96,6 +103,7 @@ type MediaCarouselSlidesProps = {
   mediaBoxClassName: string;
   onActiveItemChange?: (item: MediaItem, index: number) => void;
   onActiveVideoControlsVisibilityChange?: (visible: boolean) => void;
+  onActiveVideoFullscreenChange?: (enterFullscreen: (() => void) | null) => void;
   onImageClick: (item: MediaItem, itemIndex: number) => void;
   sortedItems: MediaItem[];
 };
@@ -106,6 +114,7 @@ function MediaCarouselSlides({
   mediaBoxClassName,
   onActiveItemChange,
   onActiveVideoControlsVisibilityChange,
+  onActiveVideoFullscreenChange,
   onImageClick,
   sortedItems,
 }: MediaCarouselSlidesProps) {
@@ -121,8 +130,15 @@ function MediaCarouselSlides({
 
     if (activeItem.type !== "video") {
       onActiveVideoControlsVisibilityChange?.(false);
+      onActiveVideoFullscreenChange?.(null);
     }
-  }, [onActiveItemChange, onActiveVideoControlsVisibilityChange, safeIndex, sortedItems]);
+  }, [
+    onActiveItemChange,
+    onActiveVideoControlsVisibilityChange,
+    onActiveVideoFullscreenChange,
+    safeIndex,
+    sortedItems,
+  ]);
 
   return (
     <Carousel.Content className="h-full">
@@ -137,6 +153,9 @@ function MediaCarouselSlides({
                 src={item.src}
                 onControlsVisibilityChange={
                   index === safeIndex ? onActiveVideoControlsVisibilityChange : undefined
+                }
+                onFullscreenAvailabilityChange={
+                  index === safeIndex ? onActiveVideoFullscreenChange : undefined
                 }
               />
             ) : hasError(item.src) ? (
@@ -177,6 +196,7 @@ export default function MediaCarousel({
   onImageClick,
   onActiveItemChange,
   onActiveVideoControlsVisibilityChange,
+  onActiveVideoFullscreenChange,
   className = "",
   aspectRatio = "video",
   rounded = true,
@@ -216,8 +236,14 @@ export default function MediaCarousel({
 
     if (activeItem.type !== "video") {
       onActiveVideoControlsVisibilityChange?.(false);
+      onActiveVideoFullscreenChange?.(null);
     }
-  }, [onActiveItemChange, onActiveVideoControlsVisibilityChange, sortedItems]);
+  }, [
+    onActiveItemChange,
+    onActiveVideoControlsVisibilityChange,
+    onActiveVideoFullscreenChange,
+    sortedItems,
+  ]);
 
   const openLightboxForItem = useCallback(
     (item: MediaItem, itemIndex: number) => {
@@ -276,6 +302,7 @@ export default function MediaCarousel({
               poster={item.thumbnail || undefined}
               src={item.src}
               onControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
+              onFullscreenAvailabilityChange={onActiveVideoFullscreenChange}
             />
           ) : hasError(item.src) ? (
             <FallbackPlaceholder />
@@ -325,6 +352,7 @@ export default function MediaCarousel({
           sortedItems={sortedItems}
           onActiveItemChange={onActiveItemChange}
           onActiveVideoControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
+          onActiveVideoFullscreenChange={onActiveVideoFullscreenChange}
           onImageClick={openLightboxForItem}
         />
         {/* Arrows only. The dots pill counted the media at the exact height the

@@ -8,7 +8,8 @@
     "viewMode": "Visningsmodus",
     "manageStores": "Administrer butikker",
     "storeViewOptions": "Butikkvisningsinnstillinger",
-    "groupIngredients": "Grupper ingredienser"
+    "groupIngredients": "Grupper ingredienser",
+    "pantry": "Spiskammer"
   },
   "empty": {
     "title": "Handlelisten din venter",
@@ -83,6 +84,15 @@
     "dragAisle": "Dra for å endre rekkefølgen",
     "aisleDuplicate": "Denne butikken har allerede en gang med det navnet"
   },
+  "pantry": {
+    "title": "Spiskammer",
+    "hint": "Det du allerede har hjemme. Ingredienser i spiskammeret holdes utenfor listen når du legger til en oppskrift.",
+    "empty": "Ingenting i spiskammeret ennå",
+    "namePlaceholder": "f.eks. Olivenolje",
+    "add": "Legg til i spiskammeret",
+    "remove": "Fjern fra spiskammeret",
+    "duplicate": "Det er allerede i spiskammeret"
+  },
   "panel": {
     "addTitle": "Legg til handlevare",
     "editTitle": "Rediger handlevare",
@@ -113,6 +123,7 @@
     "editPlaceholder": "f.eks. melk hver uke",
     "servings": "Porsjoner",
     "selectedCount": "{selected} av {total} valgt",
+    "pantryUnavailable": "Spiskammeret kunne ikke leses, så ingenting er huket av ennå. Huk av det du må kjøpe.",
     "loadingIngredients": "Laster ingredienser...",
     "noIngredients": "Ingen ingredienser.",
     "addSelectedToGroceries": "Legg til i handleliste",
@@ -120,7 +131,8 @@
     "ingredientsFailed": "Kunne ikke legge til ingredienser i handlelisten.",
     "addToGroceries": "Legg til i handleliste",
     "aisle": "Gang",
-    "noAisle": "Ingen gang"
+    "noAisle": "Ingen gang",
+    "inPantry": "I spiskammeret ditt"
   },
   "picker": {
     "unlink": "Fjern kobling til produkt",

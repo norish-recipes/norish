@@ -10,6 +10,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import {
+  createPlannedItem,
+  getPlannedItemWithRecipeById,
+  listPlannedItemsByUserAndDateRange,
+  listPlannedItemsWithRecipeBySlot,
+} from "@norish/db/repositories/planned-items";
+import {
   createRecipeWithRefs,
   dashboardRecipe,
   getRandomRecipeCandidates,
@@ -115,6 +121,72 @@ describe("thumbnail resolution across the list projections", () => {
 
     expect(byId.get(galleryOnly)).toMatch(/\/first\.jpg$/);
     expect(byId.get(legacyOnly)).toMatch(/\/legacy\.jpg$/);
+  });
+});
+
+describe("planned items resolve their recipe thumbnail the same way", () => {
+  // A planned recipe joins the recipe for its picture (issue #581): a recipe
+  // whose only image lives in the gallery must still show it on the calendar.
+  async function planAll() {
+    const shapes = await seedThreeShapes();
+    const date = "2026-03-02";
+    const planned = {
+      galleryOnly: await createPlannedItem({
+        userId,
+        date,
+        slot: "Dinner",
+        itemType: "recipe",
+        recipeId: shapes.galleryOnly,
+      }),
+      legacyOnly: await createPlannedItem({
+        userId,
+        date,
+        slot: "Dinner",
+        itemType: "recipe",
+        recipeId: shapes.legacyOnly,
+      }),
+      both: await createPlannedItem({
+        userId,
+        date,
+        slot: "Lunch",
+        itemType: "recipe",
+        recipeId: shapes.both,
+      }),
+    };
+
+    return { shapes, planned, date };
+  }
+
+  it("listPlannedItemsByUserAndDateRange leads with the gallery and falls back to the scalar", async () => {
+    const { shapes, date } = await planAll();
+
+    const items = await listPlannedItemsByUserAndDateRange([userId], date, date);
+    const byRecipe = new Map(items.map((item) => [item.recipeId, item.recipeImage]));
+
+    expect(byRecipe.get(shapes.galleryOnly)).toMatch(/\/first\.jpg$/);
+    expect(byRecipe.get(shapes.legacyOnly)).toMatch(/\/legacy\.jpg$/);
+    expect(byRecipe.get(shapes.both)).toMatch(/\/gallery\.jpg$/);
+  });
+
+  it("getPlannedItemWithRecipeById resolves the same way", async () => {
+    const { planned } = await planAll();
+
+    expect((await getPlannedItemWithRecipeById(planned.galleryOnly.id))?.recipeImage).toMatch(
+      /\/first\.jpg$/
+    );
+    expect((await getPlannedItemWithRecipeById(planned.both.id))?.recipeImage).toMatch(
+      /\/gallery\.jpg$/
+    );
+  });
+
+  it("listPlannedItemsWithRecipeBySlot resolves the same way", async () => {
+    const { shapes, date } = await planAll();
+
+    const items = await listPlannedItemsWithRecipeBySlot([userId], date, "Dinner");
+    const byRecipe = new Map(items.map((item) => [item.recipeId, item.recipeImage]));
+
+    expect(byRecipe.get(shapes.galleryOnly)).toMatch(/\/first\.jpg$/);
+    expect(byRecipe.get(shapes.legacyOnly)).toMatch(/\/legacy\.jpg$/);
   });
 });
 

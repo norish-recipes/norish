@@ -7,3 +7,4 @@ export { STORE_COLOR_KEYS, storeColorStyle, storeHue } from "./store-colors";
 export { GroupedGroceryItem } from "./grouped-grocery-item";
 export { GroupedStoreSection } from "./grouped-store-section";
 export * from "./stores";
+export * from "./pantry";

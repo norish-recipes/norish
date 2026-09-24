@@ -10,7 +10,7 @@ const dashboardRecipe = vi.fn();
 const getAllergiesForUsers = vi.fn();
 const addRecipeImages = vi.fn();
 const updateRecipeDishColor = vi.fn();
-const emitByPolicy = vi.fn();
+const publishRecipe = vi.fn(async () => undefined);
 const extractRecipeFromImages = vi.fn();
 const saveImageBytes = vi.fn();
 const dishColorForImageUrl = vi.fn();
@@ -43,12 +43,8 @@ vi.mock("@norish/queue/api-handlers", () => ({
   requireQueueApiHandler: vi.fn(() => extractRecipeFromImages),
 }));
 
-vi.mock("@norish/shared-server/realtime/policy", () => ({
-  emitByPolicy,
-}));
-
 vi.mock("@norish/shared-server/realtime/recipes", () => ({
-  recipeEmitter: {},
+  recipes: { publish: publishRecipe },
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({

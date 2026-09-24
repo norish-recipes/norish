@@ -1,6 +1,5 @@
 "use client";
 
-import type { OutboxMutationClient } from "@/lib/outbox";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
@@ -29,11 +28,14 @@ import { getSession } from "@norish/shared/lib/auth/client";
  *    owner-scoped resolver below is what enforces it (ADR-0009);
  *  - construct Recovery from the live tRPC client, Outbox, active-query refetch,
  *    and Warm Set;
- *  - trigger it on startup, Offline→Live and WebSocket reconnection.
+ *  - trigger it on startup, Offline→Live, WebSocket reconnection, and every
+ *    Live verdict while queued work is pending;
+ *  - ask the connectivity loop to probe when a mutation is admitted to the
+ *    Outbox while Live.
  */
 export function OfflineCacheController({ children }: { children: ReactNode }) {
   const { user } = useUserContext();
-  const { isLive, isOffline } = useConnectivity();
+  const { isLive, isOffline, probeNow, subscribeLiveProbes } = useConnectivity();
   const { status: wsStatus } = useConnectionStatus();
   const trpcClient = useTRPCClient();
   const queryClient = useQueryClient();
@@ -46,7 +48,7 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
       createRecovery({
         store: outboxStore,
         owner: cacheManager.owner,
-        submit: (entry) => replayOutboxEntry(trpcClient as OutboxMutationClient, entry),
+        submit: (entry) => replayOutboxEntry(trpcClient, entry),
         verifySession: async (ownerId) => {
           try {
             const session = await getSession();
@@ -121,6 +123,58 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
     // reconnecting always refreshes — those genuinely may have missed changes.
     void recovery.recover(returningLive || socketReconnected ? "resync" : "startup");
   }, [isLive, isOffline, owner, recovery, wsStatus]);
+
+  // A mutation that failed on reachability while Live is the strongest hint
+  // there is that reachability just changed — stronger than a socket drop, and
+  // the loop already probes on those. Only a growing pending count is an
+  // admission; Replay's own removals and parks change the queue too. While
+  // Offline the backoff loop is probing already.
+  const pendingCount = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!owner) return;
+
+    let cancelled = false;
+
+    const check = async () => {
+      const pending = (await outboxStore.forOwner(owner, "pending")).length;
+
+      if (cancelled) return;
+
+      const previous = pendingCount.current;
+
+      pendingCount.current = pending;
+
+      if (previous !== null && pending > previous && !isOffline) probeNow();
+    };
+
+    pendingCount.current = null;
+    void check();
+    const unsubscribe = outboxStore.subscribe(() => void check());
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [owner, isOffline, probeNow]);
+
+  // Every Live verdict drains queued work. A mutation admitted while Live has
+  // no transition to wait for — the machine never left Live and the socket
+  // never dropped — so without this its entry sat in the Outbox until some
+  // unrelated reconnect, while routine refetches erased the optimistic change
+  // it stood for. Recovery is single-flight: a verdict during a run adds
+  // nothing, and the run's own drain loop already re-reads the queue.
+  useEffect(() => {
+    if (!owner) return;
+
+    return subscribeLiveProbes(() => {
+      if (recovery.isSyncing()) return;
+
+      void outboxStore.forOwner(owner, "pending").then((pending) => {
+        if (pending.length > 0) void recovery.recover("queued");
+      });
+    });
+  }, [owner, recovery, subscribeLiveProbes]);
 
   // CacheManager clears the outgoing QueryClient before activating the
   // incoming owner, but that work crosses an async boundary. Do not let the

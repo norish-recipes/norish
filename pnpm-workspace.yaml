@@ -56,8 +56,6 @@ catalog:
   zod: 4.4.3
   zod-openapi: ^5.4.6
 
-injectWorkspacePackages: true
-
 nodeLinker: hoisted
 
 overrides:
@@ -75,5 +73,3 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
 
-syncInjectedDepsAfterScripts:
-  - build

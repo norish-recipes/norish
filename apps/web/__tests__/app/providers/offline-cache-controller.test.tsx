@@ -32,22 +32,62 @@ const cache = vi.hoisted(() => {
 });
 const warmSetTopUp = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
-const outboxStoreMock = vi.hoisted(() => ({}) as Record<string, never>);
+const outbox = vi.hoisted(() => {
+  const state = { pending: [] as Array<{ seq: number }>, listeners: new Set<() => void>() };
+
+  return {
+    state,
+    store: {
+      forOwner: vi.fn(async () => state.pending),
+      subscribe: vi.fn((listener: () => void) => {
+        state.listeners.add(listener);
+
+        return () => state.listeners.delete(listener);
+      }),
+    },
+    notify() {
+      for (const listener of state.listeners) listener();
+    },
+  };
+});
 const replayOutboxEntry = vi.hoisted(() => vi.fn());
 const recover = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const isSyncing = vi.hoisted(() => vi.fn(() => false));
 const recovery = vi.hoisted(() => ({
   recover,
-  isSyncing: () => false,
+  isSyncing,
   subscribe: () => () => {},
 }));
+const liveProbes = vi.hoisted(() => {
+  const listeners = new Set<() => void>();
+
+  return {
+    listeners,
+    probeNow: vi.fn(),
+    subscribe: vi.fn((listener: () => void) => {
+      listeners.add(listener);
+
+      return () => listeners.delete(listener);
+    }),
+    fire() {
+      for (const listener of listeners) listener();
+    },
+  };
+});
 const createRecovery = vi.hoisted(() => vi.fn(() => recovery));
 
 let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
-let wsStatus: "idle" | "connecting" | "connected" | "disconnected" = "idle";
+let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
 vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
-vi.mock("@/app/providers/connectivity-provider", () => ({ useConnectivity: () => connectivity }));
+vi.mock("@/app/providers/connectivity-provider", () => ({
+  useConnectivity: () => ({
+    ...connectivity,
+    probeNow: liveProbes.probeNow,
+    subscribeLiveProbes: liveProbes.subscribe,
+  }),
+}));
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPCClient: () => ({}),
   useConnectionStatus: () => ({ status: wsStatus }),
@@ -66,7 +106,7 @@ vi.mock("@/hooks/use-warm-set", () => ({
   useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn(), promoteCreatedRecipe: vi.fn() }),
 }));
 vi.mock("@/lib/outbox", () => ({
-  outboxStore: outboxStoreMock,
+  outboxStore: outbox.store,
   replayOutboxEntry,
 }));
 vi.mock("@/lib/outbox/recovery", () => ({ createRecovery }));
@@ -100,7 +140,20 @@ describe("OfflineCacheController", () => {
     user = null;
     connectivity = { isLive: true, isOffline: false };
     wsStatus = "idle";
+    outbox.state.pending = [];
+    outbox.state.listeners.clear();
+    outbox.store.forOwner.mockClear();
+    outbox.store.subscribe.mockClear();
+    liveProbes.listeners.clear();
+    liveProbes.probeNow.mockClear();
+    isSyncing.mockReturnValue(false);
   });
+
+  /** Let the controller's first pending-count read settle after mount. */
+  async function settled() {
+    await waitFor(() => expect(outbox.store.forOwner).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 
   afterEach(() => cleanup());
 
@@ -168,7 +221,7 @@ describe("OfflineCacheController", () => {
     await waitFor(() => expect(createRecovery).toHaveBeenCalled());
     expect(createRecovery).toHaveBeenCalledWith(
       expect.objectContaining({
-        store: outboxStoreMock,
+        store: outbox.store,
         owner: cache.owner,
         submit: expect.any(Function),
         refetchActiveQueries: expect.any(Function),
@@ -254,6 +307,78 @@ describe("OfflineCacheController", () => {
       })
     );
     expect(recover).not.toHaveBeenCalled();
+  });
+
+  it("asks the connectivity loop to probe when a mutation is admitted while Live", async () => {
+    user = { id: "u1" };
+    renderController();
+    await settled();
+
+    // The Outbox link admitted a mutation that failed on reachability.
+    outbox.state.pending = [{ seq: 1 }];
+    outbox.notify();
+
+    await waitFor(() => expect(liveProbes.probeNow).toHaveBeenCalledTimes(1));
+
+    // Replay removing it changes the queue too, but that is no admission.
+    outbox.state.pending = [];
+    outbox.notify();
+
+    await waitFor(() => expect(outbox.store.forOwner).toHaveBeenCalledTimes(3));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(liveProbes.probeNow).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not probe for an admission while Offline (the backoff loop already is)", async () => {
+    user = { id: "u1" };
+    connectivity = { isLive: false, isOffline: true };
+    renderController();
+    await settled();
+
+    outbox.state.pending = [{ seq: 1 }];
+    outbox.notify();
+
+    await waitFor(() => expect(outbox.store.forOwner).toHaveBeenCalledTimes(2));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(liveProbes.probeNow).not.toHaveBeenCalled();
+  });
+
+  it("drains queued work on a Live verdict", async () => {
+    user = { id: "u1" };
+    renderController();
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
+
+    // The verdict the admission's probe produced: the backend answers, so the
+    // queued write goes now rather than at some unrelated reconnect.
+    outbox.state.pending = [{ seq: 1 }];
+    liveProbes.fire();
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(2));
+    expect(recover).toHaveBeenLastCalledWith("queued");
+  });
+
+  it("does not treat a Live verdict with nothing queued as a Recovery trigger", async () => {
+    user = { id: "u1" };
+    renderController();
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
+
+    liveProbes.fire();
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(recover).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves queued work to a Recovery that is already running", async () => {
+    user = { id: "u1" };
+    renderController();
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
+
+    outbox.state.pending = [{ seq: 1 }];
+    isSyncing.mockReturnValue(true);
+    liveProbes.fire();
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(recover).toHaveBeenCalledTimes(1);
   });
 
   it("does not act before an owner is known (session unresolved)", async () => {

@@ -32,7 +32,7 @@ const lookup = vi.mocked(getYtDlpVersion);
 function createCaller(admin = true) {
   const ctx = createMockAdminContext(admin ? createMockAdminUser() : createMockUser());
 
-  return videoRuntimeProcedures.createCaller({ ...ctx, multiplexer: null } as never);
+  return videoRuntimeProcedures.createCaller(ctx as never);
 }
 
 beforeEach(() => {

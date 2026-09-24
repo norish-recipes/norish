@@ -18,7 +18,7 @@ Use this file for lightweight repo context.
 ## Repo Shape
 
 - `apps/web` - web app and server bundle entry
-- `apps/mobile` - Expo app
+- `apps/mobile` - Expo app, **parked pending a rewrite**: it still starts with `pnpm dev:mobile`, but it defines no `lint`, `typecheck` or `test` script, so none of the root gates reach it, and it is expected to break at compile and runtime against the current release
 - `packages/api` - server domain logic
 - `packages/trpc` - tRPC routers and API surface
 - `packages/db` - schema and repositories

@@ -3,6 +3,7 @@ import z from "zod";
 
 import type {
   PackSizeDto,
+  ProductSuggestion,
   ResolvedProductLink,
   StoreProductDto,
   StoreProductManualCreateInput,
@@ -86,6 +87,7 @@ export async function resolveProductLink(
     normalizedName: link.data.normalizedName,
     triedAt: link.data.triedAt,
     product: row.product ? parseProduct(row.product) : null,
+    suggestion: link.data.suggestion,
   };
 }
 
@@ -125,13 +127,22 @@ export async function resolveProductLinks(
       normalizedName: row.link.normalizedName,
       triedAt: row.link.triedAt,
       product: row.product ? parseProduct(row.product) : null,
+      suggestion: parseSuggestion(row.link.suggestion),
     }));
+}
+
+/** The suggestion column as typed, or nothing for a row that holds no usable one. */
+function parseSuggestion(value: unknown): ProductSuggestion | null {
+  const parsed = StoreProductLinkSelectSchema.shape.suggestion.safeParse(value);
+
+  return parsed.success ? parsed.data : null;
 }
 
 /**
  * Point a grocery name at a product, or at nothing. Last writer wins, with no
  * version guard: the last human to choose is right, and a Miss is the same row
- * with no product and a fresh `triedAt`.
+ * with no product and a fresh `triedAt`. A shopper's answer also ends whatever
+ * the Decision Model suggested: the question it ranked answers for is closed.
  */
 export async function upsertProductLink(
   storeId: string,
@@ -144,11 +155,12 @@ export async function upsertProductLink(
 
   await db
     .insert(storeProductLinks)
-    .values({ storeId, normalizedName, storeProductId, triedAt: new Date() })
+    .values({ storeId, normalizedName, storeProductId, triedAt: new Date(), suggestion: null })
     .onConflictDoUpdate({
       target: [storeProductLinks.storeId, storeProductLinks.normalizedName],
       set: {
         storeProductId,
+        suggestion: null,
         triedAt: new Date(),
         updatedAt: new Date(),
         version: sql`${storeProductLinks.version} + 1`,
@@ -168,19 +180,24 @@ export async function upsertProductLink(
 export async function linkIfUnanswered(
   storeId: string,
   name: string,
-  storeProductId: string | null
+  storeProductId: string | null,
+  /** What the Decision Model said about the offered products; kept with a Miss only. */
+  suggestion: ProductSuggestion | null = null
 ): Promise<boolean> {
   const normalizedName = normalizeGroceryName(name);
 
   if (!normalizedName) return false;
 
+  // A link answers the question the ranking was for, so it carries none.
+  const kept = storeProductId === null ? suggestion : null;
   const rows = await db
     .insert(storeProductLinks)
-    .values({ storeId, normalizedName, storeProductId, triedAt: new Date() })
+    .values({ storeId, normalizedName, storeProductId, triedAt: new Date(), suggestion: kept })
     .onConflictDoUpdate({
       target: [storeProductLinks.storeId, storeProductLinks.normalizedName],
       set: {
         storeProductId,
+        suggestion: kept,
         triedAt: new Date(),
         updatedAt: new Date(),
         version: sql`${storeProductLinks.version} + 1`,

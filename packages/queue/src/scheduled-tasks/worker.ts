@@ -9,6 +9,7 @@ import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-groce
 import { createLogger } from "@norish/shared-server/logger";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { instrumentProcessor } from "../instrumented-processor";
 import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:scheduled-tasks");
@@ -106,7 +107,7 @@ export function startScheduledTasksWorker(): void {
 
   const worker = new Worker<ScheduledTaskJobData>(
     QUEUE_NAMES.SCHEDULED_TASKS,
-    processScheduledTask,
+    instrumentProcessor(processScheduledTask),
     {
       connection: getBullClient(),
       ...baseWorkerOptions,

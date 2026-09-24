@@ -1,44 +1,4 @@
-import type { z } from "zod";
+import { defineRealtimeDomain } from "@norish/shared-server/realtime/domain";
+import { householdsRealtime } from "@norish/shared/contracts/realtime/households";
 
-import type { TypedRedisEmitter } from "@norish/shared-server/redis/pubsub";
-import type {
-  HouseholdAdminSettingsDto,
-  HouseholdSettingsDto,
-} from "@norish/shared/contracts/dto/household";
-import { createTypedEmitter } from "@norish/shared-server/redis/pubsub";
-import {
-  HouseholdAdminTransferredEventSchema,
-  HouseholdAllergiesUpdatedEventSchema,
-  HouseholdFailedEventSchema,
-  HouseholdJoinCodeRegeneratedEventSchema,
-  HouseholdMemberProfileUpdatedEventSchema,
-  HouseholdMemberRemovedEventSchema,
-  HouseholdUserJoinedEventSchema,
-  HouseholdUserKickedEventSchema,
-  HouseholdUserLeftEventSchema,
-} from "@norish/shared/contracts/zod";
-
-export type HouseholdUserInfo = z.infer<typeof HouseholdUserJoinedEventSchema>["user"];
-
-export type HouseholdSubscriptionEvents = {
-  created: {
-    household: HouseholdSettingsDto | HouseholdAdminSettingsDto;
-  };
-  userJoined: z.infer<typeof HouseholdUserJoinedEventSchema>;
-  userLeft: z.infer<typeof HouseholdUserLeftEventSchema>;
-  userKicked: z.infer<typeof HouseholdUserKickedEventSchema>;
-  memberRemoved: z.infer<typeof HouseholdMemberRemovedEventSchema>;
-  adminTransferred: z.infer<typeof HouseholdAdminTransferredEventSchema>;
-  joinCodeRegenerated: z.infer<typeof HouseholdJoinCodeRegeneratedEventSchema>;
-  allergiesUpdated: z.infer<typeof HouseholdAllergiesUpdatedEventSchema>;
-  memberProfileUpdated: z.infer<typeof HouseholdMemberProfileUpdatedEventSchema>;
-  failed: z.infer<typeof HouseholdFailedEventSchema>;
-};
-
-declare global {
-  var __householdEmitter__: TypedRedisEmitter<HouseholdSubscriptionEvents> | undefined;
-}
-
-export const householdEmitter: TypedRedisEmitter<HouseholdSubscriptionEvents> =
-  globalThis.__householdEmitter__ ||
-  (globalThis.__householdEmitter__ = createTypedEmitter<HouseholdSubscriptionEvents>("household"));
+export const households = defineRealtimeDomain(householdsRealtime);

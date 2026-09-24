@@ -5,6 +5,7 @@ import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
+import type { HouseholdUserInfo } from "@norish/shared/contracts/realtime/households";
 import {
   addUserToHousehold,
   createHousehold,
@@ -22,8 +23,9 @@ import {
   invalidateHouseholdCache,
   invalidateHouseholdCacheForUsers,
 } from "@norish/shared-server/cache/household";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
+import { households } from "@norish/shared-server/realtime/households";
 import {
   KickHouseholdUserInputSchema,
   LeaveHouseholdInputSchema,
@@ -32,12 +34,8 @@ import {
 } from "@norish/shared/contracts/zod";
 import { HouseholdNameSchema, JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
-import type { HouseholdUserInfo } from "./types";
-import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { permissionsEmitter } from "../permissions/emitter";
-import { householdEmitter } from "./emitter";
 
 /**
  * Transforms household data to DTO based on admin status
@@ -142,9 +140,9 @@ const create = authedProcedure
         const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
         const dto = toHouseholdDto(fullHousehold, ctx.user.id, allergies);
 
-        // Emit to the user who created the household
-        // This MUST happen before connection invalidation so client receives it
-        householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
+        // Awaited before the invalidation, so the creator's view receives the
+        // household before its socket closes.
+        await households.publish("created", { household: dto! }, { userId: ctx.user.id });
 
         // Invalidate cache and terminate connection to rebind subscriptions
         // The client already has the household data from the event above
@@ -153,9 +151,13 @@ const create = authedProcedure
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id }, "Failed to create household");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to create household",
-        });
+        void households.publish(
+          "failed",
+          {
+            reason: "Failed to create household",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { id };
@@ -219,8 +221,9 @@ const join = authedProcedure
         const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
         const dto = toHouseholdDto(fullHousehold, ctx.user.id, allergies);
 
-        // Emit to the joining user FIRST (before connection invalidation)
-        householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
+        // Awaited before the invalidation, so the joining user's view receives
+        // the household before its socket closes.
+        await households.publish("created", { household: dto! }, { userId: ctx.user.id });
 
         // Emit to existing household members
         const userInfo = {
@@ -230,7 +233,7 @@ const join = authedProcedure
           version: versionedMembership.version,
         } as HouseholdUserInfo;
 
-        householdEmitter.emitToHousehold(householdId, "userJoined", { user: userInfo });
+        await households.publish("userJoined", { user: userInfo }, { householdKey: householdId });
 
         // Invalidate cache and terminate connection AFTER events are sent
         await invalidateHouseholdCacheForUsers([ctx.user.id, ...existingMemberIds]);
@@ -238,9 +241,13 @@ const join = authedProcedure
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id }, "Failed to join household");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to join household",
-        });
+        void households.publish(
+          "failed",
+          {
+            reason: "Failed to join household",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { householdId };
@@ -286,22 +293,26 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
 
       log.info({ userId: ctx.user.id, householdId }, "User left household");
 
+      // Remaining members hear it before the leaver's socket restarts.
+      for (const memberId of remainingMemberIds) {
+        await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
+      }
+
       // Invalidate cache for leaving user AND remaining members (their user list changed)
       await invalidateHouseholdCacheForUsers([ctx.user.id, ...remainingMemberIds]);
 
       // Terminate connection to rebind subscriptions (now user-only channels)
       await emitConnectionInvalidation(ctx.user.id, "household-left");
-
-      // Emit to remaining members
-      for (const memberId of remainingMemberIds) {
-        householdEmitter.emitToUser(memberId, "userLeft", { userId: ctx.user.id });
-      }
     })
     .catch((err) => {
       log.error({ err, userId: ctx.user.id }, "Failed to leave household");
-      householdEmitter.emitToUser(ctx.user.id, "failed", {
-        reason: "Failed to leave household",
-      });
+      void households.publish(
+        "failed",
+        {
+          reason: "Failed to leave household",
+        },
+        { userId: ctx.user.id }
+      );
     });
 
   return { success: true };
@@ -360,20 +371,21 @@ const kick = authedProcedure
 
         log.info({ userId: ctx.user.id, householdId, userIdToKick }, "User kicked from household");
 
-        // Emit to the kicked user FIRST (before their connection is terminated)
-        householdEmitter.emitToUser(userIdToKick, "userKicked", {
-          householdId,
-          kickedBy: ctx.user.id,
-        });
-
-        // Emit policyUpdated to kicked user so their recipe view refreshes
-        // (they lose access to household recipes)
-        const recipePolicy = await getRecipePermissionPolicy();
-
-        permissionsEmitter.emitToUser(userIdToKick, "policyUpdated", { recipePolicy });
+        // The kicked user hears it before their socket is terminated; the
+        // reconnect that follows refetches their recipe view under the new
+        // identity (Recovery, ADR-0011).
+        await households.publish(
+          "userKicked",
+          { householdId, kickedBy: ctx.user.id },
+          { userId: userIdToKick }
+        );
 
         // Emit to remaining household members (household-scoped)
-        householdEmitter.emitToHousehold(householdId, "memberRemoved", { userId: userIdToKick });
+        await households.publish(
+          "memberRemoved",
+          { userId: userIdToKick },
+          { householdKey: householdId }
+        );
 
         // Invalidate cache and terminate connection AFTER events are sent
         await invalidateHouseholdCacheForUsers([userIdToKick, ...remainingMemberIds]);
@@ -381,9 +393,13 @@ const kick = authedProcedure
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id }, "Failed to kick user");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to kick user from household",
-        });
+        void households.publish(
+          "failed",
+          {
+            reason: "Failed to kick user from household",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };
@@ -423,17 +439,25 @@ const regenerateCode = authedProcedure
         log.info({ userId: ctx.user.id, householdId }, "Join code regenerated");
 
         // Emit to all household members
-        householdEmitter.emitToHousehold(householdId, "joinCodeRegenerated", {
-          joinCode: household.joinCode!,
-          joinCodeExpiresAt: household.joinCodeExpiresAt!.toISOString(),
-          version: household.version,
-        });
+        void households.publish(
+          "joinCodeRegenerated",
+          {
+            joinCode: household.joinCode!,
+            joinCodeExpiresAt: household.joinCodeExpiresAt!.toISOString(),
+            version: household.version,
+          },
+          { householdKey: householdId }
+        );
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id }, "Failed to regenerate join code");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to regenerate join code",
-        });
+        void households.publish(
+          "failed",
+          {
+            reason: "Failed to regenerate join code",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };
@@ -480,17 +504,25 @@ const transferAdmin = authedProcedure
         log.info({ userId: ctx.user.id, householdId, newAdminId }, "Admin transferred");
 
         // Emit to all household members
-        householdEmitter.emitToHousehold(householdId, "adminTransferred", {
-          oldAdminId: ctx.user.id,
-          newAdminId,
-          version: household.version,
-        });
+        void households.publish(
+          "adminTransferred",
+          {
+            oldAdminId: ctx.user.id,
+            newAdminId,
+            version: household.version,
+          },
+          { householdKey: householdId }
+        );
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id }, "Failed to transfer admin");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to transfer admin privileges",
-        });
+        void households.publish(
+          "failed",
+          {
+            reason: "Failed to transfer admin privileges",
+          },
+          { userId: ctx.user.id }
+        );
       });
 
     return { success: true };

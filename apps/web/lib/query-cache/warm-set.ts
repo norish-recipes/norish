@@ -100,6 +100,13 @@ interface WarmSetTRPC {
       queryKey: () => readonly unknown[];
     };
   };
+  pantry: {
+    /** What the household has at home; without it an offline recipe adds every staple to the list. */
+    list: {
+      queryOptions: () => object;
+      queryKey: () => readonly unknown[];
+    };
+  };
   calendar: {
     listItems: {
       queryOptions: (range: CalendarRange) => object;
@@ -319,6 +326,7 @@ async function warmLists(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<b
     queryClient.fetchQuery(withWarmGcTime(trpc.groceries.list.queryOptions()) as never),
     queryClient.fetchQuery(withWarmGcTime(trpc.stores.list.queryOptions()) as never),
     queryClient.fetchQuery(withWarmGcTime(trpc.stores.aisleLinks.queryOptions()) as never),
+    queryClient.fetchQuery(withWarmGcTime(trpc.pantry.list.queryOptions()) as never),
     ...calendarRanges().map((range) =>
       queryClient.fetchQuery(withWarmGcTime(trpc.calendar.listItems.queryOptions(range)) as never)
     ),

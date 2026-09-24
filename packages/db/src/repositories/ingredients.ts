@@ -1,7 +1,8 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { IngredientDto } from "@norish/shared/contracts/dto/ingredient";
 import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 import type {
@@ -25,9 +26,22 @@ import {
   RecipeIngredientsInsertBaseSchema,
 } from "@norish/shared/contracts/zod/recipe-ingredients";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
+import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
+/** The connection a caller is already inside, or the shared one. */
+type Db = typeof db | DbTransaction;
+
 const IngredientArraySchema = z.array(IngredientSelectBaseSchema);
+
+/**
+ * The columns a new Ingredient Name row is written with: the name and its
+ * folded form, which is what the Pantry matches on (ADR-0036). Used by every
+ * path that mints Ingredient Names, so a name is folded the moment it exists.
+ */
+function ingredientNameRowValues(names: readonly string[]) {
+  return names.map((name) => ({ name, normalizedName: normalizeGroceryName(name) }));
+}
 
 export async function getUnitsForNormalization(): Promise<UnitsMap> {
   const value = await getConfig<unknown>(ServerConfigKeys.UNITS);
@@ -89,7 +103,10 @@ async function findIngredientByName(name: string): Promise<IngredientDto | null>
 async function createIngredient(name: string): Promise<IngredientDto> {
   const cleaned = ensureNonEmptyName(name);
 
-  await db.insert(ingredients).values({ name: cleaned }).onConflictDoNothing();
+  await db
+    .insert(ingredients)
+    .values(ingredientNameRowValues([cleaned]))
+    .onConflictDoNothing();
 
   const after = await findIngredientByName(cleaned);
 
@@ -134,10 +151,7 @@ export async function getOrCreateManyIngredients(names: string[]): Promise<Ingre
   if (cleaned.length === 0) return [];
 
   return await db.transaction(async (tx) => {
-    await tx
-      .insert(ingredients)
-      .values(cleaned.map((name) => ({ name })))
-      .onConflictDoNothing();
+    await tx.insert(ingredients).values(ingredientNameRowValues(cleaned)).onConflictDoNothing();
 
     const lowers = Array.from(new Set(cleaned.map((n) => n.toLowerCase())));
 
@@ -162,10 +176,7 @@ export async function getOrCreateManyIngredientsTx(
 
   if (cleaned.length === 0) return [];
 
-  await tx
-    .insert(ingredients)
-    .values(cleaned.map((name: string) => ({ name })))
-    .onConflictDoNothing();
+  await tx.insert(ingredients).values(ingredientNameRowValues(cleaned)).onConflictDoNothing();
 
   const lowers = Array.from(new Set(cleaned.map((n) => n.toLowerCase())));
   const rows = await tx
@@ -284,4 +295,67 @@ export async function attachIngredientsToRecipeByInputTx(
   }
 
   return parsedInserted.data;
+}
+
+/**
+ * Ingredient Names written before names were folded, which the Pantry can
+ * never match. The startup backfill works through them.
+ */
+export async function listIngredientNamesMissingNormalizedName(
+  limit: number
+): Promise<Array<{ id: string; name: string }>> {
+  return await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .where(isNull(ingredients.normalizedName))
+    .orderBy(asc(ingredients.id))
+    .limit(limit);
+}
+
+/**
+ * Store the folded form of each Ingredient Name. Rows that already carry one
+ * are left alone, so two servers backfilling at once cannot undo each other.
+ */
+export async function setIngredientNormalizedNames(
+  rows: ReadonlyArray<{ id: string; normalizedName: string }>,
+  tx: Db = db
+): Promise<void> {
+  if (rows.length === 0) return;
+
+  const ids = sql.join(
+    rows.map((row) => sql`${row.id}`),
+    sql`, `
+  );
+  const folded = sql.join(
+    rows.map((row) => sql`${row.normalizedName}`),
+    sql`, `
+  );
+
+  await tx.execute(sql`
+    UPDATE ${ingredients}
+    SET normalized_name = folded.normalized_name
+    FROM unnest(ARRAY[${ids}]::uuid[], ARRAY[${folded}]::text[]) AS folded(id, normalized_name)
+    WHERE ${ingredients.id} = folded.id
+      AND ${ingredients.normalizedName} IS NULL
+  `);
+}
+
+/**
+ * The Ingredient Name with a fold on it. A name minted before names were
+ * folded carries none, and a Pantry Ingredient whose name has no fold matches
+ * nothing, so a reader that needs the fold now folds it now rather than
+ * waiting for the next startup. Folding lives in this module and nowhere
+ * else: on mint, in this repair, and in the batch the backfill drives.
+ */
+export async function ensureIngredientNameFolded(
+  ingredient: IngredientDto,
+  tx: Db = db
+): Promise<IngredientDto> {
+  if (ingredient.normalizedName !== null) return ingredient;
+
+  const normalizedName = normalizeGroceryName(ingredient.name);
+
+  await setIngredientNormalizedNames([{ id: ingredient.id, normalizedName }], tx);
+
+  return { ...ingredient, normalizedName };
 }

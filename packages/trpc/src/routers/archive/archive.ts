@@ -9,12 +9,14 @@ import {
   getArchiveInfo,
   importArchive as runArchiveImport,
 } from "@norish/shared-server/archive/parser";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { archive } from "@norish/shared-server/realtime/archive";
+import { recipes } from "@norish/shared-server/realtime/recipes";
 
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { recipeEmitter } from "../recipes/emitter";
 
 /**
  * Import recipes from an archive (Norish .norishrecipes, Mela .melarecipes,
@@ -95,11 +97,11 @@ const importArchive = authedProcedure
       runArchiveImportAsync(ctx.user.id, ctx.userIds, ctx.householdKey, buffer, total).catch(
         (err) => {
           log.error({ err, userId: ctx.user.id }, "Archive import failed");
-          recipeEmitter.emitToUser(ctx.user.id, "archiveCompleted", {
-            imported: 0,
-            notes: [],
-            errors: [{ file: "archive", error: String(err) }],
-          });
+          void archive.publish(
+            "archiveCompleted",
+            { imported: 0, notes: [], errors: [{ file: "archive", error: String(err) }] },
+            { userId: ctx.user.id }
+          );
         }
       );
 
@@ -127,6 +129,10 @@ async function runArchiveImportAsync(
   const allImported: RecipeDashboardDTO[] = [];
   const allErrors: ArchiveImportError[] = [];
   const allNotes: ArchiveImportNote[] = [];
+  // Archive-created recipes reach whoever the view policy says may see them,
+  // like every other recipe create.
+  const viewPolicy = (await getRecipePermissionPolicy()).view;
+  const target = { viewPolicy, userId, householdKey };
 
   // Calculate dynamic batch size based on total
   const batchSize = Math.max(1, calculateBatchSize(total));
@@ -166,18 +172,20 @@ async function runArchiveImportAsync(
     if (shouldEmit) {
       // Emit recipe batch to household (so all members see new recipes)
       if (batchRecipes.length > 0) {
-        recipeEmitter.emitToHousehold(householdKey, "recipeBatchCreated", {
-          recipes: batchRecipes,
-        });
+        void recipes.publish("recipeBatchCreated", { recipes: batchRecipes }, target);
       }
 
       // Always emit progress to importing user
-      recipeEmitter.emitToUser(userId, "archiveProgress", {
-        current,
-        total,
-        imported: allImported.length,
-        errors: batchErrors,
-      });
+      void archive.publish(
+        "archiveProgress",
+        {
+          current,
+          total,
+          imported: allImported.length,
+          errors: batchErrors,
+        },
+        { userId }
+      );
 
       log.debug(
         {
@@ -217,11 +225,15 @@ async function runArchiveImportAsync(
   }
 
   // Emit completion to importing user only
-  recipeEmitter.emitToUser(userId, "archiveCompleted", {
-    imported: allImported.length,
-    notes: allNotes,
-    errors: allErrors,
-  });
+  void archive.publish(
+    "archiveCompleted",
+    {
+      imported: allImported.length,
+      notes: allNotes,
+      errors: allErrors,
+    },
+    { userId }
+  );
 
   log.info(
     { imported: allImported.length, notes: allNotes.length, errors: allErrors.length },

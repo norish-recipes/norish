@@ -1,16 +1,20 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { InfiniteRecipeData, RecipesCacheHelpers } from "./use-recipes-cache";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
+
+type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
 export type RecipesSubscriptionCallbacks = {
-  onImported?: (payload: unknown) => void;
-  onConverted?: (payload: unknown) => void;
-  onFailed?: (payload: unknown) => void;
+  onImported?: (payload: Payload<"imported">) => void;
+  onConverted?: (payload: Payload<"converted">) => void;
+  onFailed?: (payload: Payload<"failed">) => void;
 };
 
 export function createUseRecipesSubscription(
@@ -30,9 +34,9 @@ export function createUseRecipesSubscription(
       removePendingRecipe,
     } = dependencies.useRecipesCacheHelpers();
 
-    const asSubscriptionOptions = (options: unknown): Parameters<typeof useSubscription>[0] => {
-      return options as Parameters<typeof useSubscription>[0];
-    };
+    // A lagged subscription refetches the lists; the detail caches are
+    // refetched by the screens that hold them.
+    const lag = { onLag: invalidate };
 
     const addRecipeToList = (recipe: RecipeDashboardDTO) => {
       setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -96,145 +100,114 @@ export function createUseRecipesSubscription(
       });
     };
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onCreated.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            removePendingRecipe(payload.recipe.id);
-            addRecipeToList(payload.recipe);
-          },
-        })
-      )
-    );
+    useRealtimeSubscription<Payload<"created">>(trpc.recipes.onCreated, {
+      ...lag,
+      onEvent: ({ recipe }) => {
+        removePendingRecipe(recipe.id);
+        addRecipeToList(recipe);
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onImportStarted.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            replaceOldestOptimisticPendingRecipe(payload.recipeId);
-          },
-        })
-      )
-    );
+    useRealtimeSubscription<Payload<"importStarted">>(trpc.recipes.onImportStarted, {
+      ...lag,
+      onEvent: ({ recipeId }) => {
+        replaceOldestOptimisticPendingRecipe(recipeId);
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onImported.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
+    useRealtimeSubscription<Payload<"imported">>(trpc.recipes.onImported, {
+      ...lag,
+      onEvent: (payload) => {
+        const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
 
-            replaceOldestOptimisticPendingRecipe(pendingId);
-            removePendingRecipe(pendingId);
-            addRecipeToList(payload.recipe);
-            callbacks.onImported?.(payload);
-          },
-        })
-      )
-    );
+        replaceOldestOptimisticPendingRecipe(pendingId);
+        removePendingRecipe(pendingId);
+        addRecipeToList(payload.recipe);
+        callbacks.onImported?.(payload);
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onUpdated.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            updateRecipeInList(payload.recipe);
-            queryClient.setQueryData(
-              trpc.recipes.get.queryKey({ id: payload.recipe.id }),
-              payload.recipe
-            );
+    useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
+      ...lag,
+      onEvent: ({ recipe, source }) => {
+        updateRecipeInList(recipe);
+        queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
 
-            if (payload.source !== "enrichment") {
-              queryClient.invalidateQueries({ queryKey: [["calendar", "listRecipes"]] });
-            }
-          },
-        })
-      )
-    );
+        // The calendar shows the recipe's name and image; an enrichment
+        // changes neither.
+        if (source !== "enrichment") {
+          void queryClient.invalidateQueries({ queryKey: trpc.calendar.listItems.queryKey() });
+        }
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onDeleted.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            removeRecipeFromList(payload.id);
-            queryClient.invalidateQueries({
-              queryKey: [["recipes", "get"], { input: { id: payload.id }, type: "query" }],
-            });
-          },
-        })
-      )
-    );
+    useRealtimeSubscription<Payload<"deleted">>(trpc.recipes.onDeleted, {
+      ...lag,
+      onEvent: ({ id }) => {
+        removeRecipeFromList(id);
+        void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onConverted.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            updateRecipeInList(payload.recipe);
-            queryClient.invalidateQueries({
-              queryKey: [["recipes", "get"], { input: { id: payload.recipe.id }, type: "query" }],
-            });
-            callbacks.onConverted?.(payload);
-          },
-        })
-      )
-    );
+    useRealtimeSubscription<Payload<"converted">>(trpc.recipes.onConverted, {
+      ...lag,
+      onEvent: (payload) => {
+        updateRecipeInList(payload.recipe);
+        void queryClient.invalidateQueries({
+          queryKey: trpc.recipes.get.queryKey({ id: payload.recipe.id }),
+        });
+        callbacks.onConverted?.(payload);
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onFailed.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            if (payload.recipeId) {
-              replaceOldestOptimisticPendingRecipe(payload.recipeId);
-              removePendingRecipe(payload.recipeId);
+    useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
+      ...lag,
+      onEvent: (payload) => {
+        if (payload.recipeId) {
+          replaceOldestOptimisticPendingRecipe(payload.recipeId);
+          removePendingRecipe(payload.recipeId);
+        }
+
+        invalidate();
+        callbacks.onFailed?.(payload);
+      },
+    });
+
+    useRealtimeSubscription<Payload<"recipeBatchCreated">>(trpc.recipes.onRecipeBatchCreated, {
+      ...lag,
+      onEvent: ({ recipes }) => {
+        setAllRecipesData(
+          (prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
+            if (!prev?.pages?.length) {
+              return {
+                pages: [{ recipes, total: recipes.length, nextCursor: null }],
+                pageParams: [0],
+              };
             }
 
-            invalidate();
-            callbacks.onFailed?.(payload);
-          },
-        })
-      )
-    );
+            const firstPage = prev.pages[0];
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onRecipeBatchCreated.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            setAllRecipesData(
-              (prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
-                if (!prev?.pages?.length) {
-                  return {
-                    pages: [
-                      { recipes: payload.recipes, total: payload.recipes.length, nextCursor: null },
-                    ],
-                    pageParams: [0],
-                  };
-                }
+            if (!firstPage) return prev;
 
-                const firstPage = prev.pages[0];
+            const existingIds = new Set(firstPage.recipes.map((r) => r.id));
+            const newRecipes = recipes.filter((r) => !existingIds.has(r.id));
 
-                if (!firstPage) return prev;
+            if (newRecipes.length === 0) return prev;
 
-                const existingIds = new Set(firstPage.recipes.map((r) => r.id));
-                const newRecipes = payload.recipes.filter(
-                  (r: RecipeDashboardDTO) => !existingIds.has(r.id)
-                );
-
-                if (newRecipes.length === 0) return prev;
-
-                return {
-                  ...prev,
-                  pages: [
-                    {
-                      ...firstPage,
-                      recipes: [...newRecipes, ...firstPage.recipes],
-                      total: firstPage.total + newRecipes.length,
-                    },
-                    ...prev.pages.slice(1),
-                  ],
-                };
-              }
-            );
-          },
-        })
-      )
-    );
+            return {
+              ...prev,
+              pages: [
+                {
+                  ...firstPage,
+                  recipes: [...newRecipes, ...firstPage.recipes],
+                  total: firstPage.total + newRecipes.length,
+                },
+                ...prev.pages.slice(1),
+              ],
+            };
+          }
+        );
+      },
+    });
   };
 }

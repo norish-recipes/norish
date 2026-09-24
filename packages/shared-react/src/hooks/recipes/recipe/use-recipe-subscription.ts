@@ -1,14 +1,23 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeQueryResult } from "./use-recipe-query";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
+
+type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
 export type RecipeSubscriptionCallbacks = {
-  onConverted?: (payload: unknown) => void;
-  onDeleted?: (payload: unknown) => void;
-  onFailed?: (payload: unknown) => void;
+  onConverted?: (payload: Payload<"converted">) => void;
+  onDeleted?: (payload: Payload<"deleted">) => void;
+  onFailed?: (payload: Payload<"failed">) => void;
 };
 
+/**
+ * One recipe's own events. A policy change reaches this screen through the
+ * permissions subscription, which invalidates the recipe list and the policy;
+ * the detail query refetches on its own terms, so it is not subscribed here.
+ */
 export function createUseRecipeSubscription(
   { useTRPC }: CreateRecipeHooksOptions,
   dependencies: {
@@ -22,73 +31,44 @@ export function createUseRecipeSubscription(
     const trpc = useTRPC();
     const { setRecipeData, invalidate } = dependencies.useRecipeQuery(recipeId);
 
-    const asSubscriptionOptions = (options: unknown): Parameters<typeof useSubscription>[0] => {
-      return options as Parameters<typeof useSubscription>[0];
-    };
+    const common = { enabled: !!recipeId, onLag: invalidate };
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onUpdated.subscriptionOptions(undefined, {
-          enabled: !!recipeId,
-          onData: ({ payload }: any) => {
-            if (payload.recipe.id !== recipeId) return;
+    useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
+      ...common,
+      onEvent: (payload) => {
+        if (payload.recipe.id !== recipeId) return;
 
-            setRecipeData(() => payload.recipe);
-          },
-        })
-      )
-    );
+        setRecipeData(() => payload.recipe);
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onConverted.subscriptionOptions(undefined, {
-          enabled: !!recipeId,
-          onData: ({ payload }: any) => {
-            if (payload.recipe.id !== recipeId) return;
+    useRealtimeSubscription<Payload<"converted">>(trpc.recipes.onConverted, {
+      ...common,
+      onEvent: (payload) => {
+        if (payload.recipe.id !== recipeId) return;
 
-            setRecipeData(() => payload.recipe);
-            callbacks.onConverted?.(payload);
-          },
-        })
-      )
-    );
+        setRecipeData(() => payload.recipe);
+        callbacks.onConverted?.(payload);
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onDeleted.subscriptionOptions(undefined, {
-          enabled: !!recipeId,
-          onData: ({ payload }: any) => {
-            if (payload.id !== recipeId) return;
+    useRealtimeSubscription<Payload<"deleted">>(trpc.recipes.onDeleted, {
+      ...common,
+      onEvent: (payload) => {
+        if (payload.id !== recipeId) return;
 
-            callbacks.onDeleted?.(payload);
-          },
-        })
-      )
-    );
+        callbacks.onDeleted?.(payload);
+      },
+    });
 
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onFailed.subscriptionOptions(undefined, {
-          enabled: !!recipeId,
-          onData: ({ payload }: any) => {
-            if (payload.recipeId !== recipeId) return;
+    useRealtimeSubscription<Payload<"failed">>(trpc.recipes.onFailed, {
+      ...common,
+      onEvent: (payload) => {
+        if (payload.recipeId !== recipeId) return;
 
-            invalidate();
-            callbacks.onFailed?.(payload);
-          },
-        })
-      )
-    );
-
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.permissions.onPolicyUpdated.subscriptionOptions(undefined, {
-          enabled: !!recipeId,
-          onData: () => {
-            invalidate();
-          },
-        })
-      )
-    );
+        invalidate();
+        callbacks.onFailed?.(payload);
+      },
+    });
   };
 }

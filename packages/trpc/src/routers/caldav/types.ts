@@ -2,27 +2,12 @@ import { z } from "zod";
 
 import type { SaveCaldavConfigInputDto } from "@norish/shared/contracts";
 import {
-  CaldavConfigSavedEventSchema,
-  CaldavInitialSyncCompleteEventSchema,
-  CaldavItemStatusUpdatedEventSchema,
-  CaldavSyncCompletedEventSchema,
-  CaldavSyncFailedEventSchema,
-  CaldavSyncStartedEventSchema,
   DeleteCaldavConfigInputSchema as SharedDeleteCaldavConfigInputSchema,
   SaveCaldavConfigInputSchema as SharedSaveCaldavConfigInputSchema,
 } from "@norish/shared/contracts/zod";
 
 export type CaldavItemType = "recipe" | "note";
 export type CaldavSyncStatus = "pending" | "synced" | "failed" | "removed";
-
-export type CaldavSubscriptionEvents = {
-  configSaved: z.infer<typeof CaldavConfigSavedEventSchema>;
-  syncStarted: z.infer<typeof CaldavSyncStartedEventSchema>;
-  syncCompleted: z.infer<typeof CaldavSyncCompletedEventSchema>;
-  syncFailed: z.infer<typeof CaldavSyncFailedEventSchema>;
-  itemStatusUpdated: z.infer<typeof CaldavItemStatusUpdatedEventSchema>;
-  initialSyncComplete: z.infer<typeof CaldavInitialSyncCompleteEventSchema>;
-};
 
 type SaveCaldavConfigInputValue = Omit<SaveCaldavConfigInputDto, "password"> & {
   password?: string;

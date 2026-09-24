@@ -1,10 +1,13 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import AuthorChip from "@/components/recipes/author-chip";
 import OriginFlag from "@/components/recipes/origin-flag";
+import { RECIPE_HERO_CHROME_BUTTON_CLASS } from "@/components/recipes/recipe-layout-constants";
 import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import {
+  ArrowsPointingOutIcon,
   ArrowTopRightOnSquareIcon,
   CakeIcon,
   ClockIcon,
@@ -13,7 +16,7 @@ import {
   SunIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/16/solid";
-import { Chip, Link } from "@heroui/react";
+import { Button, Chip, Link } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { RecipeCategory } from "@norish/shared/contracts";
@@ -71,6 +74,20 @@ type ReadonlyRecipeMediaProps = {
    * slot. Off where the header underneath already names the author.
    */
   showAuthorFallback?: boolean;
+  /**
+   * Carried by every control floating on the photo, so a page that has to
+   * clear a status bar moves the whole row by one amount rather than each
+   * caller offsetting its own button.
+   */
+  chromeClassName?: string;
+  /**
+   * Which floating chrome row gets an expand control while the visible media
+   * is a video, or nothing at all when the page wants none. Only the phone
+   * heroes ask: they cover the player's own controls with the fade the photo
+   * dissolves into and with the title pulled up over it, while a desktop page
+   * shows that same bar on hover and needs nothing added (#563).
+   */
+  expandControlSlot?: "topLeft" | "topRight";
   topLeftContent?: React.ReactNode;
   topRightContent?: React.ReactNode;
   bottomRightContent?: React.ReactNode;
@@ -83,6 +100,19 @@ const categoryIcons: Record<RecipeCategory, typeof FireIcon> = {
   Snack: CakeIcon,
 };
 
+/**
+ * The recipe photo, and whatever the page floats on top of it.
+ *
+ * Under `expandControlSlot`, a video also gets one control the player cannot
+ * draw for itself. The player puts its own expand button at its bottom edge,
+ * and the phone hero covers exactly that band with the fade the photo
+ * dissolves into and with the title pulled up over it, so on a phone the
+ * control was invisible and a video could only be watched cropped and silent
+ * (#563). It is drawn in the named chrome row instead — beside the way back
+ * out of the page — the one part of the hero nothing covers. It wears that
+ * row's own look and expands the video the browser's own way; the element
+ * never changes, so the playback position carries in and back out again.
+ */
 export function ReadonlyRecipeMedia({
   recipe,
   aspectRatio = "video",
@@ -90,11 +120,53 @@ export function ReadonlyRecipeMedia({
   mediaClassName = "",
   rounded = false,
   showAuthorFallback = true,
+  chromeClassName = "",
+  expandControlSlot,
   topLeftContent,
   topRightContent,
   bottomRightContent,
 }: ReadonlyRecipeMediaProps) {
+  const t = useTranslations("recipes.carousel.videoPlayer");
   const mediaItems = buildMediaItems(recipe);
+  const [enterVideoFullscreen, setEnterVideoFullscreen] = useState<(() => void) | null>(null);
+
+  // Stored as a value, so the setter has to be told this function is the new
+  // state rather than a way of computing it.
+  const handleActiveVideoFullscreenChange = useCallback((enter: (() => void) | null) => {
+    setEnterVideoFullscreen(() => enter);
+  }, []);
+
+  const expandVideoButton =
+    expandControlSlot && enterVideoFullscreen ? (
+      <Button
+        isIconOnly
+        aria-label={t("fullscreen")}
+        className={RECIPE_HERO_CHROME_BUTTON_CLASS}
+        data-testid="recipe-media-expand"
+        size="sm"
+        variant="tertiary"
+        onPress={() => enterVideoFullscreen()}
+      >
+        <ArrowsPointingOutIcon />
+      </Button>
+    ) : null;
+  // The author chip claims the same corner when the page leaves it empty, so
+  // the left slot is one row rather than two blocks pinned on top of each
+  // other.
+  const leadingContent =
+    topLeftContent ??
+    (showAuthorFallback && recipe.author ? (
+      <AuthorChip image={recipe.author.image} name={recipe.author.name} userId={recipe.author.id} />
+    ) : null);
+  const leftExpandControl = expandControlSlot === "topLeft" ? expandVideoButton : null;
+  const rightExpandControl = expandControlSlot === "topRight" ? expandVideoButton : null;
+  const topLeftRow =
+    leadingContent || leftExpandControl ? (
+      <div className={`absolute top-4 left-4 z-50 flex items-center gap-2 ${chromeClassName}`}>
+        {leadingContent}
+        {leftExpandControl}
+      </div>
+    ) : null;
 
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className}`}>
@@ -103,22 +175,20 @@ export function ReadonlyRecipeMedia({
         className={`h-full w-full ${mediaClassName}`}
         items={mediaItems}
         rounded={rounded}
+        onActiveVideoFullscreenChange={
+          expandControlSlot ? handleActiveVideoFullscreenChange : undefined
+        }
       />
 
-      {topLeftContent && <div className="absolute top-4 left-4 z-50">{topLeftContent}</div>}
-      {topRightContent && <div className="absolute top-4 right-4 z-50">{topRightContent}</div>}
+      {topLeftRow}
+      {(topRightContent || rightExpandControl) && (
+        <div className={`absolute top-4 right-4 z-50 flex items-center gap-2 ${chromeClassName}`}>
+          {topRightContent}
+          {rightExpandControl}
+        </div>
+      )}
       {bottomRightContent && (
         <div className="absolute right-4 bottom-8 z-50">{bottomRightContent}</div>
-      )}
-
-      {showAuthorFallback && !topLeftContent && recipe.author && (
-        <div className="absolute top-4 left-4 z-50">
-          <AuthorChip
-            image={recipe.author.image}
-            name={recipe.author.name}
-            userId={recipe.author.id}
-          />
-        </div>
       )}
     </div>
   );

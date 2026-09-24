@@ -10,10 +10,11 @@
 
 import type { Job } from "bullmq";
 
+import type { ModelUse } from "@norish/shared-server/ai/runtime/model-use-ledger";
 import { createLogger } from "@norish/shared-server/logger";
 
-import type { QueueName } from "./config";
-import { QUEUE_NAMES } from "./config";
+import type { QueueName } from "./queue-names";
+import { QUEUE_NAMES } from "./queue-names";
 
 const log = createLogger("queue:job-steps");
 
@@ -29,6 +30,8 @@ export interface JobAttemptTimeline {
   /** 1-based attempt number (job.attemptsMade + 1 at processing time) */
   attempt: number;
   timeline: JobStepEvent[];
+  /** Every model request the attempt made, in order, as the AI Runtime recorded it */
+  models?: ModelUse[];
 }
 
 export interface JobStepProgress {
@@ -65,7 +68,7 @@ export const JOB_PIPELINES: Record<QueueName, string[]> = {
   // CalDAV runs either a sync or a delete flow; no fixed sequence
   [QUEUE_NAMES.CALDAV_SYNC]: [],
   [QUEUE_NAMES.SCHEDULED_TASKS]: ["running"],
-  [QUEUE_NAMES.STORE_LOOKUP]: ["searching", "reading-product", "saving"],
+  [QUEUE_NAMES.STORE_LOOKUP]: ["searching", "reading-product", "saving-link"],
 };
 
 /**
@@ -122,6 +125,7 @@ function cloneAttempts(job: Job): JobAttemptTimeline[] {
   return prev.attempts.map((entry) => ({
     attempt: entry.attempt,
     timeline: entry.timeline.map((event) => ({ ...event })),
+    ...(entry.models ? { models: entry.models.map((use) => ({ ...use })) } : {}),
   }));
 }
 
@@ -217,5 +221,29 @@ export async function completeStep(job: Job, detail?: unknown): Promise<void> {
     } satisfies JobStepProgress);
   } catch (err) {
     log.debug({ err, jobId: job.id }, "Failed to complete job step");
+  }
+}
+
+/**
+ * Record which models the current attempt asked, so the job monitor can say
+ * "jev" or "openai" beside the job. Written once, when the attempt settles,
+ * so it never races a step report. Best-effort: never throws.
+ */
+export async function recordModelUses(job: Job, models: ModelUse[]): Promise<void> {
+  try {
+    const now = Date.now();
+    const prev = readStepProgress(job.progress);
+    const attempts = cloneAttempts(job);
+    const entry = currentAttemptEntry(attempts, job);
+
+    entry.models = models.map((use) => ({ ...use }));
+
+    await job.updateProgress({
+      step: prev?.step ?? "",
+      updatedAt: now,
+      attempts,
+    } satisfies JobStepProgress);
+  } catch (err) {
+    log.debug({ err, jobId: job.id }, "Failed to record the job's model uses");
   }
 }

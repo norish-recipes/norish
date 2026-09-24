@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Kalenteri"
+  },
+  "mobile": {
+    "today": "Tänään",
+    "scrollToToday": "Siirry tähän päivään"
+  },
+  "editNote": {
+    "title": "Muokkaa huomautusta",
+    "noteLabel": "Huomautus",
+    "notePlaceholder": "Kirjoita huomautus...",
+    "date": "Päivämäärä",
+    "slot": "Ateria"
+  },
+  "navigation": {
+    "previousMonth": "Edellinen kuukausi",
+    "nextMonth": "Seuraava kuukausi",
+    "prev": "Edell.",
+    "next": "Seur."
+  },
+  "weekdays": {
+    "mon": "Ma",
+    "tue": "Ti",
+    "wed": "Ke",
+    "thu": "To",
+    "fri": "Pe",
+    "sat": "La",
+    "sun": "Su"
+  },
+  "timeline": {
+    "noItems": "Ei suunniteltuja aterioita",
+    "goToRecipe": "Siirry reseptiin",
+    "addItem": "Lisää merkintä",
+    "untitled": "Nimetön",
+    "serving": "annos",
+    "servings": "annosta",
+    "noImage": "Ei kuvaa",
+    "recipe": "Resepti",
+    "note": "Huomautus"
+  },
+  "editPlannedRecipe": {
+    "title": "Muokkaa suunniteltua reseptiä",
+    "date": "Päivämäärä",
+    "slot": "Ateria"
+  },
+  "panel": {
+    "addToCalendar": "Lisää kalenteriin",
+    "addRecipe": "Lisää resepti",
+    "noDaysAvailable": "Ei päiviä käytettävissä.",
+    "searchPlaceholder": "Hae reseptejä tai lisää huomautuksia...",
+    "addNote": "Lisää huomautus: {input}",
+    "randomRecipe": "Satunnainen resepti",
+    "noRecipesFound": "Reseptejä ei löytynyt.",
+    "failedToLoadRecipes": "Reseptien lataaminen epäonnistui."
+  }
+}

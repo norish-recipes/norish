@@ -11,7 +11,6 @@
 import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { cookbookEmitter } from "../mocks/cookbook-emitter";
 import {
   createCookbook,
   deleteCookbookById,
@@ -21,11 +20,12 @@ import {
   withMemberSummaries,
 } from "../mocks/cookbooks-repository";
 import { canAccessResource } from "../mocks/permissions";
+import { cookbooks } from "../mocks/realtime/cookbooks";
 import { createMockHousehold, createMockUser } from "../recipes/test-utils";
 
 vi.mock("@norish/db/repositories/cookbooks", () => import("../mocks/cookbooks-repository"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/shared-server/realtime/cookbooks", () => import("../mocks/cookbook-emitter"));
+vi.mock("@norish/shared-server/realtime/cookbooks", () => import("../mocks/realtime/cookbooks"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 // The auth middleware resolves the household itself; the test hands it one on
 // the base context so nothing reaches the cache or Redis.
@@ -47,7 +47,6 @@ function callerFor(user = createMockUser()) {
     user,
     household: { id: household.id, name: household.name, users: household.users },
     connectionId: null,
-    multiplexer: null,
     operationId: null,
   };
 
@@ -91,9 +90,11 @@ describe("cookbook procedures", () => {
       });
       expect(result.id).toBe(summary.id);
       // The default mocked policy is `household`, so the echo goes there.
-      expect(cookbookEmitter.emitToHousehold).toHaveBeenCalledWith("test-household-id", "created", {
-        cookbook: summary,
-      });
+      expect(cookbooks.publish).toHaveBeenCalledWith(
+        "created",
+        { cookbook: summary },
+        { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
+      );
     });
 
     it("honours a client-minted id, so filing queued behind it lands", async () => {
@@ -188,7 +189,7 @@ describe("cookbook procedures", () => {
       await expect(
         caller.cookbooks.rename({ id: row.id, version: 1, title: "Too late" })
       ).resolves.toBeNull();
-      expect(cookbookEmitter.emitToHousehold).not.toHaveBeenCalled();
+      expect(cookbooks.publish).not.toHaveBeenCalled();
     });
   });
 

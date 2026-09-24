@@ -8,11 +8,11 @@ import {
 } from "@norish/db/repositories/aisles";
 import { listStoresByUserIds } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { stores } from "@norish/shared-server/realtime/stores";
 import { AisleFilingSchema } from "@norish/shared/contracts/zod";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { storeEmitter } from "./emitter";
 import { assertStoreAccess } from "./stores-helpers";
 
 /**
@@ -56,7 +56,7 @@ const fileGroceryName = authedProcedure
       { userId: ctx.user.id, storeId: input.storeId, aisleId: input.aisleId },
       "Filed a grocery name"
     );
-    storeEmitter.emitToHousehold(ctx.householdKey, "aisleFiled", { filing });
+    void stores.publish("aisleFiled", { filing }, { householdKey: ctx.householdKey });
 
     return filing;
   });

@@ -54,7 +54,7 @@ function composeFile(masterKey: string): string {
 
   # Renders recipe pages for URL imports
   obscura:
-    image: norishapp/obscura:0.2.0-norish.1
+    image: norishapp/obscura:0.2.2-norish.1
     container_name: norish-obscura
     restart: unless-stopped
 

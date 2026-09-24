@@ -31,6 +31,8 @@ vi.mock("@norish/shared-server/logger", () => {
 });
 
 const { generateImage } = await import("@norish/shared-server/ai/runtime/runtime");
+const { createModelUseLedger, runWithModelUseLedger } =
+  await import("@norish/shared-server/ai/runtime/model-use-ledger");
 const { AIConfigurationError, AIDisabledError, AIProviderError, AIResponseError } =
   await import("@norish/shared-server/ai/runtime/errors");
 
@@ -148,6 +150,25 @@ describe("generateImage", () => {
     expect(width).toBeGreaterThan(height ?? Number.NaN);
   });
 
+  it("draws through Ollama's native generate route with a landscape width and height", async () => {
+    // ai-sdk-ollama gained an image model on the AI SDK 7 line, so Ollama
+    // joined the providers that can draw; it answers `images` rather than
+    // the OpenAI-compatible `data[0].b64_json`.
+    mockGetImageGenerationConfig.mockResolvedValue(
+      imageConfig({ provider: "ollama", model: "x/z-image-turbo", endpoint: baseUrl })
+    );
+    reply = () => ({ status: 200, body: { model: "x/z-image-turbo", images: [imageBase64] } });
+
+    const result = await generateImage({ prompt: "image-generation-style", sections: [] });
+
+    expect(result.bytes.equals(Buffer.from(imageBase64, "base64"))).toBe(true);
+    expect(captured).toHaveLength(1);
+    expect(captured[0]!.url).toBe("/api/generate");
+    expect(captured[0]!.body.model).toBe("x/z-image-turbo");
+    expect(captured[0]!.body.width).toBe(1280);
+    expect(captured[0]!.body.height).toBe(720);
+  });
+
   it("refuses non-retryably when AI is disabled, without a request", async () => {
     mockGetAIConfig.mockResolvedValue(aiConfig({ enabled: false }));
 
@@ -185,6 +206,22 @@ describe("generateImage", () => {
     await generateImage({ prompt: "image-generation-style" });
 
     expect(captured[0]!.authorization).toBe("Bearer ai-config-key");
+  });
+
+  it("records the image model on the job's ledger, a refusal as a failure", async () => {
+    const ledger = createModelUseLedger();
+
+    await runWithModelUseLedger(ledger, () => generateImage({ prompt: "image-generation-style" }));
+
+    reply = () => ({ status: 400, body: { error: { message: "refused" } } });
+    await runWithModelUseLedger(ledger, () =>
+      generateImage({ prompt: "image-generation-style" }).catch(() => undefined)
+    );
+
+    expect(ledger.uses).toEqual([
+      { provider: "generic-openai", model: "test-image-model", outcome: "completed" },
+      { provider: "generic-openai", model: "test-image-model", outcome: "failed" },
+    ]);
   });
 
   it("classifies a provider refusal as non-retryable", async () => {

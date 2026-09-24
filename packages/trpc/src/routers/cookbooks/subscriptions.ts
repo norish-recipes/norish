@@ -1,19 +1,11 @@
-import { createEnvelopeAwareSubscription } from "../../helpers";
-import { router } from "../../trpc";
-import { cookbookEmitter } from "./emitter";
+import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
-const onCreated = createEnvelopeAwareSubscription(cookbookEmitter, "created", "cookbook created");
-const onUpdated = createEnvelopeAwareSubscription(cookbookEmitter, "updated", "cookbook updated");
-const onDeleted = createEnvelopeAwareSubscription(cookbookEmitter, "deleted", "cookbook deleted");
-const onMembershipChanged = createEnvelopeAwareSubscription(
-  cookbookEmitter,
-  "membershipChanged",
-  "cookbook membership changed"
-);
+import { realtimeSubscription } from "../../realtime-subscription";
+import { router } from "../../trpc";
 
 export const cookbooksSubscriptions = router({
-  onCreated,
-  onUpdated,
-  onDeleted,
-  onMembershipChanged,
+  onCreated: realtimeSubscription(cookbooks, "created"),
+  onUpdated: realtimeSubscription(cookbooks, "updated"),
+  onDeleted: realtimeSubscription(cookbooks, "deleted"),
+  onMembershipChanged: realtimeSubscription(cookbooks, "membershipChanged"),
 });

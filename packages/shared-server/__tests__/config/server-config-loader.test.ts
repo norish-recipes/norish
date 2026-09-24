@@ -317,3 +317,122 @@ describe("getUnits", () => {
     expect(result).toEqual(defaultUnits);
   });
 });
+
+describe("the Decision Model block (ADR-0035)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+  });
+
+  function stored(values: Record<string, unknown>) {
+    mockGetConfig.mockImplementation((key: string) => Promise.resolve(values[key] ?? null));
+  }
+
+  it("getDecisionConfig returns null on a fresh server", async () => {
+    stored({});
+
+    const { getDecisionConfig } = await import("@norish/shared-server/config/server-config-loader");
+
+    expect(await getDecisionConfig()).toBeNull();
+  });
+
+  it("getDecisionConfig returns the parsed block after a save", async () => {
+    stored({
+      [ServerConfigKeys.DECISION_CONFIG]: {
+        provider: "typesafe",
+        apiKey: "k",
+        model: "jev-latest",
+      },
+    });
+
+    const { getDecisionConfig } = await import("@norish/shared-server/config/server-config-loader");
+
+    expect(await getDecisionConfig(true)).toEqual({
+      provider: "typesafe",
+      apiKey: "k",
+      model: "jev-latest",
+    });
+  });
+
+  it("getDecisionConfig treats a row that no longer matches the contract as absent", async () => {
+    stored({ [ServerConfigKeys.DECISION_CONFIG]: { provider: "openai" } });
+
+    const { getDecisionConfig } = await import("@norish/shared-server/config/server-config-loader");
+
+    expect(await getDecisionConfig()).toBeNull();
+  });
+
+  it("isDecisionModelConfigured is false until a key is stored with a real provider", async () => {
+    const { isDecisionModelConfigured } =
+      await import("@norish/shared-server/config/server-config-loader");
+
+    stored({});
+    expect(await isDecisionModelConfigured()).toBe(false);
+
+    stored({ [ServerConfigKeys.DECISION_CONFIG]: { provider: "typesafe" } });
+    expect(await isDecisionModelConfigured()).toBe(false);
+
+    stored({ [ServerConfigKeys.DECISION_CONFIG]: { provider: "disabled", apiKey: "k" } });
+    expect(await isDecisionModelConfigured()).toBe(false);
+
+    stored({ [ServerConfigKeys.DECISION_CONFIG]: { provider: "typesafe", apiKey: "k" } });
+    expect(await isDecisionModelConfigured()).toBe(true);
+  });
+
+  describe("isDecisionUseEnabled", () => {
+    const aiOn = { enabled: true, provider: "openai", model: "m", temperature: 1, maxTokens: 1 };
+
+    it("is false for every use when no Decision Model is configured", async () => {
+      stored({ [ServerConfigKeys.AI_CONFIG]: aiOn });
+
+      const { isDecisionUseEnabled } =
+        await import("@norish/shared-server/config/server-config-loader");
+
+      expect(await isDecisionUseEnabled("autoCategorization")).toBe(false);
+      expect(await isDecisionUseEnabled("validateEnrichments")).toBe(false);
+    });
+
+    it("is true for every use by default once one is", async () => {
+      stored({
+        [ServerConfigKeys.AI_CONFIG]: aiOn,
+        [ServerConfigKeys.DECISION_CONFIG]: { provider: "typesafe", apiKey: "k" },
+      });
+
+      const { isDecisionUseEnabled } =
+        await import("@norish/shared-server/config/server-config-loader");
+
+      expect(await isDecisionUseEnabled("autoCategorization")).toBe(true);
+      expect(await isDecisionUseEnabled("groceryLinking")).toBe(true);
+    });
+
+    it("follows the stored selection after a save", async () => {
+      stored({
+        [ServerConfigKeys.AI_CONFIG]: aiOn,
+        [ServerConfigKeys.DECISION_CONFIG]: {
+          provider: "typesafe",
+          apiKey: "k",
+          uses: ["allergyDetection"],
+        },
+      });
+
+      const { isDecisionUseEnabled } =
+        await import("@norish/shared-server/config/server-config-loader");
+
+      expect(await isDecisionUseEnabled("allergyDetection")).toBe(true);
+      expect(await isDecisionUseEnabled("autoCategorization")).toBe(false);
+    });
+
+    it("is false for every use while AI is globally off", async () => {
+      // "AI off" means no request leaves the server, Decisions included.
+      stored({
+        [ServerConfigKeys.AI_CONFIG]: { ...aiOn, enabled: false },
+        [ServerConfigKeys.DECISION_CONFIG]: { provider: "typesafe", apiKey: "k" },
+      });
+
+      const { isDecisionUseEnabled } =
+        await import("@norish/shared-server/config/server-config-loader");
+
+      expect(await isDecisionUseEnabled("allergyDetection")).toBe(false);
+    });
+  });
+});

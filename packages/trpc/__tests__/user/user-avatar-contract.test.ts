@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { userProcedures } from "@norish/trpc/routers/user/user";
 
 import type { Context } from "../../src/context";
+import { households } from "../mocks/realtime/households";
 
 const mockDb = vi.hoisted(() => ({
   getUserById: vi.fn(),
@@ -14,10 +15,6 @@ const mockDb = vi.hoisted(() => ({
 const mockAvatarCleanup = vi.hoisted(() => ({
   deleteAvatarByFilename: vi.fn(),
   sweepUserAvatars: vi.fn(),
-}));
-
-const mockEmitter = vi.hoisted(() => ({
-  emitToHousehold: vi.fn(),
 }));
 
 const mockFs = vi.hoisted(() => ({
@@ -41,20 +38,12 @@ vi.mock("@norish/db", () => ({
   getAllergiesForUsers: vi.fn(),
 }));
 
-vi.mock("@norish/trpc/routers/households/emitter", () => ({
-  householdEmitter: mockEmitter,
-}));
+vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));
 
-vi.mock("@norish/trpc/connection-manager", () => ({
-  emitConnectionInvalidation: vi.fn(),
-}));
+vi.mock("@norish/shared-server/realtime/connection", () => import("../mocks/realtime/connection"));
 
 vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn(),
-}));
-
-vi.mock("@norish/shared-server/redis/subscription-multiplexer", () => ({
-  getOrCreateMultiplexer: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/media/avatar-cleanup", () => mockAvatarCleanup);
@@ -90,7 +79,6 @@ function createCaller(household: Context["household"] = HOUSEHOLD) {
     },
     household,
     connectionId: null,
-    multiplexer: null,
     operationId: null,
   };
 
@@ -201,10 +189,14 @@ describe("avatar caching contract (ADR-0021)", () => {
 
       await createCaller().uploadAvatar(buildUploadInput());
 
-      expect(mockEmitter.emitToHousehold).toHaveBeenCalledWith("house-1", "memberProfileUpdated", {
-        userId: "user-1",
-        image: "/avatars/user-1-1755000000000.png",
-      });
+      expect(households.publish).toHaveBeenCalledWith(
+        "memberProfileUpdated",
+        {
+          userId: "user-1",
+          image: "/avatars/user-1-1755000000000.png",
+        },
+        { householdKey: "house-1" }
+      );
     });
 
     it("skips the emit when the user has no household", async () => {
@@ -216,7 +208,7 @@ describe("avatar caching contract (ADR-0021)", () => {
       const result = await createCaller(null).uploadAvatar(buildUploadInput());
 
       expect(result.success).toBe(true);
-      expect(mockEmitter.emitToHousehold).not.toHaveBeenCalled();
+      expect(households.publish).not.toHaveBeenCalled();
     });
 
     it("deletes the just-written file and sweeps nothing on a stale upload", async () => {
@@ -234,7 +226,7 @@ describe("avatar caching contract (ADR-0021)", () => {
         "user-1-1755000000000.png"
       );
       expect(mockAvatarCleanup.sweepUserAvatars).not.toHaveBeenCalled();
-      expect(mockEmitter.emitToHousehold).not.toHaveBeenCalled();
+      expect(households.publish).not.toHaveBeenCalled();
     });
   });
 
@@ -247,10 +239,14 @@ describe("avatar caching contract (ADR-0021)", () => {
 
       expect(result.success).toBe(true);
       expect(mockAvatarCleanup.sweepUserAvatars).toHaveBeenCalledWith("user-1");
-      expect(mockEmitter.emitToHousehold).toHaveBeenCalledWith("house-1", "memberProfileUpdated", {
-        userId: "user-1",
-        image: null,
-      });
+      expect(households.publish).toHaveBeenCalledWith(
+        "memberProfileUpdated",
+        {
+          userId: "user-1",
+          image: null,
+        },
+        { householdKey: "house-1" }
+      );
     });
 
     it("does nothing on a stale delete", async () => {
@@ -260,7 +256,7 @@ describe("avatar caching contract (ADR-0021)", () => {
 
       expect(result).toMatchObject({ success: true, stale: true });
       expect(mockAvatarCleanup.sweepUserAvatars).not.toHaveBeenCalled();
-      expect(mockEmitter.emitToHousehold).not.toHaveBeenCalled();
+      expect(households.publish).not.toHaveBeenCalled();
     });
   });
 });

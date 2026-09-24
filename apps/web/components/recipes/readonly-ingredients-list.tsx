@@ -25,6 +25,8 @@ export type ReadonlyIngredientsListProps = {
   systemUsed: string;
   interactive?: boolean;
   units?: UnitsMap;
+  checkedIndices?: Set<number>;
+  onCheckedIndicesChange?: (indices: Set<number>) => void;
 };
 
 type ReadonlyIngredientsListContentProps = Omit<ReadonlyIngredientsListProps, "units"> & {
@@ -36,23 +38,28 @@ function ReadonlyIngredientsListContent({
   systemUsed,
   interactive = false,
   formatUnitOnly,
+  checkedIndices: controlledCheckedIndices,
+  onCheckedIndicesChange,
 }: ReadonlyIngredientsListContentProps) {
-  const [checked, setChecked] = useState<Set<number>>(() => new Set());
+  const [uncontrolledChecked, setUncontrolledChecked] = useState<Set<number>>(() => new Set());
   const { mode } = useAmountDisplayPreference();
+
+  const checked = controlledCheckedIndices ?? uncontrolledChecked;
 
   const toggle = (idx: number) => {
     if (!interactive) {
       return;
     }
 
-    setChecked((prev) => {
-      const next = new Set(prev);
+    const next = new Set(checked);
+    if (next.has(idx)) next.delete(idx);
+    else next.add(idx);
 
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
-
-      return next;
-    });
+    if (onCheckedIndicesChange) {
+      onCheckedIndicesChange(next);
+    } else {
+      setUncontrolledChecked(next);
+    }
   };
 
   const onKeyToggle = (e: React.KeyboardEvent, idx: number) => {

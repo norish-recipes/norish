@@ -1,11 +1,15 @@
 import type { InfiniteData } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RatingsRealtime } from "@norish/shared/contracts/realtime/ratings";
 
 import type { CreateRecipeHooksOptions } from "../types";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
+
+type Payload<E extends EventName<RatingsRealtime>> = PayloadOf<RatingsRealtime, E>;
 
 type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];
@@ -14,9 +18,14 @@ type InfiniteRecipeData = InfiniteData<{
 }>;
 
 export type RatingsSubscriptionCallbacks = {
-  onRatingFailed?: (payload: { recipeId: string; reason: unknown }) => void;
+  onRatingFailed?: (payload: Payload<"ratingFailed">) => void;
 };
 
+/**
+ * Ratings land where they are shown: the average and the dashboard rows are
+ * patched in place, by recipe id, and nothing is refetched for an event the
+ * cache already reflects. Only a lag refetches.
+ */
 export function createUseRatingsSubscription({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRatingsSubscription(callbacks: RatingsSubscriptionCallbacks = {}) {
     const trpc = useTRPC();
@@ -25,65 +34,67 @@ export function createUseRatingsSubscription({ useTRPC }: CreateRecipeHooksOptio
     const recipesBaseKey = trpc.recipes.list.queryKey({});
     const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
 
-    useSubscription(
-      trpc.ratings.onRatingUpdated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          const { recipeId, averageRating, ratingCount } = payload;
-          const averageQueryKey = trpc.ratings.getAverage.queryKey({ recipeId });
+    const lagQueryKeys = [
+      trpc.ratings.getAverage.queryKey(),
+      trpc.ratings.getUserRating.queryKey(),
+      recipesPath,
+    ];
 
-          queryClient.setQueryData(averageQueryKey, { recipeId, averageRating, ratingCount });
+    useRealtimeSubscription<Payload<"ratingUpdated">>(trpc.ratings.onRatingUpdated, {
+      lagQueryKeys,
+      onEvent: ({ recipeId, averageRating, ratingCount }) => {
+        const averageQueryKey = trpc.ratings.getAverage.queryKey({ recipeId });
 
-          const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
+        queryClient.setQueryData(averageQueryKey, { recipeId, averageRating, ratingCount });
 
-          queryClient.invalidateQueries({ queryKey: userRatingQueryKey });
+        const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
 
-          queryClient.setQueriesData<InfiniteRecipeData>({ queryKey: recipesPath }, (old) => {
-            if (!old?.pages) return old;
+        void queryClient.invalidateQueries({ queryKey: userRatingQueryKey });
 
-            return {
-              ...old,
-              pages: old.pages.map((page) => {
-                const idx = page.recipes.findIndex((r) => r.id === recipeId);
+        queryClient.setQueriesData<InfiniteRecipeData>({ queryKey: recipesPath }, (old) => {
+          if (!old?.pages) return old;
 
-                if (idx === -1) return page;
+          return {
+            ...old,
+            pages: old.pages.map((page) => {
+              const idx = page.recipes.findIndex((r) => r.id === recipeId);
 
-                const updatedRecipes = [...page.recipes];
-                const recipe = updatedRecipes[idx];
+              if (idx === -1) return page;
 
-                if (!recipe) {
-                  return page;
-                }
+              const updatedRecipes = [...page.recipes];
+              const recipe = updatedRecipes[idx];
 
-                updatedRecipes[idx] = {
-                  ...recipe,
-                  averageRating,
-                  ratingCount,
-                };
+              if (!recipe) {
+                return page;
+              }
 
-                return {
-                  ...page,
-                  recipes: updatedRecipes,
-                };
-              }),
-            };
-          });
+              updatedRecipes[idx] = {
+                ...recipe,
+                averageRating,
+                ratingCount,
+              };
 
-          queryClient.invalidateQueries({ queryKey: recipesPath });
-        },
-      })
-    );
+              return {
+                ...page,
+                recipes: updatedRecipes,
+              };
+            }),
+          };
+        });
+      },
+    });
 
-    useSubscription(
-      trpc.ratings.onRatingFailed.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          const { recipeId, reason } = payload;
-          const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
+    useRealtimeSubscription<Payload<"ratingFailed">>(trpc.ratings.onRatingFailed, {
+      lagQueryKeys,
+      onEvent: (payload) => {
+        const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({
+          recipeId: payload.recipeId,
+        });
 
-          queryClient.invalidateQueries({ queryKey: userRatingQueryKey });
+        void queryClient.invalidateQueries({ queryKey: userRatingQueryKey });
 
-          callbacks.onRatingFailed?.({ recipeId, reason });
-        },
-      })
-    );
+        callbacks.onRatingFailed?.(payload);
+      },
+    });
   };
 }

@@ -25,7 +25,10 @@ export function createUseCalendarMutations({
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
-    const { setCalendarData, invalidate } = useCalendarCacheHelpers(startISO, endISO);
+    const { setCalendarData, invalidate, upsertItemAcrossRanges } = useCalendarCacheHelpers(
+      startISO,
+      endISO
+    );
 
     const getCurrentItemVersion = (itemId: string): number => {
       const items = queryClient.getQueryData<PlannedItemFromQuery[]>(queryKey) ?? [];
@@ -35,6 +38,12 @@ export function createUseCalendarMutations({
 
     const createMutation = useMutation(
       trpc.calendar.createItem.mutationOptions({
+        // The created item is placed in every cached range from the response
+        // itself: the realtime echo is the fast path, not the guarantee, and a
+        // range cached for another screen never hears it (ADR-0011).
+        onSuccess: (result) => {
+          if (result.item) upsertItemAcrossRanges(result.item);
+        },
         // Queued for Replay when the backend is unreachable — nothing to refetch.
         onError: invalidateUnlessPreserved(invalidate),
       })

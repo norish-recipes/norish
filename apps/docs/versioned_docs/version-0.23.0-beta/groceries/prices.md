@@ -1,9 +1,10 @@
 ---
-
 sidebar_position: 1
 title: Prices
 description: Point a Store at a real shop and see what the groceries on your list cost there, using the shop's own pages and no AI provider.
---------------------------------------------------------------------------------------------------------------------------------------------
+---
+
+---
 
 # Prices
 

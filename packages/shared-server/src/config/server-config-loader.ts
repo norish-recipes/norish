@@ -15,6 +15,8 @@ import type {
   AutomaticEnrichmentConfig,
   ContentIndicatorsConfig,
   CuisineStrategy,
+  DecisionConfig,
+  DecisionUse,
   I18nLocaleConfig,
   ImageGenerationConfig,
   PromptsConfig,
@@ -32,9 +34,12 @@ import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
 import {
   AIConfigSchema,
+  DecisionConfigSchema,
   DEFAULT_CUISINE_STRATEGY,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   DEFAULT_TAG_STRATEGY,
+  isDecisionConfigValid,
+  isDecisionUseSelected,
   isImageGenerationConfigValid,
   ServerConfigKeys,
   UnitsConfigSchema,
@@ -206,6 +211,56 @@ export async function isImageGenerationConfigured(): Promise<boolean> {
   ]);
 
   return isImageGenerationConfigValid(imageConfig, aiConfig);
+}
+
+/**
+ * Get the Decision Model block (ADR-0035). Ships unconfigured: a deployment
+ * that never saved it has no row and gets null. A stored row that no longer
+ * matches the contract is reported and treated as absent, so a Decision is
+ * never attempted against half a configuration.
+ * @param includeSecrets - If true, includes the decrypted API key
+ */
+export async function getDecisionConfig(includeSecrets = false): Promise<DecisionConfig | null> {
+  const stored = await getConfig<unknown>(ServerConfigKeys.DECISION_CONFIG, includeSecrets);
+
+  if (stored == null) return null;
+
+  const parsed = DecisionConfigSchema.safeParse(stored);
+
+  if (!parsed.success) {
+    serverLogger.warn(
+      { issues: parsed.error.issues },
+      "Stored Decision Model config does not match the current contract"
+    );
+
+    return null;
+  }
+
+  return parsed.data;
+}
+
+/**
+ * Whether a Decision could be served at all: a provider is selected and its
+ * key is stored. Says nothing about the global AI switch, which the runtime
+ * checks on every request.
+ */
+export async function isDecisionModelConfigured(): Promise<boolean> {
+  return isDecisionConfigValid(await getDecisionConfig(true));
+}
+
+/**
+ * The one question a feature asks before composing a Decision: is there a
+ * Decision Model, is AI on at all, and did the administrator leave this use
+ * selected. False on every count when no Decision Model is configured, so a
+ * feature's fallback is the path it takes on a server that never heard of
+ * one. A block with no stored selection means every use.
+ */
+export async function isDecisionUseEnabled(use: DecisionUse): Promise<boolean> {
+  const [aiConfig, decisionConfig] = await Promise.all([getAIConfig(), getDecisionConfig(true)]);
+
+  if (!aiConfig?.enabled) return false;
+
+  return isDecisionUseSelected(decisionConfig, use);
 }
 
 /**
@@ -433,6 +488,8 @@ export type {
   RecurrenceConfig,
   AIConfig,
   VideoConfig,
+  DecisionConfig,
+  DecisionUse,
   RecipePermissionPolicy,
   PromptsConfig,
   I18nLocaleConfig,

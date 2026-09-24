@@ -14,6 +14,7 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { assertHouseholdAccess } from "../mocks/permissions";
+import { stores } from "../mocks/realtime/stores";
 
 const aislesRepository = vi.hoisted(() => ({
   fileGroceryName: vi.fn(),
@@ -26,12 +27,10 @@ const storesRepository = vi.hoisted(() => ({
   listStoresByUserIds: vi.fn(),
 }));
 
-const storeEmitter = vi.hoisted(() => ({ emitToHousehold: vi.fn() }));
-
 vi.mock("@norish/db/repositories/aisles", () => aislesRepository);
 vi.mock("@norish/db/repositories/stores", () => storesRepository);
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/stores/emitter", () => ({ storeEmitter }));
+vi.mock("@norish/shared-server/realtime/stores", () => import("../mocks/realtime/stores"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -64,9 +63,13 @@ describe("filing a name at a Store", () => {
 
     expect(aislesRepository.fileGroceryName).toHaveBeenCalledWith(STORE, "Melk", ZUIVEL);
     expect(filing).toEqual({ storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL });
-    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "aisleFiled", {
-      filing: { storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL },
-    });
+    expect(stores.publish).toHaveBeenCalledWith(
+      "aisleFiled",
+      {
+        filing: { storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL },
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("forgets a name filed under null, and says so in the same event", async () => {
@@ -74,16 +77,20 @@ describe("filing a name at a Store", () => {
 
     expect(aislesRepository.fileGroceryName).toHaveBeenCalledWith(STORE, "melk", null);
     expect(aislesRepository.getAisleById).not.toHaveBeenCalled();
-    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "aisleFiled", {
-      filing: { storeId: STORE, normalizedName: "melk", aisleId: null },
-    });
+    expect(stores.publish).toHaveBeenCalledWith(
+      "aisleFiled",
+      {
+        filing: { storeId: STORE, normalizedName: "melk", aisleId: null },
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("says the same thing twice when filed twice, so a repeat merges as a no-op", async () => {
     await caller.fileGroceryName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
     await caller.fileGroceryName({ storeId: STORE, name: " melk ", aisleId: ZUIVEL });
 
-    const [first, second] = storeEmitter.emitToHousehold.mock.calls.map((call) => call[2]);
+    const [first, second] = stores.publish.mock.calls.map((call) => call[1]);
 
     expect(second).toEqual(first);
   });
@@ -95,7 +102,7 @@ describe("filing a name at a Store", () => {
       caller.fileGroceryName({ storeId: OTHER_STORE, name: "melk", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(aislesRepository.fileGroceryName).not.toHaveBeenCalled();
-    expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(stores.publish).not.toHaveBeenCalled();
   });
 
   it("refuses an aisle that is not the Store's", async () => {
@@ -122,7 +129,7 @@ describe("filing a name at a Store", () => {
     await expect(
       caller.fileGroceryName({ storeId: STORE, name: "!?", aisleId: ZUIVEL })
     ).resolves.toBeNull();
-    expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(stores.publish).not.toHaveBeenCalled();
   });
 
   it("reads every Aisle Link of the household's Stores in one query", async () => {

@@ -15,7 +15,7 @@ import {
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/ratings", () => import("../mocks/ratings-repository"));
-vi.mock("@norish/trpc/routers/ratings/emitter", () => import("../mocks/ratings-emitter"));
+vi.mock("@norish/shared-server/realtime/ratings", () => import("../mocks/realtime/ratings"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
 }));
@@ -171,7 +171,7 @@ describe("ratings procedures", () => {
 
       rateRecipe.mockResolvedValue({ rating: 2, isNew: false, stale: true });
 
-      const caller = ratingsProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+      const caller = ratingsProcedures.createCaller(ctx as any);
       const result = await caller.rate({ recipeId, rating: 2, version: 7 });
 
       await Promise.resolve();

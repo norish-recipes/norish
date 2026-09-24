@@ -24,7 +24,7 @@ vi.mock("@norish/shared-server/media/avatar-cleanup", () => ({
   sweepUserAvatars: repositories.sweepUserAvatars,
 }));
 
-vi.mock("@norish/shared-server/realtime/connection-invalidation", () => ({
+vi.mock("@norish/shared-server/realtime/connection", () => ({
   emitConnectionInvalidation: repositories.emitConnectionInvalidation,
 }));
 

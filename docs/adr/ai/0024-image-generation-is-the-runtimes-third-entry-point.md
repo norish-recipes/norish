@@ -17,3 +17,7 @@ One feature, two requests. An image model is prompted, not reasoned with: a reci
 - A job spanning two providers can fail at either end. An unusable brief and an unusable image are both retryable; a refused image and a missing image configuration are not, and follow the existing `AIError` retryability rule rather than a new one.
 - Provider capability is now a fact Norish asserts, which ADR-0014 warns against doing about model parameters. The restriction is narrower than it looks: it is a list of provider packages that expose an image model, not a claim about any model's behaviour, and a wrong entry fails at request time exactly as before.
 - Adding a fourth entry point reopens this ADR, and the bar is now stated: a genuinely different kind of request, not a different feature making a kind that already exists.
+
+## Amendment, 2026-09-19
+
+The re-check this ADR asked for when the AI SDK line moved (to 7, for the Decision Model) found one change: `ai-sdk-ollama` 4 exposes an image model for Ollama's experimental image models, so **Ollama joined the Image Generation providers**. It takes an endpoint and no key, exactly as it does in the AI block, and borrows the AI configuration's endpoint when the provider matches. Anthropic, Mistral, DeepSeek, Groq and Perplexity still expose none, so the decision stands: the provider split is still forced, now by five providers rather than six, and "the most common self-hosted setup" can now draw without a second vendor.

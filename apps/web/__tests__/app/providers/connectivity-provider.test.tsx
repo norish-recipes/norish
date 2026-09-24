@@ -1,12 +1,14 @@
+import { useEffect } from "react";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import { ConnectivityProvider, useConnectivity } from "@/app/providers/connectivity-provider";
+import { LIVE_PROBE_INTERVAL_MS } from "@/lib/connectivity";
 
 const probeMock = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
-let wsStatus: "idle" | "connecting" | "connected" | "disconnected" = "idle";
+let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useConnectionStatus: () => ({ status: wsStatus, isConnected: wsStatus === "connected" }),
@@ -22,6 +24,24 @@ function StateProbe() {
   const { state } = useConnectivity();
 
   return <div data-testid="state">{state}</div>;
+}
+
+function LiveProbeSubscriber({ onLive }: { onLive: () => void }) {
+  const { subscribeLiveProbes } = useConnectivity();
+
+  useEffect(() => subscribeLiveProbes(onLive), [subscribeLiveProbes, onLive]);
+
+  return null;
+}
+
+let probeNowHandle: () => void = () => {};
+
+function ProbeNowHandle() {
+  const { probeNow } = useConnectivity();
+
+  probeNowHandle = probeNow;
+
+  return null;
 }
 
 /** Flush the microtasks/timers queued by the probe loop. */
@@ -88,5 +108,45 @@ describe("ConnectivityProvider", () => {
     await settle();
     expect(probeMock).toHaveBeenCalled();
     expect(screen.getByTestId("state")).toHaveTextContent("offline");
+  });
+
+  it("tells live-probe subscribers about every reachable verdict, heartbeat included", async () => {
+    probeMock.mockResolvedValue(true);
+    const onLive = vi.fn();
+
+    render(
+      <ConnectivityProvider>
+        <LiveProbeSubscriber onLive={onLive} />
+      </ConnectivityProvider>
+    );
+
+    await settle();
+    expect(onLive).toHaveBeenCalledTimes(1);
+
+    // Still Live: the state does not change, but the verdict is still news to
+    // whoever holds queued work.
+    await settle(LIVE_PROBE_INTERVAL_MS);
+    expect(onLive).toHaveBeenCalledTimes(2);
+
+    probeMock.mockResolvedValue(false);
+    await settle(LIVE_PROBE_INTERVAL_MS);
+    expect(onLive).toHaveBeenCalledTimes(2);
+  });
+
+  it("probes out of band when asked to", async () => {
+    probeMock.mockResolvedValue(true);
+
+    render(
+      <ConnectivityProvider>
+        <ProbeNowHandle />
+      </ConnectivityProvider>
+    );
+
+    await settle();
+    expect(probeMock).toHaveBeenCalledTimes(1);
+
+    act(() => probeNowHandle());
+    await settle();
+    expect(probeMock).toHaveBeenCalledTimes(2);
   });
 });

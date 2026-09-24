@@ -8,7 +8,8 @@
     "viewMode": "Mode d'affichage",
     "manageStores": "Gérer les magasins",
     "storeViewOptions": "Options d'affichage par magasin",
-    "groupIngredients": "Grouper les ingrédients"
+    "groupIngredients": "Grouper les ingrédients",
+    "pantry": "Garde-manger"
   },
   "empty": {
     "title": "Votre liste de courses vous attend",
@@ -83,6 +84,15 @@
     "dragAisle": "Glisser pour réordonner",
     "aisleDuplicate": "Ce magasin a déjà un rayon portant ce nom"
   },
+  "pantry": {
+    "title": "Garde-manger",
+    "hint": "Ce que vous avez déjà chez vous. Les ingrédients de votre garde-manger ne sont pas ajoutés à la liste quand vous ajoutez une recette.",
+    "empty": "Rien dans votre garde-manger pour l'instant",
+    "namePlaceholder": "p. ex. Huile d'olive",
+    "add": "Ajouter au garde-manger",
+    "remove": "Retirer du garde-manger",
+    "duplicate": "C'est déjà dans votre garde-manger"
+  },
   "panel": {
     "addTitle": "Ajouter un article",
     "editTitle": "Modifier l'article",
@@ -113,6 +123,7 @@
     "editPlaceholder": "ex. : lait toutes les semaines",
     "servings": "Portions",
     "selectedCount": "{selected} sur {total} sélectionnés",
+    "pantryUnavailable": "Votre garde-manger n'a pas pu être lu, donc rien n'est encore coché. Cochez ce que vous devez acheter.",
     "loadingIngredients": "Chargement des ingrédients…",
     "noIngredients": "Aucun ingrédient.",
     "addSelectedToGroceries": "Ajouter aux courses",
@@ -120,7 +131,8 @@
     "ingredientsFailed": "Échec de l'ajout des ingrédients à la liste de courses.",
     "addToGroceries": "Ajouter aux courses",
     "aisle": "Rayon",
-    "noAisle": "Aucun rayon"
+    "noAisle": "Aucun rayon",
+    "inPantry": "Dans votre garde-manger"
   },
   "picker": {
     "unlink": "Dissocier le produit",

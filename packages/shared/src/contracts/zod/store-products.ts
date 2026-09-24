@@ -32,10 +32,21 @@ const SaleFields = {
   dealWords: z.string().max(120).nullish(),
 };
 
-export const StoreProductLinkSelectSchema = createSelectSchema(storeProductLinks).omit({
-  createdAt: true,
-  updatedAt: true,
+/**
+ * A Decision's ranking of the products a lookup offered for a name (ADR-0035).
+ * A row written while the ranking also named a best guess parses all the
+ * same: the key it no longer has is dropped on the way in.
+ */
+export const ProductSuggestionSchema = z.object({
+  ranked: z.array(z.object({ url: z.string(), probability: z.number().min(0).max(1) })),
 });
+
+export const StoreProductLinkSelectSchema = createSelectSchema(storeProductLinks)
+  .omit({ createdAt: true, updatedAt: true })
+  .extend({
+    // A row written before the column existed, or by hand, reads as no suggestion.
+    suggestion: ProductSuggestionSchema.nullable().catch(null),
+  });
 
 /** A currency as a page or a person states it: three letters, upper case. */
 export const CurrencyCodeSchema = z

@@ -570,6 +570,10 @@
         "title": "Генерация изображений",
         "subtitle": "Нарисовать фото блюда для рецептов без изображения"
       },
+      "decisionModel": {
+        "title": "Модель решений",
+        "subtitle": "Быстрые и дешёвые ответы на закрытые вопросы"
+      },
       "prompts": {
         "title": "Промпты",
         "subtitle": "Настройка инструкций ИИ для обработки рецептов"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (локально)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Универсальный OpenAI-совместимый"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "напр. gpt-image-1",
       "modelDescription": "Модель, которая рисует изображение. Это должна быть модель изображений, а не текстовая.",
       "fallbackHint": "Тот же провайдер, что и в конфигурации ИИ: эндпоинт и API-ключ берутся из неё, если вы не зададите их здесь."
+    },
+    "decisionConfig": {
+      "provider": "Провайдер решений",
+      "providers": {
+        "disabled": "Отключено",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-ключ",
+      "apiKeyPlaceholder": "Введите API-ключ...",
+      "apiKeyDescription": "Получите ключ в своём аккаунте на typesafe.ai",
+      "model": "Модель решений",
+      "uses": "Использовать модель решений для",
+      "usesPlaceholder": "Ничего",
+      "useNames": {
+        "autoCategorization": "Автоматическая категоризация",
+        "autoCategorizationDescription": "Решить, является ли рецепт завтраком, обедом, ужином или перекусом",
+        "autoTagging": "Автоматические теги",
+        "autoTaggingDescription": "Выбрать теги из заданного списка и подтвердить каждый тег, предложенный ИИ",
+        "allergyDetection": "Определение аллергенов",
+        "allergyDetectionDescription": "Решить, какие аллергены домохозяйства содержит рецепт",
+        "recipeProvenance": "Происхождение рецепта",
+        "recipeProvenanceDescription": "Определить страну и Кухни до того, как будет написана заметка",
+        "groceryLinking": "Привязка покупок",
+        "groceryLinkingDescription": "Упорядочить предложенные магазином товары и привязать тот, в котором она уверена",
+        "validateEnrichments": "Проверка обогащений",
+        "validateEnrichmentsDescription": "Проверять собственные утверждения каждого обогащения перед записью"
+      },
+      "testConnection": "Проверить подключение",
+      "connectionSuccess": "Подключение успешно",
+      "aiDisabledHint": "AI отключён на этом сервере. Включите его в конфигурации AI, чтобы проверять и использовать модель решений."
     },
     "promptsConfig": {
       "recipeExtraction": "Промпт извлечения рецепта",
@@ -812,7 +847,10 @@
         "ai-request": "AI request",
         "syncing-event": "Sync calendar event",
         "deleting-event": "Delete calendar event",
-        "running": "Run task"
+        "running": "Run task",
+        "searching": "Search the shop",
+        "reading-product": "Read the product page",
+        "saving-link": "Save the link"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Связывание ингредиентов",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
-        "image-generation": "Генерация изображений"
+        "image-generation": "Генерация изображений",
+        "store-lookup": "Поиск в магазине"
       },
       "summary": {
         "failed": "{count} failed"
@@ -859,6 +898,7 @@
           "finished": "Finished",
           "duration": "Duration",
           "attempts": "Attempts",
+          "models": "Модели",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },

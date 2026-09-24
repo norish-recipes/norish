@@ -410,6 +410,38 @@ test("the dormant queue replays only once its owner signs in again", async () =>
   await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
 });
 
+test("a link copied while the backend is down is offered, and Import is Queued", async () => {
+  // Chromium hands the clipboard over without a gesture once allowed; the
+  // link is copied from inside the page and the focus event is the return.
+  await offline.context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/groceries");
+  await expect(page.getByRole("button", { name: "Add Item" })).toBeVisible();
+  await offline.transition("stopped");
+
+  await page.evaluate(async (text) => {
+    await navigator.clipboard.writeText(text);
+    window.dispatchEvent(new Event("focus"));
+  }, "https://norish-test.invalid/recipes/offline-soup");
+
+  const ask = page.getByText("Import a recipe from the link you copied?");
+
+  await expect(ask).toBeVisible();
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  await expect(ask).toBeHidden();
+
+  // Queued, not lost: the import sits in the Outbox for its owner…
+  await expect.poll(() => readOutbox(page)).toHaveLength(1);
+  expect((await readOutbox(page))[0]).toMatchObject({
+    path: "recipes.importFromUrl",
+    status: "pending",
+  });
+
+  // …and drains once the server is back, leaving the queue as it was found.
+  await offline.transition("live");
+  await page.goto("/");
+  await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
+});
+
 /**
  * A Parked entry is the stable "unsynced work while Live" state (it never
  * auto-replays), exactly what survives a reconnect after retries exhausted.

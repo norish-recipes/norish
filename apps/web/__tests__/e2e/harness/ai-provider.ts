@@ -14,7 +14,10 @@
  * controlled response is a real HTTP round-trip, not an in-process stub. It
  * also serves the OpenAI-compatible image route (`POST
  * {baseURL}/images/generations`, answering `data[0].b64_json`), which the
- * Image Generation block reaches through the same `generic-openai` provider.
+ * Image Generation block reaches through the same `generic-openai` provider,
+ * and TypeSafe's evaluation route (`POST {baseURL}/systemone`, answering
+ * `answers[id].{type, choice|score|noul, probabilities, confidence}`), which
+ * the Decision block reaches through its `endpoint` (ADR-0035).
  *
  * Responses are selected at runtime through {@link AIProviderControl}: a
  * persistent default plus an optional FIFO queue of one-shot responses. Tests
@@ -40,7 +43,27 @@ export interface ErrorDirective {
   body?: unknown;
 }
 
-export type Directive = SuccessDirective | ErrorDirective;
+/** One answer in TypeSafe's wire shape; a Boolean question answers as `noul`. */
+export type TypeSafeAnswer =
+  | { type: "choice"; choice: string; probabilities: Record<string, number>; confidence?: number }
+  | { type: "score"; score: number; probabilities: Record<string, number>; confidence?: number }
+  | { type: "noul"; noul: number };
+
+/**
+ * A deterministic Decision: `answers` is returned keyed by the asked question
+ * ids. Only the ids a request asked are answered — the SDK refuses an answer
+ * to a question it did not ask — so one persistent default can carry the
+ * answers to every question a scenario's flow asks, at whatever point each
+ * is asked (triage on the page, the kind on the recipe, validation after).
+ */
+export interface DecisionDirective {
+  kind: "decision";
+  answers: Record<string, TypeSafeAnswer>;
+  /** The model id the response reports; the release behind `jev-latest`. */
+  model?: string;
+}
+
+export type Directive = SuccessDirective | ErrorDirective | DecisionDirective;
 
 /** A chat-completion request captured for assertions. */
 export interface CapturedRequest {
@@ -84,7 +107,17 @@ export interface AIProviderControl {
   failImagePermanently(message?: string): void;
   /** Image route: persistent retryable failure (HTTP 503). */
   failImageRetryably(message?: string): void;
-  /** Clear both queues, both defaults, and captured requests. */
+  /** Decision route: response when its one-shot queue is empty (null = fail loudly). */
+  setDecisionDefault(directive: DecisionDirective | ErrorDirective | null): void;
+  /** Decision route: queue one-shot responses, consumed FIFO before its default. */
+  enqueueDecision(...directives: (DecisionDirective | ErrorDirective)[]): void;
+  /** Decision route: persistent success answering `answers` for every request. */
+  decideWith(answers: Record<string, TypeSafeAnswer>, model?: string): void;
+  /** Decision route: persistent permanent failure (HTTP 401, a rejected key). */
+  failDecisionPermanently(message?: string): void;
+  /** Decision route: persistent retryable failure (HTTP 503). */
+  failDecisionRetryably(message?: string): void;
+  /** Clear every queue, every default, and captured requests. */
   reset(): void;
   /**
    * Hold responses: requests are still recorded (so `requestCount` advances and
@@ -98,6 +131,8 @@ export interface AIProviderControl {
   readonly requestCount: number;
   /** Number of image-generation requests received since the last reset. */
   readonly imageRequestCount: number;
+  /** Number of Decision requests received since the last reset. */
+  readonly decisionRequestCount: number;
   /** Captured requests on either route, in arrival order. */
   readonly requests: readonly CapturedRequest[];
 }
@@ -120,6 +155,14 @@ export function buildImageGenerationBody(imageBase64: string): unknown {
   return { created: 0, data: [{ b64_json: imageBase64 }] };
 }
 
+/** Build a TypeSafe evaluation response carrying `answers` verbatim. */
+export function buildDecisionBody(
+  answers: Record<string, TypeSafeAnswer>,
+  model = "jev-e2e-harness"
+): unknown {
+  return { model, answers, usage: { input_tokens: 1, output_tokens: 0 } };
+}
+
 /** Build an OpenAI Chat Completions body carrying `content` verbatim. */
 export function buildChatCompletionBody(
   content: string,
@@ -140,6 +183,8 @@ class Controller implements AIProviderControl {
   private defaultDirective: Directive | null = null;
   private imageQueue: Directive[] = [];
   private imageDefaultDirective: Directive | null = null;
+  private decisionQueue: Directive[] = [];
+  private decisionDefaultDirective: Directive | null = null;
   private captured: CapturedRequest[] = [];
   private gate: Promise<void> | null = null;
   private openGate: (() => void) | null = null;
@@ -196,11 +241,33 @@ class Controller implements AIProviderControl {
     this.setImageDefault({ kind: "error", status: 503, body: errorBody(message, "server_error") });
   }
 
+  setDecisionDefault(directive: DecisionDirective | ErrorDirective | null): void {
+    this.decisionDefaultDirective = directive;
+  }
+
+  enqueueDecision(...directives: (DecisionDirective | ErrorDirective)[]): void {
+    this.decisionQueue.push(...directives);
+  }
+
+  decideWith(answers: Record<string, TypeSafeAnswer>, model?: string): void {
+    this.setDecisionDefault({ kind: "decision", answers, model });
+  }
+
+  failDecisionPermanently(message = "invalid api key"): void {
+    this.setDecisionDefault({ kind: "error", status: 401, body: { message } });
+  }
+
+  failDecisionRetryably(message = "decision model overloaded"): void {
+    this.setDecisionDefault({ kind: "error", status: 503, body: { message } });
+  }
+
   reset(): void {
     this.queue = [];
     this.defaultDirective = null;
     this.imageQueue = [];
     this.imageDefaultDirective = null;
+    this.decisionQueue = [];
+    this.decisionDefaultDirective = null;
     this.captured = [];
     this.release();
   }
@@ -232,18 +299,24 @@ class Controller implements AIProviderControl {
     return this.captured.filter((request) => request.path.endsWith("/images/generations")).length;
   }
 
+  get decisionRequestCount(): number {
+    return this.captured.filter((request) => request.path.endsWith("/systemone")).length;
+  }
+
   get requests(): readonly CapturedRequest[] {
     return this.captured;
   }
 
   /** Record a request and resolve the response for it from its route's lane. */
-  resolve(request: CapturedRequest, lane: "chat" | "image" = "chat"): Directive {
+  resolve(request: CapturedRequest, lane: Lane = "chat"): Directive {
     this.captured.push(request);
 
     const [queue, fallback] =
       lane === "image"
         ? [this.imageQueue, this.imageDefaultDirective]
-        : [this.queue, this.defaultDirective];
+        : lane === "decision"
+          ? [this.decisionQueue, this.decisionDefaultDirective]
+          : [this.queue, this.defaultDirective];
 
     return (
       queue.shift() ??
@@ -254,6 +327,27 @@ class Controller implements AIProviderControl {
       }
     );
   }
+}
+
+type Lane = "chat" | "image" | "decision";
+
+/**
+ * The directive's answers for the question ids the request asked. A body
+ * without a readable `questions` map gets every answer, so a malformed
+ * request still fails on the SDK's side rather than being masked here.
+ */
+function answersAsked(
+  body: unknown,
+  answers: Record<string, TypeSafeAnswer>
+): Record<string, TypeSafeAnswer> {
+  const questions =
+    body && typeof body === "object" && "questions" in body
+      ? (body as { questions?: unknown }).questions
+      : null;
+
+  if (!questions || typeof questions !== "object") return answers;
+
+  return Object.fromEntries(Object.entries(answers).filter(([id]) => id in questions));
 }
 
 function extractModel(body: unknown): string {
@@ -291,11 +385,13 @@ async function handleRequest(
   res: ServerResponse
 ): Promise<void> {
   const path = req.url ?? "";
-  const lane = path.endsWith("/chat/completions")
-    ? ("chat" as const)
+  const lane: Lane | null = path.endsWith("/chat/completions")
+    ? "chat"
     : path.endsWith("/images/generations")
-      ? ("image" as const)
-      : null;
+      ? "image"
+      : path.endsWith("/systemone")
+        ? "decision"
+        : null;
 
   if (req.method !== "POST" || !lane) {
     sendJson(res, 404, errorBody("unsupported endpoint", "invalid_request_error"));
@@ -317,6 +413,12 @@ async function handleRequest(
   // The request is recorded above; withhold the response while holding so a
   // scenario can observe the queued worker's job as active/pending.
   await controller.waitForGate();
+
+  if (directive.kind === "decision") {
+    sendJson(res, 200, buildDecisionBody(answersAsked(parsed, directive.answers), directive.model));
+
+    return;
+  }
 
   if (directive.kind === "success") {
     sendJson(

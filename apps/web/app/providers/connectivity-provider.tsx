@@ -4,6 +4,7 @@ import type { ConnectivitySnapshot, ConnectivityState } from "@/lib/connectivity
 import type { ReactNode } from "react";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -39,6 +40,17 @@ export interface ConnectivityValue {
   isOffline: boolean;
   /** True only under the dev-only forced-Offline override. */
   isForced: boolean;
+  /**
+   * Ask the loop to probe now instead of at its next scheduled tick. A hint,
+   * like a WebSocket drop: the probe stays the sole verdict.
+   */
+  probeNow: () => void;
+  /**
+   * Hear every probe that found the backend reachable — the Live heartbeat
+   * included, not only the Offline→Live transition. Queued work that has no
+   * transition to wait for drains on these verdicts.
+   */
+  subscribeLiveProbes: (listener: () => void) => () => void;
 }
 
 const ConnectivityContext = createContext<ConnectivityValue>({
@@ -47,6 +59,8 @@ const ConnectivityContext = createContext<ConnectivityValue>({
   isLive: true,
   isOffline: false,
   isForced: false,
+  probeNow: () => {},
+  subscribeLiveProbes: () => () => {},
 });
 
 export function useConnectivity(): ConnectivityValue {
@@ -80,6 +94,8 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
 
   // Imperative handle to force an out-of-band probe; swapped for a no-op on unmount.
   const probeNowRef = useRef<() => void>(() => {});
+  // Told about every reachable verdict; survives the loop's own restarts.
+  const liveProbeListenersRef = useRef(new Set<() => void>());
 
   useEffect(() => {
     // Radio silence while Offline is forced: no probes are scheduled and
@@ -119,6 +135,10 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
 
       snapshotRef.current = next;
       setSnapshot(next);
+
+      if (reachable) {
+        for (const listener of liveProbeListenersRef.current) listener();
+      }
 
       if (rerunRequested) {
         rerunRequested = false;
@@ -182,6 +202,17 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     }
   }, [wsStatus]);
 
+  const probeNow = useCallback(() => probeNowRef.current(), []);
+  const subscribeLiveProbes = useCallback((listener: () => void) => {
+    const listeners = liveProbeListenersRef.current;
+
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+
   const value = useMemo<ConnectivityValue>(() => {
     const posture: ConnectivityPosture = forced ? "offline-forced" : snapshot.state;
 
@@ -191,8 +222,10 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
       isLive: posture === "live",
       isOffline: posture !== "live",
       isForced: posture === "offline-forced",
+      probeNow,
+      subscribeLiveProbes,
     };
-  }, [snapshot.state, forced]);
+  }, [snapshot.state, forced, probeNow, subscribeLiveProbes]);
 
   return <ConnectivityContext.Provider value={value}>{children}</ConnectivityContext.Provider>;
 }

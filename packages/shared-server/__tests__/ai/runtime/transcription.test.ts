@@ -34,6 +34,8 @@ vi.mock("@norish/shared-server/logger", () => {
 });
 
 const { transcribe } = await import("@norish/shared-server/ai/runtime/runtime");
+const { createModelUseLedger, runWithModelUseLedger } =
+  await import("@norish/shared-server/ai/runtime/model-use-ledger");
 const { AIConfigurationError, AIDisabledError, AIResponseError } =
   await import("@norish/shared-server/ai/runtime/errors");
 
@@ -140,6 +142,27 @@ describe("transcription requests reach the provider correctly", () => {
     expect(body).toContain('name="file"');
     // No key configured means no Authorization header - not a placeholder one.
     expect(captured[0]!.authorization).toBeUndefined();
+  });
+
+  it("records the transcription model on the job's ledger", async () => {
+    mockGetVideoConfig.mockResolvedValue(
+      videoConfig({
+        transcriptionProvider: "generic-openai",
+        transcriptionEndpoint: baseUrl,
+        transcriptionModel: "faster-whisper",
+      })
+    );
+    const ledger = createModelUseLedger();
+
+    await runWithModelUseLedger(ledger, () => transcribe(audioPath));
+
+    reply = { text: "" };
+    await runWithModelUseLedger(ledger, () => transcribe(audioPath).catch(() => undefined));
+
+    expect(ledger.uses).toEqual([
+      { provider: "generic-openai", model: "faster-whisper", outcome: "completed" },
+      { provider: "generic-openai", model: "faster-whisper", outcome: "failed" },
+    ]);
   });
 
   it("azure posts multipart form data under the endpoint's /openai path", async () => {

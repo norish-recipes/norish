@@ -5,44 +5,8 @@ import "@testing-library/jest-dom";
 
 import { CookingStepView } from "@/app/(app)/recipes/[id]/components/cookingmode/cooking-step-view";
 
-/** What jsdom cannot measure: the page's height and the step's own height. */
-const layout = { pageHeight: 800, contentHeight: 200 };
-
-const originalClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientHeight");
-const originalScrollHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollHeight");
-
-beforeAll(() => {
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    }
-  );
-  Object.defineProperty(HTMLElement.prototype, "clientHeight", {
-    configurable: true,
-    get: () => layout.pageHeight,
-  });
-  Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
-    configurable: true,
-    get: () => layout.contentHeight,
-  });
-});
-
-afterAll(() => {
-  if (originalClientHeight) {
-    Object.defineProperty(HTMLElement.prototype, "clientHeight", originalClientHeight);
-  }
-
-  if (originalScrollHeight) {
-    Object.defineProperty(HTMLElement.prototype, "scrollHeight", originalScrollHeight);
-  }
-});
-
 beforeEach(() => {
-  layout.pageHeight = 800;
-  layout.contentHeight = 200;
+  vi.clearAllMocks();
 });
 
 vi.mock("@/components/recipe/smart-instruction", () => ({
@@ -63,6 +27,13 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
   useTranslations: () => (key: string) => key,
 }));
+vi.mock("motion/react", async () => {
+  const actual = await vi.importActual("motion/react");
+  return {
+    ...actual,
+    useReducedMotion: () => false,
+  };
+});
 
 const INGREDIENTS = [
   { ingredientName: "water", amount: 50, unit: "ml", systemUsed: "metric", order: 0 },
@@ -83,22 +54,21 @@ const STEPS = [
 
 function stepTree(activeStep: number, handlers: Record<string, () => void> = {}) {
   return (
-    <div onPointerDown={handlers.onPointerDown} onPointerUp={handlers.onPointerUp}>
-      <CookingStepView
-        activeStep={activeStep}
-        displayIngredients={INGREDIENTS}
-        recipe={{
-          id: "recipe-1",
-          name: "Stew",
-          image: null,
-          categories: [],
-          totalMinutes: 30,
-          servings: 2,
-          systemUsed: "metric",
-        }}
-        steps={STEPS}
-      />
-    </div>
+    <CookingStepView
+      activeStep={activeStep}
+      displayIngredients={INGREDIENTS}
+      recipe={{
+        id: "recipe-1",
+        name: "Stew",
+        image: null,
+        categories: [],
+        totalMinutes: 30,
+        servings: 2,
+        systemUsed: "metric",
+      }}
+      steps={STEPS}
+      onStepChange={handlers.onStepChange as any}
+    />
   );
 }
 
@@ -110,125 +80,99 @@ describe("CookingStepView Step Ingredients", () => {
   it("presents the active step's ingredients with resolved amounts", () => {
     renderStep(1);
 
-    // The information is in front of the cook exactly when hands are full.
     expect(screen.getByText("25 ml water")).toBeInTheDocument();
-  });
-
-  it("shows nothing extra for a step that uses nothing", () => {
-    renderStep(2);
-
-    expect(screen.getByText("Serve at once.")).toBeInTheDocument();
-    expect(screen.queryByText(/25 ml|300 g/)).not.toBeInTheDocument();
   });
 });
 
-/**
- * One step per screen: the neighbours peek at the edges so the cook keeps
- * their bearings, and a step too long for what that leaves takes the whole
- * page instead.
- */
-describe("CookingStepView paging", () => {
-  it("peeks at the step before and the step after", () => {
+describe("CookingStepView discrete scroll layout", () => {
+  it("renders only the visible window of steps", () => {
     renderStep(1);
 
     expect(screen.getByText("Boil the water.")).toBeInTheDocument();
+    expect(screen.getByText("Add half the water.")).toBeInTheDocument();
     expect(screen.getByText("Serve at once.")).toBeInTheDocument();
   });
 
-  it("peeks only forwards on the first step", () => {
+  it("renders all steps", () => {
     renderStep(0);
 
     expect(screen.getByText("Boil the water.")).toBeInTheDocument();
     expect(screen.getByText("Add half the water.")).toBeInTheDocument();
-    // Nothing before the first step, and the step after next is two away.
-    expect(screen.queryByText("Serve at once.")).not.toBeInTheDocument();
+    expect(screen.getByText("Serve at once.")).toBeInTheDocument();
   });
 
-  it("peeks only backwards on the last step", () => {
-    renderStep(2);
+  it("handles wheel event to go to next step", () => {
+    const onStepChange = vi.fn();
+    const { container } = renderStep(1, { onStepChange });
 
-    expect(screen.getByText("Add half the water.")).toBeInTheDocument();
-    expect(screen.queryByText("Boil the water.")).not.toBeInTheDocument();
+    fireEvent.wheel(container.firstChild!, { deltaY: 50 });
+    expect(onStepChange).toHaveBeenCalledWith(2);
   });
 
-  it("gives a long step the whole page and drops the peeks", () => {
-    layout.contentHeight = 5000;
+  it("handles wheel event to go to previous step", () => {
+    const onStepChange = vi.fn();
+    const { container } = renderStep(1, { onStepChange });
 
-    renderStep(1);
-
-    expect(screen.getByText("Add half the water.")).toBeInTheDocument();
-    expect(screen.queryByText("Boil the water.")).not.toBeInTheDocument();
-    expect(screen.queryByText("Serve at once.")).not.toBeInTheDocument();
-  });
-
-  it("lets a swipe start anywhere while the step fits", () => {
-    const onPointerDown = vi.fn();
-
-    renderStep(1, { onPointerDown });
-
-    fireEvent.pointerDown(screen.getByText("Add half the water."));
-
-    expect(onPointerDown).toHaveBeenCalled();
-  });
-
-  it("marks a long step's scroll region, so only the page turn is suppressed", () => {
-    layout.contentHeight = 5000;
-
-    const onPointerDown = vi.fn();
-    const { container } = renderStep(1, { onPointerDown });
-
-    // The pointer still reaches cooking mode — reaching the ingredients
-    // sideways works from anywhere — and the marker is what tells it a
-    // vertical drag in here is a scroll rather than a page turn.
-    fireEvent.pointerDown(screen.getByText("Add half the water."));
-
-    expect(onPointerDown).toHaveBeenCalled();
-    expect(container.querySelector("[data-cooking-step-scroll]")).not.toBeNull();
-  });
-
-  it("marks no scroll region while the step fits", () => {
-    const { container } = renderStep(1);
-
-    expect(container.querySelector("[data-cooking-step-scroll]")).toBeNull();
-  });
-
-  it("flanks the step with a reserved edge at both ends, neighbour or not", () => {
-    // The reservation is what centres the step: an edge that collapsed
-    // because there is nothing to peek at would shove the first and last
-    // steps up and down the screen while the ones between them sat still.
-    for (const stepIndex of [0, 1, 2]) {
-      const { container, unmount } = renderStep(stepIndex);
-
-      expect(container.querySelectorAll("[data-cooking-step-peek]")).toHaveLength(2);
-
-      unmount();
-    }
+    fireEvent.wheel(container.firstChild!, { deltaY: -50 });
+    expect(onStepChange).toHaveBeenCalledWith(0);
   });
 
   it("carries no step number of its own, because the bottom bar counts", () => {
     renderStep(1);
-
     expect(screen.queryByText("2")).not.toBeInTheDocument();
   });
-});
 
-/**
- * A page turn travels: the old page leaves while the new one arrives, so for
- * a moment both are mounted. A swap with no travel reads as a repaint.
- */
-describe("CookingStepView page turn", () => {
-  it("keeps the leaving page on screen while the arriving one enters, then lets it go", async () => {
-    const view = renderStep(0);
+  it("handles touch swipe gestures to change step", () => {
+    const onStepChange = vi.fn();
+    const { container } = renderStep(1, { onStepChange });
 
-    expect(view.container.querySelectorAll("[data-cooking-step-peek]")).toHaveLength(2);
+    // Swipe down (implies scrolling up, so prev step)
+    fireEvent.touchStart(container.firstChild!, { touches: [{ clientY: 100 }] });
+    fireEvent.touchEnd(container.firstChild!, { changedTouches: [{ clientY: 200 }] }); // deltaY: +100
+    expect(onStepChange).toHaveBeenCalledWith(0);
 
-    view.rerender(stepTree(1));
+    onStepChange.mockClear();
 
-    // Two pages of two reserved edges each: the turn is a travel, not a swap.
-    expect(view.container.querySelectorAll("[data-cooking-step-peek]")).toHaveLength(4);
+    // Swipe up (implies scrolling down, so next step)
+    fireEvent.touchStart(container.firstChild!, { touches: [{ clientY: 200 }] });
+    fireEvent.touchEnd(container.firstChild!, { changedTouches: [{ clientY: 100 }] }); // deltaY: -100
+    expect(onStepChange).toHaveBeenCalledWith(2);
+  });
 
-    await waitFor(() =>
-      expect(view.container.querySelectorAll("[data-cooking-step-peek]")).toHaveLength(2)
-    );
+  it("ignores touch swipes below the 50px threshold", () => {
+    const onStepChange = vi.fn();
+    const { container } = renderStep(1, { onStepChange });
+
+    // Swipe down but only 40px
+    fireEvent.touchStart(container.firstChild!, { touches: [{ clientY: 100 }] });
+    fireEvent.touchEnd(container.firstChild!, { changedTouches: [{ clientY: 140 }] }); // deltaY: +40
+
+    expect(onStepChange).not.toHaveBeenCalled();
+  });
+
+  it("blocks swipe if inner step content is scrollable and not at edge", () => {
+    const onStepChange = vi.fn();
+    renderStep(1, { onStepChange });
+
+    // Find the active step's scrollable container
+    const scrollables = document.querySelectorAll(".can-scroll-natively");
+    const activeScrollable = scrollables[0]; // the only one rendered with this class is the active step
+
+    // Mock the layout geometry of the scrollable container
+    Object.defineProperty(activeScrollable, "scrollTop", { value: 50, configurable: true });
+    Object.defineProperty(activeScrollable, "clientHeight", { value: 100, configurable: true });
+    Object.defineProperty(activeScrollable, "scrollHeight", { value: 300, configurable: true });
+
+    // Swipe up. The scrollable is at scrollTop 50 (not at bottom 200). It should NOT trigger a step change.
+    fireEvent.touchStart(activeScrollable, { touches: [{ clientY: 200 }] });
+    fireEvent.touchEnd(activeScrollable, { changedTouches: [{ clientY: 100 }] });
+
+    expect(onStepChange).not.toHaveBeenCalled();
+
+    Object.defineProperty(activeScrollable, "scrollTop", { value: 200, configurable: true }); // 200 + 100 = 300 (at edge)
+    fireEvent.touchStart(activeScrollable, { touches: [{ clientY: 200 }] });
+    fireEvent.touchEnd(activeScrollable, { changedTouches: [{ clientY: 100 }] });
+
+    expect(onStepChange).toHaveBeenCalledWith(2);
   });
 });

@@ -9,20 +9,25 @@
  * file.
  */
 
-import type { ImageModel, TranscriptionModel } from "ai";
+import type {
+  Experimental_EvaluationModel as EvaluationModel,
+  ImageModel,
+  TranscriptionModel,
+} from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAzure } from "@ai-sdk/azure";
 import { createDeepSeek } from "@ai-sdk/deepseek";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createGoogle } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createPerplexity } from "@ai-sdk/perplexity";
+import { createTypeSafeAi } from "@ai-sdk/typesafe-ai";
 import { createOllama } from "ai-sdk-ollama";
 import OpenAI from "openai";
 
-import type { ImageGenerationProvider } from "@norish/config/zod/server-config";
+import type { DecisionProvider, ImageGenerationProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, ModelConfig } from "./types";
@@ -223,7 +228,7 @@ function createProviderModels(
     case "google": {
       if (!apiKey) throw new Error("API Key is required for Google AI provider");
 
-      const google = createGoogleGenerativeAI({ apiKey, fetch: customFetch });
+      const google = createGoogle({ apiKey, fetch: customFetch });
 
       return {
         model: google(model),
@@ -301,7 +306,7 @@ export function createImageModelFromConfig(config: {
       if (!apiKey) throw new Error("API Key is required for Google AI provider");
 
       return {
-        model: createGoogleGenerativeAI({ apiKey, fetch: customFetch }).image(model),
+        model: createGoogle({ apiKey, fetch: customFetch }).image(model),
         providerName: "Google AI",
         landscape: { aspectRatio: "16:9" },
       };
@@ -318,6 +323,22 @@ export function createImageModelFromConfig(config: {
         model: azure.image(model),
         providerName: "Azure OpenAI",
         landscape: { size: openAILandscapeSize(model) },
+      };
+    }
+
+    case "ollama": {
+      if (!endpoint) throw new Error("Endpoint is required for Ollama provider");
+
+      return {
+        model: createOllama({
+          baseURL: normalizeOllamaEndpoint(endpoint),
+          fetch: customFetch,
+        }).imageModel(model),
+        providerName: "Ollama",
+        // Ollama's image models take a width and a height, and the SDK
+        // provider turns a size into exactly that — so, as for the other
+        // self-hosted route, ask for the stored shape itself.
+        landscape: { size: "1280x720" },
       };
     }
 
@@ -338,6 +359,49 @@ export function createImageModelFromConfig(config: {
         // No published size list to lean on, so ask for exactly the stored
         // shape: self-hosted image servers generally accept arbitrary sizes.
         landscape: { size: "1280x720" },
+      };
+    }
+  }
+}
+
+// ============================================================================
+// Decision models — the Decision Model's own provider (ADR-0035)
+// ============================================================================
+
+/** An evaluation model plus the name its log lines carry. */
+export interface DecisionModelConfig {
+  model: EvaluationModel;
+  providerName: string;
+}
+
+/**
+ * Build the evaluation model from the Decision block. Only `typesafe` is
+ * constructible: the config enum keeps `disabled` out, and Vercel's AI
+ * Gateway is a second case here and a base URL when it is wanted. The
+ * provider's default key comes from an environment variable Norish never
+ * sets, so the stored key is passed explicitly and a missing one is refused
+ * here rather than discovered as a 401.
+ */
+export function createDecisionModelFromConfig(config: {
+  provider: Exclude<DecisionProvider, "disabled">;
+  model: string;
+  endpoint: string;
+  apiKey?: string;
+  timeoutMs: number;
+}): DecisionModelConfig {
+  const { provider, model, endpoint, apiKey, timeoutMs } = config;
+
+  switch (provider) {
+    case "typesafe": {
+      if (!apiKey) throw new Error("API Key is required for the TypeSafe AI provider");
+
+      return {
+        model: createTypeSafeAi({
+          apiKey,
+          baseURL: endpoint,
+          fetch: createFetchWithTimeout(timeoutMs),
+        }).evaluationModel(model),
+        providerName: "TypeSafe AI",
       };
     }
   }

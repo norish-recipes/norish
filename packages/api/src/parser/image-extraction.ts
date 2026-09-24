@@ -53,6 +53,11 @@ export async function extractRecipeFromImages(
 
   aiLogger.debug(getExtractionLogContext(jsonLd, null), "AI vision response received");
 
+  // No faithfulness shadow score here, unlike a page or a video: a Decision's
+  // state is text or JSON, and the source these images are is neither. A
+  // score against nothing would measure the Decision Model's own guess, not
+  // the extraction's faithfulness.
+
   // Normalize using shared normalizer (no URL or images for image imports)
   const normalized = await normalizeExtractionOutput(jsonLd, { recipeId });
 

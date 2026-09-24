@@ -79,7 +79,7 @@ describe("favorites procedures", () => {
     it("logs a stale favorite mutation as a no-op", async () => {
       setFavorite.mockResolvedValue({ stale: true, value: { isFavorite: false } });
 
-      const caller = favoritesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+      const caller = favoritesProcedures.createCaller(ctx as any);
       const result = await caller.toggle({
         recipeId: crypto.randomUUID(),
         isFavorite: false,

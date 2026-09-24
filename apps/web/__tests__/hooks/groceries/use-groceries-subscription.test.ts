@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackedEvent } from "../realtime-test-utils";
 import {
   createMockGroceriesData,
   createMockGrocery,
@@ -13,7 +14,7 @@ import {
 const subscriptionCallbacks: Record<string, (data: unknown) => void> = {};
 
 function emitPayload(payload: unknown) {
-  return payload;
+  return trackedEvent(payload);
 }
 
 vi.mock("@trpc/tanstack-react-query", () => ({

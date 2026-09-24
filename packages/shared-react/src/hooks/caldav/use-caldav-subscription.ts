@@ -1,26 +1,11 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
-
 import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/contracts";
-import type { CaldavSubscriptionEvents } from "@norish/trpc";
-import { createClientLogger } from "@norish/shared/lib/logger";
+import type { CaldavRealtime, CaldavSyncEventData } from "@norish/shared/contracts/realtime/caldav";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 
 import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
-const log = createClientLogger("CaldavSubscription");
-
-type SyncEventPayload = {
-  type: keyof CaldavSubscriptionEvents;
-  data: CaldavSubscriptionEvents[keyof CaldavSubscriptionEvents];
-};
-
-type CaldavItemStatusUpdatedPayload = {
-  itemId: string;
-  itemType: "recipe" | "note";
-  syncStatus: "pending" | "synced" | "failed" | "removed";
-  errorMessage: string | null;
-  caldavEventUid: string | null;
-  version: number;
-};
+type CaldavItemStatusUpdatedPayload = CaldavSyncEventData["itemStatusUpdated"];
 
 export function applyCaldavStatusUpdate(
   statuses: CaldavSyncStatusViewDto[],
@@ -54,6 +39,10 @@ type CreateUseCaldavSubscriptionOptions = CreateCaldavHooksOptions & {
   useToastAdapter: () => CaldavSubscriptionToastAdapter;
 };
 
+/**
+ * One subscription carries every CalDAV sync fact; the payload's `type` says
+ * which, and each fact is handled once — one toast per initial sync.
+ */
 export function createUseCaldavSubscription({
   useTRPC,
   useCaldavCacheHelpers,
@@ -65,88 +54,46 @@ export function createUseCaldavSubscription({
       useCaldavCacheHelpers();
     const toastAdapter = useToastAdapter();
 
-    useSubscription(
-      trpc.caldavSubscriptions.onSyncEvent.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          const { type, data } = payload as SyncEventPayload;
+    useRealtimeSubscription<PayloadOf<CaldavRealtime, "syncEvent">>(
+      trpc.caldavSubscriptions.onSyncEvent,
+      {
+        onEvent: (event) => {
+          switch (event.type) {
+            case "configSaved":
+              setConfig(() => event.data.config);
+              break;
+            case "syncCompleted":
+            case "syncFailed":
+              invalidateSyncStatus();
+              invalidateSummary();
+              break;
+            case "itemStatusUpdated":
+              setStatuses((prev) => {
+                if (!prev) return prev;
 
-          if (type === "configSaved") {
-            const payload = data as CaldavSubscriptionEvents["configSaved"];
-
-            setConfig(() => payload.config);
-          } else if (type === "syncCompleted" || type === "syncFailed") {
-            invalidateSyncStatus();
-            invalidateSummary();
-          } else if (type === "itemStatusUpdated") {
-            const payload = data as CaldavItemStatusUpdatedPayload;
-
-            setStatuses((prev) => {
-              if (!prev) return prev;
-
-              const updatedStatuses = applyCaldavStatusUpdate(prev.statuses, payload, new Date());
-
-              return { ...prev, statuses: updatedStatuses };
-            });
-            invalidateSummary();
-          } else if (type === "initialSyncComplete") {
-            const payload = data as CaldavSubscriptionEvents["initialSyncComplete"];
-
-            toastAdapter.showSyncCompleteToast(payload.totalSynced, payload.totalFailed);
-            invalidateSyncStatus();
-            invalidateSummary();
+                return {
+                  ...prev,
+                  statuses: applyCaldavStatusUpdate(prev.statuses, event.data, new Date()),
+                };
+              });
+              invalidateSummary();
+              break;
+            case "initialSyncComplete":
+              toastAdapter.showSyncCompleteToast(event.data.totalSynced, event.data.totalFailed);
+              invalidateSyncStatus();
+              invalidateSummary();
+              break;
+            default:
+              break;
           }
         },
-        onError: (error) => {
-          log.error({ err: error }, "CalDAV subscription error");
-        },
-      })
-    );
-  }
-
-  function useCaldavItemStatusSubscription() {
-    const trpc = useTRPC();
-    const { setStatuses, invalidateSummary } = useCaldavCacheHelpers();
-
-    useSubscription(
-      trpc.caldavSubscriptions.onItemStatusUpdated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          const data = payload as CaldavItemStatusUpdatedPayload;
-
-          setStatuses((prev) => {
-            if (!prev) return prev;
-
-            const updatedStatuses = applyCaldavStatusUpdate(prev.statuses, data, new Date());
-
-            return { ...prev, statuses: updatedStatuses };
-          });
-
-          invalidateSummary();
-        },
-      })
-    );
-  }
-
-  function useCaldavSyncCompleteSubscription() {
-    const trpc = useTRPC();
-    const { invalidateSyncStatus, invalidateSummary } = useCaldavCacheHelpers();
-    const toastAdapter = useToastAdapter();
-
-    useSubscription(
-      trpc.caldavSubscriptions.onInitialSyncComplete.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          const data = payload;
-
-          toastAdapter.showSyncCompleteToast(data.totalSynced, data.totalFailed);
+        onLag: () => {
           invalidateSyncStatus();
           invalidateSummary();
         },
-      })
+      }
     );
   }
 
-  return {
-    useCaldavSubscription,
-    useCaldavItemStatusSubscription,
-    useCaldavSyncCompleteSubscription,
-  };
+  return { useCaldavSubscription };
 }

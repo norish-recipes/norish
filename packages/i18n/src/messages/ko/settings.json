@@ -570,6 +570,10 @@
         "title": "이미지 생성",
         "subtitle": "이미지가 없는 레시피에 요리 사진을 그려줍니다"
       },
+      "decisionModel": {
+        "title": "결정 모델",
+        "subtitle": "닫힌 질문에 대한 빠르고 저렴한 답"
+      },
       "prompts": {
         "title": "프롬프트",
         "subtitle": "레시피 처리를 위한 AI 지침 사용자 정의"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama(로컬)",
         "lmStudio": "LM Studio",
         "genericOpenai": "일반 OpenAI 호환"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "예: gpt-image-1",
       "modelDescription": "이미지를 그리는 모델입니다. 텍스트 모델이 아닌 이미지 모델이어야 합니다.",
       "fallbackHint": "AI 설정과 동일한 제공자입니다. 여기서 설정하지 않으면 엔드포인트와 API 키를 AI 설정에서 가져옵니다."
+    },
+    "decisionConfig": {
+      "provider": "결정 제공자",
+      "providers": {
+        "disabled": "사용 안 함",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API 키",
+      "apiKeyPlaceholder": "API 키 입력...",
+      "apiKeyDescription": "typesafe.ai 계정에서 키를 발급받으세요",
+      "model": "결정 모델",
+      "uses": "결정 모델을 사용할 기능",
+      "usesPlaceholder": "없음",
+      "useNames": {
+        "autoCategorization": "자동 분류",
+        "autoCategorizationDescription": "레시피가 아침, 점심, 저녁, 간식 중 무엇인지 결정",
+        "autoTagging": "자동 태그 지정",
+        "autoTaggingDescription": "미리 정의된 목록에서 태그를 고르고 AI가 제안한 각 태그를 확인",
+        "allergyDetection": "알레르기 감지",
+        "allergyDetectionDescription": "레시피에 가구의 어떤 알레르겐이 들어 있는지 결정",
+        "recipeProvenance": "레시피 출처",
+        "recipeProvenanceDescription": "메모를 작성하기 전에 국가와 요리 종류를 확정",
+        "groceryLinking": "장보기 연결",
+        "groceryLinkingDescription": "상점이 제안한 상품을 정렬하고 확신하는 하나를 연결",
+        "validateEnrichments": "보강 검증",
+        "validateEnrichmentsDescription": "각 보강 실행의 결과를 저장하기 전에 검사"
+      },
+      "testConnection": "연결 테스트",
+      "connectionSuccess": "연결 성공",
+      "aiDisabledHint": "이 서버에서는 AI가 비활성화되어 있습니다. 결정 모델을 테스트하고 사용하려면 AI 설정에서 활성화하세요."
     },
     "promptsConfig": {
       "recipeExtraction": "레시피 추출 프롬프트",
@@ -812,7 +847,10 @@
         "ai-request": "AI request",
         "syncing-event": "Sync calendar event",
         "deleting-event": "Delete calendar event",
-        "running": "Run task"
+        "running": "Run task",
+        "searching": "Search the shop",
+        "reading-product": "Read the product page",
+        "saving-link": "Save the link"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -826,7 +864,8 @@
         "ingredient-linking": "재료 연결",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
-        "image-generation": "이미지 생성"
+        "image-generation": "이미지 생성",
+        "store-lookup": "매장 조회"
       },
       "summary": {
         "failed": "{count} failed"
@@ -859,6 +898,7 @@
           "finished": "Finished",
           "duration": "Duration",
           "attempts": "Attempts",
+          "models": "모델",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },

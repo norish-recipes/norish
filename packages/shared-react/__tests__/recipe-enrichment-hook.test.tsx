@@ -7,6 +7,7 @@ import type { RecipeEnrichmentStatusDto } from "@norish/shared/lib/recipe-enrich
 
 import type { CreateRecipeHooksOptions } from "../src/hooks/recipes/types";
 import { createUseRecipeEnrichment } from "../src/hooks/recipes/recipe/use-recipe-enrichment";
+import { trackedEvent } from "./realtime/tracked-event";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -66,7 +67,7 @@ async function emitLifecycle(payload: Record<string, unknown>) {
   };
 
   await act(async () => {
-    options?.onData?.({ payload: { runId: "run-1", runSequence: 1, ...payload } });
+    options?.onData?.(trackedEvent({ runId: "run-1", runSequence: 1, ...payload }));
   });
 }
 

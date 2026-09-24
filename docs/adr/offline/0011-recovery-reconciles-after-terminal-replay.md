@@ -21,3 +21,9 @@ Recovery does not introduce a separate state machine for refetch failures. Exist
 - A failed refetch leaves the current cache intact and leaves convergence to later normal activity.
 - The path-agnostic Outbox remains separate from query-specific cache policy.
 - The detached Replay retry timer and the separate Reconnect Sequence are removed.
+
+## Amendment (September 21, 2026)
+
+A mutation can fail on reachability without the backend ever counting as Offline: the request dies on a radio handover while the health probe keeps succeeding and the socket never drops. Such a mutation was admitted to the Outbox and then had no trigger at all — none of the transitions above happened — so it waited for some unrelated reconnect while routine refetches replaced its optimistic state with older server data, and the "brief" inconsistency accepted above became indefinite (issue #565).
+
+An admission while Live is now a reachability hint, like a WebSocket drop: it asks the connectivity loop to probe at once. And every Live verdict — the heartbeat included, not only the Offline→Live transition — runs Recovery when the owner's Outbox holds pending work. Such a run follows the startup rule: it refreshes the reads only when Replay actually sent something, because the reads never fell behind. The single-flight operation, the drain-before-refetch ordering, and the absence of a detached retry timer are unchanged: the connectivity loop's own cadence is the retry cadence.

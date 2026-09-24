@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 title: Recipe enrichment
 description: How Norish adds tags, allergy indications, meal categories, nutrition, provenance, step ingredients, and a picture of the dish to your recipes with AI, and how to run each one yourself.
 ---
@@ -26,6 +26,12 @@ This is called _enrichment_, and it always happens **after** your recipe is
 saved. Importing or creating a recipe never waits for it, and never fails
 because of it. If AI is unavailable or an enrichment doesn't work out, you still
 have your recipe, and every enrichment can be run manually later.
+
+Your administrator may add a
+[Decision Model](../configuration/ai-provider.md#decision-model) that answers
+some of these questions faster; nothing on your recipe changes depending on
+which model decided. When one is configured some enrichments are checked
+against the decision model before writing.
 
 ## Automatic enrichment
 

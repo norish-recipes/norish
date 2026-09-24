@@ -1,12 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackedEvent } from "../realtime-test-utils";
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 
 function emitPayload(payload: unknown) {
-  return { payload };
+  return trackedEvent(payload);
 }
 
 vi.mock("@/app/providers/trpc-provider", () => ({
@@ -43,15 +44,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       onFailed: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onFailed = options?.onData;
-
-          return { enabled: true };
-        }),
-      },
-    },
-    permissions: {
-      onPolicyUpdated: {
-        subscriptionOptions: vi.fn((_, options) => {
-          subscriptionCallbacks.onPolicyUpdated = options?.onData;
 
           return { enabled: true };
         }),

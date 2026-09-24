@@ -22,6 +22,7 @@ import {
   deleteAvatarByFilename,
   sweepUserAvatars,
 } from "@norish/shared-server/media/avatar-cleanup";
+import { households } from "@norish/shared-server/realtime/households";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import {
   DeleteUserAvatarInputSchema,
@@ -35,7 +36,6 @@ import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { householdEmitter } from "../households/emitter";
 
 /**
  * Tell every open household client (the actor's other tabs included — no echo
@@ -51,10 +51,14 @@ function emitMemberProfileUpdated(
     return;
   }
 
-  householdEmitter.emitToHousehold(ctx.household.id, "memberProfileUpdated", {
-    userId: ctx.user.id,
-    image,
-  });
+  void households.publish(
+    "memberProfileUpdated",
+    {
+      userId: ctx.user.id,
+      image,
+    },
+    { householdKey: ctx.household.id }
+  );
 }
 
 /**
@@ -363,7 +367,11 @@ const setAllergies = authedProcedure
         { householdId: ctx.household.id, allergies },
         "Emitting allergiesUpdated to household"
       );
-      householdEmitter.emitToHousehold(ctx.household.id, "allergiesUpdated", { allergies });
+      void households.publish(
+        "allergiesUpdated",
+        { allergies },
+        { householdKey: ctx.household.id }
+      );
     } else {
       log.info({ userId: ctx.user.id }, "No household, skipping allergiesUpdated emit");
     }

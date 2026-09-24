@@ -570,6 +570,10 @@
         "title": "Generazione Immagini",
         "subtitle": "Disegna una foto del piatto per le ricette senza immagine"
       },
+      "decisionModel": {
+        "title": "Modello decisionale",
+        "subtitle": "Risposte rapide ed economiche a domande chiuse"
+      },
       "prompts": {
         "title": "Prompt",
         "subtitle": "Personalizza le istruzioni IA per l'elaborazione delle ricette"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (Locale)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Compatibile OpenAI generico"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "es. gpt-image-1",
       "modelDescription": "Il modello che disegna l'immagine. Deve essere un modello di immagini, non di testo.",
       "fallbackHint": "Stesso provider della configurazione IA: endpoint e chiave API vengono ripresi da lì se non li imposti qui."
+    },
+    "decisionConfig": {
+      "provider": "Provider decisionale",
+      "providers": {
+        "disabled": "Disattivato",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "Chiave API",
+      "apiKeyPlaceholder": "Inserisci la chiave API...",
+      "apiKeyDescription": "Ottieni una chiave dal tuo account su typesafe.ai",
+      "model": "Modello decisionale",
+      "uses": "Usa il modello decisionale per",
+      "usesPlaceholder": "Niente",
+      "useNames": {
+        "autoCategorization": "Categorizzazione automatica",
+        "autoCategorizationDescription": "Decidere se una ricetta è colazione, pranzo, cena o spuntino",
+        "autoTagging": "Tag automatici",
+        "autoTaggingDescription": "Scegliere i tag dall'elenco predefinito e confermare ogni tag proposto dall'IA",
+        "allergyDetection": "Rilevamento allergie",
+        "allergyDetectionDescription": "Decidere quali allergeni del nucleo familiare contiene una ricetta",
+        "recipeProvenance": "Provenienza della ricetta",
+        "recipeProvenanceDescription": "Stabilire paese e Cucine prima che la nota venga scritta",
+        "groceryLinking": "Collegamento della spesa",
+        "groceryLinkingDescription": "Ordinare i prodotti proposti da un negozio e collegarne uno di cui è sicuro",
+        "validateEnrichments": "Convalida arricchimenti",
+        "validateEnrichmentsDescription": "Verificare le affermazioni di ogni arricchimento prima che vengano salvate"
+      },
+      "testConnection": "Testa connessione",
+      "connectionSuccess": "Connessione riuscita",
+      "aiDisabledHint": "L'AI è disattivata su questo server. Attivala nella configurazione AI per testare e usare il modello decisionale."
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt estrazione ricette",
@@ -812,7 +847,10 @@
         "ai-request": "AI request",
         "syncing-event": "Sync calendar event",
         "deleting-event": "Delete calendar event",
-        "running": "Run task"
+        "running": "Run task",
+        "searching": "Search the shop",
+        "reading-product": "Read the product page",
+        "saving-link": "Save the link"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Collegamento degli ingredienti",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
-        "image-generation": "Generazione immagini"
+        "image-generation": "Generazione immagini",
+        "store-lookup": "Ricerca nel negozio"
       },
       "summary": {
         "failed": "{count} failed"
@@ -859,6 +898,7 @@
           "finished": "Finished",
           "duration": "Duration",
           "attempts": "Attempts",
+          "models": "Modelli",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },

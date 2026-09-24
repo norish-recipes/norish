@@ -8,7 +8,8 @@
     "viewMode": "Widok",
     "manageStores": "Zarządzaj sklepami",
     "storeViewOptions": "Opcje widoku sklepu",
-    "groupIngredients": "Grupuj składniki"
+    "groupIngredients": "Grupuj składniki",
+    "pantry": "Spiżarnia"
   },
   "empty": {
     "title": "Twoja lista zakupów czeka",
@@ -83,6 +84,15 @@
     "dragAisle": "Przeciągnij, aby zmienić kolejność",
     "aisleDuplicate": "Ten sklep ma już alejkę o tej nazwie"
   },
+  "pantry": {
+    "title": "Spiżarnia",
+    "hint": "To, co już masz w domu. Składniki ze spiżarni nie trafiają na listę, gdy dodajesz przepis.",
+    "empty": "W spiżarni nie ma jeszcze niczego",
+    "namePlaceholder": "np. Oliwa z oliwek",
+    "add": "Dodaj do spiżarni",
+    "remove": "Usuń ze spiżarni",
+    "duplicate": "To już jest w Twojej spiżarni"
+  },
   "panel": {
     "addTitle": "Dodaj zakup",
     "editTitle": "Edytuj zakup",
@@ -113,6 +123,7 @@
     "editPlaceholder": "np. mleko co tydzień",
     "servings": "Porcje",
     "selectedCount": "Zaznaczono {selected} z {total}",
+    "pantryUnavailable": "Nie udało się odczytać spiżarni, więc nic nie jest jeszcze zaznaczone. Zaznacz to, co musisz kupić.",
     "loadingIngredients": "Ładowanie składników...",
     "noIngredients": "Brak składników.",
     "addSelectedToGroceries": "Dodaj do zakupów",
@@ -120,7 +131,8 @@
     "ingredientsFailed": "Nie udało się dodać składników do listy zakupów.",
     "addToGroceries": "Dodaj do zakupów",
     "aisle": "Alejka",
-    "noAisle": "Bez alejki"
+    "noAisle": "Bez alejki",
+    "inPantry": "W Twojej spiżarni"
   },
   "picker": {
     "unlink": "Odłącz produkt",

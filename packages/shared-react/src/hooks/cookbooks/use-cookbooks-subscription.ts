@@ -1,6 +1,10 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
 
 import type { CookbooksCacheHelpers, CreateCookbookHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
+
+type Payload<E extends EventName<CookbooksRealtime>> = PayloadOf<CookbooksRealtime, E>;
 
 type Dependencies = CreateCookbookHooksOptions & {
   useCookbooksCacheHelpers: () => CookbooksCacheHelpers;
@@ -22,71 +26,67 @@ export function createUseCookbooksSubscription({
     const { setAllCookbooksData, invalidate, invalidateCookbook, invalidateMembership } =
       useCookbooksCacheHelpers();
 
-    useSubscription(
-      trpc.cookbooks.onCreated.subscriptionOptions(undefined, {
-        // A new cookbook belongs wherever the reader's sort puts it, which is
-        // not something a client can decide — refetch rather than guess.
-        onData: () => invalidate(),
-      })
-    );
+    const lag = { onLag: invalidate };
 
-    useSubscription(
-      trpc.cookbooks.onUpdated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          setAllCookbooksData((prev) => {
-            if (!prev) return prev;
+    useRealtimeSubscription<Payload<"created">>(trpc.cookbooks.onCreated, {
+      ...lag,
+      // A new cookbook belongs wherever the reader's sort puts it, which is
+      // not something a client can decide — refetch rather than guess.
+      onEvent: () => invalidate(),
+    });
 
-            return {
-              ...prev,
-              pages: prev.pages.map((page) => ({
+    useRealtimeSubscription<Payload<"updated">>(trpc.cookbooks.onUpdated, {
+      ...lag,
+      onEvent: ({ cookbook }) => {
+        setAllCookbooksData((prev) => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            pages: prev.pages.map((page) => ({
+              ...page,
+              cookbooks: page.cookbooks.map((current) =>
+                current.id === cookbook.id ? { ...current, ...cookbook } : current
+              ),
+            })),
+          };
+        });
+        invalidateCookbook(cookbook.id);
+      },
+    });
+
+    useRealtimeSubscription<Payload<"membershipChanged">>(trpc.cookbooks.onMembershipChanged, {
+      ...lag,
+      onEvent: ({ recipeId, cookbookId }) => {
+        // The member count and the derived cover are computed per reader on
+        // the server, so a membership change is a refetch rather than a
+        // local guess.
+        invalidateMembership(recipeId);
+        invalidateCookbook(cookbookId);
+        invalidate();
+      },
+    });
+
+    useRealtimeSubscription<Payload<"deleted">>(trpc.cookbooks.onDeleted, {
+      ...lag,
+      onEvent: ({ id }) => {
+        setAllCookbooksData((prev) => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            pages: prev.pages.map((page) => {
+              const kept = page.cookbooks.filter((cookbook) => cookbook.id !== id);
+
+              return {
                 ...page,
-                cookbooks: page.cookbooks.map((cookbook) =>
-                  cookbook.id === payload.cookbook.id
-                    ? { ...cookbook, ...payload.cookbook }
-                    : cookbook
-                ),
-              })),
-            };
-          });
-          invalidateCookbook(payload.cookbook.id);
-        },
-      })
-    );
-
-    useSubscription(
-      trpc.cookbooks.onMembershipChanged.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          // The member count and the derived cover are computed per reader on
-          // the server, so a membership change is a refetch rather than a
-          // local guess.
-          invalidateMembership(payload.recipeId);
-          invalidateCookbook(payload.cookbookId);
-          invalidate();
-        },
-      })
-    );
-
-    useSubscription(
-      trpc.cookbooks.onDeleted.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          setAllCookbooksData((prev) => {
-            if (!prev) return prev;
-
-            return {
-              ...prev,
-              pages: prev.pages.map((page) => {
-                const kept = page.cookbooks.filter((cookbook) => cookbook.id !== payload.id);
-
-                return {
-                  ...page,
-                  cookbooks: kept,
-                  total: Math.max(0, page.total - (page.cookbooks.length - kept.length)),
-                };
-              }),
-            };
-          });
-        },
-      })
-    );
+                cookbooks: kept,
+                total: Math.max(0, page.total - (page.cookbooks.length - kept.length)),
+              };
+            }),
+          };
+        });
+      },
+    });
   };
 }

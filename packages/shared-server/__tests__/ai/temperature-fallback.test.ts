@@ -10,7 +10,7 @@
  * does.
  */
 
-import type { LanguageModelV3, LanguageModelV3CallOptions } from "@ai-sdk/provider";
+import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { APICallError } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -45,7 +45,7 @@ const ANSWER = { content: [{ type: "text", text: "ok" }] } as never;
 function createModel(options: { rejectsTemperature: boolean }) {
   const temperatures: (number | undefined)[] = [];
 
-  const doGenerate = vi.fn(async (params: LanguageModelV3CallOptions) => {
+  const doGenerate = vi.fn(async (params: LanguageModelV4CallOptions) => {
     temperatures.push(params.temperature);
 
     if (options.rejectsTemperature && params.temperature != null) throw temperatureRejection();
@@ -54,22 +54,22 @@ function createModel(options: { rejectsTemperature: boolean }) {
   });
 
   const model = {
-    specificationVersion: "v3",
+    specificationVersion: "v4",
     provider: "anthropic",
     modelId: "claude-sonnet-5",
     supportedUrls: {},
     doGenerate,
     doStream: vi.fn(),
-  } as unknown as LanguageModelV3;
+  } as unknown as LanguageModelV4;
 
   return { model, doGenerate, temperatures };
 }
 
-function call(model: LanguageModelV3, temperature?: number) {
+function call(model: LanguageModelV4, temperature?: number) {
   return model.doGenerate({
     prompt: [{ role: "user", content: [{ type: "text", text: "hi" }] }],
     temperature,
-  } as LanguageModelV3CallOptions);
+  } as LanguageModelV4CallOptions);
 }
 
 describe("withTemperatureFallback", () => {
@@ -80,7 +80,7 @@ describe("withTemperatureFallback", () => {
   it("retries without temperature when the model rejects it", async () => {
     const { model, temperatures } = createModel({ rejectsTemperature: true });
 
-    const wrapped = withTemperatureFallback(model) as LanguageModelV3;
+    const wrapped = withTemperatureFallback(model) as LanguageModelV4;
 
     await expect(call(wrapped, 0.2)).resolves.toBe(ANSWER);
     expect(temperatures).toEqual([0.2, undefined]);
@@ -89,7 +89,7 @@ describe("withTemperatureFallback", () => {
   it("stops sending temperature to a model that already rejected it", async () => {
     const { model, temperatures } = createModel({ rejectsTemperature: true });
 
-    const wrapped = withTemperatureFallback(model) as LanguageModelV3;
+    const wrapped = withTemperatureFallback(model) as LanguageModelV4;
 
     await call(wrapped, 0.2);
     await call(wrapped, 0.2);
@@ -101,7 +101,7 @@ describe("withTemperatureFallback", () => {
   it("leaves a model that accepts temperature alone", async () => {
     const { model, doGenerate, temperatures } = createModel({ rejectsTemperature: false });
 
-    const wrapped = withTemperatureFallback(model) as LanguageModelV3;
+    const wrapped = withTemperatureFallback(model) as LanguageModelV4;
 
     await call(wrapped, 0.2);
 
@@ -121,7 +121,7 @@ describe("withTemperatureFallback", () => {
       })
     );
 
-    const wrapped = withTemperatureFallback(model) as LanguageModelV3;
+    const wrapped = withTemperatureFallback(model) as LanguageModelV4;
 
     await expect(call(wrapped, 0.2)).rejects.toThrow("max_tokens is too large");
   });
@@ -138,7 +138,7 @@ describe("withTemperatureFallback", () => {
       })
     );
 
-    const wrapped = withTemperatureFallback(model) as LanguageModelV3;
+    const wrapped = withTemperatureFallback(model) as LanguageModelV4;
 
     await expect(call(wrapped, 0.2)).rejects.toThrow("overloaded");
     expect(doGenerate).toHaveBeenCalledOnce();
@@ -158,7 +158,7 @@ describe("withTemperatureFallback", () => {
       .mockRejectedValueOnce(unrelated)
       .mockRejectedValueOnce(unrelated);
 
-    const wrapped = withTemperatureFallback(model) as LanguageModelV3;
+    const wrapped = withTemperatureFallback(model) as LanguageModelV4;
 
     await expect(call(wrapped, 0.2)).rejects.toThrow("prompt is too long");
 
@@ -167,7 +167,7 @@ describe("withTemperatureFallback", () => {
     const temperatures: (number | undefined)[] = [];
 
     (doGenerate as ReturnType<typeof vi.fn>).mockImplementation(
-      async (params: LanguageModelV3CallOptions) => {
+      async (params: LanguageModelV4CallOptions) => {
         temperatures.push(params.temperature);
 
         return ANSWER;

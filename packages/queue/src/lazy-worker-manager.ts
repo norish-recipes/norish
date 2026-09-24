@@ -17,7 +17,7 @@ import { Queue, QueueEvents, Worker } from "bullmq";
 
 import { createLogger } from "@norish/shared-server/logger";
 
-import { createContextAwareProcessor } from "./queue-operation-context";
+import { instrumentProcessor } from "./instrumented-processor";
 
 const log = createLogger("lazy-worker");
 
@@ -110,7 +110,7 @@ export async function createLazyWorker<T>(
 
   const config: LazyWorkerConfig<T> = {
     queueName,
-    processor: createContextAwareProcessor(processor),
+    processor: instrumentProcessor(processor),
     options,
     onFailed,
   };

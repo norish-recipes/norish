@@ -1,0 +1,407 @@
+{
+  "dashboard": {
+    "libraryTitle": "Kirjastosi",
+    "recipesTitle": "Reseptisi",
+    "cookbooksTitle": "Keittokirjasi",
+    "searchPlaceholder": "Hae tai lisää resepti...",
+    "searchRecipesPlaceholder": "Hae reseptejä...",
+    "libraryCount": "{count, plural, one {# kohde} other {# kohdetta}}",
+    "addRecipe": "Lisää resepti",
+    "importFromUrl": "Osoite",
+    "importFromPaste": "Liitä",
+    "importFromImage": "Kuva",
+    "searchFields": {
+      "title": "Nimi",
+      "description": "Kuvaus",
+      "ingredients": "Ainesosat",
+      "steps": "Työvaiheet",
+      "tags": "Tunnisteet"
+    },
+    "viewMode": {
+      "label": "Reseptinäkymä",
+      "grid": "Ruudukko",
+      "list": "Lista"
+    },
+    "libraryType": {
+      "label": "Näytä",
+      "all": "Kaikki",
+      "recipes": "Reseptit",
+      "cookbooks": "Keittokirjat"
+    }
+  },
+  "back": {
+    "all": "Takaisin kirjastoon",
+    "recipes": "Takaisin resepteihin",
+    "cookbooks": "Takaisin keittokirjoihin",
+    "named": "Takaisin: {name}",
+    "cookbook": "Takaisin keittokirjaan",
+    "generic": "Takaisin"
+  },
+  "empty": {
+    "title": "Kirjastosi odottaa",
+    "description": "Liitä reseptin osoite yllä olevaan hakukenttään ja katso, kun taika tapahtuu.",
+    "noResults": "Reseptejä ei löytynyt",
+    "noResultsHint": "Kokeile muuttaa tai tyhjentää suodattimet.",
+    "noCookbooks": "Ei vielä keittokirjoja",
+    "noCookbooksHint": "Keittokirja on nimetty kokoelma reseptejä. Tee ensimmäinen ja tuo kirjastoosi järjestystä."
+  },
+  "card": {
+    "noImage": "Ei kuvaa saatavilla",
+    "viewGroceries": "Näytä ostokset",
+    "addToCalendar": "Lisää kalenteriin",
+    "deleteRecipe": "Poista resepti",
+    "recipeOptions": "Reseptin asetukset"
+  },
+  "detail": {
+    "viewOriginal": "Näytä alkuperäinen resepti",
+    "ingredients": "Ainesosat",
+    "ingredientOptions": "Ainesosan asetukset",
+    "showMore": "Näytä lisää",
+    "showLess": "Näytä vähemmän",
+    "steps": "Työvaiheet",
+    "notes": "Muistiinpanot",
+    "addToGroceries": "Lisää ostoslistalle",
+    "ratingPrompt": "Mitä pidit tästä reseptistä?",
+    "notFound": "Reseptiä ei löytynyt",
+    "notFoundMessage": "Tätä reseptiä ei ole olemassa tai sinulla ei ole oikeutta nähdä sitä.",
+    "prep": "valmistelu",
+    "total": "yhteensä",
+    "planMeal": "Suunnittele ateria",
+    "recipeActions": "Reseptin toiminnot",
+    "instructions": "Ohjeet",
+    "cook": "Kokkaa",
+    "switchToDecimal": "Näytä desimaalit",
+    "switchToFraction": "Näytä murtoluvut",
+    "servingsCount": "{count, plural, one {# annos} other {# annosta}}",
+    "source": "Lähde",
+    "addedBy": "Lisännyt {name}",
+    "decreaseServings": "Vähemmän annoksia",
+    "increaseServings": "Enemmän annoksia"
+  },
+  "actions": {
+    "plan": "Suunnittele",
+    "groceries": "Ostokset",
+    "edit": "Muokkaa",
+    "delete": "Poista",
+    "share": "Jaa",
+    "visitOriginal": "Avaa alkuperäinen resepti",
+    "addToCalendar": "Lisää kalenteriin",
+    "autoTag": "Luo tunnisteet",
+    "autoTagging": "Luodaan tunnisteita...",
+    "autoCategorize": "Luokittele automaattisesti",
+    "detectAllergies": "Tunnista allergeenit",
+    "detectingAllergies": "Tunnistetaan allergeeneja...",
+    "estimateNutrition": "Arvioi ravintosisältö",
+    "estimatingNutrition": "Arvioidaan ravintosisältöä...",
+    "screenOn": "Näyttö päällä",
+    "keepScreenOn": "Pidä näyttö päällä",
+    "actionsLabel": "Toiminnot",
+    "autoCategorizing": "Luokitellaan…",
+    "inferProvenance": "Selvitä alkuperä",
+    "inferringProvenance": "Selvitetään alkuperää…",
+    "linkIngredients": "Linkitä ainesosat työvaiheisiin",
+    "linkingIngredients": "Linkitetään ainesosia…",
+    "enrichmentFailed": "Viime ajo epäonnistui",
+    "generateImage": "Luo kuva",
+    "generatingImage": "Luodaan kuvaa…",
+    "cookbooks": "Keittokirjat"
+  },
+  "sharePanel": {
+    "title": "Jaa resepti",
+    "description": "Luo ja hallinnoi julkisia linkkejä reseptille {recipeName}.",
+    "expiryLabel": "Linkin voimassaolo",
+    "createLink": "Luo linkki",
+    "latestLink": "Viimeisin linkki",
+    "currentLinks": "Nykyiset linkit",
+    "empty": "Ei vielä jakolinkkejä.",
+    "createSuccess": "Jakolinkki luotu",
+    "copySuccess": "Linkki kopioitu",
+    "copyLink": "Kopioi",
+    "openLink": "Avaa",
+    "createdAt": "Luotu: {value}",
+    "expiresAt": "Vanhenee: {value}",
+    "lastAccessedAt": "Viimeksi avattu: {value}",
+    "never": "Ei koskaan",
+    "expiryOptions": {
+      "1day": "1 päivä",
+      "1week": "1 viikko",
+      "1month": "1 kuukausi",
+      "1year": "1 vuosi",
+      "forever": "Ei koskaan"
+    },
+    "status": {
+      "active": "Aktiivinen",
+      "expired": "Vanhentunut",
+      "revoked": "Mitätöity"
+    },
+    "revokeModal": {
+      "title": "Mitätöi linkki",
+      "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes otat sen uudelleen käyttöön.",
+      "confirm": "Mitätöi"
+    },
+    "reactivateModal": {
+      "title": "Ota linkki uudelleen käyttöön",
+      "message": "Tämä reseptin {recipeName} linkki aktivoituu uudelleen.",
+      "confirm": "Ota käyttöön"
+    },
+    "deleteModal": {
+      "title": "Poista linkki",
+      "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
+      "confirm": "Poista linkki"
+    }
+  },
+  "convert": {
+    "ariaLabel": "Muunna mittajärjestelmä",
+    "toMetric": "Muunna metrisiksi",
+    "toUS": "Muunna amerikkalaisiksi",
+    "converting": "Muunnetaan…"
+  },
+  "deleteModal": {
+    "title": "Poista resepti",
+    "confirmMessage": "Haluatko varmasti poistaa reseptin \"{recipeName}\"?",
+    "warning": "Tätä toimintoa ei voi kumota."
+  },
+  "form": {
+    "createTitle": "Luo resepti",
+    "editTitle": "Muokkaa reseptiä",
+    "createDescription": "Lisää uusi resepti kokoelmaasi",
+    "editDescription": "Päivitä reseptisi tiedot",
+    "initializingForm": "Alustetaan lomaketta...",
+    "photo": "Kuva",
+    "basicInfo": "Perustiedot",
+    "ingredients": "Ainesosat",
+    "instructions": "Ohjeet",
+    "tags": "Tunnisteet",
+    "nutrition": "Ravintosisältö",
+    "nutritionPerServing": "(annosta kohden, valinnainen)",
+    "details": "Tiedot",
+    "additionalInfo": "Lisätiedot",
+    "recipeName": "Reseptin nimi",
+    "recipeNamePlaceholder": "esim. Suklaahippukeksit",
+    "description": "Kuvaus",
+    "descriptionPlaceholder": "Lyhyt kuvaus siitä, mikä tekee tästä reseptistä erityisen...",
+    "notes": "Muistiinpanot",
+    "notesPlaceholder": "Lisää valmisteluohjeita, muutoksia tai tarjoiluvinkkejä tälle reseptille...",
+    "ingredientsHelp": "Kirjoita ainesosat muodossa \"2 dl jauhoja\" – tunnistamme määrät ja yksiköt automaattisesti.",
+    "instructionsHelp": "Kirjoita selkeät vaiheittaiset ohjeet. Siirry seuraavaan vaiheeseen painamalla Enter.",
+    "tagsHelp": "Kirjoita tunnisteita ja lisää niitä napsauttamalla ehdotuksia. Reseptissä jo olevat tunnisteet ovat täytettyjä; uusilla on katkoviivareunus.",
+    "tagsAndCategories": "Tunnisteet ja kategoriat",
+    "categoriesHelp": "Valitse tämän reseptin ateriakategoriat.",
+    "category": {
+      "breakfast": "Aamiainen",
+      "lunch": "Lounas",
+      "dinner": "Päivällinen",
+      "snack": "Välipala"
+    },
+    "calories": "Kalorit",
+    "fat": "Rasva (g)",
+    "carbs": "Hiilihydraatit (g)",
+    "protein": "Proteiini (g)",
+    "provenance": "Alkuperä",
+    "provenanceHelp": "Mistä tämä resepti on peräisin.",
+    "originCountry": "Maa",
+    "originCountryPlaceholder": "Ei maata",
+    "originRegion": "Alue",
+    "originRegionPlaceholder": "esim. Sisilia",
+    "cuisines": "Ruokakulttuurit",
+    "cuisinesHelp": "Valitse asennuksesi listalta. Fuusioruoalle useampi on järkevä.",
+    "provenanceNote": "Huomautus",
+    "provenanceNotePlaceholder": "Muutama lause siitä, mistä tämä ruoka on peräisin…",
+    "servings": "Annokset",
+    "cookingTimes": "Valmistusajat",
+    "optional": "(valinnainen)",
+    "sourceUrl": "Lähdeosoite",
+    "sourceUrlPlaceholder": "https://example.com/resepti",
+    "measurementSystemNote": "Tunnistamme mittajärjestelmän automaattisesti ainesosistasi, mutta voit ohittaa sen tässä.",
+    "measurementSystemEditNote": " Huom: Tämä päivittää järjestelmän nimen, mutta ei muunna yksiköitä. Käytä Muunna-toimintoa tallennuksen jälkeen.",
+    "createRecipe": "Luo resepti",
+    "saveChanges": "Tallenna muutokset",
+    "uploading": "Lähetetään...",
+    "clickToUpload": "Napsauta lähettääksesi tai raahaa ja pudota",
+    "pasteToUpload": "liittääksesi",
+    "imageFormats": "PNG, JPG, WEBP enintään 5 Mt",
+    "discardChangesConfirm": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne ja poistutaan tältä sivulta?"
+  },
+  "gallery": {
+    "addImage": "Lisää kuva",
+    "uploading": "Lähetetään...",
+    "uploadFailed": "Lähetys epäonnistui",
+    "dragToReorder": "Raahaa järjestääksesi",
+    "maxImagesReached": "Enintään {max} kuvaa sallittu",
+    "maxVideosReached": "Enintään {max} videota sallittu",
+    "invalidFileType": "Virheellinen tiedostotyyppi"
+  },
+  "carousel": {
+    "noImageAvailable": "Ei kuvaa saatavilla",
+    "noMediaAvailable": "Ei mediaa saatavilla",
+    "videoPlayer": {
+      "mute": "Mykistä",
+      "unmute": "Poista mykistys",
+      "fullscreen": "Siirry koko näyttöön",
+      "exitFullscreen": "Poistu koko näytöstä"
+    }
+  },
+  "validation": {
+    "nameRequired": "Reseptin nimi on pakollinen",
+    "ingredientsRequired": "Vähintään yksi ainesosa vaaditaan",
+    "stepsRequired": "Vähintään yksi työvaihe vaaditaan",
+    "servingsMin": "Annoksia on oltava vähintään 1"
+  },
+  "nutrition": {
+    "title": "Ravintosisältö",
+    "calories": "Kalorit",
+    "fat": "Rasva",
+    "carbs": "Hiilihydraatit",
+    "protein": "Proteiini",
+    "showingPortions": "Näytetään arvot {count} {count, plural, one {annokselle} other {annokselle}}",
+    "noInfo": "Ravintosisältötietoja ei ole saatavilla",
+    "estimateWithAI": "Arvioi tekoälyllä"
+  },
+  "measurementSystem": {
+    "label": "Mittajärjestelmä",
+    "detected": "Tunnistettu: {system}",
+    "metric": "Metrinen",
+    "us": "Amerikkalainen"
+  },
+  "timeInputs": {
+    "prep": "Valmistelu",
+    "cook": "Kypsennys",
+    "total": "Yhteensä"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Vaihe {number}: Kuvaile vaihe...",
+    "stepPlaceholderShort": "Vaihe {number}"
+  },
+  "stepIngredients": {
+    "rowLabel": "Linkitetyt ainesosat",
+    "addLabel": "Linkitä ainesosa",
+    "pickerLabel": "Liitä ainesosa tähän vaiheeseen",
+    "shareLabel": "Muuta ainesosan {name} osuutta",
+    "share": {
+      "full": "Koko rivi",
+      "half": "Puolet",
+      "third": "Kolmasosa",
+      "quarter": "Neljäsosa",
+      "custom": "Mukautettu…",
+      "amount": "Määrä…"
+    },
+    "customShareLabel": "Mukautettu osuus",
+    "customAmountLabel": "Määrä",
+    "removeLabel": "Poista {name}"
+  },
+  "ingredientInput": {
+    "placeholder": "esim. 2 dl jauhoja"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Pidä näyttö päällä",
+    "notSupported": "Näytön pitäminen hereillä ei ole tuettu tässä selaimessa",
+    "activeTooltip": "Näyttö pysyy hereillä kokkauksen ajan",
+    "inactiveTooltip": "Pidä näyttö hereillä ohjeita seuratessa",
+    "ariaLabel": "Pidä näyttö hereillä"
+  },
+  "toasts": {
+    "imported": "Resepti tuotu",
+    "converted": "Mitat muunnettu",
+    "convertedDescription": "Resepti muunnettiin {system}-yksiköihin",
+    "failed": "Reseptitoiminto epäonnistui",
+    "failedDescription": "Reseptin käsittelyssä meni jokin pieleen. Tekniset tiedot löytyvät selaimen konsolista.",
+    "batchImported": "Reseptit tuotu",
+    "batchImportedDescription": "{count} reseptiä tuotu arkistosta",
+    "view": "Näytä",
+    "open": "Avaa"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Muokkaa tunnistetta",
+      "editPlaceholder": "Kirjoita tunnisteen nimi...",
+      "duplicateTag": "Tämä tunniste on jo olemassa"
+    }
+  },
+  "cookMode": {
+    "steps": "Työvaiheet",
+    "ingredients": "Ainesosat",
+    "servings": "Annokset",
+    "serving": "{count, plural, one {# annos} other {# annosta}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Pyyhkäise siirtyäksesi vaiheiden välillä",
+    "swipeIngredients": "Pyyhkäise vasemmalle nähdäksesi ainesosat",
+    "swipeBackToSteps": "Pyyhkäise oikealle palataksesi vaiheisiin",
+    "readyAt": "Valmis noin klo {time}",
+    "timers": "Ajastimet",
+    "nextStep": "Seuraava vaihe"
+  },
+  "enrichment": {
+    "failed": "Rikastus epäonnistui",
+    "states": {
+      "queued": "Jonossa",
+      "processing": "Käynnissä",
+      "succeeded": "Valmis",
+      "failed": "Viime ajo epäonnistui"
+    },
+    "kinds": {
+      "auto-tagging": "Tunnisteiden luonti",
+      "allergy-detection": "Allergeenien tunnistus",
+      "auto-categorization": "Automaattinen luokittelu",
+      "nutrition-estimation": "Ravintosisällön arviointi",
+      "recipe-provenance": "Reseptin alkuperä",
+      "ingredient-linking": "Ainesosien linkitys",
+      "image-generation": "Kuvan luonti"
+    }
+  },
+  "provenance": {
+    "title": "Alkuperä",
+    "region": "Alue",
+    "cuisines": "Ruokakulttuurit",
+    "inferring": "Selvitetään, mistä tämä resepti on peräisin…",
+    "noInfo": "Ei vielä tietoa alkuperästä",
+    "inferWithAI": "Selvitä tekoälyllä"
+  },
+  "import": {
+    "alreadyExists": "Sinulla on jo tämä resepti",
+    "openExisting": "Avaa"
+  },
+  "glanceBar": {
+    "totalTime": "Kokonaisaika",
+    "servings": "{count, plural, one {annos} other {annosta}}"
+  },
+  "cookingTime": {
+    "title": "Valmistusaika",
+    "prep": "Valmistelu",
+    "cook": "Kypsennys",
+    "other": "Muu aika",
+    "total": "Yhteensä"
+  },
+  "cookbooks": {
+    "addCookbook": "Lisää keittokirja",
+    "createTitle": "Uusi keittokirja",
+    "editTitle": "Muokkaa keittokirjaa",
+    "titleLabel": "Nimi",
+    "titlePlaceholder": "esim. Arki-illan ruoat",
+    "options": "Keittokirjan asetukset",
+    "deleteTitle": "Poista keittokirja",
+    "deleteConfirm": "Haluatko varmasti poistaa keittokirjan \"{title}\"?",
+    "deleteKeepsRecipes": "Sen sisältämät reseptit säilyvät kirjastossasi.",
+    "recipeCount": "{count, plural, one {# resepti} other {# reseptiä}}",
+    "empty": "Ei vielä reseptejä",
+    "singular": "Keittokirja",
+    "notFound": "Keittokirjaa ei löytynyt",
+    "notFoundHint": "Se on voitu poistaa, tai se ei ole sinulle näkyvissä.",
+    "emptyHint": "Lisää reseptejä minkä tahansa reseptin pikatoimintovalikosta.",
+    "panelTitle": "Lisää keittokirjaan",
+    "newWithRecipe": "Uusi keittokirja tällä reseptillä",
+    "noneEditable": "Sinulla ei ole vielä muokattavia keittokirjoja.",
+    "cardTitle": "Keittokirjoissa",
+    "removeFromCookbook": "Poista keittokirjasta",
+    "noMatchingMembers": "Yksikään tämän keittokirjan resepti ei vastaa suodattimiasi.",
+    "membersLabel": "Tämän keittokirjan reseptit",
+    "showMore": "Näytä lisää",
+    "willBeCreated": "Luodaan kun tallennat",
+    "manage": "Hallinnoi",
+    "addRecipes": "Lisää reseptejä",
+    "addRecipesTitle": "Lisää reseptejä keittokirjaan {title}",
+    "searchRecipes": "Hae reseptejä",
+    "noRecipesToAdd": "Reseptejä ei löytynyt.",
+    "addCount": "{count, plural, one {Lisää # resepti} other {Lisää # reseptiä}}",
+    "everythingAlreadyIn": "Jokainen resepti on jo tässä keittokirjassa."
+  }
+}

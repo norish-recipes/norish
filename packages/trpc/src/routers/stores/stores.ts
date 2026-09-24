@@ -13,6 +13,8 @@ import {
 } from "@norish/db/repositories/stores";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { groceries } from "@norish/shared-server/realtime/groceries";
+import { stores } from "@norish/shared-server/realtime/stores";
 import {
   StoreCreateInputSchema,
   StoreCreateSchema,
@@ -24,8 +26,6 @@ import {
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { groceryEmitter } from "../groceries/emitter";
-import { storeEmitter } from "./emitter";
 import { assertAisleNamesUnique, createStoreData, listStoresData } from "./stores-helpers";
 import {
   createStoreOutputSchema,
@@ -121,9 +121,13 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
     }
 
     log.info({ userId: ctx.user.id, storeId: updatedStore.id }, "Store updated");
-    storeEmitter.emitToHousehold(ctx.householdKey, "updated", {
-      store: updatedStore,
-    });
+    void stores.publish(
+      "updated",
+      {
+        store: updatedStore,
+      },
+      { householdKey: ctx.householdKey }
+    );
   } catch (err) {
     log.error({ err, userId: ctx.user.id, storeId: input.id }, "Failed to update store");
   }
@@ -167,17 +171,25 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
 
       if (storeDeleted) {
         // Emit store deleted event
-        storeEmitter.emitToHousehold(ctx.householdKey, "deleted", {
-          storeId,
-          deletedGroceryIds,
-        });
+        void stores.publish(
+          "deleted",
+          {
+            storeId,
+            deletedGroceryIds,
+          },
+          { householdKey: ctx.householdKey }
+        );
       }
 
       // If groceries were deleted, also emit grocery deleted event
       if (deletedGroceryIds.length > 0) {
-        groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", {
-          groceryIds: deletedGroceryIds,
-        });
+        void groceries.publish(
+          "deleted",
+          {
+            groceryIds: deletedGroceryIds,
+          },
+          { householdKey: ctx.householdKey }
+        );
       }
     })
     .catch((err) => {
@@ -217,9 +229,13 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
       log.info({ userId: ctx.user.id, storeCount: reorderedStores.length }, "Stores reordered");
     }
 
-    storeEmitter.emitToHousehold(ctx.householdKey, "reordered", {
-      stores: reorderedStores,
-    });
+    void stores.publish(
+      "reordered",
+      {
+        stores: reorderedStores,
+      },
+      { householdKey: ctx.householdKey }
+    );
   } catch (err) {
     log.error({ err, userId: ctx.user.id }, "Failed to reorder stores");
   }
@@ -268,7 +284,7 @@ const checkSearchAddress = authedProcedure
         const saved = await updateStore({ id: store.id, searchAddress });
 
         if (saved) {
-          storeEmitter.emitToHousehold(ctx.householdKey, "updated", { store: saved });
+          void stores.publish("updated", { store: saved }, { householdKey: ctx.householdKey });
         }
       }
     }

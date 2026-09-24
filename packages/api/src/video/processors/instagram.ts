@@ -1,6 +1,8 @@
+import type { RecipeVerdict } from "@norish/api/parser/import-triage";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { fetchRenderedPage } from "@norish/api/parser/fetch";
+import { judgeRecipe } from "@norish/api/parser/import-triage";
 import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
 import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
 import { transcribe } from "@norish/shared-server/ai/runtime/runtime";
@@ -57,6 +59,42 @@ function extractCaptionFromHtml(html: string): string {
 }
 
 /**
+ * Whether a caption may hold a recipe worth extracting from, given import
+ * triage's verdict on it (ADR-0035). Only a clear "no" refuses; anything
+ * else triage said proceeds, and with no verdict the character count that
+ * has always stood in for the question decides, against the floor the call
+ * site names. An empty caption holds nothing either way.
+ */
+function captionMayHoldRecipe(
+  caption: string,
+  verdict: RecipeVerdict | null,
+  minLength: number
+): boolean {
+  if (caption.length === 0) return false;
+
+  return verdict === null ? caption.length >= minLength : verdict !== "no";
+}
+
+/**
+ * Whether a caption clearly holds a recipe: the bar for paying a language
+ * model extraction on it before the audio is transcribed. Only a clear
+ * "yes" clears it by verdict; an unclear one leaves the length rule to
+ * decide, as it did before there was a Decision Model, and a clear "no"
+ * goes straight to the audio.
+ */
+function captionClearlyHoldsRecipe(
+  caption: string,
+  verdict: RecipeVerdict | null,
+  minLength: number
+): boolean {
+  if (caption.length === 0) return false;
+  if (verdict === "yes") return true;
+  if (verdict === "no") return false;
+
+  return caption.length >= minLength;
+}
+
+/**
  * Instagram video processor.
  * For images: OCR + description merged, sent to AI.
  * For videos: Try description first, fallback to transcription.
@@ -108,10 +146,11 @@ export class InstagramProcessor extends BaseVideoProcessor {
     log.info({ url }, "Detected Instagram image post");
 
     let description = metadata.description?.trim() || "";
+    let holdsRecipe = captionMayHoldRecipe(description, await judgeRecipe(description), 50);
 
-    // If yt-dlp returned empty description, render the post and read its caption
-    if (description.length < 50) {
-      log.info({ url }, "Description too short, rendering the post in Obscura");
+    // If yt-dlp returned no usable caption, render the post and read its caption
+    if (!holdsRecipe) {
+      log.info({ url }, "Description holds no recipe, rendering the post in Obscura");
       try {
         const html = await fetchRenderedPage(url, tokens);
 
@@ -121,13 +160,14 @@ export class InstagramProcessor extends BaseVideoProcessor {
             { url, descriptionLength: description.length },
             "Extracted caption from the rendered page"
           );
+          holdsRecipe = captionMayHoldRecipe(description, await judgeRecipe(description), 50);
         }
       } catch (err) {
         log.warn({ url, err }, "Failed to render the post in Obscura");
       }
     }
 
-    if (!description || description.length < 50) {
+    if (!holdsRecipe) {
       throw new Error("Instagram image posts are only supported if the caption contains a recipe");
     }
 
@@ -182,10 +222,15 @@ export class InstagramProcessor extends BaseVideoProcessor {
       // Download video file
       videoPath = await this.downloadAndConvertVideo(url, tokens);
 
-      // Try extraction from description first
+      // Try extraction from description first, when the caption clearly
+      // holds a recipe: a clear "yes" where there is a Decision Model, the
+      // length otherwise. Cheaper than paying for a transcription that the
+      // caption already answers. The one verdict serves both places the
+      // caption is weighed, so it is asked once.
       const descriptionText = metadata.description?.trim() || "";
+      const verdict = await judgeRecipe(descriptionText);
 
-      if (descriptionText.length > 200) {
+      if (captionClearlyHoldsRecipe(descriptionText, verdict, 201)) {
         log.info(
           { url, contentLength: descriptionText.length },
           "Trying extraction from description first"
@@ -220,7 +265,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
           "Audio download failed, attempting description extraction"
         );
 
-        if (descriptionText.length >= 50) {
+        if (captionMayHoldRecipe(descriptionText, verdict, 50)) {
           try {
             const recipe = await extractRecipeWithAI(descriptionText, recipeId, url);
             const savedVideo = videoPath

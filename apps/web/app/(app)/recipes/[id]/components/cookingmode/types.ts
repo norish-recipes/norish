@@ -44,4 +44,6 @@ export type CookingModeDialogProps = {
   onStepChange: (step: number) => void;
   onViewChange: (view: CookingModeView) => void;
   onTimersOpenChange: (open: boolean) => void;
+  checkedIngredients: Set<number>;
+  onCheckedIngredientsChange: (indices: Set<number>) => void;
 };

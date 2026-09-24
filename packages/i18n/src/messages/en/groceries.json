@@ -8,7 +8,8 @@
     "viewMode": "View Mode",
     "manageStores": "Manage Stores",
     "storeViewOptions": "Store View Options",
-    "groupIngredients": "Group ingredients"
+    "groupIngredients": "Group ingredients",
+    "pantry": "Pantry"
   },
   "empty": {
     "title": "Your grocery list awaits",
@@ -83,6 +84,15 @@
     "dragAisle": "Drag to reorder",
     "aisleDuplicate": "This store already has an aisle with that name"
   },
+  "pantry": {
+    "title": "Pantry",
+    "hint": "What you already have at home. Ingredients in your pantry are left off the list when you add a recipe.",
+    "empty": "Nothing in your pantry yet",
+    "namePlaceholder": "e.g., Olive oil",
+    "add": "Add to pantry",
+    "remove": "Remove from pantry",
+    "duplicate": "That is already in your pantry"
+  },
   "panel": {
     "addTitle": "Add Grocery",
     "editTitle": "Edit Grocery",
@@ -113,6 +123,7 @@
     "editPlaceholder": "e.g., milk every week",
     "servings": "Servings",
     "selectedCount": "{selected} of {total} selected",
+    "pantryUnavailable": "Your pantry could not be read, so nothing is ticked yet. Tick what you need to buy.",
     "loadingIngredients": "Loading ingredients...",
     "noIngredients": "No ingredients.",
     "addSelectedToGroceries": "Add to groceries",
@@ -120,7 +131,8 @@
     "ingredientsFailed": "Failed to add ingredients to grocery list.",
     "addToGroceries": "Add to Groceries",
     "aisle": "Aisle",
-    "noAisle": "No aisle"
+    "noAisle": "No aisle",
+    "inPantry": "In your pantry"
   },
   "picker": {
     "unlink": "Unlink product",

@@ -1,96 +1,73 @@
 /**
  * Automatic Enrichment Enrollment listener.
  *
- * Follows the CalDAV integration's shape — a subscription started as part of
- * normal server startup, with reconnect and error logging — with two
- * corrections this flow needs:
- *
- * 1. It subscribes to the internal channel, not a permission-scoped client one,
- *    so client visibility policy cannot decide whether enrollment happens.
- * 2. Initialization is awaited and only reports success once the subscription
- *    actually succeeded, so the server never claims a listener it does not have.
+ * A `hub.on()` registration on the internal `recipeBecameUsable` channel, not
+ * a permission-scoped client one, so client visibility policy cannot decide
+ * whether enrollment happens. Initialization only reports success once the
+ * registration is in place, so the server never claims a listener it does not
+ * have.
  */
 
-import type Redis from "ioredis";
-import superjson from "superjson";
-
-import type { RecipeBecameUsablePayload } from "@norish/shared-server/realtime/recipe-enrichment";
+import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 import { enrichRecipe } from "@norish/queue/enrichment/coordinator";
 import { createLogger } from "@norish/shared-server/logger";
-import { RECIPE_BECAME_USABLE_CHANNEL } from "@norish/shared-server/realtime/recipe-enrichment";
-import { createSubscriberClient } from "@norish/shared-server/redis/client";
-import { unwrapPayload } from "@norish/shared/lib/operation-helpers";
+import { getRealtimeHub } from "@norish/shared-server/realtime/hub";
+import { recipeEnrichment } from "@norish/shared-server/realtime/recipe-enrichment";
+import { RecipeBecameUsablePayloadSchema } from "@norish/shared/contracts/realtime/recipe-enrichment";
 
 const log = createLogger("recipe-enrichment-listener");
 
-let subscriber: Redis | null = null;
+export const RECIPE_BECAME_USABLE_CHANNEL = recipeEnrichment.channel(
+  "recipeBecameUsable",
+  undefined
+);
+
+let release: (() => void) | null = null;
 
 /**
- * Subscribe to the internal creation event and enroll Automatic Recipe
- * Enrichment for every recipe that becomes usable.
+ * Register on the hub and enroll Automatic Recipe Enrichment for every recipe
+ * that becomes usable.
  *
- * Call before recipe-producing workers and HTTP handlers can publish. Throws if
- * the subscription cannot be established; the caller decides whether that is
- * fatal, but it must not be reported as a successful initialization.
+ * Call after `startRealtimeHub()` and before recipe-producing workers and HTTP
+ * handlers can publish. Throws if the hub is not started; the caller decides
+ * whether that is fatal, but it must not be reported as a successful
+ * initialization.
  */
 export async function initRecipeEnrichmentListener(): Promise<void> {
-  if (subscriber) {
+  if (release) {
     log.warn("Recipe Enrichment listener already initialized");
 
     return;
   }
 
-  const client = await createSubscriberClient();
-
-  client.on("error", (err) => {
-    log.error({ err }, "Recipe Enrichment listener connection error");
+  release = getRealtimeHub().on(RECIPE_BECAME_USABLE_CHANNEL, (envelope) => {
+    // Fire and forget: a slow or failing enrollment must not stall the hub,
+    // and creation has already succeeded regardless.
+    void handleRecipeBecameUsable(envelope);
   });
 
-  client.on("reconnecting", () => {
-    log.warn("Recipe Enrichment listener reconnecting");
-  });
-
-  client.on("message", (channel, message) => {
-    if (channel !== RECIPE_BECAME_USABLE_CHANNEL) return;
-
-    // Fire and forget: a slow or failing enrollment must not stall the
-    // subscriber, and creation has already succeeded regardless.
-    void handleRecipeBecameUsable(message);
-  });
-
-  // Await the subscription itself. Only after this resolves may we claim the
-  // listener is ready.
-  await client.subscribe(RECIPE_BECAME_USABLE_CHANNEL);
-
-  subscriber = client;
   log.info({ channel: RECIPE_BECAME_USABLE_CHANNEL }, "Recipe Enrichment listener initialized");
 }
 
 export async function stopRecipeEnrichmentListener(): Promise<void> {
-  if (!subscriber) return;
+  if (!release) return;
 
-  const client = subscriber;
+  const off = release;
 
-  subscriber = null;
-
-  try {
-    await client.unsubscribe(RECIPE_BECAME_USABLE_CHANNEL);
-    await client.quit();
-  } catch (err) {
-    log.debug({ err }, "Error during Recipe Enrichment listener shutdown");
-  }
+  release = null;
+  off();
 }
 
-async function handleRecipeBecameUsable(message: string): Promise<void> {
-  let payload: RecipeBecameUsablePayload;
+async function handleRecipeBecameUsable(envelope: RealtimeEventEnvelope): Promise<void> {
+  const parsed = RecipeBecameUsablePayloadSchema.safeParse(envelope.payload);
 
-  try {
-    payload = unwrapPayload<RecipeBecameUsablePayload>(superjson.parse(message));
-  } catch (err) {
-    log.error({ err }, "Failed to parse recipe-became-usable event");
+  if (!parsed.success) {
+    log.error({ issues: parsed.error.issues }, "Dropped malformed recipe-became-usable event");
 
     return;
   }
+
+  const payload = parsed.data;
 
   try {
     const results = await enrichRecipe(

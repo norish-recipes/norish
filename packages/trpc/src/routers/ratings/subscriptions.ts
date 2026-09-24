@@ -1,19 +1,9 @@
-import { createEnvelopeAwareSubscription } from "../../helpers";
-import { router } from "../../trpc";
-import { ratingsEmitter } from "./emitter";
+import { ratings } from "@norish/shared-server/realtime/ratings";
 
-const onRatingUpdated = createEnvelopeAwareSubscription(
-  ratingsEmitter,
-  "ratingUpdated",
-  "rating updates"
-);
-const onRatingFailed = createEnvelopeAwareSubscription(
-  ratingsEmitter,
-  "ratingFailed",
-  "rating failures"
-);
+import { realtimeSubscription } from "../../realtime-subscription";
+import { router } from "../../trpc";
 
 export const ratingsSubscriptions = router({
-  onRatingUpdated,
-  onRatingFailed,
+  onRatingUpdated: realtimeSubscription(ratings, "ratingUpdated"),
+  onRatingFailed: realtimeSubscription(ratings, "ratingFailed"),
 });

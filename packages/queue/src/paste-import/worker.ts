@@ -13,7 +13,6 @@ import type {
   PasteImportJobResult,
   StructuredPasteImportRecipe,
 } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { createRecipeWithRefs, dashboardRecipe } from "@norish/db";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
@@ -25,8 +24,7 @@ import {
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
-import { emitByPolicy } from "@norish/shared-server/realtime/policy";
-import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
+import { recipes } from "@norish/shared-server/realtime/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
@@ -153,13 +151,17 @@ export async function processPasteImportJob(
 
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
-  const ctx: PolicyEmitContext = { userId, householdKey };
+  const ctx = { userId, householdKey };
 
   recipeIds.forEach((recipeId) => {
-    emitByPolicy(recipeEmitter, viewPolicy, ctx, "importStarted", {
-      recipeId,
-      url: "[pasted]",
-    });
+    void recipes.publish(
+      "importStarted",
+      {
+        recipeId,
+        url: "[pasted]",
+      },
+      { viewPolicy: viewPolicy, ...ctx }
+    );
   });
 
   const created: CreateRecipeResult[] = [];
@@ -219,11 +221,15 @@ export async function processPasteImportJob(
     log.info({ jobId: job.id, recipeId: result.recipeId }, "Pasted recipe imported successfully");
 
     // Import success is terminal here regardless of what enrichment does next.
-    emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
-      recipe: dashboardDto,
-      pendingRecipeId: result.recipeId,
-      toast: "imported",
-    });
+    void recipes.publish(
+      "imported",
+      {
+        recipe: dashboardDto,
+        pendingRecipeId: result.recipeId,
+        toast: "imported",
+      },
+      { viewPolicy: viewPolicy, ...ctx }
+    );
 
     await announceUsableRecipe(result, { userId, householdKey, householdUserIds });
   }
@@ -257,14 +263,18 @@ async function handleJobFailed(
 
   if (isFinalFailure) {
     const policy = await getRecipePermissionPolicy();
-    const ctx: PolicyEmitContext = { userId, householdKey };
+    const ctx = { userId, householdKey };
 
     recipeIds.forEach((recipeId) => {
-      emitByPolicy(recipeEmitter, policy.view, ctx, "failed", {
-        reason: error.message || "Failed to import recipe",
-        recipeId,
-        url: "[pasted]",
-      });
+      void recipes.publish(
+        "failed",
+        {
+          reason: error.message || "Failed to import recipe",
+          recipeId,
+          url: "[pasted]",
+        },
+        { viewPolicy: policy.view, ...ctx }
+      );
     });
   }
 }

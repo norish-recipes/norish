@@ -13,7 +13,11 @@ import {
 import { Accordion, Button, Chip, Modal, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { AdminJobAttemptDTO, AdminJobStepDTO } from "@norish/shared/contracts";
+import type {
+  AdminJobAttemptDTO,
+  AdminJobModelDTO,
+  AdminJobStepDTO,
+} from "@norish/shared/contracts";
 
 import { formatDuration, formatStep, formatTimestamp } from "./job-format";
 import JobStatusChip from "./job-status-chip";
@@ -89,7 +93,9 @@ function StepList({ steps, t }: { steps: AdminJobStepDTO[]; t: Translate }) {
               </div>
               {meta ? <span className="text-muted text-xs">{meta}</span> : null}
               {step.detailJson ? (
-                <span className="text-muted font-mono text-xs break-all">{step.detailJson}</span>
+                <pre className="text-muted max-h-80 overflow-auto font-mono text-xs break-all whitespace-pre-wrap">
+                  {step.detailJson}
+                </pre>
               ) : null}
               {step.error ? (
                 <span className="text-danger text-xs break-all">{step.error}</span>
@@ -99,6 +105,25 @@ function StepList({ steps, t }: { steps: AdminJobStepDTO[]; t: Translate }) {
         );
       })}
     </ul>
+  );
+}
+
+/** Which models the job asked, the failed ones marked, so "jev or openai?" is answered at a glance. */
+function ModelChips({ models, t }: { models: AdminJobModelDTO[]; t: Translate }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {models.map((use) => (
+        <Chip
+          key={`${use.provider}/${use.model}/${use.outcome}`}
+          color={use.outcome === "failed" ? "danger" : "default"}
+          size="sm"
+          variant="soft"
+        >
+          <span className="font-mono">{`${use.provider} · ${use.model}`}</span>
+          {use.outcome === "failed" ? ` (${t("stepStatus.failed")})` : null}
+        </Chip>
+      ))}
+    </div>
   );
 }
 
@@ -233,6 +258,14 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                       {field(t("detail.fields.finished"), formatTimestamp(job.finishedOn))}
                       {field(t("detail.fields.duration"), formatDuration(job.durationMs))}
                       {field(t("detail.fields.attempts"), `${job.attemptsMade}/${job.maxAttempts}`)}
+                      {job.models.length > 0 ? (
+                        <div className="col-span-2">
+                          <dt className="text-muted mb-1 text-xs">{t("detail.fields.models")}</dt>
+                          <dd>
+                            <ModelChips models={job.models} t={t} />
+                          </dd>
+                        </div>
+                      ) : null}
                     </dl>
 
                     {/* Input payload (moved to top) */}

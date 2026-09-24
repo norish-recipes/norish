@@ -9,10 +9,9 @@ import {
   listStoresByUserIds,
 } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { stores } from "@norish/shared-server/realtime/stores";
 import { StoreCreateInputSchema } from "@norish/shared/contracts/zod";
 import { duplicateAisleName } from "@norish/shared/lib/aisles";
-
-import { storeEmitter } from "./emitter";
 
 export type StoreProcedureContext = {
   user: { id: string };
@@ -93,9 +92,13 @@ export async function createStoreData(
   const createdStore = await createStore(storeId, storeData);
 
   log.info({ userId: ctx.user.id, storeId: createdStore.id }, "Store created");
-  storeEmitter.emitToHousehold(ctx.householdKey, "created", {
-    store: createdStore,
-  });
+  void stores.publish(
+    "created",
+    {
+      store: createdStore,
+    },
+    { householdKey: ctx.householdKey }
+  );
 
   return createdStore;
 }

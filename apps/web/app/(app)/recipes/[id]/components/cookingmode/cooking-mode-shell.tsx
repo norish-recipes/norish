@@ -34,6 +34,8 @@ export function CookingModeShell({
   onStepChange,
   onViewChange,
   onTimersOpenChange,
+  checkedIngredients,
+  onCheckedIngredientsChange,
 }: CookingModeShellProps) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -46,9 +48,11 @@ export function CookingModeShell({
       >
         {activeView === "ingredients" ? (
           <CookingIngredientsView
+            checkedIngredients={checkedIngredients}
             displayIngredients={displayIngredients}
             recipe={recipe}
             showTitle={showIngredientsTitle}
+            onCheckedIngredientsChange={onCheckedIngredientsChange}
           />
         ) : (
           <CookingStepView
@@ -56,6 +60,7 @@ export function CookingModeShell({
             displayIngredients={displayIngredients}
             recipe={recipe}
             steps={steps}
+            onStepChange={onStepChange}
           />
         )}
       </div>

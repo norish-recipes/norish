@@ -9,7 +9,10 @@ import { useTranslations } from "next-intl";
 
 import type { CookingModeDialogProps } from "./types";
 
-type CookingIngredientsViewProps = Pick<CookingModeDialogProps, "displayIngredients" | "recipe"> & {
+type CookingIngredientsViewProps = Pick<
+  CookingModeDialogProps,
+  "displayIngredients" | "recipe" | "checkedIngredients" | "onCheckedIngredientsChange"
+> & {
   showTitle: boolean;
 };
 
@@ -17,6 +20,8 @@ export function CookingIngredientsView({
   displayIngredients,
   recipe,
   showTitle,
+  checkedIngredients,
+  onCheckedIngredientsChange,
 }: CookingIngredientsViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
 
@@ -44,8 +49,10 @@ export function CookingIngredientsView({
         <ScrollShadow className="h-full px-4 py-4 md:px-6" size={64}>
           <ReadonlyIngredientsList
             interactive
+            checkedIndices={checkedIngredients}
             ingredients={displayIngredients}
             systemUsed={recipe.systemUsed}
+            onCheckedIndicesChange={onCheckedIngredientsChange}
           />
         </ScrollShadow>
       </div>

@@ -1,6 +1,7 @@
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { initRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
 import { backfillDishColors } from "@norish/api/startup/backfill-dish-color";
+import { backfillIngredientNormalizedNames } from "@norish/api/startup/backfill-ingredient-names";
 import { createServer } from "@norish/api/startup/http-server";
 import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
 import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
@@ -13,6 +14,7 @@ import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config
 import { initializeQueues } from "@norish/queue/registry";
 import { startWorkers } from "@norish/queue/start-workers";
 import { serverLogger as log, redactUrl } from "@norish/shared-server/logger";
+import { startRealtimeHub } from "@norish/shared-server/realtime/hub";
 
 import { startEmbeddedParser } from "./embedded-parser";
 
@@ -42,6 +44,11 @@ async function main() {
   await backfillDishColors();
   log.info("-".repeat(50));
 
+  // Fold the names stored before names were folded, so the Pantry can match
+  // them (ADR-0036).
+  await backfillIngredientNormalizedNames();
+  log.info("-".repeat(50));
+
   await initializeVideoProcessing();
   log.info("-".repeat(50));
 
@@ -49,6 +56,11 @@ async function main() {
   log.info("-".repeat(50));
 
   registerApiHandlersForQueue();
+
+  // The one Redis subscriber connection of this process; every internal
+  // listener and tRPC subscription registers on it.
+  await startRealtimeHub();
+  log.info("-".repeat(50));
 
   initCaldavSync();
   log.info("CalDAV sync service initialized");
@@ -81,7 +93,7 @@ async function main() {
     log.info("-".repeat(50));
     log.info("Server ready:");
     log.info(`  HTTP: http://${hostname}:${port}`);
-    log.info(`  WS:   ws://${hostname}:${port}/ws`);
+    log.info(`  WS:   ws://${hostname}:${port}/trpc`);
     log.info(`  ENV:  ${SERVER_CONFIG.NODE_ENV}`);
     log.info("-".repeat(50));
   });

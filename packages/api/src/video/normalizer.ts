@@ -6,6 +6,8 @@ import {
 } from "@norish/api/parser/extraction-normalizer";
 import { buildVideoExtractionSections } from "@norish/api/parser/extraction-prompts";
 import { recipeExtractionSchema } from "@norish/api/parser/extraction.schema";
+import { EXTRACTION_FAITHFULNESS_LEVELS } from "@norish/api/parser/recipe-extraction";
+import { asDecisionState, shadowScore } from "@norish/shared-server/ai/enrichment/verification";
 import { AIResponseError } from "@norish/shared-server/ai/runtime/errors";
 import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger } from "@norish/shared-server/logger";
@@ -56,6 +58,16 @@ export async function extractRecipeFromVideo(
     { url, ...getExtractionLogContext(jsonLd, null) },
     "AI video response received"
   );
+
+  // Enrichment Validation in shadow, as for a page: the extraction is scored
+  // against the text it was read from — the transcript, the caption, or
+  // both — and the verdict logged; nothing acts on it yet.
+  await shadowScore({
+    feature: "recipe-extraction",
+    state: { source: transcript, extracted: asDecisionState(jsonLd) },
+    instructions: "How faithful is this extracted recipe to the source text?",
+    criteria: EXTRACTION_FAITHFULNESS_LEVELS,
+  });
 
   // Download thumbnail as recipe image if available
   let thumbnailPath: string | undefined;

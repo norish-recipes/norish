@@ -3,17 +3,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
-import { calendarEmitter } from "../mocks/calendar-emitter";
 import {
   createPlannedItem,
   getPlannedItemWithRecipeById,
   listPlannedItemsByUserAndDateRange,
 } from "../mocks/planned-items";
+import { calendar } from "../mocks/realtime/calendar";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/planned-items", () => import("../mocks/planned-items"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/calendar/emitter", () => import("../mocks/calendar-emitter"));
+vi.mock("@norish/shared-server/realtime/calendar", () => import("../mocks/realtime/calendar"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -45,7 +45,6 @@ describe("calendar planned items household events", () => {
   const createCaller = () =>
     plannedItemsProcedures.createCaller({
       ...ctx,
-      multiplexer: null,
       operationId: null,
     } as Parameters<typeof plannedItemsProcedures.createCaller>[0]);
 
@@ -86,7 +85,17 @@ describe("calendar planned items household events", () => {
       recipeId: "11111111-1111-4111-8111-111111111111",
     });
 
-    expect(result).toEqual({ id: item.id });
+    // The actor gets the item back beside its id, the same payload the
+    // household hears, so its own caches converge without the echo.
+    expect(result).toEqual({
+      id: item.id,
+      item: expect.objectContaining({
+        id: item.id,
+        userId: ctx.user.id,
+        recipeName: "Omelette",
+        recipeImage: "/recipes/omelette.jpg",
+      }),
+    });
     expect(createPlannedItem).toHaveBeenCalledWith({
       userId: ctx.user.id,
       date: "2026-05-22",
@@ -95,15 +104,19 @@ describe("calendar planned items household events", () => {
       recipeId: "11111111-1111-4111-8111-111111111111",
       title: null,
     });
-    expect(calendarEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "itemCreated", {
-      item: expect.objectContaining({
-        id: item.id,
-        userId: ctx.user.id,
-        recipeName: "Omelette",
-        recipeImage: "/recipes/omelette.jpg",
-        servings: 2,
-        calories: 320,
-      }),
-    });
+    expect(calendar.publish).toHaveBeenCalledWith(
+      "itemCreated",
+      {
+        item: expect.objectContaining({
+          id: item.id,
+          userId: ctx.user.id,
+          recipeName: "Omelette",
+          recipeImage: "/recipes/omelette.jpg",
+          servings: 2,
+          calories: 320,
+        }),
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 });

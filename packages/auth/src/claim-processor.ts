@@ -1,5 +1,5 @@
 import type { OIDCClaimConfig } from "@norish/config/zod/server-config";
-import type { HouseholdUserInfo } from "@norish/shared-server/realtime/households";
+import type { HouseholdUserInfo } from "@norish/shared/contracts/realtime/households";
 import {
   addUserToHousehold,
   findOrCreateHouseholdByName,
@@ -9,8 +9,8 @@ import {
 import { getUserById, isUserServerOwner, setUserAdminStatus } from "@norish/db/repositories/users";
 import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/household";
 import { authLogger } from "@norish/shared-server/logger";
-import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection-invalidation";
-import { householdEmitter } from "@norish/shared-server/realtime/households";
+import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
+import { households } from "@norish/shared-server/realtime/households";
 import { getPublisherClient } from "@norish/shared-server/redis/client";
 
 // Redis key prefix and TTL for OIDC profiles during auth flow
@@ -334,7 +334,7 @@ export async function processClaimsForUser(
     } as HouseholdUserInfo;
 
     // Notify existing household members about the new user
-    householdEmitter.emitToHousehold(household.id, "userJoined", { user: userInfo });
+    await households.publish("userJoined", { user: userInfo }, { householdKey: household.id });
 
     // Invalidate cache for all affected users
     await invalidateHouseholdCacheForUsers([userId, ...existingMemberIds]);

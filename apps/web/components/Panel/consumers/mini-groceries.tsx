@@ -9,6 +9,7 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import { useGroceriesMutations } from "@/hooks/groceries";
+import { usePantryQuery } from "@/hooks/pantry";
 import {
   useLinkedRecipeIngredients,
   useRecipeIngredients,
@@ -17,6 +18,7 @@ import { Button, Input, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
+import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 type MiniGroceriesProps = {
   open: boolean;
@@ -153,10 +155,38 @@ export default function MiniGroceries({
   const [editedIngredients, setEditedIngredients] = useState<Record<string, EditedIngredient>>({});
   const hasInitialized = useRef(false);
   const knownIngredientIds = useRef<Set<string>>(new Set());
+  // Which lines the Pantry held when the ticks were last settled, so a line
+  // that crosses between the sections can be told from one that has not.
+  const knownInPantryIds = useRef<Set<string>>(new Set());
+  // What the household already has: a line whose name (as edited here) is in
+  // the Pantry is shown apart and left off the list unless it is ticked.
+  const {
+    items: pantryIngredients,
+    isLoading: pantryLoading,
+    isUnavailable: pantryUnavailable,
+  } = usePantryQuery();
+
+  const isInPantry = useCallback(
+    (item: GroceryIngredient) =>
+      pantryIngredientFor(
+        pantryIngredients,
+        editedIngredients[item.id]?.name ?? item.ingredientName
+      ) !== null,
+    [pantryIngredients, editedIngredients]
+  );
+  const { toBuy, inPantry } = useMemo(() => {
+    const buy: typeof scaledIngredients = [];
+    const have: typeof scaledIngredients = [];
+
+    for (const item of scaledIngredients) (isInPantry(item) ? have : buy).push(item);
+
+    return { toBuy: buy, inPantry: have };
+  }, [scaledIngredients, isInPantry]);
 
   useEffect(() => {
     hasInitialized.current = false;
     knownIngredientIds.current = new Set();
+    knownInPantryIds.current = new Set();
     setSelectedIds([]);
     setEditingId(null);
     setEditValue("");
@@ -164,39 +194,83 @@ export default function MiniGroceries({
   }, [open, recipeId]);
 
   useEffect(() => {
+    // Selection starts from what is to buy, so the Pantry has to have
+    // answered before the first pick: a line in the Pantry is never
+    // pre-ticked. A Pantry that cannot be read has not answered either, so
+    // nothing is ticked: the person ticks what they need, and is told why.
+    if (pantryLoading || pantryUnavailable) return;
     const currentIds = scaledIngredients.map((i) => i.id).filter(Boolean);
+    const toBuyIds = new Set(toBuy.map((item) => item.id));
+    const inPantryIds = new Set(inPantry.map((item) => item.id));
 
     if (currentIds.length > 0 && !hasInitialized.current) {
       knownIngredientIds.current = new Set(currentIds);
-      setSelectedIds(currentIds);
+      knownInPantryIds.current = inPantryIds;
+      setSelectedIds(currentIds.filter((id) => toBuyIds.has(id)));
       hasInitialized.current = true;
 
       return;
     }
 
-    const newIds = currentIds.filter((id) => !knownIngredientIds.current.has(id));
+    /* A line takes its section's default the moment it joins one: a new line,
+       and a line that crossed because a housemate changed the Pantry or
+       because its name was edited here. A tick was only ever about the
+       section the line was in, so it does not travel with it — otherwise a
+       line the Pantry has just claimed would be bought anyway, pre-ticked by
+       a default that was about buying it. */
+    const isNew = (id: string) => !knownIngredientIds.current.has(id);
+    const wasInPantry = (id: string) => knownInPantryIds.current.has(id);
+    const tick = currentIds.filter((id) => toBuyIds.has(id) && (isNew(id) || wasInPantry(id)));
+    const untick = currentIds.filter((id) => inPantryIds.has(id) && !isNew(id) && !wasInPantry(id));
 
-    if (newIds.length > 0) {
-      newIds.forEach((id) => knownIngredientIds.current.add(id));
-      setSelectedIds((prev) => Array.from(new Set([...prev, ...newIds])));
-    }
-  }, [scaledIngredients]);
+    knownIngredientIds.current = new Set(currentIds);
+    knownInPantryIds.current = inPantryIds;
+
+    if (tick.length === 0 && untick.length === 0) return;
+
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+
+      for (const id of tick) next.add(id);
+      for (const id of untick) next.delete(id);
+
+      return Array.from(next);
+    });
+  }, [scaledIngredients, toBuy, inPantry, pantryLoading, pantryUnavailable]);
   /* Count the visible rows that are selected rather than `selectedIds.length`,
      so an id left behind by an ingredient that has since disappeared cannot
-     make the list look fully selected. */
+     make the list look fully selected. The count, and "select all", are about
+     what is to buy; a line in the Pantry is ticked on its own. */
   const selectedCount = useMemo(
-    () => scaledIngredients.filter((item) => selectedIds.includes(item.id)).length,
-    [scaledIngredients, selectedIds]
+    () => toBuy.filter((item) => selectedIds.includes(item.id)).length,
+    [toBuy, selectedIds]
   );
-  const allSelected = scaledIngredients.length > 0 && selectedCount === scaledIngredients.length;
+  const inPantrySelectedCount = useMemo(
+    () => inPantry.filter((item) => selectedIds.includes(item.id)).length,
+    [inPantry, selectedIds]
+  );
+  const allSelected = toBuy.length > 0 && selectedCount === toBuy.length;
+  const allInPantrySelected = inPantry.length > 0 && inPantrySelectedCount === inPantry.length;
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
-  const toggleSelectAll = () => {
-    setSelectedIds(allSelected ? [] : scaledIngredients.map((item) => item.id));
+  /**
+   * One section's select-all: every line ticked, or none once every line
+   * already is. Each section answers for its own lines and leaves the other
+   * section's ticks exactly as they were, which is why the other section's
+   * selection is carried across rather than recomputed.
+   */
+  const toggleSection = (section: GroceryIngredient[], other: GroceryIngredient[]) => {
+    const allOfSectionSelected = section.every((item) => selectedIds.includes(item.id));
+    const otherSelected = other.map((item) => item.id).filter((id) => selectedIds.includes(id));
+
+    setSelectedIds(
+      allOfSectionSelected ? otherSelected : [...otherSelected, ...section.map((item) => item.id)]
+    );
   };
   const handleEditStart = (id: string) => {
     const item = scaledIngredients.find((i) => i.id === id);
+
     if (!item) return;
     setEditingId(item.id);
     const edited = editedIngredients[item.id];
@@ -233,6 +307,7 @@ export default function MiniGroceries({
         isDone: false,
         recipeIngredientId: ri.id,
       }));
+
     createGroceriesFromData(selectedIngredients)
       .then(() => {
         close();
@@ -246,6 +321,67 @@ export default function MiniGroceries({
         });
       });
   };
+
+  /** One ingredient line, to buy or in the Pantry alike: a name, its amount, and a tick. */
+  const renderRow = (item: GroceryIngredient) => {
+    const isEditing = editingId === item.id;
+
+    return (
+      <div
+        key={item.id}
+        className="flex cursor-pointer items-center px-2 py-2"
+        role="button"
+        tabIndex={0}
+        onClick={(e) => !isEditing && !isCheckboxEvent(e) && handleEditStart(item.id)}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && !isEditing && !isCheckboxEvent(e)) {
+            e.preventDefault();
+            handleEditStart(item.id);
+          }
+        }}
+      >
+        <div className="flex min-w-0 flex-1 flex-col">
+          {isEditing ? (
+            <Input
+              className="text-base"
+              size="sm"
+              style={{
+                fontSize: "16px",
+              }}
+              value={editValue}
+              variant="underlined"
+              onBlur={handleEditSubmit}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleEditSubmit();
+                if (e.key === "Escape") setEditingId(null);
+              }}
+            />
+          ) : (
+            <>
+              <span className="truncate text-base font-semibold">
+                {editedIngredients[item.id]?.name ?? item.ingredientName}
+              </span>
+              {(editedIngredients[item.id]?.amount ?? item.amount) ? (
+                <span className="text-accent mt-[-3px] text-xs font-medium">
+                  {editedIngredients[item.id]?.amount ?? item.amount}{" "}
+                  {editedIngredients[item.id]?.unit ?? item.unit ?? ""}
+                </span>
+              ) : null}
+            </>
+          )}
+        </div>
+        <GroceryCheckbox
+          aria-label={item.ingredientName}
+          className="ml-2 shrink-0"
+          isSelected={selectedIds.includes(item.id)}
+          size="md"
+          onChange={() => toggleSelect(item.id)}
+        />
+      </div>
+    );
+  };
+
   return (
     <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
       <Panel.Body className="flex min-h-0 flex-1 flex-col">
@@ -281,94 +417,68 @@ export default function MiniGroceries({
 
             <Separator className="bg-surface-tertiary/40 mb-2" />
 
+            {pantryUnavailable && (
+              <p className="text-muted mb-2 px-2 text-xs" data-testid="pantry-unavailable">
+                {t("pantryUnavailable")}
+              </p>
+            )}
+
             {scaledIngredients.length === 0 ? (
               <div className="text-muted flex flex-1 items-center justify-center text-base">
                 {t("noIngredients")}
               </div>
             ) : (
-              <>
-                <div className="mb-1 flex items-center justify-between px-2">
-                  <span className="text-muted text-xs font-medium">
-                    {t("selectedCount", {
-                      selected: selectedCount,
-                      total: scaledIngredients.length,
-                    })}
-                  </span>
-                  <Button
-                    className="bg-surface-secondary"
-                    size="sm"
-                    variant="tertiary"
-                    onPress={toggleSelectAll}
-                  >
-                    {allSelected ? tActions("deselectAll") : tActions("selectAll")}
-                  </Button>
-                </div>
-                <div className="divide-border/40 flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
-                  {scaledIngredients.map((item) => {
-                    const isEditing = editingId === item.id;
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex cursor-pointer items-center px-2 py-2"
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) =>
-                          !isEditing && !isCheckboxEvent(e) && handleEditStart(item.id)
-                        }
-                        onKeyDown={(e) => {
-                          if (
-                            (e.key === "Enter" || e.key === " ") &&
-                            !isEditing &&
-                            !isCheckboxEvent(e)
-                          ) {
-                            e.preventDefault();
-                            handleEditStart(item.id);
-                          }
-                        }}
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                {toBuy.length > 0 && (
+                  <div data-testid="to-buy-section">
+                    <div className="mb-1 flex items-center justify-between px-2">
+                      <span className="text-muted text-xs font-medium">
+                        {t("selectedCount", {
+                          selected: selectedCount,
+                          total: toBuy.length,
+                        })}
+                      </span>
+                      <Button
+                        className="bg-surface-secondary"
+                        data-testid="toggle-all"
+                        size="sm"
+                        variant="tertiary"
+                        onPress={() => toggleSection(toBuy, inPantry)}
                       >
-                        <div className="flex min-w-0 flex-1 flex-col">
-                          {isEditing ? (
-                            <Input
-                              className="text-base"
-                              size="sm"
-                              style={{
-                                fontSize: "16px",
-                              }}
-                              value={editValue}
-                              variant="underlined"
-                              onBlur={handleEditSubmit}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleEditSubmit();
-                                if (e.key === "Escape") setEditingId(null);
-                              }}
-                            />
-                          ) : (
-                            <>
-                              <span className="truncate text-base font-semibold">
-                                {editedIngredients[item.id]?.name ?? item.ingredientName}
-                              </span>
-                              {(editedIngredients[item.id]?.amount ?? item.amount) ? (
-                                <span className="text-accent mt-[-3px] text-xs font-medium">
-                                  {editedIngredients[item.id]?.amount ?? item.amount}{" "}
-                                  {editedIngredients[item.id]?.unit ?? item.unit ?? ""}
-                                </span>
-                              ) : null}
-                            </>
-                          )}
-                        </div>
-                        <GroceryCheckbox
-                          aria-label={item.ingredientName}
-                          className="ml-2 shrink-0"
-                          isSelected={selectedIds.includes(item.id)}
-                          size="md"
-                          onChange={() => toggleSelect(item.id)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
+                        {allSelected ? tActions("deselectAll") : tActions("selectAll")}
+                      </Button>
+                    </div>
+                    <div className="divide-border/40 flex flex-col divide-y">
+                      {toBuy.map(renderRow)}
+                    </div>
+                  </div>
+                )}
+                {toBuy.length > 0 && inPantry.length > 0 && (
+                  <Separator
+                    className="bg-surface-tertiary/40 my-2"
+                    data-testid="pantry-separator"
+                  />
+                )}
+                {inPantry.length > 0 && (
+                  <div data-testid="pantry-section">
+                    <div className="mb-1 flex items-center justify-between px-2">
+                      <span className="text-muted text-xs font-medium">{t("inPantry")}</span>
+                      <Button
+                        className="bg-surface-secondary"
+                        data-testid="toggle-all-pantry"
+                        size="sm"
+                        variant="tertiary"
+                        onPress={() => toggleSection(inPantry, toBuy)}
+                      >
+                        {allInPantrySelected ? tActions("deselectAll") : tActions("selectAll")}
+                      </Button>
+                    </div>
+                    <div className="divide-border/40 flex flex-col divide-y">
+                      {inPantry.map(renderRow)}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         ) : null}
@@ -377,7 +487,11 @@ export default function MiniGroceries({
       {open && !isLoading && scaledIngredients.length > 0 && (
         <Panel.Footer>
           <ActionButtonGroup>
-            <ActionButton action="add" isDisabled={selectedCount === 0} onPress={handleConfirm}>
+            <ActionButton
+              action="add"
+              isDisabled={selectedCount + inPantrySelectedCount === 0}
+              onPress={handleConfirm}
+            >
               {tActions("add")}
             </ActionButton>
           </ActionButtonGroup>

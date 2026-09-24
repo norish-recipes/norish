@@ -9,6 +9,8 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
+import { emitConnectionInvalidation } from "../mocks/realtime/connection";
+import { households } from "../mocks/realtime/households";
 
 const householdDb = vi.hoisted(() => ({
   addUserToHousehold: vi.fn(),
@@ -29,24 +31,10 @@ const householdCache = vi.hoisted(() => ({
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
-const householdEmitter = vi.hoisted(() => ({
-  emitToHousehold: vi.fn(),
-  emitToUser: vi.fn(),
-}));
-
-const permissionsEmitter = vi.hoisted(() => ({
-  emitToUser: vi.fn(),
-}));
-
-const connectionManager = vi.hoisted(() => ({
-  emitConnectionInvalidation: vi.fn(),
-}));
-
 vi.mock("@norish/db", () => householdDb);
 vi.mock("@norish/shared-server/cache/household", () => householdCache);
-vi.mock("@norish/trpc/routers/households/emitter", () => ({ householdEmitter }));
-vi.mock("@norish/trpc/routers/permissions/emitter", () => ({ permissionsEmitter }));
-vi.mock("@norish/trpc/connection-manager", () => connectionManager);
+vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));
+vi.mock("@norish/shared-server/realtime/connection", () => import("../mocks/realtime/connection"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
 }));
@@ -84,7 +72,7 @@ describe("household stale mutation handling", () => {
   it("logs stale leave mutations as no-ops", async () => {
     householdDb.removeUserFromHousehold.mockResolvedValue({ stale: true });
 
-    const caller = householdsRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = householdsRouter.createCaller(ctx as any);
     const result = await caller.leave({ householdId: household.id, version: 3 });
 
     expect(result).toEqual({ success: true });
@@ -94,7 +82,7 @@ describe("household stale mutation handling", () => {
       { userId: ctx.user.id, householdId: household.id, version: 3 },
       "Ignoring stale household leave mutation"
     );
-    expect(connectionManager.emitConnectionInvalidation).not.toHaveBeenCalled();
-    expect(householdEmitter.emitToUser).not.toHaveBeenCalled();
+    expect(emitConnectionInvalidation).not.toHaveBeenCalled();
+    expect(households.publish).not.toHaveBeenCalled();
   });
 });

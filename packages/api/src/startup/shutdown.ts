@@ -3,7 +3,7 @@
  *
  * Manages coordinated shutdown of all server components with timeouts
  * to prevent zombie processes. Ensures resources are released in the
- * correct order: HTTP -> CalDAV -> Workers -> extra runtime tasks -> Redis.
+ * correct order: HTTP → WebSocket → internal listeners → workers → hub → Redis.
  */
 
 import type { Server } from "node:http";
@@ -12,7 +12,9 @@ import { stopCaldavSync } from "@norish/api/caldav/event-listener";
 import { stopRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
 import { stopWorkers } from "@norish/queue/start-workers";
 import { serverLogger as log } from "@norish/shared-server/logger";
+import { stopRealtimeHub } from "@norish/shared-server/realtime/hub";
 import { closeRedisConnections } from "@norish/shared-server/redis/client";
+import { stopTrpcWebSocket } from "@norish/trpc/server";
 
 type ShutdownTask = {
   name: string;
@@ -71,10 +73,14 @@ let isShuttingDown = false;
  *
  * Shutdown order:
  * 1. HTTP server - stop accepting new connections, drain existing
- * 2. CalDAV sync - abort event subscriptions
- * 3. BullMQ workers - complete current jobs, close queues
- * 4. Extra shutdown tasks - stop embedded child processes or other runtime helpers
- * 5. Redis connections - close after all consumers stopped
+ * 2. WebSocket server - every socket closed with 1012 Service Restart while
+ *    the HTTP close drains, since an upgraded socket would hold it open
+ * 3. Internal listeners - CalDAV sync and Recipe Enrichment release their hub
+ *    registrations
+ * 4. BullMQ workers - complete current jobs, close queues
+ * 5. Extra shutdown tasks - stop embedded child processes or other runtime helpers
+ * 6. Realtime hub - end every live subscription, quit the subscriber connection
+ * 7. Redis connections - close after all consumers stopped
  */
 async function performShutdown(
   server: Server,
@@ -95,18 +101,31 @@ async function performShutdown(
   forceExitTimeout.unref();
 
   try {
-    // 1. Stop accepting new connections and drain existing
+    // 1. Stop accepting new connections; the close completes once every
+    //    connection has ended, and an upgraded socket counts as one.
+    const httpClosed = closeHttpServer(server);
+
+    httpClosed.catch(() => undefined);
+
+    // 2. Close every WebSocket with 1012 so clients reconnect to the next
+    //    process — and so live sockets do not hold the HTTP close open.
     try {
-      await withTimeout(closeHttpServer(server), SHUTDOWN_TIMEOUT_MS, "HTTP server close");
+      await withTimeout(stopTrpcWebSocket(), SHUTDOWN_TIMEOUT_MS, "WebSocket server close");
+    } catch (err) {
+      log.warn({ err }, "WebSocket server close failed or timed out, continuing shutdown");
+    }
+
+    try {
+      await withTimeout(httpClosed, SHUTDOWN_TIMEOUT_MS, "HTTP server close");
     } catch (err) {
       log.warn({ err }, "HTTP server close failed or timed out, continuing shutdown");
     }
 
-    // 2. Stop CalDAV sync service (aborts event subscriptions)
-    stopCaldavSync();
+    // 3. Stop CalDAV sync service (releases its hub registrations)
+    await withTimeout(stopCaldavSync(), SHUTDOWN_TIMEOUT_MS, "Stop CalDAV sync");
     log.info("CalDAV sync service stopped");
 
-    // 3. Stop listening for newly usable recipes
+    // 4. Stop listening for newly usable recipes
     await withTimeout(
       stopRecipeEnrichmentListener(),
       SHUTDOWN_TIMEOUT_MS,
@@ -114,16 +133,19 @@ async function performShutdown(
     );
     log.info("Recipe Enrichment listener stopped");
 
-    // 4. Stop all BullMQ workers and close queues
+    // 5. Stop all BullMQ workers and close queues
     await withTimeout(stopWorkers(), SHUTDOWN_TIMEOUT_MS, "Stop workers");
 
-    // 5. Stop extra runtime helpers that depend on HTTP/workers being drained first
+    // 6. Stop extra runtime helpers that depend on HTTP/workers being drained first
     for (const task of shutdownTasks) {
       await withTimeout(task.run(), SHUTDOWN_TIMEOUT_MS, task.name);
       log.info(`${task.name} completed`);
     }
 
-    // 6. Close Redis pub/sub connections (after all consumers stopped)
+    // 7. Stop the realtime hub: every live subscription ends, the subscriber quits
+    await withTimeout(stopRealtimeHub(), SHUTDOWN_TIMEOUT_MS, "Stop realtime hub");
+
+    // 8. Close Redis connections (after all consumers stopped)
     await withTimeout(closeRedisConnections(), SHUTDOWN_TIMEOUT_MS, "Close Redis");
     log.info("Redis connections closed");
 

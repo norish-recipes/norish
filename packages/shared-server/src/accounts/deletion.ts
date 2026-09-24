@@ -2,7 +2,7 @@ import { getHouseholdForUser, transferHouseholdAdmin } from "@norish/db/reposito
 import { deleteUser } from "@norish/db/repositories/users";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { sweepUserAvatars } from "@norish/shared-server/media/avatar-cleanup";
-import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection-invalidation";
+import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
 
 /**
  * Hand a household on before its admin is deleted.

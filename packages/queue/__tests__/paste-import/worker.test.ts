@@ -7,8 +7,8 @@ const dashboardRecipe = vi.fn();
 const getAllergiesForUsers = vi.fn();
 const rateRecipe = vi.fn();
 const getAverageRating = vi.fn();
-const publishRecipeBecameUsable = vi.fn();
-const emitByPolicy = vi.fn();
+const publishRecipeBecameUsable = vi.fn(async () => undefined);
+const publishRecipe = vi.fn(async () => undefined);
 
 vi.mock("@norish/db", () => ({
   createRecipeWithRefs,
@@ -39,15 +39,11 @@ vi.mock("@norish/queue/registry", () => ({
 }));
 
 vi.mock("@norish/shared-server/realtime/recipe-enrichment", () => ({
-  publishRecipeBecameUsable,
-}));
-
-vi.mock("@norish/shared-server/realtime/policy", () => ({
-  emitByPolicy,
+  recipeEnrichment: { publish: publishRecipeBecameUsable },
 }));
 
 vi.mock("@norish/shared-server/realtime/recipes", () => ({
-  recipeEmitter: {},
+  recipes: { publish: publishRecipe },
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -191,7 +187,9 @@ describe("processPasteImportJob", () => {
     expect(publishRecipeBecameUsable).toHaveBeenCalledTimes(2);
     expect(publishRecipeBecameUsable).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining({ recipeId: "recipe-1", userId: "user-1" })
+      "recipeBecameUsable",
+      expect.objectContaining({ recipeId: "recipe-1", userId: "user-1" }),
+      undefined
     );
   });
 

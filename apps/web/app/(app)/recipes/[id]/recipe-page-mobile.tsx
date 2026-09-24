@@ -88,21 +88,23 @@ export default function RecipePageMobile() {
               than with navigation (ADR-0020). */}
           <ReadonlyRecipeMedia
             aspectRatio="4/3"
+            chromeClassName={RECIPE_HERO_CHROME_OFFSET_CLASS}
             className="h-full rounded-none shadow-none"
+            expandControlSlot="topLeft"
             recipe={recipe}
             rounded={false}
             showAuthorFallback={false}
             topLeftContent={
               <Link
                 aria-label={back.label}
-                className={`${RECIPE_HERO_CHROME_OFFSET_CLASS} ${RECIPE_HERO_CHROME_BUTTON_CLASS} no-underline`}
+                className={`${RECIPE_HERO_CHROME_BUTTON_CLASS} no-underline`}
                 href={back.href}
               >
                 <ArrowLeftIcon className="size-5" />
               </Link>
             }
             topRightContent={
-              <div className={`${RECIPE_HERO_CHROME_OFFSET_CLASS} flex items-center gap-2`}>
+              <>
                 {showFavorites && (
                   <HeartButton
                     showBackground
@@ -113,7 +115,7 @@ export default function RecipePageMobile() {
                   />
                 )}
                 <ActionsMenu buttonClassName={RECIPE_HERO_CHROME_BUTTON_CLASS} id={recipe.id} />
-              </div>
+              </>
             }
           />
         </DoubleTapContainer>

@@ -223,24 +223,6 @@ describe("Cooking mode swipes on a long step", () => {
 
     expect(screen.getByTestId("cooking-dialog").dataset.activeView).toBe("ingredients");
   });
-
-  it("does not turn the page on a vertical drag inside the scroll region", () => {
-    render(<CookingMode floating />);
-
-    openCooking();
-    swipe(screen.getByTestId("step-scroll"), 0, -120);
-
-    expect(screen.getByTestId("cooking-dialog").dataset.activeStep).toBe("0");
-  });
-
-  it("still turns the page from the strip beside it", () => {
-    render(<CookingMode floating />);
-
-    openCooking();
-    swipe(screen.getByTestId("swipe-edge"), 0, -120);
-
-    expect(screen.getByTestId("cooking-dialog").dataset.activeStep).toBe("1");
-  });
 });
 
 /**

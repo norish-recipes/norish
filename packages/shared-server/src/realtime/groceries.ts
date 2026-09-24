@@ -1,26 +1,4 @@
-import type { TypedRedisEmitter } from "@norish/shared-server/redis/pubsub";
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
-import { createTypedEmitter } from "@norish/shared-server/redis/pubsub";
+import { defineRealtimeDomain } from "@norish/shared-server/realtime/domain";
+import { groceriesRealtime } from "@norish/shared/contracts/realtime/groceries";
 
-export type GrocerySubscriptionEvents = {
-  created: { groceries: GroceryDto[] };
-  updated: { changedGroceries: GroceryDto[] };
-  deleted: { groceryIds: string[] };
-  recurringCreated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
-  recurringUpdated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
-  recurringDeleted: { recurringGroceryId: string };
-  failed: { reason: string };
-  /**
-   * A version-guarded write was dropped because the row changed elsewhere.
-   * Clients should silently refetch so optimistic state converges to the DB.
-   */
-  stale: { reason: string };
-};
-
-declare global {
-  var __groceryEmitter__: TypedRedisEmitter<GrocerySubscriptionEvents> | undefined;
-}
-
-export const groceryEmitter: TypedRedisEmitter<GrocerySubscriptionEvents> =
-  globalThis.__groceryEmitter__ ||
-  (globalThis.__groceryEmitter__ = createTypedEmitter<GrocerySubscriptionEvents>("grocery"));
+export const groceries = defineRealtimeDomain(groceriesRealtime);

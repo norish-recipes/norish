@@ -1,25 +1,36 @@
-import type Redis from "ioredis";
-import superjson from "superjson";
+/**
+ * CalDAV sync: the server-internal reaction to planned-item changes.
+ *
+ * One `hub.on()` registration per `internal` calendar companion event; the
+ * household event the client sees is published beside it with the same
+ * payload (`publishCalendarItemEvent`).
+ */
 
 import type { Slot } from "@norish/shared/contracts";
-import type { CalendarSubscriptionEvents } from "@norish/trpc/routers/calendar/types";
-import type { RecipeSubscriptionEvents } from "@norish/trpc/routers/recipes/types";
+import type {
+  CalendarItemEvent,
+  CalendarRealtime,
+} from "@norish/shared/contracts/realtime/calendar";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
-import { createSubscriberClient } from "@norish/shared-server/redis/client";
-import { unwrapPayload } from "@norish/shared/lib/operation-helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
+import { calendar } from "@norish/shared-server/realtime/calendar";
+import { getRealtimeHub } from "@norish/shared-server/realtime/hub";
+import { calendarInternalCompanion } from "@norish/shared/contracts/realtime/calendar";
 
 const log = createLogger("caldav-sync");
 
-let isInitialized = false;
-let abortController: AbortController | null = null;
+/** The planned-item events the CalDAV sync reacts to. */
+export const CALDAV_CALENDAR_EVENTS = Object.keys(calendarInternalCompanion) as CalendarItemEvent[];
+
+let releases: Array<() => void> | null = null;
 
 export function initCaldavSync(): void {
-  if (isInitialized) {
+  if (releases) {
     log.warn("CalDAV sync service already initialized");
 
     return;
@@ -27,26 +38,26 @@ export function initCaldavSync(): void {
 
   log.info("Initializing CalDAV sync service");
 
-  abortController = new AbortController();
-  const signal = abortController.signal;
+  releases = startCalendarSubscriptions();
 
-  // Start background subscription loops
-  startCalendarSubscriptions(signal);
-  startRecipeSubscriptions(signal);
-
-  isInitialized = true;
   log.info("CalDAV sync service initialized");
 }
 
-export function stopCaldavSync(): void {
-  if (!isInitialized || !abortController) {
+/** Resolves once every hub registration is released. */
+export async function stopCaldavSync(): Promise<void> {
+  if (!releases) {
     return;
   }
 
   log.info("Stopping CalDAV sync service");
-  abortController.abort();
-  abortController = null;
-  isInitialized = false;
+
+  const pending = releases;
+
+  releases = null;
+
+  for (const release of pending) {
+    release();
+  }
 }
 
 async function getCaldavServerUrl(userId: string): Promise<string | null> {
@@ -111,88 +122,54 @@ async function queueDeleteJob(userId: string, itemId: string): Promise<void> {
   });
 }
 
-async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
-  const CALENDAR_PATTERN = "norish:calendar:household:*:*";
-  let subscriber: Redis | null = null;
+/** One `hub.on()` per internal companion; the hub must be started. */
+function startCalendarSubscriptions(): Array<() => void> {
+  const hub = getRealtimeHub();
 
-  try {
-    subscriber = await createSubscriberClient();
+  return CALDAV_CALENDAR_EVENTS.map((event) => {
+    const companion = calendarInternalCompanion[event];
+    const channel = calendar.channel(companion, undefined);
 
-    if (signal.aborted) {
-      await subscriber.quit();
+    log.info({ channel }, "CalDAV subscribed to calendar events");
 
-      return;
-    }
-
-    await subscriber.psubscribe(CALENDAR_PATTERN);
-    log.info({ pattern: CALENDAR_PATTERN }, "CalDAV subscribed to calendar events via psubscribe");
-
-    const abortHandler = async () => {
-      if (subscriber) {
-        try {
-          await subscriber.punsubscribe(CALENDAR_PATTERN);
-          await subscriber.quit();
-        } catch (err) {
-          log.debug({ err }, "Error during calendar subscription cleanup");
-        }
-      }
-    };
-
-    signal.addEventListener("abort", abortHandler, { once: true });
-
-    subscriber.on("pmessage", (_pattern: string, channel: string, message: string) => {
-      const parts = channel.split(":");
-      const eventName = parts[parts.length - 1];
-
-      if (!eventName) {
-        log.warn({ channel }, "Ignoring calendar event with missing event name");
-
-        return;
-      }
-
-      let data: unknown;
-
-      try {
-        data = superjson.parse(message);
-      } catch (err) {
-        log.error({ err, channel }, "Failed to parse calendar event message");
-
-        return;
-      }
-
-      void handleCalendarEvent(eventName, data);
+    return hub.on(channel, (envelope) => {
+      void handleCalendarEvent(event, envelope);
     });
-
-    subscriber.on("error", (err) => {
-      if (!signal.aborted) {
-        log.error({ err }, "Calendar psubscribe error");
-      }
-    });
-
-    await new Promise<void>((resolve) => {
-      signal.addEventListener("abort", () => resolve(), { once: true });
-    });
-  } catch (err) {
-    if (!signal.aborted) {
-      log.error({ err }, "Failed to start calendar subscriptions");
-    }
-  } finally {
-    if (subscriber) {
-      try {
-        await subscriber.punsubscribe(CALENDAR_PATTERN);
-        await subscriber.quit();
-      } catch {
-        // Cleanup errors are expected during shutdown
-      }
-    }
-  }
+  });
 }
 
-async function handleCalendarEvent(eventName: string, data: unknown): Promise<void> {
+type CalendarPayload<E extends CalendarItemEvent> = PayloadOf<CalendarRealtime, E>;
+
+function parsePayload<E extends CalendarItemEvent>(
+  event: E,
+  envelope: RealtimeEventEnvelope
+): CalendarPayload<E> | null {
+  const parsed = calendar.catalogue.events[event].payload.safeParse(envelope.payload);
+
+  if (!parsed.success) {
+    log.error(
+      { event, channel: envelope.meta.channel, issues: parsed.error.issues },
+      "Dropped malformed calendar event"
+    );
+
+    return null;
+  }
+
+  return parsed.data as CalendarPayload<E>;
+}
+
+export async function handleCalendarEvent(
+  eventName: CalendarItemEvent,
+  envelope: RealtimeEventEnvelope
+): Promise<void> {
   try {
     switch (eventName) {
       case "itemCreated": {
-        const { item } = unwrapPayload<CalendarSubscriptionEvents["itemCreated"]>(data);
+        const payload = parsePayload("itemCreated", envelope);
+
+        if (!payload) return;
+
+        const { item } = payload;
         const title =
           item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
 
@@ -214,7 +191,11 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
       }
 
       case "itemDeleted": {
-        const { itemId } = unwrapPayload<CalendarSubscriptionEvents["itemDeleted"]>(data);
+        const payload = parsePayload("itemDeleted", envelope);
+
+        if (!payload) return;
+
+        const { itemId } = payload;
 
         log.debug({ itemId }, "Item deleted - queuing CalDAV delete for all synced users");
         await queueDeleteJobByItemId(itemId);
@@ -222,7 +203,11 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
       }
 
       case "itemMoved": {
-        const { item } = unwrapPayload<CalendarSubscriptionEvents["itemMoved"]>(data);
+        const payload = parsePayload("itemMoved", envelope);
+
+        if (!payload) return;
+
+        const { item } = payload;
         const title =
           item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
 
@@ -256,7 +241,11 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
       }
 
       case "itemUpdated": {
-        const { item } = unwrapPayload<CalendarSubscriptionEvents["itemUpdated"]>(data);
+        const payload = parsePayload("itemUpdated", envelope);
+
+        if (!payload) return;
+
+        const { item } = payload;
         const title =
           item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
 
@@ -285,9 +274,6 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
         );
         break;
       }
-
-      default:
-        break;
     }
   } catch (error) {
     log.error({ err: error, eventName }, "Failed to handle calendar event for CalDAV sync");
@@ -305,34 +291,6 @@ async function queueDeleteJobByItemId(itemId: string): Promise<void> {
       await queueDeleteJob(status.userId, itemId);
     } catch (error) {
       log.error({ err: error, itemId, userId: status.userId }, "Failed to queue CalDAV delete");
-    }
-  }
-}
-
-async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
-  const channel = recipeEmitter.broadcastEvent("updated");
-
-  try {
-    for await (const data of recipeEmitter.createSubscription(channel, signal)) {
-      const typedData = unwrapPayload<RecipeSubscriptionEvents["updated"]>(data);
-      const { recipe } = typedData;
-
-      if (!recipe || !recipe.name) continue;
-
-      const recipeId = recipe.id;
-      const newName = recipe.name;
-
-      log.debug(
-        { recipeId, newName },
-        "Recipe name updated - CalDAV sync temporarily disabled during planned_items migration"
-      );
-
-      // TODO: Re-enable after planned-items repository is implemented
-      // This requires getPlannedItemsByRecipeId from the new repository
-    }
-  } catch (err) {
-    if (!signal.aborted) {
-      log.error({ err }, "Recipe subscription error");
     }
   }
 }

@@ -36,7 +36,7 @@ RUN apk add --no-cache python3 make g++ pkgconfig libpq-dev vips-dev
 # Tell sharp to use system libvips
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=0
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY apps/parser-api/pyproject.toml ./apps/parser-api/pyproject.toml
 COPY apps/parser-api/uv.lock ./apps/parser-api/uv.lock
@@ -113,7 +113,11 @@ RUN pnpm run build && \
   apps/web/.next/standalone/node_modules/ffmpeg-static
 
 # Create isolated production deployment with pnpm deploy.
-RUN pnpm deploy --filter @norish/web --prod /app/deploy && \
+# --legacy: pnpm v10's default deploy requires injectWorkspacePackages, which
+# this repo deliberately does not set (injected copies of packages/* went stale
+# against their sources during development). The workspace copies deploy makes
+# are deleted on the next line regardless, so legacy deploy is equivalent here.
+RUN pnpm deploy --legacy --filter @norish/web --prod /app/deploy && \
   cd /app/deploy/node_modules && \
   # Remove workspace copies (source is in packages/, server code in dist-server/)
   rm -rf @norish && \

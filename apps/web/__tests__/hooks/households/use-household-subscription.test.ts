@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackedEvent } from "../realtime-test-utils";
 import {
   createMockHouseholdAdminSettings,
   createMockHouseholdData,
@@ -271,11 +272,11 @@ describe("useHouseholdSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onFailed?.({
-          payload: {
+        subscriptionCallbacks.onFailed?.(
+          trackedEvent({
             reason: "Very long backend stack trace that should not be shown in toast",
-          },
-        });
+          })
+        );
       });
 
       expect(toast).toHaveBeenCalledWith(
@@ -302,9 +303,9 @@ describe("useHouseholdSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onMemberProfileUpdated?.({
-          payload: { userId: "user-1", image: "/avatars/user-1-1755000000000.png" },
-        });
+        subscriptionCallbacks.onMemberProfileUpdated?.(
+          trackedEvent({ userId: "user-1", image: "/avatars/user-1-1755000000000.png" })
+        );
       });
 
       expect(invalidateSpy).toHaveBeenCalledWith({
@@ -326,9 +327,9 @@ describe("useHouseholdSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onMemberProfileUpdated?.({
-          payload: { userId: "user-2", image: null },
-        });
+        subscriptionCallbacks.onMemberProfileUpdated?.(
+          trackedEvent({ userId: "user-2", image: null })
+        );
       });
 
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
@@ -350,13 +351,13 @@ describe("useHouseholdSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onJoinCodeRegenerated?.({
-          payload: {
+        subscriptionCallbacks.onJoinCodeRegenerated?.(
+          trackedEvent({
             joinCode: "654321",
             joinCodeExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
             version: 2,
-          },
-        });
+          })
+        );
       });
 
       await waitFor(() => {
@@ -385,13 +386,13 @@ describe("useHouseholdSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onAdminTransferred?.({
-          payload: {
+        subscriptionCallbacks.onAdminTransferred?.(
+          trackedEvent({
             oldAdminId: "user-1",
             newAdminId: "user-2",
             version: 4,
-          },
-        });
+          })
+        );
       });
 
       await waitFor(() => {

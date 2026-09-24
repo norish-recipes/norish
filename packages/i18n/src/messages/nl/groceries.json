@@ -8,7 +8,8 @@
     "viewMode": "Weergave",
     "manageStores": "Winkels beheren",
     "storeViewOptions": "Winkelweergave opties",
-    "groupIngredients": "Groepeer ingrediënten"
+    "groupIngredients": "Groepeer ingrediënten",
+    "pantry": "Voorraadkast"
   },
   "empty": {
     "title": "Je boodschappenlijst wacht op je",
@@ -83,6 +84,15 @@
     "dragAisle": "Sleep om te herordenen",
     "aisleDuplicate": "Deze winkel heeft al een gangpad met die naam"
   },
+  "pantry": {
+    "title": "Voorraadkast",
+    "hint": "Wat je al in huis hebt. Ingrediënten uit je voorraadkast blijven van de lijst als je een recept toevoegt.",
+    "empty": "Nog niets in je voorraadkast",
+    "namePlaceholder": "bijv. Olijfolie",
+    "add": "Toevoegen aan voorraadkast",
+    "remove": "Verwijderen uit voorraadkast",
+    "duplicate": "Dat zit al in je voorraadkast"
+  },
   "panel": {
     "addTitle": "Boodschap toevoegen",
     "editTitle": "Boodschap bewerken",
@@ -113,6 +123,7 @@
     "editPlaceholder": "bijv. melk elke week",
     "servings": "Porties",
     "selectedCount": "{selected} van {total} geselecteerd",
+    "pantryUnavailable": "Je voorraadkast kon niet worden gelezen, dus er is nog niets aangevinkt. Vink aan wat je moet kopen.",
     "loadingIngredients": "Ingrediënten laden...",
     "noIngredients": "Geen ingrediënten.",
     "addSelectedToGroceries": "Voeg toe aan boodschappen",
@@ -120,7 +131,8 @@
     "ingredientsFailed": "Kan ingrediënten niet toevoegen aan boodschappenlijst.",
     "addToGroceries": "Toevoegen aan boodschappen",
     "aisle": "Gangpad",
-    "noAisle": "Geen gangpad"
+    "noAisle": "Geen gangpad",
+    "inPantry": "In je voorraadkast"
   },
   "picker": {
     "unlink": "Product ontkoppelen",

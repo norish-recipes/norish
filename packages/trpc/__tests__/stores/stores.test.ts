@@ -16,6 +16,8 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { assertHouseholdAccess } from "../mocks/permissions";
+import { groceries } from "../mocks/realtime/groceries";
+import { stores } from "../mocks/realtime/stores";
 
 const storesRepository = vi.hoisted(() => ({
   checkStoreNameExistsInHousehold: vi.fn(),
@@ -34,21 +36,13 @@ const shop = vi.hoisted(() => ({
   verifySearchAddress: vi.fn(),
 }));
 
-const storeEmitter = vi.hoisted(() => ({
-  emitToHousehold: vi.fn(),
-}));
-
-const groceryEmitter = vi.hoisted(() => ({
-  emitToHousehold: vi.fn(),
-}));
-
 vi.mock("@norish/db/repositories/stores", () => storesRepository);
 vi.mock("@norish/queue/api-handlers", () => ({
   requireQueueApiHandler: (name: keyof typeof shop) => shop[name],
 }));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/trpc/routers/stores/emitter", () => ({ storeEmitter }));
-vi.mock("@norish/trpc/routers/groceries/emitter", () => ({ groceryEmitter }));
+vi.mock("@norish/shared-server/realtime/stores", () => import("../mocks/realtime/stores"));
+vi.mock("@norish/shared-server/realtime/groceries", () => import("../mocks/realtime/groceries"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -120,7 +114,7 @@ describe("stores procedures", () => {
       { userId: ctx.user.id, storeId: result, version: 3 },
       "Ignoring stale store update mutation"
     );
-    expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(stores.publish).not.toHaveBeenCalled();
   });
 
   it("logs stale store reorders as no-ops", async () => {
@@ -136,7 +130,7 @@ describe("stores procedures", () => {
       { userId: ctx.user.id, requestedStoreCount: 1 },
       "Ignoring stale store reorder mutation"
     );
-    expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(stores.publish).not.toHaveBeenCalled();
   });
 
   it("logs partial store reorders and emits only applied stores", async () => {
@@ -165,9 +159,13 @@ describe("stores procedures", () => {
       { userId: ctx.user.id, requestedStoreCount: 2, appliedStoreCount: 1 },
       "Store reorder partially applied due to stale versions"
     );
-    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "reordered", {
-      stores: [reorderedStore],
-    });
+    expect(stores.publish).toHaveBeenCalledWith(
+      "reordered",
+      {
+        stores: [reorderedStore],
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("saves a Store's aisles with it and tells the household the Store, aisles and all", async () => {
@@ -214,9 +212,13 @@ describe("stores procedures", () => {
         ],
       })
     );
-    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "updated", {
-      store: saved,
-    });
+    expect(stores.publish).toHaveBeenCalledWith(
+      "updated",
+      {
+        store: saved,
+      },
+      { householdKey: ctx.householdKey }
+    );
   });
 
   it("refuses two aisles whose names differ only in case, before anything is written", async () => {
@@ -234,7 +236,7 @@ describe("stores procedures", () => {
     ).rejects.toMatchObject({ code: "CONFLICT" });
 
     expect(storesRepository.updateStore).not.toHaveBeenCalled();
-    expect(storeEmitter.emitToHousehold).not.toHaveBeenCalled();
+    expect(stores.publish).not.toHaveBeenCalled();
   });
 
   it("creates a Store with its aisles in one go", async () => {
@@ -258,12 +260,12 @@ describe("stores procedures", () => {
       expect.any(String),
       expect.objectContaining({ name: "Dirk", aisles: [{ id: zuivel, name: "Zuivel" }] })
     );
-    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(
-      ctx.householdKey,
+    expect(stores.publish).toHaveBeenCalledWith(
       "created",
       expect.objectContaining({
         store: expect.objectContaining({ aisles: [expect.objectContaining({ name: "Zuivel" })] }),
-      })
+      }),
+      { householdKey: ctx.householdKey }
     );
   });
 
@@ -319,12 +321,12 @@ describe("stores procedures", () => {
       expect.any(String),
       expect.not.objectContaining({ aisles: expect.anything() })
     );
-    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(
-      ctx.householdKey,
+    expect(stores.publish).toHaveBeenCalledWith(
       "created",
       expect.objectContaining({
         store: expect.objectContaining({ name: "Market" }),
-      })
+      }),
+      { householdKey: ctx.householdKey }
     );
   });
 

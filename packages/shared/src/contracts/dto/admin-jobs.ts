@@ -60,10 +60,19 @@ export interface AdminJobAttemptDTO {
   logs: string[];
 }
 
+/** One model a job asked, as its provider key and model id, and whether it answered. */
+export interface AdminJobModelDTO {
+  provider: string;
+  model: string;
+  outcome: "completed" | "failed";
+}
+
 export interface AdminJobDetailDTO extends AdminJobRowDTO {
   /** Pretty-printed job payload; long strings truncated */
   dataJson: string;
   returnValueJson: string | null;
+  /** The models the latest attempt that asked one used, each once */
+  models: AdminJobModelDTO[];
   /** One entry per attempt, with its steps, logs, and (if failed) its error */
   attempts: AdminJobAttemptDTO[];
   /** Total log lines recorded (may exceed the sum shown per attempt) */

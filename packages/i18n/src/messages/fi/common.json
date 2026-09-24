@@ -1,0 +1,296 @@
+{
+  "actions": {
+    "save": "Tallenna",
+    "cancel": "Peruuta",
+    "delete": "Poista",
+    "duplicate": "Monista",
+    "edit": "Muokkaa",
+    "create": "Luo",
+    "add": "Lisää",
+    "remove": "Poista",
+    "close": "Sulje",
+    "apply": "Käytä",
+    "reset": "Nollaa",
+    "clear": "Tyhjennä",
+    "selectAll": "Valitse kaikki",
+    "deselectAll": "Poista kaikki valinnat",
+    "confirm": "Vahvista",
+    "back": "Takaisin",
+    "next": "Seuraava",
+    "done": "Valmis",
+    "retry": "Yritä uudelleen",
+    "submit": "Lähetä",
+    "search": "Hae",
+    "filter": "Suodata",
+    "sort": "Järjestä",
+    "import": "Tuo",
+    "aiImport": "Tekoälytuonti",
+    "importWithAI": "Tuo tekoälyllä",
+    "goHome": "Etusivulle",
+    "test": "Testaa",
+    "format": "Muotoile",
+    "restoreDefaults": "Palauta oletukset",
+    "saveChanges": "Tallenna muutokset"
+  },
+  "secret": {
+    "reveal": "Näytä salaisuus",
+    "hide": "Piilota salaisuus",
+    "keepsCurrent": "Jätä tyhjäksi, niin tallennettu arvo säilyy."
+  },
+  "status": {
+    "loading": "Ladataan...",
+    "saving": "Tallennetaan...",
+    "deleting": "Poistetaan...",
+    "error": "Virhe",
+    "success": "Onnistui",
+    "noResults": "Tuloksia ei löytynyt",
+    "changing": "Vaihdetaan…"
+  },
+  "filters": {
+    "title": "Suodattimet",
+    "search": "Haku",
+    "searchIn": "Hae kohteista",
+    "sort": "Järjestys",
+    "mode": "Tila",
+    "modeAll": "Kaikki",
+    "modeAny": "Mikä tahansa",
+    "tags": "Tunnisteet",
+    "searchTags": "Hae tunnisteita",
+    "favoritesAndRating": "Suosikit ja arvosana",
+    "favorites": "Suosikit",
+    "cookingTime": "Valmistusaika",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Kategoriat",
+    "category": {
+      "breakfast": "Aamiainen",
+      "lunch": "Lounas",
+      "dinner": "Päivällinen",
+      "snack": "Välipala"
+    },
+    "sortByTitle": "Nimi",
+    "sortByDate": "Päivämäärä",
+    "clearFilters": "Tyhjennä suodattimet"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "t"
+  },
+  "validation": {
+    "required": "Tämä kenttä on pakollinen",
+    "invalidUrl": "Anna kelvollinen verkko-osoite"
+  },
+  "errors": {
+    "operationFailed": "Toiminto epäonnistui",
+    "nameCannotBeEmpty": "Nimi ei voi olla tyhjä",
+    "technicalDetails": "Jokin meni pieleen. Tekniset tiedot löytyvät selaimen konsolista."
+  },
+  "slots": {
+    "breakfast": "Aamiainen",
+    "lunch": "Lounas",
+    "dinner": "Päivällinen",
+    "snack": "Välipala",
+    "chooseSlot": "Valitse ateria"
+  },
+  "connection": {
+    "connecting": "Yhdistetään Norishiin...",
+    "checkInternet": "Tarkista internet-yhteytesi",
+    "offlineBanner": "Olet offline-tilassa, näytetään välimuistin tiedot",
+    "serverUnreachableBanner": "Norish-palvelinta ei tavoiteta, näytetään välimuistin tiedot",
+    "live": "Yhteydessä",
+    "offline": "Offline",
+    "openDetails": "Yhteyden tiedot"
+  },
+  "language": {
+    "title": "Kieli"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Nora on ymmällään.",
+    "message": "Hän nuuskii ympäriinsä löytääkseen, minne halusit mennä.",
+    "imageAlt": "Nora näyttää hämmentyneeltä"
+  },
+  "import": {
+    "url": {
+      "title": "Tuo resepti",
+      "label": "Reseptin osoite",
+      "placeholder": "https://example.com/oma-resepti",
+      "failed": "Reseptin tuonti epäonnistui",
+      "failedWithAI": "Reseptin tuonti tekoälyllä epäonnistui"
+    },
+    "clipboard": {
+      "title": "Tuodaanko resepti kopioimastasi linkistä?"
+    },
+    "paste": {
+      "title": "Tuo liittämällä",
+      "label": "Reseptin teksti tai JSON-LD",
+      "placeholder": "Liitä resepti (vapaa teksti) tai JSON-LD tähän...",
+      "characters": "{count} / {max} merkkiä",
+      "tooLarge": "Liitetty teksti on liian pitkä",
+      "maxCharacters": "Enintään {max} merkkiä reseptiä kohden",
+      "importing": "Tuodaan reseptiä...",
+      "importingWithAI": "Tuodaan reseptiä tekoälyllä...",
+      "inProgress": "Tuonti on kesken, odota hetki...",
+      "failed": "Tuonti epäonnistui"
+    },
+    "image": {
+      "title": "Tuo kuvasta",
+      "dropzone": "Pudota kuvat tähän tai selaa napsauttamalla",
+      "paste": "liittääksesi",
+      "formats": "Tukee JPG-, PNG- ja WebP-muotoja. Enintään 10 Mt tiedostoa kohden.",
+      "invalidType": "Virheellinen tiedostotyyppi",
+      "notSupported": "{name} ei ole tuettu kuvamuoto",
+      "tooLarge": "Tiedosto on liian suuri",
+      "exceeds": "{name} ylittää 10 Mt:n rajan",
+      "tooMany": "Liian monta tiedostoa",
+      "maxFiles": "Enintään {max} tiedostoa sallittu",
+      "importing": "Tuodaan reseptiä kuvista...",
+      "analyzing": "Analysoidaan kuviasi, odota hetki...",
+      "failed": "Tuonti epäonnistui",
+      "selectedCount": "{count} kuvaa valittu – ne yhdistetään yhdeksi reseptiksi",
+      "library": "Kirjasto",
+      "takePhoto": "Ota kuva",
+      "counter": "{count} / {max} kuvaa",
+      "importFromCount": "Tuo {count, plural, one {# kuvasta} other {# kuvasta}}"
+    },
+    "menu": {
+      "description": "Tuo osoitteesta, skannaa kuva tai aloita tyhjästä."
+    }
+  },
+  "formatting": {
+    "title": "Muotoiluvinkit",
+    "heading": "Aloita rivi merkillä <strong>#</strong>, niin siitä tulee otsikko",
+    "bold": "Ympäröi teksti <strong>**kahdella tähdellä**</strong>, niin se lihavoituu",
+    "recipeLink": "Kirjoita <strong>/reseptin nimi</strong> linkittääksesi toiseen reseptiin",
+    "ingredientMention": "Kirjoita <strong>@</strong> liittääksesi ainesosan työvaiheeseen – sana tulee lauseeseesi ja linkki näkyy merkkinä sen alapuolella",
+    "helpAriaLabel": "Muotoiluohje"
+  },
+  "tagInput": {
+    "placeholder": "Kirjoita tunnisteita välilyönnillä eroteltuina..."
+  },
+  "recurrence": {
+    "title": "Toisto",
+    "frequency": "Toistoväli",
+    "interval": "Väli",
+    "onDay": "Päivänä",
+    "daily": "Päivittäin",
+    "weekly": "Viikoittain",
+    "monthly": "Kuukausittain",
+    "day": "päivä",
+    "days": "päivää",
+    "week": "viikko",
+    "weeks": "viikkoa",
+    "month": "kuukausi",
+    "months": "kuukautta",
+    "next": "Seuraava:",
+    "every": "Joka",
+    "everyOther": "Joka toinen",
+    "on": "·",
+    "today": "tänään",
+    "tomorrow": "huomenna",
+    "weekdays": {
+      "sun": "Su",
+      "mon": "Ma",
+      "tue": "Ti",
+      "wed": "Ke",
+      "thu": "To",
+      "fri": "Pe",
+      "sat": "La"
+    },
+    "weekdaysFull": {
+      "0": "sunnuntaina",
+      "1": "maanantaina",
+      "2": "tiistaina",
+      "3": "keskiviikkona",
+      "4": "torstaina",
+      "5": "perjantaina",
+      "6": "lauantaina"
+    }
+  },
+  "badges": {
+    "new": "Uusi"
+  },
+  "timer": {
+    "done": "Valmis",
+    "done_action": "Valmis",
+    "one": "Ajastin",
+    "other": "Ajastimet",
+    "label_one": "1 ajastin",
+    "label_other": "{count} ajastinta",
+    "notification_title": "Ajastin päättyi",
+    "notification_body": "{label} on valmis!",
+    "notifications_disabled": "Ilmoitukset ovat pois käytöstä",
+    "notifications_disabled_hint": "Ota ilmoitukset käyttöön selaimesi asetuksissa, niin saat hälytyksen kun ajastin päättyy taustalla."
+  },
+  "offlineStatus": {
+    "title": "Yhteys ja offline-tila",
+    "connection": {
+      "heading": "Yhteys",
+      "live": "Yhteydessä",
+      "offline": "Offline",
+      "forced": "Offline (pakotettu)",
+      "liveDescription": "Yhteys Norishiin on muodostettu. Muutokset synkronoituvat sitä mukaa kun teet niitä.",
+      "offlineDescription": "Norishia ei tavoiteta. Näytetään välimuistin tiedot; muutokset jonotetaan ja synkronoidaan kun yhteys palaa.",
+      "forcedDescription": "Offline-tila on pakotettu kehitystä varten. Palvelin on tavoitettavissa, mutta jokainen pyyntö estetään.",
+      "devBadge": "dev"
+    },
+    "cache": {
+      "heading": "Offline-välimuisti",
+      "recipes": "Reseptit",
+      "cookbooks": "Keittokirjat",
+      "groceries": "Ostokset",
+      "stores": "Kaupat",
+      "planned": "Tämä viikko",
+      "dataAge": "Tiedot ajalta {when}",
+      "dataAgeUnknown": "Ei vielä haettu",
+      "wipe": "Tyhjennä välimuisti",
+      "wipeConfirmBody": "Poistetaanko reseptiesi, ostostesi, kauppojesi ja suunnitelmasi offline-kopio? Jonossa olevat muutokset säilyvät.",
+      "wipeConfirmOfflineBody": "Olet offline-tilassa – tyhjentäminen ei jätä nyt mitään näytettäväksi ennen kuin yhteys palaa. Jonossa olevat muutokset säilyvät.",
+      "wipeConfirm": "Tyhjennä",
+      "wipeCancel": "Säilytä"
+    },
+    "outbox": {
+      "heading": "Jonossa olevat muutokset",
+      "empty": "Jonossa ei ole mitään – kaikki on synkronoitu.",
+      "pending": "{count, plural, =0 {Ei odottavia muutoksia} one {# muutos odottaa} other {# muutosta odottaa}}",
+      "syncing": "{count, plural, =0 {Synkronoidaan} one {Synkronoidaan # muutos} other {Synkronoidaan # muutosta}}",
+      "syncNow": "Synkronoi nyt",
+      "retryAll": "Yritä kaikkia uudelleen",
+      "discardAll": "Hylkää kaikki",
+      "discardConfirmBody": "{count, plural, one {Hylätäänkö # jonossa oleva muutos pysyvästi? Sitä ei lähetetä.} other {Hylätäänkö # jonossa olevaa muutosta pysyvästi? Niitä ei lähetetä.}}",
+      "discardConfirm": "Hylkää",
+      "discardCancel": "Säilytä",
+      "status": {
+        "pending": "Synkronoidaan",
+        "parked": "Vaatii huomiota",
+        "conflicted": "Ristiriita"
+      }
+    },
+    "devToggle": {
+      "heading": "Kehittäjä",
+      "force": "Pakota offline-tila",
+      "description": "Estää palvelinyhteyden offline-toiminnallisuuden testaamiseksi. Vain kehitysversioissa.",
+      "on": "Päällä",
+      "off": "Pois"
+    }
+  },
+  "offlineFallback": {
+    "title": "Norakin on offline-tilassa.",
+    "body": "Tätä sivua ei ole tallennettu offline-käyttöön – äskettäin avaamasi sivut ovat yhä täällä.",
+    "backOnlineTitle": "Nora löysi yhteyden!",
+    "backOnlineBody": "Norish on taas tavoitettavissa – kokeile ladata tämä sivu.",
+    "retry": "Yritä uudelleen",
+    "home": "Avaa Norish"
+  },
+  "queuedOffline": {
+    "title": "Olet offline-tilassa",
+    "description": "Jonossa – Norish viimeistelee tämän automaattisesti, kun yhteys palaa."
+  },
+  "storageUnavailable": {
+    "title": "Käynnistys epäonnistui",
+    "description": "Norish ei pystynyt lukemaan suojattua tallennustilaansa, joten se ei tiedä mille palvelimelle se kuuluu. Mitään ei ole muutettu. Yritä uudelleen tai käynnistä sovellus uudestaan.",
+    "detailsLabel": "Tekniset tiedot"
+  }
+}

@@ -40,6 +40,8 @@ vi.mock("@norish/shared-server/logger", () => {
 
 const { generateStructured } = await import("@norish/shared-server/ai/runtime/runtime");
 const { AIProviderError } = await import("@norish/shared-server/ai/runtime/errors");
+const { createModelUseLedger, runWithModelUseLedger } =
+  await import("@norish/shared-server/ai/runtime/model-use-ledger");
 
 interface CapturedRequest {
   body: Record<string, unknown>;
@@ -222,5 +224,53 @@ describe("a provider whose structured-output support is known", () => {
     await generate().catch(() => null);
 
     expect(captured).toHaveLength(0);
+  });
+});
+
+describe("the job's model ledger", () => {
+  const use = { provider: "generic-openai", model: "test-model" };
+
+  it("records the model that answered, and the one that refused", async () => {
+    const ledger = createModelUseLedger();
+
+    await runWithModelUseLedger(ledger, generate);
+
+    replies = [() => ({ status: 401, body: { error: { message: "invalid key" } } })];
+    await runWithModelUseLedger(ledger, () => generate().catch(() => undefined));
+
+    expect(ledger.uses).toEqual([
+      { ...use, outcome: "completed" },
+      { ...use, outcome: "failed" },
+    ]);
+  });
+
+  it("records one completed use when the plain-JSON retry is what answered", async () => {
+    const ledger = createModelUseLedger();
+
+    replies = [noEndpoints, tagged];
+    await runWithModelUseLedger(ledger, generate);
+
+    expect(ledger.uses).toEqual([{ ...use, outcome: "completed" }]);
+  });
+
+  it("records nothing for a configuration that sends no request", async () => {
+    const ledger = createModelUseLedger();
+
+    mockGetAIConfig.mockResolvedValue(aiConfig({ provider: "openai", apiKey: undefined }));
+    await runWithModelUseLedger(ledger, () =>
+      expect(generate()).rejects.toThrow(/API Key is required/)
+    );
+
+    expect(ledger.uses).toEqual([]);
+    expect(captured).toHaveLength(0);
+  });
+
+  it("records one failed use when both request shapes are refused", async () => {
+    const ledger = createModelUseLedger();
+
+    replies = [noEndpoints];
+    await runWithModelUseLedger(ledger, () => generate().catch(() => undefined));
+
+    expect(ledger.uses).toEqual([{ ...use, outcome: "failed" }]);
   });
 });

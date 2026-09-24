@@ -72,3 +72,30 @@ You may use tags from both the predefined list above AND this additional list.`
 
   return sections;
 }
+
+/** The heading the shipped auto-tagging prompt puts its tag list under. */
+const PREDEFINED_TAGS_HEADING = /^[ \t]*PREDEFINED TAGS:[ \t]*/im;
+
+/**
+ * The predefined tags an auto-tagging prompt lists: the block under its
+ * `PREDEFINED TAGS:` heading, up to the first blank line, split on commas
+ * and line breaks, lowercased and deduplicated. The list lives in the
+ * administrator-editable prompt, so an edited prompt is read as it now
+ * stands; one without the heading lists nothing.
+ */
+export function parsePredefinedTags(prompt: string): string[] {
+  const heading = PREDEFINED_TAGS_HEADING.exec(prompt);
+
+  if (!heading) return [];
+
+  const block = prompt.slice(heading.index + heading[0].length).split(/\r?\n[ \t]*\r?\n/)[0] ?? "";
+
+  return Array.from(
+    new Set(
+      block
+        .split(/[,\n]/)
+        .map((tag) => tag.trim().toLowerCase())
+        .filter((tag) => tag !== "")
+    )
+  );
+}

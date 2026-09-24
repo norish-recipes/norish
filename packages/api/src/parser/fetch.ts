@@ -48,6 +48,18 @@ async function settledContent(page: Page, isSettled: (html: string) => boolean):
   return html ?? "";
 }
 
+/** A rendered page and the HTTP status its document last arrived with. */
+export interface RenderedPage {
+  /** Empty when Obscura produced no usable HTML */
+  html: string;
+  /**
+   * The status of the main document's last navigation: a bot check that
+   * answers 403 and then hands over the real page reports the real page's.
+   * Null when no document response was seen.
+   */
+  status: number | null;
+}
+
 /**
  * Render a page in Obscura and return its HTML.
  *
@@ -68,7 +80,17 @@ export async function fetchRenderedPage(
   tokens?: SiteAuthTokenDecryptedDto[],
   isSettled?: (html: string) => boolean
 ): Promise<string> {
+  return (await renderPage(targetUrl, tokens, isSettled)).html;
+}
+
+/** `fetchRenderedPage`, keeping the status a site answered with, so a refusal can be named. */
+export async function renderPage(
+  targetUrl: string,
+  tokens?: SiteAuthTokenDecryptedDto[],
+  isSettled?: (html: string) => boolean
+): Promise<RenderedPage> {
   let context: BrowserContext | undefined;
+  let status: number | null = null;
 
   try {
     const browser = await getBrowser();
@@ -108,18 +130,26 @@ export async function fetchRenderedPage(
 
     const page = await context.newPage();
 
-    await page.goto(targetUrl, {
+    page.on("response", (response) => {
+      if (response.request().isNavigationRequest() && response.frame() === page.mainFrame()) {
+        status = response.status();
+      }
+    });
+
+    const response = await page.goto(targetUrl, {
       waitUntil: "load",
       timeout: NAVIGATION_TIMEOUT_MS,
     });
 
-    if (!isSettled) return await page.content();
+    status ??= response?.status() ?? null;
 
-    return await settledContent(page, isSettled);
+    const html = isSettled ? await settledContent(page, isSettled) : await page.content();
+
+    return { html, status };
   } catch (error) {
     log.warn({ err: error, url: targetUrl }, "Obscura could not render the page");
 
-    return "";
+    return { html: "", status };
   } finally {
     if (context) {
       await context.close().catch((err) => {

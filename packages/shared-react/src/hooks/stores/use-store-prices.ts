@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { ResolvedProductLink, StoreProductDto } from "@norish/shared/contracts";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 import { normalizeGroceryName, productLinkKey } from "@norish/shared/lib/normalized-name";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 
 import type { CreateStoresHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
+
+type Payload<E extends EventName<StoresRealtime>> = PayloadOf<StoresRealtime, E>;
 
 export type StorePricesData = ResolvedProductLink[];
 
@@ -159,35 +163,30 @@ export function createUseStorePricesSubscription({ useTRPC }: CreateStoresHooksO
       [queryClient, queryKey]
     );
 
-    useSubscription(
-      trpc.stores.onProductUpdated.subscriptionOptions(undefined, {
-        // Typed as the transport hands it over, like every other store handler.
-        onData: ({ payload }: any) => {
-          const product = payload.product as StoreProductDto;
+    const lagQueryKeys = [queryKey, linkQueriesKey];
 
-          setPrices((prev) =>
-            prev.map((link) => (link.product?.id === product.id ? { ...link, product } : link))
-          );
-        },
-      })
-    );
+    useRealtimeSubscription<Payload<"productUpdated">>(trpc.stores.onProductUpdated, {
+      onEvent: ({ product }) => {
+        setPrices((prev) =>
+          prev.map((link) => (link.product?.id === product.id ? { ...link, product } : link))
+        );
+      },
+      lagQueryKeys,
+    });
 
-    useSubscription(
-      trpc.stores.onLinkUpdated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          const updated = payload.link as ResolvedProductLink;
+    useRealtimeSubscription<Payload<"linkUpdated">>(trpc.stores.onLinkUpdated, {
+      onEvent: ({ link: updated }) => {
+        setPrices((prev) => {
+          const key = linkKey(updated);
+          const without = prev.filter((link) => linkKey(link) !== key);
 
-          setPrices((prev) => {
-            const key = linkKey(updated);
-            const without = prev.filter((link) => linkKey(link) !== key);
-
-            return [...without, updated];
-          });
-          // A panel waiting on a Store the grocery does not sit under reads
-          // its link on its own; the answer that just landed is its answer too.
-          void queryClient.invalidateQueries({ queryKey: linkQueriesKey });
-        },
-      })
-    );
+          return [...without, updated];
+        });
+        // A panel waiting on a Store the grocery does not sit under reads
+        // its link on its own; the answer that just landed is its answer too.
+        void queryClient.invalidateQueries({ queryKey: linkQueriesKey });
+      },
+      lagQueryKeys,
+    });
   };
 }

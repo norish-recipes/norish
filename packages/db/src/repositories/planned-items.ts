@@ -5,6 +5,7 @@ import { plannedItems, recipes } from "@norish/db/schema";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
 type PlannedItem = typeof plannedItems.$inferSelect;
 type PlannedItemInsert = typeof plannedItems.$inferInsert;
@@ -39,7 +40,7 @@ export async function listPlannedItemsByUserAndDateRange(
       createdAt: plannedItems.createdAt,
       updatedAt: plannedItems.updatedAt,
       recipeName: recipes.name,
-      recipeImage: recipes.image,
+      recipeImage: PRIMARY_IMAGE_SQL.as("recipeImage"),
       servings: recipes.servings,
       calories: recipes.calories,
     })
@@ -76,7 +77,7 @@ export async function listPlannedItemsWithRecipeBySlot(
       createdAt: plannedItems.createdAt,
       updatedAt: plannedItems.updatedAt,
       recipeName: recipes.name,
-      recipeImage: recipes.image,
+      recipeImage: PRIMARY_IMAGE_SQL.as("recipeImage"),
       servings: recipes.servings,
       calories: recipes.calories,
     })
@@ -109,7 +110,7 @@ export async function getPlannedItemWithRecipeById(
       createdAt: plannedItems.createdAt,
       updatedAt: plannedItems.updatedAt,
       recipeName: recipes.name,
-      recipeImage: recipes.image,
+      recipeImage: PRIMARY_IMAGE_SQL.as("recipeImage"),
       servings: recipes.servings,
       calories: recipes.calories,
     })

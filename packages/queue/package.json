@@ -1,12 +1,11 @@
 {
   "name": "@norish/queue",
-  "version": "0.23.1-beta",
+  "version": "0.24.0-beta",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./contracts/*": "./src/contracts/*.ts",
-    "./redis/client": "./src/redis/client.ts",
     "./redis/bullmq": "./src/redis/bullmq.ts",
     "./*": "./src/*.ts"
   },

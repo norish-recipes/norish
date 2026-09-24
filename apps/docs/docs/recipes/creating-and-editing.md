@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 title: Creating and editing recipes
 description: The recipe form end to end — free-text ingredients, section headings with #, linking another recipe with /, and attaching ingredients to steps while you type.
 ---

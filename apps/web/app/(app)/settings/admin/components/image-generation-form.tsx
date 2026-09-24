@@ -39,6 +39,7 @@ const PROVIDER_OPTIONS: ImageGenerationProvider[] = [
   "openai",
   "google",
   "azure",
+  "ollama",
   "lm-studio",
   "generic-openai",
 ];
@@ -210,7 +211,9 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
             placeholder={
               provider === "azure"
                 ? "https://your-resource.openai.azure.com"
-                : "http://localhost:1234"
+                : provider === "ollama"
+                  ? "http://localhost:11434"
+                  : "http://localhost:1234"
             }
           />
           {supportsOptionalEndpoint && <Description>{t("endpointOptional")}</Description>}

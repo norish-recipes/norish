@@ -2,6 +2,7 @@ import type { QueryKey } from "@tanstack/react-query";
 import type { createTRPCContext } from "@trpc/tanstack-react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { AppRouter } from "@norish/trpc/client";
 
 type TrpcContext = ReturnType<typeof createTRPCContext<AppRouter>>;
@@ -14,6 +15,10 @@ export type CalendarCacheHelpers = {
     updater: (prev: PlannedItemFromQuery[] | undefined) => PlannedItemFromQuery[] | undefined
   ) => void;
   invalidate: () => void;
+  /** Place an item, by its date, in every cached range — a no-op where it already is. */
+  upsertItemAcrossRanges: (item: PlannedItemWithRecipePayload) => void;
+  /** Drop an item from every cached range. */
+  removeItemAcrossRanges: (itemId: string) => void;
 };
 
 export type CalendarQueryResult = {

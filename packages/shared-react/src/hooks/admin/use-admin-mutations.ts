@@ -5,6 +5,7 @@ import type {
   AuthProviderGitHubInput,
   AuthProviderGoogleInput,
   AuthProviderOIDCInput,
+  DecisionConfig,
   ImageGenerationConfig,
   PromptsConfigInput,
   RecipePermissionPolicy,
@@ -50,8 +51,12 @@ export type AdminMutationsResult = {
   updateImageGenerationConfig: (
     config: ImageGenerationConfig
   ) => Promise<{ success: boolean; error?: string }>;
+  updateDecisionConfig: (config: DecisionConfig) => Promise<{ success: boolean; error?: string }>;
   testAIEndpoint: (
     config: Pick<AIConfig, "provider" | "endpoint" | "apiKey">
+  ) => Promise<{ success: boolean; error?: string }>;
+  testDecisionEndpoint: (
+    config: Pick<DecisionConfig, "provider" | "apiKey" | "model" | "endpoint">
   ) => Promise<{ success: boolean; error?: string }>;
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
@@ -99,7 +104,13 @@ export function createUseAdminMutations({
     const updateImageGenerationConfigMutation = useMutation(
       trpc.admin.updateImageGenerationConfig.mutationOptions()
     );
+    const updateDecisionConfigMutation = useMutation(
+      trpc.admin.updateDecisionConfig.mutationOptions()
+    );
     const testAIEndpointMutation = useMutation(trpc.admin.testAIEndpoint.mutationOptions());
+    const testDecisionEndpointMutation = useMutation(
+      trpc.admin.testDecisionEndpoint.mutationOptions()
+    );
     const updatePermissionPolicyMutation = useMutation(
       trpc.admin.updateRecipePermissionPolicy.mutationOptions()
     );
@@ -183,8 +194,14 @@ export function createUseAdminMutations({
       updateImageGenerationConfig: async (config) => {
         return withInvalidate(updateImageGenerationConfigMutation.mutateAsync(config));
       },
+      updateDecisionConfig: async (config) => {
+        return withInvalidate(updateDecisionConfigMutation.mutateAsync(config));
+      },
       testAIEndpoint: async (config) => {
         return testAIEndpointMutation.mutateAsync(config);
+      },
+      testDecisionEndpoint: async (config) => {
+        return testDecisionEndpointMutation.mutateAsync(config);
       },
       updateRecipePermissionPolicy: async (policy) => {
         return withInvalidate(updatePermissionPolicyMutation.mutateAsync(policy));

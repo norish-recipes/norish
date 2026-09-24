@@ -77,6 +77,9 @@ describe("callRecipeScrapersParser", () => {
       })
     );
     expect(result.ok).toBe(true);
+    expect(result.raw).toEqual(
+      expect.objectContaining({ ok: true, canonicalUrl: "https://example.com/recipe" })
+    );
     if (result.ok) {
       expect(result.parser.scraper).toBe("AllRecipes");
       expect(result.recipe.title).toBe("Test recipe");
@@ -139,6 +142,41 @@ describe("callRecipeScrapersParser", () => {
         url: "https://example.com/recipe",
         html: "<html>recipe</html>",
       })
-    ).rejects.toThrow("Recipe parser API returned an invalid payload");
+    ).rejects.toMatchObject({
+      message: "Recipe parser API returned an invalid payload",
+      detail: { raw: { ok: true, recipe: [] }, issues: expect.any(Array) },
+    });
+  });
+
+  it("keeps the body the service sent when it is not JSON", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Traceback: KeyError 'title'", { status: 200 }))
+    );
+
+    const { callRecipeScrapersParser } = await import("@norish/api/parser/python/client");
+
+    await expect(
+      callRecipeScrapersParser({ url: "https://example.com/recipe", html: "<html>recipe</html>" })
+    ).rejects.toMatchObject({
+      message: "Recipe parser API returned a body that is not JSON",
+      detail: { body: "Traceback: KeyError 'title'" },
+    });
+  });
+
+  it("keeps the status and body of a failed request", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Internal Server Error", { status: 500 }))
+    );
+
+    const { callRecipeScrapersParser } = await import("@norish/api/parser/python/client");
+
+    await expect(
+      callRecipeScrapersParser({ url: "https://example.com/recipe", html: "<html>recipe</html>" })
+    ).rejects.toMatchObject({
+      message: "Recipe parser API request failed with status 500",
+      detail: { status: 500, body: "Internal Server Error" },
+    });
   });
 });

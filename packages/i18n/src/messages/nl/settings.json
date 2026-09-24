@@ -570,6 +570,10 @@
         "title": "Afbeeldingen Genereren",
         "subtitle": "Teken een foto van het gerecht voor recepten zonder afbeelding"
       },
+      "decisionModel": {
+        "title": "Beslismodel",
+        "subtitle": "Snelle, goedkope antwoorden op gesloten vragen"
+      },
       "prompts": {
         "title": "Prompts",
         "subtitle": "Pas AI-instructies aan voor receptverwerking"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (Lokaal)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Generieke OpenAI-compatibel"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "bijv. gpt-image-1",
       "modelDescription": "Het model dat de afbeelding tekent. Het moet een afbeeldingsmodel zijn, geen tekstmodel.",
       "fallbackHint": "Zelfde provider als je AI-configuratie: endpoint en API-sleutel vallen daarop terug tenzij je ze hier instelt."
+    },
+    "decisionConfig": {
+      "provider": "Beslisprovider",
+      "providers": {
+        "disabled": "Uitgeschakeld",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API-sleutel",
+      "apiKeyPlaceholder": "Voer API-sleutel in...",
+      "apiKeyDescription": "Haal een sleutel op in je account op typesafe.ai",
+      "model": "Beslismodel",
+      "uses": "Gebruik het Beslismodel voor",
+      "usesPlaceholder": "Niets",
+      "useNames": {
+        "autoCategorization": "Automatisch categoriseren",
+        "autoCategorizationDescription": "Bepaal of een recept een ontbijt, lunch, diner of snack is",
+        "autoTagging": "Automatisch taggen",
+        "autoTaggingDescription": "Kies tags uit de vaste lijst en bevestig elke tag die de AI voorstelt",
+        "allergyDetection": "Allergiedetectie",
+        "allergyDetectionDescription": "Bepaal welke allergenen van het huishouden een recept bevat",
+        "recipeProvenance": "Receptherkomst",
+        "recipeProvenanceDescription": "Leg het land en de Keukens vast voordat de notitie wordt geschreven",
+        "groceryLinking": "Boodschappen koppelen",
+        "groceryLinkingDescription": "Rangschik de aangeboden producten van een winkel en koppel er een waar het zeker van is",
+        "validateEnrichments": "Verrijkingen valideren",
+        "validateEnrichmentsDescription": "Controleer de eigen claims van elke verrijkingsrun voordat ze worden opgeslagen"
+      },
+      "testConnection": "Test verbinding",
+      "connectionSuccess": "Verbinding succesvol",
+      "aiDisabledHint": "AI is uitgeschakeld op deze server. Schakel het in bij AI-configuratie om het Beslismodel te testen en te gebruiken."
     },
     "promptsConfig": {
       "recipeExtraction": "Receptextractie Prompt",
@@ -812,7 +847,10 @@
         "ai-request": "AI request",
         "syncing-event": "Sync calendar event",
         "deleting-event": "Delete calendar event",
-        "running": "Run task"
+        "running": "Run task",
+        "searching": "Search the shop",
+        "reading-product": "Read the product page",
+        "saving-link": "Save the link"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Ingrediëntkoppeling",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
-        "image-generation": "Afbeeldingen genereren"
+        "image-generation": "Afbeeldingen genereren",
+        "store-lookup": "Winkelopzoeking"
       },
       "summary": {
         "failed": "{count} failed"
@@ -859,6 +898,7 @@
           "finished": "Finished",
           "duration": "Duration",
           "attempts": "Attempts",
+          "models": "Modellen",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },

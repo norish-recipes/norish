@@ -570,6 +570,10 @@
         "title": "Image Generation",
         "subtitle": "Draw a picture of the dish for recipes without one"
       },
+      "decisionModel": {
+        "title": "Decision Model",
+        "subtitle": "Fast, cheap answers to closed questions"
+      },
       "prompts": {
         "title": "Prompts",
         "subtitle": "Customize AI instructions for recipe processing"
@@ -718,6 +722,7 @@
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
+        "ollama": "Ollama (Local)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Generic OpenAI-compatible"
       },
@@ -730,6 +735,36 @@
       "modelPlaceholder": "e.g. gpt-image-1",
       "modelDescription": "The model that draws the picture. It must be an image model, not a text model.",
       "fallbackHint": "Same provider as your AI configuration: the endpoint and API key fall back to it unless you set them here."
+    },
+    "decisionConfig": {
+      "provider": "Decision Provider",
+      "providers": {
+        "disabled": "Disabled",
+        "typesafe": "TypeSafe AI"
+      },
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter API key...",
+      "apiKeyDescription": "Get a key from your account at typesafe.ai",
+      "model": "Decision Model",
+      "uses": "Use the Decision Model for",
+      "usesPlaceholder": "Nothing",
+      "useNames": {
+        "autoCategorization": "Auto-Categorization",
+        "autoCategorizationDescription": "Decide whether a recipe is a breakfast, lunch, dinner or snack",
+        "autoTagging": "Auto-Tagging",
+        "autoTaggingDescription": "Pick tags from the predefined list, and confirm each tag the AI proposes",
+        "allergyDetection": "Allergy Detection",
+        "allergyDetectionDescription": "Decide which household allergens a recipe contains",
+        "recipeProvenance": "Recipe Provenance",
+        "recipeProvenanceDescription": "Settle the country and Cuisines before the note is written",
+        "groceryLinking": "Grocery Linking",
+        "groceryLinkingDescription": "Order a store's offered products and link one it is sure of",
+        "validateEnrichments": "Validate Enrichments",
+        "validateEnrichmentsDescription": "Check every enrichment run's own claims before they are written"
+      },
+      "testConnection": "Test Connection",
+      "connectionSuccess": "Connection successful",
+      "aiDisabledHint": "AI is disabled on this server. Enable it in the AI Configuration to test and use the Decision Model."
     },
     "promptsConfig": {
       "recipeExtraction": "Recipe Extraction Prompt",
@@ -812,7 +847,10 @@
         "ai-request": "AI request",
         "syncing-event": "Sync calendar event",
         "deleting-event": "Delete calendar event",
-        "running": "Run task"
+        "running": "Run task",
+        "searching": "Search the shop",
+        "reading-product": "Read the product page",
+        "saving-link": "Save the link"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -826,7 +864,8 @@
         "ingredient-linking": "Ingredient linking",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
-        "image-generation": "Image generation"
+        "image-generation": "Image generation",
+        "store-lookup": "Store lookup"
       },
       "summary": {
         "failed": "{count} failed"
@@ -859,6 +898,7 @@
           "finished": "Finished",
           "duration": "Duration",
           "attempts": "Attempts",
+          "models": "Models",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },

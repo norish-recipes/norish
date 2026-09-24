@@ -17,9 +17,5 @@ export {
   type SaveCaldavConfigInput,
   type TestConnectionInput,
 } from "./use-caldav-mutations";
-export {
-  useCaldavItemStatusSubscription,
-  useCaldavSubscription,
-  useCaldavSyncCompleteSubscription,
-} from "./use-caldav-subscription";
+export { useCaldavSubscription } from "./use-caldav-subscription";
 export { useCaldavCacheHelpers, type CaldavCacheHelpers } from "./use-caldav-cache";
