@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Categorizzazione automatica",
         "autoCategorizationDescription": "Decidere se una ricetta è colazione, pranzo, cena o spuntino",
+        "autoTagging": "Tag automatici",
+        "autoTaggingDescription": "Scegliere i tag dall'elenco predefinito e confermare ogni tag proposto dall'IA",
         "allergyDetection": "Rilevamento allergie",
         "allergyDetectionDescription": "Decidere quali allergeni del nucleo familiare contiene una ricetta",
         "recipeProvenance": "Provenienza della ricetta",

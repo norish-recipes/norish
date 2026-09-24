@@ -54,7 +54,7 @@ vi.mock("@norish/shared-server/logger", () => ({
   aiLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-const { inferRecipeProvenance, countryChoiceCriteria, COUNTRY_THRESHOLD, CUISINE_THRESHOLD } =
+const { inferRecipeProvenance, countryChoiceCriteria, CUISINE_THRESHOLD, NO_COUNTRY } =
   await import("@norish/shared-server/ai/enrichment/provenance-inferrer");
 
 const ITALIAN_RECIPE = {
@@ -538,6 +538,8 @@ describe("the Decision path", () => {
     // Deprecated aliases and pseudo-locales are not countries a dish comes from.
     expect(criteria).not.toHaveProperty("UK");
     expect(criteria).not.toHaveProperty("XA");
+    // A dish may belong to no national tradition; that is an option, not a failure.
+    expect(criteria[NO_COUNTRY]).toMatch(/no single country/i);
     expect(new Set(Object.values(criteria)).size).toBe(codes.length);
   });
 
@@ -584,33 +586,19 @@ describe("the Decision path", () => {
     expect(mocked.verifyClaims).not.toHaveBeenCalled();
   });
 
-  it("settles a country at exactly the threshold and not one just below it", async () => {
-    expect(COUNTRY_THRESHOLD).toBe(0.6);
+  it("takes the top country however unsure the Decision is of it", async () => {
+    mocked.decide.mockResolvedValue(decided({ choice: "IT", probability: 0.2 }, { Italian: 0.9 }));
 
-    mocked.decide.mockResolvedValue(decided({ choice: "IT", probability: 0.6 }, { Italian: 0.9 }));
-    await expect(inferRecipeProvenance(ITALIAN_RECIPE)).resolves.toMatchObject({
-      originCountry: "IT",
-    });
-    expect(sentRequest().schema.shape).not.toHaveProperty("originCountry");
-
-    mocked.generateStructured.mockClear();
-    mocked.decide.mockResolvedValue(decided({ choice: "IT", probability: 0.59 }, { Italian: 0.9 }));
-    respondWith({ ...NOTE_ONLY, originCountry: "FR", cuisines: ["Italian"] });
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    // An unclear country settles nothing, Cuisines included: the whole group
-    // is the language model's, exactly as before.
-    const request = sentRequest();
-
-    expect(request.schema.shape).toHaveProperty("originCountry");
-    expect(request.schema.shape).toHaveProperty("cuisines");
-    expect(request.sections).toEqual([]);
-    expect(claim.originCountry).toBe("FR");
+    expect(sentRequest().schema.shape).not.toHaveProperty("originCountry");
+    expect(sentRequest().sections.join("\n")).toContain("- originCountry: IT");
+    expect(claim).toMatchObject({ originCountry: "IT", cuisineIds: ["id-italian"] });
+    // The Decision settled it: the language model's country check does not run.
+    expect(mocked.verifyClaims).not.toHaveBeenCalled();
   });
 
-  it("settles nothing on a distribution that leaves the chosen country out", async () => {
-    // Defensive: the runtime refuses such a response first. Should one get
-    // through, a missing probability reads as "not sure", never as settled.
+  it("takes the chosen country even when the distribution leaves it out", async () => {
     mocked.decide.mockResolvedValue({
       model: "jev",
       answers: {
@@ -618,18 +606,50 @@ describe("the Decision path", () => {
         country: { type: "choice", choice: "IT", probabilities: { NL: 0.4 } },
       },
     });
-    respondWith({ ...NOTE_ONLY, originCountry: "IT", cuisines: ["Italian"] });
 
-    await inferRecipeProvenance(ITALIAN_RECIPE);
-
-    expect(sentRequest().schema.shape).toHaveProperty("originCountry");
+    await expect(inferRecipeProvenance(ITALIAN_RECIPE)).resolves.toMatchObject({
+      originCountry: "IT",
+    });
   });
 
-  it("settles a Cuisine at exactly the threshold and not one just below it", async () => {
-    expect(CUISINE_THRESHOLD).toBe(0.6);
+  it("stores no country when the Decision picks none, and still writes the note", async () => {
+    mocked.decide.mockResolvedValue(
+      decided({ choice: NO_COUNTRY, probability: 0.7 }, { Italian: 0.9 })
+    );
+
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    const request = sentRequest();
+
+    expect(request.schema.shape).not.toHaveProperty("originCountry");
+    expect(request.sections.join("\n")).toContain("- originCountry: none");
+    // The country and the Cuisines are independent answers.
+    expect(claim).toEqual({
+      originCountry: null,
+      originCountryName: null,
+      originRegion: null,
+      provenanceNote: "Un classico romano.",
+      cuisineIds: ["id-italian"],
+    });
+  });
+
+  it("drops a region the language model wrote anyway when the Decision picks no country", async () => {
+    mocked.decide.mockResolvedValue(
+      decided({ choice: NO_COUNTRY, probability: 0.7 }, { Italian: 0.9 })
+    );
+    respondWith({ ...NOTE_ONLY, originRegion: "Lazio" });
+
+    const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    expect(claim).toMatchObject({ originCountry: null, originRegion: null });
+    expect(claim.provenanceNote).toBe("Un classico romano.");
+  });
+
+  it("attaches a Cuisine on a plain yes: just above the line, not at it", async () => {
+    expect(CUISINE_THRESHOLD).toBe(0.5);
 
     mocked.decide.mockResolvedValue(
-      decided({ choice: "IT", probability: 0.9 }, { Italian: 0.6, Japanese: 0.59 })
+      decided({ choice: "IT", probability: 0.9 }, { Italian: 0.51, Japanese: 0.5 })
     );
 
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
@@ -637,21 +657,17 @@ describe("the Decision path", () => {
     expect(claim.cuisineIds).toEqual(["id-italian"]);
   });
 
-  it("leaves the Cuisines to the language model when none clears the threshold, settling only the country", async () => {
+  it("settles no Cuisines as a final answer under existing: the language model is not asked for any", async () => {
     mocked.decide.mockResolvedValue(decided({ choice: "IT", probability: 0.9 }, {}));
-    respondWith({ ...NOTE_ONLY, cuisines: ["Italiana"] });
 
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
     const request = sentRequest();
 
-    expect(request.schema.shape).not.toHaveProperty("originCountry");
-    expect(request.schema.shape).toHaveProperty("cuisines");
-    // The language model's Cuisines still go through validation and the resolver.
-    expect(mocked.verifyClaims).toHaveBeenCalledWith(
-      expect.objectContaining({ claims: [{ id: "Italiana", question: expect.any(String) }] })
-    );
-    expect(claim).toMatchObject({ originCountry: "IT", cuisineIds: ["id-italian"] });
+    expect(request.schema.shape).not.toHaveProperty("cuisines");
+    expect(request.sections.join("\n")).toContain("- cuisines: none");
+    expect(mocked.verifyClaims).not.toHaveBeenCalled();
+    expect(claim).toMatchObject({ originCountry: "IT", cuisineIds: [] });
   });
 
   it("does not ask the country when it is supplied, and settles the Cuisines around it", async () => {
@@ -732,15 +748,49 @@ describe("the Decision path", () => {
     expect(sentRequest().schema.shape).not.toHaveProperty("cuisines");
   });
 
-  it("takes today's single inference under the extend strategy", async () => {
+  it("asks only the country under extend, and lets the Decision Model confirm each proposed Cuisine", async () => {
     vi.mocked(getCuisineStrategy).mockResolvedValue("extend");
-    respondWith({ ...NOTE_ONLY, originCountry: "IT", cuisines: ["Italian"] });
+    mocked.decide.mockResolvedValue(decided({ choice: "ES", probability: 0.9 }, {}));
+    vi.mocked(createCuisines).mockResolvedValue([
+      { id: "id-basque", name: "Basque", createdAt: new Date(), version: 1 },
+    ]);
+    respondWith({ ...NOTE_ONLY, cuisines: ["Basque", "Japanese"] });
+    mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
+      Promise.resolve({
+        kept: claims.filter((claim) => claim.id === "Basque"),
+        dropped: [{ claim: { id: "Japanese" }, probability: 0.3 }],
+        mode: "enforce",
+      })
+    );
 
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
+    expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toEqual(["country"]);
+    const request = sentRequest();
+
+    expect(request.schema.shape).not.toHaveProperty("originCountry");
+    expect(request.schema.shape).toHaveProperty("cuisines");
+    // The yes/no is the flow here, so it counts whatever Validate enrichments says.
+    expect(mocked.verifyClaims).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claims: [
+          { id: "Basque", question: expect.any(String) },
+          { id: "Japanese", question: expect.any(String) },
+        ],
+        mode: "enforce",
+      })
+    );
+    expect(createCuisines).toHaveBeenCalledWith(["Basque"]);
+    expect(claim).toMatchObject({ originCountry: "ES", cuisineIds: ["id-basque"] });
+  });
+
+  it("asks nothing under extend when the country is supplied", async () => {
+    vi.mocked(getCuisineStrategy).mockResolvedValue("extend");
+    respondWith({ ...NOTE_ONLY, originCountry: "IT", cuisines: ["Italian"] });
+
+    await inferRecipeProvenance({ ...ITALIAN_RECIPE, supplied: { originCountry: "IT" } });
+
     expect(mocked.decide).not.toHaveBeenCalled();
-    expect(sentRequest().schema.shape).toHaveProperty("originCountry");
-    expect(claim.originCountry).toBe("IT");
   });
 
   it("takes today's single inference when the use is switched off", async () => {

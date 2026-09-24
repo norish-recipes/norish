@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "자동 분류",
         "autoCategorizationDescription": "레시피가 아침, 점심, 저녁, 간식 중 무엇인지 결정",
+        "autoTagging": "자동 태그 지정",
+        "autoTaggingDescription": "미리 정의된 목록에서 태그를 고르고 AI가 제안한 각 태그를 확인",
         "allergyDetection": "알레르기 감지",
         "allergyDetectionDescription": "레시피에 가구의 어떤 알레르겐이 들어 있는지 결정",
         "recipeProvenance": "레시피 출처",

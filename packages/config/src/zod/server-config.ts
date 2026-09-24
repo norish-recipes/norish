@@ -627,6 +627,7 @@ export type DecisionProvider = z.infer<typeof DecisionProviderSchema>;
  */
 export const DecisionUseSchema = z.enum([
   "autoCategorization",
+  "autoTagging",
   "allergyDetection",
   "recipeProvenance",
   "groceryLinking",

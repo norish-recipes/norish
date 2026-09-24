@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Automatische Kategorisierung",
         "autoCategorizationDescription": "Entscheiden, ob ein Rezept ein Frühstück, Mittagessen, Abendessen oder Snack ist",
+        "autoTagging": "Automatische Tags",
+        "autoTaggingDescription": "Tags aus der vordefinierten Liste wählen und jeden von der KI vorgeschlagenen Tag bestätigen",
         "allergyDetection": "Allergieerkennung",
         "allergyDetectionDescription": "Entscheiden, welche Allergene des Haushalts ein Rezept enthält",
         "recipeProvenance": "Rezept-Herkunft",

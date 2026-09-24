@@ -109,26 +109,26 @@ describe("verifyClaims", () => {
   });
 
   it("drops a claim at exactly the threshold and keeps one just above it, in enforce mode", async () => {
-    expect(DROP_THRESHOLD).toBe(0.2);
-    mocked.decide.mockResolvedValue(answered({ quick: 0.2, vegan: 0.21 }));
+    expect(DROP_THRESHOLD).toBe(0.5);
+    mocked.decide.mockResolvedValue(answered({ quick: 0.5, vegan: 0.51 }));
     const claims = [claim("quick"), claim("vegan")];
 
     const result = await verifyClaims({ feature: "auto-tagging", state, claims });
 
     expect(result).toEqual({
       kept: [claim("vegan")],
-      dropped: [{ claim: claim("quick"), probability: 0.2 }],
+      dropped: [{ claim: claim("quick"), probability: 0.5 }],
       mode: "enforce",
     });
   });
 
-  it("keeps a doubtful claim: only a clear no removes what the language model made", async () => {
-    mocked.decide.mockResolvedValue(answered({ quick: 0.5 }));
+  it("drops a claim the Decision Model answers no to, even when that no is not sure", async () => {
+    mocked.decide.mockResolvedValue(answered({ quick: 0.35 }));
 
     const result = await verifyClaims({ feature: "auto-tagging", state, claims: [claim("quick")] });
 
-    expect(result.kept).toEqual([claim("quick")]);
-    expect(result.dropped).toEqual([]);
+    expect(result.kept).toEqual([]);
+    expect(result.dropped).toEqual([{ claim: claim("quick"), probability: 0.35 }]);
   });
 
   it("takes a kind's stricter constant: the allergen one drops at 0.05 and not at 0.06, and keeps 0.2", async () => {
@@ -170,6 +170,23 @@ describe("verifyClaims", () => {
       }),
       "Enrichment Validation completed"
     );
+  });
+
+  it("enforces when a kind asks for it, whatever the Validate enrichments use says", async () => {
+    vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+    mocked.decide.mockResolvedValue(answered({ quick: 0.9, vegan: 0.1 }));
+
+    const result = await verifyClaims({
+      feature: "auto-tagging",
+      state,
+      claims: [claim("quick"), claim("vegan")],
+      mode: "enforce",
+    });
+
+    expect(result.mode).toBe("enforce");
+    expect(result.kept).toEqual([claim("quick")]);
+    expect(result.dropped).toEqual([{ claim: claim("vegan"), probability: 0.1 }]);
+    expect(vi.mocked(isDecisionUseEnabled)).not.toHaveBeenCalled();
   });
 
   it("behaves as shadow when the Validate enrichments use is off", async () => {

@@ -53,6 +53,7 @@ describe("DecisionConfigSchema", () => {
   it("lists every use in the order the form shows them", () => {
     expect(DECISION_USES).toEqual([
       "autoCategorization",
+      "autoTagging",
       "allergyDetection",
       "recipeProvenance",
       "groceryLinking",

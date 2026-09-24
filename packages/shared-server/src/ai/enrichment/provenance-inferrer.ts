@@ -7,15 +7,24 @@
  * per-locale fan-out — the prompt reads the recipe's language off the recipe
  * text it already has.
  *
- * Two paths, in a fixed order (ADR-0035). Under the `existing` Cuisine
- * strategy, with a Decision Model configured and the Recipe Provenance use
- * on, a Decision goes first: a Choice over the world's country codes and one
- * Boolean per Cuisine in the administrator's vocabulary. A clear country and
- * its clear Cuisines become settled slots, and the language model is asked to
- * write the region and the note around them — the shape ADR-0018's gap-fill
- * already gives Supplied Recipe Data. When the country is unclear, the
- * strategy is `extend`, there is no Decision Model, or the Decision fails, the
- * whole group is inferred by the language model exactly as before.
+ * With a Decision Model configured and the Recipe Provenance use on, each
+ * part of the claim has one owner (ADR-0035):
+ *
+ * - The country is the Decision's: a Choice over the world's country codes
+ *   plus `none`, and the top option is taken whatever its probability. `none`
+ *   stores no country.
+ * - Under `existing`, the Cuisines are the Decision's too: one Boolean per
+ *   vocabulary Cuisine, and every "yes" is attached. That answer is final,
+ *   even when it is empty; the language model is not asked for Cuisines.
+ * - Under `extend`, the language model proposes the Cuisines, and the
+ *   Decision Model answers yes or no to each proposal; a "no" is neither
+ *   attached nor minted.
+ * - The region, the country's written name and the note are always the
+ *   language model's, written around the settled slots — the shape ADR-0018's
+ *   gap-fill already gives Supplied Recipe Data.
+ *
+ * With the use off, or when the Decision fails, the whole group is inferred
+ * by the language model and its claims are validated as any kind's are.
  *
  * Proposed Cuisine names from the language model are resolved against the
  * administrator's vocabulary here, so what reaches the worker is already
@@ -25,10 +34,11 @@
  * function; only the vocabulary read and the `extend` row creation touch the
  * database, and both go through the cuisines repository.
  *
- * The language model's own country and Cuisines are validated before the
- * claim is returned (Enrichment Validation): a Cuisine the Decision Model is
- * clearly sure is wrong is not attached, and under `extend` not minted; the
- * country is scored in shadow until its disagreement rate is known.
+ * Off the Decision path, the language model's own country and Cuisines are
+ * validated before the claim is returned (Enrichment Validation): a Cuisine
+ * the Decision Model answers "no" to is not attached, and under `extend` not
+ * minted; the country is scored in shadow until its disagreement rate is
+ * known.
  *
  * Inference reads only the stored recipe. It never sees parser output, import
  * metadata, or how the recipe entered Norish. The stored recipe includes any
@@ -55,17 +65,16 @@ import type { ValidationMode } from "./verification";
 import { AIResponseError } from "../runtime/errors";
 import { decide, generateStructured } from "../runtime/runtime";
 import { buildProvenanceSchema } from "./provenance.schema";
-import { MAX_QUESTIONS_PER_DECISION, verifyClaims } from "./verification";
+import { DROP_THRESHOLD, MAX_QUESTIONS_PER_DECISION, verifyClaims } from "./verification";
 
 /**
- * The chosen country's probability at or above which the country is settled
- * by the Decision. Below it nothing is settled and the whole group goes to
- * the language model as it always has.
+ * A vocabulary Cuisine whose Boolean is above this is attached: a plain
+ * "yes", the same line Enrichment Validation drops a claim at.
  */
-export const COUNTRY_THRESHOLD = 0.6;
+export const CUISINE_THRESHOLD = DROP_THRESHOLD;
 
-/** A Cuisine the Decision Model is at least this sure of is settled. */
-export const CUISINE_THRESHOLD = 0.6;
+/** The country Choice's option for a dish no single country has a claim to. */
+export const NO_COUNTRY = "none";
 
 /**
  * Whether a language-model country the Decision Model disputes fails the run.
@@ -116,16 +125,19 @@ const NOT_A_COUNTRY_CHOICE = new Set([
 
 /**
  * The country Choice's options: every alpha-2 code the platform names, less
- * the ones above, labelled by code with the English name as description.
- * Derived from the runtime's own region names, like the editor's picker, so
- * no bundled list ages.
+ * the ones above, labelled by code with the English name as description,
+ * plus {@link NO_COUNTRY}. Derived from the runtime's own region names, like
+ * the editor's picker, so no bundled list ages.
  */
 export function countryChoiceCriteria(): Record<string, string> {
-  return Object.fromEntries(
-    listCountryOptions("en")
-      .filter((option) => !NOT_A_COUNTRY_CHOICE.has(option.code))
-      .map((option) => [option.code, option.name])
-  );
+  return {
+    ...Object.fromEntries(
+      listCountryOptions("en")
+        .filter((option) => !NOT_A_COUNTRY_CHOICE.has(option.code))
+        .map((option) => [option.code, option.name])
+    ),
+    [NO_COUNTRY]: "No single country: the dish belongs to no national tradition",
+  };
 }
 
 /** The provenance slots already supplied when inference runs. */
@@ -157,10 +169,13 @@ export interface ProvenanceInference {
 
 /** What a Decision settled before the language model was asked. */
 interface DecidedProvenance {
-  /** The settled country code, or null when the country was not asked. */
-  originCountry: string | null;
-  /** Vocabulary rows the Decision is sure of; null when Cuisines were not asked. */
-  cuisines: CuisineVocabularyEntry[] | null;
+  /**
+   * The settled country: a code, or null for {@link NO_COUNTRY}. Undefined
+   * when the country was not asked.
+   */
+  originCountry?: string | null;
+  /** The vocabulary rows answered "yes"; undefined when Cuisines were not asked. */
+  cuisines?: CuisineVocabularyEntry[];
 }
 
 function buildProvenanceFill(
@@ -195,21 +210,27 @@ function buildProvenanceFill(
  * as it did before gap-filling existed. A slot a Decision settled arrives here
  * the same way a supplied one does.
  */
-function buildSuppliedSection(supplied: SuppliedProvenance | undefined): string | null {
-  if (!supplied) return null;
+function buildSuppliedSection(
+  supplied: SuppliedProvenance | undefined,
+  settledEmpty: { country: boolean; cuisines: boolean } = { country: false, cuisines: false }
+): string | null {
+  if (!supplied && !settledEmpty.country && !settledEmpty.cuisines) return null;
 
   const lines: string[] = [];
-  const country = normalizeOriginCountry(supplied.originCountry);
-  const region = supplied.originRegion?.trim();
-  const note = supplied.provenanceNote?.trim();
-  const cuisineNames = (supplied.cuisineNames ?? [])
+  const country = normalizeOriginCountry(supplied?.originCountry);
+  const region = supplied?.originRegion?.trim();
+  const note = supplied?.provenanceNote?.trim();
+  const cuisineNames = (supplied?.cuisineNames ?? [])
     .map((name) => name.trim())
     .filter((name) => name !== "");
 
   if (country) lines.push(`- originCountry: ${country}`);
+  // A Decision may settle a slot as empty; the note must not claim otherwise.
+  else if (settledEmpty.country) lines.push("- originCountry: none (no single country)");
   if (region) lines.push(`- originRegion: ${region}`);
   if (note) lines.push(`- provenanceNote: ${note}`);
   if (cuisineNames.length > 0) lines.push(`- cuisines: ${cuisineNames.join(", ")}`);
+  else if (settledEmpty.cuisines) lines.push("- cuisines: none");
 
   if (lines.length === 0) return null;
 
@@ -274,21 +295,23 @@ function countryQuestion(code: string): string {
 }
 
 /**
- * Ask the Decision Model which country the dish is from and which of the
- * vocabulary's Cuisines it belongs to, in as many requests as the question
- * limit needs. A slot already supplied is not asked. Returns null when the
- * country was asked and is unclear: then nothing is settled and the whole
- * group goes to the language model. Throws whatever `decide` throws.
+ * Ask the Decision Model which country the dish is from and, under
+ * `existing`, which of the vocabulary's Cuisines it belongs to, in as many
+ * requests as the question limit needs. The two answers are independent. A
+ * slot already supplied is not asked; neither is a Cuisine under `extend`,
+ * where the language model proposes and the Decision Model only confirms.
+ * Returns null when nothing was asked. Throws whatever `decide` throws.
  */
 async function decideProvenance(
   recipe: RecipeForProvenance,
-  vocabulary: readonly CuisineVocabularyEntry[]
+  vocabulary: readonly CuisineVocabularyEntry[],
+  strategy: CuisineStrategy
 ): Promise<DecidedProvenance | null> {
   const suppliedCountry = normalizeOriginCountry(recipe.supplied?.originCountry);
   const suppliedCuisines = (recipe.supplied?.cuisineNames ?? []).some((name) => name.trim() !== "");
   const criteria = countryChoiceCriteria();
   const askCountry = suppliedCountry === null && Object.keys(criteria).length <= MAX_CHOICE_OPTIONS;
-  const askCuisines = !suppliedCuisines && vocabulary.length > 0;
+  const askCuisines = strategy === "existing" && !suppliedCuisines && vocabulary.length > 0;
 
   if (!askCountry && !askCuisines) return null;
 
@@ -299,8 +322,7 @@ async function decideProvenance(
       COUNTRY_QUESTION_ID,
       {
         type: "choice",
-        instructions:
-          "Which country has the strongest claim to this dish? Judge from the recipe alone; when several countries claim it, pick the strongest claim.",
+        instructions: `Which country has the strongest claim to this dish? Judge from the recipe alone; when several countries claim it, pick the strongest claim. Choose ${NO_COUNTRY} only when the dish belongs to no national tradition at all.`,
         criteria,
       },
     ]);
@@ -315,8 +337,7 @@ async function decideProvenance(
     }
   }
 
-  let originCountry: string | null = null;
-  const cuisines: CuisineVocabularyEntry[] = [];
+  const decided: DecidedProvenance = askCuisines ? { cuisines: [] } : {};
 
   for (let start = 0; start < questions.length; start += MAX_QUESTIONS_PER_DECISION) {
     const batch = questions.slice(start, start + MAX_QUESTIONS_PER_DECISION);
@@ -334,24 +355,17 @@ async function decideProvenance(
       if (!answer) continue;
 
       if (answer.type === "choice") {
-        // The runtime has already refused a distribution without the chosen
-        // entry; a missing probability here is "not sure", never "settled".
-        if ((answer.probabilities[answer.choice] ?? 0) < COUNTRY_THRESHOLD) return null;
-        originCountry = answer.choice;
-      } else if (answer.type === "boolean" && answer.probability >= CUISINE_THRESHOLD) {
+        // The top option is the country, however sure the Decision is of it.
+        decided.originCountry = answer.choice === NO_COUNTRY ? null : answer.choice;
+      } else if (answer.type === "boolean" && answer.probability > CUISINE_THRESHOLD) {
         const cuisine = vocabulary.find((entry) => cuisineQuestionId(entry) === id);
 
-        if (cuisine) cuisines.push(cuisine);
+        if (cuisine) decided.cuisines?.push(cuisine);
       }
     }
   }
 
-  return {
-    originCountry: askCountry ? originCountry : null,
-    // No Cuisine clearing the threshold is not an answer: the language model
-    // is still asked, and its proposals go through the resolver as before.
-    cuisines: askCuisines && cuisines.length > 0 ? cuisines : null,
-  };
+  return decided;
 }
 
 export async function inferRecipeProvenance(
@@ -372,14 +386,13 @@ export async function inferRecipeProvenance(
   const vocabulary = await listCuisines();
   const strategy = await getCuisineStrategy();
 
-  // Under `extend` the model may name a Cuisine outside the vocabulary, which
-  // a Choice over the vocabulary cannot, so the Decision path is `existing` only.
   let decided: DecidedProvenance | null = null;
+  const decisionUse = await isDecisionUseEnabled("recipeProvenance");
 
-  if (strategy === "existing" && (await isDecisionUseEnabled("recipeProvenance"))) {
+  if (decisionUse) {
     // A Decision failure of any retryability is a warn log and the fallback,
     // never the reason the job fails.
-    decided = await decideProvenance(recipe, vocabulary).catch((error: unknown) => {
+    decided = await decideProvenance(recipe, vocabulary, strategy).catch((error: unknown) => {
       aiLogger.warn(
         { err: error, feature: "recipe-provenance" },
         "Decision failed, falling back to the language model"
@@ -390,21 +403,24 @@ export async function inferRecipeProvenance(
   }
 
   const settled: SettledProvenanceSlots = {
-    country: decided?.originCountry !== null && decided?.originCountry !== undefined,
-    cuisines: decided?.cuisines !== null && decided?.cuisines !== undefined,
+    country: decided?.originCountry !== undefined,
+    cuisines: decided?.cuisines !== undefined,
   };
   // The settled slots join the supplied ones as facts the note is written around.
   const supplied: SuppliedProvenance | undefined =
     settled.country || settled.cuisines
       ? {
           ...recipe.supplied,
-          ...(settled.country ? { originCountry: decided?.originCountry } : {}),
+          ...(settled.country ? { originCountry: decided?.originCountry ?? null } : {}),
           ...(settled.cuisines
             ? { cuisineNames: decided?.cuisines?.map((cuisine) => cuisine.name) }
             : {}),
         }
       : recipe.supplied;
-  const suppliedSection = buildSuppliedSection(supplied);
+  const suppliedSection = buildSuppliedSection(supplied, {
+    country: settled.country === true && !decided?.originCountry,
+    cuisines: settled.cuisines === true && (decided?.cuisines ?? []).length === 0,
+  });
 
   const output = await generateStructured({
     prompt: "recipe-provenance",
@@ -432,6 +448,9 @@ export async function inferRecipeProvenance(
     ? (decided?.originCountry ?? null)
     : (output.originCountry ?? null);
   const originCountry = normalizeOriginCountry(claimedCountry);
+  // A region lies within a country: when the Decision settled on no country,
+  // a region the language model wrote anyway has nothing to belong to.
+  const originRegion = settled.country && claimedCountry === null ? null : output.originRegion;
 
   // Validation sees only the claims this run made. A supplied slot the
   // language model echoed back is stored data, not a claim: it is never
@@ -471,13 +490,16 @@ export async function inferRecipeProvenance(
     );
     // The language model's Cuisines, checked before they are resolved: a
     // disputed name is neither attached nor, under `extend`, minted. A name
-    // that only repeats a supplied Cuisine is not this run's claim.
+    // that only repeats a supplied Cuisine is not this run's claim. With the
+    // Recipe Provenance use on, this yes/no is the flow itself, so it counts
+    // whatever the Validate enrichments use says.
     const { kept } = await verifyClaims({
       feature: "recipe-provenance",
       state: recipeState(recipe),
       claims: proposed
         .filter((name) => !echoesSupplied(name))
         .map((name) => ({ id: name, question: cuisineQuestion(name) })),
+      ...(decisionUse ? { mode: "enforce" as const } : {}),
     });
     const keptNames = new Set(kept.map((claim) => claim.id));
 
@@ -493,7 +515,7 @@ export async function inferRecipeProvenance(
       title: recipe.title,
       originCountry,
       originCountryName: output.originCountryName,
-      originRegion: output.originRegion,
+      originRegion,
       cuisineCount: cuisineIds.length,
       path: settled.country || settled.cuisines ? "decision" : "language-model",
       settled,
@@ -510,7 +532,7 @@ export async function inferRecipeProvenance(
       claimedCountry && typeof output.originCountryName === "string"
         ? output.originCountryName.trim() || null
         : null,
-    originRegion: output.originRegion,
+    originRegion,
     provenanceNote: output.provenanceNote,
     cuisineIds,
   };

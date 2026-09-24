@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Автоматично категоризиране",
         "autoCategorizationDescription": "Да реши дали рецептата е закуска, обяд, вечеря или снак",
+        "autoTagging": "Автоматично етикетиране",
+        "autoTaggingDescription": "Да избере етикети от предварително зададения списък и да потвърди всеки етикет, предложен от ИИ",
         "allergyDetection": "Откриване на алергени",
         "allergyDetectionDescription": "Да реши кои алергени на домакинството съдържа рецептата",
         "recipeProvenance": "Произход на рецептата",

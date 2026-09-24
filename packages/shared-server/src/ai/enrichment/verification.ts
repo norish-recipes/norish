@@ -17,7 +17,8 @@
  * enrichments** use governs whether a verdict changes anything (enforce);
  * with it off, verdicts are logged and every claim is kept (shadow), because
  * a dropped claim is something a household sees and a log line is not. A kind
- * may force shadow for a question whose disagreement rate is not yet known.
+ * may force shadow for a question whose disagreement rate is not yet known,
+ * or force enforce when its own Decision use makes the yes/no its flow.
  * Any `AIError` from `decide` returns every claim unchanged: validation is
  * never the reason a run fails.
  */
@@ -38,10 +39,11 @@ import { decide } from "../runtime/runtime";
 
 /**
  * A claim whose probability of being true is at or below this is dropped in
- * enforce mode. Doubt keeps the claim, because the language model already
- * made it; only a clear "no" removes it.
+ * enforce mode: whenever the Decision Model's answer is "no", the claim is not
+ * written. Anything the run adds must be something the Decision Model agrees
+ * with; a "no" that is only moderately sure still says the claim is wrong.
  */
-export const DROP_THRESHOLD = 0.2;
+export const DROP_THRESHOLD = 0.5;
 
 /**
  * Allergy detection's own, far stricter constant: an allergen tag is dropped
@@ -87,8 +89,10 @@ export interface VerifyClaimsOptions<Claim extends ClaimToVerify> {
   claims: readonly Claim[];
   /**
    * `shadow` forces logging only, for a question whose disagreement rate is
-   * not yet known. Omitted, the Validate enrichments use decides: enforce
-   * when it is on, shadow when it is off.
+   * not yet known. `enforce` forces the verdict to count, for a kind whose
+   * own Decision use makes the yes/no part of its flow rather than a check
+   * on it. Omitted, the Validate enrichments use decides: enforce when it is
+   * on, shadow when it is off.
    */
   mode?: ValidationMode;
   /** At or below: dropped in enforce mode. Defaults to {@link DROP_THRESHOLD}. */
@@ -98,7 +102,7 @@ export interface VerifyClaimsOptions<Claim extends ClaimToVerify> {
 export interface VerifiedClaims<Claim extends ClaimToVerify> {
   /** The claims to write, in the order they were made. */
   kept: Claim[];
-  /** The claims the Decision Model was clearly sure are wrong. Empty in shadow mode. */
+  /** The claims the Decision Model judged wrong. Empty in shadow mode. */
   dropped: { claim: Claim; probability: number }[];
   /**
    * What actually happened: `enforce` or `shadow` when the Decision Model
@@ -163,9 +167,7 @@ export async function verifyClaims<Claim extends ClaimToVerify>(
   if (!(await isDecisionModelConfigured())) return { kept, dropped: [], mode: "off" };
 
   const mode: ValidationMode =
-    options.mode === "shadow" || !(await isDecisionUseEnabled("validateEnrichments"))
-      ? "shadow"
-      : "enforce";
+    options.mode ?? ((await isDecisionUseEnabled("validateEnrichments")) ? "enforce" : "shadow");
 
   let probabilities: Map<string, number>;
 

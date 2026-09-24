@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Categorización automática",
         "autoCategorizationDescription": "Decidir si una receta es desayuno, comida, cena o tentempié",
+        "autoTagging": "Etiquetado automático",
+        "autoTaggingDescription": "Elegir etiquetas de la lista predefinida y confirmar cada etiqueta que propone la IA",
         "allergyDetection": "Detección de alergias",
         "allergyDetectionDescription": "Decidir qué alérgenos del hogar contiene una receta",
         "recipeProvenance": "Procedencia de la receta",

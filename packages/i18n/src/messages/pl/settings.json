@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Automatyczna kategoryzacja",
         "autoCategorizationDescription": "Ustalić, czy przepis to śniadanie, obiad, kolacja czy przekąska",
+        "autoTagging": "Automatyczne tagowanie",
+        "autoTaggingDescription": "Wybrać tagi z predefiniowanej listy i potwierdzić każdy tag zaproponowany przez AI",
         "allergyDetection": "Wykrywanie alergenów",
         "allergyDetectionDescription": "Ustalić, które alergeny gospodarstwa zawiera przepis",
         "recipeProvenance": "Pochodzenie przepisu",

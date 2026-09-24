@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Categorização automática",
         "autoCategorizationDescription": "Decidir se uma receita é café da manhã, almoço, jantar ou lanche",
+        "autoTagging": "Marcação automática",
+        "autoTaggingDescription": "Escolher tags da lista predefinida e confirmar cada tag que a IA propõe",
         "allergyDetection": "Detecção de alergias",
         "allergyDetectionDescription": "Decidir quais alérgenos da residência uma receita contém",
         "recipeProvenance": "Procedência da receita",

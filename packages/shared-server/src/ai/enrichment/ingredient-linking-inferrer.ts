@@ -13,7 +13,7 @@
  * skip steps that already have Step Ingredients.
  *
  * The claim's links are validated before they are returned (Enrichment
- * Validation): a link the Decision Model is clearly sure is wrong is not
+ * Validation): a link the Decision Model answers "no" to is not
  * written, and the step stays bare for a later run. Only the links this run
  * proposed are judged — a link a cook attached is not in the claim.
  */

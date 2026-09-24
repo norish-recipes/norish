@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Automatisk kategorisering",
         "autoCategorizationDescription": "Afgør om en opskrift er morgenmad, frokost, aftensmad eller snack",
+        "autoTagging": "Automatiske tags",
+        "autoTaggingDescription": "Vælg tags fra den foruddefinerede liste, og bekræft hvert tag, AI'en foreslår",
         "allergyDetection": "Allergiregistrering",
         "allergyDetectionDescription": "Afgør hvilke af husstandens allergener en opskrift indeholder",
         "recipeProvenance": "Opskriftens oprindelse",

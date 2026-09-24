@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Auto-Categorization",
         "autoCategorizationDescription": "Decide whether a recipe is a breakfast, lunch, dinner or snack",
+        "autoTagging": "Auto-Tagging",
+        "autoTaggingDescription": "Pick tags from the predefined list, and confirm each tag the AI proposes",
         "allergyDetection": "Allergy Detection",
         "allergyDetectionDescription": "Decide which household allergens a recipe contains",
         "recipeProvenance": "Recipe Provenance",

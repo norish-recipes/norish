@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Automatisch categoriseren",
         "autoCategorizationDescription": "Bepaal of een recept een ontbijt, lunch, diner of snack is",
+        "autoTagging": "Automatisch taggen",
+        "autoTaggingDescription": "Kies tags uit de vaste lijst en bevestig elke tag die de AI voorstelt",
         "allergyDetection": "Allergiedetectie",
         "allergyDetectionDescription": "Bepaal welke allergenen van het huishouden een recept bevat",
         "recipeProvenance": "Receptherkomst",

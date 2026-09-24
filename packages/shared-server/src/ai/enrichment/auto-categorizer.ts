@@ -76,7 +76,7 @@ async function decideCategories(recipe: RecipeSummary): Promise<RecipeCategory[]
 /**
  * The request this kind has always made: the words, then the matcher, then
  * the run's own claims checked before they are written (Enrichment
- * Validation). A category the Decision Model is clearly sure is wrong is not
+ * Validation). A category the Decision Model answers "no" to is not
  * written; when none survives, the worker's empty-list rule makes the run a
  * retryable failure as it always has.
  */

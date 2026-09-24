@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Catégorisation automatique",
         "autoCategorizationDescription": "Décider si une recette est un petit-déjeuner, un déjeuner, un dîner ou une collation",
+        "autoTagging": "Étiquetage automatique",
+        "autoTaggingDescription": "Choisir les tags de la liste prédéfinie et confirmer chaque tag proposé par l'IA",
         "allergyDetection": "Détection des allergies",
         "allergyDetectionDescription": "Décider quels allergènes du foyer une recette contient",
         "recipeProvenance": "Provenance des recettes",

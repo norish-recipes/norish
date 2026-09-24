@@ -751,6 +751,8 @@
       "useNames": {
         "autoCategorization": "Автоматическая категоризация",
         "autoCategorizationDescription": "Решить, является ли рецепт завтраком, обедом, ужином или перекусом",
+        "autoTagging": "Автоматические теги",
+        "autoTaggingDescription": "Выбрать теги из заданного списка и подтвердить каждый тег, предложенный ИИ",
         "allergyDetection": "Определение аллергенов",
         "allergyDetectionDescription": "Решить, какие аллергены домохозяйства содержит рецепт",
         "recipeProvenance": "Происхождение рецепта",
