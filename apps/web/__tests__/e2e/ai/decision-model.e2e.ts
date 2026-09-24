@@ -245,9 +245,10 @@ test("an unsure Decision hands categorization to the AI provider, whose answer i
   await decisionModelAtHarness();
   await setAutomaticEnrichment({ autoCategorization: true });
   stack.ai.control.reset();
-  // Nothing clears the category threshold, and the validation question on
-  // the AI provider's answer ("Lunch") is answered from the same set: kept.
-  stack.ai.control.decideWith(answers({ Breakfast: 0.5, Lunch: 0.5, Dinner: 0.5, Snack: 0.5 }));
+  // Nothing clears the category threshold (0.6), and the validation question
+  // on the AI provider's answer ("Lunch") is answered from the same set: above
+  // the drop threshold (0.5), so kept.
+  stack.ai.control.decideWith(answers({ Breakfast: 0.5, Lunch: 0.55, Dinner: 0.5, Snack: 0.5 }));
 
   await importAndOpen("Unsure Decision Stew", [
     bareRecipe("Unsure Decision Stew"),
