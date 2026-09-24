@@ -9,14 +9,13 @@ import type { DefaultJobOptions, Job, Processor, WorkerOptions } from "bullmq";
 
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 
-import { createLazyWorker, stopLazyWorker } from "./lazy-worker-manager";
-import { getBullClient } from "./redis/bullmq";
-
 /**
  * Queue names for all background job queues
  */
 import type { QueueName } from "./queue-names";
+import { createLazyWorker, stopLazyWorker } from "./lazy-worker-manager";
 import { QUEUE_NAMES } from "./queue-names";
+import { getBullClient } from "./redis/bullmq";
 
 export { QUEUE_NAMES };
 export type { QueueName };

@@ -338,7 +338,11 @@ describe("the Decision Model block (ADR-0035)", () => {
 
   it("getDecisionConfig returns the parsed block after a save", async () => {
     stored({
-      [ServerConfigKeys.DECISION_CONFIG]: { provider: "typesafe", apiKey: "k", model: "jev-latest" },
+      [ServerConfigKeys.DECISION_CONFIG]: {
+        provider: "typesafe",
+        apiKey: "k",
+        model: "jev-latest",
+      },
     });
 
     const { getDecisionConfig } = await import("@norish/shared-server/config/server-config-loader");

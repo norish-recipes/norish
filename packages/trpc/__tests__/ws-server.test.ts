@@ -47,9 +47,8 @@ vi.mock("../src/router", () => {
 });
 
 const { createWsContext } = await import("../src/context");
-const { initTrpcWebSocket, isTrustedWebSocketOrigin, stopTrpcWebSocket } = await import(
-  "../src/ws-server"
-);
+const { initTrpcWebSocket, isTrustedWebSocketOrigin, stopTrpcWebSocket } =
+  await import("../src/ws-server");
 
 const identity = {
   id: "user-1",
@@ -140,7 +139,10 @@ describe("upgrade", () => {
     expect(connectionManager.registerConnection).toHaveBeenCalledWith("user-1", expect.anything());
 
     // The context reads the identity the upgrade left on the request.
-    const req = { realtimeIdentity: identity, connectionId: "conn-1" } as unknown as http.IncomingMessage;
+    const req = {
+      realtimeIdentity: identity,
+      connectionId: "conn-1",
+    } as unknown as http.IncomingMessage;
     const ctx = await createWsContext({ req, res: ws, info: {} } as never);
 
     expect(ctx).toEqual({ user: identity, household: null, connectionId: "conn-1" });

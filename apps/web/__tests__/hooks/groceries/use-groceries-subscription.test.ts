@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackedEvent } from "../realtime-test-utils";
 import {
   createMockGroceriesData,
   createMockGrocery,
@@ -8,7 +9,6 @@ import {
   createTestQueryClient,
   createTestWrapper,
 } from "./test-utils";
-import { trackedEvent } from "../realtime-test-utils";
 
 // Track subscription callbacks
 const subscriptionCallbacks: Record<string, (data: unknown) => void> = {};

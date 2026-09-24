@@ -5,9 +5,9 @@ import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/cat
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
-import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 import type { CreateRecipeHooksOptions } from "../types";
 import type { InfiniteRecipeData, RecipesCacheHelpers } from "./use-recipes-cache";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 

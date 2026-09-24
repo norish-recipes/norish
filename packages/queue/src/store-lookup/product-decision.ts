@@ -156,12 +156,10 @@ export async function decideProduct(
     const verdict: DecisionVerdict = {
       pick: chosen ? describe(chosen) : null,
       none: shown(probabilities[NONE] ?? 0),
-      ranked: ranked
-        .slice(0, SHOWN_RANKED)
-        .map((entry) => ({
-          option: describe(entry.candidate),
-          probability: shown(entry.probability),
-        })),
+      ranked: ranked.slice(0, SHOWN_RANKED).map((entry) => ({
+        option: describe(entry.candidate),
+        probability: shown(entry.probability),
+      })),
     };
 
     log.info(

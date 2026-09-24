@@ -2,8 +2,8 @@ import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/c
 import type { CaldavRealtime, CaldavSyncEventData } from "@norish/shared/contracts/realtime/caldav";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type CaldavItemStatusUpdatedPayload = CaldavSyncEventData["itemStatusUpdated"];
 

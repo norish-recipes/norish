@@ -168,7 +168,10 @@ export function initTrpcWebSocket(server: Server) {
 
     // A foreign page must not ride the browser's session cookie onto this socket.
     if (!isTrustedWebSocketOrigin(req.headers.origin, req.headers.host)) {
-      trpcLogger.warn({ origin: req.headers.origin, host }, "Rejecting cross-origin WebSocket upgrade");
+      trpcLogger.warn(
+        { origin: req.headers.origin, host },
+        "Rejecting cross-origin WebSocket upgrade"
+      );
       socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
       socket.destroy();
 

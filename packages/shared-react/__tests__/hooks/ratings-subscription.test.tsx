@@ -24,9 +24,13 @@ vi.mock("@trpc/tanstack-react-query", async () => {
 
 const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
 const averageKey = (recipeId?: string) =>
-  recipeId ? [["ratings", "getAverage"], { input: { recipeId }, type: "query" }] : [["ratings", "getAverage"]];
+  recipeId
+    ? [["ratings", "getAverage"], { input: { recipeId }, type: "query" }]
+    : [["ratings", "getAverage"]];
 const userRatingKey = (recipeId?: string) =>
-  recipeId ? [["ratings", "getUserRating"], { input: { recipeId }, type: "query" }] : [["ratings", "getUserRating"]];
+  recipeId
+    ? [["ratings", "getUserRating"], { input: { recipeId }, type: "query" }]
+    : [["ratings", "getUserRating"]];
 
 function procedure(name: string) {
   return { subscriptionOptions: (_input: undefined, opts: object) => ({ name, ...opts }) };

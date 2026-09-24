@@ -4,9 +4,9 @@ import type { StoreDto } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { CreateStoresHooksOptions, StoresCacheHelpers } from "./types";
 import type { StoreAislesData } from "./use-store-aisles";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<StoresRealtime>> = PayloadOf<StoresRealtime, E>;
 

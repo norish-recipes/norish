@@ -1,7 +1,6 @@
 import type { z } from "zod";
 
 import type { ProductSuggestion } from "@norish/db-schema/schema";
-
 import type {
   PackSizeSchema,
   StoreProductChoiceSchema,

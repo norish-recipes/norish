@@ -6,8 +6,8 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RatingsRealtime } from "@norish/shared/contracts/realtime/ratings";
 
-import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 import type { CreateRecipeHooksOptions } from "../types";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<RatingsRealtime>> = PayloadOf<RatingsRealtime, E>;
 

@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PermissionsRealtime } from "@norish/shared/contracts/realtime/permissions";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { CreatePermissionsHooksOptions, PermissionsData } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 export function createUsePermissionsQuery({ useTRPC }: CreatePermissionsHooksOptions) {
   return function usePermissionsQuery() {

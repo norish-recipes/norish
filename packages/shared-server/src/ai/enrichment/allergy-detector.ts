@@ -24,8 +24,8 @@ import type { DecisionBooleanQuestion } from "../runtime/runtime";
 import { decide, generateStructured } from "../runtime/runtime";
 import {
   ALLERGEN_DROP_THRESHOLD,
-  MAX_QUESTIONS_PER_DECISION,
   chunk,
+  MAX_QUESTIONS_PER_DECISION,
   verifyClaims,
 } from "./verification";
 

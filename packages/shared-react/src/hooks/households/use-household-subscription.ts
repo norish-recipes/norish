@@ -2,8 +2,8 @@ import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/hou
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { HouseholdsRealtime } from "@norish/shared/contracts/realtime/households";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { CreateHouseholdHooksOptions, HouseholdCacheHelpers } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<HouseholdsRealtime>> = PayloadOf<HouseholdsRealtime, E>;
 
@@ -238,16 +238,19 @@ export function createUseHouseholdSubscription({
     // onMemberProfileUpdated household-scoped: a member's avatar changed
     // (ADR-0021). No echo suppression — the actor's other tabs converge
     // through this too.
-    useRealtimeSubscription<Payload<"memberProfileUpdated">>(trpc.households.onMemberProfileUpdated, {
-      ...lag,
-      onEvent: (payload) => {
-        if (payload.userId === currentUserId) {
-          invalidateUserSettings();
-        }
+    useRealtimeSubscription<Payload<"memberProfileUpdated">>(
+      trpc.households.onMemberProfileUpdated,
+      {
+        ...lag,
+        onEvent: (payload) => {
+          if (payload.userId === currentUserId) {
+            invalidateUserSettings();
+          }
 
-        // Recipe payloads carry the author's profile picture
-        invalidateRecipes();
-      },
-    });
+          // Recipe payloads carry the author's profile picture
+          invalidateRecipes();
+        },
+      }
+    );
   };
 }

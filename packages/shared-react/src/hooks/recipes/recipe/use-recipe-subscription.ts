@@ -1,9 +1,9 @@
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
-import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeQueryResult } from "./use-recipe-query";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 

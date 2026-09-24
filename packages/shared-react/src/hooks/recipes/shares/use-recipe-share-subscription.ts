@@ -2,9 +2,9 @@ import type { RecipeShareLifecycleEventDto } from "@norish/shared/contracts";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
-import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeShareCacheHelpers } from "./use-recipe-share-cache";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 
 export type RecipeShareSubscriptionCallbacks = {
   onEvent?: (payload: RecipeShareLifecycleEventDto) => void;

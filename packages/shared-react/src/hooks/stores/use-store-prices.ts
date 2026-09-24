@@ -7,8 +7,8 @@ import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 import { normalizeGroceryName, productLinkKey } from "@norish/shared/lib/normalized-name";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { CreateStoresHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<StoresRealtime>> = PayloadOf<StoresRealtime, E>;
 

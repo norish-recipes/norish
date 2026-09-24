@@ -2,8 +2,8 @@ import type { GroceryDto } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { GroceriesRealtime } from "@norish/shared/contracts/realtime/groceries";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<GroceriesRealtime>> = PayloadOf<GroceriesRealtime, E>;
 

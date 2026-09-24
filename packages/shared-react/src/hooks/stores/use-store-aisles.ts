@@ -6,8 +6,8 @@ import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
 import { aisleLinkKey, normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { CreateStoresHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 export type StoreAislesData = AisleLinkDto[];
 

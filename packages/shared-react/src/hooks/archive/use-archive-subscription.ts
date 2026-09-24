@@ -1,9 +1,9 @@
-import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { ArchiveRealtime } from "@norish/shared/contracts/realtime/archive";
+import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
-import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 import type { ArchiveImportCacheHelpers, CreateArchiveHooksOptions } from "./types";
+import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
 
 type Payload<E extends EventName<ArchiveRealtime>> = PayloadOf<ArchiveRealtime, E>;
 
@@ -30,7 +30,9 @@ export function createUseArchiveSubscription({
 
     // An import's progress is not a query: a lag has nothing to refetch, and
     // the next progress event carries the whole count again.
-    const lag = { onLag: () => log.warn("Archive import subscription lagged; awaiting next event") };
+    const lag = {
+      onLag: () => log.warn("Archive import subscription lagged; awaiting next event"),
+    };
 
     useRealtimeSubscription<Payload<"archiveProgress">>(trpc.archive.onArchiveProgress, {
       ...lag,

@@ -14,8 +14,8 @@ import {
   isRecipeEnrichmentLifecycleEvent,
 } from "@norish/shared/lib/recipe-enrichment";
 
-import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 import type { CreateRecipeHooksOptions } from "../types";
+import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscription";
 
 export type RecipeEnrichmentStateMap = Record<RecipeEnrichmentKind, RecipeEnrichmentLifecycleState>;
 
