@@ -184,7 +184,11 @@ const providerConfigs: Record<string, ProviderConfig> = {
     mapper: (m) => ({
       id: m.id,
       name: m.id,
-      supportsVision: m.id.includes("gpt-4") || m.id.includes("gpt-5") || m.id.includes("o1"),
+      supportsVision:
+        m.id.includes("gpt-4") ||
+        m.id.includes("gpt-5") ||
+        m.id.includes("gpt-6") ||
+        m.id.includes("o1"),
     }),
   },
 

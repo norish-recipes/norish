@@ -173,7 +173,7 @@ const ServerConfigSchema = z.object({
   // AI Provider Configuration
   AI_PROVIDER: z.enum(["openai", "ollama", "lm-studio", "generic-openai"]).default("openai"),
   AI_ENDPOINT: z.string().optional(),
-  AI_MODEL: z.string().default("gpt-5-mini"),
+  AI_MODEL: z.string().default("gpt-6-luna"),
   AI_API_KEY: z.string().optional(),
   AI_TEMPERATURE: z.coerce.number().min(0).max(2).default(1.0),
   AI_MAX_TOKENS: z.coerce.number().default(10000),
