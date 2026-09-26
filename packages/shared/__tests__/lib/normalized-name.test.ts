@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  nameWords,
-  normalizeGroceryName,
-  productLinkKey,
-} from "@norish/shared/lib/normalized-name";
+import { nameWords, normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 describe("normalizeGroceryName", () => {
   it("folds case", () => {
@@ -36,11 +32,5 @@ describe("nameWords", () => {
   it("counts the words the auto-link rule looks for", () => {
     expect(nameWords("Oude  Kaas!")).toEqual(["oude", "kaas"]);
     expect(nameWords("")).toEqual([]);
-  });
-});
-
-describe("productLinkKey", () => {
-  it("spells the one key every Product Link map uses", () => {
-    expect(productLinkKey("store-a", "oude kaas")).toBe("store-a|oude kaas");
   });
 });

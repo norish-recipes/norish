@@ -3,6 +3,7 @@ import z from "zod";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { DbTransaction } from "@norish/db/drizzle";
+import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { IngredientDto } from "@norish/shared/contracts/dto/ingredient";
 import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 import type {
@@ -70,7 +71,7 @@ export async function findIngredientById(id: string): Promise<IngredientDto | nu
  * above this package, so a recipe write is handed its answers rather than
  * minting anything itself; every line's text must be here.
  */
-export type IngredientResolutions = ReadonlyMap<string, { aliasId: string; ingredientId: string }>;
+export type IngredientResolutions = ReadonlyMap<string, IngredientRef>;
 
 /**
  * The row values a recipe line is written with: its text as written, the

@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AisleFiled, AisleLinkDto } from "@norish/shared/contracts";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
-import { aisleLinkKey } from "@norish/shared/lib/normalized-name";
+import { aisleLinkKey } from "@norish/shared/lib/store-link-key";
 
 import type { CreateStoresHooksOptions } from "./types";
 import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";

@@ -23,13 +23,31 @@ import {
   getStoreOwnerId,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
+import {
+  ingredientColumns,
+  resolveGroceryNames,
+} from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
 
 import { noticeGroceries } from "../stores/pricing";
 import { assertStoreAccess } from "../stores/stores-helpers";
+
+/**
+ * Remember the Store a member sent a grocery's Ingredient to, so the next
+ * line of that food goes there too. A line with no Ingredient yet (added
+ * offline, or nameless), or sent to no Store, teaches nothing.
+ */
+export async function rememberStorePreference(
+  userId: string,
+  ingredientId: string | null | undefined,
+  storeId: string | null | undefined
+): Promise<void> {
+  if (!ingredientId || !storeId) return;
+  await upsertIngredientStorePreference(userId, ingredientId, storeId);
+  log.debug({ userId, ingredientId, storeId }, "Saved ingredient store preference");
+}
 
 export type GroceryProcedureContext = {
   user: { id: string };
@@ -214,8 +232,7 @@ export async function createGroceriesData(
   for (const [index, { groceries: grocery }] of groceriesToCreate.entries()) {
     const alias = aliases[index];
 
-    grocery.ingredientAliasId = alias?.aliasId ?? null;
-    grocery.ingredientId = alias?.ingredientId ?? null;
+    Object.assign(grocery, ingredientColumns(alias));
 
     // A line added without a Store goes where the household sends its food.
     if (!grocery.storeId && alias && grocery.name) {
@@ -487,13 +504,7 @@ export async function assignGroceryToStoreData(
   // Store's answer was never about this one.
   await noticeGroceries(ctx, [updated]);
 
-  if (savePreference && storeId && grocery.ingredientId) {
-    await upsertIngredientStorePreference(ctx.user.id, grocery.ingredientId, storeId);
-    log.debug(
-      { userId: ctx.user.id, ingredientId: grocery.ingredientId, storeId },
-      "Saved ingredient store preference"
-    );
-  }
+  if (savePreference) await rememberStorePreference(ctx.user.id, grocery.ingredientId, storeId);
 
   void groceries.publish(
     "updated",

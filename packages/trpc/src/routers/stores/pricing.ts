@@ -23,8 +23,8 @@ import {
 } from "@norish/queue/store-lookup/producer";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
-import { productLinkKey } from "@norish/shared/lib/normalized-name";
 import { isPendingLink, pendingLink } from "@norish/shared/lib/product-link";
+import { productLinkKey } from "@norish/shared/lib/store-link-key";
 
 /**
  * How many stale prices one page view is allowed to send to the shops. A list

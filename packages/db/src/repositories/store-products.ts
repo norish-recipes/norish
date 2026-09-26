@@ -16,8 +16,8 @@ import {
   StoreProductLinkSelectSchema,
   StoreProductSelectSchema,
 } from "@norish/shared/contracts/zod";
-import { productLinkKey } from "@norish/shared/lib/normalized-name";
 import { readPackSize } from "@norish/shared/lib/pack-size";
+import { productLinkKey } from "@norish/shared/lib/store-link-key";
 
 const ProductSchema = StoreProductSelectSchema;
 const ProductsSchema = z.array(StoreProductSelectSchema);

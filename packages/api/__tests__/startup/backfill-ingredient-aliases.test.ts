@@ -14,7 +14,7 @@ import {
   listGroceriesWithoutAlias,
   listRecipeLinesWithoutAlias,
   listRecurringGroceriesWithoutAlias,
-} from "@norish/db/repositories/ingredient-aliases";
+} from "@norish/db/repositories/ingredient-backfill";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { resolveProductLinks } from "@norish/db/repositories/store-products";
 import { findBestIngredientStorePreference } from "@norish/db/repositories/stores";

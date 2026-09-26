@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
+import { useDebounceValue } from "usehooks-ts";
 
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
@@ -28,13 +28,7 @@ export function useIngredientFor(
     grocery?.ingredientId && normalizeGroceryName(grocery.name) === normalizeGroceryName(name)
       ? grocery.ingredientId
       : null;
-  const [settled, setSettled] = useState(name);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSettled(name), LOOKUP_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [name]);
+  const [settled] = useDebounceValue(name, LOOKUP_DEBOUNCE_MS);
 
   const term = settled.trim();
   const { data } = useQuery(

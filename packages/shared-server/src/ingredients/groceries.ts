@@ -1,3 +1,4 @@
+import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliases";
 
 import type { ResolveActor } from "./resolver";
@@ -20,7 +21,7 @@ export interface GroceryName {
 export async function resolveGroceryNames(
   items: readonly GroceryName[],
   actor: ResolveActor
-): Promise<Array<{ aliasId: string; ingredientId: string } | null>> {
+): Promise<Array<IngredientRef | null>> {
   const lines = await findRecipeLineAliases(
     items.flatMap((item) => (item.recipeIngredientId ? [item.recipeIngredientId] : []))
   );
@@ -46,4 +47,28 @@ export async function resolveGroceryNames(
 
     return answer ? { aliasId: answer.aliasId, ingredientId: answer.ingredientId } : null;
   });
+}
+
+/**
+ * The columns a grocery row keeps for the food its name names (ADR-0037): the
+ * alias, and the alias's Ingredient beside it. Both null for a line with no
+ * name.
+ */
+export interface GroceryIngredientColumns {
+  ingredientAliasId: string | null;
+  ingredientId: string | null;
+}
+
+export function ingredientColumns(ref: IngredientRef | null | undefined): GroceryIngredientColumns {
+  return { ingredientAliasId: ref?.aliasId ?? null, ingredientId: ref?.ingredientId ?? null };
+}
+
+/** One grocery name, typed or renamed, resolved to the columns its row keeps. */
+export async function resolveGroceryName(
+  name: string | null,
+  actor: ResolveActor
+): Promise<GroceryIngredientColumns> {
+  const [ref] = await resolveGroceryNames([{ name }], actor);
+
+  return ingredientColumns(ref);
 }

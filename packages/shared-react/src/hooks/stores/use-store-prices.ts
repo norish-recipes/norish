@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ResolvedProductLink, StoreProductDto } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
-import { productLinkKey } from "@norish/shared/lib/normalized-name";
 import { isPendingLink } from "@norish/shared/lib/product-link";
+import { productLinkKey } from "@norish/shared/lib/store-link-key";
 
 import type { CreateStoresHooksOptions } from "./types";
 import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";

@@ -1,4 +1,8 @@
-import type { IngredientAliasRow, IngredientRow } from "@norish/db/repositories/ingredient-aliases";
+import type {
+  IngredientAliasRow,
+  IngredientRef,
+  IngredientRow,
+} from "@norish/db/repositories/ingredient-aliases";
 import {
   findIngredientAliasesByFolds,
   findIngredientByAliasId,
@@ -34,10 +38,46 @@ export interface ResolveActor {
 }
 
 /** One text as written, and the alias and Ingredient it resolved to. */
-export interface ResolvedIngredient {
+export interface ResolvedIngredient extends IngredientRef {
   text: string;
-  aliasId: string;
-  ingredientId: string;
+}
+
+/** A text as the first two rungs read it: its fold, and its fold with the preparation stripped. */
+interface Spelling {
+  text: string;
+  fold: string;
+  bare: string;
+  bareFold: string;
+}
+
+function spellingOf(text: string): Spelling {
+  const bare = stripPreparation(text);
+
+  return {
+    text,
+    fold: ingredientAliasFold(text),
+    bare,
+    bareFold: bare ? ingredientAliasFold(bare) : "",
+  };
+}
+
+/** The aliases Norish already has for these spellings, by fold, in one query. */
+async function knownAliases(
+  spellings: readonly Spelling[]
+): Promise<Map<string, IngredientAliasRow>> {
+  const rows = await findIngredientAliasesByFolds(
+    spellings.flatMap((spelling) => [spelling.fold, spelling.bareFold])
+  );
+
+  return new Map(rows.map((row) => [row.fold, row]));
+}
+
+/** Rungs 1 and 2: the alias with the text's fold, else the one with its stripped fold. */
+function matchKnown(
+  spelling: Spelling,
+  known: ReadonlyMap<string, IngredientAliasRow>
+): IngredientAliasRow | undefined {
+  return known.get(spelling.fold) ?? (spelling.bareFold ? known.get(spelling.bareFold) : undefined);
 }
 
 /**
@@ -78,36 +118,24 @@ export async function resolveIngredients(
     throw new Error("Ingredient text cannot be empty");
   }
 
-  const stripped = cleaned.map(stripPreparation);
-  const known = new Map<string, IngredientAliasRow>();
-
-  for (const row of await findIngredientAliasesByFolds([
-    ...cleaned.map(ingredientAliasFold),
-    ...stripped.filter(Boolean).map(ingredientAliasFold),
-  ])) {
-    known.set(row.fold, row);
-  }
-
+  const spellings = cleaned.map(spellingOf);
+  const known = await knownAliases(spellings);
   const resolved: ResolvedIngredient[] = [];
 
-  for (const [index, text] of cleaned.entries()) {
-    const fold = ingredientAliasFold(text);
-    const bare = stripped[index]!;
-    const bareFold = bare ? ingredientAliasFold(bare) : "";
-    const match = known.get(fold) ?? (bareFold ? known.get(bareFold) : undefined);
+  for (const spelling of spellings) {
+    const match = matchKnown(spelling, known);
 
-    if (match) {
-      resolved.push({ text, aliasId: match.aliasId, ingredientId: match.ingredientId });
-      continue;
+    if (!match) {
+      for (const row of await mint(spelling, actor)) known.set(row.fold, row);
     }
 
-    const minted = await mint(text, fold, bare, bareFold, actor);
+    const alias = match ?? known.get(spelling.fold)!;
 
-    for (const row of minted) known.set(row.fold, row);
-
-    const alias = known.get(fold)!;
-
-    resolved.push({ text, aliasId: alias.aliasId, ingredientId: alias.ingredientId });
+    resolved.push({
+      text: spelling.text,
+      aliasId: alias.aliasId,
+      ingredientId: alias.ingredientId,
+    });
   }
 
   return resolved;
@@ -119,10 +147,7 @@ export async function resolveIngredients(
  * and "onions" or "onions, sliced" later are the one food.
  */
 async function mint(
-  text: string,
-  fold: string,
-  bare: string,
-  bareFold: string,
+  { text, fold, bare, bareFold }: Spelling,
   actor: ResolveActor
 ): Promise<IngredientAliasRow[]> {
   const aliases = [{ text, fold }];
@@ -149,18 +174,13 @@ export async function ingredientFor(aliasId: string): Promise<IngredientRow | nu
  * mint: asking what a Store knows about a name Norish has never seen is
  * answered with nothing.
  */
-export async function findIngredientFor(
-  text: string
-): Promise<{ aliasId: string; ingredientId: string } | null> {
+export async function findIngredientFor(text: string): Promise<IngredientRef | null> {
   const cleaned = cleanIngredientText(text);
 
   if (!cleaned) return null;
 
-  const fold = ingredientAliasFold(cleaned);
-  const bare = stripPreparation(cleaned);
-  const bareFold = bare ? ingredientAliasFold(bare) : "";
-  const rows = await findIngredientAliasesByFolds([fold, bareFold]);
-  const match = rows.find((row) => row.fold === fold) ?? rows.find((row) => row.fold === bareFold);
+  const spelling = spellingOf(cleaned);
+  const match = matchKnown(spelling, await knownAliases([spelling]));
 
   return match ? { aliasId: match.aliasId, ingredientId: match.ingredientId } : null;
 }

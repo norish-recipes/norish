@@ -1,4 +1,7 @@
-import type { LegacyKeyedTable } from "@norish/db/repositories/ingredient-aliases";
+import type {
+  LegacyKeyedTable,
+  ResolvedReference,
+} from "@norish/db/repositories/ingredient-backfill";
 import {
   addOwnNameAliases,
   keyLegacyRow,
@@ -13,7 +16,7 @@ import {
   setPantryIngredientAliases,
   setRecipeLineAliases,
   setRecurringGroceryAliases,
-} from "@norish/db/repositories/ingredient-aliases";
+} from "@norish/db/repositories/ingredient-backfill";
 import {
   cleanIngredientText,
   ingredientAliasFold,
@@ -37,9 +40,14 @@ const BATCH_SIZE = 500;
  * groceries of that name resolved to, or, where no grocery has that name, the
  * Ingredient the name itself resolves to (minted where need be, so no link is
  * dropped). Two that land on one Ingredient at one Store (or for one member)
- * keep the most recently updated. Idempotent by shape: only rows without an alias are listed. A
- * failure leaves the remaining rows for the next startup and never stops the
- * server.
+ * keep the most recently updated.
+ *
+ * Idempotent by shape: only rows without an alias are listed. A failure
+ * leaves the remaining rows for the next startup and never stops the server.
+ *
+ * This is the upgrade and nothing more: nothing here merges or flags, and a
+ * row that has an alias is never visited again. Merging existing Ingredients
+ * into the catalogue seed is the seed's own pass, once a seed exists.
  */
 export async function backfillIngredientAliases(): Promise<void> {
   const written = {
@@ -113,7 +121,7 @@ type Reference = { id: string; name: string; userId: string | null };
  */
 async function resolveReferences(
   list: (limit: number, afterId: string | null) => Promise<Reference[]>,
-  store: (rows: Array<{ id: string; aliasId: string; ingredientId: string }>) => Promise<void>
+  store: (rows: ResolvedReference[]) => Promise<void>
 ): Promise<number> {
   let resolvedCount = 0;
   let afterId: string | null = null;

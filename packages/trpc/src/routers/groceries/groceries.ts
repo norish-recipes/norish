@@ -17,9 +17,9 @@ import {
   reorderGroceriesInStore,
   updateGroceries,
 } from "@norish/db";
-import { getStoreOwnerId, upsertIngredientStorePreference } from "@norish/db/repositories/stores";
+import { getStoreOwnerId } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
-import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
+import { resolveGroceryName } from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
@@ -39,6 +39,7 @@ import {
   createGroceriesData,
   deleteGroceriesData,
   listGroceriesData,
+  rememberStorePreference,
   toggleGroceriesData,
 } from "./groceries-helpers";
 import {
@@ -106,15 +107,11 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         });
       }
 
-      const [alias] = await resolveGroceryNames([{ name: parsedIngredient.description }], {
-        userId: ctx.user.id,
-      });
       const updateData: GroceryUpdateDto = {
         id: groceryId,
         version,
         name: parsedIngredient.description,
-        ingredientAliasId: alias?.aliasId ?? null,
-        ingredientId: alias?.ingredientId ?? null,
+        ...(await resolveGroceryName(parsedIngredient.description, { userId: ctx.user.id })),
         amount: parsedIngredient.quantity,
         purchaseAmount,
         unit: parsedIngredient.unitOfMeasure,
@@ -155,11 +152,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
       // Editing the store through the panel implies "remember this store for
       // this ingredient", matching the previous assignToStore behaviour.
-      const ingredientId = updatedGroceries[0]?.ingredientId;
-
-      if (storeId && ingredientId) {
-        await upsertIngredientStorePreference(ctx.user.id, ingredientId, storeId);
-      }
+      await rememberStorePreference(ctx.user.id, updatedGroceries[0]?.ingredientId, storeId);
 
       // A rename asks a new question rather than carrying the old answer to a
       // name it was never about.
@@ -576,21 +569,7 @@ const reorderInStore = authedProcedure
             for (const grocery of groceriesForPreference) {
               const update = itemsWithStoreChange.find((u) => u.id === grocery.id);
 
-              if (update?.storeId && grocery.ingredientId) {
-                await upsertIngredientStorePreference(
-                  ctx.user.id,
-                  grocery.ingredientId,
-                  update.storeId
-                );
-                log.debug(
-                  {
-                    userId: ctx.user.id,
-                    ingredientId: grocery.ingredientId,
-                    storeId: update.storeId,
-                  },
-                  "Saved ingredient store preference"
-                );
-              }
+              await rememberStorePreference(ctx.user.id, grocery.ingredientId, update?.storeId);
             }
           }
         }
