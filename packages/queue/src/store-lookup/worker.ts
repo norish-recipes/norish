@@ -4,6 +4,7 @@ import { Worker } from "bullmq";
 import type { StoreLookupJobData } from "@norish/queue/contracts/job-types";
 import { clearPendingLink } from "@norish/db/repositories/store-products";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
@@ -20,13 +21,26 @@ const globalForWorker = globalThis as unknown as {
   storeLookupWorker: Worker<StoreLookupJobData> | null;
 };
 
+/**
+ * The Ingredient a match job asks about. A job queued before questions named
+ * their Ingredient carries only the grocery's name, whose Ingredient the
+ * upgrade has since resolved (ADR-0037); it is looked up by that name.
+ */
+async function ingredientAskedAbout(
+  data: Extract<StoreLookupJobData, { kind: "match" }>
+): Promise<string | null> {
+  if (data.ingredientId) return data.ingredientId;
+
+  return (await findIngredientFor(data.name))?.ingredientId ?? null;
+}
+
 async function processStoreLookup(job: Job<StoreLookupJobData>): Promise<void> {
   if (job.data.kind === "match") {
-    const { storeId, ingredientId, name, householdKey } = job.data;
+    const { storeId, name, householdKey } = job.data;
+    const ingredientId = await ingredientAskedAbout(job.data);
 
-    // A question asked before questions named their Ingredient has nothing to
-    // be filed under; its Pending Link was carried over on the upgrade, and
-    // the next view of the list asks again.
+    // A name Norish no longer knows has nothing to be filed under; the next
+    // view of the list asks again.
     if (!ingredientId) return;
 
     await matchGroceryName({
@@ -62,8 +76,9 @@ export async function forgetFailedLookup(
 ): Promise<void> {
   if (job?.data.kind !== "match") return;
   if (job.attemptsMade < (job.opts.attempts ?? 1)) return;
-  if (!job.data.ingredientId) return;
-  await clearPendingLink(job.data.storeId, job.data.ingredientId);
+  const ingredientId = await ingredientAskedAbout(job.data);
+
+  if (ingredientId) await clearPendingLink(job.data.storeId, ingredientId);
 }
 
 /**
