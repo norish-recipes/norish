@@ -2,11 +2,12 @@ import { TRPCError } from "@trpc/server";
 
 import type { AisleFiled, AisleLinkDto } from "@norish/shared/contracts";
 import {
-  fileGroceryName as fileGroceryNameAtStore,
+  fileIngredient,
   getAisleById,
   listAisleLinksByStoreIds,
 } from "@norish/db/repositories/aisles";
 import { listStoresByUserIds } from "@norish/db/repositories/stores";
+import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { AisleFilingSchema } from "@norish/shared/contracts/zod";
@@ -17,7 +18,7 @@ import { assertStoreAccess } from "./stores-helpers";
 
 /**
  * Every Aisle Link of the household's Stores, in one round trip, the way the
- * whole list is priced at once. The set is small — one row per distinct name
+ * whole list is priced at once. The set is small — one row per Ingredient
  * ever filed per Store — and it is the whole of what a screen needs to show
  * the list by aisle; the grocery row carries no aisle of its own (ADR-0031).
  */
@@ -29,10 +30,11 @@ const aisleLinks = authedProcedure.query(async ({ ctx }): Promise<AisleLinkDto[]
 
 /**
  * File a name at a Store: under one of the Store's own aisles, or under none,
- * which forgets it. Filing one "melk" files every "melk" at that Store, on
- * every household screen, because the link is keyed by name. Last writer
+ * which forgets it. The name is resolved to its Ingredient, and filing one
+ * "melk" files every spelling of milk at that Store, on every household
+ * screen, because the link is keyed by Ingredient (ADR-0037). Last writer
  * wins — the last shopper to file is right — and the event that follows is
- * merged by store and normalized name, so a repeat is a no-op everywhere.
+ * merged by store and Ingredient, so a repeat is a no-op everywhere.
  */
 const fileGroceryName = authedProcedure
   .input(AisleFilingSchema)
@@ -48,9 +50,10 @@ const fileGroceryName = authedProcedure
       }
     }
 
-    const filing = await fileGroceryNameAtStore(input.storeId, input.name, input.aisleId);
+    const [ingredient] = await resolveIngredients([input.name], { userId: ctx.user.id });
 
-    if (!filing) return null;
+    if (!ingredient) return null;
+    const filing = await fileIngredient(input.storeId, ingredient.ingredientId, input.aisleId);
 
     log.info(
       { userId: ctx.user.id, storeId: input.storeId, aisleId: input.aisleId },

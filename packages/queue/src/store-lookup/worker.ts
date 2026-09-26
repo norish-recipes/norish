@@ -22,10 +22,16 @@ const globalForWorker = globalThis as unknown as {
 
 async function processStoreLookup(job: Job<StoreLookupJobData>): Promise<void> {
   if (job.data.kind === "match") {
-    const { storeId, name, householdKey } = job.data;
+    const { storeId, ingredientId, name, householdKey } = job.data;
+
+    // A question asked before questions named their Ingredient has nothing to
+    // be filed under; its Pending Link was carried over on the upgrade, and
+    // the next view of the list asks again.
+    if (!ingredientId) return;
 
     await matchGroceryName({
       storeId,
+      ingredientId,
       name,
       householdKey,
       onStep: (step) => reportStep(job, step),
@@ -56,7 +62,8 @@ export async function forgetFailedLookup(
 ): Promise<void> {
   if (job?.data.kind !== "match") return;
   if (job.attemptsMade < (job.opts.attempts ?? 1)) return;
-  await clearPendingLink(job.data.storeId, job.data.name);
+  if (!job.data.ingredientId) return;
+  await clearPendingLink(job.data.storeId, job.data.ingredientId);
 }
 
 /**

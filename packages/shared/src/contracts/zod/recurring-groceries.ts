@@ -7,6 +7,7 @@ import { recurringGroceries } from "@norish/db-schema/schema";
 export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroceries)
   .omit({
     ingredientAliasId: true,
+    ingredientId: true,
     userId: true,
     createdAt: true,
     updatedAt: true,
@@ -28,6 +29,8 @@ export const RecurringGroceryUpdateBaseSchema = z.object({
   name: z.string().optional(),
   /** The alias a new name resolved to; set by the server, never taken from a client. */
   ingredientAliasId: z.uuid().nullable().optional(),
+  /** The alias's Ingredient, written with it. */
+  ingredientId: z.uuid().nullable().optional(),
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),
   recurrenceRule: z.enum(["day", "week", "month"]).optional(),

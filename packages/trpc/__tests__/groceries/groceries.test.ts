@@ -638,7 +638,7 @@ describe("stale grocery updates", () => {
 
     expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
       ctx.user.id,
-      "oat milk",
+      "ingredient:oat milk",
       storeId
     );
   });
@@ -648,7 +648,7 @@ describe("stale grocery updates", () => {
     const storeId = crypto.randomUUID();
     const link = {
       storeId,
-      normalizedName: "cola",
+      ingredientId: "ingredient:cola",
       lastTriedAt: null,
       product: { id: crypto.randomUUID(), storeId, name: "Cola 1 L", price: 1.49 },
     };

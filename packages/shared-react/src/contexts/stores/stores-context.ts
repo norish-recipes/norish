@@ -36,16 +36,26 @@ export type StoresContextValue = {
     searchAddress: string | null,
     website: string | null
   ) => Promise<StoreSearchAddressResult>;
-  /** File a grocery name at a Store under one of its aisles, or under none, which forgets it. */
-  fileGroceryName: (storeId: string, name: string, aisleId: string | null) => void;
-  // Prices
+  /** File a grocery's Ingredient at a Store under one of its aisles, or under none, which forgets it. */
+  fileGroceryName: (
+    storeId: string,
+    grocery: { name: string | null; ingredientId?: string | null },
+    aisleId: string | null
+  ) => void;
+  // Prices, keyed by a grocery's Ingredient (ADR-0037)
   /** The Store Product a grocery resolves to, or null where its Store answered with a Miss. */
-  priceFor: (storeId: string | null, name: string | null) => StoreProductDto | null;
-  /** What its Store knows about the name: a link, a Miss, a Pending Link, or nothing. */
-  linkFor: (storeId: string | null, name: string | null) => ResolvedProductLink | null;
+  priceFor: (
+    storeId: string | null,
+    ingredientId: string | null | undefined
+  ) => StoreProductDto | null;
+  /** What its Store knows about the Ingredient: a link, a Miss, a Pending Link, or nothing. */
+  linkFor: (
+    storeId: string | null,
+    ingredientId: string | null | undefined
+  ) => ResolvedProductLink | null;
   // Aisles
-  /** The aisle a Store files a name under, or null where it has never been told (ADR-0031). */
-  aisleFor: (storeId: string | null, name: string | null) => string | null;
+  /** The aisle a Store files an Ingredient under, or null where it has never been told (ADR-0031). */
+  aisleFor: (storeId: string | null, ingredientId: string | null | undefined) => string | null;
   // UI
   storeManagerOpen: boolean;
   setStoreManagerOpen: (open: boolean) => void;
@@ -102,8 +112,8 @@ export function createStoresContext({
     // the links are read again.
     const { aisleFor: filedUnder } = useStoreAisles();
     const aisleFor = useCallback(
-      (storeId: string | null, name: string | null) => {
-        const aisleId = filedUnder(storeId, name);
+      (storeId: string | null, ingredientId: string | null | undefined) => {
+        const aisleId = filedUnder(storeId, ingredientId);
 
         if (aisleId === null) return null;
         const store = stores.find((candidate) => candidate.id === storeId);

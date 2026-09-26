@@ -17,10 +17,10 @@ const links = new Map<string, ResolvedProductLink>();
 
 vi.mock("@/app/(app)/groceries/stores-context", () => ({
   useStoresContext: () => ({
-    linkFor: (storeId: string | null, name: string | null) =>
-      links.get(`${storeId}|${name}`) ?? null,
-    priceFor: (storeId: string | null, name: string | null) =>
-      links.get(`${storeId}|${name}`)?.product ?? null,
+    linkFor: (storeId: string | null, ingredientId: string | null | undefined) =>
+      links.get(`${storeId}|${ingredientId}`) ?? null,
+    priceFor: (storeId: string | null, ingredientId: string | null | undefined) =>
+      links.get(`${storeId}|${ingredientId}`)?.product ?? null,
   }),
 }));
 
@@ -44,7 +44,15 @@ function grocery(
   amount: number | null = null,
   unit: string | null = null
 ): GroceryDto {
-  return { id: name, name, amount, unit, storeId: STORE, isDone: false } as unknown as GroceryDto;
+  return {
+    id: name,
+    name,
+    ingredientId: `i-${name}`,
+    amount,
+    unit,
+    storeId: STORE,
+    isDone: false,
+  } as unknown as GroceryDto;
 }
 
 function product(overrides: Partial<StoreProductDto>): StoreProductDto {
@@ -69,8 +77,17 @@ function product(overrides: Partial<StoreProductDto>): StoreProductDto {
   } as unknown as StoreProductDto;
 }
 
+/** What the Store knows about the Ingredient of the grocery by that name. */
 function link(name: string, linked: StoreProductDto | null, triedAt: Date | null = new Date()) {
-  links.set(`${STORE}|${name}`, { storeId: STORE, normalizedName: name, triedAt, product: linked });
+  const ingredientId = `i-${name}`;
+
+  links.set(`${STORE}|${ingredientId}`, {
+    storeId: STORE,
+    ingredientId,
+    triedAt,
+    product: linked,
+    suggestion: null,
+  });
 }
 
 describe("GroceryPrice", () => {

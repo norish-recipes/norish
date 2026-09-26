@@ -275,16 +275,14 @@ export function useGroupedGroceryDnd({
           stores,
           aisleFor,
           movedIds: movedGroup.sources.map((source) => source.grocery.id),
-          movedNames: movedGroup.sources.flatMap((source) =>
-            source.grocery.name ? [source.grocery.name] : []
-          ),
+          movedGroceries: movedGroup.sources.map((source) => source.grocery),
           idsOf: (groupKey) =>
             groupMap.get(groupKey)?.sources.map((source) => source.grocery.id) ?? [],
         });
 
         if (updates.length > 0) onReorderGroups(updates);
         for (const filing of filings)
-          onFileGroceryName(filing.storeId, filing.name, filing.aisleId);
+          onFileGroceryName(filing.storeId, filing.grocery, filing.aisleId);
       }
 
       setActiveGroupKey(null);

@@ -74,7 +74,7 @@ export function getContainerIdForGrocery(
   stores: StoreDto[],
   aisleFor: AisleResolver
 ): ContainerId {
-  return containerFor(grocery.storeId, aisleFor(grocery.storeId, grocery.name), stores);
+  return containerFor(grocery.storeId, aisleFor(grocery.storeId, grocery.ingredientId), stores);
 }
 
 /** Converts a Store-level container ID back to storeId (UNSORTED_CONTAINER => null) */

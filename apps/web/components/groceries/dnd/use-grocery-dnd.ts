@@ -257,13 +257,13 @@ export function useGroceryDnd({
           stores,
           aisleFor,
           movedIds: [moved.id],
-          movedNames: moved.name ? [moved.name] : [],
+          movedGroceries: [moved],
           idsOf: (id) => [id],
         });
 
         if (updates.length > 0) onReorderInStore(updates);
         for (const filing of filings)
-          onFileGroceryName(filing.storeId, filing.name, filing.aisleId);
+          onFileGroceryName(filing.storeId, filing.grocery, filing.aisleId);
       }
 
       setActiveId(null);

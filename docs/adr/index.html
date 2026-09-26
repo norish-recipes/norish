@@ -817,12 +817,13 @@
             >ADR-0031 &mdash; An Aisle is a fact about a name at a Store, not about a list line</a
           >
           <p>
-            <b>Accepted.</b> Aisles are ordered headings owned by a Store, and an Aisle Link — a
-            Store, a normalized grocery name, an Aisle — is keyed by name like a Product Link, so a
-            grocery's aisle is derived and nothing is stored on the row. Filing one "melk" files
-            every "melk" at that store and the memory outlives the line; two lines with the
-            identical name can never sit in different aisles, by design. Groups are per aisle per
-            store. Aisles travel on the Store DTO and its subscription; filing is tRPC only.
+            <b>Accepted; amended by ADR-0037</b> (keyed by Ingredient, not by name). Aisles are
+            ordered headings owned by a Store, and an Aisle Link — a Store, a normalized grocery
+            name, an Aisle — is keyed by name like a Product Link, so a grocery's aisle is derived
+            and nothing is stored on the row. Filing one "melk" files every "melk" at that store and
+            the memory outlives the line; two lines with the identical name can never sit in
+            different aisles, by design. Groups are per aisle per store. Aisles travel on the Store
+            DTO and its subscription; filing is tRPC only.
           </p>
         </li>
         <li>

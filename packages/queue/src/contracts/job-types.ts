@@ -112,5 +112,13 @@ export interface RecipeEnrichmentJobData {
  * grocery jumps a stale batch.
  */
 export type StoreLookupJobData =
-  | { kind: "match"; storeId: string; name: string; householdKey: string }
+  | {
+      kind: "match";
+      storeId: string;
+      /** The Ingredient asked about, which the answer is filed under (ADR-0037). */
+      ingredientId: string;
+      /** The grocery's name as the list shows it: what the shop is searched for. */
+      name: string;
+      householdKey: string;
+    }
   | { kind: "refresh"; storeId: string; productIds: string[]; householdKey: string };

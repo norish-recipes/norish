@@ -10,7 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
-import { ingredientAliases } from "./ingredients";
+import { ingredientAliases, ingredients } from "./ingredients";
 import { recipeIngredients } from "./recipe-ingredients";
 import { recurringGroceries } from "./recurring-groceries";
 import { versionColumn } from "./shared";
@@ -36,6 +36,12 @@ export const groceries = pgTable(
     name: text("name"),
     /** The Ingredient Alias the name resolved to (ADR-0037); null for a line with no name. */
     ingredientAliasId: uuid("ingredient_alias_id").references(() => ingredientAliases.id),
+    /**
+     * The alias's Ingredient, kept beside it so every read of the list has
+     * the food a price, an aisle and a store preference are keyed by. Written
+     * with the alias; a merge re-points both.
+     */
+    ingredientId: uuid("ingredient_id").references(() => ingredients.id),
     unit: text("unit"),
     amount: numeric("amount", { precision: 10, scale: 3 }),
     purchaseAmount: numeric("purchase_amount", { precision: 10, scale: 3 }),
@@ -51,6 +57,7 @@ export const groceries = pgTable(
     index("idx_groceries_recurring_grocery_id").on(t.recurringGroceryId),
     index("idx_groceries_store_id").on(t.storeId),
     index("idx_groceries_ingredient_alias_id").on(t.ingredientAliasId),
+    index("idx_groceries_ingredient_id").on(t.ingredientId),
     index("idx_groceries_is_done").on(t.isDone),
     index("idx_groceries_sort_order").on(t.sortOrder),
   ]

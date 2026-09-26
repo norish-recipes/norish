@@ -8,7 +8,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
-import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import {
+  findIngredientFor,
+  ingredientFor,
+  resolveIngredients,
+} from "@norish/shared-server/ingredients/resolver";
 
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -92,6 +96,18 @@ describe("ingredient resolver", () => {
 
     expect(second!.ingredientId).toBe(first!.ingredientId);
     expect(third!.ingredientId).toBe(first!.ingredientId);
+  });
+
+  it("finds what a text already resolves to without minting anything", async () => {
+    const onions = await resolveOne("onions");
+
+    await expect(findIngredientFor("Onions, sliced")).resolves.toEqual({
+      aliasId: onions.aliasId,
+      ingredientId: onions.ingredientId,
+    });
+    await expect(findIngredientFor("leeks")).resolves.toBeNull();
+    // Still unknown: the lookup above left nothing behind.
+    await expect(findIngredientFor("leeks")).resolves.toBeNull();
   });
 
   describe("recipe lines", () => {

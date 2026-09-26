@@ -353,7 +353,13 @@ describe("recurring groceries procedures", () => {
 
       expect(result).toEqual({ success: true });
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
-        { id: "r1", version: 2, name: "Oat milk", ingredientAliasId: "alias:oat milk" },
+        {
+          id: "r1",
+          version: 2,
+          name: "Oat milk",
+          ingredientAliasId: "alias:oat milk",
+          ingredientId: "ingredient:oat milk",
+        },
         { id: "g1", version: 3, storeId: undefined }
       );
       expect(groceries.publish).toHaveBeenCalledWith(
@@ -388,12 +394,18 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
-        { id: "r1", version: 2, name: "Oat Milk", ingredientAliasId: "alias:oat milk" },
+        {
+          id: "r1",
+          version: 2,
+          name: "Oat Milk",
+          ingredientAliasId: "alias:oat milk",
+          ingredientId: "ingredient:oat milk",
+        },
         { id: "g1", version: 3, storeId }
       );
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
         ctx.user.id,
-        "oat milk",
+        "ingredient:oat milk",
         storeId
       );
     });
@@ -457,6 +469,7 @@ describe("recurring groceries procedures", () => {
           version: 3,
           name: "Test",
           ingredientAliasId: "alias:test",
+          ingredientId: "ingredient:test",
           unit: "piece",
           amount: 1,
         },
@@ -509,6 +522,7 @@ describe("recurring groceries procedures", () => {
           version: 3,
           name: "Test",
           ingredientAliasId: "alias:test",
+          ingredientId: "ingredient:test",
           unit: "piece",
           amount: 1,
           storeId,
@@ -516,7 +530,7 @@ describe("recurring groceries procedures", () => {
       });
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
         ctx.user.id,
-        "test",
+        "ingredient:test",
         storeId
       );
     });
@@ -721,7 +735,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
   const storeId = crypto.randomUUID();
   const link = {
     storeId,
-    normalizedName: "melk",
+    ingredientId: "ingredient:melk",
     triedAt: new Date(),
     product: { id: crypto.randomUUID(), storeId, name: "Halfvolle melk 1 L", price: 1.29 },
   };
@@ -762,7 +776,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
     });
 
     expect(storeProductsRepository.resolveProductLinks).toHaveBeenCalledWith([
-      { storeId, name: "melk" },
+      { storeId, ingredientId: "ingredient:melk", name: "melk" },
     ]);
     expect(stores.publish).toHaveBeenCalledWith(
       "linkUpdated",

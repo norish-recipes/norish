@@ -17,11 +17,7 @@ import {
   reorderGroceriesInStore,
   updateGroceries,
 } from "@norish/db";
-import {
-  getStoreOwnerId,
-  normalizeIngredientName,
-  upsertIngredientStorePreference,
-} from "@norish/db/repositories/stores";
+import { getStoreOwnerId, upsertIngredientStorePreference } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -118,6 +114,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         version,
         name: parsedIngredient.description,
         ingredientAliasId: alias?.aliasId ?? null,
+        ingredientId: alias?.ingredientId ?? null,
         amount: parsedIngredient.quantity,
         purchaseAmount,
         unit: parsedIngredient.unitOfMeasure,
@@ -158,10 +155,10 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
       // Editing the store through the panel implies "remember this store for
       // this ingredient", matching the previous assignToStore behaviour.
-      if (storeId && updatedGroceries[0]?.name) {
-        const normalized = normalizeIngredientName(updatedGroceries[0].name);
+      const ingredientId = updatedGroceries[0]?.ingredientId;
 
-        await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
+      if (storeId && ingredientId) {
+        await upsertIngredientStorePreference(ctx.user.id, ingredientId, storeId);
       }
 
       // A rename asks a new question rather than carrying the old answer to a
@@ -579,12 +576,18 @@ const reorderInStore = authedProcedure
             for (const grocery of groceriesForPreference) {
               const update = itemsWithStoreChange.find((u) => u.id === grocery.id);
 
-              if (update?.storeId && grocery.name) {
-                const normalized = normalizeIngredientName(grocery.name);
-
-                await upsertIngredientStorePreference(ctx.user.id, normalized, update.storeId);
+              if (update?.storeId && grocery.ingredientId) {
+                await upsertIngredientStorePreference(
+                  ctx.user.id,
+                  grocery.ingredientId,
+                  update.storeId
+                );
                 log.debug(
-                  { userId: ctx.user.id, normalized, storeId: update.storeId },
+                  {
+                    userId: ctx.user.id,
+                    ingredientId: grocery.ingredientId,
+                    storeId: update.storeId,
+                  },
                   "Saved ingredient store preference"
                 );
               }

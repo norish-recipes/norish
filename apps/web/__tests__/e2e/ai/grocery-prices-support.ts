@@ -31,7 +31,10 @@ export async function createShopStore(name: string, shopUrl: string): Promise<st
   }
 }
 
-/** What the household's Stores have learned a grocery name means. */
+/**
+ * What the household's Stores have learned the Ingredient a grocery name
+ * resolves to means. The name is read as an Ingredient Alias's fold.
+ */
 export async function readStoredLink(
   name: string
 ): Promise<{ productName: string | null; price: string | null } | null> {
@@ -44,7 +47,8 @@ export async function readStoredLink(
       `select p.name, p.price
          from store_product_links l
          left join store_products p on p.id = l.store_product_id
-        where l.normalized_name = $1`,
+         join ingredient_aliases ia on ia.ingredient_id = l.ingredient_id
+        where ia.fold = $1`,
       [name]
     );
 

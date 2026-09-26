@@ -79,6 +79,7 @@ export default function AddGroceryPanel({
   // Store the moment it is typed.
   const aisle = useAisleChoice({
     groceryName: price.groceryName,
+    ingredientId: price.ingredientId,
     store: price.store,
     resetOn: open,
   });

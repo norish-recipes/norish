@@ -1,14 +1,18 @@
-import { and, asc, eq, gt, inArray, isNotNull, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, notExists, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 import {
+  aisleLinks,
   groceries,
   ingredientAliases,
   ingredients,
+  ingredientStorePreferences,
   pantryIngredients,
   recipeIngredients,
   recipes,
   recurringGroceries,
+  storeProductLinks,
+  stores,
 } from "@norish/db/schema";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
@@ -351,12 +355,12 @@ export async function listGroceriesWithoutAlias(
 }
 
 export async function setGroceryAliases(
-  rows: ReadonlyArray<{ id: string; aliasId: string }>
+  rows: ReadonlyArray<{ id: string; aliasId: string; ingredientId: string }>
 ): Promise<void> {
   for (const row of rows) {
     await db
       .update(groceries)
-      .set({ ingredientAliasId: row.aliasId })
+      .set({ ingredientAliasId: row.aliasId, ingredientId: row.ingredientId })
       .where(and(eq(groceries.id, row.id), isNull(groceries.ingredientAliasId)));
   }
 }
@@ -384,12 +388,139 @@ export async function listRecurringGroceriesWithoutAlias(
 }
 
 export async function setRecurringGroceryAliases(
-  rows: ReadonlyArray<{ id: string; aliasId: string }>
+  rows: ReadonlyArray<{ id: string; aliasId: string; ingredientId: string }>
 ): Promise<void> {
   for (const row of rows) {
     await db
       .update(recurringGroceries)
-      .set({ ingredientAliasId: row.aliasId })
+      .set({ ingredientAliasId: row.aliasId, ingredientId: row.ingredientId })
       .where(and(eq(recurringGroceries.id, row.id), isNull(recurringGroceries.ingredientAliasId)));
   }
+}
+
+/**
+ * Every grocery and recurring grocery name the household lists, with the
+ * Ingredient it resolved to: what the link carry-over reads a legacy folded
+ * key against, so a link lands on the food its grocery did.
+ */
+export async function listResolvedGroceryNames(): Promise<
+  Array<{ name: string; ingredientId: string }>
+> {
+  const rows = await db
+    .selectDistinct({ name: groceries.name, ingredientId: groceries.ingredientId })
+    .from(groceries)
+    .where(and(isNotNull(groceries.name), isNotNull(groceries.ingredientId)))
+    .union(
+      db
+        .selectDistinct({
+          name: recurringGroceries.name,
+          ingredientId: recurringGroceries.ingredientId,
+        })
+        .from(recurringGroceries)
+        .where(isNotNull(recurringGroceries.ingredientId))
+    );
+
+  return rows.flatMap((row) =>
+    row.name && row.ingredientId ? [{ name: row.name, ingredientId: row.ingredientId }] : []
+  );
+}
+
+/**
+ * The three memories that were keyed by a folded name before ADR-0037, each
+ * with the column its uniqueness is scoped by and the member who owns a row
+ * (a link belongs to its Store's owner).
+ */
+export type LegacyKeyedTable = "productLinks" | "aisleLinks" | "storePreferences";
+
+/** A row still keyed by its folded name, newest first: the newest wins a collision. */
+export interface LegacyKeyedRow {
+  id: string;
+  normalizedName: string;
+  ownerId: string;
+}
+
+export async function listLegacyKeyedRows(
+  table: LegacyKeyedTable,
+  limit: number
+): Promise<LegacyKeyedRow[]> {
+  if (table === "storePreferences") {
+    const rows = await db
+      .select({
+        id: ingredientStorePreferences.id,
+        normalizedName: ingredientStorePreferences.normalizedName,
+        ownerId: ingredientStorePreferences.userId,
+      })
+      .from(ingredientStorePreferences)
+      .where(
+        and(
+          isNull(ingredientStorePreferences.ingredientId),
+          sql`coalesce(${ingredientStorePreferences.normalizedName}, '') <> ''`
+        )
+      )
+      .orderBy(desc(ingredientStorePreferences.updatedAt), asc(ingredientStorePreferences.id))
+      .limit(limit);
+
+    return rows.map((row) => ({ ...row, normalizedName: row.normalizedName ?? "" }));
+  }
+
+  const links = table === "productLinks" ? storeProductLinks : aisleLinks;
+  const rows = await db
+    .select({ id: links.id, normalizedName: links.normalizedName, ownerId: stores.userId })
+    .from(links)
+    .innerJoin(stores, eq(stores.id, links.storeId))
+    .where(and(isNull(links.ingredientId), sql`coalesce(${links.normalizedName}, '') <> ''`))
+    .orderBy(desc(links.updatedAt), asc(links.id))
+    .limit(limit);
+
+  return rows.map((row) => ({ ...row, normalizedName: row.normalizedName ?? "" }));
+}
+
+/**
+ * Key a legacy row by its Ingredient. Where the same Store (or member)
+ * already holds a row for that Ingredient — a newer one, since rows are
+ * carried over newest first — this one is the older of the two, and goes.
+ * Returns whether the row was kept.
+ */
+export async function keyLegacyRow(
+  table: LegacyKeyedTable,
+  id: string,
+  ingredientId: string
+): Promise<boolean> {
+  return await db.transaction(async (tx) => {
+    if (table === "storePreferences") {
+      const t = ingredientStorePreferences;
+      const [kept] = await tx
+        .update(t)
+        .set({ ingredientId })
+        .where(
+          and(
+            eq(t.id, id),
+            isNull(t.ingredientId),
+            sql`not exists (select 1 from ${t} as held where held.user_id = ${t.userId} and held.ingredient_id = ${ingredientId})`
+          )
+        )
+        .returning({ id: t.id });
+
+      if (!kept) await tx.delete(t).where(and(eq(t.id, id), isNull(t.ingredientId)));
+
+      return Boolean(kept);
+    }
+
+    const t = table === "productLinks" ? storeProductLinks : aisleLinks;
+    const [kept] = await tx
+      .update(t)
+      .set({ ingredientId })
+      .where(
+        and(
+          eq(t.id, id),
+          isNull(t.ingredientId),
+          sql`not exists (select 1 from ${t} as held where held.store_id = ${t.storeId} and held.ingredient_id = ${ingredientId})`
+        )
+      )
+      .returning({ id: t.id });
+
+    if (!kept) await tx.delete(t).where(and(eq(t.id, id), isNull(t.ingredientId)));
+
+    return Boolean(kept);
+  });
 }

@@ -43,7 +43,13 @@ vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/queue/store-lookup/lookup", () => lookup);
 
 const STORE = "11111111-1111-4111-8111-111111111111";
-const match = { kind: "match" as const, storeId: STORE, name: "kaas", householdKey: "h" };
+const match = {
+  kind: "match" as const,
+  storeId: STORE,
+  ingredientId: "ingredient-kaas",
+  name: "kaas",
+  householdKey: "h",
+};
 
 /** A job as the processor sees it, keeping whatever progress it writes. */
 function fakeJob(data: unknown) {
@@ -69,7 +75,7 @@ describe("forgetFailedLookup", () => {
   it("clears the Pending Link of a match job that has spent its attempts", async () => {
     await forgetFailedLookup({ data: match, attemptsMade: 2, opts: { attempts: 2 } });
 
-    expect(clearPendingLink).toHaveBeenCalledExactlyOnceWith(STORE, "kaas");
+    expect(clearPendingLink).toHaveBeenCalledExactlyOnceWith(STORE, "ingredient-kaas");
   });
 
   it("leaves the Pending Link while an attempt is still to come", async () => {

@@ -25,15 +25,21 @@ const STORES = [
   { id: BAKKER, aisles: [{ id: BROOD, storeId: BAKKER, name: "Brood", sortOrder: 0, version: 1 }] },
 ] as unknown as StoreDto[];
 
-/** What each Store remembers: Markt files melk in Zuivel and nothing else. */
-const remembered: Record<string, string> = { [`${MARKT}|melk`]: ZUIVEL };
-const aisleFor = (storeId: string | null, name: string | null) =>
-  remembered[`${storeId}|${name}`] ?? null;
+/** A grocery as a drop carries it: its name, and the Ingredient it resolved to. */
+const grocery = (name: string, ingredientId: string | null = `i-${name.toLowerCase()}`) => ({
+  name,
+  ingredientId,
+});
+
+/** What each Store remembers: Markt files milk (i-melk) in Zuivel and nothing else. */
+const remembered: Record<string, string> = { [`${MARKT}|i-melk`]: ZUIVEL };
+const aisleFor = (storeId: string | null, ingredientId: string | null | undefined) =>
+  remembered[`${storeId}|${ingredientId}`] ?? null;
 
 const row = (id: string) => [id];
 
 describe("planDrop", () => {
-  it("renumbers the Store as its block shows it and files the name in the aisle it was dropped in", () => {
+  it("renumbers the Store as its block shows it and files the Ingredient in the aisle it was dropped in", () => {
     // "kaas" was dragged from the unfiled area into Zuivel, under melk.
     const plan = planDrop({
       items: {
@@ -47,7 +53,7 @@ describe("planDrop", () => {
       stores: STORES,
       aisleFor,
       movedIds: ["kaas"],
-      movedNames: ["kaas"],
+      movedGroceries: [grocery("kaas")],
       idsOf: row,
     });
 
@@ -57,10 +63,10 @@ describe("planDrop", () => {
       { id: "melk", sortOrder: 2 },
       { id: "kaas", sortOrder: 3 },
     ]);
-    expect(plan.filings).toEqual([{ storeId: MARKT, name: "kaas", aisleId: ZUIVEL }]);
+    expect(plan.filings).toEqual([{ storeId: MARKT, grocery: grocery("kaas"), aisleId: ZUIVEL }]);
   });
 
-  it("forgets a name dropped back into its Store's unfiled area, and keeps order within the aisle", () => {
+  it("forgets an Ingredient dropped back into its Store's unfiled area, and keeps order within the aisle", () => {
     const plan = planDrop({
       items: {
         [UNSORTED_CONTAINER]: [],
@@ -73,15 +79,15 @@ describe("planDrop", () => {
       stores: STORES,
       aisleFor,
       movedIds: ["melk"],
-      movedNames: ["melk"],
+      movedGroceries: [grocery("melk")],
       idsOf: row,
     });
 
-    expect(plan.filings).toEqual([{ storeId: MARKT, name: "melk", aisleId: null }]);
+    expect(plan.filings).toEqual([{ storeId: MARKT, grocery: grocery("melk"), aisleId: null }]);
     expect(plan.updates.map((u) => u.id)).toEqual(["melk", "komkommer"]);
   });
 
-  it("writes no filing where the Store already files the name there", () => {
+  it("writes no filing where the Store already files the Ingredient there", () => {
     // melk reordered within Zuivel: a reorder, and nothing to teach.
     const plan = planDrop({
       items: {
@@ -95,7 +101,7 @@ describe("planDrop", () => {
       stores: STORES,
       aisleFor,
       movedIds: ["melk"],
-      movedNames: ["melk"],
+      movedGroceries: [grocery("melk")],
       idsOf: row,
     });
 
@@ -121,7 +127,7 @@ describe("planDrop", () => {
       stores: STORES,
       aisleFor,
       movedIds: ["melk"],
-      movedNames: ["melk"],
+      movedGroceries: [grocery("melk")],
       idsOf: row,
     });
 
@@ -131,7 +137,7 @@ describe("planDrop", () => {
       { id: "komkommer", sortOrder: 0 },
     ]);
     // Filed at the Bakker, which had never been told; Markt's memory is untouched.
-    expect(plan.filings).toEqual([{ storeId: BAKKER, name: "melk", aisleId: BROOD }]);
+    expect(plan.filings).toEqual([{ storeId: BAKKER, grocery: grocery("melk"), aisleId: BROOD }]);
   });
 
   it("only assigns when dropped into another Store's unfiled area, and teaches unsorted nothing", () => {
@@ -142,7 +148,7 @@ describe("planDrop", () => {
       stores: STORES,
       aisleFor,
       movedIds: ["melk"],
-      movedNames: ["melk"],
+      movedGroceries: [grocery("melk")],
       idsOf: row,
     });
 
@@ -156,7 +162,7 @@ describe("planDrop", () => {
       stores: STORES,
       aisleFor,
       movedIds: ["melk"],
-      movedNames: ["melk"],
+      movedGroceries: [grocery("melk")],
       idsOf: row,
     });
 
@@ -164,9 +170,9 @@ describe("planDrop", () => {
     expect(toUnsorted.filings).toEqual([]);
   });
 
-  it("files every distinct name of a dropped group, and numbers its sources as one", () => {
+  it("files every distinct Ingredient of a dropped group, and numbers its sources as one", () => {
     const groups: Record<string, string[]> = {
-      "g-kip": ["kip-1", "kip-2"],
+      "g-kip": ["kip-1", "kip-2", "kip-3"],
       "g-sla": ["sla-1"],
     };
     const plan = planDrop({
@@ -181,7 +187,7 @@ describe("planDrop", () => {
       stores: STORES,
       aisleFor,
       movedIds: groups["g-kip"]!,
-      movedNames: ["Kip", "kip", "kip (diepvries)"],
+      movedGroceries: [grocery("Kip", "i-kip"), grocery("kip", "i-kip"), grocery("kippendij")],
       idsOf: (key) => groups[key] ?? [],
     });
 
@@ -189,11 +195,56 @@ describe("planDrop", () => {
       { id: "sla-1", sortOrder: 0 },
       { id: "kip-1", sortOrder: 1 },
       { id: "kip-2", sortOrder: 1 },
+      { id: "kip-3", sortOrder: 1 },
     ]);
-    // "Kip" and "kip" are one name; "kip (diepvries)" is another.
+    // "Kip" and "kip" are one Ingredient; "kippendij" is another.
     expect(plan.filings).toEqual([
-      { storeId: MARKT, name: "Kip", aisleId: GROENTE },
-      { storeId: MARKT, name: "kip (diepvries)", aisleId: GROENTE },
+      { storeId: MARKT, grocery: grocery("Kip", "i-kip"), aisleId: GROENTE },
+      { storeId: MARKT, grocery: grocery("kippendij"), aisleId: GROENTE },
+    ]);
+  });
+
+  it("files two groceries of one Ingredient in a dropped group once, however they are spelled", () => {
+    const plan = planDrop({
+      items: {
+        [UNSORTED_CONTAINER]: [],
+        [MARKT]: [],
+        [aisleContainerId(GROENTE)]: ["g-uien"],
+        [aisleContainerId(ZUIVEL)]: [],
+      },
+      originContainer: MARKT,
+      targetContainer: aisleContainerId(GROENTE),
+      stores: STORES,
+      aisleFor,
+      movedIds: ["ui-1", "ui-2"],
+      movedGroceries: [grocery("onions", "i-onion"), grocery("uien", "i-onion")],
+      idsOf: () => ["ui-1", "ui-2"],
+    });
+
+    expect(plan.filings).toEqual([
+      { storeId: MARKT, grocery: grocery("onions", "i-onion"), aisleId: GROENTE },
+    ]);
+  });
+
+  it("files a grocery the server has not resolved yet by its name, since it has no Ingredient", () => {
+    const plan = planDrop({
+      items: {
+        [UNSORTED_CONTAINER]: [],
+        [MARKT]: [],
+        [aisleContainerId(GROENTE)]: [],
+        [aisleContainerId(ZUIVEL)]: ["melk"],
+      },
+      originContainer: MARKT,
+      targetContainer: aisleContainerId(ZUIVEL),
+      stores: STORES,
+      aisleFor,
+      movedIds: ["melk"],
+      movedGroceries: [grocery("melk", null)],
+      idsOf: row,
+    });
+
+    expect(plan.filings).toEqual([
+      { storeId: MARKT, grocery: grocery("melk", null), aisleId: ZUIVEL },
     ]);
   });
 });

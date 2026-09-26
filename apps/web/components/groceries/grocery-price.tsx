@@ -29,7 +29,7 @@ export function GroceryPrice({ line }: { line: PricedLine }) {
   const { linkFor } = useStoresContext();
   const locale = useLocale();
   const t = useTranslations("groceries.price");
-  const link = linkFor(line.storeId, line.name);
+  const link = linkFor(line.storeId, line.ingredientId);
 
   if (!link) return null;
   if (isPendingLink(link)) {

@@ -13,10 +13,7 @@ import {
   getRecurringGroceryOwnerId,
   updateRecurringGroceryWithGrocery,
 } from "@norish/db/repositories/recurring-groceries";
-import {
-  normalizeIngredientName,
-  upsertIngredientStorePreference,
-} from "@norish/db/repositories/stores";
+import { upsertIngredientStorePreference } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -62,6 +59,7 @@ const createRecurring = authedProcedure
       userId: ctx.user.id,
       name: input.name,
       ingredientAliasId: alias?.aliasId ?? null,
+      ingredientId: alias?.ingredientId ?? null,
       amount: input.amount,
       unit: input.unit,
       recurrenceRule: input.recurrenceRule,
@@ -77,6 +75,7 @@ const createRecurring = authedProcedure
         userId: ctx.user.id,
         name: created.name,
         ingredientAliasId: alias?.aliasId ?? null,
+        ingredientId: alias?.ingredientId ?? null,
         unit: created.unit || null,
         amount: created.amount,
         purchaseAmount: input.purchaseAmount,
@@ -181,7 +180,12 @@ const updateRecurring = authedProcedure
             id: recurringGroceryId,
             version: recurringVersion,
             ...data,
-            ...(alias !== undefined ? { ingredientAliasId: alias?.aliasId ?? null } : {}),
+            ...(alias !== undefined
+              ? {
+                  ingredientAliasId: alias?.aliasId ?? null,
+                  ingredientId: alias?.ingredientId ?? null,
+                }
+              : {}),
           },
           { id: groceryId, version: groceryVersion, storeId, purchaseAmount: input.purchaseAmount }
         );
@@ -202,10 +206,10 @@ const updateRecurring = authedProcedure
           return;
         }
 
-        if (storeId && outcome.value.grocery.name) {
-          const normalized = normalizeIngredientName(outcome.value.grocery.name);
+        const ingredientId = outcome.value.grocery.ingredientId;
 
-          await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
+        if (storeId && ingredientId) {
+          await upsertIngredientStorePreference(ctx.user.id, ingredientId, storeId);
         }
 
         // Renamed or moved, the grocery asks its Store a new question.
@@ -280,6 +284,7 @@ const detachRecurring = authedProcedure
             version: groceryVersion,
             name: parsedIngredient.description,
             ingredientAliasId: alias?.aliasId ?? null,
+            ingredientId: alias?.ingredientId ?? null,
             unit: parsedIngredient.unitOfMeasure,
             amount: parsedIngredient.quantity ?? null,
             purchaseAmount: input.purchaseAmount,
@@ -303,10 +308,10 @@ const detachRecurring = authedProcedure
           return;
         }
 
-        if (storeId && outcome.value.name) {
-          const normalized = normalizeIngredientName(outcome.value.name);
+        const ingredientId = outcome.value.ingredientId;
 
-          await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
+        if (storeId && ingredientId) {
+          await upsertIngredientStorePreference(ctx.user.id, ingredientId, storeId);
         }
 
         // Detaching edits the grocery too — a new name or Store is a new question.

@@ -21,7 +21,6 @@ import { listRecurringGroceriesByUsers } from "@norish/db/repositories/recurring
 import {
   findBestIngredientStorePreference,
   getStoreOwnerId,
-  normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
@@ -115,6 +114,7 @@ export async function createGroceriesData(
       userId: string;
       name: string | null;
       ingredientAliasId?: string | null;
+      ingredientId?: string | null;
       unit: string | null;
       amount: number | null;
       purchaseAmount?: number | null;
@@ -170,13 +170,7 @@ export async function createGroceriesData(
     }
 
     const id = grocery.id ?? crypto.randomUUID();
-    let storeId: string | null = grocery.storeId ?? null;
-
-    if (!storeId && grocery.name) {
-      const match = await findBestIngredientStorePreference(ctx.user.id, ctx.userIds, grocery.name);
-
-      storeId = match?.preference.storeId ?? null;
-    }
+    const storeId: string | null = grocery.storeId ?? null;
 
     groceriesToCreate.push({
       id,
@@ -218,7 +212,20 @@ export async function createGroceriesData(
   );
 
   for (const [index, { groceries: grocery }] of groceriesToCreate.entries()) {
-    grocery.ingredientAliasId = aliases[index]?.aliasId ?? null;
+    const alias = aliases[index];
+
+    grocery.ingredientAliasId = alias?.aliasId ?? null;
+    grocery.ingredientId = alias?.ingredientId ?? null;
+
+    // A line added without a Store goes where the household sends its food.
+    if (!grocery.storeId && alias && grocery.name) {
+      const match = await findBestIngredientStorePreference(ctx.user.id, ctx.userIds, {
+        id: alias.ingredientId,
+        name: grocery.name,
+      });
+
+      grocery.storeId = match?.preference.storeId ?? null;
+    }
   }
 
   let updatedGroceries: GroceryDto[] = [];
@@ -480,11 +487,12 @@ export async function assignGroceryToStoreData(
   // Store's answer was never about this one.
   await noticeGroceries(ctx, [updated]);
 
-  if (savePreference && storeId && grocery.name) {
-    const normalized = normalizeIngredientName(grocery.name);
-
-    await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
-    log.debug({ userId: ctx.user.id, normalized, storeId }, "Saved ingredient store preference");
+  if (savePreference && storeId && grocery.ingredientId) {
+    await upsertIngredientStorePreference(ctx.user.id, grocery.ingredientId, storeId);
+    log.debug(
+      { userId: ctx.user.id, ingredientId: grocery.ingredientId, storeId },
+      "Saved ingredient store preference"
+    );
   }
 
   void groceries.publish(

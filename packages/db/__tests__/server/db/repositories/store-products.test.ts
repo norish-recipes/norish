@@ -22,6 +22,7 @@ import {
 import { deleteStore } from "@norish/db/repositories/stores";
 import { groceries, storeProductLinks, storeProducts, stores } from "@norish/db/schema";
 
+import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
 import { getTestDb } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -53,6 +54,13 @@ describe("store products, product links and misses", () => {
   afterAll(async () => {
     await testBase.teardown();
   });
+
+  /** The Ingredient a grocery name resolves to, as every link writer resolves it. */
+  async function ingredient(name: string) {
+    const [resolved] = await resolveIngredients([name], { userId });
+
+    return resolved!.ingredientId;
+  }
 
   function reading(overrides: Partial<Parameters<typeof upsertReadProduct>[0]> = {}) {
     return {
@@ -338,52 +346,54 @@ describe("store products, product links and misses", () => {
     });
   });
 
-  describe("what a Store has learned a name means", () => {
-    it("resolves a known name to its product", async () => {
+  describe("what a Store has learned an Ingredient means", () => {
+    it("resolves a known Ingredient to its product, whichever spelling asked", async () => {
       const product = await upsertReadProduct(reading());
 
-      await upsertProductLink(storeId, "Oude Kaas", product.id);
+      await upsertProductLink(storeId, await ingredient("Oude Kaas"), product.id);
 
-      const resolved = await resolveProductLink(storeId, "  oude   kaas!  ");
+      const resolved = await resolveProductLink(storeId, await ingredient("  oude   kaas!  "));
 
       expect(resolved?.product?.id).toBe(product.id);
-      expect(resolved?.normalizedName).toBe("oude kaas");
+      expect(resolved?.ingredientId).toBe(await ingredient("oude kaas"));
     });
 
-    it("resolves an unknown name to nothing at all", async () => {
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toBeNull();
+    it("resolves an Ingredient the Store was never told about to nothing at all", async () => {
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toBeNull();
     });
 
     it("reads a link with no product as a Miss, holding when it was tried", async () => {
-      await upsertProductLink(storeId, "sterrenstof", null);
+      await upsertProductLink(storeId, await ingredient("sterrenstof"), null);
 
-      const resolved = await resolveProductLink(storeId, "sterrenstof");
+      const resolved = await resolveProductLink(storeId, await ingredient("sterrenstof"));
 
       expect(resolved?.product).toBeNull();
       expect(resolved?.triedAt).toBeInstanceOf(Date);
     });
 
-    it("keeps one link per store and name, last writer winning", async () => {
+    it("keeps one link per Store and Ingredient, last writer winning", async () => {
       const first = await upsertReadProduct(reading());
       const second = await upsertReadProduct(reading({ pageUrl: OTHER_PAGE, name: "Jonge kaas" }));
 
-      await upsertProductLink(storeId, "kaas", first.id);
-      await upsertProductLink(storeId, "kaas", second.id);
+      await upsertProductLink(storeId, await ingredient("kaas"), first.id);
+      await upsertProductLink(storeId, await ingredient("kaas"), second.id);
 
       const links = await getTestDb().select().from(storeProductLinks);
 
       expect(links).toHaveLength(1);
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toMatchObject({
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: second.id },
       });
     });
 
-    it("lets the queue answer a name nobody has, and only such a name", async () => {
+    it("lets the queue answer an Ingredient nobody has, and only such an Ingredient", async () => {
       const read = await upsertReadProduct(reading());
 
       // Nobody has answered "kaas": the queue's match lands.
-      await expect(linkIfUnanswered(storeId, "kaas", read.id)).resolves.toBe(true);
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toMatchObject({
+      await expect(linkIfUnanswered(storeId, await ingredient("kaas"), read.id)).resolves.toBe(
+        true
+      );
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: read.id },
       });
 
@@ -392,10 +402,12 @@ describe("store products, product links and misses", () => {
       // a Miss.
       const chosen = await upsertReadProduct(reading({ pageUrl: OTHER_PAGE, name: "Jonge kaas" }));
 
-      await upsertProductLink(storeId, "kaas", chosen.id);
-      await expect(linkIfUnanswered(storeId, "kaas", read.id)).resolves.toBe(false);
-      await expect(linkIfUnanswered(storeId, "kaas", null)).resolves.toBe(false);
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toMatchObject({
+      await upsertProductLink(storeId, await ingredient("kaas"), chosen.id);
+      await expect(linkIfUnanswered(storeId, await ingredient("kaas"), read.id)).resolves.toBe(
+        false
+      );
+      await expect(linkIfUnanswered(storeId, await ingredient("kaas"), null)).resolves.toBe(false);
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: chosen.id },
       });
     });
@@ -408,39 +420,45 @@ describe("store products, product links and misses", () => {
         ],
       };
 
-      await expect(linkIfUnanswered(storeId, "kaas", null, suggestion)).resolves.toBe(true);
-      expect(await resolveProductLink(storeId, "kaas")).toMatchObject({
+      await expect(
+        linkIfUnanswered(storeId, await ingredient("kaas"), null, suggestion)
+      ).resolves.toBe(true);
+      expect(await resolveProductLink(storeId, await ingredient("kaas"))).toMatchObject({
         product: null,
         suggestion,
       });
-      expect(await resolveProductLinks([{ storeId, name: "kaas" }])).toMatchObject([
-        { suggestion },
-      ]);
+      expect(
+        await resolveProductLinks([{ storeId, ingredientId: await ingredient("kaas") }])
+      ).toMatchObject([{ suggestion }]);
 
       // A link answers the question the ranking was for, so it carries none.
       const read = await upsertReadProduct(reading());
 
-      await expect(linkIfUnanswered(storeId, "kaas", read.id, suggestion)).resolves.toBe(true);
-      expect(await resolveProductLink(storeId, "kaas")).toMatchObject({
+      await expect(
+        linkIfUnanswered(storeId, await ingredient("kaas"), read.id, suggestion)
+      ).resolves.toBe(true);
+      expect(await resolveProductLink(storeId, await ingredient("kaas"))).toMatchObject({
         product: expect.objectContaining({ id: read.id }),
         suggestion: null,
       });
 
       // And so does a shopper's own answer — a Miss they wrote by unlinking included.
-      await linkIfUnanswered(storeId, "melk", null, suggestion);
-      await upsertProductLink(storeId, "melk", null);
-      expect(await resolveProductLink(storeId, "melk")).toMatchObject({
+      await linkIfUnanswered(storeId, await ingredient("melk"), null, suggestion);
+      await upsertProductLink(storeId, await ingredient("melk"), null);
+      expect(await resolveProductLink(storeId, await ingredient("melk"))).toMatchObject({
         product: null,
         suggestion: null,
       });
     });
 
-    it("lets the queue answer a name it only knew as a Miss", async () => {
-      await upsertProductLink(storeId, "kaas", null);
+    it("lets the queue answer an Ingredient it only knew as a Miss", async () => {
+      await upsertProductLink(storeId, await ingredient("kaas"), null);
       const read = await upsertReadProduct(reading());
 
-      await expect(linkIfUnanswered(storeId, "kaas", read.id)).resolves.toBe(true);
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toMatchObject({
+      await expect(linkIfUnanswered(storeId, await ingredient("kaas"), read.id)).resolves.toBe(
+        true
+      );
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: read.id },
       });
     });
@@ -449,60 +467,76 @@ describe("store products, product links and misses", () => {
       const kaas = await upsertReadProduct(reading());
       const melk = await upsertReadProduct(reading({ pageUrl: OTHER_PAGE, name: "Melk" }));
 
-      await upsertProductLink(storeId, "kaas", kaas.id);
-      await upsertProductLink(storeId, "melk", melk.id);
-      await upsertProductLink(storeId, "sterrenstof", null);
+      await upsertProductLink(storeId, await ingredient("kaas"), kaas.id);
+      await upsertProductLink(storeId, await ingredient("melk"), melk.id);
+      await upsertProductLink(storeId, await ingredient("sterrenstof"), null);
 
       const resolved = await resolveProductLinks([
-        { storeId, name: "Kaas" },
-        { storeId, name: "melk" },
-        { storeId, name: "sterrenstof" },
-        { storeId, name: "boter" },
+        { storeId, ingredientId: await ingredient("Kaas") },
+        { storeId, ingredientId: await ingredient("melk") },
+        { storeId, ingredientId: await ingredient("sterrenstof") },
+        { storeId, ingredientId: await ingredient("boter") },
       ]);
 
       expect(resolved).toHaveLength(3);
       expect(
         resolved
           .filter((link) => link.product !== null)
-          .map((link) => link.normalizedName)
+          .map((link) => link.ingredientId)
           .sort()
-      ).toEqual(["kaas", "melk"]);
+      ).toEqual([await ingredient("kaas"), await ingredient("melk")].sort());
     });
   });
 
   describe("a Pending Link: the Store has been asked and has not answered", () => {
     const anHourAgo = () => new Date(Date.now() - 60 * 60 * 1000);
 
-    it("is written for a name nobody has asked about, and reads as neither a link nor a Miss", async () => {
-      await expect(markLinkPending(storeId, "Kaas", anHourAgo())).resolves.toBe(true);
+    it("is written for an Ingredient nobody has asked about, and reads as neither a link nor a Miss", async () => {
+      await expect(markLinkPending(storeId, await ingredient("Kaas"), anHourAgo())).resolves.toBe(
+        true
+      );
 
-      const resolved = await resolveProductLink(storeId, "kaas");
+      const resolved = await resolveProductLink(storeId, await ingredient("kaas"));
 
-      expect(resolved).toMatchObject({ normalizedName: "kaas", product: null, triedAt: null });
+      expect(resolved).toMatchObject({
+        ingredientId: await ingredient("kaas"),
+        product: null,
+        triedAt: null,
+      });
     });
 
     it("is somebody else's question while it is fresh, and the caller's again once it has gone stale", async () => {
-      await markLinkPending(storeId, "kaas", anHourAgo());
+      await markLinkPending(storeId, await ingredient("kaas"), anHourAgo());
 
       // A second view a moment later finds the question already asked.
-      await expect(markLinkPending(storeId, "kaas", anHourAgo())).resolves.toBe(false);
+      await expect(markLinkPending(storeId, await ingredient("kaas"), anHourAgo())).resolves.toBe(
+        false
+      );
 
       // A worker that died left the row behind; an hour on it is asked again.
-      await expect(markLinkPending(storeId, "kaas", new Date())).resolves.toBe(true);
+      await expect(markLinkPending(storeId, await ingredient("kaas"), new Date())).resolves.toBe(
+        true
+      );
     });
 
     it("never overwrites an answer, Miss or match", async () => {
       const read = await upsertReadProduct(reading());
 
-      await upsertProductLink(storeId, "kaas", read.id);
-      await upsertProductLink(storeId, "sterrenstof", null);
+      await upsertProductLink(storeId, await ingredient("kaas"), read.id);
+      await upsertProductLink(storeId, await ingredient("sterrenstof"), null);
 
-      await expect(markLinkPending(storeId, "kaas", new Date())).resolves.toBe(false);
-      await expect(markLinkPending(storeId, "sterrenstof", new Date())).resolves.toBe(false);
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toMatchObject({
+      await expect(markLinkPending(storeId, await ingredient("kaas"), new Date())).resolves.toBe(
+        false
+      );
+      await expect(
+        markLinkPending(storeId, await ingredient("sterrenstof"), new Date())
+      ).resolves.toBe(false);
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: read.id },
       });
-      await expect(resolveProductLink(storeId, "sterrenstof")).resolves.toMatchObject({
+      await expect(
+        resolveProductLink(storeId, await ingredient("sterrenstof"))
+      ).resolves.toMatchObject({
         product: null,
         triedAt: expect.any(Date),
       });
@@ -511,36 +545,40 @@ describe("store products, product links and misses", () => {
     it("becomes the answer the queue writes, or the one a shopper chooses", async () => {
       const read = await upsertReadProduct(reading());
 
-      await markLinkPending(storeId, "kaas", anHourAgo());
-      await expect(linkIfUnanswered(storeId, "kaas", read.id)).resolves.toBe(true);
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toMatchObject({
+      await markLinkPending(storeId, await ingredient("kaas"), anHourAgo());
+      await expect(linkIfUnanswered(storeId, await ingredient("kaas"), read.id)).resolves.toBe(
+        true
+      );
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: read.id },
         triedAt: expect.any(Date),
       });
 
-      await markLinkPending(storeId, "melk", anHourAgo());
-      await linkIfUnanswered(storeId, "melk", null);
-      await expect(resolveProductLink(storeId, "melk")).resolves.toMatchObject({
+      await markLinkPending(storeId, await ingredient("melk"), anHourAgo());
+      await linkIfUnanswered(storeId, await ingredient("melk"), null);
+      await expect(resolveProductLink(storeId, await ingredient("melk"))).resolves.toMatchObject({
         product: null,
         triedAt: expect.any(Date),
       });
 
-      await markLinkPending(storeId, "boter", anHourAgo());
-      await upsertProductLink(storeId, "boter", read.id);
-      await expect(resolveProductLink(storeId, "boter")).resolves.toMatchObject({
+      await markLinkPending(storeId, await ingredient("boter"), anHourAgo());
+      await upsertProductLink(storeId, await ingredient("boter"), read.id);
+      await expect(resolveProductLink(storeId, await ingredient("boter"))).resolves.toMatchObject({
         product: { id: read.id },
       });
     });
 
     it("goes when the shop did not answer, and only then", async () => {
-      await markLinkPending(storeId, "kaas", anHourAgo());
-      await expect(clearPendingLink(storeId, "kaas")).resolves.toBe(true);
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toBeNull();
+      await markLinkPending(storeId, await ingredient("kaas"), anHourAgo());
+      await expect(clearPendingLink(storeId, await ingredient("kaas"))).resolves.toBe(true);
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toBeNull();
 
       // A Miss or a link written meanwhile is an answer, and stays.
-      await upsertProductLink(storeId, "sterrenstof", null);
-      await expect(clearPendingLink(storeId, "sterrenstof")).resolves.toBe(false);
-      await expect(resolveProductLink(storeId, "sterrenstof")).resolves.not.toBeNull();
+      await upsertProductLink(storeId, await ingredient("sterrenstof"), null);
+      await expect(clearPendingLink(storeId, await ingredient("sterrenstof"))).resolves.toBe(false);
+      await expect(
+        resolveProductLink(storeId, await ingredient("sterrenstof"))
+      ).resolves.not.toBeNull();
     });
   });
 
@@ -548,7 +586,7 @@ describe("store products, product links and misses", () => {
     it("takes a Store's products and links with the Store", async () => {
       const product = await upsertReadProduct(reading());
 
-      await upsertProductLink(storeId, "kaas", product.id);
+      await upsertProductLink(storeId, await ingredient("kaas"), product.id);
       const [store] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
       await deleteStore(storeId, store!.version, false, []);
@@ -557,10 +595,10 @@ describe("store products, product links and misses", () => {
       await expect(getTestDb().select().from(storeProductLinks)).resolves.toEqual([]);
     });
 
-    it("takes neither with a Grocery, which is the point of keying by name", async () => {
+    it("takes neither with a Grocery, which is the point of keying by Ingredient", async () => {
       const product = await upsertReadProduct(reading());
 
-      await upsertProductLink(storeId, "kaas", product.id);
+      await upsertProductLink(storeId, await ingredient("kaas"), product.id);
       const [grocery] = await getTestDb()
         .insert(groceries)
         .values({ userId, storeId, name: "Kaas" })
@@ -569,7 +607,7 @@ describe("store products, product links and misses", () => {
       await getTestDb().delete(groceries).where(eq(groceries.id, grocery!.id));
 
       await expect(getStoreProductById(product.id)).resolves.not.toBeNull();
-      await expect(resolveProductLink(storeId, "kaas")).resolves.toMatchObject({
+      await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: product.id },
       });
     });

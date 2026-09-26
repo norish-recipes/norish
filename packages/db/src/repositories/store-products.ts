@@ -16,7 +16,7 @@ import {
   StoreProductLinkSelectSchema,
   StoreProductSelectSchema,
 } from "@norish/shared/contracts/zod";
-import { normalizeGroceryName, productLinkKey } from "@norish/shared/lib/normalized-name";
+import { productLinkKey } from "@norish/shared/lib/normalized-name";
 import { readPackSize } from "@norish/shared/lib/pack-size";
 
 const ProductSchema = StoreProductSelectSchema;
@@ -52,62 +52,55 @@ function packColumns(pack: PackSizeDto | null | undefined) {
   };
 }
 
+/** A link row and its product as every reader hands it back. */
+function toResolvedLink(
+  link: typeof storeProductLinks.$inferSelect & { ingredientId: string },
+  product: unknown
+): ResolvedProductLink {
+  return {
+    storeId: link.storeId,
+    ingredientId: link.ingredientId,
+    triedAt: link.triedAt,
+    product: product ? parseProduct(product) : null,
+    suggestion: parseSuggestion(link.suggestion),
+  };
+}
+
 /**
- * What a Store has learned one grocery name means, product and all, in one
+ * What a Store has learned one Ingredient means, product and all, in one
  * query. A row with no product is a Miss, or a Pending Link while `triedAt`
  * is still empty, and reads as one.
  */
 export async function resolveProductLink(
   storeId: string,
-  name: string
+  ingredientId: string
 ): Promise<ResolvedProductLink | null> {
-  const normalizedName = normalizeGroceryName(name);
-
-  if (!normalizedName) return null;
-
   const [row] = await db
     .select({ link: storeProductLinks, product: storeProducts })
     .from(storeProductLinks)
     .leftJoin(storeProducts, eq(storeProducts.id, storeProductLinks.storeProductId))
     .where(
-      and(
-        eq(storeProductLinks.storeId, storeId),
-        eq(storeProductLinks.normalizedName, normalizedName)
-      )
+      and(eq(storeProductLinks.storeId, storeId), eq(storeProductLinks.ingredientId, ingredientId))
     )
     .limit(1);
 
   if (!row) return null;
-  const link = StoreProductLinkSelectSchema.safeParse(row.link);
 
-  if (!link.success) throw new Error("Failed to parse product link");
-
-  return {
-    storeId: link.data.storeId,
-    normalizedName: link.data.normalizedName,
-    triedAt: link.data.triedAt,
-    product: row.product ? parseProduct(row.product) : null,
-    suggestion: link.data.suggestion,
-  };
+  return toResolvedLink({ ...row.link, ingredientId }, row.product);
 }
 
 /**
- * Every Product Link a household's stores hold for a set of grocery names, in
+ * Every Product Link a household's stores hold for a set of Ingredients, in
  * one query rather than one per grocery.
  */
 export async function resolveProductLinks(
-  pairs: { storeId: string; name: string }[]
+  pairs: { storeId: string; ingredientId: string }[]
 ): Promise<ResolvedProductLink[]> {
-  const wanted = new Set(
-    pairs
-      .map(({ storeId, name }) => ({ storeId, normalized: normalizeGroceryName(name) }))
-      .filter((pair) => pair.normalized !== "")
-      .map((pair) => productLinkKey(pair.storeId, pair.normalized))
-  );
+  const wanted = new Set(pairs.map((pair) => productLinkKey(pair.storeId, pair.ingredientId)));
 
   if (wanted.size === 0) return [];
   const storeIds = [...new Set(pairs.map((pair) => pair.storeId))];
-  const names = [...new Set(pairs.map((pair) => normalizeGroceryName(pair.name)).filter(Boolean))];
+  const ingredientIds = [...new Set(pairs.map((pair) => pair.ingredientId))];
 
   const rows = await db
     .select({ link: storeProductLinks, product: storeProducts })
@@ -116,19 +109,17 @@ export async function resolveProductLinks(
     .where(
       and(
         inArray(storeProductLinks.storeId, storeIds),
-        inArray(storeProductLinks.normalizedName, names)
+        inArray(storeProductLinks.ingredientId, ingredientIds)
       )
     );
 
-  return rows
-    .filter((row) => wanted.has(productLinkKey(row.link.storeId, row.link.normalizedName)))
-    .map((row) => ({
-      storeId: row.link.storeId,
-      normalizedName: row.link.normalizedName,
-      triedAt: row.link.triedAt,
-      product: row.product ? parseProduct(row.product) : null,
-      suggestion: parseSuggestion(row.link.suggestion),
-    }));
+  return rows.flatMap((row) => {
+    const ingredientId = row.link.ingredientId;
+
+    if (!ingredientId || !wanted.has(productLinkKey(row.link.storeId, ingredientId))) return [];
+
+    return [toResolvedLink({ ...row.link, ingredientId }, row.product)];
+  });
 }
 
 /** The suggestion column as typed, or nothing for a row that holds no usable one. */
@@ -139,25 +130,21 @@ function parseSuggestion(value: unknown): ProductSuggestion | null {
 }
 
 /**
- * Point a grocery name at a product, or at nothing. Last writer wins, with no
+ * Point an Ingredient at a product, or at nothing. Last writer wins, with no
  * version guard: the last human to choose is right, and a Miss is the same row
  * with no product and a fresh `triedAt`. A shopper's answer also ends whatever
  * the Decision Model suggested: the question it ranked answers for is closed.
  */
 export async function upsertProductLink(
   storeId: string,
-  name: string,
+  ingredientId: string,
   storeProductId: string | null
 ): Promise<void> {
-  const normalizedName = normalizeGroceryName(name);
-
-  if (!normalizedName) return;
-
   await db
     .insert(storeProductLinks)
-    .values({ storeId, normalizedName, storeProductId, triedAt: new Date(), suggestion: null })
+    .values({ storeId, ingredientId, storeProductId, triedAt: new Date(), suggestion: null })
     .onConflictDoUpdate({
-      target: [storeProductLinks.storeId, storeProductLinks.normalizedName],
+      target: [storeProductLinks.storeId, storeProductLinks.ingredientId],
       set: {
         storeProductId,
         suggestion: null,
@@ -169,32 +156,28 @@ export async function upsertProductLink(
 }
 
 /**
- * What the lookup queue learned about a name, written only where nobody has
- * answered it. The queue reads a shop between two paced visits, and a shopper
- * may choose the product in that gap — through the panel, or from a
- * housemate's screen. A shopper's answer is the answer, so the write itself
- * carries the condition rather than a check made seconds before it: a link
- * that already points at a product is left exactly as it is, Miss or match.
- * Returns whether anything was written.
+ * What the lookup queue learned about an Ingredient, written only where
+ * nobody has answered it. The queue reads a shop between two paced visits,
+ * and a shopper may choose the product in that gap — through the panel, or
+ * from a housemate's screen. A shopper's answer is the answer, so the write
+ * itself carries the condition rather than a check made seconds before it: a
+ * link that already points at a product is left exactly as it is, Miss or
+ * match. Returns whether anything was written.
  */
 export async function linkIfUnanswered(
   storeId: string,
-  name: string,
+  ingredientId: string,
   storeProductId: string | null,
   /** What the Decision Model said about the offered products; kept with a Miss only. */
   suggestion: ProductSuggestion | null = null
 ): Promise<boolean> {
-  const normalizedName = normalizeGroceryName(name);
-
-  if (!normalizedName) return false;
-
   // A link answers the question the ranking was for, so it carries none.
   const kept = storeProductId === null ? suggestion : null;
   const rows = await db
     .insert(storeProductLinks)
-    .values({ storeId, normalizedName, storeProductId, triedAt: new Date(), suggestion: kept })
+    .values({ storeId, ingredientId, storeProductId, triedAt: new Date(), suggestion: kept })
     .onConflictDoUpdate({
-      target: [storeProductLinks.storeId, storeProductLinks.normalizedName],
+      target: [storeProductLinks.storeId, storeProductLinks.ingredientId],
       set: {
         storeProductId,
         suggestion: kept,
@@ -210,28 +193,24 @@ export async function linkIfUnanswered(
 }
 
 /**
- * The Store has been asked what this name means. A Pending Link is written
- * before the question goes on the queue, because nothing else on the wire
- * says "being asked", and only where nobody has answered: a link or a Miss is
- * left exactly as it is. A Pending Link a dead worker left behind must not
- * stop the question for ever, so one older than `askedBefore` is asked again
- * and stamped so. Returns whether the question is the caller's to enqueue —
- * a fresh Pending Link somebody else wrote is theirs.
+ * The Store has been asked what this Ingredient means. A Pending Link is
+ * written before the question goes on the queue, because nothing else on the
+ * wire says "being asked", and only where nobody has answered: a link or a
+ * Miss is left exactly as it is. A Pending Link a dead worker left behind must
+ * not stop the question for ever, so one older than `askedBefore` is asked
+ * again and stamped so. Returns whether the question is the caller's to
+ * enqueue — a fresh Pending Link somebody else wrote is theirs.
  */
 export async function markLinkPending(
   storeId: string,
-  name: string,
+  ingredientId: string,
   askedBefore: Date
 ): Promise<boolean> {
-  const normalizedName = normalizeGroceryName(name);
-
-  if (!normalizedName) return false;
-
   const rows = await db
     .insert(storeProductLinks)
-    .values({ storeId, normalizedName, storeProductId: null, triedAt: null })
+    .values({ storeId, ingredientId, storeProductId: null, triedAt: null })
     .onConflictDoUpdate({
-      target: [storeProductLinks.storeId, storeProductLinks.normalizedName],
+      target: [storeProductLinks.storeId, storeProductLinks.ingredientId],
       set: { updatedAt: new Date(), version: sql`${storeProductLinks.version} + 1` },
       setWhere: and(
         isNull(storeProductLinks.storeProductId),
@@ -245,21 +224,18 @@ export async function markLinkPending(
 }
 
 /**
- * A question the shop did not answer. The Pending Link goes, so the name is
- * unknown again and the next view of the list asks. Only a Pending Link: a
- * link or a Miss written in the meantime is an answer, and stays.
+ * A question the shop did not answer. The Pending Link goes, so the
+ * Ingredient is unknown again and the next view of the list asks. Only a
+ * Pending Link: a link or a Miss written in the meantime is an answer, and
+ * stays.
  */
-export async function clearPendingLink(storeId: string, name: string): Promise<boolean> {
-  const normalizedName = normalizeGroceryName(name);
-
-  if (!normalizedName) return false;
-
+export async function clearPendingLink(storeId: string, ingredientId: string): Promise<boolean> {
   const rows = await db
     .delete(storeProductLinks)
     .where(
       and(
         eq(storeProductLinks.storeId, storeId),
-        eq(storeProductLinks.normalizedName, normalizedName),
+        eq(storeProductLinks.ingredientId, ingredientId),
         isNull(storeProductLinks.storeProductId),
         isNull(storeProductLinks.triedAt)
       )

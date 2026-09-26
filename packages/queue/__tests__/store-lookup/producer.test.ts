@@ -21,6 +21,8 @@ const queue = { add } as unknown as Queue<StoreLookupJobData>;
 
 const HOUSEHOLD = "household-1";
 const STORE = "11111111-1111-4111-8111-111111111111";
+/** The Ingredient every "kaas" below resolved to. */
+const KAAS = "22222222-2222-4222-8222-222222222222";
 
 describe("the store lookup producer", () => {
   beforeEach(() => {
@@ -31,6 +33,7 @@ describe("the store lookup producer", () => {
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
+      ingredientId: KAAS,
       name: "kaas",
       householdKey: HOUSEHOLD,
     });
@@ -51,6 +54,7 @@ describe("the store lookup producer", () => {
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
+      ingredientId: KAAS,
       name: "kaas",
       householdKey: HOUSEHOLD,
     });
@@ -67,21 +71,31 @@ describe("the store lookup producer", () => {
     expect(matchPriority).toBeLessThan(refreshPriority);
   });
 
-  it("asks a shop one question per store and name, however many groceries asked it", async () => {
+  it("asks a shop one question per store and Ingredient, whatever the groceries call it", async () => {
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
+      ingredientId: KAAS,
       name: "Oude Kaas",
       householdKey: HOUSEHOLD,
     });
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
-      name: "oude  kaas!",
+      ingredientId: KAAS,
+      name: "oude kaas, belegen",
+      householdKey: HOUSEHOLD,
+    });
+    await addStoreMatchJob(queue, {
+      kind: "match",
+      storeId: STORE,
+      ingredientId: "33333333-3333-4333-8333-333333333333",
+      name: "Oude Kaas",
       householdKey: HOUSEHOLD,
     });
 
     expect(add.mock.calls[0]?.[2]?.jobId).toBe(add.mock.calls[1]?.[2]?.jobId);
+    expect(add.mock.calls[2]?.[2]?.jobId).not.toBe(add.mock.calls[0]?.[2]?.jobId);
   });
 
   it("refreshes the same stale set again once its window has passed", async () => {
@@ -109,7 +123,13 @@ describe("the store lookup producer", () => {
 
   it("asks a shop that did not answer the same question again, an hour on at the soonest", async () => {
     const at = Date.UTC(2026, 8, 5, 12);
-    const data = { kind: "match" as const, storeId: STORE, name: "kaas", householdKey: HOUSEHOLD };
+    const data = {
+      kind: "match" as const,
+      storeId: STORE,
+      ingredientId: KAAS,
+      name: "kaas",
+      householdKey: HOUSEHOLD,
+    };
 
     await addStoreMatchJob(queue, data, at);
     await addStoreMatchJob(queue, data, at + 1000);
@@ -125,6 +145,7 @@ describe("the store lookup producer", () => {
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
+      ingredientId: KAAS,
       name: "kaas: oud",
       householdKey: HOUSEHOLD,
     });

@@ -24,6 +24,12 @@ export const GrocerySelectBaseSchema = createSelectSchema(groceries)
     recurringGroceryId: z.uuid().nullable(),
     storeId: z.uuid().nullable(),
     sortOrder: z.number().int(),
+    /**
+     * The Ingredient the line's name resolved to, which a price, an aisle and
+     * a store preference are looked up by. Absent on a line added offline
+     * until the server has resolved it.
+     */
+    ingredientId: z.uuid().nullable().optional(),
   });
 
 // Insert schema with explicit fields to avoid drizzle-zod type inference issues
@@ -33,6 +39,8 @@ export const GroceryInsertBaseSchema = z.object({
   name: z.string().nullable(),
   /** The alias the name resolved to; set by the server, never taken from a client. */
   ingredientAliasId: z.uuid().nullable().optional(),
+  /** The alias's Ingredient, written with it. */
+  ingredientId: z.uuid().nullable().optional(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
   isDone: z.boolean().default(false),
@@ -50,6 +58,8 @@ export const GroceryUpdateBaseSchema = z.object({
   name: z.string().nullable().optional(),
   /** The alias a new name resolved to; set by the server, never taken from a client. */
   ingredientAliasId: z.uuid().nullable().optional(),
+  /** The alias's Ingredient, written with it. */
+  ingredientId: z.uuid().nullable().optional(),
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),
   isDone: z.boolean().optional(),

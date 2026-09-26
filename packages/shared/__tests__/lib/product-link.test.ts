@@ -15,11 +15,11 @@ const OFFERED = [
 
 describe("pendingLink", () => {
   it("is a Pending Link with nothing suggested yet", () => {
-    const link = pendingLink("store-1", "Oude Kaas");
+    const link = pendingLink("store-1", "ingredient-1");
 
     expect(link).toEqual({
       storeId: "store-1",
-      normalizedName: "oude kaas",
+      ingredientId: "ingredient-1",
       triedAt: null,
       product: null,
       suggestion: null,

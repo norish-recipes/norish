@@ -16,11 +16,18 @@ export type ContainerId = string;
 /** Container ID => grocery IDs mapping (visual order during drag) */
 export type ItemsState = Record<ContainerId, string[]>;
 
-/** The aisle a Store files a name under, or null where it has never been told (ADR-0031). */
-export type AisleResolver = (storeId: string | null, name: string | null) => string | null;
+/** The aisle a Store files an Ingredient under, or null where it has never been told (ADR-0031). */
+export type AisleResolver = (
+  storeId: string | null,
+  ingredientId: string | null | undefined
+) => string | null;
 
-/** File a name at a Store under an aisle, or under none (null), which forgets it. */
-export type FileGroceryName = (storeId: string, name: string, aisleId: string | null) => void;
+/** File a grocery's Ingredient at a Store under an aisle, or under none (null), which forgets it. */
+export type FileGroceryName = (
+  storeId: string,
+  grocery: { name: string | null; ingredientId?: string | null },
+  aisleId: string | null
+) => void;
 
 /** One row's or group's new place: a sort order per Store, and the Store where that changed. */
 export interface ReorderUpdate {

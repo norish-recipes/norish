@@ -90,10 +90,12 @@ export default function EditGroceryPanel({
     stores,
     selectedStoreId,
     resetOn: grocery.id,
+    grocery,
   });
   // Where the chosen Store files this name, re-read when the Store is swapped.
   const aisle = useAisleChoice({
     groceryName: price.groceryName,
+    ingredientId: price.ingredientId,
     store: price.store,
     resetOn: grocery.id,
   });

@@ -142,3 +142,25 @@ async function mint(
 export async function ingredientFor(aliasId: string): Promise<IngredientRow | null> {
   return await findIngredientByAliasId(aliasId);
 }
+
+/**
+ * The Ingredient a text already resolves to — an exact or a stripped alias
+ * match — or null where Norish does not know it. For readers, which must not
+ * mint: asking what a Store knows about a name Norish has never seen is
+ * answered with nothing.
+ */
+export async function findIngredientFor(
+  text: string
+): Promise<{ aliasId: string; ingredientId: string } | null> {
+  const cleaned = cleanIngredientText(text);
+
+  if (!cleaned) return null;
+
+  const fold = ingredientAliasFold(cleaned);
+  const bare = stripPreparation(cleaned);
+  const bareFold = bare ? ingredientAliasFold(bare) : "";
+  const rows = await findIngredientAliasesByFolds([fold, bareFold]);
+  const match = rows.find((row) => row.fold === fold) ?? rows.find((row) => row.fold === bareFold);
+
+  return match ? { aliasId: match.aliasId, ingredientId: match.ingredientId } : null;
+}

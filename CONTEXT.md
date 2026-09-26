@@ -115,7 +115,7 @@ _Avoid_: Collection (names the shape, and collides with the Library), Folder (su
 ### Groceries & Stores
 
 **Grocery**:
-A line on the household's shopping list: a name, optionally an amount and unit, optionally assigned to a Store. It is transient by design — it is ticked off and cleared every week — so nothing worth keeping may live on it alone. What a shop sells is a Store Product; the two are never the same thing.
+A line on the household's shopping list: a name as written, optionally an amount and unit, optionally assigned to a Store. Its name resolves to an Ingredient Alias, and so to the Ingredient its price, aisle and store preference are kept for; the line itself always shows its own text. A line added offline is resolved when it syncs. It is transient by design — it is ticked off and cleared every week — so nothing worth keeping may live on it alone. What a shop sells is a Store Product; the two are never the same thing.
 _Avoid_: Item, Product (a Store Product is the shop's, a Grocery is the household's)
 
 **Store**:
@@ -139,7 +139,7 @@ What the shop charges for its unit of sale of a Store Product — one pack, or o
 _Avoid_: Unit price, Price per unit (both mean the comparison number beside a pack to a shopper, which Norish does not show)
 
 **Product Link**:
-What a Store has learned a grocery name means: a Store, a normalized grocery name, and the Store Product it resolves to. It is deliberately keyed by name rather than by Grocery, so it outlives the list line that prompted it — next week's "melk" is priced without asking the shop again — and so a rename asks a new question instead of carrying the old answer to a name it was never about.
+What a Store has learned an Ingredient means there: a Store, an Ingredient, and the Store Product it resolves to. It is deliberately keyed by Ingredient rather than by Grocery or by spelling, so it outlives the list line that prompted it — next week's "melk" is priced without asking the shop again — and a link made for "onion" prices "onions, diced" too (ADR-0037). A rename to another food asks a new question instead of carrying the old answer to a food it was never about.
 _Avoid_: Match, Mapping, Assignment (a Grocery is assigned to a Store; it is linked to a Store Product)
 
 **Miss**:
@@ -171,7 +171,7 @@ A heading within a Store, named and ordered by the household, standing for where
 _Avoid_: Category (a meal category is something else in Norish), Department, Section (that is the Store's own block in the list)
 
 **Aisle Link**:
-Where a Store has learned a grocery name is found: a Store, a normalized grocery name, and one of that Store's Aisles. Like a Product Link it is keyed by name rather than by Grocery, so filing one "melk" files every "melk" at that Store, the memory outlives the list line that prompted it, and a rename or a move to another Store asks what that name is filed under there instead of carrying the old answer along. A name the Store has never been told about stays unfiled; Norish never guesses an Aisle from words.
+Where a Store has learned an Ingredient is found: a Store, an Ingredient, and one of that Store's Aisles. Like a Product Link it is keyed by Ingredient rather than by Grocery, so filing one "melk" files every spelling of milk at that Store, the memory outlives the list line that prompted it, and a rename to another food or a move to another Store asks what that food is filed under there instead of carrying the old answer along (ADR-0031, ADR-0037). A food the Store has never been told about stays unfiled; Norish never guesses an Aisle from words.
 _Avoid_: Assignment (a Grocery is assigned to a Store, linked to a Store Product, and filed in an Aisle), Placement, Preference (the store preference is a different memory, kept per person)
 
 **Pantry**:

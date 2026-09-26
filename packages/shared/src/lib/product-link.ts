@@ -1,6 +1,5 @@
 import type { ProductSuggestion, ResolvedProductLink } from "../contracts/dto/store-products";
 import type { StoreCandidate } from "../contracts/store-page";
-import { normalizeGroceryName } from "./normalized-name";
 
 /**
  * The three things a Product Link can say. A row pointing at a product is a
@@ -17,10 +16,10 @@ export function isPendingLink(
 }
 
 /** The Pending Link the producer announces the moment it asks a Store a question. */
-export function pendingLink(storeId: string, name: string): ResolvedProductLink {
+export function pendingLink(storeId: string, ingredientId: string): ResolvedProductLink {
   return {
     storeId,
-    normalizedName: normalizeGroceryName(name),
+    ingredientId,
     triedAt: null,
     product: null,
     suggestion: null,

@@ -23,14 +23,14 @@ export type StoreProductChoice = StoreProductChoiceInput["choice"];
 export type { ProductSuggestion };
 
 /**
- * What a Store knows about one grocery name: its Product Link, and the product
+ * What a Store knows about one Ingredient: its Product Link, and the product
  * it resolves to. No product and a `triedAt` is a Miss; no product and no
  * `triedAt` is a Pending Link, still being asked. A Miss may carry what the
  * Decision Model said about the products the shop offered (ADR-0035).
  */
 export interface ResolvedProductLink {
   storeId: string;
-  normalizedName: string;
+  ingredientId: string;
   triedAt: Date | null;
   product: StoreProductDto | null;
   suggestion: ProductSuggestion | null;

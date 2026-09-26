@@ -1,10 +1,14 @@
+import type { LegacyKeyedTable } from "@norish/db/repositories/ingredient-aliases";
 import {
   addOwnNameAliases,
+  keyLegacyRow,
   listGroceriesWithoutAlias,
   listIngredientsWithoutAlias,
+  listLegacyKeyedRows,
   listPantryIngredientsWithoutAlias,
   listRecipeLinesWithoutAlias,
   listRecurringGroceriesWithoutAlias,
+  listResolvedGroceryNames,
   setGroceryAliases,
   setPantryIngredientAliases,
   setRecipeLineAliases,
@@ -27,7 +31,12 @@ const BATCH_SIZE = 500;
  * where two names fold alike the older Ingredient keeps the spelling. Then
  * every reference is resolved from its text — a recipe line's, a grocery's and
  * a recurring grocery's as written, a Pantry Ingredient's its Ingredient's
- * name — which finds those aliases. Idempotent by shape: only rows without an alias are listed. A
+ * name — which finds those aliases. Last, every Product Link, Aisle Link and
+ * store preference keyed by a folded name is keyed by the Ingredient the
+ * groceries of that name resolved to, or, where no grocery has that name, the
+ * Ingredient the name itself resolves to (minted where need be, so no link is
+ * dropped). Two that land on one Ingredient at one Store (or for one member)
+ * keep the most recently updated. Idempotent by shape: only rows without an alias are listed. A
  * failure leaves the remaining rows for the next startup and never stops the
  * server.
  */
@@ -38,6 +47,9 @@ export async function backfillIngredientAliases(): Promise<void> {
     pantryIngredients: 0,
     groceries: 0,
     recurringGroceries: 0,
+    productLinks: 0,
+    aisleLinks: 0,
+    storePreferences: 0,
   };
 
   try {
@@ -76,6 +88,12 @@ export async function backfillIngredientAliases(): Promise<void> {
       listRecurringGroceriesWithoutAlias,
       setRecurringGroceryAliases
     );
+
+    const groceryIngredients = await groceryIngredientsByFold();
+
+    for (const table of ["productLinks", "aisleLinks", "storePreferences"] as const) {
+      written[table] = await keyLegacyRows(table, groceryIngredients);
+    }
 
     if (Object.values(written).some((count) => count > 0)) {
       log.info(written, "Ingredient alias backfill complete");
@@ -126,4 +144,41 @@ async function resolveReferences(
   }
 
   return resolvedCount;
+}
+
+/** The Ingredient each grocery name the household lists resolved to, by its fold. */
+async function groceryIngredientsByFold(): Promise<Map<string, string>> {
+  const byFold = new Map<string, string>();
+
+  for (const row of await listResolvedGroceryNames()) {
+    const fold = ingredientAliasFold(row.name);
+
+    if (!byFold.has(fold)) byFold.set(fold, row.ingredientId);
+  }
+
+  return byFold;
+}
+
+/** Key every row of one legacy table by its Ingredient, newest first. */
+async function keyLegacyRows(
+  table: LegacyKeyedTable,
+  groceryIngredients: Map<string, string>
+): Promise<number> {
+  let keyed = 0;
+
+  for (;;) {
+    const batch = await listLegacyKeyedRows(table, BATCH_SIZE);
+
+    if (batch.length === 0) break;
+
+    for (const row of batch) {
+      const ingredientId =
+        groceryIngredients.get(ingredientAliasFold(row.normalizedName)) ??
+        (await resolveIngredients([row.normalizedName], { userId: row.ownerId }))[0]!.ingredientId;
+
+      if (await keyLegacyRow(table, row.id, ingredientId)) keyed += 1;
+    }
+  }
+
+  return keyed;
 }

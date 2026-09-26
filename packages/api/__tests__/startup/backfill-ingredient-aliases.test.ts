@@ -9,18 +9,26 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
 import { getRecipeFull } from "@norish/db";
+import { listAisleLinksByStoreIds } from "@norish/db/repositories/aisles";
 import {
   listGroceriesWithoutAlias,
   listRecipeLinesWithoutAlias,
   listRecurringGroceriesWithoutAlias,
 } from "@norish/db/repositories/ingredient-aliases";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
+import { resolveProductLinks } from "@norish/db/repositories/store-products";
+import { findBestIngredientStorePreference } from "@norish/db/repositories/stores";
 import {
+  aisleLinks,
+  aisles,
   groceries,
   ingredients,
+  ingredientStorePreferences,
   pantryIngredients,
   recipeIngredients,
   recurringGroceries,
+  storeProductLinks,
+  stores,
 } from "@norish/db/schema";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
@@ -136,5 +144,100 @@ describe("backfillIngredientAliases", () => {
     const names = await getTestDb().select({ name: groceries.name }).from(groceries);
 
     expect(names.map((row) => row.name).sort()).toEqual(["Uien", "olive oil!", null].sort());
+  });
+
+  describe("links keyed by a folded name", () => {
+    async function store(name: string) {
+      const [row] = await getTestDb().insert(stores).values({ userId, name }).returning();
+      const [aisle] = await getTestDb()
+        .insert(aisles)
+        .values({ storeId: row!.id, name: "Groente" })
+        .returning();
+
+      return { storeId: row!.id, aisleId: aisle!.id };
+    }
+
+    it("carries each link over to the Ingredient its grocery resolved to", async () => {
+      const { storeId, aisleId } = await store("AH");
+
+      await legacyIngredient("onions", new Date("2025-01-01"));
+      await getTestDb().insert(groceries).values({ userId, name: "Onions, diced", storeId });
+      await getTestDb()
+        .insert(aisleLinks)
+        .values({ storeId, normalizedName: "onions diced", aisleId });
+      await getTestDb().insert(ingredientStorePreferences).values({
+        userId,
+        normalizedName: "onions, diced",
+        storeId,
+      });
+
+      await backfillIngredientAliases();
+
+      const [onions] = await resolveIngredients(["onions"], { userId });
+
+      await expect(listAisleLinksByStoreIds([storeId])).resolves.toEqual([
+        { storeId, ingredientId: onions!.ingredientId, aisleId },
+      ]);
+      await expect(
+        findBestIngredientStorePreference(userId, [userId], {
+          id: onions!.ingredientId,
+          name: "onions",
+        })
+      ).resolves.toMatchObject({ isExactMatch: true, preference: { storeId } });
+    });
+
+    it("keeps the most recently updated of two links that land on one Ingredient", async () => {
+      const { storeId, aisleId: groente } = await store("Jumbo");
+      const [fruit] = await getTestDb()
+        .insert(aisles)
+        .values({ storeId, name: "Fruit" })
+        .returning();
+
+      await legacyIngredient("apples", new Date("2025-01-01"));
+      await getTestDb()
+        .insert(groceries)
+        .values([
+          { userId, name: "apples", storeId },
+          { userId, name: "apples, sliced", storeId },
+        ]);
+      await getTestDb()
+        .insert(aisleLinks)
+        .values([
+          {
+            storeId,
+            normalizedName: "apples",
+            aisleId: groente,
+            updatedAt: new Date("2025-01-01"),
+          },
+          {
+            storeId,
+            normalizedName: "apples sliced",
+            aisleId: fruit!.id,
+            updatedAt: new Date("2025-06-01"),
+          },
+        ]);
+
+      await backfillIngredientAliases();
+
+      await expect(listAisleLinksByStoreIds([storeId])).resolves.toEqual([
+        expect.objectContaining({ aisleId: fruit!.id }),
+      ]);
+    });
+
+    it("mints an Ingredient for a folded name nothing else knows, so no link is dropped", async () => {
+      const { storeId } = await store("Dirk");
+
+      await getTestDb()
+        .insert(storeProductLinks)
+        .values({ storeId, normalizedName: "havermelk", triedAt: new Date() });
+
+      await backfillIngredientAliases();
+
+      const [havermelk] = await resolveIngredients(["Havermelk"], { userId });
+
+      await expect(
+        resolveProductLinks([{ storeId, ingredientId: havermelk!.ingredientId }])
+      ).resolves.toHaveLength(1);
+    });
   });
 });

@@ -105,7 +105,7 @@ export function GroceryList({
       groceries,
       getRecipeNameForGrocery ?? (() => null),
       customUnits,
-      (grocery) => aisleFor(grocery.storeId, grocery.name)
+      (grocery) => aisleFor(grocery.storeId, grocery.ingredientId)
     );
   }, [groupSimilarIngredients, groceries, getRecipeNameForGrocery, customUnits, aisleFor]);
 

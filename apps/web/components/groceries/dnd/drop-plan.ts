@@ -1,14 +1,27 @@
-import type { AisleFilingInput, StoreDto } from "@norish/shared/contracts";
+import type { StoreDto } from "@norish/shared/contracts";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import type { AisleResolver, ContainerId, ItemsState, ReorderUpdate } from "./types";
 import { placeOfContainer, storeContainers } from "./utils";
 
+/** A grocery as a drop files it: its name, and the Ingredient that is filed. */
+export interface FiledGrocery {
+  name: string | null;
+  ingredientId?: string | null;
+}
+
+/** What a drop teaches a Store about one grocery. */
+export interface DropFiling {
+  storeId: string;
+  grocery: FiledGrocery;
+  aisleId: string | null;
+}
+
 export interface DropPlan {
   /** Every row whose place changed: a per-Store sort order, and the Store on the one that moved Store. */
   updates: ReorderUpdate[];
-  /** What the drop teaches the target Store — a name filed under an aisle, or under none — written after the reorder. */
-  filings: AisleFilingInput[];
+  /** What the drop teaches the target Store — a grocery filed under an aisle, or under none — written after the reorder. */
+  filings: DropFiling[];
 }
 
 interface DropInput {
@@ -22,8 +35,8 @@ interface DropInput {
   aisleFor: AisleResolver;
   /** The grocery ids the dragged key stands for: one row, or a group's sources. */
   movedIds: readonly string[];
-  /** The distinct names the dragged key carries; a group files every one of them. */
-  movedNames: readonly string[];
+  /** The groceries the dragged key carries; a group files every one of them. */
+  movedGroceries: readonly FiledGrocery[];
   /**
    * The grocery ids behind each key in `items`, in order: a row is its own
    * id, a group is its sources' ids, which all take the group's position.
@@ -48,7 +61,8 @@ interface DropInput {
  * differs from what the Store remembers is written (ADR-0031).
  */
 export function planDrop(input: DropInput): DropPlan {
-  const { items, originContainer, targetContainer, stores, aisleFor, movedNames, idsOf } = input;
+  const { items, originContainer, targetContainer, stores, aisleFor, movedGroceries, idsOf } =
+    input;
   const moved = new Set(input.movedIds);
   const origin = placeOfContainer(originContainer, stores);
   const target = placeOfContainer(targetContainer, stores);
@@ -74,18 +88,21 @@ export function planDrop(input: DropInput): DropPlan {
   renumber(target.storeId);
   if (changedStore) renumber(origin.storeId);
 
-  const filings: AisleFilingInput[] = [];
+  const filings: DropFiling[] = [];
 
   if (target.storeId !== null && (!changedStore || target.aisleId !== null)) {
     const seen = new Set<string>();
 
-    for (const name of movedNames) {
-      const normalized = normalizeGroceryName(name);
+    for (const grocery of movedGroceries) {
+      // One filing per food: a group's sources are mostly one Ingredient. A
+      // grocery added offline has none yet, and is told apart by its name.
+      const key = grocery.ingredientId ?? `name:${normalizeGroceryName(grocery.name)}`;
 
-      if (!normalized || seen.has(normalized)) continue;
-      seen.add(normalized);
-      if (aisleFor(target.storeId, name) === target.aisleId) continue;
-      filings.push({ storeId: target.storeId, name, aisleId: target.aisleId });
+      if (!grocery.name?.trim() || seen.has(key)) continue;
+      seen.add(key);
+      if (grocery.ingredientId && aisleFor(target.storeId, grocery.ingredientId) === target.aisleId)
+        continue;
+      filings.push({ storeId: target.storeId, grocery, aisleId: target.aisleId });
     }
   }
 
