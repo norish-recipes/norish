@@ -21,23 +21,38 @@ const pantry = [
 ];
 
 describe("pantryIngredientFor", () => {
-  it("matches a name whose folded form equals a Pantry Ingredient's", () => {
-    expect(pantryIngredientFor(pantry, "olive oil")?.name).toBe("Olive Oil");
-    expect(pantryIngredientFor(pantry, "  OLIVE  OIL! ")?.name).toBe("Olive Oil");
-    expect(pantryIngredientFor(pantry, "creme fraîche")?.name).toBe("Crème fraîche");
+  const text = (ingredientName: string | null) => ({ ingredientName });
+
+  it("covers a line of the same Ingredient, whatever either is spelled", () => {
+    expect(
+      pantryIngredientFor(pantry, { ingredientId: "i-olive oil", ingredientName: "EVOO, cold" })
+        ?.name
+    ).toBe("Olive Oil");
   });
 
-  it("never matches on part of a name", () => {
-    expect(pantryIngredientFor(pantry, "extra virgin olive oil")).toBeNull();
-    expect(pantryIngredientFor(pantry, "salted butter")).toBeNull();
-    expect(pantryIngredientFor(pantry, "sea salt")).toBeNull();
+  it("never covers a line of another Ingredient, even one spelled alike", () => {
+    expect(pantryIngredientFor(pantry, { ingredientId: "i-other", ingredientName: "salt" })).toBe(
+      null
+    );
+  });
+
+  it("matches a text nothing has resolved on its folded name", () => {
+    expect(pantryIngredientFor(pantry, text("olive oil"))?.name).toBe("Olive Oil");
+    expect(pantryIngredientFor(pantry, text("  OLIVE  OIL! "))?.name).toBe("Olive Oil");
+    expect(pantryIngredientFor(pantry, text("creme fraîche"))?.name).toBe("Crème fraîche");
+  });
+
+  it("never matches a text on part of a name", () => {
+    expect(pantryIngredientFor(pantry, text("extra virgin olive oil"))).toBeNull();
+    expect(pantryIngredientFor(pantry, text("salted butter"))).toBeNull();
+    expect(pantryIngredientFor(pantry, text("sea salt"))).toBeNull();
   });
 
   it("is null for nothing at all", () => {
-    expect(pantryIngredientFor(pantry, "")).toBeNull();
-    expect(pantryIngredientFor(pantry, "   ")).toBeNull();
-    expect(pantryIngredientFor(pantry, null)).toBeNull();
-    expect(pantryIngredientFor([], "salt")).toBeNull();
+    expect(pantryIngredientFor(pantry, text(""))).toBeNull();
+    expect(pantryIngredientFor(pantry, text("   "))).toBeNull();
+    expect(pantryIngredientFor(pantry, text(null))).toBeNull();
+    expect(pantryIngredientFor([], text("salt"))).toBeNull();
   });
 });
 

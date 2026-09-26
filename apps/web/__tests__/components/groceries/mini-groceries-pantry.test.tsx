@@ -19,7 +19,7 @@ let pantryUnavailable = false;
 const INGREDIENTS = [
   {
     id: "i-oil",
-    ingredientId: "oil",
+    ingredientId: "i-olive oil",
     ingredientName: "olive oil",
     amount: 2,
     unit: "tbsp",
@@ -28,7 +28,7 @@ const INGREDIENTS = [
   },
   {
     id: "i-chicken",
-    ingredientId: "chicken",
+    ingredientId: "i-chicken breast",
     ingredientName: "chicken breast",
     amount: 500,
     unit: "g",
@@ -37,7 +37,7 @@ const INGREDIENTS = [
   },
   {
     id: "i-salt",
-    ingredientId: "salt",
+    ingredientId: "i-salt",
     ingredientName: "Salt",
     amount: null,
     unit: null,
@@ -148,6 +148,15 @@ describe("MiniGroceries with a Pantry", () => {
     });
 
     expect(addedNames()).toEqual(["chicken breast"]);
+  });
+
+  it("counts a line as in the Pantry by its Ingredient, however either is spelled", () => {
+    pantry = [{ ...pantryIngredient("Chicken", "chicken"), ingredientId: "i-chicken breast" }];
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    const section = screen.getByTestId("pantry-section");
+
+    expect(within(section).getByRole("checkbox", { name: "chicken breast" })).not.toBeChecked();
   });
 
   it("unticks a line the Pantry claims while the panel is open", async () => {

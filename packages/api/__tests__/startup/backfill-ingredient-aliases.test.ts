@@ -8,9 +8,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
+import { getRecipeFull } from "@norish/db";
 import { listRecipeLinesWithoutAlias } from "@norish/db/repositories/ingredient-aliases";
-import { ingredients, recipeIngredients } from "@norish/db/schema";
+import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
+import { ingredients, pantryIngredients, recipeIngredients } from "@norish/db/schema";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -77,5 +80,24 @@ describe("backfillIngredientAliases", () => {
     await backfillIngredientAliases();
 
     await expect(listRecipeLinesWithoutAlias(10)).resolves.toEqual([]);
+  });
+
+  it("keeps every Pantry Ingredient, and it covers the recipe lines of its food", async () => {
+    const older = await legacyIngredient("Crème fraîche", new Date("2025-01-01"));
+    const [twin] = await getTestDb()
+      .insert(ingredients)
+      .values({ name: "creme fraiche", createdAt: new Date("2025-06-01") })
+      .returning();
+
+    await getTestDb().insert(pantryIngredients).values({ userId, ingredientId: twin!.id });
+
+    await backfillIngredientAliases();
+
+    const pantry = await listPantryIngredientsByUserIds([userId]);
+    const [line] = (await getRecipeFull(recipeId))!.recipeIngredients;
+
+    expect(pantry).toHaveLength(1);
+    expect(pantry[0]!.ingredientId).toBe(older.id);
+    expect(pantryIngredientFor(pantry, line!)).not.toBeNull();
   });
 });

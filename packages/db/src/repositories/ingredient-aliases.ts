@@ -1,7 +1,13 @@
 import { and, asc, eq, gt, inArray, isNull, notExists, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
-import { ingredientAliases, ingredients, recipeIngredients, recipes } from "@norish/db/schema";
+import {
+  ingredientAliases,
+  ingredients,
+  pantryIngredients,
+  recipeIngredients,
+  recipes,
+} from "@norish/db/schema";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 /**
@@ -223,13 +229,77 @@ export async function listRecipeLinesWithoutAlias(
     .limit(limit);
 }
 
+/**
+ * Point recipe lines at their aliases, and at each alias's Ingredient, which
+ * differs from the line's old Ingredient only where two names folded alike.
+ */
 export async function setRecipeLineAliases(
-  rows: ReadonlyArray<{ id: string; aliasId: string }>
+  rows: ReadonlyArray<{ id: string; aliasId: string; ingredientId: string }>
 ): Promise<void> {
   for (const row of rows) {
     await db
       .update(recipeIngredients)
-      .set({ ingredientAliasId: row.aliasId })
+      .set({ ingredientAliasId: row.aliasId, ingredientId: row.ingredientId })
       .where(and(eq(recipeIngredients.id, row.id), isNull(recipeIngredients.ingredientAliasId)));
+  }
+}
+
+/** Pantry Ingredients written before aliases existed, with their Ingredient's name. */
+export async function listPantryIngredientsWithoutAlias(
+  limit: number,
+  afterId: string | null = null
+): Promise<Array<{ id: string; name: string; userId: string }>> {
+  return await db
+    .select({ id: pantryIngredients.id, name: ingredients.name, userId: pantryIngredients.userId })
+    .from(pantryIngredients)
+    .innerJoin(ingredients, eq(pantryIngredients.ingredientId, ingredients.id))
+    .where(
+      and(
+        isNull(pantryIngredients.ingredientAliasId),
+        afterId ? gt(pantryIngredients.id, afterId) : undefined
+      )
+    )
+    .orderBy(asc(pantryIngredients.id))
+    .limit(limit);
+}
+
+/**
+ * Point Pantry Ingredients at their aliases and each alias's Ingredient. A
+ * member who held two names that fold alike held one food twice; the second
+ * row is that food again, so it goes rather than break the one-per-member
+ * rule.
+ */
+export async function setPantryIngredientAliases(
+  rows: ReadonlyArray<{ id: string; aliasId: string; ingredientId: string }>
+): Promise<void> {
+  for (const row of rows) {
+    await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(pantryIngredients)
+        .set({ ingredientAliasId: row.aliasId, ingredientId: row.ingredientId })
+        .where(
+          and(
+            eq(pantryIngredients.id, row.id),
+            isNull(pantryIngredients.ingredientAliasId),
+            notExists(
+              tx
+                .select({ one: sql`1` })
+                .from(sql`${pantryIngredients} as held`)
+                .where(
+                  sql`held.user_id = ${pantryIngredients.userId} and held.ingredient_id = ${row.ingredientId} and held.id <> ${row.id}`
+                )
+            )
+          )
+        )
+        .returning({ id: pantryIngredients.id });
+
+      if (!updated) {
+        await tx
+          .delete(pantryIngredients)
+          .where(
+            and(eq(pantryIngredients.id, row.id), isNull(pantryIngredients.ingredientAliasId))
+          );
+      }
+    });
   }
 }

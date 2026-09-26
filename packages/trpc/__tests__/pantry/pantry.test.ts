@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * The Pantry's procedures. The repository is mocked; what is pinned here is
+ * The Pantry's procedures. The repository and the resolver are mocked; what is pinned here is
  * who may add and remove, when nothing is written, and what the household
  * hears about it.
  */
@@ -17,14 +17,16 @@ import {
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { pantry } from "../mocks/realtime/pantry";
 
+const { addToPantry } = vi.hoisted(() => ({ addToPantry: vi.fn() }));
 const pantryRepository = vi.hoisted(() => ({
-  addPantryIngredient: vi.fn(),
   deletePantryIngredient: vi.fn(),
   getPantryIngredientOwnerId: vi.fn(),
   listPantryIngredientsByUserIds: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/pantry", () => pantryRepository);
+// Resolving the typed name is the resolver's; what is pinned here is the procedure.
+vi.mock("@norish/shared-server/ingredients/pantry", () => ({ addToPantry }));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/pantry", () => import("../mocks/realtime/pantry"));
 vi.mock("@norish/shared-server/logger", () => ({
@@ -42,18 +44,16 @@ describe("the Pantry", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     assertHouseholdAccess.mockResolvedValue(undefined);
-    pantryRepository.addPantryIngredient.mockImplementation(
-      async (id: string, input: { userId: string; name: string }) => ({
-        item: {
-          id,
-          userId: input.userId,
-          name: input.name.trim(),
-          normalizedName: input.name.trim().toLowerCase(),
-          version: 1,
-        },
-        created: true,
-      })
-    );
+    addToPantry.mockImplementation(async (id: string, input: { userId: string; name: string }) => ({
+      item: {
+        id,
+        userId: input.userId,
+        name: input.name.trim(),
+        normalizedName: input.name.trim().toLowerCase(),
+        version: 1,
+      },
+      created: true,
+    }));
     pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(ctx.user.id);
     pantryRepository.deletePantryIngredient.mockResolvedValue(true);
   });
@@ -68,7 +68,7 @@ describe("the Pantry", () => {
   it("adds a name under the client's id and tells the household", async () => {
     await expect(caller.add({ id: OLIVE, name: "Olive Oil" })).resolves.toBe(OLIVE);
 
-    expect(pantryRepository.addPantryIngredient).toHaveBeenCalledWith(OLIVE, {
+    expect(addToPantry).toHaveBeenCalledWith(OLIVE, {
       userId: ctx.user.id,
       userIds: ctx.userIds,
       name: "Olive Oil",
@@ -84,11 +84,11 @@ describe("the Pantry", () => {
     const id = await caller.add({ name: "Salt" });
 
     expect(id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(pantryRepository.addPantryIngredient).toHaveBeenCalledWith(id, expect.anything());
+    expect(addToPantry).toHaveBeenCalledWith(id, expect.anything());
   });
 
   it("answers with the item the household already has, announcing nothing", async () => {
-    pantryRepository.addPantryIngredient.mockResolvedValue({
+    addToPantry.mockResolvedValue({
       item: { id: EXISTING },
       created: false,
     });
@@ -99,7 +99,7 @@ describe("the Pantry", () => {
 
   it("refuses a name that folds to nothing", async () => {
     await expect(caller.add({ name: "!?" })).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    expect(pantryRepository.addPantryIngredient).not.toHaveBeenCalled();
+    expect(addToPantry).not.toHaveBeenCalled();
   });
 
   it("removes an item and tells the household which", async () => {

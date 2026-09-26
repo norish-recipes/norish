@@ -2,18 +2,24 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 /**
- * The Pantry Ingredient a name is, or null where the household has none by that
- * name. The one rule for "is this in the pantry", asked by the add-to-groceries
- * panel and by the Pantry panel's own duplicate check alike: an exact match on
- * the folded name (case, diacritics, punctuation and whitespace gone), and
- * nothing looser. "Olive oil" is in the pantry when "olive oil" is; "extra
- * virgin olive oil" is not, because Norish never guesses from words.
+ * The Pantry Ingredient that covers a line, or null where the household has
+ * none. The one rule for "is this in the pantry", asked by the add-to-groceries
+ * panel and by the Pantry panel's own duplicate check alike (ADR-0037): a line
+ * the resolver has seen is covered by a Pantry Ingredient of the same
+ * Ingredient, whatever either is spelled — "onions" covers "onions, diced".
+ * A text nothing has resolved yet (typed or edited on this screen) can only
+ * be matched on its folded name, and nothing looser: "salt" never covers
+ * "salted butter", because Norish never guesses from words.
  */
 export function pantryIngredientFor(
   items: readonly PantryIngredientDto[],
-  name: string | null | undefined
+  line: { ingredientId?: string | null; ingredientName?: string | null }
 ): PantryIngredientDto | null {
-  const normalized = normalizeGroceryName(name);
+  if (line.ingredientId) {
+    return items.find((item) => item.ingredientId === line.ingredientId) ?? null;
+  }
+
+  const normalized = normalizeGroceryName(line.ingredientName);
 
   if (!normalized) return null;
 

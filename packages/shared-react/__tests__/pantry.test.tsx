@@ -57,7 +57,7 @@ function Probe({
 
   return (
     <span data-testid="pantry">
-      {pantryIngredientFor(items, name)?.name ?? "not in the pantry"}
+      {pantryIngredientFor(items, { ingredientName: name })?.name ?? "not in the pantry"}
     </span>
   );
 }

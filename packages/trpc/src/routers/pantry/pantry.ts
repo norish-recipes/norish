@@ -3,11 +3,11 @@ import { TRPCError } from "@trpc/server";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
-  addPantryIngredient,
   deletePantryIngredient,
   getPantryIngredientOwnerId,
   listPantryIngredientsByUserIds,
 } from "@norish/db/repositories/pantry";
+import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { pantry } from "@norish/shared-server/realtime/pantry";
 import {
@@ -24,13 +24,13 @@ const list = authedProcedure.query(async ({ ctx }): Promise<PantryIngredientDto[
 });
 
 /**
- * Put a name in the Pantry. The name is folded by the repository, so "Olive
- * Oil" and " olive oil! " are one item; a name the household already has is
- * that item, and nothing is written or announced for it. Returns the item's
+ * Put a name in the Pantry. The name is resolved to an Ingredient, so "Olive
+ * Oil" and "olive oil, cold-pressed" are one item; an Ingredient the household
+ * already has is that item, and nothing is written or announced for it. Returns the item's
  * id, which is the client's own for a name that was not there (ADR-0003).
  */
 const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ ctx, input }) => {
-  const { item, created } = await addPantryIngredient(input.id ?? crypto.randomUUID(), {
+  const { item, created } = await addToPantry(input.id ?? crypto.randomUUID(), {
     userId: ctx.user.id,
     userIds: ctx.userIds,
     name: input.name,

@@ -22,12 +22,15 @@ export const PantryIngredientNameSchema = z
   .refine((name) => normalizeGroceryName(name) !== "", "Pantry ingredient name is required");
 
 /**
- * A Pantry Ingredient as the household reads it. The row holds only the Ingredient
- * Name it points at; `name` and `normalizedName` are that name and its fold,
- * read with it, so a screen has what it needs without a second round trip.
+ * A Pantry Ingredient as the household reads it. The row holds only the
+ * Ingredient it points at, through the alias the typed text resolved to;
+ * `name` and `normalizedName` are the Ingredient's name and its fold, read
+ * with it, so a screen has what it needs without a second round trip. The
+ * alias stays on the server: "in the pantry" is a question about the
+ * Ingredient.
  */
 export const PantryIngredientSelectSchema = createSelectSchema(pantryIngredients)
-  .omit({ createdAt: true, updatedAt: true })
+  .omit({ createdAt: true, updatedAt: true, ingredientAliasId: true })
   .extend({
     name: z.string(),
     normalizedName: z.string(),

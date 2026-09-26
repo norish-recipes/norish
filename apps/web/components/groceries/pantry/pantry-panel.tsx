@@ -38,7 +38,8 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
   }, [open]);
 
   const draftFolded = normalizeGroceryName(draft);
-  const draftDuplicate = draftFolded !== "" && pantryIngredientFor(items, draft) !== null;
+  const draftDuplicate =
+    draftFolded !== "" && pantryIngredientFor(items, { ingredientName: draft }) !== null;
   const sorted = sortPantryIngredients(items, locale);
 
   const add = () => {

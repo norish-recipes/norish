@@ -175,11 +175,11 @@ Where a Store has learned a grocery name is found: a Store, a normalized grocery
 _Avoid_: Assignment (a Grocery is assigned to a Store, linked to a Store Product, and filed in an Aisle), Placement, Preference (the store preference is a different memory, kept per person)
 
 **Pantry**:
-The household's list of what it already has at home, kept so a recipe's staples are not bought again every week. It is one list per household, shared the way Stores are, and holds names and nothing else: no amounts, no dates. It is edited in a panel of the groceries page and consulted in one place, when a recipe is added to the groceries.
+The household's list of what it already has at home, kept so a recipe's staples are not bought again every week. It is one list per household, shared the way Stores are, and holds Ingredients and nothing else: no amounts, no dates. It is edited in a panel of the groceries page and consulted in one place, when a recipe is added to the groceries.
 _Avoid_: Inventory (promises quantities Norish does not track), Stock, Cupboard
 
 **Pantry Ingredient**:
-One Ingredient Name the household has at home; the row points at it, as a recipe line does, and the name and its fold are read from it. An ingredient is _in the pantry_ only when its folded name equals a Pantry Ingredient's, using the one folding a Product Link and an Aisle Link use; Norish never guesses from words (ADR-0036). When a recipe is added to the groceries, its stocked lines are shown apart and left off the list unless ticked. A Pantry Ingredient is never a Grocery: it is what stops a Grocery being made.
+One Ingredient the household has at home; the row points at the Ingredient Alias the member's text resolved to, as a recipe line does, and so at its Ingredient. An ingredient line is _in the pantry_ when a Pantry Ingredient is of the same Ingredient, however either is spelled — "onions" covers "onions, diced", and "salt" never covers "salted butter", because they are two Ingredients (ADR-0037). A text nothing has resolved yet, such as a line edited while adding a recipe, is matched on its folded name. When a recipe is added to the groceries, its stocked lines are shown apart and left off the list unless ticked. A Pantry Ingredient is never a Grocery: it is what stops a Grocery being made.
 _Avoid_: Staple (a judgement about the food, not a fact about the household), Stocked ingredient (names the ingredient's state, not the thing the household keeps)
 
 ### Imports & AI

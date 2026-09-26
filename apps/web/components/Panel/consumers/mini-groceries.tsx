@@ -158,8 +158,9 @@ export default function MiniGroceries({
   // Which lines the Pantry held when the ticks were last settled, so a line
   // that crosses between the sections can be told from one that has not.
   const knownInPantryIds = useRef<Set<string>>(new Set());
-  // What the household already has: a line whose name (as edited here) is in
-  // the Pantry is shown apart and left off the list unless it is ticked.
+  // What the household already has: a line whose Ingredient is in the Pantry
+  // is shown apart and left off the list unless it is ticked. A line edited
+  // here is only text until it is a grocery, so it is matched by its name.
   const {
     items: pantryIngredients,
     isLoading: pantryLoading,
@@ -167,11 +168,16 @@ export default function MiniGroceries({
   } = usePantryQuery();
 
   const isInPantry = useCallback(
-    (item: GroceryIngredient) =>
-      pantryIngredientFor(
-        pantryIngredients,
-        editedIngredients[item.id]?.name ?? item.ingredientName
-      ) !== null,
+    (item: GroceryIngredient) => {
+      const edited = editedIngredients[item.id]?.name;
+
+      return (
+        pantryIngredientFor(
+          pantryIngredients,
+          edited === undefined ? item : { ingredientName: edited }
+        ) !== null
+      );
+    },
     [pantryIngredients, editedIngredients]
   );
   const { toBuy, inPantry } = useMemo(() => {

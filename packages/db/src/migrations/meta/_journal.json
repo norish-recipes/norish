@@ -393,6 +393,13 @@
       "when": 1790455395575,
       "tag": "0055_ingredient_aliases",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1790456114780,
+      "tag": "0056_pantry_ingredient_aliases",
+      "breakpoints": true
     }
   ]
 }
