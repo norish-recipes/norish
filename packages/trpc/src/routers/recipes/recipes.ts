@@ -40,6 +40,7 @@ import {
   getRecipePermissionPolicy,
   isVideoParsingEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
@@ -207,6 +208,7 @@ export const createRecipeProcedure = authedProcedure
     // The Dish Colour rides the payload from here: derived from the image
     // the recipe is being stored with, overwriting anything the client sent.
     withDishColor(input)
+      .then((dto) => withResolvedIngredients(dto, { userId: ctx.user.id }))
       .then((dto) => createRecipeWithRefs(recipeId, ctx.user.id, dto))
       .then(async (created) => {
         if (!created) {
@@ -253,7 +255,9 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
     .then(async () => {
       // An edit that touches the media recomputes the Dish Colour from what
       // the recipe now shows; one that does not leaves the colour alone.
-      const dto = await withDishColorForUpdate(data);
+      const dto = await withResolvedIngredients(await withDishColorForUpdate(data), {
+        userId: ctx.user.id,
+      });
       const result = await updateRecipeWithRefs(id, ctx.user.id, dto, version);
 
       if (result.stale) {
@@ -540,7 +544,14 @@ const convertMeasurements = authedProcedure
           systemUsed: targetSystem,
         }));
 
-        return addStepsAndIngredientsToRecipeByInput(steps, ingredients)
+        return withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id })
+          .then((resolved) =>
+            addStepsAndIngredientsToRecipeByInput(
+              steps,
+              resolved.recipeIngredients,
+              resolved.ingredientResolutions
+            )
+          )
           .then(() => setActiveSystemForRecipe(recipe.id, targetSystem, version))
           .then(() => getRecipeFull(recipe.id))
           .then(async (updatedRecipe) => {

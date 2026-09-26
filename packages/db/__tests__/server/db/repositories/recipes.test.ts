@@ -9,12 +9,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  addStepsAndIngredientsToRecipeByInput,
-  createRecipeWithRefs,
-  updateRecipeWithRefs,
-} from "@norish/db/repositories/recipes";
-
-import {
   createTestIngredient,
   createTestRecipe,
   createTestRecipeIngredients,
@@ -22,6 +16,11 @@ import {
   getRecipeIngredients,
   getRecipeSteps,
 } from "../../../helpers/db-test-helpers";
+import {
+  addStepsAndIngredientsToRecipeByInput,
+  createRecipeWithRefs,
+  updateRecipeWithRefs,
+} from "../../../helpers/recipe-writes";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("Recipe Repository - updateRecipeWithRefs", () => {

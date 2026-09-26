@@ -19,7 +19,6 @@ import type {
 } from "@norish/shared/lib/recipe-enrichment";
 import { db } from "@norish/db/drizzle";
 import {
-  ingredients,
   recipeCuisines,
   recipeImages,
   recipeIngredients,
@@ -304,10 +303,9 @@ export async function writeInferredStepIngredients(
         id: recipeIngredients.id,
         order: recipeIngredients.order,
         systemUsed: recipeIngredients.systemUsed,
-        name: ingredients.name,
+        name: recipeIngredients.name,
       })
       .from(recipeIngredients)
-      .innerJoin(ingredients, eq(recipeIngredients.ingredientId, ingredients.id))
       .where(eq(recipeIngredients.recipeId, recipeId));
 
     const stepIds = stepRows.map((row) => row.id);

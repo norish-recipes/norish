@@ -883,18 +883,32 @@
         </li>
         <li>
           <a href="groceries/0036-a-pantry-ingredient-is-a-name-matched-exactly.md"
-            >ADR-0036 &mdash; A Pantry Ingredient is a name matched exactly, and nothing is stored on the
-            recipe or the grocery</a
+            >ADR-0036 &mdash; A Pantry Ingredient is a name matched exactly, and nothing is stored
+            on the recipe or the grocery</a
           >
           <p>
             <b>Accepted.</b> A Pantry Ingredient is a household fact &mdash; an Ingredient Name the
             household has at home, owned like a Store and read across the household, with the fold
             on the Ingredient Name rather than on the row &mdash; and an ingredient is in the pantry
-            only on an exact match of folded names, with the Product Link's folding and no looser rule. The
-            pantry is consulted once, when a recipe is added to the groceries: stocked lines are
-            shown apart, unticked, and left off the list unless ticked. Nothing is stored on the
-            recipe ingredient or the grocery row; the Pantry has its own router and subscription and
-            no REST endpoint.
+            only on an exact match of folded names, with the Product Link's folding and no looser
+            rule. The pantry is consulted once, when a recipe is added to the groceries: stocked
+            lines are shown apart, unticked, and left off the list unless ticked. Nothing is stored
+            on the recipe ingredient or the grocery row; the Pantry has its own router and
+            subscription and no REST endpoint.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0037-ingredient-identity-is-an-alias-pointing-at-an-ingredient.md"
+            >ADR-0037 &mdash; Ingredient identity is an alias pointing at an Ingredient</a
+          >
+          <p>
+            <b>Accepted.</b> An Ingredient is one food known by many Ingredient Aliases; a recipe
+            line, a Grocery, a recurring grocery and a Pantry Ingredient keep their text as written
+            and point at the alias it resolved to, and Product Links, Aisle Links and store
+            preferences are keyed by Ingredient. One resolver in
+            <code>@norish/shared-server/ingredients</code> mints, in the order exact, stripped, AI,
+            new &mdash; a mint nothing sure vouched for is flagged. Merges move aliases. Supersedes
+            ADR-0036 and amends ADR-0031.
           </p>
         </li>
       </ul>

@@ -231,6 +231,7 @@ export async function createTestRecipeIngredients(
     .values({
       recipeId,
       ingredientId,
+      name: overrides.name ?? "Test ingredient",
       amount: overrides.amount ?? "1",
       unit: overrides.unit ?? "cup",
       order: overrides.order ?? "0",

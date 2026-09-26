@@ -47,6 +47,18 @@ _Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is th
 **Tag**:
 A free-form keyword attached to a recipe, mintable by anyone and by AI. Tags are an open folksonomy and deliberately overlap other taxonomies; Cuisines and Categories are the curated lists.
 
+**Ingredient**:
+One food, known by many Ingredient Aliases: "onion", "onions", "onion, diced" and "ui" are one Ingredient once Norish knows they are. Whatever a household teaches Norish about a food is taught about the Ingredient, so it holds for every spelling. An Ingredient has a name of its own, English where known, and belongs to whoever's action minted it, or to no one when the catalogue seed wrote it (ADR-0037).
+_Avoid_: Ingredient Name (retired: a name is an alias of an Ingredient, not the Ingredient), Food, Product (that is the shop's)
+
+**Ingredient Alias**:
+One spelling of an Ingredient — a plural, a translation, a variant with its preparation — and what everything that names a food points at. A recipe line, a Grocery and a Pantry Ingredient keep their text as written and point at the alias it resolved to, so "2 onions, diced" still reads that way. One spelling, folded, is one alias instance-wide, so it can never mean two foods. A new text is resolved to an alias by an exact match, then the same match with its preparation stripped, then a Decision or the language model, and only then is an Ingredient minted for it.
+_Avoid_: Synonym (an alias is how a line names its food, not a thesaurus entry), Ingredient Name
+
+**Flagged Ingredient**:
+An Ingredient Norish minted without being sure it was new — no AI step vouched for it, or the one that did was unsure. The flag asks a person to merge it into the Ingredient it duplicates or mark it distinct; it changes nothing about how the Ingredient is used meanwhile.
+_Avoid_: Unverified, Pending (it is fully usable)
+
 **Step Ingredient**:
 A step's use of one of the recipe's ingredient lines, carried as a fractional share of that line (half the water is 0.5, "the spices" is several lines at their full share). An amount is entry vocabulary, not a stored form: the editor and the AI claim both accept "3 of the 5 eggs", and it becomes the equivalent share (0.6) at entry time. Attaching an amounted line asks for its amount on the spot — the ask — and dismissing the ask keeps the whole line. The step's prose is never rewritten to express it; readers see the resolved names and amounts presented with the step. Amounts are always derived from the ingredient line at the moment of display, so they follow edits and the active measurement system.
 _Avoid_: Ingredient Link (suggests a hyperlink in the text rather than a usage relation), Cooklang (names a foreign syntax Norish does not use)
@@ -167,7 +179,7 @@ The household's list of what it already has at home, kept so a recipe's staples 
 _Avoid_: Inventory (promises quantities Norish does not track), Stock, Cupboard
 
 **Pantry Ingredient**:
-One Ingredient Name the household has at home; the row points at it, as a recipe line does, and the name and its fold are read from it. An ingredient is *in the pantry* only when its folded name equals a Pantry Ingredient's, using the one folding a Product Link and an Aisle Link use; Norish never guesses from words (ADR-0036). When a recipe is added to the groceries, its stocked lines are shown apart and left off the list unless ticked. A Pantry Ingredient is never a Grocery: it is what stops a Grocery being made.
+One Ingredient Name the household has at home; the row points at it, as a recipe line does, and the name and its fold are read from it. An ingredient is _in the pantry_ only when its folded name equals a Pantry Ingredient's, using the one folding a Product Link and an Aisle Link use; Norish never guesses from words (ADR-0036). When a recipe is added to the groceries, its stocked lines are shown apart and left off the list unless ticked. A Pantry Ingredient is never a Grocery: it is what stops a Grocery being made.
 _Avoid_: Staple (a judgement about the food, not a fact about the household), Stocked ingredient (names the ingredient's state, not the thing the household keeps)
 
 ### Imports & AI

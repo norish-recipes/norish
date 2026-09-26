@@ -29,6 +29,7 @@
     "./caldav/client": "./src/caldav/client.ts",
     "./caldav/sync": "./src/caldav/sync.ts",
     "./ai/enrichment/*": "./src/ai/enrichment/*.ts",
+    "./ingredients/*": "./src/ingredients/*.ts",
     "./ai/prompts/loader": "./src/ai/prompts/loader.ts",
     "./ai/prompts/overrides": "./src/ai/prompts/overrides.ts",
     "./ai/providers/listing": "./src/ai/providers/listing.ts",

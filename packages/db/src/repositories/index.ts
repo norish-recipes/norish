@@ -9,6 +9,7 @@ export * from "@norish/db/repositories/aisles";
 export * from "@norish/db/repositories/pantry";
 export * from "@norish/db/repositories/households";
 export * from "@norish/db/repositories/ingredients";
+export * from "@norish/db/repositories/ingredient-aliases";
 export * from "@norish/db/repositories/steps";
 export * from "@norish/db/repositories/tags";
 export * from "@norish/db/repositories/cuisines";

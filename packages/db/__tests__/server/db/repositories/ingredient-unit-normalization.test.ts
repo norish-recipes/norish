@@ -8,9 +8,8 @@
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
-
 import { getRecipeIngredients } from "../../../helpers/db-test-helpers";
+import { createRecipeWithRefs, updateRecipeWithRefs } from "../../../helpers/recipe-writes";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("Unit Normalization - Create/Edit Recipes", () => {

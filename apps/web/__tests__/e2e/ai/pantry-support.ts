@@ -35,16 +35,26 @@ export function seedRecipeWithIngredients(name: string, lines: string[]): Promis
 
     for (const [index, line] of lines.entries()) {
       const ingredient = await database.query<{ id: string }>(
-        `insert into ingredients (name) values ($1)
+        `insert into ingredients (name, normalized_name) values ($1, lower($1))
          on conflict (lower(name)) do update set name = excluded.name
          returning id`,
         [line]
       );
+      const ingredientId = ingredient.rows[0]!.id;
+      // The line's spelling as an Ingredient Alias. The scenario's names are
+      // plain lowercase words, so their fold is their lowercase self.
+      const alias = await database.query<{ id: string }>(
+        `insert into ingredient_aliases (text, fold, ingredient_id) values ($1, lower($1), $2)
+         on conflict (fold) do update set text = ingredient_aliases.text
+         returning id`,
+        [line, ingredientId]
+      );
 
       await database.query(
-        `insert into recipe_ingredients (recipe_id, ingredient_id, amount, unit, "order", system_used)
-         values ($1, $2, null, null, $3, 'metric')`,
-        [recipeId, ingredient.rows[0]!.id, index]
+        `insert into recipe_ingredients
+           (recipe_id, ingredient_id, name, ingredient_alias_id, amount, unit, "order", system_used)
+         values ($1, $2, $3, $4, null, null, $5, 'metric')`,
+        [recipeId, ingredientId, line, alias.rows[0]!.id, index]
       );
     }
 

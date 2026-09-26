@@ -16,17 +16,16 @@ import {
   listPlannedItemsWithRecipeBySlot,
 } from "@norish/db/repositories/planned-items";
 import {
-  createRecipeWithRefs,
   dashboardRecipe,
   getRandomRecipeCandidates,
   getRecipeFull,
   listRecipes,
   searchRecipesByName,
-  updateRecipeWithRefs,
 } from "@norish/db/repositories/recipes";
 import { recipes as recipesTable } from "@norish/db/schema";
 
 import { createTestUser } from "../helpers/db-test-helpers";
+import { createRecipeWithRefs, updateRecipeWithRefs } from "../helpers/recipe-writes";
 import { RepositoryTestBase } from "../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("recipe_primary_image");

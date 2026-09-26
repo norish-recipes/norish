@@ -4,12 +4,18 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The `ingredient_aliases` table exists with its text, fold (unique), optional locale, Ingredient, nullable owner and seeded marker. `ingredients` gains a nullable owner and a flagged marker.
-- [ ] A migration gives every existing Ingredient its name as an alias. Recipe lines point at an alias and carry their as-written text, and the display is unchanged for existing recipes.
-- [ ] Resolution order rungs 1, 2 and 4 are implemented, and every recipe-minting path goes through the resolver.
-- [ ] A mint records its owner (the acting user) and is flagged.
-- [ ] Resolver tests run in `packages/api` against a real database (testcontainers) under the existing test gate.
-- [ ] CONTEXT.md gains Ingredient, Ingredient Alias and Flagged Ingredient. "Ingredient Name" is retired.
-- [ ] An ADR records *ingredient identity is an alias pointing at an Ingredient*.
+- [x] The `ingredient_aliases` table exists with its text, fold (unique), optional locale, Ingredient, nullable owner and seeded marker. `ingredients` gains a nullable owner and a flagged marker.
+- [x] A migration gives every existing Ingredient its name as an alias. Recipe lines point at an alias and carry their as-written text, and the display is unchanged for existing recipes.
+- [x] Resolution order rungs 1, 2 and 4 are implemented, and every recipe-minting path goes through the resolver.
+- [x] A mint records its owner (the acting user) and is flagged.
+- [x] Resolver tests run in `packages/api` against a real database (testcontainers) under the existing test gate.
+- [x] CONTEXT.md gains Ingredient, Ingredient Alias and Flagged Ingredient. "Ingredient Name" is retired.
+- [x] An ADR records *ingredient identity is an alias pointing at an Ingredient*.
+
+## Comments
+
+- The resolver lives in `packages/shared-server/src/ingredients/`, not `packages/api`: the tRPC routers, queue workers and archive importer all save recipes and none may import `@norish/api`. Its tests run in `packages/shared-server` (testcontainers) under the existing gate; the upgrade backfill's tests run in `packages/api`.
+- Rungs 1 and 2 are fold-exact, so "onions, diced" joins a known "onions" but not a known "onion": singular/plural is for the seed (10) and the Decision (06).
+- A mint names the Ingredient for the text without its preparation and keeps that bare text as a second alias, so "onions, diced" first and "onions" later are one food.

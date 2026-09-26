@@ -1,6 +1,7 @@
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { initRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
 import { backfillDishColors } from "@norish/api/startup/backfill-dish-color";
+import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
 import { backfillIngredientNormalizedNames } from "@norish/api/startup/backfill-ingredient-names";
 import { createServer } from "@norish/api/startup/http-server";
 import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
@@ -47,6 +48,11 @@ async function main() {
   // Fold the names stored before names were folded, so the Pantry can match
   // them (ADR-0036).
   await backfillIngredientNormalizedNames();
+  log.info("-".repeat(50));
+
+  // Give every existing ingredient its name as an Ingredient Alias and point
+  // every existing reference at one (ADR-0037).
+  await backfillIngredientAliases();
   log.info("-".repeat(50));
 
   await initializeVideoProcessing();

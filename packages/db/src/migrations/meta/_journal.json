@@ -386,6 +386,13 @@
       "when": 1790003549831,
       "tag": "0054_pantry_ingredients",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1790455395575,
+      "tag": "0055_ingredient_aliases",
+      "breakpoints": true
     }
   ]
 }

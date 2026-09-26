@@ -17,10 +17,14 @@ export const RecipeIngredientsInsertBaseSchema = createInsertSchema(recipeIngred
 
 export const RecipeIngredientsUpdateBaseSchema = createUpdateSchema(recipeIngredients);
 
+// A line's as-written text travels as `ingredientName`, and its alias stays on
+// the server: clients read and write the text.
 export const RecipeIngredientsWithIdSchema = RecipeIngredientsSelectBaseSchema.omit({
   updatedAt: true,
   createdAt: true,
   recipeId: true,
+  name: true,
+  ingredientAliasId: true,
 }).extend({
   ingredientName: z.string(),
   ingredientId: z.string().nullable(),
@@ -34,18 +38,23 @@ export const RecipeIngredientSelectWithNameSchema = RecipeIngredientsSelectBaseS
   order: z.coerce.number(),
 }).omit({ recipeId: true });
 
-export const RecipeIngredientInputBaseSchema = RecipeIngredientsInsertBaseSchema.partial({
-  ingredientId: true,
-  recipeId: true,
-  systemUsed: true,
-}).extend({
-  id: z.uuid().optional(),
-  version: z.number().int().positive().optional(),
-  amount: z.coerce.number().nullable(),
-  ingredientName: z.string().trim().min(1).optional(),
-  ingredientId: z.string().nullable(),
-  order: z.coerce.number(),
-});
+export const RecipeIngredientInputBaseSchema = RecipeIngredientsInsertBaseSchema.omit({
+  name: true,
+  ingredientAliasId: true,
+})
+  .partial({
+    ingredientId: true,
+    recipeId: true,
+    systemUsed: true,
+  })
+  .extend({
+    id: z.uuid().optional(),
+    version: z.number().int().positive().optional(),
+    amount: z.coerce.number().nullable(),
+    ingredientName: z.string().trim().min(1).optional(),
+    ingredientId: z.string().nullable(),
+    order: z.coerce.number(),
+  });
 
 export const RecipeIngredientInputSchema = RecipeIngredientInputBaseSchema.refine(
   (val) => Boolean(val.ingredientId || val.ingredientName),

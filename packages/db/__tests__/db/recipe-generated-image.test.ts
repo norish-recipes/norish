@@ -12,10 +12,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import { replaceRecipePrimaryImageWithGenerated } from "@norish/db/repositories/recipe-enrichment";
-import { createRecipeWithRefs, getRecipeFull } from "@norish/db/repositories/recipes";
+import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { recipes as recipesTable } from "@norish/db/schema";
 
 import { createTestUser } from "../helpers/db-test-helpers";
+import { createRecipeWithRefs } from "../helpers/recipe-writes";
 import { RepositoryTestBase } from "../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("recipe_generated_image");

@@ -12,6 +12,7 @@ import { createRecipeWithRefs, dashboardRecipe, recipeExistsByUrlForPolicy } fro
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
@@ -117,7 +118,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   const created = await createRecipeWithRefs(
     recipeId,
     userId,
-    await withDishColor(parseResult.recipe)
+    await withResolvedIngredients(await withDishColor(parseResult.recipe), { userId })
   );
   const createdId = created?.recipeId;
 

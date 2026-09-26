@@ -21,6 +21,7 @@ import {
   getRecipePermissionPolicy,
   isAIEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
@@ -126,7 +127,7 @@ async function createStructuredRecipe(
   const created = await createRecipeWithRefs(
     structuredRecipe.recipeId,
     userId,
-    await withDishColor(parsed.data)
+    await withResolvedIngredients(await withDishColor(parsed.data), { userId })
   );
 
   if (!created) {
@@ -198,7 +199,7 @@ export async function processPasteImportJob(
     const textResult = await createRecipeWithRefs(
       recipeId,
       userId,
-      await withDishColor(parseResult.recipe)
+      await withResolvedIngredients(await withDishColor(parseResult.recipe), { userId })
     );
 
     if (!textResult) {

@@ -9,14 +9,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  createRecipeWithRefs,
   getRecipeFull,
   listRecipesMissingDishColor,
   updateRecipeDishColor,
-  updateRecipeWithRefs,
 } from "@norish/db/repositories/recipes";
 
 import { createTestUser } from "../helpers/db-test-helpers";
+import { createRecipeWithRefs, updateRecipeWithRefs } from "../helpers/recipe-writes";
 import { RepositoryTestBase } from "../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("recipe_dish_color");

@@ -27,11 +27,11 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
+import type { IngredientResolutions } from "./ingredients";
 import type { MutationOutcome } from "./mutation-outcomes";
 import {
   cookbookRecipes,
   householdUsers,
-  ingredients,
   recipeFavorites,
   recipeImages,
   recipeIngredients,
@@ -51,8 +51,8 @@ import {
 import { replaceRecipeCuisinesTx } from "./cuisines";
 import {
   attachIngredientsToRecipeByInputTx,
-  getOrCreateManyIngredientsTx,
   getUnitsForNormalization,
+  resolvedRecipeLineValues,
 } from "./ingredients";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
@@ -381,9 +381,8 @@ export function recipeSearchSql(
       case "ingredients":
         parts.push(
           sql`setweight(to_tsvector('simple', coalesce((
-            SELECT string_agg(search_ingredient.name, ' ')
+            SELECT string_agg(search_ri.name, ' ')
             FROM ${recipeIngredients} search_ri
-            INNER JOIN ${ingredients} search_ingredient ON search_ri.ingredient_id = search_ingredient.id
             WHERE search_ri.recipe_id = "recipes"."id"
           ), '')), 'C')`
         );
@@ -800,11 +799,20 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
 export type CreateRecipeResult =
   { status: "inserted"; recipeId: string } | { status: "existing"; recipeId: string };
 
+/**
+ * A recipe payload whose line texts the ingredient resolver has answered
+ * (`withResolvedIngredients` in `@norish/shared-server/ingredients`). Recipe
+ * writes take nothing else, so no path can store a line the resolver never
+ * saw.
+ */
+export type WithIngredientResolutions<T> = T & { ingredientResolutions: IngredientResolutions };
+
 export async function createRecipeWithRefs(
   recipeId: string,
   userId: string | null | undefined,
-  input: FullRecipeInsertDTO
+  input: WithIngredientResolutions<FullRecipeInsertDTO>
 ): Promise<CreateRecipeResult | null> {
+  const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeInsertSchema.safeParse(input);
 
   dbLogger.debug({ parsed }, "Parsed full recipe insert");
@@ -887,7 +895,8 @@ export async function createRecipeWithRefs(
           ...ri,
           recipeId: rid,
           systemUsed: ri.systemUsed ?? payload.systemUsed,
-        }))
+        })),
+        resolutions
       );
     }
 
@@ -1101,13 +1110,13 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         columns: {
           id: true,
           ingredientId: true,
+          name: true,
           amount: true,
           unit: true,
           systemUsed: true,
           order: true,
           version: true,
         },
-        with: { ingredient: { columns: { name: true } } },
         orderBy: (ingredients, { asc }) => [asc(ingredients.order)],
       },
       steps: {
@@ -1227,7 +1236,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       amount: ri.amount ? Number(ri.amount) : null,
       unit: ri.unit ?? null,
       systemUsed: ri.systemUsed,
-      ingredientName: ri.ingredient?.name ?? "",
+      ingredientName: ri.name,
       order: ri.order,
       version: ri.version,
     })),
@@ -1262,7 +1271,8 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
 
 export async function addStepsAndIngredientsToRecipeByInput(
   steps: StepInsertDto[],
-  ingredients: RecipeIngredientInsertDto[]
+  ingredients: RecipeIngredientInsertDto[],
+  resolutions: IngredientResolutions
 ): Promise<{ steps: StepDto[]; ingredients: RecipeIngredientsDto[] }> {
   if (!steps?.length && !ingredients?.length) {
     return { steps: [], ingredients: [] };
@@ -1275,7 +1285,7 @@ export async function addStepsAndIngredientsToRecipeByInput(
     // Ingredients before steps, so step payloads that carry Step Ingredient
     // references can land them on the lines this same call creates.
     if (ingredients?.length) {
-      createdIngredients = await attachIngredientsToRecipeByInputTx(tx, ingredients);
+      createdIngredients = await attachIngredientsToRecipeByInputTx(tx, ingredients, resolutions);
     }
 
     if (steps?.length) {
@@ -1289,32 +1299,12 @@ export async function addStepsAndIngredientsToRecipeByInput(
   });
 }
 
-async function resolveRecipeIngredientIdsTx(
-  tx: any,
-  inputs: NonNullable<FullRecipeUpdateDTO["recipeIngredients"]>
-) {
-  const names = Array.from(
-    new Set(inputs.map((item) => item.ingredientName?.trim() ?? "").filter(Boolean))
-  );
-  const resolvedIngredients = names.length > 0 ? await getOrCreateManyIngredientsTx(tx, names) : [];
-
-  return inputs.map((item) => ({
-    ...item,
-    ingredientId:
-      item.ingredientId ??
-      resolvedIngredients.find(
-        (ingredient) =>
-          ingredient.name.toLowerCase().trim() === item.ingredientName?.toLowerCase().trim()
-      )?.id ??
-      null,
-  }));
-}
-
 async function syncRecipeIngredientsTx(
   tx: any,
   recipeId: string,
   systemUsed: MeasurementSystem,
-  inputs: NonNullable<FullRecipeUpdateDTO["recipeIngredients"]>
+  inputs: NonNullable<FullRecipeUpdateDTO["recipeIngredients"]>,
+  resolutions: IngredientResolutions
 ): Promise<void> {
   const existing = await tx
     .select({ id: recipeIngredients.id })
@@ -1323,15 +1313,16 @@ async function syncRecipeIngredientsTx(
       and(eq(recipeIngredients.recipeId, recipeId), eq(recipeIngredients.systemUsed, systemUsed))
     );
   const existingById = new Map(existing.map((row: { id: string }) => [row.id, row]));
-  const resolvedInputs = await resolveRecipeIngredientIdsTx(tx, inputs);
   const units = await getUnitsForNormalization();
   const retainedIds = new Set<string>();
 
-  for (const [index, ingredient] of resolvedInputs.entries()) {
-    if (!ingredient.ingredientId) continue;
+  for (const [index, ingredient] of inputs.entries()) {
+    const line = resolvedRecipeLineValues(ingredient.ingredientName, resolutions);
+
+    if (!line) continue;
 
     const values = {
-      ingredientId: ingredient.ingredientId,
+      ...line,
       amount: ingredient.amount ?? null,
       unit: ingredient.unit ? normalizeUnit(ingredient.unit, units) : null,
       order: ingredient.order ?? index,
@@ -1547,9 +1538,10 @@ async function syncRecipeVideosTx(
 export async function updateRecipeWithRefs(
   recipeId: string,
   userId: string,
-  input: FullRecipeUpdateDTO,
+  input: WithIngredientResolutions<FullRecipeUpdateDTO>,
   version?: number
 ): Promise<MutationOutcome<void>> {
+  const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeUpdateSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -1663,7 +1655,8 @@ export async function updateRecipeWithRefs(
             ingredientId: ri.ingredientId ?? null,
             amount: ri.amount ?? null,
             order: ri.order ?? 0,
-          }))
+          })),
+          resolutions
         );
       } else {
         // If we still can't determine the system, this is an error

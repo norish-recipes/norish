@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    // The ingredient resolver's tests start a Postgres container.
+    hookTimeout: 60000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
     env: {
       NODE_ENV: "development",

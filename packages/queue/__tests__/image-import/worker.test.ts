@@ -47,6 +47,14 @@ vi.mock("@norish/shared-server/realtime/recipes", () => ({
   recipes: { publish: publishRecipe },
 }));
 
+// Resolution reads the catalogue; these tests are about the worker, not it.
+vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
+  withResolvedIngredients: vi.fn(async (payload: object) => ({
+    ...payload,
+    ingredientResolutions: new Map(),
+  })),
+}));
+
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
