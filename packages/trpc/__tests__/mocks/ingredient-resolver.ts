@@ -18,3 +18,10 @@ export const findIngredientFor = vi.fn(async (text: string) => {
 
   return text.trim() ? { aliasId, ingredientId } : null;
 });
+
+/** Text as the resolver reads it: markup gone, whitespace collapsed. */
+export const cleanIngredientText = (text: string) =>
+  text
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();

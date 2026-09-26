@@ -137,6 +137,14 @@ describe("filing a name at a Store", () => {
     expect(stores.publish).not.toHaveBeenCalled();
   });
 
+  it("files nothing for a name that is markup alone", async () => {
+    await expect(
+      caller.fileGroceryName({ storeId: STORE, name: "<b></b>", aisleId: ZUIVEL })
+    ).resolves.toBeNull();
+    expect(resolveIngredients).not.toHaveBeenCalled();
+    expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
+  });
+
   it("files every spelling of a food as its one Ingredient", async () => {
     resolveIngredients.mockResolvedValueOnce([
       { text: "Uien", aliasId: "alias:uien", ingredientId: "ingredient:onion" },

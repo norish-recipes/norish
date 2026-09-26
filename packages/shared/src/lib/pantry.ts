@@ -7,23 +7,25 @@ import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
  * panel and by the Pantry panel's own duplicate check alike (ADR-0037): a line
  * the resolver has seen is covered by a Pantry Ingredient of the same
  * Ingredient, whatever either is spelled — "onions" covers "onions, diced".
- * A text nothing has resolved yet (typed or edited on this screen) can only
- * be matched on its folded name, and nothing looser: "salt" never covers
+ * A text nothing has resolved yet (typed or edited on this screen, or added
+ * to the Pantry offline) can only be matched on its folded name, and nothing looser: "salt" never covers
  * "salted butter", because Norish never guesses from words.
  */
 export function pantryIngredientFor(
   items: readonly PantryIngredientDto[],
   line: { ingredientId?: string | null; ingredientName?: string | null }
 ): PantryIngredientDto | null {
-  if (line.ingredientId) {
-    return items.find((item) => item.ingredientId === line.ingredientId) ?? null;
-  }
-
   const normalized = normalizeGroceryName(line.ingredientName);
 
-  if (!normalized) return null;
-
-  return items.find((item) => item.normalizedName === normalized) ?? null;
+  return (
+    items.find((item) =>
+      // A Pantry Ingredient added offline has no Ingredient until it syncs,
+      // and meanwhile is matched on its name like any unresolved text.
+      line.ingredientId && item.ingredientId
+        ? item.ingredientId === line.ingredientId
+        : normalized !== "" && item.normalizedName === normalized
+    ) ?? null
+  );
 }
 
 /**

@@ -36,6 +36,15 @@ describe("pantryIngredientFor", () => {
     );
   });
 
+  it("covers a line by name while the Pantry Ingredient itself is not resolved yet", () => {
+    // Added offline: the optimistic row knows its name and not its Ingredient.
+    const offline = { ...item("Oat milk", "oat milk"), ingredientId: "" };
+
+    expect(
+      pantryIngredientFor([offline], { ingredientId: "i-oat", ingredientName: "Oat Milk" })
+    ).toBe(offline);
+  });
+
   it("matches a text nothing has resolved on its folded name", () => {
     expect(pantryIngredientFor(pantry, text("olive oil"))?.name).toBe("Olive Oil");
     expect(pantryIngredientFor(pantry, text("  OLIVE  OIL! "))?.name).toBe("Olive Oil");

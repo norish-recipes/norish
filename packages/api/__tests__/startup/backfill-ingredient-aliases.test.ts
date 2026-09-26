@@ -119,6 +119,21 @@ describe("backfillIngredientAliases", () => {
     expect(pantryIngredientFor(pantry, line!)).not.toBeNull();
   });
 
+  it("passes over a grocery whose name is markup alone, and resolves the rest", async () => {
+    await getTestDb()
+      .insert(groceries)
+      .values([
+        { userId, name: "<b></b>" },
+        { userId, name: "Uien" },
+      ]);
+
+    await backfillIngredientAliases();
+
+    await expect(listGroceriesWithoutAlias(10)).resolves.toEqual([
+      expect.objectContaining({ name: "<b></b>" }),
+    ]);
+  });
+
   it("resolves every grocery and recurring grocery, and leaves the text on the list alone", async () => {
     await legacyIngredient("Olive Oil", new Date("2025-01-01"));
     await getTestDb()

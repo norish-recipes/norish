@@ -7,7 +7,10 @@ import {
   listAisleLinksByStoreIds,
 } from "@norish/db/repositories/aisles";
 import { listStoresByUserIds } from "@norish/db/repositories/stores";
-import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import {
+  cleanIngredientText,
+  resolveIngredients,
+} from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { AisleFilingSchema } from "@norish/shared/contracts/zod";
@@ -50,6 +53,8 @@ const fileGroceryName = authedProcedure
       }
     }
 
+    // Markup alone names no food, and is filed nowhere.
+    if (!cleanIngredientText(input.name)) return null;
     const [ingredient] = await resolveIngredients([input.name], { userId: ctx.user.id });
 
     if (!ingredient) return null;

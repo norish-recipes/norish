@@ -15,6 +15,7 @@ import {
   setRecurringGroceryAliases,
 } from "@norish/db/repositories/ingredient-aliases";
 import {
+  cleanIngredientText,
   ingredientAliasFold,
   resolveIngredients,
 } from "@norish/shared-server/ingredients/resolver";
@@ -122,7 +123,8 @@ async function resolveReferences(
 
     if (batch.length === 0) break;
 
-    const named = batch.filter((row) => row.name.trim().length > 0);
+    // Text that is markup alone names nothing the resolver could read.
+    const named = batch.filter((row) => cleanIngredientText(row.name).length > 0);
 
     for (const owner of new Set(named.map((row) => row.userId))) {
       const owned = named.filter((row) => row.userId === owner);
