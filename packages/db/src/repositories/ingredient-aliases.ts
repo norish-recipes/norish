@@ -1,12 +1,14 @@
-import { and, asc, eq, gt, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull, isNull, notExists, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 import {
+  groceries,
   ingredientAliases,
   ingredients,
   pantryIngredients,
   recipeIngredients,
   recipes,
+  recurringGroceries,
 } from "@norish/db/schema";
 import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
@@ -301,5 +303,93 @@ export async function setPantryIngredientAliases(
           );
       }
     });
+  }
+}
+
+/** Recipe lines' texts and the aliases they resolved to, by line id. */
+export async function findRecipeLineAliases(
+  recipeIngredientIds: readonly string[]
+): Promise<Map<string, { name: string; aliasId: string; ingredientId: string }>> {
+  const unique = Array.from(new Set(recipeIngredientIds));
+
+  if (unique.length === 0) return new Map();
+
+  const rows = await db
+    .select({
+      id: recipeIngredients.id,
+      name: recipeIngredients.name,
+      aliasId: ingredientAliases.id,
+      ingredientId: ingredientAliases.ingredientId,
+    })
+    .from(recipeIngredients)
+    .innerJoin(ingredientAliases, eq(recipeIngredients.ingredientAliasId, ingredientAliases.id))
+    .where(inArray(recipeIngredients.id, unique));
+
+  return new Map(rows.map(({ id, ...line }) => [id, line]));
+}
+
+/** Named groceries written before aliases existed, after the given id. */
+export async function listGroceriesWithoutAlias(
+  limit: number,
+  afterId: string | null = null
+): Promise<Array<{ id: string; name: string; userId: string }>> {
+  const rows = await db
+    .select({ id: groceries.id, name: groceries.name, userId: groceries.userId })
+    .from(groceries)
+    .where(
+      and(
+        isNull(groceries.ingredientAliasId),
+        isNotNull(groceries.name),
+        sql`trim(${groceries.name}) <> ''`,
+        afterId ? gt(groceries.id, afterId) : undefined
+      )
+    )
+    .orderBy(asc(groceries.id))
+    .limit(limit);
+
+  return rows.map((row) => ({ ...row, name: row.name ?? "" }));
+}
+
+export async function setGroceryAliases(
+  rows: ReadonlyArray<{ id: string; aliasId: string }>
+): Promise<void> {
+  for (const row of rows) {
+    await db
+      .update(groceries)
+      .set({ ingredientAliasId: row.aliasId })
+      .where(and(eq(groceries.id, row.id), isNull(groceries.ingredientAliasId)));
+  }
+}
+
+/** Recurring groceries written before aliases existed, after the given id. */
+export async function listRecurringGroceriesWithoutAlias(
+  limit: number,
+  afterId: string | null = null
+): Promise<Array<{ id: string; name: string; userId: string }>> {
+  return await db
+    .select({
+      id: recurringGroceries.id,
+      name: recurringGroceries.name,
+      userId: recurringGroceries.userId,
+    })
+    .from(recurringGroceries)
+    .where(
+      and(
+        isNull(recurringGroceries.ingredientAliasId),
+        afterId ? gt(recurringGroceries.id, afterId) : undefined
+      )
+    )
+    .orderBy(asc(recurringGroceries.id))
+    .limit(limit);
+}
+
+export async function setRecurringGroceryAliases(
+  rows: ReadonlyArray<{ id: string; aliasId: string }>
+): Promise<void> {
+  for (const row of rows) {
+    await db
+      .update(recurringGroceries)
+      .set({ ingredientAliasId: row.aliasId })
+      .where(and(eq(recurringGroceries.id, row.id), isNull(recurringGroceries.ingredientAliasId)));
   }
 }

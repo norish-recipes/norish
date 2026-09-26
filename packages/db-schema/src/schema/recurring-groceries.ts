@@ -1,6 +1,7 @@
 import { date, index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { ingredientAliases } from "./ingredients";
 import { versionColumn } from "./shared";
 
 export const recurringGroceries = pgTable(
@@ -13,6 +14,8 @@ export const recurringGroceries = pgTable(
 
     // Item details
     name: text("name").notNull(),
+    /** The Ingredient Alias the name resolved to (ADR-0037). */
+    ingredientAliasId: uuid("ingredient_alias_id").references(() => ingredientAliases.id),
     unit: text("unit"),
     amount: numeric("amount", { precision: 10, scale: 3 }),
 

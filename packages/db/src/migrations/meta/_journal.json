@@ -400,6 +400,13 @@
       "when": 1790456114780,
       "tag": "0056_pantry_ingredient_aliases",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1790456522651,
+      "tag": "0057_grocery_ingredient_aliases",
+      "breakpoints": true
     }
   ]
 }

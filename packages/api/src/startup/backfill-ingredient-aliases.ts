@@ -1,10 +1,14 @@
 import {
   addOwnNameAliases,
+  listGroceriesWithoutAlias,
   listIngredientsWithoutAlias,
   listPantryIngredientsWithoutAlias,
   listRecipeLinesWithoutAlias,
+  listRecurringGroceriesWithoutAlias,
+  setGroceryAliases,
   setPantryIngredientAliases,
   setRecipeLineAliases,
+  setRecurringGroceryAliases,
 } from "@norish/db/repositories/ingredient-aliases";
 import {
   ingredientAliasFold,
@@ -21,13 +25,20 @@ const BATCH_SIZE = 500;
  *
  * Every Ingredient first gets its own name as an alias, oldest first, so
  * where two names fold alike the older Ingredient keeps the spelling. Then
- * every reference is resolved from its text — a recipe line's as written, a
- * Pantry Ingredient's its Ingredient's name — which finds those aliases. Idempotent by shape: only rows without an alias are listed. A
+ * every reference is resolved from its text — a recipe line's, a grocery's and
+ * a recurring grocery's as written, a Pantry Ingredient's its Ingredient's
+ * name — which finds those aliases. Idempotent by shape: only rows without an alias are listed. A
  * failure leaves the remaining rows for the next startup and never stops the
  * server.
  */
 export async function backfillIngredientAliases(): Promise<void> {
-  const written = { ingredients: 0, recipeLines: 0, pantryIngredients: 0 };
+  const written = {
+    ingredients: 0,
+    recipeLines: 0,
+    pantryIngredients: 0,
+    groceries: 0,
+    recurringGroceries: 0,
+  };
 
   try {
     let after: { createdAt: string; id: string } | null = null;
@@ -59,6 +70,11 @@ export async function backfillIngredientAliases(): Promise<void> {
     written.pantryIngredients = await resolveReferences(
       listPantryIngredientsWithoutAlias,
       setPantryIngredientAliases
+    );
+    written.groceries = await resolveReferences(listGroceriesWithoutAlias, setGroceryAliases);
+    written.recurringGroceries = await resolveReferences(
+      listRecurringGroceriesWithoutAlias,
+      setRecurringGroceryAliases
     );
 
     if (Object.values(written).some((count) => count > 0)) {

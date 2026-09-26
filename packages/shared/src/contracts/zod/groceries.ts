@@ -7,8 +7,10 @@ import { clientMintedId } from "./common";
 
 export const PurchaseAmountSchema = z.number().positive().max(9999999).nullable().optional();
 
+// A line's alias stays on the server: clients read and write its text.
 export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   .omit({
+    ingredientAliasId: true,
     userId: true,
     recurringGroceryId: true,
     storeId: true,
@@ -29,6 +31,8 @@ export const GroceryInsertBaseSchema = z.object({
   purchaseAmount: PurchaseAmountSchema,
   userId: z.string(),
   name: z.string().nullable(),
+  /** The alias the name resolved to; set by the server, never taken from a client. */
+  ingredientAliasId: z.uuid().nullable().optional(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
   isDone: z.boolean().default(false),
@@ -44,6 +48,8 @@ export const GroceryUpdateBaseSchema = z.object({
   id: z.uuid(),
   version: z.number().int().positive().optional(),
   name: z.string().nullable().optional(),
+  /** The alias a new name resolved to; set by the server, never taken from a client. */
+  ingredientAliasId: z.uuid().nullable().optional(),
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),
   isDone: z.boolean().optional(),

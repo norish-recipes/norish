@@ -84,10 +84,11 @@ export async function cleanDatabase() {
   await db.delete(schema.cookbookRecipes);
   await db.delete(schema.cookbooks);
   await db.delete(schema.recipes);
-  await db.delete(schema.ingredients);
-  await db.delete(schema.plannedItems);
+  // Groceries point at Ingredient Aliases, which go with their Ingredients.
   await db.delete(schema.groceries);
   await db.delete(schema.recurringGroceries);
+  await db.delete(schema.ingredients);
+  await db.delete(schema.plannedItems);
   await db.delete(schema.householdUsers);
   await db.delete(schema.households);
   await db.delete(schema.users);

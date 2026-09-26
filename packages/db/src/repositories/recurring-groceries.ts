@@ -212,6 +212,8 @@ export async function updateRecurringGroceryWithGrocery(
         id: groceryRef.id,
         version: groceryRef.version,
         name: recurringParsed.data.name,
+        // The grocery names what its recurring grocery names, and so the same food.
+        ingredientAliasId: recurringRow.ingredientAliasId,
         unit: recurringParsed.data.unit || null,
         amount: recurringParsed.data.amount,
         purchaseAmount: groceryRef.purchaseAmount,
@@ -249,6 +251,7 @@ export async function detachRecurringGrocery(input: {
     id: string;
     version: number;
     name: string | null;
+    ingredientAliasId?: string | null;
     unit: string | null;
     amount: number | null;
     storeId?: string | null;

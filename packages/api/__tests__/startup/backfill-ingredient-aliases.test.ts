@@ -9,9 +9,19 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
 import { getRecipeFull } from "@norish/db";
-import { listRecipeLinesWithoutAlias } from "@norish/db/repositories/ingredient-aliases";
+import {
+  listGroceriesWithoutAlias,
+  listRecipeLinesWithoutAlias,
+  listRecurringGroceriesWithoutAlias,
+} from "@norish/db/repositories/ingredient-aliases";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
-import { ingredients, pantryIngredients, recipeIngredients } from "@norish/db/schema";
+import {
+  groceries,
+  ingredients,
+  pantryIngredients,
+  recipeIngredients,
+  recurringGroceries,
+} from "@norish/db/schema";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
@@ -99,5 +109,32 @@ describe("backfillIngredientAliases", () => {
     expect(pantry).toHaveLength(1);
     expect(pantry[0]!.ingredientId).toBe(older.id);
     expect(pantryIngredientFor(pantry, line!)).not.toBeNull();
+  });
+
+  it("resolves every grocery and recurring grocery, and leaves the text on the list alone", async () => {
+    await legacyIngredient("Olive Oil", new Date("2025-01-01"));
+    await getTestDb()
+      .insert(groceries)
+      .values([
+        { userId, name: "olive oil!" },
+        { userId, name: "Uien" },
+        { userId, name: null },
+      ]);
+    await getTestDb().insert(recurringGroceries).values({
+      userId,
+      name: "Melk",
+      recurrenceRule: "week",
+      nextPlannedFor: "2025-12-01",
+    });
+
+    await backfillIngredientAliases();
+
+    // A line with no name names no food, and has nothing to resolve.
+    await expect(listGroceriesWithoutAlias(10)).resolves.toEqual([]);
+    await expect(listRecurringGroceriesWithoutAlias(10)).resolves.toEqual([]);
+
+    const names = await getTestDb().select({ name: groceries.name }).from(groceries);
+
+    expect(names.map((row) => row.name).sort()).toEqual(["Uien", "olive oil!", null].sort());
   });
 });

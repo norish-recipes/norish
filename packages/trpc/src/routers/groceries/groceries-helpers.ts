@@ -24,6 +24,7 @@ import {
   normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
+import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
@@ -113,6 +114,7 @@ export async function createGroceriesData(
     groceries: {
       userId: string;
       name: string | null;
+      ingredientAliasId?: string | null;
       unit: string | null;
       amount: number | null;
       purchaseAmount?: number | null;
@@ -206,6 +208,17 @@ export async function createGroceriesData(
         sortOrder: 0,
       });
     }
+  }
+
+  // Each new line's name is resolved to an Ingredient Alias, the way the
+  // household's recipe lines are (ADR-0037). A merged line keeps its own.
+  const aliases = await resolveGroceryNames(
+    groceriesToCreate.map(({ groceries: grocery }) => grocery),
+    { userId: ctx.user.id }
+  );
+
+  for (const [index, { groceries: grocery }] of groceriesToCreate.entries()) {
+    grocery.ingredientAliasId = aliases[index]?.aliasId ?? null;
   }
 
   let updatedGroceries: GroceryDto[] = [];

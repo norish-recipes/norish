@@ -23,6 +23,7 @@ import {
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
@@ -109,10 +110,14 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         });
       }
 
+      const [alias] = await resolveGroceryNames([{ name: parsedIngredient.description }], {
+        userId: ctx.user.id,
+      });
       const updateData: GroceryUpdateDto = {
         id: groceryId,
         version,
         name: parsedIngredient.description,
+        ingredientAliasId: alias?.aliasId ?? null,
         amount: parsedIngredient.quantity,
         purchaseAmount,
         unit: parsedIngredient.unitOfMeasure,
