@@ -558,12 +558,16 @@ export async function saveGeneratedImageBytes(bytes: Buffer, recipeId: string): 
   });
 }
 
-/** The edge of the square an Ingredient Illustration is stored at (ADR-0037). */
-const INGREDIENT_ILLUSTRATION_SIZE = 512;
+/**
+ * The edge of the square an Ingredient Illustration is stored at (ADR-0037).
+ * The largest a list shows one is 40px, and the administration preview 112px,
+ * so 256px is sharp on every list at 3x and on the preview at 2x.
+ */
+const INGREDIENT_ILLUSTRATION_SIZE = 256;
 
 /**
  * Normalize picture bytes into an Ingredient Illustration: validated like any
- * upload, HEIC decoded, auto-rotated, cover-cropped to a 512px square and
+ * upload, HEIC decoded, auto-rotated, cover-cropped to a 256px square and
  * encoded as WebP, which keeps an uploaded cut-out's transparency. Pure media
  * work — where the file lands is the caller's business.
  */

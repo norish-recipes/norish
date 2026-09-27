@@ -7,7 +7,7 @@ Spec: `.scratch/ingredient-catalog/spec.md`
 
 ## What to build
 
-`storeIngredientIllustration` normalizes any accepted image (HEIC included) to a 512px WebP square under a new filename, points the entry at it and sweeps all but the new file and its predecessor. A Next route serves `/ingredient-images/<file>` immutable and public, excluded from the auth proxy for signed-out share pages. Upload, clipboard paste and remove in the editor panel.
+`storeIngredientIllustration` normalizes any accepted image (HEIC included) to a 256px WebP square under a new filename, points the entry at it and sweeps all but the new file and its predecessor. A Next route serves `/ingredient-images/<file>` immutable and public, excluded from the auth proxy for signed-out share pages. Upload, clipboard paste and remove in the editor panel.
 
 ## Acceptance criteria
 

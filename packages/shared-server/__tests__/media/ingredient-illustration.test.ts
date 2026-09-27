@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * Ingredient Illustration storage (ADR-0037): every picture becomes a 512px
+ * Ingredient Illustration storage (ADR-0037): every picture becomes a 256px
  * WebP square under a filename no earlier picture used, and replacing one
  * keeps exactly its immediate predecessor on disk (the ADR-0021 rule). Runs
  * against real sharp and a temp uploads dir, beside the Generated Image test.
@@ -68,7 +68,7 @@ afterEach(async () => {
 });
 
 describe("storeIngredientIllustration", () => {
-  it("stores a 512px WebP square and points the entry at it", async () => {
+  it("stores a 256px WebP square and points the entry at it", async () => {
     repository.setIngredientImage.mockResolvedValue({ previousImageUrl: null });
 
     const url = await storeIngredientIllustration(ID, await png(900, 600));
@@ -78,7 +78,7 @@ describe("storeIngredientIllustration", () => {
 
     const metadata = await sharp(await fs.readFile(fileOf(url!))).metadata();
 
-    expect(metadata).toMatchObject({ format: "webp", width: 512, height: 512 });
+    expect(metadata).toMatchObject({ format: "webp", width: 256, height: 256 });
   });
 
   it("keeps the immediate predecessor and sweeps older pictures, never another entry's", async () => {

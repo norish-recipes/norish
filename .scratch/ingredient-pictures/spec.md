@@ -76,7 +76,7 @@ A reader who would rather not see ingredient pictures hides them, per device, li
 
 **The fold and the suggestions are pure and unit-tested** in `packages/shared`: matching, ranking, the exact-match exclusion, and rewriting only the name part.
 
-**Storage runs real sharp** against a temp uploads directory: 512px WebP output, predecessor retention, sweeping, and nothing left behind when the entry is gone.
+**Storage runs real sharp** against a temp uploads directory: 256px WebP output, predecessor retention, sweeping, and nothing left behind when the entry is gone.
 
 **The runtime test speaks the OpenAI image wire shape** and asserts the square size and the new prompt. The worker, producer and admin router are tested over mocks for their policy: prompt and shape, no-op on a vanished entry, unrecoverable errors, job dedupe, admin gating, precondition refusals and error mapping.
 

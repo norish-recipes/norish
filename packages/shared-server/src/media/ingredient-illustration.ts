@@ -65,7 +65,7 @@ export async function sweepIngredientIllustrations(
 
 /**
  * Store a picture as an Ingredient Name's illustration (ADR-0037): the bytes
- * become a 512px WebP square under a filename no earlier picture used, the
+ * become a 256px WebP square under a filename no earlier picture used, the
  * name is pointed at it, and older files beyond the immediate predecessor are
  * swept.
  *
