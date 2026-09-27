@@ -69,7 +69,8 @@ export class YouTubeProcessor extends BaseVideoProcessor {
             combinedCaptionAndDescription,
             metadata,
             recipeId,
-            url
+            url,
+            { videoPath }
           );
 
           log.info({ url }, "Successfully extracted recipe from captions + description");
@@ -103,7 +104,8 @@ export class YouTubeProcessor extends BaseVideoProcessor {
         combinedTranscriptAndDescription,
         metadata,
         recipeId,
-        url
+        url,
+        { videoPath }
       );
 
       const savedVideo = videoPath

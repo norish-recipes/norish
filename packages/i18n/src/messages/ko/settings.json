@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "시각적 설명을 위한 프롬프트...",
       "imageGenerationStyle": "이미지 스타일 프롬프트",
       "imageGenerationStyleDescription": "시각적 설명과 함께 이미지 모델로 전송됩니다. 생성되는 모든 이미지가 공유하는 스타일을 정합니다.",
-      "imageGenerationStylePlaceholder": "이미지 스타일을 위한 프롬프트..."
+      "imageGenerationStylePlaceholder": "이미지 스타일을 위한 프롬프트...",
+      "videoThumbnailSelection": "비디오 썸네일 선택 프롬프트",
+      "videoThumbnailSelectionDescription": "비디오 레시피 가져오기에서 가장 먹음직스러운 완성 요리 프레임을 선택하는 데 사용됩니다. 레시피 제목은 프롬프트 뒤에 추가됩니다.",
+      "videoThumbnailSelectionPlaceholder": "비디오 썸네일 선택을 위한 프롬프트..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {

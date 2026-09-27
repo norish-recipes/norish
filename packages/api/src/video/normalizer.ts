@@ -13,7 +13,12 @@ import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { videoLogger } from "@norish/shared-server/logger";
 import { downloadImage } from "@norish/shared-server/media/storage";
 
+import { selectAndSaveVideoThumbnail } from "./thumbnail-selector";
 import type { VideoMetadata } from "./types";
+
+export interface ExtractRecipeFromVideoOptions {
+  videoPath?: string | null;
+}
 
 /**
  * Extract recipe from video transcript using AI.
@@ -22,14 +27,17 @@ import type { VideoMetadata } from "./types";
  *
  * @param transcript - The video transcript text.
  * @param metadata - Video metadata (title, description, duration, etc.).
+ * @param recipeId - Recipe ID allocated for the import.
  * @param url - Source URL of the video.
+ * @param options - Optional processing options such as local videoPath for frame selection.
  * @returns The extracted recipe; throws on AI failure or when the video holds no recipe.
  */
 export async function extractRecipeFromVideo(
   transcript: string,
   metadata: VideoMetadata,
   recipeId: string,
-  url: string
+  url: string,
+  options?: ExtractRecipeFromVideoOptions
 ): Promise<FullRecipeInsertDTO> {
   videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
 
@@ -69,10 +77,18 @@ export async function extractRecipeFromVideo(
     criteria: EXTRACTION_FAITHFULNESS_LEVELS,
   });
 
-  // Download thumbnail as recipe image if available
+  // Extract best frame or fallback thumbnail
   let thumbnailPath: string | undefined;
 
-  if (metadata.thumbnail) {
+  if (options?.videoPath) {
+    thumbnailPath = await selectAndSaveVideoThumbnail({
+      videoPath: options.videoPath,
+      recipeId,
+      recipeTitle: metadata.title,
+      duration: metadata.duration,
+      fallbackThumbnailUrl: metadata.thumbnail,
+    });
+  } else if (metadata.thumbnail) {
     try {
       thumbnailPath = await downloadImage(metadata.thumbnail, recipeId);
     } catch (_error) {

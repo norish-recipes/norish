@@ -118,6 +118,8 @@ const SYSTEM_MESSAGES: Record<StructuredPromptName, string> = {
   // not apply to it.
   "image-generation-brief":
     "You write short visual briefs that tell an image model what a finished dish looks like.",
+  "video-thumbnail-selection":
+    "You select the best video frame showing the finished dish from a numbered collage.",
 };
 
 // ============================================================================

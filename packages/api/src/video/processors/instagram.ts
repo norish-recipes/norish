@@ -239,7 +239,9 @@ export class InstagramProcessor extends BaseVideoProcessor {
         // A failed description extraction is not terminal: the audio itself
         // is still there to transcribe.
         try {
-          const recipe = await extractRecipeFromVideo(descriptionText, metadata, recipeId, url);
+          const recipe = await extractRecipeFromVideo(descriptionText, metadata, recipeId, url, {
+            videoPath,
+          });
 
           log.info({ url }, "Successfully extracted recipe from description");
           const savedVideo = videoPath
@@ -289,7 +291,9 @@ export class InstagramProcessor extends BaseVideoProcessor {
       // Combine transcript with description
       const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
 
-      const recipe = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
+      const recipe = await extractRecipeFromVideo(combinedText, metadata, recipeId, url, {
+        videoPath,
+      });
 
       const savedVideo = videoPath
         ? await this.saveVideo(videoPath, recipeId, metadata.duration)

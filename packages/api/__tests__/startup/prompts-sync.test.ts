@@ -28,6 +28,7 @@ const NEW_DEFAULTS = {
   ingredientLinking: "NEW ingredient linking instructions",
   imageGenerationBrief: "NEW image generation brief instructions",
   imageGenerationStyle: "NEW image generation style instructions",
+  videoThumbnailSelection: "NEW video thumbnail selection instructions",
 };
 
 /** What older releases shipped (and seeded into deployments' databases). */

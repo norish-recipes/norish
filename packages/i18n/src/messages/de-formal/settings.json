@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt für die visuelle Beschreibung...",
       "imageGenerationStyle": "Bildstil-Prompt",
       "imageGenerationStyleDescription": "Wird mit der angehängten visuellen Beschreibung an das Bildmodell gesendet. Bestimmt den Stil aller generierten Bilder.",
-      "imageGenerationStylePlaceholder": "Prompt für den Bildstil..."
+      "imageGenerationStylePlaceholder": "Prompt für den Bildstil...",
+      "videoThumbnailSelection": "Video-Thumbnail-Auswahl-Prompt",
+      "videoThumbnailSelectionDescription": "Wird verwendet, um das ansprechendste Bild des fertigen Gerichts aus einem Video-Import auszuwählen. Der Rezepttitel wird nach dem Prompt angehängt.",
+      "videoThumbnailSelectionPlaceholder": "Prompt für die Auswahl des Video-Thumbnails..."
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {

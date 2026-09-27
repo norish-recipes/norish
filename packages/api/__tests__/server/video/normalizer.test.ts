@@ -84,6 +84,14 @@ beforeEach(() => {
   mocked.normalizeExtractionOutput.mockResolvedValue({ id: "recipe-1", name: "Pesto pasta" });
 });
 
+const mockedSelector = vi.hoisted(() => ({
+  selectAndSaveVideoThumbnail: vi.fn(),
+}));
+
+vi.mock("@norish/api/video/thumbnail-selector", () => ({
+  selectAndSaveVideoThumbnail: mockedSelector.selectAndSaveVideoThumbnail,
+}));
+
 describe("extractRecipeFromVideo", () => {
   it("scores its own output against the transcript in shadow, and nothing acts on the score", async () => {
     mocked.shadowScore.mockResolvedValue(0);
@@ -102,6 +110,34 @@ describe("extractRecipeFromVideo", () => {
       criteria: EXTRACTION_FAITHFULNESS_LEVELS,
     });
     expect(recipe).toMatchObject({ id: "recipe-1", name: "Pesto pasta" });
+  });
+
+  it("selects video frame thumbnail when videoPath is provided", async () => {
+    mockedSelector.selectAndSaveVideoThumbnail.mockResolvedValue(
+      "/recipes/recipe-1/best-frame.jpg"
+    );
+
+    await extractRecipeFromVideo(
+      TRANSCRIPT,
+      METADATA,
+      "recipe-1",
+      "https://www.instagram.com/reel/ABC123/",
+      { videoPath: "/tmp/video.mp4" }
+    );
+
+    expect(mockedSelector.selectAndSaveVideoThumbnail).toHaveBeenCalledWith({
+      videoPath: "/tmp/video.mp4",
+      recipeId: "recipe-1",
+      recipeTitle: METADATA.title,
+      duration: METADATA.duration,
+      fallbackThumbnailUrl: METADATA.thumbnail,
+    });
+    expect(mocked.normalizeExtractionOutput).toHaveBeenCalledWith(
+      EXTRACTED,
+      expect.objectContaining({
+        image: "/recipes/recipe-1/best-frame.jpg",
+      })
+    );
   });
 
   it("refuses an empty shell before scoring or normalising anything", async () => {

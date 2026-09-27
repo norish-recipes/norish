@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt para a descrição visual...",
       "imageGenerationStyle": "Prompt de estilo de imagem",
       "imageGenerationStyleDescription": "Enviado ao modelo de imagem, com a descrição visual anexada depois. Define o visual compartilhado por todas as imagens geradas.",
-      "imageGenerationStylePlaceholder": "Prompt para o estilo de imagem..."
+      "imageGenerationStylePlaceholder": "Prompt para o estilo de imagem...",
+      "videoThumbnailSelection": "Prompt de seleção de miniatura de vídeo",
+      "videoThumbnailSelectionDescription": "Usado para selecionar o quadro mais apetitoso do prato finalizado a partir de um vídeo. O título da receita é anexado após o prompt.",
+      "videoThumbnailSelectionPlaceholder": "Prompt para selecionar a miniatura de vídeo..."
     },
     "unsavedChanges": "Alterações não salvas",
     "jsonEditor": {

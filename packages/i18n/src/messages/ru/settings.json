@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Промпт для визуального описания...",
       "imageGenerationStyle": "Промпт стиля изображения",
       "imageGenerationStyleDescription": "Отправляется модели изображений вместе с визуальным описанием. Задаёт вид, общий для всех сгенерированных изображений.",
-      "imageGenerationStylePlaceholder": "Промпт для стиля изображения..."
+      "imageGenerationStylePlaceholder": "Промпт для стиля изображения...",
+      "videoThumbnailSelection": "Промпт выбора миниатюры видео",
+      "videoThumbnailSelectionDescription": "Используется для выбора наиболее аппетитного кадра готового блюда из видео рецепта. Название рецепта добавляется после промпта.",
+      "videoThumbnailSelectionPlaceholder": "Промпт для выбора миниатюры видео..."
     },
     "unsavedChanges": "Несохранённые изменения",
     "jsonEditor": {
