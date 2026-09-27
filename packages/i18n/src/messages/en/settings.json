@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt for writing the visual brief...",
       "imageGenerationStyle": "Image Style Prompt",
       "imageGenerationStyleDescription": "Sent to the image model, with the visual brief appended after it. Sets the look every generated picture shares.",
-      "imageGenerationStylePlaceholder": "Prompt for the image style..."
+      "imageGenerationStylePlaceholder": "Prompt for the image style...",
+      "videoThumbnailSelection": "Video Thumbnail Selection Prompt",
+      "videoThumbnailSelectionDescription": "Used to select the most appetizing finished dish frame from a video recipe import. The recipe title is appended after the prompt.",
+      "videoThumbnailSelectionPlaceholder": "Prompt for selecting the best video thumbnail frame..."
     },
     "unsavedChanges": "Unsaved changes",
     "jsonEditor": {

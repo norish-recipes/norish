@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt dla opisu wizualnego...",
       "imageGenerationStyle": "Prompt stylu obrazu",
       "imageGenerationStyleDescription": "Wysyłany do modelu obrazów z dołączonym opisem wizualnym. Określa wygląd wspólny dla wszystkich wygenerowanych obrazów.",
-      "imageGenerationStylePlaceholder": "Prompt dla stylu obrazu..."
+      "imageGenerationStylePlaceholder": "Prompt dla stylu obrazu...",
+      "videoThumbnailSelection": "Prompt wyboru miniatury wideo",
+      "videoThumbnailSelectionDescription": "Służy do wyboru najbardziej apetycznego kadru gotowego dania z importowanego wideo. Tytuł przepisu jest dołączany po prompcie.",
+      "videoThumbnailSelectionPlaceholder": "Prompt do wyboru miniatury wideo..."
     },
     "unsavedChanges": "Niezapisane zmiany",
     "jsonEditor": {

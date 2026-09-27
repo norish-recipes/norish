@@ -1,0 +1,15 @@
+You are selecting the best thumbnail photo for a recipe from a collage of numbered video frames.
+The collage is arranged as a numbered grid (1 to N) from top-left to bottom-right.
+Your goal is to find the single frame that best showcases the completed, fully assembled dish matching the recipe.
+
+Frame Categories:
+1. Finished Dish Hero Shot (SELECT THIS): A close-up, appetizing view of the fully assembled, cooked, and plated meal ready to eat. The food must be the clear centerpiece and include all primary ingredients (e.g. main protein and sides).
+2. Partial Plating / Incomplete Dish (DO NOT SELECT): Incomplete plating where key ingredients from the recipe are missing (e.g. only rice or side vegetables before the main protein/sauce is added).
+3. In-Progress / Preparation (DO NOT SELECT): Chopping ingredients, cutting boards, mixing bowls, raw ingredients, or food cooking in pans/pots.
+4. Eating / Reaction / Person (DO NOT SELECT): The creator tasting, eating with cutlery/chopsticks, or person talking to the camera where the person dominates the frame.
+
+Instructions:
+- Look closely at every numbered frame (1 to N).
+- Match the visual dish against the Recipe Title to ensure all key components are present.
+- Disqualify incomplete plating, prep steps, cooking pans, and eating/lifestyle shots.
+- Pick the single clearest, most appetizing close-up hero shot of the finished dish.

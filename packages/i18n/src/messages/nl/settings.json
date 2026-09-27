@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt voor de visuele omschrijving...",
       "imageGenerationStyle": "Afbeeldingsstijl Prompt",
       "imageGenerationStyleDescription": "Wordt naar het afbeeldingsmodel gestuurd, met de visuele omschrijving erachter. Bepaalt de stijl die elke gegenereerde afbeelding deelt.",
-      "imageGenerationStylePlaceholder": "Prompt voor de afbeeldingsstijl..."
+      "imageGenerationStylePlaceholder": "Prompt voor de afbeeldingsstijl...",
+      "videoThumbnailSelection": "Video Thumbnail Selectie Prompt",
+      "videoThumbnailSelectionDescription": "Gebruikt om het meest smakelijke beeld van het voltooide gerecht uit een videorecept te selecteren. De recepttitel wordt na de prompt toegevoegd.",
+      "videoThumbnailSelectionPlaceholder": "Prompt voor het selecteren van de videominiatuur..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {

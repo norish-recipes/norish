@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Kehote visuaalisen briefin kirjoittamiseen...",
       "imageGenerationStyle": "Kuvatyylin kehote",
       "imageGenerationStyleDescription": "Lähetetään kuvamallille, ja visuaalinen brief liitetään sen perään. Määrittää ilmeen, joka on yhteinen kaikille luoduille kuville.",
-      "imageGenerationStylePlaceholder": "Kehote kuvan tyylille..."
+      "imageGenerationStylePlaceholder": "Kehote kuvan tyylille...",
+      "videoThumbnailSelection": "Videon pikkukuvan valintakehote",
+      "videoThumbnailSelectionDescription": "Käytetään valitsemaan ruokahalua herättävin kuva valmiista annoksesta videoreseptistä. Reseptin otsikko liitetään kehotteen perään.",
+      "videoThumbnailSelectionPlaceholder": "Kehote videon pikkukuvan valintaan..."
     },
     "unsavedChanges": "Tallentamattomia muutoksia",
     "jsonEditor": {

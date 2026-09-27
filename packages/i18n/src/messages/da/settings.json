@@ -799,7 +799,10 @@
       "imageGenerationBriefPlaceholder": "Prompt til den visuelle beskrivelse...",
       "imageGenerationStyle": "Billedstil-prompt",
       "imageGenerationStyleDescription": "Sendes til billedmodellen med den visuelle beskrivelse tilføjet efter. Bestemmer det udtryk, alle genererede billeder deler.",
-      "imageGenerationStylePlaceholder": "Prompt til billedstilen..."
+      "imageGenerationStylePlaceholder": "Prompt til billedstilen...",
+      "videoThumbnailSelection": "Videominiature-udvælgelses-prompt",
+      "videoThumbnailSelectionDescription": "Bruges til at vælge det mest appetitvækkende billede af den færdige ret fra en videoopskrift. Opskriftens titel tilføjes efter prompten.",
+      "videoThumbnailSelectionPlaceholder": "Prompt til valg af videominiature..."
     },
     "unsavedChanges": "Ugemte ændringer",
     "jsonEditor": {
