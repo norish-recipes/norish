@@ -11,7 +11,7 @@
  */
 
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, ilike, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, ilike, isNull, ne, sql } from "drizzle-orm";
 
 import type {
   AdminIngredientDto,
@@ -92,10 +92,13 @@ function byName() {
   return [asc(sql`lower(${ingredients.name})`), asc(ingredients.id)];
 }
 
-/** One page of every Ingredient Name, for administration. */
+/**
+ * One page of every Ingredient Name, for administration, with how many the
+ * search matches in all so the table can say how many pages there are.
+ */
 export async function listIngredientsForAdmin(
   input: AdminIngredientListInput = {}
-): Promise<{ items: AdminIngredientDto[]; nextCursor: number | null }> {
+): Promise<{ items: AdminIngredientDto[]; nextCursor: number | null; total: number }> {
   const { search, cursor = 0, limit } = AdminIngredientListInputSchema.parse(input);
   const conditions: SQL[] = [];
 
@@ -105,17 +108,22 @@ export async function listIngredientsForAdmin(
     conditions.push(ilike(ingredients.name, pattern));
   }
 
-  const rows = await db
-    .select(adminColumns())
-    .from(ingredients)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(...byName())
-    .limit(limit + 1)
-    .offset(cursor);
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const [rows, [counted]] = await Promise.all([
+    db
+      .select(adminColumns())
+      .from(ingredients)
+      .where(where)
+      .orderBy(...byName())
+      .limit(limit + 1)
+      .offset(cursor),
+    db.select({ total: count() }).from(ingredients).where(where),
+  ]);
 
   return {
     items: rows.slice(0, limit),
     nextCursor: rows.length > limit ? cursor + limit : null,
+    total: counted?.total ?? 0,
   };
 }
 

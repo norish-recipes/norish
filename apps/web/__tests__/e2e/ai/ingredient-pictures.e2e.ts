@@ -96,9 +96,11 @@ function ingredientRow(name: string) {
   return page.locator(`[data-testid="ingredient-row"][data-ingredient-name="${name}"]`).first();
 }
 
-/** The administration list's row for an Ingredient Name. */
+/** The administration table's row for an Ingredient Name. */
 function adminRow(name: string) {
-  return page.locator(`[data-testid="ingredients-row"][data-ingredient-name="${name}"]`);
+  return page.getByRole("row").filter({
+    has: page.locator(`[data-testid="ingredients-row"][data-ingredient-name="${name}"]`),
+  });
 }
 
 test("an administrator's picture reaches the lines that point at the name", async () => {
@@ -113,7 +115,6 @@ test("an administrator's picture reaches the lines that point at the name", asyn
 
   // The administrator finds the recipe's "eggs" among every ingredient.
   await page.goto("/settings?tab=admin");
-  await page.getByTestId("ingredients-manage").click();
   await page.getByTestId("ingredients-search").fill("egg");
   await expect(adminRow("eggs")).toContainText("Used in 1 recipe");
   await expect(adminRow("chives")).toHaveCount(0);
@@ -130,7 +131,7 @@ test("an administrator's picture reaches the lines that point at the name", asyn
     .toMatchObject({ imageUrl: expect.stringMatching(/^\/ingredient-images\//) });
   expect(stack.ai.control.imageRequestCount).toBe(1);
 
-  // The panel watches for the drawing and shows it without a reload.
+  // The table watches for the drawing and shows it without a reload.
   await expect(page.getByTestId("ingredients-picture-busy")).toHaveCount(0, { timeout: 30_000 });
 
   await page.getByTestId("ingredients-cancel").click();

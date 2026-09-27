@@ -1,7 +1,7 @@
 /**
  * Capture the documentation screenshots for Ingredient pictures against a
  * recipe the harness imports itself, with pictures uploaded through the
- * ingredients panel, so the docs show the real app and nothing outbound is
+ * ingredients table, so the docs show the real app and nothing outbound is
  * involved.
  *
  * Not part of the gate. To re-capture: copy this file into
@@ -70,8 +70,16 @@ function shakshuka() {
       us: ["4 eggs", "14 oz tomatoes", "1 red pepper", "1 onion", "2 cloves garlic", "1 tsp cumin"],
     },
     recipeInstructions: {
-      metric: ["Soften the onion, pepper and garlic.", "Add the tomatoes and cumin.", "Crack in the eggs and cover."],
-      us: ["Soften the onion, pepper and garlic.", "Add the tomatoes and cumin.", "Crack in the eggs and cover."],
+      metric: [
+        "Soften the onion, pepper and garlic.",
+        "Add the tomatoes and cumin.",
+        "Crack in the eggs and cover.",
+      ],
+      us: [
+        "Soften the onion, pepper and garlic.",
+        "Add the tomatoes and cumin.",
+        "Crack in the eggs and cover.",
+      ],
     },
     keywords: null,
     allergyIndications: [],
@@ -128,25 +136,22 @@ const ENTRIES: Array<{ name: string; picture: string }> = [
   { name: "red pepper", picture: "Red pepper" },
 ];
 
-test("captures the ingredients panel and the editor", async () => {
+test("captures the ingredients table and the editor", async () => {
   await page.goto("/settings?tab=admin");
-  await page.getByTestId("ingredients-manage").click();
 
   for (const entry of ENTRIES) {
     await page.getByTestId("ingredients-search").fill(entry.name);
 
-    const row = page.locator(
-      `[data-testid="ingredients-row"][data-ingredient-name="${entry.name}"]`
-    );
+    const row = page.getByRole("row").filter({
+      has: page.locator(`[data-testid="ingredients-row"][data-ingredient-name="${entry.name}"]`),
+    });
 
     await row.getByRole("button", { name: "Edit" }).click();
     await expect(page.getByTestId("ingredients-picture-file")).toBeAttached();
     await page
       .getByTestId("ingredients-picture-file")
       .setInputFiles(await pictureFile(entry.picture));
-    await expect(
-      page.getByRole("dialog").last().getByTestId("ingredient-illustration")
-    ).toBeVisible();
+    await expect(page.getByRole("dialog").getByTestId("ingredient-illustration")).toBeVisible();
     if (entry.name === "garlic") await snap("ingredients-admin-editor.png");
 
     await page.getByTestId("ingredients-save").click();
@@ -155,6 +160,13 @@ test("captures the ingredients panel and the editor", async () => {
 
   await page.getByTestId("ingredients-search").fill("");
   await expect(page.getByTestId("ingredients-row")).toHaveCount(6);
+  // No row hovered and no field focused, so the table reads at rest.
+  await page.getByTestId("ingredients-search").blur();
+  await page.mouse.move(0, 0);
+  // The card's heading just below the floating navigation bar, so the whole table shows.
+  await page
+    .getByRole("heading", { level: 2, name: "Ingredients" })
+    .evaluate((heading) => window.scrollBy(0, heading.getBoundingClientRect().top - 110));
   await snap("ingredients-admin-panel.png");
 });
 
@@ -208,5 +220,6 @@ test("captures an editor suggestion", async () => {
   const clip = { x: box.x - 8, y: box.y - 8, width: box.width + 16, height: box.height + 200 };
 
   await page.screenshot({ path: path.join(SHOTS, "ingredient-pictures-editor.png"), clip });
-  if (DOCS) await page.screenshot({ path: path.join(DOCS, "ingredient-pictures-editor.png"), clip });
+  if (DOCS)
+    await page.screenshot({ path: path.join(DOCS, "ingredient-pictures-editor.png"), clip });
 });

@@ -92,9 +92,17 @@ describe("governance", () => {
   it("keeps the full list to administrators", async () => {
     expect(await codeOf(member.list({}))).toBe("FORBIDDEN");
 
-    repository.listIngredientsForAdmin.mockResolvedValue({ items: [EGG], nextCursor: null });
+    repository.listIngredientsForAdmin.mockResolvedValue({
+      items: [EGG],
+      nextCursor: null,
+      total: 1,
+    });
 
-    expect(await admin.list({ search: "eg" })).toEqual({ items: [EGG], nextCursor: null });
+    expect(await admin.list({ search: "eg" })).toEqual({
+      items: [EGG],
+      nextCursor: null,
+      total: 1,
+    });
     expect(repository.listIngredientsForAdmin).toHaveBeenCalledWith({ search: "eg", limit: 50 });
   });
 

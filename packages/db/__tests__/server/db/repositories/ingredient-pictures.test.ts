@@ -102,7 +102,12 @@ describe("creating and listing", () => {
       ["Egg", 0],
     ]);
     expect(page.nextCursor).toBeNull();
-    expect((await listIngredientsForAdmin({ search: "gg" })).items).toEqual([egg]);
+    expect(page.total).toBe(2);
+
+    const matching = await listIngredientsForAdmin({ search: "gg" });
+
+    expect(matching.items).toEqual([egg]);
+    expect(matching.total).toBe(1);
   });
 
   it("pages", async () => {
@@ -113,6 +118,8 @@ describe("creating and listing", () => {
 
     expect(first.items.map((row) => row.id)).toEqual([apple.id]);
     expect(first.nextCursor).toBe(1);
+    // The total counts every match, not only the page returned.
+    expect(first.total).toBe(2);
     expect(
       (await listIngredientsForAdmin({ cursor: 1, limit: 1 })).items.map((row) => row.id)
     ).toEqual([banana.id]);

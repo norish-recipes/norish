@@ -73,13 +73,14 @@ Item, this changes only your own view on that device.
 
 ## Managing ingredients
 
-Administrators manage ingredients under Settings => Admin => **Ingredients**.
-Choose **Manage ingredients** to see every ingredient name your recipes use,
-with how many recipes use each. Search by name to find one.
+Administrators manage ingredients under Settings => Admin => **Ingredients**,
+a table of every ingredient name your recipes use, with how many recipes use
+each. Search by name to find one, and page through the rest with the arrows
+below the table.
 
-![The Ingredients panel](/img/screenshots/ingredients-admin-panel.png)
+![The Ingredients table](/img/screenshots/ingredients-admin-panel.png)
 
-Edit an ingredient to change:
+Edit an ingredient to change, in a dialog over the table:
 
 - **Name**, which is the text recipes show. Renaming changes it in every recipe
   that uses it, and the editor tells you how many that is first. A name can only
@@ -98,7 +99,7 @@ no household keeps it in a pantry; otherwise Norish tells you what still does.
 
 When [Image Generation](../configuration/ai-provider.md#image-generation) is
 configured, **Generate** has the image model draw the ingredient from its name.
-A drawing takes a moment and appears in the panel when it is ready. Generating
+A drawing takes a moment and appears in the table when it is ready. Generating
 again replaces the picture.
 
 **Generate missing pictures** draws every ingredient without a picture that a
