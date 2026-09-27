@@ -290,7 +290,8 @@
     "removeLabel": "Poista {name}"
   },
   "ingredientInput": {
-    "placeholder": "esim. 2 dl jauhoja"
+    "placeholder": "esim. 2 dl jauhoja",
+    "nameSuggestions": "Ainesosaehdotukset"
   },
   "wakeLock": {
     "keepScreenOn": "Pidä näyttö päällä",

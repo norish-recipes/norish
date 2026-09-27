@@ -132,7 +132,8 @@
           "favorites": "Suosikit",
           "conversion": "Ainesosien muunnos",
           "timers": "Reseptien ajastimet",
-          "cookbooks": "Keittokirjat"
+          "cookbooks": "Keittokirjat",
+          "ingredientPictures": "Ainesosien kuvat"
         }
       },
       "todaySection": {
@@ -799,7 +800,10 @@
       "imageGenerationBriefPlaceholder": "Kehote visuaalisen briefin kirjoittamiseen...",
       "imageGenerationStyle": "Kuvatyylin kehote",
       "imageGenerationStyleDescription": "Lähetetään kuvamallille, ja visuaalinen brief liitetään sen perään. Määrittää ilmeen, joka on yhteinen kaikille luoduille kuville.",
-      "imageGenerationStylePlaceholder": "Kehote kuvan tyylille..."
+      "imageGenerationStylePlaceholder": "Kehote kuvan tyylille...",
+      "ingredientIllustrationStyle": "Ainesosakuvituksen kehote",
+      "ingredientIllustrationStyleDescription": "Lähetetään kuvamallille, ja ainesosan nimi liitetään sen perään. Määrittää ulkoasun, joka on kaikille ainesosien kuville yhteinen.",
+      "ingredientIllustrationStylePlaceholder": "Kehote ainesosien kuville..."
     },
     "unsavedChanges": "Tallentamattomia muutoksia",
     "jsonEditor": {
@@ -865,7 +869,8 @@
         "caldav-sync": "CalDAV-synkronointi",
         "scheduled-tasks": "Ajastetut tehtävät",
         "image-generation": "Kuvien luonti",
-        "store-lookup": "Kaupan haku"
+        "store-lookup": "Kaupan haku",
+        "ingredient-illustration": "Ainesosien kuvat"
       },
       "summary": {
         "failed": "{count} epäonnistui"
@@ -932,6 +937,47 @@
       "empty": "Ei vielä ruokakulttuureita.",
       "duplicate": "Samanniminen ruokakulttuuri on jo olemassa.",
       "saveFailed": "Ruokakulttuuria ei voitu tallentaa."
+    },
+    "ingredients": {
+      "title": "Ainesosat",
+      "description": "Kaikki ainesosien nimet, joita reseptisi käyttävät. Anna nimelle pieni kuva, niin jokainen sitä käyttävä reseptirivi ja ostos näyttää sen.",
+      "summary": "{count, plural, =0 {Ei vielä ainesosia} one {# ainesosa} other {# ainesosaa}}",
+      "manage": "Hallitse ainesosia",
+      "search": "Hae ainesosia",
+      "empty": "Ei vielä ainesosia.",
+      "emptyHint": "Ainesosat näkyvät täällä, kun reseptit käyttävät niitä. Voit myös lisätä ainesosan etukäteen.",
+      "noMatches": "Mikään ainesosa ei vastaa hakua.",
+      "usedBy": "{count, plural, =0 {Ei käytössä} one {Käytössä # reseptissä} other {Käytössä # reseptissä}}",
+      "loadMore": "Lataa lisää",
+      "noPicture": "Ei vielä kuvaa",
+      "add": "Lisää ainesosa",
+      "editTitle": "Muokkaa ainesosaa",
+      "newTitle": "Uusi ainesosa",
+      "nameLabel": "Nimi",
+      "namePlaceholder": "esim. Punasipuli",
+      "renameHint": "Uudelleennimeäminen muuttaa tämän ainesosan {count, plural, one {# reseptissä} other {# reseptissä}}.",
+      "saveFailed": "Ainesosaa ei voitu tallentaa.",
+      "pictureLabel": "Kuva",
+      "upload": "Lataa",
+      "generate": "Luo",
+      "regenerate": "Luo uudelleen",
+      "generating": "Luodaan…",
+      "removePicture": "Poista kuva",
+      "pictureHint": "Lataa tai liitä kuva, tai anna kuvamallin piirtää se. Kuvat rajataan neliöksi.",
+      "pictureHintNoGeneration": "Lataa tai liitä kuva. Kuvat rajataan neliöksi. Määritä kuvien luonti, jotta kuvat voidaan piirtää.",
+      "pictureAfterCreate": "Luo ainesosa ensin ja anna sille sitten kuva.",
+      "pictureFailed": "Kuvaa ei voitu muuttaa.",
+      "generationSlow": "Piirretään yhä",
+      "generationSlowDescription": "Kuvan valmistuminen kestää. Se ilmestyy tähän, kun se on valmis; tarkista työjono, jos niin ei käy.",
+      "deleteTitle": "Poista ainesosa",
+      "deleteConfirm": "Poistetaanko {name}? Mikään resepti ei käytä sitä.",
+      "deleteInUseTitle": "Ainesosa on käytössä",
+      "deleteInUse": "{name} on käytössä {count, plural, one {# reseptissä} other {# reseptissä}}, eikä sitä voi poistaa. Poista se ensin niistä resepteistä.",
+      "deleteFailed": "Ainesosaa ei voitu poistaa.",
+      "generateMissing": "{count, plural, one {Luo # puuttuva kuva} other {Luo # puuttuvaa kuvaa}}",
+      "generateMissingTitle": "Luo puuttuvat kuvat",
+      "generateMissingConfirm": "{count, plural, one {Kuvamalli piirtää # kuvan. Jokainen kuva on erillinen pyyntö kuvapalveluntarjoajallesi.} other {Kuvamalli piirtää # kuvaa. Jokainen kuva on erillinen pyyntö kuvapalveluntarjoajallesi.}}",
+      "generateMissingConfirmAction": "Luo"
     }
   },
   "archiveExport": {

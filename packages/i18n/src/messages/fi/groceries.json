@@ -89,6 +89,7 @@
     "hint": "Mitä sinulla on jo kotona. Ruokakomerossa olevia ainesosia ei lisätä listalle, kun lisäät reseptin.",
     "empty": "Ruokakomerossa ei ole vielä mitään",
     "namePlaceholder": "esim. oliiviöljy",
+    "suggestions": "Ainesosaehdotukset",
     "add": "Lisää ruokakomeroon",
     "remove": "Poista ruokakomerosta",
     "duplicate": "Tämä on jo ruokakomerossasi"
