@@ -35,6 +35,7 @@
     "mime": "4.1.0",
     "next": "catalog:",
     "playwright-core": "^1.62.1",
+    "sharp": "catalog:",
     "superjson": "catalog:",
     "zod": "catalog:"
   },

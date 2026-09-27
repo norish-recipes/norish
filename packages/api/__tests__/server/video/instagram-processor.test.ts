@@ -267,7 +267,8 @@ describe("import triage with a Decision Model", () => {
       SHORT_CAPTION,
       expect.anything(),
       RECIPE_ID,
-      URL_UNDER_TEST
+      URL_UNDER_TEST,
+      { videoPath: "/tmp/v.mp4" }
     );
     expect(boundary.downloadVideoAudio).not.toHaveBeenCalled();
     expect(boundary.transcribe).not.toHaveBeenCalled();

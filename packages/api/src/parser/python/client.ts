@@ -24,6 +24,7 @@ export async function callRecipeScrapersParser(
   const request = RecipeScrapersParserRequestSchema.parse(input);
   const baseUrl = INTERNAL_PARSER_API_URL;
   const endpoint = buildInternalParserApiUrl(PARSE_ENDPOINT);
+
   log.debug(input.html);
   log.debug(
     {
