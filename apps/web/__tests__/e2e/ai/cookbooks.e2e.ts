@@ -58,6 +58,25 @@ async function selectChip(name: LibraryType) {
   }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
 }
 
+/**
+ * Choose an action from the cookbook page's options menu. The trigger is an
+ * ordinary button on a page that hydrates behind its first paint, exactly as
+ * the chips are, so a click before React attaches opens nothing; the menu's
+ * own item is the proof the click was heard, so the click is repeated until
+ * it shows. A menu already open is not clicked shut again.
+ */
+async function chooseCookbookOption(name: string) {
+  const item = page.getByRole("button", { name, exact: true });
+
+  await expect(async () => {
+    if (!(await item.isVisible())) {
+      await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
+    }
+    await expect(item).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
+  await item.click();
+}
+
 /** The panel's own close control, rather than a keypress. */
 async function closePanel() {
   await page.getByRole("button", { name: "Close panel" }).click();
@@ -312,8 +331,7 @@ test("a cookbook fills itself from its own side", async () => {
   await cookbookCard(COOKBOOK_TITLE).click();
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
 
-  await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
-  await page.getByRole("button", { name: "Add recipes", exact: true }).click();
+  await chooseCookbookOption("Add recipes");
   await page.locator(`[data-add-recipe="${RECIPE_NAME}"]`).click();
 
   // Staged, like every other cookbook panel.
@@ -341,8 +359,7 @@ test("the edit panel takes a recipe out of the cookbook it is editing", async ()
   await cookbookCard(COOKBOOK_TITLE).click();
   await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
 
-  await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
-  await page.getByRole("button", { name: "Edit cookbook", exact: true }).click();
+  await chooseCookbookOption("Edit cookbook");
   await page.locator(`[data-remove-member="${RECIPE_NAME}"]`).click();
 
   // Staged, like everything else in this panel: nothing is written yet.
@@ -377,8 +394,7 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
 
   // Rename from inside the cookbook, through the same panel that takes
   // recipes out of it.
-  await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
-  await page.getByRole("button", { name: "Edit cookbook", exact: true }).click();
+  await chooseCookbookOption("Edit cookbook");
   await page.getByTestId("cookbook-title-input").fill(RENAMED_TITLE);
   await page.getByRole("button", { name: /^save$/i }).click();
 
@@ -388,8 +404,7 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
   }).toPass({ timeout: 10_000 });
 
   // Delete, confirmed by name.
-  await page.getByRole("button", { name: "Cookbook options", exact: true }).click();
-  await page.getByRole("button", { name: "Delete cookbook", exact: true }).click();
+  await chooseCookbookOption("Delete cookbook");
   await page.getByTestId("confirm-delete-cookbook").click();
 
   await expect(async () => {

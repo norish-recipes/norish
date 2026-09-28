@@ -24,12 +24,23 @@ async function openDashboard(page: Page): Promise<void> {
   await expect(page.getByTestId("add-library-button")).toBeVisible();
 }
 
-/** Copy a link elsewhere, then come back to the dashboard. */
+/**
+ * Copy a link elsewhere, then come back to the dashboard. Headless Chromium's
+ * clipboard can still read back empty straight after a write, and the page
+ * would then look at nothing, so the link is written until it reads back
+ * before the page is told to look.
+ */
 async function copyAndComeBack(page: Page, link: string): Promise<void> {
-  await page.evaluate(async (text) => {
-    await navigator.clipboard.writeText(text);
-    window.dispatchEvent(new Event("focus"));
-  }, link);
+  await expect
+    .poll(() =>
+      page.evaluate(async (text) => {
+        await navigator.clipboard.writeText(text);
+
+        return navigator.clipboard.readText();
+      }, link)
+    )
+    .toBe(link);
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
 }
 
 test.beforeEach(async ({ context }) => {
