@@ -13,14 +13,6 @@ type Db = typeof db | DbTransaction;
 
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
-/**
- * The Ingredient's fold as every read of the Pantry returns it. A fold is
- * null only on a row written before names were folded, and an empty fold
- * matches nothing, which is what a null means everywhere else — so it is read,
- * and ordered, as the empty name rather than sorting off the end.
- */
-const FOLDED_NAME = sql<string>`coalesce(${ingredients.normalizedName}, '')`;
-
 function parsePantryIngredients(rows: unknown[]): PantryIngredientDto[] {
   const parsed = PantryIngredientsSchema.safeParse(rows);
 
@@ -42,7 +34,6 @@ function selectPantry(tx: Db = db) {
       ingredientId: pantryIngredients.ingredientId,
       version: pantryIngredients.version,
       name: ingredients.name,
-      normalizedName: FOLDED_NAME,
     })
     .from(pantryIngredients)
     .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId));
@@ -62,7 +53,7 @@ async function findOnePantryIngredient(
 
 /**
  * The Pantry as the household reads it: every member's items in one query,
- * ordered by folded name, the way the household's Stores are read across its user ids.
+ * ordered by name, the way the household's Stores are read across its user ids.
  */
 export async function listPantryIngredientsByUserIds(
   userIds: string[]
@@ -71,7 +62,7 @@ export async function listPantryIngredientsByUserIds(
 
   const rows = await selectPantry()
     .where(inArray(pantryIngredients.userId, userIds))
-    .orderBy(asc(FOLDED_NAME), asc(pantryIngredients.createdAt));
+    .orderBy(asc(sql`lower(${ingredients.name})`), asc(pantryIngredients.createdAt));
 
   return parsePantryIngredients(rows);
 }

@@ -10,7 +10,7 @@ import { Button, FieldError, Input, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
+import { foldName } from "@norish/shared/lib/fold-name";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
 
 interface PantryPanelProps {
@@ -37,7 +37,7 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
     if (!open) setDraft("");
   }, [open]);
 
-  const draftFolded = normalizeGroceryName(draft);
+  const draftFolded = foldName(draft);
   const draftDuplicate =
     draftFolded !== "" && pantryIngredientFor(items, { ingredientName: draft }) !== null;
   const sorted = sortPantryIngredients(items, locale);
@@ -66,7 +66,7 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
               <li
                 key={item.id}
                 className="bg-surface flex items-center gap-3 rounded-lg px-3 py-2"
-                data-pantry-ingredient={item.normalizedName}
+                data-pantry-ingredient={foldName(item.name)}
               >
                 <span className="flex-1 truncate font-medium">{item.name}</span>
                 <IconActionButton

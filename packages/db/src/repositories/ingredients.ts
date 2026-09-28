@@ -1,8 +1,7 @@
-import { asc, eq, isNull, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import z from "zod";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
-import type { DbTransaction } from "@norish/db/drizzle";
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { IngredientDto } from "@norish/shared/contracts/dto/ingredient";
 import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
@@ -27,9 +26,6 @@ import {
   RecipeIngredientsInsertBaseSchema,
 } from "@norish/shared/contracts/zod/recipe-ingredients";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
-
-/** The connection a caller is already inside, or the shared one. */
-type Db = typeof db | DbTransaction;
 
 export async function getUnitsForNormalization(): Promise<UnitsMap> {
   const value = await getConfig<unknown>(ServerConfigKeys.UNITS);
@@ -81,18 +77,14 @@ export type IngredientResolutions = ReadonlyMap<string, IngredientRef>;
 export function resolvedRecipeLineValues(
   ingredientName: string | undefined,
   resolutions: IngredientResolutions
-): { name: string; ingredientAliasId: string; ingredientId: string } | null {
+): { name: string; ingredientAliasId: string } | null {
   if (!ingredientName) return null;
 
   const resolved = resolutions.get(ingredientName);
 
   if (!resolved) throw new Error(`Ingredient text was not resolved: ${ingredientName}`);
 
-  return {
-    name: ingredientName,
-    ingredientAliasId: resolved.aliasId,
-    ingredientId: resolved.ingredientId,
-  };
+  return { name: ingredientName, ingredientAliasId: resolved.aliasId };
 }
 
 export async function attachIngredientsToRecipeByInputTx(
@@ -150,6 +142,7 @@ export async function attachIngredientsToRecipeByInputTx(
 
   const insertedWithNames = inserted.map((ri: any) => ({
     ...ri,
+    ingredientId: resolutions.get(ri.name)?.ingredientId ?? null,
     amount: ri.amount != null ? Number(ri.amount) : null,
     ingredientName: ri.name,
     order: ri.order,
@@ -163,47 +156,4 @@ export async function attachIngredientsToRecipeByInputTx(
   }
 
   return parsedInserted.data;
-}
-
-/**
- * Ingredient Names written before names were folded, which the Pantry can
- * never match. The startup backfill works through them.
- */
-export async function listIngredientNamesMissingNormalizedName(
-  limit: number
-): Promise<Array<{ id: string; name: string }>> {
-  return await db
-    .select({ id: ingredients.id, name: ingredients.name })
-    .from(ingredients)
-    .where(isNull(ingredients.normalizedName))
-    .orderBy(asc(ingredients.id))
-    .limit(limit);
-}
-
-/**
- * Store the folded form of each Ingredient Name. Rows that already carry one
- * are left alone, so two servers backfilling at once cannot undo each other.
- */
-export async function setIngredientNormalizedNames(
-  rows: ReadonlyArray<{ id: string; normalizedName: string }>,
-  tx: Db = db
-): Promise<void> {
-  if (rows.length === 0) return;
-
-  const ids = sql.join(
-    rows.map((row) => sql`${row.id}`),
-    sql`, `
-  );
-  const folded = sql.join(
-    rows.map((row) => sql`${row.normalizedName}`),
-    sql`, `
-  );
-
-  await tx.execute(sql`
-    UPDATE ${ingredients}
-    SET normalized_name = folded.normalized_name
-    FROM unnest(ARRAY[${ids}]::uuid[], ARRAY[${folded}]::text[]) AS folded(id, normalized_name)
-    WHERE ${ingredients.id} = folded.id
-      AND ${ingredients.normalizedName} IS NULL
-  `);
 }

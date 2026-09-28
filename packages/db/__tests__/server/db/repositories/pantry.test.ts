@@ -4,13 +4,9 @@
  * alias the typed text resolved to, one Ingredient per household, read across
  * the household in one query, and gone with the member who typed it.
  */
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  listIngredientNamesMissingNormalizedName,
-  setIngredientNormalizedNames,
-} from "@norish/db/repositories/ingredients";
 import {
   addPantryIngredient,
   deletePantryIngredient,
@@ -58,7 +54,7 @@ describe("pantry ingredients", () => {
     await testBase.teardown();
   });
 
-  it("points at an Ingredient Name, minting it where Norish has none", async () => {
+  it("points at an Ingredient, minting it where Norish has none", async () => {
     const { item } = await add(OLIVE, {
       userId,
       userIds: [userId],
@@ -69,17 +65,16 @@ describe("pantry ingredients", () => {
       id: OLIVE,
       userId,
       name: "Olive Oil",
-      normalizedName: "olive oil",
     });
     await expect(getPantryIngredientOwnerId(OLIVE)).resolves.toBe(userId);
 
-    // The name is the Ingredient Name's, folded there, not the row's own.
+    // The name is the Ingredient's, not the row's own.
     const [row] = await getTestDb()
       .select()
       .from(ingredients)
       .where(eq(ingredients.id, item.ingredientId));
 
-    expect(row).toMatchObject({ name: "Olive Oil", normalizedName: "olive oil" });
+    expect(row).toMatchObject({ name: "Olive Oil" });
   });
 
   it("takes the Ingredient a recipe already has, rather than a second one", async () => {
@@ -92,7 +87,10 @@ describe("pantry ingredients", () => {
 
     expect(item.ingredientId).toBe(known!.ingredientId);
     await expect(
-      getTestDb().select().from(ingredients).where(eq(ingredients.normalizedName, "olive oil"))
+      getTestDb()
+        .select()
+        .from(ingredients)
+        .where(eq(sql`lower(${ingredients.name})`, "olive oil"))
     ).resolves.toHaveLength(1);
   });
 
@@ -215,39 +213,5 @@ describe("pantry ingredients", () => {
     await expect(
       db.select().from(pantryIngredients).where(eq(pantryIngredients.id, OLIVE))
     ).resolves.toEqual([]);
-  });
-
-  describe("the normalized-name backfill", () => {
-    it("lists the names written before the folding existed, and folds them", async () => {
-      const db = getTestDb();
-
-      await db.insert(ingredients).values([{ name: "Crème Fraîche!" }, { name: "yoghurt" }]);
-
-      const pending = await listIngredientNamesMissingNormalizedName(10);
-
-      expect(pending.map((row) => row.name).sort()).toEqual(["Crème Fraîche!", "yoghurt"]);
-
-      await setIngredientNormalizedNames(
-        pending.map((row) => ({
-          id: row.id,
-          normalizedName: row.name === "yoghurt" ? "yoghurt" : "creme fraiche",
-        }))
-      );
-
-      expect(await listIngredientNamesMissingNormalizedName(10)).toEqual([]);
-    });
-
-    it("leaves a fold that is already there alone", async () => {
-      const [known] = await resolveIngredients(["Olive Oil"], { userId });
-
-      await setIngredientNormalizedNames([{ id: known!.ingredientId, normalizedName: "wrong" }]);
-
-      const [row] = await getTestDb()
-        .select()
-        .from(ingredients)
-        .where(eq(ingredients.id, known!.ingredientId));
-
-      expect(row?.normalizedName).toBe("olive oil");
-    });
   });
 });

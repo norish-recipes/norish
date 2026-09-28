@@ -20,7 +20,6 @@ const OLIVE: PantryIngredientDto = {
   userId: "u1",
   ingredientId: "i-olive",
   name: "Olive Oil",
-  normalizedName: "olive oil",
   version: 1,
 };
 const SALT: PantryIngredientDto = {
@@ -28,7 +27,6 @@ const SALT: PantryIngredientDto = {
   userId: "u1",
   ingredientId: "i-salt",
   name: "Salt",
-  normalizedName: "salt",
   version: 1,
 };
 

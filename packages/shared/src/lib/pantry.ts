@@ -1,5 +1,5 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
+import { foldName } from "@norish/shared/lib/fold-name";
 
 /**
  * The Pantry Ingredient that covers a line, or null where the household has
@@ -15,7 +15,7 @@ export function pantryIngredientFor(
   items: readonly PantryIngredientDto[],
   line: { ingredientId?: string | null; ingredientName?: string | null }
 ): PantryIngredientDto | null {
-  const normalized = normalizeGroceryName(line.ingredientName);
+  const normalized = foldName(line.ingredientName);
 
   return (
     items.find((item) =>
@@ -23,7 +23,7 @@ export function pantryIngredientFor(
       // and meanwhile is matched on its name like any unresolved text.
       line.ingredientId && item.ingredientId
         ? item.ingredientId === line.ingredientId
-        : normalized !== "" && item.normalizedName === normalized
+        : normalized !== "" && foldName(item.name) === normalized
     ) ?? null
   );
 }

@@ -98,15 +98,12 @@ export async function listRecipeLinesWithoutAlias(
     .limit(limit);
 }
 
-/**
- * Point recipe lines at their aliases, and at each alias's Ingredient, which
- * differs from the line's old Ingredient only where two names folded alike.
- */
+/** Point recipe lines at their aliases; a line reaches its Ingredient through the alias. */
 export async function setRecipeLineAliases(rows: readonly ResolvedReference[]): Promise<void> {
   for (const row of rows) {
     await db
       .update(recipeIngredients)
-      .set({ ingredientAliasId: row.aliasId, ingredientId: row.ingredientId })
+      .set({ ingredientAliasId: row.aliasId })
       .where(and(eq(recipeIngredients.id, row.id), isNull(recipeIngredients.ingredientAliasId)));
   }
 }

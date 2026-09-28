@@ -9,7 +9,6 @@ function item(name: string, normalizedName: string): PantryIngredientDto {
     userId: "u1",
     ingredientId: `i-${normalizedName}`,
     name,
-    normalizedName,
     version: 1,
   };
 }

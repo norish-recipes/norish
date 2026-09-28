@@ -33,6 +33,7 @@ export const RecipeIngredientsWithIdSchema = RecipeIngredientsSelectBaseSchema.o
 });
 
 export const RecipeIngredientSelectWithNameSchema = RecipeIngredientsSelectBaseSchema.extend({
+  ingredientId: z.string().nullable(),
   amount: z.coerce.number().nullable(),
   ingredientName: z.string(),
   order: z.coerce.number(),
@@ -43,7 +44,6 @@ export const RecipeIngredientInputBaseSchema = RecipeIngredientsInsertBaseSchema
   ingredientAliasId: true,
 })
   .partial({
-    ingredientId: true,
     recipeId: true,
     systemUsed: true,
   })

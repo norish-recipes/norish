@@ -8,8 +8,8 @@ import {
   findIngredientByAliasId,
   mintIngredientWithAliases,
 } from "@norish/db/repositories/ingredient-aliases";
+import { foldName } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 /**
  * The ingredient resolver: the one module that mints Ingredients and
@@ -86,7 +86,7 @@ function matchKnown(
  * one spelling rather than every such text at once.
  */
 export function ingredientAliasFold(text: string): string {
-  return normalizeGroceryName(text) || text.trim().toLowerCase();
+  return foldName(text) || text.trim().toLowerCase();
 }
 
 /** The text with its preparation stripped: brackets removed, then cut at the first comma. */

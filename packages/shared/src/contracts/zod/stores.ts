@@ -3,7 +3,7 @@ import z from "zod";
 
 import { aisles, ingredientStorePreferences, stores } from "@norish/db-schema/schema";
 
-import { normalizeGroceryName } from "../../lib/normalized-name";
+import { foldName } from "../../lib/fold-name";
 import { httpUrlSchema } from "../../lib/schema";
 import { isSearchAddress, SEARCH_ADDRESS_PLACEHOLDER } from "../../lib/search-address";
 import { clientMintedId } from "./common";
@@ -136,7 +136,7 @@ export const AisleFilingSchema = z.object({
     .string()
     .min(1)
     .max(300)
-    .refine((name) => normalizeGroceryName(name) !== ""),
+    .refine((name) => foldName(name) !== ""),
   aisleId: z.uuid().nullable(),
 });
 

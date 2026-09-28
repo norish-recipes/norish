@@ -35,7 +35,7 @@ export function seedRecipeWithIngredients(name: string, lines: string[]): Promis
 
     for (const [index, line] of lines.entries()) {
       const ingredient = await database.query<{ id: string }>(
-        `insert into ingredients (name, normalized_name) values ($1, lower($1))
+        `insert into ingredients (name) values ($1)
          on conflict (lower(name)) do update set name = excluded.name
          returning id`,
         [line]
@@ -52,9 +52,9 @@ export function seedRecipeWithIngredients(name: string, lines: string[]): Promis
 
       await database.query(
         `insert into recipe_ingredients
-           (recipe_id, ingredient_id, name, ingredient_alias_id, amount, unit, "order", system_used)
-         values ($1, $2, $3, $4, null, null, $5, 'metric')`,
-        [recipeId, ingredientId, line, alias.rows[0]!.id, index]
+           (recipe_id, name, ingredient_alias_id, amount, unit, "order", system_used)
+         values ($1, $2, $3, null, null, $4, 'metric')`,
+        [recipeId, line, alias.rows[0]!.id, index]
       );
     }
 
@@ -63,19 +63,19 @@ export function seedRecipeWithIngredients(name: string, lines: string[]): Promis
 }
 
 /**
- * The Pantry as the database has it: every folded name, in order. A Pantry
- * Ingredient holds no name of its own, so this reads the Ingredient Name it points
- * at, the same join the repository makes.
+ * The Pantry as the database has it: every name, lowercase, in order. A
+ * Pantry Ingredient holds no name of its own, so this reads the Ingredient it
+ * points at, the same join the repository makes.
  */
 export function readPantryNames(): Promise<string[]> {
   return withDatabase(async (database) => {
-    const rows = await database.query<{ normalized_name: string }>(
-      `select i.normalized_name from pantry_ingredients p
+    const rows = await database.query<{ name: string }>(
+      `select lower(i.name) as name from pantry_ingredients p
          join ingredients i on i.id = p.ingredient_id
-        order by i.normalized_name asc`
+        order by lower(i.name) asc`
     );
 
-    return rows.rows.map((row) => row.normalized_name);
+    return rows.rows.map((row) => row.name);
   });
 }
 

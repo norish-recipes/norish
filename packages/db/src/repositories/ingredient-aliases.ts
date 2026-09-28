@@ -2,7 +2,6 @@ import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 /**
  * The Ingredient Alias rows the ingredient resolver reads and writes. Nothing
@@ -115,7 +114,6 @@ export async function mintIngredientWithAliases(
       .insert(ingredients)
       .values({
         name: input.name,
-        normalizedName: normalizeGroceryName(input.name),
         ownerId: input.ownerId,
         flagged: input.flagged,
       })

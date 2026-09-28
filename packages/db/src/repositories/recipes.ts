@@ -1109,7 +1109,6 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       ingredients: {
         columns: {
           id: true,
-          ingredientId: true,
           name: true,
           amount: true,
           unit: true,
@@ -1117,6 +1116,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
           order: true,
           version: true,
         },
+        with: { alias: { columns: { ingredientId: true } } },
         orderBy: (ingredients, { asc }) => [asc(ingredients.order)],
       },
       steps: {
@@ -1232,7 +1232,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       })),
     recipeIngredients: (full.ingredients ?? []).map((ri: any) => ({
       id: ri.id,
-      ingredientId: ri.ingredientId,
+      ingredientId: ri.alias?.ingredientId ?? null,
       amount: ri.amount ? Number(ri.amount) : null,
       unit: ri.unit ?? null,
       systemUsed: ri.systemUsed,

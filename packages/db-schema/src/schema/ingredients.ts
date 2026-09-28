@@ -10,11 +10,6 @@ import { mutableRowColumns, versionColumn } from "./shared";
  * points here (ADR-0037), so two spellings of one food are one Ingredient.
  * Only the ingredient resolver mints rows.
  *
- * `normalizedName` is the one grocery folding of `name`, kept while the
- * Pantry still matches on it; the alias fold is what identity is read from.
- * A null fold is a row written before the folding existed, which the startup
- * backfill fills in.
- *
  * `ownerId` is whoever's action minted the Ingredient, null for the seed.
  * `flagged` marks a mint the resolver was not sure about: a Flagged
  * Ingredient is worth a person's look.
@@ -24,7 +19,6 @@ export const ingredients = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     name: text("name").notNull(),
-    normalizedName: text("normalized_name"),
     ownerId: text("owner_id").references(() => users.id, { onDelete: "set null" }),
     flagged: boolean("flagged").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -33,7 +27,6 @@ export const ingredients = pgTable(
   (t) => [
     uniqueIndex("uqidx_ingredients_name_lower").on(sql`lower(${t.name})`),
     index("idx_ingredients_created_at").on(t.createdAt),
-    index("idx_ingredients_normalized_name").on(t.normalizedName),
   ]
 );
 

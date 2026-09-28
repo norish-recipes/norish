@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type { CreatePantryHooksOptions, PantryMutationsResult, PantryQueryResult } from "./types";
@@ -43,7 +42,6 @@ export function createUsePantryMutations({
             userId: "",
             ingredientId: "",
             name: payload.name,
-            normalizedName: normalizeGroceryName(payload.name),
             version: 1,
           })
         );

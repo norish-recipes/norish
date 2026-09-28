@@ -92,7 +92,6 @@ export const cuisinesRelations = relations(cuisines, ({ many }) => ({
 }));
 
 export const ingredientsRelations = relations(ingredients, ({ many }) => ({
-  recipeIngredients: many(recipeIngredients),
   aliases: many(ingredientAliases),
 }));
 
@@ -130,9 +129,9 @@ export const recipeIngredientsRelations = relations(recipeIngredients, ({ one })
     fields: [recipeIngredients.recipeId],
     references: [recipes.id],
   }),
-  ingredient: one(ingredients, {
-    fields: [recipeIngredients.ingredientId],
-    references: [ingredients.id],
+  alias: one(ingredientAliases, {
+    fields: [recipeIngredients.ingredientAliasId],
+    references: [ingredientAliases.id],
   }),
 }));
 

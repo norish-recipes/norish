@@ -45,7 +45,6 @@ import {
 const storesRepository = vi.hoisted(() => ({
   findBestIngredientStorePreference: vi.fn(),
   getStoreOwnerId: vi.fn(),
-  normalizeIngredientName: vi.fn((name: string) => name.toLowerCase()),
   upsertIngredientStorePreference: vi.fn(),
   // A household with no Store that points at a shop: pricing notices the
   // groceries, finds nothing to ask, and visits nothing.

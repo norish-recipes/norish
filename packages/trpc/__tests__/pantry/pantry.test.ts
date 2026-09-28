@@ -49,7 +49,6 @@ describe("the Pantry", () => {
         id,
         userId: input.userId,
         name: input.name.trim(),
-        normalizedName: input.name.trim().toLowerCase(),
         version: 1,
       },
       created: true,
