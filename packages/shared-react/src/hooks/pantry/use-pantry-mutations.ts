@@ -43,6 +43,7 @@ export function createUsePantryMutations({
             ingredientId: "",
             name: payload.name,
             ancestorIds: [],
+            localeNames: {},
             version: 1,
           })
         );

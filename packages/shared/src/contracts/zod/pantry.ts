@@ -39,6 +39,8 @@ export const PantryIngredientSelectSchema = createSelectSchema(pantryIngredients
      * reverse.
      */
     ancestorIds: z.array(z.string()),
+    /** The Ingredient's best spelling per language, for showing it in the viewer's. */
+    localeNames: z.record(z.string(), z.string()),
   });
 
 // Adding to the Pantry: a client-minted id (ADR-0003) and a name. The server folds it.

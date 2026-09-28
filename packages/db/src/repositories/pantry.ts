@@ -8,13 +8,25 @@ import { db } from "@norish/db/drizzle";
 import { ingredients, pantryIngredients } from "@norish/db/schema";
 import { PantryIngredientSelectSchema } from "@norish/shared/contracts/zod";
 
+import { findLocaleNames } from "./ingredient-aliases";
+
 /** The connection a caller is already inside, or the shared one. */
 type Db = typeof db | DbTransaction;
 
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
-function parsePantryIngredients(rows: unknown[]): PantryIngredientDto[] {
-  const parsed = PantryIngredientsSchema.safeParse(rows);
+/** Pantry rows as read, with each Ingredient's spelling in every language. */
+async function parsePantryIngredients(
+  rows: Array<{ ingredientId: string }>,
+  tx: Db = db
+): Promise<PantryIngredientDto[]> {
+  const localeNames = await findLocaleNames(
+    rows.map((row) => row.ingredientId),
+    tx
+  );
+  const parsed = PantryIngredientsSchema.safeParse(
+    rows.map((row) => ({ ...row, localeNames: localeNames.get(row.ingredientId) ?? {} }))
+  );
 
   if (!parsed.success) throw new Error("Failed to parse pantry ingredients");
 
@@ -58,7 +70,7 @@ async function findOnePantryIngredient(
 
   if (!row) return null;
 
-  return parsePantryIngredients([row])[0] ?? null;
+  return (await parsePantryIngredients([row], tx))[0] ?? null;
 }
 
 /**
@@ -74,7 +86,7 @@ export async function listPantryIngredientsByUserIds(
     .where(inArray(pantryIngredients.userId, userIds))
     .orderBy(asc(sql`lower(${ingredients.name})`), asc(pantryIngredients.createdAt));
 
-  return parsePantryIngredients(rows);
+  return await parsePantryIngredients(rows);
 }
 
 /**

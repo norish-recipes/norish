@@ -14,7 +14,14 @@ type Item = {
   flagged: boolean;
   parent: { id: string; name: string } | null;
   canEdit: boolean;
-  aliases: Array<{ id: string; text: string; canRemove: boolean }>;
+  localeNames?: Record<string, string>;
+  aliases: Array<{
+    id: string;
+    text: string;
+    locale?: string | null;
+    seeded?: boolean;
+    canRemove: boolean;
+  }>;
 };
 
 let items: Item[] = [];
@@ -67,8 +74,11 @@ vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries }),
 }));
 
+let viewerLocale = "en";
+
 vi.mock("next-intl", () => ({
   useTranslations: () => Object.assign((key: string) => key, { rich: (key: string) => key }),
+  useLocale: () => viewerLocale,
 }));
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
@@ -130,6 +140,7 @@ function row(name: string) {
 describe("IngredientsSettingsContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    viewerLocale = "en";
     listInputs.length = 0;
     items = [onion, salt];
   });
@@ -290,6 +301,34 @@ describe("IngredientsSettingsContent", () => {
     });
 
     expect(listInputs.at(-1)).toEqual({ search: undefined, flaggedOnly: true });
+  });
+
+  it("shows a food in the viewer's language, its own name beside it", () => {
+    viewerLocale = "nl";
+    items = [
+      {
+        ...onion,
+        localeNames: { nl: "ui" },
+        aliases: [
+          { id: "a-onion", text: "onion", locale: "en", seeded: true, canRemove: false },
+          { id: "a-ui", text: "ui", locale: "nl", seeded: true, canRemove: false },
+          { id: "a-zwiebel", text: "Zwiebel", locale: "de", seeded: true, canRemove: false },
+          { id: "a-ajuin", text: "ajuin", locale: null, seeded: false, canRemove: true },
+        ],
+      },
+    ];
+    render(<IngredientsSettingsContent />);
+
+    expect(row("onion")).toHaveTextContent("ui");
+    // The viewer's spellings and a person's own; the rest on request.
+    const chips = () =>
+      within(row("onion"))
+        .getAllByTestId("ingredient-alias")
+        .map((chip) => chip.textContent);
+
+    expect(chips()).toEqual(["ui", "ajuin"]);
+    fireEvent.click(within(row("onion")).getByTestId("ingredient-all-spellings"));
+    expect(chips()).toEqual(["onion", "ui", "Zwiebel", "ajuin"]);
   });
 
   it("credits the catalogue's source and offers it as a download", () => {

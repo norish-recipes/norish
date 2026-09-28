@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** How long typing pauses before the catalogue is searched. */
 const SEARCH_DELAY_MS = 250;
@@ -35,6 +37,7 @@ export function IngredientPicker({
   onPick: (pick: IngredientPick | null) => void;
 }) {
   const t = useTranslations("settings.ingredients");
+  const locale = useLocale();
   const trpc = useTRPC();
   const [term, setTerm] = useState("");
   const [search, setSearch] = useState("");
@@ -54,7 +57,7 @@ export function IngredientPicker({
     (item) => item.id !== excludeId && (!editableOnly || item.canEdit)
   );
   const options = [
-    ...found.map((item) => ({ id: item.id, name: item.name })),
+    ...found.map((item) => ({ id: item.id, name: ingredientDisplayName(item, locale) })),
     ...(allowNew ? [{ id: NEW_INGREDIENT, name: t("newIngredient") }] : []),
   ];
 

@@ -8,10 +8,12 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowRightIcon, BookOpenIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Chip, Input, TextField } from "@heroui/react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import type { CatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
+import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { isCatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
+import { catalogueLanguagesFor, ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { IngredientPick } from "./ingredient-picker";
 import DataSourcesCard from "./data-sources-card";
@@ -30,11 +32,18 @@ const SEARCH_DELAY_MS = 250;
 interface IngredientItem {
   id: string;
   name: string;
+  localeNames?: LocaleNames;
   flagged: boolean;
   parent: { id: string; name: string } | null;
   canEdit: boolean;
   /** `canRemove` is `edit` on the alias, which moving it needs too. */
-  aliases: Array<{ id: string; text: string; canRemove: boolean }>;
+  aliases: Array<{
+    id: string;
+    text: string;
+    locale?: string | null;
+    seeded?: boolean;
+    canRemove: boolean;
+  }>;
 }
 
 /** What the row is asking the viewer to pick a target for, if anything. */
@@ -138,7 +147,18 @@ export default function IngredientsSettingsContent() {
 function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: () => void }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
+  const locale = useLocale();
   const trpc = useTRPC();
+  const [allSpellings, setAllSpellings] = useState(false);
+  const displayName = ingredientDisplayName(item, locale);
+  // The catalogue knows a food in dozens of languages; the row shows the
+  // viewer's, the language-free ones and a person's own, the rest on request.
+  const languages = catalogueLanguagesFor(locale);
+  const ownSpellings = item.aliases.filter(
+    (alias) => !alias.seeded || !alias.locale || languages.includes(alias.locale)
+  );
+  const spellings = allSpellings ? item.aliases : ownSpellings;
+  const hiddenSpellings = item.aliases.length - ownSpellings.length;
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(item.name);
   const [alias, setAlias] = useState("");
@@ -258,7 +278,12 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
             />
           </TextField>
         ) : (
-          <span className="min-w-0 flex-1 truncate font-medium">{item.name}</span>
+          <span className="min-w-0 flex-1 truncate font-medium">
+            {displayName}
+            {displayName !== item.name ? (
+              <span className="text-muted ml-2 text-sm font-normal">{item.name}</span>
+            ) : null}
+          </span>
         )}
 
         {item.flagged && !renaming ? (
@@ -403,7 +428,7 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
       ) : null}
 
       <div className="flex flex-wrap items-center gap-1">
-        {item.aliases.map((spelling) => (
+        {spellings.map((spelling) => (
           <Chip key={spelling.id} data-testid="ingredient-alias" size="sm" variant="tertiary">
             {spelling.text}
             {spelling.canRemove ? (
@@ -433,6 +458,16 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
             ) : null}
           </Chip>
         ))}
+        {hiddenSpellings > 0 ? (
+          <Button
+            data-testid="ingredient-all-spellings"
+            size="sm"
+            variant="ghost"
+            onPress={() => setAllSpellings((shown) => !shown)}
+          >
+            {allSpellings ? t("fewerSpellings") : t("allSpellings", { count: hiddenSpellings })}
+          </Button>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2">

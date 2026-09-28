@@ -357,6 +357,8 @@
     "parentTitle": "Choose the food {name} is a kind of.",
     "kindOf": "A kind of {name}",
     "clearParent": "Remove parent",
+    "allSpellings": "Show all {count} spellings",
+    "fewerSpellings": "Show fewer spellings",
     "dataSources": {
       "title": "Data sources",
       "notice": "The ingredient catalogue is seeded from the <off>Open Food Facts</off> ingredients taxonomy, available under the <odbl>Open Database License (ODbL)</odbl>. The catalogue Norish builds from it is offered under the same licence.",

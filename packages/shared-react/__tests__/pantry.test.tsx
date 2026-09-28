@@ -22,6 +22,7 @@ const OLIVE: PantryIngredientDto = {
   name: "Olive Oil",
   version: 1,
   ancestorIds: [],
+  localeNames: {},
 };
 const SALT: PantryIngredientDto = {
   id: "salt",
@@ -30,6 +31,7 @@ const SALT: PantryIngredientDto = {
   name: "Salt",
   version: 1,
   ancestorIds: [],
+  localeNames: {},
 };
 
 type UseTRPC = Parameters<typeof createUsePantryQuery>[0]["useTRPC"];

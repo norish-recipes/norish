@@ -15,6 +15,7 @@ function item(
     name,
     version: 1,
     ancestorIds,
+    localeNames: {},
   };
 }
 

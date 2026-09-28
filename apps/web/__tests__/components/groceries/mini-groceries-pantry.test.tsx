@@ -116,6 +116,7 @@ function pantryIngredient(name: string, normalizedName: string): PantryIngredien
     name,
     version: 1,
     ancestorIds: [],
+    localeNames: {},
   };
 }
 

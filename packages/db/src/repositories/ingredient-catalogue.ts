@@ -40,6 +40,8 @@ export interface CatalogueAlias {
   id: string;
   text: string;
   ownerId: string | null;
+  locale?: string | null;
+  seeded?: boolean;
 }
 
 /** Who owns a row of the catalogue, which is what the edit policy is asked about. */
@@ -97,6 +99,8 @@ export async function listCatalogueIngredients(query: {
       id: ingredientAliases.id,
       text: ingredientAliases.text,
       ownerId: ingredientAliases.ownerId,
+      locale: ingredientAliases.locale,
+      seeded: ingredientAliases.seeded,
       ingredientId: ingredientAliases.ingredientId,
     })
     .from(ingredientAliases)

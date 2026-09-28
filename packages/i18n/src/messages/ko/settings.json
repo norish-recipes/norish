@@ -357,6 +357,8 @@
     "parentTitle": "{name}이(가) 속하는 재료를 고르세요.",
     "kindOf": "{name}의 한 종류",
     "clearParent": "상위 재료 제거",
+    "allSpellings": "표기 {count}개 모두 보기",
+    "fewerSpellings": "표기 적게 보기",
     "dataSources": {
       "title": "데이터 출처",
       "notice": "재료 카탈로그는 <off>Open Food Facts</off>의 재료 분류 체계를 바탕으로 하며, 이는 <odbl>Open Database License (ODbL)</odbl>로 제공됩니다. Norish가 이를 바탕으로 만든 카탈로그도 같은 라이선스로 제공됩니다.",

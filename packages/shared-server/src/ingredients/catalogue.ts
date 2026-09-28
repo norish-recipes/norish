@@ -19,6 +19,7 @@ import type {
   CatalogueIngredient,
 } from "@norish/db/repositories/ingredient-catalogue";
 import type { CatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
+import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import {
   clearIngredientFlag,
   deleteCatalogueAlias,
@@ -34,6 +35,7 @@ import {
 } from "@norish/db/repositories/ingredient-catalogue";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { foldName } from "@norish/shared/lib/fold-name";
+import { chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 
 import { cleanIngredientText, ingredientAliasFold } from "./resolver";
 
@@ -80,10 +82,18 @@ export function mayEditIngredientRow(
 export interface IngredientListItem {
   id: string;
   name: string;
+  /** The best spelling per language, for showing the Ingredient in the viewer's. */
+  localeNames: LocaleNames;
   flagged: boolean;
   parent: { id: string; name: string } | null;
   canEdit: boolean;
-  aliases: Array<{ id: string; text: string; canRemove: boolean }>;
+  aliases: Array<{
+    id: string;
+    text: string;
+    locale: string | null;
+    seeded: boolean;
+    canRemove: boolean;
+  }>;
 }
 
 export const INGREDIENT_PAGE_SIZE = 50;
@@ -124,12 +134,21 @@ function listItem(
   return {
     id: row.id,
     name: row.name,
+    localeNames: chooseLocaleNames(
+      row.aliases.map((alias) => ({
+        text: alias.text,
+        locale: alias.locale ?? null,
+        seeded: alias.seeded ?? false,
+      }))
+    ),
     flagged: row.flagged,
     parent: row.parent,
     canEdit: may(row.ownerId),
     aliases: row.aliases.map((alias) => ({
       id: alias.id,
       text: alias.text,
+      locale: alias.locale ?? null,
+      seeded: alias.seeded ?? false,
       canRemove: may(alias.ownerId),
     })),
   };

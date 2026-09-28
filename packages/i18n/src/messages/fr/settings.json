@@ -357,6 +357,8 @@
     "parentTitle": "Choisissez l'ingrédient dont {name} est une variété.",
     "kindOf": "Une variété de {name}",
     "clearParent": "Retirer le parent",
+    "allSpellings": "Afficher les {count} orthographes",
+    "fewerSpellings": "Afficher moins d'orthographes",
     "dataSources": {
       "title": "Sources de données",
       "notice": "Le catalogue d'ingrédients est alimenté par la taxonomie des ingrédients d'<off>Open Food Facts</off>, disponible sous la <odbl>Open Database License (ODbL)</odbl>. Le catalogue que Norish en tire est proposé sous la même licence.",

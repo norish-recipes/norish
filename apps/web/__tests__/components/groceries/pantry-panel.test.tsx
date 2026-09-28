@@ -20,9 +20,11 @@ vi.mock("@/hooks/pantry", () => ({
   usePantryMutations: () => ({ addPantryIngredient, removePantryIngredient }),
 }));
 
+let viewerLocale = "en";
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
-  useLocale: () => "en",
+  useLocale: () => viewerLocale,
 }));
 
 vi.mock("@/components/Panel/Panel", () => {
@@ -56,12 +58,14 @@ function item(id: string, name: string, normalizedName: string): PantryIngredien
     name,
     version: 1,
     ancestorIds: [],
+    localeNames: {},
   };
 }
 
 describe("PantryPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    viewerLocale = "en";
     items = [item("salt", "Salt", "salt"), item("olive", "Olive Oil", "olive oil")];
   });
 
@@ -113,5 +117,26 @@ describe("PantryPanel", () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
     expect(addPantryIngredient).not.toHaveBeenCalled();
+  });
+
+  it("shows and sorts the Pantry in the viewer's language, and knows its names there", async () => {
+    viewerLocale = "nl";
+    items = [
+      { ...item("onion", "onion", "onion"), localeNames: { nl: "ui" } },
+      { ...item("salt", "Salt", "salt"), localeNames: { nl: "zout" } },
+      item("olive", "Olive Oil", "olive oil"),
+    ];
+    render(<PantryPanel open onOpenChange={() => undefined} />);
+
+    expect(screen.getAllByRole("listitem").map((row) => row.textContent)).toEqual([
+      "Olive Oil",
+      "ui",
+      "zout",
+    ]);
+
+    await act(async () => {
+      fireEvent.change(screen.getByTestId("pantry-name"), { target: { value: "Zout" } });
+    });
+    expect(screen.getByTestId("pantry-duplicate")).toBeInTheDocument();
   });
 });

@@ -1,7 +1,9 @@
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
+import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
+import { CATALOGUE_LANGUAGES, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 
 import { isConstraintViolation } from "./constraint-violation";
 
@@ -70,6 +72,41 @@ export async function findIngredientByAliasId(aliasId: string): Promise<Ingredie
     .limit(1);
 
   return row ?? null;
+}
+
+/**
+ * Each Ingredient's best spelling in every language a Norish locale reads,
+ * for surfaces that show the Ingredient in the viewer's language.
+ */
+export async function findLocaleNames(
+  ingredientIds: readonly string[],
+  tx: Pick<typeof db, "select"> = db
+): Promise<Map<string, LocaleNames>> {
+  const unique = Array.from(new Set(ingredientIds));
+
+  if (unique.length === 0) return new Map();
+
+  const rows = await tx
+    .select({
+      ingredientId: ingredientAliases.ingredientId,
+      text: ingredientAliases.text,
+      locale: ingredientAliases.locale,
+      seeded: ingredientAliases.seeded,
+    })
+    .from(ingredientAliases)
+    .where(
+      and(
+        inArray(ingredientAliases.ingredientId, unique),
+        inArray(ingredientAliases.locale, [...CATALOGUE_LANGUAGES])
+      )
+    );
+  const byIngredient = new Map<string, typeof rows>();
+
+  for (const row of rows) {
+    byIngredient.set(row.ingredientId, [...(byIngredient.get(row.ingredientId) ?? []), row]);
+  }
+
+  return new Map(unique.map((id) => [id, chooseLocaleNames(byIngredient.get(id) ?? [])]));
 }
 
 export async function findIngredientNamesByIds(

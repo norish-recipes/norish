@@ -11,6 +11,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
+import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
 
 interface PantryPanelProps {
@@ -68,7 +69,9 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
                 className="bg-surface flex items-center gap-3 rounded-lg px-3 py-2"
                 data-pantry-ingredient={foldName(item.name)}
               >
-                <span className="flex-1 truncate font-medium">{item.name}</span>
+                <span className="flex-1 truncate font-medium">
+                  {ingredientDisplayName(item, locale)}
+                </span>
                 <IconActionButton
                   action="remove"
                   label={t("remove")}

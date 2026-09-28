@@ -13,8 +13,15 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-catalogue";
+import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { groceries, ingredients, serverConfig } from "@norish/db/schema";
-import { addAlias, mergeIngredients, setParent } from "@norish/shared-server/ingredients/catalogue";
+import {
+  addAlias,
+  listIngredients,
+  mergeIngredients,
+  setParent,
+} from "@norish/shared-server/ingredients/catalogue";
+import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import {
@@ -283,6 +290,34 @@ describe("the ingredient catalogue seed", () => {
         catalogue.ingredients.find((ingredient) => ingredient.id === mine.ingredientId)
       ).toMatchObject({ openFoodFactsId: null });
       expect(JSON.stringify(catalogue)).not.toContain(actor.userId);
+    });
+  });
+
+  describe("names in the viewer's language", () => {
+    it("gives a Pantry Ingredient its name in every language a viewer may read", async () => {
+      await applySeedFile(excerpt);
+      const userIds = [actor.userId];
+
+      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "uien" });
+
+      const [item] = await listPantryIngredientsByUserIds(userIds);
+
+      expect(item).toMatchObject({ name: "onion" });
+      expect(item?.localeNames).toMatchObject({
+        en: "onion",
+        nl: "ui",
+        de: "Zwiebel",
+        fr: "oignon",
+      });
+    });
+
+    it("finds an Ingredient on the Ingredients page by a spelling in any language", async () => {
+      await applySeedFile(excerpt);
+
+      const found = await listIngredients(actor, { search: "zwiebeln" });
+
+      expect(found.items.map((item) => item.name)).toContain("onion");
+      expect(found.items.find((item) => item.name === "onion")?.localeNames.nl).toBe("ui");
     });
   });
 });

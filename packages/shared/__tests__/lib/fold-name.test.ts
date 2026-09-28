@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nameWords, foldName } from "@norish/shared/lib/fold-name";
+import { foldName, nameWords } from "@norish/shared/lib/fold-name";
 
 describe("foldName", () => {
   it("folds case", () => {

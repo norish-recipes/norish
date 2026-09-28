@@ -371,7 +371,7 @@ describe("the list", () => {
         parent: null,
         aliases: [
           { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
-          { id: "seeded-alias", text: "ui", ownerId: null },
+          { id: "seeded-alias", text: "ui", ownerId: null, locale: "nl", seeded: true },
         ],
       },
     ]);
@@ -390,12 +390,13 @@ describe("the list", () => {
         {
           id: ONION,
           name: "onion",
+          localeNames: { nl: "ui" },
           flagged: true,
           parent: null,
           canEdit: false,
           aliases: [
-            { id: ALIAS, text: "onions", canRemove: true },
-            { id: "seeded-alias", text: "ui", canRemove: false },
+            { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true },
+            { id: "seeded-alias", text: "ui", locale: "nl", seeded: true, canRemove: false },
           ],
         },
       ],
