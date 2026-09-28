@@ -115,8 +115,11 @@ export type StoreLookupJobData =
   | {
       kind: "match";
       storeId: string;
-      /** The Ingredient asked about, which the answer is filed under (ADR-0037). */
-      ingredientId: string;
+      /**
+       * The Ingredient asked about, which the answer is filed under (ADR-0037).
+       * Absent on a job queued before the upgrade, which names only the text.
+       */
+      ingredientId?: string;
       /** The grocery's name as the list shows it: what the shop is searched for. */
       name: string;
       householdKey: string;

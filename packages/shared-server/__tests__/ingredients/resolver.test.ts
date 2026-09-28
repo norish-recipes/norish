@@ -7,10 +7,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
+import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import {
   findIngredientFor,
+  ingredientAliasFold,
   ingredientFor,
+  resolveIngredient,
   resolveIngredients,
 } from "@norish/shared-server/ingredients/resolver";
 
@@ -110,6 +113,39 @@ describe("ingredient resolver", () => {
     await expect(findIngredientFor("leeks")).resolves.toBeNull();
   });
 
+  it("answers nothing for a text that is markup alone, and mints nothing", async () => {
+    await expect(resolveIngredient("<br>&nbsp;", { userId })).resolves.toBeNull();
+    await expect(resolveIngredient("Leeks", { userId })).resolves.toMatchObject({ text: "Leeks" });
+  });
+
+  it("a mint that loses the race for one of its spellings joins the winner with the other", async () => {
+    // Another request minted "onions, diced" between this mint's read and write.
+    const [winner] = await mintIngredientWithAliases({
+      name: "onions, diced",
+      aliases: [{ text: "onions, diced", fold: ingredientAliasFold("onions, diced") }],
+      ownerId: userId,
+      locale: null,
+      flagged: true,
+    });
+
+    const rows = await mintIngredientWithAliases({
+      name: "onions",
+      aliases: [
+        { text: "onions, diced", fold: ingredientAliasFold("onions, diced") },
+        { text: "onions", fold: ingredientAliasFold("onions") },
+      ],
+      ownerId: userId,
+      locale: null,
+      flagged: true,
+    });
+
+    expect(rows.map((row) => row.ingredientId)).toEqual([
+      winner!.ingredientId,
+      winner!.ingredientId,
+    ]);
+    expect((await resolveOne("onions")).ingredientId).toBe(winner!.ingredientId);
+  });
+
   describe("recipe lines", () => {
     function line(ingredientName: string, order: number) {
       return { ingredientId: null, ingredientName, amount: 2, unit: null, order };
@@ -132,6 +168,27 @@ describe("ingredient resolver", () => {
 
       expect(recipe?.recipeIngredients).toMatchObject([
         { ingredientName: "onions, diced", ingredientId: onions.ingredientId, amount: 2 },
+      ]);
+    });
+
+    it("leaves out a line whose text is markup alone, and saves the rest", async () => {
+      const recipeId = crypto.randomUUID();
+
+      await createRecipeWithRefs(
+        recipeId,
+        userId,
+        await withResolvedIngredients(
+          {
+            name: "Soup",
+            systemUsed: "metric",
+            recipeIngredients: [line("&nbsp;", 0), line("leeks", 1)],
+          },
+          { userId }
+        )
+      );
+
+      expect((await getRecipeFull(recipeId))?.recipeIngredients).toMatchObject([
+        { ingredientName: "leeks" },
       ]);
     });
 

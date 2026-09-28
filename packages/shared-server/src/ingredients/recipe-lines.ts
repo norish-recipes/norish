@@ -14,7 +14,8 @@ interface RecipeLineInput {
  * Resolve a recipe payload's line texts before the recipe is written, which
  * is the only way a recipe write accepts them. Each line's text is its
  * `ingredientName` as written; a line that names only an Ingredient by id is
- * given that Ingredient's name as its text.
+ * given that Ingredient's name as its text. A line left with no text is
+ * dropped, as the recipe write always skipped it.
  */
 export async function withResolvedIngredients<
   L extends RecipeLineInput,
@@ -31,12 +32,13 @@ export async function withResolvedIngredients<
         : []
     )
   );
-  const written = lines.map((line) => {
+  // A line whose text is markup alone names no food and is no line.
+  const written = lines.flatMap((line) => {
     const text =
       cleanIngredientText(line.ingredientName ?? "") ||
       cleanIngredientText(namesById.get(line.ingredientId ?? "") ?? "");
 
-    return text ? { ...line, ingredientName: text } : line;
+    return text ? [{ ...line, ingredientName: text }] : [];
   });
   const texts = Array.from(
     new Set(written.flatMap((line) => (line.ingredientName ? [line.ingredientName] : [])))

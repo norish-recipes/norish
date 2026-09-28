@@ -325,6 +325,13 @@ export async function listLegacyKeyedRows(
   return listed.map((row) => ({ ...row, normalizedName: row.normalizedName ?? "" }));
 }
 
+/** Drop a legacy row whose name names no food, so the walk moves past it. */
+export async function dropLegacyRow(table: LegacyKeyedTable, id: string): Promise<void> {
+  const { table: rows } = LEGACY_KEYED[table];
+
+  await db.delete(rows).where(and(eq(rows.id, id), isNull(rows.ingredientId)));
+}
+
 /**
  * Key a legacy row by its Ingredient. Where the same Store (or member)
  * already holds a row for that Ingredient — a newer one, since rows are

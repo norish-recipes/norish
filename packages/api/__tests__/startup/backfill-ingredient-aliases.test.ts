@@ -239,6 +239,26 @@ describe("backfillIngredientAliases", () => {
       ]);
     });
 
+    it("drops a link whose name is markup alone, and carries the rest over", async () => {
+      const { storeId } = await store("Lidl");
+
+      await getTestDb()
+        .insert(storeProductLinks)
+        .values([
+          { storeId, normalizedName: "<br>", triedAt: new Date("2025-06-01") },
+          { storeId, normalizedName: "yoghurt", triedAt: new Date("2025-01-01") },
+        ]);
+
+      await backfillIngredientAliases();
+
+      const [yoghurt] = await resolveIngredients(["yoghurt"], { userId });
+
+      await expect(
+        resolveProductLinks([{ storeId, ingredientId: yoghurt!.ingredientId }])
+      ).resolves.toHaveLength(1);
+      await expect(getTestDb().select().from(storeProductLinks)).resolves.toHaveLength(1);
+    });
+
     it("mints an Ingredient for a folded name nothing else knows, so no link is dropped", async () => {
       const { storeId } = await store("Dirk");
 

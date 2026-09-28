@@ -29,7 +29,7 @@ import {
   reorderGroceriesInStore,
   updateGroceries,
 } from "../mocks/db";
-import { resolveGroceryNames } from "../mocks/ingredient-groceries";
+import { resolveGroceryName, resolveGroceryNames } from "../mocks/ingredient-groceries";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
@@ -617,6 +617,28 @@ describe("stale grocery updates", () => {
         reason: expect.any(String),
       },
       { householdKey: ctx.householdKey }
+    );
+  });
+
+  it("resolves an edited grocery knowing the recipe line it came from", async () => {
+    const groceryId = crypto.randomUUID();
+    const recipeIngredientId = crypto.randomUUID();
+
+    getGroceryOwnerIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
+    getGroceriesByIds.mockResolvedValue([
+      createMockGrocery({ id: groceryId, name: "onions, diced", recipeIngredientId }),
+    ]);
+    assertHouseholdAccess.mockResolvedValue(undefined);
+    updateGroceries.mockResolvedValue([]);
+
+    const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await caller.update({ groceryId, raw: "3 onions, diced", version: 4 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(resolveGroceryName).toHaveBeenCalledWith(
+      expect.objectContaining({ recipeIngredientId }),
+      { userId: ctx.user.id }
     );
   });
 

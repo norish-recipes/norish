@@ -13,6 +13,10 @@ function answer(text: string) {
 
 export const resolveIngredients = vi.fn(async (texts: readonly string[]) => texts.map(answer));
 
+export const resolveIngredient = vi.fn(async (text: string) =>
+  cleanIngredientText(text) ? answer(text) : null
+);
+
 export const findIngredientFor = vi.fn(async (text: string) => {
   const { aliasId, ingredientId } = answer(text);
 

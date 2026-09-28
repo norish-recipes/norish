@@ -100,8 +100,8 @@ export interface MintIngredientInput {
  * requested fold now has.
  *
  * Safe against a concurrent mint of the same spelling: an alias whose fold is
- * already taken keeps pointing where it points, and an Ingredient that ends up
- * with no alias of its own is removed again. A name that is already an
+ * already taken keeps pointing where it points, and the new Ingredient is
+ * removed again with any spelling it did get joining the one that won. A name that is already an
  * Ingredient's (regardless of case) is that Ingredient, so the aliases join it
  * and nothing is minted or flagged.
  */
@@ -152,11 +152,24 @@ export async function mintIngredientWithAliases(
       .from(ingredientAliases)
       .where(inArray(ingredientAliases.fold, folds));
 
-    if (minted && !rows.some((row) => row.ingredientId === minted.id)) {
-      await tx.delete(ingredients).where(eq(ingredients.id, minted.id));
-    }
+    if (!minted) return rows;
 
-    return rows;
+    // Lost the race for a spelling: another request's Ingredient already holds
+    // it, so the spellings this mint did get join that one, and one food stays
+    // one Ingredient.
+    const winner = rows.find((row) => row.ingredientId !== minted.id)?.ingredientId;
+
+    if (!winner) return rows;
+
+    await tx
+      .update(ingredientAliases)
+      .set({ ingredientId: winner })
+      .where(eq(ingredientAliases.ingredientId, minted.id));
+    await tx.delete(ingredients).where(eq(ingredients.id, minted.id));
+
+    return rows.map((row) =>
+      row.ingredientId === minted.id ? { ...row, ingredientId: winner } : row
+    );
   });
 }
 

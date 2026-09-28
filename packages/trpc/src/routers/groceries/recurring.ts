@@ -53,7 +53,7 @@ const createRecurring = authedProcedure
       "Creating recurring grocery"
     );
 
-    const ingredient = await resolveGroceryName(input.name, { userId: ctx.user.id });
+    const ingredient = await resolveGroceryName({ name: input.name }, { userId: ctx.user.id });
     const recurringData = {
       id: input.id ?? crypto.randomUUID(),
       userId: ctx.user.id,
@@ -171,7 +171,7 @@ const updateRecurring = authedProcedure
         // recurring one keeps on the list takes the same answer.
         const ingredient =
           data.name !== undefined
-            ? await resolveGroceryName(data.name, { userId: ctx.user.id })
+            ? await resolveGroceryName({ name: data.name }, { userId: ctx.user.id })
             : {};
         const outcome = await updateRecurringGroceryWithGrocery(
           { id: recurringGroceryId, version: recurringVersion, ...data, ...ingredient },
@@ -264,7 +264,10 @@ const detachRecurring = authedProcedure
             id: groceryId,
             version: groceryVersion,
             name: parsedIngredient.description,
-            ...(await resolveGroceryName(parsedIngredient.description, { userId: ctx.user.id })),
+            ...(await resolveGroceryName(
+              { name: parsedIngredient.description },
+              { userId: ctx.user.id }
+            )),
             unit: parsedIngredient.unitOfMeasure,
             amount: parsedIngredient.quantity ?? null,
             purchaseAmount: input.purchaseAmount,

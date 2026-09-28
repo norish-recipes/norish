@@ -4,6 +4,7 @@ import type {
 } from "@norish/db/repositories/ingredient-backfill";
 import {
   addOwnNameAliases,
+  dropLegacyRow,
   keyLegacyRow,
   listGroceriesWithoutAlias,
   listIngredientsWithoutAlias,
@@ -20,6 +21,7 @@ import {
 import {
   cleanIngredientText,
   ingredientAliasFold,
+  resolveIngredient,
   resolveIngredients,
 } from "@norish/shared-server/ingredients/resolver";
 import { dbLogger as log } from "@norish/shared-server/logger";
@@ -184,9 +186,11 @@ async function keyLegacyRows(
     for (const row of batch) {
       const ingredientId =
         groceryIngredients.get(ingredientAliasFold(row.normalizedName)) ??
-        (await resolveIngredients([row.normalizedName], { userId: row.ownerId }))[0]!.ingredientId;
+        (await resolveIngredient(row.normalizedName, { userId: row.ownerId }))?.ingredientId;
 
-      if (await keyLegacyRow(table, row.id, ingredientId)) keyed += 1;
+      // A name that is markup alone names no food: the link is about nothing.
+      if (!ingredientId) await dropLegacyRow(table, row.id);
+      else if (await keyLegacyRow(table, row.id, ingredientId)) keyed += 1;
     }
   }
 

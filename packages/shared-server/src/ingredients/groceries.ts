@@ -63,12 +63,16 @@ export function ingredientColumns(ref: IngredientRef | null | undefined): Grocer
   return { ingredientAliasId: ref?.aliasId ?? null, ingredientId: ref?.ingredientId ?? null };
 }
 
-/** One grocery name, typed or renamed, resolved to the columns its row keeps. */
+/**
+ * One grocery name, typed or renamed, resolved to the columns its row keeps.
+ * A grocery added from a recipe line names that line, so an edit that leaves
+ * its text alone keeps the line's alias.
+ */
 export async function resolveGroceryName(
-  name: string | null,
+  grocery: GroceryName,
   actor: ResolveActor
 ): Promise<GroceryIngredientColumns> {
-  const [ref] = await resolveGroceryNames([{ name }], actor);
+  const [ref] = await resolveGroceryNames([grocery], actor);
 
   return ingredientColumns(ref);
 }

@@ -107,11 +107,20 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         });
       }
 
+      // A grocery from a recipe line keeps the line's food while its text
+      // still says what the line says; an amount or Store edit re-points nothing.
+      const [current] = await getGroceriesByIds([groceryId]);
       const updateData: GroceryUpdateDto = {
         id: groceryId,
         version,
         name: parsedIngredient.description,
-        ...(await resolveGroceryName(parsedIngredient.description, { userId: ctx.user.id })),
+        ...(await resolveGroceryName(
+          {
+            name: parsedIngredient.description,
+            recipeIngredientId: current?.recipeIngredientId ?? null,
+          },
+          { userId: ctx.user.id }
+        )),
         amount: parsedIngredient.quantity,
         purchaseAmount,
         unit: parsedIngredient.unitOfMeasure,

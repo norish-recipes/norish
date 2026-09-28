@@ -31,6 +31,7 @@ export const pantryIngredients = pgTable(
   (t) => [
     index("idx_pantry_ingredients_user_id").on(t.userId),
     index("idx_pantry_ingredients_ingredient_id").on(t.ingredientId),
+    index("idx_pantry_ingredients_ingredient_alias_id").on(t.ingredientAliasId),
     unique("uq_pantry_ingredients_user_ingredient").on(t.userId, t.ingredientId),
   ]
 );

@@ -80,6 +80,17 @@ describe("grocery names through aliases", () => {
     expect(renamed?.ingredientId).not.toBe(line.ingredientId);
   });
 
+  it("answers a grocery replayed after being added offline exactly as it did the first time", async () => {
+    const first = await resolveGroceryNames([{ name: "Uien" }, { name: "leeks, sliced" }], {
+      userId,
+    });
+    const replayed = await resolveGroceryNames([{ name: "Uien" }, { name: "leeks, sliced" }], {
+      userId,
+    });
+
+    expect(replayed).toEqual(first);
+  });
+
   it("has nothing to resolve for a grocery with no name", async () => {
     await expect(
       resolveGroceryNames([{ name: null }, { name: "  " }], { userId })

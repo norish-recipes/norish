@@ -16,7 +16,7 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
-import { findIngredientFor, resolveIngredients } from "../mocks/ingredient-resolver";
+import { findIngredientFor, resolveIngredient } from "../mocks/ingredient-resolver";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { stores } from "../mocks/realtime/stores";
 
@@ -86,13 +86,15 @@ describe("chooseProduct", () => {
   });
 
   it("links the Ingredient the grocery's name resolves to, so every spelling is priced by it", async () => {
-    resolveIngredients.mockResolvedValueOnce([
-      { text: "Uien", aliasId: "alias:uien", ingredientId: "ingredient:onion" },
-    ]);
+    resolveIngredient.mockResolvedValueOnce({
+      text: "Uien",
+      aliasId: "alias:uien",
+      ingredientId: "ingredient:onion",
+    });
 
     await caller.chooseProduct({ storeId: STORE, name: "Uien", choice: { kind: "none" } });
 
-    expect(resolveIngredients).toHaveBeenCalledWith(["Uien"], { userId: ctx.user.id });
+    expect(resolveIngredient).toHaveBeenCalledWith("Uien", { userId: ctx.user.id });
     expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
       STORE,
       "ingredient:onion",
@@ -102,6 +104,13 @@ describe("chooseProduct", () => {
       STORE,
       "ingredient:onion"
     );
+  });
+
+  it("links nothing for a name that is markup alone", async () => {
+    await expect(
+      caller.chooseProduct({ storeId: STORE, name: "<b></b>", choice: { kind: "none" } })
+    ).resolves.toBeNull();
+    expect(storeProductsRepository.upsertProductLink).not.toHaveBeenCalled();
   });
 
   it("writes the page a shopper gives a by-hand product", async () => {

@@ -142,6 +142,21 @@ export async function resolveIngredients(
 }
 
 /**
+ * Resolve one text as written, or answer null where it is markup alone and so
+ * names no food. For the callers that take a single name from a person.
+ */
+export async function resolveIngredient(
+  text: string,
+  actor: ResolveActor
+): Promise<ResolvedIngredient | null> {
+  if (!cleanIngredientText(text)) return null;
+
+  const [resolved] = await resolveIngredients([text], actor);
+
+  return resolved ?? null;
+}
+
+/**
  * Rung 4. The Ingredient is named for the text without its preparation, and
  * that bare name becomes an alias beside the text, so "onions, diced" first
  * and "onions" or "onions, sliced" later are the one food.

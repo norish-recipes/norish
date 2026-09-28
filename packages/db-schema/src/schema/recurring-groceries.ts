@@ -38,5 +38,7 @@ export const recurringGroceries = pgTable(
   (t) => [
     index("idx_recurring_groceries_user_id").on(t.userId),
     index("idx_recurring_groceries_next_date").on(t.nextPlannedFor),
+    index("idx_recurring_groceries_ingredient_alias_id").on(t.ingredientAliasId),
+    index("idx_recurring_groceries_ingredient_id").on(t.ingredientId),
   ]
 );

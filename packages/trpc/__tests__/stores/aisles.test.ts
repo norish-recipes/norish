@@ -15,7 +15,7 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
-import { resolveIngredients } from "../mocks/ingredient-resolver";
+import { resolveIngredient } from "../mocks/ingredient-resolver";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { stores } from "../mocks/realtime/stores";
 
@@ -65,7 +65,7 @@ describe("filing a name at a Store", () => {
   it("files the name under the aisle and tells the household where it now is", async () => {
     const filing = await caller.fileGroceryName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
 
-    expect(resolveIngredients).toHaveBeenCalledWith(["Melk"], { userId: ctx.user.id });
+    expect(resolveIngredient).toHaveBeenCalledWith("Melk", { userId: ctx.user.id });
     expect(aislesRepository.fileIngredient).toHaveBeenCalledWith(STORE, "ingredient:melk", ZUIVEL);
     expect(filing).toEqual({ storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL });
     expect(stores.publish).toHaveBeenCalledWith(
@@ -132,7 +132,7 @@ describe("filing a name at a Store", () => {
     await expect(
       caller.fileGroceryName({ storeId: STORE, name: "!?", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    expect(resolveIngredients).not.toHaveBeenCalled();
+    expect(resolveIngredient).not.toHaveBeenCalled();
     expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
     expect(stores.publish).not.toHaveBeenCalled();
   });
@@ -141,14 +141,15 @@ describe("filing a name at a Store", () => {
     await expect(
       caller.fileGroceryName({ storeId: STORE, name: "<b></b>", aisleId: ZUIVEL })
     ).resolves.toBeNull();
-    expect(resolveIngredients).not.toHaveBeenCalled();
     expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
   });
 
   it("files every spelling of a food as its one Ingredient", async () => {
-    resolveIngredients.mockResolvedValueOnce([
-      { text: "Uien", aliasId: "alias:uien", ingredientId: "ingredient:onion" },
-    ]);
+    resolveIngredient.mockResolvedValueOnce({
+      text: "Uien",
+      aliasId: "alias:uien",
+      ingredientId: "ingredient:onion",
+    });
 
     await caller.fileGroceryName({ storeId: STORE, name: "Uien", aisleId: ZUIVEL });
 
