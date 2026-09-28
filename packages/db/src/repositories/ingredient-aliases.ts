@@ -3,6 +3,8 @@ import { asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
 
+import { isConstraintViolation } from "./constraint-violation";
+
 /**
  * The Ingredient Alias rows the ingredient resolver reads and writes. Nothing
  * but the resolver (in `@norish/shared-server/ingredients`) and the startup
@@ -126,7 +128,7 @@ export async function mintIngredientWithAliases(
         await tx
           .select({ id: ingredients.id })
           .from(ingredients)
-          .where(eq(sql`lower(${ingredients.name})`, input.name.toLowerCase()))
+          .where(eq(sql`lower(${ingredients.name})`, sql`lower(${input.name})`))
           .limit(1)
       )[0]?.id;
 
@@ -174,26 +176,32 @@ export async function mintIngredientWithAliases(
 /**
  * Add spellings to an Ingredient that already exists, and answer with the
  * alias each requested fold now has. A fold another Ingredient already holds
- * keeps pointing where it points: one spelling means one food.
+ * keeps pointing where it points: one spelling means one food. Null where
+ * the Ingredient is gone — merged away since it was read.
  */
 export async function addIngredientAliases(input: {
   ingredientId: string;
   aliases: ReadonlyArray<{ text: string; fold: string }>;
   ownerId: string | null;
   locale: string | null;
-}): Promise<IngredientAliasRow[]> {
-  await db
-    .insert(ingredientAliases)
-    .values(
-      input.aliases.map((alias) => ({
-        text: alias.text,
-        fold: alias.fold,
-        locale: input.locale,
-        ingredientId: input.ingredientId,
-        ownerId: input.ownerId,
-      }))
-    )
-    .onConflictDoNothing();
+}): Promise<IngredientAliasRow[] | null> {
+  try {
+    await db
+      .insert(ingredientAliases)
+      .values(
+        input.aliases.map((alias) => ({
+          text: alias.text,
+          fold: alias.fold,
+          locale: input.locale,
+          ingredientId: input.ingredientId,
+          ownerId: input.ownerId,
+        }))
+      )
+      .onConflictDoNothing();
+  } catch (error) {
+    if (isConstraintViolation(error, "23503")) return null;
+    throw error;
+  }
 
   return await findIngredientAliasesByFolds(input.aliases.map((alias) => alias.fold));
 }

@@ -344,6 +344,15 @@
     "markDistinct": "Marker som selvstændig",
     "addAlias": "Tilføj en stavemåde",
     "removeAlias": "Fjern {alias}",
+    "mergeInto": "Flet med…",
+    "merge": "Flet",
+    "mergeTitle": "Flet {name} med en anden ingrediens. Stavemåderne, og de opskrifter og indkøb der bruger dem, følger med.",
+    "moveTo": "Flyt til",
+    "move": "Flyt",
+    "moveAlias": "Flyt {alias}",
+    "moveTitle": "Flyt {alias} til en anden ingrediens, eller til en ny.",
+    "newIngredient": "En ny ingrediens",
+    "pickIngredient": "Søg efter en ingrediens",
     "errors": {
       "title": "Ingrediensen kunne ikke ændres",
       "forbidden": "Du må ikke redigere denne ingrediens",
@@ -352,6 +361,7 @@
       "spelling-taken": "Denne stavemåde hører allerede til en anden ingrediens",
       "last-alias": "En ingrediens beholder mindst én stavemåde",
       "alias-in-use": "Opskrifter eller indkøb bruger stadig denne stavemåde",
+      "same-ingredient": "En ingrediens kan ikke flettes med sig selv",
       "empty": "Indtast et navn",
       "unknown": "Noget gik galt. Prøv igen."
     }

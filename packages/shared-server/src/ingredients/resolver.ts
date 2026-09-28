@@ -150,7 +150,9 @@ export async function resolveIngredients(
 
     if (!match) {
       const answer = answers.get(sameFoodKey(spelling)) ?? FLAGGED_NEW;
-      const rows =
+      // The food AI named may have been merged away since the question was
+      // asked; the text is then minted flagged rather than failing its save.
+      const joined =
         answer.kind === "same"
           ? await addIngredientAliases({
               ingredientId: answer.ingredientId,
@@ -158,7 +160,9 @@ export async function resolveIngredients(
               ownerId: actor.userId,
               locale: actor.locale ?? null,
             })
-          : await mint(spelling, actor, answer.flagged);
+          : null;
+      const rows =
+        joined ?? (await mint(spelling, actor, answer.kind === "same" || answer.flagged));
 
       for (const row of rows) known.set(row.fold, row);
     }

@@ -344,6 +344,15 @@
     "markDistinct": "Marcar como distinto",
     "addAlias": "Añadir una grafía",
     "removeAlias": "Eliminar {alias}",
+    "mergeInto": "Fusionar con…",
+    "merge": "Fusionar",
+    "mergeTitle": "Fusiona {name} con otro ingrediente. Sus grafías, y las recetas y compras que las usan, van con él.",
+    "moveTo": "Mover a",
+    "move": "Mover",
+    "moveAlias": "Mover {alias}",
+    "moveTitle": "Mueve {alias} a otro ingrediente, o a uno nuevo.",
+    "newIngredient": "Un ingrediente nuevo",
+    "pickIngredient": "Buscar un ingrediente",
     "errors": {
       "title": "No se pudo cambiar el ingrediente",
       "forbidden": "No puedes editar este ingrediente",
@@ -352,6 +361,7 @@
       "spelling-taken": "Esta grafía ya pertenece a otro ingrediente",
       "last-alias": "Un ingrediente conserva al menos una grafía",
       "alias-in-use": "Recetas o compras todavía usan esta grafía",
+      "same-ingredient": "Un ingrediente no se puede fusionar consigo mismo",
       "empty": "Introduce un nombre",
       "unknown": "Algo salió mal. Inténtalo de nuevo."
     }

@@ -7,15 +7,19 @@ import {
   CatalogueEditError,
   listIngredients,
   markDistinct as markCatalogueDistinct,
+  mergeIngredients,
+  moveAlias as moveCatalogueAlias,
   removeAlias as removeCatalogueAlias,
   renameIngredient,
 } from "@norish/shared-server/ingredients/catalogue";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 
 import type { AuthedProcedureContext } from "../../middleware";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { ingredientsSubscriptions } from "./subscriptions";
 
 /**
  * The Ingredient a name Norish already knows resolves to, or null. A reader:
@@ -23,8 +27,10 @@ import { router } from "../../trpc";
  * name while it is still being typed (ADR-0037). Ingredients are always
  * visible, so the answer is nobody's in particular.
  */
+const ingredientName = z.string().trim().min(1).max(300);
+
 const find = authedProcedure
-  .input(z.object({ name: z.string().trim().min(1).max(300) }))
+  .input(z.object({ name: ingredientName }))
   .query(async ({ input }): Promise<{ ingredientId: string } | null> => {
     const ingredient = await findIngredientFor(input.name);
 
@@ -46,6 +52,7 @@ const REFUSAL_CODES: Record<CatalogueRefusal, TRPCError["code"]> = {
   "spelling-taken": "CONFLICT",
   "last-alias": "CONFLICT",
   "alias-in-use": "CONFLICT",
+  "same-ingredient": "BAD_REQUEST",
   empty: "BAD_REQUEST",
 };
 
@@ -66,7 +73,13 @@ async function asEditResult(run: () => Promise<unknown>): Promise<{ success: tru
   return { success: true };
 }
 
-const ingredientName = z.string().trim().min(1).max(300);
+/**
+ * Tell every client that what these Ingredients are has changed — a merge,
+ * an alias move or a rename — so each refetches what it derived from them.
+ */
+function announceChanged(ingredientIds: string[]): Promise<void> {
+  return ingredientsRealtime.publish("changed", { ingredientIds }, undefined);
+}
 
 /**
  * A page of the catalogue for the Ingredients page: every Ingredient, or the
@@ -104,7 +117,10 @@ const rename = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Renaming an Ingredient");
 
-    return asEditResult(() => renameIngredient(actorOf(ctx), input.ingredientId, input.name));
+    return asEditResult(async () => {
+      await renameIngredient(actorOf(ctx), input.ingredientId, input.name);
+      await announceChanged([input.ingredientId]);
+    });
   });
 
 const markDistinct = authedProcedure
@@ -123,6 +139,31 @@ const removeAlias = authedProcedure
     return asEditResult(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
   });
 
+/** Merge one Ingredient into another. Needs `edit` on both. */
+const merge = authedProcedure
+  .input(z.object({ sourceId: z.uuid(), targetId: z.uuid() }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ...input }, "Merging Ingredients");
+
+    return asEditResult(async () => {
+      await mergeIngredients(actorOf(ctx), input.sourceId, input.targetId);
+      await announceChanged([input.sourceId, input.targetId]);
+    });
+  });
+
+/** Move a spelling to another Ingredient, or to a new one (`targetId` null): the unmerge. */
+const moveAlias = authedProcedure
+  .input(z.object({ aliasId: z.uuid(), targetId: z.uuid().nullable() }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ...input }, "Moving an alias");
+
+    return asEditResult(async () => {
+      const moved = await moveCatalogueAlias(actorOf(ctx), input.aliasId, input.targetId);
+
+      await announceChanged([moved.fromIngredientId, moved.ingredientId]);
+    });
+  });
+
 export const ingredientsRouter = router({
   find,
   list,
@@ -130,4 +171,7 @@ export const ingredientsRouter = router({
   rename,
   markDistinct,
   removeAlias,
+  merge,
+  moveAlias,
+  ...ingredientsSubscriptions._def.procedures,
 });

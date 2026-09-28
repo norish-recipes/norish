@@ -344,6 +344,15 @@
     "markDistinct": "Oznacz jako odrębny",
     "addAlias": "Dodaj pisownię",
     "removeAlias": "Usuń {alias}",
+    "mergeInto": "Scal z…",
+    "merge": "Scal",
+    "mergeTitle": "Scal {name} z innym składnikiem. Jego pisownie oraz przepisy i zakupy, które ich używają, przejdą razem z nim.",
+    "moveTo": "Przenieś do",
+    "move": "Przenieś",
+    "moveAlias": "Przenieś {alias}",
+    "moveTitle": "Przenieś {alias} do innego składnika lub do nowego.",
+    "newIngredient": "Nowy składnik",
+    "pickIngredient": "Szukaj składnika",
     "errors": {
       "title": "Nie udało się zmienić składnika",
       "forbidden": "Nie możesz edytować tego składnika",
@@ -352,6 +361,7 @@
       "spelling-taken": "Ta pisownia należy już do innego składnika",
       "last-alias": "Składnik zachowuje co najmniej jedną pisownię",
       "alias-in-use": "Przepisy lub zakupy nadal używają tej pisowni",
+      "same-ingredient": "Składnika nie można scalić z samym sobą",
       "empty": "Wpisz nazwę",
       "unknown": "Coś poszło nie tak. Spróbuj ponownie."
     }

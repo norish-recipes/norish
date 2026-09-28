@@ -5,7 +5,8 @@
  *
  * - adding an alias is open to everyone;
  * - renaming and marking distinct follow `edit` on the Ingredient;
- * - removing an alias follows `edit` on the alias;
+ * - merging needs `edit` on both Ingredients;
+ * - moving or removing an alias follows `edit` on the alias;
  * - an ownerless (seeded) row is an administrator's alone, and an
  *   administrator bypasses the policy, as for recipes.
  *
@@ -17,6 +18,7 @@ import type {
   CatalogueAlias,
   CatalogueIngredient,
 } from "@norish/db/repositories/ingredient-catalogue";
+import type { CatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   clearIngredientFlag,
   deleteCatalogueAlias,
@@ -24,8 +26,9 @@ import {
   findCatalogueIngredientOwner,
   findIngredientIdByFold,
   insertCatalogueAlias,
-  isIngredientNameTaken,
   listCatalogueIngredients,
+  mergeCatalogueIngredients,
+  moveCatalogueAlias,
   renameCatalogueIngredient,
 } from "@norish/db/repositories/ingredient-catalogue";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
@@ -40,15 +43,7 @@ export interface CatalogueActor {
   isServerAdmin: boolean;
 }
 
-/** Why an edit was refused, in terms a caller turns into its own error. */
-export type CatalogueRefusal =
-  | "forbidden"
-  | "not-found"
-  | "name-taken"
-  | "spelling-taken"
-  | "last-alias"
-  | "alias-in-use"
-  | "empty";
+export type { CatalogueRefusal };
 
 export class CatalogueEditError extends Error {
   constructor(readonly refusal: CatalogueRefusal) {
@@ -191,9 +186,6 @@ export async function renameIngredient(
 
   if (!cleaned) throw new CatalogueEditError("empty");
   await assertMayEditIngredient(actor, ingredientId);
-  if (await isIngredientNameTaken(cleaned, ingredientId)) {
-    throw new CatalogueEditError("name-taken");
-  }
   const outcome = await renameCatalogueIngredient(ingredientId, cleaned);
 
   if (outcome === "taken") throw new CatalogueEditError("name-taken");
@@ -204,6 +196,58 @@ export async function renameIngredient(
 export async function markDistinct(actor: CatalogueActor, ingredientId: string): Promise<void> {
   await assertMayEditIngredient(actor, ingredientId);
   if (!(await clearIngredientFlag(ingredientId))) throw new CatalogueEditError("not-found");
+}
+
+/**
+ * Merge `sourceId` into `targetId`: every spelling of the source, and every
+ * line behind them, now means the target, and the source is gone — which is
+ * also what clears its flag. Needs `edit` on both.
+ */
+export async function mergeIngredients(
+  actor: CatalogueActor,
+  sourceId: string,
+  targetId: string
+): Promise<void> {
+  if (sourceId === targetId) throw new CatalogueEditError("same-ingredient");
+  await assertMayEditIngredient(actor, sourceId);
+  await assertMayEditIngredient(actor, targetId);
+  if ((await mergeCatalogueIngredients(sourceId, targetId)) === "missing") {
+    throw new CatalogueEditError("not-found");
+  }
+}
+
+/**
+ * Move a spelling to another Ingredient, or to a new one named for it
+ * (`targetId` null) — the unmerge. Follows `edit` on the alias; the
+ * Ingredient it leaves keeps its flag, and a new one is a person's choice, so
+ * it is not flagged. Answers the Ingredient the spelling now names.
+ */
+export async function moveAlias(
+  actor: CatalogueActor,
+  aliasId: string,
+  targetId: string | null
+): Promise<{ ingredientId: string; fromIngredientId: string }> {
+  const [alias, policy] = await Promise.all([
+    findCatalogueAliasOwner(aliasId),
+    getIngredientPermissionPolicy(),
+  ]);
+
+  if (!alias) throw new CatalogueEditError("not-found");
+  if (!mayEditIngredientRow(policy.edit, actor, alias.ownerId)) {
+    throw new CatalogueEditError("forbidden");
+  }
+
+  const moved = await moveCatalogueAlias(
+    aliasId,
+    targetId ? { ingredientId: targetId } : { mint: { name: alias.text, ownerId: actor.userId } }
+  );
+
+  if (moved.outcome === "moved") {
+    return { ingredientId: moved.ingredientId, fromIngredientId: alias.ingredientId };
+  }
+  if (moved.outcome === "last") throw new CatalogueEditError("last-alias");
+  if (moved.outcome === "name-taken") throw new CatalogueEditError("name-taken");
+  throw new CatalogueEditError("not-found");
 }
 
 /**

@@ -8,6 +8,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
+import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-catalogue";
 import { ingredientAliases, ingredients } from "@norish/db/schema";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
@@ -35,14 +36,16 @@ vi.mock("@norish/shared-server/config/server-config-loader", async (importOrigin
 
 /**
  * A Decision that picks the option whose description is `pick` with
- * probability `p`, the rest of the mass on the other options.
+ * probability `p`, the rest of the mass on the other options. `meanwhile`
+ * runs while the Decision is thinking.
  */
-function decides(pick: string, p: number) {
+function decides(pick: string, p: number, meanwhile?: () => Promise<unknown>) {
   vi.mocked(decide).mockImplementationOnce((async ({
     questions,
   }: {
     questions: DecisionQuestions;
   }) => {
+    await meanwhile?.();
     const [id, question] = Object.entries(questions)[0]!;
 
     if (question.type !== "choice") throw new Error("expected a choice");
@@ -113,6 +116,23 @@ describe("ingredient resolver, rung 3", () => {
 
     return resolveOne(text);
   }
+
+  it("mints a flagged food where the food a sure answer named was merged away meanwhile", async () => {
+    const onion = await known("onion");
+    const shallot = await known("shallot");
+
+    decides("Is onion", 0.95, () =>
+      mergeCatalogueIngredients(onion.ingredientId, shallot.ingredientId)
+    );
+
+    const onions = await resolveOne("onions");
+
+    expect(onions.ingredientId).not.toBe(onion.ingredientId);
+    await expect(ingredientFor(onions.aliasId)).resolves.toMatchObject({
+      name: "onions",
+      flagged: true,
+    });
+  });
 
   it("files a text a sure Decision names as a known food under that food", async () => {
     const onion = await known("onion");

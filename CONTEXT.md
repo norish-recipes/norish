@@ -52,7 +52,7 @@ One food, known by many Ingredient Aliases: "onion", "onions", "onion, diced" an
 _Avoid_: Ingredient Name (retired: a name is an alias of an Ingredient, not the Ingredient), Food, Product (that is the shop's)
 
 **Ingredient Alias**:
-One spelling of an Ingredient — a plural, a translation, a variant with its preparation — and what everything that names a food points at. A recipe line, a Grocery and a Pantry Ingredient keep their text as written and point at the alias it resolved to, so "2 onions, diced" still reads that way. One spelling, folded, is one alias instance-wide, so it can never mean two foods. A new text is resolved to an alias by an exact match, then the same match with its preparation stripped, then a Decision or the language model, and only then is an Ingredient minted for it.
+One spelling of an Ingredient — a plural, a translation, a variant with its preparation — and what everything that names a food points at. A recipe line, a Grocery and a Pantry Ingredient keep their text as written and point at the alias it resolved to, so "2 onions, diced" still reads that way. One spelling, folded, is one alias instance-wide, so it can never mean two foods. A new text is resolved to an alias by an exact match, then the same match with its preparation stripped, then a Decision or the language model, and only then is an Ingredient minted for it. Merging two Ingredients moves every alias of one onto the other, and moving one alias back out is the unmerge: the lines behind an alias go wherever it goes, while Product Links, Aisle Links and store preferences stay with the food they were learned for.
 _Avoid_: Synonym (an alias is how a line names its food, not a thesaurus entry), Ingredient Name
 
 **Flagged Ingredient**:

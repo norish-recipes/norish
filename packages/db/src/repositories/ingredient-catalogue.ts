@@ -1,14 +1,21 @@
+import type { SQL } from "drizzle-orm";
 import { and, asc, count, eq, inArray, or, sql } from "drizzle-orm";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
 import {
+  aisleLinks,
   groceries,
   ingredientAliases,
   ingredients,
+  ingredientStorePreferences,
   pantryIngredients,
   recipeIngredients,
   recurringGroceries,
+  storeProductLinks,
 } from "@norish/db/schema";
+
+import { isConstraintViolation } from "./constraint-violation";
 
 /**
  * The catalogue of Ingredients as the Ingredients page reads and edits it
@@ -36,20 +43,6 @@ export interface CatalogueAlias {
 /** Who owns a row of the catalogue, which is what the edit policy is asked about. */
 export interface CatalogueOwner {
   ownerId: string | null;
-}
-
-/**
- * Whether `error` is Postgres refusing a write on a constraint of this class:
- * `23505` a unique violation, `23503` a foreign-key one. Drizzle wraps the
- * driver's error, so its cause is read too.
- */
-function isConstraintViolation(error: unknown, code: "23505" | "23503"): boolean {
-  for (let current = error; current && typeof current === "object";) {
-    if ((current as { code?: unknown }).code === code) return true;
-    current = (current as { cause?: unknown }).cause;
-  }
-
-  return false;
 }
 
 /** A `LIKE` pattern matching `text` anywhere, its wildcards taken literally. */
@@ -129,30 +122,18 @@ export async function findCatalogueIngredientOwner(id: string): Promise<Catalogu
 
 export async function findCatalogueAliasOwner(
   aliasId: string
-): Promise<(CatalogueOwner & { ingredientId: string }) | null> {
+): Promise<(CatalogueOwner & { ingredientId: string; text: string }) | null> {
   const [row] = await db
-    .select({ ownerId: ingredientAliases.ownerId, ingredientId: ingredientAliases.ingredientId })
+    .select({
+      ownerId: ingredientAliases.ownerId,
+      ingredientId: ingredientAliases.ingredientId,
+      text: ingredientAliases.text,
+    })
     .from(ingredientAliases)
     .where(eq(ingredientAliases.id, aliasId))
     .limit(1);
 
   return row ?? null;
-}
-
-/** Whether another Ingredient already goes by this name, in any case. */
-export async function isIngredientNameTaken(name: string, exceptId: string): Promise<boolean> {
-  const [row] = await db
-    .select({ id: ingredients.id })
-    .from(ingredients)
-    .where(
-      and(
-        eq(sql`lower(${ingredients.name})`, name.toLowerCase()),
-        sql`${ingredients.id} <> ${exceptId}`
-      )
-    )
-    .limit(1);
-
-  return Boolean(row);
 }
 
 /**
@@ -283,4 +264,152 @@ async function deleteAliasIfSpare(
 
     return "deleted";
   });
+}
+
+/**
+ * The rows that hold a fact about an Ingredient, each unique on the
+ * Ingredient and one other column: at most one Product Link and one Aisle
+ * Link per Store, one store preference and one Pantry Ingredient per member.
+ */
+const PANTRY_KEYED = { table: pantryIngredients, key: "user_id" } as const;
+const KEYED_BY_INGREDIENT = [
+  { table: storeProductLinks, key: "store_id" },
+  { table: aisleLinks, key: "store_id" },
+  { table: ingredientStorePreferences, key: "user_id" },
+  PANTRY_KEYED,
+] as const;
+
+/**
+ * Re-point the rows `which` picks out of `table` (as `p`) at `targetId`. A row
+ * that would become a second one for the target under the table's key is
+ * deleted instead: the target's own is kept.
+ */
+async function repointKeyed(
+  tx: DbTransaction,
+  { table, key }: (typeof KEYED_BY_INGREDIENT)[number],
+  which: SQL,
+  targetId: string
+): Promise<void> {
+  const column = sql.identifier(key);
+
+  await tx.execute(sql`
+    delete from ${table} p using ${table} q
+    where ${which} and q.ingredient_id = ${targetId} and q.${column} = p.${column} and q.id <> p.id`);
+  await tx.execute(sql`update ${table} p set ingredient_id = ${targetId} where ${which}`);
+}
+
+/** Lock Ingredients for an edit, in id order so two edits over the same pair never deadlock. */
+async function lockIngredients(tx: DbTransaction, ids: readonly string[]): Promise<number> {
+  const rows = await tx
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(inArray(ingredients.id, [...ids]))
+    .orderBy(asc(ingredients.id))
+    .for("update");
+
+  return rows.length;
+}
+
+/**
+ * Merge one Ingredient into another: every spelling of the source becomes
+ * the target's, so every recipe line, grocery and Pantry Ingredient behind
+ * them now means the target, and the source is deleted. What the household
+ * taught Norish about the source — Product Links, Aisle Links, store
+ * preferences — joins the target, except where the target already has one
+ * at that Store (or for that member): the target's is kept. A member who held
+ * both foods in the Pantry keeps the one Pantry Ingredient.
+ */
+export async function mergeCatalogueIngredients(
+  sourceId: string,
+  targetId: string
+): Promise<"merged" | "missing"> {
+  return await db.transaction(async (tx) => {
+    if ((await lockIngredients(tx, [sourceId, targetId])) < 2) return "missing";
+
+    for (const keyed of KEYED_BY_INGREDIENT) {
+      await repointKeyed(tx, keyed, sql`p.ingredient_id = ${sourceId}`, targetId);
+    }
+    for (const table of [groceries, recurringGroceries]) {
+      await tx
+        .update(table)
+        .set({ ingredientId: targetId })
+        .where(eq(table.ingredientId, sourceId));
+    }
+    await tx
+      .update(ingredientAliases)
+      .set({ ingredientId: targetId, updatedAt: new Date() })
+      .where(eq(ingredientAliases.ingredientId, sourceId));
+    await tx.delete(ingredients).where(eq(ingredients.id, sourceId));
+
+    return "merged";
+  });
+}
+
+/**
+ * Move one spelling to another Ingredient, or to a new one named for it
+ * (`mint`): the unmerge. The lines behind the spelling go with it; the
+ * Product Links, Aisle Links and store preferences stay with the food they
+ * were learned for. A member whose Pantry Ingredient lands on a food they
+ * already hold keeps the one. An Ingredient keeps at least one spelling.
+ * Answers the Ingredient the spelling now names.
+ */
+export async function moveCatalogueAlias(
+  aliasId: string,
+  target: { ingredientId: string } | { mint: { name: string; ownerId: string } }
+): Promise<
+  { outcome: "moved"; ingredientId: string } | { outcome: "missing" | "last" | "name-taken" }
+> {
+  try {
+    return await db.transaction(async (tx) => {
+      const [alias] = await tx
+        .select({ ingredientId: ingredientAliases.ingredientId })
+        .from(ingredientAliases)
+        .where(eq(ingredientAliases.id, aliasId));
+
+      if (!alias) return { outcome: "missing" as const };
+
+      const sourceId = alias.ingredientId;
+      const targetIds = "ingredientId" in target ? [target.ingredientId] : [];
+
+      if ((await lockIngredients(tx, [sourceId, ...targetIds])) < 1 + targetIds.length) {
+        return { outcome: "missing" as const };
+      }
+      if (targetIds[0] === sourceId) return { outcome: "moved" as const, ingredientId: sourceId };
+
+      const [{ value: siblings } = { value: 0 }] = await tx
+        .select({ value: count() })
+        .from(ingredientAliases)
+        .where(eq(ingredientAliases.ingredientId, sourceId));
+
+      if (siblings <= 1) return { outcome: "last" as const };
+
+      const targetId =
+        "ingredientId" in target
+          ? target.ingredientId
+          : (
+              await tx
+                .insert(ingredients)
+                .values({ name: target.mint.name, ownerId: target.mint.ownerId })
+                .returning({ id: ingredients.id })
+            )[0]!.id;
+
+      await tx
+        .update(ingredientAliases)
+        .set({ ingredientId: targetId, updatedAt: new Date() })
+        .where(eq(ingredientAliases.id, aliasId));
+      await repointKeyed(tx, PANTRY_KEYED, sql`p.ingredient_alias_id = ${aliasId}`, targetId);
+      for (const table of [groceries, recurringGroceries]) {
+        await tx
+          .update(table)
+          .set({ ingredientId: targetId })
+          .where(eq(table.ingredientAliasId, aliasId));
+      }
+
+      return { outcome: "moved" as const, ingredientId: targetId };
+    });
+  } catch (error) {
+    // The new Ingredient's name is one another Ingredient goes by.
+    if (isConstraintViolation(error, "23505")) return { outcome: "name-taken" };
+    throw error;
+  }
 }

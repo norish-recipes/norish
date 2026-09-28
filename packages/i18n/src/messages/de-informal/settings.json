@@ -344,6 +344,15 @@
     "markDistinct": "Als eigenständig markieren",
     "addAlias": "Schreibweise hinzufügen",
     "removeAlias": "{alias} entfernen",
+    "mergeInto": "Zusammenführen mit…",
+    "merge": "Zusammenführen",
+    "mergeTitle": "Führe {name} mit einer anderen Zutat zusammen. Die Schreibweisen und die Rezepte und Einkäufe, die sie verwenden, wandern mit.",
+    "moveTo": "Verschieben nach",
+    "move": "Verschieben",
+    "moveAlias": "{alias} verschieben",
+    "moveTitle": "Verschiebe {alias} zu einer anderen Zutat oder zu einer neuen.",
+    "newIngredient": "Eine neue Zutat",
+    "pickIngredient": "Zutat suchen",
     "errors": {
       "title": "Die Zutat konnte nicht geändert werden",
       "forbidden": "Sie dürfen diese Zutat nicht bearbeiten",
@@ -352,6 +361,7 @@
       "spelling-taken": "Diese Schreibweise gehört bereits zu einer anderen Zutat",
       "last-alias": "Eine Zutat behält mindestens eine Schreibweise",
       "alias-in-use": "Rezepte oder Einkäufe verwenden diese Schreibweise noch",
+      "same-ingredient": "Eine Zutat kann nicht mit sich selbst zusammengeführt werden",
       "empty": "Gib einen Namen ein",
       "unknown": "Etwas ist schiefgelaufen. Versuch es erneut."
     }

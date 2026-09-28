@@ -344,6 +344,15 @@
     "markDistinct": "Marquer comme distinct",
     "addAlias": "Ajouter une orthographe",
     "removeAlias": "Supprimer {alias}",
+    "mergeInto": "Fusionner avec…",
+    "merge": "Fusionner",
+    "mergeTitle": "Fusionner {name} avec un autre ingrédient. Ses orthographes, et les recettes et courses qui les utilisent, le suivent.",
+    "moveTo": "Déplacer vers",
+    "move": "Déplacer",
+    "moveAlias": "Déplacer {alias}",
+    "moveTitle": "Déplacer {alias} vers un autre ingrédient, ou vers un nouveau.",
+    "newIngredient": "Un nouvel ingrédient",
+    "pickIngredient": "Rechercher un ingrédient",
     "errors": {
       "title": "Impossible de modifier l'ingrédient",
       "forbidden": "Vous ne pouvez pas modifier cet ingrédient",
@@ -352,6 +361,7 @@
       "spelling-taken": "Cette orthographe appartient déjà à un autre ingrédient",
       "last-alias": "Un ingrédient garde au moins une orthographe",
       "alias-in-use": "Des recettes ou des courses utilisent encore cette orthographe",
+      "same-ingredient": "Un ingrédient ne peut pas être fusionné avec lui-même",
       "empty": "Saisissez un nom",
       "unknown": "Une erreur s'est produite. Réessayez."
     }

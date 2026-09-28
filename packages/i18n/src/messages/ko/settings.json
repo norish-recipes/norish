@@ -344,6 +344,15 @@
     "markDistinct": "별개로 표시",
     "addAlias": "표기 추가",
     "removeAlias": "{alias} 제거",
+    "mergeInto": "다음으로 병합…",
+    "merge": "병합",
+    "mergeTitle": "{name}을(를) 다른 재료로 병합합니다. 표기와 그 표기를 쓰는 레시피 및 장보기 항목도 함께 옮겨집니다.",
+    "moveTo": "이동할 재료",
+    "move": "이동",
+    "moveAlias": "{alias} 이동",
+    "moveTitle": "{alias}을(를) 다른 재료나 새 재료로 옮깁니다.",
+    "newIngredient": "새 재료",
+    "pickIngredient": "재료 검색",
     "errors": {
       "title": "재료를 변경할 수 없습니다",
       "forbidden": "이 재료를 편집할 권한이 없습니다",
@@ -352,6 +361,7 @@
       "spelling-taken": "이 표기는 이미 다른 재료에 속해 있습니다",
       "last-alias": "재료에는 최소 하나의 표기가 남아야 합니다",
       "alias-in-use": "레시피나 장보기 목록이 아직 이 표기를 사용합니다",
+      "same-ingredient": "재료를 자기 자신과 병합할 수 없습니다",
       "empty": "이름을 입력하세요",
       "unknown": "문제가 발생했습니다. 다시 시도하세요."
     }

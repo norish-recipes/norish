@@ -10,6 +10,7 @@ import { ArchiveImportProvider } from "@/context/archive-import-context";
 import { CookbooksRealtimeProvider } from "@/context/cookbooks-realtime-context";
 import { HiddenItemsProvider } from "@/context/hidden-items-context";
 import { HouseholdProvider } from "@/context/household-context";
+import { IngredientsRealtime } from "@/context/ingredients-realtime";
 import { PantryRealtimeProvider } from "@/context/pantry-realtime-context";
 import { PermissionsProvider } from "@/context/permissions-context";
 import { RecipePageColorProvider } from "@/context/recipe-page-color-context";
@@ -91,6 +92,7 @@ export function AppShell({
                                 </div>
                                 <TimerDock />
                                 <ClipboardImportPrompt />
+                                <IngredientsRealtime />
                               </RecipePageColorProvider>
                             </AmountDisplayProvider>
                           </TodaysMealsVisibilityProvider>

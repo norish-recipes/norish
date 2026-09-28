@@ -23,6 +23,8 @@ const mutations = {
   markDistinct: vi.fn(async () => ({ success: true })),
   addAlias: vi.fn(async () => ({ success: true })),
   removeAlias: vi.fn(async () => ({ success: true })),
+  merge: vi.fn(async () => ({ success: true })),
+  moveAlias: vi.fn(async () => ({ success: true })),
 };
 const invalidateQueries = vi.fn();
 
@@ -41,6 +43,8 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       markDistinct: { mutationOptions: () => ({ name: "markDistinct" }) },
       addAlias: { mutationOptions: () => ({ name: "addAlias" }) },
       removeAlias: { mutationOptions: () => ({ name: "removeAlias" }) },
+      merge: { mutationOptions: () => ({ name: "merge" }) },
+      moveAlias: { mutationOptions: () => ({ name: "moveAlias" }) },
     },
   }),
 }));
@@ -75,6 +79,22 @@ vi.mock("@/components/shared/action-button", () => ({
       type="button"
       onClick={onPress}
     />
+  ),
+}));
+
+// The picker searches the catalogue; here it offers salt, and a new Ingredient where allowed.
+vi.mock("@/app/(app)/settings/ingredients/components/ingredient-picker", () => ({
+  IngredientPicker: ({ onPick, allowNew, editableOnly, excludeId }: any) => (
+    <div data-editable-only={editableOnly} data-exclude={excludeId} data-testid="picker">
+      <button type="button" onClick={() => onPick({ id: "salt", name: "salt" })}>
+        pick-salt
+      </button>
+      {allowNew ? (
+        <button type="button" onClick={() => onPick({ id: null })}>
+          pick-new
+        </button>
+      ) : null}
+    </div>
   ),
 }));
 
@@ -129,6 +149,10 @@ describe("IngredientsSettingsContent", () => {
     expect(within(row("onion")).getAllByRole("button", { name: "removeAlias" })).toHaveLength(1);
     expect(within(row("salt")).queryByTestId("icon-edit")).toBeNull();
     expect(within(row("salt")).queryByRole("button", { name: "removeAlias" })).toBeNull();
+    expect(within(row("onion")).getByTestId("ingredient-merge")).toBeInTheDocument();
+    expect(within(row("onion")).getAllByTestId("ingredient-alias-move")).toHaveLength(1);
+    expect(within(row("salt")).queryByTestId("ingredient-merge")).toBeNull();
+    expect(within(row("salt")).queryByTestId("ingredient-alias-move")).toBeNull();
     // Adding a spelling is open to everyone.
     expect(within(row("salt")).getByTestId("ingredient-alias-input")).toBeInTheDocument();
   });
@@ -175,6 +199,46 @@ describe("IngredientsSettingsContent", () => {
 
     expect(mutations.addAlias).toHaveBeenCalledWith({ ingredientId: "salt", text: "zout" });
     expect(field).toHaveValue("");
+  });
+
+  it("merges a food into one the viewer may edit", async () => {
+    render(<IngredientsSettingsContent />);
+
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByTestId("ingredient-merge"));
+    });
+    const picker = within(row("onion")).getByTestId("picker");
+
+    expect(picker).toHaveAttribute("data-editable-only", "true");
+    expect(picker).toHaveAttribute("data-exclude", "onion");
+    expect(within(picker).queryByText("pick-new")).toBeNull();
+    expect(within(row("onion")).getByTestId("ingredient-relocation-confirm")).toBeDisabled();
+
+    await act(async () => {
+      fireEvent.click(within(picker).getByText("pick-salt"));
+    });
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByTestId("ingredient-relocation-confirm"));
+    });
+
+    expect(mutations.merge).toHaveBeenCalledWith({ sourceId: "onion", targetId: "salt" });
+    expect(within(row("onion")).queryByTestId("ingredient-relocation")).toBeNull();
+  });
+
+  it("moves a spelling out to a new food", async () => {
+    render(<IngredientsSettingsContent />);
+
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByTestId("ingredient-alias-move"));
+    });
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByText("pick-new"));
+    });
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByTestId("ingredient-relocation-confirm"));
+    });
+
+    expect(mutations.moveAlias).toHaveBeenCalledWith({ aliasId: "a-onion", targetId: null });
   });
 
   it("asks for the flagged ones alone when filtered", async () => {

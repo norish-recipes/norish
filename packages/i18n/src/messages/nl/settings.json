@@ -344,6 +344,15 @@
     "markDistinct": "Markeer als apart",
     "addAlias": "Spelling toevoegen",
     "removeAlias": "{alias} verwijderen",
+    "mergeInto": "Samenvoegen met…",
+    "merge": "Samenvoegen",
+    "mergeTitle": "Voeg {name} samen met een ander ingrediënt. De spellingen, en de recepten en boodschappen die ze gebruiken, gaan mee.",
+    "moveTo": "Verplaatsen naar",
+    "move": "Verplaatsen",
+    "moveAlias": "{alias} verplaatsen",
+    "moveTitle": "Verplaats {alias} naar een ander ingrediënt, of naar een nieuw.",
+    "newIngredient": "Een nieuw ingrediënt",
+    "pickIngredient": "Zoek een ingrediënt",
     "errors": {
       "title": "Kon het ingrediënt niet wijzigen",
       "forbidden": "Je mag dit ingrediënt niet bewerken",
@@ -352,6 +361,7 @@
       "spelling-taken": "Deze spelling hoort al bij een ander ingrediënt",
       "last-alias": "Een ingrediënt houdt minstens één spelling",
       "alias-in-use": "Recepten of boodschappen gebruiken deze spelling nog",
+      "same-ingredient": "Een ingrediënt kan niet met zichzelf worden samengevoegd",
       "empty": "Voer een naam in",
       "unknown": "Er ging iets mis. Probeer het opnieuw."
     }

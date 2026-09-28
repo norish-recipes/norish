@@ -15,6 +15,7 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
+import { ingredients as ingredientsRealtime } from "../mocks/realtime/ingredients";
 
 const catalogue = vi.hoisted(() => ({
   clearIngredientFlag: vi.fn(),
@@ -23,8 +24,9 @@ const catalogue = vi.hoisted(() => ({
   findCatalogueIngredientOwner: vi.fn(),
   findIngredientIdByFold: vi.fn(),
   insertCatalogueAlias: vi.fn(),
-  isIngredientNameTaken: vi.fn(),
   listCatalogueIngredients: vi.fn(),
+  mergeCatalogueIngredients: vi.fn(),
+  moveCatalogueAlias: vi.fn(),
   renameCatalogueIngredient: vi.fn(),
 }));
 const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
@@ -32,6 +34,10 @@ const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
 vi.mock("@norish/shared-server/config/server-config-loader", () => policy);
 vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
+vi.mock(
+  "@norish/shared-server/realtime/ingredients",
+  () => import("../mocks/realtime/ingredients")
+);
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -39,6 +45,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 const ONION = "11111111-1111-4111-8111-111111111111";
 const ALIAS = "22222222-2222-4222-8222-222222222222";
+const UIEN = "33333333-3333-4333-8333-333333333333";
 const ME = "test-user-id";
 const HOUSEMATE = "household-member-id";
 const STRANGER = "someone-elsewhere";
@@ -58,13 +65,15 @@ function withPolicy(edit: PermissionLevel) {
 
 function ownedBy(ownerId: string | null) {
   catalogue.findCatalogueIngredientOwner.mockResolvedValue({ ownerId });
-  catalogue.findCatalogueAliasOwner.mockResolvedValue({ ownerId, ingredientId: ONION });
+  catalogue.findCatalogueAliasOwner.mockResolvedValue({ ownerId, ingredientId: ONION, text: "ui" });
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  ingredientsRealtime.reset();
   withPolicy("household");
-  catalogue.isIngredientNameTaken.mockResolvedValue(false);
+  catalogue.mergeCatalogueIngredients.mockResolvedValue("merged");
+  catalogue.moveCatalogueAlias.mockResolvedValue({ outcome: "moved", ingredientId: UIEN });
   catalogue.renameCatalogueIngredient.mockResolvedValue("renamed");
   catalogue.clearIngredientFlag.mockResolvedValue({ id: ONION });
   catalogue.deleteCatalogueAlias.mockResolvedValue("deleted");
@@ -159,6 +168,79 @@ describe("the edit policy", () => {
     });
   });
 
+  it.each(matrix)(
+    "under %s, moving an alias added by %s is allowed: %s",
+    async (level, owner, allowed) => {
+      withPolicy(level);
+      ownedBy(owner);
+
+      const move = callerFor().moveAlias({ aliasId: ALIAS, targetId: UIEN });
+
+      if (allowed) {
+        await expect(move).resolves.toEqual({ success: true });
+        expect(catalogue.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, { ingredientId: UIEN });
+      } else {
+        await expect(move).rejects.toMatchObject({ code: "FORBIDDEN" });
+        expect(catalogue.moveCatalogueAlias).not.toHaveBeenCalled();
+      }
+    }
+  );
+
+  it("moves an alias out to a new Ingredient the member owns, named for it", async () => {
+    ownedBy(ME);
+
+    await callerFor().moveAlias({ aliasId: ALIAS, targetId: null });
+
+    expect(catalogue.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, {
+      mint: { name: "ui", ownerId: ME },
+    });
+  });
+
+  it.each([
+    ["the source", STRANGER, ME],
+    ["the target", ME, STRANGER],
+  ])(
+    "refuses a merge when the member may not edit %s",
+    async (_which, sourceOwner, targetOwner) => {
+      withPolicy("household");
+      catalogue.findCatalogueIngredientOwner.mockImplementation(async (id: string) => ({
+        ownerId: id === UIEN ? sourceOwner : targetOwner,
+      }));
+
+      await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+      expect(catalogue.mergeCatalogueIngredients).not.toHaveBeenCalled();
+    }
+  );
+
+  it("merges where the member may edit both, and tells every client", async () => {
+    withPolicy("household");
+    catalogue.findCatalogueIngredientOwner.mockImplementation(async (id: string) => ({
+      ownerId: id === UIEN ? HOUSEMATE : ME,
+    }));
+
+    await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).resolves.toEqual({
+      success: true,
+    });
+    expect(catalogue.mergeCatalogueIngredients).toHaveBeenCalledWith(UIEN, ONION);
+    expect(ingredientsRealtime.published).toEqual([
+      expect.objectContaining({ event: "changed", payload: { ingredientIds: [UIEN, ONION] } }),
+    ]);
+  });
+
+  it("leaves a merge of seeded Ingredients to administrators", async () => {
+    withPolicy("everyone");
+    ownedBy(null);
+
+    await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(
+      callerFor({ admin: true }).merge({ sourceId: UIEN, targetId: ONION })
+    ).resolves.toEqual({ success: true });
+  });
+
   it("lets anyone add an alias, to a seeded Ingredient too", async () => {
     withPolicy("owner");
     ownedBy(null);
@@ -196,12 +278,28 @@ describe("refusals", () => {
   });
 
   it("refuses a name another Ingredient goes by", async () => {
-    catalogue.isIngredientNameTaken.mockResolvedValue(true);
+    catalogue.renameCatalogueIngredient.mockResolvedValue("taken");
 
     await expect(callerFor().rename({ ingredientId: ONION, name: "Garlic" })).rejects.toMatchObject(
       { code: "CONFLICT", message: "name-taken" }
     );
-    expect(catalogue.renameCatalogueIngredient).not.toHaveBeenCalled();
+    expect(ingredientsRealtime.published).toHaveLength(0);
+  });
+
+  it("refuses to merge an Ingredient into itself", async () => {
+    await expect(callerFor().merge({ sourceId: ONION, targetId: ONION })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "same-ingredient",
+    });
+  });
+
+  it("refuses to move an Ingredient's last alias away", async () => {
+    catalogue.moveCatalogueAlias.mockResolvedValue({ outcome: "last" });
+
+    await expect(callerFor().moveAlias({ aliasId: ALIAS, targetId: null })).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "last-alias",
+    });
   });
 
   it("refuses to remove an Ingredient's last alias, or one something points at", async () => {
