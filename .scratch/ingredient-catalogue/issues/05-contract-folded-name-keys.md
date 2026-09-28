@@ -9,7 +9,7 @@
 - [x] No identity reads or writes remain on folded-name keys or on the recipe line's direct ingredient pointer.
 - [x] A migration drops the obsolete columns and indexes.
 - [x] Any fold helper left serves display or search only, and is named accordingly.
-- [ ] `pnpm lint`, `pnpm test:run`, `pnpm build` and the grocery and pantry E2E specs pass.
+- [x] `pnpm lint`, `pnpm test:run`, `pnpm build` and the grocery and pantry E2E specs pass.
 
 ## Comments
 
