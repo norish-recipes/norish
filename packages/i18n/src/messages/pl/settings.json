@@ -353,6 +353,10 @@
     "moveTitle": "Przenieś {alias} do innego składnika lub do nowego.",
     "newIngredient": "Nowy składnik",
     "pickIngredient": "Szukaj składnika",
+    "setParent": "Wybierz nadrzędny…",
+    "parentTitle": "Wybierz składnik, którego rodzajem jest {name}.",
+    "kindOf": "Rodzaj: {name}",
+    "clearParent": "Usuń nadrzędny",
     "errors": {
       "title": "Nie udało się zmienić składnika",
       "forbidden": "Nie możesz edytować tego składnika",
@@ -362,6 +366,7 @@
       "last-alias": "Składnik zachowuje co najmniej jedną pisownię",
       "alias-in-use": "Przepisy lub zakupy nadal używają tej pisowni",
       "same-ingredient": "Składnika nie można scalić z samym sobą",
+      "cycle": "Składnik nie może być rodzajem samego siebie",
       "empty": "Wpisz nazwę",
       "unknown": "Coś poszło nie tak. Spróbuj ponownie."
     }

@@ -8,7 +8,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
-import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-catalogue";
+import {
+  findIngredientAncestors,
+  mergeCatalogueIngredients,
+} from "@norish/db/repositories/ingredient-catalogue";
 import { ingredientAliases, ingredients } from "@norish/db/schema";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
@@ -181,7 +184,7 @@ describe("ingredient resolver, rung 3", () => {
     });
   });
 
-  it("treats a sure kind-of answer as a new food until parents exist", async () => {
+  it("places a sure kind-of answer under the food it is a kind of", async () => {
     const onion = await known("onion");
 
     decides("Is a kind of onion", 0.9);
@@ -189,6 +192,36 @@ describe("ingredient resolver, rung 3", () => {
 
     expect(red.ingredientId).not.toBe(onion.ingredientId);
     await expect(ingredientFor(red.aliasId)).resolves.toMatchObject({ flagged: false });
+    await expect(findIngredientAncestors([red.ingredientId])).resolves.toEqual(
+      new Map([[red.ingredientId, [onion.ingredientId]]])
+    );
+  });
+
+  it("places an unsure kind-of answer under the food too, and flags it", async () => {
+    const onion = await known("onion");
+
+    vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+    answers({ verdict: "kind-of", food: 1, sure: false });
+    const red = await resolveOne("red onion");
+
+    await expect(ingredientFor(red.aliasId)).resolves.toMatchObject({ flagged: true });
+    await expect(findIngredientAncestors([red.ingredientId])).resolves.toEqual(
+      new Map([[red.ingredientId, [onion.ingredientId]]])
+    );
+  });
+
+  it("mints a kind of a food merged away meanwhile with no parent", async () => {
+    const onion = await known("onion");
+    const shallot = await known("shallot");
+
+    decides("Is a kind of onion", 0.9, () =>
+      mergeCatalogueIngredients(onion.ingredientId, shallot.ingredientId)
+    );
+    const red = await resolveOne("red onion");
+
+    await expect(findIngredientAncestors([red.ingredientId])).resolves.toEqual(
+      new Map([[red.ingredientId, []]])
+    );
   });
 
   it("follows a sure language-model answer when the Decision is unsure", async () => {

@@ -30,7 +30,8 @@ import { askWhatFoodThisIs, FLAGGED_NEW } from "./ai-resolution";
  *   3. what AI makes of it (`ai-resolution`): a Decision, or the language
  *      model — a known food it is sure the text names takes the text as a
  *      new spelling, so the next occurrence is a rung-1 match;
- *   4. a new Ingredient with the text as its first alias.
+ *   4. a new Ingredient with the text as its first alias, under the food AI
+ *      said it is a kind of, if any.
  *
  * A mint that no sure AI answer vouched for is flagged, so a person can merge
  * it or mark it distinct.
@@ -162,7 +163,10 @@ export async function resolveIngredients(
             })
           : null;
       const rows =
-        joined ?? (await mint(spelling, actor, answer.kind === "same" || answer.flagged));
+        joined ??
+        (answer.kind === "same"
+          ? await mint(spelling, actor, { flagged: true, parentId: null })
+          : await mint(spelling, actor, { flagged: answer.flagged, parentId: answer.kindOf }));
 
       for (const row of rows) known.set(row.fold, row);
     }
@@ -231,12 +235,13 @@ export async function resolveIngredient(
  * Rung 4. The Ingredient is named for the text without its preparation, and
  * that bare name becomes an alias beside the text, so "onions, diced" first
  * and "onions" or "onions, sliced" later are the one food. Flagged unless a
- * sure AI answer said it is a food of its own.
+ * sure AI answer said it is a food of its own; placed under the food AI said
+ * it is a kind of, where it said so.
  */
 async function mint(
   spelling: Spelling,
   actor: ResolveActor,
-  flagged: boolean
+  { flagged, parentId }: { flagged: boolean; parentId: string | null }
 ): Promise<IngredientAliasRow[]> {
   return await mintIngredientWithAliases({
     name: spelling.bareFold ? spelling.bare : spelling.text,
@@ -244,6 +249,7 @@ async function mint(
     ownerId: actor.userId,
     locale: actor.locale ?? null,
     flagged,
+    parentId,
   });
 }
 

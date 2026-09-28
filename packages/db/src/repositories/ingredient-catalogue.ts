@@ -1,5 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import { and, asc, count, eq, inArray, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
@@ -31,6 +32,7 @@ export interface CatalogueIngredient {
   flagged: boolean;
   ownerId: string | null;
   version: number;
+  parent: { id: string; name: string } | null;
   aliases: CatalogueAlias[];
 }
 
@@ -70,6 +72,7 @@ export async function listCatalogueIngredients(query: {
       )
     : undefined;
 
+  const parents = alias(ingredients, "parent");
   const rows = await db
     .select({
       id: ingredients.id,
@@ -77,8 +80,11 @@ export async function listCatalogueIngredients(query: {
       flagged: ingredients.flagged,
       ownerId: ingredients.ownerId,
       version: ingredients.version,
+      parentId: parents.id,
+      parentName: parents.name,
     })
     .from(ingredients)
+    .leftJoin(parents, eq(parents.id, ingredients.parentId))
     .where(and(query.flaggedOnly ? eq(ingredients.flagged, true) : undefined, matchesSearch))
     .orderBy(asc(sql`lower(${ingredients.name})`), asc(ingredients.id))
     .limit(query.limit)
@@ -102,8 +108,9 @@ export async function listCatalogueIngredients(query: {
     )
     .orderBy(asc(ingredientAliases.createdAt), asc(ingredientAliases.id));
 
-  return rows.map((row) => ({
+  return rows.map(({ parentId, parentName, ...row }) => ({
     ...row,
+    parent: parentId && parentName ? { id: parentId, name: parentName } : null,
     aliases: aliases
       .filter((alias) => alias.ingredientId === row.id)
       .map(({ ingredientId: _ingredientId, ...alias }) => alias),
@@ -298,6 +305,87 @@ async function repointKeyed(
   await tx.execute(sql`update ${table} p set ingredient_id = ${targetId} where ${which}`);
 }
 
+/**
+ * Serialise every change to the tree of Parent Ingredients: two changes that
+ * are each acyclic can close a cycle together, so each checks the tree as the
+ * one before it left it. Released with the transaction.
+ */
+async function lockTree(tx: DbTransaction): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext('ingredient-tree'))`);
+}
+
+/** How deep the tree is ever walked: a guard, since the tree has no cycle to loop on. */
+const MAX_DEPTH = 32;
+
+/**
+ * Every ancestor of each Ingredient, nearest first: its parent, the parent's
+ * parent, and so on. An Ingredient with no parent answers an empty list.
+ */
+async function ancestorsOf(
+  tx: typeof db | DbTransaction,
+  ids: readonly string[]
+): Promise<Map<string, string[]>> {
+  const wanted = Array.from(new Set(ids));
+  const answer = new Map(wanted.map((id) => [id, [] as string[]]));
+
+  if (wanted.length === 0) return answer;
+
+  const result = await tx.execute<{ start: string; ancestor: string; depth: number }>(sql`
+    with recursive up(start, ancestor, depth) as (
+      select i.id, i.parent_id, 1 from ${ingredients} i
+      where i.id in (${sql.join(
+        wanted.map((id) => sql`${id}::uuid`),
+        sql`, `
+      )}) and i.parent_id is not null
+      union all
+      select up.start, p.parent_id, up.depth + 1 from up
+      join ${ingredients} p on p.id = up.ancestor
+      where p.parent_id is not null and up.depth < ${MAX_DEPTH}
+    )
+    select start::text as start, ancestor::text as ancestor, depth from up order by start, depth`);
+
+  for (const row of result.rows) answer.get(row.start)?.push(row.ancestor);
+
+  return answer;
+}
+
+/** Every ancestor of each Ingredient, nearest first. */
+export async function findIngredientAncestors(
+  ids: readonly string[]
+): Promise<Map<string, string[]>> {
+  return await ancestorsOf(db, ids);
+}
+
+/**
+ * Set an Ingredient's Parent Ingredient, or clear it (`parentId` null), and
+ * clear its flag: looking after a Flagged Ingredient counts as reviewing it.
+ * A parent that is the Ingredient itself or one of its descendants would
+ * close a cycle, and is refused.
+ */
+export async function setCatalogueIngredientParent(
+  id: string,
+  parentId: string | null
+): Promise<"set" | "missing" | "cycle"> {
+  return await db.transaction(async (tx) => {
+    if (parentId === id) return "cycle";
+    await lockTree(tx);
+
+    const ids = parentId ? [id, parentId] : [id];
+
+    if ((await lockIngredients(tx, ids)) < ids.length) return "missing";
+    if (parentId && (await ancestorsOf(tx, [parentId])).get(parentId)?.includes(id)) {
+      return "cycle";
+    }
+
+    await tx
+      .update(ingredients)
+      .set({ parentId, flagged: false, version: sql`${ingredients.version} + 1` })
+      .where(eq(ingredients.id, id));
+
+    return "set";
+  });
+}
+
 /** Lock Ingredients for an edit, in id order so two edits over the same pair never deadlock. */
 async function lockIngredients(tx: DbTransaction, ids: readonly string[]): Promise<number> {
   const rows = await tx
@@ -324,7 +412,21 @@ export async function mergeCatalogueIngredients(
   targetId: string
 ): Promise<"merged" | "missing"> {
   return await db.transaction(async (tx) => {
+    await lockTree(tx);
     if ((await lockIngredients(tx, [sourceId, targetId])) < 2) return "missing";
+
+    // The target takes the source's place in the tree: where it sat under the
+    // source, it moves up to the source's parent first, so the source's
+    // children re-parented onto it can never close a cycle.
+    if ((await ancestorsOf(tx, [targetId])).get(targetId)?.includes(sourceId)) {
+      await tx.execute(sql`
+        update ${ingredients} set parent_id = (select parent_id from ${ingredients} where id = ${sourceId})
+        where id = ${targetId}`);
+    }
+    await tx
+      .update(ingredients)
+      .set({ parentId: targetId })
+      .where(eq(ingredients.parentId, sourceId));
 
     for (const keyed of KEYED_BY_INGREDIENT) {
       await repointKeyed(tx, keyed, sql`p.ingredient_id = ${sourceId}`, targetId);

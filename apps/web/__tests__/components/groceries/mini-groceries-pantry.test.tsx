@@ -115,6 +115,7 @@ function pantryIngredient(name: string, normalizedName: string): PantryIngredien
     ingredientId: `i-${normalizedName}`,
     name,
     version: 1,
+    ancestorIds: [],
   };
 }
 

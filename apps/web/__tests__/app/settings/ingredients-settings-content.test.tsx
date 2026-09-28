@@ -12,6 +12,7 @@ type Item = {
   id: string;
   name: string;
   flagged: boolean;
+  parent: { id: string; name: string } | null;
   canEdit: boolean;
   aliases: Array<{ id: string; text: string; canRemove: boolean }>;
 };
@@ -25,6 +26,7 @@ const mutations = {
   removeAlias: vi.fn(async () => ({ success: true })),
   merge: vi.fn(async () => ({ success: true })),
   moveAlias: vi.fn(async () => ({ success: true })),
+  setParent: vi.fn(async () => ({ success: true })),
 };
 const invalidateQueries = vi.fn();
 
@@ -45,6 +47,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       removeAlias: { mutationOptions: () => ({ name: "removeAlias" }) },
       merge: { mutationOptions: () => ({ name: "merge" }) },
       moveAlias: { mutationOptions: () => ({ name: "moveAlias" }) },
+      setParent: { mutationOptions: () => ({ name: "setParent" }) },
     },
   }),
 }));
@@ -102,6 +105,7 @@ const onion: Item = {
   id: "onion",
   name: "onion",
   flagged: true,
+  parent: null,
   canEdit: true,
   aliases: [
     { id: "a-onion", text: "onion", canRemove: true },
@@ -112,6 +116,7 @@ const salt: Item = {
   id: "salt",
   name: "salt",
   flagged: false,
+  parent: { id: "mineral", name: "mineral" },
   canEdit: false,
   aliases: [{ id: "a-salt", text: "salt", canRemove: false }],
 };
@@ -239,6 +244,42 @@ describe("IngredientsSettingsContent", () => {
     });
 
     expect(mutations.moveAlias).toHaveBeenCalledWith({ aliasId: "a-onion", targetId: null });
+  });
+
+  it("sets the food a food is a kind of, from any Ingredient", async () => {
+    render(<IngredientsSettingsContent />);
+
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByTestId("ingredient-set-parent"));
+    });
+    const picker = within(row("onion")).getByTestId("picker");
+
+    expect(picker).toHaveAttribute("data-editable-only", "false");
+    await act(async () => {
+      fireEvent.click(within(picker).getByText("pick-salt"));
+    });
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByTestId("ingredient-relocation-confirm"));
+    });
+
+    expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "onion", parentId: "salt" });
+  });
+
+  it("shows a food's parent, and offers to clear it only where the viewer may edit", () => {
+    items = [
+      onion,
+      salt,
+      { ...onion, id: "red", name: "red onion", parent: { id: "onion", name: "onion" } },
+    ];
+    render(<IngredientsSettingsContent />);
+
+    expect(within(row("salt")).getByTestId("ingredient-parent")).toHaveTextContent("kindOf");
+    expect(within(row("salt")).queryByTestId("ingredient-clear-parent")).toBeNull();
+    expect(within(row("onion")).queryByTestId("ingredient-parent")).toBeNull();
+
+    fireEvent.click(within(row("red onion")).getByTestId("ingredient-clear-parent"));
+
+    expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "red", parentId: null });
   });
 
   it("asks for the flagged ones alone when filtered", async () => {

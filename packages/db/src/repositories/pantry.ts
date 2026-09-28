@@ -23,7 +23,7 @@ function parsePantryIngredients(rows: unknown[]): PantryIngredientDto[] {
 
 /**
  * Every read of the Pantry: the row, plus the name of the Ingredient it
- * points at. A Pantry Ingredient holds no name of its own; whatever condition
+ * points at and that Ingredient's ancestors. A Pantry Ingredient holds no name of its own; whatever condition
  * follows is the reader's.
  */
 function selectPantry(tx: Db = db) {
@@ -34,6 +34,16 @@ function selectPantry(tx: Db = db) {
       ingredientId: pantryIngredients.ingredientId,
       version: pantryIngredients.version,
       name: ingredients.name,
+      ancestorIds: sql<string[]>`(
+        with recursive up(ancestor, depth) as (
+          select i.parent_id, 1 from ${ingredients} i
+          where i.id = ${pantryIngredients.ingredientId} and i.parent_id is not null
+          union all
+          select p.parent_id, up.depth + 1 from up join ${ingredients} p on p.id = up.ancestor
+          where p.parent_id is not null and up.depth < 32
+        )
+        select coalesce(array_agg(ancestor::text order by depth), '{}'::text[]) from up
+      )`,
     })
     .from(pantryIngredients)
     .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId));

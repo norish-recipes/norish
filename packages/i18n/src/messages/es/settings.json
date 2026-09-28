@@ -353,6 +353,10 @@
     "moveTitle": "Mueve {alias} a otro ingrediente, o a uno nuevo.",
     "newIngredient": "Un ingrediente nuevo",
     "pickIngredient": "Buscar un ingrediente",
+    "setParent": "Elegir superior…",
+    "parentTitle": "Elige el ingrediente del que {name} es un tipo.",
+    "kindOf": "Un tipo de {name}",
+    "clearParent": "Quitar superior",
     "errors": {
       "title": "No se pudo cambiar el ingrediente",
       "forbidden": "No puedes editar este ingrediente",
@@ -362,6 +366,7 @@
       "last-alias": "Un ingrediente conserva al menos una grafía",
       "alias-in-use": "Recetas o compras todavía usan esta grafía",
       "same-ingredient": "Un ingrediente no se puede fusionar consigo mismo",
+      "cycle": "Un ingrediente no puede ser un tipo de sí mismo",
       "empty": "Introduce un nombre",
       "unknown": "Algo salió mal. Inténtalo de nuevo."
     }

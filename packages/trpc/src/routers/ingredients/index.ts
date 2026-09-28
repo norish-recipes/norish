@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
+import { findIngredientAncestors } from "@norish/db/repositories/ingredient-catalogue";
 import {
   addAlias as addCatalogueAlias,
   CatalogueEditError,
@@ -11,6 +12,7 @@ import {
   moveAlias as moveCatalogueAlias,
   removeAlias as removeCatalogueAlias,
   renameIngredient,
+  setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -53,6 +55,7 @@ const REFUSAL_CODES: Record<CatalogueRefusal, TRPCError["code"]> = {
   "last-alias": "CONFLICT",
   "alias-in-use": "CONFLICT",
   "same-ingredient": "BAD_REQUEST",
+  cycle: "CONFLICT",
   empty: "BAD_REQUEST",
 };
 
@@ -75,7 +78,8 @@ async function asEditResult(run: () => Promise<unknown>): Promise<{ success: tru
 
 /**
  * Tell every client that what these Ingredients are has changed — a merge,
- * an alias move or a rename — so each refetches what it derived from them.
+ * an alias move, a rename or a new parent — so each refetches what it
+ * derived from them.
  */
 function announceChanged(ingredientIds: string[]): Promise<void> {
   return ingredientsRealtime.publish("changed", { ingredientIds }, undefined);
@@ -164,6 +168,31 @@ const moveAlias = authedProcedure
     });
   });
 
+/** Set or clear an Ingredient's Parent Ingredient. Follows `edit` on the Ingredient. */
+const setParent = authedProcedure
+  .input(z.object({ ingredientId: z.uuid(), parentId: z.uuid().nullable() }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ...input }, "Setting a Parent Ingredient");
+
+    return asEditResult(async () => {
+      await setCatalogueParent(actorOf(ctx), input.ingredientId, input.parentId);
+      await announceChanged([input.ingredientId]);
+    });
+  });
+
+/**
+ * Every ancestor of each Ingredient asked about, nearest first — what a list
+ * needs to file a child in its parent's Aisle where it has none of its own.
+ * Ingredients are always visible, so the answer is nobody's in particular.
+ */
+const ancestors = authedProcedure
+  .input(z.object({ ids: z.array(z.uuid()).max(1000) }))
+  .query(async ({ input }): Promise<Record<string, string[]>> => {
+    const found = await findIngredientAncestors(input.ids);
+
+    return Object.fromEntries([...found].filter(([, chain]) => chain.length > 0));
+  });
+
 export const ingredientsRouter = router({
   find,
   list,
@@ -173,5 +202,7 @@ export const ingredientsRouter = router({
   removeAlias,
   merge,
   moveAlias,
+  setParent,
+  ancestors,
   ...ingredientsSubscriptions._def.procedures,
 });

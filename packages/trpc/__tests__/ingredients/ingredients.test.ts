@@ -28,6 +28,8 @@ const catalogue = vi.hoisted(() => ({
   mergeCatalogueIngredients: vi.fn(),
   moveCatalogueAlias: vi.fn(),
   renameCatalogueIngredient: vi.fn(),
+  setCatalogueIngredientParent: vi.fn(),
+  findIngredientAncestors: vi.fn(),
 }));
 const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
 
@@ -73,6 +75,7 @@ beforeEach(() => {
   ingredientsRealtime.reset();
   withPolicy("household");
   catalogue.mergeCatalogueIngredients.mockResolvedValue("merged");
+  catalogue.setCatalogueIngredientParent.mockResolvedValue("set");
   catalogue.moveCatalogueAlias.mockResolvedValue({ outcome: "moved", ingredientId: UIEN });
   catalogue.renameCatalogueIngredient.mockResolvedValue("renamed");
   catalogue.clearIngredientFlag.mockResolvedValue({ id: ONION });
@@ -167,6 +170,27 @@ describe("the edit policy", () => {
       success: true,
     });
   });
+
+  it.each(matrix)(
+    "under %s, setting the parent of an Ingredient owned by %s is allowed: %s",
+    async (level, owner, allowed) => {
+      withPolicy(level);
+      ownedBy(owner);
+
+      const set = callerFor().setParent({ ingredientId: ONION, parentId: UIEN });
+
+      if (allowed) {
+        await expect(set).resolves.toEqual({ success: true });
+        expect(catalogue.setCatalogueIngredientParent).toHaveBeenCalledWith(ONION, UIEN);
+        expect(ingredientsRealtime.published).toEqual([
+          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+        ]);
+      } else {
+        await expect(set).rejects.toMatchObject({ code: "FORBIDDEN" });
+        expect(catalogue.setCatalogueIngredientParent).not.toHaveBeenCalled();
+      }
+    }
+  );
 
   it.each(matrix)(
     "under %s, moving an alias added by %s is allowed: %s",
@@ -286,6 +310,15 @@ describe("refusals", () => {
     expect(ingredientsRealtime.published).toHaveLength(0);
   });
 
+  it("refuses a parent that would close a cycle", async () => {
+    catalogue.setCatalogueIngredientParent.mockResolvedValue("cycle");
+
+    await expect(
+      callerFor().setParent({ ingredientId: ONION, parentId: UIEN })
+    ).rejects.toMatchObject({ code: "CONFLICT", message: "cycle" });
+    expect(ingredientsRealtime.published).toHaveLength(0);
+  });
+
   it("refuses to merge an Ingredient into itself", async () => {
     await expect(callerFor().merge({ sourceId: ONION, targetId: ONION })).rejects.toMatchObject({
       code: "BAD_REQUEST",
@@ -335,6 +368,7 @@ describe("the list", () => {
         flagged: true,
         ownerId: STRANGER,
         version: 1,
+        parent: null,
         aliases: [
           { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
           { id: "seeded-alias", text: "ui", ownerId: null },
@@ -357,6 +391,7 @@ describe("the list", () => {
           id: ONION,
           name: "onion",
           flagged: true,
+          parent: null,
           canEdit: false,
           aliases: [
             { id: ALIAS, text: "onions", canRemove: true },

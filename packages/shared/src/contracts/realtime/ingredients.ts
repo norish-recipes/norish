@@ -11,7 +11,7 @@ import { z } from "zod";
 import { defineRealtimeCatalogue } from "./catalogue";
 
 export const ingredientsRealtime = defineRealtimeCatalogue("ingredients", {
-  /** A merge, an alias move or a rename: which lines mean which food may have changed. */
+  /** A merge, an alias move, a rename or a new parent: which lines mean which food may have changed. */
   changed: { scope: "broadcast", payload: z.object({ ingredientIds: z.array(z.string()) }) },
 });
 

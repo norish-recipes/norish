@@ -11,6 +11,7 @@ export const CATALOGUE_REFUSALS = [
   "last-alias",
   "alias-in-use",
   "same-ingredient",
+  "cycle",
   "empty",
 ] as const;
 

@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
@@ -12,7 +13,11 @@ import { mutableRowColumns, versionColumn } from "./shared";
  *
  * `ownerId` is whoever's action minted the Ingredient, null for the seed.
  * `flagged` marks a mint the resolver was not sure about: a Flagged
- * Ingredient is worth a person's look.
+ * Ingredient is worth a person's look. `parentId` is the Parent Ingredient,
+ * the more general food this one is a kind of ("red onion" under "onion"):
+ * a child with no Aisle Link of its own is filed in its parent's Aisle, and a
+ * child in the Pantry covers a recipe line for its parent. The tree never
+ * has a cycle.
  */
 export const ingredients = pgTable(
   "ingredients",
@@ -21,12 +26,16 @@ export const ingredients = pgTable(
     name: text("name").notNull(),
     ownerId: text("owner_id").references(() => users.id, { onDelete: "set null" }),
     flagged: boolean("flagged").notNull().default(false),
+    parentId: uuid("parent_id").references((): AnyPgColumn => ingredients.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
   },
   (t) => [
     uniqueIndex("uqidx_ingredients_name_lower").on(sql`lower(${t.name})`),
     index("idx_ingredients_created_at").on(t.createdAt),
+    index("idx_ingredients_parent_id").on(t.parentId),
   ]
 );
 

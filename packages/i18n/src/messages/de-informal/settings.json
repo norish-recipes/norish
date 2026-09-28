@@ -353,6 +353,10 @@
     "moveTitle": "Verschiebe {alias} zu einer anderen Zutat oder zu einer neuen.",
     "newIngredient": "Eine neue Zutat",
     "pickIngredient": "Zutat suchen",
+    "setParent": "Oberbegriff wählen…",
+    "parentTitle": "Wähle die Zutat, von der {name} eine Sorte ist.",
+    "kindOf": "Eine Sorte {name}",
+    "clearParent": "Oberbegriff entfernen",
     "errors": {
       "title": "Die Zutat konnte nicht geändert werden",
       "forbidden": "Sie dürfen diese Zutat nicht bearbeiten",
@@ -362,6 +366,7 @@
       "last-alias": "Eine Zutat behält mindestens eine Schreibweise",
       "alias-in-use": "Rezepte oder Einkäufe verwenden diese Schreibweise noch",
       "same-ingredient": "Eine Zutat kann nicht mit sich selbst zusammengeführt werden",
+      "cycle": "Eine Zutat kann keine Sorte ihrer selbst sein",
       "empty": "Gib einen Namen ein",
       "unknown": "Etwas ist schiefgelaufen. Versuch es erneut."
     }

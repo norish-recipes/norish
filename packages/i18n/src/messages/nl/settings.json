@@ -353,6 +353,10 @@
     "moveTitle": "Verplaats {alias} naar een ander ingrediënt, of naar een nieuw.",
     "newIngredient": "Een nieuw ingrediënt",
     "pickIngredient": "Zoek een ingrediënt",
+    "setParent": "Bovenliggend kiezen…",
+    "parentTitle": "Kies het ingrediënt waarvan {name} een soort is.",
+    "kindOf": "Een soort {name}",
+    "clearParent": "Bovenliggend verwijderen",
     "errors": {
       "title": "Kon het ingrediënt niet wijzigen",
       "forbidden": "Je mag dit ingrediënt niet bewerken",
@@ -362,6 +366,7 @@
       "last-alias": "Een ingrediënt houdt minstens één spelling",
       "alias-in-use": "Recepten of boodschappen gebruiken deze spelling nog",
       "same-ingredient": "Een ingrediënt kan niet met zichzelf worden samengevoegd",
+      "cycle": "Een ingrediënt kan geen soort van zichzelf zijn",
       "empty": "Voer een naam in",
       "unknown": "Er ging iets mis. Probeer het opnieuw."
     }

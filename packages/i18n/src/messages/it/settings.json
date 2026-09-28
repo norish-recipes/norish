@@ -353,6 +353,10 @@
     "moveTitle": "Sposta {alias} in un altro ingrediente, o in uno nuovo.",
     "newIngredient": "Un nuovo ingrediente",
     "pickIngredient": "Cerca un ingrediente",
+    "setParent": "Scegli il genitore…",
+    "parentTitle": "Scegli l'ingrediente di cui {name} è un tipo.",
+    "kindOf": "Un tipo di {name}",
+    "clearParent": "Rimuovi il genitore",
     "errors": {
       "title": "Impossibile modificare l'ingrediente",
       "forbidden": "Non puoi modificare questo ingrediente",
@@ -362,6 +366,7 @@
       "last-alias": "Un ingrediente conserva almeno una grafia",
       "alias-in-use": "Ricette o spesa usano ancora questa grafia",
       "same-ingredient": "Un ingrediente non può essere unito a se stesso",
+      "cycle": "Un ingrediente non può essere un tipo di se stesso",
       "empty": "Inserisci un nome",
       "unknown": "Qualcosa è andato storto. Riprova."
     }

@@ -353,6 +353,10 @@
     "moveTitle": "{alias}을(를) 다른 재료나 새 재료로 옮깁니다.",
     "newIngredient": "새 재료",
     "pickIngredient": "재료 검색",
+    "setParent": "상위 재료 설정…",
+    "parentTitle": "{name}이(가) 속하는 재료를 고르세요.",
+    "kindOf": "{name}의 한 종류",
+    "clearParent": "상위 재료 제거",
     "errors": {
       "title": "재료를 변경할 수 없습니다",
       "forbidden": "이 재료를 편집할 권한이 없습니다",
@@ -362,6 +366,7 @@
       "last-alias": "재료에는 최소 하나의 표기가 남아야 합니다",
       "alias-in-use": "레시피나 장보기 목록이 아직 이 표기를 사용합니다",
       "same-ingredient": "재료를 자기 자신과 병합할 수 없습니다",
+      "cycle": "재료는 자기 자신의 한 종류가 될 수 없습니다",
       "empty": "이름을 입력하세요",
       "unknown": "문제가 발생했습니다. 다시 시도하세요."
     }

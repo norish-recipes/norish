@@ -30,13 +30,15 @@ interface IngredientItem {
   id: string;
   name: string;
   flagged: boolean;
+  parent: { id: string; name: string } | null;
   canEdit: boolean;
   /** `canRemove` is `edit` on the alias, which moving it needs too. */
   aliases: Array<{ id: string; text: string; canRemove: boolean }>;
 }
 
 /** What the row is asking the viewer to pick a target for, if anything. */
-type Relocation = { kind: "merge" } | { kind: "move"; aliasId: string; text: string };
+type Relocation =
+  { kind: "merge" } | { kind: "parent" } | { kind: "move"; aliasId: string; text: string };
 
 /**
  * The catalogue of Ingredients (ADR-0037): every food Norish knows, each with
@@ -147,12 +149,14 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
   const removeAlias = useMutation(trpc.ingredients.removeAlias.mutationOptions());
   const merge = useMutation(trpc.ingredients.merge.mutationOptions());
   const moveAlias = useMutation(trpc.ingredients.moveAlias.mutationOptions());
+  const setParent = useMutation(trpc.ingredients.setParent.mutationOptions());
   const busy =
     rename.isPending ||
     markDistinct.isPending ||
     addAlias.isPending ||
     merge.isPending ||
-    moveAlias.isPending;
+    moveAlias.isPending ||
+    setParent.isPending;
 
   const run = async (context: string, edit: () => Promise<unknown>) => {
     try {
@@ -197,12 +201,16 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
 
     const targetId = target.id;
     const done =
-      relocation.kind === "merge"
-        ? targetId !== null &&
-          (await run("merge", () => merge.mutateAsync({ sourceId: item.id, targetId })))
-        : await run("move-alias", () =>
+      relocation.kind === "move"
+        ? await run("move-alias", () =>
             moveAlias.mutateAsync({ aliasId: relocation.aliasId, targetId })
-          );
+          )
+        : targetId !== null &&
+          (relocation.kind === "merge"
+            ? await run("merge", () => merge.mutateAsync({ sourceId: item.id, targetId }))
+            : await run("set-parent", () =>
+                setParent.mutateAsync({ ingredientId: item.id, parentId: targetId })
+              ));
 
     if (done) relocate(null);
   };
@@ -288,6 +296,15 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
               </Button>
             ) : null}
             <Button
+              data-testid="ingredient-set-parent"
+              isDisabled={busy}
+              size="sm"
+              variant="tertiary"
+              onPress={() => relocate({ kind: "parent" })}
+            >
+              {t("setParent")}
+            </Button>
+            <Button
               data-testid="ingredient-merge"
               isDisabled={busy}
               size="sm"
@@ -313,16 +330,24 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
       {relocation ? (
         <div className="flex flex-col gap-2" data-testid="ingredient-relocation">
           <span className="text-muted text-sm">
-            {relocation.kind === "merge"
-              ? t("mergeTitle", { name: item.name })
-              : t("moveTitle", { alias: relocation.text })}
+            {relocation.kind === "move"
+              ? t("moveTitle", { alias: relocation.text })
+              : relocation.kind === "merge"
+                ? t("mergeTitle", { name: item.name })
+                : t("parentTitle", { name: item.name })}
           </span>
           <div className="flex items-center gap-2">
             <IngredientPicker
               allowNew={relocation.kind === "move"}
               editableOnly={relocation.kind === "merge"}
               excludeId={item.id}
-              label={relocation.kind === "merge" ? t("mergeInto") : t("moveTo")}
+              label={
+                relocation.kind === "move"
+                  ? t("moveTo")
+                  : relocation.kind === "merge"
+                    ? t("mergeInto")
+                    : t("setParent")
+              }
               onPick={setTarget}
             />
             <Button
@@ -331,7 +356,11 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
               size="sm"
               onPress={() => void saveRelocation()}
             >
-              {relocation.kind === "merge" ? t("merge") : t("move")}
+              {relocation.kind === "move"
+                ? t("move")
+                : relocation.kind === "merge"
+                  ? t("merge")
+                  : tActions("save")}
             </Button>
             <IconActionButton
               action="cancel"
@@ -340,6 +369,28 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
               onPress={() => relocate(null)}
             />
           </div>
+        </div>
+      ) : null}
+
+      {item.parent ? (
+        <div className="text-muted flex items-center gap-1 text-sm" data-testid="ingredient-parent">
+          {t("kindOf", { name: item.parent.name })}
+          {item.canEdit ? (
+            <button
+              aria-label={t("clearParent")}
+              className="hover:text-foreground cursor-[var(--cursor-interactive)]"
+              data-testid="ingredient-clear-parent"
+              disabled={busy}
+              type="button"
+              onClick={() =>
+                void run("set-parent", () =>
+                  setParent.mutateAsync({ ingredientId: item.id, parentId: null })
+                )
+              }
+            >
+              <XMarkIcon className="size-3" />
+            </button>
+          ) : null}
         </div>
       ) : null}
 

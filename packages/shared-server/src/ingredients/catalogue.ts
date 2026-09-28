@@ -4,14 +4,14 @@
  * here, the one place that knows it:
  *
  * - adding an alias is open to everyone;
- * - renaming and marking distinct follow `edit` on the Ingredient;
+ * - renaming, re-parenting and marking distinct follow `edit` on the Ingredient;
  * - merging needs `edit` on both Ingredients;
  * - moving or removing an alias follows `edit` on the alias;
  * - an ownerless (seeded) row is an administrator's alone, and an
  *   administrator bypasses the policy, as for recipes.
  *
- * Renaming or marking a Flagged Ingredient distinct clears its flag: looking
- * after it counts as reviewing it.
+ * Renaming, re-parenting or marking a Flagged Ingredient distinct clears its
+ * flag: looking after it counts as reviewing it.
  */
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type {
@@ -30,6 +30,7 @@ import {
   mergeCatalogueIngredients,
   moveCatalogueAlias,
   renameCatalogueIngredient,
+  setCatalogueIngredientParent,
 } from "@norish/db/repositories/ingredient-catalogue";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { foldName } from "@norish/shared/lib/fold-name";
@@ -80,6 +81,7 @@ export interface IngredientListItem {
   id: string;
   name: string;
   flagged: boolean;
+  parent: { id: string; name: string } | null;
   canEdit: boolean;
   aliases: Array<{ id: string; text: string; canRemove: boolean }>;
 }
@@ -123,6 +125,7 @@ function listItem(
     id: row.id,
     name: row.name,
     flagged: row.flagged,
+    parent: row.parent,
     canEdit: may(row.ownerId),
     aliases: row.aliases.map((alias) => ({
       id: alias.id,
@@ -189,6 +192,24 @@ export async function renameIngredient(
   const outcome = await renameCatalogueIngredient(ingredientId, cleaned);
 
   if (outcome === "taken") throw new CatalogueEditError("name-taken");
+  if (outcome === "missing") throw new CatalogueEditError("not-found");
+}
+
+/**
+ * Set or clear an Ingredient's Parent Ingredient, which clears its flag.
+ * Follows `edit` on the Ingredient; the parent is only pointed at, so its own
+ * policy is not asked. A parent that would close a cycle is refused.
+ */
+export async function setParent(
+  actor: CatalogueActor,
+  ingredientId: string,
+  parentId: string | null
+): Promise<void> {
+  await assertMayEditIngredient(actor, ingredientId);
+
+  const outcome = await setCatalogueIngredientParent(ingredientId, parentId);
+
+  if (outcome === "cycle") throw new CatalogueEditError("cycle");
   if (outcome === "missing") throw new CatalogueEditError("not-found");
 }
 

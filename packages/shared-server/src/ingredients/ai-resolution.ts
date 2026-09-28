@@ -44,8 +44,8 @@ const SHOWN_ALIASES = 5;
 
 /**
  * What rung 3 made of a name: a known food it is, or a food of its own to
- * mint — flagged where nothing sure said so, and a kind of a known food where
- * that was the answer (which parents act on; until then it is a new food).
+ * mint — flagged where nothing sure said so, and under a known food as its
+ * Parent Ingredient where the answer was that it is a kind of that food.
  */
 export type AIResolution =
   { kind: "same"; ingredientId: string } | { kind: "new"; kindOf: string | null; flagged: boolean };

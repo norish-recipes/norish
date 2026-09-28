@@ -353,6 +353,10 @@
     "moveTitle": "Déplacer {alias} vers un autre ingrédient, ou vers un nouveau.",
     "newIngredient": "Un nouvel ingrédient",
     "pickIngredient": "Rechercher un ingrédient",
+    "setParent": "Choisir le parent…",
+    "parentTitle": "Choisissez l'ingrédient dont {name} est une variété.",
+    "kindOf": "Une variété de {name}",
+    "clearParent": "Retirer le parent",
     "errors": {
       "title": "Impossible de modifier l'ingrédient",
       "forbidden": "Vous ne pouvez pas modifier cet ingrédient",
@@ -362,6 +366,7 @@
       "last-alias": "Un ingrédient garde au moins une orthographe",
       "alias-in-use": "Des recettes ou des courses utilisent encore cette orthographe",
       "same-ingredient": "Un ingrédient ne peut pas être fusionné avec lui-même",
+      "cycle": "Un ingrédient ne peut pas être une variété de lui-même",
       "empty": "Saisissez un nom",
       "unknown": "Une erreur s'est produite. Réessayez."
     }

@@ -353,6 +353,10 @@
     "moveTitle": "Move {alias} to another ingredient, or to a new one.",
     "newIngredient": "A new ingredient",
     "pickIngredient": "Search for an ingredient",
+    "setParent": "Set parent…",
+    "parentTitle": "Choose the food {name} is a kind of.",
+    "kindOf": "A kind of {name}",
+    "clearParent": "Remove parent",
     "errors": {
       "title": "Could not change the ingredient",
       "forbidden": "You may not edit this ingredient",
@@ -362,6 +366,7 @@
       "last-alias": "An ingredient keeps at least one spelling",
       "alias-in-use": "Recipes or groceries still use this spelling",
       "same-ingredient": "An ingredient cannot be merged into itself",
+      "cycle": "An ingredient cannot be a kind of itself",
       "empty": "Enter a name",
       "unknown": "Something went wrong. Try again."
     }

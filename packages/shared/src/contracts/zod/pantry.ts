@@ -33,6 +33,12 @@ export const PantryIngredientSelectSchema = createSelectSchema(pantryIngredients
   .omit({ createdAt: true, updatedAt: true, ingredientAliasId: true })
   .extend({
     name: z.string(),
+    /**
+     * The Ingredient's ancestors, nearest first: a Pantry Ingredient covers a
+     * recipe line for any of them ("red onion" covers "onion"), never the
+     * reverse.
+     */
+    ancestorIds: z.array(z.string()),
   });
 
 // Adding to the Pantry: a client-minted id (ADR-0003) and a name. The server folds it.

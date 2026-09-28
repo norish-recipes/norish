@@ -353,6 +353,10 @@
     "moveTitle": "Flytt {alias} til en annen ingrediens, eller til en ny.",
     "newIngredient": "En ny ingrediens",
     "pickIngredient": "Søk etter en ingrediens",
+    "setParent": "Velg overordnet…",
+    "parentTitle": "Velg ingrediensen {name} er en type av.",
+    "kindOf": "En type {name}",
+    "clearParent": "Fjern overordnet",
     "errors": {
       "title": "Kunne ikke endre ingrediensen",
       "forbidden": "Du kan ikke redigere denne ingrediensen",
@@ -362,6 +366,7 @@
       "last-alias": "En ingrediens beholder minst én stavemåte",
       "alias-in-use": "Oppskrifter eller innkjøp bruker fortsatt denne stavemåten",
       "same-ingredient": "En ingrediens kan ikke slås sammen med seg selv",
+      "cycle": "En ingrediens kan ikke være en type av seg selv",
       "empty": "Skriv inn et navn",
       "unknown": "Noe gikk galt. Prøv igjen."
     }

@@ -353,6 +353,10 @@
     "moveTitle": "Siirrä {alias} toiseen ainesosaan tai uuteen.",
     "newIngredient": "Uusi ainesosa",
     "pickIngredient": "Hae ainesosaa",
+    "setParent": "Valitse yläkäsite…",
+    "parentTitle": "Valitse ainesosa, jonka lajike {name} on.",
+    "kindOf": "Lajike: {name}",
+    "clearParent": "Poista yläkäsite",
     "errors": {
       "title": "Ainesosaa ei voitu muuttaa",
       "forbidden": "Et voi muokata tätä ainesosaa",
@@ -362,6 +366,7 @@
       "last-alias": "Ainesosalla on aina vähintään yksi kirjoitusasu",
       "alias-in-use": "Reseptit tai ostokset käyttävät vielä tätä kirjoitusasua",
       "same-ingredient": "Ainesosaa ei voi yhdistää itseensä",
+      "cycle": "Ainesosa ei voi olla oma lajikkeensa",
       "empty": "Anna nimi",
       "unknown": "Jokin meni vikaan. Yritä uudelleen."
     }

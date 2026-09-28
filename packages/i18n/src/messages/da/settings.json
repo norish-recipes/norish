@@ -353,6 +353,10 @@
     "moveTitle": "Flyt {alias} til en anden ingrediens, eller til en ny.",
     "newIngredient": "En ny ingrediens",
     "pickIngredient": "Søg efter en ingrediens",
+    "setParent": "Vælg overordnet…",
+    "parentTitle": "Vælg den ingrediens, {name} er en slags.",
+    "kindOf": "En slags {name}",
+    "clearParent": "Fjern overordnet",
     "errors": {
       "title": "Ingrediensen kunne ikke ændres",
       "forbidden": "Du må ikke redigere denne ingrediens",
@@ -362,6 +366,7 @@
       "last-alias": "En ingrediens beholder mindst én stavemåde",
       "alias-in-use": "Opskrifter eller indkøb bruger stadig denne stavemåde",
       "same-ingredient": "En ingrediens kan ikke flettes med sig selv",
+      "cycle": "En ingrediens kan ikke være en slags af sig selv",
       "empty": "Indtast et navn",
       "unknown": "Noget gik galt. Prøv igen."
     }

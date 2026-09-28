@@ -94,6 +94,8 @@ export interface MintIngredientInput {
   ownerId: string | null;
   locale: string | null;
   flagged: boolean;
+  /** The Parent Ingredient, where the food is a kind of a known one; none where that one is gone. */
+  parentId?: string | null;
 }
 
 /**
@@ -118,6 +120,9 @@ export async function mintIngredientWithAliases(
         name: input.name,
         ownerId: input.ownerId,
         flagged: input.flagged,
+        parentId: input.parentId
+          ? sql`(select ${ingredients.id} from ${ingredients} where ${ingredients.id} = ${input.parentId})`
+          : null,
       })
       .onConflictDoNothing()
       .returning({ id: ingredients.id });

@@ -6,7 +6,8 @@ import { foldName } from "@norish/shared/lib/fold-name";
  * none. The one rule for "is this in the pantry", asked by the add-to-groceries
  * panel and by the Pantry panel's own duplicate check alike (ADR-0037): a line
  * the resolver has seen is covered by a Pantry Ingredient of the same
- * Ingredient, whatever either is spelled — "onions" covers "onions, diced".
+ * Ingredient, whatever either is spelled — "onions" covers "onions, diced" —
+ * or of a food it is a kind of: "red onion" covers "onion", never the reverse.
  * A text nothing has resolved yet (typed or edited on this screen, or added
  * to the Pantry offline) can only be matched on its folded name, and nothing looser: "salt" never covers
  * "salted butter", because Norish never guesses from words.
@@ -22,7 +23,7 @@ export function pantryIngredientFor(
       // A Pantry Ingredient added offline has no Ingredient until it syncs,
       // and meanwhile is matched on its name like any unresolved text.
       line.ingredientId && item.ingredientId
-        ? item.ingredientId === line.ingredientId
+        ? item.ingredientId === line.ingredientId || item.ancestorIds.includes(line.ingredientId)
         : normalized !== "" && foldName(item.name) === normalized
     ) ?? null
   );
