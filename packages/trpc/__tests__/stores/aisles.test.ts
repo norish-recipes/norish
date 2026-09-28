@@ -23,6 +23,7 @@ const aislesRepository = vi.hoisted(() => ({
   fileIngredient: vi.fn(),
   getAisleById: vi.fn(),
   listAisleLinksByStoreIds: vi.fn(),
+  listInheritedAisleLinks: vi.fn(),
 }));
 
 const storesRepository = vi.hoisted(() => ({
@@ -162,10 +163,22 @@ describe("filing a name at a Store", () => {
       { storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL },
     ]);
 
+    aislesRepository.listInheritedAisleLinks.mockResolvedValue([
+      { storeId: STORE, ingredientId: "ingredient:red-onion", aisleId: ZUIVEL },
+    ]);
+
     const links = await caller.aisleLinks();
 
     expect(storesRepository.listStoresByUserIds).toHaveBeenCalledWith(ctx.userIds);
     expect(aislesRepository.listAisleLinksByStoreIds).toHaveBeenCalledWith([STORE, OTHER_STORE]);
-    expect(links).toEqual([{ storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL }]);
+    expect(aislesRepository.listInheritedAisleLinks).toHaveBeenCalledWith(
+      [STORE, OTHER_STORE],
+      ctx.userIds
+    );
+    // A kind of a food files where its parent is filed, read the same way.
+    expect(links).toEqual([
+      { storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL },
+      { storeId: STORE, ingredientId: "ingredient:red-onion", aisleId: ZUIVEL },
+    ]);
   });
 });

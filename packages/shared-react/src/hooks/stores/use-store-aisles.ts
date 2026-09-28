@@ -1,5 +1,5 @@
-import { useCallback, useMemo } from "react";
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { AisleFiled, AisleLinkDto } from "@norish/shared/contracts";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
@@ -43,8 +43,9 @@ export function mergeAisleFiling(prev: StoreAislesData, filing: AisleFiled): Sto
 
 export interface StoreAislesResult {
   /**
-   * The aisle a Store files an Ingredient under — its own, else the nearest
-   * Parent Ingredient's — or null where the Store has never been told. The
+   * The aisle a Store files an Ingredient under, as the server answers it (its
+   * own, else its nearest Parent Ingredient's), or null where the Store has
+   * never been told. The
    * only place a grocery's aisle comes from: the grocery row carries none,
    * and nothing is ever guessed from words (ADR-0031).
    */
@@ -66,39 +67,34 @@ export function createUseStoreAisles({ useTRPC }: CreateStoresHooksOptions) {
       return map;
     }, [data]);
 
-    // A child with no Aisle of its own is filed in its parent's (ADR-0037).
-    // The parents asked about are those of the foods on the household's list,
-    // read from wherever the list is already held; this never loads it.
+    // The server answers where each food on the list is filed, a kind of a
+    // food under its parent's aisle included (ADR-0037), for the foods on the
+    // list when it was asked. A food new to the list is asked about again;
+    // ticking or reordering changes no food and asks nothing.
+    const queryClient = useQueryClient();
     const { data: list } = useQuery({ ...trpc.groceries.list.queryOptions(), enabled: false });
-    const listIngredientIds = useMemo(() => {
-      const ids = new Set<string>();
+    const listFoods = useMemo(
+      () =>
+        [...new Set((list?.groceries ?? []).flatMap((grocery) => grocery.ingredientId ?? []))]
+          .sort()
+          .join(","),
+      [list]
+    );
+    const askedFoods = useRef(listFoods);
 
-      for (const grocery of list?.groceries ?? []) {
-        if (grocery.ingredientId) ids.add(grocery.ingredientId);
-      }
-
-      // The query takes at most 1000; a list longer than that files the rest by their own links.
-      return [...ids].sort().slice(0, 1000);
-    }, [list]);
-    const { data: ancestors } = useQuery({
-      ...trpc.ingredients.ancestors.queryOptions({ ids: listIngredientIds }),
-      enabled: listIngredientIds.length > 0,
-      placeholderData: keepPreviousData,
-    });
+    useEffect(() => {
+      if (askedFoods.current === listFoods) return;
+      askedFoods.current = listFoods;
+      void queryClient.invalidateQueries({ queryKey: trpc.stores.aisleLinks.queryKey() });
+    }, [listFoods, queryClient, trpc]);
 
     const aisleFor = useCallback(
       (storeId: string | null, ingredientId: string | null | undefined) => {
-        if (!storeId || !ingredientId) return null;
+        const key = aisleKey(storeId, ingredientId);
 
-        for (const id of [ingredientId, ...(ancestors?.[ingredientId] ?? [])]) {
-          const filed = byKey.get(aisleLinkKey(storeId, id));
-
-          if (filed) return filed;
-        }
-
-        return null;
+        return key ? (byKey.get(key) ?? null) : null;
       },
-      [byKey, ancestors]
+      [byKey]
     );
 
     return { aisleFor, isLoading };
@@ -109,6 +105,8 @@ export function createUseStoreAisles({ useTRPC }: CreateStoresHooksOptions) {
  * A filing lands on every screen in the household, not just the one that
  * filed: the handler is the same idempotent merge the mutation's optimistic
  * write uses, so the actor's own echo is a no-op and nothing is suppressed.
+ * The links are then read again, because a filing also moves the foods that
+ * inherit it, which only the server knows.
  */
 export function createUseStoreAislesSubscription({ useTRPC }: CreateStoresHooksOptions) {
   return function useStoreAislesSubscription() {
@@ -121,6 +119,8 @@ export function createUseStoreAislesSubscription({ useTRPC }: CreateStoresHooksO
         queryClient.setQueryData<StoreAislesData>(queryKey, (prev) =>
           mergeAisleFiling(prev ?? [], filing)
         );
+        // The foods that are a kind of the one filed follow it, as the server says.
+        void queryClient.invalidateQueries({ queryKey });
       },
       lagQueryKeys: [queryKey],
     });

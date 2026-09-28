@@ -5,6 +5,7 @@ import {
   fileIngredient,
   getAisleById,
   listAisleLinksByStoreIds,
+  listInheritedAisleLinks,
 } from "@norish/db/repositories/aisles";
 import { listStoresByUserIds } from "@norish/db/repositories/stores";
 import { resolveIngredient } from "@norish/shared-server/ingredients/resolver";
@@ -17,15 +18,21 @@ import { router } from "../../trpc";
 import { assertStoreAccess } from "./stores-helpers";
 
 /**
- * Every Aisle Link of the household's Stores, in one round trip, the way the
- * whole list is priced at once. The set is small — one row per Ingredient
- * ever filed per Store — and it is the whole of what a screen needs to show
- * the list by aisle; the grocery row carries no aisle of its own (ADR-0031).
+ * Where the household's Stores file its food, in one round trip, the way the
+ * whole list is priced at once: every Aisle Link, and for each food on the
+ * list with no link of its own at a Store, its nearest Parent Ingredient's
+ * (ADR-0037). The set is small and it is the whole of what a screen needs to
+ * show the list by aisle; the grocery row carries no aisle of its own
+ * (ADR-0031), and the screen never walks the tree.
  */
 const aisleLinks = authedProcedure.query(async ({ ctx }): Promise<AisleLinkDto[]> => {
-  const stores = await listStoresByUserIds(ctx.userIds);
+  const storeIds = (await listStoresByUserIds(ctx.userIds)).map((store) => store.id);
+  const [own, inherited] = await Promise.all([
+    listAisleLinksByStoreIds(storeIds),
+    listInheritedAisleLinks(storeIds, ctx.userIds),
+  ]);
 
-  return listAisleLinksByStoreIds(stores.map((store) => store.id));
+  return [...own, ...inherited];
 });
 
 /**

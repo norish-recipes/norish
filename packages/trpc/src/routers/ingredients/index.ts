@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
-import { findIngredientAncestors } from "@norish/db/repositories/ingredient-catalogue";
 import {
   addAlias as addCatalogueAlias,
   CatalogueEditError,
@@ -180,19 +179,6 @@ const setParent = authedProcedure
     });
   });
 
-/**
- * Every ancestor of each Ingredient asked about, nearest first — what a list
- * needs to file a child in its parent's Aisle where it has none of its own.
- * Ingredients are always visible, so the answer is nobody's in particular.
- */
-const ancestors = authedProcedure
-  .input(z.object({ ids: z.array(z.uuid()).max(1000) }))
-  .query(async ({ input }): Promise<Record<string, string[]>> => {
-    const found = await findIngredientAncestors(input.ids);
-
-    return Object.fromEntries([...found].filter(([, chain]) => chain.length > 0));
-  });
-
 export const ingredientsRouter = router({
   find,
   list,
@@ -203,6 +189,5 @@ export const ingredientsRouter = router({
   merge,
   moveAlias,
   setParent,
-  ancestors,
   ...ingredientsSubscriptions._def.procedures,
 });

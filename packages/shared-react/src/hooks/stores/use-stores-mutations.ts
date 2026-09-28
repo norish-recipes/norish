@@ -235,6 +235,9 @@ export function createUseStoresMutations({
       if (grocery.ingredientId) {
         const ingredientId = grocery.ingredientId;
 
+        // A read already under way answers for the Store as it was; it must
+        // not land over this filing. The echo reads the links again.
+        void queryClient.cancelQueries({ queryKey: aisleLinksKey });
         queryClient.setQueryData<StoreAislesData>(aisleLinksKey, (prev) =>
           mergeAisleFiling(prev ?? [], { storeId, ingredientId, aisleId })
         );

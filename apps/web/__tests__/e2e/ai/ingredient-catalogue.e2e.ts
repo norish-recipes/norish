@@ -17,6 +17,7 @@ import {
   resetCatalogueScenario,
   seedCatalogue,
   seedStoreFiling,
+  setParent,
 } from "./ingredient-catalogue-support";
 import { readGroceryNames, readPantryNames, seedRecipeWithIngredients } from "./pantry-support";
 
@@ -42,7 +43,10 @@ test.beforeAll(async ({ browser, aiStack }) => {
       ],
     },
     { name: "uitjes", aliases: [{ text: "uitjes", locale: "nl" }], flagged: true },
+    { name: "red onion", aliases: [{ text: "red onion", locale: "en" }] },
   ]);
+
+  await setParent(ids["red onion"]!, ids.onion!);
 
   await seedStoreFiling(STORE, AISLE, ids.onion!);
   recipeId = await seedRecipeWithIngredients(RECIPE, ["onion", "butter"]);
@@ -124,16 +128,27 @@ test("a food Norish was not sure about is marked on the Ingredients page", async
   await expect(ingredientRow("onion")).toHaveCount(0);
 });
 
-test("merging it into the food that holds an Aisle Link files its grocery in that aisle", async () => {
+/** Add a grocery under the Store, through the panel a shopper uses. */
+async function addGrocery(name: string): Promise<void> {
   await page.goto("/groceries");
   await page.getByRole("button", { name: "Add Item" }).click();
-  await page.getByPlaceholder("e.g., 2 lbs chicken breast").fill("uitjes");
+  await page.getByPlaceholder("e.g., 2 lbs chicken breast").fill(name);
   await page.getByRole("button", { name: /Auto-detect from history/ }).click();
   await page.getByRole("option", { name: STORE }).click();
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await page.getByRole("button", { name: "Close panel" }).click();
-  await expect(storeBlock().locator('[data-grocery-name="uitjes"]')).toBeVisible();
-  await expect.poll(() => rowsIn(AISLE)).toEqual([]);
+  await expect(storeBlock().locator(`[data-grocery-name="${name}"]`)).toBeVisible();
+}
+
+test("a kind of a food with no aisle of its own is filed in its parent's", async () => {
+  await addGrocery("red onion");
+
+  await expect.poll(() => rowsIn(AISLE)).toEqual(["red onion"]);
+});
+
+test("merging it into the food that holds an Aisle Link files its grocery in that aisle", async () => {
+  await addGrocery("uitjes");
+  await expect.poll(() => rowsIn(AISLE)).toEqual(["red onion"]);
 
   await page.goto("/settings?tab=ingredients");
   await ingredientRow("uitjes").getByTestId("ingredient-merge").click();
@@ -144,5 +159,5 @@ test("merging it into the food that holds an Aisle Link files its grocery in tha
   await expect.poll(() => readIngredientOf("uitjes")).toBe("onion");
 
   await page.goto("/groceries");
-  await expect.poll(() => rowsIn(AISLE)).toEqual(["uitjes"]);
+  await expect.poll(async () => (await rowsIn(AISLE)).sort()).toEqual(["red onion", "uitjes"]);
 });

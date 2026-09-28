@@ -8,10 +8,16 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
+import {
+  fileIngredient,
+  listInheritedAisleLinks,
+  saveStoreAisles,
+} from "@norish/db/repositories/aisles";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-catalogue";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { resolveProductLink, upsertProductLink } from "@norish/db/repositories/store-products";
 import { createStore } from "@norish/db/repositories/stores";
+import { groceries } from "@norish/db/schema";
 import {
   CatalogueEditError,
   listIngredients,
@@ -22,7 +28,11 @@ import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
+import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
+
+const GROENTE = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+const KOEL = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 
 describe("Parent Ingredients", () => {
   const testBase = new RepositoryTestBase("test_parent_ingredients");
@@ -108,6 +118,63 @@ describe("Parent Ingredients", () => {
 
     await expect(resolveProductLink(store.id, onion.ingredientId)).resolves.not.toBeNull();
     await expect(resolveProductLink(store.id, red.ingredientId)).resolves.toBeNull();
+  });
+
+  describe("the Aisle a Store files a kind of a food under", () => {
+    async function onTheList(...resolved: Array<{ aliasId: string; ingredientId: string }>) {
+      for (const food of resolved) {
+        await getTestDb().insert(groceries).values({
+          userId: actor.userId,
+          name: "x",
+          ingredientAliasId: food.aliasId,
+          ingredientId: food.ingredientId,
+        });
+      }
+    }
+
+    async function storeWithAisles() {
+      const store = await createStore(crypto.randomUUID(), { userId: actor.userId, name: "Markt" });
+
+      await saveStoreAisles(store.id, [
+        { id: GROENTE, name: "Groente", version: 0 },
+        { id: KOEL, name: "Koeling", version: 0 },
+      ]);
+
+      return store.id;
+    }
+
+    it("is its nearest ancestor's, where it has none of its own", async () => {
+      const { allium, onion, red } = await onionTree();
+      const storeId = await storeWithAisles();
+
+      await fileIngredient(storeId, allium.ingredientId, KOEL);
+      await fileIngredient(storeId, onion.ingredientId, GROENTE);
+      await onTheList(red);
+
+      await expect(listInheritedAisleLinks([storeId], [actor.userId])).resolves.toEqual([
+        { storeId, ingredientId: red.ingredientId, aisleId: GROENTE },
+      ]);
+    });
+
+    it("is its own where it has one, and never lent to a parent", async () => {
+      const { onion, red } = await onionTree();
+      const storeId = await storeWithAisles();
+
+      await fileIngredient(storeId, onion.ingredientId, GROENTE);
+      await fileIngredient(storeId, red.ingredientId, KOEL);
+      await onTheList(red, onion);
+
+      await expect(listInheritedAisleLinks([storeId], [actor.userId])).resolves.toEqual([]);
+    });
+
+    it("is answered only for the foods on the household's list", async () => {
+      const { onion } = await onionTree();
+      const storeId = await storeWithAisles();
+
+      await fileIngredient(storeId, onion.ingredientId, GROENTE);
+
+      await expect(listInheritedAisleLinks([storeId], [actor.userId])).resolves.toEqual([]);
+    });
   });
 
   it("refuses a parent that would close a cycle", async () => {

@@ -101,3 +101,13 @@ export function readIngredientOf(spelling: string): Promise<string | null> {
     return rows.rows[0]?.name ?? null;
   });
 }
+
+/** Place one Ingredient under another, as a person would on the Ingredients page. */
+export function setParent(childId: string, parentId: string): Promise<void> {
+  return withDatabase(async (database) => {
+    await database.query(
+      `update ingredients set parent_id = $1, parent_chosen = true where id = $2`,
+      [parentId, childId]
+    );
+  });
+}

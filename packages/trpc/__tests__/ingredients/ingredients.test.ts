@@ -29,7 +29,6 @@ const catalogue = vi.hoisted(() => ({
   moveCatalogueAlias: vi.fn(),
   renameCatalogueIngredient: vi.fn(),
   setCatalogueIngredientParent: vi.fn(),
-  findIngredientAncestors: vi.fn(),
 }));
 const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
 

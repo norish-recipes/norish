@@ -148,6 +148,63 @@ export async function listAisleLinksByStoreIds(storeIds: string[]): Promise<Aisl
 }
 
 /**
+ * Where each Store files the foods on a household's list that have no Aisle
+ * Link of their own there: in the Aisle of their nearest Parent Ingredient
+ * that has one (ADR-0037). One row per Store and food, shaped like an Aisle
+ * Link, so a screen reads a grocery's aisle the same way whether the Store
+ * learned it for that food or for a food it is a kind of. Only the foods on
+ * the list (groceries and recurring groceries, done or not) are answered: a
+ * tree seeded from the catalogue has thousands of descendants a household
+ * will never buy.
+ */
+export async function listInheritedAisleLinks(
+  storeIds: string[],
+  userIds: string[]
+): Promise<AisleLinkDto[]> {
+  if (storeIds.length === 0 || userIds.length === 0) return [];
+
+  const stores = sql.join(
+    storeIds.map((id) => sql`${id}::uuid`),
+    sql`, `
+  );
+  const users = sql.join(
+    userIds.map((id) => sql`${id}`),
+    sql`, `
+  );
+  const result = await db.execute<{ storeId: string; ingredientId: string; aisleId: string }>(sql`
+    with recursive listed as (
+      select ingredient_id from groceries where user_id in (${users}) and ingredient_id is not null
+      union
+      select ingredient_id from recurring_groceries
+        where user_id in (${users}) and ingredient_id is not null
+    ),
+    up(start, ancestor, depth) as (
+      select i.id, i.parent_id, 1 from ingredients i
+        join listed l on l.ingredient_id = i.id
+        where i.parent_id is not null
+      union all
+      select up.start, p.parent_id, up.depth + 1 from up
+        join ingredients p on p.id = up.ancestor
+        where p.parent_id is not null and up.depth < 32
+    )
+    select distinct on (up.start, l.store_id)
+        l.store_id::text as "storeId", up.start::text as "ingredientId", l.aisle_id::text as "aisleId"
+      from up
+      join aisle_links l on l.ingredient_id = up.ancestor and l.store_id in (${stores})
+      where not exists (
+        select 1 from aisle_links own
+          where own.store_id = l.store_id and own.ingredient_id = up.start
+      )
+      order by up.start, l.store_id, up.depth`);
+
+  const parsed = AisleLinksSchema.safeParse(result.rows);
+
+  if (!parsed.success) throw new Error("Failed to parse inherited aisle links");
+
+  return parsed.data;
+}
+
+/**
  * File an Ingredient at a Store: under one of its aisles, or under none,
  * which forgets it. Filing one spelling files every spelling of the food.
  * Last writer wins, with no version guard: the last shopper to file is right.
