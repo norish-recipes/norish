@@ -14,6 +14,7 @@ import {
   listAisleLinksByStoreIds,
   saveStoreAisles,
 } from "@norish/db/repositories/aisles";
+import { renameCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { resolveProductLink, upsertProductLink } from "@norish/db/repositories/store-products";
 import {
@@ -21,20 +22,23 @@ import {
   getIngredientStorePreference,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import { groceries, recurringGroceries } from "@norish/db/schema";
+import { groceries, householdUsers, recurringGroceries } from "@norish/db/schema";
 import {
   addAlias,
   CatalogueEditError,
   markDistinct,
   mergeIngredients,
   moveAlias,
-  renameIngredient,
 } from "@norish/shared-server/ingredients/catalogue";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
-import { createTestUser, getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  createTestHousehold,
+  createTestUser,
+  getTestDb,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const GROENTE = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
@@ -212,6 +216,30 @@ describe("merging Ingredients and moving aliases", () => {
       expect(pantry.map((item) => item.ingredientId)).toEqual([onion.ingredientId]);
     });
 
+    it("keeps one Pantry Ingredient where two members of a household held the two foods", async () => {
+      const onion = await mint("onion");
+      const uien = await mint("uien");
+      const housemate = await createTestUser();
+      const household = await createTestHousehold(actor.userId, { id: crypto.randomUUID() });
+
+      await getTestDb()
+        .insert(householdUsers)
+        .values([
+          { householdId: household!.id, userId: actor.userId },
+          { householdId: household!.id, userId: housemate.id },
+        ]);
+      const userIds = [actor.userId, housemate.id];
+
+      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "onion" });
+      await addToPantry(crypto.randomUUID(), { userId: housemate.id, userIds, name: "uien" });
+
+      await mergeIngredients(actor, uien.ingredientId, onion.ingredientId);
+
+      const pantry = await listPantryIngredientsByUserIds(userIds);
+
+      expect(pantry.map((item) => item.ingredientId)).toEqual([onion.ingredientId]);
+    });
+
     it("refuses to merge an Ingredient into itself", async () => {
       const onion = await mint("onion");
 
@@ -326,8 +354,8 @@ describe("merging Ingredients and moving aliases", () => {
       const onion = await mint("onion");
       const prei = await mint("prei");
 
-      // A rename keeps the old spellings, so "Leek" is a name no alias holds.
-      await renameIngredient(actor, prei.ingredientId, "Leek");
+      // The name alone, as the upgrade can leave one: a spelling no alias holds.
+      await renameCatalogueIngredient(prei.ingredientId, "Leek");
       await addAlias(actor, onion.ingredientId, "leek");
       const [leek] = await resolveIngredients(["leek"], { userId: actor.userId });
 

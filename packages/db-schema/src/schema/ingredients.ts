@@ -20,6 +20,9 @@ import { mutableRowColumns, versionColumn } from "./shared";
  * has a cycle. `parentChosen` says a person set or cleared the parent: the
  * catalogue seed places only Ingredients whose parent nobody chose.
  *
+ * `flagReason` says why a Flagged Ingredient is one, in the catalogue's own
+ * words (`FLAG_REASONS`), and is cleared with the flag.
+ *
  * `offId` is the Open Food Facts taxonomy entry a seeded Ingredient stands
  * for ("en:onion"), which is how a refresh of the seed finds it again
  * (ADR-0038).
@@ -31,6 +34,7 @@ export const ingredients = pgTable(
     name: text("name").notNull(),
     ownerId: text("owner_id").references(() => users.id, { onDelete: "set null" }),
     flagged: boolean("flagged").notNull().default(false),
+    flagReason: text("flag_reason"),
     parentId: uuid("parent_id").references((): AnyPgColumn => ingredients.id, {
       onDelete: "set null",
     }),

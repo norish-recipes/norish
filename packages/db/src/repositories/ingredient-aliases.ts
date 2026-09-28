@@ -1,5 +1,6 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
 
+import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
@@ -36,6 +37,7 @@ export interface IngredientRow {
   name: string;
   ownerId: string | null;
   flagged: boolean;
+  flagReason: string | null;
 }
 
 const aliasColumns = {
@@ -65,6 +67,7 @@ export async function findIngredientByAliasId(aliasId: string): Promise<Ingredie
       name: ingredients.name,
       ownerId: ingredients.ownerId,
       flagged: ingredients.flagged,
+      flagReason: ingredients.flagReason,
     })
     .from(ingredientAliases)
     .innerJoin(ingredients, eq(ingredientAliases.ingredientId, ingredients.id))
@@ -131,6 +134,8 @@ export interface MintIngredientInput {
   ownerId: string | null;
   locale: string | null;
   flagged: boolean;
+  /** Why it is flagged, where it is. */
+  flagReason?: FlagReason | null;
   /** The Parent Ingredient, where the food is a kind of a known one; none where that one is gone. */
   parentId?: string | null;
 }
@@ -169,6 +174,7 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
         name: input.name,
         ownerId: input.ownerId,
         flagged: input.flagged,
+        flagReason: input.flagged ? (input.flagReason ?? null) : null,
         parentId: input.parentId
           ? sql`(select ${ingredients.id} from ${ingredients} where ${ingredients.id} = ${input.parentId})`
           : null,
@@ -282,7 +288,9 @@ const ROWS_PER_START = 100;
  */
 export async function findIngredientCandidates(
   wordStarts: readonly string[],
-  limit: number
+  limit: number,
+  /** An Ingredient never offered as a candidate: the one the question is about. */
+  excludeId: string | null = null
 ): Promise<IngredientCandidate[]> {
   const starts = Array.from(new Set(wordStarts.filter((start) => start.length > 0)));
 
@@ -299,7 +307,12 @@ export async function findIngredientCandidates(
         })
         .from(ingredientAliases)
         .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
-        .where(sql`(' ' || ${ingredientAliases.fold}) like ${`% ${start}%`}`)
+        .where(
+          and(
+            sql`(' ' || ${ingredientAliases.fold}) like ${`% ${start}%`}`,
+            excludeId ? ne(ingredients.id, excludeId) : undefined
+          )
+        )
         .orderBy(asc(sql`length(${ingredientAliases.fold})`), asc(ingredientAliases.id))
         .limit(ROWS_PER_START)
     )

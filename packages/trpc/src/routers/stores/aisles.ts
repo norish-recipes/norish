@@ -8,7 +8,10 @@ import {
   listInheritedAisleLinks,
 } from "@norish/db/repositories/aisles";
 import { listStoresByUserIds } from "@norish/db/repositories/stores";
-import { resolveIngredient } from "@norish/shared-server/ingredients/resolver";
+import {
+  resolveIngredient,
+  retryOnStaleIngredient,
+} from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { AisleFilingSchema } from "@norish/shared/contracts/zod";
@@ -58,10 +61,15 @@ const fileGroceryName = authedProcedure
     }
 
     // Markup alone names no food, and is filed nowhere.
-    const ingredient = await resolveIngredient(input.name, { userId: ctx.user.id });
+    const filing = await retryOnStaleIngredient(async () => {
+      const ingredient = await resolveIngredient(input.name, { userId: ctx.user.id });
 
-    if (!ingredient) return null;
-    const filing = await fileIngredient(input.storeId, ingredient.ingredientId, input.aisleId);
+      return ingredient
+        ? await fileIngredient(input.storeId, ingredient.ingredientId, input.aisleId)
+        : null;
+    });
+
+    if (!filing) return null;
 
     log.info(
       { userId: ctx.user.id, storeId: input.storeId, aisleId: input.aisleId },

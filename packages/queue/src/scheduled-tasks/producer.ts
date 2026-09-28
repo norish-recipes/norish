@@ -70,9 +70,10 @@ export async function initializeScheduledJobs(queue: Queue<ScheduledTaskJobData>
     );
   }
 
-  // A new instance should not wait until midnight for its ingredient
-  // catalogue. Every boot asks once; the fetch is conditional, so asking about
-  // a seed already applied costs one small request.
+  // The first boot seeds the catalogue before the server starts; every boot
+  // still asks once here, so a seed that failed at boot is retried without
+  // waiting for midnight. The fetch is conditional, so asking about a seed
+  // already applied costs one small request.
   await queue.add("ingredient-catalogue-refresh", { taskType: "ingredient-catalogue-refresh" });
 
   log.info("Repeatable scheduled jobs initialized (daily at midnight)");

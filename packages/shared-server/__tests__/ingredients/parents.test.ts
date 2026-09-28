@@ -13,7 +13,7 @@ import {
   listInheritedAisleLinks,
   saveStoreAisles,
 } from "@norish/db/repositories/aisles";
-import { findIngredientAncestors } from "@norish/db/repositories/ingredient-catalogue";
+import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { resolveProductLink, upsertProductLink } from "@norish/db/repositories/store-products";
 import { createStore } from "@norish/db/repositories/stores";

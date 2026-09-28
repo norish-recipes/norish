@@ -94,7 +94,7 @@ After the first user signs in, registration is disabled automatically. See
 | -------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
 | `INGREDIENT_CATALOGUE_URL` | Where the ingredient catalogue seed is fetched from, nightly and at startup. Empty turns the fetch off | The Open Food Facts ingredients taxonomy |
 
-Norish seeds its catalogue of ingredients from the [Open Food Facts](https://world.openfoodfacts.org) ingredients taxonomy, so a new instance already knows that "ui", "oignon" and "onion" are one food. The file is fetched at startup and every night at midnight, and only when it changed. A failed or malformed fetch keeps the last good seed and shows as a failed job in the job monitor.
+Norish seeds its catalogue of ingredients from the [Open Food Facts](https://world.openfoodfacts.org) ingredients taxonomy, so a new instance already knows that "ui", "oignon" and "onion" are one food. A new instance fetches and applies the file before it starts serving, so its first import already knows the catalogue; after that the file is fetched at every startup and every night at midnight, and only when it changed. A failed or malformed fetch keeps the last good seed and shows as a failed job in the job monitor.
 
 On a server without internet, serve a copy of `ingredients.txt` from a local mirror and point `INGREDIENT_CATALOGUE_URL` at it, or set it empty: Norish works without a seed, it only recognises fewer spellings of a food on its own.
 

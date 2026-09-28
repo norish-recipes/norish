@@ -53,6 +53,9 @@ vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
     ...payload,
     ingredientResolutions: new Map(),
   })),
+  createResolvedRecipe: vi.fn(async (id: string, userId: unknown, payload: object) =>
+    createRecipeWithRefs(id, userId, { ...payload, ingredientResolutions: new Map() })
+  ),
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({

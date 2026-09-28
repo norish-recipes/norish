@@ -4,16 +4,14 @@ import path from "node:path";
 import JSZip from "jszip";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import {
-  createRecipeWithRefs,
-  dashboardRecipe,
-  findExistingRecipe,
-  updateRecipeWithRefs,
-} from "@norish/db";
+import { dashboardRecipe, findExistingRecipe } from "@norish/db";
 import { listCuisines } from "@norish/db/repositories/cuisines";
 import { addFavorite } from "@norish/db/repositories/favorites";
 import { rateRecipe } from "@norish/db/repositories/ratings";
-import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
+import {
+  createResolvedRecipe,
+  updateResolvedRecipe,
+} from "@norish/shared-server/ingredients/recipe-lines";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { FullRecipeInsertDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
@@ -396,12 +394,11 @@ export async function importRecipeItems(
 
         // The receiving instance extracts its own Dish Colour from the
         // media it just rehomed; nothing colour-shaped travels in an archive.
-        await updateRecipeWithRefs(
+        await updateResolvedRecipe(
           existingId,
           overwriteUserId,
-          await withResolvedIngredients(await withDishColorForUpdate(overwriteDto), {
-            userId: overwriteUserId,
-          })
+          await withDishColorForUpdate(overwriteDto),
+          { userId: overwriteUserId }
         );
 
         await applyImportedMarks(userId, existingId, importedRating, importedFavorite);
@@ -423,11 +420,9 @@ export async function importRecipeItems(
         throw new Error("Archive recipe missing preallocated recipe ID");
       }
 
-      const created = await createRecipeWithRefs(
-        recipeId,
-        userId,
-        await withResolvedIngredients(await withDishColor(dto), { userId: userId ?? null })
-      );
+      const created = await createResolvedRecipe(recipeId, userId, await withDishColor(dto), {
+        userId: userId ?? null,
+      });
 
       if (created) {
         await applyImportedMarks(userId, created.recipeId, importedRating, importedFavorite);

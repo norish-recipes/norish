@@ -12,7 +12,7 @@ import type { IngredientSeedState } from "@norish/config/zod/server-config";
 import type { SeedEntry, SeedOutcome } from "@norish/db/repositories/ingredient-seed";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { IngredientSeedStateSchema, ServerConfigKeys } from "@norish/config/zod/server-config";
-import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-catalogue";
+import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import {
   applyIngredientSeed,
   flagIngredient,
@@ -147,7 +147,8 @@ export async function mergeExistingIntoSeed(
   return { merged, flagged };
 }
 
-async function readState(): Promise<IngredientSeedState> {
+/** The last seed applied, as boot and the refresh read it: nothing applied yet reads as defaults. */
+export async function readIngredientSeedState(): Promise<IngredientSeedState> {
   return IngredientSeedStateSchema.parse(
     (await getConfig<IngredientSeedState>(ServerConfigKeys.INGREDIENT_SEED_STATE)) ?? {}
   );
@@ -169,7 +170,7 @@ export async function refreshIngredientCatalogue(
 
   if (!url) return "disabled";
 
-  const state = await readState();
+  const state = await readIngredientSeedState();
   const headers: Record<string, string> = {};
 
   if (state.etag) headers["If-None-Match"] = state.etag;

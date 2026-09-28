@@ -1,6 +1,10 @@
 "use client";
 
-import { useIngredientsSubscription } from "@/hooks/ingredients";
+import { useTRPC } from "@/app/providers/trpc-provider";
+
+import { createIngredientsHooks } from "@norish/shared-react/hooks";
+
+const { useIngredientsSubscription } = createIngredientsHooks({ useTRPC });
 
 /**
  * Holds the Ingredients realtime subscription open for the whole app, for the

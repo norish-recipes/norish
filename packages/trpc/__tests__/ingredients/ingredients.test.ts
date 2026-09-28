@@ -20,19 +20,26 @@ import { ingredients as ingredientsRealtime } from "../mocks/realtime/ingredient
 const catalogue = vi.hoisted(() => ({
   clearIngredientFlag: vi.fn(),
   deleteCatalogueAlias: vi.fn(),
+  deleteCatalogueIngredient: vi.fn(),
   findCatalogueAliasOwner: vi.fn(),
   findCatalogueIngredientOwner: vi.fn(),
   findIngredientIdByFold: vi.fn(),
   insertCatalogueAlias: vi.fn(),
+  listCatalogueAliasesOf: vi.fn(),
   listCatalogueIngredients: vi.fn(),
+  renameCatalogueIngredient: vi.fn(),
+}));
+const relocation = vi.hoisted(() => ({
   mergeCatalogueIngredients: vi.fn(),
   moveCatalogueAlias: vi.fn(),
-  renameCatalogueIngredient: vi.fn(),
   setCatalogueIngredientParent: vi.fn(),
 }));
 const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
+const reviewer = vi.hoisted(() => ({ reviewFlaggedWithAI: vi.fn() }));
 
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
+vi.mock("@norish/db/repositories/ingredient-relocation", () => relocation);
+vi.mock("@norish/shared-server/ingredients/review", () => reviewer);
 vi.mock("@norish/shared-server/config/server-config-loader", () => policy);
 vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
 vi.mock(
@@ -73,12 +80,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   ingredientsRealtime.reset();
   withPolicy("household");
-  catalogue.mergeCatalogueIngredients.mockResolvedValue("merged");
-  catalogue.setCatalogueIngredientParent.mockResolvedValue("set");
-  catalogue.moveCatalogueAlias.mockResolvedValue({ outcome: "moved", ingredientId: UIEN });
+  relocation.mergeCatalogueIngredients.mockResolvedValue("merged");
+  relocation.setCatalogueIngredientParent.mockResolvedValue("set");
+  relocation.moveCatalogueAlias.mockResolvedValue({ outcome: "moved", ingredientId: UIEN });
   catalogue.renameCatalogueIngredient.mockResolvedValue("renamed");
   catalogue.clearIngredientFlag.mockResolvedValue({ id: ONION });
   catalogue.deleteCatalogueAlias.mockResolvedValue("deleted");
+  catalogue.deleteCatalogueIngredient.mockResolvedValue("deleted");
+  catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "Onion", ownerId: ME });
 });
 
 describe("the edit policy", () => {
@@ -121,8 +130,36 @@ describe("the edit policy", () => {
 
       const mark = callerFor().markDistinct({ ingredientId: ONION });
 
-      if (allowed) await expect(mark).resolves.toEqual({ success: true });
-      else await expect(mark).rejects.toMatchObject({ code: "FORBIDDEN" });
+      if (allowed) {
+        await expect(mark).resolves.toEqual({ success: true });
+        expect(ingredientsRealtime.published).toEqual([
+          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+        ]);
+      } else {
+        await expect(mark).rejects.toMatchObject({ code: "FORBIDDEN" });
+        expect(ingredientsRealtime.published).toHaveLength(0);
+      }
+    }
+  );
+
+  it.each(matrix)(
+    "under %s, deleting an Ingredient owned by %s is allowed: %s",
+    async (level, owner, allowed) => {
+      withPolicy(level);
+      ownedBy(owner);
+
+      const remove = callerFor().remove({ ingredientId: ONION });
+
+      if (allowed) {
+        await expect(remove).resolves.toEqual({ success: true });
+        expect(catalogue.deleteCatalogueIngredient).toHaveBeenCalledWith(ONION);
+        expect(ingredientsRealtime.published).toEqual([
+          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+        ]);
+      } else {
+        await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
+        expect(catalogue.deleteCatalogueIngredient).not.toHaveBeenCalled();
+      }
     }
   );
 
@@ -136,6 +173,9 @@ describe("the edit policy", () => {
 
       if (allowed) {
         await expect(remove).resolves.toEqual({ success: true });
+        expect(ingredientsRealtime.published).toEqual([
+          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+        ]);
       } else {
         await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
         expect(catalogue.deleteCatalogueAlias).not.toHaveBeenCalled();
@@ -180,13 +220,13 @@ describe("the edit policy", () => {
 
       if (allowed) {
         await expect(set).resolves.toEqual({ success: true });
-        expect(catalogue.setCatalogueIngredientParent).toHaveBeenCalledWith(ONION, UIEN);
+        expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(ONION, UIEN);
         expect(ingredientsRealtime.published).toEqual([
           expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
         ]);
       } else {
         await expect(set).rejects.toMatchObject({ code: "FORBIDDEN" });
-        expect(catalogue.setCatalogueIngredientParent).not.toHaveBeenCalled();
+        expect(relocation.setCatalogueIngredientParent).not.toHaveBeenCalled();
       }
     }
   );
@@ -201,10 +241,10 @@ describe("the edit policy", () => {
 
       if (allowed) {
         await expect(move).resolves.toEqual({ success: true });
-        expect(catalogue.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, { ingredientId: UIEN });
+        expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, { ingredientId: UIEN });
       } else {
         await expect(move).rejects.toMatchObject({ code: "FORBIDDEN" });
-        expect(catalogue.moveCatalogueAlias).not.toHaveBeenCalled();
+        expect(relocation.moveCatalogueAlias).not.toHaveBeenCalled();
       }
     }
   );
@@ -214,7 +254,7 @@ describe("the edit policy", () => {
 
     await callerFor().moveAlias({ aliasId: ALIAS, targetId: null });
 
-    expect(catalogue.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, {
+    expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, {
       mint: { name: "ui", ownerId: ME },
     });
   });
@@ -233,7 +273,7 @@ describe("the edit policy", () => {
       await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).rejects.toMatchObject({
         code: "FORBIDDEN",
       });
-      expect(catalogue.mergeCatalogueIngredients).not.toHaveBeenCalled();
+      expect(relocation.mergeCatalogueIngredients).not.toHaveBeenCalled();
     }
   );
 
@@ -246,7 +286,7 @@ describe("the edit policy", () => {
     await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).resolves.toEqual({
       success: true,
     });
-    expect(catalogue.mergeCatalogueIngredients).toHaveBeenCalledWith(UIEN, ONION);
+    expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(UIEN, ONION);
     expect(ingredientsRealtime.published).toEqual([
       expect.objectContaining({ event: "changed", payload: { ingredientIds: [UIEN, ONION] } }),
     ]);
@@ -275,6 +315,41 @@ describe("the edit policy", () => {
     expect(catalogue.insertCatalogueAlias).toHaveBeenCalledWith(
       expect.objectContaining({ ingredientId: ONION, text: "ajuin", ownerId: ME })
     );
+    expect(ingredientsRealtime.published).toEqual([
+      expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+    ]);
+  });
+
+  it("makes a new name one of the Ingredient's spellings", async () => {
+    ownedBy(ME);
+
+    await callerFor().rename({ ingredientId: ONION, name: "Yellow onion" });
+
+    expect(catalogue.insertCatalogueAlias).toHaveBeenCalledWith(
+      expect.objectContaining({ ingredientId: ONION, text: "Yellow onion", ownerId: ME })
+    );
+  });
+});
+
+describe("asking AI about a flagged Ingredient", () => {
+  it("answers what came of it, and announces the change", async () => {
+    reviewer.reviewFlaggedWithAI.mockResolvedValue({ outcome: "merged", into: "onion" });
+
+    await expect(callerFor().reviewWithAI({ ingredientId: UIEN })).resolves.toEqual({
+      outcome: "merged",
+      into: "onion",
+    });
+    expect(ingredientsRealtime.published).toEqual([
+      expect.objectContaining({ event: "changed", payload: { ingredientIds: [UIEN] } }),
+    ]);
+  });
+
+  it("announces nothing where nothing was flagged", async () => {
+    reviewer.reviewFlaggedWithAI.mockResolvedValue({ outcome: "not-flagged" });
+
+    await callerFor().reviewWithAI({ ingredientId: UIEN });
+
+    expect(ingredientsRealtime.published).toHaveLength(0);
   });
 });
 
@@ -310,11 +385,21 @@ describe("refusals", () => {
   });
 
   it("refuses a parent that would close a cycle", async () => {
-    catalogue.setCatalogueIngredientParent.mockResolvedValue("cycle");
+    relocation.setCatalogueIngredientParent.mockResolvedValue("cycle");
 
     await expect(
       callerFor().setParent({ ingredientId: ONION, parentId: UIEN })
     ).rejects.toMatchObject({ code: "CONFLICT", message: "cycle" });
+    expect(ingredientsRealtime.published).toHaveLength(0);
+  });
+
+  it("refuses to delete an Ingredient something still uses", async () => {
+    catalogue.deleteCatalogueIngredient.mockResolvedValue("in-use");
+
+    await expect(callerFor().remove({ ingredientId: ONION })).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "ingredient-in-use",
+    });
     expect(ingredientsRealtime.published).toHaveLength(0);
   });
 
@@ -326,7 +411,7 @@ describe("refusals", () => {
   });
 
   it("refuses to move an Ingredient's last alias away", async () => {
-    catalogue.moveCatalogueAlias.mockResolvedValue({ outcome: "last" });
+    relocation.moveCatalogueAlias.mockResolvedValue({ outcome: "last" });
 
     await expect(callerFor().moveAlias({ aliasId: ALIAS, targetId: null })).rejects.toMatchObject({
       code: "CONFLICT",
@@ -365,6 +450,7 @@ describe("the list", () => {
         id: ONION,
         name: "onion",
         flagged: true,
+        flagReason: "ai-unsure",
         ownerId: STRANGER,
         version: 1,
         parent: null,
@@ -375,7 +461,7 @@ describe("the list", () => {
       },
     ]);
 
-    const page = await callerFor().list({ search: "Onion", flaggedOnly: true });
+    const page = await callerFor().list({ search: "Onion", flaggedOnly: true, locale: "en" });
 
     expect(catalogue.listCatalogueIngredients).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -391,15 +477,28 @@ describe("the list", () => {
           name: "onion",
           localeNames: { nl: "ui" },
           flagged: true,
+          flagReason: "ai-unsure",
           parent: null,
           canEdit: false,
-          aliases: [
-            { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true },
-            { id: "seeded-alias", text: "ui", locale: "nl", seeded: true, canRemove: false },
-          ],
+          // An English viewer sees the household's own spelling; the Dutch one is counted.
+          aliases: [{ id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true }],
+          hiddenSpellings: 1,
         },
       ],
       nextCursor: null,
     });
+  });
+
+  it("lists every spelling of one Ingredient on request", async () => {
+    withPolicy("household");
+    catalogue.listCatalogueAliasesOf.mockResolvedValue([
+      { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
+      { id: "seeded-alias", text: "ui", ownerId: null, locale: "nl", seeded: true },
+    ]);
+
+    await expect(callerFor().spellings({ ingredientId: ONION })).resolves.toEqual([
+      { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true },
+      { id: "seeded-alias", text: "ui", locale: "nl", seeded: true, canRemove: false },
+    ]);
   });
 });

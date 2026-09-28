@@ -14,6 +14,7 @@
 import { z } from "zod";
 
 import type { IngredientCandidate } from "@norish/db/repositories/ingredient-aliases";
+import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import { findIngredientCandidates } from "@norish/db/repositories/ingredient-aliases";
 import {
   isAIEnabled,
@@ -22,7 +23,7 @@ import {
 import { aiLogger } from "@norish/shared-server/logger";
 import { foldName } from "@norish/shared/lib/fold-name";
 
-import { decide, generateStructured } from "../ai/runtime/runtime";
+import { decide, generateStructured } from "../runtime/runtime";
 
 /**
  * At or above: the Decision's pick is acted on — a text it names as a known
@@ -48,10 +49,14 @@ const SHOWN_ALIASES = 5;
  * Parent Ingredient where the answer was that it is a kind of that food.
  */
 export type AIResolution =
-  { kind: "same"; ingredientId: string } | { kind: "new"; kindOf: string | null; flagged: boolean };
+  | { kind: "same"; ingredientId: string }
+  | { kind: "new"; kindOf: string | null; flagged: false; reason: null }
+  | { kind: "new"; kindOf: string | null; flagged: true; reason: FlagReason };
 
-/** A food of its own that nothing sure vouched for: rung 4's flagged mint. */
-export const FLAGGED_NEW: AIResolution = { kind: "new", kindOf: null, flagged: true };
+/** A food of its own that nothing sure vouched for: rung 4's flagged mint, and why. */
+export function flaggedNew(reason: FlagReason, kindOf: string | null = null): AIResolution {
+  return { kind: "new", kindOf, flagged: true, reason };
+}
 
 /**
  * How long one name may wait on AI before it is minted flagged instead. Rung 3
@@ -60,6 +65,22 @@ export const FLAGGED_NEW: AIResolution = { kind: "new", kindOf: null, flagged: t
  * after the budget is ignored.
  */
 export const RESOLUTION_BUDGET_MS = 8000;
+
+/** How a question may be asked: on the way in, or when a person asks again. */
+export interface AskOptions {
+  /** An Ingredient never offered as a candidate: the one the question is about. */
+  excludeId?: string | null;
+  /**
+   * Take a second look: ask the language model even with nothing to compare
+   * the name with, and when its answer names the plain food ("uien" is
+   * "onion"), look that food up and ask again with what it finds. An import
+   * never does this — a shopper is waiting — but a person who asks about a
+   * flagged food is asking for exactly this effort.
+   */
+  thorough?: boolean;
+  /** How long to wait for an answer before minting flagged instead. */
+  budgetMs?: number;
+}
 
 /** The starts of a name's words the candidate search matches on. Numbers name no food. */
 function wordStarts(text: string): string[] {
@@ -78,37 +99,99 @@ function wordStarts(text: string): string[] {
  * person can catch. An answer later than `RESOLUTION_BUDGET_MS` is a flagged
  * mint too.
  */
-export async function askWhatFoodThisIs(text: string, bare: string): Promise<AIResolution> {
-  if (!(await isAIEnabled())) return FLAGGED_NEW;
+export async function askWhatFoodThisIs(
+  text: string,
+  bare: string,
+  options: AskOptions = {}
+): Promise<AIResolution> {
+  if (!(await isAIEnabled())) return flaggedNew("ai-off");
 
-  const candidates = await findIngredientCandidates(wordStarts(bare || text), MAX_CANDIDATES);
+  const excludeId = options.excludeId ?? null;
+  const candidates = await findIngredientCandidates(
+    wordStarts(bare || text),
+    MAX_CANDIDATES,
+    excludeId
+  );
 
-  if (candidates.length === 0) return FLAGGED_NEW;
+  if (candidates.length === 0 && !options.thorough) return flaggedNew("unknown-food");
 
+  const budgetMs = options.budgetMs ?? RESOLUTION_BUDGET_MS;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const outOfTime = new Promise<AIResolution>((resolve) => {
     timer = setTimeout(() => {
       aiLogger.warn(
-        { feature: "ingredient-resolution", text, budgetMs: RESOLUTION_BUDGET_MS },
+        { feature: "ingredient-resolution", text, budgetMs },
         "Ingredient resolution ran out of time, minting a flagged Ingredient"
       );
-      resolve(FLAGGED_NEW);
-    }, RESOLUTION_BUDGET_MS);
+      resolve(flaggedNew("ai-unavailable"));
+    }, budgetMs);
   });
+  const asked = options.thorough
+    ? askTwice(text, candidates, excludeId)
+    : askAbout(text, candidates);
 
   try {
-    return await Promise.race([askAbout(text, candidates), outOfTime]);
+    return await Promise.race([asked, outOfTime]);
   } finally {
     clearTimeout(timer);
   }
 }
 
-/** The Decision, then the language model where the Decision is unsure, off or failing. */
+/** An answer that placed the name: a known food it is, or one it is surely a kind of. */
+function placed(answer: AIResolution): boolean {
+  return answer.kind === "same" || (answer.kindOf !== null && !answer.flagged);
+}
+
+/**
+ * The question asked once, and again with the foods the language model's own
+ * name for it finds, where the first answer did not place it. A food the
+ * second look places wins; otherwise a sure answer beats an unsure one, and
+ * between two unsure answers the first stands, since it saw the name's own
+ * candidates. Only the language model names the food, so a Decision that was
+ * sure among the first candidates is taken at its word and gets no second
+ * look.
+ */
+async function askTwice(
+  text: string,
+  candidates: readonly IngredientCandidate[],
+  excludeId: string | null
+): Promise<AIResolution> {
+  const named: string[] = [];
+  const first = await askAbout(text, candidates, named);
+  const englishName = named[0];
+
+  if (placed(first) || !englishName) return first;
+
+  const offered = new Set(candidates.map((candidate) => candidate.id));
+  const more = (
+    await findIngredientCandidates(wordStarts(englishName), MAX_CANDIDATES, excludeId)
+  ).filter((candidate) => !offered.has(candidate.id));
+
+  if (more.length === 0) return first;
+
+  aiLogger.info(
+    { text, englishName, candidates: more.length },
+    "Taking a second look at a name, by the food AI says it is"
+  );
+  const second = await askAbout(text, more);
+
+  if (placed(second)) return second;
+  if (!first.flagged) return first;
+
+  return second.flagged ? first : second;
+}
+
+/**
+ * The Decision, then the language model where the Decision is unsure, off or
+ * failing. With nothing to compare the name with, only the language model is
+ * asked. `named` collects the plain English name the language model gives.
+ */
 async function askAbout(
   text: string,
-  candidates: readonly IngredientCandidate[]
+  candidates: readonly IngredientCandidate[],
+  named: string[] = []
 ): Promise<AIResolution> {
-  if (await isDecisionUseEnabled("ingredientResolution")) {
+  if (candidates.length > 0 && (await isDecisionUseEnabled("ingredientResolution"))) {
     // A Decision failure of any retryability is a warn log and the fallback.
     const decided = await decideFood(text, candidates).catch((error: unknown) => {
       aiLogger.warn(
@@ -122,13 +205,13 @@ async function askAbout(
     if (decided) return decided;
   }
 
-  return await askLanguageModel(text, candidates).catch((error: unknown) => {
+  return await askLanguageModel(text, candidates, named).catch((error: unknown) => {
     aiLogger.warn(
       { err: error, feature: "ingredient-resolution", text },
       "Ingredient resolution failed, minting a flagged Ingredient"
     );
 
-    return FLAGGED_NEW;
+    return flaggedNew("ai-unavailable");
   });
 }
 
@@ -151,10 +234,15 @@ async function decideFood(
     criteria[`same_${index + 1}`] = `Is ${candidate.name}`;
     options.set(`same_${index + 1}`, { kind: "same", ingredientId: candidate.id });
     criteria[`kind_${index + 1}`] = `Is a kind of ${candidate.name}`;
-    options.set(`kind_${index + 1}`, { kind: "new", kindOf: candidate.id, flagged: false });
+    options.set(`kind_${index + 1}`, {
+      kind: "new",
+      kindOf: candidate.id,
+      flagged: false,
+      reason: null,
+    });
   });
   criteria[NEW] = "Is none of these, but a food of its own";
-  options.set(NEW, { kind: "new", kindOf: null, flagged: false });
+  options.set(NEW, { kind: "new", kindOf: null, flagged: false, reason: null });
 
   const { answers } = await decide({
     feature: "ingredient-resolution",
@@ -194,6 +282,12 @@ const languageModelAnswerSchema = z
       .nullable()
       .describe("The number of the listed food, for same and kind-of; null for new."),
     sure: z.boolean(),
+    englishName: z
+      .string()
+      .nullable()
+      .describe(
+        "The plain English name of the food this name is, as a shopper would look for it; null when it is not a food."
+      ),
   })
   .strict();
 
@@ -204,34 +298,39 @@ const languageModelAnswerSchema = z
  */
 async function askLanguageModel(
   text: string,
-  candidates: readonly IngredientCandidate[]
+  candidates: readonly IngredientCandidate[],
+  named: string[] = []
 ): Promise<AIResolution> {
   const answer = await generateStructured({
     prompt: "ingredient-resolution",
     schema: languageModelAnswerSchema,
     sections: [
       `New name: ${text}`,
-      [
-        "Foods in the catalogue:",
-        ...candidates.map((candidate, index) =>
-          candidate.aliases.length > 0
-            ? `${index + 1}. ${candidate.name} (also: ${candidate.aliases.slice(0, SHOWN_ALIASES).join(", ")})`
-            : `${index + 1}. ${candidate.name}`
-        ),
-      ].join("\n"),
+      candidates.length === 0
+        ? "Foods in the catalogue: none share a word with the new name."
+        : [
+            "Foods in the catalogue:",
+            ...candidates.map((candidate, index) =>
+              candidate.aliases.length > 0
+                ? `${index + 1}. ${candidate.name} (also: ${candidate.aliases.slice(0, SHOWN_ALIASES).join(", ")})`
+                : `${index + 1}. ${candidate.name}`
+            ),
+          ].join("\n"),
     ],
   });
   const food = answer.food === null ? undefined : candidates[answer.food - 1];
 
   aiLogger.info({ text, ...answer }, "Language model answered what food a name is");
 
+  if (answer.englishName?.trim()) named.push(answer.englishName.trim());
+
   if (answer.verdict === "same") {
-    return food && answer.sure ? { kind: "same", ingredientId: food.id } : FLAGGED_NEW;
+    return food && answer.sure ? { kind: "same", ingredientId: food.id } : flaggedNew("ai-unsure");
   }
 
-  return {
-    kind: "new",
-    kindOf: answer.verdict === "kind-of" ? (food?.id ?? null) : null,
-    flagged: !answer.sure,
-  };
+  const kindOf = answer.verdict === "kind-of" ? (food?.id ?? null) : null;
+
+  return answer.sure
+    ? { kind: "new", kindOf, flagged: false, reason: null }
+    : flaggedNew("ai-unsure", kindOf);
 }

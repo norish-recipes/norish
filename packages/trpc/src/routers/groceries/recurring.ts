@@ -15,6 +15,7 @@ import {
 } from "@norish/db/repositories/recurring-groceries";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { resolveGroceryName } from "@norish/shared-server/ingredients/groceries";
+import { retryOnStaleIngredient } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
@@ -53,12 +54,11 @@ const createRecurring = authedProcedure
       "Creating recurring grocery"
     );
 
-    const ingredient = await resolveGroceryName({ name: input.name }, { userId: ctx.user.id });
+    const recurringId = input.id ?? crypto.randomUUID();
     const recurringData = {
-      id: input.id ?? crypto.randomUUID(),
+      id: recurringId,
       userId: ctx.user.id,
       name: input.name,
-      ...ingredient,
       amount: input.amount,
       unit: input.unit,
       recurrenceRule: input.recurrenceRule,
@@ -69,11 +69,18 @@ const createRecurring = authedProcedure
     };
 
     try {
-      const created = await createRecurringGrocery(recurringData);
-      const groceryData: GroceryInsertDto = {
+      const created = await retryOnStaleIngredient(async () =>
+        createRecurringGrocery({
+          ...recurringData,
+          ...(await resolveGroceryName({ name: input.name }, { userId: ctx.user.id })),
+        })
+      );
+      // The grocery asks again: an exact alias match, unless the food moved
+      // in between, in which case it follows.
+      const groceryOf = async (): Promise<GroceryInsertDto> => ({
         userId: ctx.user.id,
         name: created.name,
-        ...ingredient,
+        ...(await resolveGroceryName({ name: created.name }, { userId: ctx.user.id })),
         unit: created.unit || null,
         amount: created.amount,
         purchaseAmount: input.purchaseAmount,
@@ -81,9 +88,11 @@ const createRecurring = authedProcedure
         recurringGroceryId: created.id,
         recipeIngredientId: null,
         storeId: input.storeId ?? null,
-      };
+      });
 
-      const { created: grocery, shifted } = await createGrocery(id, groceryData, ctx.userIds);
+      const { created: grocery, shifted } = await retryOnStaleIngredient(async () =>
+        createGrocery(id, await groceryOf(), ctx.userIds)
+      );
 
       // A repeating grocery is a grocery on the list like any other: its Store
       // is asked what it knows about the name, exactly as the add panel asks.
@@ -169,14 +178,22 @@ const updateRecurring = authedProcedure
 
         // A new name is a new question: it is resolved, and the grocery the
         // recurring one keeps on the list takes the same answer.
-        const ingredient =
-          data.name !== undefined
-            ? await resolveGroceryName({ name: data.name }, { userId: ctx.user.id })
-            : {};
-        const outcome = await updateRecurringGroceryWithGrocery(
-          { id: recurringGroceryId, version: recurringVersion, ...data, ...ingredient },
-          { id: groceryId, version: groceryVersion, storeId, purchaseAmount: input.purchaseAmount }
-        );
+        const outcome = await retryOnStaleIngredient(async () => {
+          const ingredient =
+            data.name !== undefined
+              ? await resolveGroceryName({ name: data.name }, { userId: ctx.user.id })
+              : {};
+
+          return await updateRecurringGroceryWithGrocery(
+            { id: recurringGroceryId, version: recurringVersion, ...data, ...ingredient },
+            {
+              id: groceryId,
+              version: groceryVersion,
+              storeId,
+              purchaseAmount: input.purchaseAmount,
+            }
+          );
+        });
 
         if (outcome.stale) {
           log.info(
@@ -257,23 +274,25 @@ const detachRecurring = authedProcedure
           });
         }
 
-        const outcome = await detachRecurringGrocery({
-          recurringGroceryId,
-          recurringVersion,
-          grocery: {
-            id: groceryId,
-            version: groceryVersion,
-            name: parsedIngredient.description,
-            ...(await resolveGroceryName(
-              { name: parsedIngredient.description },
-              { userId: ctx.user.id }
-            )),
-            unit: parsedIngredient.unitOfMeasure,
-            amount: parsedIngredient.quantity ?? null,
-            purchaseAmount: input.purchaseAmount,
-            ...(storeId !== undefined ? { storeId } : {}),
-          },
-        });
+        const outcome = await retryOnStaleIngredient(async () =>
+          detachRecurringGrocery({
+            recurringGroceryId,
+            recurringVersion,
+            grocery: {
+              id: groceryId,
+              version: groceryVersion,
+              name: parsedIngredient.description,
+              ...(await resolveGroceryName(
+                { name: parsedIngredient.description },
+                { userId: ctx.user.id }
+              )),
+              unit: parsedIngredient.unitOfMeasure,
+              amount: parsedIngredient.quantity ?? null,
+              purchaseAmount: input.purchaseAmount,
+              ...(storeId !== undefined ? { storeId } : {}),
+            },
+          })
+        );
 
         if (outcome.stale) {
           log.info(

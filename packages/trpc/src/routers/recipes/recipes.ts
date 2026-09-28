@@ -7,7 +7,6 @@ import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enric
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
   addStepsAndIngredientsToRecipeByInput,
-  createRecipeWithRefs,
   dashboardRecipe,
   deleteRecipeById,
   FullRecipeInsertSchema,
@@ -24,7 +23,6 @@ import {
   searchRecipesByName,
   setActiveSystemForRecipe,
   updateRecipeCategories,
-  updateRecipeWithRefs,
 } from "@norish/db";
 import {
   addImageImportJob,
@@ -40,7 +38,12 @@ import {
   getRecipePermissionPolicy,
   isVideoParsingEnabled,
 } from "@norish/shared-server/config/server-config-loader";
-import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
+import {
+  createResolvedRecipe,
+  updateResolvedRecipe,
+  withResolvedIngredients,
+} from "@norish/shared-server/ingredients/recipe-lines";
+import { retryOnStaleIngredient } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
@@ -208,8 +211,7 @@ export const createRecipeProcedure = authedProcedure
     // The Dish Colour rides the payload from here: derived from the image
     // the recipe is being stored with, overwriting anything the client sent.
     withDishColor(input)
-      .then((dto) => withResolvedIngredients(dto, { userId: ctx.user.id }))
-      .then((dto) => createRecipeWithRefs(recipeId, ctx.user.id, dto))
+      .then((dto) => createResolvedRecipe(recipeId, ctx.user.id, dto, { userId: ctx.user.id }))
       .then(async (created) => {
         if (!created) {
           throw new TRPCError({
@@ -255,10 +257,13 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
     .then(async () => {
       // An edit that touches the media recomputes the Dish Colour from what
       // the recipe now shows; one that does not leaves the colour alone.
-      const dto = await withResolvedIngredients(await withDishColorForUpdate(data), {
-        userId: ctx.user.id,
-      });
-      const result = await updateRecipeWithRefs(id, ctx.user.id, dto, version);
+      const result = await updateResolvedRecipe(
+        id,
+        ctx.user.id,
+        await withDishColorForUpdate(data),
+        { userId: ctx.user.id },
+        version
+      );
 
       if (result.stale) {
         log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
@@ -544,14 +549,18 @@ const convertMeasurements = authedProcedure
           systemUsed: targetSystem,
         }));
 
-        return withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id })
-          .then((resolved) =>
-            addStepsAndIngredientsToRecipeByInput(
-              steps,
-              resolved.recipeIngredients,
-              resolved.ingredientResolutions
-            )
-          )
+        return retryOnStaleIngredient(async () => {
+          const resolved = await withResolvedIngredients(
+            { recipeIngredients: ingredients },
+            { userId: ctx.user.id }
+          );
+
+          return addStepsAndIngredientsToRecipeByInput(
+            steps,
+            resolved.recipeIngredients,
+            resolved.ingredientResolutions
+          );
+        })
           .then(() => setActiveSystemForRecipe(recipe.id, targetSystem, version))
           .then(() => getRecipeFull(recipe.id))
           .then(async (updatedRecipe) => {

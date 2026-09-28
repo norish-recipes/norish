@@ -20,6 +20,7 @@ import {
 import { getStoreOwnerId } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { resolveGroceryName } from "@norish/shared-server/ingredients/groceries";
+import { retryOnStaleIngredient } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
@@ -110,38 +111,40 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       // A grocery from a recipe line keeps the line's food while its text
       // still says what the line says; an amount or Store edit re-points nothing.
       const [current] = await getGroceriesByIds([groceryId]);
-      const updateData: GroceryUpdateDto = {
-        id: groceryId,
-        version,
-        name: parsedIngredient.description,
-        ...(await resolveGroceryName(
-          {
-            name: parsedIngredient.description,
-            recipeIngredientId: current?.recipeIngredientId ?? null,
-          },
-          { userId: ctx.user.id }
-        )),
-        amount: parsedIngredient.quantity,
-        purchaseAmount,
-        unit: parsedIngredient.unitOfMeasure,
-      };
+      const updatedGroceries = await retryOnStaleIngredient(async () => {
+        const updateData: GroceryUpdateDto = {
+          id: groceryId,
+          version,
+          name: parsedIngredient.description,
+          ...(await resolveGroceryName(
+            {
+              name: parsedIngredient.description,
+              recipeIngredientId: current?.recipeIngredientId ?? null,
+            },
+            { userId: ctx.user.id }
+          )),
+          amount: parsedIngredient.quantity,
+          purchaseAmount,
+          unit: parsedIngredient.unitOfMeasure,
+        };
 
-      // When storeId is explicitly provided, include it in the update
-      // (null means "unsorted", undefined means "don't change")
-      if (storeId !== undefined) {
-        updateData.storeId = storeId;
-      }
+        // When storeId is explicitly provided, include it in the update
+        // (null means "unsorted", undefined means "don't change")
+        if (storeId !== undefined) {
+          updateData.storeId = storeId;
+        }
 
-      const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
+        const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
 
-      if (!parsed.success) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid grocery data",
-        });
-      }
+        if (!parsed.success) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid grocery data",
+          });
+        }
 
-      const updatedGroceries = await updateGroceries([parsed.data as GroceryUpdateDto]);
+        return await updateGroceries([parsed.data as GroceryUpdateDto]);
+      });
 
       if (updatedGroceries.length === 0) {
         log.info(

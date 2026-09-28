@@ -11,17 +11,17 @@ import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime
 import {
   findIngredientAncestors,
   mergeCatalogueIngredients,
-} from "@norish/db/repositories/ingredient-catalogue";
+} from "@norish/db/repositories/ingredient-relocation";
 import { ingredientAliases, ingredients } from "@norish/db/schema";
+import {
+  RESOLUTION_BUDGET_MS,
+  RESOLUTION_THRESHOLD,
+} from "@norish/shared-server/ai/resolution/ingredient-resolution";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
-import {
-  RESOLUTION_BUDGET_MS,
-  RESOLUTION_THRESHOLD,
-} from "@norish/shared-server/ingredients/ai-resolution";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -243,7 +243,10 @@ describe("ingredient resolver, rung 3", () => {
     const oat = await resolveOne("oat milk");
 
     expect(oat.ingredientId).not.toBe(milk.ingredientId);
-    await expect(ingredientFor(oat.aliasId)).resolves.toMatchObject({ flagged: true });
+    await expect(ingredientFor(oat.aliasId)).resolves.toMatchObject({
+      flagged: true,
+      flagReason: "ai-unsure",
+    });
   });
 
   it("asks the language model when the Decision fails", async () => {
@@ -284,7 +287,10 @@ describe("ingredient resolver, rung 3", () => {
 
     expect(vi.mocked(decide)).not.toHaveBeenCalled();
     expect(vi.mocked(generateStructured)).not.toHaveBeenCalled();
-    await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({ flagged: true });
+    await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({
+      flagged: true,
+      flagReason: "ai-off",
+    });
   });
 
   it("asks nothing for a text that shares no word with any known food, and flags it", async () => {
@@ -294,7 +300,10 @@ describe("ingredient resolver, rung 3", () => {
     const ui = await resolveOne("ui");
 
     expect(vi.mocked(decide)).not.toHaveBeenCalled();
-    await expect(ingredientFor(ui.aliasId)).resolves.toMatchObject({ flagged: true });
+    await expect(ingredientFor(ui.aliasId)).resolves.toMatchObject({
+      flagged: true,
+      flagReason: "unknown-food",
+    });
   });
 
   it("mints a flagged food rather than wait past the budget on AI", async () => {

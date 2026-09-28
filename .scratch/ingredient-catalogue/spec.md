@@ -74,7 +74,7 @@ The catalogue is seeded from the Open Food Facts ingredients taxonomy — every 
 
 **Migration.** Every existing `ingredients` row becomes an Ingredient with its name as an alias. A startup backfill (following the existing ingredient-name backfill) runs the resolution order over existing rows once the seed is present, merging where resolution is sure and flagging where it is not. Product Links, Aisle Links and store preferences move from their folded name to the Ingredient whose alias has that fold. Where two links collide on the same (store, Ingredient), the one most recently updated wins. A fold no alias matches mints an Ingredient for it, so no link is dropped.
 
-**The resolver: one deep module in `packages/api`.** It is the only thing that mints Ingredients or aliases, and every caller goes through it: recipe save and import, pantry add, grocery create and rename, and recurring grocery create and rename. The parser keeps emitting names without minting. Its interface, in words:
+**The resolver: one deep module in `packages/shared-server`** (`packages/api` was first named, but the tRPC routers, queue workers and archive importer all save recipes and none may import `@norish/api`)**.** It is the only thing that mints Ingredients or aliases, and every caller goes through it: recipe save and import, pantry add, grocery create and rename, and recurring grocery create and rename. The parser keeps emitting names without minting. Its interface, in words:
 
 - *resolve(texts, locale?)*: as-written texts in, one alias per text out. The order is:
   1. an exact alias match on the fold;
@@ -83,7 +83,7 @@ The catalogue is seeded from the Open Food Facts ingredients taxonomy — every 
   4. a new Ingredient with the text as its first alias.
 
   At step 3, the Decision's state is the text and its candidates are the Ingredients whose aliases share words with it. It answers *match X*, *new* or *new, child of X*, and a Clear Case above a named threshold constant is acted on. Below the threshold, or when the Decision Model is unconfigured or switched off for this use, a language-model request under a new administrator-editable Prompt answers the same question. Without AI, step 3 is skipped. A new Ingredient minted after an unsure answer, or without step 3, is flagged. A *child of X* answer sets the parent, and when that answer was unsure the Ingredient is flagged too. When sure, step 3 adds the text as an alias of X, so the next occurrence is a step-1 match.
-- *addAlias*, *moveAlias* (the unmerge), *merge(source, target)*, *markDistinct*, *rename* and *setParent*: each checks the edit policy and each clears the flag where the stories say so. A merge moves every alias of the source to the target and deletes the source. Where both have a Product Link, Aisle Link or store preference at the same Store, the target's is kept. A parent change that would form a cycle is refused.
+- *addAlias*, *removeAlias*, *moveAlias* (the unmerge), *merge(source, target)*, *markDistinct*, *rename*, *setParent* and *delete* (refused while anything points at the Ingredient): each checks the edit policy and each clears the flag where the stories say so. A merge moves every alias of the source to the target and deletes the source. Where both have a Product Link, Aisle Link or store preference at the same Store, the target's is kept. A parent change that would form a cycle is refused.
 - *ingredientFor(alias)* and *aisleFor(store, alias)*, the latter falling back to the parent's Aisle Link. Product Link lookup has no parent fallback.
 - *covers(pantryAlias, lineAlias)*: true when both resolve to the same Ingredient, or when the pantry's Ingredient is a descendant of the line's. It is used where the Pantry is consulted on adding a recipe.
 
@@ -108,7 +108,7 @@ The owner of an Ingredient is whoever's action minted it, and the owner of an al
 
 **Translations.** Seeded aliases carry their locale. Surfaces that show an Ingredient rather than a line (the Ingredients page, the Pantry, and ingredient search) show the alias in the viewer's locale, falling back to the canonical name. Recipe lines and grocery lines always show their as-written text.
 
-**Realtime and offline.** Merge, alias move, rename and parent change publish one broadcast *ingredients changed* event. Clients refetch ingredient-derived data, and handlers merge by id, so a client receiving its own change back is a no-op. An offline grocery carries only its as-written text, and the server resolves it on Replay.
+**Realtime and offline.** Every catalogue edit — merge, alias move, rename, parent change, deletion, and a spelling added or removed or a flag cleared — publishes one broadcast *ingredients changed* event, so open Ingredients pages converge too. Clients refetch ingredient-derived data, and handlers merge by id, so a client receiving its own change back is a no-op. An offline grocery carries only its as-written text, and the server resolves it on Replay.
 
 **Licence surfaces.** A Data sources page carries the ODbL notice with Open Food Facts and the ODbL hyperlinked. It also offers a JSON export of Ingredients, aliases and parents to any signed-in user.
 
@@ -118,7 +118,7 @@ The owner of an Ingredient is whoever's action minted it, and the owner of an al
 
 A good test here states a fact a person would recognise, through the resolver's public interface or the browser, and never asserts which table a row landed in. For example: "after merging 'uien' into 'onion', the onion Aisle files a grocery typed 'uien'".
 
-- **The resolver, against a real database** (the main seam). The tests live in `packages/api` and use the testcontainers harness, so the existing test gate runs them. The Decision is mocked at `decide` as the one AI seam, following the store-lookup product-decision test, and the language-model fallback is mocked at the runtime likewise. They cover:
+- **The resolver, against a real database** (the main seam). The tests live in `packages/shared-server` beside the resolver (the upgrade backfill's in `packages/api`) and use the testcontainers harness, so the existing test gate runs them. The Decision is mocked at `decide` as the one AI seam, following the store-lookup product-decision test, and the language-model fallback is mocked at the runtime likewise. They cover:
   - each rung of the resolution order and the Clear Case threshold boundary;
   - flagged mints: unsure, no AI, and unsure child-of;
   - locale aliases;

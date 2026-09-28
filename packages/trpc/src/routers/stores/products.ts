@@ -17,7 +17,11 @@ import {
 } from "@norish/db/repositories/store-products";
 import { getStoreById } from "@norish/db/repositories/stores";
 import { searchStore } from "@norish/queue/store-lookup/lookup";
-import { findIngredientFor, resolveIngredient } from "@norish/shared-server/ingredients/resolver";
+import {
+  findIngredientFor,
+  resolveIngredient,
+  retryOnStaleIngredient,
+} from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import {
@@ -286,10 +290,15 @@ const chooseProduct = authedProcedure
 
     // The choice is about the food the grocery names, so every spelling of it
     // at this Store is priced by it (ADR-0037).
-    const ingredient = await resolveIngredient(input.name, { userId: ctx.user.id });
+    const ingredient = await retryOnStaleIngredient(async () => {
+      const resolved = await resolveIngredient(input.name, { userId: ctx.user.id });
+
+      if (resolved) await upsertProductLink(input.storeId, resolved.ingredientId, storeProductId);
+
+      return resolved;
+    });
 
     if (!ingredient) return null;
-    await upsertProductLink(input.storeId, ingredient.ingredientId, storeProductId);
     const link = await resolveProductLink(input.storeId, ingredient.ingredientId);
 
     if (link) void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });

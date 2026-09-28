@@ -8,6 +8,7 @@ import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images
 import { runMigrations } from "@norish/api/startup/migrations";
 import { registerApiHandlersForQueue } from "@norish/api/startup/register-queue-api-handlers";
 import { seedServerConfig } from "@norish/api/startup/seed-config";
+import { seedIngredientCatalogueOnFirstBoot } from "@norish/api/startup/seed-ingredient-catalogue";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
 import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -47,6 +48,11 @@ async function main() {
   // Give every existing ingredient its name as an Ingredient Alias and point
   // every existing reference at one (ADR-0037).
   await backfillIngredientAliases();
+  log.info("-".repeat(50));
+
+  // A first boot seeds the catalogue before traffic; later boots leave it to
+  // the refresh job, so an unchanged file never holds the server up.
+  await seedIngredientCatalogueOnFirstBoot();
   log.info("-".repeat(50));
 
   await initializeVideoProcessing();

@@ -20,6 +20,7 @@ import {
   upsertReadProduct,
 } from "@norish/db/repositories/store-products";
 import { getStoreById } from "@norish/db/repositories/stores";
+import { isStaleIngredientReference } from "@norish/shared-server/ingredients/resolver";
 import { createLogger } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { chooseUnmistakable } from "@norish/shared/lib/auto-link";
@@ -233,11 +234,8 @@ export async function matchGroceryName(input: {
       "No unmistakable match; a Miss"
     );
     await input.onStep?.("saving-link");
-    const written = await linkIfUnanswered(
-      storeId,
-      ingredientId,
-      null,
-      decided?.asked ? decided.suggestion : null
+    const written = await linkUnlessGone(() =>
+      linkIfUnanswered(storeId, ingredientId, null, decided?.asked ? decided.suggestion : null)
     );
 
     await input.onStepDone?.({ written });
@@ -260,7 +258,7 @@ export async function matchGroceryName(input: {
 
   await input.onStep?.("saving-link");
   const product = await upsertReadProduct(reading);
-  const linked = await linkIfUnanswered(storeId, ingredientId, product.id);
+  const linked = await linkUnlessGone(() => linkIfUnanswered(storeId, ingredientId, product.id));
 
   await input.onStepDone?.({ written: linked });
   announceProduct(householdKey, product);
@@ -283,6 +281,23 @@ export async function matchGroceryName(input: {
   }
 
   return { matched: linked };
+}
+
+/**
+ * Write a link, unless the Ingredient it was for was merged away or deleted
+ * while the shop was being read: then there is nothing to link, and the
+ * food the merge left already carries what the household taught it, so the
+ * job ends as a Miss rather than a retry against an id that is gone.
+ */
+async function linkUnlessGone(write: () => Promise<boolean>): Promise<boolean> {
+  try {
+    return await write();
+  } catch (error) {
+    if (!isStaleIngredientReference(error)) throw error;
+    log.info({ err: error }, "The Ingredient went away while the shop was being read");
+
+    return false;
+  }
 }
 
 /**

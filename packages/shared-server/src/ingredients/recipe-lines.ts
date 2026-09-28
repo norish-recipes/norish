@@ -1,9 +1,15 @@
 import type { IngredientResolutions } from "@norish/db/repositories/ingredients";
-import type { WithIngredientResolutions } from "@norish/db/repositories/recipes";
+import type { MutationOutcome } from "@norish/db/repositories/mutation-outcomes";
+import type {
+  CreateRecipeResult,
+  WithIngredientResolutions,
+} from "@norish/db/repositories/recipes";
+import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
 import { findIngredientNamesByIds } from "@norish/db/repositories/ingredient-aliases";
+import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 
 import type { ResolveActor } from "./resolver";
-import { cleanIngredientText, resolveIngredients } from "./resolver";
+import { cleanIngredientText, resolveIngredients, retryOnStaleIngredient } from "./resolver";
 
 interface RecipeLineInput {
   ingredientId?: string | null;
@@ -51,4 +57,32 @@ export async function withResolvedIngredients<
   );
 
   return { ...payload, recipeIngredients: written, ingredientResolutions: resolved };
+}
+
+/**
+ * Create a recipe with its lines resolved: the one way a recipe is written
+ * from a payload. Resolved again should a food go away before the write.
+ */
+export function createResolvedRecipe(
+  recipeId: string,
+  userId: string | null | undefined,
+  payload: FullRecipeInsertDTO,
+  actor: ResolveActor
+): Promise<CreateRecipeResult | null> {
+  return retryOnStaleIngredient(async () =>
+    createRecipeWithRefs(recipeId, userId, await withResolvedIngredients(payload, actor))
+  );
+}
+
+/** Update a recipe with its lines resolved, as `createResolvedRecipe` creates one. */
+export function updateResolvedRecipe(
+  recipeId: string,
+  userId: string,
+  payload: FullRecipeUpdateDTO,
+  actor: ResolveActor,
+  version?: number
+): Promise<MutationOutcome<void>> {
+  return retryOnStaleIngredient(async () =>
+    updateRecipeWithRefs(recipeId, userId, await withResolvedIngredients(payload, actor), version)
+  );
 }

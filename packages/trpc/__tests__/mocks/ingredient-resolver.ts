@@ -32,3 +32,8 @@ export const cleanIngredientText = (text: string) =>
 
 /** A spelling's fold, as the resolver keys an alias by it. */
 export const ingredientAliasFold = (text: string) => text.trim().toLowerCase();
+
+/** Nothing goes away under a test: the one attempt is the answer. */
+export const retryOnStaleIngredient = <T>(attempt: () => Promise<T>) => attempt();
+
+export const isStaleIngredientReference = () => false;

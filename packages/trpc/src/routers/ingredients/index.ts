@@ -5,7 +5,9 @@ import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ing
 import {
   addAlias as addCatalogueAlias,
   CatalogueEditError,
+  deleteIngredient,
   listIngredients,
+  listSpellings,
   markDistinct as markCatalogueDistinct,
   mergeIngredients,
   moveAlias as moveCatalogueAlias,
@@ -14,6 +16,7 @@ import {
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
+import { reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 
@@ -53,6 +56,7 @@ const REFUSAL_CODES: Record<CatalogueRefusal, TRPCError["code"]> = {
   "spelling-taken": "CONFLICT",
   "last-alias": "CONFLICT",
   "alias-in-use": "CONFLICT",
+  "ingredient-in-use": "CONFLICT",
   "same-ingredient": "BAD_REQUEST",
   cycle: "CONFLICT",
   empty: "BAD_REQUEST",
@@ -76,12 +80,18 @@ async function asEditResult(run: () => Promise<unknown>): Promise<{ success: tru
 }
 
 /**
- * Tell every client that what these Ingredients are has changed — a merge,
- * an alias move, a rename or a new parent — so each refetches what it
- * derived from them.
+ * Tell every client that these Ingredients changed — what they are (a merge,
+ * an alias move, a rename, a new parent, a deletion) or how the page shows
+ * them (a spelling added or removed, a flag cleared) — so each refetches what
+ * it derived from them. The edit has been written by now, so a failure to
+ * tell is logged, never an error for an edit that went through.
  */
-function announceChanged(ingredientIds: string[]): Promise<void> {
-  return ingredientsRealtime.publish("changed", { ingredientIds }, undefined);
+async function announceChanged(ingredientIds: string[]): Promise<void> {
+  try {
+    await ingredientsRealtime.publish("changed", { ingredientIds }, undefined);
+  } catch (error) {
+    log.warn({ err: error, ingredientIds }, "Could not announce an Ingredient change");
+  }
 }
 
 /**
@@ -94,6 +104,8 @@ const list = authedProcedure
     z.object({
       search: z.string().max(300).optional(),
       flaggedOnly: z.boolean().optional(),
+      /** The viewer's locale: which spellings ride along with each row. */
+      locale: z.string().max(20).optional(),
       cursor: z.number().int().min(0).nullish(),
     })
   )
@@ -101,18 +113,27 @@ const list = authedProcedure
     const page = await listIngredients(actorOf(ctx), {
       search: input.search,
       flaggedOnly: input.flaggedOnly,
+      locale: input.locale,
       offset: input.cursor ?? 0,
     });
 
     return { items: page.items, nextCursor: page.nextOffset };
   });
 
+/** Every spelling of one Ingredient, for a row that asked to see them all. */
+const spellings = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .query(({ ctx, input }) => listSpellings(actorOf(ctx), input.ingredientId));
+
 const addAlias = authedProcedure
   .input(z.object({ ingredientId: z.uuid(), text: ingredientName }))
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Adding an alias");
 
-    return asEditResult(() => addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text));
+    return asEditResult(async () => {
+      await addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text);
+      await announceChanged([input.ingredientId]);
+    });
   });
 
 const rename = authedProcedure
@@ -131,7 +152,10 @@ const markDistinct = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Marking distinct");
 
-    return asEditResult(() => markCatalogueDistinct(actorOf(ctx), input.ingredientId));
+    return asEditResult(async () => {
+      await markCatalogueDistinct(actorOf(ctx), input.ingredientId);
+      await announceChanged([input.ingredientId]);
+    });
   });
 
 const removeAlias = authedProcedure
@@ -139,7 +163,49 @@ const removeAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, aliasId: input.aliasId }, "Removing an alias");
 
-    return asEditResult(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
+    return asEditResult(async () => {
+      const removed = await removeCatalogueAlias(actorOf(ctx), input.aliasId);
+
+      await announceChanged([removed.ingredientId]);
+    });
+  });
+
+/**
+ * Ask AI what a Flagged Ingredient is, and act on a sure answer. Follows
+ * `edit` on the Ingredient. Answers what came of it, for the page to say.
+ */
+const reviewWithAI = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .mutation(async ({ ctx, input }) => {
+    log.info(
+      { userId: ctx.user.id, ingredientId: input.ingredientId },
+      "Asking AI about a flagged Ingredient"
+    );
+
+    try {
+      const outcome = await reviewFlaggedWithAI(actorOf(ctx), input.ingredientId);
+
+      if (outcome.outcome !== "not-flagged") await announceChanged([input.ingredientId]);
+
+      return outcome;
+    } catch (error) {
+      if (error instanceof CatalogueEditError) {
+        throw new TRPCError({ code: REFUSAL_CODES[error.refusal], message: error.refusal });
+      }
+      throw error;
+    }
+  });
+
+/** Delete an Ingredient nothing uses. Follows `edit` on the Ingredient. */
+const remove = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Deleting an Ingredient");
+
+    return asEditResult(async () => {
+      await deleteIngredient(actorOf(ctx), input.ingredientId);
+      await announceChanged([input.ingredientId]);
+    });
   });
 
 /** Merge one Ingredient into another. Needs `edit` on both. */
@@ -182,10 +248,13 @@ const setParent = authedProcedure
 export const ingredientsRouter = router({
   find,
   list,
+  spellings,
   addAlias,
   rename,
   markDistinct,
   removeAlias,
+  remove,
+  reviewWithAI,
   merge,
   moveAlias,
   setParent,

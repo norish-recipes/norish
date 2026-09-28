@@ -3,17 +3,19 @@ import type {
   IngredientRef,
   IngredientRow,
 } from "@norish/db/repositories/ingredient-aliases";
+import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   addIngredientAliases,
   findIngredientAliasesByFolds,
   findIngredientByAliasId,
   mintIngredientWithAliases,
 } from "@norish/db/repositories/ingredient-aliases";
+import { dbLogger } from "@norish/shared-server/logger";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
-import type { AIResolution } from "./ai-resolution";
-import { askWhatFoodThisIs, FLAGGED_NEW } from "./ai-resolution";
+import type { AIResolution } from "../ai/resolution/ingredient-resolution";
+import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resolution";
 
 /**
  * The ingredient resolver: the one module that mints Ingredients and
@@ -27,7 +29,7 @@ import { askWhatFoodThisIs, FLAGGED_NEW } from "./ai-resolution";
  *   2. an alias whose fold is the text's with preparation stripped — the part
  *      after the first comma and anything in brackets ("onions, diced" and
  *      "onions (red)" are "onions");
- *   3. what AI makes of it (`ai-resolution`): a Decision, or the language
+ *   3. what AI makes of it (`ai/resolution/ingredient-resolution`): a Decision, or the language
  *      model — a known food it is sure the text names takes the text as a
  *      new spelling, so the next occurrence is a rung-1 match;
  *   4. a new Ingredient with the text as its first alias, under the food AI
@@ -108,10 +110,15 @@ export function ingredientAliasFold(text: string): string {
   return foldName(text) || text.trim().toLowerCase();
 }
 
-/** The text with its preparation stripped: brackets removed, then cut at the first comma. */
+/**
+ * The text with its preparation stripped: brackets removed, then cut at the
+ * first comma. A bracket never closed ("onion (red, diced") is a preparation
+ * to its end, not a spelling with a bracket in it.
+ */
 export function stripPreparation(text: string): string {
   return text
     .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
+    .replace(/[([].*$/, " ")
     .split(",")[0]!
     .replace(/\s+/g, " ")
     .trim();
@@ -150,7 +157,8 @@ export async function resolveIngredients(
     const match = matchKnown(spelling, known);
 
     if (!match) {
-      const answer = answers.get(sameFoodKey(spelling)) ?? FLAGGED_NEW;
+      // No answer is the upgrade's case: it resolves a whole history and asks no AI.
+      const answer = answers.get(sameFoodKey(spelling)) ?? flaggedNew("upgrade");
       // The food AI named may have been merged away since the question was
       // asked; the text is then minted flagged rather than failing its save.
       const joined =
@@ -165,8 +173,8 @@ export async function resolveIngredients(
       const rows =
         joined ??
         (answer.kind === "same"
-          ? await mint(spelling, actor, { flagged: true, parentId: null })
-          : await mint(spelling, actor, { flagged: answer.flagged, parentId: answer.kindOf }));
+          ? await mint(spelling, actor, { flagReason: "food-gone", parentId: null })
+          : await mint(spelling, actor, { flagReason: answer.reason, parentId: answer.kindOf }));
 
       for (const row of rows) known.set(row.fold, row);
     }
@@ -241,14 +249,15 @@ export async function resolveIngredient(
 async function mint(
   spelling: Spelling,
   actor: ResolveActor,
-  { flagged, parentId }: { flagged: boolean; parentId: string | null }
+  { flagReason, parentId }: { flagReason: FlagReason | null; parentId: string | null }
 ): Promise<IngredientAliasRow[]> {
   return await mintIngredientWithAliases({
     name: spelling.bareFold ? spelling.bare : spelling.text,
     aliases: spellingAliases(spelling),
     ownerId: actor.userId,
     locale: actor.locale ?? null,
-    flagged,
+    flagged: flagReason !== null,
+    flagReason,
     parentId,
   });
 }
@@ -282,4 +291,43 @@ export async function findIngredientFor(text: string): Promise<IngredientRef | n
   const match = matchKnown(spelling, await knownAliases([spelling]));
 
   return match ? { aliasId: match.aliasId, ingredientId: match.ingredientId } : null;
+}
+
+/**
+ * Whether a write was refused because the Ingredient or alias it was handed
+ * is gone: a foreign key onto `ingredients` or `ingredient_aliases` failed.
+ * Drizzle wraps the driver's error, so its cause is read too.
+ */
+export function isStaleIngredientReference(error: unknown): boolean {
+  for (let current = error; current && typeof current === "object";) {
+    const { code, constraint } = current as { code?: unknown; constraint?: unknown };
+
+    if (code === "23503" && typeof constraint === "string") {
+      return /_(ingredients|ingredient_aliases)_id_fk$/.test(constraint);
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+
+  return false;
+}
+
+/**
+ * Run a resolve-then-write once more when the write finds its Ingredient
+ * gone. Resolution and the write are separate transactions, so a merge or
+ * a deletion can land between them; resolved again, the text names the food
+ * the merge left (its alias moved with it) or a fresh mint. `attempt` must
+ * resolve inside itself, or the second run writes the same stale id.
+ */
+export async function retryOnStaleIngredient<T>(attempt: () => Promise<T>): Promise<T> {
+  try {
+    return await attempt();
+  } catch (error) {
+    if (!isStaleIngredientReference(error)) throw error;
+    dbLogger.warn(
+      { err: error },
+      "An Ingredient went away between resolving and writing; resolving again"
+    );
+
+    return await attempt();
+  }
 }

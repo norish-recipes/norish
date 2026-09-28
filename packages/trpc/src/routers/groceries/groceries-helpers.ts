@@ -27,6 +27,7 @@ import {
   ingredientColumns,
   resolveGroceryNames,
 } from "@norish/shared-server/ingredients/groceries";
+import { retryOnStaleIngredient } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
@@ -224,26 +225,29 @@ export async function createGroceriesData(
 
   // Each new line's name is resolved to an Ingredient Alias, the way the
   // household's recipe lines are (ADR-0037). A merged line keeps its own.
-  const aliases = await resolveGroceryNames(
-    groceriesToCreate.map(({ groceries: grocery }) => grocery),
-    { userId: ctx.user.id }
-  );
+  // Resolved again should the food go away before the write.
+  const resolveNewLines = async () => {
+    const aliases = await resolveGroceryNames(
+      groceriesToCreate.map(({ groceries: grocery }) => grocery),
+      { userId: ctx.user.id }
+    );
 
-  for (const [index, { groceries: grocery }] of groceriesToCreate.entries()) {
-    const alias = aliases[index];
+    for (const [index, { groceries: grocery }] of groceriesToCreate.entries()) {
+      const alias = aliases[index];
 
-    Object.assign(grocery, ingredientColumns(alias));
+      Object.assign(grocery, ingredientColumns(alias));
 
-    // A line added without a Store goes where the household sends its food.
-    if (!grocery.storeId && alias && grocery.name) {
-      const match = await findBestIngredientStorePreference(ctx.user.id, ctx.userIds, {
-        id: alias.ingredientId,
-        name: grocery.name,
-      });
+      // A line added without a Store goes where the household sends its food.
+      if (!grocery.storeId && alias && grocery.name) {
+        const match = await findBestIngredientStorePreference(ctx.user.id, ctx.userIds, {
+          id: alias.ingredientId,
+          name: grocery.name,
+        });
 
-      grocery.storeId = match?.preference.storeId ?? null;
+        grocery.storeId = match?.preference.storeId ?? null;
+      }
     }
-  }
+  };
 
   let updatedGroceries: GroceryDto[] = [];
 
@@ -265,7 +269,11 @@ export async function createGroceriesData(
   let createdGroceries: GroceryDto[] = [];
 
   if (groceriesToCreate.length > 0) {
-    const made = await createGroceries(groceriesToCreate, ctx.userIds);
+    const made = await retryOnStaleIngredient(async () => {
+      await resolveNewLines();
+
+      return await createGroceries(groceriesToCreate, ctx.userIds);
+    });
 
     createdGroceries = made.created;
     log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");

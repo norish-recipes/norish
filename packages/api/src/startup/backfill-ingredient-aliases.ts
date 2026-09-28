@@ -1,25 +1,25 @@
-import type {
-  LegacyKeyedTable,
-  ResolvedReference,
-} from "@norish/db/repositories/ingredient-backfill";
+import type { ResolvedReference } from "@norish/db/repositories/ingredient-backfill";
+import type { LegacyKeyedTable } from "@norish/db/repositories/legacy-link-backfill";
 import { findIngredientAliasesByFolds } from "@norish/db/repositories/ingredient-aliases";
 import {
   addOwnNameAliases,
-  dropLegacyRow,
-  keyLegacyRow,
   listGroceriesWithoutAlias,
   listIngredientsWithoutAlias,
-  listLegacyKeyedRows,
   listPantryIngredientsWithoutAlias,
   listRecipeLinesWithoutAlias,
   listRecurringGroceriesWithoutAlias,
-  listResolvedGroceryNames,
   setGroceryAliases,
   setPantryIngredientAliases,
   setRecipeLineAliases,
   setRecurringGroceryAliases,
 } from "@norish/db/repositories/ingredient-backfill";
-import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-catalogue";
+import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
+import {
+  dropLegacyRow,
+  keyLegacyRow,
+  listLegacyKeyedRows,
+  listResolvedGroceryNames,
+} from "@norish/db/repositories/legacy-link-backfill";
 import {
   cleanIngredientText,
   ingredientAliasFold,
@@ -79,12 +79,15 @@ export async function backfillIngredientAliases(): Promise<void> {
 
       if (batch.length === 0) break;
 
-      const ownNames = batch.map((row) => ({
-        ingredientId: row.id,
-        text: row.name,
-        fold: ingredientAliasFold(row.name),
-        ownerId: row.ownerId,
-      }));
+      const ownNames = batch
+        .map((row) => ({
+          ingredientId: row.id,
+          text: row.name,
+          fold: ingredientAliasFold(row.name),
+          ownerId: row.ownerId,
+        }))
+        // A name of whitespace alone folds to nothing, and nothing is no spelling.
+        .filter((row) => row.fold.length > 0);
 
       await addOwnNameAliases(ownNames);
       written.ingredients += batch.length;

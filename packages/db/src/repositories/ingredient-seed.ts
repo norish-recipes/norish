@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull, notInArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
@@ -14,7 +14,7 @@ import {
   storeProductLinks,
 } from "@norish/db/schema";
 
-import { lockTree } from "./ingredient-catalogue";
+import { lockTree } from "./ingredient-relocation";
 
 /**
  * The catalogue seed's writes (ADR-0038). Applying the seed upserts seeded
@@ -304,7 +304,10 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
       and(
         isNotNull(ingredients.offId),
         isNull(ingredients.ownerId),
-        listed.length > 0 ? notInArray(ingredients.offId, [...listed]) : undefined,
+        // One array parameter, not one per entry: a statement holds at most 65,535.
+        listed.length > 0
+          ? sql`${ingredients.offId} <> all(${sql.param([...listed])}::text[])`
+          : undefined,
         sql`not ${usedThroughAlias(recipeIngredients)}`,
         sql`not ${usedThroughAlias(groceries)}`,
         sql`not ${usedById(recurringGroceries)}`,
@@ -352,7 +355,7 @@ export async function listUnseededSpellings(): Promise<
 export async function flagIngredient(id: string): Promise<void> {
   await db
     .update(ingredients)
-    .set({ flagged: true, version: sql`${ingredients.version} + 1` })
+    .set({ flagged: true, flagReason: "seed-ambiguous", version: sql`${ingredients.version} + 1` })
     .where(eq(ingredients.id, id));
 }
 

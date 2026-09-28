@@ -14,7 +14,9 @@ import { groceries } from "@norish/db/schema";
 import {
   addAlias,
   CatalogueEditError,
+  deleteIngredient,
   listIngredients,
+  listSpellings,
   markDistinct,
   removeAlias,
   renameIngredient,
@@ -79,6 +81,47 @@ describe("the ingredient catalogue", () => {
     });
   });
 
+  it("makes a new name one of the Ingredient's spellings", async () => {
+    const onion = await mint("onion");
+
+    await renameIngredient(actor, onion.ingredientId, "Yellow onion");
+
+    const [again] = await resolveIngredients(["yellow onion"], { userId: actor.userId });
+
+    expect(again!.ingredientId).toBe(onion.ingredientId);
+  });
+
+  it("deletes an Ingredient nothing uses, its spellings with it", async () => {
+    const saffron = await mint("saffron");
+
+    await addAlias(actor, saffron.ingredientId, "zafraan");
+    await deleteIngredient(actor, saffron.ingredientId);
+
+    await expect(ingredientFor(saffron.aliasId)).resolves.toBeNull();
+
+    const [again] = await resolveIngredients(["zafraan"], { userId: actor.userId });
+
+    // Minted afresh: the spelling went with the food.
+    expect(again!.ingredientId).not.toBe(saffron.ingredientId);
+    await expect(refusal(deleteIngredient(actor, saffron.ingredientId))).resolves.toBe("not-found");
+  });
+
+  it("keeps an Ingredient a grocery still points at, for a merge to give it another food", async () => {
+    const onion = await mint("onion");
+
+    await getTestDb().insert(groceries).values({
+      userId: actor.userId,
+      name: "onion",
+      ingredientAliasId: onion.aliasId,
+      ingredientId: onion.ingredientId,
+    });
+
+    await expect(refusal(deleteIngredient(actor, onion.ingredientId))).resolves.toBe(
+      "ingredient-in-use"
+    );
+    await expect(ingredientFor(onion.aliasId)).resolves.toMatchObject({ name: "onion" });
+  });
+
   it("refuses a name another Ingredient goes by, in any case", async () => {
     await mint("garlic");
     const leek = await mint("leek");
@@ -139,6 +182,32 @@ describe("the ingredient catalogue", () => {
 
     // Gone: "ajuin" is a new food again.
     expect(again!.ingredientId).not.toBe(onion.ingredientId);
+  });
+
+  it("says why a food is flagged, and sends the viewer's spellings with the rest on request", async () => {
+    const cream = await mint("cream");
+
+    await addAlias(actor, cream.ingredientId, "room");
+
+    const page = await listIngredients(actor, { search: "cream", locale: "nl" });
+
+    // Minted without AI in these tests: that is the reason.
+    expect(page.items[0]).toMatchObject({
+      flagged: true,
+      flagReason: "ai-off",
+      hiddenSpellings: 0,
+    });
+    expect(page.items[0]!.aliases.map((alias) => alias.text)).toEqual(["cream", "room"]);
+    expect((await listSpellings(actor, cream.ingredientId)).map((alias) => alias.text)).toEqual([
+      "cream",
+      "room",
+    ]);
+
+    await markDistinct(actor, cream.ingredientId);
+    expect((await listIngredients(actor, { search: "cream" })).items[0]).toMatchObject({
+      flagged: false,
+      flagReason: null,
+    });
   });
 
   it("never removes an Ingredient's last spelling", async () => {

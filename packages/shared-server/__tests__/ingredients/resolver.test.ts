@@ -8,6 +8,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
+import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
+import { addPantryIngredient } from "@norish/db/repositories/pantry";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import {
   findIngredientFor,
@@ -15,6 +17,7 @@ import {
   ingredientFor,
   resolveIngredient,
   resolveIngredients,
+  retryOnStaleIngredient,
 } from "@norish/shared-server/ingredients/resolver";
 
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -76,6 +79,13 @@ describe("ingredient resolver", () => {
     );
   });
 
+  it("reads a bracket never closed as preparation to the end of the text", async () => {
+    const onions = await resolveOne("onions");
+
+    expect((await resolveOne("onions (red, diced")).ingredientId).toBe(onions.ingredientId);
+    expect((await resolveOne("onions [red, diced")).ingredientId).toBe(onions.ingredientId);
+  });
+
   it("names a new food for its text without the preparation, so later spellings join it", async () => {
     const diced = await resolveOne("onions, diced");
 
@@ -99,6 +109,31 @@ describe("ingredient resolver", () => {
 
     expect(second!.ingredientId).toBe(first!.ingredientId);
     expect(third!.ingredientId).toBe(first!.ingredientId);
+  });
+
+  it("resolves again when the food went away between resolving and writing", async () => {
+    const onion = await resolveOne("onion");
+    const ui = await resolveOne("ui");
+    let attempts = 0;
+
+    const { item } = await retryOnStaleIngredient(async () => {
+      attempts += 1;
+
+      const resolved = await resolveOne("ui");
+
+      // A housemate merges "ui" into onion after this resolve and before its write.
+      if (attempts === 1) await mergeCatalogueIngredients(ui.ingredientId, onion.ingredientId);
+
+      return await addPantryIngredient(crypto.randomUUID(), {
+        userId,
+        userIds: [userId],
+        ingredientAliasId: resolved.aliasId,
+        ingredientId: resolved.ingredientId,
+      });
+    });
+
+    expect(attempts).toBe(2);
+    expect(item.ingredientId).toBe(onion.ingredientId);
   });
 
   it("finds what a text already resolves to without minting anything", async () => {
