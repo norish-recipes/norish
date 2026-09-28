@@ -77,7 +77,8 @@ export function createUseStoreAisles({ useTRPC }: CreateStoresHooksOptions) {
         if (grocery.ingredientId) ids.add(grocery.ingredientId);
       }
 
-      return [...ids].sort();
+      // The query takes at most 1000; a list longer than that files the rest by their own links.
+      return [...ids].sort().slice(0, 1000);
     }, [list]);
     const { data: ancestors } = useQuery({
       ...trpc.ingredients.ancestors.queryOptions({ ids: listIngredientIds }),

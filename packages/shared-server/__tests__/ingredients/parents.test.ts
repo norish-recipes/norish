@@ -130,7 +130,7 @@ describe("Parent Ingredients", () => {
     await expect(ingredientFor(red.aliasId)).resolves.toMatchObject({ flagged: false });
     const page = await listIngredients(actor, { search: "red onion" });
 
-    expect(page.items[0]?.parent).toEqual({ id: onion.ingredientId, name: "onion" });
+    expect(page.items[0]?.parent).toMatchObject({ id: onion.ingredientId, name: "onion" });
   });
 
   it("clears a parent", async () => {

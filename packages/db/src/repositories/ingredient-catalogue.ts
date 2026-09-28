@@ -472,6 +472,11 @@ export async function moveCatalogueAlias(
 > {
   try {
     return await db.transaction(async (tx) => {
+      // Every catalogue move and merge takes the tree lock first, so they run
+      // one at a time (a nightly seed included) and never deadlock on rows,
+      // and the alias read under it is where it still is.
+      await lockTree(tx);
+
       const [alias] = await tx
         .select({ ingredientId: ingredientAliases.ingredientId })
         .from(ingredientAliases)

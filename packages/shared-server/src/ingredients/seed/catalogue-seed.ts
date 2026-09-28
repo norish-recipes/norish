@@ -21,6 +21,7 @@ import {
 } from "@norish/db/repositories/ingredient-seed";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { createLogger } from "@norish/shared-server/logger";
+import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 
 import { cleanIngredientText, ingredientAliasFold, stripPreparation } from "../resolver";
 import { parseTaxonomy } from "./parse-taxonomy";
@@ -29,6 +30,9 @@ const log = createLogger("ingredient-seed");
 
 /** How long one fetch of the taxonomy may take: the file is a few megabytes. */
 const FETCH_TIMEOUT_MS = 120_000;
+
+/** The smallest share of the last seed's foods a new file must list to be applied. */
+const MIN_KEPT_SHARE = 0.5;
 
 /** The largest file read: a guard against a mirror serving something else entirely. */
 const MAX_FILE_BYTES = 64 * 1024 * 1024;
@@ -65,7 +69,14 @@ export async function applySeedFile(file: string): Promise<{
   entries: SeedEntry[];
   outcome: SeedOutcome;
 }> {
-  const entries = seedEntriesOf(file);
+  return await applySeedEntries(seedEntriesOf(file));
+}
+
+/** Apply entries already read from a taxonomy file, in one transaction. */
+async function applySeedEntries(entries: SeedEntry[]): Promise<{
+  entries: SeedEntry[];
+  outcome: SeedOutcome;
+}> {
   const outcome = await applyIngredientSeed(entries);
   const { aliasCollisions, ...counts } = outcome;
 
@@ -187,25 +198,39 @@ export async function refreshIngredientCatalogue(
     throw new Error("The ingredient catalogue is larger than Norish reads");
   }
 
-  const { entries } = await applySeedFile(file);
-  const next: IngredientSeedState = {
-    ...state,
-    etag: response.headers.get("etag"),
-    lastModified: response.headers.get("last-modified"),
-    appliedAt: new Date().toISOString(),
-    entries: entries.length,
-  };
+  const read = seedEntriesOf(file);
 
-  await setConfig(ServerConfigKeys.INGREDIENT_SEED_STATE, next, null, false);
-
-  if (!state.mergedExisting) {
-    await mergeExistingIntoSeed(entries);
-    await setConfig(
-      ServerConfigKeys.INGREDIENT_SEED_STATE,
-      { ...next, mergedExisting: true },
-      null,
-      false
+  // A file that still parses but lists far fewer foods than the last one (a
+  // truncated mirror) would read as every other food dropped upstream.
+  if (read.length < state.entries * MIN_KEPT_SHARE) {
+    throw new Error(
+      `The ingredient catalogue lists ${read.length} foods, far fewer than the ${state.entries} of the last seed`
     );
+  }
+
+  const { entries, outcome } = await applySeedEntries(read);
+  const merged = state.mergedExisting ? 0 : (await mergeExistingIntoSeed(entries)).merged;
+
+  // The validators are stored only once the file and the one pass are both
+  // through, so a failure in either is retried in full the next time.
+  await setConfig(
+    ServerConfigKeys.INGREDIENT_SEED_STATE,
+    {
+      ...state,
+      etag: response.headers.get("etag"),
+      lastModified: response.headers.get("last-modified"),
+      appliedAt: new Date().toISOString(),
+      entries: entries.length,
+      mergedExisting: true,
+    } satisfies IngredientSeedState,
+    null,
+    false
+  );
+
+  // Merges, parents and removals change which food lines mean: open clients
+  // refetch what they derived from Ingredients, as after a person's merge.
+  if (merged > 0 || outcome.parentsSet > 0 || outcome.removed > 0 || outcome.adopted > 0) {
+    await ingredientsRealtime.publish("changed", { ingredientIds: [] }, undefined);
   }
 
   return "applied";

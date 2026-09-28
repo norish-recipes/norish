@@ -148,6 +148,18 @@ export interface MintIngredientInput {
 export async function mintIngredientWithAliases(
   input: MintIngredientInput
 ): Promise<IngredientAliasRow[]> {
+  try {
+    return await mintOnce(input);
+  } catch (error) {
+    // The parent was merged away between the read and the insert: mint without it.
+    if (input.parentId && isConstraintViolation(error, "23503")) {
+      return await mintOnce({ ...input, parentId: null });
+    }
+    throw error;
+  }
+}
+
+async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[]> {
   const folds = input.aliases.map((alias) => alias.fold);
 
   return await db.transaction(async (tx) => {

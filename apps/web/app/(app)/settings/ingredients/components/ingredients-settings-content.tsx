@@ -34,7 +34,7 @@ interface IngredientItem {
   name: string;
   localeNames?: LocaleNames;
   flagged: boolean;
-  parent: { id: string; name: string } | null;
+  parent: { id: string; name: string; localeNames?: LocaleNames } | null;
   canEdit: boolean;
   /** `canRemove` is `edit` on the alias, which moving it needs too. */
   aliases: Array<{
@@ -409,7 +409,7 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
 
       {item.parent ? (
         <div className="text-muted flex items-center gap-1 text-sm" data-testid="ingredient-parent">
-          {t("kindOf", { name: item.parent.name })}
+          {t("kindOf", { name: ingredientDisplayName(item.parent, locale) })}
           {item.canEdit ? (
             <button
               aria-label={t("clearParent")}

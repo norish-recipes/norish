@@ -20,6 +20,7 @@ import type {
 } from "@norish/db/repositories/ingredient-catalogue";
 import type { CatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import {
   clearIngredientFlag,
   deleteCatalogueAlias,
@@ -85,7 +86,7 @@ export interface IngredientListItem {
   /** The best spelling per language, for showing the Ingredient in the viewer's. */
   localeNames: LocaleNames;
   flagged: boolean;
-  parent: { id: string; name: string } | null;
+  parent: { id: string; name: string; localeNames: LocaleNames } | null;
   canEdit: boolean;
   aliases: Array<{
     id: string;
@@ -120,16 +121,21 @@ export async function listIngredients(
     }),
   ]);
   const may = (ownerId: string | null) => mayEditIngredientRow(policy.edit, actor, ownerId);
+  const page = rows.slice(0, INGREDIENT_PAGE_SIZE);
+  const parentNames = await findLocaleNames(
+    page.flatMap((row) => (row.parent ? [row.parent.id] : []))
+  );
 
   return {
-    items: rows.slice(0, INGREDIENT_PAGE_SIZE).map((row) => listItem(row, may)),
+    items: page.map((row) => listItem(row, may, parentNames)),
     nextOffset: rows.length > INGREDIENT_PAGE_SIZE ? offset + INGREDIENT_PAGE_SIZE : null,
   };
 }
 
 function listItem(
   row: CatalogueIngredient,
-  may: (ownerId: string | null) => boolean
+  may: (ownerId: string | null) => boolean,
+  parentNames: ReadonlyMap<string, LocaleNames>
 ): IngredientListItem {
   return {
     id: row.id,
@@ -142,7 +148,9 @@ function listItem(
       }))
     ),
     flagged: row.flagged,
-    parent: row.parent,
+    parent: row.parent
+      ? { ...row.parent, localeNames: parentNames.get(row.parent.id) ?? {} }
+      : null,
     canEdit: may(row.ownerId),
     aliases: row.aliases.map((alias) => ({
       id: alias.id,

@@ -262,6 +262,14 @@ describe("the ingredient catalogue seed", () => {
       expect(server.asked[1]).toMatchObject({ "If-None-Match": '"v1"' });
     });
 
+    it("refuses a file listing far fewer foods than the last seed, and removes nothing", async () => {
+      await refreshIngredientCatalogue(serving(excerpt, '"v1"').fetchImpl);
+      const truncated = serving("en: vegetable\n\nen: onion\n", '"v2"');
+
+      await expect(refreshIngredientCatalogue(truncated.fetchImpl)).rejects.toThrow("far fewer");
+      await expect(ingredientNamed("imazalil")).resolves.not.toBeNull();
+    });
+
     it("keeps the last good seed when the fetch fails", async () => {
       await refreshIngredientCatalogue(serving(excerpt, '"v1"').fetchImpl);
       const failing = (async () => new Response("down", { status: 503 })) as typeof fetch;

@@ -111,7 +111,7 @@ function closesCycle(parents: ReadonlyMap<string, string | null>, id: string, pa
  *   another Ingredient already holds stays where it is, and is reported.
  * - An entry's first parent becomes its Ingredient's parent, unless a person
  *   set or cleared that Ingredient's parent, or the parent would close a
- *   cycle.
+ *   cycle. An entry with no parent leaves its Ingredient's parent alone.
  * - A seeded Ingredient the file no longer lists is removed only when nothing
  *   uses it: no line, grocery, recurring grocery or Pantry Ingredient
  *   through any of its spellings, no link or preference, no spelling a person
@@ -251,7 +251,8 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
       const parentId = entry.parentOffId ? (ingredientOf.get(entry.parentOffId) ?? null) : null;
 
-      if (parentId === row.parentId || parentId === id) continue;
+      // A parent the resolver set from an AI answer stays where the file has none.
+      if (parentId === null || parentId === row.parentId || parentId === id) continue;
       if (parentId && closesCycle(parents, id, parentId)) {
         outcome.parentCycles += 1;
         continue;
@@ -294,6 +295,7 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
       | typeof ingredientStorePreferences
       | typeof pantryIngredients
       | typeof recurringGroceries
+      | typeof groceries
   ) => sql`exists (select 1 from ${table} r where r.ingredient_id = ${ingredients.id})`;
 
   const removed = await tx
@@ -306,6 +308,8 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
         sql`not ${usedThroughAlias(recipeIngredients)}`,
         sql`not ${usedThroughAlias(groceries)}`,
         sql`not ${usedById(recurringGroceries)}`,
+        // A grocery the upgrade has not given an alias yet points at its food alone.
+        sql`not ${usedById(groceries)}`,
         sql`not ${usedById(pantryIngredients)}`,
         sql`not ${usedById(aisleLinks)}`,
         sql`not ${usedById(storeProductLinks)}`,
