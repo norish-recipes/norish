@@ -357,8 +357,8 @@
     "parentTitle": "Kies het ingrediënt waarvan {name} een soort is.",
     "kindOf": "Een soort {name}",
     "clearParent": "Bovenliggend verwijderen",
-    "allSpellings": "Alle {count} spellingen tonen",
-    "fewerSpellings": "Minder spellingen tonen",
+    "moreSpellings": "Meer spellingen ({count})",
+    "fewerSpellings": "Minder spellingen",
     "dataSources": {
       "title": "Gegevensbronnen",
       "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",

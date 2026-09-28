@@ -357,8 +357,8 @@
     "parentTitle": "Wähle die Zutat, von der {name} eine Sorte ist.",
     "kindOf": "Eine Sorte {name}",
     "clearParent": "Oberbegriff entfernen",
-    "allSpellings": "Alle {count} Schreibweisen zeigen",
-    "fewerSpellings": "Weniger Schreibweisen zeigen",
+    "moreSpellings": "Weitere Schreibweisen ({count})",
+    "fewerSpellings": "Weniger Schreibweisen",
     "dataSources": {
       "title": "Datenquellen",
       "notice": "Der Zutatenkatalog basiert auf der Zutatentaxonomie von <off>Open Food Facts</off>, verfügbar unter der <odbl>Open Database License (ODbL)</odbl>. Der Katalog, den Norish daraus aufbaut, steht unter derselben Lizenz.",

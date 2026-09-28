@@ -153,10 +153,12 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
   const displayName = ingredientDisplayName(item, locale);
   // The catalogue knows a food in dozens of languages; the row shows the
   // viewer's, the language-free ones and a person's own, the rest on request.
+  // A food known only in other languages shows them all.
   const languages = catalogueLanguagesFor(locale);
-  const ownSpellings = item.aliases.filter(
+  const viewerSpellings = item.aliases.filter(
     (alias) => !alias.seeded || !alias.locale || languages.includes(alias.locale)
   );
+  const ownSpellings = viewerSpellings.length > 0 ? viewerSpellings : item.aliases;
   const spellings = allSpellings ? item.aliases : ownSpellings;
   const hiddenSpellings = item.aliases.length - ownSpellings.length;
   const [renaming, setRenaming] = useState(false);
@@ -465,7 +467,7 @@ function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: (
             variant="ghost"
             onPress={() => setAllSpellings((shown) => !shown)}
           >
-            {allSpellings ? t("fewerSpellings") : t("allSpellings", { count: hiddenSpellings })}
+            {allSpellings ? t("fewerSpellings") : t("moreSpellings", { count: hiddenSpellings })}
           </Button>
         ) : null}
       </div>

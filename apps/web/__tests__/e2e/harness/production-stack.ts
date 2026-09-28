@@ -433,6 +433,9 @@ export class ProductionStack {
       // returns 429 and pages that need client-side session data hang on their
       // skeletons — a failure about the harness, not the code under test.
       AUTH_RATE_LIMIT_ENABLED: "false",
+      // Nothing outbound: a spec that needs an ingredient catalogue seeds its
+      // own, rather than the server fetching Open Food Facts at boot.
+      INGREDIENT_CATALOGUE_URL: "",
       ...this.options.environment,
     };
   }

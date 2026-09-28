@@ -357,8 +357,8 @@
     "parentTitle": "Valitse ainesosa, jonka lajike {name} on.",
     "kindOf": "Lajike: {name}",
     "clearParent": "Poista yläkäsite",
-    "allSpellings": "Näytä kaikki {count} kirjoitusasua",
-    "fewerSpellings": "Näytä vähemmän kirjoitusasuja",
+    "moreSpellings": "Lisää kirjoitusasuja ({count})",
+    "fewerSpellings": "Vähemmän kirjoitusasuja",
     "dataSources": {
       "title": "Tietolähteet",
       "notice": "Ainesosaluettelo perustuu <off>Open Food Factsin</off> ainesosataksonomiaan, joka on saatavilla <odbl>Open Database License (ODbL)</odbl> -lisenssillä. Norishin siitä rakentama luettelo tarjotaan samalla lisenssillä.",

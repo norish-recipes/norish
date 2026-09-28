@@ -357,8 +357,8 @@
     "parentTitle": "Escolha o ingrediente do qual {name} é um tipo.",
     "kindOf": "Um tipo de {name}",
     "clearParent": "Remover superior",
-    "allSpellings": "Mostrar as {count} grafias",
-    "fewerSpellings": "Mostrar menos grafias",
+    "moreSpellings": "Mais grafias ({count})",
+    "fewerSpellings": "Menos grafias",
     "dataSources": {
       "title": "Fontes de dados",
       "notice": "O catálogo de ingredientes parte da taxonomia de ingredientes do <off>Open Food Facts</off>, disponível sob a <odbl>Open Database License (ODbL)</odbl>. O catálogo que o Norish constrói a partir dela é oferecido sob a mesma licença.",

@@ -331,6 +331,19 @@ describe("IngredientsSettingsContent", () => {
     expect(chips()).toEqual(["onion", "ui", "Zwiebel", "ajuin"]);
   });
 
+  it("shows every spelling of a food known only in other languages", () => {
+    items = [
+      {
+        ...salt,
+        aliases: [{ id: "a-zout", text: "zout", locale: "nl", seeded: true, canRemove: false }],
+      },
+    ];
+    render(<IngredientsSettingsContent />);
+
+    expect(within(row("salt")).getAllByTestId("ingredient-alias")).toHaveLength(1);
+    expect(within(row("salt")).queryByTestId("ingredient-all-spellings")).toBeNull();
+  });
+
   it("credits the catalogue's source and offers it as a download", () => {
     render(<IngredientsSettingsContent />);
 

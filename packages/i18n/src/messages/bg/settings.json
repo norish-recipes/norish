@@ -357,8 +357,8 @@
     "parentTitle": "Изберете съставката, чийто вид е {name}.",
     "kindOf": "Вид {name}",
     "clearParent": "Премахване на родител",
-    "allSpellings": "Показване на всички изписвания ({count})",
-    "fewerSpellings": "Показване на по-малко изписвания",
+    "moreSpellings": "Още изписвания ({count})",
+    "fewerSpellings": "По-малко изписвания",
     "dataSources": {
       "title": "Източници на данни",
       "notice": "Каталогът на съставките се основава на таксономията на съставките на <off>Open Food Facts</off>, достъпна под лиценза <odbl>Open Database License (ODbL)</odbl>. Каталогът, който Norish изгражда от нея, се предлага под същия лиценз.",

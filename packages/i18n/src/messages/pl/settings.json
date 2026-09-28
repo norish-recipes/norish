@@ -357,8 +357,8 @@
     "parentTitle": "Wybierz składnik, którego rodzajem jest {name}.",
     "kindOf": "Rodzaj: {name}",
     "clearParent": "Usuń nadrzędny",
-    "allSpellings": "Pokaż wszystkie pisownie ({count})",
-    "fewerSpellings": "Pokaż mniej pisowni",
+    "moreSpellings": "Więcej pisowni ({count})",
+    "fewerSpellings": "Mniej pisowni",
     "dataSources": {
       "title": "Źródła danych",
       "notice": "Katalog składników opiera się na taksonomii składników <off>Open Food Facts</off>, dostępnej na licencji <odbl>Open Database License (ODbL)</odbl>. Katalog, który Norish na jej podstawie buduje, jest udostępniany na tej samej licencji.",

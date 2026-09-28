@@ -35,14 +35,15 @@ Some settings may require a reboot, this is indicated in the UI.
 
 Every household shares one catalogue of ingredients, which members look after
 in **Settings => Ingredients**. **Settings => Admin => Ingredient Permissions**
-decides who may rename an ingredient someone else added, mark it distinct, or
-remove one of its spellings:
+decides who may rename an ingredient someone else added, set its parent, mark it
+distinct, merge it, or move or remove one of its spellings:
 
 - **Everyone**: any signed-in user.
 - **Household** (the default): whoever added it and their household members.
 - **Owner only**: only whoever added it.
 
-Anyone may add a spelling to any ingredient. Ingredients are always visible to
+Merging needs permission on both ingredients. Anyone may add a spelling to any
+ingredient. Ingredients are always visible to
 everyone; there is no view setting. Ingredients from the built-in catalogue
 belong to no one and only server admins can edit them, and server admins can
 always edit every ingredient. An ingredient whose owner deleted their account

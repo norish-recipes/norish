@@ -357,8 +357,8 @@
     "parentTitle": "Velg ingrediensen {name} er en type av.",
     "kindOf": "En type {name}",
     "clearParent": "Fjern overordnet",
-    "allSpellings": "Vis alle {count} stavemåter",
-    "fewerSpellings": "Vis færre stavemåter",
+    "moreSpellings": "Flere stavemåter ({count})",
+    "fewerSpellings": "Færre stavemåter",
     "dataSources": {
       "title": "Datakilder",
       "notice": "Ingredienskatalogen bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgjengelig under <odbl>Open Database License (ODbL)</odbl>. Katalogen Norish bygger ut fra den, tilbys under samme lisens.",

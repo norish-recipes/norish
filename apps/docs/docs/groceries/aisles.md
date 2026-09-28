@@ -43,9 +43,15 @@ with aisles shows an **Aisle** field once the grocery has a name.
 
 ## Memory
 
-When you add a grocery to an aisle, the Store remembers that grocery **by name**.
+When you add a grocery to an aisle, the Store remembers the **ingredient** it
+is, not just the name you typed.
 
-So if you put “melk” in Zuivel at a Store, every “melk” at that Store will appear in Zuivel.
+So if you put “melk” in Zuivel at a Store, every “melk” at that Store will appear
+in Zuivel, and so will “milk” and “Melk (halfvol)”, because Norish knows they are
+the same [ingredient](./ingredients.md).
+
+An ingredient that is a kind of another, such as “red onion” under “onion”, uses
+its parent's aisle until you give it one of its own.
 
 That same rule applies everywhere:
 
@@ -55,6 +61,6 @@ That same rule applies everywhere:
 - **Remove an aisle:** the groceries that belonged to it become unassigned.
 - **Delete a Store:** its aisles and all of its grocery-to-aisle memory are deleted with it.
 
-Because the Store remembers aisles by grocery name, two groceries with exactly the same name at the same Store can’t belong to different aisles.
+Because the Store remembers aisles by ingredient, two groceries of the same ingredient at the same Store can’t belong to different aisles.
 
-The grouped list works the same way. Groups are per aisle, per Store, and per unit: lines of one name measured the same way share a row and add up, while a line measured differently, or with no measure at all, keeps a row of its own. Dragging a group into another aisle assigns every grocery name in that group to that aisle.
+The grouped list works the same way. Groups are per aisle, per Store, and per unit: lines of one name measured the same way share a row and add up, while a line measured differently, or with no measure at all, keeps a row of its own. Dragging a group into another aisle assigns every ingredient in that group to that aisle.
