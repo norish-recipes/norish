@@ -68,7 +68,7 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => Object.assign((key: string) => key, { rich: (key: string) => key }),
 }));
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
@@ -290,6 +290,13 @@ describe("IngredientsSettingsContent", () => {
     });
 
     expect(listInputs.at(-1)).toEqual({ search: undefined, flaggedOnly: true });
+  });
+
+  it("credits the catalogue's source and offers it as a download", () => {
+    render(<IngredientsSettingsContent />);
+
+    expect(screen.getByTestId("data-sources")).toHaveTextContent("notice");
+    expect(screen.getByTestId("catalogue-export")).toHaveAttribute("href", "/export/ingredients");
   });
 
   it("says when nothing is flagged", () => {

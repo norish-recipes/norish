@@ -23,6 +23,7 @@ export const SCHEDULED_TASKS = [
   "calendar-cleanup",
   "groceries-cleanup",
   "video-temp-cleanup",
+  "ingredient-catalogue-refresh",
 ] as const;
 
 export type ScheduledTaskType = (typeof SCHEDULED_TASKS)[number];

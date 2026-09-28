@@ -913,6 +913,19 @@
             ADR-0036 and amends ADR-0031.
           </p>
         </li>
+        <li>
+          <a href="groceries/0038-the-catalogue-is-seeded-from-open-food-facts-under-odbl.md"
+            >ADR-0038 &mdash; The ingredient catalogue is seeded from Open Food Facts under the ODbL</a
+          >
+          <p>
+            <b>Accepted.</b> The Open Food Facts ingredients taxonomy, every entry and language, is
+            fetched nightly and applied as ownerless Ingredients, seeded aliases and parents. A
+            refresh never undoes a person's alias, merge or parent; a failed or malformed fetch
+            leaves the last good seed. The first seed merges existing Ingredients it is sure of,
+            once. The ODbL is accepted: the Ingredients page credits the source and offers the
+            catalogue as JSON.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

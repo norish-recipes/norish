@@ -18,6 +18,7 @@ import {
 import { recordModelUse } from "@norish/shared-server/ai/runtime/model-use-ledger";
 
 const scheduler = vi.hoisted(() => ({ checkRecurringGroceries: vi.fn() }));
+const seed = vi.hoisted(() => ({ refreshIngredientCatalogue: vi.fn() }));
 const captured = vi.hoisted(() => ({
   processor: undefined as ((job: unknown) => Promise<unknown>) | undefined,
 }));
@@ -43,6 +44,7 @@ vi.mock("@norish/queue/scheduler/old-calendar-cleanup", () => ({
   cleanupOldCalendarData: vi.fn(),
 }));
 vi.mock("@norish/queue/scheduler/old-groceries-cleanup", () => ({ cleanupOldGroceries: vi.fn() }));
+vi.mock("@norish/shared-server/ingredients/seed/catalogue-seed", () => seed);
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
@@ -86,5 +88,31 @@ describe("startScheduledTasksWorker", () => {
     expect(readStepProgress(job.progress)?.attempts[0]?.models).toEqual([
       { provider: "openai", model: "gpt-5", outcome: "completed" },
     ]);
+  });
+
+  function jobFor(taskType: string) {
+    const job = {
+      id: `job-${taskType}`,
+      attemptsMade: 0,
+      data: { taskType },
+      progress: {} as unknown,
+      updateProgress: vi.fn(async (progress: unknown) => {
+        job.progress = progress;
+      }),
+      log: vi.fn(async () => 0),
+    };
+
+    return job;
+  }
+
+  it("refreshes the ingredient catalogue, and fails the job where the refresh fails", async () => {
+    seed.refreshIngredientCatalogue.mockResolvedValueOnce("applied");
+    await captured.processor!(jobFor("ingredient-catalogue-refresh"));
+    expect(seed.refreshIngredientCatalogue).toHaveBeenCalledTimes(1);
+
+    seed.refreshIngredientCatalogue.mockRejectedValueOnce(new Error("HTTP 503"));
+    await expect(captured.processor!(jobFor("ingredient-catalogue-refresh"))).rejects.toThrow(
+      "HTTP 503"
+    );
   });
 });

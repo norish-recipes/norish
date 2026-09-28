@@ -357,6 +357,11 @@
     "parentTitle": "Valitse ainesosa, jonka lajike {name} on.",
     "kindOf": "Lajike: {name}",
     "clearParent": "Poista yläkäsite",
+    "dataSources": {
+      "title": "Tietolähteet",
+      "notice": "Ainesosaluettelo perustuu <off>Open Food Factsin</off> ainesosataksonomiaan, joka on saatavilla <odbl>Open Database License (ODbL)</odbl> -lisenssillä. Norishin siitä rakentama luettelo tarjotaan samalla lisenssillä.",
+      "download": "Lataa ainesosaluettelo (JSON)"
+    },
     "errors": {
       "title": "Ainesosaa ei voitu muuttaa",
       "forbidden": "Et voi muokata tätä ainesosaa",

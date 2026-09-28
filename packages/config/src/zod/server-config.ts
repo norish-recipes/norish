@@ -21,6 +21,7 @@ export const ServerConfigKeys = {
   JOB_RETENTION: "job_retention",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
   INGREDIENT_PERMISSION_POLICY: "ingredient_permission_policy",
+  INGREDIENT_SEED_STATE: "ingredient_seed_state",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
   TIMER_KEYWORDS: "timer_keywords",
@@ -796,6 +797,22 @@ export const DEFAULT_INGREDIENT_PERMISSION_POLICY: IngredientPermissionPolicy = 
   edit: "household",
 };
 
+/**
+ * Where the ingredient catalogue seed stands (ADR-0038): the validators of
+ * the last file applied, so the nightly fetch asks only for a newer one, and
+ * whether existing Ingredients have been merged into the seed — a pass that
+ * runs once. Written by the seed task alone.
+ */
+export const IngredientSeedStateSchema = z.object({
+  etag: z.string().nullable().default(null),
+  lastModified: z.string().nullable().default(null),
+  appliedAt: z.string().nullable().default(null),
+  entries: z.number().int().default(0),
+  mergedExisting: z.boolean().default(false),
+});
+
+export type IngredientSeedState = z.infer<typeof IngredientSeedStateSchema>;
+
 // ============================================================================
 // Server Config Entry Schema (for database rows)
 // ============================================================================
@@ -908,6 +925,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return RecipePermissionPolicySchema;
     case ServerConfigKeys.INGREDIENT_PERMISSION_POLICY:
       return IngredientPermissionPolicySchema;
+    case ServerConfigKeys.INGREDIENT_SEED_STATE:
+      return IngredientSeedStateSchema;
     case ServerConfigKeys.PROMPTS:
       return PromptsConfigSchema;
     case ServerConfigKeys.LOCALE_CONFIG:

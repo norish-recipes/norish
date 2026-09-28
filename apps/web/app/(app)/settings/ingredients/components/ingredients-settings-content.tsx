@@ -14,6 +14,7 @@ import type { CatalogueRefusal } from "@norish/shared/contracts/ingredient-catal
 import { isCatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
 
 import type { IngredientPick } from "./ingredient-picker";
+import DataSourcesCard from "./data-sources-card";
 import { IngredientPicker } from "./ingredient-picker";
 
 /** Why the server refused an edit, as the procedures name it. */
@@ -72,58 +73,65 @@ export default function IngredientsSettingsContent() {
     queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() });
 
   return (
-    <Card>
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <BookOpenIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-      <Card.Content className="gap-4">
-        <p className="text-muted text-base">{t("description")}</p>
+    <div className="flex flex-col gap-6">
+      <Card>
+        <Card.Header>
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <BookOpenIcon className="h-5 w-5" />
+            {t("title")}
+          </h2>
+        </Card.Header>
+        <Card.Content className="gap-4">
+          <p className="text-muted text-base">{t("description")}</p>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <TextField
-            aria-label={t("search")}
-            className="min-w-0 flex-1"
-            value={searchText}
-            onChange={setSearchText}
-          >
-            <Input data-testid="ingredients-search" placeholder={t("search")} variant="secondary" />
-          </TextField>
-          <UiSwitch
-            data-testid="ingredients-flagged-only"
-            isSelected={flaggedOnly}
-            onValueChange={setFlaggedOnly}
-          >
-            <span className="text-sm">{t("flaggedOnly")}</span>
-          </UiSwitch>
-        </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <TextField
+              aria-label={t("search")}
+              className="min-w-0 flex-1"
+              value={searchText}
+              onChange={setSearchText}
+            >
+              <Input
+                data-testid="ingredients-search"
+                placeholder={t("search")}
+                variant="secondary"
+              />
+            </TextField>
+            <UiSwitch
+              data-testid="ingredients-flagged-only"
+              isSelected={flaggedOnly}
+              onValueChange={setFlaggedOnly}
+            >
+              <span className="text-sm">{t("flaggedOnly")}</span>
+            </UiSwitch>
+          </div>
 
-        {!isLoading && items.length === 0 ? (
-          <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
-            {flaggedOnly ? t("emptyFlagged") : t("empty")}
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2" data-testid="ingredients-list">
-            {items.map((item) => (
-              <IngredientRow key={item.id} item={item} onChanged={refresh} />
-            ))}
-          </ul>
-        )}
+          {!isLoading && items.length === 0 ? (
+            <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
+              {flaggedOnly ? t("emptyFlagged") : t("empty")}
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2" data-testid="ingredients-list">
+              {items.map((item) => (
+                <IngredientRow key={item.id} item={item} onChanged={refresh} />
+              ))}
+            </ul>
+          )}
 
-        {hasNextPage ? (
-          <Button
-            className="self-center"
-            isDisabled={isFetchingNextPage}
-            variant="tertiary"
-            onPress={() => void fetchNextPage()}
-          >
-            {t("loadMore")}
-          </Button>
-        ) : null}
-      </Card.Content>
-    </Card>
+          {hasNextPage ? (
+            <Button
+              className="self-center"
+              isDisabled={isFetchingNextPage}
+              variant="tertiary"
+              onPress={() => void fetchNextPage()}
+            >
+              {t("loadMore")}
+            </Button>
+          ) : null}
+        </Card.Content>
+      </Card>
+      <DataSourcesCard />
+    </div>
   );
 }
 

@@ -190,6 +190,15 @@ const ServerConfigSchema = z.object({
   YT_DLP_VERSION: z.string().default(DEFAULT_YT_DLP_VERSION),
   YT_DLP_BIN_DIR: z.string().default(defaultYtDlpBinDir),
 
+  // Ingredient catalogue seed (ADR-0038): the Open Food Facts ingredients
+  // taxonomy, fetched nightly. Point it at a mirror on a server without
+  // internet; empty turns the fetch off, and Norish works with no seed.
+  INGREDIENT_CATALOGUE_URL: z
+    .union([z.url(), z.literal("")])
+    .default(
+      "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/taxonomies/food/ingredients.txt"
+    ),
+
   // Transcription Configuration (separate from AI_PROVIDER)
   TRANSCRIPTION_PROVIDER: z
     .enum(["openai", "ollama", "lm-studio", "generic-openai", "disabled"])

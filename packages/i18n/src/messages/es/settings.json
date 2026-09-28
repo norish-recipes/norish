@@ -357,6 +357,11 @@
     "parentTitle": "Elige el ingrediente del que {name} es un tipo.",
     "kindOf": "Un tipo de {name}",
     "clearParent": "Quitar superior",
+    "dataSources": {
+      "title": "Fuentes de datos",
+      "notice": "El catálogo de ingredientes parte de la taxonomía de ingredientes de <off>Open Food Facts</off>, disponible bajo la <odbl>Open Database License (ODbL)</odbl>. El catálogo que Norish construye a partir de ella se ofrece bajo la misma licencia.",
+      "download": "Descargar el catálogo de ingredientes (JSON)"
+    },
     "errors": {
       "title": "No se pudo cambiar el ingrediente",
       "forbidden": "No puedes editar este ingrediente",

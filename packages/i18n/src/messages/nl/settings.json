@@ -357,6 +357,11 @@
     "parentTitle": "Kies het ingrediënt waarvan {name} een soort is.",
     "kindOf": "Een soort {name}",
     "clearParent": "Bovenliggend verwijderen",
+    "dataSources": {
+      "title": "Gegevensbronnen",
+      "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",
+      "download": "Ingrediëntencatalogus downloaden (JSON)"
+    },
     "errors": {
       "title": "Kon het ingrediënt niet wijzigen",
       "forbidden": "Je mag dit ingrediënt niet bewerken",

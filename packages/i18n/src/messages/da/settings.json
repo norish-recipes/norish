@@ -357,6 +357,11 @@
     "parentTitle": "Vælg den ingrediens, {name} er en slags.",
     "kindOf": "En slags {name}",
     "clearParent": "Fjern overordnet",
+    "dataSources": {
+      "title": "Datakilder",
+      "notice": "Ingredienskataloget bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgængelig under <odbl>Open Database License (ODbL)</odbl>. Det katalog, Norish bygger ud fra den, tilbydes under samme licens.",
+      "download": "Download ingredienskataloget (JSON)"
+    },
     "errors": {
       "title": "Ingrediensen kunne ikke ændres",
       "forbidden": "Du må ikke redigere denne ingrediens",

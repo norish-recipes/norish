@@ -17,7 +17,12 @@ import { mutableRowColumns, versionColumn } from "./shared";
  * the more general food this one is a kind of ("red onion" under "onion"):
  * a child with no Aisle Link of its own is filed in its parent's Aisle, and a
  * child in the Pantry covers a recipe line for its parent. The tree never
- * has a cycle.
+ * has a cycle. `parentChosen` says a person set or cleared the parent: the
+ * catalogue seed places only Ingredients whose parent nobody chose.
+ *
+ * `offId` is the Open Food Facts taxonomy entry a seeded Ingredient stands
+ * for ("en:onion"), which is how a refresh of the seed finds it again
+ * (ADR-0038).
  */
 export const ingredients = pgTable(
   "ingredients",
@@ -29,6 +34,8 @@ export const ingredients = pgTable(
     parentId: uuid("parent_id").references((): AnyPgColumn => ingredients.id, {
       onDelete: "set null",
     }),
+    parentChosen: boolean("parent_chosen").notNull().default(false),
+    offId: text("off_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
   },
@@ -36,6 +43,7 @@ export const ingredients = pgTable(
     uniqueIndex("uqidx_ingredients_name_lower").on(sql`lower(${t.name})`),
     index("idx_ingredients_created_at").on(t.createdAt),
     index("idx_ingredients_parent_id").on(t.parentId),
+    uniqueIndex("uqidx_ingredients_off_id").on(t.offId),
   ]
 );
 

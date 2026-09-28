@@ -6,24 +6,15 @@ import { getBullClient } from "@norish/queue/redis/bullmq";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
+import { refreshIngredientCatalogue } from "@norish/shared-server/ingredients/seed/catalogue-seed";
 import { createLogger } from "@norish/shared-server/logger";
 
+import type { ScheduledTaskJobData } from "./queue";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { instrumentProcessor } from "../instrumented-processor";
 import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:scheduled-tasks");
-
-type ScheduledTaskType =
-  | "recurring-grocery-check"
-  | "media-cleanup"
-  | "calendar-cleanup"
-  | "groceries-cleanup"
-  | "video-temp-cleanup";
-
-interface ScheduledTaskJobData {
-  taskType: ScheduledTaskType;
-}
 
 // Read on every access, never copied into a module-local — see the note on
 // `globalForRegistry` in ../registry.ts for why this module is evaluated more
@@ -90,6 +81,15 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
     case "video-temp-cleanup": {
       await cleanupOldTempFiles();
       log.info("Video temp cleanup completed");
+      break;
+    }
+
+    case "ingredient-catalogue-refresh": {
+      // A failed fetch or a malformed file throws before anything is
+      // applied: the last good seed stays, and the job monitor shows why.
+      const result = await refreshIngredientCatalogue();
+
+      log.info({ result }, "Ingredient catalogue refresh completed");
       break;
     }
 

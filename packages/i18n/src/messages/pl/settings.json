@@ -357,6 +357,11 @@
     "parentTitle": "Wybierz składnik, którego rodzajem jest {name}.",
     "kindOf": "Rodzaj: {name}",
     "clearParent": "Usuń nadrzędny",
+    "dataSources": {
+      "title": "Źródła danych",
+      "notice": "Katalog składników opiera się na taksonomii składników <off>Open Food Facts</off>, dostępnej na licencji <odbl>Open Database License (ODbL)</odbl>. Katalog, który Norish na jej podstawie buduje, jest udostępniany na tej samej licencji.",
+      "download": "Pobierz katalog składników (JSON)"
+    },
     "errors": {
       "title": "Nie udało się zmienić składnika",
       "forbidden": "Nie możesz edytować tego składnika",

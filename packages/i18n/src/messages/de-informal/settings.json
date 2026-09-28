@@ -357,6 +357,11 @@
     "parentTitle": "Wähle die Zutat, von der {name} eine Sorte ist.",
     "kindOf": "Eine Sorte {name}",
     "clearParent": "Oberbegriff entfernen",
+    "dataSources": {
+      "title": "Datenquellen",
+      "notice": "Der Zutatenkatalog basiert auf der Zutatentaxonomie von <off>Open Food Facts</off>, verfügbar unter der <odbl>Open Database License (ODbL)</odbl>. Der Katalog, den Norish daraus aufbaut, steht unter derselben Lizenz.",
+      "download": "Zutatenkatalog herunterladen (JSON)"
+    },
     "errors": {
       "title": "Die Zutat konnte nicht geändert werden",
       "forbidden": "Sie dürfen diese Zutat nicht bearbeiten",

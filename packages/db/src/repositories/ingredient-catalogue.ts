@@ -310,7 +310,7 @@ async function repointKeyed(
  * are each acyclic can close a cycle together, so each checks the tree as the
  * one before it left it. Released with the transaction.
  */
-async function lockTree(tx: DbTransaction): Promise<void> {
+export async function lockTree(tx: DbTransaction): Promise<void> {
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext('ingredient-tree'))`);
 }
 
@@ -379,7 +379,12 @@ export async function setCatalogueIngredientParent(
 
     await tx
       .update(ingredients)
-      .set({ parentId, flagged: false, version: sql`${ingredients.version} + 1` })
+      .set({
+        parentId,
+        parentChosen: true,
+        flagged: false,
+        version: sql`${ingredients.version} + 1`,
+      })
       .where(eq(ingredients.id, id));
 
     return "set";
