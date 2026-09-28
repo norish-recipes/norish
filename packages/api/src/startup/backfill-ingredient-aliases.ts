@@ -28,6 +28,9 @@ import { dbLogger as log } from "@norish/shared-server/logger";
 
 const BATCH_SIZE = 500;
 
+/** The upgrade resolves an instance's whole history at boot: no model request per row. */
+const NO_AI = { ai: false } as const;
+
 /**
  * Carry an instance over to Ingredient Aliases (ADR-0037). The fold is the
  * JavaScript grocery folding, so this runs at startup rather than in the SQL
@@ -140,7 +143,8 @@ async function resolveReferences(
       const owned = named.filter((row) => row.userId === owner);
       const resolved = await resolveIngredients(
         owned.map((row) => row.name),
-        { userId: owner }
+        { userId: owner },
+        NO_AI
       );
 
       await store(
@@ -186,7 +190,7 @@ async function keyLegacyRows(
     for (const row of batch) {
       const ingredientId =
         groceryIngredients.get(ingredientAliasFold(row.normalizedName)) ??
-        (await resolveIngredient(row.normalizedName, { userId: row.ownerId }))?.ingredientId;
+        (await resolveIngredient(row.normalizedName, { userId: row.ownerId }, NO_AI))?.ingredientId;
 
       // A name that is markup alone names no food: the link is about nothing.
       if (!ingredientId) await dropLegacyRow(table, row.id);

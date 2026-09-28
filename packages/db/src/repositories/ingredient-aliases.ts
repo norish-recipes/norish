@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, or, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
@@ -169,6 +169,96 @@ export async function mintIngredientWithAliases(
       row.ingredientId === minted.id ? { ...row, ingredientId: winner } : row
     );
   });
+}
+
+/**
+ * Add spellings to an Ingredient that already exists, and answer with the
+ * alias each requested fold now has. A fold another Ingredient already holds
+ * keeps pointing where it points: one spelling means one food.
+ */
+export async function addIngredientAliases(input: {
+  ingredientId: string;
+  aliases: ReadonlyArray<{ text: string; fold: string }>;
+  ownerId: string | null;
+  locale: string | null;
+}): Promise<IngredientAliasRow[]> {
+  await db
+    .insert(ingredientAliases)
+    .values(
+      input.aliases.map((alias) => ({
+        text: alias.text,
+        fold: alias.fold,
+        locale: input.locale,
+        ingredientId: input.ingredientId,
+        ownerId: input.ownerId,
+      }))
+    )
+    .onConflictDoNothing();
+
+  return await findIngredientAliasesByFolds(input.aliases.map((alias) => alias.fold));
+}
+
+/** An Ingredient a new name might be, with some of the names it is known by. */
+export interface IngredientCandidate {
+  id: string;
+  name: string;
+  aliases: string[];
+}
+
+/** How many alias rows one candidate search reads before ranking them. */
+const CANDIDATE_ROWS = 400;
+
+/**
+ * The Ingredients with an alias that has a word beginning with one of the
+ * given word starts, the ones sharing the most starts first. The starts are
+ * the first letters of a name's words, so "onions" finds "onion" and
+ * "tomatoes" finds "tomato"; which of them the name really is, is not decided
+ * here.
+ */
+export async function findIngredientCandidates(
+  wordStarts: readonly string[],
+  limit: number
+): Promise<IngredientCandidate[]> {
+  const starts = Array.from(new Set(wordStarts.filter((start) => start.length > 0)));
+
+  if (starts.length === 0) return [];
+
+  const rows = await db
+    .select({
+      id: ingredients.id,
+      name: ingredients.name,
+      text: ingredientAliases.text,
+      fold: ingredientAliases.fold,
+    })
+    .from(ingredientAliases)
+    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+    .where(
+      or(...starts.map((start) => sql`(' ' || ${ingredientAliases.fold}) like ${`% ${start}%`}`))
+    )
+    .limit(CANDIDATE_ROWS);
+
+  const byIngredient = new Map<string, { candidate: IngredientCandidate; shared: Set<string> }>();
+
+  for (const row of rows) {
+    const entry = byIngredient.get(row.id) ?? {
+      candidate: { id: row.id, name: row.name, aliases: [] },
+      shared: new Set<string>(),
+    };
+    const words = row.fold.split(" ");
+
+    for (const start of starts) {
+      if (words.some((word) => word.startsWith(start))) entry.shared.add(start);
+    }
+    if (row.text !== row.name) entry.candidate.aliases.push(row.text);
+    byIngredient.set(row.id, entry);
+  }
+
+  return [...byIngredient.values()]
+    .sort(
+      (a, b) => b.shared.size - a.shared.size || a.candidate.name.localeCompare(b.candidate.name)
+    )
+    .slice(0, limit)
+    .map(({ candidate }) => candidate);
 }
 
 /** Recipe lines' texts and the aliases they resolved to, by line id. */

@@ -217,7 +217,7 @@ A Decision answer above the asking feature's threshold, and therefore acted on. 
 _Avoid_: Confident answer (TypeSafe's confidence is a separate statistic from the probability the threshold reads)
 
 **Decision Use**:
-One thing the Decision Model does for a household — categorising, tagging, allergy tagging, provenance, grocery linking, validating enrichments — chosen by an administrator from one list, all selected by default once a Decision Model is configured. What the Decision Model does for Norish's own algorithms (import triage) is not a Decision Use and is not in the list: those questions only ever make an import cheaper or refuse a page that was never a recipe, and there is nothing for a household to opt out of.
+One thing the Decision Model does for a household — categorising, tagging, allergy tagging, provenance, grocery linking, ingredient resolution, validating enrichments — chosen by an administrator from one list, all selected by default once a Decision Model is configured. What the Decision Model does for Norish's own algorithms (import triage) is not a Decision Use and is not in the list: those questions only ever make an import cheaper or refuse a page that was never a recipe, and there is nothing for a household to opt out of.
 _Avoid_: Decision feature (a feature is the kind; the use is whether the kind asks)
 
 **Enrichment Validation**:

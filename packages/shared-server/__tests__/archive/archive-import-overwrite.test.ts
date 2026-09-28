@@ -28,6 +28,14 @@ vi.mock("@norish/config/env-config-server", () => ({
   },
 }));
 
+// Resolving the lines is the resolver's concern, not the import loop's.
+vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
+  withResolvedIngredients: vi.fn(async (payload: object) => ({
+    ...payload,
+    ingredientResolutions: new Map(),
+  })),
+}));
+
 vi.mock("@norish/db", () => ({
   findExistingRecipe: mockFindExistingRecipe,
   createRecipeWithRefs: mockCreateRecipeWithRefs,

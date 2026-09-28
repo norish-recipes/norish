@@ -759,6 +759,8 @@
         "recipeProvenanceDescription": "메모를 작성하기 전에 국가와 요리 종류를 확정",
         "groceryLinking": "장보기 연결",
         "groceryLinkingDescription": "상점이 제안한 상품을 정렬하고 확신하는 하나를 연결",
+        "ingredientResolution": "재료 인식",
+        "ingredientResolutionDescription": "새 재료 이름이 Norish가 이미 아는 식품인지 판단",
         "validateEnrichments": "보강 검증",
         "validateEnrichmentsDescription": "각 보강 실행의 결과를 저장하기 전에 검사"
       },
@@ -794,6 +796,9 @@
       "ingredientLinking": "재료 연결 프롬프트",
       "ingredientLinkingDescription": "각 단계를 사용하는 재료 줄에 연결할 때 사용됩니다",
       "ingredientLinkingPlaceholder": "재료를 단계에 연결하기 위한 프롬프트...",
+      "ingredientResolution": "재료 인식 프롬프트",
+      "ingredientResolutionDescription": "새 재료 이름이 Norish가 이미 아는 식품인지 판단할 때 사용",
+      "ingredientResolutionPlaceholder": "재료 이름을 인식하기 위한 프롬프트...",
       "imageGenerationBrief": "이미지 설명 프롬프트",
       "imageGenerationBriefDescription": "이미지를 생성하기 전에 레시피를 짧은 시각적 설명으로 바꾸는 데 사용됩니다. 레시피는 프롬프트 뒤에 추가됩니다.",
       "imageGenerationBriefPlaceholder": "시각적 설명을 위한 프롬프트...",

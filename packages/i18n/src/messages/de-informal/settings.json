@@ -759,6 +759,8 @@
         "recipeProvenanceDescription": "Land und Küchen festlegen, bevor die Notiz geschrieben wird",
         "groceryLinking": "Einkäufe verknüpfen",
         "groceryLinkingDescription": "Die angebotenen Produkte eines Geschäfts ordnen und eines verknüpfen, bei dem es sicher ist",
+        "ingredientResolution": "Zutatenerkennung",
+        "ingredientResolutionDescription": "Entscheiden, ob ein neuer Zutatenname ein Lebensmittel ist, das Norish bereits kennt",
         "validateEnrichments": "Anreicherungen prüfen",
         "validateEnrichmentsDescription": "Die eigenen Aussagen jedes Anreicherungslaufs prüfen, bevor sie gespeichert werden"
       },
@@ -794,6 +796,9 @@
       "ingredientLinking": "Prompt für Zutatenverknüpfung",
       "ingredientLinkingDescription": "Wird verwendet, um jeden Schritt mit den verwendeten Zutatenzeilen zu verknüpfen",
       "ingredientLinkingPlaceholder": "Prompt zum Verknüpfen von Zutaten mit Schritten...",
+      "ingredientResolution": "Prompt für Zutatenerkennung",
+      "ingredientResolutionDescription": "Wird verwendet, um zu entscheiden, ob ein neuer Zutatenname ein Lebensmittel ist, das Norish bereits kennt",
+      "ingredientResolutionPlaceholder": "Prompt zum Erkennen von Zutatennamen...",
       "imageGenerationBrief": "Bildbeschreibungs-Prompt",
       "imageGenerationBriefDescription": "Wird verwendet, um ein Rezept vor der Bildgenerierung in eine kurze visuelle Beschreibung zu verwandeln. Das Rezept wird an den Prompt angehängt.",
       "imageGenerationBriefPlaceholder": "Prompt für die visuelle Beschreibung...",

@@ -32,6 +32,7 @@ const PROMPT_FILES = {
   "allergy-detection": "allergyDetection",
   "recipe-provenance": "recipeProvenance",
   "ingredient-linking": "ingredientLinking",
+  "ingredient-resolution": "ingredientResolution",
   "image-generation-brief": "imageGenerationBrief",
   "image-generation-style": "imageGenerationStyle",
 };

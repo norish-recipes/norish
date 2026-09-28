@@ -43,8 +43,21 @@ describe("the shipped allergy-detection prompt", () => {
   });
 });
 
+describe("the shipped ingredient-resolution prompt", () => {
+  it("asks for a verdict about the numbered foods, and for doubt to be said", () => {
+    const prompt = shipped("ingredient-resolution");
+
+    expect(prompt).toMatch(/same/);
+    expect(prompt).toMatch(/kind-of/);
+    expect(prompt).toMatch(/new/);
+    expect(prompt).toMatch(/sure/i);
+    // The name and the known foods are appended by the resolver.
+    expect(prompt).not.toMatch(/\{\{/);
+  });
+});
+
 describe("loadDefaultPrompts", () => {
-  it("ships a default for all eleven administrator-editable prompts", () => {
+  it("ships a default for all twelve administrator-editable prompts", () => {
     const defaults = loadDefaultPrompts();
 
     expect(Object.keys(defaults).sort()).toEqual(
@@ -56,6 +69,7 @@ describe("loadDefaultPrompts", () => {
         "imageGenerationBrief",
         "imageGenerationStyle",
         "ingredientLinking",
+        "ingredientResolution",
         "nutritionEstimation",
         "recipeExtraction",
         "recipeProvenance",

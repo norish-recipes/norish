@@ -759,6 +759,8 @@
         "recipeProvenanceDescription": "Да определи държавата и Кухните, преди да бъде написана бележката",
         "groceryLinking": "Свързване на покупки",
         "groceryLinkingDescription": "Да подреди предложените от магазина продукти и да свърже един, в който е сигурен",
+        "ingredientResolution": "Разпознаване на съставки",
+        "ingredientResolutionDescription": "Решава дали ново име на съставка е храна, която Norish вече познава",
         "validateEnrichments": "Проверка на обогатяванията",
         "validateEnrichmentsDescription": "Да провери собствените твърдения на всяко обогатяване, преди да бъдат записани"
       },
@@ -794,6 +796,9 @@
       "ingredientLinking": "Промпт за свързване на съставките",
       "ingredientLinkingDescription": "Използва се за свързване на всяка стъпка с редовете на съставките, които тя използва",
       "ingredientLinkingPlaceholder": "Промпт за свързване на съставките със стъпките…",
+      "ingredientResolution": "Промпт за разпознаване на съставки",
+      "ingredientResolutionDescription": "Използва се, за да се реши дали ново име на съставка е храна, която Norish вече познава",
+      "ingredientResolutionPlaceholder": "Промпт за разпознаване на имена на съставки…",
       "imageGenerationBrief": "Промпт за визуално описание",
       "imageGenerationBriefDescription": "Използва се за превръщане на рецепта в кратко визуално описание преди генерирането на изображението. Рецептата се добавя след промпта.",
       "imageGenerationBriefPlaceholder": "Промпт за визуалното описание...",

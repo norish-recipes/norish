@@ -31,6 +31,13 @@ vi.mock("@norish/db", () => ({
   dashboardRecipe: mockDashboardRecipe,
 }));
 
+vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
+  withResolvedIngredients: vi.fn(async (payload: object) => ({
+    ...payload,
+    ingredientResolutions: new Map(),
+  })),
+}));
+
 vi.mock("@norish/db/repositories/ratings", () => ({
   rateRecipe: mockRateRecipe,
 }));

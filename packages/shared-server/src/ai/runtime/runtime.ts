@@ -113,6 +113,8 @@ const SYSTEM_MESSAGES: Record<StructuredPromptName, string> = {
     "You are a culinary historian who places dishes in their country and region of origin.",
   "ingredient-linking":
     "You are a careful recipe reader who says which ingredient lines each step uses, and only what the text supports.",
+  "ingredient-resolution":
+    "You keep a catalogue of foods and say whether a name is a food already in it, a kind of one, or a food of its own.",
   // English by instruction, not by system message alone: the brief is a model
   // instruction rather than recipe content, so ADR-0018's language care does
   // not apply to it.

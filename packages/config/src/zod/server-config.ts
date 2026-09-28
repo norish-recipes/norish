@@ -141,6 +141,7 @@ export const PromptsConfigSchema = z.object({
   autoTagging: z.string().optional(),
   recipeProvenance: z.string().optional(),
   ingredientLinking: z.string().optional(),
+  ingredientResolution: z.string().optional(),
   imageExtraction: z.string().optional(),
   autoCategorization: z.string().optional(),
   allergyDetection: z.string().optional(),
@@ -631,6 +632,7 @@ export const DecisionUseSchema = z.enum([
   "allergyDetection",
   "recipeProvenance",
   "groceryLinking",
+  "ingredientResolution",
   "validateEnrichments",
 ]);
 

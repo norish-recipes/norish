@@ -759,6 +759,8 @@
         "recipeProvenanceDescription": "Settle the country and Cuisines before the note is written",
         "groceryLinking": "Grocery Linking",
         "groceryLinkingDescription": "Order a store's offered products and link one it is sure of",
+        "ingredientResolution": "Ingredient Resolution",
+        "ingredientResolutionDescription": "Decide whether a new ingredient name is a food Norish already knows",
         "validateEnrichments": "Validate Enrichments",
         "validateEnrichmentsDescription": "Check every enrichment run's own claims before they are written"
       },
@@ -794,6 +796,9 @@
       "ingredientLinking": "Ingredient Linking Prompt",
       "ingredientLinkingDescription": "Used when linking each step to the ingredient lines it uses",
       "ingredientLinkingPlaceholder": "Prompt for linking ingredients to steps...",
+      "ingredientResolution": "Ingredient Resolution Prompt",
+      "ingredientResolutionDescription": "Used when deciding whether a new ingredient name is a food Norish already knows",
+      "ingredientResolutionPlaceholder": "Prompt for recognising ingredient names...",
       "imageGenerationBrief": "Image Brief Prompt",
       "imageGenerationBriefDescription": "Used to turn a recipe into a short visual brief before its picture is generated. The recipe is appended after the prompt.",
       "imageGenerationBriefPlaceholder": "Prompt for writing the visual brief...",

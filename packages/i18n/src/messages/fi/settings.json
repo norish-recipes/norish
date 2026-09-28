@@ -759,6 +759,8 @@
         "recipeProvenanceDescription": "Ratkaise maa ja ruokakulttuurit ennen kuin muistiinpano kirjoitetaan",
         "groceryLinking": "Ostosten linkitys",
         "groceryLinkingDescription": "Järjestä kaupan tarjoamat tuotteet ja linkitä se, josta ollaan varmoja",
+        "ingredientResolution": "Ainesosien tunnistus",
+        "ingredientResolutionDescription": "Päätä, onko uusi ainesosan nimi ruoka, jonka Norish jo tuntee",
         "validateEnrichments": "Rikastusten tarkistus",
         "validateEnrichmentsDescription": "Tarkista jokaisen rikastusajon omat väitteet ennen kuin ne tallennetaan"
       },
@@ -794,6 +796,9 @@
       "ingredientLinking": "Ainesosien linkityksen kehote",
       "ingredientLinkingDescription": "Käytetään linkitettäessä jokainen työvaihe käyttämiinsä ainesosariveihin",
       "ingredientLinkingPlaceholder": "Kehote ainesosien linkittämiseen työvaiheisiin...",
+      "ingredientResolution": "Ainesosien tunnistuksen kehote",
+      "ingredientResolutionDescription": "Käytetään päättämään, onko uusi ainesosan nimi ruoka, jonka Norish jo tuntee",
+      "ingredientResolutionPlaceholder": "Kehote ainesosien nimien tunnistamiseen...",
       "imageGenerationBrief": "Kuvabriefin kehote",
       "imageGenerationBriefDescription": "Käytetään muuntamaan resepti lyhyeksi visuaaliseksi briefiksi ennen kuvan luontia. Resepti liitetään kehotteen perään.",
       "imageGenerationBriefPlaceholder": "Kehote visuaalisen briefin kirjoittamiseen...",

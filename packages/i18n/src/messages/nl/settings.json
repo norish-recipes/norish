@@ -759,6 +759,8 @@
         "recipeProvenanceDescription": "Leg het land en de Keukens vast voordat de notitie wordt geschreven",
         "groceryLinking": "Boodschappen koppelen",
         "groceryLinkingDescription": "Rangschik de aangeboden producten van een winkel en koppel er een waar het zeker van is",
+        "ingredientResolution": "Ingrediëntherkenning",
+        "ingredientResolutionDescription": "Beslis of een nieuwe ingrediëntnaam een voedingsmiddel is dat Norish al kent",
         "validateEnrichments": "Verrijkingen valideren",
         "validateEnrichmentsDescription": "Controleer de eigen claims van elke verrijkingsrun voordat ze worden opgeslagen"
       },
@@ -794,6 +796,9 @@
       "ingredientLinking": "Prompt voor ingrediëntkoppeling",
       "ingredientLinkingDescription": "Gebruikt bij het koppelen van elke stap aan de ingrediëntregels die hij gebruikt",
       "ingredientLinkingPlaceholder": "Prompt voor het koppelen van ingrediënten aan stappen...",
+      "ingredientResolution": "Prompt voor ingrediëntherkenning",
+      "ingredientResolutionDescription": "Gebruikt om te beslissen of een nieuwe ingrediëntnaam een voedingsmiddel is dat Norish al kent",
+      "ingredientResolutionPlaceholder": "Prompt voor het herkennen van ingrediëntnamen...",
       "imageGenerationBrief": "Afbeeldingsomschrijving Prompt",
       "imageGenerationBriefDescription": "Gebruikt om een recept om te zetten in een korte visuele omschrijving voordat de afbeelding wordt gegenereerd. Het recept wordt na de prompt toegevoegd.",
       "imageGenerationBriefPlaceholder": "Prompt voor de visuele omschrijving...",

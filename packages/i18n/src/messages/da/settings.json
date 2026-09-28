@@ -759,6 +759,8 @@
         "recipeProvenanceDescription": "Fastlæg land og Køkkener, før noten skrives",
         "groceryLinking": "Kobling af varer",
         "groceryLinkingDescription": "Sortér en butiks tilbudte produkter og kobl et, den er sikker på",
+        "ingredientResolution": "Genkendelse af ingredienser",
+        "ingredientResolutionDescription": "Afgør, om et nyt ingrediensnavn er en fødevare, Norish allerede kender",
         "validateEnrichments": "Validér berigelser",
         "validateEnrichmentsDescription": "Kontrollér hver berigelseskørsels egne påstande, før de gemmes"
       },
@@ -794,6 +796,9 @@
       "ingredientLinking": "Prompt til ingredienstilknytning",
       "ingredientLinkingDescription": "Bruges når hvert trin tilknyttes de ingredienslinjer, det bruger",
       "ingredientLinkingPlaceholder": "Prompt til at tilknytte ingredienser til trin...",
+      "ingredientResolution": "Prompt til genkendelse af ingredienser",
+      "ingredientResolutionDescription": "Bruges til at afgøre, om et nyt ingrediensnavn er en fødevare, Norish allerede kender",
+      "ingredientResolutionPlaceholder": "Prompt til at genkende ingrediensnavne...",
       "imageGenerationBrief": "Billedbeskrivelses-prompt",
       "imageGenerationBriefDescription": "Bruges til at omdanne en opskrift til en kort visuel beskrivelse, før billedet genereres. Opskriften tilføjes efter prompten.",
       "imageGenerationBriefPlaceholder": "Prompt til den visuelle beskrivelse...",
