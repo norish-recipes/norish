@@ -7,7 +7,8 @@
     "user": "Bruger",
     "household": "Husstand",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Ingredienser"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingredienser",
+    "description": "Alle fødevarer Norish kender, med de stavemåder de kendes under. Norish markerer dem, det var usikker på: flet dem sammen med den fødevare, de er, eller marker dem som selvstændige.",
+    "search": "Søg i ingredienser",
+    "flaggedOnly": "Kun markerede",
+    "flagged": "Markeret",
+    "empty": "Ingen ingredienser fundet",
+    "emptyFlagged": "Intet er markeret",
+    "loadMore": "Indlæs flere",
+    "rename": "Omdøb",
+    "markDistinct": "Marker som selvstændig",
+    "addAlias": "Tilføj en stavemåde",
+    "removeAlias": "Fjern {alias}",
+    "errors": {
+      "title": "Ingrediensen kunne ikke ændres",
+      "forbidden": "Du må ikke redigere denne ingrediens",
+      "not-found": "Denne ingrediens findes ikke længere",
+      "name-taken": "En anden ingrediens har allerede dette navn",
+      "spelling-taken": "Denne stavemåde hører allerede til en anden ingrediens",
+      "last-alias": "En ingrediens beholder mindst én stavemåde",
+      "alias-in-use": "Opskrifter eller indkøb bruger stadig denne stavemåde",
+      "empty": "Indtast et navn",
+      "unknown": "Noget gik galt. Prøv igen."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderation af opskriftdeling",
@@ -428,6 +454,21 @@
         "ownerDescription": "Kun opskriftens ejer"
       },
       "note": "Bemærk: Indkøbslister og kalenderbegivenheder følger husstandsregler automatisk; husstandsmedlemmer kan altid redigere/slette elementer, der tilhører enhver i samme husstand."
+    },
+    "ingredientPermissions": {
+      "title": "Ingredienstilladelser",
+      "description": "Bestem, hvem der må omdøbe ingredienser, markere dem som selvstændige og fjerne deres stavemåder. Alle kan tilføje en stavemåde, og serveradministratorer har altid fuld adgang.",
+      "editIngredients": "Rediger ingredienser",
+      "editDescription": "Hvem der må ændre en ingrediens, som en anden har tilføjet",
+      "levels": {
+        "everyone": "Alle",
+        "everyoneDescription": "Alle loggede brugere",
+        "household": "Husstand",
+        "householdDescription": "Den, der tilføjede den, og medlemmerne af husstanden",
+        "owner": "Kun ejer",
+        "ownerDescription": "Kun den, der tilføjede den"
+      },
+      "note": "Ingredienser fra det indbyggede katalog kan kun redigeres af serveradministratorer."
     },
     "system": {
       "title": "Systemindstillinger",

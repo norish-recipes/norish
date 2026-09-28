@@ -16,6 +16,7 @@ import type {
   DecisionConfig,
   I18nLocaleConfig,
   ImageGenerationConfig,
+  IngredientPermissionPolicy,
   PromptsConfig,
   PromptsConfigInput,
   RecipePermissionPolicy,
@@ -45,6 +46,7 @@ interface AdminSettingsContextValue {
   decisionConfig: DecisionConfig | undefined;
   schedulerCleanupMonths: number | undefined;
   recipePermissionPolicy: RecipePermissionPolicy | undefined;
+  ingredientPermissionPolicy: IngredientPermissionPolicy | undefined;
   prompts: PromptsConfig | undefined;
   timerKeywords: TimerKeywordsConfig | undefined;
 
@@ -86,6 +88,9 @@ interface AdminSettingsContextValue {
   updateSchedulerMonths: (months: number) => Promise<{ success: boolean; error?: string }>;
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
+  ) => Promise<{ success: boolean; error?: string }>;
+  updateIngredientPermissionPolicy: (
+    policy: IngredientPermissionPolicy
   ) => Promise<{ success: boolean; error?: string }>;
   restoreDefaultConfig: (key: string) => Promise<{ success: boolean; error?: string }>;
   testAuthProvider: (
@@ -141,6 +146,8 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     number | undefined;
   const recipePermissionPolicy = configs[ServerConfigKeys.RECIPE_PERMISSION_POLICY] as
     RecipePermissionPolicy | undefined;
+  const ingredientPermissionPolicy = configs[ServerConfigKeys.INGREDIENT_PERMISSION_POLICY] as
+    IngredientPermissionPolicy | undefined;
   const prompts = configs[ServerConfigKeys.PROMPTS] as PromptsConfig | undefined;
   const timerKeywords = configs[ServerConfigKeys.TIMER_KEYWORDS] as TimerKeywordsConfig | undefined;
 
@@ -271,6 +278,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     [mutations]
   );
 
+  const updateIngredientPolicy = useCallback(
+    async (policy: IngredientPermissionPolicy) => {
+      return mutations.updateIngredientPermissionPolicy(policy);
+    },
+    [mutations]
+  );
+
   const restoreDefault = useCallback(
     async (key: string) => {
       return mutations.restoreDefault(key as ServerConfigKey);
@@ -330,6 +344,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     decisionConfig,
     schedulerCleanupMonths,
     recipePermissionPolicy,
+    ingredientPermissionPolicy,
     prompts,
     timerKeywords,
     isLoading,
@@ -351,6 +366,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     updateTimerKeywords: updateTimerKeywordsConfig,
     updateSchedulerMonths: updateScheduler,
     updateRecipePermissionPolicy: updatePermissionPolicy,
+    updateIngredientPermissionPolicy: updateIngredientPolicy,
     restoreDefaultConfig: restoreDefault,
     testAuthProvider: testAuth,
     testAIEndpoint: testAI,

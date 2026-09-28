@@ -7,7 +7,8 @@
     "user": "Gebruiker",
     "household": "Huishouden",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Ingrediënten"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingrediënten",
+    "description": "Elk voedingsmiddel dat Norish kent, met de spellingen waaronder het bekend is. Norish markeert de ingrediënten waarover het twijfelde: voeg ze samen met het voedingsmiddel dat ze zijn, of markeer ze als apart.",
+    "search": "Ingrediënten zoeken",
+    "flaggedOnly": "Alleen gemarkeerd",
+    "flagged": "Gemarkeerd",
+    "empty": "Geen ingrediënten gevonden",
+    "emptyFlagged": "Niets is gemarkeerd",
+    "loadMore": "Meer laden",
+    "rename": "Hernoemen",
+    "markDistinct": "Markeer als apart",
+    "addAlias": "Spelling toevoegen",
+    "removeAlias": "{alias} verwijderen",
+    "errors": {
+      "title": "Kon het ingrediënt niet wijzigen",
+      "forbidden": "Je mag dit ingrediënt niet bewerken",
+      "not-found": "Dit ingrediënt bestaat niet meer",
+      "name-taken": "Een ander ingrediënt heeft deze naam al",
+      "spelling-taken": "Deze spelling hoort al bij een ander ingrediënt",
+      "last-alias": "Een ingrediënt houdt minstens één spelling",
+      "alias-in-use": "Recepten of boodschappen gebruiken deze spelling nog",
+      "empty": "Voer een naam in",
+      "unknown": "Er ging iets mis. Probeer het opnieuw."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderatie van receptdeling",
@@ -428,6 +454,21 @@
         "ownerDescription": "Alleen de eigenaar van het recept"
       },
       "note": "Opmerking: Boodschappen en agenda-items volgen automatisch de huishoudregels, huishoudleden kunnen altijd items bewerken/verwijderen die behoren tot iemand in hetzelfde huishouden."
+    },
+    "ingredientPermissions": {
+      "title": "Ingrediëntrechten",
+      "description": "Bepaal wie ingrediënten mag hernoemen, als apart mag markeren en spellingen mag verwijderen. Iedereen mag een spelling toevoegen, en serverbeheerders hebben altijd volledige toegang.",
+      "editIngredients": "Ingrediënten bewerken",
+      "editDescription": "Wie een ingrediënt mag wijzigen dat iemand anders heeft toegevoegd",
+      "levels": {
+        "everyone": "Iedereen",
+        "everyoneDescription": "Alle ingelogde gebruikers",
+        "household": "Huishouden",
+        "householdDescription": "Wie het heeft toegevoegd en de leden van diens huishouden",
+        "owner": "Alleen eigenaar",
+        "ownerDescription": "Alleen wie het heeft toegevoegd"
+      },
+      "note": "Ingrediënten uit de ingebouwde catalogus kunnen alleen door serverbeheerders worden bewerkt."
     },
     "system": {
       "title": "Systeeminstellingen",

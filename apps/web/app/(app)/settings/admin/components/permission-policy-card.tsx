@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { Card, ListBox, Select } from "@heroui/react";
+import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 
+import type { PermissionLevelLabels } from "./permission-level-select";
 import { useAdminSettingsContext } from "../context";
+import { PermissionLevelSelect } from "./permission-level-select";
 
 type PolicyAction = "view" | "edit" | "delete";
 
@@ -17,23 +19,11 @@ export default function PermissionPolicyCard() {
   const { recipePermissionPolicy, updateRecipePermissionPolicy } = useAdminSettingsContext();
   const [saving, setSaving] = useState<PolicyAction | null>(null);
 
-  const POLICY_OPTIONS: { value: PermissionLevel; labelKey: string; descriptionKey: string }[] = [
-    {
-      value: "everyone",
-      labelKey: "levels.everyone",
-      descriptionKey: "levels.everyoneDescription",
-    },
-    {
-      value: "household",
-      labelKey: "levels.household",
-      descriptionKey: "levels.householdDescription",
-    },
-    {
-      value: "owner",
-      labelKey: "levels.owner",
-      descriptionKey: "levels.ownerDescription",
-    },
-  ];
+  const labels: PermissionLevelLabels = {
+    everyone: { label: t("levels.everyone"), description: t("levels.everyoneDescription") },
+    household: { label: t("levels.household"), description: t("levels.householdDescription") },
+    owner: { label: t("levels.owner"), description: t("levels.ownerDescription") },
+  };
 
   const handleChange = async (action: PolicyAction, value: PermissionLevel) => {
     if (!recipePermissionPolicy) return;
@@ -50,37 +40,13 @@ export default function PermissionPolicyCard() {
   };
 
   const renderPolicySelect = (action: PolicyAction, ariaLabel: string) => (
-    <Select
-      aria-label={ariaLabel}
-      className="w-full sm:w-48"
+    <PermissionLevelSelect
+      ariaLabel={ariaLabel}
       isDisabled={saving !== null}
-      placeholder={ariaLabel}
-      selectedKey={recipePermissionPolicy?.[action] ?? null}
-      size="sm"
-      variant="secondary"
-      onSelectionChange={(key) => {
-        if (typeof key === "string") {
-          void handleChange(action, key as PermissionLevel);
-        }
-      }}
-    >
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover placement="bottom end">
-        <ListBox>
-          {POLICY_OPTIONS.map((option) => (
-            <ListBox.Item key={option.value} id={option.value} textValue={t(option.labelKey)}>
-              <div className="flex flex-col">
-                <span>{t(option.labelKey)}</span>
-                <span className="text-muted text-xs">{t(option.descriptionKey)}</span>
-              </div>
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+      labels={labels}
+      value={recipePermissionPolicy?.[action] ?? null}
+      onChange={(level) => void handleChange(action, level)}
+    />
   );
 
   return (

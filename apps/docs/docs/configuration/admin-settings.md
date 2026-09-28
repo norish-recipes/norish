@@ -13,7 +13,8 @@ You can manage:
 
 - **[Users](./users.md)** Basic user management.
 - **Registration policy** whether new users may register.
-- **Permission policies** for recipe view, edit, and delete scopes.
+- **Permission policies** for recipe view, edit, and delete scopes, and for
+  [editing ingredients](#ingredient-permissions).
 - **Auth providers** (OIDC, GitHub, Google).
 - **OIDC claim mapping** for admin role assignment and household auto-join.
 - **Content detection settings** (units, content indicators, recurrence config).
@@ -29,6 +30,22 @@ instance, the [database](./database.md), the encryption key in
 
 Some settings may require a reboot, this is indicated in the UI.
 :::
+
+## Ingredient permissions
+
+Every household shares one catalogue of ingredients, which members look after
+in **Settings => Ingredients**. **Settings => Admin => Ingredient Permissions**
+decides who may rename an ingredient someone else added, mark it distinct, or
+remove one of its spellings:
+
+- **Everyone**: any signed-in user.
+- **Household** (the default): whoever added it and their household members.
+- **Owner only**: only whoever added it.
+
+Anyone may add a spelling to any ingredient. Ingredients are always visible to
+everyone; there is no view setting. Ingredients from the built-in catalogue
+belong to no one and only server admins can edit them, and server admins can
+always edit every ingredient.
 
 ## Job queue
 

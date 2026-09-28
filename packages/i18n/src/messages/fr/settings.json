@@ -7,7 +7,8 @@
     "user": "Utilisateur",
     "household": "Foyer",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Ingrédients"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingrédients",
+    "description": "Chaque aliment que Norish connaît, avec les orthographes sous lesquelles il est connu. Norish signale ceux dont il n'était pas sûr : fusionnez-les avec l'aliment qu'ils sont, ou marquez-les comme distincts.",
+    "search": "Rechercher des ingrédients",
+    "flaggedOnly": "Signalés uniquement",
+    "flagged": "Signalé",
+    "empty": "Aucun ingrédient trouvé",
+    "emptyFlagged": "Rien n'est signalé",
+    "loadMore": "Charger plus",
+    "rename": "Renommer",
+    "markDistinct": "Marquer comme distinct",
+    "addAlias": "Ajouter une orthographe",
+    "removeAlias": "Supprimer {alias}",
+    "errors": {
+      "title": "Impossible de modifier l'ingrédient",
+      "forbidden": "Vous ne pouvez pas modifier cet ingrédient",
+      "not-found": "Cet ingrédient n'existe plus",
+      "name-taken": "Un autre ingrédient porte déjà ce nom",
+      "spelling-taken": "Cette orthographe appartient déjà à un autre ingrédient",
+      "last-alias": "Un ingrédient garde au moins une orthographe",
+      "alias-in-use": "Des recettes ou des courses utilisent encore cette orthographe",
+      "empty": "Saisissez un nom",
+      "unknown": "Une erreur s'est produite. Réessayez."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Modération du partage de recettes",
@@ -428,6 +454,21 @@
         "ownerDescription": "Uniquement le propriétaire de la recette"
       },
       "note": "Note : Les courses et éléments de calendrier suivent automatiquement les règles de foyer. Les membres du même foyer peuvent modifier ou supprimer ces éléments."
+    },
+    "ingredientPermissions": {
+      "title": "Permissions des ingrédients",
+      "description": "Définissez qui peut renommer les ingrédients, les marquer comme distincts et supprimer leurs orthographes. Tout le monde peut ajouter une orthographe, et les administrateurs du serveur ont toujours un accès complet.",
+      "editIngredients": "Modifier les ingrédients",
+      "editDescription": "Qui peut modifier un ingrédient ajouté par quelqu'un d'autre",
+      "levels": {
+        "everyone": "Tout le monde",
+        "everyoneDescription": "Tous les utilisateurs connectés",
+        "household": "Foyer",
+        "householdDescription": "La personne qui l'a ajouté et les membres de son foyer",
+        "owner": "Propriétaire uniquement",
+        "ownerDescription": "Uniquement la personne qui l'a ajouté"
+      },
+      "note": "Les ingrédients du catalogue intégré ne peuvent être modifiés que par les administrateurs du serveur."
     },
     "system": {
       "title": "Paramètres système",

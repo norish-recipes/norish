@@ -56,7 +56,7 @@ One spelling of an Ingredient — a plural, a translation, a variant with its pr
 _Avoid_: Synonym (an alias is how a line names its food, not a thesaurus entry), Ingredient Name
 
 **Flagged Ingredient**:
-An Ingredient Norish minted without being sure it was new — no AI step vouched for it, or the one that did was unsure. The flag asks a person to merge it into the Ingredient it duplicates or mark it distinct; it changes nothing about how the Ingredient is used meanwhile.
+An Ingredient Norish minted without being sure it was new — no AI step vouched for it, or the one that did was unsure. The flag asks a person to merge it into the Ingredient it duplicates or mark it distinct, on the Ingredients page; renaming it or marking it distinct clears the flag. It changes nothing about how the Ingredient is used meanwhile. Who may edit an Ingredient someone else minted is the instance's ingredient permission policy (everyone, household or owner); anyone may add an alias, and an ownerless, seeded Ingredient is an administrator's alone.
 _Avoid_: Unverified, Pending (it is fully usable)
 
 **Step Ingredient**:

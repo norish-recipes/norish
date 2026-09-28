@@ -7,7 +7,8 @@
     "user": "Käyttäjä",
     "household": "Kotitalous",
     "caldav": "CalDAV",
-    "admin": "Ylläpito"
+    "admin": "Ylläpito",
+    "ingredients": "Ainesosat"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Sivu {current} / {total}"
     }
   },
+  "ingredients": {
+    "title": "Ainesosat",
+    "description": "Jokainen Norishin tuntema ruoka ja kirjoitusasut, joilla se tunnetaan. Norish merkitsee ne, joista se ei ollut varma: yhdistä ne siihen ruokaan, joka ne ovat, tai merkitse ne erillisiksi.",
+    "search": "Hae ainesosia",
+    "flaggedOnly": "Vain merkityt",
+    "flagged": "Merkitty",
+    "empty": "Ainesosia ei löytynyt",
+    "emptyFlagged": "Mitään ei ole merkitty",
+    "loadMore": "Lataa lisää",
+    "rename": "Nimeä uudelleen",
+    "markDistinct": "Merkitse erilliseksi",
+    "addAlias": "Lisää kirjoitusasu",
+    "removeAlias": "Poista {alias}",
+    "errors": {
+      "title": "Ainesosaa ei voitu muuttaa",
+      "forbidden": "Et voi muokata tätä ainesosaa",
+      "not-found": "Tätä ainesosaa ei enää ole",
+      "name-taken": "Toisella ainesosalla on jo tämä nimi",
+      "spelling-taken": "Tämä kirjoitusasu kuuluu jo toiselle ainesosalle",
+      "last-alias": "Ainesosalla on aina vähintään yksi kirjoitusasu",
+      "alias-in-use": "Reseptit tai ostokset käyttävät vielä tätä kirjoitusasua",
+      "empty": "Anna nimi",
+      "unknown": "Jokin meni vikaan. Yritä uudelleen."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Reseptien jakojen valvonta",
@@ -428,6 +454,21 @@
         "ownerDescription": "Vain reseptin omistaja"
       },
       "note": "Huom: Ostokset ja kalenterimerkinnät noudattavat kotitalouden sääntöjä automaattisesti; kotitalouden jäsenet voivat aina muokata ja poistaa saman kotitalouden kenen tahansa jäsenen merkintöjä."
+    },
+    "ingredientPermissions": {
+      "title": "Ainesosien oikeudet",
+      "description": "Määritä, kuka voi nimetä ainesosia uudelleen, merkitä ne erillisiksi ja poistaa niiden kirjoitusasuja. Kuka tahansa voi lisätä kirjoitusasun, ja palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "editIngredients": "Muokkaa ainesosia",
+      "editDescription": "Kuka voi muuttaa jonkun toisen lisäämää ainesosaa",
+      "levels": {
+        "everyone": "Kaikki",
+        "everyoneDescription": "Kaikki kirjautuneet käyttäjät",
+        "household": "Kotitalous",
+        "householdDescription": "Lisääjä ja hänen kotitaloutensa jäsenet",
+        "owner": "Vain omistaja",
+        "ownerDescription": "Vain lisääjä"
+      },
+      "note": "Sisäänrakennetun luettelon ainesosia voivat muokata vain palvelimen ylläpitäjät."
     },
     "system": {
       "title": "Järjestelmäasetukset",

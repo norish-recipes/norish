@@ -21,6 +21,7 @@ import {
   setConfig,
 } from "@norish/db/repositories/server-config";
 import {
+  DEFAULT_INGREDIENT_PERMISSION_POLICY,
   DEFAULT_JOB_RETENTION,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
@@ -145,6 +146,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     getDefaultValue: () => DEFAULT_RECIPE_PERMISSION_POLICY,
     sensitive: false,
     description: "Recipe permission policy (default: household)",
+  },
+  {
+    key: ServerConfigKeys.INGREDIENT_PERMISSION_POLICY,
+    getDefaultValue: () => DEFAULT_INGREDIENT_PERMISSION_POLICY,
+    sensitive: false,
+    description: "Ingredient permission policy (default: household)",
   },
   {
     key: ServerConfigKeys.PROMPTS,

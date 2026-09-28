@@ -7,7 +7,8 @@
     "user": "Użytkownik",
     "household": "Gospodarstwo domowe",
     "caldav": "CalDAV",
-    "admin": "Administrator"
+    "admin": "Administrator",
+    "ingredients": "Składniki"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Składniki",
+    "description": "Każdy produkt, który zna Norish, wraz z pisowniami, pod którymi jest znany. Norish oznacza te, co do których nie był pewien: połącz je z produktem, którym są, albo oznacz jako odrębne.",
+    "search": "Szukaj składników",
+    "flaggedOnly": "Tylko oznaczone",
+    "flagged": "Oznaczony",
+    "empty": "Nie znaleziono składników",
+    "emptyFlagged": "Nic nie jest oznaczone",
+    "loadMore": "Wczytaj więcej",
+    "rename": "Zmień nazwę",
+    "markDistinct": "Oznacz jako odrębny",
+    "addAlias": "Dodaj pisownię",
+    "removeAlias": "Usuń {alias}",
+    "errors": {
+      "title": "Nie udało się zmienić składnika",
+      "forbidden": "Nie możesz edytować tego składnika",
+      "not-found": "Ten składnik już nie istnieje",
+      "name-taken": "Inny składnik ma już tę nazwę",
+      "spelling-taken": "Ta pisownia należy już do innego składnika",
+      "last-alias": "Składnik zachowuje co najmniej jedną pisownię",
+      "alias-in-use": "Przepisy lub zakupy nadal używają tej pisowni",
+      "empty": "Wpisz nazwę",
+      "unknown": "Coś poszło nie tak. Spróbuj ponownie."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderacja udostępniania przepisów",
@@ -428,6 +454,21 @@
         "ownerDescription": "Tylko właściciel przepisu"
       },
       "note": "Uwaga: elementy Zakupów i Kalendarza automatycznie podlegają zasadom gospodarstwa domowego; członkowie gospodarstwa domowego zawsze mogą edytować/usuwać elementy należące do kogokolwiek w tym samym gospodarstwie."
+    },
+    "ingredientPermissions": {
+      "title": "Uprawnienia składników",
+      "description": "Określ, kto może zmieniać nazwy składników, oznaczać je jako odrębne i usuwać ich pisownie. Każdy może dodać pisownię, a administratorzy serwera zawsze mają pełny dostęp.",
+      "editIngredients": "Edytuj składniki",
+      "editDescription": "Kto może zmienić składnik dodany przez kogoś innego",
+      "levels": {
+        "everyone": "Wszyscy",
+        "everyoneDescription": "Wszyscy zalogowani użytkownicy",
+        "household": "Gospodarstwo domowe",
+        "householdDescription": "Osoba, która go dodała, i członkowie jej gospodarstwa",
+        "owner": "Tylko właściciel",
+        "ownerDescription": "Tylko osoba, która go dodała"
+      },
+      "note": "Składniki z wbudowanego katalogu mogą edytować tylko administratorzy serwera."
     },
     "system": {
       "title": "Ustawienia systemowe",

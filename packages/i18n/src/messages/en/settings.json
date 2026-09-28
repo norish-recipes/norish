@@ -7,7 +7,8 @@
     "user": "User",
     "household": "Household",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Ingredients"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingredients",
+    "description": "Every food Norish knows, with the spellings it goes by. Norish marks the ones it was not sure about: merge them into the food they are, or mark them distinct.",
+    "search": "Search ingredients",
+    "flaggedOnly": "Only flagged",
+    "flagged": "Flagged",
+    "empty": "No ingredients found",
+    "emptyFlagged": "Nothing is flagged",
+    "loadMore": "Load more",
+    "rename": "Rename",
+    "markDistinct": "Mark distinct",
+    "addAlias": "Add a spelling",
+    "removeAlias": "Remove {alias}",
+    "errors": {
+      "title": "Could not change the ingredient",
+      "forbidden": "You may not edit this ingredient",
+      "not-found": "This ingredient no longer exists",
+      "name-taken": "Another ingredient already has this name",
+      "spelling-taken": "This spelling already belongs to another ingredient",
+      "last-alias": "An ingredient keeps at least one spelling",
+      "alias-in-use": "Recipes or groceries still use this spelling",
+      "empty": "Enter a name",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Recipe share moderation",
@@ -428,6 +454,21 @@
         "ownerDescription": "Only the recipe owner"
       },
       "note": "Note: Groceries and Calendar items follow household rules automatically, household members can always edit/delete items belonging to anyone in the same household."
+    },
+    "ingredientPermissions": {
+      "title": "Ingredient Permissions",
+      "description": "Control who can rename ingredients, mark them distinct and remove their spellings. Anyone can add a spelling, and server admins always have full access.",
+      "editIngredients": "Edit Ingredients",
+      "editDescription": "Who can change an ingredient someone else added",
+      "levels": {
+        "everyone": "Everyone",
+        "everyoneDescription": "All authenticated users",
+        "household": "Household",
+        "householdDescription": "Whoever added it and their household members",
+        "owner": "Owner Only",
+        "ownerDescription": "Only whoever added it"
+      },
+      "note": "Ingredients from the built-in catalogue can only be edited by server admins."
     },
     "system": {
       "title": "System Settings",

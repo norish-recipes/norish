@@ -7,7 +7,8 @@
     "user": "Usuário",
     "household": "Casa",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Ingredientes"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingredientes",
+    "description": "Todo alimento que o Norish conhece, com as grafias pelas quais é conhecido. O Norish marca aqueles sobre os quais não tinha certeza: una-os ao alimento que eles são ou marque-os como distintos.",
+    "search": "Buscar ingredientes",
+    "flaggedOnly": "Somente marcados",
+    "flagged": "Marcado",
+    "empty": "Nenhum ingrediente encontrado",
+    "emptyFlagged": "Nada está marcado",
+    "loadMore": "Carregar mais",
+    "rename": "Renomear",
+    "markDistinct": "Marcar como distinto",
+    "addAlias": "Adicionar uma grafia",
+    "removeAlias": "Remover {alias}",
+    "errors": {
+      "title": "Não foi possível alterar o ingrediente",
+      "forbidden": "Você não pode editar este ingrediente",
+      "not-found": "Este ingrediente não existe mais",
+      "name-taken": "Outro ingrediente já tem este nome",
+      "spelling-taken": "Esta grafia já pertence a outro ingrediente",
+      "last-alias": "Um ingrediente mantém pelo menos uma grafia",
+      "alias-in-use": "Receitas ou compras ainda usam esta grafia",
+      "empty": "Digite um nome",
+      "unknown": "Algo deu errado. Tente novamente."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderação de compartilhamento de receitas",
@@ -428,6 +454,21 @@
         "ownerDescription": "Apenas o proprietário da receita"
       },
       "note": "Observação: compras e itens do calendário seguem automaticamente as regras da casa; membros da casa sempre podem editar/excluir itens pertencentes a qualquer pessoa da mesma casa."
+    },
+    "ingredientPermissions": {
+      "title": "Permissões de ingredientes",
+      "description": "Controle quem pode renomear ingredientes, marcá-los como distintos e remover suas grafias. Qualquer pessoa pode adicionar uma grafia, e administradores do servidor sempre têm acesso total.",
+      "editIngredients": "Editar ingredientes",
+      "editDescription": "Quem pode alterar um ingrediente que outra pessoa adicionou",
+      "levels": {
+        "everyone": "Todos",
+        "everyoneDescription": "Todos os usuários autenticados",
+        "household": "Casa",
+        "householdDescription": "Quem o adicionou e os membros da casa",
+        "owner": "Somente o dono",
+        "ownerDescription": "Somente quem o adicionou"
+      },
+      "note": "Ingredientes do catálogo integrado só podem ser editados por administradores do servidor."
     },
     "system": {
       "title": "Configurações do sistema",

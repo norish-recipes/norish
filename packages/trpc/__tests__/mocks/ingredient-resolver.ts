@@ -29,3 +29,6 @@ export const cleanIngredientText = (text: string) =>
     .replace(/<[^>]*>/g, "")
     .replace(/\s+/g, " ")
     .trim();
+
+/** A spelling's fold, as the resolver keys an alias by it. */
+export const ingredientAliasFold = (text: string) => text.trim().toLowerCase();

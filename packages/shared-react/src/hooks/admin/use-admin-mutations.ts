@@ -7,6 +7,7 @@ import type {
   AuthProviderOIDCInput,
   DecisionConfig,
   ImageGenerationConfig,
+  IngredientPermissionPolicy,
   PromptsConfigInput,
   RecipePermissionPolicy,
   ServerConfigKey,
@@ -61,6 +62,9 @@ export type AdminMutationsResult = {
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
   ) => Promise<{ success: boolean; error?: string }>;
+  updateIngredientPermissionPolicy: (
+    policy: IngredientPermissionPolicy
+  ) => Promise<{ success: boolean; error?: string }>;
   updateSchedulerMonths: (months: number) => Promise<{ success: boolean; error?: string }>;
   restoreDefault: (key: ServerConfigKey) => Promise<{ success: boolean; error?: string }>;
   restartServer: () => Promise<{ success: boolean }>;
@@ -113,6 +117,9 @@ export function createUseAdminMutations({
     );
     const updatePermissionPolicyMutation = useMutation(
       trpc.admin.updateRecipePermissionPolicy.mutationOptions()
+    );
+    const updateIngredientPolicyMutation = useMutation(
+      trpc.admin.updateIngredientPermissionPolicy.mutationOptions()
     );
     const updateSchedulerMonthsMutation = useMutation(
       trpc.admin.updateSchedulerMonths.mutationOptions()
@@ -205,6 +212,9 @@ export function createUseAdminMutations({
       },
       updateRecipePermissionPolicy: async (policy) => {
         return withInvalidate(updatePermissionPolicyMutation.mutateAsync(policy));
+      },
+      updateIngredientPermissionPolicy: async (policy) => {
+        return withInvalidate(updateIngredientPolicyMutation.mutateAsync(policy));
       },
       updateSchedulerMonths: async (months) => {
         return withInvalidate(updateSchedulerMonthsMutation.mutateAsync(months));

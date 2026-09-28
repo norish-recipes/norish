@@ -7,7 +7,8 @@
     "user": "Benutzer",
     "household": "Haushalt",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Zutaten"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Zutaten",
+    "description": "Jedes Lebensmittel, das Norish kennt, mit den Schreibweisen, unter denen es bekannt ist. Norish markiert die, bei denen es unsicher war: Führen Sie sie mit dem Lebensmittel zusammen, das sie sind, oder markieren Sie sie als eigenständig.",
+    "search": "Zutaten suchen",
+    "flaggedOnly": "Nur markierte",
+    "flagged": "Markiert",
+    "empty": "Keine Zutaten gefunden",
+    "emptyFlagged": "Nichts ist markiert",
+    "loadMore": "Mehr laden",
+    "rename": "Umbenennen",
+    "markDistinct": "Als eigenständig markieren",
+    "addAlias": "Schreibweise hinzufügen",
+    "removeAlias": "{alias} entfernen",
+    "errors": {
+      "title": "Die Zutat konnte nicht geändert werden",
+      "forbidden": "Sie dürfen diese Zutat nicht bearbeiten",
+      "not-found": "Diese Zutat existiert nicht mehr",
+      "name-taken": "Eine andere Zutat hat bereits diesen Namen",
+      "spelling-taken": "Diese Schreibweise gehört bereits zu einer anderen Zutat",
+      "last-alias": "Eine Zutat behält mindestens eine Schreibweise",
+      "alias-in-use": "Rezepte oder Einkäufe verwenden diese Schreibweise noch",
+      "empty": "Gib einen Namen ein",
+      "unknown": "Etwas ist schiefgelaufen. Versuch es erneut."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderation von Rezept-Freigaben",
@@ -428,6 +454,21 @@
         "ownerDescription": "Nur der Rezept-Eigentümer"
       },
       "note": "Einkaufslisten- und Kalendereinträge folgen automatisch den Haushaltsregeln. Haushaltsmitglieder können Einträge aller anderen im gleichen Haushalt immer bearbeiten/löschen."
+    },
+    "ingredientPermissions": {
+      "title": "Zutatenberechtigungen",
+      "description": "Lege fest, wer Zutaten umbenennen, als eigenständig markieren und ihre Schreibweisen entfernen darf. Jeder darf eine Schreibweise hinzufügen, und Serveradministratoren haben immer vollen Zugriff.",
+      "editIngredients": "Zutaten bearbeiten",
+      "editDescription": "Wer eine Zutat ändern darf, die jemand anderes hinzugefügt hat",
+      "levels": {
+        "everyone": "Alle",
+        "everyoneDescription": "Alle angemeldeten Benutzer",
+        "household": "Haushalt",
+        "householdDescription": "Wer sie hinzugefügt hat und die Mitglieder des Haushalts",
+        "owner": "Nur Eigentümer",
+        "ownerDescription": "Nur wer sie hinzugefügt hat"
+      },
+      "note": "Zutaten aus dem eingebauten Katalog können nur von Serveradministratoren bearbeitet werden."
     },
     "system": {
       "title": "Systemeinstellungen",

@@ -1,7 +1,19 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
+import {
+  addAlias as addCatalogueAlias,
+  CatalogueEditError,
+  listIngredients,
+  markDistinct as markCatalogueDistinct,
+  removeAlias as removeCatalogueAlias,
+  renameIngredient,
+} from "@norish/shared-server/ingredients/catalogue";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
+import type { AuthedProcedureContext } from "../../middleware";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 
@@ -19,4 +31,103 @@ const find = authedProcedure
     return ingredient ? { ingredientId: ingredient.ingredientId } : null;
   });
 
-export const ingredientsRouter = router({ find });
+function actorOf(ctx: AuthedProcedureContext): CatalogueActor {
+  return {
+    userId: ctx.user.id,
+    householdUserIds: ctx.householdUserIds,
+    isServerAdmin: ctx.isServerAdmin,
+  };
+}
+
+const REFUSAL_CODES: Record<CatalogueRefusal, TRPCError["code"]> = {
+  forbidden: "FORBIDDEN",
+  "not-found": "NOT_FOUND",
+  "name-taken": "CONFLICT",
+  "spelling-taken": "CONFLICT",
+  "last-alias": "CONFLICT",
+  "alias-in-use": "CONFLICT",
+  empty: "BAD_REQUEST",
+};
+
+/**
+ * Run a catalogue edit, turning a refusal into the error the page shows. The
+ * message is the refusal itself, which the page translates.
+ */
+async function editing(run: () => Promise<unknown>): Promise<{ success: true }> {
+  try {
+    await run();
+  } catch (error) {
+    if (error instanceof CatalogueEditError) {
+      throw new TRPCError({ code: REFUSAL_CODES[error.refusal], message: error.refusal });
+    }
+    throw error;
+  }
+
+  return { success: true };
+}
+
+const ingredientName = z.string().trim().min(1).max(300);
+
+/**
+ * A page of the catalogue for the Ingredients page: every Ingredient, or the
+ * flagged ones, or those a search finds, each saying what the viewer may do.
+ * The cursor is where the page starts, for an infinite query.
+ */
+const list = authedProcedure
+  .input(
+    z.object({
+      search: z.string().max(300).optional(),
+      flaggedOnly: z.boolean().optional(),
+      cursor: z.number().int().min(0).nullish(),
+    })
+  )
+  .query(async ({ ctx, input }) => {
+    const page = await listIngredients(actorOf(ctx), {
+      search: input.search,
+      flaggedOnly: input.flaggedOnly,
+      offset: input.cursor ?? 0,
+    });
+
+    return { items: page.items, nextCursor: page.nextOffset };
+  });
+
+const addAlias = authedProcedure
+  .input(z.object({ ingredientId: z.uuid(), text: ingredientName }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Adding an alias");
+
+    return editing(() => addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text));
+  });
+
+const rename = authedProcedure
+  .input(z.object({ ingredientId: z.uuid(), name: ingredientName }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Renaming an Ingredient");
+
+    return editing(() => renameIngredient(actorOf(ctx), input.ingredientId, input.name));
+  });
+
+const markDistinct = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Marking distinct");
+
+    return editing(() => markCatalogueDistinct(actorOf(ctx), input.ingredientId));
+  });
+
+const removeAlias = authedProcedure
+  .input(z.object({ aliasId: z.uuid() }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, aliasId: input.aliasId }, "Removing an alias");
+
+    return editing(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
+  });
+
+export const ingredientsRouter = router({
+  find,
+  list,
+  addAlias,
+  rename,
+  markDistinct,
+  removeAlias,
+});

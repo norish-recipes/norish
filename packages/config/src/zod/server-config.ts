@@ -20,6 +20,7 @@ export const ServerConfigKeys = {
   SCHEDULER_CLEANUP_MONTHS: "scheduler_cleanup_months",
   JOB_RETENTION: "job_retention",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
+  INGREDIENT_PERMISSION_POLICY: "ingredient_permission_policy",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
   TIMER_KEYWORDS: "timer_keywords",
@@ -777,6 +778,24 @@ export const DEFAULT_RECIPE_PERMISSION_POLICY: RecipePermissionPolicy = {
   delete: "household",
 };
 
+/**
+ * Who may edit an Ingredient someone else minted: rename it, mark it
+ * distinct, remove its aliases. One level, because Ingredients are always
+ * visible — a hidden one would split the shared catalogue and leave recipes
+ * pointing at food their readers cannot see. Adding an alias is open to
+ * everyone; ownerless (seeded) rows are an administrator's alone, and an
+ * administrator bypasses the policy, as for recipes.
+ */
+export const IngredientPermissionPolicySchema = z.object({
+  edit: PermissionLevelSchema.default("household"),
+});
+
+export type IngredientPermissionPolicy = z.infer<typeof IngredientPermissionPolicySchema>;
+
+export const DEFAULT_INGREDIENT_PERMISSION_POLICY: IngredientPermissionPolicy = {
+  edit: "household",
+};
+
 // ============================================================================
 // Server Config Entry Schema (for database rows)
 // ============================================================================
@@ -887,6 +906,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return JobRetentionConfigSchema;
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return RecipePermissionPolicySchema;
+    case ServerConfigKeys.INGREDIENT_PERMISSION_POLICY:
+      return IngredientPermissionPolicySchema;
     case ServerConfigKeys.PROMPTS:
       return PromptsConfigSchema;
     case ServerConfigKeys.LOCALE_CONFIG:

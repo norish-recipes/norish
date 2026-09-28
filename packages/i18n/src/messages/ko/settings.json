@@ -7,7 +7,8 @@
     "user": "사용자",
     "household": "가구",
     "caldav": "CalDAV",
-    "admin": "관리자"
+    "admin": "관리자",
+    "ingredients": "재료"
   },
   "user": {
     "profile": {
@@ -330,6 +331,31 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "재료",
+    "description": "Norish가 아는 모든 식품과 그 식품을 부르는 표기입니다. Norish가 확신하지 못한 재료는 표시됩니다. 해당하는 식품에 병합하거나 별개로 표시하세요.",
+    "search": "재료 검색",
+    "flaggedOnly": "표시된 항목만",
+    "flagged": "표시됨",
+    "empty": "재료를 찾을 수 없습니다",
+    "emptyFlagged": "표시된 항목이 없습니다",
+    "loadMore": "더 불러오기",
+    "rename": "이름 바꾸기",
+    "markDistinct": "별개로 표시",
+    "addAlias": "표기 추가",
+    "removeAlias": "{alias} 제거",
+    "errors": {
+      "title": "재료를 변경할 수 없습니다",
+      "forbidden": "이 재료를 편집할 권한이 없습니다",
+      "not-found": "이 재료는 더 이상 존재하지 않습니다",
+      "name-taken": "다른 재료가 이미 이 이름을 사용합니다",
+      "spelling-taken": "이 표기는 이미 다른 재료에 속해 있습니다",
+      "last-alias": "재료에는 최소 하나의 표기가 남아야 합니다",
+      "alias-in-use": "레시피나 장보기 목록이 아직 이 표기를 사용합니다",
+      "empty": "이름을 입력하세요",
+      "unknown": "문제가 발생했습니다. 다시 시도하세요."
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "레시피 공유 모더레이션",
@@ -428,6 +454,21 @@
         "ownerDescription": "레시피 소유자만"
       },
       "note": "참고: 장보기 및 달력 항목은 자동으로 가구 규칙을 따르며, 가구 구성원은 언제든지 같은 가구에 속한 모든 사람의 항목을 편집/삭제할 수 있습니다."
+    },
+    "ingredientPermissions": {
+      "title": "재료 권한",
+      "description": "누가 재료 이름을 바꾸고, 별개로 표시하고, 표기를 제거할 수 있는지 정합니다. 표기 추가는 누구나 할 수 있으며 서버 관리자는 항상 모든 권한을 가집니다.",
+      "editIngredients": "재료 편집",
+      "editDescription": "다른 사람이 추가한 재료를 누가 변경할 수 있는지",
+      "levels": {
+        "everyone": "모두",
+        "everyoneDescription": "로그인한 모든 사용자",
+        "household": "가구",
+        "householdDescription": "추가한 사람과 그 가구 구성원",
+        "owner": "소유자만",
+        "ownerDescription": "추가한 사람만"
+      },
+      "note": "기본 제공 카탈로그의 재료는 서버 관리자만 편집할 수 있습니다."
     },
     "system": {
       "title": "시스템 설정",
