@@ -5,6 +5,7 @@
  * pointing at them are carried over so resolution finds what the household
  * already had, and nothing it taught Norish is lost.
  */
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
@@ -12,6 +13,7 @@ import { getRecipeFull } from "@norish/db";
 import { listAisleLinksByStoreIds } from "@norish/db/repositories/aisles";
 import {
   listGroceriesWithoutAlias,
+  listIngredientsWithoutAlias,
   listRecipeLinesWithoutAlias,
   listRecurringGroceriesWithoutAlias,
 } from "@norish/db/repositories/ingredient-backfill";
@@ -87,6 +89,24 @@ describe("backfillIngredientAliases", () => {
     await backfillIngredientAliases();
 
     const [resolved] = await resolveIngredients(["Creme Fraiche"], { userId });
+
+    expect(resolved!.ingredientId).toBe(older.id);
+  });
+
+  it("merges a name that folds like an older one into it, so no Ingredient is left without a spelling", async () => {
+    const older = await legacyIngredient("Crème fraîche", new Date("2025-01-01"));
+    const newer = await legacyIngredient("creme fraiche", new Date("2025-06-01"));
+
+    await backfillIngredientAliases();
+
+    await expect(listIngredientsWithoutAlias(10, null)).resolves.toEqual([]);
+    const [row] = await getTestDb()
+      .select({ id: ingredients.id })
+      .from(ingredients)
+      .where(eq(ingredients.id, newer.id));
+
+    expect(row).toBeUndefined();
+    const [resolved] = await resolveIngredients(["creme fraiche"], { userId });
 
     expect(resolved!.ingredientId).toBe(older.id);
   });
