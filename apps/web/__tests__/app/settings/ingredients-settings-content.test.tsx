@@ -1,6 +1,7 @@
 /**
- * The Ingredients page: every food with its spellings, the flagged ones
- * marked, and only the actions the server says the viewer may take.
+ * The Ingredients page: every food folded to a line, the flagged ones
+ * marked, and a panel per food holding its spellings and only the actions
+ * the server says the viewer may take.
  */
 import IngredientsSettingsContent from "@/app/(app)/settings/ingredients/components/ingredients-settings-content";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
@@ -12,6 +13,8 @@ type Item = {
   id: string;
   name: string;
   flagged: boolean;
+  flagReason?: string | null;
+  hiddenSpellings?: number;
   parent: { id: string; name: string } | null;
   canEdit: boolean;
   localeNames?: Record<string, string>;
@@ -25,6 +28,7 @@ type Item = {
 };
 
 let items: Item[] = [];
+let everySpelling: Item["aliases"] = [];
 const listInputs: unknown[] = [];
 const mutations = {
   rename: vi.fn(async () => ({ success: true })),
@@ -34,6 +38,8 @@ const mutations = {
   merge: vi.fn(async () => ({ success: true })),
   moveAlias: vi.fn(async () => ({ success: true })),
   setParent: vi.fn(async () => ({ success: true })),
+  remove: vi.fn(async () => ({ success: true })),
+  reviewWithAI: vi.fn(async () => ({ outcome: "distinct" })),
 };
 const invalidateQueries = vi.fn();
 
@@ -48,6 +54,9 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         },
         pathKey: () => ["ingredients.list"],
       },
+      spellings: {
+        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.spellings", input] }),
+      },
       rename: { mutationOptions: () => ({ name: "rename" }) },
       markDistinct: { mutationOptions: () => ({ name: "markDistinct" }) },
       addAlias: { mutationOptions: () => ({ name: "addAlias" }) },
@@ -55,14 +64,22 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       merge: { mutationOptions: () => ({ name: "merge" }) },
       moveAlias: { mutationOptions: () => ({ name: "moveAlias" }) },
       setParent: { mutationOptions: () => ({ name: "setParent" }) },
+      remove: { mutationOptions: () => ({ name: "remove" }) },
+      reviewWithAI: { mutationOptions: () => ({ name: "reviewWithAI" }) },
     },
   }),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
+  keepPreviousData: (data: unknown) => data,
+  useQuery: ({ enabled }: { enabled: boolean }) => ({
+    data: enabled ? everySpelling : undefined,
+    isFetching: false,
+  }),
   useInfiniteQuery: () => ({
     data: { pages: [{ items, nextCursor: null }] },
     isLoading: false,
+    isFetching: false,
     hasNextPage: false,
     isFetchingNextPage: false,
     fetchNextPage: vi.fn(),
@@ -76,6 +93,8 @@ vi.mock("@tanstack/react-query", () => ({
 
 let viewerLocale = "en";
 
+vi.mock("usehooks-ts", () => ({ useDebounceValue: (value: unknown) => [value] }));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => Object.assign((key: string) => key, { rich: (key: string) => key }),
   useLocale: () => viewerLocale,
@@ -84,16 +103,37 @@ vi.mock("next-intl", () => ({
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 
 vi.mock("@/components/shared/action-button", () => ({
-  IconActionButton: ({ label, onPress, action, isDisabled }: any) => (
+  ActionButton: ({ children, onPress, isDisabled, "data-testid": testId }: any) => (
+    <button data-testid={testId} disabled={isDisabled} type="button" onClick={onPress}>
+      {children}
+    </button>
+  ),
+  ActionButtonGroup: ({ children }: any) => <div>{children}</div>,
+  IconActionButton: ({ label, onPress, action, isDisabled, "data-testid": testId }: any) => (
     <button
       aria-label={label}
-      data-testid={`icon-${action}`}
+      data-testid={testId ?? `icon-${action}`}
       disabled={isDisabled}
       type="button"
       onClick={onPress}
     />
   ),
 }));
+
+// A Panel is a dialog named after its title; a closed one renders nothing.
+vi.mock("@/components/Panel/Panel", () => {
+  const Panel = ({ children, open, title }: any) =>
+    open ? (
+      <div aria-label={title} role="dialog">
+        {children}
+      </div>
+    ) : null;
+
+  Panel.Body = ({ children }: any) => <div>{children}</div>;
+  Panel.Footer = ({ children }: any) => <div>{children}</div>;
+
+  return { default: Panel, usePanelPortalContainer: () => undefined };
+});
 
 // The picker searches the catalogue; here it offers salt, and a new Ingredient where allowed.
 vi.mock("@/app/(app)/settings/ingredients/components/ingredient-picker", () => ({
@@ -137,64 +177,94 @@ function row(name: string) {
     .find((element) => element.getAttribute("data-ingredient") === name)!;
 }
 
+/** The open food's panel, named after the food. */
+function panel(name: string) {
+  return screen.getByRole("dialog", { name });
+}
+
+/** A row folded to a line opens its panel on a press; the edits live there. */
+async function open(name: string) {
+  await act(async () => {
+    fireEvent.click(within(row(name)).getByTestId("ingredient-toggle"));
+  });
+
+  return panel(name);
+}
+
 describe("IngredientsSettingsContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     viewerLocale = "en";
     listInputs.length = 0;
     items = [onion, salt];
+    everySpelling = [];
   });
 
-  it("lists each food with its spellings, and marks the flagged ones", () => {
+  it("lists each food on a line, marks the flagged ones, and opens one to its spellings", async () => {
     render(<IngredientsSettingsContent />);
 
     expect(within(row("onion")).getByTestId("ingredient-flagged")).toBeInTheDocument();
     expect(within(row("salt")).queryByTestId("ingredient-flagged")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    const opened = await open("onion");
+
     expect(
-      within(row("onion"))
+      within(opened)
         .getAllByTestId("ingredient-alias")
         .map((chip) => chip.textContent)
     ).toEqual(["onion", "ui"]);
   });
 
-  it("offers only what the viewer may do", () => {
+  it("offers only what the viewer may do", async () => {
     render(<IngredientsSettingsContent />);
+    const mine = await open("onion");
 
-    expect(within(row("onion")).getByTestId("ingredient-mark-distinct")).toBeInTheDocument();
-    expect(within(row("onion")).getByTestId("icon-edit")).toBeInTheDocument();
-    expect(within(row("onion")).getAllByRole("button", { name: "removeAlias" })).toHaveLength(1);
-    expect(within(row("salt")).queryByTestId("icon-edit")).toBeNull();
-    expect(within(row("salt")).queryByRole("button", { name: "removeAlias" })).toBeNull();
-    expect(within(row("onion")).getByTestId("ingredient-merge")).toBeInTheDocument();
-    expect(within(row("onion")).getAllByTestId("ingredient-alias-move")).toHaveLength(1);
-    expect(within(row("salt")).queryByTestId("ingredient-merge")).toBeNull();
-    expect(within(row("salt")).queryByTestId("ingredient-alias-move")).toBeNull();
+    expect(within(mine).getByTestId("ingredient-mark-distinct")).toBeInTheDocument();
+    expect(within(mine).getByTestId("ingredient-name-input")).toBeInTheDocument();
+    expect(within(mine).getByTestId("ingredient-delete")).toBeInTheDocument();
+    expect(within(mine).getByTestId("ingredient-merge")).toBeInTheDocument();
+    expect(within(mine).getByTestId("ingredient-set-parent")).toBeInTheDocument();
+    expect(within(mine).getAllByRole("button", { name: "removeAlias" })).toHaveLength(1);
+    expect(within(mine).getAllByTestId("ingredient-alias-move")).toHaveLength(1);
+
+    const theirs = await open("salt");
+
+    expect(within(theirs).queryByTestId("ingredient-name-input")).toBeNull();
+    expect(within(theirs).queryByTestId("ingredient-delete")).toBeNull();
+    expect(within(theirs).queryByTestId("ingredient-merge")).toBeNull();
+    expect(within(theirs).queryByTestId("ingredient-set-parent")).toBeNull();
+    expect(within(theirs).queryByRole("button", { name: "removeAlias" })).toBeNull();
+    expect(within(theirs).queryByTestId("ingredient-alias-move")).toBeNull();
     // Adding a spelling is open to everyone.
-    expect(within(row("salt")).getByTestId("ingredient-alias-input")).toBeInTheDocument();
+    expect(within(theirs).getByTestId("ingredient-alias-input")).toBeInTheDocument();
   });
 
   it("marks a flagged food distinct", async () => {
     render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
 
     await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("ingredient-mark-distinct"));
+      fireEvent.click(within(opened).getByTestId("ingredient-mark-distinct"));
     });
 
     expect(mutations.markDistinct).toHaveBeenCalledWith({ ingredientId: "onion" });
     expect(invalidateQueries).toHaveBeenCalled();
   });
 
-  it("renames a food", async () => {
+  it("renames a food from its name field, once the name differs", async () => {
     render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+    const field = within(opened).getByTestId("ingredient-name-input");
 
-    await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("icon-edit"));
-    });
-    const field = within(row("onion")).getByTestId("ingredient-name-input");
+    expect(within(opened).getByTestId("ingredient-rename")).toBeDisabled();
 
     await act(async () => {
       fireEvent.change(field, { target: { value: "Onion" } });
     });
+
+    expect(within(opened).getByTestId("ingredient-rename")).toBeEnabled();
+
     await act(async () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
@@ -202,9 +272,28 @@ describe("IngredientsSettingsContent", () => {
     expect(mutations.rename).toHaveBeenCalledWith({ ingredientId: "onion", name: "Onion" });
   });
 
+  it("deletes a food once the viewer confirms", async () => {
+    render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-delete"));
+    });
+
+    expect(mutations.remove).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
+    });
+
+    expect(mutations.remove).toHaveBeenCalledWith({ ingredientId: "onion" });
+    expect(invalidateQueries).toHaveBeenCalled();
+  });
+
   it("adds a household's own spelling", async () => {
     render(<IngredientsSettingsContent />);
-    const field = within(row("salt")).getByTestId("ingredient-alias-input");
+    const opened = await open("salt");
+    const field = within(opened).getByTestId("ingredient-alias-input");
 
     await act(async () => {
       fireEvent.change(field, { target: { value: " zout " } });
@@ -217,41 +306,47 @@ describe("IngredientsSettingsContent", () => {
     expect(field).toHaveValue("");
   });
 
-  it("merges a food into one the viewer may edit", async () => {
+  it("merges a food into one the viewer may edit, picked in a panel of its own", async () => {
     render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
 
+    expect(screen.queryByRole("dialog", { name: "mergeInto" })).toBeNull();
     await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("ingredient-merge"));
+      fireEvent.click(within(opened).getByTestId("ingredient-merge"));
     });
-    const picker = within(row("onion")).getByTestId("picker");
+    const asking = screen.getByRole("dialog", { name: "mergeInto" });
+    const picker = within(asking).getByTestId("picker");
 
     expect(picker).toHaveAttribute("data-editable-only", "true");
     expect(picker).toHaveAttribute("data-exclude", "onion");
     expect(within(picker).queryByText("pick-new")).toBeNull();
-    expect(within(row("onion")).getByTestId("ingredient-relocation-confirm")).toBeDisabled();
+    expect(within(asking).getByTestId("ingredient-relocation-confirm")).toBeDisabled();
 
     await act(async () => {
       fireEvent.click(within(picker).getByText("pick-salt"));
     });
     await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("ingredient-relocation-confirm"));
+      fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
     });
 
     expect(mutations.merge).toHaveBeenCalledWith({ sourceId: "onion", targetId: "salt" });
-    expect(within(row("onion")).queryByTestId("ingredient-relocation")).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "mergeInto" })).toBeNull();
   });
 
   it("moves a spelling out to a new food", async () => {
     render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
 
     await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("ingredient-alias-move"));
+      fireEvent.click(within(opened).getByTestId("ingredient-alias-move"));
+    });
+    const asking = screen.getByRole("dialog", { name: "moveTo" });
+
+    await act(async () => {
+      fireEvent.click(within(asking).getByText("pick-new"));
     });
     await act(async () => {
-      fireEvent.click(within(row("onion")).getByText("pick-new"));
-    });
-    await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("ingredient-relocation-confirm"));
+      fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
     });
 
     expect(mutations.moveAlias).toHaveBeenCalledWith({ aliasId: "a-onion", targetId: null });
@@ -259,24 +354,27 @@ describe("IngredientsSettingsContent", () => {
 
   it("sets the food a food is a kind of, from any Ingredient", async () => {
     render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
 
+    expect(within(opened).getByText("noParent")).toBeInTheDocument();
     await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("ingredient-set-parent"));
+      fireEvent.click(within(opened).getByTestId("ingredient-set-parent"));
     });
-    const picker = within(row("onion")).getByTestId("picker");
+    const asking = screen.getByRole("dialog", { name: "setParent" });
+    const picker = within(asking).getByTestId("picker");
 
     expect(picker).toHaveAttribute("data-editable-only", "false");
     await act(async () => {
       fireEvent.click(within(picker).getByText("pick-salt"));
     });
     await act(async () => {
-      fireEvent.click(within(row("onion")).getByTestId("ingredient-relocation-confirm"));
+      fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
     });
 
     expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "onion", parentId: "salt" });
   });
 
-  it("shows a food's parent, and offers to clear it only where the viewer may edit", () => {
+  it("shows a food's parent, and offers to clear it only where the viewer may edit", async () => {
     items = [
       onion,
       salt,
@@ -284,11 +382,17 @@ describe("IngredientsSettingsContent", () => {
     ];
     render(<IngredientsSettingsContent />);
 
-    expect(within(row("salt")).getByTestId("ingredient-parent")).toHaveTextContent("kindOf");
-    expect(within(row("salt")).queryByTestId("ingredient-clear-parent")).toBeNull();
-    expect(within(row("onion")).queryByTestId("ingredient-parent")).toBeNull();
+    // Folded, the parent is in the summary; opened, it is a line of its own.
+    expect(within(row("salt")).getByTestId("ingredient-toggle")).toHaveTextContent("summary");
 
-    fireEvent.click(within(row("red onion")).getByTestId("ingredient-clear-parent"));
+    const theirs = await open("salt");
+
+    expect(within(theirs).getByTestId("ingredient-parent")).toHaveTextContent("kindOf");
+    expect(within(theirs).queryByTestId("ingredient-clear-parent")).toBeNull();
+
+    const mine = await open("red onion");
+
+    fireEvent.click(within(mine).getByTestId("ingredient-clear-parent"));
 
     expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "red", parentId: null });
   });
@@ -300,48 +404,140 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.click(screen.getByRole("switch"));
     });
 
-    expect(listInputs.at(-1)).toEqual({ search: undefined, flaggedOnly: true });
+    expect(listInputs.at(-1)).toEqual({ search: undefined, flaggedOnly: true, locale: "en" });
   });
 
-  it("shows a food in the viewer's language, its own name beside it", () => {
+  it("shows a food in the viewer's language, its own name beside it", async () => {
     viewerLocale = "nl";
+    // The server sent the viewer's spellings and a person's own; the rest on request.
     items = [
       {
         ...onion,
         localeNames: { nl: "ui" },
         aliases: [
-          { id: "a-onion", text: "onion", locale: "en", seeded: true, canRemove: false },
           { id: "a-ui", text: "ui", locale: "nl", seeded: true, canRemove: false },
-          { id: "a-zwiebel", text: "Zwiebel", locale: "de", seeded: true, canRemove: false },
           { id: "a-ajuin", text: "ajuin", locale: null, seeded: false, canRemove: true },
         ],
+        hiddenSpellings: 2,
       },
+    ];
+    everySpelling = [
+      { id: "a-onion", text: "onion", locale: "en", seeded: true, canRemove: false },
+      { id: "a-ui", text: "ui", locale: "nl", seeded: true, canRemove: false },
+      { id: "a-zwiebel", text: "Zwiebel", locale: "de", seeded: true, canRemove: false },
+      { id: "a-ajuin", text: "ajuin", locale: null, seeded: false, canRemove: true },
     ];
     render(<IngredientsSettingsContent />);
 
     expect(row("onion")).toHaveTextContent("ui");
-    // The viewer's spellings and a person's own; the rest on request.
+    // The panel is named in the viewer's language too.
+    await act(async () => {
+      fireEvent.click(within(row("onion")).getByTestId("ingredient-toggle"));
+    });
+    const opened = panel("ui");
     const chips = () =>
-      within(row("onion"))
+      within(opened)
         .getAllByTestId("ingredient-alias")
         .map((chip) => chip.textContent);
 
+    expect(within(opened).getByText("shownAs")).toBeInTheDocument();
     expect(chips()).toEqual(["ui", "ajuin"]);
-    fireEvent.click(within(row("onion")).getByTestId("ingredient-all-spellings"));
+    fireEvent.click(within(opened).getByTestId("ingredient-all-spellings"));
     expect(chips()).toEqual(["onion", "ui", "Zwiebel", "ajuin"]);
   });
 
-  it("shows every spelling of a food known only in other languages", () => {
+  it("asks for no more spellings where the server sent them all", async () => {
     items = [
       {
         ...salt,
         aliases: [{ id: "a-zout", text: "zout", locale: "nl", seeded: true, canRemove: false }],
+        hiddenSpellings: 0,
       },
     ];
     render(<IngredientsSettingsContent />);
+    const opened = await open("salt");
 
-    expect(within(row("salt")).getAllByTestId("ingredient-alias")).toHaveLength(1);
-    expect(within(row("salt")).queryByTestId("ingredient-all-spellings")).toBeNull();
+    expect(within(opened).getAllByTestId("ingredient-alias")).toHaveLength(1);
+    expect(within(opened).queryByTestId("ingredient-all-spellings")).toBeNull();
+  });
+
+  it("says why a food is flagged, on the fold and in the panel, and offers to ask AI", async () => {
+    items = [{ ...onion, flagReason: "ai-unsure" }, salt];
+    render(<IngredientsSettingsContent />);
+
+    expect(within(row("onion")).getByTestId("ingredient-flag-reason")).toHaveTextContent(
+      "flagReasons.ai-unsure"
+    );
+    expect(within(row("salt")).queryByTestId("ingredient-flag-reason")).toBeNull();
+
+    const opened = await open("onion");
+
+    expect(within(opened).getByTestId("ingredient-flag-notice")).toHaveTextContent(
+      "flagReasons.ai-unsure"
+    );
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-ask-ai"));
+    });
+
+    expect(mutations.reviewWithAI).toHaveBeenCalledWith({ ingredientId: "onion" });
+    expect(invalidateQueries).toHaveBeenCalled();
+  });
+
+  it("offers to ask AI about every flagged food on screen", async () => {
+    render(<IngredientsSettingsContent />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredients-ask-ai-all"));
+    });
+
+    // Only onion is flagged and editable.
+    expect(mutations.reviewWithAI).toHaveBeenCalledTimes(1);
+    expect(mutations.reviewWithAI).toHaveBeenCalledWith({ ingredientId: "onion" });
+  });
+
+  it("offers no AI round where nothing on screen is flagged", () => {
+    items = [salt];
+    render(<IngredientsSettingsContent />);
+
+    expect(screen.queryByTestId("ingredients-ask-ai-all")).toBeNull();
+  });
+
+  it("keeps the panel of a food a filter no longer lists, and closes it once merged away", async () => {
+    const { rerender } = render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+
+    // Marked distinct under the flagged filter, the row goes; the panel stays.
+    items = [salt];
+    rerender(<IngredientsSettingsContent />);
+    expect(screen.getByRole("dialog", { name: "onion" })).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-merge"));
+    });
+    const asking = screen.getByRole("dialog", { name: "mergeInto" });
+
+    await act(async () => {
+      fireEvent.click(within(asking).getByText("pick-salt"));
+    });
+    await act(async () => {
+      fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
+    });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("closes the panel of a food once it is deleted", async () => {
+    render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-delete"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
+    });
+
+    expect(screen.queryByRole("dialog", { name: "onion" })).toBeNull();
   });
 
   it("credits the catalogue's source and offers it as a download", () => {

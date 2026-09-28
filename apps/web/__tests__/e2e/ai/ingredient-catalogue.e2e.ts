@@ -44,6 +44,7 @@ test.beforeAll(async ({ browser, aiStack }) => {
     },
     { name: "uitjes", aliases: [{ text: "uitjes", locale: "nl" }], flagged: true },
     { name: "red onion", aliases: [{ text: "red onion", locale: "en" }] },
+    { name: "shallot", aliases: [{ text: "shallot", locale: "en" }] },
   ]);
 
   await setParent(ids["red onion"]!, ids.onion!);
@@ -125,8 +126,25 @@ test("a food Norish was not sure about is marked on the Ingredients page", async
   await page.getByTestId("ingredients-flagged-only").click();
 
   await expect(ingredientRow("uitjes").getByTestId("ingredient-flagged")).toBeVisible();
+  await expect(ingredientRow("uitjes").getByTestId("ingredient-flag-reason")).toBeVisible();
   await expect(ingredientRow("onion")).toHaveCount(0);
+
+  // The page offers to ask AI about every flagged food at once; a food's own
+  // panel says why it is flagged and offers to ask about it alone.
+  await expect(page.getByTestId("ingredients-ask-ai-all")).toBeVisible();
+  await ingredientRow("uitjes").getByTestId("ingredient-toggle").click();
+  const opened = ingredientPanel("uitjes");
+
+  await expect(opened.getByTestId("ingredient-flag-notice")).toBeVisible();
+  await expect(opened.getByTestId("ingredient-ask-ai")).toBeVisible();
+  await opened.getByRole("button", { name: "Close panel" }).click();
+  await expect(opened).toBeHidden();
 });
+
+/** The panel a row opens: a dialog named after the food. */
+function ingredientPanel(name: string) {
+  return page.getByRole("dialog", { name, exact: true });
+}
 
 /** Add a grocery under the Store, through the panel a shopper uses. */
 async function addGrocery(name: string): Promise<void> {
@@ -151,13 +169,39 @@ test("merging it into the food that holds an Aisle Link files its grocery in tha
   await expect.poll(() => rowsIn(AISLE)).toEqual(["red onion"]);
 
   await page.goto("/settings?tab=ingredients");
-  await ingredientRow("uitjes").getByTestId("ingredient-merge").click();
-  await ingredientRow("uitjes").getByTestId("ingredient-picker").fill("onion");
+  await ingredientRow("uitjes").getByTestId("ingredient-toggle").click();
+  await ingredientPanel("uitjes").getByTestId("ingredient-merge").click();
+  // Picking what to merge into is a panel over the food's own.
+  const asking = page.getByRole("dialog", { name: "Merge into…" });
+
+  await asking.getByTestId("ingredient-picker").fill("onion");
   await page.getByRole("option", { name: "onion", exact: true }).click();
-  await ingredientRow("uitjes").getByTestId("ingredient-relocation-confirm").click();
+  await asking.getByTestId("ingredient-relocation-confirm").click();
+  // Merged away, the food's panel closes with its row.
+  await expect(ingredientPanel("uitjes")).toBeHidden();
   await expect(ingredientRow("uitjes")).toHaveCount(0);
   await expect.poll(() => readIngredientOf("uitjes")).toBe("onion");
 
   await page.goto("/groceries");
   await expect.poll(async () => (await rowsIn(AISLE)).sort()).toEqual(["red onion", "uitjes"]);
+});
+
+test("a food nothing uses can be deleted, and one a grocery uses cannot", async () => {
+  await page.goto("/settings?tab=ingredients");
+
+  await ingredientRow("shallot").getByTestId("ingredient-toggle").click();
+  await ingredientPanel("shallot").getByTestId("ingredient-delete").click();
+  await page.getByTestId("ingredient-delete-confirm").click();
+  await expect(ingredientPanel("shallot")).toBeHidden();
+  await expect(ingredientRow("shallot")).toHaveCount(0);
+  await expect.poll(() => readIngredientOf("shallot")).toBeNull();
+
+  // "red onion" is on the grocery list: it stays, and the page says why.
+  await ingredientRow("red onion").getByTestId("ingredient-toggle").click();
+  await ingredientPanel("red onion").getByTestId("ingredient-delete").click();
+  await page.getByTestId("ingredient-delete-confirm").click();
+  await expect(
+    page.getByText("Recipes, groceries or the pantry still use this ingredient")
+  ).toBeVisible();
+  await expect(ingredientRow("red onion")).toHaveCount(1);
 });

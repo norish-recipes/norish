@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { usePanelPortalContainer } from "@/components/Panel/Panel";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -18,8 +19,8 @@ const NEW_INGREDIENT = "__new__";
 export type IngredientPick = { id: string; name: string } | { id: null };
 
 /**
- * Find an Ingredient to merge into or move a spelling to, by any of its
- * spellings. Only Ingredients the viewer may edit are offered where
+ * Find an Ingredient to merge into, file under or move a spelling to, by any
+ * of its spellings. Only Ingredients the viewer may edit are offered where
  * `editableOnly` says so (a merge needs `edit` on both), and never the one
  * the action starts from.
  */
@@ -39,6 +40,8 @@ export function IngredientPicker({
   const t = useTranslations("settings.ingredients");
   const locale = useLocale();
   const trpc = useTRPC();
+  // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
+  const portalContainer = usePanelPortalContainer();
   const [term, setTerm] = useState("");
   const [search, setSearch] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
@@ -50,7 +53,7 @@ export function IngredientPicker({
   }, [term]);
 
   const { data } = useQuery({
-    ...trpc.ingredients.list.queryOptions({ search }),
+    ...trpc.ingredients.list.queryOptions({ search, locale }),
     enabled: search.length > 0,
   });
   const found = (data?.items ?? []).filter(
@@ -90,7 +93,7 @@ export function IngredientPicker({
       <ComboBox.InputGroup>
         <Input data-testid="ingredient-picker" placeholder={t("pickIngredient")} />
       </ComboBox.InputGroup>
-      <ComboBox.Popover>
+      <ComboBox.Popover UNSTABLE_portalContainer={portalContainer}>
         <ListBox renderEmptyState={() => null}>
           {(option: { id: string; name: string }) => (
             <ListBox.Item

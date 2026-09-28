@@ -16,9 +16,9 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import type { Locator, Page } from "@playwright/test";
 
+import { withDatabase } from "./database";
 import { expect, test } from "./fixture";
 import { resetCatalogueScenario, seedCatalogue } from "./ingredient-catalogue-support";
-import { withDatabase } from "./database";
 
 test.describe.configure({ mode: "serial" });
 
@@ -104,12 +104,25 @@ test("captures the Ingredients page", async () => {
   await snap(page.getByTestId("ingredients-list").locator(".."), "page", "ingredients-page.png");
 });
 
+test("captures a flagged ingredient's panel", async () => {
+  await row("uitjes").getByTestId("ingredient-toggle").click();
+  const opened = page.getByRole("dialog", { name: "uitjes", exact: true });
+
+  await expect(opened.getByTestId("ingredient-flag-notice")).toBeVisible();
+  await snap(opened, "panel", "ingredients-panel.png");
+});
+
 test("captures merging a flagged ingredient", async () => {
-  await row("uitjes").getByTestId("ingredient-merge").click();
-  await row("uitjes").getByTestId("ingredient-picker").fill("onio");
+  await page
+    .getByRole("dialog", { name: "uitjes", exact: true })
+    .getByTestId("ingredient-merge")
+    .click();
+  const asking = page.getByRole("dialog", { name: "Merge into…" });
+
+  await asking.getByTestId("ingredient-picker").fill("onio");
   await page.getByRole("option", { name: "onion", exact: true }).click();
-  await expect(row("uitjes").getByTestId("ingredient-relocation-confirm")).toBeEnabled();
-  await snap(row("uitjes"), "merge", "ingredients-merge.png");
+  await expect(asking.getByTestId("ingredient-relocation-confirm")).toBeEnabled();
+  await snap(asking, "merge", "ingredients-merge.png");
 });
 
 test("captures the Data sources section", async () => {

@@ -45,9 +45,9 @@ export default function DataSourcesCard() {
           })}
         </p>
         <a
+          download
           className="text-accent inline-flex items-center gap-2 self-start text-sm font-medium hover:underline"
           data-testid="catalogue-export"
-          download
           href="/export/ingredients"
         >
           <ArrowDownTrayIcon aria-hidden className="h-4 w-4" />

@@ -33,38 +33,63 @@ none of these is sure does it add a new ingredient, **flagged** for you to check
 ## The Ingredients page
 
 Open **Settings → Ingredients** to see the catalogue. Search finds an ingredient
-by any of its spellings, in any language. Each row shows the ingredient in your
-language, the spellings in your language and the ones your household added, and
-**More spellings** shows the rest.
+by any of its spellings, in any language. Each ingredient is a line: its name in
+your language, whether Norish flagged it and why, and how many spellings it goes
+by. Press a line to open the ingredient's panel.
 
 ![The Ingredients page, with a flagged ingredient](/img/screenshots/ingredients-page.png)
 
-Turn on **Only flagged** to see what Norish was not sure about. For each one:
+The panel shows the ingredient's name, what it is a kind of, and its spellings in
+your language and the ones your household added (**More spellings** shows the
+rest). Every change is saved as you make it. What you may change depends on who
+added the ingredient; a control you may not use is not shown.
 
-- **Merge into…** when it is a food Norish already knows. All of its spellings,
+![An ingredient's panel](/img/screenshots/ingredients-panel.png)
+
+- **Name**: type a new name and save it. The old spellings stay.
+- **Kind of**: **Set parent…** (or **Change parent…**) says an ingredient is a
+  kind of another, such as “cherry tomatoes” under “tomatoes”. A kind of a food
+  uses its parent's aisle until it has one of its own, and covers its parent in
+  the pantry. It never borrows its parent's product, so a recipe that asks for
+  “red onion” is never priced as plain onion. The cross on the parent removes it.
+- **Spellings**: add one, such as your household's word for a food. The arrow on
+  a spelling moves it to another ingredient, or to a new one, which undoes a
+  wrong merge. The cross removes a spelling nothing uses.
+- **Merge into…** when this is a food Norish already knows. All of its spellings,
   and every recipe line, grocery and pantry item that uses them, join the other
   ingredient. Where both had an aisle, a product or a store preference at the same
   Store, the one you merge into wins.
-- **Mark distinct** when it really is a food of its own.
+- **Delete** an ingredient nothing uses. Its spellings go with it. One a recipe,
+  grocery or pantry item still uses cannot be deleted: merge it into the food it
+  is instead.
+
+Choosing another ingredient, for a merge, a parent or a spelling's move, opens a
+second panel over the first with a search box.
 
 ![Merging an ingredient into another](/img/screenshots/ingredients-merge.png)
 
-You can also:
+### Flagged ingredients
 
-- **Add a spelling**, such as your household's word for a food.
-- **Move a spelling** to another ingredient, or to a new one, with the arrow on
-  its chip. This undoes a wrong merge.
-- **Rename** an ingredient.
-- **Set parent…** to say an ingredient is a kind of another, such as “cherry
-  tomatoes” under “tomatoes”. A kind of a food uses its parent's aisle until it
-  has one of its own, and covers its parent in the pantry. It never borrows its
-  parent's product, so a recipe that asks for “red onion” is never priced as plain
-  onion.
+Turn on **Only flagged** to see what Norish was not sure about. A flagged
+ingredient's panel opens with the reason at the top: AI was off or not sure, no
+known food shared a word with the name, the upgrade added it, or the catalogue
+lists several foods it could be. Two buttons settle it:
+
+- **Ask AI** has Norish ask its AI what the food is, now that the catalogue is
+  there to compare it with. It looks harder than an import does: when no known
+  food shares a word with the name, it asks what plain food the name is (“uien”
+  is “onion”, “Unox Knaks” is a frankfurter) and compares it with the foods that
+  name finds. A sure answer is acted on: merged into the food it is, filed as a
+  kind of one, or marked distinct. An unsure answer leaves the flag and says so.
+- **Mark distinct** when it really is a food of its own.
+
+Whenever the list shows flagged ingredients you may edit, one button above it
+asks AI about each of them in turn and says what came of it.
 
 Renaming, setting a parent or marking an ingredient distinct clears its flag. Who
 may change an ingredient someone else added is up to your server admin, see
 [Ingredient permissions](../configuration/admin-settings.md#ingredient-permissions).
-Changes reach everyone's lists straight away.
+Every change reaches everyone's lists and open Ingredients pages straight away.
 
 ## Data sources
 

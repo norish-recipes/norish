@@ -1,85 +1,103 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState, useTransition } from "react";
 import UiSwitch from "@/app/(app)/settings/components/settings-switch";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { IconActionButton } from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { ArrowRightIcon, BookOpenIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Chip, Input, TextField } from "@heroui/react";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { BookOpenIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { Button, Card, toast } from "@heroui/react";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { CatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
-import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
-import { isCatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
-import { catalogueLanguagesFor, ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-
-import type { IngredientPick } from "./ingredient-picker";
 import DataSourcesCard from "./data-sources-card";
-import { IngredientPicker } from "./ingredient-picker";
-
-/** Why the server refused an edit, as the procedures name it. */
-function refusalOf(error: unknown): CatalogueRefusal | null {
-  const message = error instanceof Error ? error.message : null;
-
-  return isCatalogueRefusal(message) ? message : null;
-}
-
-/** How long typing pauses before the list is searched again. */
-const SEARCH_DELAY_MS = 250;
-
-interface IngredientItem {
-  id: string;
-  name: string;
-  localeNames?: LocaleNames;
-  flagged: boolean;
-  parent: { id: string; name: string; localeNames?: LocaleNames } | null;
-  canEdit: boolean;
-  /** `canRemove` is `edit` on the alias, which moving it needs too. */
-  aliases: Array<{
-    id: string;
-    text: string;
-    locale?: string | null;
-    seeded?: boolean;
-    canRemove: boolean;
-  }>;
-}
-
-/** What the row is asking the viewer to pick a target for, if anything. */
-type Relocation =
-  { kind: "merge" } | { kind: "parent" } | { kind: "move"; aliasId: string; text: string };
+import { IngredientPanel } from "./ingredient-panel";
+import { IngredientRow } from "./ingredient-row";
+import { IngredientSearch } from "./ingredient-search";
 
 /**
- * The catalogue of Ingredients (ADR-0037): every food Norish knows, each with
- * the spellings it is known by, and the ones Norish was not sure about
- * marked. An action the viewer may not take is not offered; the server says
- * which, row by row.
+ * The catalogue of Ingredients (ADR-0037): every food Norish knows, folded to
+ * a line each, with the ones Norish was not sure about marked and told why.
+ * A row opens the food's panel, where its spellings and edits live; an
+ * action the viewer may not take is not offered. The list stays on screen
+ * while a search runs, as the dashboard's does, and re-renders in the
+ * background so typing never waits on it.
  */
 export default function IngredientsSettingsContent() {
   const t = useTranslations("settings.ingredients");
+  const locale = useLocale();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [searchText, setSearchText] = useState("");
   const [search, setSearch] = useState("");
   const [flaggedOnly, setFlaggedOnly] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  // A new search re-renders the rows at background priority, as the toggle does.
+  const onSearch = useCallback((next: string) => startTransition(() => setSearch(next)), []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchText.trim()), SEARCH_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [searchText]);
-
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery(
-    trpc.ingredients.list.infiniteQueryOptions(
-      { search: search || undefined, flaggedOnly },
-      { getNextPageParam: (page) => page.nextCursor }
-    )
+  const { data, isLoading, isFetching, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInfiniteQuery(
+      trpc.ingredients.list.infiniteQueryOptions(
+        { search: search || undefined, flaggedOnly, locale },
+        { getNextPageParam: (page) => page.nextCursor, placeholderData: keepPreviousData }
+      )
+    );
+  // The rows render at background priority: a keystroke or a toggle paints
+  // first, and the list catches up, as the dashboard's grid does.
+  const items = useDeferredValue(
+    useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages])
   );
-  const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
+  const settling = isPending || (isFetching && !isFetchingNextPage);
+  // The open panel follows its food through the list: a refresh, a housemate's
+  // edit or AI's answer shows there too. The panel keeps the last version it
+  // saw when a filter drops the row, and closes on its own merge or delete.
+  const openItem = useMemo(
+    () => (openId ? (items.find((item) => item.id === openId) ?? null) : null),
+    [items, openId]
+  );
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() });
+  const refresh = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
+    [queryClient, trpc]
+  );
+
+  // Asking AI about every flagged food on screen, one after another, so the
+  // page can say how far it is and each answer lands as its own row change.
+  const review = useMutation(trpc.ingredients.reviewWithAI.mutationOptions());
+  const [reviewed, setReviewed] = useState<{ done: number; total: number } | null>(null);
+  const flaggedIds = items.filter((item) => item.flagged && item.canEdit).map((item) => item.id);
+
+  const askAIAboutAll = async () => {
+    const total = flaggedIds.length;
+    const counts = { merged: 0, parent: 0, distinct: 0, unsure: 0 };
+
+    setReviewed({ done: 0, total });
+    try {
+      for (const [index, ingredientId] of flaggedIds.entries()) {
+        const outcome = await review.mutateAsync({ ingredientId });
+
+        if (outcome.outcome !== "not-flagged") counts[outcome.outcome] += 1;
+        setReviewed({ done: index + 1, total });
+      }
+      toast(t("askAIAllDone", counts), {
+        variant: counts.unsure === total ? "warning" : "success",
+      });
+    } catch (error) {
+      showSafeErrorToast({
+        title: t("errors.title"),
+        description: t("errors.unknown"),
+        error,
+        context: "ingredients:review-all",
+      });
+    } finally {
+      setReviewed(null);
+      await refresh();
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,35 +112,48 @@ export default function IngredientsSettingsContent() {
           <p className="text-muted text-base">{t("description")}</p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <TextField
-              aria-label={t("search")}
-              className="min-w-0 flex-1"
-              value={searchText}
-              onChange={setSearchText}
-            >
-              <Input
-                data-testid="ingredients-search"
-                placeholder={t("search")}
-                variant="secondary"
-              />
-            </TextField>
+            <IngredientSearch busy={settling} onSearch={onSearch} />
             <UiSwitch
               data-testid="ingredients-flagged-only"
               isSelected={flaggedOnly}
-              onValueChange={setFlaggedOnly}
+              onValueChange={(selected) => startTransition(() => setFlaggedOnly(selected))}
             >
               <span className="text-sm">{t("flaggedOnly")}</span>
             </UiSwitch>
           </div>
+
+          {flaggedIds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                data-testid="ingredients-ask-ai-all"
+                isDisabled={reviewed !== null}
+                isPending={reviewed !== null}
+                size="sm"
+                variant="secondary"
+                onPress={() => void askAIAboutAll()}
+              >
+                <SparklesIcon className="size-4" />
+                {t("askAIAll", { count: flaggedIds.length })}
+              </Button>
+              {reviewed ? (
+                <span className="text-muted text-sm" data-testid="ingredients-ask-ai-progress">
+                  {t("askAIProgress", reviewed)}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
 
           {!isLoading && items.length === 0 ? (
             <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
               {flaggedOnly ? t("emptyFlagged") : t("empty")}
             </p>
           ) : (
-            <ul className="flex flex-col gap-2" data-testid="ingredients-list">
+            <ul
+              className={`border-border divide-border divide-y rounded-xl border transition-opacity ${settling ? "opacity-60" : ""}`}
+              data-testid="ingredients-list"
+            >
               {items.map((item) => (
-                <IngredientRow key={item.id} item={item} onChanged={refresh} />
+                <IngredientRow key={item.id} item={item} onOpen={setOpenId} />
               ))}
             </ul>
           )}
@@ -131,7 +162,7 @@ export default function IngredientsSettingsContent() {
             <Button
               className="self-center"
               isDisabled={isFetchingNextPage}
-              variant="tertiary"
+              variant="secondary"
               onPress={() => void fetchNextPage()}
             >
               {t("loadMore")}
@@ -140,363 +171,13 @@ export default function IngredientsSettingsContent() {
         </Card.Content>
       </Card>
       <DataSourcesCard />
+
+      <IngredientPanel
+        item={openItem}
+        open={openId !== null}
+        onChanged={refresh}
+        onClose={() => setOpenId(null)}
+      />
     </div>
-  );
-}
-
-function IngredientRow({ item, onChanged }: { item: IngredientItem; onChanged: () => void }) {
-  const t = useTranslations("settings.ingredients");
-  const tActions = useTranslations("common.actions");
-  const locale = useLocale();
-  const trpc = useTRPC();
-  const [allSpellings, setAllSpellings] = useState(false);
-  const displayName = ingredientDisplayName(item, locale);
-  // The catalogue knows a food in dozens of languages; the row shows the
-  // viewer's, the language-free ones and a person's own, the rest on request.
-  // A food known only in other languages shows them all.
-  const languages = catalogueLanguagesFor(locale);
-  const viewerSpellings = item.aliases.filter(
-    (alias) => !alias.seeded || !alias.locale || languages.includes(alias.locale)
-  );
-  const ownSpellings = viewerSpellings.length > 0 ? viewerSpellings : item.aliases;
-  const spellings = allSpellings ? item.aliases : ownSpellings;
-  const hiddenSpellings = item.aliases.length - ownSpellings.length;
-  const [renaming, setRenaming] = useState(false);
-  const [name, setName] = useState(item.name);
-  const [alias, setAlias] = useState("");
-  const [relocation, setRelocation] = useState<Relocation | null>(null);
-  const [target, setTarget] = useState<IngredientPick | null>(null);
-  const nameField = useRef<HTMLInputElement>(null);
-
-  // The name field takes focus when the viewer asks to rename, not on load.
-  useEffect(() => {
-    if (renaming) nameField.current?.focus();
-  }, [renaming]);
-
-  const rename = useMutation(trpc.ingredients.rename.mutationOptions());
-  const markDistinct = useMutation(trpc.ingredients.markDistinct.mutationOptions());
-  const addAlias = useMutation(trpc.ingredients.addAlias.mutationOptions());
-  const removeAlias = useMutation(trpc.ingredients.removeAlias.mutationOptions());
-  const merge = useMutation(trpc.ingredients.merge.mutationOptions());
-  const moveAlias = useMutation(trpc.ingredients.moveAlias.mutationOptions());
-  const setParent = useMutation(trpc.ingredients.setParent.mutationOptions());
-  const busy =
-    rename.isPending ||
-    markDistinct.isPending ||
-    addAlias.isPending ||
-    merge.isPending ||
-    moveAlias.isPending ||
-    setParent.isPending;
-
-  const run = async (context: string, edit: () => Promise<unknown>) => {
-    try {
-      await edit();
-      onChanged();
-
-      return true;
-    } catch (error) {
-      const refusal = refusalOf(error);
-
-      showSafeErrorToast({
-        title: t("errors.title"),
-        description: refusal ? t(`errors.${refusal}`) : t("errors.unknown"),
-        error,
-        context: `ingredients:${context}`,
-      });
-
-      return false;
-    }
-  };
-
-  const saveName = async () => {
-    const next = name.trim();
-
-    if (!next || next === item.name) {
-      setRenaming(false);
-
-      return;
-    }
-    if (await run("rename", () => rename.mutateAsync({ ingredientId: item.id, name: next }))) {
-      setRenaming(false);
-    }
-  };
-
-  const relocate = (next: Relocation | null) => {
-    setTarget(null);
-    setRelocation(next);
-  };
-
-  const saveRelocation = async () => {
-    if (!relocation || !target) return;
-
-    const targetId = target.id;
-    const done =
-      relocation.kind === "move"
-        ? await run("move-alias", () =>
-            moveAlias.mutateAsync({ aliasId: relocation.aliasId, targetId })
-          )
-        : targetId !== null &&
-          (relocation.kind === "merge"
-            ? await run("merge", () => merge.mutateAsync({ sourceId: item.id, targetId }))
-            : await run("set-parent", () =>
-                setParent.mutateAsync({ ingredientId: item.id, parentId: targetId })
-              ));
-
-    if (done) relocate(null);
-  };
-
-  const saveAlias = async () => {
-    const text = alias.trim();
-
-    if (!text) return;
-    if (await run("add-alias", () => addAlias.mutateAsync({ ingredientId: item.id, text }))) {
-      setAlias("");
-    }
-  };
-
-  return (
-    <li
-      className="bg-surface-secondary flex flex-col gap-3 rounded-lg p-3"
-      data-flagged={item.flagged}
-      data-ingredient={item.name}
-      data-testid="ingredient-row"
-    >
-      <div className="flex items-center gap-2">
-        {renaming ? (
-          <TextField
-            aria-label={t("rename")}
-            className="min-w-0 flex-1"
-            value={name}
-            onChange={setName}
-          >
-            <Input
-              ref={nameField}
-              data-testid="ingredient-name-input"
-              variant="secondary"
-              onKeyDown={(event) => {
-                if (event.key === "Enter") void saveName();
-                if (event.key === "Escape") setRenaming(false);
-              }}
-            />
-          </TextField>
-        ) : (
-          <span className="min-w-0 flex-1 truncate font-medium">
-            {displayName}
-            {displayName !== item.name ? (
-              <span className="text-muted ml-2 text-sm font-normal">{item.name}</span>
-            ) : null}
-          </span>
-        )}
-
-        {item.flagged && !renaming ? (
-          <Chip color="warning" data-testid="ingredient-flagged" size="sm" variant="soft">
-            {t("flagged")}
-          </Chip>
-        ) : null}
-
-        {renaming ? (
-          <>
-            <IconActionButton
-              action="save"
-              isDisabled={busy}
-              label={tActions("save")}
-              size="sm"
-              onPress={() => void saveName()}
-            />
-            <IconActionButton
-              action="cancel"
-              label={tActions("cancel")}
-              size="sm"
-              onPress={() => {
-                setName(item.name);
-                setRenaming(false);
-              }}
-            />
-          </>
-        ) : item.canEdit ? (
-          <>
-            {item.flagged ? (
-              <Button
-                data-testid="ingredient-mark-distinct"
-                isDisabled={busy}
-                size="sm"
-                variant="tertiary"
-                onPress={() =>
-                  void run("mark-distinct", () =>
-                    markDistinct.mutateAsync({ ingredientId: item.id })
-                  )
-                }
-              >
-                {t("markDistinct")}
-              </Button>
-            ) : null}
-            <Button
-              data-testid="ingredient-set-parent"
-              isDisabled={busy}
-              size="sm"
-              variant="tertiary"
-              onPress={() => relocate({ kind: "parent" })}
-            >
-              {t("setParent")}
-            </Button>
-            <Button
-              data-testid="ingredient-merge"
-              isDisabled={busy}
-              size="sm"
-              variant="tertiary"
-              onPress={() => relocate({ kind: "merge" })}
-            >
-              {t("mergeInto")}
-            </Button>
-            <IconActionButton
-              action="edit"
-              data-testid="ingredient-rename"
-              label={t("rename")}
-              size="sm"
-              onPress={() => {
-                setName(item.name);
-                setRenaming(true);
-              }}
-            />
-          </>
-        ) : null}
-      </div>
-
-      {relocation ? (
-        <div className="flex flex-col gap-2" data-testid="ingredient-relocation">
-          <span className="text-muted text-sm">
-            {relocation.kind === "move"
-              ? t("moveTitle", { alias: relocation.text })
-              : relocation.kind === "merge"
-                ? t("mergeTitle", { name: item.name })
-                : t("parentTitle", { name: item.name })}
-          </span>
-          <div className="flex items-center gap-2">
-            <IngredientPicker
-              allowNew={relocation.kind === "move"}
-              editableOnly={relocation.kind === "merge"}
-              excludeId={item.id}
-              label={
-                relocation.kind === "move"
-                  ? t("moveTo")
-                  : relocation.kind === "merge"
-                    ? t("mergeInto")
-                    : t("setParent")
-              }
-              onPick={setTarget}
-            />
-            <Button
-              data-testid="ingredient-relocation-confirm"
-              isDisabled={busy || !target}
-              size="sm"
-              onPress={() => void saveRelocation()}
-            >
-              {relocation.kind === "move"
-                ? t("move")
-                : relocation.kind === "merge"
-                  ? t("merge")
-                  : tActions("save")}
-            </Button>
-            <IconActionButton
-              action="cancel"
-              label={tActions("cancel")}
-              size="sm"
-              onPress={() => relocate(null)}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {item.parent ? (
-        <div className="text-muted flex items-center gap-1 text-sm" data-testid="ingredient-parent">
-          {t("kindOf", { name: ingredientDisplayName(item.parent, locale) })}
-          {item.canEdit ? (
-            <button
-              aria-label={t("clearParent")}
-              className="hover:text-foreground cursor-[var(--cursor-interactive)]"
-              data-testid="ingredient-clear-parent"
-              disabled={busy}
-              type="button"
-              onClick={() =>
-                void run("set-parent", () =>
-                  setParent.mutateAsync({ ingredientId: item.id, parentId: null })
-                )
-              }
-            >
-              <XMarkIcon className="size-3" />
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap items-center gap-1">
-        {spellings.map((spelling) => (
-          <Chip key={spelling.id} data-testid="ingredient-alias" size="sm" variant="tertiary">
-            {spelling.text}
-            {spelling.canRemove ? (
-              <button
-                aria-label={t("moveAlias", { alias: spelling.text })}
-                className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
-                data-testid="ingredient-alias-move"
-                type="button"
-                onClick={() =>
-                  relocate({ kind: "move", aliasId: spelling.id, text: spelling.text })
-                }
-              >
-                <ArrowRightIcon className="size-3" />
-              </button>
-            ) : null}
-            {spelling.canRemove ? (
-              <button
-                aria-label={t("removeAlias", { alias: spelling.text })}
-                className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
-                type="button"
-                onClick={() =>
-                  void run("remove-alias", () => removeAlias.mutateAsync({ aliasId: spelling.id }))
-                }
-              >
-                <XMarkIcon className="size-3" />
-              </button>
-            ) : null}
-          </Chip>
-        ))}
-        {hiddenSpellings > 0 ? (
-          <Button
-            data-testid="ingredient-all-spellings"
-            size="sm"
-            variant="ghost"
-            onPress={() => setAllSpellings((shown) => !shown)}
-          >
-            {allSpellings ? t("fewerSpellings") : t("moreSpellings", { count: hiddenSpellings })}
-          </Button>
-        ) : null}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <TextField
-          aria-label={t("addAlias")}
-          className="min-w-0 flex-1 sm:max-w-xs"
-          value={alias}
-          onChange={setAlias}
-        >
-          <Input
-            data-testid="ingredient-alias-input"
-            placeholder={t("addAlias")}
-            variant="secondary"
-            onKeyDown={(event) => {
-              if (event.key === "Enter") void saveAlias();
-            }}
-          />
-        </TextField>
-        <IconActionButton
-          action="add"
-          isDisabled={busy || !alias.trim()}
-          label={t("addAlias")}
-          size="sm"
-          variant="tertiary"
-          onPress={() => void saveAlias()}
-        />
-      </div>
-    </li>
   );
 }
