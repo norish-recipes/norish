@@ -38,6 +38,20 @@ export interface CatalogueOwner {
   ownerId: string | null;
 }
 
+/**
+ * Whether `error` is Postgres refusing a write on a constraint of this class:
+ * `23505` a unique violation, `23503` a foreign-key one. Drizzle wraps the
+ * driver's error, so its cause is read too.
+ */
+function isConstraintViolation(error: unknown, code: "23505" | "23503"): boolean {
+  for (let current = error; current && typeof current === "object";) {
+    if ((current as { code?: unknown }).code === code) return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+
+  return false;
+}
+
 /** A `LIKE` pattern matching `text` anywhere, its wildcards taken literally. */
 function containing(text: string): string {
   return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
@@ -143,19 +157,25 @@ export async function isIngredientNameTaken(name: string, exceptId: string): Pro
 
 /**
  * Rename an Ingredient and clear its flag: looking after a flagged Ingredient
- * counts as reviewing it. Null where it is gone.
+ * counts as reviewing it. `taken` where another Ingredient got the name first,
+ * which the unique name holds even against a rename racing this one.
  */
 export async function renameCatalogueIngredient(
   id: string,
   name: string
-): Promise<{ id: string } | null> {
-  const [row] = await db
-    .update(ingredients)
-    .set({ name, flagged: false, version: sql`${ingredients.version} + 1` })
-    .where(eq(ingredients.id, id))
-    .returning({ id: ingredients.id });
+): Promise<"renamed" | "missing" | "taken"> {
+  try {
+    const [row] = await db
+      .update(ingredients)
+      .set({ name, flagged: false, version: sql`${ingredients.version} + 1` })
+      .where(eq(ingredients.id, id))
+      .returning({ id: ingredients.id });
 
-  return row ?? null;
+    return row ? "renamed" : "missing";
+  } catch (error) {
+    if (isConstraintViolation(error, "23505")) return "taken";
+    throw error;
+  }
 }
 
 /** Clear an Ingredient's flag: Norish's doubt about it was unfounded. */
@@ -209,14 +229,35 @@ export async function insertCatalogueAlias(input: {
 export async function deleteCatalogueAlias(
   aliasId: string
 ): Promise<"deleted" | "last" | "in-use" | "missing"> {
+  try {
+    return await deleteAliasIfSpare(aliasId);
+  } catch (error) {
+    // Something came to point at it between the check and the delete.
+    if (isConstraintViolation(error, "23503")) return "in-use";
+    throw error;
+  }
+}
+
+async function deleteAliasIfSpare(
+  aliasId: string
+): Promise<"deleted" | "last" | "in-use" | "missing"> {
   return await db.transaction(async (tx) => {
     const [alias] = await tx
       .select({ ingredientId: ingredientAliases.ingredientId })
       .from(ingredientAliases)
-      .where(eq(ingredientAliases.id, aliasId))
-      .for("update");
+      .where(eq(ingredientAliases.id, aliasId));
 
     if (!alias) return "missing";
+
+    // The Ingredient is locked, not only the alias: two members removing its
+    // last two spellings at once must not both find a sibling left.
+    const [held] = await tx
+      .select({ id: ingredients.id })
+      .from(ingredients)
+      .where(eq(ingredients.id, alias.ingredientId))
+      .for("update");
+
+    if (!held) return "missing";
 
     const [{ value: siblings } = { value: 0 }] = await tx
       .select({ value: count() })

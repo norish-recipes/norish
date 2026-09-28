@@ -65,7 +65,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   withPolicy("household");
   catalogue.isIngredientNameTaken.mockResolvedValue(false);
-  catalogue.renameCatalogueIngredient.mockResolvedValue({ id: ONION });
+  catalogue.renameCatalogueIngredient.mockResolvedValue("renamed");
   catalogue.clearIngredientFlag.mockResolvedValue({ id: ONION });
   catalogue.deleteCatalogueAlias.mockResolvedValue("deleted");
 });
@@ -259,7 +259,6 @@ describe("the list", () => {
           id: ONION,
           name: "onion",
           flagged: true,
-          version: 1,
           canEdit: false,
           aliases: [
             { id: ALIAS, text: "onions", canRemove: true },

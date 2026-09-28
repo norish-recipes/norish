@@ -85,7 +85,6 @@ export interface IngredientListItem {
   id: string;
   name: string;
   flagged: boolean;
-  version: number;
   canEdit: boolean;
   aliases: Array<{ id: string; text: string; canRemove: boolean }>;
 }
@@ -129,7 +128,6 @@ function listItem(
     id: row.id,
     name: row.name,
     flagged: row.flagged,
-    version: row.version,
     canEdit: may(row.ownerId),
     aliases: row.aliases.map((alias) => ({
       id: alias.id,
@@ -196,9 +194,10 @@ export async function renameIngredient(
   if (await isIngredientNameTaken(cleaned, ingredientId)) {
     throw new CatalogueEditError("name-taken");
   }
-  if (!(await renameCatalogueIngredient(ingredientId, cleaned))) {
-    throw new CatalogueEditError("not-found");
-  }
+  const outcome = await renameCatalogueIngredient(ingredientId, cleaned);
+
+  if (outcome === "taken") throw new CatalogueEditError("name-taken");
+  if (outcome === "missing") throw new CatalogueEditError("not-found");
 }
 
 /** Mark a Flagged Ingredient distinct: Norish's doubt was unfounded. Follows `edit`. */

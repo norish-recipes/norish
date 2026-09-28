@@ -9,6 +9,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
+import { renameCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { groceries } from "@norish/db/schema";
 import {
   addAlias,
@@ -85,6 +86,15 @@ describe("the ingredient catalogue", () => {
     await expect(refusal(renameIngredient(actor, leek.ingredientId, "Garlic"))).resolves.toBe(
       "name-taken"
     );
+  });
+
+  it("answers a rename that loses the race for a name as taken, not as a failure", async () => {
+    const garlic = await mint("garlic");
+    const leek = await mint("leek");
+
+    // The check passed for both; the unique name decides.
+    await expect(renameCatalogueIngredient(leek.ingredientId, "Garlic")).resolves.toBe("taken");
+    await expect(ingredientFor(garlic.aliasId)).resolves.toMatchObject({ name: "garlic" });
   });
 
   it("files a household's own word under the food it names", async () => {

@@ -13,7 +13,7 @@ import { foldName } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
 import type { AIResolution } from "./ai-resolution";
-import { askWhatFoodThisIs } from "./ai-resolution";
+import { askWhatFoodThisIs, FLAGGED_NEW } from "./ai-resolution";
 
 /**
  * The ingredient resolver: the one module that mints Ingredients and
@@ -174,8 +174,6 @@ export async function resolveIngredients(
 
   return resolved;
 }
-
-const FLAGGED_NEW: AIResolution = { kind: "new", kindOf: null, flagged: true };
 
 /** Spellings the first two rungs resolve alike: "onions, diced" and "onions (2)" are one question. */
 function sameFoodKey(spelling: Spelling): string {

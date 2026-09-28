@@ -8,14 +8,19 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
+import { ingredientAliases, ingredients } from "@norish/db/schema";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
-import { RESOLUTION_THRESHOLD } from "@norish/shared-server/ingredients/ai-resolution";
+import {
+  RESOLUTION_BUDGET_MS,
+  RESOLUTION_THRESHOLD,
+} from "@norish/shared-server/ingredients/ai-resolution";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
+import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
@@ -229,13 +234,51 @@ describe("ingredient resolver, rung 3", () => {
     await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({ flagged: true });
   });
 
-  it("asks nothing for a text that shares no word with any known food", async () => {
-    await known("garlic");
+  it("asks nothing for a text that shares no word with any known food, and flags it", async () => {
+    await known("onion");
 
-    const saffron = await resolveOne("saffron");
+    // Could be a translation nothing here can see ("ui"): a person's to judge.
+    const ui = await resolveOne("ui");
 
     expect(vi.mocked(decide)).not.toHaveBeenCalled();
-    await expect(ingredientFor(saffron.aliasId)).resolves.toMatchObject({ flagged: false });
+    await expect(ingredientFor(ui.aliasId)).resolves.toMatchObject({ flagged: true });
+  });
+
+  it("mints a flagged food rather than wait past the budget on AI", async () => {
+    await known("garlic");
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    try {
+      vi.mocked(decide).mockReturnValueOnce(new Promise(() => undefined));
+      const pending = resolveOne("garlic cloves");
+
+      await vi.waitFor(() => expect(vi.mocked(decide)).toHaveBeenCalled());
+      await vi.advanceTimersByTimeAsync(RESOLUTION_BUDGET_MS);
+      const cloves = await pending;
+
+      await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({ flagged: true });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("finds the food a name is about even where a common word fills the catalogue", async () => {
+    const onion = await known("onion");
+    // More foods starting "red" than one search reads.
+    const reds = await getTestDb()
+      .insert(ingredients)
+      .values(Array.from({ length: 450 }, (_, index) => ({ name: `red thing ${index}` })))
+      .returning({ id: ingredients.id, name: ingredients.name });
+
+    await getTestDb()
+      .insert(ingredientAliases)
+      .values(reds.map((row) => ({ text: row.name, fold: row.name, ingredientId: row.id })));
+
+    decides("Is onion", 0.95);
+
+    await expect(resolveOne("red onions")).resolves.toMatchObject({
+      ingredientId: onion.ingredientId,
+    });
   });
 
   it("asks once for texts in one call that resolve alike", async () => {

@@ -45,7 +45,8 @@ remove one of its spellings:
 Anyone may add a spelling to any ingredient. Ingredients are always visible to
 everyone; there is no view setting. Ingredients from the built-in catalogue
 belong to no one and only server admins can edit them, and server admins can
-always edit every ingredient.
+always edit every ingredient. An ingredient whose owner deleted their account
+belongs to no one too, so it is left to server admins in the same way.
 
 ## Job queue
 

@@ -50,7 +50,16 @@ const SHOWN_ALIASES = 5;
 export type AIResolution =
   { kind: "same"; ingredientId: string } | { kind: "new"; kindOf: string | null; flagged: boolean };
 
-const FLAGGED_NEW: AIResolution = { kind: "new", kindOf: null, flagged: true };
+/** A food of its own that nothing sure vouched for: rung 4's flagged mint. */
+export const FLAGGED_NEW: AIResolution = { kind: "new", kindOf: null, flagged: true };
+
+/**
+ * How long one name may wait on AI before it is minted flagged instead. Rung 3
+ * runs inside a person's grocery add as well as an import, and a failing
+ * provider retries; nothing a shopper does should hang on that. What arrives
+ * after the budget is ignored.
+ */
+export const RESOLUTION_BUDGET_MS = 8000;
 
 /** The starts of a name's words the candidate search matches on. Numbers name no food. */
 function wordStarts(text: string): string[] {
@@ -63,16 +72,42 @@ function wordStarts(text: string): string[] {
 /**
  * Ask what `text` is. `bare` is the text with its preparation stripped, which
  * is what the candidates are searched by: "onions, diced" is about onions.
- * With AI switched off nothing is asked and the mint is flagged; with nothing
- * that could be the same food, nothing is asked and the mint is not.
+ * With AI switched off, or with nothing that could be the same food, nothing
+ * is asked and the mint is flagged: no step vouched for it, and a translation
+ * sharing no letters with its food ("ui" and "onion") is exactly what only a
+ * person can catch. An answer later than `RESOLUTION_BUDGET_MS` is a flagged
+ * mint too.
  */
 export async function askWhatFoodThisIs(text: string, bare: string): Promise<AIResolution> {
   if (!(await isAIEnabled())) return FLAGGED_NEW;
 
   const candidates = await findIngredientCandidates(wordStarts(bare || text), MAX_CANDIDATES);
 
-  if (candidates.length === 0) return { kind: "new", kindOf: null, flagged: false };
+  if (candidates.length === 0) return FLAGGED_NEW;
 
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const outOfTime = new Promise<AIResolution>((resolve) => {
+    timer = setTimeout(() => {
+      aiLogger.warn(
+        { feature: "ingredient-resolution", text, budgetMs: RESOLUTION_BUDGET_MS },
+        "Ingredient resolution ran out of time, minting a flagged Ingredient"
+      );
+      resolve(FLAGGED_NEW);
+    }, RESOLUTION_BUDGET_MS);
+  });
+
+  try {
+    return await Promise.race([askAbout(text, candidates), outOfTime]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The Decision, then the language model where the Decision is unsure, off or failing. */
+async function askAbout(
+  text: string,
+  candidates: readonly IngredientCandidate[]
+): Promise<AIResolution> {
   if (await isDecisionUseEnabled("ingredientResolution")) {
     // A Decision failure of any retryability is a warn log and the fallback.
     const decided = await decideFood(text, candidates).catch((error: unknown) => {

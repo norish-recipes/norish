@@ -1,4 +1,4 @@
-import { eq, inArray, or, sql } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
@@ -205,15 +205,18 @@ export interface IngredientCandidate {
   aliases: string[];
 }
 
-/** How many alias rows one candidate search reads before ranking them. */
-const CANDIDATE_ROWS = 400;
+/** How many alias rows one candidate search reads per word start. */
+const ROWS_PER_START = 100;
 
 /**
  * The Ingredients with an alias that has a word beginning with one of the
- * given word starts, the ones sharing the most starts first. The starts are
- * the first letters of a name's words, so "onions" finds "onion" and
- * "tomatoes" finds "tomato"; which of them the name really is, is not decided
- * here.
+ * given word starts: those sharing the most starts first, then taking turns
+ * across the starts, so a common word ("red" in "red onions") filling the
+ * catalogue cannot crowd out the one the name is about ("onio"). Each start
+ * reads its shortest spellings first, so the plain food leads its variants.
+ * The starts are the first letters of a name's words, so "onions" finds
+ * "onion" and "tomatoes" finds "tomato"; which of them the name really is, is
+ * not decided here.
  */
 export async function findIngredientCandidates(
   wordStarts: readonly string[],
@@ -223,42 +226,60 @@ export async function findIngredientCandidates(
 
   if (starts.length === 0) return [];
 
-  const rows = await db
-    .select({
-      id: ingredients.id,
-      name: ingredients.name,
-      text: ingredientAliases.text,
-      fold: ingredientAliases.fold,
-    })
-    .from(ingredientAliases)
-    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
-    .where(
-      or(...starts.map((start) => sql`(' ' || ${ingredientAliases.fold}) like ${`% ${start}%`}`))
+  const perStart = await Promise.all(
+    starts.map((start) =>
+      db
+        .select({
+          id: ingredients.id,
+          name: ingredients.name,
+          text: ingredientAliases.text,
+          fold: ingredientAliases.fold,
+        })
+        .from(ingredientAliases)
+        .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+        .where(sql`(' ' || ${ingredientAliases.fold}) like ${`% ${start}%`}`)
+        .orderBy(asc(sql`length(${ingredientAliases.fold})`), asc(ingredientAliases.id))
+        .limit(ROWS_PER_START)
     )
-    .limit(CANDIDATE_ROWS);
+  );
 
-  const byIngredient = new Map<string, { candidate: IngredientCandidate; shared: Set<string> }>();
+  const candidates = new Map<string, IngredientCandidate>();
+  const shared = new Map<string, Set<number>>();
+  const turns: string[][] = perStart.map(() => []);
 
-  for (const row of rows) {
-    const entry = byIngredient.get(row.id) ?? {
-      candidate: { id: row.id, name: row.name, aliases: [] },
-      shared: new Set<string>(),
-    };
-    const words = row.fold.split(" ");
+  perStart.forEach((rows, startIndex) => {
+    for (const row of rows) {
+      const candidate = candidates.get(row.id) ?? { id: row.id, name: row.name, aliases: [] };
 
-    for (const start of starts) {
-      if (words.some((word) => word.startsWith(start))) entry.shared.add(start);
+      if (row.text !== row.name && !candidate.aliases.includes(row.text)) {
+        candidate.aliases.push(row.text);
+      }
+      candidates.set(row.id, candidate);
+
+      const starts = shared.get(row.id) ?? new Set<number>();
+
+      if (!starts.has(startIndex)) turns[startIndex]!.push(row.id);
+      starts.add(startIndex);
+      shared.set(row.id, starts);
     }
-    if (row.text !== row.name) entry.candidate.aliases.push(row.text);
-    byIngredient.set(row.id, entry);
+  });
+
+  // Round-robin across the starts, each in its own order.
+  const order: string[] = [];
+
+  for (let turn = 0; order.length < candidates.size; turn += 1) {
+    for (const ids of turns) {
+      const id = ids[turn];
+
+      if (id && !order.includes(id)) order.push(id);
+    }
   }
 
-  return [...byIngredient.values()]
-    .sort(
-      (a, b) => b.shared.size - a.shared.size || a.candidate.name.localeCompare(b.candidate.name)
-    )
+  return order
+    .map((id, position) => ({ id, position, shares: shared.get(id)!.size }))
+    .sort((a, b) => b.shares - a.shares || a.position - b.position)
     .slice(0, limit)
-    .map(({ candidate }) => candidate);
+    .map(({ id }) => candidates.get(id)!);
 }
 
 /** Recipe lines' texts and the aliases they resolved to, by line id. */

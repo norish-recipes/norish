@@ -15,8 +15,9 @@
 ## Comments
 
 - Rung 3 lives in `packages/shared-server/src/ingredients/ai-resolution.ts`; `RESOLUTION_THRESHOLD` is 0.8, higher than grocery linking's 0.5, because a wrong match silently lends one food's links to another while a wrong mint is one merge.
-- "Shares a word" is read as "has a word starting with the same four letters", so "onions" finds "onion" and "tomatoes" finds "tomato"; exact word sharing would miss every plural. The search is a `LIKE` scan over alias folds with no index; revisit once the seed (10) has filled the table.
-- A text that has no candidates at all is asked nothing and minted **unflagged** while AI is on: there is nothing it could duplicate that AI could have seen. Translations with no shared letters ("ui" for "onion") are the seed's to know.
+- "Shares a word" is read as "has a word starting with the same four letters", so "onions" finds "onion" and "tomatoes" finds "tomato"; exact word sharing would miss every plural. Each word start reads its own 100 shortest aliases and the candidates take turns across the words, so "red" filling the catalogue cannot crowd "onio" out of "red onions". The search is a `LIKE` scan over alias folds with no index; revisit once the seed (10) has filled the table.
+- A text that has no candidates at all is asked nothing and minted **flagged** (review: step 3 did not really run, and a translation sharing no letters, "ui" for "onion", is exactly what only a person catches on an instance without a seed).
+- Rung 3 has a time budget, `RESOLUTION_BUDGET_MS` (8 s) per name: it runs inside a person's grocery add, and a failing provider retries three times. Past the budget the mint is flagged and the late answer ignored.
 - The language model says itself whether it is sure (`sure` in its answer). An unsure "same" mints a flagged food rather than joining one; an unsure "new" or "kind-of" is a flagged mint.
 - Texts in one call that resolve alike (same bare fold) are asked once, and at most four questions run at a time.
 - The upgrade backfill resolves with `{ ai: false }`: it walks an instance's whole history at boot.

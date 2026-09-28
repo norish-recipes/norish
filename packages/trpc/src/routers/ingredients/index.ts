@@ -53,7 +53,7 @@ const REFUSAL_CODES: Record<CatalogueRefusal, TRPCError["code"]> = {
  * Run a catalogue edit, turning a refusal into the error the page shows. The
  * message is the refusal itself, which the page translates.
  */
-async function editing(run: () => Promise<unknown>): Promise<{ success: true }> {
+async function asEditResult(run: () => Promise<unknown>): Promise<{ success: true }> {
   try {
     await run();
   } catch (error) {
@@ -96,7 +96,7 @@ const addAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Adding an alias");
 
-    return editing(() => addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text));
+    return asEditResult(() => addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text));
   });
 
 const rename = authedProcedure
@@ -104,7 +104,7 @@ const rename = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Renaming an Ingredient");
 
-    return editing(() => renameIngredient(actorOf(ctx), input.ingredientId, input.name));
+    return asEditResult(() => renameIngredient(actorOf(ctx), input.ingredientId, input.name));
   });
 
 const markDistinct = authedProcedure
@@ -112,7 +112,7 @@ const markDistinct = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Marking distinct");
 
-    return editing(() => markCatalogueDistinct(actorOf(ctx), input.ingredientId));
+    return asEditResult(() => markCatalogueDistinct(actorOf(ctx), input.ingredientId));
   });
 
 const removeAlias = authedProcedure
@@ -120,7 +120,7 @@ const removeAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, aliasId: input.aliasId }, "Removing an alias");
 
-    return editing(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
+    return asEditResult(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
   });
 
 export const ingredientsRouter = router({

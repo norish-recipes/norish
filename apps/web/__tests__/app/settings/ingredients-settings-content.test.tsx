@@ -12,7 +12,6 @@ type Item = {
   id: string;
   name: string;
   flagged: boolean;
-  version: number;
   canEdit: boolean;
   aliases: Array<{ id: string; text: string; canRemove: boolean }>;
 };
@@ -83,7 +82,6 @@ const onion: Item = {
   id: "onion",
   name: "onion",
   flagged: true,
-  version: 1,
   canEdit: true,
   aliases: [
     { id: "a-onion", text: "onion", canRemove: true },
@@ -94,7 +92,6 @@ const salt: Item = {
   id: "salt",
   name: "salt",
   flagged: false,
-  version: 1,
   canEdit: false,
   aliases: [{ id: "a-salt", text: "salt", canRemove: false }],
 };
