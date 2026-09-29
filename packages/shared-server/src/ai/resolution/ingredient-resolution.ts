@@ -15,7 +15,10 @@ import { z } from "zod";
 
 import type { IngredientCandidate } from "@norish/db/repositories/ingredient-aliases";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
-import { findIngredientCandidates } from "@norish/db/repositories/ingredient-aliases";
+import {
+  findIngredientCandidates,
+  findIngredientsNamed,
+} from "@norish/db/repositories/ingredient-aliases";
 import {
   isAIEnabled,
   isDecisionUseEnabled,
@@ -71,11 +74,12 @@ export interface AskOptions {
   /** An Ingredient never offered as a candidate: the one the question is about. */
   excludeId?: string | null;
   /**
-   * Take a second look: ask the language model even with nothing to compare
-   * the name with, and when its answer names the plain food ("uien" is
-   * "onion"), look that food up and ask again with what it finds. An import
-   * never does this — a shopper is waiting — but a person who asks about a
-   * flagged food is asking for exactly this effort.
+   * Read the name first: ask the language model what plain food it is and
+   * what more general food it is a kind of ("uien" is "onion"; "cherry
+   * tomatoes" are a kind of "tomato"), look both up exactly, and put those
+   * foods to the question alongside what the name's own words find. An
+   * import never does this — a shopper is waiting — but a person who asks
+   * about a flagged food is asking for exactly this effort.
    */
   thorough?: boolean;
   /** How long to wait for an answer before minting flagged instead. */
@@ -85,6 +89,13 @@ export interface AskOptions {
 }
 
 /** What one question came to: the foods the name was compared with, and what AI read it as. */
+interface Reading {
+  englishName: string | null;
+  generalFood: string | null;
+  sure: boolean;
+}
+
+/** What one question came to: the foods the name was compared with, and what AI read the name as. */
 export interface AskTrace {
   considered: string[];
   englishName: string | null;
@@ -135,11 +146,11 @@ export async function askWhatFoodThisIs(
     }, budgetMs);
   });
   const trace = options.trace ?? { considered: [], englishName: null };
-
-  trace.considered.push(...candidates.map((candidate) => candidate.name));
   const asked = options.thorough
-    ? askTwice(text, candidates, excludeId, trace)
+    ? readThenCompare(text, candidates, excludeId, trace)
     : askAbout(text, candidates);
+
+  if (!options.thorough) trace.considered.push(...candidates.map((candidate) => candidate.name));
 
   try {
     return await Promise.race([asked, outOfTime]);
@@ -148,62 +159,90 @@ export async function askWhatFoodThisIs(
   }
 }
 
-/** An answer that placed the name: a known food it is, or one it is surely a kind of. */
-function placed(answer: AIResolution): boolean {
-  return answer.kind === "same" || (answer.kindOf !== null && !answer.flagged);
-}
-
 /**
- * The question asked once, and again with the foods the language model's own
- * name for it finds, where the first answer did not place it. A food the
- * second look places wins; otherwise a sure answer beats an unsure one, and
- * between two unsure answers the first stands, since it saw the name's own
- * candidates. Only the language model names the food, so a Decision that was
- * sure among the first candidates is taken at its word and gets no second
- * look.
+ * Read first, then compare. The language model says what plain food the
+ * name is and what it is a kind of; those two are looked up exactly, with
+ * their parents, and joined to what the name's own words found. One question
+ * is then asked over all of them. With nothing to compare even then, the
+ * reading stands: a food of its own, flagged unless the model was sure.
  */
-async function askTwice(
+async function readThenCompare(
   text: string,
-  candidates: readonly IngredientCandidate[],
+  found: readonly IngredientCandidate[],
   excludeId: string | null,
   trace: AskTrace
 ): Promise<AIResolution> {
-  const named: string[] = [];
-  const first = await askAbout(text, candidates, named);
-  const englishName = named[0];
+  const reading = await readName(text).catch((error: unknown) => {
+    aiLogger.warn({ err: error, feature: "ingredient-resolution", text }, "Reading a name failed");
 
-  trace.englishName = englishName ?? null;
-  if (placed(first) || !englishName) return first;
+    return null;
+  });
 
-  const offered = new Set(candidates.map((candidate) => candidate.id));
-  const more = (
-    await findIngredientCandidates(wordStarts(englishName), MAX_CANDIDATES, excludeId)
-  ).filter((candidate) => !offered.has(candidate.id));
+  trace.englishName = reading?.englishName ?? null;
 
-  if (more.length === 0) return first;
-
-  trace.considered.push(...more.map((candidate) => candidate.name));
-  aiLogger.info(
-    { text, englishName, candidates: more.length },
-    "Taking a second look at a name, by the food AI says it is"
+  const named = await findIngredientsNamed(
+    [reading?.englishName, reading?.generalFood].map((name) => foldName(name ?? "")),
+    excludeId
   );
-  const second = await askAbout(text, more);
+  const have = new Set(named.map((candidate) => candidate.id));
+  const candidates = [...named, ...found.filter((candidate) => !have.has(candidate.id))].slice(
+    0,
+    MAX_CANDIDATES
+  );
 
-  if (placed(second)) return second;
-  if (!first.flagged) return first;
+  trace.considered.push(...candidates.map((candidate) => candidate.name));
+  if (candidates.length > 0) return await askAbout(text, candidates);
+  if (!reading) return flaggedNew("ai-unavailable");
 
-  return second.flagged ? first : second;
+  return reading.sure
+    ? { kind: "new", kindOf: null, flagged: false, reason: null }
+    : flaggedNew("ai-unsure");
+}
+
+const readingSchema = z
+  .object({
+    englishName: z
+      .string()
+      .nullable()
+      .describe("The plain English name of the food this name is; null when it is not a food."),
+    generalFood: z
+      .string()
+      .nullable()
+      .describe(
+        "The more general food it is a kind of, in plain English, or null when it is not a kind of anything more general."
+      ),
+    sure: z.boolean(),
+  })
+  .strict();
+
+/** What the language model reads a name as, with no catalogue in front of it. */
+async function readName(text: string): Promise<Reading> {
+  const reading = await generateStructured({
+    prompt: "ingredient-resolution",
+    schema: readingSchema,
+    sections: [
+      `New name: ${text}`,
+      "There is no list of foods yet. Say what plain food this name is (englishName), and what more general food it is a kind of (generalFood), so the catalogue can be searched for them.",
+    ],
+  });
+
+  aiLogger.info({ text, ...reading }, "Language model read what food a name is");
+
+  return {
+    englishName: reading.englishName?.trim() || null,
+    generalFood: reading.generalFood?.trim() || null,
+    sure: reading.sure,
+  };
 }
 
 /**
  * The Decision, then the language model where the Decision is unsure, off or
  * failing. With nothing to compare the name with, only the language model is
- * asked. `named` collects the plain English name the language model gives.
+ * asked.
  */
 async function askAbout(
   text: string,
-  candidates: readonly IngredientCandidate[],
-  named: string[] = []
+  candidates: readonly IngredientCandidate[]
 ): Promise<AIResolution> {
   if (candidates.length > 0 && (await isDecisionUseEnabled("ingredientResolution"))) {
     // A Decision failure of any retryability is a warn log and the fallback.
@@ -219,7 +258,7 @@ async function askAbout(
     if (decided) return decided;
   }
 
-  return await askLanguageModel(text, candidates, named).catch((error: unknown) => {
+  return await askLanguageModel(text, candidates).catch((error: unknown) => {
     aiLogger.warn(
       { err: error, feature: "ingredient-resolution", text },
       "Ingredient resolution failed, minting a flagged Ingredient"
@@ -312,8 +351,7 @@ const languageModelAnswerSchema = z
  */
 async function askLanguageModel(
   text: string,
-  candidates: readonly IngredientCandidate[],
-  named: string[] = []
+  candidates: readonly IngredientCandidate[]
 ): Promise<AIResolution> {
   const answer = await generateStructured({
     prompt: "ingredient-resolution",
@@ -335,8 +373,6 @@ async function askLanguageModel(
   const food = answer.food === null ? undefined : candidates[answer.food - 1];
 
   aiLogger.info({ text, ...answer }, "Language model answered what food a name is");
-
-  if (answer.englishName?.trim()) named.push(answer.englishName.trim());
 
   if (answer.verdict === "same") {
     return food && answer.sure ? { kind: "same", ingredientId: food.id } : flaggedNew("ai-unsure");

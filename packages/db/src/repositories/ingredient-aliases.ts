@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
@@ -350,11 +351,101 @@ export async function findIngredientCandidates(
     }
   }
 
-  return order
+  const picked = order
     .map((id, position) => ({ id, position, shares: shared.get(id)!.size }))
     .sort((a, b) => b.shares - a.shares || a.position - b.position)
     .slice(0, limit)
     .map(({ id }) => candidates.get(id)!);
+
+  return await withParents(picked, excludeId);
+}
+
+/**
+ * The candidates with every candidate's Parent Ingredient after them, so a
+ * question can be answered "a kind of X" for the X the tree already knows:
+ * "dark chocolate" offered brings "chocolate" along.
+ */
+async function withParents(
+  picked: IngredientCandidate[],
+  excludeId: string | null
+): Promise<IngredientCandidate[]> {
+  if (picked.length === 0) return picked;
+
+  const have = new Set(picked.map((candidate) => candidate.id));
+  const children = alias(ingredients, "child");
+  const parents = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(children)
+    .innerJoin(ingredients, eq(ingredients.id, children.parentId))
+    .where(inArray(children.id, [...have]));
+  const missing = parents.filter(
+    (parent, index) =>
+      !have.has(parent.id) &&
+      parent.id !== excludeId &&
+      parents.findIndex((other) => other.id === parent.id) === index
+  );
+
+  return [...picked, ...(await candidatesFor(missing))];
+}
+
+/** Candidate rows for known Ingredients: each with its shortest other names. */
+async function candidatesFor(
+  rows: ReadonlyArray<{ id: string; name: string }>
+): Promise<IngredientCandidate[]> {
+  if (rows.length === 0) return [];
+
+  const spellings = await db
+    .select({ ingredientId: ingredientAliases.ingredientId, text: ingredientAliases.text })
+    .from(ingredientAliases)
+    .where(
+      inArray(
+        ingredientAliases.ingredientId,
+        rows.map((row) => row.id)
+      )
+    )
+    .orderBy(asc(sql`length(${ingredientAliases.fold})`), asc(ingredientAliases.id));
+  const byId = new Map(rows.map((row) => [row.id, { ...row, aliases: [] as string[] }]));
+
+  for (const spelling of spellings) {
+    const candidate = byId.get(spelling.ingredientId);
+
+    if (
+      candidate &&
+      spelling.text !== candidate.name &&
+      !candidate.aliases.includes(spelling.text)
+    ) {
+      candidate.aliases.push(spelling.text);
+    }
+  }
+
+  return [...byId.values()];
+}
+
+/**
+ * The Ingredients named exactly by any of `folds` — as a name or a spelling —
+ * with their parents: what the language model's own reading of a name looks
+ * up ("onion" for "uien").
+ */
+export async function findIngredientsNamed(
+  folds: readonly string[],
+  excludeId: string | null = null
+): Promise<IngredientCandidate[]> {
+  const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
+
+  if (unique.length === 0) return [];
+
+  const rows = await db
+    .selectDistinct({ id: ingredients.id, name: ingredients.name })
+    .from(ingredientAliases)
+    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+    .where(
+      and(
+        inArray(ingredientAliases.fold, unique),
+        excludeId ? ne(ingredients.id, excludeId) : undefined
+      )
+    );
+
+  return await withParents(await candidatesFor(rows), excludeId);
 }
 
 /** Recipe lines' texts and the aliases they resolved to, by line id. */

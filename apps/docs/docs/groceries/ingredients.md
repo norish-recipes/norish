@@ -91,10 +91,10 @@ known food shared a word with the name, the upgrade added it, or the catalogue
 lists several foods it could be. Two buttons settle it:
 
 - **Ask AI** has Norish ask its AI what the food is, now that the catalogue is
-  there to compare it with. It looks harder than an import does: when no known
-  food shares a word with the name, it asks what plain food the name is (“uien”
-  is “onion”, “Unox Knaks” is a frankfurter) and compares it with the foods that
-  name finds. A sure answer is acted on: merged into the food it is, filed as a
+  there to compare it with. It looks harder than an import does: it first asks
+  what plain food the name is and what it is a kind of (“uien” is “onion”,
+  “Grand'Italia Fusilli” is fusilli, a kind of pasta), looks those up, and
+  compares the name with them and with the foods sharing its words. A sure answer is acted on: merged into the food it is, filed as a
   kind of one, or marked distinct. An unsure answer leaves the flag and says so.
   Either way the message says what AI tried: what it read the name as, and
   which foods it compared it with, so you can judge the answer or merge by

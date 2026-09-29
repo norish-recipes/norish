@@ -27,5 +27,9 @@ not hesitate.
 Also give "englishName": the plain English name of the food the new name is, as
 a shopper would look for it, whatever the answer above. "uien" is "onion", "Unox
 Knaks" is "frankfurter", "kipfilet" is "chicken breast". Give null when the new
-name is not a food at all. When the list of foods is empty, answer "new" and
-still give "englishName": it is used to find the foods to compare the name with.
+name is not a food at all.
+
+When there is no list of foods yet, you are asked only to read the name: give
+"englishName" as above and "generalFood", the more general food it is a kind of
+("cherry tomatoes" are a kind of "tomato", "Unox Knaks" a kind of "sausage"), or
+null when there is none. Both are used to find the foods to compare it with.

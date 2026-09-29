@@ -16,7 +16,7 @@ import {
   isAIEnabled,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
-import { markDistinct } from "@norish/shared-server/ingredients/catalogue";
+import { markDistinct, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
 
@@ -67,6 +67,11 @@ function decides(pick: string, p: number, offered: string[] = []) {
       },
     };
   }) as never);
+}
+
+/** What the language model reads a name as, before any comparing. */
+function reads(reading: { englishName: string | null; generalFood: string | null; sure: boolean }) {
+  vi.mocked(generateStructured).mockResolvedValueOnce(reading);
 }
 
 describe("asking AI about a flagged Ingredient", () => {
@@ -152,6 +157,7 @@ describe("asking AI about a flagged Ingredient", () => {
     await flagged("onion");
     const uitjes = await flagged("onion rings");
 
+    reads({ englishName: "onion rings", generalFood: "onion", sure: false });
     decides("Is onion", 0.4);
     vi.mocked(generateStructured).mockResolvedValueOnce({ verdict: "same", food: 1, sure: false });
 
@@ -170,14 +176,9 @@ describe("asking AI about a flagged Ingredient", () => {
     const onion = await flagged("onion");
     const ui = await flagged("ui");
 
-    // With no candidates, the language model is asked what plain food this is…
-    vi.mocked(generateStructured).mockResolvedValueOnce({
-      verdict: "new",
-      food: null,
-      sure: true,
-      englishName: "onion",
-    });
-    // …and the foods that name finds are put to the Decision.
+    // The language model reads the name first…
+    reads({ englishName: "onion", generalFood: null, sure: true });
+    // …and the foods that reading finds are put to the Decision.
     const offered: string[] = [];
 
     decides("Is onion", 0.95, offered);
@@ -192,17 +193,12 @@ describe("asking AI about a flagged Ingredient", () => {
     await expect(ingredientFor(ui.aliasId)).resolves.toMatchObject({ id: onion.ingredientId });
   });
 
-  it("takes a second look when the first candidates were the wrong foods", async () => {
-    // "kipfilet" finds nothing under "kipf", but the model knows it is chicken breast.
+  it("files a name under the general food its reading names", async () => {
+    // "kipfilet" finds nothing under "kipf", but the model reads it as a kind of chicken.
     const chicken = await flagged("chicken");
     const kipfilet = await flagged("kipfilet");
 
-    vi.mocked(generateStructured).mockResolvedValueOnce({
-      verdict: "new",
-      food: null,
-      sure: true,
-      englishName: "chicken breast",
-    });
+    reads({ englishName: "chicken breast", generalFood: "chicken", sure: true });
     decides("Is a kind of chicken", 0.9);
 
     await expect(reviewFlaggedWithAI(actor, kipfilet.ingredientId)).resolves.toMatchObject({
@@ -214,46 +210,42 @@ describe("asking AI about a flagged Ingredient", () => {
     ).toEqual([chicken.ingredientId]);
   });
 
-  it("takes the second look after an unsure 'kind of' too, and keeps the first reason when both are unsure", async () => {
-    const onion = await flagged("onion");
-    const rings = await flagged("uienringen");
+  it("offers a candidate's parent, so a kind-of answer can land on it", async () => {
+    const sausage = await flagged("sausage");
+    const frankfurter = await flagged("frankfurter");
 
-    // Unsure kind-of among the first candidates (none here), naming the food.
-    vi.mocked(generateStructured).mockResolvedValueOnce({
-      verdict: "kind-of",
-      food: null,
-      sure: false,
-      englishName: "onion",
-    });
-    // The second look, over onion, is unsure as well.
-    decides("Is a kind of onion", 0.5);
-    vi.mocked(generateStructured).mockResolvedValueOnce({
-      verdict: "kind-of",
-      food: 1,
-      sure: false,
-      englishName: "onion rings",
-    });
+    await setParent(actor, frankfurter.ingredientId, sausage.ingredientId);
+    const knaks = await flagged("frankfurters");
+    const offered: string[] = [];
 
-    await expect(reviewFlaggedWithAI(actor, rings.ingredientId)).resolves.toMatchObject({
+    reads({ englishName: "frankfurter", generalFood: null, sure: true });
+    decides("Is a kind of sausage", 0.9, offered);
+
+    await expect(reviewFlaggedWithAI(actor, knaks.ingredientId)).resolves.toMatchObject({
+      outcome: "parent",
+      of: "sausage",
+      considered: expect.arrayContaining(["frankfurter", "sausage"]),
+    });
+    expect(offered).toContain("Is a kind of sausage");
+  });
+
+  it("leaves the reading's doubt on the flag when nothing compares", async () => {
+    const thing = await flagged("Multitool deluxe");
+
+    reads({ englishName: "multitool", generalFood: "tool", sure: false });
+
+    await expect(reviewFlaggedWithAI(actor, thing.ingredientId)).resolves.toMatchObject({
       outcome: "unsure",
       reason: "ai-unsure",
+      englishName: "multitool",
     });
-    expect(vi.mocked(decide)).toHaveBeenCalledTimes(1);
-    await expect(ingredientFor(rings.aliasId)).resolves.toMatchObject({
-      flagged: true,
-      id: expect.not.stringMatching(onion.ingredientId),
-    });
+    expect(vi.mocked(decide)).not.toHaveBeenCalled();
   });
 
   it("leaves a name AI cannot place flagged, saying AI was not sure", async () => {
     const multitool = await flagged("Multitool");
 
-    vi.mocked(generateStructured).mockResolvedValueOnce({
-      verdict: "new",
-      food: null,
-      sure: false,
-      englishName: null,
-    });
+    reads({ englishName: null, generalFood: null, sure: false });
 
     await expect(reviewFlaggedWithAI(actor, multitool.ingredientId)).resolves.toMatchObject({
       outcome: "unsure",
@@ -265,12 +257,7 @@ describe("asking AI about a flagged Ingredient", () => {
   it("marks a name AI is sure is a food of its own distinct, even with nothing to compare it with", async () => {
     const knaks = await flagged("Unox Knaks");
 
-    vi.mocked(generateStructured).mockResolvedValueOnce({
-      verdict: "new",
-      food: null,
-      sure: true,
-      englishName: "frankfurter",
-    });
+    reads({ englishName: "frankfurter", generalFood: "sausage", sure: true });
 
     await expect(reviewFlaggedWithAI(actor, knaks.ingredientId)).resolves.toMatchObject({
       outcome: "distinct",
