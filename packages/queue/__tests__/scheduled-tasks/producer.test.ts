@@ -66,6 +66,17 @@ describe("initializeScheduledJobs", () => {
     ]);
   });
 
+  it("asks only once: a boot with a catalogue fetch still queued adds no second one", async () => {
+    // A dev server restarts on every saved file; each boot must not queue another fetch.
+    const queue = fakeQueue([fakeJob("ingredient-catalogue-refresh")]);
+
+    await initializeScheduledJobs(queue);
+
+    const immediate = vi.mocked(queue.add).mock.calls.filter(([, , options]) => !options?.repeat);
+
+    expect(immediate).toEqual([]);
+  });
+
   it("clears out a task type the code no longer has", async () => {
     const stranded = fakeJob("price-refresh-sweep");
     const kept = fakeJob("media-cleanup");

@@ -73,8 +73,17 @@ export async function initializeScheduledJobs(queue: Queue<ScheduledTaskJobData>
   // The first boot seeds the catalogue before the server starts; every boot
   // still asks once here, so a seed that failed at boot is retried without
   // waiting for midnight. The fetch is conditional, so asking about a seed
-  // already applied costs one small request.
-  await queue.add("ingredient-catalogue-refresh", { taskType: "ingredient-catalogue-refresh" });
+  // already applied costs one small request. Once is once: a boot that finds
+  // the ask still queued (a dev server restarts on every saved file) adds
+  // nothing, or the queue fills with fetches that all say "unchanged".
+  const pending = await queue.getJobs(["waiting", "delayed", "active", "prioritized"]);
+  const asked = pending.some(
+    (job) => job.data?.taskType === "ingredient-catalogue-refresh" && !job.repeatJobKey
+  );
+
+  if (!asked) {
+    await queue.add("ingredient-catalogue-refresh", { taskType: "ingredient-catalogue-refresh" });
+  }
 
   log.info("Repeatable scheduled jobs initialized (daily at midnight)");
 }
