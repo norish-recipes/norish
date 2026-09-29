@@ -182,7 +182,9 @@ export async function setCatalogueIngredientParent(
  * taught Norish about the source — Product Links, Aisle Links, store
  * preferences — joins the target, except where the target already has one
  * at that Store (or for that member): the target's is kept. A household that
- * held both foods in the Pantry keeps the one Pantry Ingredient.
+ * held both foods in the Pantry keeps the one Pantry Ingredient. The target's
+ * flag is cleared, and it takes the source's Open Food Facts id when it has
+ * none, so the seed keeps finding the food.
  */
 export async function mergeCatalogueIngredients(
   sourceId: string,
@@ -219,7 +221,18 @@ export async function mergeCatalogueIngredients(
       .update(ingredientAliases)
       .set({ ingredientId: targetId, updatedAt: new Date() })
       .where(eq(ingredientAliases.ingredientId, sourceId));
-    await tx.delete(ingredients).where(eq(ingredients.id, sourceId));
+    // The target is what a person decided the food is: that settles its flag.
+    // A seeded source hands its Open Food Facts id on where the target has
+    // none, so the nightly seed keeps finding the food instead of minting it again.
+    const [gone] = await tx
+      .delete(ingredients)
+      .where(eq(ingredients.id, sourceId))
+      .returning({ offId: ingredients.offId });
+
+    await tx.execute(sql`
+      update ${ingredients} set flagged = false, flag_reason = null, version = version + 1,
+        off_id = coalesce(off_id, ${gone?.offId ?? null})
+      where id = ${targetId}`);
 
     return "merged";
   });

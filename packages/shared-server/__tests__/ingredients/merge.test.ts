@@ -22,7 +22,7 @@ import {
   getIngredientStorePreference,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import { groceries, householdUsers, recurringGroceries } from "@norish/db/schema";
+import { groceries, householdUsers, ingredients, recurringGroceries } from "@norish/db/schema";
 import {
   addAlias,
   CatalogueEditError,
@@ -238,6 +238,37 @@ describe("merging Ingredients and moving aliases", () => {
       const pantry = await listPantryIngredientsByUserIds(userIds);
 
       expect(pantry.map((item) => item.ingredientId)).toEqual([onion.ingredientId]);
+    });
+
+    it("clears the target's flag: a person merged into it on purpose", async () => {
+      const knaks = await mint("Unox Knaks");
+      const frankfurter = await mint("frankfurter");
+
+      await expect(ingredientFor(knaks.aliasId)).resolves.toMatchObject({ flagged: true });
+      await mergeIngredients(actor, frankfurter.ingredientId, knaks.ingredientId);
+
+      await expect(ingredientFor(knaks.aliasId)).resolves.toMatchObject({
+        flagged: false,
+        flagReason: null,
+      });
+    });
+
+    it("keeps the seed's id when a seeded food is merged into one without", async () => {
+      const knaks = await mint("Unox Knaks");
+      const frankfurter = await mint("frankfurter");
+
+      await getTestDb()
+        .update(ingredients)
+        .set({ offId: "en:frankfurter" })
+        .where(eq(ingredients.id, frankfurter.ingredientId));
+      await mergeIngredients(actor, frankfurter.ingredientId, knaks.ingredientId);
+
+      const [row] = await getTestDb()
+        .select({ offId: ingredients.offId })
+        .from(ingredients)
+        .where(eq(ingredients.id, knaks.ingredientId));
+
+      expect(row?.offId).toBe("en:frankfurter");
     });
 
     it("refuses to merge an Ingredient into itself", async () => {

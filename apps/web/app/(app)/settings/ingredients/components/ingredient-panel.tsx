@@ -183,8 +183,14 @@ function IngredientPanelContent({
 
     if (done) {
       setRelocation(null);
-      // Merged away, the food is gone: nothing is left to show for it.
-      if (asked.kind === "merge") onClose();
+      // Merged away, the food is gone: nothing is left to show for it. The
+      // toast says where it went and how to get it back.
+      if (asked.kind === "merge") {
+        onClose();
+        if (target.id !== null) {
+          toast(t("mergedToast", { name: displayName, into: target.name }), { variant: "success" });
+        }
+      }
     }
   };
 
