@@ -335,6 +335,7 @@
     "title": "재료",
     "description": "Norish가 아는 모든 식품과 그 식품을 부르는 표기입니다. Norish가 확신하지 못한 재료는 표시됩니다. 해당하는 식품에 병합하거나 별개로 표시하세요.",
     "search": "재료 검색",
+    "searchHint": "단어의 시작을 입력하세요. <cola>는 정확히 cola를, %cola%는 이를 포함하는 모든 것을, cola%는 이로 시작하는 모든 것을 찾습니다.",
     "flaggedOnly": "표시된 항목만",
     "flagged": "표시됨",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "AI는 여전히 {name}이(가) 무엇인지 확신하지 못합니다.",
       "notFlagged": "{name}은(는) 플래그되지 않았습니다."
     },
+    "aiTrace": {
+      "readAs": "AI가 “{name}”(으)로 읽었습니다.",
+      "compared": "비교 대상: {names}.",
+      "comparedNothing": "비교할 알려진 식품이 없었습니다."
+    },
     "addAlias": "표기 추가",
     "removeAlias": "{alias} 제거",
     "mergeInto": "다음으로 병합…",
@@ -378,6 +384,9 @@
     "moveTitle": "{alias}을(를) 다른 재료나 새 재료로 옮깁니다.",
     "newIngredient": "새 재료",
     "pickIngredient": "재료 검색",
+    "pickerHint": "입력하여 목록 검색",
+    "pickerSearching": "검색 중…",
+    "pickerEmpty": "식재료를 찾을 수 없음",
     "setParent": "상위 재료 설정…",
     "parentTitle": "{name}이(가) 속하는 재료를 고르세요.",
     "kindOf": "{name}의 한 종류",

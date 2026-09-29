@@ -210,6 +210,7 @@ function IngredientPanelContent({
       const outcome: ReviewOutcome = await review.mutateAsync({ ingredientId: item.id });
 
       toast(reviewMessage(t, displayName, outcome), {
+        description: reviewTrace(t, outcome),
         variant: outcome.outcome === "unsure" ? "warning" : "success",
       });
     });
@@ -476,6 +477,21 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       {children}
     </section>
   );
+}
+
+/** What AI tried, so the viewer can judge its answer: what it read the name as, and what it compared it with. */
+function reviewTrace(
+  t: ReturnType<typeof useTranslations<"settings.ingredients">>,
+  outcome: ReviewOutcome
+): string {
+  const considered =
+    outcome.considered.length > 0
+      ? t("aiTrace.compared", { names: outcome.considered.slice(0, 8).join(", ") })
+      : t("aiTrace.comparedNothing");
+
+  return outcome.englishName
+    ? `${t("aiTrace.readAs", { name: outcome.englishName })} ${considered}`
+    : considered;
 }
 
 /** What to tell the viewer about an AI review, in their words. */

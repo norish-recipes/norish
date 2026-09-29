@@ -335,6 +335,7 @@
     "title": "Ingrédients",
     "description": "Chaque aliment que Norish connaît, avec les orthographes sous lesquelles il est connu. Norish signale ceux dont il n'était pas sûr : fusionnez-les avec l'aliment qu'ils sont, ou marquez-les comme distincts.",
     "search": "Rechercher des ingrédients",
+    "searchHint": "Tapez le début d'un mot. <cola> trouve exactement cola, %cola% tout ce qui le contient, cola% tout ce qui commence ainsi.",
     "flaggedOnly": "Signalés uniquement",
     "flagged": "Signalé",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "L'IA ne sait toujours pas ce qu'est {name}.",
       "notFlagged": "{name} n'est pas signalé."
     },
+    "aiTrace": {
+      "readAs": "L'IA l'a lu comme « {name} ».",
+      "compared": "Comparé avec : {names}.",
+      "comparedNothing": "Aucun aliment connu avec lequel le comparer."
+    },
     "addAlias": "Ajouter une orthographe",
     "removeAlias": "Supprimer {alias}",
     "mergeInto": "Fusionner avec…",
@@ -378,6 +384,9 @@
     "moveTitle": "Déplacer {alias} vers un autre ingrédient, ou vers un nouveau.",
     "newIngredient": "Un nouvel ingrédient",
     "pickIngredient": "Rechercher un ingrédient",
+    "pickerHint": "Tapez pour chercher dans le catalogue",
+    "pickerSearching": "Recherche…",
+    "pickerEmpty": "Aucun ingrédient trouvé",
     "setParent": "Choisir le parent…",
     "parentTitle": "Choisissez l'ingrédient dont {name} est une variété.",
     "kindOf": "Une variété de {name}",

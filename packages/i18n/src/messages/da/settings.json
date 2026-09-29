@@ -335,6 +335,7 @@
     "title": "Ingredienser",
     "description": "Alle fødevarer Norish kender, med de stavemåder de kendes under. Norish markerer dem, det var usikker på: flet dem sammen med den fødevare, de er, eller marker dem som selvstændige.",
     "search": "Søg i ingredienser",
+    "searchHint": "Skriv begyndelsen af et ord. <cola> finder præcis cola, %cola% alt der indeholder det, cola% alt der begynder sådan.",
     "flaggedOnly": "Kun markerede",
     "flagged": "Markeret",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "AI er stadig ikke sikker på, hvad {name} er.",
       "notFlagged": "{name} er ikke markeret."
     },
+    "aiTrace": {
+      "readAs": "AI læste det som “{name}”.",
+      "compared": "Sammenlignet med: {names}.",
+      "comparedNothing": "Der var ingen kendt fødevare at sammenligne med."
+    },
     "addAlias": "Tilføj en stavemåde",
     "removeAlias": "Fjern {alias}",
     "mergeInto": "Flet med…",
@@ -378,6 +384,9 @@
     "moveTitle": "Flyt {alias} til en anden ingrediens, eller til en ny.",
     "newIngredient": "En ny ingrediens",
     "pickIngredient": "Søg efter en ingrediens",
+    "pickerHint": "Skriv for at søge i kataloget",
+    "pickerSearching": "Søger…",
+    "pickerEmpty": "Ingen ingrediens fundet",
     "setParent": "Vælg overordnet…",
     "parentTitle": "Vælg den ingrediens, {name} er en slags.",
     "kindOf": "En slags {name}",

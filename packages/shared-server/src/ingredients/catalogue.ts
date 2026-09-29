@@ -40,8 +40,8 @@ import {
 } from "@norish/db/repositories/ingredient-relocation";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
-import { foldName } from "@norish/shared/lib/fold-name";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
+import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 
 import { cleanIngredientText, ingredientAliasFold } from "./resolver";
 
@@ -133,7 +133,7 @@ export async function listIngredients(
   const [policy, rows] = await Promise.all([
     getIngredientPermissionPolicy(),
     listCatalogueIngredients({
-      search: search ? { lower: search.toLowerCase(), fold: foldName(search) } : null,
+      search: parseIngredientSearch(search),
       flaggedOnly: query.flaggedOnly ?? false,
       // One more than a page says whether there is a next one.
       limit: INGREDIENT_PAGE_SIZE + 1,

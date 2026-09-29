@@ -52,7 +52,7 @@ export function IngredientPicker({
     return () => clearTimeout(timer);
   }, [term]);
 
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     ...trpc.ingredients.list.queryOptions({ search, locale }),
     enabled: search.length > 0,
   });
@@ -70,7 +70,8 @@ export function IngredientPicker({
       className="min-w-0 flex-1"
       inputValue={term}
       items={options}
-      menuTrigger="focus"
+      // The list opens once there is something to search by, never empty on focus.
+      menuTrigger="input"
       selectedKey={picked}
       variant="secondary"
       onInputChange={(value) => {
@@ -94,7 +95,17 @@ export function IngredientPicker({
         <Input data-testid="ingredient-picker" placeholder={t("pickIngredient")} />
       </ComboBox.InputGroup>
       <ComboBox.Popover UNSTABLE_portalContainer={portalContainer}>
-        <ListBox renderEmptyState={() => null}>
+        <ListBox
+          renderEmptyState={() => (
+            <p className="text-muted px-3 py-2 text-sm">
+              {term.trim() === ""
+                ? t("pickerHint")
+                : isFetching || search !== term.trim()
+                  ? t("pickerSearching")
+                  : t("pickerEmpty")}
+            </p>
+          )}
+        >
           {(option: { id: string; name: string }) => (
             <ListBox.Item
               data-testid="ingredient-picker-option"

@@ -335,6 +335,7 @@
     "title": "Ingredients",
     "description": "Every food Norish knows, with the spellings it goes by. Norish marks the ones it was not sure about: merge them into the food they are, or mark them distinct.",
     "search": "Search ingredients",
+    "searchHint": "Type the start of a word. <cola> finds exactly cola, %cola% anything containing it, cola% anything starting with it.",
     "flaggedOnly": "Only flagged",
     "flagged": "Flagged",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "AI is still not sure what {name} is.",
       "notFlagged": "{name} is not flagged."
     },
+    "aiTrace": {
+      "readAs": "AI read it as “{name}”.",
+      "compared": "Compared with: {names}.",
+      "comparedNothing": "There was no known food to compare it with."
+    },
     "addAlias": "Add a spelling",
     "removeAlias": "Remove {alias}",
     "mergeInto": "Merge into…",
@@ -378,6 +384,9 @@
     "moveTitle": "Move {alias} to another ingredient, or to a new one.",
     "newIngredient": "A new ingredient",
     "pickIngredient": "Search for an ingredient",
+    "pickerHint": "Type to search the catalogue",
+    "pickerSearching": "Searching…",
+    "pickerEmpty": "No ingredient found",
     "setParent": "Set parent…",
     "parentTitle": "Choose the food {name} is a kind of.",
     "kindOf": "A kind of {name}",

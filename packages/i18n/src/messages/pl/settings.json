@@ -335,6 +335,7 @@
     "title": "Składniki",
     "description": "Każdy produkt, który zna Norish, wraz z pisowniami, pod którymi jest znany. Norish oznacza te, co do których nie był pewien: połącz je z produktem, którym są, albo oznacz jako odrębne.",
     "search": "Szukaj składników",
+    "searchHint": "Wpisz początek słowa. <cola> znajduje dokładnie cola, %cola% wszystko, co to zawiera, cola% wszystko, co tak się zaczyna.",
     "flaggedOnly": "Tylko oznaczone",
     "flagged": "Oznaczony",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "AI nadal nie jest pewne, czym jest {name}.",
       "notFlagged": "{name} nie jest oznaczony."
     },
+    "aiTrace": {
+      "readAs": "AI odczytało to jako „{name}”.",
+      "compared": "Porównano z: {names}.",
+      "comparedNothing": "Nie było znanego produktu do porównania."
+    },
     "addAlias": "Dodaj pisownię",
     "removeAlias": "Usuń {alias}",
     "mergeInto": "Scal z…",
@@ -378,6 +384,9 @@
     "moveTitle": "Przenieś {alias} do innego składnika lub do nowego.",
     "newIngredient": "Nowy składnik",
     "pickIngredient": "Szukaj składnika",
+    "pickerHint": "Wpisz, aby przeszukać katalog",
+    "pickerSearching": "Szukanie…",
+    "pickerEmpty": "Nie znaleziono składnika",
     "setParent": "Wybierz nadrzędny…",
     "parentTitle": "Wybierz składnik, którego rodzajem jest {name}.",
     "kindOf": "Rodzaj: {name}",

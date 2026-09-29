@@ -465,7 +465,7 @@ describe("the list", () => {
 
     expect(catalogue.listCatalogueIngredients).toHaveBeenCalledWith(
       expect.objectContaining({
-        search: { lower: "onion", fold: "onion" },
+        search: { kind: "like", patterns: ["onion%", "% onion%"] },
         flaggedOnly: true,
         offset: 0,
       })

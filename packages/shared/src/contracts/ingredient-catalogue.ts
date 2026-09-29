@@ -50,10 +50,23 @@ export function isFlagReason(value: unknown): value is FlagReason {
   return (FLAG_REASONS as readonly unknown[]).includes(value);
 }
 
-/** What asking AI about a Flagged Ingredient came to, as the procedure answers it. */
-export type ReviewOutcome =
+/**
+ * What asking AI about a Flagged Ingredient came to, as the procedure answers
+ * it, with what was asked: the foods the name was compared with and what AI
+ * read the name as, so a person can see what AI tried.
+ */
+export type ReviewOutcome = ReviewVerdict & ReviewTrace;
+
+export type ReviewVerdict =
   | { outcome: "merged"; into: string }
   | { outcome: "parent"; of: string }
   | { outcome: "distinct" }
   | { outcome: "unsure"; reason: FlagReason }
   | { outcome: "not-flagged" };
+
+export interface ReviewTrace {
+  /** The names of the foods AI was asked to compare the name with, in order. */
+  considered: string[];
+  /** The plain English food AI read the name as, when it said. */
+  englishName: string | null;
+}

@@ -121,6 +121,9 @@ export default function IngredientsSettingsContent() {
               <span className="text-sm">{t("flaggedOnly")}</span>
             </UiSwitch>
           </div>
+          <p className="text-muted -mt-2 text-xs" data-testid="ingredients-search-hint">
+            {t("searchHint")}
+          </p>
 
           {flaggedIds.length > 0 ? (
             <div className="flex flex-wrap items-center gap-3">

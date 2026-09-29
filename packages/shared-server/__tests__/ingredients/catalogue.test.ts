@@ -232,6 +232,30 @@ describe("the ingredient catalogue", () => {
     expect(flagged.items.map((item) => item.name)).toEqual(["cream"]);
   });
 
+  it("reads a search as a word start, a pattern with %, or exactly <this>, the flagged first", async () => {
+    const cola = await mint("cola");
+    const chocolate = await mint("chocolate");
+    const nut = await mint("cola nut");
+
+    await markDistinct(actor, cola.ingredientId);
+    await markDistinct(actor, chocolate.ingredientId);
+    await addAlias(actor, chocolate.ingredientId, "chocola");
+
+    const names = async (search: string) =>
+      (await listIngredients(actor, { search })).items.map((item) => item.name);
+
+    // A word start: never "chocolate". The exact name first, then the flagged one.
+    await expect(names("cola")).resolves.toEqual(["cola", "cola nut"]);
+    // Anything containing it, its own spellings included.
+    await expect(names("%cola%")).resolves.toEqual(["cola", "cola nut", "chocolate"]);
+    await expect(names("%cola")).resolves.toEqual(["cola", "chocolate"]);
+    await expect(names("cola%")).resolves.toEqual(["cola", "cola nut"]);
+    // Exactly this.
+    await expect(names("<Cola>")).resolves.toEqual(["cola"]);
+    // Without a search, the flagged lead.
+    expect((await listIngredients(actor, {})).items[0]!.id).toBe(nut.ingredientId);
+  });
+
   it("leaves another member's Ingredient alone under the default household policy", async () => {
     const onion = await mint("onion");
     const stranger = await createTestUser();

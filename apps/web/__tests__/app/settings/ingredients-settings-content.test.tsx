@@ -39,7 +39,11 @@ const mutations = {
   moveAlias: vi.fn(async () => ({ success: true })),
   setParent: vi.fn(async () => ({ success: true })),
   remove: vi.fn(async () => ({ success: true })),
-  reviewWithAI: vi.fn(async () => ({ outcome: "distinct" })),
+  reviewWithAI: vi.fn(async () => ({
+    outcome: "distinct",
+    considered: ["salt"],
+    englishName: null,
+  })),
 };
 const invalidateQueries = vi.fn();
 

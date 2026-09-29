@@ -335,6 +335,7 @@
     "title": "Zutaten",
     "description": "Jedes Lebensmittel, das Norish kennt, mit den Schreibweisen, unter denen es bekannt ist. Norish markiert die, bei denen es unsicher war: Führen Sie sie mit dem Lebensmittel zusammen, das sie sind, oder markieren Sie sie als eigenständig.",
     "search": "Zutaten suchen",
+    "searchHint": "Geben Sie einen Wortanfang ein. <cola> findet genau cola, %cola% alles, was es enthält, cola% alles, was damit beginnt.",
     "flaggedOnly": "Nur markierte",
     "flagged": "Markiert",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "KI ist sich weiterhin nicht sicher, was {name} ist.",
       "notFlagged": "{name} ist nicht markiert."
     },
+    "aiTrace": {
+      "readAs": "Die KI las es als „{name}“.",
+      "compared": "Verglichen mit: {names}.",
+      "comparedNothing": "Es gab kein bekanntes Lebensmittel zum Vergleich."
+    },
     "addAlias": "Schreibweise hinzufügen",
     "removeAlias": "{alias} entfernen",
     "mergeInto": "Zusammenführen mit…",
@@ -378,6 +384,9 @@
     "moveTitle": "Verschieben Sie {alias} zu einer anderen Zutat oder zu einer neuen.",
     "newIngredient": "Eine neue Zutat",
     "pickIngredient": "Zutat suchen",
+    "pickerHint": "Tippen, um den Katalog zu durchsuchen",
+    "pickerSearching": "Suche…",
+    "pickerEmpty": "Keine Zutat gefunden",
     "setParent": "Oberbegriff wählen…",
     "parentTitle": "Wählen Sie die Zutat, von der {name} eine Sorte ist.",
     "kindOf": "Eine Sorte {name}",

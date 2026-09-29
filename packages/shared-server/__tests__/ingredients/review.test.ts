@@ -107,7 +107,7 @@ describe("asking AI about a flagged Ingredient", () => {
 
     decides("Is onion", 0.95, offered);
 
-    await expect(reviewFlaggedWithAI(actor, onions.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, onions.ingredientId)).resolves.toMatchObject({
       outcome: "merged",
       into: "onion",
     });
@@ -123,7 +123,7 @@ describe("asking AI about a flagged Ingredient", () => {
 
     decides("Is a kind of onion", 0.95);
 
-    await expect(reviewFlaggedWithAI(actor, red.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, red.ingredientId)).resolves.toMatchObject({
       outcome: "parent",
       of: "onion",
     });
@@ -139,7 +139,7 @@ describe("asking AI about a flagged Ingredient", () => {
 
     decides("Is none of these, but a food of its own", 0.95);
 
-    await expect(reviewFlaggedWithAI(actor, spring.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, spring.ingredientId)).resolves.toMatchObject({
       outcome: "distinct",
     });
     await expect(ingredientFor(spring.aliasId)).resolves.toMatchObject({
@@ -155,7 +155,7 @@ describe("asking AI about a flagged Ingredient", () => {
     decides("Is onion", 0.4);
     vi.mocked(generateStructured).mockResolvedValueOnce({ verdict: "same", food: 1, sure: false });
 
-    await expect(reviewFlaggedWithAI(actor, uitjes.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, uitjes.ingredientId)).resolves.toMatchObject({
       outcome: "unsure",
       reason: "ai-unsure",
     });
@@ -182,9 +182,11 @@ describe("asking AI about a flagged Ingredient", () => {
 
     decides("Is onion", 0.95, offered);
 
-    await expect(reviewFlaggedWithAI(actor, ui.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, ui.ingredientId)).resolves.toMatchObject({
       outcome: "merged",
       into: "onion",
+      considered: ["onion"],
+      englishName: "onion",
     });
     expect(offered).toContain("Is onion");
     await expect(ingredientFor(ui.aliasId)).resolves.toMatchObject({ id: onion.ingredientId });
@@ -203,7 +205,7 @@ describe("asking AI about a flagged Ingredient", () => {
     });
     decides("Is a kind of chicken", 0.9);
 
-    await expect(reviewFlaggedWithAI(actor, kipfilet.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, kipfilet.ingredientId)).resolves.toMatchObject({
       outcome: "parent",
       of: "chicken",
     });
@@ -232,7 +234,7 @@ describe("asking AI about a flagged Ingredient", () => {
       englishName: "onion rings",
     });
 
-    await expect(reviewFlaggedWithAI(actor, rings.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, rings.ingredientId)).resolves.toMatchObject({
       outcome: "unsure",
       reason: "ai-unsure",
     });
@@ -253,7 +255,7 @@ describe("asking AI about a flagged Ingredient", () => {
       englishName: null,
     });
 
-    await expect(reviewFlaggedWithAI(actor, multitool.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, multitool.ingredientId)).resolves.toMatchObject({
       outcome: "unsure",
       reason: "ai-unsure",
     });
@@ -270,7 +272,7 @@ describe("asking AI about a flagged Ingredient", () => {
       englishName: "frankfurter",
     });
 
-    await expect(reviewFlaggedWithAI(actor, knaks.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, knaks.ingredientId)).resolves.toMatchObject({
       outcome: "distinct",
     });
     await expect(ingredientFor(knaks.aliasId)).resolves.toMatchObject({ flagged: false });
@@ -281,7 +283,7 @@ describe("asking AI about a flagged Ingredient", () => {
 
     await markDistinct(actor, onion.ingredientId);
 
-    await expect(reviewFlaggedWithAI(actor, onion.ingredientId)).resolves.toEqual({
+    await expect(reviewFlaggedWithAI(actor, onion.ingredientId)).resolves.toMatchObject({
       outcome: "not-flagged",
     });
     expect(vi.mocked(decide)).not.toHaveBeenCalled();

@@ -335,6 +335,7 @@
     "title": "Ingrediënten",
     "description": "Elk voedingsmiddel dat Norish kent, met de spellingen waaronder het bekend is. Norish markeert de ingrediënten waarover het twijfelde: voeg ze samen met het voedingsmiddel dat ze zijn, of markeer ze als apart.",
     "search": "Ingrediënten zoeken",
+    "searchHint": "Typ het begin van een woord. <cola> vindt precies cola, %cola% alles wat het bevat, cola% alles wat ermee begint.",
     "flaggedOnly": "Alleen gemarkeerd",
     "flagged": "Gemarkeerd",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "AI weet nog steeds niet zeker wat {name} is.",
       "notFlagged": "{name} is niet gemarkeerd."
     },
+    "aiTrace": {
+      "readAs": "AI las het als “{name}”.",
+      "compared": "Vergeleken met: {names}.",
+      "comparedNothing": "Er was geen bekend ingrediënt om het mee te vergelijken."
+    },
     "addAlias": "Spelling toevoegen",
     "removeAlias": "{alias} verwijderen",
     "mergeInto": "Samenvoegen met…",
@@ -378,6 +384,9 @@
     "moveTitle": "Verplaats {alias} naar een ander ingrediënt, of naar een nieuw.",
     "newIngredient": "Een nieuw ingrediënt",
     "pickIngredient": "Zoek een ingrediënt",
+    "pickerHint": "Typ om de catalogus te doorzoeken",
+    "pickerSearching": "Zoeken…",
+    "pickerEmpty": "Geen ingrediënt gevonden",
     "setParent": "Bovenliggend kiezen…",
     "parentTitle": "Kies het ingrediënt waarvan {name} een soort is.",
     "kindOf": "Een soort {name}",

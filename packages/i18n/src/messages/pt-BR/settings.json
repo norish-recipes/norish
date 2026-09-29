@@ -335,6 +335,7 @@
     "title": "Ingredientes",
     "description": "Todo alimento que o Norish conhece, com as grafias pelas quais é conhecido. O Norish marca aqueles sobre os quais não tinha certeza: una-os ao alimento que eles são ou marque-os como distintos.",
     "search": "Buscar ingredientes",
+    "searchHint": "Digite o início de uma palavra. <cola> encontra exatamente cola, %cola% tudo que o contenha, cola% tudo que comece assim.",
     "flaggedOnly": "Somente marcados",
     "flagged": "Marcado",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "A IA ainda não tem certeza do que é {name}.",
       "notFlagged": "{name} não está sinalizado."
     },
+    "aiTrace": {
+      "readAs": "A IA leu como “{name}”.",
+      "compared": "Comparado com: {names}.",
+      "comparedNothing": "Não havia alimento conhecido para comparar."
+    },
     "addAlias": "Adicionar uma grafia",
     "removeAlias": "Remover {alias}",
     "mergeInto": "Mesclar com…",
@@ -378,6 +384,9 @@
     "moveTitle": "Mova {alias} para outro ingrediente, ou para um novo.",
     "newIngredient": "Um novo ingrediente",
     "pickIngredient": "Buscar um ingrediente",
+    "pickerHint": "Digite para buscar no catálogo",
+    "pickerSearching": "Buscando…",
+    "pickerEmpty": "Nenhum ingrediente encontrado",
     "setParent": "Escolher superior…",
     "parentTitle": "Escolha o ingrediente do qual {name} é um tipo.",
     "kindOf": "Um tipo de {name}",

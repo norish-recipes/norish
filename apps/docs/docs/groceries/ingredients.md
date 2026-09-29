@@ -32,10 +32,25 @@ none of these is sure does it add a new ingredient, **flagged** for you to check
 
 ## The Ingredients page
 
-Open **Settings → Ingredients** to see the catalogue. Search finds an ingredient
-by any of its spellings, in any language. Each ingredient is a line: its name in
-your language, whether Norish flagged it and why, and how many spellings it goes
-by. Press a line to open the ingredient's panel.
+Open **Settings → Ingredients** to see the catalogue. Flagged ingredients come
+first. Each ingredient is a line: its name in your language, whether Norish
+flagged it and why, and how many spellings it goes by. Press a line to open the
+ingredient's panel.
+
+Search finds an ingredient by any of its spellings, in any language, and reads
+what you type as the start of a word: `cola` finds “cola” and “cola nut”, never
+“chocolate”. For more, use `%` for anything and `<…>` for exactly this:
+
+| You type | Finds                                |
+| -------- | ------------------------------------ |
+| `cola`   | names with a word starting with cola |
+| `<cola>` | exactly cola                         |
+| `%cola%` | anything containing cola             |
+| `cola%`  | anything starting with cola          |
+| `%cola`  | anything ending in cola              |
+
+An ingredient named exactly what you typed is listed first. The same search
+works in the box that picks an ingredient for a merge, a parent or a move.
 
 ![The Ingredients page, with a flagged ingredient](/img/screenshots/ingredients-page.png)
 
@@ -81,6 +96,9 @@ lists several foods it could be. Two buttons settle it:
   is “onion”, “Unox Knaks” is a frankfurter) and compares it with the foods that
   name finds. A sure answer is acted on: merged into the food it is, filed as a
   kind of one, or marked distinct. An unsure answer leaves the flag and says so.
+  Either way the message says what AI tried: what it read the name as, and
+  which foods it compared it with, so you can judge the answer or merge by
+  hand.
 - **Mark distinct** when it really is a food of its own.
 
 Whenever the list shows flagged ingredients you may edit, one button above it

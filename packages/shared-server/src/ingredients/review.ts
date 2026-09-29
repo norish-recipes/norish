@@ -7,7 +7,7 @@
  * a parent, or the flag cleared — and an unsure one leaves the flag, with
  * the reason brought up to date. Follows `edit` on the Ingredient.
  */
-import type { ReviewOutcome } from "@norish/shared/contracts/ingredient-catalogue";
+import type { ReviewOutcome, ReviewVerdict } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   clearIngredientFlag,
   findCatalogueIngredient,
@@ -19,6 +19,7 @@ import {
 } from "@norish/db/repositories/ingredient-relocation";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 
+import type { AskTrace } from "../ai/resolution/ingredient-resolution";
 import type { CatalogueActor } from "./catalogue";
 import { askWhatFoodThisIs } from "../ai/resolution/ingredient-resolution";
 import { CatalogueEditError, mayEditIngredientRow } from "./catalogue";
@@ -45,14 +46,26 @@ export async function reviewFlaggedWithAI(
   if (!mayEditIngredientRow(policy.edit, actor, row.ownerId)) {
     throw new CatalogueEditError("forbidden");
   }
-  if (!row.flagged) return { outcome: "not-flagged" };
+  const trace: AskTrace = { considered: [], englishName: null };
+
+  if (!row.flagged) return { outcome: "not-flagged", ...trace };
 
   const answer = await askWhatFoodThisIs(row.name, stripPreparation(row.name), {
     excludeId: ingredientId,
     thorough: true,
     budgetMs: REVIEW_BUDGET_MS,
+    trace,
   });
+  const verdict = await actOn(ingredientId, answer);
 
+  return { ...verdict, ...trace };
+}
+
+/** Act on the answer the way the page's own edits would, and say what came of it. */
+async function actOn(
+  ingredientId: string,
+  answer: Awaited<ReturnType<typeof askWhatFoodThisIs>>
+): Promise<ReviewVerdict> {
   if (answer.kind === "same") {
     const target = await findCatalogueIngredient(answer.ingredientId);
 

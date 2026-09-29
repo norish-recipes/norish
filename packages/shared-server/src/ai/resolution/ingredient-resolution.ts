@@ -80,6 +80,14 @@ export interface AskOptions {
   thorough?: boolean;
   /** How long to wait for an answer before minting flagged instead. */
   budgetMs?: number;
+  /** Where to record what was asked, for a person who wants to know: filled in as it goes. */
+  trace?: AskTrace;
+}
+
+/** What one question came to: the foods the name was compared with, and what AI read it as. */
+export interface AskTrace {
+  considered: string[];
+  englishName: string | null;
 }
 
 /** The starts of a name's words the candidate search matches on. Numbers name no food. */
@@ -126,8 +134,11 @@ export async function askWhatFoodThisIs(
       resolve(flaggedNew("ai-unavailable"));
     }, budgetMs);
   });
+  const trace = options.trace ?? { considered: [], englishName: null };
+
+  trace.considered.push(...candidates.map((candidate) => candidate.name));
   const asked = options.thorough
-    ? askTwice(text, candidates, excludeId)
+    ? askTwice(text, candidates, excludeId, trace)
     : askAbout(text, candidates);
 
   try {
@@ -154,12 +165,14 @@ function placed(answer: AIResolution): boolean {
 async function askTwice(
   text: string,
   candidates: readonly IngredientCandidate[],
-  excludeId: string | null
+  excludeId: string | null,
+  trace: AskTrace
 ): Promise<AIResolution> {
   const named: string[] = [];
   const first = await askAbout(text, candidates, named);
   const englishName = named[0];
 
+  trace.englishName = englishName ?? null;
   if (placed(first) || !englishName) return first;
 
   const offered = new Set(candidates.map((candidate) => candidate.id));
@@ -169,6 +182,7 @@ async function askTwice(
 
   if (more.length === 0) return first;
 
+  trace.considered.push(...more.map((candidate) => candidate.name));
   aiLogger.info(
     { text, englishName, candidates: more.length },
     "Taking a second look at a name, by the food AI says it is"

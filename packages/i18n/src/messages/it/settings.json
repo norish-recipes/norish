@@ -335,6 +335,7 @@
     "title": "Ingredienti",
     "description": "Ogni alimento che Norish conosce, con le grafie con cui è noto. Norish segnala quelli su cui non era sicuro: uniscili all'alimento che sono o segnali come distinti.",
     "search": "Cerca ingredienti",
+    "searchHint": "Scrivi l'inizio di una parola. <cola> trova esattamente cola, %cola% tutto ciò che lo contiene, cola% tutto ciò che inizia così.",
     "flaggedOnly": "Solo segnalati",
     "flagged": "Segnalato",
     "flagReasons": {
@@ -367,6 +368,11 @@
       "unsure": "L'IA non è ancora sicura di cosa sia {name}.",
       "notFlagged": "{name} non è segnalato."
     },
+    "aiTrace": {
+      "readAs": "L'IA l'ha letto come “{name}”.",
+      "compared": "Confrontato con: {names}.",
+      "comparedNothing": "Non c'era alcun alimento noto con cui confrontarlo."
+    },
     "addAlias": "Aggiungi una grafia",
     "removeAlias": "Rimuovi {alias}",
     "mergeInto": "Unisci a…",
@@ -378,6 +384,9 @@
     "moveTitle": "Sposta {alias} in un altro ingrediente, o in uno nuovo.",
     "newIngredient": "Un nuovo ingrediente",
     "pickIngredient": "Cerca un ingrediente",
+    "pickerHint": "Scrivi per cercare nel catalogo",
+    "pickerSearching": "Ricerca…",
+    "pickerEmpty": "Nessun ingrediente trovato",
     "setParent": "Scegli il genitore…",
     "parentTitle": "Scegli l'ingrediente di cui {name} è un tipo.",
     "kindOf": "Un tipo di {name}",

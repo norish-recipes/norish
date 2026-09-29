@@ -1,6 +1,8 @@
-import { and, asc, count, eq, inArray, or, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { db } from "@norish/db/drizzle";
 import {
   groceries,
@@ -49,30 +51,47 @@ export interface CatalogueOwner {
   ownerId: string | null;
 }
 
-/** A `LIKE` pattern matching `text` anywhere, its wildcards taken literally. */
-function containing(text: string): string {
-  return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
+/**
+ * The folded name and the spellings of an Ingredient against one search:
+ * exactly that fold, or any of the `LIKE` patterns. Names carry no fold
+ * column, so the name is matched lowercased, which is the fold of an ASCII
+ * name; an accented name is found through its own spelling.
+ */
+function matchingSearch(search: IngredientSearch) {
+  const name = sql`lower(${ingredients.name})`;
+  const spelling = (test: (column: typeof ingredientAliases.fold) => SQL | undefined) =>
+    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredients.id} and ${test(ingredientAliases.fold)})`;
+
+  if (search.kind === "exact") {
+    return or(
+      sql`${name} = ${search.fold}`,
+      spelling((fold) => eq(fold, search.fold))
+    );
+  }
+
+  return or(
+    ...search.patterns.map((pattern) => sql`${name} like ${pattern}`),
+    spelling((fold) => or(...search.patterns.map((pattern) => sql`${fold} like ${pattern}`)))
+  );
 }
 
 /**
- * A page of the catalogue by name: every Ingredient, or the flagged ones, or
- * those whose name or any spelling contains the search — matched on the fold,
- * so "creme" finds "Crème fraîche".
+ * A page of the catalogue: every Ingredient, or the flagged ones, or those a
+ * search names (`parseIngredientSearch`) by their name or any spelling. An
+ * Ingredient named exactly what was typed comes first; then the flagged,
+ * since they are what wants looking at; then by name.
  */
 export async function listCatalogueIngredients(query: {
-  search: { lower: string; fold: string } | null;
+  search: IngredientSearch | null;
   flaggedOnly: boolean;
   limit: number;
   offset: number;
 }): Promise<CatalogueIngredient[]> {
-  const matchesSearch = query.search
-    ? or(
-        sql`lower(${ingredients.name}) like ${containing(query.search.lower)}`,
-        query.search.fold
-          ? sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredients.id} and ${ingredientAliases.fold} like ${containing(query.search.fold)})`
-          : undefined
-      )
-    : undefined;
+  const matchesSearch = query.search ? matchingSearch(query.search) : undefined;
+  const typed = query.search?.kind === "like" ? query.search.patterns[0]?.replace(/%/g, "") : null;
+  const exactFirst = typed
+    ? [sql`case when lower(${ingredients.name}) = ${typed} then 0 else 1 end`]
+    : [];
 
   const parents = alias(ingredients, "parent");
   const rows = await db
@@ -89,7 +108,12 @@ export async function listCatalogueIngredients(query: {
     .from(ingredients)
     .leftJoin(parents, eq(parents.id, ingredients.parentId))
     .where(and(query.flaggedOnly ? eq(ingredients.flagged, true) : undefined, matchesSearch))
-    .orderBy(asc(sql`lower(${ingredients.name})`), asc(ingredients.id))
+    .orderBy(
+      ...exactFirst,
+      desc(ingredients.flagged),
+      asc(sql`lower(${ingredients.name})`),
+      asc(ingredients.id)
+    )
     .limit(query.limit)
     .offset(query.offset);
 
