@@ -378,7 +378,7 @@
     "mergeInto": "Yhdistä…",
     "merge": "Yhdistä",
     "mergedToast": "{name} on nyt ruoka-aineen {into} käännös. Kumoa avaamalla {into} ja siirtämällä {name} taas pois.",
-    "mergeTitle": "{name} katoaa ja siitä tulee valitsemasi ruoka-aineen käännös. Kaikki, mikä on nimeltään {name}, säilyttää tekstinsä mutta lasketaan tästä lähtien siksi ruoka-aineeksi: sen käytävä, sen tuote ja sen varasto.",
+    "mergeTitle": "{name} katoaa ja siitä tulee valitsemasi ruoka-aineen käännös. Kaikki, mikä on nimeltään {name}, säilyttää tekstinsä mutta lasketaan tästä lähtien siksi ruoka-aineeksi: se menee sen käytävälle, saa sen tuotteen ja jää pois listalta, kun se ruoka-aine on varastossasi.",
     "moveTo": "Siirrä",
     "move": "Siirrä",
     "moveAlias": "Siirrä {alias}",

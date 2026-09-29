@@ -378,7 +378,7 @@
     "mergeInto": "Samenvoegen met…",
     "merge": "Samenvoegen",
     "mergedToast": "{name} is nu een vertaling van {into}. Om dit ongedaan te maken, open {into} en verplaats {name} er weer uit.",
-    "mergeTitle": "{name} verdwijnt en wordt een vertaling van het ingrediënt dat je kiest. Alles wat {name} heet houdt zijn tekst, maar telt voortaan als dat ingrediënt: zijn gangpad, zijn product en zijn voorraad.",
+    "mergeTitle": "{name} verdwijnt en wordt een vertaling van het ingrediënt dat je kiest. Alles wat {name} heet houdt zijn tekst, maar telt voortaan als dat ingrediënt: het komt in zijn gangpad, krijgt zijn product en blijft van de lijst als dat ingrediënt in je voorraad zit.",
     "moveTo": "Verplaatsen naar",
     "move": "Verplaatsen",
     "moveAlias": "{alias} verplaatsen",

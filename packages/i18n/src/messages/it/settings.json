@@ -378,7 +378,7 @@
     "mergeInto": "Unisci a…",
     "merge": "Unisci",
     "mergedToast": "{name} è ora una traduzione di {into}. Per annullare, apri {into} e sposta di nuovo fuori {name}.",
-    "mergeTitle": "{name} scompare e diventa una traduzione dell'ingrediente che scegli. Tutto ciò che si chiama {name} mantiene il testo ma da ora conta come quell'ingrediente: la sua corsia, il suo prodotto e la sua dispensa.",
+    "mergeTitle": "{name} scompare e diventa una traduzione dell'ingrediente che scegli. Tutto ciò che si chiama {name} mantiene il testo ma da ora conta come quell'ingrediente: va nella sua corsia, con il suo prodotto, e resta fuori dalla lista quando quell'ingrediente è in dispensa.",
     "moveTo": "Sposta in",
     "move": "Sposta",
     "moveAlias": "Sposta {alias}",

@@ -378,7 +378,7 @@
     "mergeInto": "Slå sammen med…",
     "merge": "Slå sammen",
     "mergedToast": "{name} er nå en oversettelse av {into}. Angre ved å åpne {into} og flytte {name} ut igjen.",
-    "mergeTitle": "{name} forsvinner og blir en oversettelse av ingrediensen du velger. Alt som heter {name} beholder teksten, men teller fra nå av som den ingrediensen: dens hylle, dens produkt og dens forråd.",
+    "mergeTitle": "{name} forsvinner og blir en oversettelse av ingrediensen du velger. Alt som heter {name} beholder teksten, men teller fra nå av som den ingrediensen: den havner i dens hylle, får dens produkt og holdes utenfor listen når den ingrediensen er i forrådet ditt.",
     "moveTo": "Flytt til",
     "move": "Flytt",
     "moveAlias": "Flytt {alias}",

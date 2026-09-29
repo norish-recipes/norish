@@ -378,7 +378,7 @@
     "mergeInto": "Fusionar con…",
     "merge": "Fusionar",
     "mergedToast": "{name} es ahora una traducción de {into}. Para deshacerlo, abre {into} y saca {name} de nuevo.",
-    "mergeTitle": "{name} desaparece y pasa a ser una traducción del ingrediente que elijas. Todo lo que se llama {name} conserva su texto, pero cuenta desde ahora como ese ingrediente: su pasillo, su producto y su despensa.",
+    "mergeTitle": "{name} desaparece y pasa a ser una traducción del ingrediente que elijas. Todo lo que se llama {name} conserva su texto, pero cuenta desde ahora como ese ingrediente: va en su pasillo, con su producto, y se queda fuera de la lista cuando ese ingrediente está en tu despensa.",
     "moveTo": "Mover a",
     "move": "Mover",
     "moveAlias": "Mover {alias}",

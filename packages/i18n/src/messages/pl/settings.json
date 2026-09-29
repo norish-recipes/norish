@@ -378,7 +378,7 @@
     "mergeInto": "Scal z…",
     "merge": "Scal",
     "mergedToast": "{name} jest teraz tłumaczeniem składnika {into}. Aby cofnąć, otwórz {into} i przenieś {name} z powrotem.",
-    "mergeTitle": "{name} znika i staje się tłumaczeniem wybranego składnika. Wszystko, co nazywa się {name}, zachowuje tekst, ale od teraz liczy się jako ten składnik: jego alejka, jego produkt i jego spiżarnia.",
+    "mergeTitle": "{name} znika i staje się tłumaczeniem wybranego składnika. Wszystko, co nazywa się {name}, zachowuje tekst, ale od teraz liczy się jako ten składnik: trafia do jego alejki, dostaje jego produkt i nie trafia na listę, gdy ten składnik jest w spiżarni.",
     "moveTo": "Przenieś do",
     "move": "Przenieś",
     "moveAlias": "Przenieś {alias}",

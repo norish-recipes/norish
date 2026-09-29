@@ -378,7 +378,7 @@
     "mergeInto": "Merge into…",
     "merge": "Merge",
     "mergedToast": "{name} is now a translation of {into}. To undo, open {into} and move {name} back out.",
-    "mergeTitle": "{name} disappears and becomes a translation of the ingredient you pick. Everything that says {name} keeps its text but counts as that ingredient from now on: its aisle, its product and its pantry cover.",
+    "mergeTitle": "{name} disappears and becomes a translation of the ingredient you pick. Everything that says {name} keeps its text but counts as that ingredient from now on: it is filed in its aisle, priced by its product, and left off the list when that ingredient is in your pantry.",
     "moveTo": "Move to",
     "move": "Move",
     "moveAlias": "Move {alias}",

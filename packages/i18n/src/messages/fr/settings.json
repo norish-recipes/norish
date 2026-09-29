@@ -378,7 +378,7 @@
     "mergeInto": "Fusionner avec…",
     "merge": "Fusionner",
     "mergedToast": "{name} est maintenant une traduction de {into}. Pour annuler, ouvrez {into} et déplacez {name} hors de celui-ci.",
-    "mergeTitle": "{name} disparaît et devient une traduction de l'ingrédient que vous choisissez. Tout ce qui s'appelle {name} garde son texte mais compte désormais comme cet ingrédient : son rayon, son produit et son garde-manger.",
+    "mergeTitle": "{name} disparaît et devient une traduction de l'ingrédient que vous choisissez. Tout ce qui s'appelle {name} garde son texte mais compte désormais comme cet ingrédient : classé dans son rayon, au prix de son produit, et laissé hors de la liste quand cet ingrédient est dans votre garde-manger.",
     "moveTo": "Déplacer vers",
     "move": "Déplacer",
     "moveAlias": "Déplacer {alias}",

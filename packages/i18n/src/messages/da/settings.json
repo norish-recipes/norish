@@ -378,7 +378,7 @@
     "mergeInto": "Flet med…",
     "merge": "Flet",
     "mergedToast": "{name} er nu en oversættelse af {into}. Fortryd ved at åbne {into} og flytte {name} ud igen.",
-    "mergeTitle": "{name} forsvinder og bliver en oversættelse af den ingrediens, du vælger. Alt, der hedder {name}, beholder sin tekst, men tæller fra nu af som den ingrediens: dens gang, dens produkt og dens forråd.",
+    "mergeTitle": "{name} forsvinder og bliver en oversættelse af den ingrediens, du vælger. Alt, der hedder {name}, beholder sin tekst, men tæller fra nu af som den ingrediens: den lander i dens gang, får dens produkt og holdes ude af listen, når den ingrediens er i dit forråd.",
     "moveTo": "Flyt til",
     "move": "Flyt",
     "moveAlias": "Flyt {alias}",

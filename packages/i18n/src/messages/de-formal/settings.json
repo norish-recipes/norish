@@ -378,7 +378,7 @@
     "mergeInto": "Zusammenführen mit…",
     "merge": "Zusammenführen",
     "mergedToast": "{name} ist jetzt eine Übersetzung von {into}. Zum Rückgängigmachen öffnen Sie {into} und verschieben {name} wieder heraus.",
-    "mergeTitle": "{name} verschwindet und wird zu einer Übersetzung der Zutat, die Sie wählen. Alles, was {name} heißt, behält seinen Text, zählt aber ab jetzt als diese Zutat: ihr Gang, ihr Produkt und ihr Vorrat.",
+    "mergeTitle": "{name} verschwindet und wird zu einer Übersetzung der Zutat, die Sie wählen. Alles, was {name} heißt, behält seinen Text, zählt aber ab jetzt als diese Zutat: es landet in ihrem Gang, bekommt ihr Produkt und bleibt von der Liste, wenn diese Zutat in Ihrem Vorrat ist.",
     "moveTo": "Verschieben nach",
     "move": "Verschieben",
     "moveAlias": "{alias} verschieben",
