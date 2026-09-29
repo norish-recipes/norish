@@ -501,8 +501,10 @@
       "description": "Wenn deaktiviert, können sich nur bestehende Benutzer anmelden"
     },
     "permissions": {
-      "title": "Rezept-Berechtigungen",
-      "description": "Steuere, wer Rezepte ansehen, bearbeiten und löschen kann. Server-Administratoren haben immer vollen Zugriff.",
+      "title": "Berechtigungen",
+      "description": "Wer sehen und ändern darf, was andere angelegt haben. Server-Admins haben immer vollen Zugriff.",
+      "recipes": "Rezepte",
+      "ingredients": "Zutaten",
       "viewRecipes": "Rezepte ansehen",
       "viewDescription": "Wer kann Rezepte im Dashboard sehen",
       "editRecipes": "Rezepte bearbeiten",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Zutatenberechtigungen",
-      "description": "Lege fest, wer Zutaten umbenennen, als eigenständig markieren und ihre Schreibweisen entfernen darf. Jeder darf eine Schreibweise hinzufügen, und Serveradministratoren haben immer vollen Zugriff.",
+      "description": "Lege fest, wer Zutaten umbenennen, als eigenständig markieren und ihre Übersetzungen entfernen darf. Jeder darf eine Übersetzung hinzufügen, und Serveradministratoren haben immer vollen Zugriff.",
       "editIngredients": "Zutaten bearbeiten",
       "editDescription": "Wer eine Zutat ändern darf, die jemand anderes hinzugefügt hat",
       "levels": {

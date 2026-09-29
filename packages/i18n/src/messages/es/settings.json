@@ -501,8 +501,10 @@
       "description": "Si está desactivado, solo los usuarios existentes pueden iniciar sesión"
     },
     "permissions": {
-      "title": "Permisos de recetas",
-      "description": "Controla quién puede ver, editar y eliminar recetas. Los administradores del servidor siempre tienen acceso completo.",
+      "title": "Permisos",
+      "description": "Quién puede ver y cambiar lo que otros han creado. Los administradores del servidor siempre tienen acceso completo.",
+      "recipes": "Recetas",
+      "ingredients": "Ingredientes",
       "viewRecipes": "Ver recetas",
       "viewDescription": "Quién puede ver las recetas en el panel",
       "editRecipes": "Editar recetas",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Permisos de ingredientes",
-      "description": "Controla quién puede renombrar ingredientes, marcarlos como distintos y eliminar sus grafías. Cualquiera puede añadir una grafía, y los administradores del servidor siempre tienen acceso completo.",
+      "description": "Controla quién puede renombrar ingredientes, marcarlos como distintos y eliminar sus traducciones. Cualquiera puede añadir una traducción, y los administradores del servidor siempre tienen acceso completo.",
       "editIngredients": "Editar ingredientes",
       "editDescription": "Quién puede cambiar un ingrediente que otra persona añadió",
       "levels": {

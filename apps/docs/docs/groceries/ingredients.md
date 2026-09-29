@@ -106,7 +106,7 @@ asks AI about each of them in turn and says what came of it.
 
 Renaming, setting a parent or marking an ingredient distinct clears its flag. Who
 may change an ingredient someone else added is up to your server admin, see
-[Ingredient permissions](../configuration/admin-settings.md#ingredient-permissions).
+[Permissions](../configuration/admin-settings.md#permissions).
 Every change reaches everyone's lists and open Ingredients pages straight away.
 
 ## Data sources

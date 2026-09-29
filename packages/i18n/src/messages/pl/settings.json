@@ -501,8 +501,10 @@
       "description": "Gdy wyłączone, tylko istniejący użytkownicy mogą się zalogować"
     },
     "permissions": {
-      "title": "Uprawnienia przepisów",
-      "description": "Określ, kto może przeglądać, edytować i usuwać przepisy. Administratorzy serwera zawsze mają pełny dostęp.",
+      "title": "Uprawnienia",
+      "description": "Kto może widzieć i zmieniać to, co stworzyli inni. Administratorzy serwera zawsze mają pełny dostęp.",
+      "recipes": "Przepisy",
+      "ingredients": "Składniki",
       "viewRecipes": "Przeglądanie przepisów",
       "viewDescription": "Kto może widzieć przepisy na pulpicie",
       "editRecipes": "Edycja przepisów",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Uprawnienia składników",
-      "description": "Określ, kto może zmieniać nazwy składników, oznaczać je jako odrębne i usuwać ich pisownie. Każdy może dodać pisownię, a administratorzy serwera zawsze mają pełny dostęp.",
+      "description": "Określ, kto może zmieniać nazwy składników, oznaczać je jako odrębne i usuwać ich tłumaczenia. Każdy może dodać tłumaczeńę, a administratorzy serwera zawsze mają pełny dostęp.",
       "editIngredients": "Edytuj składniki",
       "editDescription": "Kto może zmienić składnik dodany przez kogoś innego",
       "levels": {

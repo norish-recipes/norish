@@ -501,8 +501,10 @@
       "description": "Quando disabilitato, solo gli utenti esistenti possono accedere"
     },
     "permissions": {
-      "title": "Permessi ricette",
-      "description": "Controlla chi può visualizzare, modificare ed eliminare le ricette. Gli amministratori del server hanno sempre accesso completo.",
+      "title": "Permessi",
+      "description": "Chi può vedere e modificare ciò che altri hanno creato. Gli amministratori del server hanno sempre accesso completo.",
+      "recipes": "Ricette",
+      "ingredients": "Ingredienti",
       "viewRecipes": "Visualizza ricette",
       "viewDescription": "Chi può vedere le ricette nella dashboard",
       "editRecipes": "Modifica ricette",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Permessi degli ingredienti",
-      "description": "Decidi chi può rinominare gli ingredienti, segnarli come distinti e rimuoverne le grafie. Chiunque può aggiungere una grafia e gli amministratori del server hanno sempre accesso completo.",
+      "description": "Decidi chi può rinominare gli ingredienti, segnarli come distinti e rimuoverne le traduzioni. Chiunque può aggiungere una traduzione e gli amministratori del server hanno sempre accesso completo.",
       "editIngredients": "Modifica ingredienti",
       "editDescription": "Chi può cambiare un ingrediente aggiunto da qualcun altro",
       "levels": {

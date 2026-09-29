@@ -501,8 +501,10 @@
       "description": "Kun tämä on pois käytöstä, vain olemassa olevat käyttäjät voivat kirjautua sisään"
     },
     "permissions": {
-      "title": "Reseptien käyttöoikeudet",
-      "description": "Määritä, kuka voi katsella, muokata ja poistaa reseptejä. Palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "title": "Oikeudet",
+      "description": "Kuka saa nähdä ja muuttaa muiden tekemää. Palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "recipes": "Reseptit",
+      "ingredients": "Ruoka-aineet",
       "viewRecipes": "Reseptien katselu",
       "viewDescription": "Kuka näkee reseptit etusivulla",
       "editRecipes": "Reseptien muokkaus",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Ainesosien oikeudet",
-      "description": "Määritä, kuka voi nimetä ainesosia uudelleen, merkitä ne erillisiksi ja poistaa niiden kirjoitusasuja. Kuka tahansa voi lisätä kirjoitusasun, ja palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "description": "Määritä, kuka voi nimetä ainesosia uudelleen, merkitä ne erillisiksi ja poistaa niiden käännöksiä. Kuka tahansa voi lisätä käännöksen, ja palvelimen ylläpitäjillä on aina täydet oikeudet.",
       "editIngredients": "Muokkaa ainesosia",
       "editDescription": "Kuka voi muuttaa jonkun toisen lisäämää ainesosaa",
       "levels": {

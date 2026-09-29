@@ -501,8 +501,10 @@
       "description": "Si désactivé, seuls les utilisateurs existants peuvent se connecter"
     },
     "permissions": {
-      "title": "Permissions des recettes",
-      "description": "Définissez qui peut voir, modifier et supprimer les recettes. Les admins serveur ont toujours un accès complet.",
+      "title": "Permissions",
+      "description": "Qui peut voir et modifier ce que d'autres ont créé. Les administrateurs du serveur ont toujours un accès complet.",
+      "recipes": "Recettes",
+      "ingredients": "Ingrédients",
       "viewRecipes": "Voir les recettes",
       "viewDescription": "Qui peut consulter les recettes",
       "editRecipes": "Modifier les recettes",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Permissions des ingrédients",
-      "description": "Définissez qui peut renommer les ingrédients, les marquer comme distincts et supprimer leurs orthographes. Tout le monde peut ajouter une orthographe, et les administrateurs du serveur ont toujours un accès complet.",
+      "description": "Définissez qui peut renommer les ingrédients, les marquer comme distincts et supprimer leurs traductions. Tout le monde peut ajouter une traduction, et les administrateurs du serveur ont toujours un accès complet.",
       "editIngredients": "Modifier les ingrédients",
       "editDescription": "Qui peut modifier un ingrédient ajouté par quelqu'un d'autre",
       "levels": {

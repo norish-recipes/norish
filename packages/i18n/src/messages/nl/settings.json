@@ -501,8 +501,10 @@
       "description": "Wanneer uitgeschakeld, kunnen alleen bestaande gebruikers inloggen"
     },
     "permissions": {
-      "title": "Receptmachtigingen",
-      "description": "Beheer wie recepten kan bekijken, bewerken en verwijderen. Serverbeheerders hebben altijd volledige toegang.",
+      "title": "Rechten",
+      "description": "Wie mag zien en wijzigen wat anderen hebben gemaakt. Serverbeheerders hebben altijd volledige toegang.",
+      "recipes": "Recepten",
+      "ingredients": "Ingrediënten",
       "viewRecipes": "Recepten bekijken",
       "viewDescription": "Wie recepten kan zien in het dashboard",
       "editRecipes": "Recepten bewerken",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Ingrediëntrechten",
-      "description": "Bepaal wie ingrediënten mag hernoemen, als apart mag markeren en spellingen mag verwijderen. Iedereen mag een spelling toevoegen, en serverbeheerders hebben altijd volledige toegang.",
+      "description": "Bepaal wie ingrediënten mag hernoemen, als apart mag markeren en vertalingen mag verwijderen. Iedereen mag een vertaling toevoegen, en serverbeheerders hebben altijd volledige toegang.",
       "editIngredients": "Ingrediënten bewerken",
       "editDescription": "Wie een ingrediënt mag wijzigen dat iemand anders heeft toegevoegd",
       "levels": {

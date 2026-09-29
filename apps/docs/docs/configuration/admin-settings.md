@@ -13,8 +13,8 @@ You can manage:
 
 - **[Users](./users.md)** Basic user management.
 - **Registration policy** whether new users may register.
-- **Permission policies** for recipe view, edit, and delete scopes, and for
-  [editing ingredients](#ingredient-permissions).
+- **[Permissions](#permissions)** for recipe view, edit, and delete scopes,
+  and for editing ingredients.
 - **Auth providers** (OIDC, GitHub, Google).
 - **OIDC claim mapping** for admin role assignment and household auto-join.
 - **Content detection settings** (units, content indicators, recurrence config).
@@ -31,18 +31,24 @@ instance, the [database](./database.md), the encryption key in
 Some settings may require a reboot, this is indicated in the UI.
 :::
 
-## Ingredient permissions
+## Permissions
 
-Every household shares one catalogue of ingredients, which members look after
-in **Settings => Ingredients**. **Settings => Admin => Ingredient Permissions**
+**Settings => Admin => Permissions** holds one card with a section per kind of
+thing.
+
+**Recipes** has a level each for viewing, editing and deleting a recipe someone
+else added: everyone, household or owner only.
+
+**Ingredients** has one level. Every household shares one catalogue of
+ingredients, which members look after in **Settings => Ingredients**, and this
 decides who may rename an ingredient someone else added, set its parent, mark it
-distinct, merge it, or move or remove one of its spellings:
+distinct, merge it, or move or remove one of its translations:
 
 - **Everyone**: any signed-in user.
 - **Household** (the default): whoever added it and their household members.
 - **Owner only**: only whoever added it.
 
-Merging needs permission on both ingredients. Anyone may add a spelling to any
+Merging needs permission on both ingredients. Anyone may add a translation to any
 ingredient. Ingredients are always visible to
 everyone; there is no view setting. Ingredients from the built-in catalogue
 belong to no one and only server admins can edit them, and server admins can

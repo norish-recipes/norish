@@ -501,8 +501,10 @@
       "description": "Når deaktivert, kan bare eksisterende brukere logge inn"
     },
     "permissions": {
-      "title": "Oppskrifttillatelser",
-      "description": "Kontroller hvem som kan se, redigere og slette oppskrifter. Serveradministratorer har alltid full tilgang.",
+      "title": "Tillatelser",
+      "description": "Hvem som kan se og endre det andre har laget. Serveradministratorer har alltid full tilgang.",
+      "recipes": "Oppskrifter",
+      "ingredients": "Ingredienser",
       "viewRecipes": "Se oppskrifter",
       "viewDescription": "Hvem kan se oppskrifter i oversikten",
       "editRecipes": "Rediger oppskrifter",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Ingredienstillatelser",
-      "description": "Bestem hvem som kan gi ingredienser nytt navn, markere dem som egne og fjerne stavemåtene deres. Alle kan legge til en stavemåte, og serveradministratorer har alltid full tilgang.",
+      "description": "Bestem hvem som kan gi ingredienser nytt navn, markere dem som egne og fjerne oversettelsene deres. Alle kan legge til en oversettelse, og serveradministratorer har alltid full tilgang.",
       "editIngredients": "Rediger ingredienser",
       "editDescription": "Hvem som kan endre en ingrediens noen andre har lagt til",
       "levels": {

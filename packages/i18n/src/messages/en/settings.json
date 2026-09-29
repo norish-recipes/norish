@@ -501,8 +501,10 @@
       "description": "When disabled, only existing users can sign in"
     },
     "permissions": {
-      "title": "Recipe Permissions",
-      "description": "Control who can view, edit, and delete recipes. Server admins always have full access.",
+      "title": "Permissions",
+      "description": "Who may see and change what others made. Server admins always have full access.",
+      "recipes": "Recipes",
+      "ingredients": "Ingredients",
       "viewRecipes": "View Recipes",
       "viewDescription": "Who can see recipes in the dashboard",
       "editRecipes": "Edit Recipes",
@@ -521,7 +523,7 @@
     },
     "ingredientPermissions": {
       "title": "Ingredient Permissions",
-      "description": "Control who can rename ingredients, mark them distinct and remove their spellings. Anyone can add a spelling, and server admins always have full access.",
+      "description": "Control who can rename ingredients, mark them distinct and remove their translations. Anyone can add a translation, and server admins always have full access.",
       "editIngredients": "Edit Ingredients",
       "editDescription": "Who can change an ingredient someone else added",
       "levels": {
