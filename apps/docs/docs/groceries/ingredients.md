@@ -54,7 +54,7 @@ works in the box that picks an ingredient for a merge, a parent or a move.
 
 ![The Ingredients page, with a flagged ingredient](/img/screenshots/ingredients-page.png)
 
-The panel shows the ingredient's name, what it is a kind of, and its spellings in
+The panel shows the ingredient's name, its parent, and its spellings in
 your language and the ones your household added (**More spellings** shows the
 rest). Every change is saved as you make it. What you may change depends on who
 added the ingredient; a control you may not use is not shown.
@@ -62,7 +62,7 @@ added the ingredient; a control you may not use is not shown.
 ![An ingredient's panel](/img/screenshots/ingredients-panel.png)
 
 - **Name**: type a new name and save it. The old spellings stay.
-- **Kind of**: **Set parent…** (or **Change parent…**) says an ingredient is a
+- **Parent**: **Set parent…** (or **Change parent…**) says an ingredient is a
   kind of another, such as “cherry tomatoes” under “tomatoes”. A kind of a food
   uses its parent's aisle until it has one of its own, and covers its parent in
   the pantry. It never borrows its parent's product, so a recipe that asks for
