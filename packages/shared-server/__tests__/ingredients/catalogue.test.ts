@@ -22,6 +22,7 @@ import {
   moveAlias,
   removeAlias,
   renameIngredient,
+  saveDraft,
   setParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { publishIngredientChangesTo } from "@norish/shared-server/ingredients/changes";
@@ -94,6 +95,70 @@ describe("the ingredient catalogue", () => {
       [onion.ingredientId, moved.ingredientId],
       [red.ingredientId],
     ]);
+  });
+
+  it("saves a draft as one edit: the name, the parent and the spellings", async () => {
+    const onion = await mint("onion");
+    const allium = await mint("allium");
+
+    await addAlias(actor, onion.ingredientId, "ajuin");
+    const [ajuin] = await resolveIngredients(["ajuin"], { userId: actor.userId });
+
+    announced = [];
+    await saveDraft(actor, onion.ingredientId, {
+      name: "Yellow onion",
+      parentId: allium.ingredientId,
+      add: ["ui"],
+      remove: [ajuin!.aliasId],
+    });
+
+    const [saved] = (await listIngredients(actor, { id: onion.ingredientId })).items;
+
+    expect(saved).toMatchObject({ name: "Yellow onion", parent: { id: allium.ingredientId } });
+    expect(saved!.aliases.map((alias) => alias.text).sort()).toEqual([
+      "Yellow onion",
+      "onion",
+      "ui",
+    ]);
+    expect(announced).toEqual([[onion.ingredientId]]);
+  });
+
+  it("changes nothing when any part of a draft is refused", async () => {
+    const onion = await mint("onion");
+    const allium = await mint("allium");
+    const garlic = await mint("garlic");
+
+    // The last spelling added is one garlic already holds.
+    announced = [];
+    await expect(
+      refusal(
+        saveDraft(actor, onion.ingredientId, {
+          name: "Yellow onion",
+          parentId: allium.ingredientId,
+          add: ["ui", "garlic"],
+          remove: [],
+        })
+      )
+    ).resolves.toBe("spelling-taken");
+
+    const [kept] = (await listIngredients(actor, { id: onion.ingredientId })).items;
+
+    expect(kept).toMatchObject({ name: "onion", parent: null });
+    expect(kept!.aliases.map((alias) => alias.text)).toEqual(["onion"]);
+    await expect(ingredientFor(garlic.aliasId)).resolves.toMatchObject({ name: "garlic" });
+    expect(announced).toEqual([]);
+  });
+
+  it("refuses a draft that removes another food's spelling", async () => {
+    const onion = await mint("onion");
+    const garlic = await mint("garlic");
+
+    await addAlias(actor, garlic.ingredientId, "knoflook");
+    const [knoflook] = await resolveIngredients(["knoflook"], { userId: actor.userId });
+
+    await expect(
+      refusal(saveDraft(actor, onion.ingredientId, { add: [], remove: [knoflook!.aliasId] }))
+    ).resolves.toBe("not-found");
   });
 
   it("clears the flag of an Ingredient a person renames", async () => {

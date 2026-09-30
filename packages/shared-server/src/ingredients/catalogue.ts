@@ -545,9 +545,13 @@ export async function removeAlias(actor: CatalogueActor, aliasId: string): Promi
 async function removeAliasIn(
   tx: DbTransaction,
   actor: CatalogueActor,
-  aliasId: string
+  aliasId: string,
+  /** The Ingredient the spelling must belong to, where the caller is editing one. */
+  of?: string
 ): Promise<CatalogueEdit> {
   const alias = await assertMayEdit(actor, await findCatalogueAliasOwner(tx, aliasId));
+
+  if (of !== undefined && alias.ingredientId !== of) throw new CatalogueEditError("not-found");
 
   // The Ingredient is locked, not only the alias: two members removing its
   // last two spellings at once must not both find a sibling left.
@@ -562,4 +566,34 @@ async function removeAliasIn(
   await refusedOn("23503", "alias-in-use", () => deleteCatalogueAlias(tx, aliasId));
 
   return { changed: [alias.ingredientId] };
+}
+
+/** An Ingredient's draft as the panel holds it until Save: only what differs is sent. */
+export interface IngredientDraft {
+  name?: string;
+  /** The new parent, or null to clear it; omitted leaves it as it is. */
+  parentId?: string | null;
+  add: readonly string[];
+  /** The ids of spellings of this Ingredient to remove. */
+  remove: readonly string[];
+}
+
+/**
+ * Save an Ingredient's draft as one edit: the rename, the parent, the
+ * spellings removed and those added, each under its own rule, in one
+ * transaction. A refusal anywhere changes nothing.
+ */
+export async function saveDraft(
+  actor: CatalogueActor,
+  ingredientId: string,
+  draft: IngredientDraft
+): Promise<CatalogueEdit> {
+  return await inEdit(async (tx) => {
+    if (draft.name !== undefined) await renameIngredientIn(tx, actor, ingredientId, draft.name);
+    if (draft.parentId !== undefined) await setParentIn(tx, actor, ingredientId, draft.parentId);
+    for (const aliasId of draft.remove) await removeAliasIn(tx, actor, aliasId, ingredientId);
+    for (const text of draft.add) await addAliasIn(tx, actor, ingredientId, text);
+
+    return { changed: [ingredientId] };
+  });
 }

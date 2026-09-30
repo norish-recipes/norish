@@ -33,13 +33,10 @@ let items: Item[] = [];
 let everySpelling: Item["aliases"] = [];
 const listInputs: unknown[] = [];
 const mutations = {
-  rename: vi.fn(async () => ({ success: true })),
+  saveDraft: vi.fn(async () => ({ success: true })),
   markDistinct: vi.fn(async () => ({ success: true })),
-  addAlias: vi.fn(async () => ({ success: true })),
-  removeAlias: vi.fn(async () => ({ success: true })),
   merge: vi.fn(async () => ({ success: true })),
   moveAlias: vi.fn(async () => ({ success: true })),
-  setParent: vi.fn(async () => ({ success: true })),
   remove: vi.fn(async () => ({ success: true })),
   reviewWithAI: vi.fn(async () => ({
     outcome: "distinct",
@@ -102,13 +99,10 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       spellings: {
         queryOptions: (input: unknown) => ({ queryKey: ["ingredients.spellings", input] }),
       },
-      rename: { mutationOptions: () => ({ name: "rename" }) },
+      saveDraft: { mutationOptions: () => ({ name: "saveDraft" }) },
       markDistinct: { mutationOptions: () => ({ name: "markDistinct" }) },
-      addAlias: { mutationOptions: () => ({ name: "addAlias" }) },
-      removeAlias: { mutationOptions: () => ({ name: "removeAlias" }) },
       merge: { mutationOptions: () => ({ name: "merge" }) },
       moveAlias: { mutationOptions: () => ({ name: "moveAlias" }) },
-      setParent: { mutationOptions: () => ({ name: "setParent" }) },
       remove: { mutationOptions: () => ({ name: "remove" }) },
       reviewWithAI: { mutationOptions: () => ({ name: "reviewWithAI" }) },
       reviewAllWithAI: { mutationOptions: () => ({ name: "reviewAllWithAI" }) },
@@ -415,14 +409,19 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.change(field, { target: { value: "Onion" } });
     });
 
-    expect(mutations.rename).not.toHaveBeenCalled();
+    expect(mutations.saveDraft).not.toHaveBeenCalled();
     expect(within(opened).getByTestId("ingredient-save")).toBeEnabled();
 
     await act(async () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
 
-    expect(mutations.rename).toHaveBeenCalledWith({ ingredientId: "onion", name: "Onion" });
+    expect(mutations.saveDraft).toHaveBeenCalledWith({
+      ingredientId: "onion",
+      name: "Onion",
+      add: [],
+      remove: [],
+    });
     expect(invalidateQueries).toHaveBeenCalled();
   });
 
@@ -459,7 +458,7 @@ describe("IngredientsSettingsContent", () => {
 
     // Staged as a chip of its own; nothing has been sent.
     expect(field).toHaveValue("");
-    expect(mutations.addAlias).not.toHaveBeenCalled();
+    expect(mutations.saveDraft).not.toHaveBeenCalled();
     expect(
       within(opened)
         .getAllByTestId("ingredient-alias")
@@ -470,7 +469,11 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.click(within(opened).getByTestId("ingredient-save"));
     });
 
-    expect(mutations.addAlias).toHaveBeenCalledWith({ ingredientId: "salt", text: "zout" });
+    expect(mutations.saveDraft).toHaveBeenCalledWith({
+      ingredientId: "salt",
+      add: ["zout"],
+      remove: [],
+    });
   });
 
   it("removes a spelling on Save, and keeps one un-removed before it", async () => {
@@ -485,7 +488,7 @@ describe("IngredientsSettingsContent", () => {
       "data-pending",
       "removed"
     );
-    expect(mutations.removeAlias).not.toHaveBeenCalled();
+    expect(mutations.saveDraft).not.toHaveBeenCalled();
     fireEvent.click(within(opened).getByRole("button", { name: "keepAlias" }));
     expect(within(opened).getByTestId("ingredient-save")).toBeDisabled();
 
@@ -494,7 +497,11 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.click(within(opened).getByTestId("ingredient-save"));
     });
 
-    expect(mutations.removeAlias).toHaveBeenCalledWith({ aliasId: "a-onion" });
+    expect(mutations.saveDraft).toHaveBeenCalledWith({
+      ingredientId: "onion",
+      add: [],
+      remove: ["a-onion"],
+    });
   });
 
   it("merges a food into one the viewer may edit, picked in a panel of its own", async () => {
@@ -563,12 +570,17 @@ describe("IngredientsSettingsContent", () => {
 
     // Picked, the parent joins the draft; it lands with Save.
     expect(within(opened).getByTestId("ingredient-parent")).toHaveTextContent("salt");
-    expect(mutations.setParent).not.toHaveBeenCalled();
+    expect(mutations.saveDraft).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-save"));
     });
 
-    expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "onion", parentId: "salt" });
+    expect(mutations.saveDraft).toHaveBeenCalledWith({
+      ingredientId: "onion",
+      parentId: "salt",
+      add: [],
+      remove: [],
+    });
   });
 
   it("folds a food's kinds out beneath it, and asks for them only then", async () => {
@@ -704,12 +716,17 @@ describe("IngredientsSettingsContent", () => {
 
     fireEvent.click(within(mine).getByTestId("ingredient-clear-parent"));
     expect(within(mine).queryByTestId("ingredient-clear-parent")).toBeNull();
-    expect(mutations.setParent).not.toHaveBeenCalled();
+    expect(mutations.saveDraft).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.click(within(mine).getByTestId("ingredient-save"));
     });
 
-    expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "red", parentId: null });
+    expect(mutations.saveDraft).toHaveBeenCalledWith({
+      ingredientId: "red",
+      parentId: null,
+      add: [],
+      remove: [],
+    });
   });
 
   it("asks for the flagged ones alone when filtered", async () => {
@@ -915,9 +932,11 @@ describe("IngredientsSettingsContent", () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredient-save"));
     });
-    expect(mutations.setParent).toHaveBeenCalledWith({
+    expect(mutations.saveDraft).toHaveBeenCalledWith({
       ingredientId: "onion",
       parentId: "vegetable",
+      add: [],
+      remove: [],
     });
 
     await act(async () => {

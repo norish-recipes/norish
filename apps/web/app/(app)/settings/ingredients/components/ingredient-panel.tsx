@@ -160,13 +160,10 @@ function IngredientPanelContent({
     setParent(suggestedParent ?? item.parent);
   }, [item.parent, suggestedParent]);
 
-  const rename = useMutation(trpc.ingredients.rename.mutationOptions());
+  const saveDraft = useMutation(trpc.ingredients.saveDraft.mutationOptions());
   const markDistinct = useMutation(trpc.ingredients.markDistinct.mutationOptions());
-  const addAlias = useMutation(trpc.ingredients.addAlias.mutationOptions());
-  const removeAlias = useMutation(trpc.ingredients.removeAlias.mutationOptions());
   const merge = useMutation(trpc.ingredients.merge.mutationOptions());
   const moveAlias = useMutation(trpc.ingredients.moveAlias.mutationOptions());
-  const setParentMutation = useMutation(trpc.ingredients.setParent.mutationOptions());
   const remove = useMutation(trpc.ingredients.remove.mutationOptions());
   const review = useMutation(trpc.ingredients.reviewWithAI.mutationOptions());
   const findParent = useMutation(trpc.ingredients.findParentWithAI.mutationOptions());
@@ -176,9 +173,7 @@ function IngredientPanelContent({
   // One edit at a time: a second one on the same food races the first.
   const busy =
     asking ||
-    [rename, markDistinct, addAlias, removeAlias, merge, moveAlias, setParentMutation, remove].some(
-      (mutation) => mutation.isPending
-    ) ||
+    [saveDraft, markDistinct, merge, moveAlias, remove].some((mutation) => mutation.isPending) ||
     suggestions.isAnswering;
 
   const run = async (context: string, edit: () => Promise<unknown>) => {
@@ -211,36 +206,22 @@ function IngredientPanelContent({
   const parentChanged = (parent?.id ?? null) !== (item.parent?.id ?? null);
   const dirty = nameChanged || parentChanged || added.length > 0 || removed.size > 0;
 
-  /** Land the draft, one edit at a time; the first refusal stops the rest and says why. */
+  /** Land the draft as one edit; a refusal changes nothing, keeps the draft and says why. */
   const save = async () => {
     if (!dirty || busy) return;
-    if (nameChanged) {
-      if (
-        !(await run("rename", () => rename.mutateAsync({ ingredientId: item.id, name: nextName })))
-      ) {
-        return;
-      }
-    }
-    if (parentChanged) {
-      const parentId = parent?.id ?? null;
+    const saved = await run("save", () =>
+      saveDraft.mutateAsync({
+        ingredientId: item.id,
+        ...(nameChanged ? { name: nextName } : {}),
+        ...(parentChanged ? { parentId: parent?.id ?? null } : {}),
+        add: added,
+        remove: [...removed],
+      })
+    );
 
-      if (
-        !(await run("set-parent", () =>
-          setParentMutation.mutateAsync({ ingredientId: item.id, parentId })
-        ))
-      ) {
-        return;
-      }
-    }
-    for (const aliasId of removed) {
-      if (!(await run("remove-alias", () => removeAlias.mutateAsync({ aliasId })))) return;
-      setRemoved((current) => new Set([...current].filter((id) => id !== aliasId)));
-    }
-    for (const text of added) {
-      if (!(await run("add-alias", () => addAlias.mutateAsync({ ingredientId: item.id, text })))) {
-        return;
-      }
-      setAdded((current) => current.filter((pending) => pending !== text));
+    if (saved) {
+      setAdded([]);
+      setRemoved(new Set());
     }
   };
 

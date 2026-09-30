@@ -18,6 +18,7 @@ import {
   moveAlias as moveCatalogueAlias,
   removeAlias as removeCatalogueAlias,
   renameIngredient,
+  saveDraft as saveIngredientDraft,
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { ingredientChanges } from "@norish/shared-server/ingredients/changes";
@@ -343,6 +344,28 @@ const dismissSuggestions = authedProcedure.input(suggestionIds).mutation(({ ctx,
   return answerSuggestions(ctx, input.suggestionIds, dismissSuggestion);
 });
 
+/**
+ * Save an Ingredient's draft from its panel as one edit: a new name, a new
+ * parent (null clears it), spellings removed and added, each under its own
+ * rule. A refusal anywhere changes nothing, and says why.
+ */
+const saveDraft = authedProcedure
+  .input(
+    z.object({
+      ingredientId: z.uuid(),
+      name: ingredientName.optional(),
+      parentId: z.uuid().nullable().optional(),
+      add: z.array(ingredientName).max(100),
+      remove: z.array(z.uuid()).max(100),
+    })
+  )
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Saving an Ingredient");
+    const { ingredientId, ...draft } = input;
+
+    return asEditResult(() => saveIngredientDraft(actorOf(ctx), ingredientId, draft));
+  });
+
 /** Delete an Ingredient nothing uses. Follows `edit` on the Ingredient. */
 const remove = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
@@ -389,6 +412,7 @@ export const ingredientsRouter = router({
   rename,
   markDistinct,
   removeAlias,
+  saveDraft,
   remove,
   reviewWithAI,
   findParentWithAI: findParentWithAI_,
