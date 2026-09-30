@@ -43,7 +43,7 @@ import {
   updateResolvedRecipe,
   withResolvedIngredients,
 } from "@norish/shared-server/ingredients/recipe-lines";
-import { retryOnStaleIngredient } from "@norish/shared-server/ingredients/resolver";
+import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
@@ -549,18 +549,16 @@ const convertMeasurements = authedProcedure
           systemUsed: targetSystem,
         }));
 
-        return retryOnStaleIngredient(async () => {
-          const resolved = await withResolvedIngredients(
-            { recipeIngredients: ingredients },
-            { userId: ctx.user.id }
-          );
-
-          return addStepsAndIngredientsToRecipeByInput(
-            steps,
-            resolved.recipeIngredients,
-            resolved.ingredientResolutions
-          );
-        })
+        return writeResolved(
+          () =>
+            withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id }),
+          (resolved) =>
+            addStepsAndIngredientsToRecipeByInput(
+              steps,
+              resolved.recipeIngredients,
+              resolved.ingredientResolutions
+            )
+        )
           .then(() => setActiveSystemForRecipe(recipe.id, targetSystem, version))
           .then(() => getRecipeFull(recipe.id))
           .then(async (updatedRecipe) => {

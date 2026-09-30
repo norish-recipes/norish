@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { GroceryDto, GroceryUpdateDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
@@ -23,11 +24,8 @@ import {
   getStoreOwnerId,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import {
-  ingredientColumns,
-  resolveGroceryNames,
-} from "@norish/shared-server/ingredients/groceries";
-import { retryOnStaleIngredient } from "@norish/shared-server/ingredients/resolver";
+import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
+import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
@@ -225,17 +223,12 @@ export async function createGroceriesData(
 
   // Each new line's name is resolved to an Ingredient Alias, the way the
   // household's recipe lines are (ADR-0037). A merged line keeps its own.
-  // Resolved again should the food go away before the write.
-  const resolveNewLines = async () => {
-    const aliases = await resolveGroceryNames(
-      groceriesToCreate.map(({ groceries: grocery }) => grocery),
-      { userId: ctx.user.id }
-    );
-
+  const fileNewLines = async (aliases: Array<IngredientRef | null>) => {
     for (const [index, { groceries: grocery }] of groceriesToCreate.entries()) {
       const alias = aliases[index];
 
-      Object.assign(grocery, ingredientColumns(alias));
+      grocery.ingredientAliasId = alias?.aliasId ?? null;
+      grocery.ingredientId = alias?.ingredientId ?? null;
 
       // A line added without a Store goes where the household sends its food.
       if (!grocery.storeId && alias && grocery.name) {
@@ -269,11 +262,18 @@ export async function createGroceriesData(
   let createdGroceries: GroceryDto[] = [];
 
   if (groceriesToCreate.length > 0) {
-    const made = await retryOnStaleIngredient(async () => {
-      await resolveNewLines();
+    const made = await writeResolved(
+      () =>
+        resolveGroceryNames(
+          groceriesToCreate.map(({ groceries: grocery }) => grocery),
+          { userId: ctx.user.id }
+        ),
+      async (aliases) => {
+        await fileNewLines(aliases);
 
-      return await createGroceries(groceriesToCreate, ctx.userIds);
-    });
+        return await createGroceries(groceriesToCreate, ctx.userIds);
+      }
+    );
 
     createdGroceries = made.created;
     log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");

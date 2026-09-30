@@ -9,7 +9,7 @@ import { findIngredientNamesByIds } from "@norish/db/repositories/ingredient-ali
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 
 import type { ResolveActor } from "./resolver";
-import { cleanIngredientText, resolveIngredients, retryOnStaleIngredient } from "./resolver";
+import { cleanIngredientText, resolveIngredients, writeResolved } from "./resolver";
 
 interface RecipeLineInput {
   ingredientId?: string | null;
@@ -69,8 +69,9 @@ export function createResolvedRecipe(
   payload: FullRecipeInsertDTO,
   actor: ResolveActor
 ): Promise<CreateRecipeResult | null> {
-  return retryOnStaleIngredient(async () =>
-    createRecipeWithRefs(recipeId, userId, await withResolvedIngredients(payload, actor))
+  return writeResolved(
+    () => withResolvedIngredients(payload, actor),
+    (resolved) => createRecipeWithRefs(recipeId, userId, resolved)
   );
 }
 
@@ -82,7 +83,8 @@ export function updateResolvedRecipe(
   actor: ResolveActor,
   version?: number
 ): Promise<MutationOutcome<void>> {
-  return retryOnStaleIngredient(async () =>
-    updateRecipeWithRefs(recipeId, userId, await withResolvedIngredients(payload, actor), version)
+  return writeResolved(
+    () => withResolvedIngredients(payload, actor),
+    (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version)
   );
 }

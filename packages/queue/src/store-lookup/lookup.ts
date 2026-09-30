@@ -11,6 +11,7 @@ import type {
   StoreProductReadingInput,
 } from "@norish/shared/contracts";
 import type { PricedCandidate } from "@norish/shared/lib/currency";
+import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
 import {
   clearPendingLink,
   linkIfUnanswered,
@@ -20,7 +21,6 @@ import {
   upsertReadProduct,
 } from "@norish/db/repositories/store-products";
 import { getStoreById } from "@norish/db/repositories/stores";
-import { isStaleIngredientReference } from "@norish/shared-server/ingredients/resolver";
 import { createLogger } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { chooseUnmistakable } from "@norish/shared/lib/auto-link";

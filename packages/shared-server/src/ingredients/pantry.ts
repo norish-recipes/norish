@@ -1,7 +1,7 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { addPantryIngredient } from "@norish/db/repositories/pantry";
 
-import { resolveIngredient, retryOnStaleIngredient } from "./resolver";
+import { resolveIngredient, writeResolved } from "./resolver";
 
 /**
  * Put what a member typed in the Pantry: the text is resolved like any recipe
@@ -13,16 +13,17 @@ export async function addToPantry(
   id: string,
   input: { userId: string; userIds: string[]; name: string }
 ): Promise<{ item: PantryIngredientDto; created: boolean }> {
-  return await retryOnStaleIngredient(async () => {
-    const resolved = await resolveIngredient(input.name, { userId: input.userId });
+  return await writeResolved(
+    () => resolveIngredient(input.name, { userId: input.userId }),
+    async (resolved) => {
+      if (!resolved) throw new Error("Failed to resolve pantry ingredient");
 
-    if (!resolved) throw new Error("Failed to resolve pantry ingredient");
-
-    return await addPantryIngredient(id, {
-      userId: input.userId,
-      userIds: input.userIds,
-      ingredientAliasId: resolved.aliasId,
-      ingredientId: resolved.ingredientId,
-    });
-  });
+      return await addPantryIngredient(id, {
+        userId: input.userId,
+        userIds: input.userIds,
+        ingredientAliasId: resolved.aliasId,
+        ingredientId: resolved.ingredientId,
+      });
+    }
+  );
 }

@@ -18,7 +18,7 @@ import {
   ingredientFor,
   resolveIngredient,
   resolveIngredients,
-  retryOnStaleIngredient,
+  writeResolved,
 } from "@norish/shared-server/ingredients/resolver";
 
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -112,32 +112,55 @@ describe("ingredient resolver", () => {
     expect(third!.ingredientId).toBe(first!.ingredientId);
   });
 
-  it("resolves again when the food went away between resolving and writing", async () => {
+  it("resolves and writes once more when a merge lands between the two, on the food it left", async () => {
     const onion = await resolveOne("onion");
     const ui = await resolveOne("ui");
-    let attempts = 0;
+    let resolves = 0;
+    let writes = 0;
 
-    const { item } = await retryOnStaleIngredient(async () => {
-      attempts += 1;
+    const { item } = await writeResolved(
+      async () => {
+        resolves += 1;
+        const resolved = await resolveOne("ui");
 
-      const resolved = await resolveOne("ui");
+        // A housemate merges "ui" into onion after this resolve and before its write.
+        if (resolves === 1) {
+          await withTransaction((tx) =>
+            mergeCatalogueIngredients(tx, ui.ingredientId, onion.ingredientId)
+          );
+        }
 
-      // A housemate merges "ui" into onion after this resolve and before its write.
-      if (attempts === 1)
-        await withTransaction((tx) =>
-          mergeCatalogueIngredients(tx, ui.ingredientId, onion.ingredientId)
-        );
+        return resolved;
+      },
+      async (resolved) => {
+        writes += 1;
 
-      return await addPantryIngredient(crypto.randomUUID(), {
-        userId,
-        userIds: [userId],
-        ingredientAliasId: resolved.aliasId,
-        ingredientId: resolved.ingredientId,
-      });
-    });
+        return await addPantryIngredient(crypto.randomUUID(), {
+          userId,
+          userIds: [userId],
+          ingredientAliasId: resolved.aliasId,
+          ingredientId: resolved.ingredientId,
+        });
+      }
+    );
 
-    expect(attempts).toBe(2);
+    expect([resolves, writes]).toEqual([2, 2]);
     expect(item.ingredientId).toBe(onion.ingredientId);
+  });
+
+  it("does not retry a write refused for any other reason", async () => {
+    let writes = 0;
+
+    await expect(
+      writeResolved(
+        () => resolveOne("onion"),
+        async () => {
+          writes += 1;
+          throw new Error("refused");
+        }
+      )
+    ).rejects.toThrow("refused");
+    expect(writes).toBe(1);
   });
 
   it("finds what a text already resolves to without minting anything", async () => {

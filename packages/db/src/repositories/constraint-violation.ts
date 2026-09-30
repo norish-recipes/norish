@@ -11,3 +11,20 @@ export function isConstraintViolation(error: unknown, code: "23505" | "23503"): 
 
   return false;
 }
+
+/**
+ * Whether a write was refused because the Ingredient or alias it was handed
+ * is gone: a foreign key onto `ingredients` or `ingredient_aliases` failed.
+ */
+export function isStaleIngredientReference(error: unknown): boolean {
+  for (let current = error; current && typeof current === "object";) {
+    const { code, constraint } = current as { code?: unknown; constraint?: unknown };
+
+    if (code === "23503" && typeof constraint === "string") {
+      return /_(ingredients|ingredient_aliases)_id_fk$/.test(constraint);
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+
+  return false;
+}

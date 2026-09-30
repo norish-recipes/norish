@@ -34,6 +34,7 @@ export const cleanIngredientText = (text: string) =>
 export const ingredientAliasFold = (text: string) => text.trim().toLowerCase();
 
 /** Nothing goes away under a test: the one attempt is the answer. */
-export const retryOnStaleIngredient = <T>(attempt: () => Promise<T>) => attempt();
-
-export const isStaleIngredientReference = () => false;
+export const writeResolved = async <R, T>(
+  resolve: () => Promise<R>,
+  write: (resolved: R) => Promise<T>
+) => write(await resolve());

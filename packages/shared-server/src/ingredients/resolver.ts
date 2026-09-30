@@ -4,6 +4,7 @@ import type {
   IngredientRow,
 } from "@norish/db/repositories/ingredient-aliases";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
+import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
 import {
   addIngredientAliases,
   findIngredientAliasesByFolds,
@@ -294,33 +295,21 @@ export async function findIngredientFor(text: string): Promise<IngredientRef | n
 }
 
 /**
- * Whether a write was refused because the Ingredient or alias it was handed
- * is gone: a foreign key onto `ingredients` or `ingredient_aliases` failed.
- * Drizzle wraps the driver's error, so its cause is read too.
+ * Resolve, then write what was resolved: the one way a write that stores a
+ * reference to an Ingredient is made. Resolution and the write are separate
+ * transactions, so a merge or a deletion can land between them; when the
+ * write finds its Ingredient or alias gone, both run once more, and the text
+ * then names the food the merge left (its alias moved with it) or a fresh
+ * mint. `resolve` is the resolution itself — `resolveIngredient`,
+ * `resolveGroceryName`, `withResolvedIngredients` — so the second run can
+ * never write the first run's stale ids.
  */
-export function isStaleIngredientReference(error: unknown): boolean {
-  for (let current = error; current && typeof current === "object";) {
-    const { code, constraint } = current as { code?: unknown; constraint?: unknown };
-
-    if (code === "23503" && typeof constraint === "string") {
-      return /_(ingredients|ingredient_aliases)_id_fk$/.test(constraint);
-    }
-    current = (current as { cause?: unknown }).cause;
-  }
-
-  return false;
-}
-
-/**
- * Run a resolve-then-write once more when the write finds its Ingredient
- * gone. Resolution and the write are separate transactions, so a merge or
- * a deletion can land between them; resolved again, the text names the food
- * the merge left (its alias moved with it) or a fresh mint. `attempt` must
- * resolve inside itself, or the second run writes the same stale id.
- */
-export async function retryOnStaleIngredient<T>(attempt: () => Promise<T>): Promise<T> {
+export async function writeResolved<R, T>(
+  resolve: () => Promise<R>,
+  write: (resolved: R) => Promise<T>
+): Promise<T> {
   try {
-    return await attempt();
+    return await write(await resolve());
   } catch (error) {
     if (!isStaleIngredientReference(error)) throw error;
     dbLogger.warn(
@@ -328,6 +317,6 @@ export async function retryOnStaleIngredient<T>(attempt: () => Promise<T>): Prom
       "An Ingredient went away between resolving and writing; resolving again"
     );
 
-    return await attempt();
+    return await write(await resolve());
   }
 }
