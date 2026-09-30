@@ -93,7 +93,7 @@ describe("the ingredient catalogue", () => {
       [ui.ingredientId, onion.ingredientId],
       [onion.ingredientId],
       [onion.ingredientId, moved.ingredientId],
-      [red.ingredientId],
+      [red.ingredientId, allium.ingredientId],
     ]);
   });
 
@@ -120,7 +120,7 @@ describe("the ingredient catalogue", () => {
       "onion",
       "ui",
     ]);
-    expect(announced).toEqual([[onion.ingredientId]]);
+    expect(announced).toEqual([[onion.ingredientId, allium.ingredientId]]);
   });
 
   it("changes nothing when any part of a draft is refused", async () => {

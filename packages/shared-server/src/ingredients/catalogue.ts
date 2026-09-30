@@ -422,10 +422,17 @@ async function setParentIn(
   ) {
     throw new CatalogueEditError("cycle");
   }
+  // The parent it leaves and the one it joins each count one kind more or less.
+  const [previous] = (await findIngredientAncestors([ingredientId], tx)).get(ingredientId) ?? [];
+
   await setCatalogueIngredientParent(tx, ingredientId, parentId);
   await deleteSuggestionFor(ingredientId, tx);
 
-  return { changed: [ingredientId] };
+  return {
+    changed: [
+      ...new Set([ingredientId, ...(previous ? [previous] : []), ...(parentId ? [parentId] : [])]),
+    ],
+  };
 }
 
 /**
@@ -590,11 +597,17 @@ export async function saveDraft(
   draft: IngredientDraft
 ): Promise<CatalogueEdit> {
   return await inEdit(async (tx) => {
+    const changed = new Set([ingredientId]);
+
     if (draft.name !== undefined) await renameIngredientIn(tx, actor, ingredientId, draft.name);
-    if (draft.parentId !== undefined) await setParentIn(tx, actor, ingredientId, draft.parentId);
+    if (draft.parentId !== undefined) {
+      const parented = await setParentIn(tx, actor, ingredientId, draft.parentId);
+
+      for (const id of parented.changed) changed.add(id);
+    }
     for (const aliasId of draft.remove) await removeAliasIn(tx, actor, aliasId, ingredientId);
     for (const text of draft.add) await addAliasIn(tx, actor, ingredientId, text);
 
-    return { changed: [ingredientId] };
+    return { changed: [...changed] };
   });
 }
