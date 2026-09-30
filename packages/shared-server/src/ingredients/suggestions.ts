@@ -16,7 +16,7 @@ import {
 } from "@norish/db/repositories/ingredient-suggestions";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 
-import type { CatalogueActor } from "./catalogue";
+import type { CatalogueActor, CatalogueEdit } from "./catalogue";
 import {
   CatalogueEditError,
   markDistinct,
@@ -24,6 +24,7 @@ import {
   mergeIngredients,
   setParent,
 } from "./catalogue";
+import { ingredientChanges } from "./changes";
 
 /** One suggestion as the page shows it: both foods, how AI got there, and whether the viewer may answer it. */
 export interface IngredientSuggestionItem {
@@ -63,12 +64,12 @@ export async function listSuggestions(actor: CatalogueActor): Promise<Ingredient
 
 /**
  * Confirm a suggestion: make the edit it proposes as the actor's own, which
- * also settles the suggestion. Answers the Ingredients the edit changed.
+ * also settles the suggestion and announces what it changed.
  */
 export async function confirmSuggestion(
   actor: CatalogueActor,
   suggestionId: string
-): Promise<string[]> {
+): Promise<CatalogueEdit> {
   const [suggestion] = await findIngredientSuggestions([suggestionId]);
 
   if (!suggestion) throw new CatalogueEditError("not-found");
@@ -78,21 +79,21 @@ export async function confirmSuggestion(
     case "merge":
       if (!target) throw new CatalogueEditError("not-found");
 
-      return (await mergeIngredients(actor, ingredientId, target.id)).changed;
+      return await mergeIngredients(actor, ingredientId, target.id);
     case "parent":
       if (!target) throw new CatalogueEditError("not-found");
 
-      return (await setParent(actor, ingredientId, target.id)).changed;
+      return await setParent(actor, ingredientId, target.id);
     case "distinct":
-      return (await markDistinct(actor, ingredientId)).changed;
+      return await markDistinct(actor, ingredientId);
   }
 }
 
-/** Dismiss a suggestion: the food stays as it was. Answers the Ingredient it was about. */
+/** Dismiss a suggestion: the food stays as it was, and the page stops offering it. */
 export async function dismissSuggestion(
   actor: CatalogueActor,
   suggestionId: string
-): Promise<string[]> {
+): Promise<CatalogueEdit> {
   const [[suggestion], policy] = await Promise.all([
     findIngredientSuggestions([suggestionId]),
     getIngredientPermissionPolicy(),
@@ -104,5 +105,9 @@ export async function dismissSuggestion(
   }
   await deleteIngredientSuggestion(suggestionId);
 
-  return [suggestion.ingredientId];
+  const changed = [suggestion.ingredientId];
+
+  await ingredientChanges().changed(changed);
+
+  return { changed };
 }

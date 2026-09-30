@@ -18,6 +18,7 @@
  * Each edit is one transaction: the owner lookup, the policy check, the
  * locks, the write and the suggestion it settles, all through its `tx`. The
  * repositories answer data; what that means as a refusal is decided here.
+ * Every edit announces the Ingredients it changed itself (`changes.ts`).
  */
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -65,6 +66,7 @@ import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 
+import { ingredientChanges } from "./changes";
 import { cleanIngredientText, ingredientAliasFold } from "./resolver";
 
 /** Who is editing: what the policy is asked about. */
@@ -257,10 +259,15 @@ export interface CatalogueEdit {
 /**
  * Run an edit as one unit: the owner lookup, the lock, the write and the
  * suggestion it settles all read and write through the one `tx`, so a
- * refusal anywhere undoes the whole edit.
+ * refusal anywhere undoes the whole edit. Once it has committed, the
+ * Ingredients it changed are announced.
  */
-async function inEdit<T>(run: (tx: DbTransaction) => Promise<T>): Promise<T> {
-  return await withTransaction(run);
+async function inEdit<T extends CatalogueEdit>(run: (tx: DbTransaction) => Promise<T>): Promise<T> {
+  const edit = await withTransaction(run);
+
+  await ingredientChanges().changed(edit.changed);
+
+  return edit;
 }
 
 /** A write the database refused on a constraint (`23505` unique, `23503` foreign key), as this edit's refusal. */

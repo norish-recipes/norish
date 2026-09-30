@@ -20,6 +20,7 @@ import {
   renameIngredient,
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
+import { ingredientChanges } from "@norish/shared-server/ingredients/changes";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
 import {
@@ -28,7 +29,6 @@ import {
   listSuggestions,
 } from "@norish/shared-server/ingredients/suggestions";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 import {
   INGREDIENT_SEARCH_FIELDS,
   INGREDIENT_SEARCH_MATCHES,
@@ -77,35 +77,25 @@ const REFUSAL_CODES: Record<CatalogueRefusal, TRPCError["code"]> = {
 };
 
 /**
- * Run a catalogue edit, turning a refusal into the error the page shows. The
+ * Run a catalogue call, turning a refusal into the error the page shows. The
  * message is the refusal itself, which the page translates.
  */
-async function asEditResult(run: () => Promise<unknown>): Promise<{ success: true }> {
+async function translated<T>(run: () => Promise<T>): Promise<T> {
   try {
-    await run();
+    return await run();
   } catch (error) {
     if (error instanceof CatalogueEditError) {
       throw new TRPCError({ code: REFUSAL_CODES[error.refusal], message: error.refusal });
     }
     throw error;
   }
-
-  return { success: true };
 }
 
-/**
- * Tell every client that these Ingredients changed — what they are (a merge,
- * an alias move, a rename, a new parent, a deletion) or how the page shows
- * them (a spelling added or removed, a flag cleared) — so each refetches what
- * it derived from them. The edit has been written by now, so a failure to
- * tell is logged, never an error for an edit that went through.
- */
-async function announceChanged(ingredientIds: string[]): Promise<void> {
-  try {
-    await ingredientsRealtime.publish("changed", { ingredientIds }, undefined);
-  } catch (error) {
-    log.warn({ err: error, ingredientIds }, "Could not announce an Ingredient change");
-  }
+/** Run a catalogue edit, which announces what it changed itself. */
+async function asEditResult(run: () => Promise<unknown>): Promise<{ success: true }> {
+  await translated(run);
+
+  return { success: true };
 }
 
 /**
@@ -184,10 +174,7 @@ const addAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Adding an alias");
 
-    return asEditResult(async () => {
-      await addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text);
-      await announceChanged([input.ingredientId]);
-    });
+    return asEditResult(() => addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text));
   });
 
 const rename = authedProcedure
@@ -195,10 +182,7 @@ const rename = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Renaming an Ingredient");
 
-    return asEditResult(async () => {
-      await renameIngredient(actorOf(ctx), input.ingredientId, input.name);
-      await announceChanged([input.ingredientId]);
-    });
+    return asEditResult(() => renameIngredient(actorOf(ctx), input.ingredientId, input.name));
   });
 
 const markDistinct = authedProcedure
@@ -206,10 +190,7 @@ const markDistinct = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Marking distinct");
 
-    return asEditResult(async () => {
-      await markCatalogueDistinct(actorOf(ctx), input.ingredientId);
-      await announceChanged([input.ingredientId]);
-    });
+    return asEditResult(() => markCatalogueDistinct(actorOf(ctx), input.ingredientId));
   });
 
 const removeAlias = authedProcedure
@@ -217,11 +198,7 @@ const removeAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, aliasId: input.aliasId }, "Removing an alias");
 
-    return asEditResult(async () => {
-      const removed = await removeCatalogueAlias(actorOf(ctx), input.aliasId);
-
-      await announceChanged(removed.changed);
-    });
+    return asEditResult(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
   });
 
 /**
@@ -236,19 +213,16 @@ const reviewWithAI = authedProcedure
       "Asking AI about a flagged Ingredient"
     );
 
-    try {
+    return translated(async () => {
       const outcome = await reviewFlaggedWithAI(actorOf(ctx), input.ingredientId);
 
       // A suggestion recorded, or a flag's reason brought up to date.
-      if (outcome.outcome !== "not-flagged") await announceChanged([input.ingredientId]);
+      if (outcome.outcome !== "not-flagged") {
+        await ingredientChanges().changed([input.ingredientId]);
+      }
 
       return outcome;
-    } catch (error) {
-      if (error instanceof CatalogueEditError) {
-        throw new TRPCError({ code: REFUSAL_CODES[error.refusal], message: error.refusal });
-      }
-      throw error;
-    }
+    });
   });
 
 /**
@@ -263,18 +237,14 @@ const findParentWithAI_ = authedProcedure
       "Asking AI what an Ingredient is a kind of"
     );
 
-    try {
+    return translated(async () => {
       const outcome = await findParentWithAI(actorOf(ctx), input.ingredientId);
 
-      await announceChanged([input.ingredientId]);
+      // A suggestion recorded or cleared.
+      await ingredientChanges().changed([input.ingredientId]);
 
       return outcome;
-    } catch (error) {
-      if (error instanceof CatalogueEditError) {
-        throw new TRPCError({ code: REFUSAL_CODES[error.refusal], message: error.refusal });
-      }
-      throw error;
-    }
+    });
   });
 
 /**
@@ -336,29 +306,27 @@ const suggestionIds = z.object({ suggestionIds: z.array(z.uuid()).min(1).max(500
 
 /**
  * Answer suggestions one by one, confirming (the edit each proposes is made
- * as the viewer's own) or dismissing them. One that is refused or already
- * gone does not stop the rest; the answer counts both and names the first
- * refusal, for the page to say why.
+ * as the viewer's own) or dismissing them; each announces what it changed.
+ * One that is refused or already gone does not stop the rest; the answer
+ * counts both and names the first refusal, for the page to say why.
  */
 async function answerSuggestions(
   ctx: AuthedProcedureContext,
   ids: readonly string[],
   answer: typeof confirmSuggestion
 ): Promise<{ done: number; failed: number; refusal: CatalogueRefusal | null }> {
-  const changed = new Set<string>();
   let done = 0;
   let refusal: CatalogueRefusal | null = null;
 
   for (const id of ids) {
     try {
-      for (const ingredientId of await answer(actorOf(ctx), id)) changed.add(ingredientId);
+      await answer(actorOf(ctx), id);
       done += 1;
     } catch (error) {
       if (!(error instanceof CatalogueEditError)) throw error;
       refusal ??= error.refusal;
     }
   }
-  if (changed.size > 0) await announceChanged([...changed]);
 
   return { done, failed: ids.length - done, refusal };
 }
@@ -381,10 +349,7 @@ const remove = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Deleting an Ingredient");
 
-    return asEditResult(async () => {
-      await deleteIngredient(actorOf(ctx), input.ingredientId);
-      await announceChanged([input.ingredientId]);
-    });
+    return asEditResult(() => deleteIngredient(actorOf(ctx), input.ingredientId));
   });
 
 /** Merge one Ingredient into another. Needs `edit` on both. */
@@ -393,10 +358,7 @@ const merge = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Merging Ingredients");
 
-    return asEditResult(async () => {
-      await mergeIngredients(actorOf(ctx), input.sourceId, input.targetId);
-      await announceChanged([input.sourceId, input.targetId]);
-    });
+    return asEditResult(() => mergeIngredients(actorOf(ctx), input.sourceId, input.targetId));
   });
 
 /** Move a spelling to another Ingredient, or to a new one (`targetId` null): the unmerge. */
@@ -405,11 +367,7 @@ const moveAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Moving an alias");
 
-    return asEditResult(async () => {
-      const moved = await moveCatalogueAlias(actorOf(ctx), input.aliasId, input.targetId);
-
-      await announceChanged(moved.changed);
-    });
+    return asEditResult(() => moveCatalogueAlias(actorOf(ctx), input.aliasId, input.targetId));
   });
 
 /** Set or clear an Ingredient's Parent Ingredient. Follows `edit` on the Ingredient. */
@@ -418,10 +376,7 @@ const setParent = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Setting a Parent Ingredient");
 
-    return asEditResult(async () => {
-      await setCatalogueParent(actorOf(ctx), input.ingredientId, input.parentId);
-      await announceChanged([input.ingredientId]);
-    });
+    return asEditResult(() => setCatalogueParent(actorOf(ctx), input.ingredientId, input.parentId));
   });
 
 export const ingredientsRouter = router({

@@ -7,7 +7,7 @@
  * procedures; here the editor is the Ingredient's owner.
  */
 import { sql } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { groceries } from "@norish/db/schema";
@@ -18,10 +18,13 @@ import {
   listIngredients,
   listSpellings,
   markDistinct,
+  mergeIngredients,
+  moveAlias,
   removeAlias,
   renameIngredient,
   setParent,
 } from "@norish/shared-server/ingredients/catalogue";
+import { publishIngredientChangesTo } from "@norish/shared-server/ingredients/changes";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
@@ -32,6 +35,9 @@ describe("the ingredient catalogue", () => {
   const testBase = new RepositoryTestBase("test_ingredient_catalogue");
 
   let actor: CatalogueActor;
+  /** What the edits announced, one list of Ingredient ids per announcement. */
+  let announced: string[][];
+  let restorePublisher: () => void;
 
   beforeAll(async () => {
     await testBase.setup();
@@ -41,7 +47,15 @@ describe("the ingredient catalogue", () => {
     const [user] = await testBase.beforeEachTest();
 
     actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    announced = [];
+    restorePublisher = publishIngredientChangesTo({
+      changed: async (ids) => {
+        announced.push([...ids]);
+      },
+    });
   });
+
+  afterEach(() => restorePublisher());
 
   afterAll(async () => {
     await testBase.teardown();
@@ -59,6 +73,28 @@ describe("the ingredient catalogue", () => {
       (error: unknown) => (error instanceof CatalogueEditError ? error.refusal : error)
     );
   }
+
+  it("announces what a merge, an alias move and a new parent changed, and nothing refused", async () => {
+    const onion = await mint("onion");
+    const ui = await mint("ui");
+    const allium = await mint("allium");
+    const red = await mint("red onion");
+
+    await mergeIngredients(actor, ui.ingredientId, onion.ingredientId);
+    await addAlias(actor, onion.ingredientId, "ajuin");
+    const [ajuin] = await resolveIngredients(["ajuin"], { userId: actor.userId });
+    const moved = await moveAlias(actor, ajuin!.aliasId, null);
+
+    await setParent(actor, red.ingredientId, allium.ingredientId);
+    await refusal(setParent(actor, allium.ingredientId, allium.ingredientId));
+
+    expect(announced).toEqual([
+      [ui.ingredientId, onion.ingredientId],
+      [onion.ingredientId],
+      [onion.ingredientId, moved.ingredientId],
+      [red.ingredientId],
+    ]);
+  });
 
   it("clears the flag of an Ingredient a person renames", async () => {
     const onion = await mint("onion");
