@@ -23,11 +23,11 @@ import {
 } from "@norish/db/repositories/legacy-link-backfill";
 import {
   cleanIngredientText,
-  ingredientAliasFold,
   resolveIngredient,
   resolveIngredients,
 } from "@norish/shared-server/ingredients/resolver";
 import { dbLogger as log } from "@norish/shared-server/logger";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const BATCH_SIZE = 500;
 

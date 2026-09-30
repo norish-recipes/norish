@@ -14,12 +14,12 @@ import { addPantryIngredient } from "@norish/db/repositories/pantry";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import {
   findIngredientFor,
-  ingredientAliasFold,
   ingredientFor,
   resolveIngredient,
   resolveIngredients,
   writeResolved,
 } from "@norish/shared-server/ingredients/resolver";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 

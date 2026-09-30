@@ -30,9 +30,6 @@ export const cleanIngredientText = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-/** A spelling's fold, as the resolver keys an alias by it. */
-export const ingredientAliasFold = (text: string) => text.trim().toLowerCase();
-
 /** Nothing goes away under a test: the one attempt is the answer. */
 export const writeResolved = async <R, T>(
   resolve: () => Promise<R>,

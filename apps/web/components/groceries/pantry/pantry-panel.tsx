@@ -13,6 +13,7 @@ import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod"
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
+import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 interface PantryPanelProps {
   open: boolean;
@@ -38,7 +39,7 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
     if (!open) setDraft("");
   }, [open]);
 
-  const draftFolded = foldName(draft);
+  const draftFolded = foodKey(draft);
   const draftDuplicate =
     draftFolded !== "" && pantryIngredientFor(items, { ingredientName: draft }) !== null;
   const sorted = sortPantryIngredients(items, locale);

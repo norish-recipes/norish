@@ -1,5 +1,5 @@
 import type { StoreDto } from "@norish/shared/contracts";
-import { foldName } from "@norish/shared/lib/fold-name";
+import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 import type { AisleResolver, ContainerId, ItemsState, ReorderUpdate } from "./types";
 import { placeOfContainer, storeContainers } from "./utils";
@@ -95,8 +95,9 @@ export function planDrop(input: DropInput): DropPlan {
 
     for (const grocery of movedGroceries) {
       // One filing per food: a group's sources are mostly one Ingredient. A
-      // grocery added offline has none yet, and is told apart by its name.
-      const key = grocery.ingredientId ?? `name:${foldName(grocery.name)}`;
+      // grocery added offline has none yet, and is told apart by the key its
+      // name will resolve by ("onions, diced" is "onions").
+      const key = grocery.ingredientId ?? `name:${foodKey(grocery.name)}`;
 
       if (!grocery.name?.trim() || seen.has(key)) continue;
       seen.add(key);

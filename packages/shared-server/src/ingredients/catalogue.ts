@@ -65,9 +65,10 @@ import { getIngredientPermissionPolicy } from "@norish/shared-server/config/serv
 import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { ingredientChanges } from "./changes";
-import { cleanIngredientText, ingredientAliasFold } from "./resolver";
+import { cleanIngredientText } from "./resolver";
 
 /** Who is editing: what the policy is asked about. */
 export interface CatalogueActor {

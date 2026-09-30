@@ -23,8 +23,9 @@ import {
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
+import { ingredientAliasFold, stripPreparation } from "@norish/shared/lib/spelling-keys";
 
-import { cleanIngredientText, ingredientAliasFold, stripPreparation } from "../resolver";
+import { cleanIngredientText } from "../resolver";
 import { parseTaxonomy } from "./parse-taxonomy";
 
 const log = createLogger("ingredient-seed");

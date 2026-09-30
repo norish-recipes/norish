@@ -4,7 +4,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
-import { foldName } from "@norish/shared/lib/fold-name";
+import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 /** How long a shopper stops typing a name before its Ingredient is asked for. */
 const LOOKUP_DEBOUNCE_MS = 400;
@@ -25,9 +25,7 @@ export function useIngredientFor(
 ): string | null {
   const trpc = useTRPC();
   const own =
-    grocery?.ingredientId && foldName(grocery.name) === foldName(name)
-      ? grocery.ingredientId
-      : null;
+    grocery?.ingredientId && foodKey(grocery.name) === foodKey(name) ? grocery.ingredientId : null;
   const [settled] = useDebounceValue(name, LOOKUP_DEBOUNCE_MS);
 
   const term = settled.trim();

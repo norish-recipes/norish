@@ -24,12 +24,12 @@ import {
   upsertIngredientSuggestion,
 } from "@norish/db/repositories/ingredient-suggestions";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { stripPreparation } from "@norish/shared/lib/spelling-keys";
 
 import type { AskTrace } from "../ai/resolution/ingredient-resolution";
 import type { CatalogueActor } from "./catalogue";
 import { askWhatFoodThisIs } from "../ai/resolution/ingredient-resolution";
 import { CatalogueEditError, mayEditIngredientRow } from "./catalogue";
-import { stripPreparation } from "./resolver";
 
 /**
  * How long a person's question may take. Longer than an import's budget: the

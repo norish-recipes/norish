@@ -1,8 +1,9 @@
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliases";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { ResolveActor } from "./resolver";
-import { cleanIngredientText, ingredientAliasFold, resolveIngredients } from "./resolver";
+import { cleanIngredientText, resolveIngredients } from "./resolver";
 
 /** A grocery's name as written, and the recipe line it was added from, if any. */
 export interface GroceryName {

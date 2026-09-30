@@ -4,6 +4,7 @@ import type {
   IngredientRow,
 } from "@norish/db/repositories/ingredient-aliases";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
+import type { SpellingKeys } from "@norish/shared/lib/spelling-keys";
 import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
 import {
   addIngredientAliases,
@@ -12,8 +13,8 @@ import {
   mintIngredientWithAliases,
 } from "@norish/db/repositories/ingredient-aliases";
 import { dbLogger } from "@norish/shared-server/logger";
-import { foldName } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
+import { spellingKeys } from "@norish/shared/lib/spelling-keys";
 
 import type { AIResolution } from "../ai/resolution/ingredient-resolution";
 import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resolution";
@@ -30,6 +31,8 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
  *   2. an alias whose fold is the text's with preparation stripped — the part
  *      after the first comma and anything in brackets ("onions, diced" and
  *      "onions (red)" are "onions");
+ *   (both keys are `@norish/shared/lib/spelling-keys`, which the clients
+ *   match unresolved text on too);
  *   3. what AI makes of it (`ai/resolution/ingredient-resolution`): a Decision, or the language
  *      model — a known food it is sure the text names takes the text as a
  *      new spelling, so the next occurrence is a rung-1 match;
@@ -65,22 +68,12 @@ export interface ResolvedIngredient extends IngredientRef {
 }
 
 /** A text as the first two rungs read it: its fold, and its fold with the preparation stripped. */
-interface Spelling {
+interface Spelling extends SpellingKeys {
   text: string;
-  fold: string;
-  bare: string;
-  bareFold: string;
 }
 
 function spellingOf(text: string): Spelling {
-  const bare = stripPreparation(text);
-
-  return {
-    text,
-    fold: ingredientAliasFold(text),
-    bare,
-    bareFold: bare ? ingredientAliasFold(bare) : "",
-  };
+  return { text, ...spellingKeys(text) };
 }
 
 /** The aliases Norish already has for these spellings, by fold, in one query. */
@@ -100,29 +93,6 @@ function matchKnown(
   known: ReadonlyMap<string, IngredientAliasRow>
 ): IngredientAliasRow | undefined {
   return known.get(spelling.fold) ?? (spelling.bareFold ? known.get(spelling.bareFold) : undefined);
-}
-
-/**
- * The fold an alias is keyed by: the one grocery folding. A text that folds
- * to nothing (punctuation only) is keyed by its lowercase self, so it is still
- * one spelling rather than every such text at once.
- */
-export function ingredientAliasFold(text: string): string {
-  return foldName(text) || text.trim().toLowerCase();
-}
-
-/**
- * The text with its preparation stripped: brackets removed, then cut at the
- * first comma. A bracket never closed ("onion (red, diced") is a preparation
- * to its end, not a spelling with a bracket in it.
- */
-export function stripPreparation(text: string): string {
-  return text
-    .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
-    .replace(/[([].*$/, " ")
-    .split(",")[0]!
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 /** The as-written text a caller hands in, cleaned the way every stored name is. */
@@ -192,7 +162,7 @@ export async function resolveIngredients(
   return resolved;
 }
 
-/** Spellings the first two rungs resolve alike: "onions, diced" and "onions (2)" are one question. */
+/** Spellings the first two rungs resolve alike: "onions, diced" and "onions (2)" are one question (`foodKey`). */
 function sameFoodKey(spelling: Spelling): string {
   return spelling.bareFold || spelling.fold;
 }
