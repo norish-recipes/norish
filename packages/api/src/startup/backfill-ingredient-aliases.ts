@@ -1,5 +1,6 @@
 import type { ResolvedReference } from "@norish/db/repositories/ingredient-backfill";
 import type { LegacyKeyedTable } from "@norish/db/repositories/legacy-link-backfill";
+import { withTransaction } from "@norish/db/drizzle";
 import { findIngredientAliasesByFolds } from "@norish/db/repositories/ingredient-aliases";
 import {
   addOwnNameAliases,
@@ -146,7 +147,7 @@ async function mergeSpellingless(
     const holder = holders.get(fold);
 
     if (holder && holder !== ingredientId) {
-      await mergeCatalogueIngredients(ingredientId, holder);
+      await withTransaction((tx) => mergeCatalogueIngredients(tx, ingredientId, holder));
       merged += 1;
     }
   }

@@ -220,7 +220,7 @@ const removeAlias = authedProcedure
     return asEditResult(async () => {
       const removed = await removeCatalogueAlias(actorOf(ctx), input.aliasId);
 
-      await announceChanged([removed.ingredientId]);
+      await announceChanged(removed.changed);
     });
   });
 
@@ -408,7 +408,7 @@ const moveAlias = authedProcedure
     return asEditResult(async () => {
       const moved = await moveCatalogueAlias(actorOf(ctx), input.aliasId, input.targetId);
 
-      await announceChanged([moved.fromIngredientId, moved.ingredientId]);
+      await announceChanged(moved.changed);
     });
   });
 

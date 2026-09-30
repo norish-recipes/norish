@@ -6,10 +6,10 @@
  * or a grocery without its food. The edit policy's matrix is pinned at the
  * procedures; here the editor is the Ingredient's owner.
  */
+import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { renameCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { groceries } from "@norish/db/schema";
 import {
   addAlias,
@@ -132,13 +132,28 @@ describe("the ingredient catalogue", () => {
     );
   });
 
-  it("answers a rename that loses the race for a name as taken, not as a failure", async () => {
-    const garlic = await mint("garlic");
+  it("undoes a rename whose new spelling cannot be written, the old name kept", async () => {
     const leek = await mint("leek");
+    const db = getTestDb();
 
-    // The check passed for both; the unique name decides.
-    await expect(renameCatalogueIngredient(leek.ingredientId, "Garlic")).resolves.toBe("taken");
-    await expect(ingredientFor(garlic.aliasId)).resolves.toMatchObject({ name: "garlic" });
+    // Stands in for any failure after the rename's first write.
+    await db.execute(sql`
+      create or replace function refuse_alias() returns trigger language plpgsql as
+        $$ begin raise exception 'alias refused'; end $$`);
+    await db.execute(sql`
+      create trigger refuse_alias before insert on ingredient_aliases
+        for each row execute function refuse_alias()`);
+    try {
+      await expect(renameIngredient(actor, leek.ingredientId, "Winter leek")).rejects.toThrow();
+    } finally {
+      await db.execute(sql`drop trigger refuse_alias on ingredient_aliases`);
+      await db.execute(sql`drop function refuse_alias()`);
+    }
+
+    await expect(ingredientFor(leek.aliasId)).resolves.toMatchObject({
+      name: "leek",
+      flagged: true,
+    });
   });
 
   it("files a household's own word under the food it names", async () => {

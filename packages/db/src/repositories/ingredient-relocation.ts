@@ -15,14 +15,13 @@ import {
   storeProductLinks,
 } from "@norish/db/schema";
 
-import { isConstraintViolation } from "./constraint-violation";
-
 /**
  * What moves between Ingredients (ADR-0037): a merge, an alias moved to
  * another Ingredient or a new one (the unmerge), and a Parent Ingredient set
  * or cleared. Each takes the tree lock first, so the tree of parents is
  * changed one edit at a time and two edits over one pair of rows never
- * deadlock. Nothing here decides who may edit what: the ingredient module in
+ * deadlock. Every writer takes the edit's transaction, so an edit is one unit.
+ * Nothing here decides who may edit what: the ingredient module in
  * `@norish/shared-server/ingredients` checks the edit policy and calls these.
  */
 
@@ -132,47 +131,34 @@ async function ancestorsOf(
   return answer;
 }
 
-/** Every ancestor of each Ingredient, nearest first. */
+/** Every ancestor of each Ingredient, nearest first; read through `tx` when an edit is asking. */
 export async function findIngredientAncestors(
-  ids: readonly string[]
+  ids: readonly string[],
+  tx: typeof db | DbTransaction = db
 ): Promise<Map<string, string[]>> {
-  return await ancestorsOf(db, ids);
+  return await ancestorsOf(tx, ids);
 }
 
 /**
  * Set an Ingredient's Parent Ingredient, or clear it (`parentId` null), and
  * clear its flag: looking after a Flagged Ingredient counts as reviewing it.
- * A parent that is the Ingredient itself or one of its descendants would
- * close a cycle, and is refused.
+ * The caller holds the tree lock and has ruled out a cycle.
  */
 export async function setCatalogueIngredientParent(
+  tx: DbTransaction,
   id: string,
   parentId: string | null
-): Promise<"set" | "missing" | "cycle"> {
-  return await db.transaction(async (tx) => {
-    if (parentId === id) return "cycle";
-    await lockTree(tx);
-
-    const ids = parentId ? [id, parentId] : [id];
-
-    if ((await lockIngredients(tx, ids)) < ids.length) return "missing";
-    if (parentId && (await ancestorsOf(tx, [parentId])).get(parentId)?.includes(id)) {
-      return "cycle";
-    }
-
-    await tx
-      .update(ingredients)
-      .set({
-        parentId,
-        parentChosen: true,
-        flagged: false,
-        flagReason: null,
-        version: sql`${ingredients.version} + 1`,
-      })
-      .where(eq(ingredients.id, id));
-
-    return "set";
-  });
+): Promise<void> {
+  await tx
+    .update(ingredients)
+    .set({
+      parentId,
+      parentChosen: true,
+      flagged: false,
+      flagReason: null,
+      version: sql`${ingredients.version} + 1`,
+    })
+    .where(eq(ingredients.id, id));
 }
 
 /**
@@ -184,131 +170,102 @@ export async function setCatalogueIngredientParent(
  * at that Store (or for that member): the target's is kept. A household that
  * held both foods in the Pantry keeps the one Pantry Ingredient. The target's
  * flag is cleared, and it takes the source's Open Food Facts id when it has
- * none, so the seed keeps finding the food.
+ * none, so the seed keeps finding the food. Takes the tree lock and both
+ * rows itself; false, and nothing written, where either is gone.
  */
 export async function mergeCatalogueIngredients(
+  tx: DbTransaction,
   sourceId: string,
   targetId: string
-): Promise<"merged" | "missing"> {
-  return await db.transaction(async (tx) => {
-    await lockTree(tx);
-    if ((await lockIngredients(tx, [sourceId, targetId])) < 2) return "missing";
+): Promise<boolean> {
+  await lockTree(tx);
+  if ((await lockIngredients(tx, [sourceId, targetId])) < 2) return false;
 
-    // The target takes the source's place in the tree: where it sat under the
-    // source, it moves up to the source's parent first, so the source's
-    // children re-parented onto it can never close a cycle.
-    if ((await ancestorsOf(tx, [targetId])).get(targetId)?.includes(sourceId)) {
-      await tx.execute(sql`
-        update ${ingredients} set parent_id = (select parent_id from ${ingredients} where id = ${sourceId})
-        where id = ${targetId}`);
-    }
-    await tx
-      .update(ingredients)
-      .set({ parentId: targetId })
-      .where(eq(ingredients.parentId, sourceId));
-
-    for (const keyed of KEYED_BY_INGREDIENT) {
-      await repointKeyed(tx, keyed, sql`p.ingredient_id = ${sourceId}`, targetId);
-    }
-    await keepOnePantryRowPerHousehold(tx, targetId);
-    for (const table of [groceries, recurringGroceries]) {
-      await tx
-        .update(table)
-        .set({ ingredientId: targetId })
-        .where(eq(table.ingredientId, sourceId));
-    }
-    await tx
-      .update(ingredientAliases)
-      .set({ ingredientId: targetId, updatedAt: new Date() })
-      .where(eq(ingredientAliases.ingredientId, sourceId));
-    // The target is what a person decided the food is: that settles its flag.
-    // A seeded source hands its Open Food Facts id on where the target has
-    // none, so the nightly seed keeps finding the food instead of minting it again.
-    const [gone] = await tx
-      .delete(ingredients)
-      .where(eq(ingredients.id, sourceId))
-      .returning({ offId: ingredients.offId });
-
+  // The target takes the source's place in the tree: where it sat under the
+  // source, it moves up to the source's parent first, so the source's
+  // children re-parented onto it can never close a cycle.
+  if ((await ancestorsOf(tx, [targetId])).get(targetId)?.includes(sourceId)) {
     await tx.execute(sql`
-      update ${ingredients} set flagged = false, flag_reason = null, version = version + 1,
-        off_id = coalesce(off_id, ${gone?.offId ?? null})
+      update ${ingredients} set parent_id = (select parent_id from ${ingredients} where id = ${sourceId})
       where id = ${targetId}`);
+  }
+  await tx
+    .update(ingredients)
+    .set({ parentId: targetId })
+    .where(eq(ingredients.parentId, sourceId));
 
-    return "merged";
-  });
+  for (const keyed of KEYED_BY_INGREDIENT) {
+    await repointKeyed(tx, keyed, sql`p.ingredient_id = ${sourceId}`, targetId);
+  }
+  await keepOnePantryRowPerHousehold(tx, targetId);
+  for (const table of [groceries, recurringGroceries]) {
+    await tx.update(table).set({ ingredientId: targetId }).where(eq(table.ingredientId, sourceId));
+  }
+  await tx
+    .update(ingredientAliases)
+    .set({ ingredientId: targetId, updatedAt: new Date() })
+    .where(eq(ingredientAliases.ingredientId, sourceId));
+  // The target is what a person decided the food is: that settles its flag.
+  // A seeded source hands its Open Food Facts id on where the target has
+  // none, so the nightly seed keeps finding the food instead of minting it again.
+  const [gone] = await tx
+    .delete(ingredients)
+    .where(eq(ingredients.id, sourceId))
+    .returning({ offId: ingredients.offId });
+
+  await tx.execute(sql`
+    update ${ingredients} set flagged = false, flag_reason = null, version = version + 1,
+      off_id = coalesce(off_id, ${gone?.offId ?? null})
+    where id = ${targetId}`);
+
+  return true;
+}
+
+/** How many spellings an Ingredient has. */
+export async function countAliasesOf(tx: DbTransaction, ingredientId: string): Promise<number> {
+  const [{ value } = { value: 0 }] = await tx
+    .select({ value: count() })
+    .from(ingredientAliases)
+    .where(eq(ingredientAliases.ingredientId, ingredientId));
+
+  return value;
 }
 
 /**
- * Move one spelling to another Ingredient, or to a new one named for it
- * (`mint`): the unmerge. The lines behind the spelling go with it; the
- * Product Links, Aisle Links and store preferences stay with the food they
- * were learned for. A household whose Pantry Ingredient lands on a food it
- * already holds keeps the one. An Ingredient keeps at least one spelling.
- * Answers the Ingredient the spelling now names.
+ * A new Ingredient a person made, named for a spelling moved out to it. Its
+ * name is unique, so one another Ingredient goes by throws a unique violation.
+ */
+export async function insertCatalogueIngredient(
+  tx: DbTransaction,
+  values: { name: string; ownerId: string }
+): Promise<string> {
+  const [row] = await tx.insert(ingredients).values(values).returning({ id: ingredients.id });
+
+  return row!.id;
+}
+
+/**
+ * Move one spelling to another Ingredient: the unmerge. The lines behind the
+ * spelling go with it; the Product Links, Aisle Links and store preferences
+ * stay with the food they were learned for. A household whose Pantry
+ * Ingredient lands on a food it already holds keeps the one. The caller holds
+ * the tree lock and both rows, and has kept the source a spelling.
  */
 export async function moveCatalogueAlias(
+  tx: DbTransaction,
   aliasId: string,
-  target: { ingredientId: string } | { mint: { name: string; ownerId: string } }
-): Promise<
-  { outcome: "moved"; ingredientId: string } | { outcome: "missing" | "last" | "name-taken" }
-> {
-  try {
-    return await db.transaction(async (tx) => {
-      // Every catalogue move and merge takes the tree lock first, so they run
-      // one at a time (a nightly seed included) and never deadlock on rows,
-      // and the alias read under it is where it still is.
-      await lockTree(tx);
-
-      const [alias] = await tx
-        .select({ ingredientId: ingredientAliases.ingredientId })
-        .from(ingredientAliases)
-        .where(eq(ingredientAliases.id, aliasId));
-
-      if (!alias) return { outcome: "missing" as const };
-
-      const sourceId = alias.ingredientId;
-      const targetIds = "ingredientId" in target ? [target.ingredientId] : [];
-
-      if ((await lockIngredients(tx, [sourceId, ...targetIds])) < 1 + targetIds.length) {
-        return { outcome: "missing" as const };
-      }
-      if (targetIds[0] === sourceId) return { outcome: "moved" as const, ingredientId: sourceId };
-
-      const [{ value: siblings } = { value: 0 }] = await tx
-        .select({ value: count() })
-        .from(ingredientAliases)
-        .where(eq(ingredientAliases.ingredientId, sourceId));
-
-      if (siblings <= 1) return { outcome: "last" as const };
-
-      const targetId =
-        "ingredientId" in target
-          ? target.ingredientId
-          : (
-              await tx
-                .insert(ingredients)
-                .values({ name: target.mint.name, ownerId: target.mint.ownerId })
-                .returning({ id: ingredients.id })
-            )[0]!.id;
-
-      await tx
-        .update(ingredientAliases)
-        .set({ ingredientId: targetId, updatedAt: new Date() })
-        .where(eq(ingredientAliases.id, aliasId));
-      await repointKeyed(tx, PANTRY_KEYED, sql`p.ingredient_alias_id = ${aliasId}`, targetId);
-      await keepOnePantryRowPerHousehold(tx, targetId);
-      for (const table of [groceries, recurringGroceries]) {
-        await tx
-          .update(table)
-          .set({ ingredientId: targetId })
-          .where(eq(table.ingredientAliasId, aliasId));
-      }
-
-      return { outcome: "moved" as const, ingredientId: targetId };
-    });
-  } catch (error) {
-    // The new Ingredient's name is one another Ingredient goes by.
-    if (isConstraintViolation(error, "23505")) return { outcome: "name-taken" };
-    throw error;
+  targetId: string
+): Promise<void> {
+  await tx
+    .update(ingredientAliases)
+    .set({ ingredientId: targetId, updatedAt: new Date() })
+    .where(eq(ingredientAliases.id, aliasId));
+  await repointKeyed(tx, PANTRY_KEYED, sql`p.ingredient_alias_id = ${aliasId}`, targetId);
+  await keepOnePantryRowPerHousehold(tx, targetId);
+  for (const table of [groceries, recurringGroceries]) {
+    await tx
+      .update(table)
+      .set({ ingredientId: targetId })
+      .where(eq(table.ingredientAliasId, aliasId));
   }
 }

@@ -77,18 +77,14 @@ export async function confirmSuggestion(
   switch (suggestion.kind) {
     case "merge":
       if (!target) throw new CatalogueEditError("not-found");
-      await mergeIngredients(actor, ingredientId, target.id);
 
-      return [ingredientId, target.id];
+      return (await mergeIngredients(actor, ingredientId, target.id)).changed;
     case "parent":
       if (!target) throw new CatalogueEditError("not-found");
-      await setParent(actor, ingredientId, target.id);
 
-      return [ingredientId];
+      return (await setParent(actor, ingredientId, target.id)).changed;
     case "distinct":
-      await markDistinct(actor, ingredientId);
-
-      return [ingredientId];
+      return (await markDistinct(actor, ingredientId)).changed;
   }
 }
 

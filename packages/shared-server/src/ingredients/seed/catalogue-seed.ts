@@ -12,6 +12,7 @@ import type { IngredientSeedState } from "@norish/config/zod/server-config";
 import type { SeedEntry, SeedOutcome } from "@norish/db/repositories/ingredient-seed";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { IngredientSeedStateSchema, ServerConfigKeys } from "@norish/config/zod/server-config";
+import { withTransaction } from "@norish/db/drizzle";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import {
   applyIngredientSeed,
@@ -135,7 +136,9 @@ export async function mergeExistingIntoSeed(
     if (targets.size === 1) {
       const [target] = targets;
 
-      if ((await mergeCatalogueIngredients(ingredientId, target!)) === "merged") merged += 1;
+      if (await withTransaction((tx) => mergeCatalogueIngredients(tx, ingredientId, target!))) {
+        merged += 1;
+      }
     } else {
       await flagIngredient(ingredientId);
       flagged += 1;

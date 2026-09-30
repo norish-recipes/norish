@@ -1,6 +1,7 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { SuggestionKind } from "@norish/shared/contracts/ingredient-catalogue";
 import { db } from "@norish/db/drizzle";
 import { ingredients, ingredientSuggestions } from "@norish/db/schema";
@@ -109,8 +110,11 @@ export async function deleteIngredientSuggestion(id: string): Promise<void> {
 }
 
 /** Drop whatever AI proposed for an Ingredient: a person has settled it. */
-export async function deleteSuggestionFor(ingredientId: string): Promise<void> {
-  await db
+export async function deleteSuggestionFor(
+  ingredientId: string,
+  tx: typeof db | DbTransaction = db
+): Promise<void> {
+  await tx
     .delete(ingredientSuggestions)
     .where(eq(ingredientSuggestions.ingredientId, ingredientId));
 }

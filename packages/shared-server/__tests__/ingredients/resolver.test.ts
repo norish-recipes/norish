@@ -7,6 +7,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
+import { withTransaction } from "@norish/db/drizzle";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import { addPantryIngredient } from "@norish/db/repositories/pantry";
@@ -122,7 +123,10 @@ describe("ingredient resolver", () => {
       const resolved = await resolveOne("ui");
 
       // A housemate merges "ui" into onion after this resolve and before its write.
-      if (attempts === 1) await mergeCatalogueIngredients(ui.ingredientId, onion.ingredientId);
+      if (attempts === 1)
+        await withTransaction((tx) =>
+          mergeCatalogueIngredients(tx, ui.ingredientId, onion.ingredientId)
+        );
 
       return await addPantryIngredient(crypto.randomUUID(), {
         userId,

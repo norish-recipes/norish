@@ -27,11 +27,18 @@ const catalogue = vi.hoisted(() => ({
   findCatalogueIngredientOwner: vi.fn(),
   findIngredientIdByFold: vi.fn(),
   insertCatalogueAlias: vi.fn(),
+  isAliasInUse: vi.fn(),
+  isIngredientInUse: vi.fn(),
   listCatalogueAliasesOf: vi.fn(),
   listCatalogueIngredients: vi.fn(),
   renameCatalogueIngredient: vi.fn(),
 }));
 const relocation = vi.hoisted(() => ({
+  countAliasesOf: vi.fn(),
+  findIngredientAncestors: vi.fn(),
+  insertCatalogueIngredient: vi.fn(),
+  lockIngredients: vi.fn(async (_tx: unknown, ids: readonly string[]) => ids.length),
+  lockTree: vi.fn(),
   mergeCatalogueIngredients: vi.fn(),
   moveCatalogueAlias: vi.fn(),
   setCatalogueIngredientParent: vi.fn(),
@@ -52,6 +59,12 @@ const reviewQueue = vi.hoisted(() => ({
   getJob: vi.fn(async (): Promise<unknown> => null),
 }));
 
+// Each edit is one transaction; here it is the mocked repositories' to ignore.
+const TX = vi.hoisted(() => ({ tx: true }));
+
+vi.mock("@norish/db/drizzle", () => ({
+  withTransaction: (run: (tx: unknown) => unknown) => run(TX),
+}));
 vi.mock("@norish/queue/registry", () => ({ getQueues: () => ({ ingredientReview: reviewQueue }) }));
 vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
@@ -99,13 +112,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   ingredientsRealtime.reset();
   withPolicy("household");
-  relocation.mergeCatalogueIngredients.mockResolvedValue("merged");
-  relocation.setCatalogueIngredientParent.mockResolvedValue("set");
-  relocation.moveCatalogueAlias.mockResolvedValue({ outcome: "moved", ingredientId: UIEN });
-  catalogue.renameCatalogueIngredient.mockResolvedValue("renamed");
+  relocation.mergeCatalogueIngredients.mockResolvedValue(true);
+  relocation.countAliasesOf.mockResolvedValue(2);
+  relocation.findIngredientAncestors.mockResolvedValue(new Map());
+  relocation.insertCatalogueIngredient.mockResolvedValue(UIEN);
+  catalogue.renameCatalogueIngredient.mockResolvedValue({ id: ONION });
   catalogue.clearIngredientFlag.mockResolvedValue({ id: ONION });
-  catalogue.deleteCatalogueAlias.mockResolvedValue("deleted");
-  catalogue.deleteCatalogueIngredient.mockResolvedValue("deleted");
+  catalogue.isAliasInUse.mockResolvedValue(false);
+  catalogue.isIngredientInUse.mockResolvedValue(false);
   catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "Onion", ownerId: ME });
 });
 
@@ -133,7 +147,7 @@ describe("the edit policy", () => {
 
       if (allowed) {
         await expect(rename).resolves.toEqual({ success: true });
-        expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(ONION, "Onion");
+        expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(TX, ONION, "Onion");
       } else {
         await expect(rename).rejects.toMatchObject({ code: "FORBIDDEN" });
         expect(catalogue.renameCatalogueIngredient).not.toHaveBeenCalled();
@@ -171,7 +185,7 @@ describe("the edit policy", () => {
 
       if (allowed) {
         await expect(remove).resolves.toEqual({ success: true });
-        expect(catalogue.deleteCatalogueIngredient).toHaveBeenCalledWith(ONION);
+        expect(catalogue.deleteCatalogueIngredient).toHaveBeenCalledWith(TX, ONION);
         expect(ingredientsRealtime.published).toEqual([
           expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
         ]);
@@ -239,7 +253,7 @@ describe("the edit policy", () => {
 
       if (allowed) {
         await expect(set).resolves.toEqual({ success: true });
-        expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(ONION, UIEN);
+        expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(TX, ONION, UIEN);
         expect(ingredientsRealtime.published).toEqual([
           expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
         ]);
@@ -260,7 +274,7 @@ describe("the edit policy", () => {
 
       if (allowed) {
         await expect(move).resolves.toEqual({ success: true });
-        expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, { ingredientId: UIEN });
+        expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(TX, ALIAS, UIEN);
       } else {
         await expect(move).rejects.toMatchObject({ code: "FORBIDDEN" });
         expect(relocation.moveCatalogueAlias).not.toHaveBeenCalled();
@@ -273,9 +287,11 @@ describe("the edit policy", () => {
 
     await callerFor().moveAlias({ aliasId: ALIAS, targetId: null });
 
-    expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(ALIAS, {
-      mint: { name: "ui", ownerId: ME },
+    expect(relocation.insertCatalogueIngredient).toHaveBeenCalledWith(TX, {
+      name: "ui",
+      ownerId: ME,
     });
+    expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(TX, ALIAS, UIEN);
   });
 
   it.each([
@@ -285,9 +301,11 @@ describe("the edit policy", () => {
     "refuses a merge when the member may not edit %s",
     async (_which, sourceOwner, targetOwner) => {
       withPolicy("household");
-      catalogue.findCatalogueIngredientOwner.mockImplementation(async (id: string) => ({
-        ownerId: id === UIEN ? sourceOwner : targetOwner,
-      }));
+      catalogue.findCatalogueIngredientOwner.mockImplementation(
+        async (_tx: unknown, id: string) => ({
+          ownerId: id === UIEN ? sourceOwner : targetOwner,
+        })
+      );
 
       await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).rejects.toMatchObject({
         code: "FORBIDDEN",
@@ -298,14 +316,14 @@ describe("the edit policy", () => {
 
   it("merges where the member may edit both, and tells every client", async () => {
     withPolicy("household");
-    catalogue.findCatalogueIngredientOwner.mockImplementation(async (id: string) => ({
+    catalogue.findCatalogueIngredientOwner.mockImplementation(async (_tx: unknown, id: string) => ({
       ownerId: id === UIEN ? HOUSEMATE : ME,
     }));
 
     await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).resolves.toEqual({
       success: true,
     });
-    expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(UIEN, ONION);
+    expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(TX, UIEN, ONION);
     expect(ingredientsRealtime.published).toEqual([
       expect.objectContaining({ event: "changed", payload: { ingredientIds: [UIEN, ONION] } }),
     ]);
@@ -332,6 +350,7 @@ describe("the edit policy", () => {
       success: true,
     });
     expect(catalogue.insertCatalogueAlias).toHaveBeenCalledWith(
+      TX,
       expect.objectContaining({ ingredientId: ONION, text: "ajuin", ownerId: ME })
     );
     expect(ingredientsRealtime.published).toEqual([
@@ -345,6 +364,7 @@ describe("the edit policy", () => {
     await callerFor().rename({ ingredientId: ONION, name: "Yellow onion" });
 
     expect(catalogue.insertCatalogueAlias).toHaveBeenCalledWith(
+      TX,
       expect.objectContaining({ ingredientId: ONION, text: "Yellow onion", ownerId: ME })
     );
   });
@@ -554,8 +574,8 @@ describe("AI's suggestions", () => {
       failed: 0,
       refusal: null,
     });
-    expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(UIEN, ONION);
-    expect(suggestionsRepo.deleteSuggestionFor).toHaveBeenCalledWith(UIEN);
+    expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(TX, UIEN, ONION);
+    expect(suggestionsRepo.deleteSuggestionFor).toHaveBeenCalledWith(UIEN, TX);
     expect(ingredientsRealtime.published).toHaveLength(1);
   });
 
@@ -568,8 +588,8 @@ describe("AI's suggestions", () => {
     await expect(
       callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
     ).resolves.toMatchObject({ done: 2, failed: 0 });
-    expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(UIEN, ONION);
-    expect(catalogue.clearIngredientFlag).toHaveBeenCalledWith(UIEN);
+    expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(TX, UIEN, ONION);
+    expect(catalogue.clearIngredientFlag).toHaveBeenCalledWith(TX, UIEN);
   });
 
   it("goes on past a refused one and says why", async () => {
@@ -673,7 +693,9 @@ describe("refusals", () => {
   });
 
   it("refuses a name another Ingredient goes by", async () => {
-    catalogue.renameCatalogueIngredient.mockResolvedValue("taken");
+    catalogue.renameCatalogueIngredient.mockRejectedValue(
+      Object.assign(new Error("duplicate key"), { code: "23505" })
+    );
 
     await expect(callerFor().rename({ ingredientId: ONION, name: "Garlic" })).rejects.toMatchObject(
       { code: "CONFLICT", message: "name-taken" }
@@ -682,7 +704,8 @@ describe("refusals", () => {
   });
 
   it("refuses a parent that would close a cycle", async () => {
-    relocation.setCatalogueIngredientParent.mockResolvedValue("cycle");
+    // The parent sits under the food already.
+    relocation.findIngredientAncestors.mockResolvedValue(new Map([[UIEN, [ONION]]]));
 
     await expect(
       callerFor().setParent({ ingredientId: ONION, parentId: UIEN })
@@ -691,7 +714,7 @@ describe("refusals", () => {
   });
 
   it("refuses to delete an Ingredient something still uses", async () => {
-    catalogue.deleteCatalogueIngredient.mockResolvedValue("in-use");
+    catalogue.isIngredientInUse.mockResolvedValue(true);
 
     await expect(callerFor().remove({ ingredientId: ONION })).rejects.toMatchObject({
       code: "CONFLICT",
@@ -708,7 +731,7 @@ describe("refusals", () => {
   });
 
   it("refuses to move an Ingredient's last alias away", async () => {
-    relocation.moveCatalogueAlias.mockResolvedValue({ outcome: "last" });
+    relocation.countAliasesOf.mockResolvedValue(1);
 
     await expect(callerFor().moveAlias({ aliasId: ALIAS, targetId: null })).rejects.toMatchObject({
       code: "CONFLICT",
@@ -717,13 +740,13 @@ describe("refusals", () => {
   });
 
   it("refuses to remove an Ingredient's last alias, or one something points at", async () => {
-    catalogue.deleteCatalogueAlias.mockResolvedValueOnce("last");
+    relocation.countAliasesOf.mockResolvedValueOnce(1);
     await expect(callerFor().removeAlias({ aliasId: ALIAS })).rejects.toMatchObject({
       code: "CONFLICT",
       message: "last-alias",
     });
 
-    catalogue.deleteCatalogueAlias.mockResolvedValueOnce("in-use");
+    catalogue.isAliasInUse.mockResolvedValueOnce(true);
     await expect(callerFor().removeAlias({ aliasId: ALIAS })).rejects.toMatchObject({
       code: "CONFLICT",
       message: "alias-in-use",

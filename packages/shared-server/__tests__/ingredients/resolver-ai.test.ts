@@ -8,6 +8,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
+import { withTransaction } from "@norish/db/drizzle";
 import {
   findIngredientAncestors,
   mergeCatalogueIngredients,
@@ -125,7 +126,9 @@ describe("ingredient resolver, rung 3", () => {
     const shallot = await known("shallot");
 
     decides("Is onion", 0.95, () =>
-      mergeCatalogueIngredients(onion.ingredientId, shallot.ingredientId)
+      withTransaction((tx) =>
+        mergeCatalogueIngredients(tx, onion.ingredientId, shallot.ingredientId)
+      )
     );
 
     const onions = await resolveOne("onions");
@@ -215,7 +218,9 @@ describe("ingredient resolver, rung 3", () => {
     const shallot = await known("shallot");
 
     decides("Is a kind of onion", 0.9, () =>
-      mergeCatalogueIngredients(onion.ingredientId, shallot.ingredientId)
+      withTransaction((tx) =>
+        mergeCatalogueIngredients(tx, onion.ingredientId, shallot.ingredientId)
+      )
     );
     const red = await resolveOne("red onion");
 

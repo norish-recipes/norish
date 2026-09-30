@@ -1,8 +1,9 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, asc, count, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { IngredientSearch, IngredientSearchField } from "@norish/shared/lib/ingredient-search";
 import { db } from "@norish/db/drizzle";
 import {
@@ -13,9 +14,6 @@ import {
   recipeIngredients,
   recurringGroceries,
 } from "@norish/db/schema";
-
-import { isConstraintViolation } from "./constraint-violation";
-import { lockIngredients, lockTree } from "./ingredient-relocation";
 
 /**
  * The catalogue of Ingredients as the Ingredients page reads and edits it
@@ -229,8 +227,11 @@ export async function setIngredientFlagReason(id: string, flagReason: string): P
     .where(and(eq(ingredients.id, id), eq(ingredients.flagged, true)));
 }
 
-export async function findCatalogueIngredientOwner(id: string): Promise<CatalogueOwner | null> {
-  const [row] = await db
+export async function findCatalogueIngredientOwner(
+  tx: DbTransaction,
+  id: string
+): Promise<CatalogueOwner | null> {
+  const [row] = await tx
     .select({ ownerId: ingredients.ownerId })
     .from(ingredients)
     .where(eq(ingredients.id, id))
@@ -240,9 +241,10 @@ export async function findCatalogueIngredientOwner(id: string): Promise<Catalogu
 }
 
 export async function findCatalogueAliasOwner(
+  tx: DbTransaction,
   aliasId: string
 ): Promise<(CatalogueOwner & { ingredientId: string; text: string }) | null> {
-  const [row] = await db
+  const [row] = await tx
     .select({
       ownerId: ingredientAliases.ownerId,
       ingredientId: ingredientAliases.ingredientId,
@@ -257,30 +259,30 @@ export async function findCatalogueAliasOwner(
 
 /**
  * Rename an Ingredient and clear its flag: looking after a flagged Ingredient
- * counts as reviewing it. `taken` where another Ingredient got the name first,
- * which the unique name holds even against a rename racing this one.
+ * counts as reviewing it. Null where it is gone. The name is unique, so one
+ * another Ingredient got first, even by a rename racing this one, throws a
+ * unique violation.
  */
 export async function renameCatalogueIngredient(
+  tx: DbTransaction,
   id: string,
   name: string
-): Promise<"renamed" | "missing" | "taken"> {
-  try {
-    const [row] = await db
-      .update(ingredients)
-      .set({ name, flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
-      .where(eq(ingredients.id, id))
-      .returning({ id: ingredients.id });
+): Promise<{ id: string } | null> {
+  const [row] = await tx
+    .update(ingredients)
+    .set({ name, flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
+    .where(eq(ingredients.id, id))
+    .returning({ id: ingredients.id });
 
-    return row ? "renamed" : "missing";
-  } catch (error) {
-    if (isConstraintViolation(error, "23505")) return "taken";
-    throw error;
-  }
+  return row ?? null;
 }
 
-/** Clear an Ingredient's flag: Norish's doubt about it was unfounded. */
-export async function clearIngredientFlag(id: string): Promise<{ id: string } | null> {
-  const [row] = await db
+/** Clear an Ingredient's flag: Norish's doubt about it was unfounded. Null where it is gone. */
+export async function clearIngredientFlag(
+  tx: DbTransaction,
+  id: string
+): Promise<{ id: string } | null> {
+  const [row] = await tx
     .update(ingredients)
     .set({ flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
     .where(eq(ingredients.id, id))
@@ -290,8 +292,11 @@ export async function clearIngredientFlag(id: string): Promise<{ id: string } | 
 }
 
 /** The Ingredient a spelling already names, if any. */
-export async function findIngredientIdByFold(fold: string): Promise<string | null> {
-  const [row] = await db
+export async function findIngredientIdByFold(
+  tx: DbTransaction,
+  fold: string
+): Promise<string | null> {
+  const [row] = await tx
     .select({ ingredientId: ingredientAliases.ingredientId })
     .from(ingredientAliases)
     .where(eq(ingredientAliases.fold, fold))
@@ -305,13 +310,11 @@ export async function findIngredientIdByFold(fold: string): Promise<string | nul
  * spelling another Ingredient already holds is refused by the row itself:
  * null then, and the caller says which food holds it.
  */
-export async function insertCatalogueAlias(input: {
-  ingredientId: string;
-  text: string;
-  fold: string;
-  ownerId: string;
-}): Promise<CatalogueAlias | null> {
-  const [row] = await db.insert(ingredientAliases).values(input).onConflictDoNothing().returning({
+export async function insertCatalogueAlias(
+  tx: DbTransaction,
+  input: { ingredientId: string; text: string; fold: string; ownerId: string }
+): Promise<CatalogueAlias | null> {
+  const [row] = await tx.insert(ingredientAliases).values(input).onConflictDoNothing().returning({
     id: ingredientAliases.id,
     text: ingredientAliases.text,
     ownerId: ingredientAliases.ownerId,
@@ -320,118 +323,66 @@ export async function insertCatalogueAlias(input: {
   return row ?? null;
 }
 
-/**
- * Remove a spelling, where that loses nothing: an Ingredient keeps at least
- * one alias, and a spelling a recipe line, grocery or Pantry Ingredient
- * points at stays until it is moved (the reference would otherwise lose its
- * food). Answers what happened.
- */
-export async function deleteCatalogueAlias(
-  aliasId: string
-): Promise<"deleted" | "last" | "in-use" | "missing"> {
-  try {
-    return await deleteAliasIfSpare(aliasId);
-  } catch (error) {
-    // Something came to point at it between the check and the delete.
-    if (isConstraintViolation(error, "23503")) return "in-use";
-    throw error;
-  }
-}
+/** Whether a recipe line, grocery, recurring grocery or Pantry Ingredient points at a spelling. */
+export async function isAliasInUse(tx: DbTransaction, aliasId: string): Promise<boolean> {
+  const references = await Promise.all(
+    [recipeIngredients, groceries, recurringGroceries, pantryIngredients].map((table) =>
+      tx
+        .select({ one: sql`1` })
+        .from(table)
+        .where(eq(table.ingredientAliasId, aliasId))
+        .limit(1)
+    )
+  );
 
-async function deleteAliasIfSpare(
-  aliasId: string
-): Promise<"deleted" | "last" | "in-use" | "missing"> {
-  return await db.transaction(async (tx) => {
-    const [alias] = await tx
-      .select({ ingredientId: ingredientAliases.ingredientId })
-      .from(ingredientAliases)
-      .where(eq(ingredientAliases.id, aliasId));
-
-    if (!alias) return "missing";
-
-    // The Ingredient is locked, not only the alias: two members removing its
-    // last two spellings at once must not both find a sibling left.
-    const [held] = await tx
-      .select({ id: ingredients.id })
-      .from(ingredients)
-      .where(eq(ingredients.id, alias.ingredientId))
-      .for("update");
-
-    if (!held) return "missing";
-
-    const [{ value: siblings } = { value: 0 }] = await tx
-      .select({ value: count() })
-      .from(ingredientAliases)
-      .where(eq(ingredientAliases.ingredientId, alias.ingredientId));
-
-    if (siblings <= 1) return "last";
-
-    const references = await Promise.all(
-      [recipeIngredients, groceries, recurringGroceries, pantryIngredients].map((table) =>
-        tx
-          .select({ one: sql`1` })
-          .from(table)
-          .where(eq(table.ingredientAliasId, aliasId))
-          .limit(1)
-      )
-    );
-    const used = references.some((rows) => rows.length > 0);
-
-    if (used) return "in-use";
-
-    await tx.delete(ingredientAliases).where(eq(ingredientAliases.id, aliasId));
-
-    return "deleted";
-  });
+  return references.some((rows) => rows.length > 0);
 }
 
 /**
- * Delete an Ingredient nothing uses, with every spelling it was known by and
- * what the household taught Norish about it (Product Links, Aisle Links,
- * store preferences). One a recipe line, grocery, recurring grocery or Pantry
- * Ingredient still points at stays: those would lose their food, and a merge
- * is the edit that gives them another. Its children become Ingredients of
- * their own.
+ * Remove a spelling. The caller holds its Ingredient and has kept it a
+ * spelling and found nothing pointing at this one; something that came to
+ * point at it since throws a foreign-key violation.
  */
-export async function deleteCatalogueIngredient(
-  id: string
-): Promise<"deleted" | "missing" | "in-use"> {
-  try {
-    return await db.transaction(async (tx) => {
-      // The tree lock, as for every edit that changes what a row points at:
-      // a merge into this Ingredient must not land while it goes.
-      await lockTree(tx);
-      if ((await lockIngredients(tx, [id])) < 1) return "missing";
+export async function deleteCatalogueAlias(tx: DbTransaction, aliasId: string): Promise<void> {
+  await tx.delete(ingredientAliases).where(eq(ingredientAliases.id, aliasId));
+}
 
-      const references = await Promise.all(
-        [recipeIngredients, groceries, recurringGroceries, pantryIngredients].map((table) =>
-          tx
-            .select({ one: sql`1` })
-            .from(table)
-            .innerJoin(ingredientAliases, eq(ingredientAliases.id, table.ingredientAliasId))
-            .where(eq(ingredientAliases.ingredientId, id))
-            .limit(1)
-        )
-      );
-      const byIngredient = await Promise.all(
-        [groceries, recurringGroceries, pantryIngredients].map((table) =>
-          tx
-            .select({ one: sql`1` })
-            .from(table)
-            .where(eq(table.ingredientId, id))
-            .limit(1)
-        )
-      );
+/**
+ * Whether a recipe line, grocery, recurring grocery or Pantry Ingredient
+ * points at an Ingredient, directly or through one of its spellings.
+ */
+export async function isIngredientInUse(tx: DbTransaction, id: string): Promise<boolean> {
+  const references = await Promise.all(
+    [recipeIngredients, groceries, recurringGroceries, pantryIngredients].map((table) =>
+      tx
+        .select({ one: sql`1` })
+        .from(table)
+        .innerJoin(ingredientAliases, eq(ingredientAliases.id, table.ingredientAliasId))
+        .where(eq(ingredientAliases.ingredientId, id))
+        .limit(1)
+    )
+  );
+  const byIngredient = await Promise.all(
+    [groceries, recurringGroceries, pantryIngredients].map((table) =>
+      tx
+        .select({ one: sql`1` })
+        .from(table)
+        .where(eq(table.ingredientId, id))
+        .limit(1)
+    )
+  );
 
-      if ([...references, ...byIngredient].some((rows) => rows.length > 0)) return "in-use";
+  return [...references, ...byIngredient].some((rows) => rows.length > 0);
+}
 
-      await tx.delete(ingredients).where(eq(ingredients.id, id));
-
-      return "deleted";
-    });
-  } catch (error) {
-    // Something came to point at one of its spellings between the check and the delete.
-    if (isConstraintViolation(error, "23503")) return "in-use";
-    throw error;
-  }
+/**
+ * Delete an Ingredient, with every spelling it was known by and what the
+ * household taught Norish about it (Product Links, Aisle Links, store
+ * preferences). Its children become Ingredients of their own. The caller
+ * holds the tree lock and the row and has found nothing using it; something
+ * that came to point at one of its spellings since throws a foreign-key
+ * violation.
+ */
+export async function deleteCatalogueIngredient(tx: DbTransaction, id: string): Promise<void> {
+  await tx.delete(ingredients).where(eq(ingredients.id, id));
 }

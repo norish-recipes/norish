@@ -14,11 +14,17 @@
  * flag: looking after it counts as reviewing it. Re-parenting or marking
  * distinct also settles whatever AI suggested for it, as a merge does by
  * taking the food away.
+ *
+ * Each edit is one transaction: the owner lookup, the policy check, the
+ * locks, the write and the suggestion it settles, all through its `tx`. The
+ * repositories answer data; what that means as a refusal is decided here.
  */
 import type { PermissionLevel } from "@norish/config/zod/server-config";
+import type { DbTransaction } from "@norish/db/drizzle";
 import type {
   CatalogueAlias,
   CatalogueIngredient,
+  CatalogueOwner,
 } from "@norish/db/repositories/ingredient-catalogue";
 import type { CatalogueRefusal, FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
@@ -26,6 +32,8 @@ import type {
   IngredientSearchField,
   IngredientSearchMatch,
 } from "@norish/shared/lib/ingredient-search";
+import { withTransaction } from "@norish/db/drizzle";
+import { isConstraintViolation } from "@norish/db/repositories/constraint-violation";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import {
   clearIngredientFlag,
@@ -35,11 +43,18 @@ import {
   findCatalogueIngredientOwner,
   findIngredientIdByFold,
   insertCatalogueAlias,
+  isAliasInUse,
+  isIngredientInUse,
   listCatalogueAliasesOf,
   listCatalogueIngredients,
   renameCatalogueIngredient,
 } from "@norish/db/repositories/ingredient-catalogue";
 import {
+  countAliasesOf,
+  findIngredientAncestors,
+  insertCatalogueIngredient,
+  lockIngredients,
+  lockTree,
   mergeCatalogueIngredients,
   moveCatalogueAlias,
   setCatalogueIngredientParent,
@@ -234,17 +249,55 @@ function listItem(
   };
 }
 
-/** Refuse unless `actor` may edit the Ingredient; answers nothing otherwise. */
-async function assertMayEditIngredient(actor: CatalogueActor, ingredientId: string) {
-  const [owner, policy] = await Promise.all([
-    findCatalogueIngredientOwner(ingredientId),
-    getIngredientPermissionPolicy(),
-  ]);
+/** What an edit did: the Ingredients it changed, for every screen showing them to refetch. */
+export interface CatalogueEdit {
+  changed: string[];
+}
 
-  if (!owner) throw new CatalogueEditError("not-found");
-  if (!mayEditIngredientRow(policy.edit, actor, owner.ownerId)) {
+/**
+ * Run an edit as one unit: the owner lookup, the lock, the write and the
+ * suggestion it settles all read and write through the one `tx`, so a
+ * refusal anywhere undoes the whole edit.
+ */
+async function inEdit<T>(run: (tx: DbTransaction) => Promise<T>): Promise<T> {
+  return await withTransaction(run);
+}
+
+/** A write the database refused on a constraint (`23505` unique, `23503` foreign key), as this edit's refusal. */
+async function refusedOn<T>(
+  code: "23505" | "23503",
+  refusal: CatalogueRefusal,
+  write: () => Promise<T>
+): Promise<T> {
+  try {
+    return await write();
+  } catch (error) {
+    if (isConstraintViolation(error, code)) throw new CatalogueEditError(refusal);
+    throw error;
+  }
+}
+
+/** Refuse unless the row exists and `actor` may edit it, whoever owns it. */
+async function assertMayEdit<T extends CatalogueOwner>(
+  actor: CatalogueActor,
+  row: T | null
+): Promise<T> {
+  if (!row) throw new CatalogueEditError("not-found");
+  const policy = await getIngredientPermissionPolicy();
+
+  if (!mayEditIngredientRow(policy.edit, actor, row.ownerId)) {
     throw new CatalogueEditError("forbidden");
   }
+
+  return row;
+}
+
+async function assertMayEditIngredient(
+  tx: DbTransaction,
+  actor: CatalogueActor,
+  ingredientId: string
+): Promise<void> {
+  await assertMayEdit(actor, await findCatalogueIngredientOwner(tx, ingredientId));
 }
 
 /**
@@ -256,26 +309,36 @@ export async function addAlias(
   actor: CatalogueActor,
   ingredientId: string,
   text: string
-): Promise<CatalogueAlias | null> {
+): Promise<CatalogueEdit> {
+  return await inEdit((tx) => addAliasIn(tx, actor, ingredientId, text));
+}
+
+async function addAliasIn(
+  tx: DbTransaction,
+  actor: CatalogueActor,
+  ingredientId: string,
+  text: string
+): Promise<CatalogueEdit> {
   const cleaned = cleanIngredientText(text);
 
   if (!cleaned) throw new CatalogueEditError("empty");
-  if (!(await findCatalogueIngredientOwner(ingredientId))) {
+  if (!(await findCatalogueIngredientOwner(tx, ingredientId))) {
     throw new CatalogueEditError("not-found");
   }
 
   const fold = ingredientAliasFold(cleaned);
-  const alias = await insertCatalogueAlias({
+  const alias = await insertCatalogueAlias(tx, {
     ingredientId,
     text: cleaned,
     fold,
     ownerId: actor.userId,
   });
 
-  if (alias) return alias;
-  if ((await findIngredientIdByFold(fold)) === ingredientId) return null;
+  if (!alias && (await findIngredientIdByFold(tx, fold)) !== ingredientId) {
+    throw new CatalogueEditError("spelling-taken");
+  }
 
-  throw new CatalogueEditError("spelling-taken");
+  return { changed: [ingredientId] };
 }
 
 /**
@@ -288,40 +351,73 @@ export async function renameIngredient(
   actor: CatalogueActor,
   ingredientId: string,
   name: string
-): Promise<void> {
+): Promise<CatalogueEdit> {
+  return await inEdit((tx) => renameIngredientIn(tx, actor, ingredientId, name));
+}
+
+async function renameIngredientIn(
+  tx: DbTransaction,
+  actor: CatalogueActor,
+  ingredientId: string,
+  name: string
+): Promise<CatalogueEdit> {
   const cleaned = cleanIngredientText(name);
 
   if (!cleaned) throw new CatalogueEditError("empty");
-  await assertMayEditIngredient(actor, ingredientId);
-  const outcome = await renameCatalogueIngredient(ingredientId, cleaned);
+  await assertMayEditIngredient(tx, actor, ingredientId);
 
-  if (outcome === "taken") throw new CatalogueEditError("name-taken");
-  if (outcome === "missing") throw new CatalogueEditError("not-found");
-  await insertCatalogueAlias({
+  const renamed = await refusedOn("23505", "name-taken", () =>
+    renameCatalogueIngredient(tx, ingredientId, cleaned)
+  );
+
+  if (!renamed) throw new CatalogueEditError("not-found");
+  await insertCatalogueAlias(tx, {
     ingredientId,
     text: cleaned,
     fold: ingredientAliasFold(cleaned),
     ownerId: actor.userId,
   });
+
+  return { changed: [ingredientId] };
 }
 
 /**
- * Set or clear an Ingredient's Parent Ingredient, which clears its flag.
- * Follows `edit` on the Ingredient; the parent is only pointed at, so its own
- * policy is not asked. A parent that would close a cycle is refused.
+ * Set or clear an Ingredient's Parent Ingredient, which clears its flag and
+ * settles what AI suggested for it. Follows `edit` on the Ingredient; the
+ * parent is only pointed at, so its own policy is not asked. A parent that
+ * would close a cycle is refused.
  */
 export async function setParent(
   actor: CatalogueActor,
   ingredientId: string,
   parentId: string | null
-): Promise<void> {
-  await assertMayEditIngredient(actor, ingredientId);
+): Promise<CatalogueEdit> {
+  return await inEdit((tx) => setParentIn(tx, actor, ingredientId, parentId));
+}
 
-  const outcome = await setCatalogueIngredientParent(ingredientId, parentId);
+async function setParentIn(
+  tx: DbTransaction,
+  actor: CatalogueActor,
+  ingredientId: string,
+  parentId: string | null
+): Promise<CatalogueEdit> {
+  await assertMayEditIngredient(tx, actor, ingredientId);
+  if (parentId === ingredientId) throw new CatalogueEditError("cycle");
+  await lockTree(tx);
 
-  if (outcome === "cycle") throw new CatalogueEditError("cycle");
-  if (outcome === "missing") throw new CatalogueEditError("not-found");
-  await deleteSuggestionFor(ingredientId);
+  const ids = parentId ? [ingredientId, parentId] : [ingredientId];
+
+  if ((await lockIngredients(tx, ids)) < ids.length) throw new CatalogueEditError("not-found");
+  if (
+    parentId &&
+    (await findIngredientAncestors([parentId], tx)).get(parentId)?.includes(ingredientId)
+  ) {
+    throw new CatalogueEditError("cycle");
+  }
+  await setCatalogueIngredientParent(tx, ingredientId, parentId);
+  await deleteSuggestionFor(ingredientId, tx);
+
+  return { changed: [ingredientId] };
 }
 
 /**
@@ -329,98 +425,134 @@ export async function setParent(
  * the Ingredient. One a recipe line, grocery or Pantry Ingredient still
  * points at is refused: merging is how those are given another food.
  */
-export async function deleteIngredient(actor: CatalogueActor, ingredientId: string): Promise<void> {
-  await assertMayEditIngredient(actor, ingredientId);
+export async function deleteIngredient(
+  actor: CatalogueActor,
+  ingredientId: string
+): Promise<CatalogueEdit> {
+  return await inEdit(async (tx) => {
+    await assertMayEditIngredient(tx, actor, ingredientId);
+    // The tree lock, as for every edit that changes what a row points at:
+    // a merge into this Ingredient must not land while it goes.
+    await lockTree(tx);
+    if ((await lockIngredients(tx, [ingredientId])) < 1) throw new CatalogueEditError("not-found");
+    if (await isIngredientInUse(tx, ingredientId)) {
+      throw new CatalogueEditError("ingredient-in-use");
+    }
+    // Something may have come to point at one of its spellings since the check.
+    await refusedOn("23503", "ingredient-in-use", () =>
+      deleteCatalogueIngredient(tx, ingredientId)
+    );
 
-  const outcome = await deleteCatalogueIngredient(ingredientId);
-
-  if (outcome === "in-use") throw new CatalogueEditError("ingredient-in-use");
-  if (outcome === "missing") throw new CatalogueEditError("not-found");
+    return { changed: [ingredientId] };
+  });
 }
 
-/** Mark a Flagged Ingredient distinct: Norish's doubt was unfounded. Follows `edit`. */
-export async function markDistinct(actor: CatalogueActor, ingredientId: string): Promise<void> {
-  await assertMayEditIngredient(actor, ingredientId);
-  if (!(await clearIngredientFlag(ingredientId))) throw new CatalogueEditError("not-found");
-  await deleteSuggestionFor(ingredientId);
+/**
+ * Mark a Flagged Ingredient distinct: Norish's doubt was unfounded, and what
+ * AI suggested for it is settled. Follows `edit`.
+ */
+export async function markDistinct(
+  actor: CatalogueActor,
+  ingredientId: string
+): Promise<CatalogueEdit> {
+  return await inEdit(async (tx) => {
+    await assertMayEditIngredient(tx, actor, ingredientId);
+    if (!(await clearIngredientFlag(tx, ingredientId))) throw new CatalogueEditError("not-found");
+    await deleteSuggestionFor(ingredientId, tx);
+
+    return { changed: [ingredientId] };
+  });
 }
 
 /**
  * Merge `sourceId` into `targetId`: every spelling of the source, and every
  * line behind them, now means the target, and the source is gone — which is
- * also what clears its flag. Needs `edit` on both.
+ * also what clears its flag and takes its suggestion. Needs `edit` on both.
  */
 export async function mergeIngredients(
   actor: CatalogueActor,
   sourceId: string,
   targetId: string
-): Promise<void> {
+): Promise<CatalogueEdit> {
   if (sourceId === targetId) throw new CatalogueEditError("same-ingredient");
-  await assertMayEditIngredient(actor, sourceId);
-  await assertMayEditIngredient(actor, targetId);
-  if ((await mergeCatalogueIngredients(sourceId, targetId)) === "missing") {
-    throw new CatalogueEditError("not-found");
-  }
+
+  return await inEdit(async (tx) => {
+    await assertMayEditIngredient(tx, actor, sourceId);
+    await assertMayEditIngredient(tx, actor, targetId);
+    if (!(await mergeCatalogueIngredients(tx, sourceId, targetId))) {
+      throw new CatalogueEditError("not-found");
+    }
+
+    return { changed: [sourceId, targetId] };
+  });
 }
 
 /**
  * Move a spelling to another Ingredient, or to a new one named for it
  * (`targetId` null) — the unmerge. Follows `edit` on the alias; the
  * Ingredient it leaves keeps its flag, and a new one is a person's choice, so
- * it is not flagged. Answers the Ingredient the spelling now names.
+ * it is not flagged. An Ingredient keeps at least one spelling. Answers the
+ * Ingredient the spelling now names.
  */
 export async function moveAlias(
   actor: CatalogueActor,
   aliasId: string,
   targetId: string | null
-): Promise<{ ingredientId: string; fromIngredientId: string }> {
-  const [alias, policy] = await Promise.all([
-    findCatalogueAliasOwner(aliasId),
-    getIngredientPermissionPolicy(),
-  ]);
+): Promise<CatalogueEdit & { ingredientId: string }> {
+  return await inEdit(async (tx) => {
+    // Every catalogue move and merge takes the tree lock first, so they run
+    // one at a time (a nightly seed included) and never deadlock on rows,
+    // and the alias read under it is where it still is.
+    await lockTree(tx);
 
-  if (!alias) throw new CatalogueEditError("not-found");
-  if (!mayEditIngredientRow(policy.edit, actor, alias.ownerId)) {
-    throw new CatalogueEditError("forbidden");
-  }
+    const alias = await assertMayEdit(actor, await findCatalogueAliasOwner(tx, aliasId));
+    const sourceId = alias.ingredientId;
+    const locked = targetId ? [sourceId, targetId] : [sourceId];
 
-  const moved = await moveCatalogueAlias(
-    aliasId,
-    targetId ? { ingredientId: targetId } : { mint: { name: alias.text, ownerId: actor.userId } }
-  );
+    if ((await lockIngredients(tx, locked)) < locked.length) {
+      throw new CatalogueEditError("not-found");
+    }
+    if (targetId === sourceId) return { ingredientId: sourceId, changed: [sourceId] };
+    if ((await countAliasesOf(tx, sourceId)) <= 1) throw new CatalogueEditError("last-alias");
 
-  if (moved.outcome === "moved") {
-    return { ingredientId: moved.ingredientId, fromIngredientId: alias.ingredientId };
-  }
-  if (moved.outcome === "last") throw new CatalogueEditError("last-alias");
-  if (moved.outcome === "name-taken") throw new CatalogueEditError("name-taken");
-  throw new CatalogueEditError("not-found");
+    const to =
+      targetId ??
+      (await refusedOn("23505", "name-taken", () =>
+        insertCatalogueIngredient(tx, { name: alias.text, ownerId: actor.userId })
+      ));
+
+    await moveCatalogueAlias(tx, aliasId, to);
+
+    return { ingredientId: to, changed: [sourceId, to] };
+  });
 }
 
 /**
  * Remove a spelling. Follows `edit` on the alias. An Ingredient keeps at
  * least one, and a spelling something points at stays until it is moved.
- * Answers the Ingredient the spelling was removed from.
  */
-export async function removeAlias(
+export async function removeAlias(actor: CatalogueActor, aliasId: string): Promise<CatalogueEdit> {
+  return await inEdit((tx) => removeAliasIn(tx, actor, aliasId));
+}
+
+async function removeAliasIn(
+  tx: DbTransaction,
   actor: CatalogueActor,
   aliasId: string
-): Promise<{ ingredientId: string }> {
-  const [alias, policy] = await Promise.all([
-    findCatalogueAliasOwner(aliasId),
-    getIngredientPermissionPolicy(),
-  ]);
+): Promise<CatalogueEdit> {
+  const alias = await assertMayEdit(actor, await findCatalogueAliasOwner(tx, aliasId));
 
-  if (!alias) throw new CatalogueEditError("not-found");
-  if (!mayEditIngredientRow(policy.edit, actor, alias.ownerId)) {
-    throw new CatalogueEditError("forbidden");
+  // The Ingredient is locked, not only the alias: two members removing its
+  // last two spellings at once must not both find a sibling left.
+  if ((await lockIngredients(tx, [alias.ingredientId])) < 1) {
+    throw new CatalogueEditError("not-found");
   }
+  if ((await countAliasesOf(tx, alias.ingredientId)) <= 1) {
+    throw new CatalogueEditError("last-alias");
+  }
+  if (await isAliasInUse(tx, aliasId)) throw new CatalogueEditError("alias-in-use");
+  // Something may have come to point at it since the check.
+  await refusedOn("23503", "alias-in-use", () => deleteCatalogueAlias(tx, aliasId));
 
-  const outcome = await deleteCatalogueAlias(aliasId);
-
-  if (outcome === "last") throw new CatalogueEditError("last-alias");
-  if (outcome === "in-use") throw new CatalogueEditError("alias-in-use");
-  if (outcome === "missing") throw new CatalogueEditError("not-found");
-
-  return { ingredientId: alias.ingredientId };
+  return { changed: [alias.ingredientId] };
 }
