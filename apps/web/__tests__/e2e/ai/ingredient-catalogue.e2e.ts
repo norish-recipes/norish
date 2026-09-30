@@ -24,6 +24,9 @@ import { readGroceryNames, readPantryNames, seedRecipeWithIngredients } from "./
 test.describe.configure({ mode: "serial" });
 
 const RECIPE = "Onion soup";
+/** A page of the catalogue is fifty; these fill one and start another. */
+const FILLER_COUNT = 55;
+const fillerName = (n: number) => `zz filler ${String(n).padStart(2, "0")}`;
 const STORE = "Groenteboer";
 const AISLE = "Groente";
 
@@ -43,8 +46,20 @@ test.beforeAll(async ({ browser, aiStack }) => {
       ],
     },
     { name: "uitjes", aliases: [{ text: "uitjes", locale: "nl" }], flagged: true },
+    // Flagged too, for the round of Ask AI: settled there so "uitjes" stays for the merge below.
+    {
+      name: "knoflookteentjes",
+      aliases: [{ text: "knoflookteentjes", locale: "nl" }],
+      flagged: true,
+    },
     { name: "red onion", aliases: [{ text: "red onion", locale: "en" }] },
     { name: "shallot", aliases: [{ text: "shallot", locale: "en" }] },
+    // Enough foods, sorted last, for the list to have a second page to scroll to.
+    ...Array.from({ length: FILLER_COUNT }, (_, index) => {
+      const name = fillerName(index + 1);
+
+      return { name, aliases: [{ text: name, locale: "en" }] };
+    }),
   ]);
 
   await setParent(ids["red onion"]!, ids.onion!);
@@ -121,9 +136,90 @@ test("a Dutch 'ui' in the Pantry leaves an English recipe's 'onion' off the list
   await expect.poll(readGroceryNames).toEqual(["butter"]);
 });
 
+test("the list asks for its next page as the end comes into view", async () => {
+  await page.goto("/settings?tab=ingredients");
+  await expect(ingredientRow("uitjes")).toBeVisible();
+  // The last food is on the second page: not there until the end is reached.
+  await expect(ingredientRow(fillerName(FILLER_COUNT))).toHaveCount(0);
+
+  // The list is virtualised, so the end is scrolled to as many times as pages land.
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId("ingredients-list-end").scrollIntoViewIfNeeded();
+
+        return ingredientRow(fillerName(FILLER_COUNT)).count();
+      },
+      { timeout: 15_000 }
+    )
+    .toBe(1);
+  await page.evaluate(() => window.scrollTo(0, 0));
+});
+
+test("a food's name, parent and translations land together with Save", async () => {
+  const before = fillerName(1);
+  const after = "zz filler one";
+
+  await page.goto("/settings?tab=ingredients");
+  await page.getByTestId("ingredients-search").fill(before);
+  await ingredientRow(before).getByTestId("ingredient-toggle").click();
+  const opened = ingredientPanel(before);
+
+  await expect(opened.getByTestId("ingredient-save")).toBeDisabled();
+  await opened.getByTestId("ingredient-name-input").fill(after);
+  // Translations are a click through, in a panel of their own.
+  await opened.getByTestId("ingredient-all-spellings").click();
+  const spellings = page.getByRole("dialog", { name: "Translations" });
+
+  await spellings.getByTestId("ingredient-alias-input").fill("vulling");
+  await spellings.getByTestId("ingredient-alias-input").press("Enter");
+  await spellings.getByRole("button", { name: "Done" }).click();
+  // A parent is picked in a panel of its own and joins the draft.
+  await opened.getByTestId("ingredient-set-parent").click();
+  const asking = page.getByRole("dialog", { name: "Set parent…" });
+
+  await asking.getByTestId("ingredient-picker").fill("onion");
+  await page.getByRole("option", { name: "onion", exact: true }).click();
+  await asking.getByTestId("ingredient-relocation-confirm").click();
+  await expect(opened.getByTestId("ingredient-parent")).toContainText("onion");
+  // Nothing has landed yet.
+  await expect.poll(() => readIngredientOf("vulling")).toBeNull();
+
+  await opened.getByTestId("ingredient-save").click();
+  await expect(opened.getByTestId("ingredient-save")).toBeDisabled();
+  await page.getByTestId("ingredients-search").fill(after);
+  await expect(ingredientRow(after)).toBeVisible();
+  await expect(ingredientRow(after)).toContainText("3 translations, parent: onion");
+  await expect.poll(() => readIngredientOf("vulling")).not.toBeNull();
+
+  await opened.getByRole("button", { name: "Close panel" }).click();
+  await expect(opened).toBeHidden();
+
+  // With nothing typed, the list is the tree of kinds: the food is no longer
+  // a root, and folds out under onion.
+  await page.getByTestId("ingredients-search").fill("");
+  await expect(ingredientRow("onion")).toBeVisible();
+  await expect(ingredientRow(after)).toHaveCount(0);
+  await ingredientRow("onion").getByTestId("ingredient-kinds-toggle").click();
+  await expect(ingredientRow(after)).toBeVisible();
+  await expect(ingredientRow(after)).toHaveAttribute("data-depth", "1");
+  await expect(ingredientRow("red onion")).toHaveAttribute("data-depth", "1");
+  await ingredientRow("onion").getByTestId("ingredient-kinds-toggle").click();
+  await expect(ingredientRow(after)).toHaveCount(0);
+});
+
 test("a food Norish was not sure about is marked on the Ingredients page", async () => {
   await page.goto("/settings?tab=ingredients");
-  await page.getByTestId("ingredients-flagged-only").click();
+  // The filters sit in a panel and land with Apply, as the dashboard's do.
+  await page.getByTestId("ingredients-filters").click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+
+  const flaggedOnly = filters.getByRole("switch", { name: "Only flagged" });
+
+  await flaggedOnly.press("Space");
+  await expect(flaggedOnly).toBeChecked();
+  await filters.getByTestId("ingredients-filters-apply").click();
+  await expect(filters).toBeHidden();
 
   await expect(ingredientRow("uitjes").getByTestId("ingredient-flagged")).toBeVisible();
   await expect(ingredientRow("uitjes").getByTestId("ingredient-flag-reason")).toBeVisible();
@@ -139,6 +235,77 @@ test("a food Norish was not sure about is marked on the Ingredients page", async
   await expect(opened.getByTestId("ingredient-ask-ai")).toBeVisible();
   await opened.getByRole("button", { name: "Close panel" }).click();
   await expect(opened).toBeHidden();
+});
+
+test("the filters can show only the foods with neither parent nor kinds", async () => {
+  await page.goto("/settings?tab=ingredients");
+  await page.getByTestId("ingredients-filters").click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+  const standalone = filters.getByRole("switch", { name: "Without parent or kinds" });
+
+  await standalone.press("Space");
+  await expect(standalone).toBeChecked();
+  await filters.getByTestId("ingredients-filters-apply").click();
+  await expect(filters).toBeHidden();
+
+  // onion has kinds and red onion a parent: neither is listed; shallot is.
+  await expect(ingredientRow("shallot")).toBeVisible();
+  await expect(ingredientRow("onion")).toHaveCount(0);
+  await expect(ingredientRow("red onion")).toHaveCount(0);
+  // The header offers to find their parents with AI, and a food's panel to find its own.
+  await expect(page.getByTestId("ingredients-find-parents-all")).toBeVisible();
+  await ingredientRow("shallot").getByTestId("ingredient-toggle").click();
+  await expect(ingredientPanel("shallot").getByTestId("ingredient-find-parent")).toBeVisible();
+  await ingredientPanel("shallot").getByRole("button", { name: "Close panel" }).click();
+});
+
+test("asking AI about the flagged foods on screen runs as one round of suggestions to confirm", async ({
+  ai,
+}) => {
+  // The round asks the language model to read the name, then to compare it
+  // with what that reading finds: nothing here, so the food is its own.
+  ai.control.enqueue(
+    {
+      kind: "success",
+      content: JSON.stringify({ englishName: "garlic cloves", generalFood: "garlic", sure: true }),
+    },
+    {
+      kind: "success",
+      content: JSON.stringify({
+        verdict: "new",
+        food: null,
+        sure: true,
+        englishName: "garlic cloves",
+      }),
+    }
+  );
+  await page.goto("/settings?tab=ingredients");
+  await page.getByTestId("ingredients-search").fill("knoflook");
+  await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-flagged")).toBeVisible();
+  await expect(ingredientRow("uitjes")).toHaveCount(0);
+
+  // One round over the flagged foods on screen; the page follows it over the socket.
+  await page.getByTestId("ingredients-ask-ai-all").click();
+  // The row itself shows its turn in the round.
+  await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-reviewing")).toBeVisible();
+  // The round ends with the suggestions drawer open: AI changed nothing on its own.
+  const panel = page.getByRole("dialog", { name: "AI suggestions" });
+
+  await expect(panel).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("ingredient-reviewing")).toHaveCount(0);
+  const suggestion = panel.getByTestId("ingredient-suggestion");
+
+  await expect(suggestion).toHaveCount(1);
+  await expect(suggestion).toHaveAttribute("data-kind", "distinct");
+  await expect(suggestion).toContainText("Keep knoflookteentjes as a food of its own");
+  await expect(suggestion).toContainText("AI read it as “garlic cloves”.");
+  await suggestion.getByTestId("ingredient-suggestion-confirm").click();
+  await expect(suggestion).toHaveCount(0);
+  await expect(panel.getByText("Nothing is waiting on you.")).toBeVisible();
+  await panel.getByRole("button", { name: "Close panel" }).click();
+  await expect(panel).toBeHidden();
+  await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-flagged")).toHaveCount(0);
+  await expect(page.getByTestId("ingredients-ask-ai-all")).toHaveCount(0);
 });
 
 /** The panel a row opens: a dialog named after the food. */
@@ -197,6 +364,7 @@ test("a food nothing uses can be deleted, and one a grocery uses cannot", async 
   await expect.poll(() => readIngredientOf("shallot")).toBeNull();
 
   // "red onion" is on the grocery list: it stays, and the page says why.
+  await ingredientRow("onion").getByTestId("ingredient-kinds-toggle").click();
   await ingredientRow("red onion").getByTestId("ingredient-toggle").click();
   await ingredientPanel("red onion").getByTestId("ingredient-delete").click();
   await page.getByTestId("ingredient-delete-confirm").click();

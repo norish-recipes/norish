@@ -125,3 +125,22 @@ export type StoreLookupJobData =
       householdKey: string;
     }
   | { kind: "refresh"; storeId: string; productIds: string[]; householdKey: string };
+
+/**
+ * One round of Ask AI over Flagged Ingredients (ADR-0037): the foods a person
+ * asked about, in the order the page listed them, and who asked, since each
+ * food's edit follows the ingredient permission policy for that person. A
+ * round outlives the tab that started it, so it carries the actor rather than
+ * a session.
+ */
+export interface IngredientReviewJobData {
+  /** The foods, by id and by name, so the job monitor reads "uitjes" rather than an id. */
+  ingredients: Array<{ id: string; name: string }>;
+  /** What is asked: what each flagged food is (the default), or what food each is a kind of. */
+  mode?: "review" | "parent";
+  actor: {
+    userId: string;
+    householdUserIds: string[] | null;
+    isServerAdmin: boolean;
+  };
+}

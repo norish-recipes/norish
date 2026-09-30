@@ -22,6 +22,8 @@ const catalogue = vi.hoisted(() => ({
   deleteCatalogueAlias: vi.fn(),
   deleteCatalogueIngredient: vi.fn(),
   findCatalogueAliasOwner: vi.fn(),
+  findCatalogueIngredient: vi.fn(),
+  findCatalogueIngredientNames: vi.fn(),
   findCatalogueIngredientOwner: vi.fn(),
   findIngredientIdByFold: vi.fn(),
   insertCatalogueAlias: vi.fn(),
@@ -34,11 +36,28 @@ const relocation = vi.hoisted(() => ({
   moveCatalogueAlias: vi.fn(),
   setCatalogueIngredientParent: vi.fn(),
 }));
+const aliases = vi.hoisted(() => ({ findLocaleNames: vi.fn(async () => new Map()) }));
 const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
-const reviewer = vi.hoisted(() => ({ reviewFlaggedWithAI: vi.fn() }));
+const suggestionsRepo = vi.hoisted(() => ({
+  deleteIngredientSuggestion: vi.fn(),
+  deleteSuggestionFor: vi.fn(),
+  findIngredientSuggestions: vi.fn(async (): Promise<unknown[]> => []),
+  listIngredientSuggestions: vi.fn(async (): Promise<unknown[]> => []),
+}));
+const reviewer = vi.hoisted(() => ({ reviewFlaggedWithAI: vi.fn(), findParentWithAI: vi.fn() }));
 
+const reviewQueue = vi.hoisted(() => ({
+  add: vi.fn(async () => ({ id: "round-1" })),
+  getJobs: vi.fn(async () => []),
+  getJob: vi.fn(async (): Promise<unknown> => null),
+}));
+
+vi.mock("@norish/queue/registry", () => ({ getQueues: () => ({ ingredientReview: reviewQueue }) }));
+vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
 vi.mock("@norish/db/repositories/ingredient-relocation", () => relocation);
+vi.mock("@norish/db/repositories/ingredient-aliases", () => aliases);
+vi.mock("@norish/db/repositories/ingredient-suggestions", () => suggestionsRepo);
 vi.mock("@norish/shared-server/ingredients/review", () => reviewer);
 vi.mock("@norish/shared-server/config/server-config-loader", () => policy);
 vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
@@ -333,10 +352,10 @@ describe("the edit policy", () => {
 
 describe("asking AI about a flagged Ingredient", () => {
   it("answers what came of it, and announces the change", async () => {
-    reviewer.reviewFlaggedWithAI.mockResolvedValue({ outcome: "merged", into: "onion" });
+    reviewer.reviewFlaggedWithAI.mockResolvedValue({ outcome: "merge", into: "onion" });
 
     await expect(callerFor().reviewWithAI({ ingredientId: UIEN })).resolves.toEqual({
-      outcome: "merged",
+      outcome: "merge",
       into: "onion",
     });
     expect(ingredientsRealtime.published).toEqual([
@@ -350,6 +369,284 @@ describe("asking AI about a flagged Ingredient", () => {
     await callerFor().reviewWithAI({ ingredientId: UIEN });
 
     expect(ingredientsRealtime.published).toHaveLength(0);
+  });
+});
+
+describe("a round of Ask AI over flagged Ingredients", () => {
+  beforeEach(() => {
+    reviewQueue.add.mockClear();
+    reviewQueue.getJobs.mockReset();
+    reviewQueue.getJobs.mockResolvedValue([]);
+  });
+
+  it("queues one job carrying the foods by name and the asker, and answers the job to watch", async () => {
+    catalogue.findCatalogueIngredientNames.mockResolvedValue(new Map([[UIEN, "uien"]]));
+
+    await expect(callerFor().reviewAllWithAI({ ingredientIds: [UIEN, ONION] })).resolves.toEqual({
+      jobId: "round-1",
+      total: 2,
+    });
+
+    // A food the catalogue no longer names keeps its id as its name.
+    expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith("review", {
+      ingredients: [
+        { id: UIEN, name: "uien" },
+        { id: ONION, name: ONION },
+      ],
+      actor: { userId: ME, householdUserIds: [ME, HOUSEMATE], isServerAdmin: false },
+    });
+    // Nothing is asked here: the round asks, and announces, from the worker.
+    expect(reviewer.reviewFlaggedWithAI).not.toHaveBeenCalled();
+    expect(ingredientsRealtime.published).toHaveLength(0);
+  });
+
+  it("asks what each food is a kind of instead, when told to", async () => {
+    catalogue.findCatalogueIngredientNames.mockResolvedValue(new Map());
+
+    await callerFor().reviewAllWithAI({ ingredientIds: [UIEN], mode: "parent" });
+
+    expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith(
+      "review",
+      expect.objectContaining({ mode: "parent" })
+    );
+  });
+
+  it("asks what one food is a kind of, and announces the suggestion", async () => {
+    reviewer.findParentWithAI.mockResolvedValueOnce({
+      outcome: "parent",
+      of: "onion",
+      considered: ["onion"],
+      englishName: null,
+    });
+
+    await expect(callerFor().findParentWithAI({ ingredientId: UIEN })).resolves.toMatchObject({
+      outcome: "parent",
+      of: "onion",
+    });
+    expect(reviewer.findParentWithAI).toHaveBeenCalledWith(expect.anything(), UIEN);
+    expect(ingredientsRealtime.published).toHaveLength(1);
+  });
+
+  it("asks about nothing without a food", async () => {
+    await expect(callerFor().reviewAllWithAI({ ingredientIds: [] })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    expect(reviewQueue.add).not.toHaveBeenCalled();
+  });
+
+  it("tells a page that opens mid-round how far the round is", async () => {
+    reviewQueue.getJobs.mockResolvedValue([
+      {
+        id: "round-1",
+        data: {
+          ingredients: [
+            { id: UIEN, name: "uien" },
+            { id: ONION, name: "onion" },
+          ],
+        },
+        progress: {},
+      },
+    ]);
+
+    await expect(callerFor().reviewRound()).resolves.toEqual({
+      jobId: "round-1",
+      done: 0,
+      total: 2,
+      counts: { merge: 0, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 },
+      pending: [UIEN, ONION],
+      finished: false,
+    });
+    await expect(callerFor().reviewRound()).resolves.not.toBeNull();
+
+    reviewQueue.getJobs.mockResolvedValue([]);
+    await expect(callerFor().reviewRound()).resolves.toBeNull();
+  });
+
+  it("reads a round back, food by food, for the summary the page offers", async () => {
+    reviewQueue.getJob.mockResolvedValue({
+      id: "round-1",
+      data: { ingredients: [{ id: UIEN, name: "uien" }] },
+      progress: {
+        step: "asking-ai:1/1",
+        updatedAt: 1,
+        attempts: [
+          {
+            attempt: 1,
+            timeline: [
+              {
+                id: "asking-ai:1/1",
+                startedAt: 1,
+                endedAt: 2,
+                detail: {
+                  ingredientId: UIEN,
+                  name: "uien",
+                  outcome: "merge",
+                  into: "onion",
+                  considered: ["onion"],
+                  englishName: "onions",
+                },
+              },
+            ],
+          },
+        ],
+      },
+      getState: async () => "completed",
+    });
+
+    await expect(callerFor().reviewReport({ jobId: "round-1" })).resolves.toEqual({
+      jobId: "round-1",
+      finished: true,
+      entries: [
+        {
+          ingredientId: UIEN,
+          name: "uien",
+          outcome: "merge",
+          into: "onion",
+          considered: ["onion"],
+          englishName: "onions",
+        },
+      ],
+    });
+    expect(reviewQueue.getJob).toHaveBeenCalledWith("round-1");
+
+    reviewQueue.getJob.mockResolvedValue(null);
+    await expect(callerFor().reviewReport({ jobId: "gone" })).resolves.toBeNull();
+  });
+});
+
+describe("AI's suggestions", () => {
+  const SUGGESTION = "44444444-4444-4444-8444-444444444444";
+  const OTHER = "55555555-5555-4555-8555-555555555555";
+
+  function suggested(kind: "merge" | "parent" | "distinct", ownerId: string | null = ME) {
+    return {
+      id: SUGGESTION,
+      ingredientId: UIEN,
+      ingredientName: "uien",
+      ingredientOwnerId: ownerId,
+      kind,
+      target: kind === "distinct" ? null : { id: ONION, name: "onion" },
+      englishName: "onions",
+      considered: ["onion"],
+    };
+  }
+
+  it("lists what waits on a person, and whether the viewer may answer each", async () => {
+    suggestionsRepo.listIngredientSuggestions.mockResolvedValueOnce([
+      suggested("parent"),
+      { ...suggested("distinct", STRANGER), id: OTHER },
+    ]);
+
+    const listed = await callerFor().suggestions();
+
+    expect(listed.map((it) => [it.kind, it.target?.name ?? null, it.canAnswer])).toEqual([
+      ["parent", "onion", true],
+      ["distinct", null, false],
+    ]);
+  });
+
+  it("confirms a parent as the viewer's own edit, which settles it", async () => {
+    ownedBy(ME);
+    suggestionsRepo.findIngredientSuggestions.mockResolvedValueOnce([suggested("parent")]);
+
+    await expect(callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION] })).resolves.toEqual({
+      done: 1,
+      failed: 0,
+      refusal: null,
+    });
+    expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(UIEN, ONION);
+    expect(suggestionsRepo.deleteSuggestionFor).toHaveBeenCalledWith(UIEN);
+    expect(ingredientsRealtime.published).toHaveLength(1);
+  });
+
+  it("confirms a merge and a food of its own the way the page's own edits do", async () => {
+    ownedBy(ME);
+    suggestionsRepo.findIngredientSuggestions
+      .mockResolvedValueOnce([suggested("merge")])
+      .mockResolvedValueOnce([{ ...suggested("distinct"), id: OTHER }]);
+
+    await expect(
+      callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
+    ).resolves.toMatchObject({ done: 2, failed: 0 });
+    expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(UIEN, ONION);
+    expect(catalogue.clearIngredientFlag).toHaveBeenCalledWith(UIEN);
+  });
+
+  it("goes on past a refused one and says why", async () => {
+    ownedBy(STRANGER);
+    suggestionsRepo.findIngredientSuggestions.mockResolvedValue([suggested("parent", STRANGER)]);
+
+    await expect(
+      callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
+    ).resolves.toEqual({ done: 0, failed: 2, refusal: "forbidden" });
+    expect(relocation.setCatalogueIngredientParent).not.toHaveBeenCalled();
+    expect(ingredientsRealtime.published).toHaveLength(0);
+  });
+
+  it("dismisses a suggestion without touching the food, under the edit policy", async () => {
+    suggestionsRepo.findIngredientSuggestions.mockResolvedValueOnce([suggested("merge")]);
+
+    await expect(
+      callerFor().dismissSuggestions({ suggestionIds: [SUGGESTION] })
+    ).resolves.toMatchObject({ done: 1 });
+    expect(suggestionsRepo.deleteIngredientSuggestion).toHaveBeenCalledWith(SUGGESTION);
+    expect(relocation.mergeCatalogueIngredients).not.toHaveBeenCalled();
+
+    suggestionsRepo.findIngredientSuggestions.mockResolvedValueOnce([suggested("merge", STRANGER)]);
+    await expect(
+      callerFor().dismissSuggestions({ suggestionIds: [SUGGESTION] })
+    ).resolves.toMatchObject({ done: 0, refusal: "forbidden" });
+  });
+});
+
+describe("the tree of kinds", () => {
+  beforeEach(() => {
+    withPolicy("household");
+    catalogue.listCatalogueIngredients.mockResolvedValue([]);
+  });
+
+  it("lists the foods with neither parent nor kinds on request", async () => {
+    await callerFor().list({ standaloneOnly: true });
+
+    expect(catalogue.listCatalogueIngredients).toHaveBeenLastCalledWith(
+      expect.objectContaining({ standaloneOnly: true })
+    );
+  });
+
+  it("lists the foods filed under none as the roots", async () => {
+    await callerFor().list({ rootsOnly: true });
+
+    expect(catalogue.listCatalogueIngredients).toHaveBeenLastCalledWith(
+      expect.objectContaining({ parentId: null })
+    );
+
+    await callerFor().list({});
+    expect(catalogue.listCatalogueIngredients).toHaveBeenLastCalledWith(
+      expect.objectContaining({ parentId: undefined })
+    );
+  });
+
+  it("answers the kinds of a food, with how many kinds each has", async () => {
+    catalogue.listCatalogueIngredients.mockResolvedValue([
+      {
+        id: UIEN,
+        name: "red onion",
+        flagged: false,
+        flagReason: null,
+        ownerId: ME,
+        version: 1,
+        parent: { id: ONION, name: "onion" },
+        kinds: 2,
+        aliases: [],
+      },
+    ]);
+
+    await expect(callerFor().kinds({ parentId: ONION })).resolves.toMatchObject([
+      { id: UIEN, name: "red onion", kinds: 2, parent: { id: ONION } },
+    ]);
+    expect(catalogue.listCatalogueIngredients).toHaveBeenLastCalledWith(
+      expect.objectContaining({ parentId: ONION })
+    );
   });
 });
 
@@ -443,6 +740,34 @@ describe("refusals", () => {
 });
 
 describe("the list", () => {
+  it("reads one food on its own, whatever filter the page has on, or null once it is gone", async () => {
+    catalogue.listCatalogueIngredients.mockResolvedValueOnce([
+      {
+        id: ONION,
+        name: "onion",
+        flagged: false,
+        flagReason: null,
+        ownerId: ME,
+        version: 2,
+        parent: null,
+        kinds: 0,
+        aliases: [{ id: ALIAS, text: "onion", ownerId: ME }],
+      },
+    ]);
+
+    await expect(callerFor().get({ ingredientId: ONION, locale: "en" })).resolves.toMatchObject({
+      id: ONION,
+      flagged: false,
+      canEdit: true,
+    });
+    expect(catalogue.listCatalogueIngredients).toHaveBeenCalledWith(
+      expect.objectContaining({ id: ONION, flaggedOnly: false, search: null })
+    );
+
+    catalogue.listCatalogueIngredients.mockResolvedValueOnce([]);
+    await expect(callerFor().get({ ingredientId: ONION })).resolves.toBeNull();
+  });
+
   it("says, row by row, what the viewer may do", async () => {
     withPolicy("household");
     catalogue.listCatalogueIngredients.mockResolvedValue([
@@ -465,7 +790,12 @@ describe("the list", () => {
 
     expect(catalogue.listCatalogueIngredients).toHaveBeenCalledWith(
       expect.objectContaining({
-        search: { kind: "like", patterns: ["onion%", "% onion%"] },
+        search: {
+          fold: "onion",
+          pattern: "%onion%",
+          match: "contains",
+          fields: ["name", "translations"],
+        },
         flaggedOnly: true,
         offset: 0,
       })

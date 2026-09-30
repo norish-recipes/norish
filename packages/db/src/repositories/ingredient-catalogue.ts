@@ -1,8 +1,9 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { and, asc, count, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
-import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
+import type { IngredientSearch, IngredientSearchField } from "@norish/shared/lib/ingredient-search";
 import { db } from "@norish/db/drizzle";
 import {
   groceries,
@@ -35,6 +36,8 @@ export interface CatalogueIngredient {
   ownerId: string | null;
   version: number;
   parent: { id: string; name: string } | null;
+  /** How many Ingredients are kinds of this one. */
+  kinds: number;
   aliases: CatalogueAlias[];
 }
 
@@ -52,27 +55,27 @@ export interface CatalogueOwner {
 }
 
 /**
- * The folded name and the spellings of an Ingredient against one search:
- * exactly that fold, or any of the `LIKE` patterns. Names carry no fold
- * column, so the name is matched lowercased, which is the fold of an ASCII
- * name; an accented name is found through its own spelling.
+ * One search against the fields it asks to look in: the Ingredient's name,
+ * its translations, or its parent's name and translations. An exact search
+ * compares the fold, a contains search runs the `LIKE` pattern. Names carry
+ * no fold column, so a name is matched lowercased, which is the fold of an
+ * ASCII name; an accented name is found through its own spelling.
  */
-function matchingSearch(search: IngredientSearch) {
-  const name = sql`lower(${ingredients.name})`;
-  const spelling = (test: (column: typeof ingredientAliases.fold) => SQL | undefined) =>
-    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredients.id} and ${test(ingredientAliases.fold)})`;
+function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; name: AnyPgColumn }) {
+  const matches = (value: SQL): SQL =>
+    search.match === "exact"
+      ? sql`${value} = ${search.fold}`
+      : sql`${value} like ${search.pattern}`;
+  const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
+    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${matches(sql`${ingredientAliases.fold}`)})`;
 
-  if (search.kind === "exact") {
-    return or(
-      sql`${name} = ${search.fold}`,
-      spelling((fold) => eq(fold, search.fold))
-    );
-  }
+  const byField: Record<IngredientSearchField, SQL> = {
+    name: matches(sql`lower(${ingredients.name})`),
+    translations: spellingOf(ingredients.id),
+    parent: or(matches(sql`lower(${parents.name})`), spellingOf(sql`${parents.id}`)) ?? sql`false`,
+  };
 
-  return or(
-    ...search.patterns.map((pattern) => sql`${name} like ${pattern}`),
-    spelling((fold) => or(...search.patterns.map((pattern) => sql`${fold} like ${pattern}`)))
-  );
+  return or(...search.fields.map((field) => byField[field]));
 }
 
 /**
@@ -84,16 +87,21 @@ function matchingSearch(search: IngredientSearch) {
 export async function listCatalogueIngredients(query: {
   search: IngredientSearch | null;
   flaggedOnly: boolean;
+  /** Only the Ingredients filed under this one (null: the ones filed under none); undefined for every one. */
+  parentId?: string | null;
+  /** Only the Ingredients filed under none that nothing is filed under: no parent, no kinds. */
+  standaloneOnly?: boolean;
+  /** Only this Ingredient, for a panel that follows one food a filter no longer lists. */
+  id?: string;
   limit: number;
   offset: number;
 }): Promise<CatalogueIngredient[]> {
-  const matchesSearch = query.search ? matchingSearch(query.search) : undefined;
-  const typed = query.search?.kind === "like" ? query.search.patterns[0]?.replace(/%/g, "") : null;
-  const exactFirst = typed
-    ? [sql`case when lower(${ingredients.name}) = ${typed} then 0 else 1 end`]
+  const parents = alias(ingredients, "parent");
+  const matchesSearch = query.search ? matchingSearch(query.search, parents) : undefined;
+  const exactFirst = query.search
+    ? [sql`case when lower(${ingredients.name}) = ${query.search.fold} then 0 else 1 end`]
     : [];
 
-  const parents = alias(ingredients, "parent");
   const rows = await db
     .select({
       id: ingredients.id,
@@ -104,10 +112,29 @@ export async function listCatalogueIngredients(query: {
       version: ingredients.version,
       parentId: parents.id,
       parentName: parents.name,
+      // The table under its own name again: a Drizzle alias in raw SQL renders bare.
+      kinds: sql<number>`(select count(*)::int from ${ingredients} k where k.parent_id = ${ingredients.id})`,
     })
     .from(ingredients)
     .leftJoin(parents, eq(parents.id, ingredients.parentId))
-    .where(and(query.flaggedOnly ? eq(ingredients.flagged, true) : undefined, matchesSearch))
+    .where(
+      and(
+        query.id === undefined ? undefined : eq(ingredients.id, query.id),
+        query.flaggedOnly ? eq(ingredients.flagged, true) : undefined,
+        query.parentId === undefined
+          ? undefined
+          : query.parentId === null
+            ? isNull(ingredients.parentId)
+            : eq(ingredients.parentId, query.parentId),
+        query.standaloneOnly
+          ? and(
+              isNull(ingredients.parentId),
+              sql`not exists (select 1 from ${ingredients} k where k.parent_id = ${ingredients.id})`
+            )
+          : undefined,
+        matchesSearch
+      )
+    )
     .orderBy(
       ...exactFirst,
       desc(ingredients.flagged),
@@ -177,6 +204,21 @@ export async function findCatalogueIngredient(
     .limit(1);
 
   return row ?? null;
+}
+
+/** The names of these Ingredients, by id; an id the catalogue no longer holds is left out. */
+export async function findCatalogueIngredientNames(
+  ids: readonly string[]
+): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(ids));
+
+  if (unique.length === 0) return new Map();
+  const rows = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .where(inArray(ingredients.id, unique));
+
+  return new Map(rows.map((row) => [row.id, row.name]));
 }
 
 /** Say anew why a Flagged Ingredient is one: AI was asked again and is still not sure. */

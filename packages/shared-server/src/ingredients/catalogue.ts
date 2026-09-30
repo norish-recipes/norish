@@ -11,7 +11,9 @@
  *   administrator bypasses the policy, as for recipes.
  *
  * Renaming, re-parenting or marking a Flagged Ingredient distinct clears its
- * flag: looking after it counts as reviewing it.
+ * flag: looking after it counts as reviewing it. Re-parenting or marking
+ * distinct also settles whatever AI suggested for it, as a merge does by
+ * taking the food away.
  */
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type {
@@ -20,6 +22,10 @@ import type {
 } from "@norish/db/repositories/ingredient-catalogue";
 import type { CatalogueRefusal, FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import type {
+  IngredientSearchField,
+  IngredientSearchMatch,
+} from "@norish/shared/lib/ingredient-search";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import {
   clearIngredientFlag,
@@ -38,6 +44,7 @@ import {
   moveCatalogueAlias,
   setCatalogueIngredientParent,
 } from "@norish/db/repositories/ingredient-relocation";
+import { deleteSuggestionFor } from "@norish/db/repositories/ingredient-suggestions";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
@@ -103,6 +110,8 @@ export interface IngredientListItem {
   /** Why it is flagged, where the catalogue recorded one. */
   flagReason: FlagReason | null;
   parent: { id: string; name: string; localeNames: LocaleNames } | null;
+  /** How many Ingredients are kinds of this one, for the fold on the page. */
+  kinds: number;
   canEdit: boolean;
   /**
    * The spellings worth showing the viewer: the ones in their language, the
@@ -118,14 +127,28 @@ export interface IngredientListItem {
 export const INGREDIENT_PAGE_SIZE = 50;
 
 /**
- * A page of the catalogue: every Ingredient, or the flagged ones, or those
- * whose name or a spelling contains the search, by name. Every row says what
+ * A page of the catalogue: every Ingredient, or the flagged ones, or those a
+ * search finds — the text contained in, or exactly, the name, a translation
+ * or the parent, whichever fields it asks for — by name. Every row says what
  * the viewer may do, so an action they may not take is never offered. The
  * viewer's `locale` picks which spellings ride along.
  */
 export async function listIngredients(
   actor: CatalogueActor,
-  query: { search?: string; flaggedOnly?: boolean; offset?: number; locale?: string }
+  query: {
+    search?: string;
+    match?: IngredientSearchMatch;
+    fields?: IngredientSearchField[];
+    flaggedOnly?: boolean;
+    /** Only the Ingredients filed under this one (null: under none), for the page's tree. */
+    parentId?: string | null;
+    /** Only the Ingredients with neither a parent nor kinds. */
+    standaloneOnly?: boolean;
+    /** Only this Ingredient. */
+    id?: string;
+    offset?: number;
+    locale?: string;
+  }
 ): Promise<{ items: IngredientListItem[]; nextOffset: number | null }> {
   const search = query.search?.trim() ?? "";
   const offset = query.offset ?? 0;
@@ -133,8 +156,11 @@ export async function listIngredients(
   const [policy, rows] = await Promise.all([
     getIngredientPermissionPolicy(),
     listCatalogueIngredients({
-      search: parseIngredientSearch(search),
+      search: parseIngredientSearch(search, { match: query.match, fields: query.fields }),
       flaggedOnly: query.flaggedOnly ?? false,
+      parentId: query.parentId,
+      standaloneOnly: query.standaloneOnly ?? false,
+      id: query.id,
       // One more than a page says whether there is a next one.
       limit: INGREDIENT_PAGE_SIZE + 1,
       offset,
@@ -201,6 +227,7 @@ function listItem(
     parent: row.parent
       ? { ...row.parent, localeNames: parentNames.get(row.parent.id) ?? {} }
       : null,
+    kinds: row.kinds,
     canEdit: may(row.ownerId),
     aliases: shown,
     hiddenSpellings: all.length - shown.length,
@@ -294,6 +321,7 @@ export async function setParent(
 
   if (outcome === "cycle") throw new CatalogueEditError("cycle");
   if (outcome === "missing") throw new CatalogueEditError("not-found");
+  await deleteSuggestionFor(ingredientId);
 }
 
 /**
@@ -314,6 +342,7 @@ export async function deleteIngredient(actor: CatalogueActor, ingredientId: stri
 export async function markDistinct(actor: CatalogueActor, ingredientId: string): Promise<void> {
   await assertMayEditIngredient(actor, ingredientId);
   if (!(await clearIngredientFlag(ingredientId))) throw new CatalogueEditError("not-found");
+  await deleteSuggestionFor(ingredientId);
 }
 
 /**

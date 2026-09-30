@@ -31,6 +31,7 @@ import { useTranslations } from "next-intl";
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type { AdminJobRowDTO } from "@norish/shared/contracts";
 import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
+import { QUEUE_NAMES } from "@norish/queue/queue-names";
 
 import JobDetailModal from "./jobs/job-detail-modal";
 import { formatDuration, formatStep } from "./jobs/job-format";
@@ -38,20 +39,12 @@ import JobStatusChip from "./jobs/job-status-chip";
 import { RestartRequiredChip } from "./restart-required-chip";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
-const QUEUE_OPTIONS = [
-  "recipe-import",
-  "image-recipe-import",
-  "paste-recipe-import",
-  "nutrition-estimation",
-  "auto-tagging",
-  "auto-categorization",
-  "allergy-detection",
-  "recipe-provenance",
-  "ingredient-linking",
-  "image-generation",
-  "caldav-sync",
-  "scheduled-tasks",
-] as const;
+/**
+ * Every queue the server runs, from the one table that declares them; a
+ * queue added there is offered here without a second list to keep in step.
+ * A leaf module with no server imports, so it is safe in the client bundle.
+ */
+const QUEUE_OPTIONS = Object.values(QUEUE_NAMES);
 
 const ALL = "all";
 const PAGE_SIZE = 10;

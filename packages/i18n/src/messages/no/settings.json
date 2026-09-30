@@ -335,7 +335,17 @@
     "title": "Ingredienser",
     "description": "Alle matvarer Norish kjenner, med oversettelsene de er kjent under. Norish markerer dem det var usikker på: slå dem sammen med matvaren de er, eller marker dem som egne.",
     "search": "Søk i ingredienser",
-    "searchHint": "Skriv begynnelsen av et ord. <cola> finner nøyaktig cola, %cola% alt som inneholder det, cola% alt som begynner slik.",
+    "searchMatch": "Treff",
+    "searchIn": "Søk i",
+    "searchMatches": {
+      "contains": "Inneholder",
+      "exact": "Nøyaktig"
+    },
+    "searchFields": {
+      "name": "Navn",
+      "translations": "Oversettelser",
+      "parent": "Overordnet"
+    },
     "flaggedOnly": "Bare markerte",
     "flagged": "Markert",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "Fant ingen ingredienser",
     "emptyFlagged": "Ingenting er markert",
-    "loadMore": "Last inn flere",
     "rename": "Gi nytt navn",
     "delete": "Slett",
     "deleteTitle": "Slette {name}?",
     "deleteConfirm": "Oversettelsene følger med, og det husstanden din har lært Norish om den. En ingrediens som en oppskrift, en handlevare eller spiskammeret fortsatt bruker, kan ikke slettes; slå den sammen i stedet.",
     "markDistinct": "Marker som egen",
-    "summary": "{spellings, plural, one {# oversettelse} other {# oversettelser}}{parent, select, none {} other {, overordnet: {parent}}}",
+    "summary": "{spellings, plural, one {# oversettelse} other {# oversettelser}}{kinds, plural, =0 {} one {, # type} other {, # typer}}{parent, select, none {} other {, overordnet: {parent}}}",
     "askAI": "Spør AI",
-    "askAIAll": "Spør AI om {count, plural, one {denne merkede ingrediensen} other {disse # merkede ingrediensene}}",
-    "askAIProgress": "Spurt om {done} av {total}…",
-    "askAIAllDone": "AI slo sammen {merged}, plasserte {parent} under en overordnet, merket {distinct} som egne ingredienser og var ikke sikker på {unsure}.",
+    "askAIAll": "Spør AI om merkede ingredienser",
+    "reviewing": "Spør AI…",
     "aiOutcomes": {
-      "merged": "AI slo {name} sammen med {into}.",
-      "parent": "AI plasserte {name} som en slags {of}.",
-      "distinct": "AI er sikker på at {name} er en egen ingrediens.",
+      "parent": "AI foreslår å plassere {name} som en type {of}.",
+      "distinct": "AI foreslår at {name} er en egen matvare.",
       "unsure": "AI er fortsatt ikke sikker på hva {name} er.",
-      "notFlagged": "{name} er ikke merket."
+      "notFlagged": "{name} er ikke merket.",
+      "skippedNotFlagged": "{name} var ikke lenger merket.",
+      "skippedForbidden": "{name} kan du ikke endre.",
+      "skippedNotFound": "{name} var borte da AI kom dit.",
+      "failed": "Spørsmålet om {name} mislyktes.",
+      "merge": "AI foreslår å slå sammen {name} med {into}."
     },
     "aiTrace": {
       "readAs": "AI leste det som «{name}».",
@@ -378,28 +390,25 @@
     "mergeInto": "Slå sammen med…",
     "merge": "Slå sammen",
     "mergedToast": "{name} er nå en oversettelse av {into}. Angre ved å åpne {into} og flytte {name} ut igjen.",
-    "mergeTitle": "{name} forsvinner og blir en oversettelse av ingrediensen du velger. Alt som heter {name} beholder teksten, men teller fra nå av som den ingrediensen: den havner i dens hylle, får dens produkt og holdes utenfor listen når den ingrediensen er i forrådet ditt.",
+    "mergeTitle": "{name} forsvinner og blir en oversettelse av ingrediensen du velger.",
     "moveTo": "Flytt til",
     "move": "Flytt",
     "moveAlias": "Flytt {alias}",
-    "moveTitle": "Flytt {alias} til en annen ingrediens, eller gjør den til sin egen ingrediens igjen.",
-    "newIngredient": "Sin egen ingrediens",
+    "moveTitle": "Flytt {alias} til en annen ingrediens.",
+    "newIngredient": "Gjør den til en basisingrediens",
     "pickIngredient": "Søk etter en ingrediens",
     "pickerHint": "Skriv for å søke i katalogen",
     "pickerSearching": "Søker…",
     "pickerEmpty": "Ingen ingrediens funnet",
     "setParent": "Velg overordnet…",
     "parentTitle": "Velg ingrediensen {name} er en type av.",
-    "kindOf": "Overordnet: {name}",
     "clearParent": "Fjern overordnet",
     "nameSection": "Navn",
     "parentSection": "Overordnet",
     "spellingsSection": "Oversettelser",
     "shownAs": "Vises for deg som {name}",
-    "noParent": "Ikke plassert under en annen matvare",
     "changeParent": "Bytt overordnet…",
-    "moreSpellings": "Flere oversettelser ({count})",
-    "fewerSpellings": "Færre oversettelser",
+    "spellingsCount": "{count, plural, one {# oversettelse} other {# oversettelser}}",
     "dataSources": {
       "title": "Datakilder",
       "notice": "Ingredienskatalogen bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgjengelig under <odbl>Open Database License (ODbL)</odbl>. Katalogen Norish bygger ut fra den, tilbys under samme lisens.",
@@ -418,7 +427,40 @@
       "cycle": "En ingrediens kan ikke være en type av seg selv",
       "empty": "Skriv inn et navn",
       "unknown": "Noe gikk galt. Prøv igjen."
-    }
+    },
+    "reportRunning": "Runden pågår fortsatt; det som er avklart så langt, er listet.",
+    "keepAlias": "Behold {alias}",
+    "reportOutcomes": {
+      "parent": "Under en forelder",
+      "distinct": "Egen matvare",
+      "unsure": "Ikke sikker",
+      "skipped": "Hoppet over",
+      "failed": "Mislyktes",
+      "merge": "Slå sammen"
+    },
+    "expandKinds": "Vis typer av {name}",
+    "collapseKinds": "Skjul typer av {name}",
+    "layoutSection": "Visning",
+    "asTree": "Hierarkisk visning",
+    "showOnly": "Vis bare",
+    "standaloneOnly": "Uten forelder eller typer",
+    "findParent": "Finn forelder med AI",
+    "findParentsAll": "Finn foreldre med AI",
+    "suggestion": {
+      "merge": "Slå sammen {name} med {into}",
+      "parent": "Plasser {name} under {of}",
+      "distinct": "Behold {name} som egen matvare"
+    },
+    "suggestionsTitle": "AI-forslag",
+    "suggestionsEmpty": "Ingenting venter på deg.",
+    "suggestionsNone": "Ingen forslag",
+    "suggestionsOpen": "{count, plural, =0 {Forslag} one {# forslag} other {# forslag}}",
+    "suggestionsFailed": "{count, plural, one {# forslag} other {# forslag}} kunne ikke brukes: {reason}",
+    "confirmSuggestion": "Bekreft",
+    "dismissSuggestion": "Avvis",
+    "confirmAll": "Bekreft alle ({count})",
+    "dismissAll": "Avvis alle",
+    "suggestedByAI": "Foreslått av AI"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Bildegenerering",
-        "store-lookup": "Butikkoppslag"
+        "store-lookup": "Butikkoppslag",
+        "ingredient-review": "Spør AI om ingredienser"
       },
       "summary": {
         "failed": "{count} failed"

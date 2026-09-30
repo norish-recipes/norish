@@ -335,7 +335,17 @@
     "title": "Ингредиенты",
     "description": "Все продукты, которые знает Norish, с переводами, под которыми они известны. Norish отмечает те, в которых не был уверен: объедините их с продуктом, которым они являются, или отметьте как отдельные.",
     "search": "Поиск ингредиентов",
-    "searchHint": "Введите начало слова. <cola> находит ровно cola, %cola% всё, что его содержит, cola% всё, что с него начинается.",
+    "searchMatch": "Совпадение",
+    "searchIn": "Искать в",
+    "searchMatches": {
+      "contains": "Содержит",
+      "exact": "Точно"
+    },
+    "searchFields": {
+      "name": "Название",
+      "translations": "Переводы",
+      "parent": "Родитель"
+    },
     "flaggedOnly": "Только отмеченные",
     "flagged": "Отмечен",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "Ингредиенты не найдены",
     "emptyFlagged": "Ничего не отмечено",
-    "loadMore": "Загрузить ещё",
     "rename": "Переименовать",
     "delete": "Удалить",
     "deleteTitle": "Удалить {name}?",
     "deleteConfirm": "Вместе с ним уйдут его перевода и всё, чему ваша семья научила Norish о нём. Ингредиент, который ещё используется в рецепте, покупке или кладовой, удалить нельзя; вместо этого объедините его.",
     "markDistinct": "Отметить как отдельный",
-    "summary": "{spellings, plural, one {# перевод} few {# перевода} other {# переводов}}{parent, select, none {} other {, родительский: {parent}}}",
+    "summary": "{spellings, plural, one {# перевод} few {# перевода} other {# переводов}}{kinds, plural, =0 {} one {, # вид} few {, # вида} many {, # видов} other {, # вида}}{parent, select, none {} other {, родительский: {parent}}}",
     "askAI": "Спросить ИИ",
-    "askAIAll": "Спросить ИИ о {count, plural, one {этом отмеченном ингредиенте} other {этих # отмеченных ингредиентах}}",
-    "askAIProgress": "Спрошено о {done} из {total}…",
-    "askAIAllDone": "ИИ объединил {merged}, поместил {parent} под родительский ингредиент, отметил {distinct} как отдельные ингредиенты и не был уверен насчёт {unsure}.",
+    "askAIAll": "Спросить ИИ об отмеченных ингредиентах",
+    "reviewing": "Спрашиваем ИИ…",
     "aiOutcomes": {
-      "merged": "ИИ объединил {name} с {into}.",
-      "parent": "ИИ отнёс {name} к разновидности {of}.",
-      "distinct": "ИИ уверен, что {name} — отдельный ингредиент.",
+      "parent": "ИИ предлагает отнести {name} к разновидностям {of}.",
+      "distinct": "ИИ предлагает считать {name} отдельным продуктом.",
       "unsure": "ИИ всё ещё не уверен, что такое {name}.",
-      "notFlagged": "{name} не отмечен."
+      "notFlagged": "{name} не отмечен.",
+      "skippedNotFlagged": "{name} уже не был помечен.",
+      "skippedForbidden": "{name} вы не можете менять.",
+      "skippedNotFound": "{name} исчез, пока ИИ до него дошёл.",
+      "failed": "Запрос о {name} не удался.",
+      "merge": "ИИ предлагает объединить {name} с {into}."
     },
     "aiTrace": {
       "readAs": "ИИ прочитал это как «{name}».",
@@ -378,28 +390,25 @@
     "mergeInto": "Объединить с…",
     "merge": "Объединить",
     "mergedToast": "{name} теперь перевод ингредиента {into}. Чтобы отменить, откройте {into} и переместите {name} обратно.",
-    "mergeTitle": "{name} исчезает и становится переводом выбранного ингредиента. Всё, что называется {name}, сохраняет текст, но отныне считается этим ингредиентом: попадает в его отдел, получает его товар и не попадает в список, когда этот ингредиент есть в ваших запасах.",
+    "mergeTitle": "{name} исчезает и становится переводом выбранного ингредиента.",
     "moveTo": "Переместить в",
     "move": "Переместить",
     "moveAlias": "Переместить {alias}",
-    "moveTitle": "Переместить {alias} в другой ингредиент или снова сделать его самостоятельным ингредиентом.",
-    "newIngredient": "Самостоятельный ингредиент",
+    "moveTitle": "Переместить {alias} в другой ингредиент.",
+    "newIngredient": "Сделать базовым ингредиентом",
     "pickIngredient": "Найти ингредиент",
     "pickerHint": "Введите текст для поиска по каталогу",
     "pickerSearching": "Поиск…",
     "pickerEmpty": "Ингредиент не найден",
     "setParent": "Выбрать родителя…",
     "parentTitle": "Выберите ингредиент, разновидностью которого является {name}.",
-    "kindOf": "Родительский: {name}",
     "clearParent": "Убрать родителя",
     "nameSection": "Название",
     "parentSection": "Родительский",
     "spellingsSection": "Переводы",
     "shownAs": "Показано вам как {name}",
-    "noParent": "Не отнесён к другому продукту",
     "changeParent": "Изменить родительский…",
-    "moreSpellings": "Другие перевода ({count})",
-    "fewerSpellings": "Меньше переводов",
+    "spellingsCount": "{count, plural, one {# перевод} few {# перевода} other {# переводов}}",
     "dataSources": {
       "title": "Источники данных",
       "notice": "Каталог ингредиентов основан на таксономии ингредиентов <off>Open Food Facts</off>, доступной по лицензии <odbl>Open Database License (ODbL)</odbl>. Каталог, который Norish строит на её основе, предоставляется по той же лицензии.",
@@ -418,7 +427,40 @@
       "cycle": "Ингредиент не может быть разновидностью самого себя",
       "empty": "Введите название",
       "unknown": "Что-то пошло не так. Попробуйте ещё раз."
-    }
+    },
+    "reportRunning": "Раунд ещё идёт; ниже то, что уже решено.",
+    "keepAlias": "Оставить {alias}",
+    "reportOutcomes": {
+      "parent": "Под родителем",
+      "distinct": "Отдельный продукт",
+      "unsure": "Не уверен",
+      "skipped": "Пропущено",
+      "failed": "Ошибка",
+      "merge": "Объединить"
+    },
+    "expandKinds": "Показать виды {name}",
+    "collapseKinds": "Скрыть виды {name}",
+    "layoutSection": "Вид",
+    "asTree": "Иерархический вид",
+    "showOnly": "Показывать только",
+    "standaloneOnly": "Без родителя и видов",
+    "findParent": "Найти родителя с ИИ",
+    "findParentsAll": "Найти родителей с ИИ",
+    "suggestion": {
+      "merge": "Объединить {name} с {into}",
+      "parent": "Отнести {name} к {of}",
+      "distinct": "Оставить {name} отдельным продуктом"
+    },
+    "suggestionsTitle": "Предложения ИИ",
+    "suggestionsEmpty": "Ничего не ждёт вашего решения.",
+    "suggestionsNone": "Без предложения",
+    "suggestionsOpen": "{count, plural, =0 {Предложения} one {# предложение} few {# предложения} many {# предложений} other {# предложения}}",
+    "suggestionsFailed": "Не удалось применить {count, plural, one {# предложение} few {# предложения} many {# предложений} other {# предложения}}: {reason}",
+    "confirmSuggestion": "Подтвердить",
+    "dismissSuggestion": "Отклонить",
+    "confirmAll": "Подтвердить все ({count})",
+    "dismissAll": "Отклонить все",
+    "suggestedByAI": "Предложено ИИ"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Генерация изображений",
-        "store-lookup": "Поиск в магазине"
+        "store-lookup": "Поиск в магазине",
+        "ingredient-review": "Спросить ИИ об ингредиентах"
       },
       "summary": {
         "failed": "{count} failed"

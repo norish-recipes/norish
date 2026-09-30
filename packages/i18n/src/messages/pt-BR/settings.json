@@ -335,7 +335,17 @@
     "title": "Ingredientes",
     "description": "Todo alimento que o Norish conhece, com as traduções pelas quais é conhecido. O Norish marca aqueles sobre os quais não tinha certeza: una-os ao alimento que eles são ou marque-os como distintos.",
     "search": "Buscar ingredientes",
-    "searchHint": "Digite o início de uma palavra. <cola> encontra exatamente cola, %cola% tudo que o contenha, cola% tudo que comece assim.",
+    "searchMatch": "Correspondência",
+    "searchIn": "Buscar em",
+    "searchMatches": {
+      "contains": "Contém",
+      "exact": "Exato"
+    },
+    "searchFields": {
+      "name": "Nome",
+      "translations": "Traduções",
+      "parent": "Pai"
+    },
     "flaggedOnly": "Somente marcados",
     "flagged": "Marcado",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "Nenhum ingrediente encontrado",
     "emptyFlagged": "Nada está marcado",
-    "loadMore": "Carregar mais",
     "rename": "Renomear",
     "delete": "Excluir",
     "deleteTitle": "Excluir {name}?",
     "deleteConfirm": "Suas traduções vão junto, e o que sua casa ensinou ao Norish sobre ele. Um ingrediente que uma receita, uma compra ou a despensa ainda usa não pode ser excluído; mescle-o em vez disso.",
     "markDistinct": "Marcar como distinto",
-    "summary": "{spellings, plural, one {# tradução} other {# traduções}}{parent, select, none {} other {, pai: {parent}}}",
+    "summary": "{spellings, plural, one {# tradução} other {# traduções}}{kinds, plural, =0 {} one {, # tipo} other {, # tipos}}{parent, select, none {} other {, pai: {parent}}}",
     "askAI": "Perguntar à IA",
-    "askAIAll": "Perguntar à IA sobre {count, plural, one {este ingrediente sinalizado} other {estes # ingredientes sinalizados}}",
-    "askAIProgress": "Perguntado sobre {done} de {total}…",
-    "askAIAllDone": "A IA mesclou {merged}, classificou {parent} sob um pai, marcou {distinct} como ingredientes próprios e não teve certeza de {unsure}.",
+    "askAIAll": "Perguntar à IA sobre ingredientes sinalizados",
+    "reviewing": "Perguntando à IA…",
     "aiOutcomes": {
-      "merged": "A IA mesclou {name} em {into}.",
-      "parent": "A IA classificou {name} como um tipo de {of}.",
-      "distinct": "A IA tem certeza de que {name} é um ingrediente próprio.",
+      "parent": "A IA sugere classificar {name} como um tipo de {of}.",
+      "distinct": "A IA sugere que {name} é um alimento próprio.",
       "unsure": "A IA ainda não tem certeza do que é {name}.",
-      "notFlagged": "{name} não está sinalizado."
+      "notFlagged": "{name} não está sinalizado.",
+      "skippedNotFlagged": "{name} não estava mais marcado.",
+      "skippedForbidden": "{name} não é seu para alterar.",
+      "skippedNotFound": "{name} já não existia quando a IA chegou.",
+      "failed": "A pergunta sobre {name} falhou.",
+      "merge": "A IA sugere mesclar {name} com {into}."
     },
     "aiTrace": {
       "readAs": "A IA leu como “{name}”.",
@@ -378,28 +390,25 @@
     "mergeInto": "Mesclar com…",
     "merge": "Mesclar",
     "mergedToast": "{name} agora é uma tradução de {into}. Para desfazer, abra {into} e mova {name} de volta para fora.",
-    "mergeTitle": "{name} desaparece e vira uma tradução do ingrediente que você escolher. Tudo que se chama {name} mantém o texto, mas conta a partir de agora como esse ingrediente: vai para o corredor dele, com o produto dele, e fica fora da lista quando esse ingrediente está na sua despensa.",
+    "mergeTitle": "{name} desaparece e vira uma tradução do ingrediente que você escolher.",
     "moveTo": "Mover para",
     "move": "Mover",
     "moveAlias": "Mover {alias}",
-    "moveTitle": "Mover {alias} para outro ingrediente, ou torná-lo de novo um ingrediente próprio.",
-    "newIngredient": "Um ingrediente próprio",
+    "moveTitle": "Mover {alias} para outro ingrediente.",
+    "newIngredient": "Torná-lo um ingrediente base",
     "pickIngredient": "Buscar um ingrediente",
     "pickerHint": "Digite para buscar no catálogo",
     "pickerSearching": "Buscando…",
     "pickerEmpty": "Nenhum ingrediente encontrado",
     "setParent": "Escolher superior…",
     "parentTitle": "Escolha o ingrediente do qual {name} é um tipo.",
-    "kindOf": "Pai: {name}",
     "clearParent": "Remover superior",
     "nameSection": "Nome",
     "parentSection": "Pai",
     "spellingsSection": "Traduções",
     "shownAs": "Exibido para você como {name}",
-    "noParent": "Não está sob outro alimento",
     "changeParent": "Alterar o pai…",
-    "moreSpellings": "Mais traduções ({count})",
-    "fewerSpellings": "Menos traduções",
+    "spellingsCount": "{count, plural, one {# tradução} other {# traduções}}",
     "dataSources": {
       "title": "Fontes de dados",
       "notice": "O catálogo de ingredientes parte da taxonomia de ingredientes do <off>Open Food Facts</off>, disponível sob a <odbl>Open Database License (ODbL)</odbl>. O catálogo que o Norish constrói a partir dela é oferecido sob a mesma licença.",
@@ -418,7 +427,40 @@
       "cycle": "Um ingrediente não pode ser um tipo de si mesmo",
       "empty": "Digite um nome",
       "unknown": "Algo deu errado. Tente novamente."
-    }
+    },
+    "reportRunning": "A rodada ainda está em andamento; o que já foi resolvido está listado.",
+    "keepAlias": "Manter {alias}",
+    "reportOutcomes": {
+      "parent": "Sob um pai",
+      "distinct": "Alimento próprio",
+      "unsure": "Sem certeza",
+      "skipped": "Ignorado",
+      "failed": "Falhou",
+      "merge": "Mesclar"
+    },
+    "expandKinds": "Mostrar os tipos de {name}",
+    "collapseKinds": "Ocultar os tipos de {name}",
+    "layoutSection": "Exibição",
+    "asTree": "Visualização hierárquica",
+    "showOnly": "Mostrar apenas",
+    "standaloneOnly": "Sem pai nem tipos",
+    "findParent": "Encontrar pai com IA",
+    "findParentsAll": "Encontrar pais com IA",
+    "suggestion": {
+      "merge": "Mesclar {name} com {into}",
+      "parent": "Classificar {name} em {of}",
+      "distinct": "Manter {name} como alimento próprio"
+    },
+    "suggestionsTitle": "Sugestões da IA",
+    "suggestionsEmpty": "Nada aguardando você.",
+    "suggestionsNone": "Sem sugestão",
+    "suggestionsOpen": "{count, plural, =0 {Sugestões} one {# sugestão} other {# sugestões}}",
+    "suggestionsFailed": "{count, plural, one {# sugestão não pôde ser aplicada} other {# sugestões não puderam ser aplicadas}}: {reason}",
+    "confirmSuggestion": "Confirmar",
+    "dismissSuggestion": "Descartar",
+    "confirmAll": "Confirmar tudo ({count})",
+    "dismissAll": "Descartar tudo",
+    "suggestedByAI": "Sugerido pela IA"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Geração de imagens",
-        "store-lookup": "Consulta de loja"
+        "store-lookup": "Consulta de loja",
+        "ingredient-review": "Perguntar à IA sobre ingredientes"
       },
       "summary": {
         "failed": "{count} failed"

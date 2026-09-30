@@ -335,7 +335,17 @@
     "title": "재료",
     "description": "Norish가 아는 모든 식품과 그 식품을 부르는 번역입니다. Norish가 확신하지 못한 재료는 표시됩니다. 해당하는 식품에 병합하거나 별개로 표시하세요.",
     "search": "재료 검색",
-    "searchHint": "단어의 시작을 입력하세요. <cola>는 정확히 cola를, %cola%는 이를 포함하는 모든 것을, cola%는 이로 시작하는 모든 것을 찾습니다.",
+    "searchMatch": "일치 방식",
+    "searchIn": "검색 범위",
+    "searchMatches": {
+      "contains": "포함",
+      "exact": "정확히"
+    },
+    "searchFields": {
+      "name": "이름",
+      "translations": "번역",
+      "parent": "상위 항목"
+    },
     "flaggedOnly": "표시된 항목만",
     "flagged": "표시됨",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "재료를 찾을 수 없습니다",
     "emptyFlagged": "표시된 항목이 없습니다",
-    "loadMore": "더 불러오기",
     "rename": "이름 바꾸기",
     "delete": "삭제",
     "deleteTitle": "{name}을(를) 삭제할까요?",
     "deleteConfirm": "이 재료의 번역와 가족이 Norish에 알려준 내용이 함께 사라집니다. 레시피, 장보기 목록 또는 식료품 저장실에서 아직 사용 중인 재료는 삭제할 수 없으니 대신 병합하세요.",
     "markDistinct": "별개로 표시",
-    "summary": "번역 {spellings}개{parent, select, none {} other {, 상위: {parent}}}",
+    "summary": "번역 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
     "askAI": "AI에게 묻기",
-    "askAIAll": "플래그된 재료 {count}개에 대해 AI에게 묻기",
-    "askAIProgress": "{total}개 중 {done}개 확인…",
-    "askAIAllDone": "AI가 {merged}개를 병합하고, {parent}개를 상위 재료 아래에 두고, {distinct}개를 별도 재료로 표시했으며, {unsure}개는 확신하지 못했습니다.",
+    "askAIAll": "플래그된 재료에 대해 AI에게 묻기",
+    "reviewing": "AI에 묻는 중…",
     "aiOutcomes": {
-      "merged": "AI가 {name}을(를) {into}에 병합했습니다.",
-      "parent": "AI가 {name}을(를) {of}의 한 종류로 분류했습니다.",
-      "distinct": "AI는 {name}이(가) 별도의 재료라고 확신합니다.",
+      "parent": "AI가 {name}을(를) {of}의 한 종류로 분류할 것을 제안합니다.",
+      "distinct": "AI가 {name}을(를) 별개의 식재료로 볼 것을 제안합니다.",
       "unsure": "AI는 여전히 {name}이(가) 무엇인지 확신하지 못합니다.",
-      "notFlagged": "{name}은(는) 플래그되지 않았습니다."
+      "notFlagged": "{name}은(는) 플래그되지 않았습니다.",
+      "skippedNotFlagged": "{name}은(는) 더 이상 표시되지 않았습니다.",
+      "skippedForbidden": "{name}은(는) 수정 권한이 없습니다.",
+      "skippedNotFound": "AI가 도달했을 때 {name}은(는) 이미 없었습니다.",
+      "failed": "{name}에 대한 질문이 실패했습니다.",
+      "merge": "AI가 {name}을(를) {into}에 병합할 것을 제안합니다."
     },
     "aiTrace": {
       "readAs": "AI가 “{name}”(으)로 읽었습니다.",
@@ -378,28 +390,25 @@
     "mergeInto": "다음으로 병합…",
     "merge": "병합",
     "mergedToast": "{name}은(는) 이제 {into}의 번역입니다. 되돌리려면 {into}을(를) 열고 {name}을(를) 다시 밖으로 옮기세요.",
-    "mergeTitle": "{name}은(는) 사라지고 선택한 식재료의 번역이 됩니다. {name}이라는 모든 항목은 텍스트를 유지하지만 이제부터 그 식재료로 계산됩니다: 해당 통로에 분류되고, 해당 상품으로 가격이 매겨지며, 그 식재료가 저장실에 있으면 목록에서 제외됩니다.",
+    "mergeTitle": "{name}은(는) 사라지고 선택한 식재료의 번역이 됩니다.",
     "moveTo": "이동할 재료",
     "move": "이동",
     "moveAlias": "{alias} 이동",
-    "moveTitle": "{alias}을(를) 다른 식재료로 옮기거나 다시 독립된 식재료로 만드세요.",
-    "newIngredient": "독립된 식재료",
+    "moveTitle": "{alias}을(를) 다른 식재료로 옮기세요.",
+    "newIngredient": "기본 식재료로 만들기",
     "pickIngredient": "재료 검색",
     "pickerHint": "입력하여 목록 검색",
     "pickerSearching": "검색 중…",
     "pickerEmpty": "식재료를 찾을 수 없음",
     "setParent": "상위 재료 설정…",
     "parentTitle": "{name}이(가) 속하는 재료를 고르세요.",
-    "kindOf": "상위: {name}",
     "clearParent": "상위 재료 제거",
     "nameSection": "이름",
     "parentSection": "상위",
     "spellingsSection": "번역",
     "shownAs": "내게는 {name}(으)로 표시됨",
-    "noParent": "다른 식재료 아래에 있지 않음",
     "changeParent": "상위 식재료 변경…",
-    "moreSpellings": "다른 번역 ({count})",
-    "fewerSpellings": "번역 줄이기",
+    "spellingsCount": "번역 {count}개",
     "dataSources": {
       "title": "데이터 출처",
       "notice": "재료 카탈로그는 <off>Open Food Facts</off>의 재료 분류 체계를 바탕으로 하며, 이는 <odbl>Open Database License (ODbL)</odbl>로 제공됩니다. Norish가 이를 바탕으로 만든 카탈로그도 같은 라이선스로 제공됩니다.",
@@ -418,7 +427,40 @@
       "cycle": "재료는 자기 자신의 한 종류가 될 수 없습니다",
       "empty": "이름을 입력하세요",
       "unknown": "문제가 발생했습니다. 다시 시도하세요."
-    }
+    },
+    "reportRunning": "라운드가 아직 진행 중입니다. 지금까지 처리된 항목이 표시됩니다.",
+    "keepAlias": "{alias} 유지",
+    "reportOutcomes": {
+      "parent": "상위 항목 아래",
+      "distinct": "독립 식재료",
+      "unsure": "불확실",
+      "skipped": "건너뜀",
+      "failed": "실패",
+      "merge": "병합"
+    },
+    "expandKinds": "{name}의 종류 보기",
+    "collapseKinds": "{name}의 종류 숨기기",
+    "layoutSection": "보기",
+    "asTree": "계층 보기",
+    "showOnly": "다음만 표시",
+    "standaloneOnly": "상위 항목과 종류가 없는 것",
+    "findParent": "AI로 상위 항목 찾기",
+    "findParentsAll": "AI로 상위 항목 찾기",
+    "suggestion": {
+      "merge": "{name}을(를) {into}에 병합",
+      "parent": "{name}을(를) {of} 아래로 분류",
+      "distinct": "{name}을(를) 별개의 식재료로 유지"
+    },
+    "suggestionsTitle": "AI 제안",
+    "suggestionsEmpty": "대기 중인 항목이 없습니다.",
+    "suggestionsNone": "제안 없음",
+    "suggestionsOpen": "{count, plural, =0 {제안} other {제안 #개}}",
+    "suggestionsFailed": "제안 {count}개를 적용하지 못했습니다: {reason}",
+    "confirmSuggestion": "확인",
+    "dismissSuggestion": "무시",
+    "confirmAll": "모두 확인 ({count})",
+    "dismissAll": "모두 무시",
+    "suggestedByAI": "AI 제안"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "이미지 생성",
-        "store-lookup": "매장 조회"
+        "store-lookup": "매장 조회",
+        "ingredient-review": "AI에게 재료 묻기"
       },
       "summary": {
         "failed": "{count} failed"

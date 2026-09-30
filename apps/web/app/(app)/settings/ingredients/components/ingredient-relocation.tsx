@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { PlusIcon } from "@heroicons/react/24/outline";
+import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { IngredientPick } from "./ingredient-picker";
@@ -15,7 +17,7 @@ export type Relocation =
 /**
  * The panel an Ingredient's panel opens over itself for an edit that names
  * another Ingredient: what to merge into, what this is a kind of, or where a
- * spelling goes (a new Ingredient included). It owns the pick; the caller
+ * spelling goes, or that it becomes an Ingredient of its own. It owns the pick; the caller
  * owns the save, which it is handed the pick for.
  */
 export function IngredientRelocationPanel({
@@ -76,7 +78,6 @@ export function IngredientRelocationPanel({
             <IngredientPicker
               // A new question starts with an empty field.
               key={asked.kind === "move" ? asked.aliasId : asked.kind}
-              allowNew={asked.kind === "move"}
               editableOnly={asked.kind === "merge"}
               excludeId={ingredient.id}
               label={
@@ -88,6 +89,20 @@ export function IngredientRelocationPanel({
               }
               onPick={setTarget}
             />
+            {asked.kind === "move" ? (
+              // Not a search result: typing into the picker would filter it away.
+              <Button
+                className="self-start"
+                data-testid="ingredient-relocation-new"
+                isDisabled={busy}
+                size="sm"
+                variant="ghost"
+                onPress={() => onConfirm(asked, { id: null })}
+              >
+                <PlusIcon className="size-4" />
+                {t("newIngredient")}
+              </Button>
+            ) : null}
           </div>
         ) : null}
       </Panel.Body>
@@ -97,7 +112,7 @@ export function IngredientRelocationPanel({
             {tActions("cancel")}
           </ActionButton>
           <ActionButton
-            action={asked?.kind === "parent" ? "save" : "apply"}
+            action="apply"
             data-testid="ingredient-relocation-confirm"
             isDisabled={busy || !target || !asked}
             isPending={busy}
@@ -109,7 +124,7 @@ export function IngredientRelocationPanel({
               ? t("move")
               : asked?.kind === "merge"
                 ? t("merge")
-                : tActions("save")}
+                : tActions("apply")}
           </ActionButton>
         </ActionButtonGroup>
       </Panel.Footer>

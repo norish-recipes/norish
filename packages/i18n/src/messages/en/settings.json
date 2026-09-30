@@ -335,7 +335,17 @@
     "title": "Ingredients",
     "description": "Every food Norish knows, with the translations it goes by. Norish marks the ones it was not sure about: merge them into the food they are, or mark them distinct.",
     "search": "Search ingredients",
-    "searchHint": "Type the start of a word. <cola> finds exactly cola, %cola% anything containing it, cola% anything starting with it.",
+    "searchMatch": "Match",
+    "searchIn": "Search in",
+    "searchMatches": {
+      "contains": "Contains",
+      "exact": "Exact"
+    },
+    "searchFields": {
+      "name": "Name",
+      "translations": "Translations",
+      "parent": "Parent"
+    },
     "flaggedOnly": "Only flagged",
     "flagged": "Flagged",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "No ingredients found",
     "emptyFlagged": "Nothing is flagged",
-    "loadMore": "Load more",
     "rename": "Rename",
     "delete": "Delete",
     "deleteTitle": "Delete {name}?",
     "deleteConfirm": "Its translations go with it, and what your household taught Norish about it. An ingredient a recipe, grocery or pantry item still uses cannot be deleted; merge it instead.",
     "markDistinct": "Mark distinct",
-    "summary": "{spellings, plural, one {# translation} other {# translations}}{parent, select, none {} other {, parent: {parent}}}",
+    "summary": "{spellings, plural, one {# translation} other {# translations}}{kinds, plural, =0 {} one {, # kind} other {, # kinds}}{parent, select, none {} other {, parent: {parent}}}",
     "askAI": "Ask AI",
-    "askAIAll": "Ask AI about {count, plural, one {this flagged ingredient} other {these # flagged ingredients}}",
-    "askAIProgress": "Asked about {done} of {total}…",
-    "askAIAllDone": "AI merged {merged}, filed {parent} under a parent, marked {distinct} as their own food and was not sure about {unsure}.",
+    "askAIAll": "Ask AI about flagged ingredients",
+    "reviewing": "Asking AI…",
     "aiOutcomes": {
-      "merged": "AI merged {name} into {into}.",
-      "parent": "AI filed {name} as a kind of {of}.",
-      "distinct": "AI is sure {name} is a food of its own.",
+      "parent": "AI suggests filing {name} as a kind of {of}.",
+      "distinct": "AI suggests {name} is a food of its own.",
       "unsure": "AI is still not sure what {name} is.",
-      "notFlagged": "{name} is not flagged."
+      "notFlagged": "{name} is not flagged.",
+      "skippedNotFlagged": "{name} was no longer flagged.",
+      "skippedForbidden": "{name} is not yours to change.",
+      "skippedNotFound": "{name} was gone by the time AI reached it.",
+      "failed": "Asking about {name} failed.",
+      "merge": "AI suggests merging {name} into {into}."
     },
     "aiTrace": {
       "readAs": "AI read it as “{name}”.",
@@ -378,28 +390,25 @@
     "mergeInto": "Merge into…",
     "merge": "Merge",
     "mergedToast": "{name} is now a translation of {into}. To undo, open {into} and move {name} back out.",
-    "mergeTitle": "{name} disappears and becomes a translation of the ingredient you pick. Everything that says {name} keeps its text but counts as that ingredient from now on: it is filed in its aisle, priced by its product, and left off the list when that ingredient is in your pantry.",
+    "mergeTitle": "{name} disappears and becomes a translation of the ingredient you pick.",
     "moveTo": "Move to",
     "move": "Move",
     "moveAlias": "Move {alias}",
-    "moveTitle": "Move {alias} to another ingredient, or make it an ingredient of its own again.",
-    "newIngredient": "An ingredient of its own",
+    "moveTitle": "Move {alias} to another ingredient.",
+    "newIngredient": "Make it a base ingredient",
     "pickIngredient": "Search for an ingredient",
     "pickerHint": "Type to search the catalogue",
     "pickerSearching": "Searching…",
     "pickerEmpty": "No ingredient found",
     "setParent": "Set parent…",
     "parentTitle": "Choose the food {name} is a kind of.",
-    "kindOf": "Parent: {name}",
     "clearParent": "Remove parent",
     "nameSection": "Name",
     "parentSection": "Parent",
     "spellingsSection": "Translations",
     "shownAs": "Shown to you as {name}",
-    "noParent": "Not filed under another food",
     "changeParent": "Change parent…",
-    "moreSpellings": "More translations ({count})",
-    "fewerSpellings": "Fewer translations",
+    "spellingsCount": "{count, plural, one {# translation} other {# translations}}",
     "dataSources": {
       "title": "Data sources",
       "notice": "The ingredient catalogue is seeded from the <off>Open Food Facts</off> ingredients taxonomy, available under the <odbl>Open Database License (ODbL)</odbl>. The catalogue Norish builds from it is offered under the same licence.",
@@ -418,7 +427,40 @@
       "cycle": "An ingredient cannot be a kind of itself",
       "empty": "Enter a name",
       "unknown": "Something went wrong. Try again."
-    }
+    },
+    "reportRunning": "The round is still going; what it has settled so far is listed.",
+    "keepAlias": "Keep {alias}",
+    "reportOutcomes": {
+      "parent": "Filed under a parent",
+      "distinct": "Its own food",
+      "unsure": "Not sure",
+      "skipped": "Passed over",
+      "failed": "Failed",
+      "merge": "Merge"
+    },
+    "expandKinds": "Show the kinds of {name}",
+    "collapseKinds": "Hide the kinds of {name}",
+    "layoutSection": "Layout",
+    "asTree": "Hierarchical view",
+    "showOnly": "Show only",
+    "standaloneOnly": "Without parent or kinds",
+    "findParent": "Find parent with AI",
+    "findParentsAll": "Find parents with AI",
+    "suggestion": {
+      "merge": "Merge {name} into {into}",
+      "parent": "File {name} under {of}",
+      "distinct": "Keep {name} as a food of its own"
+    },
+    "suggestionsTitle": "AI suggestions",
+    "suggestionsEmpty": "Nothing is waiting on you.",
+    "suggestionsNone": "No suggestion",
+    "suggestionsOpen": "{count, plural, =0 {Suggestions} one {# suggestion} other {# suggestions}}",
+    "suggestionsFailed": "{count, plural, one {# suggestion} other {# suggestions}} could not be applied: {reason}",
+    "confirmSuggestion": "Confirm",
+    "dismissSuggestion": "Dismiss",
+    "confirmAll": "Confirm all ({count})",
+    "dismissAll": "Dismiss all",
+    "suggestedByAI": "Suggested by AI"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Image generation",
-        "store-lookup": "Store lookup"
+        "store-lookup": "Store lookup",
+        "ingredient-review": "Ask AI about ingredients"
       },
       "summary": {
         "failed": "{count} failed"

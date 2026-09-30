@@ -1,90 +1,155 @@
 "use client";
 
-import { useCallback, useDeferredValue, useMemo, useState, useTransition } from "react";
-import UiSwitch from "@/app/(app)/settings/components/settings-switch";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { AIButton } from "@/components/shared/ai-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { FunnelIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon, SparklesIcon } from "@heroicons/react/24/outline";
-import { Button, Card, toast } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import {
   keepPreviousData,
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { ReviewRound } from "@norish/shared/contracts/realtime/ingredients";
+import { useRealtimeSubscription } from "@norish/shared-react/realtime";
+
+import type { IngredientFilters } from "./ingredient-filters-panel";
 import DataSourcesCard from "./data-sources-card";
+import {
+  DEFAULT_INGREDIENT_FILTERS,
+  hasIngredientFilters,
+  IngredientFiltersPanel,
+} from "./ingredient-filters-panel";
+import { IngredientList } from "./ingredient-list";
 import { IngredientPanel } from "./ingredient-panel";
-import { IngredientRow } from "./ingredient-row";
 import { IngredientSearch } from "./ingredient-search";
+import { SuggestionsPanel } from "./suggestions-panel";
+import { useIngredientSuggestions } from "./use-ingredient-suggestions";
+import { useIngredientTree } from "./use-ingredient-tree";
 
 /**
  * The catalogue of Ingredients (ADR-0037): every food Norish knows, folded to
  * a line each, with the ones Norish was not sure about marked and told why.
- * A row opens the food's panel, where its spellings and edits live; an
- * action the viewer may not take is not offered. The list stays on screen
- * while a search runs, as the dashboard's does, and re-renders in the
- * background so typing never waits on it.
+ * With nothing typed and no filter on, the list is the tree of kinds: the
+ * foods filed under none, each folding its kinds out beneath it. A search or
+ * a filter lists flat, since a match may sit at any depth. A row opens the
+ * food's panel, where its spellings and edits live; an action the viewer may
+ * not take is not offered. The list stays on screen while a search runs, as
+ * the dashboard's does, the search lands in a transition so typing never
+ * waits on it, and it is virtualised with the next page fetched as the end
+ * comes into view.
  */
 export default function IngredientsSettingsContent() {
   const t = useTranslations("settings.ingredients");
+  const tFilters = useTranslations("common.filters");
   const locale = useLocale();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [flaggedOnly, setFlaggedOnly] = useState(false);
+  const [filters, setFilters] = useState<IngredientFilters>(DEFAULT_INGREDIENT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   // A new search re-renders the rows at background priority, as the toggle does.
   const onSearch = useCallback((next: string) => startTransition(() => setSearch(next)), []);
 
+  // With nothing typed and no other filter on, the list is the tree of kinds:
+  // the foods filed under none, each folding its kinds out. A search or a
+  // filter finds a food at any depth, so it lists flat, as it does when the
+  // filters panel says flat.
+  const { tree: asTree, ...searchFilters } = filters;
+  const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
   const { data, isLoading, isFetching, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useInfiniteQuery(
       trpc.ingredients.list.infiniteQueryOptions(
-        { search: search || undefined, flaggedOnly, locale },
+        { search: search || undefined, ...searchFilters, rootsOnly: treeMode || undefined, locale },
         { getNextPageParam: (page) => page.nextCursor, placeholderData: keepPreviousData }
       )
     );
-  // The rows render at background priority: a keystroke or a toggle paints
-  // first, and the list catches up, as the dashboard's grid does.
-  const items = useDeferredValue(
-    useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages])
-  );
+  // The rows are not deferred: a search lands in a transition already, and a
+  // deferred copy of a keyed list that a transition is replacing was seen to
+  // keep the old page on screen with the new one's kinds folded into it.
+  const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
   const settling = isPending || (isFetching && !isFetchingNextPage);
+  const loadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  const tree = useIngredientTree(items, treeMode, locale);
+  // Every food on screen, the folded-out kinds included.
+  const shown = useMemo(() => tree.rows.map((row) => row.item), [tree.rows]);
   // The open panel follows its food through the list: a refresh, a housemate's
   // edit or AI's answer shows there too. The panel keeps the last version it
   // saw when a filter drops the row, and closes on its own merge or delete.
   const openItem = useMemo(
-    () => (openId ? (items.find((item) => item.id === openId) ?? null) : null),
-    [items, openId]
+    () => (openId ? (shown.find((item) => item.id === openId) ?? null) : null),
+    [shown, openId]
   );
 
   const refresh = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
+    () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.kinds.pathKey() }),
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.suggestions.pathKey() }),
+      ]),
     [queryClient, trpc]
   );
 
-  // Asking AI about every flagged food on screen, one after another, so the
-  // page can say how far it is and each answer lands as its own row change.
-  const review = useMutation(trpc.ingredients.reviewWithAI.mutationOptions());
-  const [reviewed, setReviewed] = useState<{ done: number; total: number } | null>(null);
-  const flaggedIds = items.filter((item) => item.flagged && item.canEdit).map((item) => item.id);
+  // Asking AI about every flagged food on screen is one job on the server, a
+  // step per food, that outlives this tab. The page watches it over the
+  // socket: each answer lands as a suggestion waiting on a person, and the
+  // round's count follows. A round is the instance's, so a tab opened mid-round, or a
+  // housemate's, shows the same count and is not offered a second round.
+  const startRound = useMutation(trpc.ingredients.reviewAllWithAI.mutationOptions());
+  const roundQuery = useQuery(trpc.ingredients.reviewRound.queryOptions());
+  const [round, setRound] = useState<ReviewRound | null>(null);
+  const [startedJobId, setStartedJobId] = useState<string | null>(null);
+  // The last round this tab saw end: what it got no suggestion for rides along with the suggestions.
+  const [reportJobId, setReportJobId] = useState<string | null>(null);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const { suggestions } = useIngredientSuggestions();
+  const running = round?.finished ? null : (round ?? roundQuery.data ?? null);
+  const flaggedIds = shown.filter((item) => item.flagged && item.canEdit).map((item) => item.id);
+  // Under the standalone filter, the round asks what each food is a kind of instead.
+  const standaloneIds = filters.standaloneOnly
+    ? shown.filter((item) => !item.parent && item.canEdit).map((item) => item.id)
+    : [];
+  // Each flagged row shows its own turn in the round rather than a count above the list.
+  const reviewing = useMemo(() => new Set(running?.pending ?? []), [running?.pending]);
 
-  const askAIAboutAll = async () => {
-    const total = flaggedIds.length;
-    const counts = { merged: 0, parent: 0, distinct: 0, unsure: 0 };
+  useRealtimeSubscription<ReviewRound>(trpc.ingredients.onReview, {
+    lagQueryKeys: [trpc.ingredients.reviewRound.queryKey()],
+    onEvent: (payload) => {
+      setRound(payload);
+      if (!payload.finished) return;
+      void queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewRound.queryKey() });
+      void refresh();
+      // What AI suggests opens for whoever asked; everyone else sees the count in the header.
+      if (payload.jobId !== startedJobId) return;
+      setStartedJobId(null);
+      setReportJobId(payload.jobId);
+      setSuggestionsOpen(true);
+    },
+  });
 
-    setReviewed({ done: 0, total });
+  const askAIAboutAll = async (mode: "review" | "parent") => {
+    const ingredientIds = mode === "parent" ? standaloneIds : flaggedIds;
+
     try {
-      for (const [index, ingredientId] of flaggedIds.entries()) {
-        const outcome = await review.mutateAsync({ ingredientId });
+      const started = await startRound.mutateAsync({ ingredientIds, mode });
 
-        if (outcome.outcome !== "not-flagged") counts[outcome.outcome] += 1;
-        setReviewed({ done: index + 1, total });
-      }
-      toast(t("askAIAllDone", counts), {
-        variant: counts.unsure === total ? "warning" : "success",
+      setStartedJobId(started.jobId);
+      setRound({
+        jobId: started.jobId,
+        done: 0,
+        total: started.total,
+        counts: { merge: 0, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 },
+        pending: ingredientIds,
+        finished: false,
       });
     } catch (error) {
       showSafeErrorToast({
@@ -93,93 +158,111 @@ export default function IngredientsSettingsContent() {
         error,
         context: "ingredients:review-all",
       });
-    } finally {
-      setReviewed(null);
-      await refresh();
     }
   };
 
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <Card.Header>
+        <Card.Header className="flex-row items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <BookOpenIcon className="h-5 w-5" />
             {t("title")}
           </h2>
+          <div className="flex items-center gap-2">
+            {suggestions.length > 0 || reportJobId ? (
+              <Button
+                data-testid="ingredients-suggestions-open"
+                size="sm"
+                variant="ghost"
+                onPress={() => setSuggestionsOpen(true)}
+              >
+                <SparklesIcon className="size-4" />
+                {t("suggestionsOpen", { count: suggestions.length })}
+              </Button>
+            ) : null}
+            {standaloneIds.length > 0 ? (
+              <AIButton
+                data-testid="ingredients-find-parents-all"
+                isDisabled={running !== null || startRound.isPending}
+                size="sm"
+                variant="tertiary"
+                onPress={() => void askAIAboutAll("parent")}
+              >
+                {t("findParentsAll")}
+              </AIButton>
+            ) : null}
+            {flaggedIds.length > 0 ? (
+              <AIButton
+                data-testid="ingredients-ask-ai-all"
+                isDisabled={running !== null || startRound.isPending}
+                size="sm"
+                variant="tertiary"
+                onPress={() => void askAIAboutAll("review")}
+              >
+                {t("askAIAll")}
+              </AIButton>
+            ) : null}
+          </div>
         </Card.Header>
         <Card.Content className="gap-4">
           <p className="text-muted text-base">{t("description")}</p>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2">
             <IngredientSearch busy={settling} onSearch={onSearch} />
-            <UiSwitch
-              data-testid="ingredients-flagged-only"
-              isSelected={flaggedOnly}
-              onValueChange={(selected) => startTransition(() => setFlaggedOnly(selected))}
+            <Button
+              isIconOnly
+              aria-label={tFilters("title")}
+              // A plain field beside the search box, as the dashboard's is; the dot alone says a filter is on.
+              className="shadow-field bg-field hover:bg-field-hover dark:bg-default dark:hover:bg-surface-tertiary relative shrink-0 border border-transparent"
+              data-testid="ingredients-filters"
+              variant="tertiary"
+              onPress={() => setFiltersOpen(true)}
             >
-              <span className="text-sm">{t("flaggedOnly")}</span>
-            </UiSwitch>
-          </div>
-          <p className="text-muted -mt-2 text-xs" data-testid="ingredients-search-hint">
-            {t("searchHint")}
-          </p>
-
-          {flaggedIds.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                data-testid="ingredients-ask-ai-all"
-                isDisabled={reviewed !== null}
-                isPending={reviewed !== null}
-                size="sm"
-                variant="secondary"
-                onPress={() => void askAIAboutAll()}
-              >
-                <SparklesIcon className="size-4" />
-                {t("askAIAll", { count: flaggedIds.length })}
-              </Button>
-              {reviewed ? (
-                <span className="text-muted text-sm" data-testid="ingredients-ask-ai-progress">
-                  {t("askAIProgress", reviewed)}
-                </span>
+              <FunnelIcon className="size-4" />
+              {hasIngredientFilters(filters) ? (
+                <span className="bg-accent shadow-background absolute top-2 right-2 inline-flex h-2 w-2 rounded-full shadow-[0_0_0_2px]" />
               ) : null}
-            </div>
-          ) : null}
+            </Button>
+          </div>
 
           {!isLoading && items.length === 0 ? (
             <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
-              {flaggedOnly ? t("emptyFlagged") : t("empty")}
+              {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
             </p>
           ) : (
-            <ul
-              className={`border-border divide-border divide-y rounded-xl border transition-opacity ${settling ? "opacity-60" : ""}`}
-              data-testid="ingredients-list"
-            >
-              {items.map((item) => (
-                <IngredientRow key={item.id} item={item} onOpen={setOpenId} />
-              ))}
-            </ul>
+            <IngredientList
+              hasMore={hasNextPage}
+              isFetchingMore={isFetchingNextPage}
+              loadMore={loadMore}
+              reviewing={reviewing}
+              rows={tree.rows}
+              settling={settling}
+              onOpen={setOpenId}
+              onToggleKinds={treeMode ? tree.toggle : undefined}
+            />
           )}
-
-          {hasNextPage ? (
-            <Button
-              className="self-center"
-              isDisabled={isFetchingNextPage}
-              variant="secondary"
-              onPress={() => void fetchNextPage()}
-            >
-              {t("loadMore")}
-            </Button>
-          ) : null}
         </Card.Content>
       </Card>
       <DataSourcesCard />
 
+      <IngredientFiltersPanel
+        open={filtersOpen}
+        value={filters}
+        onApply={(next) => startTransition(() => setFilters(next))}
+        onOpenChange={setFiltersOpen}
+      />
       <IngredientPanel
         item={openItem}
         open={openId !== null}
+        reviewing={openId !== null && reviewing.has(openId)}
         onChanged={refresh}
         onClose={() => setOpenId(null)}
+      />
+      <SuggestionsPanel
+        jobId={reportJobId}
+        open={suggestionsOpen}
+        onClose={() => setSuggestionsOpen(false)}
       />
     </div>
   );

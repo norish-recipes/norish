@@ -61,6 +61,7 @@ export default withSerwist(
       "localhost",
       "192.168.2.13",
       "192.168.2.25",
+      "192.168.50.11",
       "http://mac-mini.local",
       "*.local",
     ],

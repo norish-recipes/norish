@@ -335,7 +335,17 @@
     "title": "Съставки",
     "description": "Всяка храна, която Norish познава, с преводите, под които е известна. Norish отбелязва тези, за които не е бил сигурен: обединете ги с храната, която са, или ги отбележете като отделни.",
     "search": "Търсене на съставки",
-    "searchHint": "Въведете началото на дума. <cola> намира точно cola, %cola% всичко, което го съдържа, cola% всичко, което започва така.",
+    "searchMatch": "Съвпадение",
+    "searchIn": "Търси в",
+    "searchMatches": {
+      "contains": "Съдържа",
+      "exact": "Точно"
+    },
+    "searchFields": {
+      "name": "Име",
+      "translations": "Преводи",
+      "parent": "Родител"
+    },
     "flaggedOnly": "Само отбелязани",
     "flagged": "Отбелязана",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "Няма намерени съставки",
     "emptyFlagged": "Нищо не е отбелязано",
-    "loadMore": "Зареди още",
     "rename": "Преименувай",
     "delete": "Изтрий",
     "deleteTitle": "Да се изтрие ли {name}?",
     "deleteConfirm": "Заедно с него си отиват преводите му и това, което домакинството ви е научило Norish за него. Съставка, която рецепта, покупка или килерът още използват, не може да бъде изтрита; вместо това я обединете.",
     "markDistinct": "Отбележи като отделна",
-    "summary": "{spellings, plural, one {# превод} other {# превода}}{parent, select, none {} other {, родител: {parent}}}",
+    "summary": "{spellings, plural, one {# превод} other {# превода}}{kinds, plural, =0 {} one {, # вид} other {, # вида}}{parent, select, none {} other {, родител: {parent}}}",
     "askAI": "Попитай ИИ",
-    "askAIAll": "Попитай ИИ за {count, plural, one {тази маркирана съставка} other {тези # маркирани съставки}}",
-    "askAIProgress": "Попитано за {done} от {total}…",
-    "askAIAllDone": "ИИ обедини {merged}, постави {parent} под родител, отбеляза {distinct} като отделни съставки и не беше сигурен за {unsure}.",
+    "askAIAll": "Попитай ИИ за маркираните съставки",
+    "reviewing": "Питаме AI…",
     "aiOutcomes": {
-      "merged": "ИИ обедини {name} с {into}.",
-      "parent": "ИИ определи {name} като вид {of}.",
-      "distinct": "ИИ е сигурен, че {name} е отделна съставка.",
+      "parent": "ИИ предлага {name} да се класира като вид {of}.",
+      "distinct": "ИИ предлага {name} да е самостоятелна храна.",
       "unsure": "ИИ все още не е сигурен какво е {name}.",
-      "notFlagged": "{name} не е маркирана."
+      "notFlagged": "{name} не е маркирана.",
+      "skippedNotFlagged": "{name} вече не беше отбелязано.",
+      "skippedForbidden": "{name} не е ваше за промяна.",
+      "skippedNotFound": "{name} го нямаше, когато ИИ стигна до него.",
+      "failed": "Запитването за {name} не успя.",
+      "merge": "ИИ предлага {name} да се обедини с {into}."
     },
     "aiTrace": {
       "readAs": "ИИ го прочете като „{name}“.",
@@ -378,28 +390,25 @@
     "mergeInto": "Обедини с…",
     "merge": "Обедини",
     "mergedToast": "{name} вече е превод на {into}. За отмяна отворете {into} и преместете {name} обратно.",
-    "mergeTitle": "{name} изчезва и става превод на съставката, която изберете. Всичко, което се казва {name}, запазва текста си, но отсега се брои за тази съставка: отива в нейната пътека, взема нейния продукт и остава извън списъка, когато тази съставка е в килера ви.",
+    "mergeTitle": "{name} изчезва и става превод на съставката, която изберете.",
     "moveTo": "Премести в",
     "move": "Премести",
     "moveAlias": "Премести {alias}",
-    "moveTitle": "Преместете {alias} към друга съставка или отново я направете отделна съставка.",
-    "newIngredient": "Отделна съставка",
+    "moveTitle": "Преместете {alias} към друга съставка.",
+    "newIngredient": "Направете я основна съставка",
     "pickIngredient": "Търсене на съставка",
     "pickerHint": "Пишете, за да търсите в каталога",
     "pickerSearching": "Търсене…",
     "pickerEmpty": "Не е намерена съставка",
     "setParent": "Избор на родител…",
     "parentTitle": "Изберете съставката, чийто вид е {name}.",
-    "kindOf": "Родител: {name}",
     "clearParent": "Премахване на родител",
     "nameSection": "Име",
     "parentSection": "Родител",
     "spellingsSection": "Преводи",
     "shownAs": "Показва се за вас като {name}",
-    "noParent": "Не е подредено под друга храна",
     "changeParent": "Смяна на родителя…",
-    "moreSpellings": "Още превода ({count})",
-    "fewerSpellings": "По-малко превода",
+    "spellingsCount": "{count, plural, one {# превод} other {# превода}}",
     "dataSources": {
       "title": "Източници на данни",
       "notice": "Каталогът на съставките се основава на таксономията на съставките на <off>Open Food Facts</off>, достъпна под лиценза <odbl>Open Database License (ODbL)</odbl>. Каталогът, който Norish изгражда от нея, се предлага под същия лиценз.",
@@ -418,7 +427,40 @@
       "cycle": "Съставка не може да бъде вид на самата себе си",
       "empty": "Въведете име",
       "unknown": "Нещо се обърка. Опитайте отново."
-    }
+    },
+    "reportRunning": "Кръгът още тече; изброено е решеното досега.",
+    "keepAlias": "Запази {alias}",
+    "reportOutcomes": {
+      "parent": "Под родител",
+      "distinct": "Отделна храна",
+      "unsure": "Не е сигурно",
+      "skipped": "Пропуснато",
+      "failed": "Неуспешно",
+      "merge": "Обединяване"
+    },
+    "expandKinds": "Покажи видовете {name}",
+    "collapseKinds": "Скрий видовете {name}",
+    "layoutSection": "Изглед",
+    "asTree": "Йерархичен изглед",
+    "showOnly": "Покажи само",
+    "standaloneOnly": "Без родител или видове",
+    "findParent": "Намери родител с ИИ",
+    "findParentsAll": "Намери родители с ИИ",
+    "suggestion": {
+      "merge": "Обедини {name} с {into}",
+      "parent": "Класирай {name} под {of}",
+      "distinct": "Запази {name} като самостоятелна храна"
+    },
+    "suggestionsTitle": "Предложения от ИИ",
+    "suggestionsEmpty": "Нищо не чака вашето решение.",
+    "suggestionsNone": "Без предложение",
+    "suggestionsOpen": "{count, plural, =0 {Предложения} one {# предложение} other {# предложения}}",
+    "suggestionsFailed": "{count, plural, one {# предложение не можа да бъде приложено} other {# предложения не можаха да бъдат приложени}}: {reason}",
+    "confirmSuggestion": "Потвърди",
+    "dismissSuggestion": "Отхвърли",
+    "confirmAll": "Потвърди всички ({count})",
+    "dismissAll": "Отхвърли всички",
+    "suggestedByAI": "Предложено от ИИ"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Изпълнение на задача",
         "searching": "Търсене в магазина",
         "reading-product": "Четене на продуктовата страница",
-        "saving-link": "Запазване на връзката"
+        "saving-link": "Запазване на връзката",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Импортиране на рецепта",
@@ -977,7 +1020,8 @@
         "caldav-sync": "Синхронизиране с CalDAV",
         "scheduled-tasks": "Планирани задачи",
         "image-generation": "Генериране на изображения",
-        "store-lookup": "Търсене в магазин"
+        "store-lookup": "Търсене в магазин",
+        "ingredient-review": "Попитай ИИ за съставките"
       },
       "summary": {
         "failed": "{count} неуспешни"

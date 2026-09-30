@@ -19,6 +19,7 @@ export const QUEUE_NAMES = {
   INGREDIENT_LINKING: "ingredient-linking",
   IMAGE_GENERATION: "image-generation",
   STORE_LOOKUP: "store-lookup",
+  INGREDIENT_REVIEW: "ingredient-review",
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];

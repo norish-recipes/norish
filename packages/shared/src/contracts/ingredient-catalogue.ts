@@ -51,14 +51,25 @@ export function isFlagReason(value: unknown): value is FlagReason {
 }
 
 /**
- * What asking AI about a Flagged Ingredient came to, as the procedure answers
- * it, with what was asked: the foods the name was compared with and what AI
- * read the name as, so a person can see what AI tried.
+ * What AI may propose for an Ingredient (ADR-0037): that it is another food
+ * (`merge`), a kind of another food (`parent`), or a food of its own
+ * (`distinct`). AI never makes the edit itself; a person confirms or
+ * dismisses the suggestion.
+ */
+export const SUGGESTION_KINDS = ["merge", "parent", "distinct"] as const;
+
+export type SuggestionKind = (typeof SUGGESTION_KINDS)[number];
+
+/**
+ * What asking AI about an Ingredient came to, as the procedure answers it,
+ * with what was asked: the foods the name was compared with and what AI read
+ * the name as, so a person can see what AI tried. A sure answer is a
+ * suggestion waiting on a person, named here by the food it proposes.
  */
 export type ReviewOutcome = ReviewVerdict & ReviewTrace;
 
 export type ReviewVerdict =
-  | { outcome: "merged"; into: string }
+  | { outcome: "merge"; into: string }
   | { outcome: "parent"; of: string }
   | { outcome: "distinct" }
   | { outcome: "unsure"; reason: FlagReason }
@@ -69,4 +80,27 @@ export interface ReviewTrace {
   considered: string[];
   /** The plain English food AI read the name as, when it said. */
   englishName: string | null;
+}
+
+/**
+ * What a round of Ask AI came to for one food, as the round's report reads
+ * it back: the suggestion and the food it names with what was asked
+ * (`ReviewTrace`); or why the food was passed over; or what broke. The
+ * worker records one per step, and the Ingredients page lists the foods
+ * that got no suggestion beside the ones waiting to be confirmed.
+ */
+export type ReviewReportEntry = { ingredientId: string; name?: string } & (
+  | ({ outcome: "merge"; into: string } & ReviewTrace)
+  | ({ outcome: "parent"; of: string } & ReviewTrace)
+  | ({ outcome: "distinct" } & ReviewTrace)
+  | ({ outcome: "unsure"; reason: string } & ReviewTrace)
+  | { outcome: "skipped"; reason: "not-flagged" | "forbidden" | "not-found" }
+  | { outcome: "failed"; error: string }
+);
+
+/** A round of Ask AI read back: what it came to for each food, in the order it took them. */
+export interface ReviewReport {
+  jobId: string;
+  finished: boolean;
+  entries: ReviewReportEntry[];
 }

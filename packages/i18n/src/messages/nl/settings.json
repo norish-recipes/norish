@@ -335,7 +335,17 @@
     "title": "Ingrediënten",
     "description": "Elk voedingsmiddel dat Norish kent, met de vertalingen waaronder het bekend is. Norish markeert de ingrediënten waarover het twijfelde: voeg ze samen met het voedingsmiddel dat ze zijn, of markeer ze als apart.",
     "search": "Ingrediënten zoeken",
-    "searchHint": "Typ het begin van een woord. <cola> vindt precies cola, %cola% alles wat het bevat, cola% alles wat ermee begint.",
+    "searchMatch": "Overeenkomst",
+    "searchIn": "Zoek in",
+    "searchMatches": {
+      "contains": "Bevat",
+      "exact": "Exact"
+    },
+    "searchFields": {
+      "name": "Naam",
+      "translations": "Vertalingen",
+      "parent": "Bovenliggend"
+    },
     "flaggedOnly": "Alleen gemarkeerd",
     "flagged": "Gemarkeerd",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "Geen ingrediënten gevonden",
     "emptyFlagged": "Niets is gemarkeerd",
-    "loadMore": "Meer laden",
     "rename": "Hernoemen",
     "delete": "Verwijderen",
     "deleteTitle": "{name} verwijderen?",
     "deleteConfirm": "De vertalingen gaan mee, en wat je huishouden Norish erover leerde. Een ingrediënt dat een recept, boodschap of voorraaditem nog gebruikt kan niet weg; voeg het dan samen.",
     "markDistinct": "Markeer als apart",
-    "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
+    "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
     "askAI": "Vraag AI",
-    "askAIAll": "Vraag AI over {count, plural, one {dit gemarkeerde ingrediënt} other {deze # gemarkeerde ingrediënten}}",
-    "askAIProgress": "{done} van {total} gevraagd…",
-    "askAIAllDone": "AI voegde {merged} samen, plaatste {parent} onder een ouder, markeerde {distinct} als eigen ingrediënt en wist het bij {unsure} niet zeker.",
+    "askAIAll": "Vraag AI over gemarkeerde ingrediënten",
+    "reviewing": "AI wordt gevraagd…",
     "aiOutcomes": {
-      "merged": "AI voegde {name} samen met {into}.",
-      "parent": "AI plaatste {name} als een soort {of}.",
-      "distinct": "AI is zeker dat {name} een eigen ingrediënt is.",
+      "parent": "AI stelt voor {name} te plaatsen als een soort {of}.",
+      "distinct": "AI stelt voor dat {name} een eigen ingrediënt is.",
       "unsure": "AI weet nog steeds niet zeker wat {name} is.",
-      "notFlagged": "{name} is niet gemarkeerd."
+      "notFlagged": "{name} is niet gemarkeerd.",
+      "skippedNotFlagged": "{name} was niet meer gemarkeerd.",
+      "skippedForbidden": "{name} mag je niet wijzigen.",
+      "skippedNotFound": "{name} was al weg toen AI eraan toekwam.",
+      "failed": "Vragen naar {name} is mislukt.",
+      "merge": "AI stelt voor {name} samen te voegen met {into}."
     },
     "aiTrace": {
       "readAs": "AI las het als “{name}”.",
@@ -378,28 +390,25 @@
     "mergeInto": "Samenvoegen met…",
     "merge": "Samenvoegen",
     "mergedToast": "{name} is nu een vertaling van {into}. Om dit ongedaan te maken, open {into} en verplaats {name} er weer uit.",
-    "mergeTitle": "{name} verdwijnt en wordt een vertaling van het ingrediënt dat je kiest. Alles wat {name} heet houdt zijn tekst, maar telt voortaan als dat ingrediënt: het komt in zijn gangpad, krijgt zijn product en blijft van de lijst als dat ingrediënt in je voorraad zit.",
+    "mergeTitle": "{name} verdwijnt en wordt een vertaling van het ingrediënt dat je kiest.",
     "moveTo": "Verplaatsen naar",
     "move": "Verplaatsen",
     "moveAlias": "{alias} verplaatsen",
-    "moveTitle": "Verplaats {alias} naar een ander ingrediënt, of maak er weer een eigen ingrediënt van.",
-    "newIngredient": "Een eigen ingrediënt",
+    "moveTitle": "Verplaats {alias} naar een ander ingrediënt.",
+    "newIngredient": "Maak er een basisingrediënt van",
     "pickIngredient": "Zoek een ingrediënt",
     "pickerHint": "Typ om de catalogus te doorzoeken",
     "pickerSearching": "Zoeken…",
     "pickerEmpty": "Geen ingrediënt gevonden",
     "setParent": "Bovenliggend kiezen…",
     "parentTitle": "Kies het ingrediënt waarvan {name} een soort is.",
-    "kindOf": "Hoofdingrediënt: {name}",
     "clearParent": "Bovenliggend verwijderen",
     "nameSection": "Naam",
     "parentSection": "Hoofdingrediënt",
     "spellingsSection": "Vertalingen",
     "shownAs": "Voor jou getoond als {name}",
-    "noParent": "Niet onder een ander ingrediënt ingedeeld",
     "changeParent": "Ander hoofdingrediënt…",
-    "moreSpellings": "Meer vertalingen ({count})",
-    "fewerSpellings": "Minder vertalingen",
+    "spellingsCount": "{count, plural, one {# vertaling} other {# vertalingen}}",
     "dataSources": {
       "title": "Gegevensbronnen",
       "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",
@@ -418,7 +427,40 @@
       "cycle": "Een ingrediënt kan geen soort van zichzelf zijn",
       "empty": "Voer een naam in",
       "unknown": "Er ging iets mis. Probeer het opnieuw."
-    }
+    },
+    "reportRunning": "De ronde loopt nog; wat tot nu toe is afgehandeld staat hieronder.",
+    "keepAlias": "{alias} behouden",
+    "reportOutcomes": {
+      "parent": "Onder een ouder geplaatst",
+      "distinct": "Eigen ingrediënt",
+      "unsure": "Niet zeker",
+      "skipped": "Overgeslagen",
+      "failed": "Mislukt",
+      "merge": "Samenvoegen"
+    },
+    "expandKinds": "Toon de soorten {name}",
+    "collapseKinds": "Verberg de soorten {name}",
+    "layoutSection": "Weergave",
+    "asTree": "Hiërarchische weergave",
+    "showOnly": "Toon alleen",
+    "standaloneOnly": "Zonder ouder of soorten",
+    "findParent": "Ouder zoeken met AI",
+    "findParentsAll": "Ouders zoeken met AI",
+    "suggestion": {
+      "merge": "{name} samenvoegen met {into}",
+      "parent": "{name} plaatsen onder {of}",
+      "distinct": "{name} houden als eigen ingrediënt"
+    },
+    "suggestionsTitle": "AI-voorstellen",
+    "suggestionsEmpty": "Er wacht niets op je.",
+    "suggestionsNone": "Geen voorstel",
+    "suggestionsOpen": "{count, plural, =0 {Voorstellen} one {# voorstel} other {# voorstellen}}",
+    "suggestionsFailed": "{count, plural, one {# voorstel kon} other {# voorstellen konden}} niet worden toegepast: {reason}",
+    "confirmSuggestion": "Bevestigen",
+    "dismissSuggestion": "Negeren",
+    "confirmAll": "Alles bevestigen ({count})",
+    "dismissAll": "Alles negeren",
+    "suggestedByAI": "Voorgesteld door AI"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Afbeeldingen genereren",
-        "store-lookup": "Winkelopzoeking"
+        "store-lookup": "Winkelopzoeking",
+        "ingredient-review": "AI vragen over ingrediënten"
       },
       "summary": {
         "failed": "{count} failed"

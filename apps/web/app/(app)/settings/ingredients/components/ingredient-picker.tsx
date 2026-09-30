@@ -12,9 +12,6 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 /** How long typing pauses before the catalogue is searched. */
 const SEARCH_DELAY_MS = 250;
 
-/** The option that stands for a new Ingredient rather than a known one. */
-const NEW_INGREDIENT = "__new__";
-
 /** What a person picked: a known Ingredient, or a new one (`id` null). */
 export type IngredientPick = { id: string; name: string } | { id: null };
 
@@ -28,13 +25,11 @@ export function IngredientPicker({
   label,
   excludeId,
   editableOnly,
-  allowNew,
   onPick,
 }: {
   label: string;
   excludeId: string;
   editableOnly: boolean;
-  allowNew: boolean;
   onPick: (pick: IngredientPick | null) => void;
 }) {
   const t = useTranslations("settings.ingredients");
@@ -59,10 +54,7 @@ export function IngredientPicker({
   const found = (data?.items ?? []).filter(
     (item) => item.id !== excludeId && (!editableOnly || item.canEdit)
   );
-  const options = [
-    ...found.map((item) => ({ id: item.id, name: ingredientDisplayName(item, locale) })),
-    ...(allowNew ? [{ id: NEW_INGREDIENT, name: t("newIngredient") }] : []),
-  ];
+  const options = found.map((item) => ({ id: item.id, name: ingredientDisplayName(item, locale) }));
 
   return (
     <ComboBox
@@ -87,13 +79,17 @@ export function IngredientPicker({
         if (!option) return;
         setPicked(option.id);
         setTerm(option.name);
-        onPick(option.id === NEW_INGREDIENT ? { id: null } : option);
+        onPick(option);
       }}
     >
       <Label className="sr-only">{label}</Label>
-      <ComboBox.InputGroup>
-        <Input data-testid="ingredient-picker" placeholder={t("pickIngredient")} />
-      </ComboBox.InputGroup>
+      {/* Search-only, so no trigger: ComboBox.InputGroup expects one as its last child and
+          hands its slot props to whatever sits there, which the Input would pass to the DOM. */}
+      <Input
+        data-testid="ingredient-picker"
+        placeholder={t("pickIngredient")}
+        variant="secondary"
+      />
       <ComboBox.Popover UNSTABLE_portalContainer={portalContainer}>
         <ListBox
           renderEmptyState={() => (

@@ -335,7 +335,17 @@
     "title": "Zutaten",
     "description": "Jedes Lebensmittel, das Norish kennt, mit den Übersetzungen, unter denen es bekannt ist. Norish markiert die, bei denen es unsicher war: Führen Sie sie mit dem Lebensmittel zusammen, das sie sind, oder markieren Sie sie als eigenständig.",
     "search": "Zutaten suchen",
-    "searchHint": "Geben Sie einen Wortanfang ein. <cola> findet genau cola, %cola% alles, was es enthält, cola% alles, was damit beginnt.",
+    "searchMatch": "Treffer",
+    "searchIn": "Suchen in",
+    "searchMatches": {
+      "contains": "Enthält",
+      "exact": "Genau"
+    },
+    "searchFields": {
+      "name": "Name",
+      "translations": "Übersetzungen",
+      "parent": "Übergeordnet"
+    },
     "flaggedOnly": "Nur markierte",
     "flagged": "Markiert",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "Keine Zutaten gefunden",
     "emptyFlagged": "Nichts ist markiert",
-    "loadMore": "Mehr laden",
     "rename": "Umbenennen",
     "delete": "Löschen",
     "deleteTitle": "{name} löschen?",
     "deleteConfirm": "Die Übersetzungen gehen mit, und was Ihr Haushalt Norish darüber beigebracht hat. Eine Zutat, die ein Rezept, ein Einkauf oder der Vorrat noch verwendet, kann nicht gelöscht werden; führen Sie sie stattdessen zusammen.",
     "markDistinct": "Als eigenständig markieren",
-    "summary": "{spellings, plural, one {# Übersetzung} other {# Übersetzungen}}{parent, select, none {} other {, übergeordnet: {parent}}}",
+    "summary": "{spellings, plural, one {# Übersetzung} other {# Übersetzungen}}{kinds, plural, =0 {} one {, # Sorte} other {, # Sorten}}{parent, select, none {} other {, übergeordnet: {parent}}}",
     "askAI": "KI fragen",
-    "askAIAll": "KI zu {count, plural, one {dieser markierten Zutat} other {diesen # markierten Zutaten}} fragen",
-    "askAIProgress": "{done} von {total} gefragt…",
-    "askAIAllDone": "KI hat {merged} zusammengeführt, {parent} unter eine übergeordnete Zutat gestellt, {distinct} als eigene Zutat markiert und war sich bei {unsure} nicht sicher.",
+    "askAIAll": "KI zu markierten Zutaten fragen",
+    "reviewing": "KI wird gefragt…",
     "aiOutcomes": {
-      "merged": "KI hat {name} mit {into} zusammengeführt.",
-      "parent": "KI hat {name} als eine Art {of} eingeordnet.",
-      "distinct": "KI ist sicher, dass {name} eine eigene Zutat ist.",
+      "parent": "Die KI schlägt vor, {name} als eine Art {of} einzuordnen.",
+      "distinct": "Die KI schlägt vor, dass {name} eine eigene Zutat ist.",
       "unsure": "KI ist sich weiterhin nicht sicher, was {name} ist.",
-      "notFlagged": "{name} ist nicht markiert."
+      "notFlagged": "{name} ist nicht markiert.",
+      "skippedNotFlagged": "{name} war nicht mehr markiert.",
+      "skippedForbidden": "{name} dürfen Sie nicht ändern.",
+      "skippedNotFound": "{name} war schon weg, als die KI dazu kam.",
+      "failed": "Die Frage zu {name} ist fehlgeschlagen.",
+      "merge": "Die KI schlägt vor, {name} mit {into} zusammenzuführen."
     },
     "aiTrace": {
       "readAs": "Die KI las es als „{name}“.",
@@ -378,28 +390,25 @@
     "mergeInto": "Zusammenführen mit…",
     "merge": "Zusammenführen",
     "mergedToast": "{name} ist jetzt eine Übersetzung von {into}. Zum Rückgängigmachen öffnen Sie {into} und verschieben {name} wieder heraus.",
-    "mergeTitle": "{name} verschwindet und wird zu einer Übersetzung der Zutat, die Sie wählen. Alles, was {name} heißt, behält seinen Text, zählt aber ab jetzt als diese Zutat: es landet in ihrem Gang, bekommt ihr Produkt und bleibt von der Liste, wenn diese Zutat in Ihrem Vorrat ist.",
+    "mergeTitle": "{name} verschwindet und wird zu einer Übersetzung der Zutat, die Sie wählen.",
     "moveTo": "Verschieben nach",
     "move": "Verschieben",
     "moveAlias": "{alias} verschieben",
-    "moveTitle": "Verschieben Sie {alias} zu einer anderen Zutat, oder machen Sie daraus wieder eine eigene Zutat.",
-    "newIngredient": "Eine eigene Zutat",
+    "moveTitle": "Verschieben Sie {alias} zu einer anderen Zutat.",
+    "newIngredient": "Zu einer Basiszutat machen",
     "pickIngredient": "Zutat suchen",
     "pickerHint": "Tippen, um den Katalog zu durchsuchen",
     "pickerSearching": "Suche…",
     "pickerEmpty": "Keine Zutat gefunden",
     "setParent": "Oberbegriff wählen…",
     "parentTitle": "Wählen Sie die Zutat, von der {name} eine Sorte ist.",
-    "kindOf": "Übergeordnet: {name}",
     "clearParent": "Oberbegriff entfernen",
     "nameSection": "Name",
     "parentSection": "Übergeordnet",
     "spellingsSection": "Übersetzungen",
     "shownAs": "Ihnen angezeigt als {name}",
-    "noParent": "Keinem anderen Lebensmittel zugeordnet",
     "changeParent": "Übergeordnete Zutat ändern…",
-    "moreSpellings": "Weitere Übersetzungen ({count})",
-    "fewerSpellings": "Weniger Übersetzungen",
+    "spellingsCount": "{count, plural, one {# Übersetzung} other {# Übersetzungen}}",
     "dataSources": {
       "title": "Datenquellen",
       "notice": "Der Zutatenkatalog basiert auf der Zutatentaxonomie von <off>Open Food Facts</off>, verfügbar unter der <odbl>Open Database License (ODbL)</odbl>. Der Katalog, den Norish daraus aufbaut, steht unter derselben Lizenz.",
@@ -418,7 +427,40 @@
       "cycle": "Eine Zutat kann keine Sorte ihrer selbst sein",
       "empty": "Geben Sie einen Namen ein",
       "unknown": "Etwas ist schiefgelaufen. Versuchen Sie es erneut."
-    }
+    },
+    "reportRunning": "Die Runde läuft noch; was bisher erledigt ist, steht hier.",
+    "keepAlias": "{alias} behalten",
+    "reportOutcomes": {
+      "parent": "Unter eine übergeordnete Zutat gestellt",
+      "distinct": "Eigene Zutat",
+      "unsure": "Nicht sicher",
+      "skipped": "Übersprungen",
+      "failed": "Fehlgeschlagen",
+      "merge": "Zusammenführen"
+    },
+    "expandKinds": "Sorten von {name} anzeigen",
+    "collapseKinds": "Sorten von {name} ausblenden",
+    "layoutSection": "Ansicht",
+    "asTree": "Hierarchische Ansicht",
+    "showOnly": "Nur anzeigen",
+    "standaloneOnly": "Ohne übergeordnete Zutat oder Sorten",
+    "findParent": "Übergeordnete Zutat mit KI finden",
+    "findParentsAll": "Übergeordnete Zutaten mit KI finden",
+    "suggestion": {
+      "merge": "{name} mit {into} zusammenführen",
+      "parent": "{name} unter {of} einordnen",
+      "distinct": "{name} als eigene Zutat behalten"
+    },
+    "suggestionsTitle": "KI-Vorschläge",
+    "suggestionsEmpty": "Nichts wartet auf Sie.",
+    "suggestionsNone": "Kein Vorschlag",
+    "suggestionsOpen": "{count, plural, =0 {Vorschläge} one {# Vorschlag} other {# Vorschläge}}",
+    "suggestionsFailed": "{count, plural, one {# Vorschlag konnte} other {# Vorschläge konnten}} nicht übernommen werden: {reason}",
+    "confirmSuggestion": "Bestätigen",
+    "dismissSuggestion": "Verwerfen",
+    "confirmAll": "Alle bestätigen ({count})",
+    "dismissAll": "Alle verwerfen",
+    "suggestedByAI": "Von der KI vorgeschlagen"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Bildgenerierung",
-        "store-lookup": "Geschäftsabfrage"
+        "store-lookup": "Geschäftsabfrage",
+        "ingredient-review": "KI zu Zutaten fragen"
       },
       "summary": {
         "failed": "{count} failed"

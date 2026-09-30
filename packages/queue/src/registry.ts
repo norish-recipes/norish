@@ -14,6 +14,7 @@ import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type {
   CaldavSyncJobData,
   ImageImportJobData,
+  IngredientReviewJobData,
   PasteImportJobData,
   RecipeEnrichmentJobData,
   RecipeImportJobData,
@@ -33,6 +34,7 @@ import { buildRemovalOptions, QUEUE_NAMES } from "./config";
 import { createImageGenerationQueue } from "./image-generation/queue";
 import { createImageImportQueue } from "./image-import/queue";
 import { createIngredientLinkingQueue } from "./ingredient-linking/queue";
+import { createIngredientReviewQueue } from "./ingredient-review/queue";
 import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 import { createPasteImportQueue } from "./paste-import/queue";
 import { createRecipeImportQueue } from "./recipe-import/queue";
@@ -72,6 +74,7 @@ interface QueueRegistry {
   caldavSync: Queue<CaldavSyncJobData>;
   scheduledTasks: Queue<ScheduledTaskJobData>;
   storeLookup: Queue<StoreLookupJobData>;
+  ingredientReview: Queue<IngredientReviewJobData>;
 }
 
 async function loadJobRetention(): Promise<JobRetentionConfig> {
@@ -130,6 +133,7 @@ export async function initializeQueues(): Promise<QueueRegistry> {
       caldavSync: createCaldavSyncQueue(removalOptions),
       scheduledTasks: createScheduledTasksQueue(removalOptions),
       storeLookup: createStoreLookupQueue(removalOptions),
+      ingredientReview: createIngredientReviewQueue(removalOptions),
     };
 
     globalForRegistry.queueRegistry = created;
@@ -180,6 +184,7 @@ export function getQueueByName(name: QueueName): Queue {
     [QUEUE_NAMES.CALDAV_SYNC]: getQueues().caldavSync,
     [QUEUE_NAMES.SCHEDULED_TASKS]: getQueues().scheduledTasks,
     [QUEUE_NAMES.STORE_LOOKUP]: getQueues().storeLookup,
+    [QUEUE_NAMES.INGREDIENT_REVIEW]: getQueues().ingredientReview,
   };
 
   return byName[name];
@@ -223,6 +228,7 @@ export async function closeAllQueues(): Promise<void> {
     registry.caldavSync.close(),
     registry.scheduledTasks.close(),
     registry.storeLookup.close(),
+    registry.ingredientReview.close(),
   ]);
 
   globalForRegistry.queueRegistry = null;

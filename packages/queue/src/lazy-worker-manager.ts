@@ -156,14 +156,18 @@ async function initializeQueueEvents<T>(state: LazyWorkerState<T>): Promise<void
 
   // CRITICAL: Check for existing waiting jobs BEFORE attaching event listeners
   // This eliminates the race condition where jobs could be added between
-  // waitUntilReady() and the 'waiting' event listener attachment
-  const initialCounts = await queue.getJobCounts("waiting");
+  // waitUntilReady() and the 'waiting' event listener attachment.
+  // Active jobs count too: one left active by a process that died (a restart
+  // mid-job) is only recovered by a running worker's stalled-job check, and no
+  // 'waiting' event ever comes for it.
+  const initialCounts = await queue.getJobCounts("waiting", "active");
   const initialWaiting = initialCounts.waiting ?? 0;
+  const initialActive = initialCounts.active ?? 0;
 
-  if (initialWaiting > 0) {
+  if (initialWaiting > 0 || initialActive > 0) {
     log.info(
-      { queueName, waiting: initialWaiting },
-      "Found existing waiting jobs during init, starting worker"
+      { queueName, waiting: initialWaiting, active: initialActive },
+      "Found existing waiting or orphaned active jobs during init, starting worker"
     );
     await ensureWorkerRunning(state);
   }
@@ -335,11 +339,16 @@ function startPolling<T>(state: LazyWorkerState<T>): void {
     if (!state.queue) return;
 
     try {
-      const counts = await state.queue.getJobCounts("waiting");
+      const counts = await state.queue.getJobCounts("waiting", "active");
       const waiting = counts.waiting ?? 0;
+      const active = counts.active ?? 0;
 
-      if (waiting > 0) {
-        log.info({ queueName, waiting }, "Polling: found waiting jobs, ensuring worker is running");
+      // An active job with no worker here may be orphaned: only a worker recovers it.
+      if (waiting > 0 || (active > 0 && !state.isRunning)) {
+        log.info(
+          { queueName, waiting, active },
+          "Polling: found waiting or orphaned active jobs, ensuring worker is running"
+        );
         await ensureWorkerRunning(state);
       }
     } catch (err) {

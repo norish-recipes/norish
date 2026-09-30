@@ -4,6 +4,7 @@
  * the server says the viewer may take.
  */
 import IngredientsSettingsContent from "@/app/(app)/settings/ingredients/components/ingredients-settings-content";
+import { toast } from "@heroui/react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -16,6 +17,7 @@ type Item = {
   flagReason?: string | null;
   hiddenSpellings?: number;
   parent: { id: string; name: string } | null;
+  kinds?: number;
   canEdit: boolean;
   localeNames?: Record<string, string>;
   aliases: Array<{
@@ -44,12 +46,48 @@ const mutations = {
     considered: ["salt"],
     englishName: null,
   })),
+  reviewAllWithAI: vi.fn(async () => ({ jobId: "round-1", total: 1 })),
+  confirmSuggestions: vi.fn(async () => ({ done: 1, failed: 0, refusal: null })),
+  dismissSuggestions: vi.fn(async () => ({ done: 1, failed: 0, refusal: null })),
+  findParentWithAI: vi.fn(async () => ({
+    outcome: "parent",
+    of: "vegetable",
+    considered: ["vegetable"],
+    englishName: null,
+  })),
 };
 const invalidateQueries = vi.fn();
+/** The round running on the server when the page opens, as `reviewRound` answers. */
+let runningRound: unknown = null;
+/** What `reviewReport` answers for the round this tab watched. */
+let report: unknown = null;
+/** What AI suggests, waiting on a person, as `suggestions` answers. */
+let suggestions: unknown[] = [];
+/** What `get` answers for a food the list no longer lists. */
+let ownItem: unknown = undefined;
+/** What `kinds` answers per parent, for the rows folded out under it. */
+let kinds: Record<string, Item[]> = {};
+/** The observer watching the end of the list, so a test can bring it into view. */
+const listEnd = vi.hoisted(() => ({
+  onIntersect: undefined as ((entries: Array<{ isIntersecting: boolean }>) => void) | undefined,
+}));
+const fetchNextPage = vi.fn();
+let hasNextPage = false;
+/** The last handler the page gave the `onReview` subscription: how a test lets the round move. */
+const review = vi.hoisted(() => ({
+  onEvent: undefined as ((payload: unknown) => void) | undefined,
+}));
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     ingredients: {
+      pathKey: () => ["ingredients"],
+      suggestions: {
+        queryOptions: () => ({ queryKey: ["ingredients.suggestions"] }),
+        pathKey: () => ["ingredients.suggestions"],
+      },
+      confirmSuggestions: { mutationOptions: () => ({ name: "confirmSuggestions" }) },
+      dismissSuggestions: { mutationOptions: () => ({ name: "dismissSuggestions" }) },
       list: {
         infiniteQueryOptions: (input: unknown) => {
           listInputs.push(input);
@@ -57,6 +95,9 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           return { queryKey: ["ingredients.list", input] };
         },
         pathKey: () => ["ingredients.list"],
+      },
+      get: {
+        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.get", input] }),
       },
       spellings: {
         queryOptions: (input: unknown) => ({ queryKey: ["ingredients.spellings", input] }),
@@ -70,23 +111,55 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       setParent: { mutationOptions: () => ({ name: "setParent" }) },
       remove: { mutationOptions: () => ({ name: "remove" }) },
       reviewWithAI: { mutationOptions: () => ({ name: "reviewWithAI" }) },
+      reviewAllWithAI: { mutationOptions: () => ({ name: "reviewAllWithAI" }) },
+      findParentWithAI: { mutationOptions: () => ({ name: "findParentWithAI" }) },
+      reviewRound: {
+        queryOptions: () => ({ queryKey: ["ingredients.reviewRound"] }),
+        queryKey: () => ["ingredients.reviewRound"],
+      },
+      reviewReport: {
+        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.reviewReport", input] }),
+      },
+      kinds: {
+        queryOptions: (input: { parentId: string }) => ({ queryKey: ["ingredients.kinds", input] }),
+        pathKey: () => ["ingredients.kinds"],
+      },
+      onReview: "onReview",
     },
   }),
 }));
 
+vi.mock("@norish/shared-react/realtime", () => ({
+  useRealtimeSubscription: (_procedure: unknown, handlers: { onEvent: (p: unknown) => void }) => {
+    review.onEvent = handlers.onEvent;
+  },
+}));
+
 vi.mock("@tanstack/react-query", () => ({
   keepPreviousData: (data: unknown) => data,
-  useQuery: ({ enabled }: { enabled: boolean }) => ({
-    data: enabled ? everySpelling : undefined,
-    isFetching: false,
-  }),
+  useQuery: ({ enabled, queryKey }: { enabled?: boolean; queryKey: unknown[] }) => {
+    switch (queryKey[0]) {
+      case "ingredients.reviewRound":
+        return { data: runningRound, isFetching: false, isPending: false };
+      case "ingredients.get":
+        return { data: enabled ? ownItem : undefined, isFetching: false, isPending: false };
+      case "ingredients.suggestions":
+        return { data: suggestions, isFetching: false, isPending: false };
+      case "ingredients.reviewReport":
+        return { data: enabled ? report : undefined, isFetching: false, isPending: false };
+      default:
+        return { data: enabled ? everySpelling : undefined, isFetching: false, isPending: false };
+    }
+  },
+  useQueries: ({ queries }: { queries: Array<{ queryKey: [string, { parentId: string }] }> }) =>
+    queries.map(({ queryKey }) => ({ data: kinds[queryKey[1].parentId] ?? [], isPending: false })),
   useInfiniteQuery: () => ({
     data: { pages: [{ items, nextCursor: null }] },
     isLoading: false,
     isFetching: false,
-    hasNextPage: false,
+    hasNextPage,
     isFetchingNextPage: false,
-    fetchNextPage: vi.fn(),
+    fetchNextPage,
   }),
   useMutation: ({ name }: { name: keyof typeof mutations }) => ({
     mutateAsync: mutations[name],
@@ -97,7 +170,10 @@ vi.mock("@tanstack/react-query", () => ({
 
 let viewerLocale = "en";
 
-vi.mock("usehooks-ts", () => ({ useDebounceValue: (value: unknown) => [value] }));
+vi.mock("usehooks-ts", () => ({
+  useDebounceValue: (value: unknown) => [value],
+  useWindowSize: () => ({ width: 1024, height: 768 }),
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => Object.assign((key: string) => key, { rich: (key: string) => key }),
@@ -105,6 +181,11 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
+
+vi.mock("@heroui/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@heroui/react")>()),
+  toast: Object.assign(vi.fn(), { close: vi.fn() }),
+}));
 
 vi.mock("@/components/shared/action-button", () => ({
   ActionButton: ({ children, onPress, isDisabled, "data-testid": testId }: any) => (
@@ -126,9 +207,10 @@ vi.mock("@/components/shared/action-button", () => ({
 
 // A Panel is a dialog named after its title; a closed one renders nothing.
 vi.mock("@/components/Panel/Panel", () => {
-  const Panel = ({ children, open, title }: any) =>
+  const Panel = ({ children, open, title, titleAddon }: any) =>
     open ? (
       <div aria-label={title} role="dialog">
+        {titleAddon}
         {children}
       </div>
     ) : null;
@@ -139,18 +221,13 @@ vi.mock("@/components/Panel/Panel", () => {
   return { default: Panel, usePanelPortalContainer: () => undefined };
 });
 
-// The picker searches the catalogue; here it offers salt, and a new Ingredient where allowed.
+// The picker searches the catalogue; here it offers salt.
 vi.mock("@/app/(app)/settings/ingredients/components/ingredient-picker", () => ({
-  IngredientPicker: ({ onPick, allowNew, editableOnly, excludeId }: any) => (
+  IngredientPicker: ({ onPick, editableOnly, excludeId }: any) => (
     <div data-editable-only={editableOnly} data-exclude={excludeId} data-testid="picker">
       <button type="button" onClick={() => onPick({ id: "salt", name: "salt" })}>
         pick-salt
       </button>
-      {allowNew ? (
-        <button type="button" onClick={() => onPick({ id: null })}>
-          pick-new
-        </button>
-      ) : null}
     </div>
   ),
 }));
@@ -186,6 +263,25 @@ function panel(name: string) {
   return screen.getByRole("dialog", { name });
 }
 
+/** What AI suggests for `name`, waiting on the viewer. */
+function suggestion(
+  id: string,
+  kind: "merge" | "parent" | "distinct",
+  name: string,
+  target: string | null,
+  ingredientId = name
+) {
+  return {
+    id,
+    kind,
+    ingredient: { id: ingredientId, name, localeNames: {} },
+    target: target ? { id: target, name: target, localeNames: {} } : null,
+    englishName: "onions",
+    considered: ["onion"],
+    canAnswer: true,
+  };
+}
+
 /** A row folded to a line opens its panel on a press; the edits live there. */
 async function open(name: string) {
   await act(async () => {
@@ -195,13 +291,59 @@ async function open(name: string) {
   return panel(name);
 }
 
+/** The spellings sit behind a row of their own, in a panel over the food's. */
+async function showSpellings(opened: HTMLElement) {
+  await act(async () => {
+    fireEvent.click(within(opened).getByTestId("ingredient-all-spellings"));
+  });
+}
+
 describe("IngredientsSettingsContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The end of the list watches for itself scrolling into view; jsdom has no observer.
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: (entries: Array<{ isIntersecting: boolean }>) => void) {
+          listEnd.onIntersect = callback;
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      }
+    );
+    listEnd.onIntersect = undefined;
+    hasNextPage = false;
     viewerLocale = "en";
     listInputs.length = 0;
     items = [onion, salt];
     everySpelling = [];
+    runningRound = null;
+    report = null;
+    suggestions = [];
+    ownItem = undefined;
+    kinds = {};
+    review.onEvent = undefined;
+  });
+
+  it("asks for the next page once the end of the list comes into view, and again while it stays", () => {
+    hasNextPage = true;
+    render(<IngredientsSettingsContent />);
+
+    expect(fetchNextPage).not.toHaveBeenCalled();
+    act(() => {
+      listEnd.onIntersect?.([{ isIntersecting: true }]);
+    });
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+
+    // The next page lands and the end is still in reach: asked again.
+    items = [...items, { ...salt, id: "pepper", name: "pepper" }];
+    render(<IngredientsSettingsContent />);
+    act(() => {
+      listEnd.onIntersect?.([{ isIntersecting: true }]);
+    });
+    expect(fetchNextPage).toHaveBeenCalledTimes(2);
   });
 
   it("lists each food on a line, marks the flagged ones, and opens one to its spellings", async () => {
@@ -213,6 +355,8 @@ describe("IngredientsSettingsContent", () => {
 
     const opened = await open("onion");
 
+    await showSpellings(opened);
+
     expect(
       within(opened)
         .getAllByTestId("ingredient-alias")
@@ -223,6 +367,7 @@ describe("IngredientsSettingsContent", () => {
   it("offers only what the viewer may do", async () => {
     render(<IngredientsSettingsContent />);
     const mine = await open("onion");
+    await showSpellings(mine);
 
     expect(within(mine).getByTestId("ingredient-mark-distinct")).toBeInTheDocument();
     expect(within(mine).getByTestId("ingredient-name-input")).toBeInTheDocument();
@@ -233,6 +378,8 @@ describe("IngredientsSettingsContent", () => {
     expect(within(mine).getAllByTestId("ingredient-alias-move")).toHaveLength(1);
 
     const theirs = await open("salt");
+
+    await showSpellings(theirs);
 
     expect(within(theirs).queryByTestId("ingredient-name-input")).toBeNull();
     expect(within(theirs).queryByTestId("ingredient-delete")).toBeNull();
@@ -256,24 +403,27 @@ describe("IngredientsSettingsContent", () => {
     expect(invalidateQueries).toHaveBeenCalled();
   });
 
-  it("renames a food from its name field, once the name differs", async () => {
+  it("renames a food from its name field, saved with the panel's Save", async () => {
     render(<IngredientsSettingsContent />);
     const opened = await open("onion");
     const field = within(opened).getByTestId("ingredient-name-input");
 
-    expect(within(opened).getByTestId("ingredient-rename")).toBeDisabled();
+    // Nothing to save until something differs.
+    expect(within(opened).getByTestId("ingredient-save")).toBeDisabled();
 
     await act(async () => {
       fireEvent.change(field, { target: { value: "Onion" } });
     });
 
-    expect(within(opened).getByTestId("ingredient-rename")).toBeEnabled();
+    expect(mutations.rename).not.toHaveBeenCalled();
+    expect(within(opened).getByTestId("ingredient-save")).toBeEnabled();
 
     await act(async () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
 
     expect(mutations.rename).toHaveBeenCalledWith({ ingredientId: "onion", name: "Onion" });
+    expect(invalidateQueries).toHaveBeenCalled();
   });
 
   it("deletes a food once the viewer confirms", async () => {
@@ -294,9 +444,10 @@ describe("IngredientsSettingsContent", () => {
     expect(invalidateQueries).toHaveBeenCalled();
   });
 
-  it("adds a household's own spelling", async () => {
+  it("adds a household's own spelling, staged until Save", async () => {
     render(<IngredientsSettingsContent />);
     const opened = await open("salt");
+    await showSpellings(opened);
     const field = within(opened).getByTestId("ingredient-alias-input");
 
     await act(async () => {
@@ -306,8 +457,44 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });
 
-    expect(mutations.addAlias).toHaveBeenCalledWith({ ingredientId: "salt", text: "zout" });
+    // Staged as a chip of its own; nothing has been sent.
     expect(field).toHaveValue("");
+    expect(mutations.addAlias).not.toHaveBeenCalled();
+    expect(
+      within(opened)
+        .getAllByTestId("ingredient-alias")
+        .map((chip) => chip.textContent)
+    ).toEqual(["salt", "zout"]);
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-save"));
+    });
+
+    expect(mutations.addAlias).toHaveBeenCalledWith({ ingredientId: "salt", text: "zout" });
+  });
+
+  it("removes a spelling on Save, and keeps one un-removed before it", async () => {
+    render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+    await showSpellings(opened);
+    const remove = () => within(opened).getByRole("button", { name: "removeAlias" });
+
+    fireEvent.click(remove());
+    // Marked for removal, the chip stays, struck through, with a way back.
+    expect(within(opened).getAllByTestId("ingredient-alias")[0]).toHaveAttribute(
+      "data-pending",
+      "removed"
+    );
+    expect(mutations.removeAlias).not.toHaveBeenCalled();
+    fireEvent.click(within(opened).getByRole("button", { name: "keepAlias" }));
+    expect(within(opened).getByTestId("ingredient-save")).toBeDisabled();
+
+    fireEvent.click(remove());
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-save"));
+    });
+
+    expect(mutations.removeAlias).toHaveBeenCalledWith({ aliasId: "a-onion" });
   });
 
   it("merges a food into one the viewer may edit, picked in a panel of its own", async () => {
@@ -323,7 +510,7 @@ describe("IngredientsSettingsContent", () => {
 
     expect(picker).toHaveAttribute("data-editable-only", "true");
     expect(picker).toHaveAttribute("data-exclude", "onion");
-    expect(within(picker).queryByText("pick-new")).toBeNull();
+    expect(within(asking).queryByTestId("ingredient-relocation-new")).toBeNull();
     expect(within(asking).getByTestId("ingredient-relocation-confirm")).toBeDisabled();
 
     await act(async () => {
@@ -340,17 +527,16 @@ describe("IngredientsSettingsContent", () => {
   it("moves a spelling out to a new food", async () => {
     render(<IngredientsSettingsContent />);
     const opened = await open("onion");
+    await showSpellings(opened);
 
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-alias-move"));
     });
     const asking = screen.getByRole("dialog", { name: "moveTo" });
 
+    // Its own food is a button of its own, not a search result typing would filter away.
     await act(async () => {
-      fireEvent.click(within(asking).getByText("pick-new"));
-    });
-    await act(async () => {
-      fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
+      fireEvent.click(within(asking).getByTestId("ingredient-relocation-new"));
     });
 
     expect(mutations.moveAlias).toHaveBeenCalledWith({ aliasId: "a-onion", targetId: null });
@@ -360,7 +546,7 @@ describe("IngredientsSettingsContent", () => {
     render(<IngredientsSettingsContent />);
     const opened = await open("onion");
 
-    expect(within(opened).getByText("noParent")).toBeInTheDocument();
+    expect(within(opened).queryByTestId("ingredient-clear-parent")).toBeNull();
     await act(async () => {
       fireEvent.click(within(opened).getByTestId("ingredient-set-parent"));
     });
@@ -375,7 +561,127 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.click(within(asking).getByTestId("ingredient-relocation-confirm"));
     });
 
+    // Picked, the parent joins the draft; it lands with Save.
+    expect(within(opened).getByTestId("ingredient-parent")).toHaveTextContent("salt");
+    expect(mutations.setParent).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-save"));
+    });
+
     expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "onion", parentId: "salt" });
+  });
+
+  it("folds a food's kinds out beneath it, and asks for them only then", async () => {
+    items = [{ ...onion, kinds: 1 }, salt];
+    kinds = { onion: [{ ...onion, id: "red", name: "red onion", kinds: 1, flagged: false }] };
+    render(<IngredientsSettingsContent />);
+
+    // With nothing typed and no filter on, the list is the roots.
+    expect(listInputs.at(-1)).toMatchObject({ rootsOnly: true });
+    expect(screen.queryAllByTestId("ingredient-row").map((r) => r.dataset.ingredient)).toEqual([
+      "onion",
+      "salt",
+    ]);
+    // A food with kinds carries a live chevron; one without, none to press.
+    expect(within(row("salt")).getByTestId("ingredient-kinds-toggle")).toBeDisabled();
+    const toggle = within(row("onion")).getByTestId("ingredient-kinds-toggle");
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+
+    expect(screen.queryAllByTestId("ingredient-row").map((r) => r.dataset.ingredient)).toEqual([
+      "onion",
+      "red onion",
+      "salt",
+    ]);
+    expect(row("red onion")).toHaveAttribute("data-depth", "1");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    // A folded-out kind opens its panel like any row.
+    await open("red onion");
+
+    fireEvent.click(toggle);
+    expect(screen.queryAllByTestId("ingredient-row")).toHaveLength(2);
+  });
+
+  it("lists flat when the filters panel says so", async () => {
+    items = [{ ...onion, kinds: 1 }];
+    render(<IngredientsSettingsContent />);
+
+    fireEvent.click(screen.getByTestId("ingredients-filters"));
+    const filters = screen.getByRole("dialog", { name: "title" });
+
+    fireEvent.click(within(filters).getByRole("switch", { name: "asTree" }));
+    await act(async () => {
+      fireEvent.click(within(filters).getByTestId("ingredients-filters-apply"));
+    });
+
+    expect(listInputs.at(-1)).not.toHaveProperty("rootsOnly", true);
+    expect(listInputs.at(-1)).not.toHaveProperty("tree");
+    expect(within(row("onion")).queryByTestId("ingredient-kinds-toggle")).toBeNull();
+  });
+
+  it("lists the foods with neither parent nor kinds on request, and offers to find their parents", async () => {
+    items = [{ ...onion, flagged: false, kinds: 0 }, salt];
+    render(<IngredientsSettingsContent />);
+
+    expect(screen.queryByTestId("ingredients-find-parents-all")).toBeNull();
+    fireEvent.click(screen.getByTestId("ingredients-filters"));
+    const filters = screen.getByRole("dialog", { name: "title" });
+
+    fireEvent.click(within(filters).getByRole("switch", { name: "standaloneOnly" }));
+    await act(async () => {
+      fireEvent.click(within(filters).getByTestId("ingredients-filters-apply"));
+    });
+
+    expect(listInputs.at(-1)).toMatchObject({ standaloneOnly: true });
+    expect(listInputs.at(-1)).not.toHaveProperty("rootsOnly", true);
+
+    // Only onion is the viewer's to file; salt has a parent already.
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredients-find-parents-all"));
+    });
+
+    expect(mutations.reviewAllWithAI).toHaveBeenCalledExactlyOnceWith({
+      ingredientIds: ["onion"],
+      mode: "parent",
+    });
+    // Unflagged, the row still shows its turn in the round.
+    expect(within(row("onion")).getByTestId("ingredient-reviewing")).toBeInTheDocument();
+  });
+
+  it("asks AI what one food is a kind of, from its panel, where it has no parent", async () => {
+    items = [{ ...onion, flagged: false }, salt];
+    render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-find-parent"));
+    });
+
+    expect(mutations.findParentWithAI).toHaveBeenCalledWith({ ingredientId: "onion" });
+    expect(toast).toHaveBeenCalledWith(
+      "aiOutcomes.parent",
+      expect.objectContaining({ variant: "accent" })
+    );
+    expect(invalidateQueries).toHaveBeenCalled();
+
+    // A food with a parent, or one the viewer may not edit, is not offered it.
+    const theirs = await open("salt");
+
+    expect(within(theirs).queryByTestId("ingredient-find-parent")).toBeNull();
+  });
+
+  it("lists flat under a search, where a match may sit at any depth", () => {
+    items = [{ ...onion, kinds: 1 }];
+    render(<IngredientsSettingsContent />);
+    // No chevron column at all when flat.
+    act(() => {
+      fireEvent.change(screen.getByTestId("ingredients-search"), { target: { value: "oni" } });
+    });
+
+    expect(listInputs.at(-1)).toMatchObject({ search: "oni" });
+    expect(listInputs.at(-1)).not.toHaveProperty("rootsOnly", true);
+    expect(within(row("onion")).queryByTestId("ingredient-kinds-toggle")).toBeNull();
   });
 
   it("shows a food's parent, and offers to clear it only where the viewer may edit", async () => {
@@ -391,12 +697,17 @@ describe("IngredientsSettingsContent", () => {
 
     const theirs = await open("salt");
 
-    expect(within(theirs).getByTestId("ingredient-parent")).toHaveTextContent("kindOf");
+    expect(within(theirs).getByTestId("ingredient-parent")).toHaveTextContent("mineral");
     expect(within(theirs).queryByTestId("ingredient-clear-parent")).toBeNull();
 
     const mine = await open("red onion");
 
     fireEvent.click(within(mine).getByTestId("ingredient-clear-parent"));
+    expect(within(mine).queryByTestId("ingredient-clear-parent")).toBeNull();
+    expect(mutations.setParent).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(within(mine).getByTestId("ingredient-save"));
+    });
 
     expect(mutations.setParent).toHaveBeenCalledWith({ ingredientId: "red", parentId: null });
   });
@@ -404,11 +715,26 @@ describe("IngredientsSettingsContent", () => {
   it("asks for the flagged ones alone when filtered", async () => {
     render(<IngredientsSettingsContent />);
 
+    // The filters live in a panel and land with Apply, as the dashboard's do.
     await act(async () => {
-      fireEvent.click(screen.getByRole("switch"));
+      fireEvent.click(screen.getByTestId("ingredients-filters"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("switch", { name: "flaggedOnly" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredients-filters-apply"));
     });
 
-    expect(listInputs.at(-1)).toEqual({ search: undefined, flaggedOnly: true, locale: "en" });
+    expect(listInputs.at(-1)).toEqual({
+      search: undefined,
+      match: "contains",
+      fields: ["name", "translations"],
+      flaggedOnly: true,
+      standaloneOnly: false,
+      rootsOnly: undefined,
+      locale: "en",
+    });
   });
 
   it("shows a food in the viewer's language, its own name beside it", async () => {
@@ -439,15 +765,24 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.click(within(row("onion")).getByTestId("ingredient-toggle"));
     });
     const opened = panel("ui");
-    const chips = () =>
-      within(opened)
+    const chips = (scope: HTMLElement) =>
+      within(scope)
         .getAllByTestId("ingredient-alias")
         .map((chip) => chip.textContent);
 
     expect(within(opened).getByText("shownAs")).toBeInTheDocument();
-    expect(chips()).toEqual(["ui", "ajuin"]);
-    fireEvent.click(within(opened).getByTestId("ingredient-all-spellings"));
-    expect(chips()).toEqual(["onion", "ui", "Zwiebel", "ajuin"]);
+    // The panel names how many; the spellings themselves are a click through.
+    expect(within(opened).queryByTestId("ingredient-alias")).toBeNull();
+    expect(within(opened).getByTestId("ingredient-all-spellings")).toHaveTextContent(
+      "spellingsCount"
+    );
+    await showSpellings(opened);
+    expect(chips(screen.getByTestId("ingredient-spellings-all"))).toEqual([
+      "onion",
+      "ui",
+      "Zwiebel",
+      "ajuin",
+    ]);
   });
 
   it("asks for no more spellings where the server sent them all", async () => {
@@ -461,8 +796,9 @@ describe("IngredientsSettingsContent", () => {
     render(<IngredientsSettingsContent />);
     const opened = await open("salt");
 
+    await showSpellings(opened);
+    // Nothing more to fetch: the chips are the ones the server sent.
     expect(within(opened).getAllByTestId("ingredient-alias")).toHaveLength(1);
-    expect(within(opened).queryByTestId("ingredient-all-spellings")).toBeNull();
   });
 
   it("says why a food is flagged, on the fold and in the panel, and offers to ask AI", async () => {
@@ -487,16 +823,165 @@ describe("IngredientsSettingsContent", () => {
     expect(invalidateQueries).toHaveBeenCalled();
   });
 
-  it("offers to ask AI about every flagged food on screen", async () => {
+  it("asks AI about every flagged food on screen as one round, and watches it", async () => {
     render(<IngredientsSettingsContent />);
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-ask-ai-all"));
     });
 
-    // Only onion is flagged and editable.
-    expect(mutations.reviewWithAI).toHaveBeenCalledTimes(1);
-    expect(mutations.reviewWithAI).toHaveBeenCalledWith({ ingredientId: "onion" });
+    // Only onion is flagged and editable; the server asks, not the page.
+    expect(mutations.reviewAllWithAI).toHaveBeenCalledExactlyOnceWith({
+      ingredientIds: ["onion"],
+      mode: "review",
+    });
+    expect(mutations.reviewWithAI).not.toHaveBeenCalled();
+    // The round shows on the row itself, not as a count above the list.
+    expect(within(row("onion")).getByTestId("ingredient-reviewing")).toBeInTheDocument();
+    expect(screen.getByTestId("ingredients-ask-ai-all")).toBeDisabled();
+
+    // By the time the round ends, AI's suggestions are waiting.
+    suggestions = [
+      suggestion("s1", "merge", "uitjes", "onion"),
+      suggestion("s2", "parent", "red onion", "onion"),
+    ];
+    report = {
+      jobId: "round-1",
+      finished: true,
+      entries: [
+        {
+          ingredientId: "onion",
+          name: "uitjes",
+          outcome: "merge",
+          into: "onion",
+          considered: ["onion", "shallot"],
+          englishName: "onions",
+        },
+        { ingredientId: "x", name: "Unox Knaks", outcome: "failed", error: "Failed query" },
+      ],
+    };
+    const counts = { merge: 1, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 };
+
+    act(() => {
+      review.onEvent?.({
+        jobId: "round-1",
+        done: 1,
+        total: 1,
+        counts,
+        pending: [],
+        finished: true,
+      });
+    });
+
+    // The round this tab started ends with the suggestions drawer open, no toast, and the list read again.
+    expect(toast).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("ingredient-reviewing")).toBeNull();
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["ingredients.list"] });
+
+    const shown = screen.getByRole("dialog", { name: "suggestionsTitle" });
+    const listed = within(shown).getAllByTestId("ingredient-suggestion");
+
+    expect(listed.map((it) => it.getAttribute("data-kind"))).toEqual(["merge", "parent"]);
+    expect(listed[0]).toHaveTextContent("suggestion.merge");
+    expect(listed[0]).toHaveTextContent("aiTrace.readAs");
+    // A food the round got no suggestion for says why, below.
+    const unsuggested = within(shown).getAllByTestId("ingredients-review-entry");
+
+    expect(unsuggested.map((it) => it.getAttribute("data-outcome"))).toEqual(["failed"]);
+    expect(unsuggested[0]).toHaveTextContent("Failed query");
+
+    // One at a time, or all at once.
+    await act(async () => {
+      fireEvent.click(within(listed[1]!).getByTestId("ingredient-suggestion-dismiss"));
+    });
+    expect(mutations.dismissSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s2"] });
+    await act(async () => {
+      fireEvent.click(within(shown).getByTestId("ingredient-suggestions-confirm-all"));
+    });
+    expect(mutations.confirmSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1", "s2"] });
+    expect(screen.getByTestId("ingredients-suggestions-open")).toBeInTheDocument();
+  });
+
+  it("fills AI's parent into the draft, marked as AI's, to keep with Save or dismiss", async () => {
+    suggestions = [suggestion("s1", "parent", "onion", "vegetable", "onion")];
+    render(<IngredientsSettingsContent />);
+    const details = await open("onion");
+
+    expect(within(details).getByTestId("ingredient-parent")).toHaveTextContent("vegetable");
+    expect(within(details).getByTestId("ingredient-parent-suggested")).toBeInTheDocument();
+    // The name stays the viewer's to edit meanwhile.
+    expect(within(details).getByTestId("ingredient-name-input")).toBeEnabled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredient-save"));
+    });
+    expect(mutations.setParent).toHaveBeenCalledWith({
+      ingredientId: "onion",
+      parentId: "vegetable",
+    });
+
+    await act(async () => {
+      fireEvent.click(within(details).getByTestId("ingredient-clear-parent"));
+    });
+    expect(mutations.dismissSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1"] });
+  });
+
+  it("puts AI's merge at the top of the panel, to confirm or dismiss", async () => {
+    suggestions = [suggestion("s1", "merge", "onion", "shallot", "onion")];
+    render(<IngredientsSettingsContent />);
+    const notice = within(await open("onion")).getByTestId("ingredient-suggestion-notice");
+
+    expect(notice).toHaveTextContent("suggestion.merge");
+    await act(async () => {
+      fireEvent.click(within(notice).getByTestId("ingredient-suggestion-confirm"));
+    });
+    expect(mutations.confirmSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1"] });
+    expect(mutations.merge).not.toHaveBeenCalled();
+  });
+
+  it("shows a round someone else is running, and offers no second one meanwhile", () => {
+    runningRound = {
+      jobId: "theirs",
+      done: 2,
+      total: 5,
+      counts: { merge: 1, parent: 0, distinct: 1, unsure: 0, skipped: 0, failed: 0 },
+      pending: ["onion", "x", "y"],
+      finished: false,
+    };
+    render(<IngredientsSettingsContent />);
+
+    expect(within(row("onion")).getByTestId("ingredient-reviewing")).toBeInTheDocument();
+    expect(screen.getByTestId("ingredients-ask-ai-all")).toBeDisabled();
+
+    act(() => {
+      review.onEvent?.({ ...(runningRound as object), done: 5, pending: [], finished: true });
+    });
+
+    // Not this tab's round: the rows settled, and that is the whole message.
+    expect(toast).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("ingredient-reviewing")).toBeNull();
+    expect(screen.getByTestId("ingredients-ask-ai-all")).toBeEnabled();
+  });
+
+  it("locks a food's panel while a round of Ask AI is asking about it", async () => {
+    runningRound = {
+      jobId: "theirs",
+      done: 0,
+      total: 1,
+      counts: { merge: 0, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 },
+      pending: ["onion"],
+      finished: false,
+    };
+    render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+
+    // The panel says so with the row's own chip.
+    expect(within(opened).getByTestId("ingredient-reviewing")).toBeInTheDocument();
+    expect(within(opened).getByTestId("ingredient-name-input")).toBeDisabled();
+    expect(within(opened).getByTestId("ingredient-set-parent")).toBeDisabled();
+    expect(within(opened).getByTestId("ingredient-mark-distinct")).toBeDisabled();
+    await showSpellings(opened);
+    expect(screen.getByTestId("ingredient-alias-input")).toBeDisabled();
   });
 
   it("offers no AI round where nothing on screen is flagged", () => {
@@ -528,6 +1013,27 @@ describe("IngredientsSettingsContent", () => {
     });
 
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("keeps the panel current once a filter no longer lists the food", async () => {
+    const { rerender } = render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+
+    expect(within(opened).getByTestId("ingredient-flag-notice")).toBeInTheDocument();
+    expect(within(opened).getByTestId("ingredient-find-parent")).toBeInTheDocument();
+    expect(within(opened).getByTestId("ingredient-flagged")).toHaveTextContent("flagged");
+
+    // Given a parent under the flagged filter, the row goes and the flag with it:
+    // the panel reads the food on its own and shows it as it now is.
+    items = [salt];
+    ownItem = { ...onion, flagged: false, parent: { id: "vegetable", name: "vegetable" } };
+    rerender(<IngredientsSettingsContent />);
+
+    const current = screen.getByRole("dialog", { name: "onion" });
+
+    expect(within(current).queryByTestId("ingredient-flag-notice")).toBeNull();
+    expect(within(current).queryByTestId("ingredient-find-parent")).toBeNull();
+    expect(within(current).getByTestId("ingredient-parent")).toHaveTextContent("vegetable");
   });
 
   it("closes the panel of a food once it is deleted", async () => {

@@ -335,7 +335,17 @@
     "title": "Ainesosat",
     "description": "Jokainen Norishin tuntema ruoka ja käännökset, joilla se tunnetaan. Norish merkitsee ne, joista se ei ollut varma: yhdistä ne siihen ruokaan, joka ne ovat, tai merkitse ne erillisiksi.",
     "search": "Hae ainesosia",
-    "searchHint": "Kirjoita sanan alku. <cola> löytää täsmälleen cola, %cola% kaiken sen sisältävän, cola% kaiken sillä alkavan.",
+    "searchMatch": "Vastaavuus",
+    "searchIn": "Hae kohteesta",
+    "searchMatches": {
+      "contains": "Sisältää",
+      "exact": "Tarkka"
+    },
+    "searchFields": {
+      "name": "Nimi",
+      "translations": "Käännökset",
+      "parent": "Yläkäsite"
+    },
     "flaggedOnly": "Vain merkityt",
     "flagged": "Merkitty",
     "flagReasons": {
@@ -350,23 +360,25 @@
     },
     "empty": "Ainesosia ei löytynyt",
     "emptyFlagged": "Mitään ei ole merkitty",
-    "loadMore": "Lataa lisää",
     "rename": "Nimeä uudelleen",
     "delete": "Poista",
     "deleteTitle": "Poistetaanko {name}?",
     "deleteConfirm": "Sen käännökset lähtevät mukana, samoin se mitä kotitaloutesi on opettanut Norishille siitä. Ainesosaa, jota resepti, ostos tai ruokakomero yhä käyttää, ei voi poistaa; yhdistä se sen sijaan.",
     "markDistinct": "Merkitse erilliseksi",
-    "summary": "{spellings, plural, one {# käännös} other {# käännöstä}}{parent, select, none {} other {, yläkäsite: {parent}}}",
+    "summary": "{spellings, plural, one {# käännös} other {# käännöstä}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
     "askAI": "Kysy tekoälyltä",
-    "askAIAll": "Kysy tekoälyltä {count, plural, one {tästä merkitystä ainesosasta} other {näistä # merkitystä ainesosasta}}",
-    "askAIProgress": "Kysytty {done}/{total}…",
-    "askAIAllDone": "Tekoäly yhdisti {merged}, sijoitti {parent} yläkäsitteen alle, merkitsi {distinct} omiksi ainesosiksi eikä ollut varma {unsure} kohdalla.",
+    "askAIAll": "Kysy tekoälyltä merkityistä ainesosista",
+    "reviewing": "Kysytään tekoälyltä…",
     "aiOutcomes": {
-      "merged": "Tekoäly yhdisti ainesosan {name} ainesosaan {into}.",
-      "parent": "Tekoäly sijoitti ainesosan {name} lajiksi ainesosasta {of}.",
-      "distinct": "Tekoäly on varma, että {name} on oma ainesosansa.",
+      "parent": "Tekoäly ehdottaa, että {name} luokitellaan kohteen {of} alalajiksi.",
+      "distinct": "Tekoäly ehdottaa, että {name} on oma ainesosansa.",
       "unsure": "Tekoäly ei vieläkään ole varma, mikä {name} on.",
-      "notFlagged": "{name} ei ole merkitty."
+      "notFlagged": "{name} ei ole merkitty.",
+      "skippedNotFlagged": "{name} ei ollut enää merkitty.",
+      "skippedForbidden": "{name} ei ole sinun muutettavissasi.",
+      "skippedNotFound": "{name} oli poissa, kun tekoäly ehti siihen.",
+      "failed": "Kysymys aineesta {name} epäonnistui.",
+      "merge": "Tekoäly ehdottaa, että {name} yhdistetään kohteeseen {into}."
     },
     "aiTrace": {
       "readAs": "Tekoäly luki sen nimellä ”{name}”.",
@@ -378,28 +390,25 @@
     "mergeInto": "Yhdistä…",
     "merge": "Yhdistä",
     "mergedToast": "{name} on nyt ruoka-aineen {into} käännös. Kumoa avaamalla {into} ja siirtämällä {name} taas pois.",
-    "mergeTitle": "{name} katoaa ja siitä tulee valitsemasi ruoka-aineen käännös. Kaikki, mikä on nimeltään {name}, säilyttää tekstinsä mutta lasketaan tästä lähtien siksi ruoka-aineeksi: se menee sen käytävälle, saa sen tuotteen ja jää pois listalta, kun se ruoka-aine on varastossasi.",
+    "mergeTitle": "{name} katoaa ja siitä tulee valitsemasi ruoka-aineen käännös.",
     "moveTo": "Siirrä",
     "move": "Siirrä",
     "moveAlias": "Siirrä {alias}",
-    "moveTitle": "Siirrä {alias} toiseen ruoka-aineeseen tai tee siitä taas oma ruoka-aineensa.",
-    "newIngredient": "Oma ruoka-aineensa",
+    "moveTitle": "Siirrä {alias} toiseen ruoka-aineeseen.",
+    "newIngredient": "Tee siitä perusruoka-aine",
     "pickIngredient": "Hae ainesosaa",
     "pickerHint": "Kirjoita hakeaksesi luettelosta",
     "pickerSearching": "Haetaan…",
     "pickerEmpty": "Ruoka-ainetta ei löytynyt",
     "setParent": "Valitse yläkäsite…",
     "parentTitle": "Valitse ainesosa, jonka lajike {name} on.",
-    "kindOf": "Yläkäsite: {name}",
     "clearParent": "Poista yläkäsite",
     "nameSection": "Nimi",
     "parentSection": "Yläkäsite",
     "spellingsSection": "Käännökset",
     "shownAs": "Näytetään sinulle nimellä {name}",
-    "noParent": "Ei toisen ruoka-aineen alla",
     "changeParent": "Vaihda yläkäsite…",
-    "moreSpellings": "Lisää käännöksiä ({count})",
-    "fewerSpellings": "Vähemmän käännöksiä",
+    "spellingsCount": "{count, plural, one {# käännös} other {# käännöstä}}",
     "dataSources": {
       "title": "Tietolähteet",
       "notice": "Ainesosaluettelo perustuu <off>Open Food Factsin</off> ainesosataksonomiaan, joka on saatavilla <odbl>Open Database License (ODbL)</odbl> -lisenssillä. Norishin siitä rakentama luettelo tarjotaan samalla lisenssillä.",
@@ -418,7 +427,40 @@
       "cycle": "Ainesosa ei voi olla oma lajikkeensa",
       "empty": "Anna nimi",
       "unknown": "Jokin meni vikaan. Yritä uudelleen."
-    }
+    },
+    "reportRunning": "Kierros on yhä kesken; tähän mennessä ratkaistut on listattu.",
+    "keepAlias": "Säilytä {alias}",
+    "reportOutcomes": {
+      "parent": "Yläkäsitteen alle",
+      "distinct": "Oma ruoka-aine",
+      "unsure": "Epävarma",
+      "skipped": "Ohitettu",
+      "failed": "Epäonnistui",
+      "merge": "Yhdistä"
+    },
+    "expandKinds": "Näytä lajit: {name}",
+    "collapseKinds": "Piilota lajit: {name}",
+    "layoutSection": "Näkymä",
+    "asTree": "Hierarkkinen näkymä",
+    "showOnly": "Näytä vain",
+    "standaloneOnly": "Ilman yläkäsitettä tai lajeja",
+    "findParent": "Etsi yläkäsite tekoälyllä",
+    "findParentsAll": "Etsi yläkäsitteet tekoälyllä",
+    "suggestion": {
+      "merge": "Yhdistä {name} kohteeseen {into}",
+      "parent": "Luokittele {name} kohteen {of} alle",
+      "distinct": "Pidä {name} omana ainesosanaan"
+    },
+    "suggestionsTitle": "Tekoälyn ehdotukset",
+    "suggestionsEmpty": "Mikään ei odota sinua.",
+    "suggestionsNone": "Ei ehdotusta",
+    "suggestionsOpen": "{count, plural, =0 {Ehdotukset} one {# ehdotus} other {# ehdotusta}}",
+    "suggestionsFailed": "{count, plural, one {# ehdotusta} other {# ehdotusta}} ei voitu ottaa käyttöön: {reason}",
+    "confirmSuggestion": "Vahvista",
+    "dismissSuggestion": "Hylkää",
+    "confirmAll": "Vahvista kaikki ({count})",
+    "dismissAll": "Hylkää kaikki",
+    "suggestedByAI": "Tekoälyn ehdottama"
   },
   "admin": {
     "shareLinks": {
@@ -962,7 +1004,8 @@
         "running": "Aja tehtävä",
         "searching": "Hae kaupasta",
         "reading-product": "Lue tuotesivu",
-        "saving-link": "Tallenna linkki"
+        "saving-link": "Tallenna linkki",
+        "asking-ai": "Ask AI about the food"
       },
       "queues": {
         "recipe-import": "Reseptien tuonti",
@@ -977,7 +1020,8 @@
         "caldav-sync": "CalDAV-synkronointi",
         "scheduled-tasks": "Ajastetut tehtävät",
         "image-generation": "Kuvien luonti",
-        "store-lookup": "Kaupan haku"
+        "store-lookup": "Kaupan haku",
+        "ingredient-review": "Kysy tekoälyltä ainesosista"
       },
       "summary": {
         "failed": "{count} epäonnistui"

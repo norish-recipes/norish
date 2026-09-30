@@ -20,6 +20,7 @@ import {
   markDistinct,
   removeAlias,
   renameIngredient,
+  setParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
@@ -232,7 +233,7 @@ describe("the ingredient catalogue", () => {
     expect(flagged.items.map((item) => item.name)).toEqual(["cream"]);
   });
 
-  it("reads a search as a word start, a pattern with %, or exactly <this>, the flagged first", async () => {
+  it("finds the text anywhere by default, exactly on request, in the fields asked for, the flagged first", async () => {
     const cola = await mint("cola");
     const chocolate = await mint("chocolate");
     const nut = await mint("cola nut");
@@ -241,19 +242,23 @@ describe("the ingredient catalogue", () => {
     await markDistinct(actor, chocolate.ingredientId);
     await addAlias(actor, chocolate.ingredientId, "chocola");
 
-    const names = async (search: string) =>
-      (await listIngredients(actor, { search })).items.map((item) => item.name);
+    const names = async (
+      search: string,
+      options: {
+        match?: "contains" | "exact";
+        fields?: Array<"name" | "translations" | "parent">;
+      } = {}
+    ) => (await listIngredients(actor, { search, ...options })).items.map((item) => item.name);
 
-    // A word start: never "chocolate". The exact name first, then the flagged one.
-    await expect(names("cola")).resolves.toEqual(["cola", "cola nut"]);
-    // Anything containing it, its own spellings included.
-    await expect(names("%cola%")).resolves.toEqual(["cola", "cola nut", "chocolate"]);
-    await expect(names("%cola")).resolves.toEqual(["cola", "chocolate"]);
-    await expect(names("cola%")).resolves.toEqual(["cola", "cola nut"]);
+    // Anywhere in a name or a translation: the exact name first, then the flagged one.
+    await expect(names("cola")).resolves.toEqual(["cola", "cola nut", "chocolate"]);
     // Exactly this.
-    await expect(names("<Cola>")).resolves.toEqual(["cola"]);
+    await expect(names("Cola", { match: "exact" })).resolves.toEqual(["cola"]);
     // Without a search, the flagged lead.
     expect((await listIngredients(actor, {})).items[0]!.id).toBe(nut.ingredientId);
+    // Only where asked: by parent alone, the kinds of cola. (Filing it clears its flag.)
+    await setParent(actor, nut.ingredientId, cola.ingredientId);
+    await expect(names("cola", { fields: ["parent"] })).resolves.toEqual(["cola nut"]);
   });
 
   it("leaves another member's Ingredient alone under the default household policy", async () => {

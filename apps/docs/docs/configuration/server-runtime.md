@@ -90,9 +90,10 @@ After the first user signs in, registration is disabled automatically. See
 
 ## Ingredient catalogue
 
-| Variable                   | Description                                                                                            | Default                                  |
-| -------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| `INGREDIENT_CATALOGUE_URL` | Where the ingredient catalogue seed is fetched from, nightly and at startup. Empty turns the fetch off | The Open Food Facts ingredients taxonomy |
+| Variable                        | Description                                                                                                                                                             | Default                                  |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `INGREDIENT_CATALOGUE_URL`      | Where the ingredient catalogue seed is fetched from, nightly and at startup. Empty turns the fetch off                                                                  | The Open Food Facts ingredients taxonomy |
+| `INGREDIENT_REVIEW_CONCURRENCY` | How many ingredients a round of **Ask AI** on the Ingredients page asks about at once, from 1 to 50. Lower it when a self-hosted model struggles with parallel requests | `10`                                     |
 
 Norish seeds its catalogue of ingredients from the [Open Food Facts](https://world.openfoodfacts.org) ingredients taxonomy, so a new instance already knows that "ui", "oignon" and "onion" are one food. A new instance fetches and applies the file before it starts serving, so its first import already knows the catalogue; after that the file is fetched at every startup and every night at midnight, and only when it changed. A failed or malformed fetch keeps the last good seed and shows as a failed job in the job monitor.
 

@@ -2,8 +2,9 @@
 /**
  * Asking AI about a Flagged Ingredient after the fact, against a real
  * database: the flagged food is never its own candidate, a sure answer is
- * acted on as the page's own edits would be, and an unsure one leaves the
- * flag with its reason brought up to date. The Decision is mocked at
+ * recorded as a suggestion and nothing else — the food is left as it was
+ * until a person confirms it — and an unsure one leaves the flag with its
+ * reason brought up to date. The Decision is mocked at
  * `decide` and the language model at `generateStructured`, as in rung 3's tests.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +12,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
+import { listIngredientSuggestions } from "@norish/db/repositories/ingredient-suggestions";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
@@ -18,7 +20,11 @@ import {
 } from "@norish/shared-server/config/server-config-loader";
 import { markDistinct, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
-import { reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
+import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
+import {
+  confirmSuggestion,
+  dismissSuggestion,
+} from "@norish/shared-server/ingredients/suggestions";
 
 import { createTestUser } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -97,6 +103,15 @@ describe("asking AI about a flagged Ingredient", () => {
     await testBase.teardown();
   });
 
+  /** What AI proposes for a food, as the page reads it: its kind and the food it names. */
+  async function suggestionFor(ingredientId: string) {
+    const found = (await listIngredientSuggestions()).find(
+      (it) => it.ingredientId === ingredientId
+    );
+
+    return found ? { id: found.id, kind: found.kind, target: found.target?.name ?? null } : null;
+  }
+
   /** A food minted while nothing could be asked: flagged, as the upgrade leaves them. */
   async function flagged(text: string) {
     vi.mocked(isAIEnabled).mockResolvedValueOnce(false);
@@ -105,7 +120,7 @@ describe("asking AI about a flagged Ingredient", () => {
     return resolved!;
   }
 
-  it("merges a food AI is sure is a known one, never offering the food itself", async () => {
+  it("suggests merging a food AI is sure is a known one, never offering the food itself", async () => {
     const onion = await flagged("onion");
     const onions = await flagged("onions");
     const offered: string[] = [];
@@ -113,16 +128,26 @@ describe("asking AI about a flagged Ingredient", () => {
     decides("Is onion", 0.95, offered);
 
     await expect(reviewFlaggedWithAI(actor, onions.ingredientId)).resolves.toMatchObject({
-      outcome: "merged",
+      outcome: "merge",
       into: "onion",
     });
     expect(offered).not.toContain("Is onions");
+    // Nothing merged yet: a person confirms first.
+    await expect(ingredientFor(onions.aliasId)).resolves.toMatchObject({
+      id: onions.ingredientId,
+      flagged: true,
+    });
+    const suggestion = await suggestionFor(onions.ingredientId);
+
+    expect(suggestion).toMatchObject({ kind: "merge", target: "onion" });
+    await confirmSuggestion(actor, suggestion!.id);
     await expect(ingredientFor(onions.aliasId)).resolves.toMatchObject({
       id: onion.ingredientId,
     });
+    expect(await listIngredientSuggestions()).toEqual([]);
   });
 
-  it("files a food AI is sure is a kind of a known one under it, and clears the flag", async () => {
+  it("suggests filing a food under the one AI says it is a kind of, and confirming files it", async () => {
     const onion = await flagged("onion");
     const red = await flagged("red onion");
 
@@ -132,13 +157,91 @@ describe("asking AI about a flagged Ingredient", () => {
       outcome: "parent",
       of: "onion",
     });
+    await expect(ingredientFor(red.aliasId)).resolves.toMatchObject({ flagged: true });
+    expect((await findIngredientAncestors([red.ingredientId])).get(red.ingredientId)).toEqual([]);
+
+    await confirmSuggestion(actor, (await suggestionFor(red.ingredientId))!.id);
     await expect(ingredientFor(red.aliasId)).resolves.toMatchObject({ flagged: false });
+    expect(await suggestionFor(red.ingredientId)).toBeNull();
     expect((await findIngredientAncestors([red.ingredientId])).get(red.ingredientId)).toEqual([
       onion.ingredientId,
     ]);
   });
 
-  it("marks a food AI is sure is its own distinct", async () => {
+  it("finds a food's parent whether or not it is flagged, and suggests a duplicate's merge", async () => {
+    const onion = await flagged("onion");
+    const red = await flagged("red onion");
+    const onions = await flagged("onions");
+
+    // Unflagged all three: a parent is asked for regardless.
+    for (const food of [onion, red, onions]) await markDistinct(actor, food.ingredientId);
+    decides("Is a kind of onion", 0.95);
+    await expect(findParentWithAI(actor, red.ingredientId)).resolves.toMatchObject({
+      outcome: "parent",
+      of: "onion",
+    });
+    expect(await suggestionFor(red.ingredientId)).toMatchObject({
+      kind: "parent",
+      target: "onion",
+    });
+
+    decides("Is onion", 0.95);
+    await expect(findParentWithAI(actor, onions.ingredientId)).resolves.toMatchObject({
+      outcome: "merge",
+      into: "onion",
+    });
+    // Still a food of its own: a person merges, not AI.
+    await expect(ingredientFor(onions.aliasId)).resolves.toMatchObject({
+      id: onions.ingredientId,
+    });
+    expect(await suggestionFor(onions.ingredientId)).toMatchObject({ kind: "merge" });
+
+    // A food nobody doubted that AI calls its own: nothing to suggest.
+    decides("Is none of these, but a food of its own", 0.95);
+    await expect(findParentWithAI(actor, onion.ingredientId)).resolves.toMatchObject({
+      outcome: "distinct",
+    });
+    expect(await suggestionFor(onion.ingredientId)).toBeNull();
+  });
+
+  it("dismissing leaves the food as it was, and asking again replaces the suggestion", async () => {
+    await flagged("onion");
+    const red = await flagged("red onion");
+
+    decides("Is a kind of onion", 0.95);
+    await reviewFlaggedWithAI(actor, red.ingredientId);
+    decides("Is onion", 0.95);
+    await reviewFlaggedWithAI(actor, red.ingredientId);
+    const suggestion = await suggestionFor(red.ingredientId);
+
+    expect(suggestion).toMatchObject({ kind: "merge", target: "onion" });
+    expect(await listIngredientSuggestions()).toHaveLength(1);
+
+    await dismissSuggestion(actor, suggestion!.id);
+    expect(await suggestionFor(red.ingredientId)).toBeNull();
+    await expect(ingredientFor(red.aliasId)).resolves.toMatchObject({
+      id: red.ingredientId,
+      flagged: true,
+    });
+  });
+
+  it("lets one general food gather many suggested kinds", async () => {
+    await flagged("meat");
+    const mince = await flagged("minced meat");
+    const steak = await flagged("meat steak");
+
+    decides("Is a kind of meat", 0.9);
+    await reviewFlaggedWithAI(actor, mince.ingredientId);
+    decides("Is a kind of meat", 0.9);
+    await reviewFlaggedWithAI(actor, steak.ingredientId);
+
+    expect((await listIngredientSuggestions()).map((it) => [it.kind, it.target?.name])).toEqual([
+      ["parent", "meat"],
+      ["parent", "meat"],
+    ]);
+  });
+
+  it("suggests a food AI is sure is its own be marked distinct", async () => {
     await flagged("onion");
     const spring = await flagged("spring onion");
 
@@ -147,6 +250,9 @@ describe("asking AI about a flagged Ingredient", () => {
     await expect(reviewFlaggedWithAI(actor, spring.ingredientId)).resolves.toMatchObject({
       outcome: "distinct",
     });
+    await expect(ingredientFor(spring.aliasId)).resolves.toMatchObject({ flagged: true });
+
+    await confirmSuggestion(actor, (await suggestionFor(spring.ingredientId))!.id);
     await expect(ingredientFor(spring.aliasId)).resolves.toMatchObject({
       flagged: false,
       flagReason: null,
@@ -169,6 +275,7 @@ describe("asking AI about a flagged Ingredient", () => {
       flagged: true,
       flagReason: "ai-unsure",
     });
+    expect(await suggestionFor(uitjes.ingredientId)).toBeNull();
   });
 
   it("asks AI about a name no known food shares a word with, and follows the food it names", async () => {
@@ -184,18 +291,25 @@ describe("asking AI about a flagged Ingredient", () => {
     decides("Is onion", 0.95, offered);
 
     await expect(reviewFlaggedWithAI(actor, ui.ingredientId)).resolves.toMatchObject({
-      outcome: "merged",
+      outcome: "merge",
       into: "onion",
       considered: ["onion"],
       englishName: "onion",
     });
     expect(offered).toContain("Is onion");
-    await expect(ingredientFor(ui.aliasId)).resolves.toMatchObject({ id: onion.ingredientId });
+    const suggestion = (await listIngredientSuggestions())[0];
+
+    expect(suggestion).toMatchObject({
+      ingredientId: ui.ingredientId,
+      target: { id: onion.ingredientId },
+      englishName: "onion",
+      considered: ["onion"],
+    });
   });
 
-  it("files a name under the general food its reading names", async () => {
+  it("suggests the general food a name's reading names as its parent", async () => {
     // "kipfilet" finds nothing under "kipf", but the model reads it as a kind of chicken.
-    const chicken = await flagged("chicken");
+    await flagged("chicken");
     const kipfilet = await flagged("kipfilet");
 
     reads({ englishName: "chicken breast", generalFood: "chicken", sure: true });
@@ -205,9 +319,10 @@ describe("asking AI about a flagged Ingredient", () => {
       outcome: "parent",
       of: "chicken",
     });
-    expect(
-      (await findIngredientAncestors([kipfilet.ingredientId])).get(kipfilet.ingredientId)
-    ).toEqual([chicken.ingredientId]);
+    expect(await suggestionFor(kipfilet.ingredientId)).toMatchObject({
+      kind: "parent",
+      target: "chicken",
+    });
   });
 
   it("offers a candidate's parent, so a kind-of answer can land on it", async () => {
@@ -254,7 +369,7 @@ describe("asking AI about a flagged Ingredient", () => {
     expect(vi.mocked(decide)).not.toHaveBeenCalled();
   });
 
-  it("marks a name AI is sure is a food of its own distinct, even with nothing to compare it with", async () => {
+  it("suggests a name AI is sure is a food of its own be marked distinct, even with nothing to compare it with", async () => {
     const knaks = await flagged("Unox Knaks");
 
     reads({ englishName: "frankfurter", generalFood: "sausage", sure: true });
@@ -262,7 +377,8 @@ describe("asking AI about a flagged Ingredient", () => {
     await expect(reviewFlaggedWithAI(actor, knaks.ingredientId)).resolves.toMatchObject({
       outcome: "distinct",
     });
-    await expect(ingredientFor(knaks.aliasId)).resolves.toMatchObject({ flagged: false });
+    expect(await suggestionFor(knaks.ingredientId)).toMatchObject({ kind: "distinct" });
+    await expect(ingredientFor(knaks.aliasId)).resolves.toMatchObject({ flagged: true });
   });
 
   it("has nothing to ask about a food that is not flagged", async () => {

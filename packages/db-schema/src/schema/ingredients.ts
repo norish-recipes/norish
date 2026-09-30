@@ -1,6 +1,15 @@
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
 import { mutableRowColumns, versionColumn } from "./shared";
@@ -77,5 +86,36 @@ export const ingredientAliases = pgTable(
   (t) => [
     uniqueIndex("uqidx_ingredient_aliases_fold").on(t.fold),
     index("idx_ingredient_aliases_ingredient_id").on(t.ingredientId),
+  ]
+);
+
+/**
+ * Ingredient Suggestions: what AI proposes for an Ingredient, waiting on a
+ * person. AI never edits the catalogue itself; a sure answer lands here, and
+ * a person confirms it (the edit is made as if they had made it) or
+ * dismisses it (the row goes, the food stays as it was). One per Ingredient:
+ * asking again replaces it. `kind` is `merge` (the food is `targetId`),
+ * `parent` (the food is a kind of `targetId`) or `distinct` (a food of its
+ * own, no target). Many foods may name the same target, so one general food
+ * can gather many proposed kinds. Either food going away takes the
+ * suggestion with it. `englishName` and `considered` are how AI got there,
+ * shown beside the proposal.
+ */
+export const ingredientSuggestions = pgTable(
+  "ingredient_suggestions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ingredientId: uuid("ingredient_id")
+      .notNull()
+      .references(() => ingredients.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    targetId: uuid("target_id").references(() => ingredients.id, { onDelete: "cascade" }),
+    englishName: text("english_name"),
+    considered: jsonb("considered").$type<string[]>().notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uqidx_ingredient_suggestions_ingredient_id").on(t.ingredientId),
+    index("idx_ingredient_suggestions_target_id").on(t.targetId),
   ]
 );
