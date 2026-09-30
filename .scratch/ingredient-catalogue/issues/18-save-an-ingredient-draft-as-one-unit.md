@@ -11,7 +11,7 @@ Add a server procedure `ingredients.saveDraft({ id, name, parentId, add, remove 
 - [x] A refused draft changes nothing (server test).
 - [x] The panel uses one mutation, and its draft reconciliation code is removed.
 - [ ] The existing E2E `ingredient-catalogue.e2e.ts` still passes.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 

@@ -19,7 +19,7 @@ Use a shared transaction. Each edit in `catalogue.ts` opens one with the existin
 - [x] Repository outcome string unions are gone; repositories return data, and `catalogue.ts` maps it to `CatalogueEditError`.
 - [x] Each edit returns the Ingredient ids it changed.
 - [x] Existing `packages/shared-server/__tests__/ingredients/*` tests pass against a real database.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 

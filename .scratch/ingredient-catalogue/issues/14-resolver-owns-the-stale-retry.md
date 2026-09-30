@@ -11,7 +11,7 @@ Deepen the resolver with one interface, for example `writeResolved(texts, actor,
 - [x] Every current caller goes through the new interface; the two helpers are no longer exported.
 - [x] Routers no longer spread alias/ingredient columns into repository payloads.
 - [x] A resolver test proves a write racing a merge retries once and lands on the surviving Ingredient.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 

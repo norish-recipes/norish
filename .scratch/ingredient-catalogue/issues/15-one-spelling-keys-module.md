@@ -11,7 +11,7 @@ Move the fold, the preparation stripping and the resolver's private `spellingOf(
 - [x] One module in `packages/shared` defines the fold and the preparation stripping; `resolver.ts` imports them.
 - [x] Client fallbacks match on both keys; a table-driven test covers offline = online for the known cases.
 - [x] ADR-0037 gets a note that unresolved client matching now includes rung 2.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 

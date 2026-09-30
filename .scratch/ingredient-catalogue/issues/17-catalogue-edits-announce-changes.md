@@ -10,7 +10,7 @@ The catalogue edits publish their changed Ingredient ids through a publisher por
 
 - [x] No router or queue path calls `announceChanged` for a catalogue edit.
 - [x] `catalogue.test.ts` asserts the changed ids for merge, move-alias and set-parent through the in-memory publisher.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 
