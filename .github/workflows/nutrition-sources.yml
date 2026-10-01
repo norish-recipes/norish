@@ -1,0 +1,80 @@
+name: Rebuild Nutrition Sources
+
+# Ingredient Nutrition's source table (ADR-0039) is built from public
+# downloads that change every few months: CIQUAL editions, USDA Foundation
+# Foods, the Open Food Facts taxonomy's codes and the name matches made
+# from them. Once a month the build script runs again and, when the table
+# changed, opens or updates one pull request, so a new match is read by a
+# person before it reaches an instance. A failed run (ANSES moves its
+# download links with every edition) leaves the committed table alone and
+# gates nothing; next month's run tries again.
+on:
+  schedule:
+    - cron: "17 5 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: nutrition-sources
+  cancel-in-progress: false
+
+env:
+  BRANCH: chore/nutrition-source-table
+  TABLE: packages/shared-server/src/ingredients/nutrition/source-table.json
+
+jobs:
+  rebuild:
+    name: Rebuild the source table
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
+        with:
+          install-filter: "@norish/nutrition-sources..."
+
+      - name: Build the table from the public downloads
+        run: pnpm --filter @norish/nutrition-sources build:table
+
+      - name: Open or update the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          if git diff --quiet -- "$TABLE"; then
+            echo "The source table is unchanged; no pull request."
+            exit 0
+          fi
+
+          version=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.env.TABLE, 'utf8')).version)")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add "$TABLE"
+          git commit -m "chore(ingredients): rebuild the nutrition source table ($version)"
+          git push --force origin "$BRANCH"
+
+          body=$(cat <<EOF
+          The monthly rebuild of Ingredient Nutrition's source table (ADR-0039) found changes: version \`$version\`.
+
+          Read the diff before merging. Each line is one dataset food, one fix, or one name match keyed by Open Food Facts id. Check every new or changed **name match** by hand; a match lands on every instance at its next boot.
+
+          This pull request was opened with the workflow's token, so other workflows do not run on it until someone pushes to the branch.
+          EOF
+          )
+
+          if gh pr view "$BRANCH" --json state --jq .state 2>/dev/null | grep -q OPEN; then
+            gh pr edit "$BRANCH" --body "$body"
+          else
+            gh pr create --base "$BASE" --head "$BRANCH" \
+              --title "chore(ingredients): rebuild the nutrition source table" \
+              --body "$body"
+          fi
