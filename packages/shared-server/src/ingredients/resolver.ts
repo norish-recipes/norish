@@ -4,17 +4,19 @@ import type {
   IngredientRow,
 } from "@norish/db/repositories/ingredient-aliases";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
-import type { SpellingKeys } from "@norish/shared/lib/spelling-keys";
+import type { SpellingKeys, UnitPhrases } from "@norish/shared/lib/spelling-keys";
 import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
 import {
   addIngredientAliases,
   findIngredientAliasesByFolds,
   findIngredientByAliasId,
+  findSeededAliasesByFolds,
   mintIngredientWithAliases,
 } from "@norish/db/repositories/ingredient-aliases";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { dbLogger } from "@norish/shared-server/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
-import { spellingKeys } from "@norish/shared/lib/spelling-keys";
+import { spellingKeys, unitPhrases } from "@norish/shared/lib/spelling-keys";
 
 import type { AIResolution } from "../ai/resolution/ingredient-resolution";
 import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resolution";
@@ -30,7 +32,9 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
  *   1. an alias whose fold is the text's fold;
  *   2. an alias whose fold is the text's with preparation stripped — the part
  *      after the first comma and anything in brackets ("onions, diced" and
- *      "onions (red)" are "onions");
+ *      "onions (red)" are "onions") — else with a phrase of the units map at
+ *      either end stripped too ("salt to taste", "a pinch of nutmeg" and
+ *      "naar smaak zout" are salt, nutmeg and zout);
  *   (both keys are `@norish/shared/lib/spelling-keys`, which the clients
  *   match unresolved text on too);
  *   3. what AI makes of it (`ai/resolution/ingredient-resolution`): a Decision, or the language
@@ -40,8 +44,18 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
  *      said it is a kind of, if any.
  *
  * A mint that no sure AI answer vouched for is flagged, so a person can merge
- * it or mark it distinct.
+ * it or mark it distinct. One AI placed nowhere is filed under the longest
+ * seeded spelling its text ends with, as whole words ("ground cumin" under
+ * cumin), and stays flagged: a guess from words may set a parent, never merge
+ * (ADR-0037 as amended by ADR-0039).
  */
+
+/**
+ * Which rules the first two rungs and the parent from words follow. Raised
+ * whenever they change, so the startup pass looks at old Flagged Ingredients
+ * again under the new rules (`recheckFlaggedIngredients`).
+ */
+export const RUNG_VERSION = 1;
 
 /** Who the resolution is for: the owner of anything it mints. */
 export interface ResolveActor {
@@ -72,8 +86,13 @@ interface Spelling extends SpellingKeys {
   text: string;
 }
 
-function spellingOf(text: string): Spelling {
-  return { text, ...spellingKeys(text) };
+function spellingOf(text: string, phrases: UnitPhrases): Spelling {
+  return { text, ...spellingKeys(text, phrases) };
+}
+
+/** The units map's phrases as rung 2 strips them: the administrator's map, read once per call. */
+async function currentPhrases(): Promise<UnitPhrases> {
+  return unitPhrases(await getUnits());
 }
 
 /** The aliases Norish already has for these spellings, by fold, in one query. */
@@ -81,18 +100,25 @@ async function knownAliases(
   spellings: readonly Spelling[]
 ): Promise<Map<string, IngredientAliasRow>> {
   const rows = await findIngredientAliasesByFolds(
-    spellings.flatMap((spelling) => [spelling.fold, spelling.bareFold])
+    spellings.flatMap((spelling) => [spelling.fold, spelling.bareFold, spelling.plainFold])
   );
 
   return new Map(rows.map((row) => [row.fold, row]));
 }
 
-/** Rungs 1 and 2: the alias with the text's fold, else the one with its stripped fold. */
+/**
+ * Rungs 1 and 2: the alias with the text's fold, else the one with its
+ * preparation stripped, else the one with the units map's phrases stripped too.
+ */
 function matchKnown(
   spelling: Spelling,
   known: ReadonlyMap<string, IngredientAliasRow>
 ): IngredientAliasRow | undefined {
-  return known.get(spelling.fold) ?? (spelling.bareFold ? known.get(spelling.bareFold) : undefined);
+  return (
+    known.get(spelling.fold) ??
+    (spelling.bareFold ? known.get(spelling.bareFold) : undefined) ??
+    (spelling.plainFold ? known.get(spelling.plainFold) : undefined)
+  );
 }
 
 /** The as-written text a caller hands in, cleaned the way every stored name is. */
@@ -116,7 +142,8 @@ export async function resolveIngredients(
     throw new Error("Ingredient text cannot be empty");
   }
 
-  const spellings = cleaned.map(spellingOf);
+  const phrases = await currentPhrases();
+  const spellings = cleaned.map((text) => spellingOf(text, phrases));
   const known = await knownAliases(spellings);
   const answers = await askAboutUnknown(
     spellings.filter((spelling) => !matchKnown(spelling, known)),
@@ -144,8 +171,15 @@ export async function resolveIngredients(
       const rows =
         joined ??
         (answer.kind === "same"
-          ? await mint(spelling, actor, { flagReason: "food-gone", parentId: null })
-          : await mint(spelling, actor, { flagReason: answer.reason, parentId: answer.kindOf }));
+          ? await mint(spelling, actor, {
+              flagReason: "food-gone",
+              parentId: await parentFromWords(spelling),
+            })
+          : await mint(spelling, actor, {
+              flagReason: answer.reason,
+              parentId:
+                answer.kindOf ?? (answer.reason !== null ? await parentFromWords(spelling) : null),
+            }));
 
       for (const row of rows) known.set(row.fold, row);
     }
@@ -233,6 +267,37 @@ async function mint(
   });
 }
 
+/**
+ * The parent a flagged mint is filed under from the words of its text: the
+ * longest seeded spelling the text, stripped as rung 2 strips it, ends with
+ * as whole words and is longer than ("verse peterselie" under peterselie,
+ * "smoked sweet paprika" under sweet paprika), or none.
+ */
+async function parentFromWords(spelling: Spelling): Promise<string | null> {
+  const words = (spelling.plainFold || spelling.bareFold || spelling.fold).split(" ");
+  const endings = words.slice(1).map((_, index) => words.slice(index + 1).join(" "));
+
+  if (endings.length === 0) return null;
+
+  const seeded = new Map(
+    (await findSeededAliasesByFolds(endings)).map((row) => [row.fold, row.ingredientId])
+  );
+
+  // Longest first: the endings run from all but the first word down to the last.
+  for (const ending of endings) {
+    const ingredientId = seeded.get(ending);
+
+    if (ingredientId) return ingredientId;
+  }
+
+  return null;
+}
+
+/** The parent a text would be filed under from its words, for the startup pass over old mints. */
+export async function parentFromWordsOf(text: string): Promise<string | null> {
+  return await parentFromWords(spellingOf(cleanIngredientText(text), await currentPhrases()));
+}
+
 /** The aliases a spelling gives its food: the text, and its bare name where that differs. */
 function spellingAliases({ text, fold, bare, bareFold }: Spelling) {
   const aliases = [{ text, fold }];
@@ -258,10 +323,39 @@ export async function findIngredientFor(text: string): Promise<IngredientRef | n
 
   if (!cleaned) return null;
 
-  const spelling = spellingOf(cleaned);
+  const spelling = spellingOf(cleaned, await currentPhrases());
   const match = matchKnown(spelling, await knownAliases([spelling]));
 
   return match ? { aliasId: match.aliasId, ingredientId: match.ingredientId } : null;
+}
+
+/**
+ * The Ingredients other than `ingredientId` that these texts resolve to by
+ * the first two rungs, leaving the Ingredient's own spellings out: whether an
+ * old mint's spellings would now name a known food, for the startup pass
+ * that looks at old Flagged Ingredients again. Mints nothing.
+ */
+export async function findOtherIngredientsFor(
+  ingredientId: string,
+  texts: readonly string[]
+): Promise<Set<string>> {
+  const phrases = await currentPhrases();
+  const spellings = texts
+    .map(cleanIngredientText)
+    .filter((text) => text.length > 0)
+    .map((text) => spellingOf(text, phrases));
+  const known = new Map(
+    [...(await knownAliases(spellings))].filter(([, row]) => row.ingredientId !== ingredientId)
+  );
+  const found = new Set<string>();
+
+  for (const spelling of spellings) {
+    const match = matchKnown(spelling, known);
+
+    if (match) found.add(match.ingredientId);
+  }
+
+  return found;
 }
 
 /**

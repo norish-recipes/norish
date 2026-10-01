@@ -158,6 +158,21 @@ export async function readIngredientSeedState(): Promise<IngredientSeedState> {
   );
 }
 
+/**
+ * Record part of the seed state, keeping the rest: what the startup passes
+ * beside the seed (the re-check of old mints, the nutrition sources) note.
+ */
+export async function updateIngredientSeedState(
+  patch: Partial<IngredientSeedState>
+): Promise<void> {
+  await setConfig(
+    ServerConfigKeys.INGREDIENT_SEED_STATE,
+    { ...(await readIngredientSeedState()), ...patch } satisfies IngredientSeedState,
+    null,
+    false
+  );
+}
+
 export type RefreshResult = "disabled" | "unchanged" | "applied";
 
 /**
@@ -218,19 +233,13 @@ export async function refreshIngredientCatalogue(
 
   // The validators are stored only once the file and the one pass are both
   // through, so a failure in either is retried in full the next time.
-  await setConfig(
-    ServerConfigKeys.INGREDIENT_SEED_STATE,
-    {
-      ...state,
-      etag: response.headers.get("etag"),
-      lastModified: response.headers.get("last-modified"),
-      appliedAt: new Date().toISOString(),
-      entries: entries.length,
-      mergedExisting: true,
-    } satisfies IngredientSeedState,
-    null,
-    false
-  );
+  await updateIngredientSeedState({
+    etag: response.headers.get("etag"),
+    lastModified: response.headers.get("last-modified"),
+    appliedAt: new Date().toISOString(),
+    entries: entries.length,
+    mergedExisting: true,
+  });
 
   // Merges, parents and removals change which food lines mean: open clients
   // refetch what they derived from Ingredients, as after a person's merge.

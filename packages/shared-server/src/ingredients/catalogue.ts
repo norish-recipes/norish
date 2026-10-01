@@ -37,7 +37,6 @@ import { withTransaction } from "@norish/db/drizzle";
 import { isConstraintViolation } from "@norish/db/repositories/constraint-violation";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import {
-  clearIngredientFlag,
   deleteCatalogueAlias,
   deleteCatalogueIngredient,
   findCatalogueAliasOwner,
@@ -46,6 +45,7 @@ import {
   insertCatalogueAlias,
   isAliasInUse,
   isIngredientInUse,
+  keepIngredientDistinct,
   listCatalogueAliasesOf,
   listCatalogueIngredients,
   renameCatalogueIngredient,
@@ -464,7 +464,8 @@ export async function deleteIngredient(
 
 /**
  * Mark a Flagged Ingredient distinct: Norish's doubt was unfounded, and what
- * AI suggested for it is settled. Follows `edit`.
+ * AI suggested for it is settled. The decision is kept, so Norish never
+ * merges it later. Follows `edit`.
  */
 export async function markDistinct(
   actor: CatalogueActor,
@@ -472,7 +473,9 @@ export async function markDistinct(
 ): Promise<CatalogueEdit> {
   return await inEdit(async (tx) => {
     await assertMayEditIngredient(tx, actor, ingredientId);
-    if (!(await clearIngredientFlag(tx, ingredientId))) throw new CatalogueEditError("not-found");
+    if (!(await keepIngredientDistinct(tx, ingredientId))) {
+      throw new CatalogueEditError("not-found");
+    }
     await deleteSuggestionFor(ingredientId, tx);
 
     return { changed: [ingredientId] };

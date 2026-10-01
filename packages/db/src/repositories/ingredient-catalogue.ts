@@ -277,14 +277,23 @@ export async function renameCatalogueIngredient(
   return row ?? null;
 }
 
-/** Clear an Ingredient's flag: Norish's doubt about it was unfounded. Null where it is gone. */
-export async function clearIngredientFlag(
+/**
+ * Mark an Ingredient a food of its own: its flag goes, and Norish remembers
+ * the person's decision so it never merges the Ingredient later. Null where
+ * it is gone.
+ */
+export async function keepIngredientDistinct(
   tx: DbTransaction,
   id: string
 ): Promise<{ id: string } | null> {
   const [row] = await tx
     .update(ingredients)
-    .set({ flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
+    .set({
+      flagged: false,
+      flagReason: null,
+      keptDistinct: true,
+      version: sql`${ingredients.version} + 1`,
+    })
     .where(eq(ingredients.id, id))
     .returning({ id: ingredients.id });
 

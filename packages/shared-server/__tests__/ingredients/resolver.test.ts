@@ -6,11 +6,13 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import { addPantryIngredient } from "@norish/db/repositories/pantry";
+import { setConfig } from "@norish/db/repositories/server-config";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import {
   findIngredientFor,
@@ -161,6 +163,52 @@ describe("ingredient resolver", () => {
       )
     ).rejects.toThrow("refused");
     expect(writes).toBe(1);
+  });
+
+  it("recognises a known food under a units-map phrase at either end of the text", async () => {
+    const salt = await resolveOne("salt");
+    const nutmeg = await resolveOne("nutmeg");
+    const sauce = await resolveOne("sweet chilli sauce");
+
+    expect((await resolveOne("Salt to taste")).ingredientId).toBe(salt.ingredientId);
+    expect((await resolveOne("a pinch of nutmeg")).ingredientId).toBe(nutmeg.ingredientId);
+    expect((await resolveOne("sweet chilli sauce to serve")).ingredientId).toBe(sauce.ingredientId);
+    expect((await resolveOne("salt, to taste")).ingredientId).toBe(salt.ingredientId);
+  });
+
+  it("keeps a units-map phrase inside the name", async () => {
+    const cream = await resolveOne("cream");
+
+    expect((await resolveOne("cream to taste with sugar")).ingredientId).not.toBe(
+      cream.ingredientId
+    );
+  });
+
+  it("strips the phrases the administrator's units map has, and only those", async () => {
+    const nutmeg = await resolveOne("nutmeg");
+    // The administrator's own map: a household's phrasing added to "pinch",
+    // and "to taste" gone with the rest of the defaults.
+    const units = {
+      pinch: {
+        short: [{ locale: "en", name: "pinch" }],
+        plural: [{ locale: "en", name: "pinches" }],
+        alternates: ["a smidgen"],
+      },
+    };
+
+    expect((await resolveOne("a smidgen of nutmeg")).ingredientId).not.toBe(nutmeg.ingredientId);
+    await setConfig(ServerConfigKeys.UNITS, { units, isOverridden: true }, null, false);
+    expect((await resolveOne("smidgen of nutmeg, grated")).ingredientId).not.toBe(
+      nutmeg.ingredientId
+    );
+    expect((await resolveOne("a smidgen nutmeg")).ingredientId).toBe(nutmeg.ingredientId);
+    expect((await resolveOne("nutmeg to taste")).ingredientId).not.toBe(nutmeg.ingredientId);
+  });
+
+  it("never strips a measure or a piece, which name foods too", async () => {
+    const onion = await resolveOne("onion");
+
+    expect((await resolveOne("onion rings")).ingredientId).not.toBe(onion.ingredientId);
   });
 
   it("finds what a text already resolves to without minting anything", async () => {

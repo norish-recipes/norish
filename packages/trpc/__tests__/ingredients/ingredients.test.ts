@@ -18,7 +18,7 @@ import {
 import { ingredients as ingredientsRealtime } from "../mocks/realtime/ingredients";
 
 const catalogue = vi.hoisted(() => ({
-  clearIngredientFlag: vi.fn(),
+  keepIngredientDistinct: vi.fn(),
   deleteCatalogueAlias: vi.fn(),
   deleteCatalogueIngredient: vi.fn(),
   findCatalogueAliasOwner: vi.fn(),
@@ -117,7 +117,7 @@ beforeEach(() => {
   relocation.findIngredientAncestors.mockResolvedValue(new Map());
   relocation.insertCatalogueIngredient.mockResolvedValue(UIEN);
   catalogue.renameCatalogueIngredient.mockResolvedValue({ id: ONION });
-  catalogue.clearIngredientFlag.mockResolvedValue({ id: ONION });
+  catalogue.keepIngredientDistinct.mockResolvedValue({ id: ONION });
   catalogue.isAliasInUse.mockResolvedValue(false);
   catalogue.isIngredientInUse.mockResolvedValue(false);
   catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "Onion", ownerId: ME });
@@ -589,7 +589,7 @@ describe("AI's suggestions", () => {
       callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
     ).resolves.toMatchObject({ done: 2, failed: 0 });
     expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(TX, UIEN, ONION);
-    expect(catalogue.clearIngredientFlag).toHaveBeenCalledWith(TX, UIEN);
+    expect(catalogue.keepIngredientDistinct).toHaveBeenCalledWith(TX, UIEN);
   });
 
   it("goes on past a refused one and says why", async () => {

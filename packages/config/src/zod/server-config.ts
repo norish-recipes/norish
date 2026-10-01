@@ -809,6 +809,8 @@ export const IngredientSeedStateSchema = z.object({
   appliedAt: z.string().nullable().default(null),
   entries: z.number().int().default(0),
   mergedExisting: z.boolean().default(false),
+  /** The resolver's `RUNG_VERSION` the last pass over undecided mints ran under. */
+  rungVersion: z.number().int().default(0),
 });
 
 export type IngredientSeedState = z.infer<typeof IngredientSeedStateSchema>;

@@ -61,6 +61,23 @@ export async function findIngredientAliasesByFolds(
     .where(inArray(ingredientAliases.fold, unique));
 }
 
+/**
+ * The seeded aliases among these folds: the spellings the catalogue seed
+ * wrote, which a new mint may be filed under by the words its text ends with.
+ */
+export async function findSeededAliasesByFolds(
+  folds: readonly string[]
+): Promise<IngredientAliasRow[]> {
+  const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
+
+  if (unique.length === 0) return [];
+
+  return await db
+    .select(aliasColumns)
+    .from(ingredientAliases)
+    .where(and(inArray(ingredientAliases.fold, unique), eq(ingredientAliases.seeded, true)));
+}
+
 export async function findIngredientByAliasId(aliasId: string): Promise<IngredientRow | null> {
   const [row] = await db
     .select({

@@ -30,7 +30,9 @@ import { mutableRowColumns, versionColumn } from "./shared";
  * catalogue seed places only Ingredients whose parent nobody chose.
  *
  * `flagReason` says why a Flagged Ingredient is one, in the catalogue's own
- * words (`FLAG_REASONS`), and is cleared with the flag.
+ * words (`FLAG_REASONS`), and is cleared with the flag. `keptDistinct` says a
+ * person marked it a food of its own: Norish never merges it later, not even
+ * when its rules for reading a name change.
  *
  * `offId` is the Open Food Facts taxonomy entry a seeded Ingredient stands
  * for ("en:onion"), which is how a refresh of the seed finds it again
@@ -44,6 +46,7 @@ export const ingredients = pgTable(
     ownerId: text("owner_id").references(() => users.id, { onDelete: "set null" }),
     flagged: boolean("flagged").notNull().default(false),
     flagReason: text("flag_reason"),
+    keptDistinct: boolean("kept_distinct").notNull().default(false),
     parentId: uuid("parent_id").references((): AnyPgColumn => ingredients.id, {
       onDelete: "set null",
     }),

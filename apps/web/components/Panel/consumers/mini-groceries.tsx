@@ -8,6 +8,7 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { useUnitPhrases } from "@/hooks/config";
 import { useGroceriesMutations } from "@/hooks/groceries";
 import { usePantryQuery } from "@/hooks/pantry";
 import {
@@ -166,6 +167,7 @@ export default function MiniGroceries({
     isLoading: pantryLoading,
     isUnavailable: pantryUnavailable,
   } = usePantryQuery();
+  const phrases = useUnitPhrases();
 
   const isInPantry = useCallback(
     (item: GroceryIngredient) => {
@@ -174,11 +176,12 @@ export default function MiniGroceries({
       return (
         pantryIngredientFor(
           pantryIngredients,
-          edited === undefined ? item : { ingredientName: edited }
+          edited === undefined ? item : { ingredientName: edited },
+          phrases
         ) !== null
       );
     },
-    [pantryIngredients, editedIngredients]
+    [pantryIngredients, editedIngredients, phrases]
   );
   const { toBuy, inPantry } = useMemo(() => {
     const buy: typeof scaledIngredients = [];

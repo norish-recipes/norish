@@ -9545,5 +9545,411 @@
       "senttimetri",
       "senttimetriä"
     ]
+  },
+  "to_serve": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "to serve"
+      },
+      {
+        "locale": "de",
+        "name": "zum Servieren"
+      },
+      {
+        "locale": "nl",
+        "name": "om te serveren"
+      },
+      {
+        "locale": "ko",
+        "name": "곁들임용"
+      },
+      {
+        "locale": "da",
+        "name": "til servering"
+      },
+      {
+        "locale": "it",
+        "name": "per servire"
+      },
+      {
+        "locale": "es",
+        "name": "para servir"
+      },
+      {
+        "locale": "ru",
+        "name": "для подачи"
+      },
+      {
+        "locale": "pl",
+        "name": "do podania"
+      },
+      {
+        "locale": "no",
+        "name": "til servering"
+      },
+      {
+        "locale": "pt",
+        "name": "para servir"
+      },
+      {
+        "locale": "bg",
+        "name": "за сервиране"
+      },
+      {
+        "locale": "fr",
+        "name": "pour servir"
+      },
+      {
+        "locale": "fi",
+        "name": "tarjoiluun"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "to serve"
+      },
+      {
+        "locale": "de",
+        "name": "zum Servieren"
+      },
+      {
+        "locale": "nl",
+        "name": "om te serveren"
+      },
+      {
+        "locale": "ko",
+        "name": "곁들임용"
+      },
+      {
+        "locale": "da",
+        "name": "til servering"
+      },
+      {
+        "locale": "it",
+        "name": "per servire"
+      },
+      {
+        "locale": "es",
+        "name": "para servir"
+      },
+      {
+        "locale": "ru",
+        "name": "для подачи"
+      },
+      {
+        "locale": "pl",
+        "name": "do podania"
+      },
+      {
+        "locale": "no",
+        "name": "til servering"
+      },
+      {
+        "locale": "pt",
+        "name": "para servir"
+      },
+      {
+        "locale": "bg",
+        "name": "за сервиране"
+      },
+      {
+        "locale": "fr",
+        "name": "pour servir"
+      },
+      {
+        "locale": "fi",
+        "name": "tarjoiluun"
+      }
+    ],
+    "alternates": [
+      "for serving",
+      "to serve with",
+      "zum Servieren",
+      "om te serveren",
+      "ter serving",
+      "bij het serveren",
+      "til servering",
+      "per servire",
+      "para servir",
+      "для подачи",
+      "do podania",
+      "за сервиране",
+      "pour servir",
+      "tarjoiluun"
+    ]
+  },
+  "for_garnish": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "for garnish"
+      },
+      {
+        "locale": "de",
+        "name": "zum Garnieren"
+      },
+      {
+        "locale": "nl",
+        "name": "ter garnering"
+      },
+      {
+        "locale": "ko",
+        "name": "장식용"
+      },
+      {
+        "locale": "da",
+        "name": "til pynt"
+      },
+      {
+        "locale": "it",
+        "name": "per guarnire"
+      },
+      {
+        "locale": "es",
+        "name": "para decorar"
+      },
+      {
+        "locale": "ru",
+        "name": "для украшения"
+      },
+      {
+        "locale": "pl",
+        "name": "do dekoracji"
+      },
+      {
+        "locale": "no",
+        "name": "til pynt"
+      },
+      {
+        "locale": "pt",
+        "name": "para decorar"
+      },
+      {
+        "locale": "bg",
+        "name": "за украса"
+      },
+      {
+        "locale": "fr",
+        "name": "pour décorer"
+      },
+      {
+        "locale": "fi",
+        "name": "koristeluun"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "for garnish"
+      },
+      {
+        "locale": "de",
+        "name": "zum Garnieren"
+      },
+      {
+        "locale": "nl",
+        "name": "ter garnering"
+      },
+      {
+        "locale": "ko",
+        "name": "장식용"
+      },
+      {
+        "locale": "da",
+        "name": "til pynt"
+      },
+      {
+        "locale": "it",
+        "name": "per guarnire"
+      },
+      {
+        "locale": "es",
+        "name": "para decorar"
+      },
+      {
+        "locale": "ru",
+        "name": "для украшения"
+      },
+      {
+        "locale": "pl",
+        "name": "do dekoracji"
+      },
+      {
+        "locale": "no",
+        "name": "til pynt"
+      },
+      {
+        "locale": "pt",
+        "name": "para decorar"
+      },
+      {
+        "locale": "bg",
+        "name": "за украса"
+      },
+      {
+        "locale": "fr",
+        "name": "pour décorer"
+      },
+      {
+        "locale": "fi",
+        "name": "koristeluun"
+      }
+    ],
+    "alternates": [
+      "to garnish",
+      "for garnishing",
+      "for decoration",
+      "zur Garnitur",
+      "zum Dekorieren",
+      "ter decoratie",
+      "om te garneren",
+      "til pynt",
+      "per decorare",
+      "para adornar",
+      "для украшения",
+      "do dekoracji",
+      "para enfeitar",
+      "за украса",
+      "pour la décoration",
+      "koristeluun"
+    ]
+  },
+  "optional": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "optional"
+      },
+      {
+        "locale": "de",
+        "name": "optional"
+      },
+      {
+        "locale": "nl",
+        "name": "optioneel"
+      },
+      {
+        "locale": "ko",
+        "name": "선택"
+      },
+      {
+        "locale": "da",
+        "name": "valgfri"
+      },
+      {
+        "locale": "it",
+        "name": "facoltativo"
+      },
+      {
+        "locale": "es",
+        "name": "opcional"
+      },
+      {
+        "locale": "ru",
+        "name": "по желанию"
+      },
+      {
+        "locale": "pl",
+        "name": "opcjonalnie"
+      },
+      {
+        "locale": "no",
+        "name": "valgfritt"
+      },
+      {
+        "locale": "pt",
+        "name": "opcional"
+      },
+      {
+        "locale": "bg",
+        "name": "по желание"
+      },
+      {
+        "locale": "fr",
+        "name": "facultatif"
+      },
+      {
+        "locale": "fi",
+        "name": "valinnainen"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "optional"
+      },
+      {
+        "locale": "de",
+        "name": "optional"
+      },
+      {
+        "locale": "nl",
+        "name": "optioneel"
+      },
+      {
+        "locale": "ko",
+        "name": "선택"
+      },
+      {
+        "locale": "da",
+        "name": "valgfri"
+      },
+      {
+        "locale": "it",
+        "name": "facoltativo"
+      },
+      {
+        "locale": "es",
+        "name": "opcional"
+      },
+      {
+        "locale": "ru",
+        "name": "по желанию"
+      },
+      {
+        "locale": "pl",
+        "name": "opcjonalnie"
+      },
+      {
+        "locale": "no",
+        "name": "valgfritt"
+      },
+      {
+        "locale": "pt",
+        "name": "opcional"
+      },
+      {
+        "locale": "bg",
+        "name": "по желание"
+      },
+      {
+        "locale": "fr",
+        "name": "facultatif"
+      },
+      {
+        "locale": "fi",
+        "name": "valinnainen"
+      }
+    ],
+    "alternates": [
+      "optionally",
+      "if desired",
+      "if you like",
+      "nach Wunsch",
+      "naar wens",
+      "indien gewenst",
+      "valgfrit",
+      "a piacere",
+      "si se desea",
+      "по желанию",
+      "opcjonalnie",
+      "valgfritt",
+      "se desejar",
+      "по желание",
+      "au choix",
+      "halutessa"
+    ]
   }
 }

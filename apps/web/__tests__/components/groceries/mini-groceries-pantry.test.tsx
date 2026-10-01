@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 
 const createGroceriesFromData = vi.fn(async (_lines: { name: string }[]) => undefined);
@@ -49,6 +50,12 @@ const INGREDIENTS = [
 vi.mock("@/hooks/groceries", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData }),
 }));
+vi.mock("@/hooks/config", async () => {
+  const { unitPhrases } = await import("@norish/shared/lib/spelling-keys");
+  const units = (await import("@norish/config/units.default.json")).default;
+
+  return { useUnitPhrases: () => unitPhrases(units as UnitsMap) };
+});
 vi.mock("@/hooks/pantry", () => ({
   usePantryQuery: () => ({
     items: pantry,

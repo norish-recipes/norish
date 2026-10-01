@@ -9,12 +9,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 
 const addPantryIngredient = vi.fn(async () => "new");
 const removePantryIngredient = vi.fn();
 let items: PantryIngredientDto[] = [];
 
+vi.mock("@/hooks/config", async () => {
+  const { unitPhrases } = await import("@norish/shared/lib/spelling-keys");
+  const units = (await import("@norish/config/units.default.json")).default;
+
+  return { useUnitPhrases: () => unitPhrases(units as UnitsMap) };
+});
 vi.mock("@/hooks/pantry", () => ({
   usePantryQuery: () => ({ items, isLoading: false }),
   usePantryMutations: () => ({ addPantryIngredient, removePantryIngredient }),

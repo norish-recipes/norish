@@ -14,7 +14,7 @@ import {
   storeProductLinks,
 } from "@norish/db/schema";
 
-import { lockTree } from "./ingredient-relocation";
+import { findIngredientAncestors, lockTree } from "./ingredient-relocation";
 
 /**
  * The catalogue seed's writes (ADR-0038). Applying the seed upserts seeded
@@ -357,6 +357,83 @@ export async function flagIngredient(id: string): Promise<void> {
     .update(ingredients)
     .set({ flagged: true, flagReason: "seed-ambiguous", version: sql`${ingredients.version} + 1` })
     .where(eq(ingredients.id, id));
+}
+
+/**
+ * The Flagged Ingredients Norish minted itself and no person has decided
+ * about: no taxonomy entry, not kept distinct, no parent a person chose (a
+ * rename clears the flag, so a flagged one was not renamed since). What the
+ * startup pass looks at again whenever the resolver's rules change.
+ */
+export async function listUndecidedMints(): Promise<
+  Array<{ id: string; name: string; parentId: string | null; aliases: string[] }>
+> {
+  const rows = await db
+    .select({
+      id: ingredients.id,
+      name: ingredients.name,
+      parentId: ingredients.parentId,
+      alias: ingredientAliases.text,
+    })
+    .from(ingredients)
+    .innerJoin(ingredientAliases, eq(ingredientAliases.ingredientId, ingredients.id))
+    .where(
+      and(
+        eq(ingredients.flagged, true),
+        isNull(ingredients.offId),
+        eq(ingredients.keptDistinct, false),
+        eq(ingredients.parentChosen, false)
+      )
+    )
+    .orderBy(ingredients.createdAt, ingredients.id, ingredientAliases.createdAt);
+  const byId = new Map<
+    string,
+    { id: string; name: string; parentId: string | null; aliases: string[] }
+  >();
+
+  for (const row of rows) {
+    const mint = byId.get(row.id) ?? {
+      id: row.id,
+      name: row.name,
+      parentId: row.parentId,
+      aliases: [],
+    };
+
+    mint.aliases.push(row.alias);
+    byId.set(row.id, mint);
+  }
+
+  return [...byId.values()];
+}
+
+/**
+ * File an undecided mint under the parent its words suggest, leaving it
+ * flagged and the parent unchosen: only where it still has no parent, no
+ * person decided about it meanwhile, and the parent would close no cycle.
+ * Whether it was filed.
+ */
+export async function fileUndecidedMint(id: string, parentId: string): Promise<boolean> {
+  return await db.transaction(async (tx) => {
+    await lockTree(tx);
+    if ((await findIngredientAncestors([parentId], tx)).get(parentId)?.includes(id)) return false;
+    if (id === parentId) return false;
+
+    const filed = await tx
+      .update(ingredients)
+      .set({ parentId, version: sql`${ingredients.version} + 1` })
+      .where(
+        and(
+          eq(ingredients.id, id),
+          isNull(ingredients.parentId),
+          eq(ingredients.flagged, true),
+          eq(ingredients.keptDistinct, false),
+          eq(ingredients.parentChosen, false)
+        )
+      )
+      .returning({ id: ingredients.id });
+
+    return filed.length > 0;
+  });
 }
 
 /** The whole catalogue, for the export the ODbL asks be offered. */

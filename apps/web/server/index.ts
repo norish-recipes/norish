@@ -6,6 +6,7 @@ import { createServer } from "@norish/api/startup/http-server";
 import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
 import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
 import { runMigrations } from "@norish/api/startup/migrations";
+import { recheckUndecidedMintsOnBoot } from "@norish/api/startup/recheck-undecided-mints";
 import { registerApiHandlersForQueue } from "@norish/api/startup/register-queue-api-handlers";
 import { seedServerConfig } from "@norish/api/startup/seed-config";
 import { seedIngredientCatalogueOnFirstBoot } from "@norish/api/startup/seed-ingredient-catalogue";
@@ -53,6 +54,10 @@ async function main() {
   // A first boot seeds the catalogue before traffic; later boots leave it to
   // the refresh job, so an unchanged file never holds the server up.
   await seedIngredientCatalogueOnFirstBoot();
+  log.info("-".repeat(50));
+
+  // Old flagged mints, looked at again whenever the resolver's rules change.
+  await recheckUndecidedMintsOnBoot();
   log.info("-".repeat(50));
 
   await initializeVideoProcessing();
