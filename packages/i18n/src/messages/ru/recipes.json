@@ -255,7 +255,11 @@
     "protein": "Белки",
     "showingPortions": "Показаны значения для {count} {count, plural, one {порции} few {порций} many {порций} other {порции}}",
     "noInfo": "Нет данных о пищевой ценности",
-    "estimateWithAI": "Оценить с помощью ИИ"
+    "estimateWithAI": "Оценить с помощью ИИ",
+    "estimated": "Приблизительно",
+    "notCounted": "Не учтено:",
+    "workedOutFrom": "Рассчитано по ингредиентам, по данным {sources}.",
+    "householdNumbers": "значений вашей семьи"
   },
   "measurementSystem": {
     "label": "Система мер",

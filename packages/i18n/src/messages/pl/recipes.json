@@ -255,7 +255,11 @@
     "protein": "Białko",
     "showingPortions": "Wartości dla {count} {count, plural, one {porcji} other {porcji}}",
     "noInfo": "Brak informacji o wartościach odżywczych",
-    "estimateWithAI": "Oszacuj z AI"
+    "estimateWithAI": "Oszacuj z AI",
+    "estimated": "Szacunkowo",
+    "notCounted": "Nie wliczono:",
+    "workedOutFrom": "Obliczone ze składników, na podstawie {sources}.",
+    "householdNumbers": "wartości twojego gospodarstwa"
   },
   "measurementSystem": {
     "label": "System miar",

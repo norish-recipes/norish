@@ -255,7 +255,11 @@
     "protein": "Protein",
     "showingPortions": "Viser værdier for {count} {count, plural, one {portion} other {portioner}}",
     "noInfo": "Ingen næringsoplysninger tilgængelige",
-    "estimateWithAI": "Estimér med AI"
+    "estimateWithAI": "Estimér med AI",
+    "estimated": "Anslået",
+    "notCounted": "Ikke talt med:",
+    "workedOutFrom": "Beregnet ud fra ingredienserne, med {sources}.",
+    "householdNumbers": "din husstands værdier"
   },
   "measurementSystem": {
     "label": "Målesystem",

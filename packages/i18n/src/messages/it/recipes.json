@@ -255,7 +255,11 @@
     "protein": "Proteine",
     "showingPortions": "Valori mostrati per {count} {count, plural, one {porzione} other {porzioni}}",
     "noInfo": "Nessuna informazione nutrizionale disponibile",
-    "estimateWithAI": "Stima con IA"
+    "estimateWithAI": "Stima con IA",
+    "estimated": "Stimato",
+    "notCounted": "Non conteggiato:",
+    "workedOutFrom": "Calcolato dagli ingredienti, con {sources}.",
+    "householdNumbers": "i valori della tua famiglia"
   },
   "measurementSystem": {
     "label": "Sistema di misura",

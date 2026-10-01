@@ -255,7 +255,11 @@
     "protein": "Eiwitten",
     "showingPortions": "Waardes voor {count} {count, plural, one {portie} other {porties}}",
     "noInfo": "Geen voedingsinformatie beschikbaar",
-    "estimateWithAI": "Schatten met AI"
+    "estimateWithAI": "Schatten met AI",
+    "estimated": "Geschat",
+    "notCounted": "Niet meegeteld:",
+    "workedOutFrom": "Berekend uit de ingrediënten, met {sources}.",
+    "householdNumbers": "de waarden van je huishouden"
   },
   "measurementSystem": {
     "label": "Meetsysteem",

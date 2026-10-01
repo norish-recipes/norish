@@ -255,7 +255,11 @@
     "protein": "단백질",
     "showingPortions": "{count, plural, one {#인분} other {#인분}} 기준 영양 정보",
     "noInfo": "영양정보가 없습니다.",
-    "estimateWithAI": "AI로 추정"
+    "estimateWithAI": "AI로 추정",
+    "estimated": "추정치",
+    "notCounted": "계산에서 제외:",
+    "workedOutFrom": "재료로 계산했습니다. 출처: {sources}.",
+    "householdNumbers": "우리 가구의 값"
   },
   "measurementSystem": {
     "label": "측정 시스템",

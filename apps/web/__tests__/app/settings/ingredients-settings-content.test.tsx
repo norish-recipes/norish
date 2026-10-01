@@ -215,6 +215,18 @@ vi.mock("@/components/Panel/Panel", () => {
   return { default: Panel, usePanelPortalContainer: () => undefined };
 });
 
+// A food's nutrition and its corrections are the nutrition section's own tests' business.
+vi.mock("@/app/(app)/settings/ingredients/components/ingredient-nutrition", () => ({
+  IngredientNutritionSection: () => <section data-testid="ingredient-nutrition" />,
+}));
+
+let linkedIngredient: string | null = null;
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () =>
+    new URLSearchParams(linkedIngredient ? { ingredient: linkedIngredient } : {}),
+}));
+
 // The picker searches the catalogue; here it offers salt.
 vi.mock("@/app/(app)/settings/ingredients/components/ingredient-picker", () => ({
   IngredientPicker: ({ onPick, editableOnly, excludeId }: any) => (
@@ -295,6 +307,7 @@ async function showSpellings(opened: HTMLElement) {
 describe("IngredientsSettingsContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    linkedIngredient = null;
     // The end of the list watches for itself scrolling into view; jsdom has no observer.
     vi.stubGlobal(
       "IntersectionObserver",
@@ -356,6 +369,14 @@ describe("IngredientsSettingsContent", () => {
         .getAllByTestId("ingredient-alias")
         .map((chip) => chip.textContent)
     ).toEqual(["onion", "ui"]);
+  });
+
+  it("opens the panel of the food a link names, such as a recipe's Not counted line", async () => {
+    linkedIngredient = "onion";
+
+    render(<IngredientsSettingsContent />);
+
+    expect(await screen.findByRole("dialog", { name: "onion" })).toBeInTheDocument();
   });
 
   it("offers only what the viewer may do", async () => {

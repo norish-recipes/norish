@@ -53,6 +53,11 @@ vi.mock("@/hooks/cookbooks", () => ({
   useRecipeCookbooksQuery: () => ({ cookbooks: [], isLoading: false }),
 }));
 
+// The worked-out total reads the server; these pages are about their layout.
+vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
+  useWorkedOutNutrition: () => null,
+}));
+
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({
   useRecipeContext: () => ({ recipe: stubRecipe }),
   useRecipeContextRequired: () => ({

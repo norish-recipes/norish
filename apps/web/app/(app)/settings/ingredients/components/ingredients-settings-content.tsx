@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { AIButton } from "@/components/shared/ai-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -54,7 +55,9 @@ export default function IngredientsSettingsContent() {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<IngredientFilters>(DEFAULT_INGREDIENT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
+  // A link from elsewhere (a recipe's "Not counted") opens one food's panel.
+  const searchParams = useSearchParams();
+  const [openId, setOpenId] = useState<string | null>(() => searchParams.get("ingredient"));
   const [isPending, startTransition] = useTransition();
   // A new search re-renders the rows at background priority, as the toggle does.
   const onSearch = useCallback((next: string) => startTransition(() => setSearch(next)), []);
@@ -253,6 +256,7 @@ export default function IngredientsSettingsContent() {
         onOpenChange={setFiltersOpen}
       />
       <IngredientPanel
+        id={openId}
         item={openItem}
         open={openId !== null}
         reviewing={openId !== null && reviewing.has(openId)}

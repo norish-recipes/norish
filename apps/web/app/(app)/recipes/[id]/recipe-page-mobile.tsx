@@ -23,6 +23,7 @@ import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
@@ -56,6 +57,7 @@ export default function RecipePageMobile() {
   const t = useTranslations("recipes.detail");
   const back = useBackDestination();
   const { showRatings, showFavorites, showNutrition } = useHiddenItemVisibility();
+  const workedOut = useWorkedOutNutrition(recipe);
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -142,7 +144,12 @@ export default function RecipePageMobile() {
         <RecipeHeaderMobile
           allergies={allergies}
           allergySet={allergySet}
-          recipe={{ ...recipe, servings: currentServings ?? recipe.servings }}
+          recipe={{
+            ...recipe,
+            servings: currentServings ?? recipe.servings,
+            // A total worked out from the lines is restated too, as the card shows it.
+            calories: recipe.calories ?? workedOut?.perServing?.calories ?? null,
+          }}
           showCalories={showNutrition}
         />
 

@@ -255,7 +255,11 @@
     "protein": "Протеини",
     "showingPortions": "Показани стойности за {count} {count, plural, one {порция} other {порции}}",
     "noInfo": "Няма налична информация за хранителните стойности",
-    "estimateWithAI": "Изчисли с AI"
+    "estimateWithAI": "Изчисли с AI",
+    "estimated": "Приблизително",
+    "notCounted": "Не е отчетено:",
+    "workedOutFrom": "Изчислено от съставките, по данни от {sources}.",
+    "householdNumbers": "стойностите на вашето домакинство"
   },
   "measurementSystem": {
     "label": "Мерна система",

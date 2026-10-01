@@ -255,7 +255,11 @@
     "protein": "Proteiini",
     "showingPortions": "Näytetään arvot {count} {count, plural, one {annokselle} other {annokselle}}",
     "noInfo": "Ravintosisältötietoja ei ole saatavilla",
-    "estimateWithAI": "Arvioi tekoälyllä"
+    "estimateWithAI": "Arvioi tekoälyllä",
+    "estimated": "Arvioitu",
+    "notCounted": "Ei laskettu:",
+    "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
+    "householdNumbers": "kotitaloutesi arvot"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",
