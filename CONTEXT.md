@@ -33,7 +33,7 @@ Supplied Recipe Data explicitly present in an import source and preserved during
 _Avoid_: AI-imported data (describes the mechanism, not the source evidence)
 
 **Nutrition Information**:
-A recipe's calories, fat, carbohydrates, and protein considered as one atomic group. Blank values are absent; any substantive supplied value makes the stored group authoritative for Automatic Recipe Enrichment.
+A recipe's calories, fat, carbohydrates, and protein considered as one atomic group. Blank values are absent; any substantive supplied value makes the stored group authoritative for Automatic Recipe Enrichment. When nothing was supplied, the language model's estimate is given the numbers Ingredient Nutrition knows for the recipe's lines and only fills the gaps between them.
 _Avoid_: Macros (does not include calories)
 
 **Recipe Provenance**:
@@ -51,6 +51,10 @@ A free-form keyword attached to a recipe, mintable by anyone and by AI. Tags are
 One food, known by many Ingredient Aliases: "onion", "onions", "onion, diced" and "ui" are one Ingredient once Norish knows they are. Whatever a household teaches Norish about a food is taught about the Ingredient, so it holds for every spelling. An Ingredient has a name of its own, English where known, and belongs to whoever's action minted it, or to no one when the catalogue seed wrote it (ADR-0037).
 _Avoid_: Ingredient Name (retired: a name is an alias of an Ingredient, not the Ingredient), Food, Product (that is the shop's)
 
+**Ingredient Nutrition**:
+An Ingredient's calories, fat, carbohydrates and protein per 100 grams, taken from an open food dataset and correctable by a household, whose correction is the last word for that household. It exists so a recipe that supplies no Nutrition Information can have one worked out from its lines, for the household reading it; a recipe's supplied Nutrition Information always takes precedence over the worked-out one. It is the food's, never a brand's: a recipe reads the same numbers whichever shop its reader buys from, and a brand gets numbers of its own only by being a different food (cola zero is a child of cola; Coca-Cola is a spelling of cola). A correction either names a different dataset food ("milk" is semi-skimmed, not skimmed) or gives the numbers from a label. An Ingredient without numbers of its own borrows from its nearest Parent Ingredient that has some, unless that parent is one known to lend badly (an average sauce, pure alcohol), and a recipe total that borrowed anywhere says it is estimated. Lines reach grams by their weight, by the Ingredient's piece weight when counted, or by its density when measured by volume, each borrowed and corrected like the numbers; a line with no amount, or none that reaches grams, is left out of the total and named beneath it, except seasoning measured as a pinch or to taste, which counts as nothing.
+_Avoid_: Macros (does not include calories), Product nutrition (a Store Product's label is the shop's, not the food's)
+
 **Ingredient Alias**:
 One spelling of an Ingredient — a plural, a translation, a variant with its preparation — and what everything that names a food points at. A recipe line, a Grocery and a Pantry Ingredient keep their text as written and point at the alias it resolved to, so "2 onions, diced" still reads that way. One spelling, folded, is one alias instance-wide, so it can never mean two foods. A new text is resolved to an alias by an exact match, then the same match with its preparation stripped, then a Decision or the language model, and only then is an Ingredient minted for it. Merging two Ingredients moves every alias of one onto the other, and moving one alias back out is the unmerge: the lines behind an alias go wherever it goes, while Product Links, Aisle Links and store preferences stay with the food they were learned for.
 _Avoid_: Synonym (an alias is how a line names its food, not a thesaurus entry), Ingredient Name
@@ -60,7 +64,7 @@ The more general food an Ingredient is a kind of: "onion" is the parent of "red 
 _Avoid_: Category (a grouping for browsing, not a food), Variant (names the child alone)
 
 **Flagged Ingredient**:
-An Ingredient Norish minted without being sure it was new — no AI step vouched for it, or the one that did was unsure. The flag asks a person to merge it into the Ingredient it duplicates or mark it distinct, on the Ingredients page; renaming it, giving it a parent or marking it distinct clears the flag. It changes nothing about how the Ingredient is used meanwhile. Who may edit an Ingredient someone else minted is the instance's ingredient permission policy (everyone, household or owner); anyone may add an alias, and an ownerless, seeded Ingredient is an administrator's alone.
+An Ingredient Norish minted without being sure it was new — no AI step vouched for it, or the one that did was unsure. The flag asks a person to merge it into the Ingredient it duplicates or mark it distinct, on the Ingredients page; a person renaming it, giving it a parent or marking it distinct clears the flag, and a person's decision to keep it distinct is remembered so Norish never merges it later. A parent Norish gave it from the words of its name (the food named last: "ground cumin" under cumin) leaves it flagged. It changes nothing about how the Ingredient is used meanwhile. Who may edit an Ingredient someone else minted is the instance's ingredient permission policy (everyone, household or owner); anyone may add an alias, and an ownerless, seeded Ingredient is an administrator's alone.
 _Avoid_: Unverified, Pending (it is fully usable)
 
 **Step Ingredient**:

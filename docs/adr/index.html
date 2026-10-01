@@ -904,7 +904,8 @@
             >ADR-0037 &mdash; Ingredient identity is an alias pointing at an Ingredient</a
           >
           <p>
-            <b>Accepted.</b> An Ingredient is one food known by many Ingredient Aliases; a recipe
+            <b>Accepted; amended by ADR-0039</b> (rung 2 strips units-map phrases, a mint is
+            parented under the alias its text ends with). An Ingredient is one food known by many Ingredient Aliases; a recipe
             line, a Grocery, a recurring grocery and a Pantry Ingredient keep their text as written
             and point at the alias it resolved to, and Product Links, Aisle Links and store
             preferences are keyed by Ingredient. One resolver in
@@ -918,12 +919,24 @@
             >ADR-0038 &mdash; The ingredient catalogue is seeded from Open Food Facts under the ODbL</a
           >
           <p>
-            <b>Accepted.</b> The Open Food Facts ingredients taxonomy, every entry and language, is
+            <b>Accepted; amended by ADR-0039</b> (the seed keeps nutrition codes). The Open Food Facts ingredients taxonomy, every entry and language, is
             fetched nightly and applied as ownerless Ingredients, seeded aliases and parents. A
             refresh never undoes a person's alias, merge or parent; a failed or malformed fetch
             leaves the last good seed. The first seed merges existing Ingredients it is sure of,
             once. The ODbL is accepted: the Ingredients page credits the source and offers the
             catalogue as JSON.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0039-ingredient-nutrition-comes-from-vendored-open-datasets-corrected-per-household.md"
+            >ADR-0039 &mdash; Ingredient Nutrition comes from vendored open datasets, corrected per household</a
+          >
+          <p>
+            <b>Accepted.</b> CIQUAL, CALNUT and USDA numbers, joined through the taxonomy's codes
+            plus a reviewed name match, are committed as a table a monthly workflow rebuilds. Own
+            codes come before a parent's; Norish keeps a fix list and a list of parents that never
+            lend. A correction belongs to a household, and a recipe's worked-out nutrition is
+            computed on read for the reader's household.
           </p>
         </li>
       </ul>

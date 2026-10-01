@@ -12,7 +12,7 @@ A new instance knew no foods: "ui", "onion" and "Zwiebel" were three Ingredients
 
 ## Considered and rejected
 
-- **CIQUAL, USDA and NEVO.** They are nutrition tables: their value is macros, which are out of scope, and their food lists are narrower and single-language. NEVO's terms forbid redistribution, which an open-source seed would be.
+- **CIQUAL, USDA and NEVO as the catalogue.** Their food lists are narrower and single-language. They now supply Ingredient Nutrition beside the seed, joined through the taxonomy's codes (ADR-0039). NEVO stays out: its conditions forbid amendment and charging end users, which the ODbL grants.
 - **Shipping the seed in the image.** It would age with the release and need an upgrade to learn a new food or translation; the nightly fetch keeps it current, and a mirror covers an offline server.
 - **Asking the language model in the one pass.** One request per existing Ingredient at boot is a cost an administrator did not choose; the resolver's rung 3 still asks about every new name.
 
@@ -21,3 +21,4 @@ A new instance knew no foods: "ui", "onion" and "Zwiebel" were three Ingredients
 - `ingredients` carries `off_id` (unique) and `parent_chosen`; seeded aliases carry `seeded` and a locale. Migration 0062.
 - About 5,700 entries and 69,000 spellings; applying the file takes seconds and a re-apply of an unchanged file changes nothing.
 - A seeded Ingredient is an administrator's to edit (ADR-0037's edit policy); an adopted one keeps its owner.
+- Amended by ADR-0039: the seed keeps each entry's nutrition codes, piece weight and density, which it used to discard.
