@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Източници на данни",
       "notice": "Каталогът на съставките се основава на таксономията на съставките на <off>Open Food Facts</off>, достъпна под лиценза <odbl>Open Database License (ODbL)</odbl>. Каталогът, който Norish изгражда от нея, се предлага под същия лиценз.",
+      "nutritionNotice": "Хранителната стойност на 100 г идва от <ciqual>CIQUAL 2025</ciqual> и CALNUT (ANSES), <usda>USDA FoodData Central</usda> и <cofid>CoFID</cofid>, свързани чрез кодовете, които Open Food Facts дава на всяка съставка. Корекциите на едно домакинство са негови собствени стойности, а не на наборите данни.",
       "download": "Изтегляне на каталога на съставките (JSON)"
+    },
+    "nutrition": {
+      "section": "Хранителна стойност",
+      "per100g": "На 100 г",
+      "calories": "Калории",
+      "fat": "Мазнини",
+      "carbs": "Въглехидрати",
+      "protein": "Протеини",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} г в чаша",
+      "onePiece": "Едно парче тежи {grams} г",
+      "oneCup": "Една чаша тежи {grams} г",
+      "none": "Norish все още няма хранителна стойност за тази съставка. Коригирайте я, за да ѝ дадете.",
+      "noNumbers": "Все още няма стойности на 100 г.",
+      "borrowed": "От {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, избрано от Norish",
+        "name": "{food} · {dataset}, намерено по име",
+        "householdFood": "{food} · {dataset}, избрано от вашето домакинство",
+        "household": "Собствените стойности на вашето домакинство",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Коригирай",
+      "correctTitle": "Коригиране на {name}",
+      "correctIntro": "Корекцията ви важи за всички във вашето домакинство и за никой друг.",
+      "facts": {
+        "numbers": "На 100 г",
+        "pieceWeight": "Едно парче",
+        "density": "Една чаша"
+      },
+      "useSources": "Както е в Norish",
+      "pickFood": "Храна от наборите данни",
+      "typeLabel": "От етикет",
+      "label": {
+        "calories": "Калории (kcal)",
+        "fat": "Мазнини (g)",
+        "carbs": "Въглехидрати (g)",
+        "protein": "Протеини (g)",
+        "pieceGrams": "Едно парче тежи (г)",
+        "cupGrams": "Една чаша тежи (г)"
+      },
+      "searchFood": "Търсене в наборите данни (на английски), например milk semi-skimmed",
+      "foodHint": "Въведете няколко думи от името",
+      "searchingFoods": "Търсене…",
+      "noFoods": "Никоя храна в данните няма всички тези думи.",
+      "remove": "Премахни нашата корекция",
+      "saved": "Корекцията е запазена",
+      "removed": "Обратно към стойностите от наборите данни",
+      "errors": {
+        "title": "Корекцията не е запазена",
+        "unknown-food": "Тази храна вече не е в Norish.",
+        "empty": "Коригирайте поне една от трите.",
+        "not-found": "Тази съставка вече не съществува.",
+        "unknown": "Нещо се обърка. Опитайте отново."
+      }
     },
     "errors": {
       "title": "Съставката не можа да бъде променена",

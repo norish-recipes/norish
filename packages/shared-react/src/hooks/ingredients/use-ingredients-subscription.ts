@@ -13,7 +13,9 @@ import { useRealtimeSubscription } from "../../realtime/use-realtime-subscriptio
  * or removed, a flag cleared or a deletion changes what the Ingredients page
  * shows. Everything derived from an Ingredient is read again: a refetch is
  * idempotent, so the actor's own echo and a replay change nothing, and a
- * lagged subscription does the same.
+ * lagged subscription does the same. A housemate's nutrition correction
+ * (ADR-0039) reaches only the household, and the nutrition read for it,
+ * the Ingredients page's and every recipe's worked-out total, is read again.
  */
 export function createUseIngredientsSubscription({ useTRPC }: CreateIngredientsHooksOptions) {
   return function useIngredientsSubscription() {
@@ -34,5 +36,20 @@ export function createUseIngredientsSubscription({ useTRPC }: CreateIngredientsH
         for (const queryKey of derived) void queryClient.invalidateQueries({ queryKey });
       },
     });
+
+    const nutrition = [
+      trpc.ingredients.nutrition.queryKey(),
+      trpc.ingredients.nutritionFor.queryKey(),
+    ];
+
+    useRealtimeSubscription<PayloadOf<IngredientsRealtime, "corrected">>(
+      trpc.ingredients.onCorrected,
+      {
+        lagQueryKeys: nutrition,
+        onEvent: () => {
+          for (const queryKey of nutrition) void queryClient.invalidateQueries({ queryKey });
+        },
+      }
+    );
   };
 }

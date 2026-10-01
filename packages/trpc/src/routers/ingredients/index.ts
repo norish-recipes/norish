@@ -22,6 +22,13 @@ import {
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { ingredientChanges } from "@norish/shared-server/ingredients/changes";
+import {
+  correctNutrition,
+  NutritionCorrectionError,
+  removeNutritionCorrection,
+  searchDatasetFoods,
+} from "@norish/shared-server/ingredients/nutrition/corrections";
+import { resolveIngredientNutrition } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
 import {
@@ -402,6 +409,108 @@ const setParent = authedProcedure
     return asEditResult(() => setCatalogueParent(actorOf(ctx), input.ingredientId, input.parentId));
   });
 
+/**
+ * One Ingredient's nutrition as the viewer's household reads it (ADR-0039):
+ * its numbers per 100 g, piece weight and density, each with where it came
+ * from, or null once the Ingredient is gone.
+ */
+const nutrition = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    const answer = await resolveIngredientNutrition([input.ingredientId], {
+      householdUserIds: ctx.userIds,
+    });
+
+    return answer.get(input.ingredientId) ?? null;
+  });
+
+/**
+ * The nutrition of many Ingredients at once, as the viewer's household reads
+ * it: what a recipe page works its total out from, in the browser, so the
+ * total follows the recipe's lines as they are edited.
+ */
+const nutritionFor = authedProcedure
+  .input(z.object({ ingredientIds: z.array(z.uuid()).max(500) }))
+  .query(async ({ ctx, input }) => {
+    const answer = await resolveIngredientNutrition(input.ingredientIds, {
+      householdUserIds: ctx.userIds,
+    });
+
+    return Object.fromEntries(answer);
+  });
+
+/** A dataset food, as a correction names it. */
+const datasetFood = z.object({
+  food: z
+    .string()
+    .regex(/^[a-z0-9-]+:[^\s]+$/)
+    .max(100),
+});
+const amount = z.number().finite().nonnegative().max(100_000);
+
+/**
+ * Correct an Ingredient's nutrition for the viewer's household: any member,
+ * any Ingredient, no edit policy (a correction is the household's data, not
+ * an edit to the Ingredient). Each fact is a dataset food, a number from a
+ * label, or left to the sources (null).
+ */
+const correctNutrition_ = authedProcedure
+  .input(
+    z.object({
+      ingredientId: z.uuid(),
+      numbers: z
+        .union([
+          datasetFood,
+          z.object({ kcal: amount, fat: amount, carbs: amount, protein: amount }),
+        ])
+        .nullable(),
+      pieceWeight: z.union([datasetFood, z.object({ grams: amount.positive() })]).nullable(),
+      density: z
+        .union([datasetFood, z.object({ gramsPerMl: amount.positive().max(30) })])
+        .nullable(),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Correcting nutrition");
+    const { ingredientId, ...correction } = input;
+
+    try {
+      await correctNutrition(memberOf(ctx), ingredientId, correction);
+    } catch (error) {
+      if (error instanceof NutritionCorrectionError) {
+        throw new TRPCError({
+          code: error.refusal === "not-found" ? "NOT_FOUND" : "BAD_REQUEST",
+          message: error.refusal,
+        });
+      }
+      throw error;
+    }
+
+    return { success: true as const };
+  });
+
+/** Remove the household's correction to an Ingredient: back to the datasets' numbers. */
+const removeNutritionCorrection_ = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .mutation(async ({ ctx, input }) => {
+    log.info(
+      { userId: ctx.user.id, ingredientId: input.ingredientId },
+      "Removing a nutrition correction"
+    );
+    await removeNutritionCorrection(memberOf(ctx), input.ingredientId);
+
+    return { success: true as const };
+  });
+
+/** Dataset foods whose names hold every word searched, for a correction to name. */
+const nutritionFoods = authedProcedure
+  .input(z.object({ search: z.string().trim().min(2).max(100) }))
+  .query(({ input }) => searchDatasetFoods(input.search));
+
+function memberOf(ctx: AuthedProcedureContext) {
+  return { userId: ctx.user.id, householdUserIds: ctx.userIds, householdKey: ctx.householdKey };
+}
+
 export const ingredientsRouter = router({
   find,
   list,
@@ -425,5 +534,10 @@ export const ingredientsRouter = router({
   merge,
   moveAlias,
   setParent,
+  nutrition,
+  nutritionFor,
+  correctNutrition: correctNutrition_,
+  removeNutritionCorrection: removeNutritionCorrection_,
+  nutritionFoods,
   ...ingredientsSubscriptions._def.procedures,
 });

@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Tietolähteet",
       "notice": "Ainesosaluettelo perustuu <off>Open Food Factsin</off> ainesosataksonomiaan, joka on saatavilla <odbl>Open Database License (ODbL)</odbl> -lisenssillä. Norishin siitä rakentama luettelo tarjotaan samalla lisenssillä.",
+      "nutritionNotice": "Ravintoarvot 100 g:ssa tulevat lähteistä <ciqual>CIQUAL 2025</ciqual> ja CALNUT (ANSES), <usda>USDA FoodData Central</usda> ja <cofid>CoFID</cofid>, yhdistettyinä koodeilla, jotka Open Food Facts antaa kullekin ainekselle. Kotitalouden korjaukset ovat sen omia arvoja, eivät tietoaineistojen.",
       "download": "Lataa ainesosaluettelo (JSON)"
+    },
+    "nutrition": {
+      "section": "Ravintoarvot",
+      "per100g": "100 g:ssa",
+      "calories": "Kalorit",
+      "fat": "Rasva",
+      "carbs": "Hiilihydraatit",
+      "protein": "Proteiini",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g kupissa",
+      "onePiece": "Yksi kappale painaa {grams} g",
+      "oneCup": "Kuppi painaa {grams} g",
+      "none": "Norishilla ei vielä ole ravintoarvoja tälle ainekselle. Korjaa se antaaksesi arvot.",
+      "noNumbers": "Ei vielä arvoja 100 g:ssa.",
+      "borrowed": "Aineksesta {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, Norishin valitsema",
+        "name": "{food} · {dataset}, löydetty nimellä",
+        "householdFood": "{food} · {dataset}, kotitaloutesi valitsema",
+        "household": "Kotitaloutesi omat arvot",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Korjaa",
+      "correctTitle": "Korjaa {name}",
+      "correctIntro": "Korjauksesi koskee kaikkia kotitaloudessasi, eikä ketään muuta.",
+      "facts": {
+        "numbers": "100 g:ssa",
+        "pieceWeight": "Yksi kappale",
+        "density": "Kuppi"
+      },
+      "useSources": "Kuten Norishilla",
+      "pickFood": "Elintarvike tietoaineistoista",
+      "typeLabel": "Pakkausmerkinnöistä",
+      "label": {
+        "calories": "Kalorit (kcal)",
+        "fat": "Rasva (g)",
+        "carbs": "Hiilihydraatit (g)",
+        "protein": "Proteiini (g)",
+        "pieceGrams": "Yksi kappale painaa (g)",
+        "cupGrams": "Kuppi painaa (g)"
+      },
+      "searchFood": "Hae tietoaineistoista (englanniksi), esimerkiksi milk semi-skimmed",
+      "foodHint": "Kirjoita muutama sana nimestä",
+      "searchingFoods": "Haetaan…",
+      "noFoods": "Millään tietoaineiston elintarvikkeella ei ole kaikkia noita sanoja.",
+      "remove": "Poista korjauksemme",
+      "saved": "Korjaus tallennettu",
+      "removed": "Takaisin tietoaineistojen arvoihin",
+      "errors": {
+        "title": "Korjausta ei tallennettu",
+        "unknown-food": "Sitä elintarviketta ei enää ole Norishissa.",
+        "empty": "Korjaa ainakin yksi kolmesta.",
+        "not-found": "Tätä ainesosaa ei enää ole.",
+        "unknown": "Jokin meni vikaan. Yritä uudelleen."
+      }
     },
     "errors": {
       "title": "Ainesosaa ei voitu muuttaa",

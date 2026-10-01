@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Gegevensbronnen",
       "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",
+      "nutritionNotice": "De voedingswaarde per 100 g komt uit <ciqual>CIQUAL 2025</ciqual> en CALNUT (ANSES), <usda>USDA FoodData Central</usda> en <cofid>CoFID</cofid>, gekoppeld via de codes die Open Food Facts elk ingrediënt geeft. De correcties van een huishouden zijn diens eigen waarden, niet die van de datasets.",
       "download": "Ingrediëntencatalogus downloaden (JSON)"
+    },
+    "nutrition": {
+      "section": "Voedingswaarde",
+      "per100g": "Per 100 g",
+      "calories": "Calorieën",
+      "fat": "Vet",
+      "carbs": "Koolhydraten",
+      "protein": "Eiwit",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g per kop",
+      "onePiece": "Eén stuk weegt {grams} g",
+      "oneCup": "Een kop weegt {grams} g",
+      "none": "Norish heeft nog geen voedingswaarde voor dit ingrediënt. Corrigeer het om er een te geven.",
+      "noNumbers": "Nog geen waarden per 100 g.",
+      "borrowed": "Van {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, gekozen door Norish",
+        "name": "{food} · {dataset}, gevonden op naam",
+        "householdFood": "{food} · {dataset}, gekozen door je huishouden",
+        "household": "De eigen waarden van je huishouden",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Corrigeren",
+      "correctTitle": "{name} corrigeren",
+      "correctIntro": "Je correctie geldt voor iedereen in je huishouden, en voor niemand anders.",
+      "facts": {
+        "numbers": "Per 100 g",
+        "pieceWeight": "Eén stuk",
+        "density": "Een kop"
+      },
+      "useSources": "Zoals Norish het heeft",
+      "pickFood": "Een voedingsmiddel uit de datasets",
+      "typeLabel": "Van een etiket",
+      "label": {
+        "calories": "Calorieën (kcal)",
+        "fat": "Vet (g)",
+        "carbs": "Koolhydraten (g)",
+        "protein": "Eiwit (g)",
+        "pieceGrams": "Eén stuk weegt (g)",
+        "cupGrams": "Een kop weegt (g)"
+      },
+      "searchFood": "Zoek in de datasets (Engels), zoals milk semi-skimmed",
+      "foodHint": "Typ een paar woorden van de naam",
+      "searchingFoods": "Zoeken…",
+      "noFoods": "Geen voedingsmiddel in de datasets heeft al die woorden.",
+      "remove": "Onze correctie verwijderen",
+      "saved": "Correctie opgeslagen",
+      "removed": "Terug naar de waarden uit de datasets",
+      "errors": {
+        "title": "Correctie niet opgeslagen",
+        "unknown-food": "Dat voedingsmiddel staat niet meer in Norish.",
+        "empty": "Corrigeer er minstens één van de drie.",
+        "not-found": "Dit ingrediënt bestaat niet meer.",
+        "unknown": "Er ging iets mis. Probeer het opnieuw."
+      }
     },
     "errors": {
       "title": "Kon het ingrediënt niet wijzigen",

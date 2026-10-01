@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Data sources",
       "notice": "The ingredient catalogue is seeded from the <off>Open Food Facts</off> ingredients taxonomy, available under the <odbl>Open Database License (ODbL)</odbl>. The catalogue Norish builds from it is offered under the same licence.",
+      "nutritionNotice": "Nutrition per 100 g comes from <ciqual>CIQUAL 2025</ciqual> and CALNUT (ANSES), <usda>USDA FoodData Central</usda> and <cofid>CoFID</cofid>, joined through the codes Open Food Facts gives each food. A household's corrections are its own numbers, not the datasets'.",
       "download": "Download the ingredient catalogue (JSON)"
+    },
+    "nutrition": {
+      "section": "Nutrition",
+      "per100g": "Per 100 g",
+      "calories": "Calories",
+      "fat": "Fat",
+      "carbs": "Carbohydrates",
+      "protein": "Protein",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g a cup",
+      "onePiece": "One piece weighs {grams} g",
+      "oneCup": "A cup weighs {grams} g",
+      "none": "Norish has no nutrition for this food yet. Correct it to give it some.",
+      "noNumbers": "No numbers per 100 g yet.",
+      "borrowed": "From {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, chosen by Norish",
+        "name": "{food} · {dataset}, matched by name",
+        "householdFood": "{food} · {dataset}, your household's choice",
+        "household": "Your household's own numbers",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Correct",
+      "correctTitle": "Correct {name}",
+      "correctIntro": "Your correction holds for everyone in your household, and for nobody else.",
+      "facts": {
+        "numbers": "Per 100 g",
+        "pieceWeight": "One piece",
+        "density": "A cup"
+      },
+      "useSources": "As Norish has it",
+      "pickFood": "A dataset food",
+      "typeLabel": "From a label",
+      "label": {
+        "calories": "Calories (kcal)",
+        "fat": "Fat (g)",
+        "carbs": "Carbohydrates (g)",
+        "protein": "Protein (g)",
+        "pieceGrams": "One piece weighs (g)",
+        "cupGrams": "A cup weighs (g)"
+      },
+      "searchFood": "Search the datasets, such as milk semi-skimmed",
+      "foodHint": "Type a few words of the food's name",
+      "searchingFoods": "Searching…",
+      "noFoods": "No dataset food has all of those words.",
+      "remove": "Remove our correction",
+      "saved": "Correction saved",
+      "removed": "Back to the datasets' numbers",
+      "errors": {
+        "title": "Could not save the correction",
+        "unknown-food": "That dataset food is not in Norish any more.",
+        "empty": "Correct at least one of the three.",
+        "not-found": "This food is gone.",
+        "unknown": "Something went wrong. Try again."
+      }
     },
     "errors": {
       "title": "Could not change the ingredient",

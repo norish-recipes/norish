@@ -1,0 +1,31 @@
+{
+  "name": "@norish/nutrition-sources",
+  "version": "0.25.0-beta",
+  "private": true,
+  "type": "module",
+  "description": "Builds Ingredient Nutrition's committed source table from CIQUAL, CALNUT, USDA FoodData Central and CoFID (ADR-0039).",
+  "scripts": {
+    "build:table": "tsx src/cli.ts",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "pnpm exec tsc --noEmit",
+    "test": "vitest run",
+    "clean": "git clean -xdf .cache .turbo node_modules"
+  },
+  "dependencies": {
+    "@norish/shared-server": "workspace:*",
+    "jszip": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsx": "4.23.12",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

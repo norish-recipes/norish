@@ -4,13 +4,20 @@
 
 **Blocked by:** 03, 04
 
-**Status:** ready-for-agent
+**Status:** done, pending gates and review
 
-- [ ] A member of household A sets milk to semi-skimmed; A's recipe totals change and household B's do not.
-- [ ] Two members of one household correct the same Ingredient; the later correction holds for both.
-- [ ] A correction by label numbers marks nothing estimated; the panel shows it as the household's own.
-- [ ] A correction can be removed, returning to the dataset's numbers.
-- [ ] Rebuilding or re-applying the source table leaves corrections untouched.
-- [ ] Other members of the household see a correction without reloading.
-- [ ] The catalogue export never includes corrections.
+- [x] A member of household A sets milk to semi-skimmed; A's recipe totals change and household B's do not.
+- [x] Two members of one household correct the same Ingredient; the later correction holds for both.
+- [x] A correction by label numbers marks nothing estimated; the panel shows it as the household's own.
+- [x] A correction can be removed, returning to the dataset's numbers.
+- [x] Rebuilding or re-applying the source table leaves corrections untouched.
+- [x] Other members of the household see a correction without reloading.
+- [x] The catalogue export never includes corrections.
 - [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+
+## Comments
+
+- 2026-10-01 implemented. The table is `ingredient_nutrition_corrections` (one row per member and Ingredient). The household reads its members' most recent row, and Save writes the member's own row as the new most recent. Remove deletes every member's row for that Ingredient, so a housemate's older correction never resurfaces.
+- A merge moves corrections the way it moves store preferences: to the target, where that member has none there yet. The seed never removes a dropped Ingredient that has a correction.
+- `ingredients.correctNutrition`, `removeNutritionCorrection` and `nutritionFoods` (search by every word, in the dataset's own words). `ingredients.onCorrected` is a household-scoped realtime event; the client refetches the nutrition reads, the same as for `changed`.
+- The "Not counted" link to the panel arrives with ticket 02's card: `/settings?tab=ingredients&ingredient=<id>` now opens that food's panel.

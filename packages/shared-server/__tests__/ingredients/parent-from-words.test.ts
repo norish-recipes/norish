@@ -24,6 +24,7 @@ function entry(offId: string, ...names: string[]): SeedEntry {
     name: names[0]!,
     nameFold: ingredientAliasFold(names[0]!),
     parentOffId: null,
+    nutrition: null,
     aliases: names.map((text) => ({ text, fold: ingredientAliasFold(text), locale: null })),
   };
 }

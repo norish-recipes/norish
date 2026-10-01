@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Datakilder",
       "notice": "Ingredienskataloget bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgængelig under <odbl>Open Database License (ODbL)</odbl>. Det katalog, Norish bygger ud fra den, tilbydes under samme licens.",
+      "nutritionNotice": "Næringsindholdet pr. 100 g kommer fra <ciqual>CIQUAL 2025</ciqual> og CALNUT (ANSES), <usda>USDA FoodData Central</usda> og <cofid>CoFID</cofid>, koblet via de koder Open Food Facts giver hver ingrediens. En husstands rettelser er dens egne værdier, ikke datasættenes.",
       "download": "Download ingredienskataloget (JSON)"
+    },
+    "nutrition": {
+      "section": "Næringsindhold",
+      "per100g": "Pr. 100 g",
+      "calories": "Kalorier",
+      "fat": "Fedt",
+      "carbs": "Kulhydrater",
+      "protein": "Protein",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g pr. kop",
+      "onePiece": "Ét stk. vejer {grams} g",
+      "oneCup": "En kop vejer {grams} g",
+      "none": "Norish har endnu ikke næringsindhold for denne ingrediens. Ret den for at give den noget.",
+      "noNumbers": "Endnu ingen værdier pr. 100 g.",
+      "borrowed": "Fra {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, valgt af Norish",
+        "name": "{food} · {dataset}, fundet på navnet",
+        "householdFood": "{food} · {dataset}, valgt af din husstand",
+        "household": "Din husstands egne værdier",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Ret",
+      "correctTitle": "Ret {name}",
+      "correctIntro": "Din rettelse gælder for alle i din husstand, og for ingen andre.",
+      "facts": {
+        "numbers": "Pr. 100 g",
+        "pieceWeight": "Ét stk.",
+        "density": "En kop"
+      },
+      "useSources": "Som Norish har det",
+      "pickFood": "En fødevare fra datasættene",
+      "typeLabel": "Fra en etiket",
+      "label": {
+        "calories": "Kalorier (kcal)",
+        "fat": "Fedt (g)",
+        "carbs": "Kulhydrater (g)",
+        "protein": "Protein (g)",
+        "pieceGrams": "Ét stk. vejer (g)",
+        "cupGrams": "En kop vejer (g)"
+      },
+      "searchFood": "Søg i datasættene (på engelsk), fx milk semi-skimmed",
+      "foodHint": "Skriv et par ord af navnet",
+      "searchingFoods": "Søger…",
+      "noFoods": "Ingen fødevare i datasættene har alle de ord.",
+      "remove": "Fjern vores rettelse",
+      "saved": "Rettelse gemt",
+      "removed": "Tilbage til datasættenes værdier",
+      "errors": {
+        "title": "Rettelsen blev ikke gemt",
+        "unknown-food": "Den fødevare findes ikke længere i Norish.",
+        "empty": "Ret mindst én af de tre.",
+        "not-found": "Denne ingrediens findes ikke længere.",
+        "unknown": "Noget gik galt. Prøv igen."
+      }
     },
     "errors": {
       "title": "Ingrediensen kunne ikke ændres",

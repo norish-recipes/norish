@@ -27,6 +27,10 @@ fr: oignon, oignons
 nl: ui, uien, ajuin
 # aeb-arab:راس بصل
 average_weight_per_unit:en: 150
+ciqual_food_code:en: 20034
+ciqual_food_name:en: Onion, raw
+usda_ndb_code:en: 11282
+usda_fdc_code:en: 170000
 ecobalyse_origins_en_european-union:en: onion-eu
 wikidata:en: Q3406628
 

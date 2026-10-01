@@ -1,5 +1,6 @@
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { initRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
+import { applyNutritionSourcesOnBoot } from "@norish/api/startup/apply-nutrition-sources";
 import { backfillDishColors } from "@norish/api/startup/backfill-dish-color";
 import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
 import { createServer } from "@norish/api/startup/http-server";
@@ -58,6 +59,10 @@ async function main() {
 
   // Old flagged mints, looked at again whenever the resolver's rules change.
   await recheckUndecidedMintsOnBoot();
+  log.info("-".repeat(50));
+
+  // Ingredient Nutrition's source numbers, when this release carries new ones.
+  await applyNutritionSourcesOnBoot();
   log.info("-".repeat(50));
 
   await initializeVideoProcessing();

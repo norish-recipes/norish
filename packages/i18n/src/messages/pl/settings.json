@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Źródła danych",
       "notice": "Katalog składników opiera się na taksonomii składników <off>Open Food Facts</off>, dostępnej na licencji <odbl>Open Database License (ODbL)</odbl>. Katalog, który Norish na jej podstawie buduje, jest udostępniany na tej samej licencji.",
+      "nutritionNotice": "Wartości odżywcze na 100 g pochodzą z <ciqual>CIQUAL 2025</ciqual> i CALNUT (ANSES), <usda>USDA FoodData Central</usda> oraz <cofid>CoFID</cofid>, połączonych kodami, które Open Food Facts nadaje każdemu składnikowi. Poprawki gospodarstwa to jego własne wartości, nie wartości z baz.",
       "download": "Pobierz katalog składników (JSON)"
+    },
+    "nutrition": {
+      "section": "Wartości odżywcze",
+      "per100g": "Na 100 g",
+      "calories": "Kalorie",
+      "fat": "Tłuszcz",
+      "carbs": "Węglowodany",
+      "protein": "Białko",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g na szklankę",
+      "onePiece": "Jedna sztuka waży {grams} g",
+      "oneCup": "Szklanka waży {grams} g",
+      "none": "Norish nie ma jeszcze wartości odżywczych dla tego składnika. Popraw go, aby je dodać.",
+      "noNumbers": "Brak jeszcze wartości na 100 g.",
+      "borrowed": "Od {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, wybrane przez Norish",
+        "name": "{food} · {dataset}, dopasowane po nazwie",
+        "householdFood": "{food} · {dataset}, wybrane przez twoje gospodarstwo",
+        "household": "Własne wartości twojego gospodarstwa",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Popraw",
+      "correctTitle": "Popraw {name}",
+      "correctIntro": "Twoja poprawka obowiązuje wszystkich w twoim gospodarstwie i nikogo więcej.",
+      "facts": {
+        "numbers": "Na 100 g",
+        "pieceWeight": "Jedna sztuka",
+        "density": "Szklanka"
+      },
+      "useSources": "Tak, jak ma Norish",
+      "pickFood": "Produkt z baz danych",
+      "typeLabel": "Z etykiety",
+      "label": {
+        "calories": "Kalorie (kcal)",
+        "fat": "Tłuszcz (g)",
+        "carbs": "Węglowodany (g)",
+        "protein": "Białko (g)",
+        "pieceGrams": "Jedna sztuka waży (g)",
+        "cupGrams": "Szklanka waży (g)"
+      },
+      "searchFood": "Szukaj w bazach (po angielsku), np. milk semi-skimmed",
+      "foodHint": "Wpisz kilka słów z nazwy",
+      "searchingFoods": "Szukanie…",
+      "noFoods": "Żaden produkt z baz nie ma wszystkich tych słów.",
+      "remove": "Usuń naszą poprawkę",
+      "saved": "Poprawka zapisana",
+      "removed": "Powrót do wartości z baz danych",
+      "errors": {
+        "title": "Nie zapisano poprawki",
+        "unknown-food": "Tego produktu nie ma już w Norish.",
+        "empty": "Popraw co najmniej jedną z trzech.",
+        "not-found": "Ten składnik już nie istnieje.",
+        "unknown": "Coś poszło nie tak. Spróbuj ponownie."
+      }
     },
     "errors": {
       "title": "Nie udało się zmienić składnika",

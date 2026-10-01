@@ -45,6 +45,12 @@ export const ingredientsRealtime = defineRealtimeCatalogue("ingredients", {
   changed: { scope: "broadcast", payload: z.object({ ingredientIds: z.array(z.string()) }) },
   /** A round of Ask AI moved on by a food, or ended. */
   review: { scope: "broadcast", payload: ReviewRoundSchema },
+  /**
+   * A member of the household corrected these Ingredients' nutrition, or
+   * removed a correction (ADR-0039): only that household reads it, so only
+   * it hears. Everything derived from their numbers is read again.
+   */
+  corrected: { scope: "household", payload: z.object({ ingredientIds: z.array(z.string()) }) },
 });
 
 export type IngredientsRealtime = typeof ingredientsRealtime;

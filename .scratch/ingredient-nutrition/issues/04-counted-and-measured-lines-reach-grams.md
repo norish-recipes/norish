@@ -4,11 +4,16 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done, pending gates and review
 
-- [ ] "2 onions" counts at two piece weights of onion; "3 cloves garlic" at three of garlic's clove portion.
-- [ ] "1 cup milk" and "2 tbsp olive oil" count through their densities.
-- [ ] "1 cup flour" without a density is named under "Not counted", never counted at 240 g.
-- [ ] "1 red onion" with no piece weight of its own borrows onion's and marks the total estimated.
-- [ ] The panel shows the piece weight and density with their sources.
+- [x] "2 onions" counts at two piece weights of onion; "3 cloves garlic" at three of garlic's clove portion.
+- [x] "1 cup milk" and "2 tbsp olive oil" count through their densities.
+- [x] "1 cup flour" without a density is named under "Not counted", never counted at 240 g.
+- [x] "1 red onion" with no piece weight of its own borrows onion's and marks the total estimated.
+- [x] The panel shows the piece weight and density with their sources.
 - [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+
+## Comments
+
+- 2026-10-01 implemented. A USDA food's piece weight is its "medium" or "whole" portion, else its first portion counted in pieces. That second rule also covers "one whose modifier matches the unit" (garlic's first counted portion is its clove). Density comes from a plain cup, then tablespoon, then teaspoon, then fl oz or ml portion, preferring the plain measure to a cut one ("cup" before "cup, chopped").
+- Following "hide the algorithm", the panel shows and corrects a density as what a cup weighs, never in grams per millilitre.

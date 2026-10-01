@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Fonti dei dati",
       "notice": "Il catalogo degli ingredienti parte dalla tassonomia degli ingredienti di <off>Open Food Facts</off>, disponibile con la <odbl>Open Database License (ODbL)</odbl>. Il catalogo che Norish ne ricava è offerto con la stessa licenza.",
+      "nutritionNotice": "I valori nutrizionali per 100 g provengono da <ciqual>CIQUAL 2025</ciqual> e CALNUT (ANSES), <usda>USDA FoodData Central</usda> e <cofid>CoFID</cofid>, collegati tramite i codici che Open Food Facts dà a ogni ingrediente. Le correzioni di una famiglia sono valori suoi, non dei dataset.",
       "download": "Scarica il catalogo degli ingredienti (JSON)"
+    },
+    "nutrition": {
+      "section": "Valori nutrizionali",
+      "per100g": "Per 100 g",
+      "calories": "Calorie",
+      "fat": "Grassi",
+      "carbs": "Carboidrati",
+      "protein": "Proteine",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g a tazza",
+      "onePiece": "Un pezzo pesa {grams} g",
+      "oneCup": "Una tazza pesa {grams} g",
+      "none": "Norish non ha ancora valori nutrizionali per questo ingrediente. Correggilo per dargliene.",
+      "noNumbers": "Ancora nessun valore per 100 g.",
+      "borrowed": "Da {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, scelto da Norish",
+        "name": "{food} · {dataset}, trovato per nome",
+        "householdFood": "{food} · {dataset}, scelto dalla tua famiglia",
+        "household": "I valori propri della tua famiglia",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Correggi",
+      "correctTitle": "Correggi {name}",
+      "correctIntro": "La tua correzione vale per tutta la tua famiglia, e per nessun altro.",
+      "facts": {
+        "numbers": "Per 100 g",
+        "pieceWeight": "Un pezzo",
+        "density": "Una tazza"
+      },
+      "useSources": "Come lo ha Norish",
+      "pickFood": "Un alimento dei dataset",
+      "typeLabel": "Da un'etichetta",
+      "label": {
+        "calories": "Calorie (kcal)",
+        "fat": "Grassi (g)",
+        "carbs": "Carboidrati (g)",
+        "protein": "Proteine (g)",
+        "pieceGrams": "Un pezzo pesa (g)",
+        "cupGrams": "Una tazza pesa (g)"
+      },
+      "searchFood": "Cerca nei dataset (in inglese), per esempio milk semi-skimmed",
+      "foodHint": "Scrivi qualche parola del nome",
+      "searchingFoods": "Ricerca…",
+      "noFoods": "Nessun alimento dei dataset ha tutte queste parole.",
+      "remove": "Rimuovi la nostra correzione",
+      "saved": "Correzione salvata",
+      "removed": "Di nuovo i valori dei dataset",
+      "errors": {
+        "title": "Correzione non salvata",
+        "unknown-food": "Quell'alimento non è più in Norish.",
+        "empty": "Correggi almeno uno dei tre.",
+        "not-found": "Questo ingrediente non esiste più.",
+        "unknown": "Qualcosa è andato storto. Riprova."
+      }
     },
     "errors": {
       "title": "Impossibile modificare l'ingrediente",

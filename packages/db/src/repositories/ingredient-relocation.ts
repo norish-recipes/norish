@@ -8,6 +8,7 @@ import {
   groceries,
   householdUsers,
   ingredientAliases,
+  ingredientNutritionCorrections,
   ingredients,
   ingredientStorePreferences,
   pantryIngredients,
@@ -28,13 +29,15 @@ import {
 /**
  * The rows that hold a fact about an Ingredient, each unique on the
  * Ingredient and one other column: at most one Product Link and one Aisle
- * Link per Store, one store preference and one Pantry Ingredient per member.
+ * Link per Store, one store preference, one nutrition correction and one
+ * Pantry Ingredient per member.
  */
 const PANTRY_KEYED = { table: pantryIngredients, key: "user_id" } as const;
 const KEYED_BY_INGREDIENT = [
   { table: storeProductLinks, key: "store_id" },
   { table: aisleLinks, key: "store_id" },
   { table: ingredientStorePreferences, key: "user_id" },
+  { table: ingredientNutritionCorrections, key: "user_id" },
   PANTRY_KEYED,
 ] as const;
 

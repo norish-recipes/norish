@@ -15,6 +15,24 @@ import { users } from "./auth";
 import { mutableRowColumns, versionColumn } from "./shared";
 
 /**
+ * What an Open Food Facts taxonomy entry says about its food's nutrition
+ * (ADR-0039): the codes it is known by in the open food datasets, in the
+ * order Ingredient Nutrition tries them, and its piece weight and density.
+ */
+export interface NutritionCodes {
+  /** CIQUAL codes: the entry's own code first, then its proxy. */
+  ciqual: string[];
+  /** USDA codes, in the order tried: `ndb:11282` (SR Legacy) or `fdc:170000`. */
+  usda: string[];
+  /** Other CIQUAL-keyed codes (secondary codes, Agribalyse's), tried after USDA. */
+  ciqualOther: string[];
+  /** `average_weight_per_unit`: grams per piece. */
+  pieceWeight: number | null;
+  /** `density_g_per_ml`. */
+  density: number | null;
+}
+
+/**
  * Ingredients: one row per food, known by many Ingredient Aliases. A recipe
  * line, a Grocery and a Pantry Ingredient point at an alias, and the alias
  * points here (ADR-0037), so two spellings of one food are one Ingredient.
@@ -36,7 +54,9 @@ import { mutableRowColumns, versionColumn } from "./shared";
  *
  * `offId` is the Open Food Facts taxonomy entry a seeded Ingredient stands
  * for ("en:onion"), which is how a refresh of the seed finds it again
- * (ADR-0038).
+ * (ADR-0038). `nutritionCodes` is what that entry says about its nutrition,
+ * as the seed last read it, so a code fixed upstream arrives overnight
+ * (ADR-0039); null for an Ingredient no entry gives any.
  */
 export const ingredients = pgTable(
   "ingredients",
@@ -52,6 +72,7 @@ export const ingredients = pgTable(
     }),
     parentChosen: boolean("parent_chosen").notNull().default(false),
     offId: text("off_id"),
+    nutritionCodes: jsonb("nutrition_codes").$type<NutritionCodes>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
   },

@@ -63,6 +63,41 @@ describe("parseTaxonomy", () => {
     expect(entry("en:vegetable")?.parentIds).toEqual([]);
   });
 
+  it("keeps what an entry says about its nutrition, and no other property", () => {
+    expect(entry("en:onion")?.nutrition).toEqual({
+      ciqual: ["20034"],
+      usda: ["ndb:11282", "fdc:170000"],
+      ciqualOther: [],
+      pieceWeight: 150,
+      density: null,
+    });
+    expect(entry("en:vegetable")?.nutrition).toBeNull();
+    expect(entry("en:red-onion")?.nutrition).toBeNull();
+  });
+
+  it("reads a proxy after the entry's own code, secondary codes apart, and density", () => {
+    const [milk] = parseTaxonomy(
+      [
+        "en: milk",
+        "ciqual_proxy_food_code:en: 19051",
+        "ciqual_food_code:en: 19016",
+        "agribalyse_food_code:en: 19016",
+        "ciqual_food_2_code:en: 19024",
+        "usda_ndb_proxy_code:en: 1077",
+        "density_g_per_ml:en: 1.03",
+        "",
+      ].join("\n")
+    );
+
+    expect(milk?.nutrition).toEqual({
+      ciqual: ["19016", "19051"],
+      usda: ["ndb:1077"],
+      ciqualOther: ["19024"],
+      pieceWeight: null,
+      density: 1.03,
+    });
+  });
+
   it("reads an every-language name as holding in no language in particular", () => {
     expect(entry("en:imazalil")?.names).toContainEqual({ text: "imazalil", locale: null });
   });

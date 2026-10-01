@@ -30,6 +30,7 @@ import type { IngredientPick } from "./ingredient-picker";
 import type { Relocation } from "./ingredient-relocation";
 import type { IngredientItem, Spelling } from "./ingredient-row";
 import { DeleteIngredientModal } from "./delete-ingredient-modal";
+import { IngredientNutritionSection } from "./ingredient-nutrition";
 import { IngredientRelocationPanel } from "./ingredient-relocation";
 import { IngredientStatusChip } from "./ingredient-status-chip";
 import { reviewMessage, reviewTrace, suggestionMessage } from "./review-copy";
@@ -62,12 +63,15 @@ type DraftParent = { id: string; name: string; localeNames?: LocaleNames } | nul
  * AI's shows here too.
  */
 export function IngredientPanel({
+  id = null,
   item,
   open,
   reviewing = false,
   onClose,
   onChanged,
 }: {
+  /** The food the panel is open for, which a link may name before the list lists it. */
+  id?: string | null;
   /** The food as the list now has it; null while the list does not list it. */
   item: IngredientItem | null;
   open: boolean;
@@ -82,9 +86,10 @@ export function IngredientPanel({
   const [shown, setShown] = useState<IngredientItem | null>(item);
   // A food a filter or a search no longer lists (marked distinct under
   // "flagged only", say) is read on its own, so the panel keeps up with it.
+  const ownId = shown?.id ?? id;
   const own = useQuery({
-    ...trpc.ingredients.get.queryOptions({ ingredientId: shown?.id ?? "", locale }),
-    enabled: open && shown !== null && item === null,
+    ...trpc.ingredients.get.queryOptions({ ingredientId: ownId ?? "", locale }),
+    enabled: open && ownId !== null && item === null,
   });
   const current: IngredientItem | null = item ?? own.data ?? null;
 
@@ -549,6 +554,8 @@ function IngredientPanelContent({
               <ChevronRightIcon className="size-4" />
             </Button>
           </Section>
+
+          <IngredientNutritionSection ingredientId={item.id} name={displayName} />
         </div>
       </Panel.Body>
 

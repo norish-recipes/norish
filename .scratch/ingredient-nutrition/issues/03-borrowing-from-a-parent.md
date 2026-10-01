@@ -4,11 +4,15 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done, pending gates and review
 
-- [ ] "Red onion" with no code reads onion's numbers, marked as borrowed from onion.
-- [ ] Borrowing passes over an ancestor without numbers to the next one up.
-- [ ] Brandy under alcohol has no numbers, and a brandy line is named under "Not counted", not counted at 660 kcal.
-- [ ] Re-parenting an Ingredient changes what it borrows.
-- [ ] A recipe total with any borrowed line is marked estimated; one without is not.
+- [x] "Red onion" with no code reads onion's numbers, marked as borrowed from onion.
+- [x] Borrowing passes over an ancestor without numbers to the next one up.
+- [x] Brandy under alcohol has no numbers, and a brandy line is named under "Not counted", not counted at 660 kcal.
+- [x] Re-parenting an Ingredient changes what it borrows.
+- [x] A recipe total with any borrowed line is marked estimated; one without is not.
 - [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+
+## Comments
+
+- 2026-10-01 implemented in the module's step 8, over `findNutritionLineage` (one recursive query for an Ingredient and all its ancestors). The never-lend list is the table's `neverLend`, applied as `nutrition_rules` of kind `never-lend`. A never-lend parent keeps numbers of its own, so `en:sauce` reads "Sauce (average)" itself, but its children have none. In the real table brandy has a fix, so the brandy acceptance case is tested on a fixture table.

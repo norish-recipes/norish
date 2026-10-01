@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Источники данных",
       "notice": "Каталог ингредиентов основан на таксономии ингредиентов <off>Open Food Facts</off>, доступной по лицензии <odbl>Open Database License (ODbL)</odbl>. Каталог, который Norish строит на её основе, предоставляется по той же лицензии.",
+      "nutritionNotice": "Пищевая ценность на 100 г взята из <ciqual>CIQUAL 2025</ciqual> и CALNUT (ANSES), <usda>USDA FoodData Central</usda> и <cofid>CoFID</cofid> по кодам, которые Open Food Facts даёт каждому ингредиенту. Исправления семьи являются её собственными значениями, а не значениями наборов данных.",
       "download": "Скачать каталог ингредиентов (JSON)"
+    },
+    "nutrition": {
+      "section": "Пищевая ценность",
+      "per100g": "На 100 г",
+      "calories": "Калории",
+      "fat": "Жиры",
+      "carbs": "Углеводы",
+      "protein": "Белки",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} г в чашке",
+      "onePiece": "Одна штука весит {grams} г",
+      "oneCup": "Чашка весит {grams} г",
+      "none": "У Norish пока нет пищевой ценности для этого ингредиента. Исправьте его, чтобы задать её.",
+      "noNumbers": "Пока нет значений на 100 г.",
+      "borrowed": "От {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, выбрано Norish",
+        "name": "{food} · {dataset}, найдено по названию",
+        "householdFood": "{food} · {dataset}, выбрано вашей семьёй",
+        "household": "Собственные значения вашей семьи",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Исправить",
+      "correctTitle": "Исправить {name}",
+      "correctIntro": "Ваше исправление действует для всей вашей семьи и ни для кого больше.",
+      "facts": {
+        "numbers": "На 100 г",
+        "pieceWeight": "Одна штука",
+        "density": "Чашка"
+      },
+      "useSources": "Как в Norish",
+      "pickFood": "Продукт из наборов данных",
+      "typeLabel": "С этикетки",
+      "label": {
+        "calories": "Калории (kcal)",
+        "fat": "Жиры (g)",
+        "carbs": "Углеводы (g)",
+        "protein": "Белки (g)",
+        "pieceGrams": "Одна штука весит (г)",
+        "cupGrams": "Чашка весит (г)"
+      },
+      "searchFood": "Поиск по наборам данных (на английском), например milk semi-skimmed",
+      "foodHint": "Введите несколько слов названия",
+      "searchingFoods": "Поиск…",
+      "noFoods": "Ни у одного продукта в данных нет всех этих слов.",
+      "remove": "Удалить наше исправление",
+      "saved": "Исправление сохранено",
+      "removed": "Снова значения из наборов данных",
+      "errors": {
+        "title": "Исправление не сохранено",
+        "unknown-food": "Этого продукта больше нет в Norish.",
+        "empty": "Исправьте хотя бы одно из трёх.",
+        "not-found": "Этого ингредиента больше нет.",
+        "unknown": "Что-то пошло не так. Попробуйте снова."
+      }
     },
     "errors": {
       "title": "Не удалось изменить ингредиент",

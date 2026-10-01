@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Sources de données",
       "notice": "Le catalogue d'ingrédients est alimenté par la taxonomie des ingrédients d'<off>Open Food Facts</off>, disponible sous la <odbl>Open Database License (ODbL)</odbl>. Le catalogue que Norish en tire est proposé sous la même licence.",
+      "nutritionNotice": "Les valeurs nutritionnelles pour 100 g proviennent de <ciqual>CIQUAL 2025</ciqual> et CALNUT (ANSES), de <usda>USDA FoodData Central</usda> et de <cofid>CoFID</cofid>, reliées par les codes qu'Open Food Facts donne à chaque ingrédient. Les corrections d'un foyer sont ses propres valeurs, pas celles des bases.",
       "download": "Télécharger le catalogue d'ingrédients (JSON)"
+    },
+    "nutrition": {
+      "section": "Valeurs nutritionnelles",
+      "per100g": "Pour 100 g",
+      "calories": "Calories",
+      "fat": "Lipides",
+      "carbs": "Glucides",
+      "protein": "Protéines",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g la tasse",
+      "onePiece": "Une pièce pèse {grams} g",
+      "oneCup": "Une tasse pèse {grams} g",
+      "none": "Norish n'a pas encore de valeurs nutritionnelles pour cet ingrédient. Corrigez-le pour lui en donner.",
+      "noNumbers": "Pas encore de valeurs pour 100 g.",
+      "borrowed": "De {name} : {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, choisi par Norish",
+        "name": "{food} · {dataset}, trouvé par le nom",
+        "householdFood": "{food} · {dataset}, choisi par votre foyer",
+        "household": "Les propres valeurs de votre foyer",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Corriger",
+      "correctTitle": "Corriger {name}",
+      "correctIntro": "Votre correction vaut pour tout votre foyer, et pour personne d'autre.",
+      "facts": {
+        "numbers": "Pour 100 g",
+        "pieceWeight": "Une pièce",
+        "density": "Une tasse"
+      },
+      "useSources": "Comme Norish l'a",
+      "pickFood": "Un aliment des bases de données",
+      "typeLabel": "D'après une étiquette",
+      "label": {
+        "calories": "Calories (kcal)",
+        "fat": "Lipides (g)",
+        "carbs": "Glucides (g)",
+        "protein": "Protéines (g)",
+        "pieceGrams": "Une pièce pèse (g)",
+        "cupGrams": "Une tasse pèse (g)"
+      },
+      "searchFood": "Chercher dans les bases (en anglais), par exemple milk semi-skimmed",
+      "foodHint": "Tapez quelques mots du nom",
+      "searchingFoods": "Recherche…",
+      "noFoods": "Aucun aliment des bases n'a tous ces mots.",
+      "remove": "Supprimer notre correction",
+      "saved": "Correction enregistrée",
+      "removed": "Retour aux valeurs des bases de données",
+      "errors": {
+        "title": "Correction non enregistrée",
+        "unknown-food": "Cet aliment n'est plus dans Norish.",
+        "empty": "Corrigez au moins une des trois valeurs.",
+        "not-found": "Cet ingrédient n'existe plus.",
+        "unknown": "Une erreur s'est produite. Réessayez."
+      }
     },
     "errors": {
       "title": "Impossible de modifier l'ingrédient",

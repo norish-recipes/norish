@@ -1,3 +1,5 @@
+import type { NutritionCodes } from "@norish/db/schema";
+
 /**
  * The Open Food Facts ingredients taxonomy, read (ADR-0038). The file is a
  * list of entries separated by blank lines; within one entry
@@ -5,9 +7,11 @@
  *   < en: onion-family vegetable      a parent, named in any of its languages
  *   en: onion, onions                 the entry's names in one language
  *   nl: ui, uien, ajuin
- *   wikidata:en: Q3406628             a property, which Norish does not read
+ *   wikidata:en: Q3406628             a property
+ *   ciqual_food_code:en: 20034        a property Norish reads (`NutritionCodes`)
  *
- * and `#` starts a comment. The first name line names the entry: its id is
+ * and `#` starts a comment. Of the properties, only those about nutrition
+ * are kept: the dataset codes, the piece weight and the density (ADR-0039). The first name line names the entry: its id is
  * that language and the first name, as Open Food Facts itself keys it
  * ("en:onion"). `xx:` names hold in every language. A block with no names
  * (the synonyms and stopwords at the top of the file) is not an entry.
@@ -23,6 +27,8 @@ export interface TaxonomyName {
   locale: string | null;
 }
 
+export type { NutritionCodes };
+
 export interface TaxonomyEntry {
   /** The entry's own key, "en:onion". */
   id: string;
@@ -32,6 +38,8 @@ export interface TaxonomyEntry {
   names: TaxonomyName[];
   /** The ids of the entries it is a kind of, first one first. Parents the file does not have are dropped. */
   parentIds: string[];
+  /** What it says about its nutrition, or null where it says nothing. */
+  nutrition: NutritionCodes | null;
 }
 
 export class TaxonomyParseError extends Error {
@@ -43,7 +51,7 @@ export class TaxonomyParseError extends Error {
 
 const LANGUAGE = "[a-z]{2,3}(?:[_-][a-z]+)?";
 const PARENT_LINE = new RegExp(`^<\\s*(${LANGUAGE}):\\s*(.+)$`);
-const PROPERTY_LINE = new RegExp(`^[a-z0-9_-]+:${LANGUAGE}:`);
+const PROPERTY_LINE = new RegExp(`^([a-z0-9_-]+):${LANGUAGE}:\\s*(.*)$`);
 const NAME_LINE = new RegExp(`^(${LANGUAGE}):\\s*(.*)$`);
 
 /** The language-free marker: a name that holds in every language. */
@@ -65,14 +73,88 @@ function namesOf(list: string): string[] {
 interface RawEntry {
   names: Array<TaxonomyName & { lang: string }>;
   parentKeys: string[];
+  properties: Map<string, string>;
+}
+
+/** The properties that name a CIQUAL code: the entry's own, then its proxy. */
+const CIQUAL_PROPERTIES = ["ciqual_food_code", "ciqual_proxy_food_code"];
+
+/** The USDA properties, in the order they are tried, and which kind of code each holds. */
+const USDA_PROPERTIES: ReadonlyArray<readonly [string, "ndb" | "fdc"]> = [
+  ["usda_ndb_code", "ndb"],
+  ["usda_fdc_code", "fdc"],
+  ["usda_ndb_proxy_code", "ndb"],
+  ["usda_fdc_2_code", "fdc"],
+  ["usda_ndb_2_code", "ndb"],
+  ["usda_fdc_3_code", "fdc"],
+  ["usda_ndb_3_code", "ndb"],
+  ["usda_ndb_proxy_2_code", "ndb"],
+];
+
+/** Other properties keyed by CIQUAL code, typo variants included, tried after USDA. */
+const OTHER_CIQUAL_PROPERTIES = [
+  "ciqual_food_2_code",
+  "ciqual_food_3_code",
+  "agribalyse_food_code",
+  "agribalyse_proxy_food_code",
+  "ciqual_food_proxy_code",
+  "ciqual_proxy_proxy_food_code",
+];
+
+function codeOf(value: string | undefined): string | null {
+  const code = value?.trim();
+
+  return code && /^\d+$/.test(code) ? code : null;
+}
+
+function amountOf(value: string | undefined): number | null {
+  const amount = Number(value?.trim().replace(",", "."));
+
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+/** What an entry's properties say about its nutrition, or null where they say nothing. */
+function nutritionOf(properties: ReadonlyMap<string, string>): NutritionCodes | null {
+  const codes = (names: readonly string[]) =>
+    names.flatMap((name) => {
+      const code = codeOf(properties.get(name));
+
+      return code ? [code] : [];
+    });
+  const ciqual = [...new Set(codes(CIQUAL_PROPERTIES))];
+  const nutrition: NutritionCodes = {
+    ciqual,
+    usda: [
+      ...new Set(
+        USDA_PROPERTIES.flatMap(([name, kind]) => {
+          const code = codeOf(properties.get(name));
+
+          return code ? [`${kind}:${code}`] : [];
+        })
+      ),
+    ],
+    ciqualOther: [...new Set(codes(OTHER_CIQUAL_PROPERTIES))].filter(
+      (code) => !ciqual.includes(code)
+    ),
+    pieceWeight: amountOf(properties.get("average_weight_per_unit")),
+    density: amountOf(properties.get("density_g_per_ml")),
+  };
+  const empty =
+    nutrition.ciqual.length === 0 &&
+    nutrition.usda.length === 0 &&
+    nutrition.ciqualOther.length === 0 &&
+    nutrition.pieceWeight === null &&
+    nutrition.density === null;
+
+  return empty ? null : nutrition;
 }
 
 export function parseTaxonomy(file: string): TaxonomyEntry[] {
   const blocks: RawEntry[] = [];
-  let current: RawEntry = { names: [], parentKeys: [] };
+  let current: RawEntry = { names: [], parentKeys: [], properties: new Map() };
   const close = () => {
     if (current.names.length > 0) blocks.push(current);
-    current = { names: [], parentKeys: [] };
+    current = { names: [], parentKeys: [], properties: new Map() };
   };
 
   file.split(/\r?\n/).forEach((raw, index) => {
@@ -88,7 +170,16 @@ export function parseTaxonomy(file: string): TaxonomyEntry[] {
 
       return;
     }
-    if (PROPERTY_LINE.test(line)) return;
+    const property = PROPERTY_LINE.exec(line);
+
+    if (property) {
+      // The first value an entry gives a property is the one it means.
+      if (!current.properties.has(property[1]!)) {
+        current.properties.set(property[1]!, property[2]!);
+      }
+
+      return;
+    }
 
     const names = NAME_LINE.exec(line);
 
@@ -111,7 +202,7 @@ export function parseTaxonomy(file: string): TaxonomyEntry[] {
   // Every name of every entry keys it, so a parent named by any of its names is found.
   const idByKey = new Map<string, string>();
   const ids = new Set<string>();
-  const entries: Array<TaxonomyEntry & { parentKeys: string[] }> = [];
+  const entries: Array<Omit<TaxonomyEntry, "parentIds"> & { parentKeys: string[] }> = [];
 
   for (const block of blocks) {
     const first = block.names[0]!;
@@ -130,8 +221,8 @@ export function parseTaxonomy(file: string): TaxonomyEntry[] {
       id,
       name: (block.names.find((name) => name.lang === "en") ?? first).text,
       names: block.names.map(({ text, locale }) => ({ text, locale })),
-      parentIds: [],
       parentKeys: block.parentKeys,
+      nutrition: nutritionOf(block.properties),
     });
   }
 

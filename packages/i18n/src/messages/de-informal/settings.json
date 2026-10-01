@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "Datenquellen",
       "notice": "Der Zutatenkatalog basiert auf der Zutatentaxonomie von <off>Open Food Facts</off>, verfügbar unter der <odbl>Open Database License (ODbL)</odbl>. Der Katalog, den Norish daraus aufbaut, steht unter derselben Lizenz.",
+      "nutritionNotice": "Die Nährwerte pro 100 g stammen aus <ciqual>CIQUAL 2025</ciqual> und CALNUT (ANSES), <usda>USDA FoodData Central</usda> und <cofid>CoFID</cofid>, verknüpft über die Codes, die Open Food Facts jeder Zutat gibt. Die Korrekturen eines Haushalts sind dessen eigene Werte, nicht die der Datensätze.",
       "download": "Zutatenkatalog herunterladen (JSON)"
+    },
+    "nutrition": {
+      "section": "Nährwerte",
+      "per100g": "Pro 100 g",
+      "calories": "Kalorien",
+      "fat": "Fett",
+      "carbs": "Kohlenhydrate",
+      "protein": "Eiweiß",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "{value} g pro Tasse",
+      "onePiece": "Ein Stück wiegt {grams} g",
+      "oneCup": "Eine Tasse wiegt {grams} g",
+      "noNumbers": "Noch keine Werte pro 100 g.",
+      "borrowed": "Von {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, von Norish gewählt",
+        "name": "{food} · {dataset}, über den Namen gefunden",
+        "taxonomy": "Open Food Facts",
+        "householdFood": "{food} · {dataset}, von deinem Haushalt gewählt",
+        "household": "Die eigenen Werte deines Haushalts"
+      },
+      "correct": "Korrigieren",
+      "correctTitle": "{name} korrigieren",
+      "facts": {
+        "numbers": "Pro 100 g",
+        "pieceWeight": "Ein Stück",
+        "density": "Eine Tasse"
+      },
+      "useSources": "Wie Norish es hat",
+      "pickFood": "Ein Lebensmittel aus den Datensätzen",
+      "typeLabel": "Vom Etikett",
+      "label": {
+        "calories": "Kalorien (kcal)",
+        "fat": "Fett (g)",
+        "carbs": "Kohlenhydrate (g)",
+        "protein": "Eiweiß (g)",
+        "pieceGrams": "Ein Stück wiegt (g)",
+        "cupGrams": "Eine Tasse wiegt (g)"
+      },
+      "searchingFoods": "Suche…",
+      "noFoods": "Kein Lebensmittel in den Datensätzen hat all diese Wörter.",
+      "saved": "Korrektur gespeichert",
+      "removed": "Zurück zu den Werten der Datensätze",
+      "errors": {
+        "title": "Korrektur nicht gespeichert",
+        "unknown-food": "Dieses Lebensmittel gibt es in Norish nicht mehr.",
+        "not-found": "Diese Zutat gibt es nicht mehr.",
+        "empty": "Korrigiere mindestens einen der drei Werte.",
+        "unknown": "Etwas ist schiefgelaufen. Versuch es erneut."
+      },
+      "none": "Norish hat noch keine Nährwerte für diese Zutat. Korrigiere sie, um welche einzutragen.",
+      "correctIntro": "Deine Korrektur gilt für alle in deinem Haushalt und für niemanden sonst.",
+      "searchFood": "In den Datensätzen suchen (Englisch), etwa milk semi-skimmed",
+      "foodHint": "Gib ein paar Wörter des Namens ein",
+      "remove": "Unsere Korrektur entfernen"
     },
     "errors": {
       "title": "Die Zutat konnte nicht geändert werden",

@@ -118,7 +118,42 @@ describe("the ingredient catalogue seed", () => {
       await applySeedFile(excerpt);
       const { outcome } = await applySeedFile(excerpt);
 
-      expect(outcome).toMatchObject({ created: 0, adopted: 0, aliasesAdded: 0, parentsSet: 0 });
+      expect(outcome).toMatchObject({
+        created: 0,
+        adopted: 0,
+        aliasesAdded: 0,
+        parentsSet: 0,
+        nutritionChanged: 0,
+      });
+    });
+
+    it("keeps each entry's nutrition codes, and a code changed upstream arrives with the next one", async () => {
+      await applySeedFile(excerpt);
+
+      const codesOf = async (name: string) => {
+        const [row] = await getTestDb()
+          .select({ codes: ingredients.nutritionCodes })
+          .from(ingredients)
+          .where(eq(ingredients.name, name));
+
+        return row?.codes;
+      };
+
+      await expect(codesOf("onion")).resolves.toEqual({
+        ciqual: ["20034"],
+        usda: ["ndb:11282", "fdc:170000"],
+        ciqualOther: [],
+        pieceWeight: 150,
+        density: null,
+      });
+      await expect(codesOf("red onion")).resolves.toBeNull();
+
+      const { outcome } = await applySeedFile(
+        excerpt.replace("ciqual_food_code:en: 20034", "ciqual_food_code:en: 20035")
+      );
+
+      expect(outcome.nutritionChanged).toBe(1);
+      await expect(codesOf("onion")).resolves.toMatchObject({ ciqual: ["20035"] });
     });
 
     it("takes an existing Ingredient of the same name as the entry, and keeps its owner", async () => {

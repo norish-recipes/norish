@@ -52,6 +52,7 @@ export function seedEntriesOf(file: string): SeedEntry[] {
         name,
         nameFold: ingredientAliasFold(name),
         parentOffId: entry.parentIds[0] ?? null,
+        nutrition: entry.nutrition,
         aliases: entry.names.flatMap(({ text, locale }) => {
           const cleaned = cleanIngredientText(text);
 

@@ -1,11 +1,13 @@
 import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
+import type { NutritionCodes } from "@norish/db/schema";
 import { db } from "@norish/db/drizzle";
 import {
   aisleLinks,
   groceries,
   ingredientAliases,
+  ingredientNutritionCorrections,
   ingredients,
   ingredientStorePreferences,
   pantryIngredients,
@@ -32,6 +34,8 @@ export interface SeedEntry {
   nameFold: string;
   parentOffId: string | null;
   aliases: ReadonlyArray<{ text: string; fold: string; locale: string | null }>;
+  /** What the entry says about its nutrition (ADR-0039), or null. */
+  nutrition: NutritionCodes | null;
 }
 
 export interface SeedOutcome {
@@ -52,6 +56,24 @@ export interface SeedOutcome {
   parentCycles: number;
   /** Ingredients the file no longer lists and nothing used, removed. */
   removed: number;
+  /** Seeded Ingredients whose nutrition codes the file changed. */
+  nutritionChanged: number;
+}
+
+/**
+ * Codes as compared: one spelling for the same codes, whatever order the
+ * stored jsonb gives its keys back in, so an unchanged file writes nothing.
+ */
+function codesKey(codes: NutritionCodes | null | undefined): string {
+  return codes
+    ? JSON.stringify([
+        codes.ciqual,
+        codes.usda,
+        codes.ciqualOther,
+        codes.pieceWeight,
+        codes.density,
+      ])
+    : "null";
 }
 
 /** How many rows one insert or lookup carries: well under Postgres's parameter limit. */
@@ -114,8 +136,8 @@ function closesCycle(parents: ReadonlyMap<string, string | null>, id: string, pa
  *   cycle. An entry with no parent leaves its Ingredient's parent alone.
  * - A seeded Ingredient the file no longer lists is removed only when nothing
  *   uses it: no line, grocery, recurring grocery or Pantry Ingredient
- *   through any of its spellings, no link or preference, no spelling a person
- *   added, and no child.
+ *   through any of its spellings, no link, preference or nutrition
+ *   correction, no spelling a person added, and no child.
  */
 export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promise<SeedOutcome> {
   return await db.transaction(async (tx) => {
@@ -130,6 +152,7 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
       parentsSet: 0,
       parentCycles: 0,
       removed: 0,
+      nutritionChanged: 0,
     };
     const existing = await tx
       .select({
@@ -138,6 +161,7 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
         offId: ingredients.offId,
         parentId: ingredients.parentId,
         parentChosen: ingredients.parentChosen,
+        nutritionCodes: ingredients.nutritionCodes,
       })
       .from(ingredients);
     const byId = new Map(existing.map((row) => [row.id, row]));
@@ -179,13 +203,27 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     for (const part of chunks(toCreate)) {
       const created = await tx
         .insert(ingredients)
-        .values(part.map((entry) => ({ name: entry.name, offId: entry.offId })))
+        .values(
+          part.map((entry) => ({
+            name: entry.name,
+            offId: entry.offId,
+            nutritionCodes: entry.nutrition,
+          }))
+        )
         .onConflictDoNothing()
         .returning({ id: ingredients.id, offId: ingredients.offId });
 
+      const codesOf = new Map(part.map((entry) => [entry.offId, entry.nutrition]));
+
       for (const row of created) {
         ingredientOf.set(row.offId!, row.id);
-        byId.set(row.id, { ...row, name: "", parentId: null, parentChosen: false });
+        byId.set(row.id, {
+          ...row,
+          name: "",
+          parentId: null,
+          parentChosen: false,
+          nutritionCodes: codesOf.get(row.offId!) ?? null,
+        });
       }
       outcome.created += created.length;
       // An entry whose name an Ingredient took meanwhile is picked up next time.
@@ -274,6 +312,34 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
     outcome.parentsSet = parentUpdates.length;
 
+    // Nutrition codes, where the file changed them: a code fixed upstream
+    // arrives with the next refresh.
+    const codeUpdates: Array<{ id: string; codes: NutritionCodes | null }> = [];
+
+    for (const entry of entries) {
+      const id = ingredientOf.get(entry.offId);
+      const row = id ? byId.get(id) : undefined;
+
+      if (!id || !row || codesKey(row.nutritionCodes) === codesKey(entry.nutrition)) continue;
+      row.nutritionCodes = entry.nutrition;
+      codeUpdates.push({ id, codes: entry.nutrition });
+    }
+
+    for (const part of chunks(codeUpdates)) {
+      const values = sql.join(
+        part.map(
+          ({ id, codes }) => sql`(${id}::uuid, ${codes ? JSON.stringify(codes) : null}::jsonb)`
+        ),
+        sql`, `
+      );
+
+      await tx.execute(sql`
+        update ${ingredients} set nutrition_codes = v.codes
+        from (values ${values}) as v(id, codes)
+        where ${ingredients}.id = v.id`);
+    }
+    outcome.nutritionChanged = codeUpdates.length;
+
     outcome.removed = await removeUnusedDropped(
       tx,
       entries.map((entry) => entry.offId)
@@ -293,6 +359,7 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
       | typeof aisleLinks
       | typeof storeProductLinks
       | typeof ingredientStorePreferences
+      | typeof ingredientNutritionCorrections
       | typeof pantryIngredients
       | typeof recurringGroceries
       | typeof groceries
@@ -317,6 +384,7 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
         sql`not ${usedById(aisleLinks)}`,
         sql`not ${usedById(storeProductLinks)}`,
         sql`not ${usedById(ingredientStorePreferences)}`,
+        sql`not ${usedById(ingredientNutritionCorrections)}`,
         sql`not exists (select 1 from ${ingredientAliases} a where a.ingredient_id = ${ingredients.id} and not a.seeded)`,
         sql`not exists (select 1 from ${ingredients} c where c.parent_id = ${ingredients.id})`
       )
@@ -443,6 +511,7 @@ export async function listCatalogueForExport(): Promise<{
     name: string;
     parentId: string | null;
     offId: string | null;
+    nutritionCodes: NutritionCodes | null;
   }>;
   aliases: Array<{ ingredientId: string; text: string; locale: string | null }>;
 }> {
@@ -453,6 +522,7 @@ export async function listCatalogueForExport(): Promise<{
         name: ingredients.name,
         parentId: ingredients.parentId,
         offId: ingredients.offId,
+        nutritionCodes: ingredients.nutritionCodes,
       })
       .from(ingredients)
       .orderBy(sql`lower(${ingredients.name})`),

@@ -1,0 +1,204 @@
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import "@testing-library/jest-dom";
+
+import { IngredientNutritionSection } from "@/app/(app)/settings/ingredients/components/ingredient-nutrition";
+
+import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
+
+const mocks = vi.hoisted(() => ({
+  nutrition: null as IngredientNutrition | null,
+  pending: false,
+  correct: vi.fn(async (_input: unknown) => ({ success: true })),
+  remove: vi.fn(async (_input: unknown) => ({ success: true })),
+}));
+
+vi.mock("@/app/providers/trpc-provider", () => ({
+  useTRPC: () => ({
+    ingredients: {
+      nutrition: {
+        queryOptions: (input: unknown) => ({ queryKey: ["nutrition", input] }),
+        queryKey: () => ["nutrition"],
+      },
+      nutritionFor: { queryKey: () => ["nutritionFor"] },
+      nutritionFoods: {
+        queryOptions: (input: unknown) => ({ queryKey: ["nutritionFoods", input] }),
+      },
+      correctNutrition: { mutationOptions: () => ({ mutationFn: mocks.correct }) },
+      removeNutritionCorrection: { mutationOptions: () => ({ mutationFn: mocks.remove }) },
+    },
+  }),
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: (options: { queryKey: unknown[] }) =>
+    options.queryKey[0] === "nutrition"
+      ? { data: mocks.nutrition, isPending: mocks.pending }
+      : { data: [], isFetching: false },
+  useMutation: (options: { mutationFn: (input: unknown) => Promise<unknown> }) => ({
+    mutateAsync: options.mutationFn,
+    isPending: false,
+  }),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+}));
+
+vi.mock("next-intl", () => ({
+  useFormatter: () => ({ number: (value: number) => String(Math.round(value * 10) / 10) }),
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key} ${JSON.stringify(values)}` : key,
+}));
+
+vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
+
+vi.mock("@heroui/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@heroui/react")>()),
+  toast: vi.fn(),
+}));
+
+vi.mock("@/components/shared/action-button", () => ({
+  ActionButton: ({ children, onPress, isDisabled, "data-testid": testId }: any) => (
+    <button data-testid={testId} disabled={isDisabled} type="button" onClick={onPress}>
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock("@/components/Panel/Panel", () => {
+  const Panel = ({ children, open, title }: any) =>
+    open ? (
+      <div aria-label={title} role="dialog">
+        {children}
+      </div>
+    ) : null;
+
+  Panel.Body = ({ children }: any) => <div>{children}</div>;
+  Panel.Footer = ({ children }: any) => <div>{children}</div>;
+
+  return { default: Panel, usePanelPortalContainer: () => undefined };
+});
+
+const ONION_RAW = { dataset: "ciqual" as const, code: "20034", name: "Onion, raw" };
+
+describe("an Ingredient's nutrition in its panel", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.pending = false;
+    mocks.nutrition = {
+      numbers: {
+        value: { kcal: 35, fat: 0.2, carbs: 6.8, protein: 1.1 },
+        source: { kind: "code", food: ONION_RAW },
+        borrowedFrom: null,
+      },
+      pieceWeight: { value: 150, source: { kind: "taxonomy" }, borrowedFrom: null },
+      density: null,
+    };
+  });
+
+  it("shows the four numbers per 100 g and the dataset food they came from", () => {
+    render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+
+    const numbers = screen.getByTestId("ingredient-nutrition-numbers");
+
+    expect(numbers).toHaveTextContent('kcal {"value":"35"}');
+    expect(numbers).toHaveTextContent('grams {"value":"6.8"}');
+    expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent(
+      'source.code {"food":"Onion, raw","dataset":"CIQUAL 2025"}'
+    );
+    expect(screen.getByTestId("ingredient-nutrition-piece")).toHaveTextContent(
+      'onePiece {"grams":"150"}'
+    );
+    expect(screen.queryByTestId("ingredient-nutrition-density")).toBeNull();
+  });
+
+  it("says where borrowed numbers come from", () => {
+    mocks.nutrition = {
+      numbers: { ...mocks.nutrition!.numbers!, borrowedFrom: { id: "onion", name: "onion" } },
+      pieceWeight: null,
+      density: null,
+    };
+
+    render(<IngredientNutritionSection ingredientId="red-onion" name="red onion" />);
+
+    expect(screen.getByTestId("ingredient-nutrition-source")).toHaveTextContent(
+      'borrowed {"name":"onion"'
+    );
+  });
+
+  it("says it knows nothing where it does not", () => {
+    mocks.nutrition = { numbers: null, pieceWeight: null, density: null };
+
+    render(<IngredientNutritionSection ingredientId="brandy" name="brandy" />);
+
+    expect(screen.getByTestId("ingredient-nutrition-none")).toBeInTheDocument();
+  });
+
+  it("corrects the numbers from a label, and a cup's weight as a density", async () => {
+    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    fireEvent.click(screen.getByTestId("ingredient-nutrition-correct"));
+
+    const panel = screen.getByRole("dialog");
+
+    fireEvent.click(within(panel).getByTestId("nutrition-correction-numbers-label"));
+    for (const [field, value] of [
+      ["calories", "47"],
+      ["fat", "1,5"],
+      ["carbs", "4.8"],
+      ["protein", "3.4"],
+    ] as const) {
+      fireEvent.change(within(panel).getByTestId(`nutrition-correction-${field}`), {
+        target: { value },
+      });
+    }
+    fireEvent.click(within(panel).getByTestId("nutrition-correction-density-label"));
+    fireEvent.change(within(panel).getByTestId("nutrition-correction-cupGrams"), {
+      target: { value: "247" },
+    });
+    fireEvent.click(within(panel).getByTestId("nutrition-correction-save"));
+
+    await vi.waitFor(() =>
+      expect(mocks.correct).toHaveBeenCalledWith({
+        ingredientId: "milk",
+        numbers: { kcal: 47, fat: 1.5, carbs: 4.8, protein: 3.4 },
+        pieceWeight: null,
+        density: { gramsPerMl: 247 / 240 },
+      })
+    );
+  });
+
+  it("holds Save until every number of a label is there", () => {
+    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    fireEvent.click(screen.getByTestId("ingredient-nutrition-correct"));
+
+    const panel = screen.getByRole("dialog");
+
+    fireEvent.click(within(panel).getByTestId("nutrition-correction-numbers-label"));
+    fireEvent.change(within(panel).getByTestId("nutrition-correction-calories"), {
+      target: { value: "47" },
+    });
+
+    expect(within(panel).getByTestId("nutrition-correction-save")).toBeDisabled();
+  });
+
+  it("starts from the household's correction, and removes it", async () => {
+    mocks.nutrition = {
+      numbers: {
+        value: { kcal: 47, fat: 1.5, carbs: 4.8, protein: 3.4 },
+        source: { kind: "household" },
+        borrowedFrom: null,
+      },
+      pieceWeight: null,
+      density: null,
+    };
+
+    render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+    fireEvent.click(screen.getByTestId("ingredient-nutrition-correct"));
+
+    const panel = screen.getByRole("dialog");
+
+    expect(within(panel).getByTestId("nutrition-correction-calories")).toHaveValue("47");
+    fireEvent.click(within(panel).getByTestId("nutrition-correction-remove"));
+
+    await vi.waitFor(() => expect(mocks.remove).toHaveBeenCalledWith({ ingredientId: "milk" }));
+  });
+});

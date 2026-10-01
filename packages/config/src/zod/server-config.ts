@@ -811,6 +811,8 @@ export const IngredientSeedStateSchema = z.object({
   mergedExisting: z.boolean().default(false),
   /** The resolver's `RUNG_VERSION` the last pass over undecided mints ran under. */
   rungVersion: z.number().int().default(0),
+  /** The version of Ingredient Nutrition's source table last applied (ADR-0039). */
+  nutritionVersion: z.string().nullable().default(null),
 });
 
 export type IngredientSeedState = z.infer<typeof IngredientSeedStateSchema>;

@@ -412,7 +412,65 @@
     "dataSources": {
       "title": "데이터 출처",
       "notice": "재료 카탈로그는 <off>Open Food Facts</off>의 재료 분류 체계를 바탕으로 하며, 이는 <odbl>Open Database License (ODbL)</odbl>로 제공됩니다. Norish가 이를 바탕으로 만든 카탈로그도 같은 라이선스로 제공됩니다.",
+      "nutritionNotice": "100 g당 영양 정보는 <ciqual>CIQUAL 2025</ciqual> 및 CALNUT(ANSES), <usda>USDA FoodData Central</usda>, <cofid>CoFID</cofid>에서 가져오며, Open Food Facts가 각 재료에 부여한 코드로 연결됩니다. 가구의 수정 값은 그 가구의 값이며 데이터셋의 값이 아닙니다.",
       "download": "재료 카탈로그 다운로드 (JSON)"
+    },
+    "nutrition": {
+      "section": "영양 정보",
+      "per100g": "100 g당",
+      "calories": "칼로리",
+      "fat": "지방",
+      "carbs": "탄수화물",
+      "protein": "단백질",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "cupGrams": "컵당 {value} g",
+      "onePiece": "한 개의 무게는 {grams} g",
+      "oneCup": "한 컵의 무게는 {grams} g",
+      "none": "Norish에는 아직 이 재료의 영양 정보가 없습니다. 수정해서 값을 넣어 주세요.",
+      "noNumbers": "아직 100 g당 값이 없습니다.",
+      "borrowed": "{name}에서: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, Norish가 선택",
+        "name": "{food} · {dataset}, 이름으로 찾음",
+        "householdFood": "{food} · {dataset}, 우리 가구가 선택",
+        "household": "우리 가구의 자체 값",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "수정",
+      "correctTitle": "{name} 수정",
+      "correctIntro": "수정 내용은 우리 가구 모두에게 적용되며, 다른 사람에게는 적용되지 않습니다.",
+      "facts": {
+        "numbers": "100 g당",
+        "pieceWeight": "한 개",
+        "density": "한 컵"
+      },
+      "useSources": "Norish 그대로",
+      "pickFood": "데이터셋의 식품",
+      "typeLabel": "라벨에서",
+      "label": {
+        "calories": "칼로리 (kcal)",
+        "fat": "지방 (g)",
+        "carbs": "탄수화물 (g)",
+        "protein": "단백질 (g)",
+        "pieceGrams": "한 개의 무게 (g)",
+        "cupGrams": "한 컵의 무게 (g)"
+      },
+      "searchFood": "데이터셋에서 검색 (영어), 예: milk semi-skimmed",
+      "foodHint": "이름의 단어 몇 개를 입력하세요",
+      "searchingFoods": "검색 중…",
+      "noFoods": "그 단어를 모두 가진 데이터셋 식품이 없습니다.",
+      "remove": "우리 수정 삭제",
+      "saved": "수정이 저장되었습니다",
+      "removed": "데이터셋 값으로 돌아갔습니다",
+      "errors": {
+        "title": "수정을 저장하지 못했습니다",
+        "unknown-food": "그 식품은 더 이상 Norish에 없습니다.",
+        "empty": "세 가지 중 하나 이상을 수정하세요.",
+        "not-found": "이 재료는 더 이상 없습니다.",
+        "unknown": "문제가 발생했습니다. 다시 시도하세요."
+      }
     },
     "errors": {
       "title": "재료를 변경할 수 없습니다",
