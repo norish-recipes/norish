@@ -59,7 +59,10 @@ interface Offer<T> {
 }
 
 type OwnFacts = {
-  [K in keyof IngredientNutrition]: Omit<NonNullable<IngredientNutrition[K]>, "borrowedFrom"> | null;
+  [K in keyof IngredientNutrition]: Omit<
+    NonNullable<IngredientNutrition[K]>,
+    "borrowedFrom"
+  > | null;
 };
 
 function refOf(food: NutritionFoodRow): NutritionFoodRef {
@@ -138,7 +141,8 @@ function stepsOf(node: NutritionNode, sources: Sources): Step[] {
   const food = (key: string | undefined) => (key ? byKey.get(key) : undefined);
   const step = (kind: "fix" | "code" | "name", found: NutritionFoodRow | undefined): Step[] =>
     found ? [{ source: { kind, food: refOf(found) }, food: found }] : [];
-  const ciqual = (code: string) => step("code", food(`ciqual:${code}`) ?? food(`ciqual-2020:${code}`));
+  const ciqual = (code: string) =>
+    step("code", food(`ciqual:${code}`) ?? food(`ciqual-2020:${code}`));
   const calnut = (code: string) => step("code", food(`calnut:${code}`));
   const usda = (code: string) => {
     const [kind, value] = code.split(":");
@@ -163,7 +167,11 @@ function stepsOf(node: NutritionNode, sources: Sources): Step[] {
 function correctionOffers(
   correction: NutritionCorrectionRow | undefined,
   sources: Sources
-): { numbers: Array<Offer<Per100g>>; pieceWeight: Array<Offer<number>>; density: Array<Offer<number>> } {
+): {
+  numbers: Array<Offer<Per100g>>;
+  pieceWeight: Array<Offer<number>>;
+  density: Array<Offer<number>>;
+} {
   const picked = (key: string | null) => (key ? (sources.byKey.get(key) ?? null) : null);
   const source = (food: NutritionFoodRow | null): NutritionSource =>
     food ? { kind: "household-food", food: refOf(food) } : { kind: "household" };
@@ -182,7 +190,9 @@ function correctionOffers(
       : typed
         ? [{ source: source(null), value: { kcal, fat, carbs, protein } }]
         : [],
-    pieceWeight: [{ source: source(pieceFood), value: pieceFood?.pieceWeight ?? correction.pieceWeight }],
+    pieceWeight: [
+      { source: source(pieceFood), value: pieceFood?.pieceWeight ?? correction.pieceWeight },
+    ],
     density: [{ source: source(densityFood), value: densityFood?.density ?? correction.density }],
   };
 }
@@ -250,7 +260,7 @@ export async function resolveIngredientNutrition(
 
     const seen = new Set([node.id]);
 
-    for (let parentId = node.parentId; parentId && !seen.has(parentId); ) {
+    for (let parentId = node.parentId; parentId && !seen.has(parentId);) {
       const parent = lineage.get(parentId);
 
       if (!parent) break;
@@ -261,7 +271,10 @@ export async function resolveIngredientNutrition(
       const lent = own.get(parent.id)?.[fact];
 
       if (lent) {
-        return { ...lent, borrowedFrom: { id: parent.id, name: parent.name } } as IngredientNutrition[K];
+        return {
+          ...lent,
+          borrowedFrom: { id: parent.id, name: parent.name },
+        } as IngredientNutrition[K];
       }
       parentId = parent.parentId;
     }
@@ -282,4 +295,3 @@ export async function resolveIngredientNutrition(
 
   return answer;
 }
-

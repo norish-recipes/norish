@@ -50,6 +50,13 @@ export type NutritionSource =
   | { kind: "name"; food: NutritionFoodRef }
   | { kind: "taxonomy" };
 
+/** A dataset food as a correction's search offers it: what it is, its calories, its portions. */
+export interface NutritionFoodSummary extends NutritionFoodRef {
+  kcal: number;
+  pieceWeight: number | null;
+  density: number | null;
+}
+
 /** The four numbers per 100 g. */
 export interface Per100g {
   kcal: number;

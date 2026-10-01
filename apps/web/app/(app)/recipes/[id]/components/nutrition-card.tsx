@@ -131,7 +131,11 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
 
   return (
     <div className="mt-3 flex flex-col gap-2 text-sm">
-      <NamedLines label={t("notCounted")} lines={workedOut.uncounted} testId="nutrition-not-counted" />
+      <NamedLines
+        label={t("notCounted")}
+        lines={workedOut.uncounted}
+        testId="nutrition-not-counted"
+      />
       <NamedLines
         label={t("estimatedByAI")}
         lines={workedOut.estimatedByAI}

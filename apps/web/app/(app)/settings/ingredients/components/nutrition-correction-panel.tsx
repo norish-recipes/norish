@@ -114,7 +114,9 @@ export function NutritionCorrectionPanel({
       [value.kcal, value.fat, value.carbs, value.protein].map(String)
     ),
     pieceWeight: draftOf(current?.pieceWeight ?? null, (value) => [String(value)]),
-    density: draftOf(current?.density ?? null, (value) => [String(Math.round(value * CUP_ML))]),
+    density: draftOf(current?.density ?? null, (value) => [
+      String(Math.round(value * CUP_ML * 10) / 10),
+    ]),
   }));
   const [draft, setDraft] = useState(initial);
   const corrected = Object.values(initial).some((fact) => fact.mode !== "sources");

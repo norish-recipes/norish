@@ -9,16 +9,18 @@
  * the household alone.
  */
 import type { NutritionCorrectionValues } from "@norish/db/repositories/ingredient-nutrition";
-import type { NutritionFoodRef } from "@norish/shared/contracts/ingredient-nutrition";
+import type {
+  NutritionFoodRef,
+  NutritionFoodSummary,
+} from "@norish/shared/contracts/ingredient-nutrition";
 import {
   findNutritionFoods,
   removeHouseholdCorrections,
   saveNutritionCorrection,
   searchNutritionFoods,
 } from "@norish/db/repositories/ingredient-nutrition";
+import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 import { foldName } from "@norish/shared/lib/fold-name";
-
-import { ingredients as ingredientsRealtime } from "../../realtime/ingredients";
 
 /** Who is correcting: a member, their household, and the household's realtime key. */
 export interface CorrectingMember {
@@ -75,7 +77,9 @@ export async function correctNutrition(
     throw new NutritionCorrectionError("empty");
   }
   if (foods.length > 0) {
-    const known = new Set((await findNutritionFoods(foods)).map((food) => `${food.dataset}:${food.code}`));
+    const known = new Set(
+      (await findNutritionFoods(foods)).map((food) => `${food.dataset}:${food.code}`)
+    );
 
     if (foods.some((key) => !known.has(key))) throw new NutritionCorrectionError("unknown-food");
   }
@@ -118,9 +122,7 @@ const SEARCH_LIMIT = 20;
  * in the dataset's own language: "milk semi skimmed" finds "Milk,
  * semi-skimmed, UHT". Every word must be in the name.
  */
-export async function searchDatasetFoods(
-  text: string
-): Promise<Array<NutritionFoodRef & { kcal: number; pieceWeight: number | null; density: number | null }>> {
+export async function searchDatasetFoods(text: string): Promise<NutritionFoodSummary[]> {
   const words = foldName(text)
     .split(" ")
     .filter((word) => word.length > 1);

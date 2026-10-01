@@ -5,7 +5,7 @@ import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ing
 import type { ReviewReport } from "@norish/shared/contracts/ingredient-catalogue";
 import type {
   IngredientNutrition,
-  NutritionFoodRef,
+  NutritionFoodSummary,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
@@ -27,9 +27,9 @@ import {
 } from "@norish/shared-server/ingredients/catalogue";
 import { ingredientChanges } from "@norish/shared-server/ingredients/changes";
 import {
-  correctNutrition,
+  correctNutrition as correctHouseholdNutrition,
   NutritionCorrectionError,
-  removeNutritionCorrection,
+  removeNutritionCorrection as removeHouseholdCorrection,
   searchDatasetFoods,
 } from "@norish/shared-server/ingredients/nutrition/corrections";
 import { resolveIngredientNutrition } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
@@ -458,7 +458,7 @@ const amount = z.number().finite().nonnegative().max(100_000);
  * an edit to the Ingredient). Each fact is a dataset food, a number from a
  * label, or left to the sources (null).
  */
-const correctNutrition_ = authedProcedure
+const correctNutrition = authedProcedure
   .input(
     z.object({
       ingredientId: z.uuid(),
@@ -479,7 +479,7 @@ const correctNutrition_ = authedProcedure
     const { ingredientId, ...correction } = input;
 
     try {
-      await correctNutrition(memberOf(ctx), ingredientId, correction);
+      await correctHouseholdNutrition(memberOf(ctx), ingredientId, correction);
     } catch (error) {
       if (error instanceof NutritionCorrectionError) {
         throw new TRPCError({
@@ -494,14 +494,14 @@ const correctNutrition_ = authedProcedure
   });
 
 /** Remove the household's correction to an Ingredient: back to the datasets' numbers. */
-const removeNutritionCorrection_ = authedProcedure
+const removeNutritionCorrection = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .mutation(async ({ ctx, input }) => {
     log.info(
       { userId: ctx.user.id, ingredientId: input.ingredientId },
       "Removing a nutrition correction"
     );
-    await removeNutritionCorrection(memberOf(ctx), input.ingredientId);
+    await removeHouseholdCorrection(memberOf(ctx), input.ingredientId);
 
     return { success: true as const };
   });
@@ -509,13 +509,7 @@ const removeNutritionCorrection_ = authedProcedure
 /** Dataset foods whose names hold every word searched, for a correction to name. */
 const nutritionFoods = authedProcedure
   .input(z.object({ search: z.string().trim().min(2).max(100) }))
-  .query(
-    ({
-      input,
-    }): Promise<
-      Array<NutritionFoodRef & { kcal: number; pieceWeight: number | null; density: number | null }>
-    > => searchDatasetFoods(input.search)
-  );
+  .query(({ input }): Promise<NutritionFoodSummary[]> => searchDatasetFoods(input.search));
 
 function memberOf(ctx: AuthedProcedureContext) {
   return { userId: ctx.user.id, householdUserIds: ctx.userIds, householdKey: ctx.householdKey };
@@ -546,8 +540,8 @@ export const ingredientsRouter = router({
   setParent,
   nutrition,
   nutritionFor,
-  correctNutrition: correctNutrition_,
-  removeNutritionCorrection: removeNutritionCorrection_,
+  correctNutrition,
+  removeNutritionCorrection,
   nutritionFoods,
   ...ingredientsSubscriptions._def.procedures,
 });

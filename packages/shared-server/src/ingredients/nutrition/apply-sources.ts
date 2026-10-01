@@ -6,10 +6,10 @@
  * and the version is recorded only once it is in. Households' corrections
  * are never touched.
  */
-import type { SourceTable } from "./source-table";
 import { replaceNutritionSources } from "@norish/db/repositories/ingredient-nutrition";
 import { createLogger } from "@norish/shared-server/logger";
 
+import type { SourceTable } from "./source-table";
 import { readIngredientSeedState, updateIngredientSeedState } from "../seed/catalogue-seed";
 import { foodOf, readSourceTable } from "./source-table";
 

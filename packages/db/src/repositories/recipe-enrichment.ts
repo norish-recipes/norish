@@ -21,8 +21,8 @@ import { db } from "@norish/db/drizzle";
 import {
   recipeCuisines,
   recipeImages,
-  recipeNutritionEstimates,
   recipeIngredients,
+  recipeNutritionEstimates,
   recipes,
   stepIngredients,
   steps,
@@ -150,7 +150,10 @@ export async function saveRecipeNutritionEstimate(
   recipeId: string,
   estimate: { calories: number; fat: number; carbs: number; protein: number; lines: string[] }
 ): Promise<boolean> {
-  const [recipe] = await db.select({ id: recipes.id }).from(recipes).where(eq(recipes.id, recipeId));
+  const [recipe] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(eq(recipes.id, recipeId));
 
   if (!recipe) return false;
 
