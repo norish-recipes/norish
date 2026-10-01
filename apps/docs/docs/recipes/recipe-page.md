@@ -38,8 +38,10 @@ Two of the cards draw a chart:
   split wins and the headline becomes their sum.
 - **Nutrition** draws the three macros as a ring, sized by what each
   contributes in calories, with the recipe's stored calorie figure in the
-  centre. The centre is always the number the recipe actually stores — Norish
-  never presents a computed calorie figure as the recipe's own.
+  centre. The centre is always the number the recipe actually stores, and
+  Norish never presents a computed calorie figure as the recipe's own. A
+  recipe that stores no nutrition shows one worked out from its ingredients
+  instead, marked as such, see [Nutrition](./nutrition.md).
 
 ![The Cooking time card with an Other Time segment, above the Nutrition ring](/img/screenshots/recipe-page-cards.png)
 

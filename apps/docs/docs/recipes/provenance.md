@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Recipe provenance
 description: Where a recipe comes from, its country, region, cuisines, and a short explanation, how Norish works that out, and how to curate the cuisine list.
 ---

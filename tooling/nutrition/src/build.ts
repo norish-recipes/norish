@@ -50,13 +50,30 @@ export function tableFoods(sources: Sources): DatasetFood[] {
     .filter((food) => !counted.has(food.code))
     .map((food) => ({ ...food, name: english.get(food.code) ?? food.name }));
 
-  return [
+  return withoutAmbiguousCodes([
     ...sources.ciqual.foods.map((food) => asFood("ciqual", food)),
     ...ciqual2020.map((food) => asFood("ciqual-2020", food)),
     ...calnut.map((food) => asFood("calnut", food)),
     ...sources.usda.map((food) => ({ dataset: "usda" as const, ...food })),
     ...sources.cofid.map((food) => asFood("cofid", food)),
-  ];
+  ]);
+}
+
+/**
+ * The foods without any code a dataset gives two of them: such a code names
+ * no one food (CoFID 2021 gives 13-669 to both a roasted aubergine and
+ * watercress), so neither is kept rather than guessing which it means.
+ */
+function withoutAmbiguousCodes(foods: readonly DatasetFood[]): DatasetFood[] {
+  const counts = new Map<string, number>();
+
+  for (const food of foods) {
+    const key = foodKeyOf(food);
+
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  return foods.filter((food) => counts.get(foodKeyOf(food)) === 1);
 }
 
 /** Whether an entry's own codes give it numbers from the table's foods. */

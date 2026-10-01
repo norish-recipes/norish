@@ -32,6 +32,8 @@ type BackendState = "live" | "stopped" | "unresponsive";
 
 export interface OfflineHarness {
   readonly baseURL: string;
+  /** The stack's database, for a spec that seeds what it reads. */
+  readonly databaseUrl: string;
   readonly context: BrowserContext;
   readonly page: Page;
   selectIdentity(identity: "a" | "b"): Promise<void>;
@@ -189,6 +191,7 @@ export const test = base.extend<Record<string, never>, OfflineWorkerFixtures>({
 
         await use({
           baseURL: stack.baseURL,
+          databaseUrl: stack.databaseUrl,
           context,
           page,
           selectIdentity,

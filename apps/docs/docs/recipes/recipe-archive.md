@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 title: Recipe Archive
 description: Export every recipe you can see as one portable .norishrecipes file, and import it back into any Norish instance. What travels with a recipe, what deliberately does not, and why an archive is portability rather than backup.
 ---

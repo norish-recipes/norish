@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 9
 title: Cookbooks
 description: Group recipes into titled sets, file a recipe from its own page, and browse the Library as recipes and cookbooks together under three chips.
 ---

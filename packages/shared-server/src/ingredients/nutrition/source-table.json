@@ -1,5 +1,5 @@
 {
-  "version": "ad99c16a10a2ed74",
+  "version": "c356c04529abc397",
   "editions": {"calnut":"2020-07-07","ciqual":"2025-11-03","ciqual-2020":"2020-07-07","cofid":"2021","usda":"SR Legacy 2018-04, Foundation Foods 2026-04-30"},
   "fixes": {
     "en:barley": "usda:170284",
@@ -4693,8 +4693,6 @@
     ["cofid","13-666","Beans, cannellini, canned, re-heated, drained",104,1.6,15.9,7.6,null,null,null],
     ["cofid","13-667","Beans, edamame, frozen, boiled in unsalted water",142,7.6,6.5,12.2,null,null,null],
     ["cofid","13-668","Courgette, dried",280,3.6,41.2,23.3,null,null,null],
-    ["cofid","13-669","Aubergine, flesh and skin, roasted in rapeseed oil",62,3.8,5.2,2.1,null,null,null],
-    ["cofid","13-669","Watercress, raw",10,0.3,0,1.9,null,null,null],
     ["cofid","13-670","Beans, chick peas, canned, re-heated, drained",129,3,18.3,8.4,null,null,null],
     ["cofid","13-671","Sweet potato, steamed",84,0.3,20.4,1.1,null,null,null],
     ["cofid","13-672","Sweet potato, baked",115,0.4,27.9,1.6,null,null,null],

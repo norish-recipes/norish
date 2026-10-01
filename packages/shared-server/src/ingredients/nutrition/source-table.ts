@@ -57,19 +57,26 @@ const FoodRowSchema = z.tuple([
 
 export type FoodRow = z.infer<typeof FoodRowSchema>;
 
-export const SourceTableSchema = z.object({
-  /** A hash of everything below: an instance applies the table when it differs. */
-  version: z.string().min(1),
-  /** Which edition of each dataset the foods come from, for the credit line. */
-  editions: z.partialRecord(z.enum(NUTRITION_DATASETS), z.string()),
-  foods: z.array(FoodRowSchema),
-  /** Norish's fix list: the dataset food an entry should use, above its own codes. */
-  fixes: z.record(z.string(), datasetFoodKey),
-  /** Name matches for entries without numbers from a code, made by the build script. */
-  names: z.record(z.string(), datasetFoodKey),
-  /** Entries whose numbers are never lent to their children: a borrow ends there. */
-  neverLend: z.array(z.string()),
-});
+export const SourceTableSchema = z
+  .object({
+    /** A hash of everything below: an instance applies the table when it differs. */
+    version: z.string().min(1),
+    /** Which edition of each dataset the foods come from, for the credit line. */
+    editions: z.partialRecord(z.enum(NUTRITION_DATASETS), z.string()),
+    foods: z.array(FoodRowSchema),
+    /** Norish's fix list: the dataset food an entry should use, above its own codes. */
+    fixes: z.record(z.string(), datasetFoodKey),
+    /** Name matches for entries without numbers from a code, made by the build script. */
+    names: z.record(z.string(), datasetFoodKey),
+    /** Entries whose numbers are never lent to their children: a borrow ends there. */
+    neverLend: z.array(z.string()),
+  })
+  .refine(
+    (table) =>
+      new Set(table.foods.map(([dataset, code]) => `${dataset}:${code}`)).size ===
+      table.foods.length,
+    { message: "A food is listed twice under one dataset code", path: ["foods"] }
+  );
 
 export type SourceTable = z.infer<typeof SourceTableSchema>;
 
@@ -123,7 +130,9 @@ export const SOURCE_TABLE_PATH = join(
 );
 
 /** The committed table, read and checked. Throws on a file that is not one. */
-export function readSourceTable(path = resolveExistingWorkspacePath(SOURCE_TABLE_PATH)): SourceTable {
+export function readSourceTable(
+  path = resolveExistingWorkspacePath(SOURCE_TABLE_PATH)
+): SourceTable {
   return SourceTableSchema.parse(JSON.parse(readFileSync(path, "utf8")));
 }
 
@@ -152,7 +161,10 @@ export function serializeSourceTable(table: SourceTable): string {
     `  "version": ${line(table.version)},`,
     `  "editions": ${line(editions)},`,
     `  "fixes": {\n${entries(table.fixes)}\n  },`,
-    `  "neverLend": [\n${[...table.neverLend].sort().map((id) => `    ${line(id)}`).join(",\n")}\n  ],`,
+    `  "neverLend": [\n${[...table.neverLend]
+      .sort()
+      .map((id) => `    ${line(id)}`)
+      .join(",\n")}\n  ],`,
     `  "names": {\n${entries(table.names)}\n  },`,
     `  "foods": [\n${foods}\n  ]`,
     "}",

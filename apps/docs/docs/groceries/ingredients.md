@@ -26,9 +26,17 @@ taxonomy, which Norish fetches when it starts and every night, and grows with ev
 recipe you import and every grocery you add.
 
 When Norish meets a name it does not know, it checks it against the translations it
-has, then without the preparation (“onions, diced” is “onions”), and then, if
+has, then without the preparation (“onions, diced” is “onions”) and without a
+serving phrase or vague amount at either end (“salt to taste”, “a pinch of
+nutmeg”, “parsley for garnish” are salt, nutmeg and parsley), and then, if
 [AI](../configuration/ai-provider.md) is set up, asks what food it is. Only when
 none of these is sure does it add a new ingredient, **flagged** for you to check.
+A new ingredient whose name ends in a food Norish knows is filed under it:
+“ground cumin” goes under cumin, so it uses cumin's aisle and nutrition while it
+waits for you.
+
+The serving phrases and amounts come from your server's units list, so an admin
+can add a household's own phrasing there.
 
 ## The Ingredients page
 
@@ -63,8 +71,9 @@ works in the box that picks an ingredient for a merge, a parent or a move.
 
 ![The Ingredients page, with a flagged ingredient](/img/screenshots/ingredients-page.png)
 
-The panel shows the ingredient's name, its parent, and how many translations
-it has; press that row to see, add, move or remove them in a panel of their own. Changes to the name, the parent and the translations wait for **Save**
+The panel shows the ingredient's name, its parent, how many translations
+it has, and its [nutrition](../recipes/nutrition.md#where-the-numbers-come-from)
+with where each number came from; press that row to see, add, move or remove them in a panel of their own. Changes to the name, the parent and the translations wait for **Save**
 at the bottom of the panel; close the panel to drop them. What you may change
 depends on who added the ingredient; a control you may not use is not shown.
 
@@ -118,7 +127,8 @@ lists several foods it could be. Two buttons settle it:
   and suggests the parent even when it is not quite sure. An answer that names
   nothing leaves the flag and says so. Either way it says what AI tried: what
   it read the name as, and which foods it compared it with.
-- **Mark distinct** when it really is a food of its own.
+- **Mark distinct** when it really is a food of its own. Norish remembers this
+  and never merges it later.
 
 Whenever the list shows flagged ingredients you may edit, a button in the
 card's header asks AI about all of them at once. Under **Without parent or
@@ -137,6 +147,12 @@ over, or its question failed. Anyone who opens the page meanwhile sees the same
 rows waiting, and the round shows in the admin job monitor as **Ask AI about
 ingredients**, with the models it asked.
 
+Whenever an update improves how Norish reads names, it looks at the flagged
+ingredients it added in the past once more when it starts: one that now
+matches a known food (an old “salt to taste” is salt) is merged into it, and
+one whose name ends in a known food is filed under it. Ingredients you renamed,
+gave a parent or marked distinct are left alone.
+
 Renaming, setting a parent or marking an ingredient distinct clears its flag. Who
 may change an ingredient someone else added is up to your server admin, see
 [Permissions](../configuration/admin-settings.md#permissions).
@@ -146,9 +162,12 @@ Every change reaches everyone's lists and open Ingredients pages straight away.
 
 The catalogue is built on the Open Food Facts ingredients taxonomy, available
 under the [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/),
-and Norish offers the catalogue it builds under the same licence. The **Data
-sources** section of the Ingredients page credits it and lets anyone signed in
-download the whole catalogue, with every translation and parent, as JSON.
+and Norish offers the catalogue it builds under the same licence. Ingredient
+nutrition comes from CIQUAL 2025 and CALNUT (ANSES), USDA FoodData Central and
+CoFID. The **Data sources** section of the Ingredients page credits them and lets
+anyone signed in download the whole catalogue, with every translation, parent,
+dataset code and the datasets' numbers, as JSON. Households' corrections are
+never in it.
 
 ![The Data sources section of the Ingredients page](/img/screenshots/ingredients-data-sources.png)
 

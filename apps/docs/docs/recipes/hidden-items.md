@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 8
 title: Hidden Items
 description: Choose what you would rather not be shown, from Recipe Provenance and Nutrition Information to ratings, favorites and timers. Everything is shown by default, and hiding changes only your own view.
 ---

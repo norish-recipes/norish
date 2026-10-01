@@ -14,9 +14,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
-  readSourceTable,
   serializeSourceTable,
   SOURCE_TABLE_PATH,
+  SourceTableSchema,
 } from "@norish/shared-server/ingredients/nutrition/source-table";
 import { resolveWorkspaceRootPath } from "@norish/shared-server/lib/workspace-paths";
 
@@ -31,6 +31,17 @@ function say(...parts: unknown[]): void {
   process.stdout.write(
     `${parts.map((part) => (typeof part === "string" ? part : JSON.stringify(part, null, 2))).join(" ")}\n`
   );
+}
+
+/** The committed table's version, whatever else it holds: it is about to be replaced. */
+function previousVersion(text: string): string | null {
+  try {
+    const { version } = JSON.parse(text) as { version?: unknown };
+
+    return typeof version === "string" ? version : null;
+  } catch {
+    return null;
+  }
 }
 
 async function main(): Promise<void> {
@@ -61,7 +72,7 @@ async function main(): Promise<void> {
     editions
   );
   const path = resolveWorkspaceRootPath(SOURCE_TABLE_PATH);
-  const previous = existsSync(path) ? readSourceTable(path).version : null;
+  const previous = existsSync(path) ? previousVersion(await readFile(path, "utf8")) : null;
 
   say(
     `Built table ${table.version}: ${table.foods.length} foods, ${Object.keys(table.names).length} name matches, ${Object.keys(table.fixes).length} fixes`
@@ -71,6 +82,8 @@ async function main(): Promise<void> {
 
     return;
   }
+  // What is written must read back as a table, or no instance could apply it.
+  SourceTableSchema.parse(JSON.parse(serializeSourceTable(table)));
   await writeFile(path, serializeSourceTable(table));
   say(`Wrote ${path}`);
 }

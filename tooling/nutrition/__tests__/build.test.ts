@@ -90,6 +90,18 @@ describe("building the source table", () => {
     expect(calnut).toMatchObject([{ code: "13050", name: "Apple, pulp, raw", kcal: 49 }]);
   });
 
+  it("keeps no food under a code its dataset gives two foods", () => {
+    const table = buildSourceTable(
+      sources({
+        cofid: [food("13-669", "Aubergine, roasted", 100), food("13-669", "Watercress, raw", 20)],
+      }),
+      LISTS,
+      EDITIONS
+    );
+
+    expect(table.foods.filter((row) => row[0] === "cofid")).toEqual([]);
+  });
+
   it("carries USDA's piece weight, density and NDB number", () => {
     const table = buildSourceTable(sources(), LISTS, EDITIONS);
 
