@@ -17,6 +17,7 @@ import type {
 import type { NutritionLine } from "@norish/shared/lib/recipe-nutrition";
 import defaultUnits from "@norish/config/units.default.json";
 import {
+  lineKey,
   nutritionLinesOf,
   seasoningPhrases,
   suppliesNutrition,
@@ -185,7 +186,12 @@ describe("workOutNutrition", () => {
 
     expect(result.perServing?.calories).toBe(350);
     expect(result.uncounted).toEqual([
-      { lineId: uncounted.id, name: uncounted.name, ingredientId: uncounted.ingredientId },
+      {
+        lineId: uncounted.id,
+        name: uncounted.name,
+        ingredientId: uncounted.ingredientId,
+        key: lineKey(uncounted),
+      },
     ]);
   });
 
@@ -231,6 +237,79 @@ describe("workOutNutrition", () => {
         seasoning: phrases,
       })
     ).toMatchObject({ perServing: { calories: 360 }, credits: [], household: true });
+  });
+
+  describe("with the language model's estimate of the lines left out", () => {
+    const oil = line(null, null, "olive-oil", "olive oil for frying");
+    const brandy = line(50, "milliliter", "brandy", "brandy");
+    const estimate = (lines: NutritionLine[]) => ({
+      calories: 100,
+      fat: 10,
+      carbs: 1,
+      protein: 0,
+      lines: lines.map(lineKey),
+    });
+
+    it("adds its share where it covers exactly the lines left out, and names them as its own", () => {
+      const result = workOutNutrition({
+        lines: [line(100, "gram", "rice"), oil, brandy],
+        servings: 2,
+        nutrition: NUTRITION,
+        seasoning: phrases,
+        estimate: estimate([oil, brandy]),
+      });
+
+      expect(result).toMatchObject({
+        perServing: { calories: 175 + 100, fat: 0.5 + 10 },
+        uncounted: [],
+        estimated: true,
+      });
+      expect(result.estimatedByAI.map((named) => named.name)).toEqual([
+        "olive oil for frying",
+        "brandy",
+      ]);
+    });
+
+    it("is the whole total where no line counted", () => {
+      expect(
+        workOutNutrition({
+          lines: [oil],
+          servings: 1,
+          nutrition: NUTRITION,
+          seasoning: phrases,
+          estimate: estimate([oil]),
+        }).perServing
+      ).toEqual({ calories: 100, fat: 10, carbs: 1, protein: 0 });
+    });
+
+    it("is ignored once the lines left out are no longer the ones it covered", () => {
+      const more = line(2, "tablespoon", "brandy", "brandy");
+      const result = workOutNutrition({
+        lines: [line(100, "gram", "rice"), oil, more],
+        servings: 1,
+        nutrition: NUTRITION,
+        seasoning: phrases,
+        estimate: estimate([oil, brandy]),
+      });
+
+      expect(result.perServing?.calories).toBe(350);
+      expect(result.uncounted).toHaveLength(2);
+      expect(result.estimatedByAI).toEqual([]);
+    });
+  });
+
+  it("tells what each counted line brought to the total", () => {
+    expect(workOut([line(200, "gram", "onion", "200 g onion")]).counted).toEqual([
+      {
+        lineId: expect.any(String),
+        name: "200 g onion",
+        grams: 200,
+        calories: 80,
+        fat: 0,
+        carbs: 20,
+        protein: 2,
+      },
+    ]);
   });
 
   it("reads a recipe without servings as one serving", () => {

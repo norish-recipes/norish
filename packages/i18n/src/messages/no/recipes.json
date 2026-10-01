@@ -258,6 +258,7 @@
     "estimateWithAI": "Estimér med AI",
     "estimated": "Anslått",
     "notCounted": "Ikke regnet med:",
+    "estimatedByAI": "Anslått av AI:",
     "workedOutFrom": "Beregnet fra ingrediensene, med {sources}.",
     "householdNumbers": "husstandens verdier"
   },

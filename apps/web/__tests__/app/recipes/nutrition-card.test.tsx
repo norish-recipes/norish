@@ -166,9 +166,11 @@ describe("NutritionCard", () => {
     const workedOut: WorkedOutNutrition = {
       perServing: { calories: 420, fat: 12, carbs: 50, protein: 20 },
       uncounted: [
-        { lineId: "line-1", name: "olive oil for frying", ingredientId: "olive-oil" },
-        { lineId: "line-2", name: "a mystery", ingredientId: null },
+        { lineId: "line-1", name: "olive oil for frying", ingredientId: "olive-oil", key: "a" },
+        { lineId: "line-2", name: "a mystery", ingredientId: null, key: "b" },
       ],
+      estimatedByAI: [],
+      counted: [],
       estimated: true,
       credits: ["ciqual", "off"],
       household: true,
@@ -197,6 +199,22 @@ describe("NutritionCard", () => {
       expect(screen.getByTestId("nutrition-credit")).toHaveTextContent(
         "CIQUAL 2025 + Open Food Facts + householdNumbers"
       );
+    });
+
+    it("names the lines the language model estimated as its own, not as left out", () => {
+      mocks.workedOut = {
+        ...workedOut,
+        estimatedByAI: workedOut.uncounted,
+        uncounted: [],
+      };
+
+      render(<NutritionCard />);
+
+      expect(screen.queryByTestId("nutrition-not-counted")).not.toBeInTheDocument();
+      expect(screen.getByTestId("nutrition-estimated-by-ai")).toHaveTextContent(
+        "estimatedByAI olive oil for frying, a mystery"
+      );
+      expect(screen.getByTestId("nutrition-estimated")).toBeInTheDocument();
     });
 
     it("is not called estimated where nothing was borrowed", () => {

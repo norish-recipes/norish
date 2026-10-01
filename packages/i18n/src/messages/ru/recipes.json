@@ -258,6 +258,7 @@
     "estimateWithAI": "Оценить с помощью ИИ",
     "estimated": "Приблизительно",
     "notCounted": "Не учтено:",
+    "estimatedByAI": "Оценено ИИ:",
     "workedOutFrom": "Рассчитано по ингредиентам, по данным {sources}.",
     "householdNumbers": "значений вашей семьи"
   },

@@ -5,7 +5,11 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { useQuery } from "@tanstack/react-query";
 
-import type { RecipeForNutrition, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
+import type {
+  NutritionGapEstimate,
+  RecipeForNutrition,
+  WorkedOutNutrition,
+} from "@norish/shared/lib/recipe-nutrition";
 import {
   nutritionLinesOf,
   seasoningPhrases,
@@ -17,9 +21,10 @@ import {
  * A recipe's worked-out nutrition for the reader's household (ADR-0039):
  * the server answers what each of its Ingredients is, for this household,
  * and the total is worked out here from the recipe's lines as they are, so
- * an edit to an amount moves it at once. Null for a recipe that supplies
- * Nutrition Information of its own, which always wins, and while the
- * Ingredients' nutrition is still being read.
+ * an edit to an amount moves it at once. The language model's stored share
+ * of the lines left out is added while it still covers exactly those lines.
+ * Null for a recipe that supplies Nutrition Information of its own, which
+ * always wins, and while the Ingredients' nutrition is still being read.
  */
 export function useWorkedOutNutrition(
   recipe: RecipeForNutrition | null
@@ -50,6 +55,7 @@ export function useWorkedOutNutrition(
       servings: recipe.servings,
       nutrition: new Map(Object.entries(data ?? {})),
       seasoning,
+      estimate: recipe.nutritionEstimate ?? null,
     });
   }, [supplied, recipe, ingredientIds.length, data, lines, seasoning]);
 }

@@ -258,6 +258,7 @@
     "estimateWithAI": "Изчисли с AI",
     "estimated": "Приблизително",
     "notCounted": "Не е отчетено:",
+    "estimatedByAI": "Изчислено от ИИ:",
     "workedOutFrom": "Изчислено от съставките, по данни от {sources}.",
     "householdNumbers": "стойностите на вашето домакинство"
   },

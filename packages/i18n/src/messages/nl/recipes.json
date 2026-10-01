@@ -258,6 +258,7 @@
     "estimateWithAI": "Schatten met AI",
     "estimated": "Geschat",
     "notCounted": "Niet meegeteld:",
+    "estimatedByAI": "Geschat door AI:",
     "workedOutFrom": "Berekend uit de ingrediënten, met {sources}.",
     "householdNumbers": "de waarden van je huishouden"
   },

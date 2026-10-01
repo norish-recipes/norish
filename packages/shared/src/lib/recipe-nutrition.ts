@@ -15,6 +15,12 @@
  *
  * A total that borrowed anywhere is estimated; one no line counted toward
  * is none at all, never a misleading zero.
+ *
+ * On an instance with AI, the language model may have estimated the lines
+ * left out (ADR-0039, ticket 12): its share is stored apart, with the lines
+ * it covered, and is added only while exactly those lines are still left
+ * out. The total is then estimated, and those lines are named as the
+ * model's rather than as not counted.
  */
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type {
@@ -93,11 +99,44 @@ export interface NutritionPerServing {
   protein: number;
 }
 
+/** A line named under a total: left out of it, or estimated by the language model. */
+export interface NamedLine {
+  lineId: string;
+  name: string;
+  ingredientId: string | null;
+  /** The line as an estimate recognises it again (`lineKey`). */
+  key: string;
+}
+
+/** A line the total counted, with what it brought, for the whole line rather than per serving. */
+export interface CountedLine {
+  lineId: string;
+  name: string;
+  grams: number;
+  calories: number;
+  fat: number;
+  carbs: number;
+  protein: number;
+}
+
+/** The language model's per-serving share of the lines left out, and the lines it covered. */
+export interface NutritionGapEstimate {
+  calories: number;
+  fat: number;
+  carbs: number;
+  protein: number;
+  lines: string[];
+}
+
 export interface WorkedOutNutrition {
   /** Null where no line counted toward a total. */
   perServing: NutritionPerServing | null;
   /** The lines left out of the total, in the recipe's order. */
-  uncounted: Array<{ lineId: string; name: string; ingredientId: string | null }>;
+  uncounted: NamedLine[];
+  /** The lines the language model's estimate covers, in the recipe's order. */
+  estimatedByAI: NamedLine[];
+  /** The lines the total counted. */
+  counted: CountedLine[];
   /** Whether a counted line borrowed a fact from a parent food. */
   estimated: boolean;
   /** The datasets the counted lines took a fact from, in a fixed order. */
@@ -135,6 +174,16 @@ export function seasoningPhrases(units: UnitsMap | null | undefined): string[] {
   }
 
   return [...phrases];
+}
+
+/**
+ * A line as a stored estimate recognises it again: its food (or text), its
+ * amount and its unit. An edit to any of them makes it another line.
+ */
+export function lineKey(
+  line: Pick<NutritionLine, "name" | "amount" | "unit" | "ingredientId">
+): string {
+  return JSON.stringify([line.ingredientId ?? foldName(line.name), line.amount, line.unit ?? null]);
 }
 
 function isSeasoning(line: NutritionLine, seasoning: readonly string[]): boolean {
@@ -181,17 +230,20 @@ export function workOutNutrition({
   servings,
   nutrition,
   seasoning,
+  estimate = null,
 }: {
   lines: readonly NutritionLine[];
   servings: number | null;
   nutrition: ReadonlyMap<string, IngredientNutrition>;
   /** `seasoningPhrases` of the units map. */
   seasoning: readonly string[];
+  /** The language model's stored share of the lines left out, if any. */
+  estimate?: NutritionGapEstimate | null;
 }): WorkedOutNutrition {
   const total = { calories: 0, fat: 0, carbs: 0, protein: 0 };
-  const uncounted: WorkedOutNutrition["uncounted"] = [];
+  const uncounted: NamedLine[] = [];
+  const counted: CountedLine[] = [];
   const credits = new Set<NutritionCredit>();
-  let counted = 0;
   let estimated = false;
   let household = false;
 
@@ -202,18 +254,29 @@ export function workOutNutrition({
     const weighed = facts?.numbers ? gramsOf(line, facts) : null;
 
     if (!facts?.numbers || !weighed) {
-      uncounted.push({ lineId: line.id, name: line.name, ingredientId: line.ingredientId });
+      uncounted.push({
+        lineId: line.id,
+        name: line.name,
+        ingredientId: line.ingredientId,
+        key: lineKey(line),
+      });
       continue;
     }
 
     const share = weighed.grams / 100;
     const used = [facts.numbers, ...(weighed.through ? [weighed.through] : [])];
+    const brought = {
+      calories: facts.numbers.value.kcal * share,
+      fat: facts.numbers.value.fat * share,
+      carbs: facts.numbers.value.carbs * share,
+      protein: facts.numbers.value.protein * share,
+    };
 
-    total.calories += facts.numbers.value.kcal * share;
-    total.fat += facts.numbers.value.fat * share;
-    total.carbs += facts.numbers.value.carbs * share;
-    total.protein += facts.numbers.value.protein * share;
-    counted += 1;
+    total.calories += brought.calories;
+    total.fat += brought.fat;
+    total.carbs += brought.carbs;
+    total.protein += brought.protein;
+    counted.push({ lineId: line.id, name: line.name, grams: weighed.grams, ...brought });
     for (const fact of used) {
       const credit = creditOf(fact.source);
 
@@ -224,18 +287,43 @@ export function workOutNutrition({
   }
 
   const divisor = servings && servings > 0 ? servings : 1;
+  const perServing =
+    counted.length > 0
+      ? {
+          calories: total.calories / divisor,
+          fat: total.fat / divisor,
+          carbs: total.carbs / divisor,
+          protein: total.protein / divisor,
+        }
+      : null;
+  const covers =
+    estimate !== null &&
+    uncounted.length > 0 &&
+    estimate.lines.length === uncounted.length &&
+    uncounted.every((line) => estimate.lines.includes(line.key));
+
+  if (covers) {
+    return {
+      perServing: {
+        calories: (perServing?.calories ?? 0) + estimate.calories,
+        fat: (perServing?.fat ?? 0) + estimate.fat,
+        carbs: (perServing?.carbs ?? 0) + estimate.carbs,
+        protein: (perServing?.protein ?? 0) + estimate.protein,
+      },
+      uncounted: [],
+      estimatedByAI: uncounted,
+      counted,
+      estimated: true,
+      credits: NUTRITION_CREDITS.filter((credit) => credits.has(credit)),
+      household,
+    };
+  }
 
   return {
-    perServing:
-      counted > 0
-        ? {
-            calories: total.calories / divisor,
-            fat: total.fat / divisor,
-            carbs: total.carbs / divisor,
-            protein: total.protein / divisor,
-          }
-        : null,
+    perServing,
     uncounted,
+    estimatedByAI: [],
+    counted,
     estimated,
     credits: NUTRITION_CREDITS.filter((credit) => credits.has(credit)),
     household,

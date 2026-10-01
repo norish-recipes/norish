@@ -101,6 +101,20 @@ export function patchDashboardRecipeFromFull(
   return patched as z.output<typeof RecipeDashboardSchema>;
 }
 
+/**
+ * The language model's per-serving estimate of the lines a worked-out total
+ * could not count, and the lines it covered (ADR-0039). Derived, not
+ * supplied: it is added to a reader's worked-out total while those lines are
+ * still the ones left out, and never travels in an archive.
+ */
+export const RecipeNutritionEstimateSchema = z.object({
+  calories: z.number(),
+  fat: z.number(),
+  carbs: z.number(),
+  protein: z.number(),
+  lines: z.array(z.string()),
+});
+
 export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),
   steps: z.array(StepOutputSchema).default([]),
@@ -112,6 +126,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),
   videos: RecipeVideosArraySchema.default([]),
+  nutritionEstimate: RecipeNutritionEstimateSchema.nullable().optional(),
 });
 
 export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({

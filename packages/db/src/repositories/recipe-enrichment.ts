@@ -21,6 +21,7 @@ import { db } from "@norish/db/drizzle";
 import {
   recipeCuisines,
   recipeImages,
+  recipeNutritionEstimates,
   recipeIngredients,
   recipes,
   stepIngredients,
@@ -137,6 +138,41 @@ export async function replaceRecipeNutrition(
     .returning({ id: recipes.id });
 
   return updated.length > 0;
+}
+
+/**
+ * Store the language model's estimate of the lines a recipe's worked-out
+ * nutrition leaves out (ADR-0039): its per-serving share and the lines it
+ * covered, replacing any earlier estimate. Never the recipe's own Nutrition
+ * Information. False where the recipe is gone.
+ */
+export async function saveRecipeNutritionEstimate(
+  recipeId: string,
+  estimate: { calories: number; fat: number; carbs: number; protein: number; lines: string[] }
+): Promise<boolean> {
+  const [recipe] = await db.select({ id: recipes.id }).from(recipes).where(eq(recipes.id, recipeId));
+
+  if (!recipe) return false;
+
+  await db
+    .insert(recipeNutritionEstimates)
+    .values({ recipeId, ...estimate, createdAt: new Date() })
+    .onConflictDoUpdate({
+      target: recipeNutritionEstimates.recipeId,
+      set: { ...estimate, createdAt: new Date() },
+    });
+
+  return true;
+}
+
+/** Drop a recipe's stored estimate: every line counts now. Whether there was one. */
+export async function clearRecipeNutritionEstimate(recipeId: string): Promise<boolean> {
+  const removed = await db
+    .delete(recipeNutritionEstimates)
+    .where(eq(recipeNutritionEstimates.recipeId, recipeId))
+    .returning({ recipeId: recipeNutritionEstimates.recipeId });
+
+  return removed.length > 0;
 }
 
 /** What the Generated Image replacement did, and which files it orphaned. */

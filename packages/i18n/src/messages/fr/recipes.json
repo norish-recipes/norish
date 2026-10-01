@@ -258,6 +258,7 @@
     "estimateWithAI": "Estimer avec l’IA",
     "estimated": "Estimé",
     "notCounted": "Non compté :",
+    "estimatedByAI": "Estimé par l'IA :",
     "workedOutFrom": "Calculé à partir des ingrédients, avec {sources}.",
     "householdNumbers": "les valeurs de votre foyer"
   },

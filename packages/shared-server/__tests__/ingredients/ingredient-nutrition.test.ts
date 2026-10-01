@@ -12,11 +12,16 @@ import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import type { NutritionCodes } from "@norish/db/schema";
 import type { SourceTable } from "@norish/shared-server/ingredients/nutrition/source-table";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { getRecipeFull } from "@norish/db";
 import { saveNutritionCorrection } from "@norish/db/repositories/ingredient-nutrition";
 import {
   applyIngredientSeed,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
+import {
+  clearRecipeNutritionEstimate,
+  saveRecipeNutritionEstimate,
+} from "@norish/db/repositories/recipe-enrichment";
 import { serverConfig } from "@norish/db/schema";
 import { setParent } from "@norish/shared-server/ingredients/catalogue";
 import {
@@ -24,15 +29,16 @@ import {
   applySourceTableOnVersionChange,
 } from "@norish/shared-server/ingredients/nutrition/apply-sources";
 import {
-  NO_HOUSEHOLD,
-  resolveIngredientNutrition,
-} from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
-import {
   correctNutrition,
   NutritionCorrectionError,
   removeNutritionCorrection,
   searchDatasetFoods,
 } from "@norish/shared-server/ingredients/nutrition/corrections";
+import {
+  NO_HOUSEHOLD,
+  resolveIngredientNutrition,
+} from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
+import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
@@ -110,6 +116,7 @@ describe("Ingredient Nutrition", () => {
   const testBase = new RepositoryTestBase("test_ingredient_nutrition");
 
   let id: (offId: string) => string;
+  let recipeId: string;
   let householdA: string[];
   let householdB: string[];
 
@@ -118,7 +125,9 @@ describe("Ingredient Nutrition", () => {
   });
 
   beforeEach(async () => {
-    const [first] = await testBase.beforeEachTest();
+    const [first, recipe] = await testBase.beforeEachTest();
+
+    recipeId = recipe.id;
     const second = await createTestUser();
     const stranger = await createTestUser();
 
@@ -402,9 +411,68 @@ describe("Ingredient Nutrition", () => {
 
     it("finds dataset foods by every word of their names", async () => {
       await expect(searchDatasetFoods("milk semi")).resolves.toEqual([
-        expect.objectContaining({ dataset: "ciqual", code: "19041", name: "Milk, semi-skimmed, UHT" }),
+        expect.objectContaining({
+          dataset: "ciqual",
+          code: "19041",
+          name: "Milk, semi-skimmed, UHT",
+        }),
       ]);
       await expect(searchDatasetFoods("milk banana")).resolves.toEqual([]);
+    });
+  });
+
+  describe("a recipe's total on the server, for the language model's estimate", () => {
+    const recipe = (calories: number | null = null) => ({
+      servings: 2,
+      systemUsed: "metric",
+      calories,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [
+        {
+          id: "a",
+          ingredientName: "onion",
+          ingredientId: id("en:onion"),
+          amount: 2,
+          unit: null,
+          systemUsed: "metric",
+        },
+        {
+          id: "b",
+          ingredientName: "brandy",
+          ingredientId: id("en:brandy"),
+          amount: 50,
+          unit: "milliliter",
+          systemUsed: "metric",
+        },
+      ],
+    });
+
+    it("counts from the datasets' numbers, and names what it left out", async () => {
+      const worked = await workOutRecipeNutrition(recipe(), NO_HOUSEHOLD);
+
+      expect(worked?.counted).toEqual([
+        expect.objectContaining({ lineId: "a", grams: 300, calories: 105 }),
+      ]);
+      expect(worked?.uncounted.map((line) => line.lineId)).toEqual(["b"]);
+    });
+
+    it("works nothing out for a recipe that supplies its own", async () => {
+      await expect(workOutRecipeNutrition(recipe(320), NO_HOUSEHOLD)).resolves.toBeNull();
+    });
+
+    it("carries the language model's stored share on the recipe, until it is dropped", async () => {
+      const share = { calories: 60, fat: 0, carbs: 1, protein: 0, lines: ["key"] };
+
+      await saveRecipeNutritionEstimate(recipeId, share);
+      expect((await getRecipeFull(recipeId))?.nutritionEstimate).toEqual(share);
+
+      await saveRecipeNutritionEstimate(recipeId, { ...share, calories: 70 });
+      expect((await getRecipeFull(recipeId))?.nutritionEstimate).toMatchObject({ calories: 70 });
+
+      await expect(clearRecipeNutritionEstimate(recipeId)).resolves.toBe(true);
+      expect((await getRecipeFull(recipeId))?.nutritionEstimate).toBeNull();
     });
   });
 

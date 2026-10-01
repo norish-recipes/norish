@@ -258,6 +258,7 @@
     "estimateWithAI": "Arvioi tekoälyllä",
     "estimated": "Arvioitu",
     "notCounted": "Ei laskettu:",
+    "estimatedByAI": "Tekoälyn arvioima:",
     "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
     "householdNumbers": "kotitaloutesi arvot"
   },

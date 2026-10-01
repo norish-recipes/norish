@@ -258,6 +258,7 @@
     "estimateWithAI": "Oszacuj z AI",
     "estimated": "Szacunkowo",
     "notCounted": "Nie wliczono:",
+    "estimatedByAI": "Oszacowane przez AI:",
     "workedOutFrom": "Obliczone ze składników, na podstawie {sources}.",
     "householdNumbers": "wartości twojego gospodarstwa"
   },

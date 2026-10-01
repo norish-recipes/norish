@@ -258,6 +258,7 @@
     "estimateWithAI": "AI로 추정",
     "estimated": "추정치",
     "notCounted": "계산에서 제외:",
+    "estimatedByAI": "AI 추정:",
     "workedOutFrom": "재료로 계산했습니다. 출처: {sources}.",
     "householdNumbers": "우리 가구의 값"
   },

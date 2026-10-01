@@ -70,6 +70,49 @@ describe("estimateNutritionFromIngredients", () => {
     );
   });
 
+  it("appends no section where nothing is counted already", async () => {
+    await estimateNutritionFromIngredients("Overnight oats", 2, INGREDIENTS);
+
+    expect(mocked.generateStructured).toHaveBeenCalledWith(
+      expect.objectContaining({ sections: [] })
+    );
+  });
+
+  it("gives the lines Ingredient Nutrition counted as an appended section, never in the prompt itself", async () => {
+    await estimateNutritionFromIngredients(
+      "Overnight oats",
+      2,
+      [{ ingredientName: "honey", amount: null, unit: null }],
+      [
+        { text: "80 g rolled oats", calories: 303.2, fat: 5.6, carbs: 48.8, protein: 10.8 },
+        { text: "200 ml milk", calories: 128, fat: 7, carbs: 9.6, protein: 6.8 },
+      ]
+    );
+
+    const [request] = mocked.generateStructured.mock.calls[0]!;
+
+    expect(request.fill.ingredients).toBe("- honey");
+    expect(request.sections).toHaveLength(1);
+    expect(request.sections[0]).toMatch(/^Already counted:/);
+    expect(request.sections[0]).toContain(
+      "- 80 g rolled oats: 303.2 kcal, 5.6 g fat, 48.8 g carbohydrates, 10.8 g protein"
+    );
+    expect(request.sections[0]).toContain("- 200 ml milk: 128 kcal");
+  });
+
+  it("asks the Decision Model about the estimated lines, not the whole recipe, where some are counted", async () => {
+    await estimateNutritionFromIngredients(
+      "Overnight oats",
+      2,
+      [{ ingredientName: "honey", amount: null, unit: null }],
+      [{ text: "80 g rolled oats", calories: 303, fat: 5.6, carbs: 48.8, protein: 10.8 }]
+    );
+
+    expect(mocked.verifyClaims.mock.calls[0]![0].claims[0].question).toMatch(
+      /these ingredients of the recipe/
+    );
+  });
+
   it("returns the estimate the model gave", async () => {
     await expect(
       estimateNutritionFromIngredients("Overnight oats", 2, INGREDIENTS)

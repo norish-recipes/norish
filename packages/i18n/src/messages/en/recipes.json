@@ -258,6 +258,7 @@
     "estimateWithAI": "Estimate with AI",
     "estimated": "Estimated",
     "notCounted": "Not counted:",
+    "estimatedByAI": "Estimated by AI:",
     "workedOutFrom": "Worked out from the ingredients, with {sources}.",
     "householdNumbers": "your household's numbers"
   },

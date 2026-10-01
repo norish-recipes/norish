@@ -470,6 +470,13 @@
       "when": 1790850342014,
       "tag": "0066_ingredient_nutrition",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1790851602671,
+      "tag": "0067_recipe_nutrition_estimates",
+      "breakpoints": true
     }
   ]
 }

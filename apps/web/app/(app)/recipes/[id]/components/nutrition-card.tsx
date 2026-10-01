@@ -117,7 +117,10 @@ export default function NutritionCard() {
   );
 }
 
-/** Under a worked-out total: the lines it left out, each opening its food, and where it came from. */
+/**
+ * Under a worked-out total: the lines it left out and the lines the language
+ * model estimated, each opening its food, and where the numbers came from.
+ */
 function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
   const t = useTranslations("recipes.nutrition");
   const format = useFormatter();
@@ -128,30 +131,50 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
 
   return (
     <div className="mt-3 flex flex-col gap-2 text-sm">
-      {workedOut.uncounted.length > 0 ? (
-        <p data-testid="nutrition-not-counted">
-          <span className="text-muted">{t("notCounted")} </span>
-          {workedOut.uncounted.map((line, index) => (
-            <span key={line.lineId}>
-              {index > 0 ? ", " : null}
-              {line.ingredientId ? (
-                <Link
-                  className="text-accent hover:underline"
-                  data-testid="nutrition-not-counted-line"
-                  href={`/settings?tab=ingredients&ingredient=${line.ingredientId}`}
-                >
-                  {line.name}
-                </Link>
-              ) : (
-                <span data-testid="nutrition-not-counted-line">{line.name}</span>
-              )}
-            </span>
-          ))}
-        </p>
-      ) : null}
+      <NamedLines label={t("notCounted")} lines={workedOut.uncounted} testId="nutrition-not-counted" />
+      <NamedLines
+        label={t("estimatedByAI")}
+        lines={workedOut.estimatedByAI}
+        testId="nutrition-estimated-by-ai"
+      />
       <p className="text-muted text-xs" data-testid="nutrition-credit">
         {t("workedOutFrom", { sources: format.list(sources, { type: "conjunction" }) })}
       </p>
     </div>
+  );
+}
+
+/** Lines named under the total, each opening its food's panel where it has one. */
+function NamedLines({
+  label,
+  lines,
+  testId,
+}: {
+  label: string;
+  lines: WorkedOutNutrition["uncounted"];
+  testId: string;
+}) {
+  if (lines.length === 0) return null;
+
+  return (
+    <p data-testid={testId}>
+      <span className="text-muted">{label} </span>
+      {lines.map((line, index) => (
+        <span key={line.lineId}>
+          {index > 0 ? ", " : null}
+          {line.ingredientId ? (
+            <Link
+              className="text-accent hover:underline"
+              data-testid={`${testId}-line`}
+              href={`/settings?tab=ingredients&ingredient=${line.ingredientId}`}
+            >
+              {line.name}
+            </Link>
+          ) : (
+            <span data-testid={`${testId}-line`}>{line.name}</span>
+          )}
+        </span>
+      ))}
+    </p>
   );
 }

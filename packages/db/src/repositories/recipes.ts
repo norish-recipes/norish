@@ -35,6 +35,7 @@ import {
   recipeFavorites,
   recipeImages,
   recipeIngredients,
+  recipeNutritionEstimates,
   recipes,
   recipeTags,
   recipeVideos,
@@ -1156,6 +1157,18 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
 
   if (!full) return null;
 
+  // The language model's share of the lines a worked-out total leaves out (ADR-0039).
+  const [nutritionEstimate] = await db
+    .select({
+      calories: recipeNutritionEstimates.calories,
+      fat: recipeNutritionEstimates.fat,
+      carbs: recipeNutritionEstimates.carbs,
+      protein: recipeNutritionEstimates.protein,
+      lines: recipeNutritionEstimates.lines,
+    })
+    .from(recipeNutritionEstimates)
+    .where(eq(recipeNutritionEstimates.recipeId, id));
+
   // fetch author if exists
   let author:
     { id: string; name: string | null; image: string | null; version: number } | undefined;
@@ -1256,6 +1269,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       order: Number(vid.order) || 0,
       version: vid.version,
     })),
+    nutritionEstimate: nutritionEstimate ?? null,
   };
 
   const parsed = FullRecipeSchema.safeParse(dto);
