@@ -3,6 +3,10 @@ import { z } from "zod";
 
 import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
 import type { ReviewReport } from "@norish/shared/contracts/ingredient-catalogue";
+import type {
+  IngredientNutrition,
+  NutritionFoodRef,
+} from "@norish/shared/contracts/ingredient-nutrition";
 import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
 import { findRunningReviewRound, readReviewReport } from "@norish/queue/ingredient-review/progress";
@@ -416,7 +420,7 @@ const setParent = authedProcedure
  */
 const nutrition = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
-  .query(async ({ ctx, input }) => {
+  .query(async ({ ctx, input }): Promise<IngredientNutrition | null> => {
     const answer = await resolveIngredientNutrition([input.ingredientId], {
       householdUserIds: ctx.userIds,
     });
@@ -431,7 +435,7 @@ const nutrition = authedProcedure
  */
 const nutritionFor = authedProcedure
   .input(z.object({ ingredientIds: z.array(z.uuid()).max(500) }))
-  .query(async ({ ctx, input }) => {
+  .query(async ({ ctx, input }): Promise<Record<string, IngredientNutrition>> => {
     const answer = await resolveIngredientNutrition(input.ingredientIds, {
       householdUserIds: ctx.userIds,
     });
@@ -505,7 +509,13 @@ const removeNutritionCorrection_ = authedProcedure
 /** Dataset foods whose names hold every word searched, for a correction to name. */
 const nutritionFoods = authedProcedure
   .input(z.object({ search: z.string().trim().min(2).max(100) }))
-  .query(({ input }) => searchDatasetFoods(input.search));
+  .query(
+    ({
+      input,
+    }): Promise<
+      Array<NutritionFoodRef & { kcal: number; pieceWeight: number | null; density: number | null }>
+    > => searchDatasetFoods(input.search)
+  );
 
 function memberOf(ctx: AuthedProcedureContext) {
   return { userId: ctx.user.id, householdUserIds: ctx.userIds, householdKey: ctx.householdKey };
