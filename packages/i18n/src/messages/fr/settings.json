@@ -425,7 +425,12 @@
       "protein": "Protéines",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g la tasse",
+      "spoonGrams": {
+        "teaspoon": "{value} g la cuillère à café",
+        "tablespoon": "{value} g la cuillère à soupe",
+        "cup": "{value} g la tasse",
+        "hundredMl": "{value} g les 100 ml"
+      },
       "none": "Norish n'a pas encore de valeurs nutritionnelles pour cet ingrédient. Corrigez-le pour lui en donner.",
       "noNumbers": "Pas encore de valeurs pour 100 g.",
       "borrowed": "De {name} : {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Les corrections ne valent que pour votre foyer.",
       "facts": {
         "numbers": "Pour 100 g",
-        "pieceWeight": "Une pièce",
-        "density": "Une tasse"
+        "pieceWeight": "Une pièce"
       },
       "useSources": "Aucune correction",
       "pickFood": "Un aliment des bases de données",
@@ -454,7 +458,12 @@
         "carbs": "Glucides (g)",
         "protein": "Protéines (g)",
         "pieceGrams": "Une pièce pèse (g)",
-        "cupGrams": "Une tasse pèse (g)"
+        "spoonGrams": {
+          "teaspoon": "Une cuillère à café pèse (g)",
+          "tablespoon": "Une cuillère à soupe pèse (g)",
+          "cup": "Une tasse pèse (g)",
+          "hundredMl": "100 ml pèsent (g)"
+        }
       },
       "searchFood": "Chercher dans les bases (en anglais), par exemple milk semi-skimmed",
       "foodHint": "Tapez quelques mots du nom",
@@ -470,8 +479,14 @@
         "not-found": "Cet ingrédient n'existe plus.",
         "unknown": "Une erreur s'est produite. Réessayez."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Une pièce",
+      "spoon": {
+        "teaspoon": "Une cuillère à café",
+        "tablespoon": "Une cuillère à soupe",
+        "cup": "Une tasse",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Ajouter son poids",
       "summary": "{value} kcal pour 100 g",
       "summaryNone": "Pas encore de valeurs nutritionnelles",
       "current": "Actuellement {value} · {source}",

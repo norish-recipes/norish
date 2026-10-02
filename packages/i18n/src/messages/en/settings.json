@@ -425,7 +425,12 @@
       "protein": "Protein",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g a cup",
+      "spoonGrams": {
+        "teaspoon": "{value} g a teaspoon",
+        "tablespoon": "{value} g a tablespoon",
+        "cup": "{value} g a cup",
+        "hundredMl": "{value} g per 100 ml"
+      },
       "none": "Norish has no nutrition for this food yet. Correct it to give it some.",
       "noNumbers": "No numbers per 100 g yet.",
       "borrowed": "From {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Corrections are scoped to your household.",
       "facts": {
         "numbers": "Per 100 g",
-        "pieceWeight": "One piece",
-        "density": "A cup"
+        "pieceWeight": "One piece"
       },
       "useSources": "No correction",
       "pickFood": "A dataset food",
@@ -454,7 +458,12 @@
         "carbs": "Carbohydrates (g)",
         "protein": "Protein (g)",
         "pieceGrams": "One piece weighs (g)",
-        "cupGrams": "A cup weighs (g)"
+        "spoonGrams": {
+          "teaspoon": "A teaspoon weighs (g)",
+          "tablespoon": "A tablespoon weighs (g)",
+          "cup": "A cup weighs (g)",
+          "hundredMl": "100 ml weighs (g)"
+        }
       },
       "searchFood": "Search the datasets, such as milk semi-skimmed",
       "foodHint": "Type a few words of the food's name",
@@ -471,7 +480,13 @@
         "unknown": "Something went wrong. Try again."
       },
       "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "spoon": {
+        "teaspoon": "A teaspoon",
+        "tablespoon": "A tablespoon",
+        "cup": "A cup",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Add its weight",
       "summary": "{value} kcal per 100 g",
       "summaryNone": "No nutrition yet",
       "current": "Now {value} · {source}",

@@ -425,7 +425,12 @@
       "protein": "Proteínas",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g por xícara",
+      "spoonGrams": {
+        "teaspoon": "{value} g por colher de chá",
+        "tablespoon": "{value} g por colher de sopa",
+        "cup": "{value} g por xícara",
+        "hundredMl": "{value} g por 100 ml"
+      },
       "none": "O Norish ainda não tem informação nutricional deste ingrediente. Corrija para dar uma a ele.",
       "noNumbers": "Ainda não há valores por 100 g.",
       "borrowed": "De {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "As correções valem só para a sua casa.",
       "facts": {
         "numbers": "Por 100 g",
-        "pieceWeight": "Uma unidade",
-        "density": "Uma xícara"
+        "pieceWeight": "Uma unidade"
       },
       "useSources": "Sem correção",
       "pickFood": "Um alimento dos conjuntos de dados",
@@ -454,7 +458,12 @@
         "carbs": "Carboidratos (g)",
         "protein": "Proteínas (g)",
         "pieceGrams": "Uma unidade pesa (g)",
-        "cupGrams": "Uma xícara pesa (g)"
+        "spoonGrams": {
+          "teaspoon": "Uma colher de chá pesa (g)",
+          "tablespoon": "Uma colher de sopa pesa (g)",
+          "cup": "Uma xícara pesa (g)",
+          "hundredMl": "100 ml pesam (g)"
+        }
       },
       "searchFood": "Buscar nos conjuntos de dados (em inglês), como milk semi-skimmed",
       "foodHint": "Digite algumas palavras do nome",
@@ -470,8 +479,14 @@
         "not-found": "Este ingrediente não existe mais.",
         "unknown": "Algo deu errado. Tente novamente."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Uma unidade",
+      "spoon": {
+        "teaspoon": "Uma colher de chá",
+        "tablespoon": "Uma colher de sopa",
+        "cup": "Uma xícara",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Adicionar o peso",
       "summary": "{value} kcal por 100 g",
       "summaryNone": "Ainda sem informação nutricional",
       "current": "Agora {value} · {source}",

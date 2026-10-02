@@ -425,7 +425,12 @@
       "protein": "단백질",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "컵당 {value} g",
+      "spoonGrams": {
+        "teaspoon": "작은술당 {value} g",
+        "tablespoon": "큰술당 {value} g",
+        "cup": "컵당 {value} g",
+        "hundredMl": "100 ml당 {value} g"
+      },
       "none": "Norish에는 아직 이 재료의 영양 정보가 없습니다. 수정해서 값을 넣어 주세요.",
       "noNumbers": "아직 100 g당 값이 없습니다.",
       "borrowed": "{name}에서: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "수정은 내 가구에만 적용됩니다.",
       "facts": {
         "numbers": "100 g당",
-        "pieceWeight": "한 개",
-        "density": "한 컵"
+        "pieceWeight": "한 개"
       },
       "useSources": "수정 없음",
       "pickFood": "데이터셋의 식품",
@@ -454,7 +458,12 @@
         "carbs": "탄수화물 (g)",
         "protein": "단백질 (g)",
         "pieceGrams": "한 개의 무게 (g)",
-        "cupGrams": "한 컵의 무게 (g)"
+        "spoonGrams": {
+          "teaspoon": "1 작은술의 무게 (g)",
+          "tablespoon": "1 큰술의 무게 (g)",
+          "cup": "한 컵의 무게 (g)",
+          "hundredMl": "100 ml의 무게 (g)"
+        }
       },
       "searchFood": "데이터셋에서 검색 (영어), 예: milk semi-skimmed",
       "foodHint": "이름의 단어 몇 개를 입력하세요",
@@ -470,8 +479,14 @@
         "not-found": "이 재료는 더 이상 없습니다.",
         "unknown": "문제가 발생했습니다. 다시 시도하세요."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "한 개",
+      "spoon": {
+        "teaspoon": "1 작은술",
+        "tablespoon": "1 큰술",
+        "cup": "한 컵",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "무게 추가",
       "summary": "100 g당 {value} kcal",
       "summaryNone": "아직 영양 정보 없음",
       "current": "현재 {value} · {source}",

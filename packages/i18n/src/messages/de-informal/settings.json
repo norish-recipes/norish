@@ -425,7 +425,12 @@
       "protein": "Eiweiß",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g pro Tasse",
+      "spoonGrams": {
+        "teaspoon": "{value} g pro Teelöffel",
+        "tablespoon": "{value} g pro Esslöffel",
+        "cup": "{value} g pro Tasse",
+        "hundredMl": "{value} g pro 100 ml"
+      },
       "noNumbers": "Noch keine Werte pro 100 g.",
       "borrowed": "Von {name}: {source}",
       "source": {
@@ -440,8 +445,7 @@
       "correctTitle": "{name} korrigieren",
       "facts": {
         "numbers": "Pro 100 g",
-        "pieceWeight": "Ein Stück",
-        "density": "Eine Tasse"
+        "pieceWeight": "Ein Stück"
       },
       "useSources": "Keine Korrektur",
       "pickFood": "Ein Lebensmittel aus den Datensätzen",
@@ -452,7 +456,12 @@
         "carbs": "Kohlenhydrate (g)",
         "protein": "Eiweiß (g)",
         "pieceGrams": "Ein Stück wiegt (g)",
-        "cupGrams": "Eine Tasse wiegt (g)"
+        "spoonGrams": {
+          "teaspoon": "Ein Teelöffel wiegt (g)",
+          "tablespoon": "Ein Esslöffel wiegt (g)",
+          "cup": "Eine Tasse wiegt (g)",
+          "hundredMl": "100 ml wiegen (g)"
+        }
       },
       "searchingFoods": "Suche…",
       "noFoods": "Kein Lebensmittel in den Datensätzen hat all diese Wörter.",
@@ -470,8 +479,14 @@
       "searchFood": "In den Datensätzen suchen (Englisch), etwa milk semi-skimmed",
       "foodHint": "Gib ein paar Wörter des Namens ein",
       "remove": "Unsere Korrektur entfernen",
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Ein Stück",
+      "spoon": {
+        "teaspoon": "Ein Teelöffel",
+        "tablespoon": "Ein Esslöffel",
+        "cup": "Eine Tasse",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Gewicht eintragen",
       "summary": "{value} kcal pro 100 g",
       "summaryNone": "Noch keine Nährwerte",
       "current": "Jetzt {value} · {source}",

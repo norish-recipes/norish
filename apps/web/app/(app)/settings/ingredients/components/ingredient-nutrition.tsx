@@ -10,17 +10,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
+import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
+import { SPOON_MEASURE_ML } from "@norish/shared/lib/spoon-measure";
 
-import { CUP_ML, factSource } from "./nutrition-copy";
+import { factSource, spoonKey } from "./nutrition-copy";
 import { NutritionCorrectionPanel } from "./nutrition-correction-panel";
 
 /**
  * An Ingredient's nutrition in its panel (ADR-0039): one row saying the
  * calories per 100 g, which opens a panel of its own with the four numbers,
- * what one piece weighs and what a cup weighs, each with where it came from
- * ("Onion, raw · CIQUAL 2025", "from onion"), or that Norish does not know.
- * Any member may correct them for the household, seeded food or not: the
- * edit policy does not apply to a correction.
+ * what one piece weighs and what a spoon of it weighs, each with where it
+ * came from ("Onion, raw · CIQUAL 2025", "from onion"), or that Norish does
+ * not know. The spoon is the measure the household's recipes use most for
+ * the food ("a teaspoon of cumin weighs 2 g"), and its row shows only where
+ * one of them measures it by volume, asking for the weight where none is
+ * known. Any member may correct them for the household, seeded food or not:
+ * the edit policy does not apply to a correction.
  */
 export function IngredientNutritionSection({
   ingredientId,
@@ -35,11 +40,17 @@ export function IngredientNutritionSection({
   const trpc = useTRPC();
   const [open, setOpen] = useState(false);
   const [correcting, setCorrecting] = useState(false);
-  // Each opening of the correction panel is a fresh draft.
-  const [opening, setOpening] = useState(0);
+  // Each opening of the correction panel is a fresh draft, ready to type the
+  // spoon's weight when the spoon row asked for it.
+  const [opening, setOpening] = useState({ count: 0, askSpoon: false });
   const { data, isPending } = useQuery(trpc.ingredients.nutrition.queryOptions({ ingredientId }));
+  const { data: measure } = useQuery(trpc.ingredients.spoonMeasure.queryOptions({ ingredientId }));
   const number = (value: number) => format.number(value, { maximumFractionDigits: 1 });
   const facts = data ?? null;
+  const correct = (askSpoon: boolean) => {
+    setOpening((previous) => ({ count: previous.count + 1, askSpoon }));
+    setCorrecting(true);
+  };
 
   return (
     <section className="flex flex-col gap-2" data-testid="ingredient-nutrition">
@@ -73,7 +84,12 @@ export function IngredientNutritionSection({
       >
         <Panel.Body>
           <div className="flex flex-col gap-3 pb-2" data-testid="ingredient-nutrition-details">
-            <NutritionFacts facts={facts} number={number} />
+            <NutritionFacts
+              facts={facts}
+              measure={measure ?? null}
+              number={number}
+              onAskSpoon={() => correct(true)}
+            />
           </div>
         </Panel.Body>
         <Panel.Footer>
@@ -81,10 +97,7 @@ export function IngredientNutritionSection({
             <Button
               data-testid="ingredient-nutrition-correct"
               variant="secondary"
-              onPress={() => {
-                setOpening((count) => count + 1);
-                setCorrecting(true);
-              }}
+              onPress={() => correct(false)}
             >
               <PencilSquareIcon className="size-4" />
               {t("correct")}
@@ -95,9 +108,11 @@ export function IngredientNutritionSection({
           </div>
         </Panel.Footer>
         <NutritionCorrectionPanel
-          key={opening}
+          key={opening.count}
+          askSpoon={opening.askSpoon}
           current={facts}
           ingredientId={ingredientId}
+          measure={measure ?? null}
           name={name}
           open={correcting}
           onClose={() => setCorrecting(false)}
@@ -109,14 +124,19 @@ export function IngredientNutritionSection({
 
 function NutritionFacts({
   facts,
+  measure,
   number,
+  onAskSpoon,
 }: {
   facts: IngredientNutrition | null;
+  /** The measure the household's recipes use most for the food, or null where none measures it by volume. */
+  measure: SpoonMeasure | null;
   number: (value: number) => string;
+  onAskSpoon: () => void;
 }) {
   const t = useTranslations("settings.ingredients.nutrition");
 
-  if (!facts?.numbers && !facts?.pieceWeight && !facts?.density) {
+  if (!facts?.numbers && !facts?.pieceWeight && !measure) {
     return (
       <p className="text-muted text-sm" data-testid="ingredient-nutrition-none">
         {t("none")}
@@ -125,10 +145,10 @@ function NutritionFacts({
   }
 
   // One table, a line between rows and none at the sides: the four numbers
-  // per 100 g with where they came from beneath, then what a piece and a cup weigh.
+  // per 100 g with where they came from beneath, then what a piece and a spoon weigh.
   return (
     <dl className="divide-border flex flex-col divide-y text-sm">
-      {facts.numbers ? (
+      {facts?.numbers ? (
         <div
           className="flex flex-col divide-y divide-inherit"
           data-testid="ingredient-nutrition-numbers"
@@ -149,18 +169,31 @@ function NutritionFacts({
       ) : (
         <p className="text-muted py-2">{t("noNumbers")}</p>
       )}
-      {facts.pieceWeight ? (
+      {facts?.pieceWeight ? (
         <div data-testid="ingredient-nutrition-piece">
           <Fact label={t("onePieceLabel")} source={factSource(t, facts.pieceWeight)}>
             {t("grams", { value: number(facts.pieceWeight.value) })}
           </Fact>
         </div>
       ) : null}
-      {facts.density ? (
-        <div data-testid="ingredient-nutrition-density">
-          <Fact label={t("oneCupLabel")} source={factSource(t, facts.density)}>
-            {t("grams", { value: number(facts.density.value * CUP_ML) })}
-          </Fact>
+      {measure ? (
+        <div data-measure={measure} data-testid="ingredient-nutrition-density">
+          {facts?.density ? (
+            <Fact label={t(`spoon.${spoonKey(measure)}`)} source={factSource(t, facts.density)}>
+              {t("grams", { value: number(facts.density.value * SPOON_MEASURE_ML[measure]) })}
+            </Fact>
+          ) : (
+            <Fact label={t(`spoon.${spoonKey(measure)}`)} source={t("currentNone")}>
+              <Button
+                data-testid="ingredient-nutrition-density-ask"
+                size="sm"
+                variant="secondary"
+                onPress={onAskSpoon}
+              >
+                {t("spoonAsk")}
+              </Button>
+            </Fact>
+          )}
         </div>
       ) : null}
     </dl>

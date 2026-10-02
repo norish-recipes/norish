@@ -3,11 +3,17 @@ import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { NutritionCodes } from "@norish/db/schema";
 import { db } from "@norish/db/drizzle";
 import {
+  ingredientAliases,
   ingredientNutritionCorrections,
   ingredients,
   nutritionFoods,
   nutritionRules,
+  recipeIngredients,
+  recipes,
 } from "@norish/db/schema";
+
+import type { RecipeListContext } from "./recipes";
+import { buildOwnerPolicyCondition } from "./recipes";
 
 /**
  * Ingredient Nutrition's reads and its one write (ADR-0039): the source
@@ -170,6 +176,33 @@ export async function searchNutritionFoods(
     .where(and(...words.map((word) => sql`${nutritionFoods.name} ilike ${`%${word}%`}`)))
     .orderBy(sql`length(${nutritionFoods.name})`, nutritionFoods.dataset, nutritionFoods.code)
     .limit(limit);
+}
+
+/**
+ * How many lines name this Ingredient in the recipes the viewer can open,
+ * by unit: under the recipe list's view policy, and in each recipe's own
+ * measurement system, as its worked-out total reads them.
+ */
+export async function countIngredientLinesByUnit(
+  viewer: RecipeListContext,
+  ingredientId: string
+): Promise<Array<{ unit: string | null; lines: number }>> {
+  const visible = await buildOwnerPolicyCondition(viewer, recipes.userId, "view");
+  const rows = await db
+    .select({ unit: recipeIngredients.unit, lines: sql<number>`count(*)::int` })
+    .from(recipeIngredients)
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredients.ingredientAliasId))
+    .where(
+      and(
+        eq(ingredientAliases.ingredientId, ingredientId),
+        eq(recipeIngredients.systemUsed, recipes.systemUsed),
+        visible
+      )
+    )
+    .groupBy(recipeIngredients.unit);
+
+  return rows.map((row) => ({ unit: row.unit, lines: Number(row.lines) }));
 }
 
 /** A household's correction to one Ingredient, as stored. */

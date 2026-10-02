@@ -1,12 +1,26 @@
 import type { useTranslations } from "next-intl";
 
 import type { NutritionFact, NutritionSource } from "@norish/shared/contracts/ingredient-nutrition";
+import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 
 type NutritionT = ReturnType<typeof useTranslations<"settings.ingredients.nutrition">>;
 
-/** A cup, in millilitres: how a density is shown and corrected, never as grams per millilitre. */
-export const CUP_ML = 240;
+const SPOON_KEYS = {
+  teaspoon: "teaspoon",
+  tablespoon: "tablespoon",
+  cup: "cup",
+  "100ml": "hundredMl",
+} as const satisfies Record<SpoonMeasure, string>;
+
+/**
+ * A measure's key among the panel's words ("spoon.teaspoon", "100 ml"): a
+ * density is shown and corrected as what that measure weighs, never as
+ * grams per millilitre.
+ */
+export function spoonKey(measure: SpoonMeasure): (typeof SPOON_KEYS)[SpoonMeasure] {
+  return SPOON_KEYS[measure];
+}
 
 /**
  * Where a fact came from, in the panel's words: the dataset food and its

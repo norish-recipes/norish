@@ -425,7 +425,12 @@
       "protein": "Proteínas",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g por taza",
+      "spoonGrams": {
+        "teaspoon": "{value} g por cucharadita",
+        "tablespoon": "{value} g por cucharada",
+        "cup": "{value} g por taza",
+        "hundredMl": "{value} g por 100 ml"
+      },
       "none": "Norish aún no tiene información nutricional de este ingrediente. Corrígelo para darle una.",
       "noNumbers": "Aún no hay valores por 100 g.",
       "borrowed": "De {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Las correcciones solo valen para tu hogar.",
       "facts": {
         "numbers": "Por 100 g",
-        "pieceWeight": "Una pieza",
-        "density": "Una taza"
+        "pieceWeight": "Una pieza"
       },
       "useSources": "Sin corrección",
       "pickFood": "Un alimento de los conjuntos de datos",
@@ -454,7 +458,12 @@
         "carbs": "Carbohidratos (g)",
         "protein": "Proteínas (g)",
         "pieceGrams": "Una pieza pesa (g)",
-        "cupGrams": "Una taza pesa (g)"
+        "spoonGrams": {
+          "teaspoon": "Una cucharadita pesa (g)",
+          "tablespoon": "Una cucharada pesa (g)",
+          "cup": "Una taza pesa (g)",
+          "hundredMl": "100 ml pesan (g)"
+        }
       },
       "searchFood": "Buscar en los conjuntos de datos (en inglés), como milk semi-skimmed",
       "foodHint": "Escribe unas palabras del nombre",
@@ -470,8 +479,14 @@
         "not-found": "Este ingrediente ya no existe.",
         "unknown": "Algo salió mal. Inténtalo de nuevo."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Una pieza",
+      "spoon": {
+        "teaspoon": "Una cucharadita",
+        "tablespoon": "Una cucharada",
+        "cup": "Una taza",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Añadir su peso",
       "summary": "{value} kcal por 100 g",
       "summaryNone": "Aún sin información nutricional",
       "current": "Ahora {value} · {source}",

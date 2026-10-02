@@ -425,7 +425,12 @@
       "protein": "Protein",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g pr. kop",
+      "spoonGrams": {
+        "teaspoon": "{value} g pr. teske",
+        "tablespoon": "{value} g pr. spiseske",
+        "cup": "{value} g pr. kop",
+        "hundredMl": "{value} g pr. 100 ml"
+      },
       "none": "Norish har endnu ikke næringsindhold for denne ingrediens. Ret den for at give den noget.",
       "noNumbers": "Endnu ingen værdier pr. 100 g.",
       "borrowed": "Fra {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Rettelser gælder kun for din husstand.",
       "facts": {
         "numbers": "Pr. 100 g",
-        "pieceWeight": "Ét stk.",
-        "density": "En kop"
+        "pieceWeight": "Ét stk."
       },
       "useSources": "Ingen rettelse",
       "pickFood": "En fødevare fra datasættene",
@@ -454,7 +458,12 @@
         "carbs": "Kulhydrater (g)",
         "protein": "Protein (g)",
         "pieceGrams": "Ét stk. vejer (g)",
-        "cupGrams": "En kop vejer (g)"
+        "spoonGrams": {
+          "teaspoon": "En teske vejer (g)",
+          "tablespoon": "En spiseske vejer (g)",
+          "cup": "En kop vejer (g)",
+          "hundredMl": "100 ml vejer (g)"
+        }
       },
       "searchFood": "Søg i datasættene (på engelsk), fx milk semi-skimmed",
       "foodHint": "Skriv et par ord af navnet",
@@ -470,8 +479,14 @@
         "not-found": "Denne ingrediens findes ikke længere.",
         "unknown": "Noget gik galt. Prøv igen."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Ét stk.",
+      "spoon": {
+        "teaspoon": "En teske",
+        "tablespoon": "En spiseske",
+        "cup": "En kop",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Tilføj vægt",
       "summary": "{value} kcal pr. 100 g",
       "summaryNone": "Ingen næringsindhold endnu",
       "current": "Nu {value} · {source}",

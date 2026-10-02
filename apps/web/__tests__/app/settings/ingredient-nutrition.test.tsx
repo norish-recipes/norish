@@ -5,10 +5,15 @@ import "@testing-library/jest-dom";
 
 import { IngredientNutritionSection } from "@/app/(app)/settings/ingredients/components/ingredient-nutrition";
 
-import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
+import type {
+  IngredientNutrition,
+  NutritionFact,
+  NutritionSource,
+} from "@norish/shared/contracts/ingredient-nutrition";
 
 const mocks = vi.hoisted(() => ({
   nutrition: null as IngredientNutrition | null,
+  measure: null as string | null,
   pending: false,
   correct: vi.fn(async (_input: unknown) => ({ success: true })),
   remove: vi.fn(async (_input: unknown) => ({ success: true })),
@@ -23,6 +28,9 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         queryKey: () => ["nutrition"],
       },
       nutritionFor: { queryKey: () => ["nutritionFor"] },
+      spoonMeasure: {
+        queryOptions: (input: unknown) => ({ queryKey: ["spoonMeasure", input] }),
+      },
       nutritionFoods: {
         queryOptions: (input: unknown) => ({ queryKey: ["nutritionFoods", input] }),
       },
@@ -36,7 +44,9 @@ vi.mock("@tanstack/react-query", () => ({
   useQuery: (options: { queryKey: unknown[] }) =>
     options.queryKey[0] === "nutrition"
       ? { data: mocks.nutrition, isPending: mocks.pending }
-      : { data: [], isFetching: false },
+      : options.queryKey[0] === "spoonMeasure"
+        ? { data: mocks.measure, isPending: false }
+        : { data: [], isFetching: false },
   useMutation: (options: { mutationFn: (input: unknown) => Promise<unknown> }) => ({
     mutateAsync: options.mutationFn,
     isPending: false,
@@ -94,6 +104,7 @@ describe("an Ingredient's nutrition in its panel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.pending = false;
+    mocks.measure = null;
     mocks.nutrition = {
       numbers: {
         value: { kcal: 35, fat: 0.2, carbs: 6.8, protein: 1.1 },
@@ -158,7 +169,103 @@ describe("an Ingredient's nutrition in its panel", () => {
     expect(screen.getByTestId("ingredient-nutrition-none")).toBeInTheDocument();
   });
 
+  describe("a spoon's weight", () => {
+    const CUMIN_SEED = { dataset: "usda" as const, code: "170923", name: "Spices, cumin seed" };
+    const density = (value: number, source: NutritionSource): NutritionFact<number> => ({
+      value,
+      source,
+      borrowedFrom: null,
+    });
+
+    it("shows no spoon row where no recipe the household can open measures the food by volume", () => {
+      mocks.nutrition = { ...mocks.nutrition!, density: density(0.67, { kind: "taxonomy" }) };
+
+      render(<IngredientNutritionSection ingredientId="onion" name="onion" />);
+      openNutrition();
+
+      expect(screen.queryByTestId("ingredient-nutrition-density")).toBeNull();
+    });
+
+    it("states it in the measure the household's recipes use most, with where it came from", () => {
+      mocks.measure = "teaspoon";
+      mocks.nutrition = {
+        ...mocks.nutrition!,
+        density: density(0.4, { kind: "fix", food: CUMIN_SEED }),
+      };
+
+      render(<IngredientNutritionSection ingredientId="cumin" name="cumin" />);
+      openNutrition();
+
+      const row = screen.getByTestId("ingredient-nutrition-density");
+
+      expect(row).toHaveTextContent('spoon.teaspoongrams {"value":"2"}');
+      expect(row).toHaveTextContent(
+        'source.fix {"food":"Spices, cumin seed","dataset":"USDA FoodData Central"}'
+      );
+    });
+
+    it("reads millilitres to litres per 100 ml", () => {
+      mocks.measure = "100ml";
+      mocks.nutrition = { ...mocks.nutrition!, density: density(1.03, { kind: "taxonomy" }) };
+
+      render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
+      openNutrition();
+
+      expect(screen.getByTestId("ingredient-nutrition-density")).toHaveTextContent(
+        'spoon.hundredMlgrams {"value":"103"}'
+      );
+    });
+
+    it("asks for the weight in that measure where none is known, and keeps it as a density", async () => {
+      mocks.measure = "teaspoon";
+
+      render(<IngredientNutritionSection ingredientId="cumin" name="cumin" />);
+      openNutrition();
+      fireEvent.click(screen.getByTestId("ingredient-nutrition-density-ask"));
+
+      const panel = correction();
+
+      expect(within(panel).getByText("label.spoonGrams.teaspoon")).toBeInTheDocument();
+      // The household has no correction yet: there is nothing to remove.
+      expect(within(panel).queryByTestId("nutrition-correction-remove")).toBeNull();
+      fireEvent.change(within(panel).getByTestId("nutrition-correction-spoonGrams"), {
+        target: { value: "2" },
+      });
+      fireEvent.click(within(panel).getByTestId("nutrition-correction-save"));
+
+      await vi.waitFor(() =>
+        expect(mocks.correct).toHaveBeenCalledWith({
+          ingredientId: "cumin",
+          numbers: null,
+          pieceWeight: null,
+          density: { gramsPerMl: 0.4 },
+        })
+      );
+    });
+
+    it("keeps a correction made in another measure as it was, saved unchanged", async () => {
+      mocks.measure = "teaspoon";
+      // Typed before as a cup weighing 125 g.
+      mocks.nutrition = { ...mocks.nutrition!, density: density(125 / 240, { kind: "household" }) };
+
+      render(<IngredientNutritionSection ingredientId="flour" name="flour" />);
+      openCorrection();
+
+      const panel = correction();
+
+      expect(within(panel).getByTestId("nutrition-correction-spoonGrams")).toHaveValue("2.6");
+      fireEvent.click(within(panel).getByTestId("nutrition-correction-save"));
+
+      await vi.waitFor(() =>
+        expect(mocks.correct).toHaveBeenCalledWith(
+          expect.objectContaining({ density: { gramsPerMl: 125 / 240 } })
+        )
+      );
+    });
+  });
+
   it("corrects the numbers from a label, and a cup's weight as a density", async () => {
+    mocks.measure = "cup";
     render(<IngredientNutritionSection ingredientId="milk" name="milk" />);
     openCorrection();
 
@@ -183,7 +290,7 @@ describe("an Ingredient's nutrition in its panel", () => {
       });
     }
     fireEvent.click(within(panel).getByTestId("nutrition-correction-density-label"));
-    fireEvent.change(within(panel).getByTestId("nutrition-correction-cupGrams"), {
+    fireEvent.change(within(panel).getByTestId("nutrition-correction-spoonGrams"), {
       target: { value: "247" },
     });
     fireEvent.click(within(panel).getByTestId("nutrition-correction-save"));

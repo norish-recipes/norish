@@ -425,7 +425,12 @@
       "protein": "Протеини",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} г в чаша",
+      "spoonGrams": {
+        "teaspoon": "{value} г в чаена лъжица",
+        "tablespoon": "{value} г в супена лъжица",
+        "cup": "{value} г в чаша",
+        "hundredMl": "{value} г в 100 мл"
+      },
       "none": "Norish все още няма хранителна стойност за тази съставка. Коригирайте я, за да ѝ дадете.",
       "noNumbers": "Все още няма стойности на 100 г.",
       "borrowed": "От {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Корекциите важат само за вашето домакинство.",
       "facts": {
         "numbers": "На 100 г",
-        "pieceWeight": "Едно парче",
-        "density": "Една чаша"
+        "pieceWeight": "Едно парче"
       },
       "useSources": "Без корекция",
       "pickFood": "Храна от наборите данни",
@@ -454,7 +458,12 @@
         "carbs": "Въглехидрати (g)",
         "protein": "Протеини (g)",
         "pieceGrams": "Едно парче тежи (г)",
-        "cupGrams": "Една чаша тежи (г)"
+        "spoonGrams": {
+          "teaspoon": "Чаена лъжица тежи (г)",
+          "tablespoon": "Супена лъжица тежи (г)",
+          "cup": "Една чаша тежи (г)",
+          "hundredMl": "100 мл тежат (г)"
+        }
       },
       "searchFood": "Търсене в наборите данни (на английски), например milk semi-skimmed",
       "foodHint": "Въведете няколко думи от името",
@@ -470,8 +479,14 @@
         "not-found": "Тази съставка вече не съществува.",
         "unknown": "Нещо се обърка. Опитайте отново."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Едно парче",
+      "spoon": {
+        "teaspoon": "Чаена лъжица",
+        "tablespoon": "Супена лъжица",
+        "cup": "Една чаша",
+        "hundredMl": "100 мл"
+      },
+      "spoonAsk": "Добавете тегло",
       "summary": "{value} kcal на 100 г",
       "summaryNone": "Още няма хранителни стойности",
       "current": "Сега {value} · {source}",

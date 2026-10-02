@@ -7,6 +7,7 @@ import type {
   IngredientNutrition,
   NutritionFoodSummary,
 } from "@norish/shared/contracts/ingredient-nutrition";
+import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { assertAIEnabled } from "@norish/auth/permissions";
 import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
@@ -34,6 +35,7 @@ import {
   searchDatasetFoods,
 } from "@norish/shared-server/ingredients/nutrition/corrections";
 import { resolveIngredientNutrition } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
+import { spoonMeasureFor } from "@norish/shared-server/ingredients/nutrition/spoon-measure";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
 import {
@@ -448,6 +450,25 @@ const nutritionFor = authedProcedure
     return Object.fromEntries(answer);
   });
 
+/**
+ * The measure an Ingredient's spoon weight is shown and corrected in for the
+ * viewer: the volume measure the recipes they can open use most for it, or
+ * null where none measures it by volume (ADR-0039).
+ */
+const spoonMeasure = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .query(
+    ({ ctx, input }): Promise<SpoonMeasure | null> =>
+      spoonMeasureFor(
+        {
+          userId: ctx.user.id,
+          householdUserIds: ctx.householdUserIds,
+          isServerAdmin: ctx.isServerAdmin,
+        },
+        input.ingredientId
+      )
+  );
+
 /** A dataset food, as a correction names it. */
 const datasetFood = z.object({
   food: z
@@ -545,6 +566,7 @@ export const ingredientsRouter = router({
   setParent,
   nutrition,
   nutritionFor,
+  spoonMeasure,
   correctNutrition,
   removeNutritionCorrection,
   nutritionFoods,

@@ -26,9 +26,11 @@ import type {
   NutritionFoodRef,
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
+import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
+import { SPOON_MEASURE_ML } from "@norish/shared/lib/spoon-measure";
 
-import { CUP_ML, factSource } from "./nutrition-copy";
+import { factSource, spoonKey } from "./nutrition-copy";
 
 /** How long typing pauses before the datasets are searched. */
 const SEARCH_DELAY_MS = 250;
@@ -95,7 +97,7 @@ interface FactDraft {
 const LABEL_FIELDS: Record<Fact, readonly string[]> = {
   numbers: ["calories", "fat", "carbs", "protein"],
   pieceWeight: ["pieceGrams"],
-  density: ["cupGrams"],
+  density: ["spoonGrams"],
 };
 
 /** A number as a person types it: a comma or a point, nothing negative. */
@@ -127,22 +129,30 @@ function draftOf<T>(fact: NutritionFact<T> | null, typed: (value: T) => string[]
 
 /**
  * Correct an Ingredient's nutrition for the household (ADR-0039), fact by
- * fact: the numbers per 100 g, what one piece weighs, what a cup weighs.
- * Each is kept as Norish has it, set to a dataset food found by its name
- * in the dataset's own words ("Milk, semi-skimmed, UHT"), or typed from a
- * label. A draft until Save, as every panel is; Remove takes the
- * household's correction away, every member's.
+ * fact: the numbers per 100 g, what one piece weighs, and what a spoon of it
+ * weighs in the measure the household's recipes use most, stored as the
+ * same density whichever measure it was typed in. Each is kept as Norish has
+ * it, set to a dataset food found by its name in the dataset's own words
+ * ("Milk, semi-skimmed, UHT"), or typed from a label. A draft until Save, as
+ * every panel is; Remove takes the household's correction away, every
+ * member's.
  */
 export function NutritionCorrectionPanel({
   ingredientId,
   name,
   current,
+  measure,
+  askSpoon = false,
   open,
   onClose,
 }: {
   ingredientId: string;
   name: string;
   current: IngredientNutrition | null;
+  /** The measure the household's recipes use most for the food, or null where none measures it by volume. */
+  measure: SpoonMeasure | null;
+  /** Open ready to type the spoon's weight, as the spoon row asks for it. */
+  askSpoon?: boolean;
   open: boolean;
   onClose: () => void;
 }) {
@@ -151,19 +161,35 @@ export function NutritionCorrectionPanel({
   const format = useFormatter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  // A density is typed as what the household's measure weighs; with none,
+  // a correction made before is shown per 100 ml.
+  const spoon = measure ?? "100ml";
+  const spoonMl = SPOON_MEASURE_ML[spoon];
   // The panel is mounted afresh for each opening, so the draft starts from
   // what the household has now.
-  const [initial] = useState<Record<Fact, FactDraft>>(() => ({
+  const [own] = useState<Record<Fact, FactDraft>>(() => ({
     numbers: draftOf(current?.numbers ?? null, (value) =>
       [value.kcal, value.fat, value.carbs, value.protein].map(String)
     ),
     pieceWeight: draftOf(current?.pieceWeight ?? null, (value) => [String(value)]),
     density: draftOf(current?.density ?? null, (value) => [
-      String(Math.round(value * CUP_ML * 10) / 10),
+      String(Math.round(value * spoonMl * 10) / 10),
     ]),
   }));
+  // Asked from the spoon row, the spoon's weight waits to be typed.
+  const [initial] = useState<Record<Fact, FactDraft>>(() =>
+    askSpoon && own.density.mode === "sources"
+      ? { ...own, density: { mode: "label", food: null, typed: [] } }
+      : own
+  );
   const [draft, setDraft] = useState(initial);
-  const corrected = Object.values(initial).some((fact) => fact.mode !== "sources");
+  const corrected = Object.values(own).some((fact) => fact.mode !== "sources");
+  // The spoon is asked about only where the household's recipes measure the
+  // food by volume, or where its own correction already says one.
+  const facts: readonly Fact[] =
+    measure || initial.density.mode !== "sources"
+      ? ["numbers", "pieceWeight", "density"]
+      : ["numbers", "pieceWeight"];
 
   const correct = useMutation(trpc.ingredients.correctNutrition.mutationOptions());
   const remove = useMutation(trpc.ingredients.removeNutritionCorrection.mutationOptions());
@@ -207,9 +233,16 @@ export function NutritionCorrectionPanel({
   const pieceWeight = factInput("pieceWeight", ([grams = 0]) =>
     grams > 0 ? { grams } : undefined
   );
-  const density = factInput("density", ([cupGrams = 0]) =>
-    cupGrams > 0 ? { gramsPerMl: cupGrams / CUP_ML } : undefined
-  );
+  const density = factInput("density", ([grams = 0]) => {
+    if (!(grams > 0)) return undefined;
+    // Left as it was, a correction keeps the density it was stored with,
+    // whatever measure it was typed in then.
+    if (current?.density && draft.density.typed[0] === initial.density.typed[0]) {
+      return { gramsPerMl: current.density.value };
+    }
+
+    return { gramsPerMl: grams / spoonMl };
+  });
   // Every fact must be complete; all three left to the sources is a removal.
   const complete = numbers !== undefined && pieceWeight !== undefined && density !== undefined;
   const nothing = complete && numbers === null && pieceWeight === null && density === null;
@@ -303,7 +336,9 @@ export function NutritionCorrectionPanel({
   const now: Record<Fact, string> = {
     numbers: nowLine(current?.numbers, (value) => t("kcal", { value: whole(value.kcal) })),
     pieceWeight: nowLine(current?.pieceWeight, (grams) => t("grams", { value: whole(grams) })),
-    density: nowLine(current?.density, (density) => t("grams", { value: whole(density * CUP_ML) })),
+    density: nowLine(current?.density, (density) =>
+      t("grams", { value: whole(density * spoonMl) })
+    ),
   };
 
   return (
@@ -319,12 +354,13 @@ export function NutritionCorrectionPanel({
       <Panel.Body>
         <div className="flex flex-col gap-5 pb-2" data-testid="nutrition-correction">
           <p className="text-muted text-sm">{t("correctIntro")}</p>
-          {(["numbers", "pieceWeight", "density"] as const).map((fact) => (
+          {facts.map((fact) => (
             <FactEditor
               key={fact}
               draft={draft[fact]}
               fact={fact}
               now={now[fact]}
+              spoon={spoon}
               onChange={(next) => set(fact, next)}
             />
           ))}
@@ -364,12 +400,15 @@ function FactEditor({
   fact,
   draft,
   now,
+  spoon,
   onChange,
 }: {
   fact: Fact;
   draft: FactDraft;
   /** What the fact is now and where it came from, in a line. */
   now: string;
+  /** The measure a density is typed in. */
+  spoon: SpoonMeasure;
   onChange: (next: Partial<FactDraft>) => void;
 }) {
   const t = useTranslations("settings.ingredients.nutrition");
@@ -379,7 +418,7 @@ function FactEditor({
     <section className="flex flex-col gap-2" data-testid={`nutrition-correction-${fact}`}>
       <div className="flex flex-col gap-0.5">
         <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">
-          {t(`facts.${fact}`)}
+          {fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}
         </h3>
         <p className="text-muted text-xs" data-testid={`nutrition-correction-${fact}-now`}>
           {now}
@@ -410,7 +449,12 @@ function FactEditor({
         </ToggleButton>
       </ToggleButtonGroup>
       {draft.mode === "food" ? (
-        <DatasetFoodPicker fact={fact} picked={draft.food} onPick={(food) => onChange({ food })} />
+        <DatasetFoodPicker
+          fact={fact}
+          picked={draft.food}
+          spoon={spoon}
+          onPick={(food) => onChange({ food })}
+        />
       ) : null}
       {draft.mode === "label" ? (
         <div className={fields.length > 1 ? "grid grid-cols-2 gap-2" : "flex"}>
@@ -426,7 +470,11 @@ function FactEditor({
                 onChange({ typed });
               }}
             >
-              <Label className="text-muted text-xs">{t(`label.${field}`)}</Label>
+              <Label className="text-muted text-xs">
+                {fact === "density"
+                  ? t(`label.spoonGrams.${spoonKey(spoon)}`)
+                  : t(`label.${field}`)}
+              </Label>
               <Input
                 data-testid={`nutrition-correction-${field}`}
                 inputMode="decimal"
@@ -442,15 +490,18 @@ function FactEditor({
 
 /**
  * Find a dataset food by the words of its name, in the dataset's own words.
- * For a piece weight or a density only foods with one are offered.
+ * For a piece weight or a density only foods with one are offered, a
+ * density as what a spoon of the food weighs.
  */
 function DatasetFoodPicker({
   fact,
   picked,
+  spoon,
   onPick,
 }: {
   fact: Fact;
   picked: PickedFood | null;
+  spoon: SpoonMeasure;
   onPick: (food: PickedFood | null) => void;
 }) {
   const t = useTranslations("settings.ingredients.nutrition");
@@ -493,8 +544,10 @@ function DatasetFoodPicker({
             ? t("grams", {
                 value: format.number(food.pieceWeight ?? 0, { maximumFractionDigits: 0 }),
               })
-            : t("cupGrams", {
-                value: format.number((food.density ?? 0) * CUP_ML, { maximumFractionDigits: 0 }),
+            : t(`spoonGrams.${spoonKey(spoon)}`, {
+                value: format.number((food.density ?? 0) * SPOON_MEASURE_ML[spoon], {
+                  maximumFractionDigits: 1,
+                }),
               }),
       ].join(" · "),
     }));

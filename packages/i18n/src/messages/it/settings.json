@@ -425,7 +425,12 @@
       "protein": "Proteine",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g a tazza",
+      "spoonGrams": {
+        "teaspoon": "{value} g a cucchiaino",
+        "tablespoon": "{value} g a cucchiaio",
+        "cup": "{value} g a tazza",
+        "hundredMl": "{value} g per 100 ml"
+      },
       "none": "Norish non ha ancora valori nutrizionali per questo ingrediente. Correggilo per dargliene.",
       "noNumbers": "Ancora nessun valore per 100 g.",
       "borrowed": "Da {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Le correzioni valgono solo per la tua famiglia.",
       "facts": {
         "numbers": "Per 100 g",
-        "pieceWeight": "Un pezzo",
-        "density": "Una tazza"
+        "pieceWeight": "Un pezzo"
       },
       "useSources": "Nessuna correzione",
       "pickFood": "Un alimento dei dataset",
@@ -454,7 +458,12 @@
         "carbs": "Carboidrati (g)",
         "protein": "Proteine (g)",
         "pieceGrams": "Un pezzo pesa (g)",
-        "cupGrams": "Una tazza pesa (g)"
+        "spoonGrams": {
+          "teaspoon": "Un cucchiaino pesa (g)",
+          "tablespoon": "Un cucchiaio pesa (g)",
+          "cup": "Una tazza pesa (g)",
+          "hundredMl": "100 ml pesano (g)"
+        }
       },
       "searchFood": "Cerca nei dataset (in inglese), per esempio milk semi-skimmed",
       "foodHint": "Scrivi qualche parola del nome",
@@ -470,8 +479,14 @@
         "not-found": "Questo ingrediente non esiste più.",
         "unknown": "Qualcosa è andato storto. Riprova."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Un pezzo",
+      "spoon": {
+        "teaspoon": "Un cucchiaino",
+        "tablespoon": "Un cucchiaio",
+        "cup": "Una tazza",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Aggiungi il peso",
       "summary": "{value} kcal per 100 g",
       "summaryNone": "Ancora nessun valore nutrizionale",
       "current": "Ora {value} · {source}",

@@ -425,7 +425,12 @@
       "protein": "Eiwit",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g per kop",
+      "spoonGrams": {
+        "teaspoon": "{value} g per theelepel",
+        "tablespoon": "{value} g per eetlepel",
+        "cup": "{value} g per kop",
+        "hundredMl": "{value} g per 100 ml"
+      },
       "none": "Norish heeft nog geen voedingswaarde voor dit ingrediënt. Corrigeer het om er een te geven.",
       "noNumbers": "Nog geen waarden per 100 g.",
       "borrowed": "Van {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Correcties gelden alleen voor je huishouden.",
       "facts": {
         "numbers": "Per 100 g",
-        "pieceWeight": "Eén stuk",
-        "density": "Een kop"
+        "pieceWeight": "Eén stuk"
       },
       "useSources": "Geen correctie",
       "pickFood": "Een voedingsmiddel uit de datasets",
@@ -454,7 +458,12 @@
         "carbs": "Koolhydraten (g)",
         "protein": "Eiwit (g)",
         "pieceGrams": "Eén stuk weegt (g)",
-        "cupGrams": "Een kop weegt (g)"
+        "spoonGrams": {
+          "teaspoon": "Een theelepel weegt (g)",
+          "tablespoon": "Een eetlepel weegt (g)",
+          "cup": "Een kop weegt (g)",
+          "hundredMl": "100 ml weegt (g)"
+        }
       },
       "searchFood": "Zoek in de datasets (Engels), zoals milk semi-skimmed",
       "foodHint": "Typ een paar woorden van de naam",
@@ -471,7 +480,13 @@
         "unknown": "Er ging iets mis. Probeer het opnieuw."
       },
       "onePieceLabel": "Eén stuk",
-      "oneCupLabel": "Een kopje",
+      "spoon": {
+        "teaspoon": "Een theelepel",
+        "tablespoon": "Een eetlepel",
+        "cup": "Een kop",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Gewicht invullen",
       "summary": "{value} kcal per 100 g",
       "summaryNone": "Nog geen voedingswaarde",
       "current": "Nu {value} · {source}",

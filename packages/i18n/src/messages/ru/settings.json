@@ -425,7 +425,12 @@
       "protein": "Белки",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} г в чашке",
+      "spoonGrams": {
+        "teaspoon": "{value} г в чайной ложке",
+        "tablespoon": "{value} г в столовой ложке",
+        "cup": "{value} г в чашке",
+        "hundredMl": "{value} г в 100 мл"
+      },
       "none": "У Norish пока нет пищевой ценности для этого ингредиента. Исправьте его, чтобы задать её.",
       "noNumbers": "Пока нет значений на 100 г.",
       "borrowed": "От {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Исправления действуют только для вашей семьи.",
       "facts": {
         "numbers": "На 100 г",
-        "pieceWeight": "Одна штука",
-        "density": "Чашка"
+        "pieceWeight": "Одна штука"
       },
       "useSources": "Без исправления",
       "pickFood": "Продукт из наборов данных",
@@ -454,7 +458,12 @@
         "carbs": "Углеводы (g)",
         "protein": "Белки (g)",
         "pieceGrams": "Одна штука весит (г)",
-        "cupGrams": "Чашка весит (г)"
+        "spoonGrams": {
+          "teaspoon": "Чайная ложка весит (г)",
+          "tablespoon": "Столовая ложка весит (г)",
+          "cup": "Чашка весит (г)",
+          "hundredMl": "100 мл весят (г)"
+        }
       },
       "searchFood": "Поиск по наборам данных (на английском), например milk semi-skimmed",
       "foodHint": "Введите несколько слов названия",
@@ -470,8 +479,14 @@
         "not-found": "Этого ингредиента больше нет.",
         "unknown": "Что-то пошло не так. Попробуйте снова."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Одна штука",
+      "spoon": {
+        "teaspoon": "Чайная ложка",
+        "tablespoon": "Столовая ложка",
+        "cup": "Чашка",
+        "hundredMl": "100 мл"
+      },
+      "spoonAsk": "Указать вес",
       "summary": "{value} ккал на 100 г",
       "summaryNone": "Пищевой ценности пока нет",
       "current": "Сейчас {value} · {source}",

@@ -425,7 +425,12 @@
       "protein": "Proteiini",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g kupissa",
+      "spoonGrams": {
+        "teaspoon": "{value} g teelusikallisessa",
+        "tablespoon": "{value} g ruokalusikallisessa",
+        "cup": "{value} g kupissa",
+        "hundredMl": "{value} g 100 ml:ssa"
+      },
       "none": "Norishilla ei vielä ole ravintoarvoja tälle ainekselle. Korjaa se antaaksesi arvot.",
       "noNumbers": "Ei vielä arvoja 100 g:ssa.",
       "borrowed": "Aineksesta {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Korjaukset koskevat vain omaa talouttasi.",
       "facts": {
         "numbers": "100 g:ssa",
-        "pieceWeight": "Yksi kappale",
-        "density": "Kuppi"
+        "pieceWeight": "Yksi kappale"
       },
       "useSources": "Ei korjausta",
       "pickFood": "Elintarvike tietoaineistoista",
@@ -454,7 +458,12 @@
         "carbs": "Hiilihydraatit (g)",
         "protein": "Proteiini (g)",
         "pieceGrams": "Yksi kappale painaa (g)",
-        "cupGrams": "Kuppi painaa (g)"
+        "spoonGrams": {
+          "teaspoon": "Teelusikallinen painaa (g)",
+          "tablespoon": "Ruokalusikallinen painaa (g)",
+          "cup": "Kuppi painaa (g)",
+          "hundredMl": "100 ml painaa (g)"
+        }
       },
       "searchFood": "Hae tietoaineistoista (englanniksi), esimerkiksi milk semi-skimmed",
       "foodHint": "Kirjoita muutama sana nimestä",
@@ -470,8 +479,14 @@
         "not-found": "Tätä ainesosaa ei enää ole.",
         "unknown": "Jokin meni vikaan. Yritä uudelleen."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Yksi kappale",
+      "spoon": {
+        "teaspoon": "Teelusikallinen",
+        "tablespoon": "Ruokalusikallinen",
+        "cup": "Kuppi",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Lisää paino",
       "summary": "{value} kcal / 100 g",
       "summaryNone": "Ei vielä ravintoarvoja",
       "current": "Nyt {value} · {source}",

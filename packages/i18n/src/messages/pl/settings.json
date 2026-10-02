@@ -425,7 +425,12 @@
       "protein": "Białko",
       "kcal": "{value} kcal",
       "grams": "{value} g",
-      "cupGrams": "{value} g na szklankę",
+      "spoonGrams": {
+        "teaspoon": "{value} g na łyżeczkę",
+        "tablespoon": "{value} g na łyżkę",
+        "cup": "{value} g na szklankę",
+        "hundredMl": "{value} g na 100 ml"
+      },
       "none": "Norish nie ma jeszcze wartości odżywczych dla tego składnika. Popraw go, aby je dodać.",
       "noNumbers": "Brak jeszcze wartości na 100 g.",
       "borrowed": "Od {name}: {source}",
@@ -442,8 +447,7 @@
       "correctIntro": "Poprawki dotyczą tylko Twojego gospodarstwa.",
       "facts": {
         "numbers": "Na 100 g",
-        "pieceWeight": "Jedna sztuka",
-        "density": "Szklanka"
+        "pieceWeight": "Jedna sztuka"
       },
       "useSources": "Bez poprawki",
       "pickFood": "Produkt z baz danych",
@@ -454,7 +458,12 @@
         "carbs": "Węglowodany (g)",
         "protein": "Białko (g)",
         "pieceGrams": "Jedna sztuka waży (g)",
-        "cupGrams": "Szklanka waży (g)"
+        "spoonGrams": {
+          "teaspoon": "Łyżeczka waży (g)",
+          "tablespoon": "Łyżka waży (g)",
+          "cup": "Szklanka waży (g)",
+          "hundredMl": "100 ml waży (g)"
+        }
       },
       "searchFood": "Szukaj w bazach (po angielsku), np. milk semi-skimmed",
       "foodHint": "Wpisz kilka słów z nazwy",
@@ -470,8 +479,14 @@
         "not-found": "Ten składnik już nie istnieje.",
         "unknown": "Coś poszło nie tak. Spróbuj ponownie."
       },
-      "onePieceLabel": "One piece",
-      "oneCupLabel": "A cup",
+      "onePieceLabel": "Jedna sztuka",
+      "spoon": {
+        "teaspoon": "Łyżeczka",
+        "tablespoon": "Łyżka",
+        "cup": "Szklanka",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Dodaj wagę",
       "summary": "{value} kcal na 100 g",
       "summaryNone": "Brak wartości odżywczych",
       "current": "Teraz {value} · {source}",
