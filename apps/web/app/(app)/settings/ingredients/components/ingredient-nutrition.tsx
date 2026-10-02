@@ -11,7 +11,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
-import { SPOON_MEASURE_ML } from "@norish/shared/lib/spoon-measure";
+import { spoonWeight } from "@norish/shared/lib/spoon-measure";
 
 import { factSource, spoonKey } from "./nutrition-copy";
 import { NutritionCorrectionPanel } from "./nutrition-correction-panel";
@@ -180,7 +180,7 @@ function NutritionFacts({
         <div data-measure={measure} data-testid="ingredient-nutrition-density">
           {facts?.density ? (
             <Fact label={t(`spoon.${spoonKey(measure)}`)} source={factSource(t, facts.density)}>
-              {t("grams", { value: number(facts.density.value * SPOON_MEASURE_ML[measure]) })}
+              {t("grams", { value: number(spoonWeight(facts.density.value, measure)) })}
             </Fact>
           ) : (
             <Fact label={t(`spoon.${spoonKey(measure)}`)} source={t("currentNone")}>

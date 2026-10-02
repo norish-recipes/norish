@@ -107,7 +107,7 @@ export interface NutritionPerServing {
 
 /**
  * Why a line was left out of a total, the first thing that stopped it:
- * - `seasoning`: a pinch, a dash or "to taste", never counted;
+ * - `seasoning`: a pinch (a generous one, a knife tip), a dash or "to taste", never counted;
  * - `no-amount`: nothing says how much;
  * - `no-size`: a measure with no size of its own (a can, a handful, a sprig);
  * - `no-numbers`: its food has no numbers, or it names no food at all;
@@ -180,7 +180,7 @@ export interface WorkedOutNutrition {
 }
 
 /** The units-map entries that measure seasoning: never counted, and listed as seasoning. */
-const SEASONING_UNITS = ["pinch", "dash", "to_taste"] as const;
+const SEASONING_UNITS = ["pinch", "generous_pinch", "knife_tip", "dash", "to_taste"] as const;
 
 /** The share of a total's counted calories the borrowing lines may bring before it is estimated. */
 const ESTIMATED_SHARE = 0.1;

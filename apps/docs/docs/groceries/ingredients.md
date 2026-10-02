@@ -86,8 +86,8 @@ The panel shows the ingredient's name, its parent, how many translations
 it has (press that row to see, add, move or remove them in a panel of their
 own), and its [nutrition](../recipes/nutrition.md#where-the-numbers-come-from):
 one row with its calories per 100 g, which opens its numbers, what a piece of it
-weighs and, where your household's recipes measure it by volume, what a spoon of
-it weighs in the measure they use (“A teaspoon · 2 g”), each with where it came
+weighs and, where the recipes you can open measure it by volume, what a spoon of
+it weighs in the measure they use most (“A teaspoon · 2 g”), each with where it came
 from. Where Norish doesn't know that spoon weight, the row asks for it; see
 [Spoon weights](../recipes/nutrition.md#spoon-weights). The same panel opens from
 a recipe's [lines not counted](../recipes/nutrition.md#how-a-recipes-total-is-worked-out)

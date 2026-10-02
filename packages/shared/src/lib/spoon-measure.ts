@@ -5,23 +5,33 @@
  * 125 g", or per 100 ml for the metric volumes. The stored fact stays a
  * density; only the words around it change.
  */
-import { resolveUnit } from "./units";
+import { resolveUnit, unitById } from "./units";
 
-/** Teaspoon, tablespoon and cup by their own sizes; millilitres to litres per 100 ml. */
-export const SPOON_MEASURES = ["teaspoon", "tablespoon", "cup", "100ml"] as const;
+/** The measures, smallest first: a tie between two goes to the smaller. */
+const SPOON_MEASURES = ["teaspoon", "tablespoon", "100ml", "cup"] as const;
 
 export type SpoonMeasure = (typeof SPOON_MEASURES)[number];
 
-/** How many millilitres each measure holds: the unit table's sizes. */
-export const SPOON_MEASURE_ML: Record<SpoonMeasure, number> = {
-  teaspoon: 5,
-  tablespoon: 15,
-  cup: 240,
+/** How many millilitres each measure holds: the unit table's own sizes. */
+const MILLILITRES: Record<SpoonMeasure, number> = {
+  teaspoon: unitById("teaspoon").magnitude,
+  tablespoon: unitById("tablespoon").magnitude,
   "100ml": 100,
+  cup: unitById("cup").magnitude,
 };
 
+/** What a measure of a food weighs, in grams, from its density in grams per millilitre. */
+export function spoonWeight(gramsPerMl: number, measure: SpoonMeasure): number {
+  return gramsPerMl * MILLILITRES[measure];
+}
+
+/** A food's density, in grams per millilitre, from what a measure of it weighs. */
+export function densityFromSpoon(grams: number, measure: SpoonMeasure): number {
+  return grams / MILLILITRES[measure];
+}
+
 /** The measure a line's unit is read in, or null for a unit that measures no volume. */
-export function spoonMeasureOf(unit: string | null | undefined): SpoonMeasure | null {
+function spoonMeasureOf(unit: string | null | undefined): SpoonMeasure | null {
   const resolved = resolveUnit(unit);
 
   if (resolved?.family !== "volume") return null;

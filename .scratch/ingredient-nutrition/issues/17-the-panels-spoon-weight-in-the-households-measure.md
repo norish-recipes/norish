@@ -24,3 +24,8 @@
   - The correction panel shows the spoon only where the household's recipes measure the food by volume, or where its own correction already gives one (then per 100 ml when no recipe does). It types the weight in that measure and stores the same density. A density left as it was keeps the value it was stored with, so a cup typed before and shown now as "2.6" for a teaspoon does not drift on Save.
   - `onePieceLabel` was English in 13 locales; it now takes each locale's existing "one piece" wording.
   - Not done: the card's line opens the Ingredient panel, and the spoon row is two taps further (Nutrition, then Add its weight). Opening those nested panels straight from the card is possible if the extra taps prove too many.
+- 2026-10-02, review:
+  - The tie rule now matches its comment: the measures are ordered by size, so one cup line against one 250 ml line reads per 100 ml.
+  - The count reads lines as the worked-out total does, so every line of a recipe with none in its own measurement system counts. Without that fallback, a spoon line such a recipe listed as "no spoon weight yet" opened a panel with no spoon row to fix it.
+  - The sizes come from the unit table, through `spoonWeight` and `densityFromSpoon`.
+  - "A recipe the household can open" is the viewer's recipe-list visibility, which on the default policy ("everyone") is every recipe on the server; the docs now say "the recipes you can open".

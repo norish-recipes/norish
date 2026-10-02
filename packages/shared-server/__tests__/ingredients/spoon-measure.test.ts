@@ -93,7 +93,10 @@ describe("the measure a spoon weight is shown in", () => {
 
     await expect(spoonMeasureFor(household, cumin.id)).resolves.toBe("teaspoon");
     await expect(
-      spoonMeasureFor({ userId: strangerId, householdUserIds: null, isServerAdmin: false }, cumin.id)
+      spoonMeasureFor(
+        { userId: strangerId, householdUserIds: null, isServerAdmin: false },
+        cumin.id
+      )
     ).resolves.toBe("cup");
   });
 
@@ -108,6 +111,23 @@ describe("the measure a spoon weight is shown in", () => {
     await recipeOf(housemateId, milk.id, [["1", "liter"]]);
 
     await expect(spoonMeasureFor(household, milk.id)).resolves.toBe("100ml");
+  });
+
+  it("goes to the smaller measure on a tie", async () => {
+    const milk = (await createTestIngredient({ name: "milk" }))!;
+
+    await recipeOf(household.userId, milk.id, [["1", "cup"]]);
+    await recipeOf(housemateId, milk.id, [["250", "milliliter"]]);
+
+    await expect(spoonMeasureFor(household, milk.id)).resolves.toBe("100ml");
+  });
+
+  it("reads every line of a recipe with none in its own measurement system, as its total does", async () => {
+    const flour = (await createTestIngredient({ name: "flour" }))!;
+
+    await recipeOf(household.userId, flour.id, [["1", "cup", "us"]]);
+
+    await expect(spoonMeasureFor(household, flour.id)).resolves.toBe("cup");
   });
 
   it("is none where no recipe measures the food by volume", async () => {

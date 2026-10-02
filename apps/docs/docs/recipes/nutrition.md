@@ -104,8 +104,8 @@ though a sauce never lends its calories: what a spoonful weighs is the same,
 what's in it is not. Dairy, cheese, herbs, fruit, vegetables and meat share no
 spoon weight, since a cup of grated cheese weighs nothing like a cup of milk.
 
-An ingredient's panel shows its spoon weight only where one of your household's
-recipes measures it by volume, in the measure those recipes use most: “A
+An ingredient's panel shows its spoon weight only where one of the recipes you
+can open measures it by volume, in the measure those recipes use most: “A
 teaspoon · 2 g” for cumin, “A cup · 125 g” for flour, and per 100 ml where they
 use millilitres or litres. Onion's panel says nothing about cups of onion until
 a recipe asks for one. Where Norish doesn't know it, the row asks: **Add its

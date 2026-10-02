@@ -104,7 +104,7 @@ export async function processNutritionEstimationJob(
     const saved = await saveRecipeNutritionEstimate(recipe.id, { lines: shares });
 
     log.info(
-      { recipeId: recipe.id, saved, uncounted: gaps.length, origin: job.data.origin },
+      { recipeId: recipe.id, saved, leftOut: gaps.length, origin: job.data.origin },
       "Nutrition estimate of the lines left out saved"
     );
 

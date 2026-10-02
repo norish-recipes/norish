@@ -181,6 +181,8 @@ describe("workOutNutrition", () => {
   it.each([
     ["a pinch", line(1, "pinch", "salt", "nutmeg")],
     ["a dash", line(1, "dash", "salt", "tabasco")],
+    ["a generous pinch", line(1, "generous_pinch", "salt", "salt")],
+    ["a knife tip", line(1, "knife_tip", "salt", "nutmeg")],
     ["to taste", line(null, "to_taste", "salt", "salt")],
     ["salt to taste, written in the name", line(null, null, "salt", "salt to taste")],
     ["a pinch, written in the name", line(null, null, "salt", "a pinch of salt")],

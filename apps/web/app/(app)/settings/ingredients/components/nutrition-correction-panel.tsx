@@ -28,7 +28,7 @@ import type {
 } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
-import { SPOON_MEASURE_ML } from "@norish/shared/lib/spoon-measure";
+import { densityFromSpoon, spoonWeight } from "@norish/shared/lib/spoon-measure";
 
 import { factSource, spoonKey } from "./nutrition-copy";
 
@@ -164,7 +164,6 @@ export function NutritionCorrectionPanel({
   // A density is typed as what the household's measure weighs; with none,
   // a correction made before is shown per 100 ml.
   const spoon = measure ?? "100ml";
-  const spoonMl = SPOON_MEASURE_ML[spoon];
   // The panel is mounted afresh for each opening, so the draft starts from
   // what the household has now.
   const [own] = useState<Record<Fact, FactDraft>>(() => ({
@@ -173,7 +172,7 @@ export function NutritionCorrectionPanel({
     ),
     pieceWeight: draftOf(current?.pieceWeight ?? null, (value) => [String(value)]),
     density: draftOf(current?.density ?? null, (value) => [
-      String(Math.round(value * spoonMl * 10) / 10),
+      String(Math.round(spoonWeight(value, spoon) * 10) / 10),
     ]),
   }));
   // Asked from the spoon row, the spoon's weight waits to be typed.
@@ -241,7 +240,7 @@ export function NutritionCorrectionPanel({
       return { gramsPerMl: current.density.value };
     }
 
-    return { gramsPerMl: grams / spoonMl };
+    return { gramsPerMl: densityFromSpoon(grams, spoon) };
   });
   // Every fact must be complete; all three left to the sources is a removal.
   const complete = numbers !== undefined && pieceWeight !== undefined && density !== undefined;
@@ -337,7 +336,7 @@ export function NutritionCorrectionPanel({
     numbers: nowLine(current?.numbers, (value) => t("kcal", { value: whole(value.kcal) })),
     pieceWeight: nowLine(current?.pieceWeight, (grams) => t("grams", { value: whole(grams) })),
     density: nowLine(current?.density, (density) =>
-      t("grams", { value: whole(density * spoonMl) })
+      t("grams", { value: whole(spoonWeight(density, spoon)) })
     ),
   };
 
@@ -545,7 +544,7 @@ function DatasetFoodPicker({
                 value: format.number(food.pieceWeight ?? 0, { maximumFractionDigits: 0 }),
               })
             : t(`spoonGrams.${spoonKey(spoon)}`, {
-                value: format.number((food.density ?? 0) * SPOON_MEASURE_ML[spoon], {
+                value: format.number(spoonWeight(food.density ?? 0, spoon), {
                   maximumFractionDigits: 1,
                 }),
               }),

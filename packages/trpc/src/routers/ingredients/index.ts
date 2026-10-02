@@ -457,16 +457,15 @@ const nutritionFor = authedProcedure
  */
 const spoonMeasure = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
-  .query(
-    ({ ctx, input }): Promise<SpoonMeasure | null> =>
-      spoonMeasureFor(
-        {
-          userId: ctx.user.id,
-          householdUserIds: ctx.householdUserIds,
-          isServerAdmin: ctx.isServerAdmin,
-        },
-        input.ingredientId
-      )
+  .query(({ ctx, input }): Promise<SpoonMeasure | null> =>
+    spoonMeasureFor(
+      {
+        userId: ctx.user.id,
+        householdUserIds: ctx.householdUserIds,
+        isServerAdmin: ctx.isServerAdmin,
+      },
+      input.ingredientId
+    )
   );
 
 /** A dataset food, as a correction names it. */
