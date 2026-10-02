@@ -86,4 +86,8 @@ The same list also gives a few hand-picked groups whose foods share a form a den
   - Heavy cream and whipping cream take density fixes to USDA's fluid creams (heavy whipping 0.99, light whipping 1.00). Their numbers come by name from foods with no portions.
   - Ricotta's own USDA code names a sample the table does not carry, so it had no density at all. It now takes USDA's whole-milk ricotta (1.03) as a density fix.
   - The density picker takes a whole measure before a fraction of it. USDA's Foundation ricotta lists a quarter cup as "0.2 cup", which read as 1.35; it now reads its whole cup, 1.08. The rule moves 13 other foods by 1-4%, every one toward its whole cup (sauces, gravies, tomato paste, the other ricottas).
-  - Still without a density: plain cream (`en:cream`, "room", "kookroom"). A fix there would be lent to every cream kind without its own, which is the dairy group density the spec rules out.
+  - Plain cream (`en:cream`, "room", "kookroom") had none either. Decided with Mike: cream joins the hand-picked groups, the one dairy group, pointing at USDA's light cream (1.00). Every poured or spooned cream weighs 0.96-1.01 g/ml, tighter than the sauces, and cheese, which sits under `en:cheese`, cannot borrow it.
+    - Single, double, light, fresh and clotted cream and the 12-33% creams borrow it.
+    - Heavy, whipping, half and half and sour cream keep their own.
+    - Whipped cream ("slagroom" in Dutch) borrows it too but has no numbers, so its lines stay left out. If it ever gets numbers it would weigh as poured cream: right for "250 ml slagroom", too heavy for an English cup of whipped cream.
+    - The spec, ADR-0039 and CONTEXT.md name cream among the groups.

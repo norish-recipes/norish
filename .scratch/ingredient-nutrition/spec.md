@@ -30,7 +30,7 @@ Legacy lines reach seeded Ingredients without AI in three ways:
 
 Spoon measures count without AI too:
 - a reviewed list of density fixes gives a food the spoon weight USDA measured for it, whichever dataset its numbers come from;
-- a few hand-picked groups whose foods share a form (spices, sauces, syrups, vinegars) carry a density their members borrow, even past a parent that never lends its numbers;
+- a few hand-picked groups whose foods share a form (spices, sauces, syrups, vinegars, creams) carry a density their members borrow, even past a parent that never lends its numbers;
 - every word in the units map names one unit, chosen in the file.
 
 A total names every line it left out, and why, behind an asterisk on its calories. It says it is estimated only when borrowed facts carry a tenth of its calories. The Ingredient panel shows a spoon weight in the measure the household's recipes use for that food.
@@ -199,9 +199,10 @@ A total names every line it left out, and why, behind an asterisk on its calorie
   - `en:spice`, which `en:mixed-spices` and its blends borrow through;
   - `en:sauce`;
   - the syrup entries, which the taxonomy scatters: `en:syrup`, `en:sugar-syrup`, `en:glucose-syrup` and `en:invert-sugar-syrup`;
-  - `en:vinegar`.
+  - `en:vinegar`;
+  - `en:cream`, added after implementation (2026-10-02, with Mike): every poured or spooned cream weighs 0.96–1.01 g/ml, tighter than the sauces, so "room" and "kookroom" count; cream still never lends its numbers.
 
-  Oils already carry the taxonomy's 0.92 on `en:oil` and `en:vegetable-oil`. Dairy, cheese, herbs, fruit, vegetables and meat never get one.
+  Oils already carry the taxonomy's 0.92 on `en:oil` and `en:vegetable-oil`. Dairy as a whole, cheese, herbs, fruit, vegetables and meat never get one.
 - **Never-lend** ends only the numbers' walk. A density walks past it, so every sauce borrows `en:sauce`'s and desiccated coconut borrows coconut's. Piece weights keep the list for now (`piece-weights.md`).
 - A total is **estimated** when the counted lines that borrowed any fact bring at least 10% of its counted calories, or when a line's share came from the language model.
 - **Lines left out**:

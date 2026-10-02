@@ -51,10 +51,10 @@ export const FIX_LIST: Readonly<Record<string, DatasetFoodKey>> = {
  * their own source. CIQUAL weighs no spoons, so an entry whose numbers come
  * from CIQUAL and whose taxonomy entry has no USDA code had no density of
  * its own. A fix on a group whose foods share a form gives the group a
- * density its members borrow: spices, sauces, syrups and vinegars, never
- * dairy, cheese, herbs, fruit, vegetables or meat, whose foods differ too
- * much for one figure. Each entry names a USDA food with a density, or the
- * build fails.
+ * density its members borrow: spices, sauces, syrups, vinegars and creams,
+ * never dairy as a whole, cheese, herbs, fruit, vegetables or meat, whose
+ * foods differ too much for one figure. Each entry names a USDA food with a
+ * density, or the build fails.
  */
 export const DENSITY_FIXES: Readonly<Record<string, DatasetFoodKey>> = {
   "en:cumin": "usda:170923", // Spices, cumin seed: 0.40
@@ -94,6 +94,8 @@ export const DENSITY_FIXES: Readonly<Record<string, DatasetFoodKey>> = {
   "en:glucose-syrup": "usda:168837", // Syrups, corn, light: 1.42
   "en:invert-sugar-syrup": "usda:168837", // golden syrup's
   "en:vinegar": "usda:172237", // Vinegar, distilled: 0.99, and vinegar's own
+  // Every poured or spooned cream weighs 0.96-1.01; cream still never lends its numbers.
+  "en:cream": "usda:170857", // Cream, fluid, light (coffee cream or table cream): 1.00
 };
 
 /**

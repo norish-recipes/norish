@@ -98,11 +98,12 @@ vinegar, rice and a few dozen other often-spooned foods are chosen this way, in
 the list that comes with every release.
 
 A few groups whose foods share a form carry one spoon weight for all their
-kinds: spices, sauces, syrups and vinegars, so garam masala weighs like a spice
-and golden syrup like a syrup. A sauce borrows the sauce's spoon weight even
-though a sauce never lends its calories: what a spoonful weighs is the same,
-what's in it is not. Dairy, cheese, herbs, fruit, vegetables and meat share no
-spoon weight, since a cup of grated cheese weighs nothing like a cup of milk.
+kinds: spices, sauces, syrups, vinegars and creams, so garam masala weighs like
+a spice, golden syrup like a syrup and double cream like cream. A sauce borrows
+the sauce's spoon weight even though a sauce never lends its calories: what a
+spoonful weighs is the same, what's in it is not. Cheese, herbs, fruit,
+vegetables and meat share no spoon weight, and nor does dairy as a whole, since
+a cup of grated cheese weighs nothing like a cup of milk.
 
 An ingredient's panel shows its spoon weight only where one of the recipes you
 can open measures it by volume, in the measure those recipes use most: “A

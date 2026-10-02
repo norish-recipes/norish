@@ -1,5 +1,5 @@
 {
-  "version": "7844204a51cd63fe",
+  "version": "f99017737582655c",
   "editions": {"calnut":"2020-07-07","ciqual":"2025-11-03","ciqual-2020":"2020-07-07","cofid":"2021","usda":"SR Legacy 2018-04, Foundation Foods 2026-04-30"},
   "fixes": {
     "en:barley": "usda:170284",
@@ -34,6 +34,7 @@
     "en:cocoa": "usda:169593",
     "en:cocoa-powder": "usda:169593",
     "en:coconut-fat": "usda:171412",
+    "en:cream": "usda:170857",
     "en:cumin": "usda:170923",
     "en:dry-baker's-yeast": "usda:175043",
     "en:glucose-syrup": "usda:168837",
