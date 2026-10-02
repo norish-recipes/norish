@@ -47,10 +47,12 @@ misleading zero.
 
 On a server with AI, [nutrition estimation](./enrichment.md) now fills only the
 gaps: AI is given the lines Norish counted, with their numbers, and estimates
-just the lines left out. Those lines are then listed as **Estimated by AI**
-instead of not counted. When you change those lines the estimate no longer
-applies; ask for a new one from the recipe's **⋯** menu. A recipe whose every
-line counts asks AI nothing.
+just the lines left out, each on its own. Those lines are then listed as
+**Estimated by AI** instead of not counted. A line your household's correction
+counts uses your numbers and the other lines keep AI's. When you change one of
+those lines its estimate no longer applies and it is listed as not counted
+until the next run; ask for one from the recipe's **⋯** menu. A recipe whose
+every line counts asks AI nothing.
 
 ## Where the numbers come from
 

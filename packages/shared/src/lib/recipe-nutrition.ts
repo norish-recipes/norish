@@ -17,9 +17,10 @@
  * is none at all, never a misleading zero.
  *
  * On an instance with AI, the language model may have estimated the lines
- * left out (ADR-0039, ticket 12): its share is stored apart, with the lines
- * it covered, and is added only while exactly those lines are still left
- * out. The total is then estimated, and those lines are named as the
+ * left out (ADR-0039, ticket 12): one share per line, stored apart under the
+ * line's key. A line still left out takes its share, so a household whose
+ * own correction counts one of those lines keeps the model's numbers for
+ * the others. The total is then estimated, and those lines are named as the
  * model's rather than as not counted.
  */
 import type { UnitsMap } from "@norish/config/zod/server-config";
@@ -49,6 +50,8 @@ export interface RecipeForNutrition {
     unit: string | null;
     systemUsed: string;
   }>;
+  /** The language model's stored estimate of the lines left out, where the recipe travels with it. */
+  nutritionEstimate?: NutritionGapEstimate | null;
 }
 
 /**
@@ -119,13 +122,18 @@ export interface CountedLine {
   protein: number;
 }
 
-/** The language model's per-serving share of the lines left out, and the lines it covered. */
-export interface NutritionGapEstimate {
+/** The language model's per-serving share of one line left out, under the line's `lineKey`. */
+export interface EstimatedLine {
+  key: string;
   calories: number;
   fat: number;
   carbs: number;
   protein: number;
-  lines: string[];
+}
+
+/** The language model's estimate of the lines a worked-out total left out: one share per line. */
+export interface NutritionGapEstimate {
+  lines: EstimatedLine[];
 }
 
 export interface WorkedOutNutrition {
@@ -296,22 +304,34 @@ export function workOutNutrition({
           protein: total.protein / divisor,
         }
       : null;
-  const covers =
-    estimate !== null &&
-    uncounted.length > 0 &&
-    estimate.lines.length === uncounted.length &&
-    uncounted.every((line) => estimate.lines.includes(line.key));
+  // Each line still left out takes the model's stored share of it, if there
+  // is one. A line a household's own correction made countable simply counts;
+  // the other lines keep their shares, and a line the share never covered,
+  // or one edited since, stays listed as not counted.
+  const shareOf = new Map((estimate?.lines ?? []).map((line) => [line.key, line]));
+  const estimatedByAI = uncounted.filter((line) => shareOf.has(line.key));
 
-  if (covers) {
+  if (estimatedByAI.length > 0) {
+    const share = { calories: 0, fat: 0, carbs: 0, protein: 0 };
+
+    for (const line of estimatedByAI) {
+      const stored = shareOf.get(line.key)!;
+
+      share.calories += stored.calories;
+      share.fat += stored.fat;
+      share.carbs += stored.carbs;
+      share.protein += stored.protein;
+    }
+
     return {
       perServing: {
-        calories: (perServing?.calories ?? 0) + estimate.calories,
-        fat: (perServing?.fat ?? 0) + estimate.fat,
-        carbs: (perServing?.carbs ?? 0) + estimate.carbs,
-        protein: (perServing?.protein ?? 0) + estimate.protein,
+        calories: (perServing?.calories ?? 0) + share.calories,
+        fat: (perServing?.fat ?? 0) + share.fat,
+        carbs: (perServing?.carbs ?? 0) + share.carbs,
+        protein: (perServing?.protein ?? 0) + share.protein,
       },
-      uncounted: [],
-      estimatedByAI: uncounted,
+      uncounted: uncounted.filter((line) => !shareOf.has(line.key)),
+      estimatedByAI,
       counted,
       estimated: true,
       credits: NUTRITION_CREDITS.filter((credit) => credits.has(credit)),

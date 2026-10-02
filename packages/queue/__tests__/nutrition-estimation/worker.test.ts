@@ -3,8 +3,8 @@
  * The nutrition estimation worker (ADR-0039): a recipe that supplies its own
  * Nutrition Information is estimated as a whole, as before; one that does
  * not asks the language model only about the lines its worked-out total
- * leaves out, gives it the counted lines as facts, and stores the share
- * apart; one whose every line counts asks nothing.
+ * leaves out, gives it the counted lines as facts, and stores one share per
+ * line apart; one whose every line counts asks nothing.
  */
 
 import type { Job } from "bullmq";
@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   saveRecipeNutritionEstimate: vi.fn(),
   clearRecipeNutritionEstimate: vi.fn(),
   estimate: vi.fn(),
+  estimateGap: vi.fn(),
   workOut: vi.fn(),
 }));
 
@@ -35,6 +36,7 @@ vi.mock("@norish/db/repositories/recipe-enrichment", () => ({
 
 vi.mock("@norish/shared-server/ai/enrichment/nutrition-estimator", () => ({
   estimateNutritionFromIngredients: mocks.estimate,
+  estimateNutritionGap: mocks.estimateGap,
 }));
 
 vi.mock("@norish/shared-server/ingredients/nutrition/ingredient-nutrition", () => ({
@@ -59,6 +61,7 @@ vi.mock("../../src/job-steps", () => ({ reportStep: mocks.reportStep }));
 const { processNutritionEstimationJob } = await import("../../src/nutrition-estimation/worker");
 
 const ESTIMATE = { calories: 120, fat: 13, carbs: 0, protein: 0 };
+const SHARES = [{ key: "key-oil", calories: 120, fat: 13, carbs: 0, protein: 0 }];
 
 const RECIPE = {
   id: "recipe-1",
@@ -122,6 +125,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.getRecipeFull.mockResolvedValue(RECIPE);
   mocks.estimate.mockResolvedValue(ESTIMATE);
+  mocks.estimateGap.mockResolvedValue(SHARES);
   mocks.workOut.mockResolvedValue(WORKED);
   mocks.saveRecipeNutritionEstimate.mockResolvedValue(true);
   mocks.clearRecipeNutritionEstimate.mockResolvedValue(false);
@@ -129,13 +133,14 @@ beforeEach(() => {
 });
 
 describe("processNutritionEstimationJob", () => {
-  it("estimates only the lines left out, given the counted ones, and stores the share apart", async () => {
+  it("estimates only the lines left out, given the counted ones, and stores their shares apart", async () => {
     await processNutritionEstimationJob(job());
 
-    expect(mocks.estimate).toHaveBeenCalledWith(
+    expect(mocks.estimate).not.toHaveBeenCalled();
+    expect(mocks.estimateGap).toHaveBeenCalledWith(
       "Fried rice",
       2,
-      [{ ingredientName: "oil for frying", amount: null, unit: null }],
+      [{ key: "key-oil", ingredientName: "oil for frying", amount: null, unit: null }],
       [
         expect.objectContaining({
           text: "200 gram rice",
@@ -146,10 +151,7 @@ describe("processNutritionEstimationJob", () => {
         }),
       ]
     );
-    expect(mocks.saveRecipeNutritionEstimate).toHaveBeenCalledWith("recipe-1", {
-      ...ESTIMATE,
-      lines: ["key-oil"],
-    });
+    expect(mocks.saveRecipeNutritionEstimate).toHaveBeenCalledWith("recipe-1", { lines: SHARES });
     expect(mocks.replaceRecipeNutrition).not.toHaveBeenCalled();
     // The share is the recipe's news: open pages are sent the recipe again.
     expect(mocks.publishRecipeUpdated).toHaveBeenCalled();
@@ -160,7 +162,7 @@ describe("processNutritionEstimationJob", () => {
 
     await processNutritionEstimationJob(job({ origin: "manual", requestedByUserId: "user-1" }));
 
-    expect(mocks.estimate).not.toHaveBeenCalled();
+    expect(mocks.estimateGap).not.toHaveBeenCalled();
     expect(mocks.saveRecipeNutritionEstimate).not.toHaveBeenCalled();
     expect(mocks.clearRecipeNutritionEstimate).toHaveBeenCalledWith("recipe-1");
   });
@@ -171,6 +173,7 @@ describe("processNutritionEstimationJob", () => {
     await processNutritionEstimationJob(job({ origin: "manual", requestedByUserId: "user-1" }));
 
     expect(mocks.workOut).not.toHaveBeenCalled();
+    expect(mocks.estimateGap).not.toHaveBeenCalled();
     expect(mocks.estimate).toHaveBeenCalledWith("Fried rice", 2, [
       { ingredientName: "rice", amount: 200, unit: "gram" },
       { ingredientName: "oil for frying", amount: null, unit: null },

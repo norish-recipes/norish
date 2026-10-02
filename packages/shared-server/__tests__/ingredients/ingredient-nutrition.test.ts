@@ -462,14 +462,16 @@ describe("Ingredient Nutrition", () => {
       await expect(workOutRecipeNutrition(recipe(320), NO_HOUSEHOLD)).resolves.toBeNull();
     });
 
-    it("carries the language model's stored share on the recipe, until it is dropped", async () => {
-      const share = { calories: 60, fat: 0, carbs: 1, protein: 0, lines: ["key"] };
+    it("carries the language model's stored shares on the recipe, until they are dropped", async () => {
+      const line = { key: "key", calories: 60, fat: 0, carbs: 1, protein: 0 };
 
-      await saveRecipeNutritionEstimate(recipeId, share);
-      expect((await getRecipeFull(recipeId))?.nutritionEstimate).toEqual(share);
+      await saveRecipeNutritionEstimate(recipeId, { lines: [line] });
+      expect((await getRecipeFull(recipeId))?.nutritionEstimate).toEqual({ lines: [line] });
 
-      await saveRecipeNutritionEstimate(recipeId, { ...share, calories: 70 });
-      expect((await getRecipeFull(recipeId))?.nutritionEstimate).toMatchObject({ calories: 70 });
+      await saveRecipeNutritionEstimate(recipeId, { lines: [{ ...line, calories: 70 }] });
+      expect((await getRecipeFull(recipeId))?.nutritionEstimate).toEqual({
+        lines: [{ ...line, calories: 70 }],
+      });
 
       await expect(clearRecipeNutritionEstimate(recipeId)).resolves.toBe(true);
       expect((await getRecipeFull(recipeId))?.nutritionEstimate).toBeNull();

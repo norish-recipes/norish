@@ -242,21 +242,22 @@ describe("workOutNutrition", () => {
   describe("with the language model's estimate of the lines left out", () => {
     const oil = line(null, null, "olive-oil", "olive oil for frying");
     const brandy = line(50, "milliliter", "brandy", "brandy");
-    const estimate = (lines: NutritionLine[]) => ({
-      calories: 100,
-      fat: 10,
+    const share = (of: NutritionLine, calories: number, fat: number) => ({
+      key: lineKey(of),
+      calories,
+      fat,
       carbs: 1,
       protein: 0,
-      lines: lines.map(lineKey),
     });
+    const estimate = { lines: [share(oil, 90, 10), share(brandy, 10, 0)] };
 
-    it("adds its share where it covers exactly the lines left out, and names them as its own", () => {
+    it("adds each line's share where it covers the lines left out, and names them as its own", () => {
       const result = workOutNutrition({
         lines: [line(100, "gram", "rice"), oil, brandy],
         servings: 2,
         nutrition: NUTRITION,
         seasoning: phrases,
-        estimate: estimate([oil, brandy]),
+        estimate,
       });
 
       expect(result).toMatchObject({
@@ -277,24 +278,48 @@ describe("workOutNutrition", () => {
           servings: 1,
           nutrition: NUTRITION,
           seasoning: phrases,
-          estimate: estimate([oil]),
+          estimate: { lines: [share(oil, 100, 10)] },
         }).perServing
       ).toEqual({ calories: 100, fat: 10, carbs: 1, protein: 0 });
     });
 
-    it("is ignored once the lines left out are no longer the ones it covered", () => {
+    it("keeps the other lines' shares once a household's correction counts one of them", () => {
+      const corrected = new Map(NUTRITION);
+
+      corrected.set("brandy", {
+        numbers: fact(per100g(230, 0, 0, 0), { kind: "household" }),
+        pieceWeight: null,
+        density: fact(1, { kind: "household" }),
+      });
+
+      const result = workOutNutrition({
+        lines: [line(100, "gram", "rice"), oil, brandy],
+        servings: 1,
+        nutrition: corrected,
+        seasoning: phrases,
+        estimate,
+      });
+
+      // Rice from the datasets, brandy from the household, the oil from the model.
+      expect(result.perServing?.calories).toBe(350 + 50 * 2.3 + 90);
+      expect(result.estimatedByAI.map((named) => named.name)).toEqual(["olive oil for frying"]);
+      expect(result.uncounted).toEqual([]);
+      expect(result.household).toBe(true);
+    });
+
+    it("lists a line the estimate never covered, or one edited since, as not counted", () => {
       const more = line(2, "tablespoon", "brandy", "brandy");
       const result = workOutNutrition({
         lines: [line(100, "gram", "rice"), oil, more],
         servings: 1,
         nutrition: NUTRITION,
         seasoning: phrases,
-        estimate: estimate([oil, brandy]),
+        estimate,
       });
 
-      expect(result.perServing?.calories).toBe(350);
-      expect(result.uncounted).toHaveLength(2);
-      expect(result.estimatedByAI).toEqual([]);
+      expect(result.perServing?.calories).toBe(350 + 90);
+      expect(result.estimatedByAI.map((named) => named.name)).toEqual(["olive oil for frying"]);
+      expect(result.uncounted.map((named) => named.name)).toEqual(["brandy"]);
     });
   });
 

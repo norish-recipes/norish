@@ -103,16 +103,20 @@ export function patchDashboardRecipeFromFull(
 
 /**
  * The language model's per-serving estimate of the lines a worked-out total
- * could not count, and the lines it covered (ADR-0039). Derived, not
- * supplied: it is added to a reader's worked-out total while those lines are
- * still the ones left out, and never travels in an archive.
+ * could not count, one share per line under its key (ADR-0039). Derived, not
+ * supplied: a reader's worked-out total adds the share of each line still
+ * left out for them, and it never travels in an archive.
  */
 export const RecipeNutritionEstimateSchema = z.object({
-  calories: z.number(),
-  fat: z.number(),
-  carbs: z.number(),
-  protein: z.number(),
-  lines: z.array(z.string()),
+  lines: z.array(
+    z.object({
+      key: z.string(),
+      calories: z.number(),
+      fat: z.number(),
+      carbs: z.number(),
+      protein: z.number(),
+    })
+  ),
 });
 
 export const FullRecipeSchema = RecipeSelectBaseSchema.extend({

@@ -8,9 +8,9 @@
  * A recipe that supplies none has its nutrition worked out from its lines
  * (ADR-0039), and the language model fills only the gap: it is given the
  * lines Ingredient Nutrition counts, with their numbers, and estimates the
- * lines left out. Its share is stored apart from the recipe's own group,
- * with the lines it covered, and added to a reader's worked-out total while
- * those are still the lines left out. A recipe whose every line counts asks
+ * lines left out, one share per line. The shares are stored apart from the
+ * recipe's own group, under the lines' keys, and a reader's worked-out total
+ * adds the share of each line still left out for them. A recipe whose every line counts asks
  * the model nothing. The lines are counted from the datasets' numbers, with
  * no household's correction, which is what most readers see.
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
@@ -24,7 +24,10 @@ import {
   replaceRecipeNutrition,
   saveRecipeNutritionEstimate,
 } from "@norish/db/repositories/recipe-enrichment";
-import { estimateNutritionFromIngredients } from "@norish/shared-server/ai/enrichment/nutrition-estimator";
+import {
+  estimateNutritionFromIngredients,
+  estimateNutritionGap,
+} from "@norish/shared-server/ai/enrichment/nutrition-estimator";
 import { NO_HOUSEHOLD } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import { createLogger } from "@norish/shared-server/logger";
@@ -77,10 +80,11 @@ export async function processNutritionEstimationJob(
     }
 
     const lineById = new Map(recipe.recipeIngredients.map((line) => [line.id, line]));
-    const estimate = await estimateNutritionFromIngredients(
+    const shares = await estimateNutritionGap(
       recipe.name,
       recipe.servings ?? 1,
       worked.uncounted.map((named) => ({
+        key: named.key,
         ingredientName: named.name,
         amount: lineById.get(named.lineId)?.amount ?? null,
         unit: lineById.get(named.lineId)?.unit ?? null,
@@ -95,10 +99,7 @@ export async function processNutritionEstimationJob(
 
     await reportStep(job, "saving");
 
-    const saved = await saveRecipeNutritionEstimate(recipe.id, {
-      ...estimate,
-      lines: worked.uncounted.map((named) => named.key),
-    });
+    const saved = await saveRecipeNutritionEstimate(recipe.id, { lines: shares });
 
     log.info(
       { recipeId: recipe.id, saved, uncounted: worked.uncounted.length, origin: job.data.origin },

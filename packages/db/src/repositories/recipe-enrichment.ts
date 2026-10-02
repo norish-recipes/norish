@@ -11,6 +11,7 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 
+import type { EstimatedLineRow } from "@norish/db/schema";
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type {
   NutritionGroupInput,
@@ -142,13 +143,13 @@ export async function replaceRecipeNutrition(
 
 /**
  * Store the language model's estimate of the lines a recipe's worked-out
- * nutrition leaves out (ADR-0039): its per-serving share and the lines it
- * covered, replacing any earlier estimate. Never the recipe's own Nutrition
- * Information. False where the recipe is gone.
+ * nutrition leaves out (ADR-0039): one per-serving share per line, under
+ * the line's key, replacing any earlier estimate. Never the recipe's own
+ * Nutrition Information. False where the recipe is gone.
  */
 export async function saveRecipeNutritionEstimate(
   recipeId: string,
-  estimate: { calories: number; fat: number; carbs: number; protein: number; lines: string[] }
+  estimate: { lines: EstimatedLineRow[] }
 ): Promise<boolean> {
   const [recipe] = await db
     .select({ id: recipes.id })

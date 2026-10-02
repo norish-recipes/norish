@@ -1159,13 +1159,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
 
   // The language model's share of the lines a worked-out total leaves out (ADR-0039).
   const [nutritionEstimate] = await db
-    .select({
-      calories: recipeNutritionEstimates.calories,
-      fat: recipeNutritionEstimates.fat,
-      carbs: recipeNutritionEstimates.carbs,
-      protein: recipeNutritionEstimates.protein,
-      lines: recipeNutritionEstimates.lines,
-    })
+    .select({ lines: recipeNutritionEstimates.lines })
     .from(recipeNutritionEstimates)
     .where(eq(recipeNutritionEstimates.recipeId, id));
 
