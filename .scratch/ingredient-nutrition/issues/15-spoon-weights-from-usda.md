@@ -6,7 +6,7 @@ The same list also gives a few hand-picked groups whose foods share a form a den
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] **The list and its check.** `tooling/nutrition/src/lists.ts` gains a density fix list (OFF id → `usda:` food key). The build fails, writing nothing, on an entry whose id the taxonomy lacks or whose food is not a USDA food with a density. The source table carries the list, and an instance applies it as a nutrition rule.
 - [x] **Lookup order.** For the density, a density fix comes right after the household's correction and before the fix list; the order for numbers and piece weight is unchanged. Cumin's panel reads its numbers from CIQUAL's cumin and its spoon weight from "Spices, cumin seed · USDA, chosen by Norish".
@@ -21,7 +21,7 @@ The same list also gives a few hand-picked groups whose foods share a form a den
 - [x] **Whipped portions.** The density picker in `tooling/nutrition/src/portions.ts` skips them, so heavy and light whipping cream read their fluid cup (about 1.0 g/ml, not 0.5).
 - [x] **Vegetable broth** joins the fix list, like chicken and beef broth.
 - [x] **Agave syrup's 0.92** is checked against USDA's portions and fixed if the picker chose the wrong one.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 

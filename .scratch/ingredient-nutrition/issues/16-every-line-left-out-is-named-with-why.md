@@ -6,7 +6,7 @@ A total now says it is estimated only when the lines that borrowed a fact bring 
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] `workOutNutrition` (`packages/shared/src/lib/recipe-nutrition.ts`) gives each line left out one reason:
   - seasoning (pinch, dash, to taste);
@@ -23,7 +23,7 @@ A total now says it is estimated only when the lines that borrowed a fact bring 
   - A borrowed teaspoon of paprika in a 2,000 kcal recipe leaves it counted.
   - A cup of flour on a borrowed density marks it.
 - [x] The reasons and labels are translated in every locale.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 

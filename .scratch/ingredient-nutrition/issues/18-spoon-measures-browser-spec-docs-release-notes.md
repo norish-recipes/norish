@@ -9,7 +9,7 @@ The nutrition docs explain spoon weights and the lines-left-out list with retake
 
 **Blocked by:** 14, 15, 16, 17
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] `apps/web/__tests__/e2e/offline/ingredient-nutrition.e2e.ts` covers:
   - "1 tl komijn" counted through cumin's density fix;
@@ -26,7 +26,7 @@ The nutrition docs explain spoon weights and the lines-left-out list with retake
   - every line left out being named;
   - the unit-word fixes ("T" read as a tablespoon, "Stück" as pieces).
 - [x] The docs format check and production build pass inside `apps/docs`.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 
@@ -37,3 +37,4 @@ The nutrition docs explain spoon weights and the lines-left-out list with retake
   - Screenshots were shot off the offline E2E stack with a throwaway spec, since deleted: the card with its list open, cumin's Nutrition panel, the teaspoon correction, and flour's panel asking (`ingredients-nutrition-spoon.png`, new).
   - `ingredients-panel.png` on the Ingredients page predates the catalogue's own redesign and was left as it is.
   - The release notes add an upgrade note: a server with an edited units list keeps it, so it misses the one-owner fixes.
+- 2026-10-02, gates: lint, typecheck, `test:run`, `i18n:check`, format and `build` pass, as do the repository tests (`packages/db`, 300). The whole browser suite passes on a fresh build: 147 tests over the ai, offline and realtime projects.

@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] The spoon row appears only when a recipe the household can open has a line measuring this Ingredient by volume, under the same visibility the recipe list uses. Onion's panel has none unless such a recipe says "1 cup chopped onion".
 - [x] The row states the weight of the volume measure those lines use most: "a teaspoon of cumin weighs 2 g", "a cup of flour weighs 125 g". Millilitre, centilitre, decilitre and litre lines read per 100 ml.
@@ -12,7 +12,7 @@
 - [x] With no density known, the row asks for the weight in that measure.
 - [x] The source under the row is unchanged: the dataset food, "chosen by Norish", borrowed from a parent, or the household's own.
 - [x] The count of lines per measure comes through a repository, not a query in the router.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 

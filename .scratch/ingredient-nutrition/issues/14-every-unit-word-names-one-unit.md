@@ -14,7 +14,7 @@ The work:
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] A test over `packages/config/src/units.default.json` fails when two entries claim the same folded word, whether as id, short form, plural or alternate.
 - [x] Each of the 68 shared words has one owner. The owners that change a count:
@@ -26,7 +26,7 @@ The work:
 - [x] "1 T olive oil" stores and counts as a tablespoon and "1 t salt" as a teaspoon, through import, paste import, manual entry and groceries (`normalizeUnit` and `resolveUnit`).
 - [x] "2 heaped tsp cumin seeds" and "4 heaped tbsp Greek-style yogurt" store as teaspoons and tablespoons.
 - [x] A line stored as `chunk` counts through the piece weight, like clove and slice.
-- [ ] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
+- [x] All gates pass: `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build`.
 
 ## Comments
 
