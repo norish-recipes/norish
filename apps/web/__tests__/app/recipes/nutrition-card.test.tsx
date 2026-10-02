@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -13,18 +13,32 @@ const mocks = vi.hoisted(() => ({
   hidden: [] as string[],
   workedOut: null as WorkedOutNutrition | null,
   shown: null as unknown,
+  panel: null as { id: string | null; open: boolean } | null,
 }));
 
 vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => mocks.workedOut,
 }));
 
-vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+vi.mock("@/app/(app)/settings/ingredients/components/ingredient-panel", () => ({
+  IngredientPanel: ({ id, open }: { id: string | null; open: boolean }) => {
+    mocks.panel = { id, open };
+
+    return open ? <div data-testid="ingredient-panel">{id}</div> : null;
+  },
+}));
+
+vi.mock("@/app/providers/trpc-provider", () => ({
+  useTRPC: () => ({
+    ingredients: {
+      nutritionFor: { pathKey: () => ["ingredients", "nutritionFor"] },
+      list: { pathKey: () => ["ingredients", "list"] },
+    },
+  }),
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 
 vi.mock("@/context/user-context", () => ({
@@ -98,6 +112,7 @@ vi.mock("next-intl", () => ({
 describe("NutritionCard", () => {
   beforeEach(() => {
     mocks.hasData = false;
+    mocks.panel = null;
     mocks.state = "idle";
     mocks.hidden = [];
     mocks.workedOut = null;
@@ -191,14 +206,22 @@ describe("NutritionCard", () => {
       render(<NutritionCard />);
 
       expect(screen.getByTestId("nutrition-estimated")).toHaveTextContent("estimated");
-      expect(screen.getByText("olive oil for frying")).toHaveAttribute(
-        "href",
-        "/settings?tab=ingredients&ingredient=olive-oil"
-      );
+      expect(screen.getByText("olive oil for frying").tagName).toBe("BUTTON");
       expect(screen.getByText("a mystery").tagName).toBe("SPAN");
       expect(screen.getByTestId("nutrition-credit")).toHaveTextContent(
         "CIQUAL 2025 + Open Food Facts + householdNumbers"
       );
+    });
+
+    it("opens the food's panel in place rather than leaving the recipe", () => {
+      mocks.workedOut = workedOut;
+
+      render(<NutritionCard />);
+
+      expect(screen.queryByTestId("ingredient-panel")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByText("olive oil for frying"));
+      expect(screen.getByTestId("ingredient-panel")).toHaveTextContent("olive-oil");
+      expect(mocks.panel).toEqual({ id: "olive-oil", open: true });
     });
 
     it("names the lines the language model estimated as its own, not as left out", () => {

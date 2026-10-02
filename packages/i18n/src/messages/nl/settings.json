@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "AI las het als “{name}”.",
       "compared": "Vergeleken met: {names}.",
-      "comparedNothing": "Er was geen bekend ingrediënt om het mee te vergelijken."
+      "comparedNothing": "Er was geen bekend ingrediënt om het mee te vergelijken.",
+      "fromWords": "Op basis van de naam."
     },
     "addAlias": "Vertaling toevoegen",
     "removeAlias": "{alias} verwijderen",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} g per kop",
-      "onePiece": "Eén stuk weegt {grams} g",
-      "oneCup": "Een kop weegt {grams} g",
       "none": "Norish heeft nog geen voedingswaarde voor dit ingrediënt. Corrigeer het om er een te geven.",
       "noNumbers": "Nog geen waarden per 100 g.",
       "borrowed": "Van {name}: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Corrigeren",
       "correctTitle": "{name} corrigeren",
-      "correctIntro": "Je correctie geldt voor iedereen in je huishouden, en voor niemand anders.",
+      "correctIntro": "Correcties gelden alleen voor je huishouden.",
       "facts": {
         "numbers": "Per 100 g",
         "pieceWeight": "Eén stuk",
         "density": "Een kop"
       },
-      "useSources": "Zoals Norish het heeft",
+      "useSources": "Geen correctie",
       "pickFood": "Een voedingsmiddel uit de datasets",
       "typeLabel": "Van een etiket",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Corrigeer er minstens één van de drie.",
         "not-found": "Dit ingrediënt bestaat niet meer.",
         "unknown": "Er ging iets mis. Probeer het opnieuw."
-      }
+      },
+      "onePieceLabel": "Eén stuk",
+      "oneCupLabel": "Een kopje",
+      "summary": "{value} kcal per 100 g",
+      "summaryNone": "Nog geen voedingswaarde",
+      "current": "Nu {value} · {source}",
+      "currentNone": "Norish heeft hier nog niets voor"
     },
     "errors": {
       "title": "Kon het ingrediënt niet wijzigen",
@@ -507,9 +512,10 @@
     "suggestion": {
       "merge": "{name} samenvoegen met {into}",
       "parent": "{name} plaatsen onder {of}",
-      "distinct": "{name} houden als eigen ingrediënt"
+      "distinct": "{name} houden als eigen ingrediënt",
+      "filedFromName": "{name} geplaatst onder {of}"
     },
-    "suggestionsTitle": "AI-voorstellen",
+    "suggestionsTitle": "Voorstellen",
     "suggestionsEmpty": "Er wacht niets op je.",
     "suggestionsNone": "Geen voorstel",
     "suggestionsOpen": "{count, plural, =0 {Voorstellen} one {# voorstel} other {# voorstellen}}",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Negeren",
     "confirmAll": "Alles bevestigen ({count})",
     "dismissAll": "Alles negeren",
-    "suggestedByAI": "Voorgesteld door AI"
+    "suggestedByAI": "Voorgesteld door AI",
+    "suggestedFromName": "Op basis van de naam",
+    "suggestionColumns": {
+      "ingredient": "Ingrediënt",
+      "proposal": "Voorstel",
+      "basis": "Op basis van",
+      "outcome": "Uitkomst",
+      "actions": "Acties"
+    },
+    "proposal": {
+      "merge": "Samenvoegen met {into}",
+      "parent": "Plaatsen onder {of}",
+      "distinct": "Eigen ingrediënt"
+    },
+    "skippedReasons": {
+      "notFlagged": "Niet meer gemarkeerd",
+      "forbidden": "Niet van jou om te bewerken",
+      "notFound": "Bestaat niet meer"
+    }
   },
   "admin": {
     "shareLinks": {

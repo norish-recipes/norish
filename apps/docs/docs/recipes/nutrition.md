@@ -84,12 +84,13 @@ starts. Nothing is fetched at runtime.
 
 ## Correcting nutrition for your household
 
-If Norish's numbers don't match what you buy, press **Correct** in the
-ingredient's panel. Anyone in your household can correct any ingredient, and the
-correction counts for everyone in your household and nobody else. For each of
-the numbers per 100 g, the weight of one piece and the weight of a cup, choose:
+If Norish's numbers don't match what you buy, open **Nutrition** in the
+ingredient's panel and press **Correct**. Anyone in your household can correct
+any ingredient, and corrections are scoped to your household: nobody else sees
+them. Each fact says what Norish has for it now. For each of the numbers per
+100 g, the weight of one piece and the weight of a cup, choose:
 
-- **As Norish has it**,
+- **No correction**: keep Norish's numbers,
 - **A dataset food**: search the datasets by name, such as “milk semi-skimmed”,
 - **From a label**: type the numbers from a pack.
 

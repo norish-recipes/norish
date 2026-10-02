@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "AI가 “{name}”(으)로 읽었습니다.",
       "compared": "비교 대상: {names}.",
-      "comparedNothing": "비교할 알려진 식품이 없었습니다."
+      "comparedNothing": "비교할 알려진 식품이 없었습니다.",
+      "fromWords": "Based on name."
     },
     "addAlias": "번역 추가",
     "removeAlias": "{alias} 제거",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "컵당 {value} g",
-      "onePiece": "한 개의 무게는 {grams} g",
-      "oneCup": "한 컵의 무게는 {grams} g",
       "none": "Norish에는 아직 이 재료의 영양 정보가 없습니다. 수정해서 값을 넣어 주세요.",
       "noNumbers": "아직 100 g당 값이 없습니다.",
       "borrowed": "{name}에서: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "수정",
       "correctTitle": "{name} 수정",
-      "correctIntro": "수정 내용은 우리 가구 모두에게 적용되며, 다른 사람에게는 적용되지 않습니다.",
+      "correctIntro": "수정은 내 가구에만 적용됩니다.",
       "facts": {
         "numbers": "100 g당",
         "pieceWeight": "한 개",
         "density": "한 컵"
       },
-      "useSources": "Norish 그대로",
+      "useSources": "수정 없음",
       "pickFood": "데이터셋의 식품",
       "typeLabel": "라벨에서",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "세 가지 중 하나 이상을 수정하세요.",
         "not-found": "이 재료는 더 이상 없습니다.",
         "unknown": "문제가 발생했습니다. 다시 시도하세요."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "100 g당 {value} kcal",
+      "summaryNone": "아직 영양 정보 없음",
+      "current": "현재 {value} · {source}",
+      "currentNone": "Norish에 아직 이 항목의 정보가 없습니다"
     },
     "errors": {
       "title": "재료를 변경할 수 없습니다",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "{name}을(를) {into}에 병합",
       "parent": "{name}을(를) {of} 아래로 분류",
-      "distinct": "{name}을(를) 별개의 식재료로 유지"
+      "distinct": "{name}을(를) 별개의 식재료로 유지",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "AI 제안",
     "suggestionsEmpty": "대기 중인 항목이 없습니다.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "무시",
     "confirmAll": "모두 확인 ({count})",
     "dismissAll": "모두 무시",
-    "suggestedByAI": "AI 제안"
+    "suggestedByAI": "AI 제안",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

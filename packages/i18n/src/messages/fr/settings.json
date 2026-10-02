@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "L'IA l'a lu comme « {name} ».",
       "compared": "Comparé avec : {names}.",
-      "comparedNothing": "Aucun aliment connu avec lequel le comparer."
+      "comparedNothing": "Aucun aliment connu avec lequel le comparer.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Ajouter une traduction",
     "removeAlias": "Supprimer {alias}",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} g la tasse",
-      "onePiece": "Une pièce pèse {grams} g",
-      "oneCup": "Une tasse pèse {grams} g",
       "none": "Norish n'a pas encore de valeurs nutritionnelles pour cet ingrédient. Corrigez-le pour lui en donner.",
       "noNumbers": "Pas encore de valeurs pour 100 g.",
       "borrowed": "De {name} : {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Corriger",
       "correctTitle": "Corriger {name}",
-      "correctIntro": "Votre correction vaut pour tout votre foyer, et pour personne d'autre.",
+      "correctIntro": "Les corrections ne valent que pour votre foyer.",
       "facts": {
         "numbers": "Pour 100 g",
         "pieceWeight": "Une pièce",
         "density": "Une tasse"
       },
-      "useSources": "Comme Norish l'a",
+      "useSources": "Aucune correction",
       "pickFood": "Un aliment des bases de données",
       "typeLabel": "D'après une étiquette",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Corrigez au moins une des trois valeurs.",
         "not-found": "Cet ingrédient n'existe plus.",
         "unknown": "Une erreur s'est produite. Réessayez."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} kcal pour 100 g",
+      "summaryNone": "Pas encore de valeurs nutritionnelles",
+      "current": "Actuellement {value} · {source}",
+      "currentNone": "Norish n'a encore rien pour cela"
     },
     "errors": {
       "title": "Impossible de modifier l'ingrédient",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "Fusionner {name} avec {into}",
       "parent": "Classer {name} sous {of}",
-      "distinct": "Garder {name} comme aliment à part entière"
+      "distinct": "Garder {name} comme aliment à part entière",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "Suggestions de l'IA",
     "suggestionsEmpty": "Rien ne vous attend.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Ignorer",
     "confirmAll": "Tout confirmer ({count})",
     "dismissAll": "Tout ignorer",
-    "suggestedByAI": "Suggéré par l'IA"
+    "suggestedByAI": "Suggéré par l'IA",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

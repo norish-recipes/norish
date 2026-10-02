@@ -84,12 +84,16 @@ test("a recipe without nutrition shows one worked out from its lines, estimated 
   await expect(card.getByTestId("nutrition-credit")).toContainText("CIQUAL 2025");
   await expect(card.getByTestId("nutrition-credit")).toContainText("Open Food Facts");
 
-  // A name under Not counted opens that food's panel, where it can be fixed.
-  await card.getByRole("link", { name: "olive oil for frying" }).click();
+  // A name under Not counted opens that food's panel here, where it can be fixed.
+  await card.getByRole("button", { name: "olive oil for frying" }).click();
 
   const panel = pageA.getByRole("dialog", { name: "olive oil", exact: true });
 
-  await expect(panel.getByTestId("ingredient-nutrition-source")).toContainText(
+  await panel.getByTestId("ingredient-nutrition-open").click();
+
+  const nutrition = pageA.getByRole("dialog", { name: "Nutrition", exact: true });
+
+  await expect(nutrition.getByTestId("ingredient-nutrition-source")).toContainText(
     "Olive oil, extra virgin · CIQUAL 2025"
   );
 });
@@ -99,10 +103,15 @@ test("a household's correction changes its own total and no other household's", 
 
   const panel = pageA.getByRole("dialog", { name: "rice", exact: true });
 
-  await expect(panel.getByTestId("ingredient-nutrition-source")).toContainText(
+  await expect(panel.getByTestId("ingredient-nutrition-summary")).toContainText("kcal per 100 g");
+  await panel.getByTestId("ingredient-nutrition-open").click();
+
+  const nutrition = pageA.getByRole("dialog", { name: "Nutrition", exact: true });
+
+  await expect(nutrition.getByTestId("ingredient-nutrition-source")).toContainText(
     "Rice, white, raw · CIQUAL 2025"
   );
-  await panel.getByTestId("ingredient-nutrition-correct").click();
+  await nutrition.getByTestId("ingredient-nutrition-correct").click();
 
   const correction = pageA.getByTestId("nutrition-correction");
 
@@ -113,7 +122,7 @@ test("a household's correction changes its own total and no other household's", 
   await correction.getByTestId("nutrition-correction-protein").fill("7");
   await pageA.getByTestId("nutrition-correction-save").click();
 
-  await expect(panel.getByTestId("ingredient-nutrition-source")).toContainText(
+  await expect(nutrition.getByTestId("ingredient-nutrition-source")).toContainText(
     "Your household's own numbers"
   );
 

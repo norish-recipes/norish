@@ -86,8 +86,51 @@ export function suggestionMessage(
     case "merge":
       return t("suggestion.merge", { name, into: target });
     case "parent":
-      return t("suggestion.parent", { name, of: target });
+      return suggestion.source === "words"
+        ? t("suggestion.filedFromName", { name, of: target })
+        : t("suggestion.parent", { name, of: target });
     case "distinct":
       return t("suggestion.distinct", { name });
   }
+}
+
+/** What a suggestion proposes, without the food's name: the proposal column of the table. */
+export function suggestionProposal(
+  t: Translate,
+  suggestion: IngredientSuggestion,
+  locale: string
+): string {
+  const target = suggestion.target ? ingredientDisplayName(suggestion.target, locale) : "";
+
+  switch (suggestion.kind) {
+    case "merge":
+      return t("proposal.merge", { into: target });
+    case "parent":
+      return t("proposal.parent", { of: target });
+    case "distinct":
+      return t("proposal.distinct");
+  }
+}
+
+/** Why a round passed a food over, without the food's name. */
+export function skippedReason(
+  t: Translate,
+  reason: "not-flagged" | "forbidden" | "not-found"
+): string {
+  switch (reason) {
+    case "not-flagged":
+      return t("skippedReasons.notFlagged");
+    case "forbidden":
+      return t("skippedReasons.forbidden");
+    case "not-found":
+      return t("skippedReasons.notFound");
+  }
+}
+
+/**
+ * How a suggestion came about: what AI tried, or that the words of the name
+ * alone gave it.
+ */
+export function suggestionTrace(t: Translate, suggestion: IngredientSuggestion): string {
+  return suggestion.source === "words" ? t("aiTrace.fromWords") : reviewTrace(t, suggestion);
 }

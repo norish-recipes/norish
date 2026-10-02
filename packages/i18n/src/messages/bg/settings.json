@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "ИИ го прочете като „{name}“.",
       "compared": "Сравнено с: {names}.",
-      "comparedNothing": "Нямаше позната храна за сравнение."
+      "comparedNothing": "Нямаше позната храна за сравнение.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Добави превод",
     "removeAlias": "Премахни {alias}",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} г в чаша",
-      "onePiece": "Едно парче тежи {grams} г",
-      "oneCup": "Една чаша тежи {grams} г",
       "none": "Norish все още няма хранителна стойност за тази съставка. Коригирайте я, за да ѝ дадете.",
       "noNumbers": "Все още няма стойности на 100 г.",
       "borrowed": "От {name}: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Коригирай",
       "correctTitle": "Коригиране на {name}",
-      "correctIntro": "Корекцията ви важи за всички във вашето домакинство и за никой друг.",
+      "correctIntro": "Корекциите важат само за вашето домакинство.",
       "facts": {
         "numbers": "На 100 г",
         "pieceWeight": "Едно парче",
         "density": "Една чаша"
       },
-      "useSources": "Както е в Norish",
+      "useSources": "Без корекция",
       "pickFood": "Храна от наборите данни",
       "typeLabel": "От етикет",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Коригирайте поне една от трите.",
         "not-found": "Тази съставка вече не съществува.",
         "unknown": "Нещо се обърка. Опитайте отново."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} kcal на 100 г",
+      "summaryNone": "Още няма хранителни стойности",
+      "current": "Сега {value} · {source}",
+      "currentNone": "Norish още няма нищо за това"
     },
     "errors": {
       "title": "Съставката не можа да бъде променена",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "Обедини {name} с {into}",
       "parent": "Класирай {name} под {of}",
-      "distinct": "Запази {name} като самостоятелна храна"
+      "distinct": "Запази {name} като самостоятелна храна",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "Предложения от ИИ",
     "suggestionsEmpty": "Нищо не чака вашето решение.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Отхвърли",
     "confirmAll": "Потвърди всички ({count})",
     "dismissAll": "Отхвърли всички",
-    "suggestedByAI": "Предложено от ИИ"
+    "suggestedByAI": "Предложено от ИИ",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

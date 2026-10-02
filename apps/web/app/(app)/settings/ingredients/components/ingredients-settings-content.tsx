@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { AIButton } from "@/components/shared/ai-button";
+import { usePermissionsContext } from "@/context/permissions-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon, SparklesIcon } from "@heroicons/react/24/outline";
@@ -49,6 +50,8 @@ import { useIngredientTree } from "./use-ingredient-tree";
 export default function IngredientsSettingsContent() {
   const t = useTranslations("settings.ingredients");
   const tFilters = useTranslations("common.filters");
+  // AI buttons go with AI: with it off for the instance, nothing here offers it.
+  const { isAIEnabled } = usePermissionsContext();
   const locale = useLocale();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -80,7 +83,10 @@ export default function IngredientsSettingsContent() {
   // keep the old page on screen with the new one's kinds folded into it.
   const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
   const settling = isPending || (isFetching && !isFetchingNextPage);
-  const loadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  // The end of a short list is in view as the list is read again (a search
+  // cleared, an edit landed): asking for the next page then must not cancel
+  // that read, or the first page keeps what it had before it.
+  const loadMore = useCallback(() => void fetchNextPage({ cancelRefetch: false }), [fetchNextPage]);
   const tree = useIngredientTree(items, treeMode, locale);
   // Every food on screen, the folded-out kinds included.
   const shown = useMemo(() => tree.rows.map((row) => row.item), [tree.rows]);
@@ -177,14 +183,14 @@ export default function IngredientsSettingsContent() {
               <Button
                 data-testid="ingredients-suggestions-open"
                 size="sm"
-                variant="ghost"
+                variant="tertiary"
                 onPress={() => setSuggestionsOpen(true)}
               >
                 <SparklesIcon className="size-4" />
                 {t("suggestionsOpen", { count: suggestions.length })}
               </Button>
             ) : null}
-            {standaloneIds.length > 0 ? (
+            {isAIEnabled && standaloneIds.length > 0 ? (
               <AIButton
                 data-testid="ingredients-find-parents-all"
                 isDisabled={running !== null || startRound.isPending}
@@ -195,7 +201,7 @@ export default function IngredientsSettingsContent() {
                 {t("findParentsAll")}
               </AIButton>
             ) : null}
-            {flaggedIds.length > 0 ? (
+            {isAIEnabled && flaggedIds.length > 0 ? (
               <AIButton
                 data-testid="ingredients-ask-ai-all"
                 isDisabled={running !== null || startRound.isPending}

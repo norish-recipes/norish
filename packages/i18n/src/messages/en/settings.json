@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "AI read it as “{name}”.",
       "compared": "Compared with: {names}.",
-      "comparedNothing": "There was no known food to compare it with."
+      "comparedNothing": "There was no known food to compare it with.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Add a translation",
     "removeAlias": "Remove {alias}",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} g a cup",
-      "onePiece": "One piece weighs {grams} g",
-      "oneCup": "A cup weighs {grams} g",
       "none": "Norish has no nutrition for this food yet. Correct it to give it some.",
       "noNumbers": "No numbers per 100 g yet.",
       "borrowed": "From {name}: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Correct",
       "correctTitle": "Correct {name}",
-      "correctIntro": "Your correction holds for everyone in your household, and for nobody else.",
+      "correctIntro": "Corrections are scoped to your household.",
       "facts": {
         "numbers": "Per 100 g",
         "pieceWeight": "One piece",
         "density": "A cup"
       },
-      "useSources": "As Norish has it",
+      "useSources": "No correction",
       "pickFood": "A dataset food",
       "typeLabel": "From a label",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Correct at least one of the three.",
         "not-found": "This food is gone.",
         "unknown": "Something went wrong. Try again."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} kcal per 100 g",
+      "summaryNone": "No nutrition yet",
+      "current": "Now {value} · {source}",
+      "currentNone": "Norish has nothing for this yet"
     },
     "errors": {
       "title": "Could not change the ingredient",
@@ -507,9 +512,10 @@
     "suggestion": {
       "merge": "Merge {name} into {into}",
       "parent": "File {name} under {of}",
-      "distinct": "Keep {name} as a food of its own"
+      "distinct": "Keep {name} as a food of its own",
+      "filedFromName": "{name} filed under {of}"
     },
-    "suggestionsTitle": "AI suggestions",
+    "suggestionsTitle": "Suggestions",
     "suggestionsEmpty": "Nothing is waiting on you.",
     "suggestionsNone": "No suggestion",
     "suggestionsOpen": "{count, plural, =0 {Suggestions} one {# suggestion} other {# suggestions}}",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Dismiss",
     "confirmAll": "Confirm all ({count})",
     "dismissAll": "Dismiss all",
-    "suggestedByAI": "Suggested by AI"
+    "suggestedByAI": "Suggested by AI",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "AI leste det som «{name}».",
       "compared": "Sammenlignet med: {names}.",
-      "comparedNothing": "Det var ingen kjent matvare å sammenligne med."
+      "comparedNothing": "Det var ingen kjent matvare å sammenligne med.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Legg til en oversettelse",
     "removeAlias": "Fjern {alias}",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} g per kopp",
-      "onePiece": "Én bit veier {grams} g",
-      "oneCup": "En kopp veier {grams} g",
       "none": "Norish har ennå ikke næringsinnhold for denne ingrediensen. Rett den for å gi den noe.",
       "noNumbers": "Ennå ingen verdier per 100 g.",
       "borrowed": "Fra {name}: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Rett",
       "correctTitle": "Rett {name}",
-      "correctIntro": "Rettelsen gjelder for alle i husstanden din, og for ingen andre.",
+      "correctIntro": "Rettelser gjelder bare for din husstand.",
       "facts": {
         "numbers": "Per 100 g",
         "pieceWeight": "Én bit",
         "density": "En kopp"
       },
-      "useSources": "Slik Norish har det",
+      "useSources": "Ingen rettelse",
       "pickFood": "En matvare fra datasettene",
       "typeLabel": "Fra en etikett",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Rett minst én av de tre.",
         "not-found": "Denne ingrediensen finnes ikke lenger.",
         "unknown": "Noe gikk galt. Prøv igjen."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} kcal per 100 g",
+      "summaryNone": "Ingen næringsinnhold enda",
+      "current": "Nå {value} · {source}",
+      "currentNone": "Norish har ingenting for dette enda"
     },
     "errors": {
       "title": "Kunne ikke endre ingrediensen",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "Slå sammen {name} med {into}",
       "parent": "Plasser {name} under {of}",
-      "distinct": "Behold {name} som egen matvare"
+      "distinct": "Behold {name} som egen matvare",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "AI-forslag",
     "suggestionsEmpty": "Ingenting venter på deg.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Avvis",
     "confirmAll": "Bekreft alle ({count})",
     "dismissAll": "Avvis alle",
-    "suggestedByAI": "Foreslått av AI"
+    "suggestedByAI": "Foreslått av AI",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

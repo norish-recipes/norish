@@ -1,11 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, IconActionButton } from "@/components/shared/action-button";
 import { AIButton } from "@/components/shared/ai-button";
+import { usePermissionsContext } from "@/context/permissions-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowRightIcon,
@@ -33,7 +34,8 @@ import { DeleteIngredientModal } from "./delete-ingredient-modal";
 import { IngredientNutritionSection } from "./ingredient-nutrition";
 import { IngredientRelocationPanel } from "./ingredient-relocation";
 import { IngredientStatusChip } from "./ingredient-status-chip";
-import { reviewMessage, reviewTrace, suggestionMessage } from "./review-copy";
+import { reviewMessage, reviewTrace, suggestionMessage, suggestionTrace } from "./review-copy";
+import { useIngredientCache } from "./use-ingredient-cache";
 import { useIngredientSuggestions } from "./use-ingredient-suggestions";
 
 /** Why the server refused an edit, as the procedures name it. */
@@ -60,7 +62,9 @@ type DraftParent = { id: string; name: string; localeNames?: LocaleNames } | nul
  * confirm or dismiss. Every other field stays the viewer's to edit. The
  * panel follows the item it was opened for through the list, and reads it on
  * its own once the list no longer lists it, so its own edit, a housemate's or
- * AI's shows here too.
+ * AI's shows here too. Every edit shows the moment it is made: the row and
+ * the panel change as the server will change them, and a refusal puts them
+ * back and says why.
  */
 export function IngredientPanel({
   id = null,
@@ -86,7 +90,10 @@ export function IngredientPanel({
   const [shown, setShown] = useState<IngredientItem | null>(item);
   // A food a filter or a search no longer lists (marked distinct under
   // "flagged only", say) is read on its own, so the panel keeps up with it.
-  const ownId = shown?.id ?? id;
+  // The food asked for comes first: a link to another food reads that one,
+  // not the one the panel showed last. With no food asked for (the panel
+  // closing), the last one stays.
+  const ownId = id ?? shown?.id ?? null;
   const own = useQuery({
     ...trpc.ingredients.get.queryOptions({ ingredientId: ownId ?? "", locale }),
     enabled: open && ownId !== null && item === null,
@@ -97,7 +104,8 @@ export function IngredientPanel({
     if (current) setShown(current);
   }, [current]);
 
-  if (!shown) return null;
+  // Another food asked for, not read yet: nothing, rather than the last one.
+  if (!shown || (open && id !== null && shown.id !== id && !current)) return null;
 
   return (
     <IngredientPanelContent
@@ -129,6 +137,7 @@ function IngredientPanelContent({
   const tActions = useTranslations("common.actions");
   const locale = useLocale();
   const trpc = useTRPC();
+  const cache = useIngredientCache();
   const displayName = ingredientDisplayName(item, locale);
   const [allSpellings, setAllSpellings] = useState(false);
   // The catalogue knows a food in dozens of languages; the server sends the
@@ -153,17 +162,28 @@ function IngredientPanelContent({
   const [deleting, setDeleting] = useState(false);
   const suggestions = useIngredientSuggestions();
   const suggestion = suggestions.suggestions.find((it) => it.ingredient.id === item.id) ?? null;
-  const suggestedParent = suggestion?.kind === "parent" ? suggestion.target : null;
+  // A parent AI proposes is a draft to save; one the words of the name gave
+  // is already in place, and is confirmed or dismissed like a merge.
+  const suggestedParent =
+    suggestion?.kind === "parent" && suggestion.source === "ai" ? suggestion.target : null;
+  const { isAIEnabled } = usePermissionsContext();
+
+  // A refused save is read back from the server, which would overwrite the
+  // draft the viewer still has to fix: that one read leaves the draft alone.
+  const keepDraft = useRef(false);
 
   // A change elsewhere (a housemate's, or AI's) shows in the draft where the
-  // viewer has not touched that field.
+  // viewer has not touched that field; a parent AI suggests fills the draft,
+  // for the viewer to keep with Save or dismiss.
   useEffect(() => {
+    if (keepDraft.current) {
+      keepDraft.current = false;
+
+      return;
+    }
     setName(item.name);
-  }, [item.name]);
-  // A parent AI suggests fills the draft, for the viewer to keep with Save or dismiss.
-  useEffect(() => {
     setParent(suggestedParent ?? item.parent);
-  }, [item.parent, suggestedParent]);
+  }, [item.name, item.parent, suggestedParent]);
 
   const saveDraft = useMutation(trpc.ingredients.saveDraft.mutationOptions());
   const markDistinct = useMutation(trpc.ingredients.markDistinct.mutationOptions());
@@ -173,21 +193,25 @@ function IngredientPanelContent({
   const review = useMutation(trpc.ingredients.reviewWithAI.mutationOptions());
   const findParent = useMutation(trpc.ingredients.findParentWithAI.mutationOptions());
   // AI is asking about this food, from here or in a round: its answer is
-  // about the food as it stands, so nothing is edited until it lands.
+  // about the food as it stands, so nothing is edited until it lands. An
+  // edit of the viewer's own never waits: it shows at once and lands behind.
   const asking = review.isPending || findParent.isPending || reviewing;
-  // One edit at a time: a second one on the same food races the first.
-  const busy =
-    asking ||
-    [saveDraft, markDistinct, merge, moveAlias, remove].some((mutation) => mutation.isPending) ||
-    suggestions.isAnswering;
+  const busy = asking;
 
-  const run = async (context: string, edit: () => Promise<unknown>) => {
+  /**
+   * Make an edit: `show` changes the cache as the server will, now; `edit`
+   * is the server's turn, after which everything is read again. A refusal
+   * reads everything again too, which undoes what was shown, and says why.
+   */
+  const run = async (context: string, show: () => void, edit: () => Promise<unknown>) => {
     try {
+      show();
       await edit();
       onChanged();
 
       return true;
     } catch (error) {
+      void cache.rollback();
       const refusal = refusalOf(error);
 
       showSafeErrorToast({
@@ -214,19 +238,42 @@ function IngredientPanelContent({
   /** Land the draft as one edit; a refusal changes nothing, keeps the draft and says why. */
   const save = async () => {
     if (!dirty || busy) return;
-    const saved = await run("save", () =>
-      saveDraft.mutateAsync({
-        ingredientId: item.id,
-        ...(nameChanged ? { name: nextName } : {}),
-        ...(parentChanged ? { parentId: parent?.id ?? null } : {}),
-        add: added,
-        remove: [...removed],
-      })
+    const draft = { added, removed, parent };
+
+    // The row reads as the draft has it, and the draft is spent, at once.
+    setAdded([]);
+    setRemoved(new Set());
+    const saved = await run(
+      "save",
+      () =>
+        cache.patchRow(item.id, (row) => ({
+          ...row,
+          ...(nameChanged ? { name: nextName } : {}),
+          ...(parentChanged ? { parent: parent ? { ...parent } : null } : {}),
+          // A flagged food the viewer saved by hand is settled by it.
+          ...(parentChanged && parent ? { flagged: false, flagReason: null } : {}),
+          aliases: [
+            ...row.aliases.filter((spelling) => !removed.has(spelling.id)),
+            ...added.map((text) => ({ id: `draft:${text}`, text, canRemove: true })),
+          ],
+        })),
+      () =>
+        saveDraft.mutateAsync({
+          ingredientId: item.id,
+          ...(nameChanged ? { name: nextName } : {}),
+          ...(parentChanged ? { parentId: parent?.id ?? null } : {}),
+          add: added,
+          remove: [...removed],
+        })
     );
 
-    if (saved) {
-      setAdded([]);
-      setRemoved(new Set());
+    // A refused draft is the viewer's to fix, so it comes back as it was.
+    if (!saved) {
+      keepDraft.current = true;
+      setAdded(draft.added);
+      setRemoved(draft.removed);
+      setName(nextName);
+      setParent(draft.parent);
     }
   };
 
@@ -239,7 +286,7 @@ function IngredientPanelContent({
     setAlias("");
   };
 
-  const saveRelocation = async (asked: Relocation, target: IngredientPick) => {
+  const saveRelocation = (asked: Relocation, target: IngredientPick) => {
     if (asked.kind === "parent") {
       // A parent joins the draft and lands with Save.
       if (target.id !== null) setParent(target);
@@ -248,42 +295,54 @@ function IngredientPanelContent({
       return;
     }
     const targetId = target.id;
-    const done =
-      asked.kind === "move"
-        ? await run("move-alias", () => moveAlias.mutateAsync({ aliasId: asked.aliasId, targetId }))
-        : targetId !== null &&
-          (await run("merge", () => merge.mutateAsync({ sourceId: item.id, targetId })));
 
-    if (done) {
-      setRelocation(null);
-      // Merged away, the food is gone: nothing is left to show for it. The
-      // toast says where it went and how to get it back.
-      if (asked.kind === "merge") {
-        onClose();
-        if (target.id !== null) {
-          toast(t("mergedToast", { name: displayName, into: target.name }), { variant: "success" });
-        }
-      }
-    }
-  };
-
-  const confirmDelete = async () => {
-    if (await run("delete", () => remove.mutateAsync({ ingredientId: item.id }))) {
-      setDeleting(false);
-      onClose();
-    }
-  };
-
-  /** Take AI's suggestion, or leave it; a merge takes the food away, as the viewer's own does. */
-  const answerSuggestion = async (confirm: boolean) => {
-    if (!suggestion) return;
-    if (!confirm) {
-      // A dismissed parent leaves the draft as the suggestion goes.
-      await suggestions.dismiss([suggestion.id]);
+    setRelocation(null);
+    if (asked.kind === "move") {
+      void run(
+        "move-alias",
+        () =>
+          cache.patchRow(item.id, (row) => ({
+            ...row,
+            aliases: row.aliases.filter((spelling) => spelling.id !== asked.aliasId),
+          })),
+        () => moveAlias.mutateAsync({ aliasId: asked.aliasId, targetId })
+      );
 
       return;
     }
-    if ((await suggestions.confirm([suggestion.id])) && suggestion.kind === "merge") {
+    if (targetId === null) return;
+    // Merged away, the food is gone: nothing is left to show for it. The
+    // toast says where it went and how to get it back.
+    onClose();
+    toast(t("mergedToast", { name: displayName, into: target.name }), { variant: "success" });
+    void run(
+      "merge",
+      () => cache.dropRow(item.id),
+      () => merge.mutateAsync({ sourceId: item.id, targetId })
+    );
+  };
+
+  const confirmDelete = () => {
+    setDeleting(false);
+    onClose();
+    void run(
+      "delete",
+      () => cache.dropRow(item.id),
+      () => remove.mutateAsync({ ingredientId: item.id })
+    );
+  };
+
+  /** Take AI's suggestion, or leave it; a merge takes the food away, as the viewer's own does. */
+  const answerSuggestion = (confirm: boolean) => {
+    if (!suggestion) return;
+    if (!confirm) {
+      // A dismissed parent leaves the draft as the suggestion goes.
+      void suggestions.dismiss([suggestion.id]);
+
+      return;
+    }
+    void suggestions.confirm([suggestion.id]);
+    if (suggestion.kind === "merge") {
       onClose();
       if (suggestion.target) {
         toast(
@@ -299,29 +358,40 @@ function IngredientPanelContent({
 
   /** Ask AI what this food is, and say what it suggests. */
   const askAI = async () => {
-    await run("review", async () => {
-      const outcome: ReviewOutcome = await review.mutateAsync({ ingredientId: item.id });
+    await run(
+      "review",
+      () => undefined,
+      async () => {
+        const outcome: ReviewOutcome = await review.mutateAsync({ ingredientId: item.id });
 
-      toast(reviewMessage(t, displayName, outcome), {
-        description: reviewTrace(t, outcome),
-        variant: outcome.outcome === "unsure" ? "warning" : "accent",
-      });
-    });
+        toast(reviewMessage(t, displayName, outcome), {
+          description: reviewTrace(t, outcome),
+          variant: outcome.outcome === "unsure" ? "warning" : "accent",
+        });
+      }
+    );
   };
 
   /** Ask AI what food this is a kind of, and say what it suggests. */
   const askParent = async () => {
-    await run("find-parent", async () => {
-      const outcome: ReviewOutcome = await findParent.mutateAsync({ ingredientId: item.id });
+    await run(
+      "find-parent",
+      () => undefined,
+      async () => {
+        const outcome: ReviewOutcome = await findParent.mutateAsync({ ingredientId: item.id });
 
-      toast(reviewMessage(t, displayName, outcome), {
-        description: reviewTrace(t, outcome),
-        variant: outcome.outcome === "parent" ? "accent" : "warning",
-      });
-    });
+        toast(reviewMessage(t, displayName, outcome), {
+          description: reviewTrace(t, outcome),
+          variant: outcome.outcome === "parent" ? "accent" : "warning",
+        });
+      }
+    );
   };
 
-  /** One spelling the food goes by, with the moves the viewer may make on it. */
+  /**
+   * One spelling the food goes by. One the viewer may edit is a button: the
+   * chip itself moves the spelling to another food, the cross removes it.
+   */
   const spellingChip = (spelling: Spelling) => {
     const pendingRemoval = removed.has(spelling.id);
 
@@ -334,11 +404,10 @@ function IngredientPanelContent({
         size="sm"
         variant="tertiary"
       >
-        {spelling.text}
         {spelling.canRemove && !pendingRemoval ? (
           <button
             aria-label={t("moveAlias", { alias: spelling.text })}
-            className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
+            className="hover:text-foreground cursor-[var(--cursor-interactive)]"
             data-testid="ingredient-alias-move"
             disabled={busy}
             type="button"
@@ -346,9 +415,11 @@ function IngredientPanelContent({
               setRelocation({ kind: "move", aliasId: spelling.id, text: spelling.text })
             }
           >
-            <ArrowRightIcon className="size-3" />
+            {spelling.text}
           </button>
-        ) : null}
+        ) : (
+          spelling.text
+        )}
         {spelling.canRemove ? (
           <button
             aria-label={
@@ -393,11 +464,19 @@ function IngredientPanelContent({
     >
       <Panel.Body>
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-details">
-          {suggestion && suggestion.kind !== "parent" ? (
-            <Section title={t("suggestedByAI")}>
-              <div className="flex flex-col gap-2" data-testid="ingredient-suggestion-notice">
+          {suggestion && (suggestion.kind !== "parent" || suggestion.source === "words") ? (
+            <Section
+              title={suggestion.source === "words" ? t("suggestedFromName") : t("suggestedByAI")}
+            >
+              <div
+                className="flex flex-col gap-2"
+                data-source={suggestion.source}
+                data-testid="ingredient-suggestion-notice"
+              >
                 <p className="text-sm font-medium">{suggestionMessage(t, suggestion, locale)}</p>
-                <p className="text-muted text-sm">{reviewTrace(t, suggestion)}</p>
+                {suggestion.source === "ai" ? (
+                  <p className="text-muted text-sm">{suggestionTrace(t, suggestion)}</p>
+                ) : null}
                 {suggestion.canAnswer ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
@@ -405,7 +484,7 @@ function IngredientPanelContent({
                       isDisabled={busy}
                       size="sm"
                       variant="secondary"
-                      onPress={() => void answerSuggestion(true)}
+                      onPress={() => answerSuggestion(true)}
                     >
                       {t("confirmSuggestion")}
                     </Button>
@@ -413,8 +492,8 @@ function IngredientPanelContent({
                       data-testid="ingredient-suggestion-dismiss"
                       isDisabled={busy}
                       size="sm"
-                      variant="ghost"
-                      onPress={() => void answerSuggestion(false)}
+                      variant="danger-soft"
+                      onPress={() => answerSuggestion(false)}
                     >
                       {t("dismissSuggestion")}
                     </Button>
@@ -430,24 +509,33 @@ function IngredientPanelContent({
               </p>
               {item.canEdit ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <AIButton
-                    data-testid="ingredient-ask-ai"
-                    isDisabled={busy}
-                    isPending={review.isPending || reviewing}
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => void askAI()}
-                  >
-                    {t("askAI")}
-                  </AIButton>
+                  {isAIEnabled ? (
+                    <AIButton
+                      data-testid="ingredient-ask-ai"
+                      isDisabled={busy}
+                      isPending={review.isPending || reviewing}
+                      size="sm"
+                      variant="secondary"
+                      onPress={() => void askAI()}
+                    >
+                      {t("askAI")}
+                    </AIButton>
+                  ) : null}
                   <Button
                     data-testid="ingredient-mark-distinct"
                     isDisabled={busy}
                     size="sm"
                     variant="secondary"
                     onPress={() =>
-                      void run("mark-distinct", () =>
-                        markDistinct.mutateAsync({ ingredientId: item.id })
+                      void run(
+                        "mark-distinct",
+                        () =>
+                          cache.patchRow(item.id, (row) => ({
+                            ...row,
+                            flagged: false,
+                            flagReason: null,
+                          })),
+                        () => markDistinct.mutateAsync({ ingredientId: item.id })
                       )
                     }
                   >
@@ -487,11 +575,13 @@ function IngredientPanelContent({
           <Section title={t("parentSection")}>
             <div className="flex flex-wrap items-center gap-2" data-testid="ingredient-parent">
               {parent ? (
+                // The same height as the button beside it: the pair reads as one row.
                 <Chip
+                  className="h-9 px-3 text-sm md:h-8"
                   color={parentIsSuggested ? "accent" : undefined}
                   data-suggested={parentIsSuggested || undefined}
-                  size="sm"
-                  variant={parentIsSuggested ? "soft" : "tertiary"}
+                  size="lg"
+                  variant={parentIsSuggested ? "soft" : "secondary"}
                 >
                   {ingredientDisplayName(parent, locale)}
                   {item.canEdit ? (
@@ -502,10 +592,10 @@ function IngredientPanelContent({
                       disabled={busy}
                       type="button"
                       onClick={() =>
-                        parentIsSuggested ? void answerSuggestion(false) : setParent(null)
+                        parentIsSuggested ? answerSuggestion(false) : setParent(null)
                       }
                     >
-                      <XMarkIcon className="size-3" />
+                      <XMarkIcon className="size-4" />
                     </button>
                   ) : null}
                 </Chip>
@@ -527,7 +617,7 @@ function IngredientPanelContent({
                   {parent ? t("changeParent") : t("setParent")}
                 </Button>
               ) : null}
-              {item.canEdit && !item.parent ? (
+              {isAIEnabled && item.canEdit && !item.parent ? (
                 <AIButton
                   data-testid="ingredient-find-parent"
                   isDisabled={busy}
@@ -589,7 +679,6 @@ function IngredientPanelContent({
               action="save"
               data-testid="ingredient-save"
               isDisabled={busy || !dirty}
-              isPending={busy}
               onPress={() => void save()}
             >
               {tActions("save")}
@@ -676,15 +765,14 @@ function IngredientPanelContent({
         ingredient={item}
         relocation={relocation}
         onClose={() => setRelocation(null)}
-        onConfirm={(asked, target) => void saveRelocation(asked, target)}
+        onConfirm={saveRelocation}
       />
 
       <DeleteIngredientModal
-        isDeleting={remove.isPending}
         isOpen={deleting}
         name={displayName}
         onClose={() => setDeleting(false)}
-        onConfirm={() => void confirmDelete()}
+        onConfirm={confirmDelete}
       />
     </Panel>
   );

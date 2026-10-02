@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "ИИ прочитал это как «{name}».",
       "compared": "Сравнивалось с: {names}.",
-      "comparedNothing": "Не было известного продукта для сравнения."
+      "comparedNothing": "Не было известного продукта для сравнения.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Добавить перевод",
     "removeAlias": "Удалить {alias}",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} г в чашке",
-      "onePiece": "Одна штука весит {grams} г",
-      "oneCup": "Чашка весит {grams} г",
       "none": "У Norish пока нет пищевой ценности для этого ингредиента. Исправьте его, чтобы задать её.",
       "noNumbers": "Пока нет значений на 100 г.",
       "borrowed": "От {name}: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Исправить",
       "correctTitle": "Исправить {name}",
-      "correctIntro": "Ваше исправление действует для всей вашей семьи и ни для кого больше.",
+      "correctIntro": "Исправления действуют только для вашей семьи.",
       "facts": {
         "numbers": "На 100 г",
         "pieceWeight": "Одна штука",
         "density": "Чашка"
       },
-      "useSources": "Как в Norish",
+      "useSources": "Без исправления",
       "pickFood": "Продукт из наборов данных",
       "typeLabel": "С этикетки",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Исправьте хотя бы одно из трёх.",
         "not-found": "Этого ингредиента больше нет.",
         "unknown": "Что-то пошло не так. Попробуйте снова."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} ккал на 100 г",
+      "summaryNone": "Пищевой ценности пока нет",
+      "current": "Сейчас {value} · {source}",
+      "currentNone": "У Norish пока ничего нет для этого"
     },
     "errors": {
       "title": "Не удалось изменить ингредиент",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "Объединить {name} с {into}",
       "parent": "Отнести {name} к {of}",
-      "distinct": "Оставить {name} отдельным продуктом"
+      "distinct": "Оставить {name} отдельным продуктом",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "Предложения ИИ",
     "suggestionsEmpty": "Ничего не ждёт вашего решения.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Отклонить",
     "confirmAll": "Подтвердить все ({count})",
     "dismissAll": "Отклонить все",
-    "suggestedByAI": "Предложено ИИ"
+    "suggestedByAI": "Предложено ИИ",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

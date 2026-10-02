@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "Die KI las es als „{name}“.",
       "compared": "Verglichen mit: {names}.",
-      "comparedNothing": "Es gab kein bekanntes Lebensmittel zum Vergleich."
+      "comparedNothing": "Es gab kein bekanntes Lebensmittel zum Vergleich.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Übersetzung hinzufügen",
     "removeAlias": "{alias} entfernen",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} g pro Tasse",
-      "onePiece": "Ein Stück wiegt {grams} g",
-      "oneCup": "Eine Tasse wiegt {grams} g",
       "noNumbers": "Noch keine Werte pro 100 g.",
       "borrowed": "Von {name}: {source}",
       "source": {
@@ -444,7 +443,7 @@
         "pieceWeight": "Ein Stück",
         "density": "Eine Tasse"
       },
-      "useSources": "Wie Norish es hat",
+      "useSources": "Keine Korrektur",
       "pickFood": "Ein Lebensmittel aus den Datensätzen",
       "typeLabel": "Vom Etikett",
       "label": {
@@ -467,10 +466,16 @@
         "unknown": "Etwas ist schiefgelaufen. Versuchen Sie es erneut."
       },
       "none": "Norish hat noch keine Nährwerte für diese Zutat. Korrigieren Sie sie, um welche einzutragen.",
-      "correctIntro": "Ihre Korrektur gilt für alle in Ihrem Haushalt und für niemanden sonst.",
+      "correctIntro": "Korrekturen gelten nur für Ihren Haushalt.",
       "searchFood": "In den Datensätzen suchen (Englisch), etwa milk semi-skimmed",
       "foodHint": "Geben Sie ein paar Wörter des Namens ein",
-      "remove": "Unsere Korrektur entfernen"
+      "remove": "Unsere Korrektur entfernen",
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} kcal pro 100 g",
+      "summaryNone": "Noch keine Nährwerte",
+      "current": "Jetzt {value} · {source}",
+      "currentNone": "Norish hat dafür noch nichts"
     },
     "errors": {
       "title": "Die Zutat konnte nicht geändert werden",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "{name} mit {into} zusammenführen",
       "parent": "{name} unter {of} einordnen",
-      "distinct": "{name} als eigene Zutat behalten"
+      "distinct": "{name} als eigene Zutat behalten",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "KI-Vorschläge",
     "suggestionsEmpty": "Nichts wartet auf Sie.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Verwerfen",
     "confirmAll": "Alle bestätigen ({count})",
     "dismissAll": "Alle verwerfen",
-    "suggestedByAI": "Von der KI vorgeschlagen"
+    "suggestedByAI": "Von der KI vorgeschlagen",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

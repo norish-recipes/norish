@@ -26,17 +26,28 @@ taxonomy, which Norish fetches when it starts and every night, and grows with ev
 recipe you import and every grocery you add.
 
 When Norish meets a name it does not know, it checks it against the translations it
-has, then without the preparation (“onions, diced” is “onions”) and without a
-serving phrase or vague amount at either end (“salt to taste”, “a pinch of
+has, then without the preparation (“onions, diced” is “onions”, and so are “onions
+finely chopped” and “finely chopped onions”, as many sites write it without the
+comma), without a container at the start (“can of chickpeas”, “pack coriander”) and
+without a serving phrase or vague amount at either end (“salt to taste”, “a pinch of
 nutmeg”, “parsley for garnish” are salt, nutmeg and parsley), and then, if
 [AI](../configuration/ai-provider.md) is set up, asks what food it is. Only when
-none of these is sure does it add a new ingredient, **flagged** for you to check.
-A new ingredient whose name ends in a food Norish knows is filed under it:
-“ground cumin” goes under cumin, so it uses cumin's aisle and nutrition while it
-waits for you.
+none of these is sure does it add a new ingredient, **flagged** for you to check,
+and named without the preparation: “garlic cloves crushed” becomes “garlic cloves”.
+A new ingredient whose name contains a food Norish knows is filed under it, so it
+uses that food's aisle and nutrition while it waits for you. “Ground cumin” goes
+under cumin without a question; “garlic cloves” goes under garlic with a
+**suggestion** for you to confirm or dismiss, because the food was not the last
+word of the name. With AI set up, AI is asked about the same name with that food
+among the options: if it agrees, the ingredient is filed without a flag; if it
+names another food, a Decision Model gets the final say between the two, and
+without one AI's answer wins.
 
-The serving phrases and amounts come from your server's units list, so an admin
-can add a household's own phrasing there.
+The serving phrases, amounts and containers come from your server's units list, so
+an admin can add a household's own phrasing there. The preparation words (chopped,
+crushed, peeled, drained, finely, roughly, and their Dutch counterparts) are fixed;
+words that name a different food, such as “ground”, “dried” or “smoked”, are never
+taken off.
 
 ## The Ingredients page
 
@@ -130,17 +141,28 @@ lists several foods it could be. Two buttons settle it:
 - **Mark distinct** when it really is a food of its own. Norish remembers this
   and never merges it later.
 
+Both AI buttons appear only on a server where AI is set up. Without it, the
+flag still says why and **Mark distinct**, a merge or a parent by hand settle it.
+
+A flagged ingredient Norish filed under a food found inside its name (“garlic
+cloves” under garlic) opens with that filing at the top, marked **Read from its
+name**, with **Confirm** and **Dismiss**. The parent is already in place, so the
+ingredient uses garlic's aisle and nutrition meanwhile; confirming keeps it as
+your choice and clears the flag, dismissing takes the parent off again. These
+suggestions sit in the **Suggestions** panel beside AI's.
+
 Whenever the list shows flagged ingredients you may edit, a button in the
 card's header asks AI about all of them at once. Under **Without parent or
 kinds**, the button asks instead what each ingredient on screen is a kind of.
 That runs on the server as one job with a step per ingredient, so it carries
 on if you close the tab: each flagged row shows **Asking AI…** until the round
 ends. It asks a few ingredients at once, and the answers land together: the
-**AI suggestions** panel then opens on its own for whoever started the round,
+**Suggestions** panel then opens on its own for whoever started the round,
 and the suggestions button in the card's header opens it whenever any are
-waiting. The panel lists one line per ingredient with what AI proposes and how
-it got there, each with **Confirm** and **Dismiss**, and **Confirm all** / **Dismiss all**
-at the bottom. Confirming makes the change as your own edit. Many ingredients
+waiting. The panel is a table, one row per ingredient: the ingredient, the
+proposal (merge into, file under, or a food of its own), what it is based on
+(what AI read the name as and compared it with, or “Based on name”), and
+**Confirm** and **Dismiss**, with **Confirm all** / **Dismiss all** at the bottom. Confirming makes the change as your own edit. Many ingredients
 may be suggested under the same parent. Below them, the ingredients the round
 had nothing to suggest for say why: AI was not sure, the ingredient was passed
 over, or its question failed. Anyone who opens the page meanwhile sees the same
@@ -149,9 +171,13 @@ ingredients**, with the models it asked.
 
 Whenever an update improves how Norish reads names, it looks at the flagged
 ingredients it added in the past once more when it starts: one that now
-matches a known food (an old “salt to taste” is salt) is merged into it, and
-one whose name ends in a known food is filed under it. Ingredients you renamed,
-gave a parent or marked distinct are left alone.
+matches a known food (an old “salt to taste” or “can chickpeas drained” is salt
+or chickpeas) is merged into it, one that still carries its preparation is
+renamed without it and gathers the others that strip to the same name (“garlic
+cloves crushed”, “garlic cloves thinly sliced” become one “garlic cloves”), and
+one whose name contains a known food is filed under it, with a suggestion to
+confirm where the food is not the last word. Ingredients you renamed, gave a
+parent or marked distinct are left alone.
 
 Renaming, setting a parent or marking an ingredient distinct clears its flag. Who
 may change an ingredient someone else added is up to your server admin, see

@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "AI odczytało to jako „{name}”.",
       "compared": "Porównano z: {names}.",
-      "comparedNothing": "Nie było znanego produktu do porównania."
+      "comparedNothing": "Nie było znanego produktu do porównania.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Dodaj tłumaczenie",
     "removeAlias": "Usuń {alias}",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} g na szklankę",
-      "onePiece": "Jedna sztuka waży {grams} g",
-      "oneCup": "Szklanka waży {grams} g",
       "none": "Norish nie ma jeszcze wartości odżywczych dla tego składnika. Popraw go, aby je dodać.",
       "noNumbers": "Brak jeszcze wartości na 100 g.",
       "borrowed": "Od {name}: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Popraw",
       "correctTitle": "Popraw {name}",
-      "correctIntro": "Twoja poprawka obowiązuje wszystkich w twoim gospodarstwie i nikogo więcej.",
+      "correctIntro": "Poprawki dotyczą tylko Twojego gospodarstwa.",
       "facts": {
         "numbers": "Na 100 g",
         "pieceWeight": "Jedna sztuka",
         "density": "Szklanka"
       },
-      "useSources": "Tak, jak ma Norish",
+      "useSources": "Bez poprawki",
       "pickFood": "Produkt z baz danych",
       "typeLabel": "Z etykiety",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Popraw co najmniej jedną z trzech.",
         "not-found": "Ten składnik już nie istnieje.",
         "unknown": "Coś poszło nie tak. Spróbuj ponownie."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} kcal na 100 g",
+      "summaryNone": "Brak wartości odżywczych",
+      "current": "Teraz {value} · {source}",
+      "currentNone": "Norish nie ma jeszcze nic dla tej pozycji"
     },
     "errors": {
       "title": "Nie udało się zmienić składnika",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "Połącz {name} z {into}",
       "parent": "Przypisz {name} do {of}",
-      "distinct": "Zachowaj {name} jako osobny produkt"
+      "distinct": "Zachowaj {name} jako osobny produkt",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "Sugestie AI",
     "suggestionsEmpty": "Nic na Ciebie nie czeka.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Odrzuć",
     "confirmAll": "Potwierdź wszystkie ({count})",
     "dismissAll": "Odrzuć wszystkie",
-    "suggestedByAI": "Zasugerowane przez AI"
+    "suggestedByAI": "Zasugerowane przez AI",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

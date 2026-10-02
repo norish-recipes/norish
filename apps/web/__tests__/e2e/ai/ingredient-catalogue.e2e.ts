@@ -289,7 +289,7 @@ test("asking AI about the flagged foods on screen runs as one round of suggestio
   // The row itself shows its turn in the round.
   await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-reviewing")).toBeVisible();
   // The round ends with the suggestions drawer open: AI changed nothing on its own.
-  const panel = page.getByRole("dialog", { name: "AI suggestions" });
+  const panel = page.getByRole("dialog", { name: "Suggestions" });
 
   await expect(panel).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("ingredient-reviewing")).toHaveCount(0);
@@ -297,7 +297,8 @@ test("asking AI about the flagged foods on screen runs as one round of suggestio
 
   await expect(suggestion).toHaveCount(1);
   await expect(suggestion).toHaveAttribute("data-kind", "distinct");
-  await expect(suggestion).toContainText("Keep knoflookteentjes as a food of its own");
+  await expect(suggestion).toContainText("knoflookteentjes");
+  await expect(suggestion).toContainText("Food of its own");
   await expect(suggestion).toContainText("AI read it as “garlic cloves”.");
   await suggestion.getByTestId("ingredient-suggestion-confirm").click();
   await expect(suggestion).toHaveCount(0);

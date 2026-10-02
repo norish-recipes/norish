@@ -383,7 +383,8 @@
     "aiTrace": {
       "readAs": "Tekoäly luki sen nimellä ”{name}”.",
       "compared": "Verrattiin: {names}.",
-      "comparedNothing": "Ei ollut tunnettua ruoka-ainetta, johon verrata."
+      "comparedNothing": "Ei ollut tunnettua ruoka-ainetta, johon verrata.",
+      "fromWords": "Based on name."
     },
     "addAlias": "Lisää käännös",
     "removeAlias": "Poista {alias}",
@@ -425,8 +426,6 @@
       "kcal": "{value} kcal",
       "grams": "{value} g",
       "cupGrams": "{value} g kupissa",
-      "onePiece": "Yksi kappale painaa {grams} g",
-      "oneCup": "Kuppi painaa {grams} g",
       "none": "Norishilla ei vielä ole ravintoarvoja tälle ainekselle. Korjaa se antaaksesi arvot.",
       "noNumbers": "Ei vielä arvoja 100 g:ssa.",
       "borrowed": "Aineksesta {name}: {source}",
@@ -440,13 +439,13 @@
       },
       "correct": "Korjaa",
       "correctTitle": "Korjaa {name}",
-      "correctIntro": "Korjauksesi koskee kaikkia kotitaloudessasi, eikä ketään muuta.",
+      "correctIntro": "Korjaukset koskevat vain omaa talouttasi.",
       "facts": {
         "numbers": "100 g:ssa",
         "pieceWeight": "Yksi kappale",
         "density": "Kuppi"
       },
-      "useSources": "Kuten Norishilla",
+      "useSources": "Ei korjausta",
       "pickFood": "Elintarvike tietoaineistoista",
       "typeLabel": "Pakkausmerkinnöistä",
       "label": {
@@ -470,7 +469,13 @@
         "empty": "Korjaa ainakin yksi kolmesta.",
         "not-found": "Tätä ainesosaa ei enää ole.",
         "unknown": "Jokin meni vikaan. Yritä uudelleen."
-      }
+      },
+      "onePieceLabel": "One piece",
+      "oneCupLabel": "A cup",
+      "summary": "{value} kcal / 100 g",
+      "summaryNone": "Ei vielä ravintoarvoja",
+      "current": "Nyt {value} · {source}",
+      "currentNone": "Norishilla ei ole tähän vielä mitään"
     },
     "errors": {
       "title": "Ainesosaa ei voitu muuttaa",
@@ -507,7 +512,8 @@
     "suggestion": {
       "merge": "Yhdistä {name} kohteeseen {into}",
       "parent": "Luokittele {name} kohteen {of} alle",
-      "distinct": "Pidä {name} omana ainesosanaan"
+      "distinct": "Pidä {name} omana ainesosanaan",
+      "filedFromName": "{name} filed under {of}"
     },
     "suggestionsTitle": "Tekoälyn ehdotukset",
     "suggestionsEmpty": "Mikään ei odota sinua.",
@@ -518,7 +524,25 @@
     "dismissSuggestion": "Hylkää",
     "confirmAll": "Vahvista kaikki ({count})",
     "dismissAll": "Hylkää kaikki",
-    "suggestedByAI": "Tekoälyn ehdottama"
+    "suggestedByAI": "Tekoälyn ehdottama",
+    "suggestedFromName": "Based on name",
+    "suggestionColumns": {
+      "ingredient": "Ingredient",
+      "proposal": "Proposal",
+      "basis": "Based on",
+      "outcome": "Outcome",
+      "actions": "Actions"
+    },
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    }
   },
   "admin": {
     "shareLinks": {

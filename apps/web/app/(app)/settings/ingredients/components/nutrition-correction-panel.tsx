@@ -23,10 +23,12 @@ import { useFormatter, useTranslations } from "next-intl";
 import type {
   IngredientNutrition,
   NutritionFact,
+  NutritionFoodRef,
+  Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
 
-import { CUP_ML } from "./nutrition-copy";
+import { CUP_ML, factSource } from "./nutrition-copy";
 
 /** How long typing pauses before the datasets are searched. */
 const SEARCH_DELAY_MS = 250;
@@ -35,10 +37,51 @@ type Mode = "sources" | "food" | "label";
 
 type Fact = "numbers" | "pieceWeight" | "density";
 
-/** A dataset food as the picker offers it. */
+/** A dataset food as the picker offers it, with what it said of the food, to show before the server does. */
 interface PickedFood {
   key: string;
   name: string;
+  kcal?: number;
+  pieceWeight?: number | null;
+  density?: number | null;
+}
+
+/** The dataset food a pick names, as a fact credits it. */
+function foodRef(food: PickedFood): NutritionFoodRef {
+  const [dataset, ...code] = food.key.split(":");
+
+  return { dataset: dataset as NutritionFoodRef["dataset"], code: code.join(":"), name: food.name };
+}
+
+/**
+ * One fact as the household will have it once the correction lands, for the
+ * panel to show at once: a label's numbers are exact; a picked food brings
+ * what the picker knew of it, and keeps the numbers it did not know until
+ * the server says them. Left to the sources, the fact is the server's to
+ * say: null here keeps what is shown.
+ */
+function shownFact<T>(
+  draft: FactDraft,
+  typed: () => T,
+  fromFood: (food: PickedFood) => T | undefined,
+  before: NutritionFact<T> | null
+): NutritionFact<T> | null | undefined {
+  if (draft.mode === "label") {
+    return { value: typed(), source: { kind: "household" }, borrowedFrom: null };
+  }
+  if (draft.mode === "food" && draft.food) {
+    const value = fromFood(draft.food) ?? before?.value;
+
+    if (value === undefined) return undefined;
+
+    return {
+      value,
+      source: { kind: "household-food", food: foodRef(draft.food) },
+      borrowedFrom: null,
+    };
+  }
+
+  return undefined;
 }
 
 /** One fact of the draft: left to the sources, a dataset food, or what a label says. */
@@ -105,6 +148,7 @@ export function NutritionCorrectionPanel({
 }) {
   const t = useTranslations("settings.ingredients.nutrition");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   // The panel is mounted afresh for each opening, so the draft starts from
@@ -123,16 +167,24 @@ export function NutritionCorrectionPanel({
 
   const correct = useMutation(trpc.ingredients.correctNutrition.mutationOptions());
   const remove = useMutation(trpc.ingredients.removeNutritionCorrection.mutationOptions());
-  const busy = correct.isPending || remove.isPending;
 
-  const refetch = async () => {
-    await Promise.all([
+  // What the server did replaces what was shown: the Ingredient's own facts,
+  // and every recipe total worked out from them.
+  const refetch = () =>
+    Promise.all([
       queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutrition.queryKey() }),
       queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutritionFor.queryKey() }),
     ]);
-  };
 
-  const factInput = (fact: Fact) => {
+  /**
+   * One fact as the procedure takes it: a dataset food, a label's numbers
+   * (`label` says what the typed values make), the sources (null), or
+   * undefined while the draft is not complete.
+   */
+  const factInput = <T,>(
+    fact: Fact,
+    label: (values: number[]) => T | undefined
+  ): { food: string } | T | null | undefined => {
     const { mode, food, typed } = draft[fact];
 
     if (mode === "food") return food ? { food: food.key } : undefined;
@@ -143,18 +195,21 @@ export function NutritionCorrectionPanel({
     if (values.length !== LABEL_FIELDS[fact].length || values.some((value) => value === null)) {
       return undefined;
     }
-    if (fact === "numbers") {
-      const [kcal, fat, carbs, protein] = values as number[];
 
-      return { kcal: kcal!, fat: fat!, carbs: carbs!, protein: protein! };
-    }
-    if (fact === "pieceWeight") return values[0]! > 0 ? { grams: values[0]! } : undefined;
-
-    return values[0]! > 0 ? { gramsPerMl: values[0]! / CUP_ML } : undefined;
+    return label(values.map((value) => value ?? 0));
   };
-  const numbers = factInput("numbers");
-  const pieceWeight = factInput("pieceWeight");
-  const density = factInput("density");
+  const numbers = factInput("numbers", ([kcal = 0, fat = 0, carbs = 0, protein = 0]) => ({
+    kcal,
+    fat,
+    carbs,
+    protein,
+  }));
+  const pieceWeight = factInput("pieceWeight", ([grams = 0]) =>
+    grams > 0 ? { grams } : undefined
+  );
+  const density = factInput("density", ([cupGrams = 0]) =>
+    cupGrams > 0 ? { gramsPerMl: cupGrams / CUP_ML } : undefined
+  );
   // Every fact must be complete; all three left to the sources is a removal.
   const complete = numbers !== undefined && pieceWeight !== undefined && density !== undefined;
   const nothing = complete && numbers === null && pieceWeight === null && density === null;
@@ -169,35 +224,87 @@ export function NutritionCorrectionPanel({
       context: "ingredients:correct-nutrition",
     });
 
-  const save = async () => {
-    if (!complete || busy) return;
-    try {
-      if (nothing) {
-        await remove.mutateAsync({ ingredientId });
-      } else {
-        await correct.mutateAsync({ ingredientId, numbers, pieceWeight, density });
-      }
-      await refetch();
-      toast(nothing ? t("removed") : t("saved"), { variant: "success" });
-      onClose();
-    } catch (error) {
-      fail(error);
-    }
+  /** What the section shows the moment the correction is saved, before the server has it. */
+  const shownNutrition = (): IngredientNutrition | null => {
+    if (!numbers && !pieceWeight && !density) return null;
+    const next: IngredientNutrition = current ?? {
+      numbers: null,
+      pieceWeight: null,
+      density: null,
+    };
+    const shown = {
+      numbers: shownFact<Per100g>(
+        draft.numbers,
+        () => (numbers && "kcal" in numbers ? numbers : { kcal: 0, fat: 0, carbs: 0, protein: 0 }),
+        () => undefined,
+        current?.numbers ?? null
+      ),
+      pieceWeight: shownFact<number>(
+        draft.pieceWeight,
+        () => (pieceWeight && "grams" in pieceWeight ? pieceWeight.grams : 0),
+        (food) => food.pieceWeight ?? undefined,
+        current?.pieceWeight ?? null
+      ),
+      density: shownFact<number>(
+        draft.density,
+        () => (density && "gramsPerMl" in density ? density.gramsPerMl : 0),
+        (food) => food.density ?? undefined,
+        current?.density ?? null
+      ),
+    };
+
+    return {
+      numbers: shown.numbers === undefined ? next.numbers : shown.numbers,
+      pieceWeight: shown.pieceWeight === undefined ? next.pieceWeight : shown.pieceWeight,
+      density: shown.density === undefined ? next.density : shown.density,
+    };
   };
 
-  const removeAll = async () => {
-    try {
-      await remove.mutateAsync({ ingredientId });
-      await refetch();
-      toast(t("removed"), { variant: "success" });
-      onClose();
-    } catch (error) {
-      fail(error);
+  /** The panel closes and the facts change at once; the server's word follows, and a refusal undoes it. */
+  const land = (
+    shown: IngredientNutrition | null,
+    message: string,
+    edit: () => Promise<unknown>
+  ) => {
+    if (shown) {
+      queryClient.setQueryData(trpc.ingredients.nutrition.queryKey({ ingredientId }), shown);
     }
+    toast(message, { variant: "success" });
+    onClose();
+    edit()
+      .catch(fail)
+      .finally(() => void refetch());
   };
+
+  const save = () => {
+    if (!complete) return;
+    if (nothing) {
+      land(null, t("removed"), () => remove.mutateAsync({ ingredientId }));
+
+      return;
+    }
+    land(shownNutrition(), t("saved"), () =>
+      correct.mutateAsync({ ingredientId, numbers, pieceWeight, density })
+    );
+  };
+
+  const removeAll = () => land(null, t("removed"), () => remove.mutateAsync({ ingredientId }));
 
   const set = (fact: Fact, next: Partial<FactDraft>) =>
     setDraft((previous) => ({ ...previous, [fact]: { ...previous[fact], ...next } }));
+
+  // What each fact is now, and where it came from, so the viewer sees what
+  // the correction replaces; or that Norish has nothing for it yet.
+  const whole = (value: number) => format.number(value, { maximumFractionDigits: 1 });
+  const nowLine = <T,>(fact: NutritionFact<T> | null | undefined, value: (fact: T) => string) =>
+    fact
+      ? t("current", { value: value(fact.value), source: factSource(t, fact) })
+      : t("currentNone");
+  const now: Record<Fact, string> = {
+    numbers: nowLine(current?.numbers, (value) => t("kcal", { value: whole(value.kcal) })),
+    pieceWeight: nowLine(current?.pieceWeight, (grams) => t("grams", { value: whole(grams) })),
+    density: nowLine(current?.density, (density) => t("grams", { value: whole(density * CUP_ML) })),
+  };
 
   return (
     <Panel
@@ -215,9 +322,9 @@ export function NutritionCorrectionPanel({
           {(["numbers", "pieceWeight", "density"] as const).map((fact) => (
             <FactEditor
               key={fact}
-              busy={busy}
               draft={draft[fact]}
               fact={fact}
+              now={now[fact]}
               onChange={(next) => set(fact, next)}
             />
           ))}
@@ -226,12 +333,7 @@ export function NutritionCorrectionPanel({
       <Panel.Footer>
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           {corrected ? (
-            <Button
-              data-testid="nutrition-correction-remove"
-              isDisabled={busy}
-              variant="ghost"
-              onPress={() => void removeAll()}
-            >
+            <Button data-testid="nutrition-correction-remove" variant="ghost" onPress={removeAll}>
               {t("remove")}
             </Button>
           ) : (
@@ -240,9 +342,8 @@ export function NutritionCorrectionPanel({
           <ActionButton
             action="save"
             data-testid="nutrition-correction-save"
-            isDisabled={busy || !complete || (nothing && !corrected)}
-            isPending={busy}
-            onPress={() => void save()}
+            isDisabled={!complete || (nothing && !corrected)}
+            onPress={save}
           >
             {tActions("save")}
           </ActionButton>
@@ -258,16 +359,17 @@ function isRefusal(message: string): message is (typeof REFUSALS)[number] {
   return (REFUSALS as readonly string[]).includes(message);
 }
 
-/** One fact of the correction: where it comes from, and the food or the label's numbers. */
+/** One fact of the correction: what it is now, where the correction comes from, and the food or the label's numbers. */
 function FactEditor({
   fact,
   draft,
-  busy,
+  now,
   onChange,
 }: {
   fact: Fact;
   draft: FactDraft;
-  busy: boolean;
+  /** What the fact is now and where it came from, in a line. */
+  now: string;
   onChange: (next: Partial<FactDraft>) => void;
 }) {
   const t = useTranslations("settings.ingredients.nutrition");
@@ -275,13 +377,17 @@ function FactEditor({
 
   return (
     <section className="flex flex-col gap-2" data-testid={`nutrition-correction-${fact}`}>
-      <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">
-        {t(`facts.${fact}`)}
-      </h3>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">
+          {t(`facts.${fact}`)}
+        </h3>
+        <p className="text-muted text-xs" data-testid={`nutrition-correction-${fact}-now`}>
+          {now}
+        </p>
+      </div>
       <ToggleButtonGroup
         disallowEmptySelection
         fullWidth
-        isDisabled={busy}
         selectedKeys={[draft.mode]}
         selectionMode="single"
         size="sm"
@@ -312,7 +418,6 @@ function FactEditor({
             <TextField
               key={field}
               className="min-w-0"
-              isDisabled={busy}
               value={draft.typed[index] ?? ""}
               onChange={(value) => {
                 const typed = [...draft.typed];
@@ -377,6 +482,9 @@ function DatasetFoodPicker({
     .map((food) => ({
       id: `${food.dataset}:${food.code}`,
       name: food.name,
+      kcal: food.kcal,
+      pieceWeight: food.pieceWeight,
+      density: food.density,
       detail: [
         NUTRITION_CREDIT_NAMES[food.dataset],
         fact === "numbers"
@@ -409,7 +517,13 @@ function DatasetFoodPicker({
 
         if (!option) return;
         setTerm(option.name);
-        onPick({ key: option.id, name: option.name });
+        onPick({
+          key: option.id,
+          name: option.name,
+          kcal: option.kcal,
+          pieceWeight: option.pieceWeight,
+          density: option.density,
+        });
       }}
     >
       <Label className="sr-only">{t("searchFood")}</Label>

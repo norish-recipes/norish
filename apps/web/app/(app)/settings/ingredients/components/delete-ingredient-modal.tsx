@@ -12,13 +12,11 @@ import { useTranslations } from "next-intl";
 export function DeleteIngredientModal({
   isOpen,
   name,
-  isDeleting,
   onClose,
   onConfirm,
 }: {
   isOpen: boolean;
   name: string;
-  isDeleting: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }) {
@@ -37,15 +35,10 @@ export function DeleteIngredientModal({
             <p>{t("deleteConfirm")}</p>
           </Modal.Body>
           <Modal.Footer>
-            <Button isDisabled={isDeleting} variant="tertiary" onPress={onClose}>
+            <Button variant="tertiary" onPress={onClose}>
               {tActions("cancel")}
             </Button>
-            <Button
-              data-testid="ingredient-delete-confirm"
-              isPending={isDeleting}
-              variant="danger"
-              onPress={onConfirm}
-            >
+            <Button data-testid="ingredient-delete-confirm" variant="danger" onPress={onConfirm}>
               {tActions("delete")}
             </Button>
           </Modal.Footer>

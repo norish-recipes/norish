@@ -3,7 +3,9 @@
  * marked, and a panel per food holding its spellings and only the actions
  * the server says the viewer may take.
  */
+import { useSyncExternalStore } from "react";
 import IngredientsSettingsContent from "@/app/(app)/settings/ingredients/components/ingredients-settings-content";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -54,6 +56,43 @@ const mutations = {
   })),
 };
 const invalidateQueries = vi.fn();
+/**
+ * The cache as the page patches it before the server answers: the list's
+ * rows and the suggestions, written back so the next render shows them.
+ */
+const setQueriesData = vi.fn(
+  ({ queryKey }: { queryKey: unknown[] }, update: (data: unknown) => unknown) => {
+    if (queryKey[0] === "ingredients.list") {
+      const next = update({ pages: [{ items, nextCursor: null }], pageParams: [] }) as {
+        pages: Array<{ items: Item[] }>;
+      };
+
+      items = next.pages[0]!.items;
+    }
+    if (queryKey[0] === "ingredients.suggestions") {
+      suggestions = update(suggestions) as unknown[];
+    }
+    cache.changed();
+  }
+);
+/** A patch to the cache re-renders whatever reads it, as the real cache does. */
+const cache = vi.hoisted(() => {
+  const listeners = new Set<() => void>();
+  let version = 0;
+
+  return {
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+
+      return () => listeners.delete(listener);
+    },
+    snapshot: () => version,
+    changed: () => {
+      version += 1;
+      listeners.forEach((listener) => listener());
+    },
+  };
+});
 /** The round running on the server when the page opens, as `reviewRound` answers. */
 let runningRound: unknown = null;
 /** What `reviewReport` answers for the round this tab watched. */
@@ -95,6 +134,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
       get: {
         queryOptions: (input: unknown) => ({ queryKey: ["ingredients.get", input] }),
+        pathKey: () => ["ingredients.get"],
       },
       spellings: {
         queryOptions: (input: unknown) => ({ queryKey: ["ingredients.spellings", input] }),
@@ -132,6 +172,7 @@ vi.mock("@norish/shared-react/realtime", () => ({
 vi.mock("@tanstack/react-query", () => ({
   keepPreviousData: (data: unknown) => data,
   useQuery: ({ enabled, queryKey }: { enabled?: boolean; queryKey: unknown[] }) => {
+    useSyncExternalStore(cache.subscribe, cache.snapshot);
     switch (queryKey[0]) {
       case "ingredients.reviewRound":
         return { data: runningRound, isFetching: false, isPending: false };
@@ -147,19 +188,23 @@ vi.mock("@tanstack/react-query", () => ({
   },
   useQueries: ({ queries }: { queries: Array<{ queryKey: [string, { parentId: string }] }> }) =>
     queries.map(({ queryKey }) => ({ data: kinds[queryKey[1].parentId] ?? [], isPending: false })),
-  useInfiniteQuery: () => ({
-    data: { pages: [{ items, nextCursor: null }] },
-    isLoading: false,
-    isFetching: false,
-    hasNextPage,
-    isFetchingNextPage: false,
-    fetchNextPage,
-  }),
+  useInfiniteQuery: () => {
+    useSyncExternalStore(cache.subscribe, cache.snapshot);
+
+    return {
+      data: { pages: [{ items, nextCursor: null }] },
+      isLoading: false,
+      isFetching: false,
+      hasNextPage,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    };
+  },
   useMutation: ({ name }: { name: keyof typeof mutations }) => ({
     mutateAsync: mutations[name],
     isPending: false,
   }),
-  useQueryClient: () => ({ invalidateQueries }),
+  useQueryClient: () => ({ invalidateQueries, setQueriesData }),
 }));
 
 let viewerLocale = "en";
@@ -175,6 +220,12 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
+/** Whether the instance has AI: with it off, nothing on the page offers it. */
+const permissions = vi.hoisted(() => ({ isAIEnabled: true }));
+
+vi.mock("@/context/permissions-context", () => ({
+  usePermissionsContext: () => ({ isAIEnabled: permissions.isAIEnabled }),
+}));
 
 vi.mock("@heroui/react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@heroui/react")>()),
@@ -275,7 +326,8 @@ function suggestion(
   kind: "merge" | "parent" | "distinct",
   name: string,
   target: string | null,
-  ingredientId = name
+  ingredientId = name,
+  source: "ai" | "words" = "ai"
 ) {
   return {
     id,
@@ -284,6 +336,7 @@ function suggestion(
     target: target ? { id: target, name: target, localeNames: {} } : null,
     englishName: "onions",
     considered: ["onion"],
+    source,
     canAnswer: true,
   };
 }
@@ -462,6 +515,30 @@ describe("IngredientsSettingsContent", () => {
 
     expect(mutations.remove).toHaveBeenCalledWith({ ingredientId: "onion" });
     expect(invalidateQueries).toHaveBeenCalled();
+    // The row is gone the moment the viewer confirms, not when the server answers.
+    expect(items.map((item) => item.id)).toEqual(["salt"]);
+  });
+
+  it("shows a refused edit undone, and says why", async () => {
+    mutations.remove.mockRejectedValueOnce(new Error("ingredient-in-use"));
+    render(<IngredientsSettingsContent />);
+    const opened = await open("onion");
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-delete"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredient-delete-confirm"));
+    });
+
+    // The guess is read back from the server rather than kept.
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["ingredients"] });
+    expect(showSafeErrorToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "errors.ingredient-in-use",
+        context: "ingredients:delete",
+      })
+    );
   });
 
   it("adds a household's own spelling, staged until Save", async () => {
@@ -920,7 +997,8 @@ describe("IngredientsSettingsContent", () => {
     const listed = within(shown).getAllByTestId("ingredient-suggestion");
 
     expect(listed.map((it) => it.getAttribute("data-kind"))).toEqual(["merge", "parent"]);
-    expect(listed[0]).toHaveTextContent("suggestion.merge");
+    expect(listed[0]).toHaveTextContent("uitjes");
+    expect(listed[0]).toHaveTextContent("proposal.merge");
     expect(listed[0]).toHaveTextContent("aiTrace.readAs");
     // A food the round got no suggestion for says why, below.
     const unsuggested = within(shown).getAllByTestId("ingredients-review-entry");
@@ -933,11 +1011,13 @@ describe("IngredientsSettingsContent", () => {
       fireEvent.click(within(listed[1]!).getByTestId("ingredient-suggestion-dismiss"));
     });
     expect(mutations.dismissSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s2"] });
+    // The answered row leaves the table at once, before the server answers.
+    expect(within(shown).getAllByTestId("ingredient-suggestion")).toHaveLength(1);
     await act(async () => {
       fireEvent.click(within(shown).getByTestId("ingredient-suggestions-confirm-all"));
     });
-    expect(mutations.confirmSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1", "s2"] });
-    expect(screen.getByTestId("ingredients-suggestions-open")).toBeInTheDocument();
+    expect(mutations.confirmSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1"] });
+    expect(within(shown).queryAllByTestId("ingredient-suggestion")).toHaveLength(0);
   });
 
   it("fills AI's parent into the draft, marked as AI's, to keep with Save or dismiss", async () => {
@@ -959,11 +1039,21 @@ describe("IngredientsSettingsContent", () => {
       add: [],
       remove: [],
     });
+    // The row is filed under the parent at once.
+    expect(items.find((item) => item.id === "onion")?.parent?.id).toBe("vegetable");
+  });
+
+  it("dismisses AI's parent from the draft, which takes it off again", async () => {
+    suggestions = [suggestion("s1", "parent", "onion", "vegetable", "onion")];
+    render(<IngredientsSettingsContent />);
+    const details = await open("onion");
 
     await act(async () => {
       fireEvent.click(within(details).getByTestId("ingredient-clear-parent"));
     });
     expect(mutations.dismissSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1"] });
+    expect(mutations.saveDraft).not.toHaveBeenCalled();
+    expect(within(details).getByTestId("ingredient-parent")).not.toHaveTextContent("vegetable");
   });
 
   it("puts AI's merge at the top of the panel, to confirm or dismiss", async () => {
@@ -1022,6 +1112,44 @@ describe("IngredientsSettingsContent", () => {
     expect(within(opened).getByTestId("ingredient-mark-distinct")).toBeDisabled();
     await showSpellings(opened);
     expect(screen.getByTestId("ingredient-alias-input")).toBeDisabled();
+  });
+
+  it("offers nothing of AI while AI is off for the instance", async () => {
+    permissions.isAIEnabled = false;
+    try {
+      render(<IngredientsSettingsContent />);
+
+      expect(screen.queryByTestId("ingredients-ask-ai-all")).toBeNull();
+      const opened = await open("onion");
+
+      expect(within(opened).getByTestId("ingredient-flag-notice")).toBeInTheDocument();
+      expect(within(opened).queryByTestId("ingredient-ask-ai")).toBeNull();
+      expect(within(opened).queryByTestId("ingredient-find-parent")).toBeNull();
+      expect(within(opened).getByTestId("ingredient-mark-distinct")).toBeInTheDocument();
+    } finally {
+      permissions.isAIEnabled = true;
+    }
+  });
+
+  it("puts a parent read from the food's own name to the viewer, in place rather than as a draft", async () => {
+    items = [{ ...onion, name: "garlic cloves", parent: { id: "garlic", name: "garlic" } }, salt];
+    suggestions = [suggestion("s1", "parent", "garlic cloves", "garlic", "onion", "words")];
+    render(<IngredientsSettingsContent />);
+    const opened = await open("garlic cloves");
+
+    const notice = within(opened).getByTestId("ingredient-suggestion-notice");
+
+    expect(notice).toHaveAttribute("data-source", "words");
+    expect(notice).toHaveTextContent("suggestion.filedFromName");
+    expect(notice).not.toHaveTextContent("aiTrace.");
+    // The parent is the saved one, not a draft marked as AI's.
+    expect(within(opened).queryByTestId("ingredient-parent-suggested")).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(within(notice).getByTestId("ingredient-suggestion-dismiss"));
+    });
+
+    expect(mutations.dismissSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1"] });
   });
 
   it("offers no AI round where nothing on screen is flagged", () => {

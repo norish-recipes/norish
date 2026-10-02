@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useCallback, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
+import { IngredientPanel } from "@/app/(app)/settings/ingredients/components/ingredient-panel";
+import { useTRPC } from "@/app/providers/trpc-provider";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, NutritionBody } from "@/components/recipes/readonly-nutrition";
 import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { Card, Chip, Skeleton } from "@heroui/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
@@ -119,11 +121,25 @@ export default function NutritionCard() {
 
 /**
  * Under a worked-out total: the lines it left out and the lines the language
- * model estimated, each opening its food, and where the numbers came from.
+ * model estimated, each opening its food's panel right here so it can be
+ * given numbers without leaving the recipe, and where the numbers came from.
+ * An edit made in that panel re-reads the foods' facts, so the total above
+ * follows it.
  */
 function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
   const t = useTranslations("recipes.nutrition");
   const format = useFormatter();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [openIngredientId, setOpenIngredientId] = useState<string | null>(null);
+  const onChanged = useCallback(
+    () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutritionFor.pathKey() }),
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
+      ]),
+    [queryClient, trpc]
+  );
   const sources = [
     ...workedOut.credits.map((credit) => NUTRITION_CREDIT_NAMES[credit]),
     ...(workedOut.household ? [t("householdNumbers")] : []),
@@ -135,47 +151,59 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
         label={t("notCounted")}
         lines={workedOut.uncounted}
         testId="nutrition-not-counted"
+        onOpen={setOpenIngredientId}
       />
       <NamedLines
         label={t("estimatedByAI")}
         lines={workedOut.estimatedByAI}
         testId="nutrition-estimated-by-ai"
+        onOpen={setOpenIngredientId}
       />
       <p className="text-muted text-xs" data-testid="nutrition-credit">
         {t("workedOutFrom", { sources: format.list(sources, { type: "conjunction" }) })}
       </p>
+      <IngredientPanel
+        id={openIngredientId}
+        item={null}
+        open={openIngredientId !== null}
+        onChanged={onChanged}
+        onClose={() => setOpenIngredientId(null)}
+      />
     </div>
   );
 }
 
-/** Lines named under the total, each opening its food's panel where it has one. */
+/** Lines named under the total, each a button opening its food's panel where it has one. */
 function NamedLines({
   label,
   lines,
   testId,
+  onOpen,
 }: {
   label: string;
   lines: WorkedOutNutrition["uncounted"];
   testId: string;
+  onOpen: (ingredientId: string) => void;
 }) {
   if (lines.length === 0) return null;
 
   return (
     <p data-testid={testId}>
       <span className="text-muted">{label} </span>
-      {lines.map((line, index) => (
-        <span key={line.lineId}>
+      {lines.map(({ lineId, name, ingredientId }, index) => (
+        <span key={lineId}>
           {index > 0 ? ", " : null}
-          {line.ingredientId ? (
-            <Link
+          {ingredientId ? (
+            <button
               className="text-accent hover:underline"
               data-testid={`${testId}-line`}
-              href={`/settings?tab=ingredients&ingredient=${line.ingredientId}`}
+              type="button"
+              onClick={() => onOpen(ingredientId)}
             >
-              {line.name}
-            </Link>
+              {name}
+            </button>
           ) : (
-            <span data-testid={`${testId}-line`}>{line.name}</span>
+            <span data-testid={`${testId}-line`}>{name}</span>
           )}
         </span>
       ))}
