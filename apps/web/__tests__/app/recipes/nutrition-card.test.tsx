@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 
 import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 
-import type { WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
+import type { LeftOutLine, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 
 const mocks = vi.hoisted(() => ({
   hasData: false,
@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   hidden: [] as string[],
   workedOut: null as WorkedOutNutrition | null,
   shown: null as unknown,
+  marked: undefined as boolean | undefined,
   panel: null as { id: string | null; open: boolean } | null,
 }));
 
@@ -69,8 +70,9 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
 
 vi.mock("@/components/recipes/readonly-nutrition", () => ({
   getNutritionData: () => ({ hasData: mocks.hasData, values: {} }),
-  NutritionBody: ({ recipe }: { recipe: unknown }) => {
+  NutritionBody: ({ recipe, marked }: { recipe: unknown; marked?: boolean }) => {
     mocks.shown = recipe;
+    mocks.marked = marked;
 
     return <div data-testid="nutrition-body" />;
   },
@@ -91,8 +93,9 @@ vi.mock("@heroui/react", () => ({
 
 vi.mock("next-intl", () => ({
   useFormatter: () => ({ list: (items: string[]) => items.join(" + ") }),
-  useTranslations: (namespace: string) => (key: string, values?: Record<string, string>) => {
+  useTranslations: (namespace: string) => (key: string, values?: Record<string, unknown>) => {
     if (values?.sources) return `${key}: ${values.sources}`;
+    if (values?.count !== undefined) return `${key}: ${values.count}`;
     const states: Record<string, string> = {
       "states.queued": "Queued",
       "states.processing": "In progress",
@@ -117,6 +120,7 @@ describe("NutritionCard", () => {
     mocks.hidden = [];
     mocks.workedOut = null;
     mocks.shown = null;
+    mocks.marked = undefined;
   });
 
   it("is absent when nothing is stored and nothing is running", () => {
@@ -178,18 +182,29 @@ describe("NutritionCard", () => {
   });
 
   describe("a total worked out from the lines", () => {
+    const left = (
+      lineId: string,
+      name: string,
+      ingredientId: string | null,
+      reason: LeftOutLine["reason"],
+      estimatedByAI = false
+    ): LeftOutLine => ({ lineId, name, ingredientId, key: lineId, reason, estimatedByAI });
     const workedOut: WorkedOutNutrition = {
       perServing: { calories: 420, fat: 12, carbs: 50, protein: 20 },
-      uncounted: [
-        { lineId: "line-1", name: "olive oil for frying", ingredientId: "olive-oil", key: "a" },
-        { lineId: "line-2", name: "a mystery", ingredientId: null, key: "b" },
+      leftOut: [
+        left("line-1", "olive oil for frying", "olive-oil", "no-amount"),
+        left("line-2", "1 tl komijn", "cumin", "no-spoon-weight"),
+        left("line-3", "a mystery", null, "no-numbers"),
+        left("line-4", "salt to taste", "salt", "seasoning"),
       ],
-      estimatedByAI: [],
       counted: [],
       estimated: true,
       credits: ["ciqual", "off"],
       household: true,
     };
+    const openList = () => fireEvent.click(screen.getByTestId("nutrition-left-out-toggle"));
+    const listed = () =>
+      screen.getAllByTestId("nutrition-left-out-line").map((line) => line.textContent);
 
     it("shows the worked-out numbers where the recipe stores none", () => {
       mocks.workedOut = workedOut;
@@ -200,53 +215,91 @@ describe("NutritionCard", () => {
       expect(mocks.shown).toEqual({ calories: 420, fat: 12, carbs: 50, protein: 20 });
     });
 
-    it("says it is estimated, names what it did not count, and credits what it used", () => {
+    it("says it is estimated, and credits what it used", () => {
       mocks.workedOut = workedOut;
 
       render(<NutritionCard />);
 
       expect(screen.getByTestId("nutrition-estimated")).toHaveTextContent("estimated");
-      expect(screen.getByText("olive oil for frying").tagName).toBe("BUTTON");
-      expect(screen.getByText("a mystery").tagName).toBe("SPAN");
       expect(screen.getByTestId("nutrition-credit")).toHaveTextContent(
         "CIQUAL 2025 + Open Food Facts + householdNumbers"
       );
     });
 
-    it("opens the food's panel in place rather than leaving the recipe", () => {
+    it("marks the calories and says how many lines it left out, the list closed until asked", () => {
       mocks.workedOut = workedOut;
 
       render(<NutritionCard />);
 
-      expect(screen.queryByTestId("ingredient-panel")).not.toBeInTheDocument();
-      fireEvent.click(screen.getByText("olive oil for frying"));
-      expect(screen.getByTestId("ingredient-panel")).toHaveTextContent("olive-oil");
-      expect(mocks.panel).toEqual({ id: "olive-oil", open: true });
+      expect(mocks.marked).toBe(true);
+      expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveTextContent("leftOut: 4");
+      expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "false"
+      );
+      expect(screen.queryByTestId("nutrition-left-out")).not.toBeInTheDocument();
     });
 
-    it("names the lines the language model estimated as its own, not as left out", () => {
+    it("opens the list in place, each line with why it was left out", () => {
+      mocks.workedOut = workedOut;
+
+      render(<NutritionCard />);
+      openList();
+
+      expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "true"
+      );
+      expect(listed()).toEqual([
+        "olive oil for fryingreasons.noAmount",
+        "1 tl komijnreasons.noSpoonWeight",
+        "a mysteryreasons.noNumbers",
+        "salt to tastereasons.seasoning",
+      ]);
+    });
+
+    it("links only the lines whose fix is a fact in the food's panel, and opens it in place", () => {
+      mocks.workedOut = workedOut;
+
+      render(<NutritionCard />);
+      openList();
+
+      expect(screen.getByText("1 tl komijn").tagName).toBe("BUTTON");
+      expect(screen.getByText("olive oil for frying").tagName).toBe("SPAN");
+      expect(screen.getByText("a mystery").tagName).toBe("SPAN");
+      expect(screen.getByText("salt to taste").tagName).toBe("SPAN");
+      expect(screen.queryByTestId("ingredient-panel")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByText("1 tl komijn"));
+      expect(screen.getByTestId("ingredient-panel")).toHaveTextContent("cumin");
+      expect(mocks.panel).toEqual({ id: "cumin", open: true });
+    });
+
+    it("marks the lines the language model estimated as its own, in the same list", () => {
       mocks.workedOut = {
         ...workedOut,
-        estimatedByAI: workedOut.uncounted,
-        uncounted: [],
+        leftOut: [
+          left("line-1", "olive oil for frying", "olive-oil", "no-amount", true),
+          left("line-4", "salt to taste", "salt", "seasoning"),
+        ],
       };
 
       render(<NutritionCard />);
+      openList();
 
-      expect(screen.queryByTestId("nutrition-not-counted")).not.toBeInTheDocument();
-      expect(screen.getByTestId("nutrition-estimated-by-ai")).toHaveTextContent(
-        "estimatedByAI olive oil for frying, a mystery"
-      );
-      expect(screen.getByTestId("nutrition-estimated")).toBeInTheDocument();
+      expect(listed()).toEqual([
+        "olive oil for fryingestimatedByAI",
+        "salt to tastereasons.seasoning",
+      ]);
     });
 
-    it("is not called estimated where nothing was borrowed", () => {
-      mocks.workedOut = { ...workedOut, estimated: false, uncounted: [] };
+    it("shows no mark and no list where every line counted", () => {
+      mocks.workedOut = { ...workedOut, estimated: false, leftOut: [] };
 
       render(<NutritionCard />);
 
+      expect(mocks.marked).toBe(false);
       expect(screen.queryByTestId("nutrition-estimated")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("nutrition-not-counted")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("nutrition-left-out-toggle")).not.toBeInTheDocument();
     });
 
     it("leaves what the recipe supplies alone", () => {

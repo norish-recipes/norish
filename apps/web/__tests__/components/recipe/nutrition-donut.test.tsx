@@ -56,6 +56,25 @@ describe("Nutrition donut", () => {
     expect(screen.queryByText("recipes.nutrition.calories")).not.toBeInTheDocument();
   });
 
+  it("marks the calories with an asterisk for a total that left lines out, and only then", () => {
+    const recipe = { calories: 400, fat: 10, carbs: 10, protein: 10 };
+    const { rerender } = render(<NutritionBody marked portions={1} recipe={recipe} />);
+
+    expect(screen.getByTestId("nutrition-calories-mark")).toHaveTextContent("*");
+
+    rerender(
+      <NutritionBody
+        marked
+        portions={1}
+        recipe={{ ...recipe, fat: null, carbs: null, protein: null }}
+      />
+    );
+    expect(screen.getByTestId("nutrition-calories-mark")).toHaveTextContent("*");
+
+    rerender(<NutritionBody portions={1} recipe={recipe} />);
+    expect(screen.queryByTestId("nutrition-calories-mark")).not.toBeInTheDocument();
+  });
+
   it("draws no ring for a recipe with calories and no macros", () => {
     const { container } = render(
       <NutritionBody

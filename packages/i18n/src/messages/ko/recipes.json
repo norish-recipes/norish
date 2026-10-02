@@ -257,8 +257,16 @@
     "noInfo": "영양정보가 없습니다.",
     "estimateWithAI": "AI로 추정",
     "estimated": "추정치",
-    "notCounted": "계산에서 제외:",
-    "estimatedByAI": "AI 추정:",
+    "leftOut": "{count, plural, other {계산되지 않은 줄 #개}}",
+    "estimatedByAI": "AI 추정",
+    "reasons": {
+      "seasoning": "양념",
+      "noAmount": "양 없음",
+      "noSize": "이 단위의 무게 없음",
+      "noNumbers": "영양 정보 아직 없음",
+      "noSpoonWeight": "스푼 무게 아직 없음",
+      "noPieceWeight": "개당 무게 아직 없음"
+    },
     "workedOutFrom": "재료로 계산했습니다. 출처: {sources}.",
     "householdNumbers": "우리 가구의 값"
   },

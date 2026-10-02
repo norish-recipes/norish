@@ -8,12 +8,24 @@ import NutritionPortionControl from "@/components/recipes/nutrition-portion-cont
 import { getNutritionData, NutritionBody } from "@/components/recipes/readonly-nutrition";
 import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Card, Chip, Skeleton } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
-import type { WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
+import type { LeftOutReason, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
+import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
+
+/** Why a line was left out, in the card's words. */
+const REASON_KEYS = {
+  seasoning: "reasons.seasoning",
+  "no-amount": "reasons.noAmount",
+  "no-size": "reasons.noSize",
+  "no-numbers": "reasons.noNumbers",
+  "no-spoon-weight": "reasons.noSpoonWeight",
+  "no-piece-weight": "reasons.noPieceWeight",
+} as const satisfies Record<LeftOutReason, string>;
 
 /**
  * Whether the Nutrition Information section has anything to show: something
@@ -105,7 +117,11 @@ export default function NutritionCard() {
           </div>
         ) : shown ? (
           <>
-            <NutritionBody portions={portions} recipe={shown} />
+            <NutritionBody
+              marked={!stored && (workedOut?.leftOut.length ?? 0) > 0}
+              portions={portions}
+              recipe={shown}
+            />
             {portions !== 1 && (
               <p className="text-muted mt-2 text-center text-xs">
                 {t("showingPortions", { count: portions })}
@@ -120,17 +136,19 @@ export default function NutritionCard() {
 }
 
 /**
- * Under a worked-out total: the lines it left out and the lines the language
- * model estimated, each opening its food's panel right here so it can be
- * given numbers without leaving the recipe, and where the numbers came from.
- * An edit made in that panel re-reads the foods' facts, so the total above
- * follows it.
+ * Under a worked-out total: how many lines it left out, behind the asterisk
+ * on its calories, opening in place to name each with why (or as the
+ * language model's estimate), and where the numbers came from. A line whose
+ * fix is a fact in its food's panel opens that panel right here, so it can
+ * be given a spoon weight or numbers without leaving the recipe; an edit
+ * made there re-reads the foods' facts, so the total above follows it.
  */
 function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
   const t = useTranslations("recipes.nutrition");
   const format = useFormatter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [listOpen, setListOpen] = useState(false);
   const [openIngredientId, setOpenIngredientId] = useState<string | null>(null);
   const onChanged = useCallback(
     () =>
@@ -147,18 +165,50 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
 
   return (
     <div className="mt-3 flex flex-col gap-2 text-sm">
-      <NamedLines
-        label={t("notCounted")}
-        lines={workedOut.uncounted}
-        testId="nutrition-not-counted"
-        onOpen={setOpenIngredientId}
-      />
-      <NamedLines
-        label={t("estimatedByAI")}
-        lines={workedOut.estimatedByAI}
-        testId="nutrition-estimated-by-ai"
-        onOpen={setOpenIngredientId}
-      />
+      {workedOut.leftOut.length > 0 ? (
+        <div data-state={listOpen ? "open" : "closed"}>
+          <button
+            aria-expanded={listOpen}
+            className="text-muted hover:text-foreground flex items-center gap-1 text-left transition-colors"
+            data-testid="nutrition-left-out-toggle"
+            type="button"
+            onClick={() => setListOpen((wasOpen) => !wasOpen)}
+          >
+            <span aria-hidden>*</span>
+            <span>{t("leftOut", { count: workedOut.leftOut.length })}</span>
+            <ChevronRightIcon
+              className={`size-4 shrink-0 transition-transform ${listOpen ? "rotate-90" : ""}`}
+            />
+          </button>
+          {listOpen ? (
+            <ul className="mt-2 flex flex-col gap-1" data-testid="nutrition-left-out">
+              {workedOut.leftOut.map(({ lineId, name, ingredientId, reason, estimatedByAI }) => (
+                <li
+                  key={lineId}
+                  className="flex flex-wrap items-baseline gap-x-2"
+                  data-reason={estimatedByAI ? "estimated-by-ai" : reason}
+                  data-testid="nutrition-left-out-line"
+                >
+                  {ingredientId && PANEL_REASONS.has(reason) ? (
+                    <button
+                      className="text-accent hover:underline"
+                      type="button"
+                      onClick={() => setOpenIngredientId(ingredientId)}
+                    >
+                      {name}
+                    </button>
+                  ) : (
+                    <span>{name}</span>
+                  )}
+                  <span className="text-muted text-xs">
+                    {estimatedByAI ? t("estimatedByAI") : t(REASON_KEYS[reason])}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
       <p className="text-muted text-xs" data-testid="nutrition-credit">
         {t("workedOutFrom", { sources: format.list(sources, { type: "conjunction" }) })}
       </p>
@@ -170,43 +220,5 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
         onClose={() => setOpenIngredientId(null)}
       />
     </div>
-  );
-}
-
-/** Lines named under the total, each a button opening its food's panel where it has one. */
-function NamedLines({
-  label,
-  lines,
-  testId,
-  onOpen,
-}: {
-  label: string;
-  lines: WorkedOutNutrition["uncounted"];
-  testId: string;
-  onOpen: (ingredientId: string) => void;
-}) {
-  if (lines.length === 0) return null;
-
-  return (
-    <p data-testid={testId}>
-      <span className="text-muted">{label} </span>
-      {lines.map(({ lineId, name, ingredientId }, index) => (
-        <span key={lineId}>
-          {index > 0 ? ", " : null}
-          {ingredientId ? (
-            <button
-              className="text-accent hover:underline"
-              data-testid={`${testId}-line`}
-              type="button"
-              onClick={() => onOpen(ingredientId)}
-            >
-              {name}
-            </button>
-          ) : (
-            <span data-testid={`${testId}-line`}>{name}</span>
-          )}
-        </span>
-      ))}
-    </p>
   );
 }

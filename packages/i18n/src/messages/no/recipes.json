@@ -257,8 +257,16 @@
     "noInfo": "Ingen næringsinformasjon tilgjengelig",
     "estimateWithAI": "Estimér med AI",
     "estimated": "Anslått",
-    "notCounted": "Ikke regnet med:",
-    "estimatedByAI": "Anslått av AI:",
+    "leftOut": "{count, plural, one {# linje ikke regnet med} other {# linjer ikke regnet med}}",
+    "estimatedByAI": "anslått av AI",
+    "reasons": {
+      "seasoning": "krydder",
+      "noAmount": "ingen mengde",
+      "noSize": "ingen vekt for dette målet",
+      "noNumbers": "ingen næringsverdier ennå",
+      "noSpoonWeight": "ingen skjevekt ennå",
+      "noPieceWeight": "ingen stykkvekt ennå"
+    },
     "workedOutFrom": "Beregnet fra ingrediensene, med {sources}.",
     "householdNumbers": "husstandens verdier"
   },

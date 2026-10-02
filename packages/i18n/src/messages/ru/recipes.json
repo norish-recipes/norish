@@ -257,8 +257,16 @@
     "noInfo": "Нет данных о пищевой ценности",
     "estimateWithAI": "Оценить с помощью ИИ",
     "estimated": "Приблизительно",
-    "notCounted": "Не учтено:",
-    "estimatedByAI": "Оценено ИИ:",
+    "leftOut": "{count, plural, one {# строка не учтена} few {# строки не учтены} many {# строк не учтено} other {# строки не учтено}}",
+    "estimatedByAI": "оценено ИИ",
+    "reasons": {
+      "seasoning": "приправа",
+      "noAmount": "нет количества",
+      "noSize": "у этой меры нет веса",
+      "noNumbers": "пока нет пищевой ценности",
+      "noSpoonWeight": "пока нет веса ложки",
+      "noPieceWeight": "пока нет веса штуки"
+    },
     "workedOutFrom": "Рассчитано по ингредиентам, по данным {sources}.",
     "householdNumbers": "значений вашей семьи"
   },

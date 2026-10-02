@@ -257,8 +257,16 @@
     "noInfo": "Keine Nährwertinformationen verfügbar",
     "estimateWithAI": "Mit KI schätzen",
     "estimated": "Geschätzt",
-    "notCounted": "Nicht mitgezählt:",
-    "estimatedByAI": "Von KI geschätzt:",
+    "leftOut": "{count, plural, one {# Zeile nicht mitgezählt} other {# Zeilen nicht mitgezählt}}",
+    "estimatedByAI": "von KI geschätzt",
+    "reasons": {
+      "seasoning": "Gewürz",
+      "noAmount": "keine Menge",
+      "noSize": "kein Gewicht für dieses Maß",
+      "noNumbers": "noch keine Nährwerte",
+      "noSpoonWeight": "noch kein Löffelgewicht",
+      "noPieceWeight": "noch kein Stückgewicht"
+    },
     "workedOutFrom": "Aus den Zutaten berechnet, mit {sources}.",
     "householdNumbers": "den Werten deines Haushalts"
   },

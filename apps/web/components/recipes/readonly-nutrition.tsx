@@ -42,6 +42,15 @@ export function getNutritionData(recipe: NutritionRecipeLike, portions: number) 
   };
 }
 
+/** The asterisk after the calories of a total that left lines out, explained beneath it. */
+function CaloriesMark() {
+  return (
+    <span aria-hidden className="text-muted" data-testid="nutrition-calories-mark">
+      *
+    </span>
+  );
+}
+
 /**
  * The macro ring: one arc per stored macro, sized by the calories it
  * contributes rather than by its weight in grams. The recipe's own stored
@@ -52,9 +61,11 @@ export function getNutritionData(recipe: NutritionRecipeLike, portions: number) 
 function NutritionDonut({
   shares,
   calories,
+  marked,
 }: {
   shares: MacroCalorieShare[];
   calories: number | null;
+  marked: boolean;
 }) {
   const t = useTranslations("recipes.nutrition");
   let drawn = 0;
@@ -87,10 +98,13 @@ function NutritionDonut({
       </svg>
       {calories != null && (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <AnimatedNumber
-            className="text-foreground text-2xl leading-none font-semibold"
-            value={String(Math.round(calories))}
-          />
+          <span className="flex items-start">
+            <AnimatedNumber
+              className="text-foreground text-2xl leading-none font-semibold"
+              value={String(Math.round(calories))}
+            />
+            {marked ? <CaloriesMark /> : null}
+          </span>
           <span className="text-muted mt-1 text-xs">{t("calories")}</span>
         </div>
       )}
@@ -102,13 +116,17 @@ function NutritionDonut({
  * A recipe's nutrition values: a macro ring with the stored calories in its
  * centre and the macros as its legend. A recipe with calories and no macros
  * has no ring to draw, so its calories are shown as a row of their own.
+ * `marked` puts an asterisk after the calories of a worked-out total that
+ * left lines out; what it means is said beneath.
  */
 export function NutritionBody({
   recipe,
   portions,
+  marked = false,
 }: {
   recipe: NutritionRecipeLike;
   portions: number;
+  marked?: boolean;
 }) {
   const t = useTranslations("recipes.nutrition");
   // The arcs read the stored macros, so the portion control moves the legend
@@ -130,6 +148,7 @@ export function NutritionBody({
         <span className="text-foreground flex items-baseline text-base font-semibold">
           <AnimatedNumber value={String(Math.round(values.calories))} />
           <span className="text-muted ml-1 font-normal">kcal</span>
+          {marked ? <CaloriesMark /> : null}
         </span>
       </div>
     );
@@ -137,7 +156,7 @@ export function NutritionBody({
 
   return (
     <div className="flex items-center gap-5">
-      <NutritionDonut calories={values.calories} shares={shares} />
+      <NutritionDonut calories={values.calories} marked={marked} shares={shares} />
       <dl className="divide-border min-w-0 flex-1 divide-y">
         {shares.map((macro) => {
           const style = MACRO_STYLES[macro.key];

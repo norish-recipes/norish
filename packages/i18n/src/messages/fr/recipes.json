@@ -257,8 +257,16 @@
     "noInfo": "Aucune information nutritionnelle disponible",
     "estimateWithAI": "Estimer avec l’IA",
     "estimated": "Estimé",
-    "notCounted": "Non compté :",
-    "estimatedByAI": "Estimé par l'IA :",
+    "leftOut": "{count, plural, one {# ligne non comptée} other {# lignes non comptées}}",
+    "estimatedByAI": "estimé par l'IA",
+    "reasons": {
+      "seasoning": "assaisonnement",
+      "noAmount": "pas de quantité",
+      "noSize": "pas de poids pour cette mesure",
+      "noNumbers": "pas encore de valeurs nutritionnelles",
+      "noSpoonWeight": "pas encore de poids par cuillère",
+      "noPieceWeight": "pas encore de poids par pièce"
+    },
     "workedOutFrom": "Calculé à partir des ingrédients, avec {sources}.",
     "householdNumbers": "les valeurs de votre foyer"
   },

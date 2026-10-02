@@ -1,9 +1,9 @@
 /**
  * The scenarios a recipe's worked-out nutrition was argued through, as one
  * table (ADR-0039): a line reaches grams by its weight, by the Ingredient's
- * piece weight when counted, or by its density when measured by volume; a
- * pinch, a dash or "to taste" counts as nothing; anything else is left out
- * of the total and named beneath it.
+ * piece weight when counted, or by its density when measured by volume;
+ * anything else is left out of the total and named with why, a pinch, a dash
+ * or "to taste" as seasoning.
  */
 import { describe, expect, it } from "vitest";
 
@@ -107,6 +107,22 @@ const NUTRITION = new Map<string, IngredientNutrition>([
       density: null,
     },
   ],
+  [
+    "paprika",
+    {
+      numbers: fact(per100g(282, 13, 54, 14), ciqual("Paprika, powder")),
+      pieceWeight: null,
+      density: fact(0.45, ciqual("Spices"), "spice"),
+    },
+  ],
+  [
+    "pastry-flour",
+    {
+      numbers: fact(per100g(350, 1, 75, 10), ciqual("Wheat flour")),
+      pieceWeight: null,
+      density: fact(0.6, { kind: "taxonomy" }, "flour"),
+    },
+  ],
   ["brandy", { numbers: null, pieceWeight: null, density: null }],
   [
     "salt",
@@ -142,7 +158,7 @@ describe("workOutNutrition", () => {
         carbs: (20 + 390) / 4,
         protein: (2 + 35) / 4,
       },
-      uncounted: [],
+      leftOut: [],
       estimated: false,
     });
   });
@@ -168,32 +184,65 @@ describe("workOutNutrition", () => {
     ["to taste", line(null, "to_taste", "salt", "salt")],
     ["salt to taste, written in the name", line(null, null, "salt", "salt to taste")],
     ["a pinch, written in the name", line(null, null, "salt", "a pinch of salt")],
-  ])("counts %s as nothing, and does not list it", (_, seasoning) => {
+  ])("lists %s as seasoning, and never counts it", (_, seasoning) => {
     const result = workOut([line(100, "gram", "rice"), seasoning]);
 
     expect(result.perServing?.calories).toBe(350);
-    expect(result.uncounted).toEqual([]);
+    expect(result.leftOut).toEqual([
+      {
+        lineId: seasoning.id,
+        name: seasoning.name,
+        ingredientId: seasoning.ingredientId,
+        key: lineKey(seasoning),
+        reason: "seasoning",
+        estimatedByAI: false,
+      },
+    ]);
   });
 
   it.each([
-    ["no amount", line(null, null, "olive-oil", "olive oil for frying")],
-    ["a unit that reaches no grams", line(1, "can", "onion", "tomatoes")],
-    ["a volume with no density", line(1, "cup", "flour", "flour")],
-    ["no numbers", line(50, "milliliter", "brandy", "brandy")],
-    ["no Ingredient", line(100, "gram", null, "mystery")],
-    ["a count with no piece weight", line(2, null, "rice", "rice")],
-  ])("names a line with %s under Not counted, and still shows the total", (_, uncounted) => {
-    const result = workOut([line(100, "gram", "rice"), uncounted]);
+    ["no amount", line(null, null, "olive-oil", "olive oil for frying"), "no-amount"],
+    ["a measure with no size", line(1, "can", "onion", "tomatoes"), "no-size"],
+    ["a volume with no density", line(1, "cup", "flour", "flour"), "no-spoon-weight"],
+    ["no numbers", line(50, "milliliter", "brandy", "brandy"), "no-numbers"],
+    ["no Ingredient", line(100, "gram", null, "mystery"), "no-numbers"],
+    ["a count with no piece weight", line(2, null, "rice", "rice"), "no-piece-weight"],
+  ])("leaves out a line with %s, saying so, and still shows the total", (_, leftOut, reason) => {
+    const result = workOut([line(100, "gram", "rice"), leftOut]);
 
     expect(result.perServing?.calories).toBe(350);
-    expect(result.uncounted).toEqual([
+    expect(result.leftOut).toEqual([
       {
-        lineId: uncounted.id,
-        name: uncounted.name,
-        ingredientId: uncounted.ingredientId,
-        key: lineKey(uncounted),
+        lineId: leftOut.id,
+        name: leftOut.name,
+        ingredientId: leftOut.ingredientId,
+        key: lineKey(leftOut),
+        reason,
+        estimatedByAI: false,
       },
     ]);
+  });
+
+  it("names the first thing that stops a line: its amount, then its measure, then its food", () => {
+    const reasons = workOut([
+      line(null, "cup", "brandy", "brandy, a splash"),
+      line(1, "can", "brandy", "a can of brandy"),
+      line(1, "cup", "brandy", "a cup of brandy"),
+      line(1, "cup", "flour", "a cup of flour"),
+    ]).leftOut.map((named) => named.reason);
+
+    expect(reasons).toEqual(["no-amount", "no-size", "no-numbers", "no-spoon-weight"]);
+  });
+
+  it("names every line left out in the recipe's order, seasoning among them", () => {
+    const names = workOut([
+      line(1, "pinch", "salt", "a pinch of salt"),
+      line(100, "gram", "rice", "rice"),
+      line(1, "cup", "flour", "flour"),
+      line(null, "to_taste", "salt", "pepper to taste"),
+    ]).leftOut.map((named) => named.name);
+
+    expect(names).toEqual(["a pinch of salt", "flour", "pepper to taste"]);
   });
 
   it("shows no total where no line counts, rather than a zero", () => {
@@ -210,6 +259,21 @@ describe("workOutNutrition", () => {
     // A borrowing line left out of the total does not make it estimated.
     expect(workOut([line(100, "gram", "onion"), line(1, "can", "red-onion")]).estimated).toBe(
       false
+    );
+  });
+
+  it("is estimated only where the lines that borrowed bring a tenth of its calories", () => {
+    // A borrowed teaspoon of paprika (5 ml at 0.45 g/ml, 6 kcal) in a 2,000 kcal recipe.
+    expect(
+      workOut([
+        line(1, "teaspoon", "paprika"),
+        line(500, "gram", "rice"),
+        line(30, "gram", "olive-oil"),
+      ]).estimated
+    ).toBe(false);
+    // A cup of flour on a borrowed density: 144 g, 504 kcal of the 2,254.
+    expect(workOut([line(1, "cup", "pastry-flour"), line(500, "gram", "rice")]).estimated).toBe(
+      true
     );
   });
 
@@ -263,12 +327,11 @@ describe("workOutNutrition", () => {
 
       expect(result).toMatchObject({
         perServing: { calories: 175 + 100, fat: 0.5 + 10 },
-        uncounted: [],
         estimated: true,
       });
-      expect(result.estimatedByAI.map((named) => named.name)).toEqual([
-        "olive oil for frying",
-        "brandy",
+      expect(result.leftOut.map((named) => [named.name, named.estimatedByAI])).toEqual([
+        ["olive oil for frying", true],
+        ["brandy", true],
       ]);
     });
 
@@ -303,8 +366,9 @@ describe("workOutNutrition", () => {
 
       // Rice from the datasets, brandy from the household, the oil from the model.
       expect(result.perServing?.calories).toBe(350 + 50 * 2.3 + 90);
-      expect(result.estimatedByAI.map((named) => named.name)).toEqual(["olive oil for frying"]);
-      expect(result.uncounted).toEqual([]);
+      expect(result.leftOut.map((named) => [named.name, named.estimatedByAI])).toEqual([
+        ["olive oil for frying", true],
+      ]);
       expect(result.household).toBe(true);
     });
 
@@ -319,8 +383,10 @@ describe("workOutNutrition", () => {
       });
 
       expect(result.perServing?.calories).toBe(350 + 90);
-      expect(result.estimatedByAI.map((named) => named.name)).toEqual(["olive oil for frying"]);
-      expect(result.uncounted.map((named) => named.name)).toEqual(["brandy"]);
+      expect(result.leftOut.map((named) => [named.name, named.estimatedByAI])).toEqual([
+        ["olive oil for frying", true],
+        ["brandy", false],
+      ]);
     });
   });
 

@@ -257,8 +257,16 @@
     "noInfo": "Няма налична информация за хранителните стойности",
     "estimateWithAI": "Изчисли с AI",
     "estimated": "Приблизително",
-    "notCounted": "Не е отчетено:",
-    "estimatedByAI": "Изчислено от ИИ:",
+    "leftOut": "{count, plural, one {# ред не е отчетен} other {# реда не са отчетени}}",
+    "estimatedByAI": "изчислено от ИИ",
+    "reasons": {
+      "seasoning": "подправка",
+      "noAmount": "няма количество",
+      "noSize": "няма тегло за тази мярка",
+      "noNumbers": "все още няма хранителни стойности",
+      "noSpoonWeight": "все още няма тегло на лъжица",
+      "noPieceWeight": "все още няма тегло на брой"
+    },
     "workedOutFrom": "Изчислено от съставките, по данни от {sources}.",
     "householdNumbers": "стойностите на вашето домакинство"
   },

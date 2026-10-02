@@ -2,9 +2,10 @@
  * Ingredient Nutrition, in a browser, on an instance without AI (ADR-0039).
  *
  * What a household sees: a recipe that supplies no nutrition shows a total
- * per serving worked out from its lines, says it is estimated where a line
- * borrowed from a parent food, and names what it could not count, each
- * name opening that food's panel. A household's correction changes its own
+ * per serving worked out from its lines, says it is estimated where the
+ * lines that borrowed from a parent food bring a tenth of it, and names
+ * every line it left out behind an asterisk, each with why, a line whose fix
+ * is a fact in its food's panel opening that panel. A household's correction changes its own
  * total and no other household's. A legacy "salt to taste" line, minted as
  * a food of its own before the resolver read it as salt, lands on salt at
  * the next boot under the new rules. The real Norish server applies the
@@ -27,15 +28,17 @@ test.describe.configure({ mode: "serial" });
 
 /*
  * The total, per serving of two: 200 g onion (39 kcal per 100 g) is 78,
- * 300 g rice (350) is 1,050, one red onion (its own numbers, matched by name
- * to "Red onion, raw" at 35) weighs what an onion does, borrowed, 150 g,
- * so 52.5, and 250 ml milk (whole, by Norish's fix, 63.9 at 1.03 g/ml) is
- * 164.5. Olive oil for frying has no amount; salt to taste is nothing.
- * 1,345 over two servings is 673.
+ * 300 g rice (350) is 1,050, three red onions (their own numbers, matched by
+ * name to "Red onion, raw" at 35) weigh what an onion does, borrowed, 150 g
+ * each, so 157.5, and 250 ml milk (whole, by Norish's fix, 63.9 at 1.03 g/ml)
+ * is 164.5. The borrowing red onions bring more than a tenth: estimated.
+ * A cup of flour has no spoon weight, olive oil for frying no amount, and
+ * salt to taste is seasoning: all three are left out. 1,450 over two
+ * servings is 725.
  */
-const TOTAL = "673";
-/** The same with the household's rice at 360 kcal per 100 g: 1,375 over two. */
-const CORRECTED_TOTAL = "688";
+const TOTAL = "725";
+/** The same with the household's rice at 360 kcal per 100 g: 1,480 over two. */
+const CORRECTED_TOTAL = "740";
 
 let scenario: NutritionScenario | null = null;
 let contexts: BrowserContext[] = [];
@@ -79,22 +82,31 @@ test("a recipe without nutrition shows one worked out from its lines, estimated 
 
   await expect(card).toContainText(TOTAL);
   await expect(card.getByTestId("nutrition-estimated")).toBeVisible();
-  await expect(card.getByTestId("nutrition-not-counted")).toContainText("olive oil for frying");
-  await expect(card.getByTestId("nutrition-not-counted")).not.toContainText("salt");
+  await expect(card.getByTestId("nutrition-calories-mark")).toBeVisible();
   await expect(card.getByTestId("nutrition-credit")).toContainText("CIQUAL 2025");
   await expect(card.getByTestId("nutrition-credit")).toContainText("Open Food Facts");
 
-  // A name under Not counted opens that food's panel here, where it can be fixed.
-  await card.getByRole("button", { name: "olive oil for frying" }).click();
+  // Behind the asterisk, every line left out, each with why.
+  await expect(card.getByTestId("nutrition-left-out-toggle")).toHaveText(/3 lines not counted/);
+  await card.getByTestId("nutrition-left-out-toggle").click();
+  await expect(card.getByTestId("nutrition-left-out-line")).toHaveText([
+    /flour\s*no spoon weight yet/,
+    /olive oil for frying\s*no amount/,
+    /salt to taste\s*seasoning/,
+  ]);
 
-  const panel = pageA.getByRole("dialog", { name: "olive oil", exact: true });
+  // Only the flour's fix is a fact its panel holds, so only the flour opens it, here.
+  await expect(card.getByTestId("nutrition-left-out").getByRole("button")).toHaveCount(1);
+  await card.getByRole("button", { name: "flour", exact: true }).click();
+
+  const panel = pageA.getByRole("dialog", { name: "flour", exact: true });
 
   await panel.getByTestId("ingredient-nutrition-open").click();
 
   const nutrition = pageA.getByRole("dialog", { name: "Nutrition", exact: true });
 
   await expect(nutrition.getByTestId("ingredient-nutrition-source")).toContainText(
-    "Olive oil, extra virgin · CIQUAL 2025"
+    "Wheat flour, type 110 · CIQUAL 2025"
   );
 });
 

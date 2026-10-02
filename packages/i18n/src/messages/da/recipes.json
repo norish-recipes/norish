@@ -257,8 +257,16 @@
     "noInfo": "Ingen næringsoplysninger tilgængelige",
     "estimateWithAI": "Estimér med AI",
     "estimated": "Anslået",
-    "notCounted": "Ikke talt med:",
-    "estimatedByAI": "Anslået af AI:",
+    "leftOut": "{count, plural, one {# linje ikke talt med} other {# linjer ikke talt med}}",
+    "estimatedByAI": "anslået af AI",
+    "reasons": {
+      "seasoning": "krydderi",
+      "noAmount": "ingen mængde",
+      "noSize": "ingen vægt for dette mål",
+      "noNumbers": "ingen næringsværdier endnu",
+      "noSpoonWeight": "ingen skevægt endnu",
+      "noPieceWeight": "ingen stykvægt endnu"
+    },
     "workedOutFrom": "Beregnet ud fra ingredienserne, med {sources}.",
     "householdNumbers": "din husstands værdier"
   },

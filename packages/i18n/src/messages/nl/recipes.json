@@ -257,8 +257,16 @@
     "noInfo": "Geen voedingsinformatie beschikbaar",
     "estimateWithAI": "Schatten met AI",
     "estimated": "Geschat",
-    "notCounted": "Niet meegeteld:",
-    "estimatedByAI": "Geschat door AI:",
+    "leftOut": "{count, plural, one {# regel niet meegeteld} other {# regels niet meegeteld}}",
+    "estimatedByAI": "geschat door AI",
+    "reasons": {
+      "seasoning": "smaakmaker",
+      "noAmount": "geen hoeveelheid",
+      "noSize": "geen gewicht voor deze maat",
+      "noNumbers": "nog geen voedingswaarden",
+      "noSpoonWeight": "nog geen lepelgewicht",
+      "noPieceWeight": "nog geen stukgewicht"
+    },
     "workedOutFrom": "Berekend uit de ingrediënten, met {sources}.",
     "householdNumbers": "de waarden van je huishouden"
   },

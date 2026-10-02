@@ -94,8 +94,24 @@ const RECIPE = {
 
 const WORKED: WorkedOutNutrition = {
   perServing: { calories: 350, fat: 1, carbs: 78, protein: 7 },
-  uncounted: [{ lineId: "oil", name: "oil for frying", ingredientId: "i-oil", key: "key-oil" }],
-  estimatedByAI: [],
+  leftOut: [
+    {
+      lineId: "oil",
+      name: "oil for frying",
+      ingredientId: "i-oil",
+      key: "key-oil",
+      reason: "no-amount",
+      estimatedByAI: false,
+    },
+    {
+      lineId: "salt",
+      name: "salt to taste",
+      ingredientId: "i-salt",
+      key: "key-salt",
+      reason: "seasoning",
+      estimatedByAI: false,
+    },
+  ],
   counted: [
     { lineId: "rice", name: "rice", grams: 200, calories: 700, fat: 2, carbs: 156, protein: 14 },
   ],
@@ -133,7 +149,7 @@ beforeEach(() => {
 });
 
 describe("processNutritionEstimationJob", () => {
-  it("estimates only the lines left out, given the counted ones, and stores their shares apart", async () => {
+  it("estimates only the lines left out, seasoning excepted, given the counted ones, and stores their shares apart", async () => {
     await processNutritionEstimationJob(job());
 
     expect(mocks.estimate).not.toHaveBeenCalled();
@@ -157,8 +173,11 @@ describe("processNutritionEstimationJob", () => {
     expect(mocks.publishRecipeUpdated).toHaveBeenCalled();
   });
 
-  it("asks the model nothing where every line counts, and drops an earlier estimate", async () => {
-    mocks.workOut.mockResolvedValue({ ...WORKED, uncounted: [] });
+  it.each([
+    ["every line counts", []],
+    ["only seasoning is left out", WORKED.leftOut.filter((line) => line.reason === "seasoning")],
+  ])("asks the model nothing where %s, and drops an earlier estimate", async (_, leftOut) => {
+    mocks.workOut.mockResolvedValue({ ...WORKED, leftOut });
 
     await processNutritionEstimationJob(job({ origin: "manual", requestedByUserId: "user-1" }));
 

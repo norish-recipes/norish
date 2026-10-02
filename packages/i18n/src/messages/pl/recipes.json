@@ -257,8 +257,16 @@
     "noInfo": "Brak informacji o wartościach odżywczych",
     "estimateWithAI": "Oszacuj z AI",
     "estimated": "Szacunkowo",
-    "notCounted": "Nie wliczono:",
-    "estimatedByAI": "Oszacowane przez AI:",
+    "leftOut": "{count, plural, one {# niewliczony wiersz} few {# niewliczone wiersze} many {# niewliczonych wierszy} other {# niewliczonego wiersza}}",
+    "estimatedByAI": "oszacowane przez AI",
+    "reasons": {
+      "seasoning": "przyprawa",
+      "noAmount": "brak ilości",
+      "noSize": "brak wagi dla tej miary",
+      "noNumbers": "jeszcze brak wartości odżywczych",
+      "noSpoonWeight": "jeszcze brak wagi łyżki",
+      "noPieceWeight": "jeszcze brak wagi sztuki"
+    },
     "workedOutFrom": "Obliczone ze składników, na podstawie {sources}.",
     "householdNumbers": "wartości twojego gospodarstwa"
   },

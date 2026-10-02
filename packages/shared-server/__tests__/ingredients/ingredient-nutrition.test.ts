@@ -539,7 +539,9 @@ describe("Ingredient Nutrition", () => {
       expect(worked?.counted).toEqual([
         expect.objectContaining({ lineId: "a", grams: 300, calories: 105 }),
       ]);
-      expect(worked?.uncounted.map((line) => line.lineId)).toEqual(["b"]);
+      expect(worked?.leftOut.map((line) => [line.lineId, line.reason])).toEqual([
+        ["b", "no-numbers"],
+      ]);
     });
 
     it("works nothing out for a recipe that supplies its own", async () => {

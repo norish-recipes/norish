@@ -257,8 +257,16 @@
     "noInfo": "Ravintosisältötietoja ei ole saatavilla",
     "estimateWithAI": "Arvioi tekoälyllä",
     "estimated": "Arvioitu",
-    "notCounted": "Ei laskettu:",
-    "estimatedByAI": "Tekoälyn arvioima:",
+    "leftOut": "{count, plural, one {# rivi jäi laskematta} other {# riviä jäi laskematta}}",
+    "estimatedByAI": "tekoälyn arvioima",
+    "reasons": {
+      "seasoning": "mauste",
+      "noAmount": "ei määrää",
+      "noSize": "tälle mitalle ei ole painoa",
+      "noNumbers": "ei vielä ravintoarvoja",
+      "noSpoonWeight": "ei vielä lusikallisen painoa",
+      "noPieceWeight": "ei vielä kappaleen painoa"
+    },
     "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
     "householdNumbers": "kotitaloutesi arvot"
   },

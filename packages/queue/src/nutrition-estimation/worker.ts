@@ -72,8 +72,10 @@ export async function processNutritionEstimationJob(
     }
 
     const worked = await workOutRecipeNutrition(recipe, NO_HOUSEHOLD);
+    // Seasoning is left out of every total and never estimated.
+    const gaps = worked?.leftOut.filter((line) => line.reason !== "seasoning") ?? [];
 
-    if (!worked || worked.uncounted.length === 0) {
+    if (!worked || gaps.length === 0) {
       log.info({ recipeId: recipe.id }, "Every line counts; no estimate asked for");
 
       return await clearRecipeNutritionEstimate(recipe.id);
@@ -83,7 +85,7 @@ export async function processNutritionEstimationJob(
     const shares = await estimateNutritionGap(
       recipe.name,
       recipe.servings ?? 1,
-      worked.uncounted.map((named) => ({
+      gaps.map((named) => ({
         key: named.key,
         ingredientName: named.name,
         amount: lineById.get(named.lineId)?.amount ?? null,
@@ -102,7 +104,7 @@ export async function processNutritionEstimationJob(
     const saved = await saveRecipeNutritionEstimate(recipe.id, { lines: shares });
 
     log.info(
-      { recipeId: recipe.id, saved, uncounted: worked.uncounted.length, origin: job.data.origin },
+      { recipeId: recipe.id, saved, uncounted: gaps.length, origin: job.data.origin },
       "Nutrition estimate of the lines left out saved"
     );
 

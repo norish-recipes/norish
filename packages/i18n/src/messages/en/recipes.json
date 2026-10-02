@@ -257,8 +257,16 @@
     "noInfo": "No nutrition information available",
     "estimateWithAI": "Estimate with AI",
     "estimated": "Estimated",
-    "notCounted": "Not counted:",
-    "estimatedByAI": "Estimated by AI:",
+    "leftOut": "{count, plural, one {# line not counted} other {# lines not counted}}",
+    "estimatedByAI": "estimated by AI",
+    "reasons": {
+      "seasoning": "seasoning",
+      "noAmount": "no amount",
+      "noSize": "no weight for this measure",
+      "noNumbers": "no numbers yet",
+      "noSpoonWeight": "no spoon weight yet",
+      "noPieceWeight": "no piece weight yet"
+    },
     "workedOutFrom": "Worked out from the ingredients, with {sources}.",
     "householdNumbers": "your household's numbers"
   },

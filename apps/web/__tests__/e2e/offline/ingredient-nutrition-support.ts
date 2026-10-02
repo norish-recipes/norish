@@ -11,7 +11,10 @@ import { Client } from "pg";
 
 export interface NutritionScenario {
   recipeId: string;
-  ingredientIds: Record<"onion" | "redOnion" | "rice" | "milk" | "oliveOil" | "salt", string>;
+  ingredientIds: Record<
+    "onion" | "redOnion" | "rice" | "milk" | "oliveOil" | "salt" | "flour",
+    string
+  >;
   legacyId: string;
 }
 
@@ -57,6 +60,13 @@ const FOODS: Food[] = [
     offId: "en:salt",
     codes: { ciqual: ["11058"], usda: [], ciqualOther: [], pieceWeight: null, density: null },
   },
+  // Numbers from CIQUAL, which weighs no cups, and no density from anywhere.
+  {
+    key: "flour",
+    name: "flour",
+    offId: "en:wheat-flour",
+    codes: { ciqual: ["9410"], usda: [], ciqualOther: [], pieceWeight: null, density: null },
+  },
 ];
 
 export const RECIPE_NAME = "Nutrition worked out";
@@ -67,8 +77,9 @@ const LINES: Array<
 > = [
   ["onion", 200, "gram", "onion"],
   ["rice", 300, "gram", "rice"],
-  ["red onion", 1, null, "redOnion"],
+  ["red onion", 3, null, "redOnion"],
   ["milk", 250, "milliliter", "milk"],
+  ["flour", 1, "cup", "flour"],
   ["olive oil for frying", null, null, "oliveOil"],
   ["salt to taste", null, null, "legacy"],
 ];
