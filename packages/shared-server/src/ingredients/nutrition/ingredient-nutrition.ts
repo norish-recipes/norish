@@ -20,6 +20,14 @@
  * density USDA's before the taxonomy's; water is never assumed. Own before
  * inherited is deliberate: white wine reads dry white wine, not its
  * parent's pure alcohol.
+ *
+ * The density has two exceptions (spoon measures, 2026-10-02): Norish's
+ * density fix, a USDA food measured by the spoon or cup, comes right after
+ * the household's correction, so cumin reads CIQUAL's numbers and USDA's
+ * teaspoon; and a lender that never lends its numbers still lends its
+ * density, because an average sauce misleads about calories, not about what
+ * a spoonful weighs. A group whose foods share a form (spices, sauces,
+ * syrups, vinegars) carries a density fix for its members to borrow.
  */
 import type {
   NutritionCorrectionRow,
@@ -88,17 +96,20 @@ async function readSources(nodes: readonly NutritionNode[], reader: NutritionRea
   );
   const rules = await findNutritionRules(nodes.flatMap((node) => (node.offId ? [node.offId] : [])));
   const fixes = new Map<string, string>();
+  const densityFixes = new Map<string, string>();
   const names = new Map<string, string>();
   const neverLend = new Set<string>();
 
   for (const rule of rules) {
     if (rule.kind === "fix" && rule.food) fixes.set(rule.offId, rule.food);
+    else if (rule.kind === "density" && rule.food) densityFixes.set(rule.offId, rule.food);
     else if (rule.kind === "name" && rule.food) names.set(rule.offId, rule.food);
     else if (rule.kind === "never-lend") neverLend.add(rule.offId);
   }
 
   const keys: string[] = [
     ...fixes.values(),
+    ...densityFixes.values(),
     ...names.values(),
     ...[...corrections.values()].flatMap((correction) =>
       [correction.numbersFood, correction.pieceWeightFood, correction.densityFood].filter(
@@ -129,7 +140,7 @@ async function readSources(nodes: readonly NutritionNode[], reader: NutritionRea
 
   for (const food of foods) if (food.ndb && !byNdb.has(food.ndb)) byNdb.set(food.ndb, food);
 
-  return { corrections, fixes, names, neverLend, byKey, byNdb };
+  return { corrections, fixes, densityFixes, names, neverLend, byKey, byNdb };
 }
 
 type Sources = Awaited<ReturnType<typeof readSources>>;
@@ -201,8 +212,9 @@ function correctionOffers(
  * An Ingredient's own facts, before any borrowing: its household's
  * correction, then the sources. The numbers come from the first step with a
  * food. The piece weight takes the taxonomy's own after a
- * fix and before any code's portion; the density takes the codes' portions
- * before the taxonomy's own, and a name match's last.
+ * fix and before any code's portion; the density takes its density fix
+ * first, then the codes' portions before the taxonomy's own, and a name
+ * match's last.
  */
 function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
   const steps = stepsOf(node, sources);
@@ -214,6 +226,8 @@ function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
   const taxonomy = (value: number | null | undefined): Array<Offer<number>> =>
     value ? [{ source: { kind: "taxonomy" }, value }] : [];
   const corrected = correctionOffers(sources.corrections.get(node.id), sources);
+  const densityFixKey = node.offId ? sources.densityFixes.get(node.offId) : undefined;
+  const densityFix = densityFixKey ? sources.byKey.get(densityFixKey) : undefined;
 
   return {
     numbers: first([
@@ -229,6 +243,9 @@ function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
     ]),
     density: first([
       ...corrected.density,
+      ...(densityFix
+        ? [{ source: { kind: "fix" as const, food: refOf(densityFix) }, value: densityFix.density }]
+        : []),
       ...kind("fix").map(offer("density")),
       ...kind("code").map(offer("density")),
       ...taxonomy(node.nutritionCodes?.density),
@@ -265,8 +282,9 @@ export async function resolveIngredientNutrition(
 
       if (!parent) break;
       seen.add(parent.id);
-      // A lender that never lends ends the walk: its children have no numbers rather than bad ones.
-      if (parent.offId && sources.neverLend.has(parent.offId)) break;
+      // A lender that never lends ends the walk: its children have no numbers rather than bad
+      // ones. Not a density's: what a spoonful of sauce weighs is no average sauce's calories.
+      if (fact !== "density" && parent.offId && sources.neverLend.has(parent.offId)) break;
 
       const lent = own.get(parent.id)?.[fact];
 

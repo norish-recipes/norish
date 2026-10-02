@@ -2,8 +2,8 @@
  * The committed source table of Ingredient Nutrition (ADR-0039): every
  * dataset food's four numbers per 100 g, and its piece weight and density
  * where USDA gives a portion for them, plus Norish's own lists — the fix
- * list, the name matches and the lenders that never lend — keyed by Open
- * Food Facts id. Built by `tooling/nutrition` from the public downloads,
+ * list, the density fixes, the name matches and the lenders that never
+ * lend — keyed by Open Food Facts id. Built by `tooling/nutrition` from the public downloads,
  * read by a pull request's reviewer, and applied by an instance at boot when
  * its version changed. Nothing here is a household's: corrections live
  * apart, so a table refresh never touches them.
@@ -66,6 +66,12 @@ export const SourceTableSchema = z
     foods: z.array(FoodRowSchema),
     /** Norish's fix list: the dataset food an entry should use, above its own codes. */
     fixes: z.record(z.string(), datasetFoodKey),
+    /**
+     * Norish's density fixes: the USDA food whose measured spoon or cup an
+     * entry's density is taken from, above everything but a household's
+     * correction, while its numbers keep their own source.
+     */
+    densityFixes: z.record(z.string(), datasetFoodKey),
     /** Name matches for entries without numbers from a code, made by the build script. */
     names: z.record(z.string(), datasetFoodKey),
     /** Entries whose numbers are never lent to their children: a borrow ends there. */
@@ -161,6 +167,7 @@ export function serializeSourceTable(table: SourceTable): string {
     `  "version": ${line(table.version)},`,
     `  "editions": ${line(editions)},`,
     `  "fixes": {\n${entries(table.fixes)}\n  },`,
+    `  "densityFixes": {\n${entries(table.densityFixes)}\n  },`,
     `  "neverLend": [\n${[...table.neverLend]
       .sort()
       .map((id) => `    ${line(id)}`)

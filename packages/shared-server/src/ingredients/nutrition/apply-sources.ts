@@ -19,6 +19,11 @@ const log = createLogger("ingredient-nutrition");
 export async function applySourceTable(table: SourceTable): Promise<void> {
   await replaceNutritionSources(table.foods.map(foodOf), [
     ...Object.entries(table.fixes).map(([offId, food]) => ({ offId, kind: "fix", food })),
+    ...Object.entries(table.densityFixes).map(([offId, food]) => ({
+      offId,
+      kind: "density",
+      food,
+    })),
     ...Object.entries(table.names).map(([offId, food]) => ({ offId, kind: "name", food })),
     ...table.neverLend.map((offId) => ({ offId, kind: "never-lend", food: null })),
   ]);

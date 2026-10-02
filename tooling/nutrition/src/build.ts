@@ -21,6 +21,7 @@ import { indexByName, matchByName } from "./names";
 /** Norish's own lists, as the table carries them. */
 export interface Lists {
   fixes: Readonly<Record<string, DatasetFoodKey>>;
+  densityFixes: Readonly<Record<string, DatasetFoodKey>>;
   neverLend: readonly string[];
 }
 
@@ -98,8 +99,9 @@ function numbersFromCodes(
 /**
  * Build the table from the datasets and Norish's lists. Throws, writing
  * nothing, where a fix-list entry names a food the datasets no longer have,
- * or a list names an entry the taxonomy no longer has: a broken fix never
- * reaches an instance.
+ * a density fix names anything but a USDA food with a density (CIQUAL
+ * weighs no spoons), or a list names an entry the taxonomy no longer has: a
+ * broken fix never reaches an instance.
  */
 export function buildSourceTable(
   sources: Sources,
@@ -118,6 +120,15 @@ export function buildSourceTable(
     ...Object.keys(lists.fixes)
       .filter((id) => !ids.has(id))
       .map((id) => `the fix list names ${id}, which the taxonomy does not have`),
+    ...Object.entries(lists.densityFixes)
+      .filter(([, key]) => !key.startsWith("usda:") || !byKey.get(key)?.density)
+      .map(
+        ([id, key]) =>
+          `the density fix for ${id} names ${key}, which is no USDA food with a density`
+      ),
+    ...Object.keys(lists.densityFixes)
+      .filter((id) => !ids.has(id))
+      .map((id) => `the density fixes name ${id}, which the taxonomy does not have`),
     ...lists.neverLend
       .filter((id) => !ids.has(id))
       .map((id) => `the lenders that never lend name ${id}, which the taxonomy does not have`),
@@ -151,6 +162,7 @@ export function buildSourceTable(
     editions,
     foods: foods.map(rowOf),
     fixes: { ...lists.fixes },
+    densityFixes: { ...lists.densityFixes },
     names,
     neverLend: [...lists.neverLend],
   };

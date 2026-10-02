@@ -63,7 +63,11 @@ function sources(overrides: Partial<Sources> = {}): Sources {
 }
 
 const EDITIONS = { ciqual: "2025-11-03" };
-const LISTS = { fixes: { "en:brandy": "ciqual:1023" as const }, neverLend: ["en:alcohol"] };
+const LISTS = {
+  fixes: { "en:brandy": "ciqual:1023" as const },
+  densityFixes: { "en:onion": "usda:170000" as const },
+  neverLend: ["en:alcohol"],
+};
 
 describe("building the source table", () => {
   it("keeps CIQUAL 2025, 2020 only for codes 2025 gives no numbers, CALNUT only for codes neither does", () => {
@@ -119,11 +123,38 @@ describe("building the source table", () => {
     expect(table.names).toEqual({ "en:red-onion": "usda:170000" });
   });
 
-  it("carries the fix list and the lenders that never lend", () => {
+  it("carries the fix list, the density fixes and the lenders that never lend", () => {
     const table = buildSourceTable(sources(), LISTS, EDITIONS);
 
     expect(table.fixes).toEqual({ "en:brandy": "ciqual:1023" });
+    expect(table.densityFixes).toEqual({ "en:onion": "usda:170000" });
     expect(table.neverLend).toEqual(["en:alcohol"]);
+  });
+
+  it("fails where a density fix names an entry the taxonomy lacks, or no USDA food with a density", () => {
+    const build = (densityFixes: Record<string, `usda:${string}` | `ciqual:${string}`>) =>
+      buildSourceTable(sources(), { ...LISTS, densityFixes }, EDITIONS);
+
+    expect(() => build({ "en:shallot": "usda:170000" })).toThrow(/en:shallot/);
+    expect(() => build({ "en:onion": "usda:999999" })).toThrow(/usda:999999/);
+    // CIQUAL weighs no spoons: a density fix is USDA's measure or nothing.
+    expect(() => build({ "en:onion": "ciqual:20034" })).toThrow(/ciqual:20034/);
+    expect(() =>
+      buildSourceTable(
+        sources({
+          usda: [
+            {
+              ...food("170001", "Onions, dried", 349),
+              ndb: null,
+              pieceWeight: null,
+              density: null,
+            },
+          ],
+        }),
+        { ...LISTS, densityFixes: { "en:onion": "usda:170001" } },
+        EDITIONS
+      )
+    ).toThrow(/usda:170001/);
   });
 
   it("fails where a fix names a food no dataset has any more", () => {

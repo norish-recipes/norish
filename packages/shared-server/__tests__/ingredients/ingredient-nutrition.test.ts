@@ -62,10 +62,26 @@ const TABLE: SourceTable = {
     ["ciqual", "11", "Celeriac, raw", 31, 0.4, 2.3, 1.2, null, null, null],
     ["cofid", "13-336", "Sauerkraut", 9, 0, 1, 1.1, null, null, null],
     ["ciqual", "11184", "Sauce (average)", 246, 22, 9, 1.5, null, null, null],
+    ["usda", "999001", "Cumin, whole", 380, 21, 40, 17, null, 0.3, null],
+    ["usda", "170923", "Spices, cumin seed", 375, 22, 44, 18, null, 0.4, null],
+    ["usda", "171595", "Sauce, tomato chili sauce, bottled", 104, 0.3, 20, 2.5, null, 1.1375, null],
+    ["usda", "170924", "Spices, curry powder", 325, 14, 55, 14, null, 0.42, null],
+    ["cofid", "13-829", "Garam masala", 379, 15, 45, 15, null, null, null],
+    ["usda", "170169", "Nuts, coconut meat, raw", 354, 33, 15, 3.3, 397, 0.3333, "12104"],
+    ["ciqual", "15007", "Coconut, pulp, dried", 680, 64, 7, 7, null, null, null],
   ],
-  fixes: { "en:milk": "ciqual:19016" },
-  names: { "en:sauerkraut": "cofid:13-336", "en:sauce": "ciqual:11184" },
-  neverLend: ["en:alcohol", "en:sauce"],
+  fixes: { "en:milk": "ciqual:19016", "en:cumin": "usda:999001" },
+  densityFixes: {
+    "en:cumin": "usda:170923",
+    "en:sauce": "usda:171595",
+    "en:spice": "usda:170924",
+  },
+  names: {
+    "en:sauerkraut": "cofid:13-336",
+    "en:sauce": "ciqual:11184",
+    "en:garam-masala": "cofid:13-829",
+  },
+  neverLend: ["en:alcohol", "en:sauce", "en:coconut"],
 };
 
 function codes(partial: Partial<NutritionCodes>): NutritionCodes {
@@ -110,6 +126,12 @@ const ENTRIES = [
   entry("en:sauerkraut", null),
   entry("en:sauce", null),
   entry("en:hot-sauce", "en:sauce"),
+  entry("en:cumin", null),
+  entry("en:spice", null),
+  entry("en:mixed-spices", "en:spice"),
+  entry("en:garam-masala", "en:mixed-spices"),
+  entry("en:coconut", null, codes({ usda: ["ndb:12104"] })),
+  entry("en:desiccated-coconut", "en:coconut", codes({ ciqual: ["15007"] })),
 ];
 
 describe("Ingredient Nutrition", () => {
@@ -255,6 +277,68 @@ describe("Ingredient Nutrition", () => {
       expect((await read("en:red-onion")).numbers).toMatchObject({
         value: { kcal: 64 },
         borrowedFrom: { id: id("en:milk") },
+      });
+    });
+  });
+
+  describe("a spoon's weight", () => {
+    it("takes a density fix before the fix list, for the density alone", async () => {
+      expect(await read("en:cumin")).toMatchObject({
+        numbers: {
+          value: { kcal: 380 },
+          source: { kind: "fix", food: { name: "Cumin, whole" } },
+        },
+        density: {
+          value: 0.4,
+          source: {
+            kind: "fix",
+            food: { dataset: "usda", code: "170923", name: "Spices, cumin seed" },
+          },
+          borrowedFrom: null,
+        },
+      });
+    });
+
+    it("still gives the household's own correction the last word", async () => {
+      await saveNutritionCorrection(householdA[0]!, id("en:cumin"), {
+        numbersFood: null,
+        kcal: null,
+        fat: null,
+        carbs: null,
+        protein: null,
+        pieceWeightFood: null,
+        pieceWeight: null,
+        densityFood: null,
+        density: 0.5,
+      });
+
+      expect((await read("en:cumin", householdA)).density).toMatchObject({
+        value: 0.5,
+        source: { kind: "household" },
+      });
+    });
+
+    it("lends a group's density to its members, at any distance", async () => {
+      expect(await read("en:garam-masala")).toMatchObject({
+        numbers: { value: { kcal: 379 }, source: { kind: "name" }, borrowedFrom: null },
+        density: {
+          value: 0.42,
+          source: { kind: "fix", food: { name: "Spices, curry powder" } },
+          borrowedFrom: { id: id("en:spice"), name: "spice" },
+        },
+      });
+    });
+
+    it("walks past a lender that never lends its numbers, which still end there", async () => {
+      expect(await read("en:hot-sauce")).toMatchObject({
+        numbers: null,
+        density: { value: 1.1375, borrowedFrom: { id: id("en:sauce") } },
+      });
+      expect(await read("en:desiccated-coconut")).toMatchObject({
+        numbers: { value: { kcal: 680 }, borrowedFrom: null },
+        // A piece weight keeps the list: a coconut is no piece of desiccated coconut.
+        pieceWeight: null,
+        density: { value: 0.3333, borrowedFrom: { id: id("en:coconut"), name: "coconut" } },
       });
     });
   });

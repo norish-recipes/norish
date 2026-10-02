@@ -171,6 +171,25 @@ describe("reading the datasets", () => {
     ]);
   });
 
+  it("weighs a cup of cream as it is poured, never whipped", async () => {
+    const file = await usdaDownload("sr-legacy", [
+      {
+        fdcId: "170859",
+        name: "Cream, fluid, heavy whipping",
+        nutrients: { "1008": "340", "1003": "2.8", "1004": "36", "1005": "2.7" },
+        portions: [
+          { amount: "1", modifier: "cup, whipped", grams: "120" },
+          { amount: "1", modifier: "cup, fluid (yields 2 cups whipped)", grams: "238" },
+          { amount: "1", modifier: "tbsp", grams: "15" },
+        ],
+      },
+    ]);
+
+    await expect(readUsda(file, "sr-legacy")).resolves.toMatchObject([
+      { code: "170859", density: 0.9917 },
+    ]);
+  });
+
   it("reads a Foundation food's measure from its unit, and leaves its NDB number to SR Legacy", async () => {
     const file = await usdaDownload("foundation", [
       {

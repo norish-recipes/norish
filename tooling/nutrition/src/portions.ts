@@ -61,13 +61,25 @@ export function pieceWeightOf(portions: readonly Portion[]): number | null {
 }
 
 /**
+ * Whether a portion measures the food whipped ("cup, whipped"): air, not the
+ * food a recipe pours. A note in brackets does not count, so "cup, fluid
+ * (yields 2 cups whipped)" is the cream as poured.
+ */
+function isWhipped(portion: Portion): boolean {
+  return /\bwhipped\b/.test(label(portion).replace(/\([^)]*\)/g, ""));
+}
+
+/**
  * Grams per millilitre (ADR-0039): from a cup portion, else a tablespoon,
  * else a teaspoon, else a fluid ounce or millilitre; the plain measure ("cup")
- * before one of the food cut some way ("cup, chopped"). Water is never assumed.
+ * before one of the food cut some way ("cup, chopped"), and never one of it
+ * whipped. Water is never assumed.
  */
 export function densityOf(portions: readonly Portion[]): number | null {
   for (const [measure, ml] of VOLUME_ML) {
-    const matching = portions.filter((portion) => measure.test(label(portion)));
+    const matching = portions.filter(
+      (portion) => measure.test(label(portion)) && !isWhipped(portion)
+    );
     const plain = matching.filter((portion) => !/[,(]/.test(label(portion)));
 
     for (const portion of [...plain, ...matching]) {
