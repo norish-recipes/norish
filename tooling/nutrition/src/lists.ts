@@ -75,7 +75,12 @@ export const DENSITY_FIXES: Readonly<Record<string, DatasetFoodKey>> = {
   "en:pesto": "usda:171579", // Sauce, pesto, ready-to-serve, refrigerated: 1.05
   "en:white-wine": "usda:174837", // Alcoholic beverage, wine, table, white: 0.99
   "en:parmigiano-reggiano": "usda:171247", // Cheese, parmesan, grated: 0.42; spooned, it is grated
+  // Ricotta's own USDA code names a sample the table does not carry.
+  "en:ricotta": "usda:170851", // Cheese, ricotta, whole milk: 1.03
   "en:rice": "usda:169756", // Rice, white, long-grain, regular, raw: 0.77
+  // Creams whose numbers come by name, from foods nobody weighed by the cup; poured, never whipped.
+  "en:heavy-cream": "usda:170859", // Cream, fluid, heavy whipping: 0.99
+  "en:whipping-cream": "usda:170858", // Cream, fluid, light whipping: 1.00
   // USDA's agave has ¼ cup at 55 g (0.92), against its own teaspoon at 6.9 g (1.38) and the
   // labels' 21 g a tablespoon: honey weighs the same per spoon.
   "en:agave-syrup": "usda:169640", // Honey: 1.41

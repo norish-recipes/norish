@@ -171,6 +171,26 @@ describe("reading the datasets", () => {
     ]);
   });
 
+  it("weighs a whole cup before a fraction of one", async () => {
+    // USDA's Foundation ricotta lists a quarter cup as "0.2 cup", which reads as 323 g a cup.
+    const file = await usdaDownload("sr-legacy", [
+      {
+        fdcId: "746766",
+        name: "Cheese, ricotta, whole milk",
+        nutrients: { "1008": "157", "1003": "7.8", "1004": "11", "1005": "6.9" },
+        portions: [
+          { amount: "0.2", modifier: "cup", grams: "64.6" },
+          { amount: "0.5", modifier: "cup", grams: "129" },
+          { amount: "1", modifier: "cup", grams: "258" },
+        ],
+      },
+    ]);
+
+    await expect(readUsda(file, "sr-legacy")).resolves.toMatchObject([
+      { code: "746766", density: 1.075 },
+    ]);
+  });
+
   it("weighs a cup of cream as it is poured, never whipped", async () => {
     const file = await usdaDownload("sr-legacy", [
       {

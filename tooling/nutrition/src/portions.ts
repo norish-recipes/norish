@@ -70,10 +70,23 @@ function isWhipped(portion: Portion): boolean {
 }
 
 /**
+ * A measure's portions, a whole one before any fraction of it: USDA rounds
+ * some fractions ("0.2 cup" for a quarter), and a whole measure is weighed
+ * as it is.
+ */
+function wholeFirst(portions: readonly Portion[]): Portion[] {
+  return [
+    ...portions.filter((portion) => portion.amount === 1),
+    ...portions.filter((portion) => portion.amount !== 1),
+  ];
+}
+
+/**
  * Grams per millilitre (ADR-0039): from a cup portion, else a tablespoon,
  * else a teaspoon, else a fluid ounce or millilitre; the plain measure ("cup")
- * before one of the food cut some way ("cup, chopped"), and never one of it
- * whipped. Water is never assumed.
+ * before one of the food cut some way ("cup, chopped"), a whole measure
+ * before a fraction of it, and never one of it whipped. Water is never
+ * assumed.
  */
 export function densityOf(portions: readonly Portion[]): number | null {
   for (const [measure, ml] of VOLUME_ML) {
@@ -82,7 +95,7 @@ export function densityOf(portions: readonly Portion[]): number | null {
     );
     const plain = matching.filter((portion) => !/[,(]/.test(label(portion)));
 
-    for (const portion of [...plain, ...matching]) {
+    for (const portion of [...wholeFirst(plain), ...wholeFirst(matching)]) {
       const grams = perOne(portion);
 
       if (grams !== null) return round(grams / ml);

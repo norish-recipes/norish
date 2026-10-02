@@ -82,3 +82,8 @@ The same list also gives a few hand-picked groups whose foods share a form a den
   - Seen and left alone:
     - `en:heavy-cream` and `en:whipping-cream` have no density (their numbers come by name from foods with no portions), so their cup lines are left out, never halved; a density fix to USDA's heavy whipping cream would count them;
     - ricotta reads 1.35 from a "0.2 cup" portion where its whole cup says 1.08, another fractional portion like agave's.
+- 2026-10-02, follow-up (Mike asked to fix the two items seen and left alone):
+  - Heavy cream and whipping cream take density fixes to USDA's fluid creams (heavy whipping 0.99, light whipping 1.00). Their numbers come by name from foods with no portions.
+  - Ricotta's own USDA code names a sample the table does not carry, so it had no density at all. It now takes USDA's whole-milk ricotta (1.03) as a density fix.
+  - The density picker takes a whole measure before a fraction of it. USDA's Foundation ricotta lists a quarter cup as "0.2 cup", which read as 1.35; it now reads its whole cup, 1.08. The rule moves 13 other foods by 1-4%, every one toward its whole cup (sauces, gravies, tomato paste, the other ricottas).
+  - Still without a density: plain cream (`en:cream`, "room", "kookroom"). A fix there would be lent to every cream kind without its own, which is the dairy group density the spec rules out.
