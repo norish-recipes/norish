@@ -5,8 +5,8 @@
  * reader's household, and nothing cleverer:
  *
  * - a weight line converts directly;
- * - a counted line (no unit, a piece, a clove, a slice) goes through the
- *   Ingredient's piece weight;
+ * - a counted line (no unit, a piece, a clove, a slice, a chunk) goes
+ *   through the Ingredient's piece weight;
  * - a volume line (ml, a teaspoon of 5, a tablespoon of 15, a cup of 240,
  *   the unit table's own sizes) goes through its density, never water's;
  * - a pinch, a dash or "to taste" counts as nothing and is not listed;
@@ -156,8 +156,12 @@ export interface WorkedOutNutrition {
 /** The units-map entries that measure seasoning: counted as nothing, and never listed. */
 const SEASONING_UNITS = ["pinch", "dash", "to_taste"] as const;
 
-/** The units counted in pieces besides the unit table's own: a garlic's clove, a bread's slice. */
-const PIECE_UNITS = new Set(["clove", "cloves", "slice", "slices"]);
+/**
+ * The units counted in pieces besides the unit table's own: a garlic's
+ * clove, a bread's slice, a chunk (which "stuk" was stored as before it
+ * named a piece).
+ */
+const PIECE_UNITS = new Set(["clove", "cloves", "slice", "slices", "chunk", "chunks"]);
 
 /**
  * The phrases of those entries, folded: what marks a line written without a

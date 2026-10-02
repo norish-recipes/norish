@@ -154,6 +154,7 @@ describe("workOutNutrition", () => {
     ["pieces, no unit", line(2, null, "onion"), 2 * 150 * 0.4],
     ["pieces, named", line(2, "piece", "onion"), 2 * 150 * 0.4],
     ["cloves", line(3, "clove", "garlic"), 3 * 3 * 1],
+    ["chunks, as a stuk was stored before it named a piece", line(2, "chunk", "onion"), 120],
     ["a cup through its density", line(1, "cup", "milk"), 240 * 0.64],
     ["tablespoons through their density", line(2, "tablespoon", "olive-oil"), 2 * 15 * 0.9 * 9],
     ["millilitres through their density", line(100, "milliliter", "milk"), 64],

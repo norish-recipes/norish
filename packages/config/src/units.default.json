@@ -1041,7 +1041,6 @@
       "prise(n)",
       "prise/n",
       "a pinch",
-      "dash",
       "pinch",
       "pinches",
       "pr",
@@ -1050,7 +1049,6 @@
       "snufjes",
       "한꼬집",
       "꼬집",
-      "약간",
       "et nip",
       "drys",
       "pizzico",
@@ -1210,9 +1208,7 @@
       "stuks",
       "stückchen",
       "개",
-      "장",
       "모",
-      "토막",
       "styk",
       "styks",
       "pezzo",
@@ -1530,7 +1526,6 @@
       "leaf",
       "leaves",
       "잎",
-      "장",
       "foglia",
       "foglie",
       "foglietta",
@@ -1675,10 +1670,8 @@
       "sprig",
       "sprigs",
       "sprigs of",
-      "stengel",
       "stiel",
       "stiele",
-      "stängel",
       "stängelchen",
       "tak",
       "takje",
@@ -1687,8 +1680,6 @@
       "zweiglein",
       "줄기",
       "가지",
-      "stilk",
-      "stilke",
       "rametto",
       "rametti",
       "ramita",
@@ -1990,7 +1981,6 @@
       "stengel",
       "stengels",
       "대",
-      "줄기",
       "stilk",
       "stilke",
       "gambo",
@@ -2149,7 +2139,6 @@
       "päckchen",
       "팩",
       "봉",
-      "봉지",
       "포",
       "pk.",
       "confezione",
@@ -2313,11 +2302,8 @@
       "kleine dosen",
       "tin",
       "캔",
-      "통",
       "lattina",
       "lattine",
-      "barattolo",
-      "barattoli",
       "lata",
       "latas",
       "банка",
@@ -2344,19 +2330,19 @@
       },
       {
         "locale": "de",
-        "name": "Glas"
+        "name": "Gl."
       },
       {
         "locale": "nl",
-        "name": "pot"
+        "name": "potje"
       },
       {
         "locale": "ko",
-        "name": "병"
+        "name": "유리병"
       },
       {
         "locale": "da",
-        "name": "glas"
+        "name": "krukke"
       },
       {
         "locale": "it",
@@ -2402,19 +2388,19 @@
       },
       {
         "locale": "de",
-        "name": "Gläser"
+        "name": "Gl."
       },
       {
         "locale": "nl",
-        "name": "potten"
+        "name": "potjes"
       },
       {
         "locale": "ko",
-        "name": "병"
+        "name": "유리병"
       },
       {
         "locale": "da",
-        "name": "glas"
+        "name": "krukker"
       },
       {
         "locale": "it",
@@ -2461,9 +2447,6 @@
       "jar",
       "jars",
       "mason jar",
-      "pot",
-      "potten",
-      "병",
       "유리병",
       "vasetto",
       "vasetti",
@@ -2614,7 +2597,6 @@
       "flaschen",
       "bottle",
       "bottles",
-      "btl",
       "btls",
       "fl",
       "fl.",
@@ -2767,14 +2749,11 @@
       "bags",
       "btl",
       "btl.",
-      "beutel",
       "sack",
       "tütchen",
       "tüte",
       "tüten",
       "zak",
-      "zakje",
-      "zakjes",
       "zakken",
       "봉지",
       "자루",
@@ -2813,7 +2792,7 @@
       },
       {
         "locale": "nl",
-        "name": "doos"
+        "name": "doosje"
       },
       {
         "locale": "ko",
@@ -2871,7 +2850,7 @@
       },
       {
         "locale": "nl",
-        "name": "dozen"
+        "name": "doosjes"
       },
       {
         "locale": "ko",
@@ -2925,7 +2904,6 @@
       "bx.",
       "doosje",
       "doosjes",
-      "dozen",
       "박스",
       "상자",
       "scatola",
@@ -2945,7 +2923,8 @@
       "кутия",
       "кутии",
       "laatikko",
-      "laatikkoa"
+      "laatikkoa",
+      "doos"
     ]
   },
   "handful": {
@@ -3116,7 +3095,7 @@
       },
       {
         "locale": "ko",
-        "name": "약간"
+        "name": "조금"
       },
       {
         "locale": "da",
@@ -3174,7 +3153,7 @@
       },
       {
         "locale": "ko",
-        "name": "약간"
+        "name": "조금"
       },
       {
         "locale": "da",
@@ -3226,7 +3205,6 @@
       "schuß",
       "splash",
       "splashes",
-      "약간",
       "조금",
       "et skvæt",
       "slat",
@@ -3388,7 +3366,6 @@
       "tass.",
       "tässchen",
       "컵",
-      "공기",
       "pægl",
       "tazza",
       "tazze",
@@ -3544,7 +3521,6 @@
       "kleines glas",
       "shotglas",
       "잔",
-      "컵",
       "bicchiere",
       "bicchieri",
       "verre",
@@ -3842,7 +3818,6 @@
     "alternates": [
       "reepje",
       "reepjes",
-      "repen",
       "strip",
       "strips",
       "채",
@@ -3875,7 +3850,7 @@
       },
       {
         "locale": "de",
-        "name": "Blatt"
+        "name": "Platte"
       },
       {
         "locale": "nl",
@@ -3895,7 +3870,7 @@
       },
       {
         "locale": "fr",
-        "name": "feuille"
+        "name": "plaque"
       },
       {
         "locale": "es",
@@ -3933,7 +3908,7 @@
       },
       {
         "locale": "de",
-        "name": "Blätter"
+        "name": "Platten"
       },
       {
         "locale": "nl",
@@ -3953,7 +3928,7 @@
       },
       {
         "locale": "fr",
-        "name": "feuilles"
+        "name": "plaques"
       },
       {
         "locale": "es",
@@ -3992,8 +3967,6 @@
       "장",
       "foglio",
       "fogli",
-      "feuille",
-      "feuilles",
       "lámina",
       "láminas",
       "пластина",
@@ -4163,7 +4136,7 @@
       },
       {
         "locale": "de",
-        "name": "Scheibe"
+        "name": "Rädchen"
       },
       {
         "locale": "nl",
@@ -4175,7 +4148,7 @@
       },
       {
         "locale": "da",
-        "name": "skive"
+        "name": "rund skive"
       },
       {
         "locale": "it",
@@ -4221,7 +4194,7 @@
       },
       {
         "locale": "de",
-        "name": "Scheiben"
+        "name": "Rädchen"
       },
       {
         "locale": "nl",
@@ -4233,7 +4206,7 @@
       },
       {
         "locale": "da",
-        "name": "skiver"
+        "name": "runde skiver"
       },
       {
         "locale": "it",
@@ -4565,8 +4538,6 @@
     "alternates": [
       "bol",
       "bollen",
-      "bolletje",
-      "bolletjes",
       "kügelchen",
       "알",
       "경단",
@@ -4602,7 +4573,7 @@
       },
       {
         "locale": "nl",
-        "name": "scheutje"
+        "name": "spatje"
       },
       {
         "locale": "ko",
@@ -4660,7 +4631,7 @@
       },
       {
         "locale": "nl",
-        "name": "scheutjes"
+        "name": "spatjes"
       },
       {
         "locale": "ko",
@@ -4712,7 +4683,6 @@
       "dash",
       "dashes",
       "약간",
-      "소량",
       "et stænk",
       "goccio",
       "gocci",
@@ -4743,11 +4713,11 @@
       },
       {
         "locale": "de",
-        "name": "Spritzer"
+        "name": "Spritzerchen"
       },
       {
         "locale": "nl",
-        "name": "scheutje"
+        "name": "straaltje"
       },
       {
         "locale": "ko",
@@ -4801,11 +4771,11 @@
       },
       {
         "locale": "de",
-        "name": "Spritzer"
+        "name": "Spritzerchen"
       },
       {
         "locale": "nl",
-        "name": "scheutjes"
+        "name": "straaltjes"
       },
       {
         "locale": "ko",
@@ -4887,7 +4857,7 @@
       },
       {
         "locale": "de",
-        "name": "Kugel"
+        "name": "Kelle"
       },
       {
         "locale": "nl",
@@ -4899,11 +4869,11 @@
       },
       {
         "locale": "da",
-        "name": "kugle"
+        "name": "øse"
       },
       {
         "locale": "it",
-        "name": "pallina"
+        "name": "mestolo"
       },
       {
         "locale": "es",
@@ -4945,7 +4915,7 @@
       },
       {
         "locale": "de",
-        "name": "Kugeln"
+        "name": "Kellen"
       },
       {
         "locale": "nl",
@@ -4957,11 +4927,11 @@
       },
       {
         "locale": "da",
-        "name": "kugler"
+        "name": "øser"
       },
       {
         "locale": "it",
-        "name": "palline"
+        "name": "mestoli"
       },
       {
         "locale": "es",
@@ -5001,8 +4971,6 @@
       "scoops",
       "스쿱",
       "국자",
-      "pallina",
-      "palline",
       "cazo",
       "cazos",
       "cucharón",
@@ -5182,7 +5150,7 @@
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "용기"
       },
       {
         "locale": "da",
@@ -5240,7 +5208,7 @@
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "용기"
       },
       {
         "locale": "da",
@@ -5287,7 +5255,6 @@
       "container",
       "tub",
       "tubs",
-      "통",
       "용기",
       "vaschetta",
       "vaschette",
@@ -5475,7 +5442,7 @@
       },
       {
         "locale": "da",
-        "name": "pose"
+        "name": "brev"
       },
       {
         "locale": "it",
@@ -5533,7 +5500,7 @@
       },
       {
         "locale": "da",
-        "name": "poser"
+        "name": "breve"
       },
       {
         "locale": "it",
@@ -5609,7 +5576,7 @@
       },
       {
         "locale": "de",
-        "name": "Packung"
+        "name": "Tube"
       },
       {
         "locale": "nl",
@@ -5617,7 +5584,7 @@
       },
       {
         "locale": "ko",
-        "name": "봉지"
+        "name": "묶음"
       },
       {
         "locale": "da",
@@ -5625,7 +5592,7 @@
       },
       {
         "locale": "it",
-        "name": "confezione"
+        "name": "tubo"
       },
       {
         "locale": "es",
@@ -5667,7 +5634,7 @@
       },
       {
         "locale": "de",
-        "name": "Packungen"
+        "name": "Tuben"
       },
       {
         "locale": "nl",
@@ -5675,7 +5642,7 @@
       },
       {
         "locale": "ko",
-        "name": "봉지"
+        "name": "묶음"
       },
       {
         "locale": "da",
@@ -5683,7 +5650,7 @@
       },
       {
         "locale": "it",
-        "name": "confezioni"
+        "name": "tubi"
       },
       {
         "locale": "es",
@@ -5721,10 +5688,7 @@
     "alternates": [
       "sleeve",
       "sleeves",
-      "봉지",
       "묶음",
-      "confezione",
-      "confezioni",
       "funda",
       "fundas",
       "туба",
@@ -5904,7 +5868,7 @@
       },
       {
         "locale": "ko",
-        "name": "개"
+        "name": "이삭"
       },
       {
         "locale": "da",
@@ -5962,7 +5926,7 @@
       },
       {
         "locale": "ko",
-        "name": "개"
+        "name": "이삭"
       },
       {
         "locale": "da",
@@ -6010,7 +5974,6 @@
       "ear of corn",
       "ears",
       "ears of corn",
-      "개",
       "이삭",
       "majskolbe",
       "pannocchia",
@@ -6049,7 +6012,7 @@
       },
       {
         "locale": "ko",
-        "name": "쪽"
+        "name": "웨지"
       },
       {
         "locale": "da",
@@ -6057,7 +6020,7 @@
       },
       {
         "locale": "it",
-        "name": "spicchio"
+        "name": "fettina"
       },
       {
         "locale": "es",
@@ -6107,7 +6070,7 @@
       },
       {
         "locale": "ko",
-        "name": "쪽"
+        "name": "웨지"
       },
       {
         "locale": "da",
@@ -6115,7 +6078,7 @@
       },
       {
         "locale": "it",
-        "name": "spicchi"
+        "name": "fettine"
       },
       {
         "locale": "es",
@@ -6155,9 +6118,6 @@
       "keil",
       "wedge",
       "wedges",
-      "쪽",
-      "spicchio",
-      "spicchi",
       "gajo",
       "gajos",
       "долька",
@@ -6184,11 +6144,11 @@
       },
       {
         "locale": "de",
-        "name": "Stück"
+        "name": "Brocken"
       },
       {
         "locale": "nl",
-        "name": "stuk"
+        "name": "brok"
       },
       {
         "locale": "ko",
@@ -6200,7 +6160,7 @@
       },
       {
         "locale": "it",
-        "name": "pezzo"
+        "name": "tocco"
       },
       {
         "locale": "es",
@@ -6242,11 +6202,11 @@
       },
       {
         "locale": "de",
-        "name": "Stücke"
+        "name": "Brocken"
       },
       {
         "locale": "nl",
-        "name": "stukken"
+        "name": "brokken"
       },
       {
         "locale": "ko",
@@ -6258,7 +6218,7 @@
       },
       {
         "locale": "it",
-        "name": "pezzi"
+        "name": "tocchi"
       },
       {
         "locale": "es",
@@ -6297,9 +6257,6 @@
       "chunk",
       "chunks",
       "덩어리",
-      "토막",
-      "pezzo",
-      "pezzi",
       "tocco",
       "tocchi",
       "trozo",
@@ -6318,7 +6275,8 @@
       "morceau",
       "morceaux",
       "pala",
-      "palaa"
+      "palaa",
+      "stukken"
     ]
   },
   "cube": {
@@ -6771,7 +6729,10 @@
       "kukkurainen rkl",
       "kukkurainen ruokalusikka",
       "kukkurainen ruokalusikallinen",
-      "kukkuraista ruokalusikallista"
+      "kukkuraista ruokalusikallista",
+      "heaped tbsp",
+      "heaped tablespoon",
+      "heaped tablespoons"
     ]
   },
   "scant_tablespoon": {
@@ -7389,7 +7350,7 @@
       },
       {
         "locale": "ko",
-        "name": "조금"
+        "name": "소량"
       },
       {
         "locale": "da",
@@ -7447,7 +7408,7 @@
       },
       {
         "locale": "ko",
-        "name": "조금"
+        "name": "소량"
       },
       {
         "locale": "da",
@@ -7493,7 +7454,6 @@
     "alternates": [
       "kleiner schuß",
       "winziger schuss",
-      "조금",
       "소량",
       "en smule",
       "spruzzino",
@@ -7529,15 +7489,15 @@
       },
       {
         "locale": "nl",
-        "name": "bol"
+        "name": "knol"
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "뿌리"
       },
       {
         "locale": "da",
-        "name": "hoved"
+        "name": "knold"
       },
       {
         "locale": "it",
@@ -7587,15 +7547,15 @@
       },
       {
         "locale": "nl",
-        "name": "bollen"
+        "name": "knollen"
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "뿌리"
       },
       {
         "locale": "da",
-        "name": "hoveder"
+        "name": "knolde"
       },
       {
         "locale": "it",
@@ -7636,7 +7596,6 @@
     ],
     "alternates": [
       "knöllchen",
-      "통",
       "뿌리",
       "bulbo",
       "bulbi",
@@ -8250,7 +8209,7 @@
       },
       {
         "locale": "es",
-        "name": "bol"
+        "name": "cuenco"
       },
       {
         "locale": "ru",
@@ -8274,7 +8233,7 @@
       },
       {
         "locale": "fr",
-        "name": "bol"
+        "name": "bolée"
       },
       {
         "locale": "fi",
@@ -8308,7 +8267,7 @@
       },
       {
         "locale": "es",
-        "name": "boles"
+        "name": "cuencos"
       },
       {
         "locale": "ru",
@@ -8332,7 +8291,7 @@
       },
       {
         "locale": "fr",
-        "name": "bols"
+        "name": "bolées"
       },
       {
         "locale": "fi",
@@ -8347,7 +8306,6 @@
       "ciotole",
       "scodella",
       "scodelle",
-      "bol",
       "boles",
       "cuenco",
       "cuencos",
@@ -8531,7 +8489,10 @@
       "kukkurallinen teelusikka",
       "kukkurainen teelusikka",
       "kukkurainen teelusikallinen",
-      "kukkuraista teelusikallista"
+      "kukkuraista teelusikallista",
+      "heaped tsp",
+      "heaped teaspoon",
+      "heaped teaspoons"
     ]
   },
   "scant_teaspoon": {
@@ -9941,7 +9902,6 @@
       "naar wens",
       "indien gewenst",
       "valgfrit",
-      "a piacere",
       "si se desea",
       "по желанию",
       "opcjonalnie",

@@ -14,6 +14,8 @@
  */
 import unitsMap from "@norish/config/units.default.json";
 
+import { foldUnitWord } from "./unit-localization";
+
 /** Mass in grams, volume in millilitres, count in pieces; a container on a grocery means packs. */
 export type UnitFamily = "mass" | "volume" | "count" | "pack";
 
@@ -196,11 +198,6 @@ const TABLE: UnitEntry[] = [
   },
 ];
 
-/** A spelling as it is looked up: lower case, no trailing dot, one space between words. */
-function fold(spelling: string): string {
-  return spelling.trim().toLowerCase().replace(/\.+$/, "").replace(/\s+/g, " ");
-}
-
 type MapEntry = { short: { name: string }[]; plural: { name: string }[]; alternates: string[] };
 
 function mapSpellings(id: string): string[] {
@@ -234,7 +231,7 @@ const BY_SPELLING: Map<string, ResolvedUnit> = (() => {
     ];
 
     for (const spelling of spellings) {
-      const key = fold(spelling);
+      const key = foldUnitWord(spelling);
 
       if (key && !map.has(key)) map.set(key, unit);
     }
@@ -266,7 +263,7 @@ const BY_CODE: Record<string, UnitId> = {
 export function resolveUnit(spelling: string | null | undefined): ResolvedUnit | null {
   if (!spelling) return null;
 
-  return BY_SPELLING.get(fold(spelling)) ?? null;
+  return BY_SPELLING.get(foldUnitWord(spelling)) ?? null;
 }
 
 /** The unit a UN/CEFACT code names, else the unit its text names, else null. */
