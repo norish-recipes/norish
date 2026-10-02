@@ -5,8 +5,12 @@
  * per serving worked out from its lines, says it is estimated where the
  * lines that borrowed from a parent food bring a tenth of it, and names
  * every line it left out behind an asterisk, each with why, a line whose fix
- * is a fact in its food's panel opening that panel. A household's correction changes its own
- * total and no other household's. A legacy "salt to taste" line, minted as
+ * is a fact in its food's panel opening that panel, where the spoon row asks
+ * for the weight in the measure the household's recipes use. A teaspoon of
+ * cumin counts through the spoon weight USDA measured, though cumin's
+ * numbers are CIQUAL's. A household's correction, of numbers or of a
+ * teaspoon's weight, changes its own total and no other household's. A
+ * legacy "salt to taste" line, minted as
  * a food of its own before the resolver read it as salt, lands on salt at
  * the next boot under the new rules. The real Norish server applies the
  * committed source table at boot; the spec seeds the few Ingredients it
@@ -30,15 +34,18 @@ test.describe.configure({ mode: "serial" });
  * The total, per serving of two: 200 g onion (39 kcal per 100 g) is 78,
  * 300 g rice (350) is 1,050, three red onions (their own numbers, matched by
  * name to "Red onion, raw" at 35) weigh what an onion does, borrowed, 150 g
- * each, so 157.5, and 250 ml milk (whole, by Norish's fix, 63.9 at 1.03 g/ml)
- * is 164.5. The borrowing red onions bring more than a tenth: estimated.
- * A cup of flour has no spoon weight, olive oil for frying no amount, and
- * salt to taste is seasoning: all three are left out. 1,450 over two
- * servings is 725.
+ * each, so 157.5, 250 ml milk (whole, by Norish's fix, 63.9 at 1.03 g/ml) is
+ * 164.5, and a teaspoon of komijn (cumin seed at 427) weighs the 2 g USDA
+ * measured, so 8.5. The borrowing red onions bring more than a tenth:
+ * estimated. A cup of flour has no spoon weight, olive oil for frying no
+ * amount, and salt to taste is seasoning: all three are left out. 1,458.6
+ * over two servings is 729.
  */
-const TOTAL = "725";
-/** The same with the household's rice at 360 kcal per 100 g: 1,480 over two. */
-const CORRECTED_TOTAL = "740";
+const TOTAL = "729";
+/** With the household's rice at 360 kcal per 100 g: 1,488.6 over two. */
+const CORRECTED_TOTAL = "744";
+/** And the household's teaspoon of cumin at 4 g: 1,497.1 over two. */
+const SPOONED_TOTAL = "749";
 
 let scenario: NutritionScenario | null = null;
 let contexts: BrowserContext[] = [];
@@ -108,6 +115,13 @@ test("a recipe without nutrition shows one worked out from its lines, estimated 
   await expect(nutrition.getByTestId("ingredient-nutrition-source")).toContainText(
     "Wheat flour, type 110 · CIQUAL 2025"
   );
+
+  // The recipe measures flour by the cup, so the panel asks what a cup of it weighs.
+  const spoon = nutrition.getByTestId("ingredient-nutrition-density");
+
+  await expect(spoon).toHaveAttribute("data-measure", "cup");
+  await expect(spoon).toContainText("A cup");
+  await expect(spoon.getByTestId("ingredient-nutrition-density-ask")).toBeVisible();
 });
 
 test("a household's correction changes its own total and no other household's", async () => {
@@ -144,6 +158,44 @@ test("a household's correction changes its own total and no other household's", 
   await pageB.goto(`/recipes/${scenario!.recipeId}`);
   await expect(recipeCard(pageB)).toContainText(TOTAL);
   await expect(recipeCard(pageB)).not.toContainText(CORRECTED_TOTAL);
+});
+
+test("a household's teaspoon of cumin changes its own total and no other household's", async () => {
+  await pageA.goto(`/settings?tab=ingredients&ingredient=${scenario!.ingredientIds.cumin}`);
+
+  const panel = pageA.getByRole("dialog", { name: "cumin", exact: true });
+
+  await panel.getByTestId("ingredient-nutrition-open").click();
+
+  const nutrition = pageA.getByRole("dialog", { name: "Nutrition", exact: true });
+  const spoon = nutrition.getByTestId("ingredient-nutrition-density");
+
+  // Its numbers are CIQUAL's cumin seed; its teaspoon, in the recipe's own measure, USDA's.
+  await expect(nutrition.getByTestId("ingredient-nutrition-source")).toContainText(
+    "Cumin, seed · CIQUAL 2025, chosen by Norish"
+  );
+  await expect(spoon).toHaveAttribute("data-measure", "teaspoon");
+  await expect(spoon).toContainText("A teaspoon");
+  await expect(spoon).toContainText("2 g");
+  await expect(spoon).toContainText("Spices, cumin seed · USDA FoodData Central, chosen by Norish");
+
+  await nutrition.getByTestId("ingredient-nutrition-correct").click();
+
+  const correction = pageA.getByTestId("nutrition-correction");
+
+  await correction.getByTestId("nutrition-correction-density-label").click();
+  await correction.getByTestId("nutrition-correction-spoonGrams").fill("4");
+  await pageA.getByTestId("nutrition-correction-save").click();
+
+  await expect(spoon).toContainText("4 g");
+  await expect(spoon).toContainText("Your household's own numbers");
+
+  await pageA.goto(`/recipes/${scenario!.recipeId}`);
+  await expect(recipeCard(pageA)).toContainText(SPOONED_TOTAL);
+
+  await pageB.goto(`/recipes/${scenario!.recipeId}`);
+  await expect(recipeCard(pageB)).toContainText(TOTAL);
+  await expect(recipeCard(pageB)).not.toContainText(SPOONED_TOTAL);
 });
 
 test("a legacy salt to taste line lands on salt once the resolver's rules change", async ({

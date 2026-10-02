@@ -12,7 +12,7 @@ import { Client } from "pg";
 export interface NutritionScenario {
   recipeId: string;
   ingredientIds: Record<
-    "onion" | "redOnion" | "rice" | "milk" | "oliveOil" | "salt" | "flour",
+    "onion" | "redOnion" | "rice" | "milk" | "oliveOil" | "salt" | "flour" | "cumin",
     string
   >;
   legacyId: string;
@@ -67,6 +67,9 @@ const FOODS: Food[] = [
     offId: "en:wheat-flour",
     codes: { ciqual: ["9410"], usda: [], ciqualOther: [], pieceWeight: null, density: null },
   },
+  // No code at all: its numbers are Norish's fix (CIQUAL's cumin seed), its
+  // spoon weight a density fix (USDA's teaspoon of cumin seed).
+  { key: "cumin", name: "cumin", offId: "en:cumin", codes: null },
 ];
 
 export const RECIPE_NAME = "Nutrition worked out";
@@ -80,6 +83,7 @@ const LINES: Array<
   ["red onion", 3, null, "redOnion"],
   ["milk", 250, "milliliter", "milk"],
   ["flour", 1, "cup", "flour"],
+  ["komijn", 1, "teaspoon", "cumin"],
   ["olive oil for frying", null, null, "oliveOil"],
   ["salt to taste", null, null, "legacy"],
 ];
