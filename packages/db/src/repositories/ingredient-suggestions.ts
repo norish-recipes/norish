@@ -2,7 +2,10 @@ import { asc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
-import type { SuggestionKind } from "@norish/shared/contracts/ingredient-catalogue";
+import type {
+  SuggestionKind,
+  SuggestionSource,
+} from "@norish/shared/contracts/ingredient-catalogue";
 import { db } from "@norish/db/drizzle";
 import { ingredients, ingredientSuggestions } from "@norish/db/schema";
 
@@ -23,9 +26,10 @@ export interface StoredIngredientSuggestion {
   target: { id: string; name: string } | null;
   englishName: string | null;
   considered: string[];
+  source: SuggestionSource;
 }
 
-/** Record what AI proposes for an Ingredient, replacing what it proposed before. */
+/** Record what AI proposes for an Ingredient, replacing what was proposed before, by AI or its words. */
 export async function upsertIngredientSuggestion(input: {
   ingredientId: string;
   kind: SuggestionKind;
@@ -38,6 +42,7 @@ export async function upsertIngredientSuggestion(input: {
     targetId: input.targetId,
     englishName: input.englishName,
     considered: input.considered,
+    source: "ai" as const,
   };
 
   await db
@@ -63,6 +68,7 @@ function selectSuggestions() {
       targetName: targets.name,
       englishName: ingredientSuggestions.englishName,
       considered: ingredientSuggestions.considered,
+      source: ingredientSuggestions.source,
     })
     .from(ingredientSuggestions)
     .innerJoin(ingredients, eq(ingredients.id, ingredientSuggestions.ingredientId))
@@ -81,6 +87,7 @@ function stored(row: SuggestionRow): StoredIngredientSuggestion {
     target: row.targetId && row.targetName ? { id: row.targetId, name: row.targetName } : null,
     englishName: row.englishName,
     considered: row.considered,
+    source: row.source as SuggestionSource,
   };
 }
 

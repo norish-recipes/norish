@@ -33,8 +33,10 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
  *   2. an alias whose fold is the text's with preparation stripped — the part
  *      after the first comma and anything in brackets ("onions, diced" and
  *      "onions (red)" are "onions") — else with a phrase of the units map at
- *      either end stripped too ("salt to taste", "a pinch of nutmeg" and
- *      "naar smaak zout" are salt, nutmeg and zout);
+ *      either end, a container at the start and preparation words at either
+ *      end stripped too ("salt to taste", "a pinch of nutmeg", "naar smaak
+ *      zout", "can of chickpeas drained and rinsed" and "garlic cloves
+ *      crushed" are salt, nutmeg, zout, chickpeas and garlic cloves);
  *   (both keys are `@norish/shared/lib/spelling-keys`, which the clients
  *   match unresolved text on too);
  *   3. what AI makes of it (`ai/resolution/ingredient-resolution`): a Decision, or the language
@@ -45,17 +47,20 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
  *
  * A mint that no sure AI answer vouched for is flagged, so a person can merge
  * it or mark it distinct. One AI placed nowhere is filed under the longest
- * seeded spelling its text ends with, as whole words ("ground cumin" under
- * cumin), and stays flagged: a guess from words may set a parent, never merge
- * (ADR-0037 as amended by ADR-0039).
+ * seeded spelling its words contain, as whole words, and stays flagged: a
+ * guess from words may set a parent, never merge (ADR-0037 as amended by
+ * ADR-0039). The spelling its text ends with ("ground cumin" under cumin) is
+ * filed quietly; one found anywhere else in the words ("garlic cloves" under
+ * garlic, "kale large stalks removed" under kale) is filed with a suggestion
+ * beside it, for a person to confirm or dismiss.
  */
 
 /**
  * Which rules the first two rungs and the parent from words follow. Raised
  * whenever they change, so the startup pass looks at old Flagged Ingredients
- * again under the new rules (`recheckFlaggedIngredients`).
+ * again under the new rules (`recheckUndecidedMints`).
  */
-export const RUNG_VERSION = 1;
+export const RUNG_VERSION = 2;
 
 /** Who the resolution is for: the owner of anything it mints. */
 export interface ResolveActor {
@@ -81,7 +86,7 @@ export interface ResolvedIngredient extends IngredientRef {
   text: string;
 }
 
-/** A text as the first two rungs read it: its fold, and its fold with the preparation stripped. */
+/** A text as the first two rungs read it: its fold, and its folds with the preparation stripped. */
 interface Spelling extends SpellingKeys {
   text: string;
 }
@@ -156,7 +161,9 @@ export async function resolveIngredients(
 
     if (!match) {
       // No answer is the upgrade's case: it resolves a whole history and asks no AI.
-      const answer = answers.get(sameFoodKey(spelling)) ?? flaggedNew("upgrade");
+      const asked = answers.get(sameFoodKey(spelling));
+      const answer = asked?.answer ?? flaggedNew("upgrade");
+      const wordsParent = async () => (asked ? asked.words : await parentFromWords(spelling));
       // The food AI named may have been merged away since the question was
       // asked; the text is then minted flagged rather than failing its save.
       const joined =
@@ -173,12 +180,15 @@ export async function resolveIngredients(
         (answer.kind === "same"
           ? await mint(spelling, actor, {
               flagReason: "food-gone",
-              parentId: await parentFromWords(spelling),
+              parent: await wordsParent(),
             })
           : await mint(spelling, actor, {
               flagReason: answer.reason,
-              parentId:
-                answer.kindOf ?? (answer.reason !== null ? await parentFromWords(spelling) : null),
+              parent: answer.kindOf
+                ? { id: answer.kindOf, sure: true }
+                : answer.reason !== null
+                  ? await wordsParent()
+                  : null,
             }));
 
       for (const row of rows) known.set(row.fold, row);
@@ -201,16 +211,24 @@ function sameFoodKey(spelling: Spelling): string {
   return spelling.bareFold || spelling.fold;
 }
 
+/** What rung 3 made of one spelling, with the food its words pointed at, which the question was told. */
+interface Asked {
+  answer: AIResolution;
+  words: ParentFromWords | null;
+}
+
 /**
  * Rung 3 for every spelling the first two rungs did not know, asked once per
  * food the spellings name and a few at a time, by the key `sameFoodKey` gives.
+ * Each question is told the food the spelling's words point at, so AI and
+ * the words are weighed together (`settleWithWords`).
  */
 async function askAboutUnknown(
   unknown: readonly Spelling[],
   options: ResolveOptions
-): Promise<Map<string, AIResolution>> {
+): Promise<Map<string, Asked>> {
   const questions = new Map(unknown.map((spelling) => [sameFoodKey(spelling), spelling]));
-  const answers = new Map<string, AIResolution>();
+  const answers = new Map<string, Asked>();
 
   if (options.ai === false) return answers;
 
@@ -219,7 +237,14 @@ async function askAboutUnknown(
   while (pending.length > 0) {
     const batch = pending.splice(0, AI_CONCURRENCY);
     const answered = await Promise.all(
-      batch.map(([, spelling]) => askWhatFoodThisIs(spelling.text, spelling.bare))
+      batch.map(async ([, spelling]) => {
+        const words = await parentFromWords(spelling);
+        const answer = await askWhatFoodThisIs(spelling.text, spelling.bare, {
+          wordsParent: words,
+        });
+
+        return { answer, words };
+      })
     );
 
     batch.forEach(([key], index) => answers.set(key, answered[index]!));
@@ -245,64 +270,107 @@ export async function resolveIngredient(
 }
 
 /**
- * Rung 4. The Ingredient is named for the text without its preparation, and
- * that bare name becomes an alias beside the text, so "onions, diced" first
- * and "onions" or "onions, sliced" later are the one food. Flagged unless a
- * sure AI answer said it is a food of its own; placed under the food AI said
- * it is a kind of, where it said so.
+ * Rung 4. The Ingredient is named for the text without its preparation — its
+ * plain name — and that name and the bare one become aliases beside the
+ * text, so "onions, diced" first and "onions" or "onions, sliced" later are
+ * the one food. Flagged unless a sure AI answer said it is a food of its own;
+ * placed under the food AI said it is a kind of, where it said so, else under
+ * the one its words suggest, with a suggestion to confirm where that was a
+ * guess from inside the words.
  */
 async function mint(
   spelling: Spelling,
   actor: ResolveActor,
-  { flagReason, parentId }: { flagReason: FlagReason | null; parentId: string | null }
+  { flagReason, parent }: { flagReason: FlagReason | null; parent: ParentFromWords | null }
 ): Promise<IngredientAliasRow[]> {
   return await mintIngredientWithAliases({
-    name: spelling.bareFold ? spelling.bare : spelling.text,
+    name: spelling.plainFold ? spelling.plain : spelling.text,
     aliases: spellingAliases(spelling),
     ownerId: actor.userId,
     locale: actor.locale ?? null,
     flagged: flagReason !== null,
     flagReason,
-    parentId,
+    parentId: parent?.id ?? null,
+    suggestParent: parent !== null && !parent.sure,
   });
 }
 
 /**
- * The parent a flagged mint is filed under from the words of its text: the
- * longest seeded spelling the text, stripped as rung 2 strips it, ends with
- * as whole words and is longer than ("verse peterselie" under peterselie,
- * "smoked sweet paprika" under sweet paprika), or none.
+ * A parent found in the words of a text: `sure` where the text ends with the
+ * parent's spelling, the food named last in most languages ("ground cumin"),
+ * and not where the spelling sits elsewhere in the words ("garlic cloves
+ * crushed" under garlic), which a person is asked to confirm.
  */
-async function parentFromWords(spelling: Spelling): Promise<string | null> {
-  const words = (spelling.plainFold || spelling.bareFold || spelling.fold).split(" ");
-  const endings = words.slice(1).map((_, index) => words.slice(index + 1).join(" "));
+export interface ParentFromWords {
+  id: string;
+  sure: boolean;
+}
 
-  if (endings.length === 0) return null;
+/**
+ * The parent a flagged mint is filed under from the words of its text: the
+ * longest seeded spelling the text, stripped as rung 2 strips it, contains
+ * as whole words and is longer than ("verse peterselie" under peterselie,
+ * "smoked sweet paprika" under sweet paprika, "garlic cloves" under garlic),
+ * or none. Of two the same length, the one the text ends with.
+ */
+async function parentFromWords(spelling: Spelling): Promise<ParentFromWords | null> {
+  const words = (spelling.plainFold || spelling.bareFold || spelling.fold).split(" ");
+  const windows: Array<{ fold: string; sure: boolean }> = [];
+
+  // Longest first, and within a length from the end of the text backwards.
+  for (let length = words.length - 1; length >= 1; length -= 1) {
+    for (let start = words.length - length; start >= 0; start -= 1) {
+      windows.push({
+        fold: words.slice(start, start + length).join(" "),
+        sure: start + length === words.length,
+      });
+    }
+  }
+
+  if (windows.length === 0) return null;
 
   const seeded = new Map(
-    (await findSeededAliasesByFolds(endings)).map((row) => [row.fold, row.ingredientId])
+    (await findSeededAliasesByFolds(windows.map((window) => window.fold))).map((row) => [
+      row.fold,
+      row.ingredientId,
+    ])
   );
 
-  // Longest first: the endings run from all but the first word down to the last.
-  for (const ending of endings) {
-    const ingredientId = seeded.get(ending);
+  for (const window of windows) {
+    const id = seeded.get(window.fold);
 
-    if (ingredientId) return ingredientId;
+    if (id) return { id, sure: window.sure };
   }
 
   return null;
 }
 
 /** The parent a text would be filed under from its words, for the startup pass over old mints. */
-export async function parentFromWordsOf(text: string): Promise<string | null> {
+export async function parentFromWordsOf(text: string): Promise<ParentFromWords | null> {
   return await parentFromWords(spellingOf(cleanIngredientText(text), await currentPhrases()));
 }
 
-/** The aliases a spelling gives its food: the text, and its bare name where that differs. */
-function spellingAliases({ text, fold, bare, bareFold }: Spelling) {
+/**
+ * The plain name a text would be minted under today, where it differs from
+ * the text itself, for the startup pass over old mints: null where the text
+ * is its own plain name already.
+ */
+export async function plainNameOf(text: string): Promise<{ text: string; fold: string } | null> {
+  const spelling = spellingOf(cleanIngredientText(text), await currentPhrases());
+
+  return spelling.plainFold && spelling.plainFold !== spelling.fold
+    ? { text: spelling.plain, fold: spelling.plainFold }
+    : null;
+}
+
+/** The aliases a spelling gives its food: the text, and its bare and plain names where they differ. */
+function spellingAliases({ text, fold, bare, bareFold, plain, plainFold }: Spelling) {
   const aliases = [{ text, fold }];
 
   if (bareFold && bareFold !== fold) aliases.push({ text: bare, fold: bareFold });
+  if (plainFold && plainFold !== fold && plainFold !== bareFold) {
+    aliases.push({ text: plain, fold: plainFold });
+  }
 
   return aliases;
 }

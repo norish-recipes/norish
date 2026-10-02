@@ -6,6 +6,7 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import defaultUnits from "@norish/config/units.default.json";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
@@ -203,6 +204,35 @@ describe("ingredient resolver", () => {
     );
     expect((await resolveOne("a smidgen nutmeg")).ingredientId).toBe(nutmeg.ingredientId);
     expect((await resolveOne("nutmeg to taste")).ingredientId).not.toBe(nutmeg.ingredientId);
+  });
+
+  it("recognises a known food under preparation written without a comma, and a container", async () => {
+    // The containers come from the units map: the default one, not the test above's.
+    await setConfig(
+      ServerConfigKeys.UNITS,
+      { units: defaultUnits, isOverridden: false },
+      null,
+      false
+    );
+    const garlic = await resolveOne("garlic cloves");
+    const chickpeas = await resolveOne("chickpeas");
+
+    expect((await resolveOne("garlic cloves crushed")).ingredientId).toBe(garlic.ingredientId);
+    expect((await resolveOne("finely chopped garlic cloves")).ingredientId).toBe(
+      garlic.ingredientId
+    );
+    expect((await resolveOne("can of chickpeas drained and rinsed")).ingredientId).toBe(
+      chickpeas.ingredientId
+    );
+    expect((await resolveOne("400g can chickpeas")).ingredientId).not.toBe(chickpeas.ingredientId);
+  });
+
+  it("names a new food for its text without such preparation, and keeps the text as a spelling", async () => {
+    const minted = await resolveOne("Fresh coconut grated");
+
+    await expect(ingredientFor(minted.aliasId)).resolves.toMatchObject({ name: "Fresh coconut" });
+    expect((await resolveOne("fresh coconut")).ingredientId).toBe(minted.ingredientId);
+    expect((await resolveOne("fresh coconut, grated")).ingredientId).toBe(minted.ingredientId);
   });
 
   it("never strips a measure or a piece, which name foods too", async () => {

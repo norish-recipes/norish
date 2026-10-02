@@ -123,7 +123,10 @@ export const ingredientAliases = pgTable(
  * own, no target). Many foods may name the same target, so one general food
  * can gather many proposed kinds. Either food going away takes the
  * suggestion with it. `englishName` and `considered` are how AI got there,
- * shown beside the proposal.
+ * shown beside the proposal. `source` says who proposed it: `ai`, or `words`
+ * for a parent the resolver gave a mint from inside the words of its name
+ * ("garlic cloves" under garlic), already filed and waiting to be confirmed
+ * or dismissed — dismissing one of those takes the parent off again.
  */
 export const ingredientSuggestions = pgTable(
   "ingredient_suggestions",
@@ -136,6 +139,7 @@ export const ingredientSuggestions = pgTable(
     targetId: uuid("target_id").references(() => ingredients.id, { onDelete: "cascade" }),
     englishName: text("english_name"),
     considered: jsonb("considered").$type<string[]>().notNull().default([]),
+    source: text("source").notNull().default("ai"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

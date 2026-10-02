@@ -1,8 +1,10 @@
 // @vitest-environment node
 /**
  * Rung 4's parent from words, against a real database: a Flagged Ingredient
- * minted for a text that ends in a seeded spelling is filed under it, longest
- * first, and stays flagged for a person to look at (ADR-0037 as amended).
+ * minted for a text that contains a seeded spelling is filed under it,
+ * longest first, and stays flagged for a person to look at (ADR-0037 as
+ * amended). A spelling the text ends with is filed quietly; one found
+ * elsewhere in the words comes with a suggestion to confirm or dismiss.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -12,8 +14,14 @@ import {
   applyIngredientSeed,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
+import { listIngredientSuggestions } from "@norish/db/repositories/ingredient-suggestions";
 import { listIngredients, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import {
+  confirmSuggestion,
+  dismissSuggestion,
+  listSuggestions,
+} from "@norish/shared-server/ingredients/suggestions";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -49,6 +57,8 @@ describe("a mint's parent from the words of its text", () => {
       entry("en:paprika", "paprika"),
       entry("en:sweet-paprika", "sweet paprika"),
       entry("en:noodle", "noodles"),
+      entry("en:garlic", "garlic", "knoflook"),
+      entry("en:kale", "kale"),
     ]);
     seeded = await listSeededIngredientIds();
   });
@@ -94,6 +104,75 @@ describe("a mint's parent from the words of its text", () => {
 
     expect(await mintOne("dragon fruit")).toMatchObject({ flagged: true, parent: null });
     expect(await mintOne("ground saffron")).toMatchObject({ flagged: true, parent: null });
+  });
+
+  it("files a mint under a seeded food found inside its words, with a suggestion to confirm", async () => {
+    const cloves = await mintOne("garlic cloves crushed");
+
+    expect(cloves).toMatchObject({
+      name: "garlic cloves",
+      flagged: true,
+      parent: { id: seeded.get("en:garlic") },
+    });
+    expect(await listIngredientSuggestions()).toMatchObject([
+      {
+        ingredientId: cloves.id,
+        kind: "parent",
+        target: { id: seeded.get("en:garlic") },
+        source: "words",
+        considered: [],
+      },
+    ]);
+    // The one the text ends with is filed without a question.
+    await mintOne("ground cumin");
+    expect(await listIngredientSuggestions()).toHaveLength(1);
+  });
+
+  it("prefers the longest spelling, and of two as long the one the text ends with", async () => {
+    expect(await mintOne("kale large stalks removed")).toMatchObject({
+      parent: { id: seeded.get("en:kale") },
+    });
+    expect((await listSuggestions(actor)).map((it) => it.source)).toEqual(["words"]);
+  });
+
+  it("confirming keeps the parent as the person's choice, and clears the flag", async () => {
+    const cloves = await mintOne("garlic cloves crushed");
+    const [suggestion] = await listSuggestions(actor);
+
+    await confirmSuggestion(actor, suggestion!.id);
+
+    expect((await listIngredients(actor, { id: cloves.id })).items[0]).toMatchObject({
+      flagged: false,
+      parent: { id: seeded.get("en:garlic") },
+    });
+    expect(await listIngredientSuggestions()).toHaveLength(0);
+  });
+
+  it("dismissing takes the parent off again, since it was a guess", async () => {
+    const cloves = await mintOne("garlic cloves crushed");
+    const [suggestion] = await listSuggestions(actor);
+
+    await dismissSuggestion(actor, suggestion!.id);
+
+    expect((await listIngredients(actor, { id: cloves.id })).items[0]).toMatchObject({
+      flagged: true,
+      parent: null,
+    });
+    expect(await listIngredientSuggestions()).toHaveLength(0);
+  });
+
+  it("dismissing leaves a parent a person chose meanwhile", async () => {
+    const cloves = await mintOne("garlic cloves crushed");
+    const [suggestion] = await listSuggestions(actor);
+
+    await setParent(actor, cloves.id, seeded.get("en:kale")!);
+    // Choosing a parent settles the suggestion; dismissing a stale id changes nothing.
+    await expect(dismissSuggestion(actor, suggestion!.id)).rejects.toMatchObject({
+      refusal: "not-found",
+    });
+    expect((await listIngredients(actor, { id: cloves.id })).items[0]).toMatchObject({
+      parent: { id: seeded.get("en:kale") },
+    });
   });
 
   it("is a guess a person overrides: another parent clears the flag", async () => {

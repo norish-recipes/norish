@@ -61,6 +61,16 @@ export const SUGGESTION_KINDS = ["merge", "parent", "distinct"] as const;
 export type SuggestionKind = (typeof SUGGESTION_KINDS)[number];
 
 /**
+ * Who proposed a suggestion: AI, asked about the food; or the words of the
+ * food's own name (`words`), for a parent the resolver filed a mint under
+ * from inside its name ("garlic cloves" under garlic). A `words` parent is
+ * already in place; confirming keeps it, dismissing takes it off again.
+ */
+export const SUGGESTION_SOURCES = ["ai", "words"] as const;
+
+export type SuggestionSource = (typeof SUGGESTION_SOURCES)[number];
+
+/**
  * What asking AI about an Ingredient came to, as the procedure answers it,
  * with what was asked: the foods the name was compared with and what AI read
  * the name as, so a person can see what AI tried. A sure answer is a

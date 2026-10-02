@@ -17,6 +17,7 @@ import type { IngredientCandidate } from "@norish/db/repositories/ingredient-ali
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   findIngredientCandidates,
+  findIngredientCandidatesById,
   findIngredientsNamed,
 } from "@norish/db/repositories/ingredient-aliases";
 import {
@@ -84,6 +85,13 @@ export interface AskOptions {
   thorough?: boolean;
   /** How long to wait for an answer before minting flagged instead. */
   budgetMs?: number;
+  /**
+   * The food the name's own words point at (the resolver's parent from
+   * words), always put to the question as a candidate. An answer that agrees
+   * with it is taken as sure, and a disagreement between the language model
+   * and the words is settled by the Decision where there is one.
+   */
+  wordsParent?: { id: string } | null;
   /** Where to record what was asked, for a person who wants to know: filled in as it goes. */
   trace?: AskTrace;
 }
@@ -126,11 +134,12 @@ export async function askWhatFoodThisIs(
   if (!(await isAIEnabled())) return flaggedNew("ai-off");
 
   const excludeId = options.excludeId ?? null;
-  const candidates = await findIngredientCandidates(
-    wordStarts(bare || text),
-    MAX_CANDIDATES,
-    excludeId
-  );
+  const words = options.wordsParent ?? null;
+  const found = await findIngredientCandidates(wordStarts(bare || text), MAX_CANDIDATES, excludeId);
+  const candidates =
+    words && !found.some((candidate) => candidate.id === words.id)
+      ? [...(await findIngredientCandidatesById([words.id])), ...found]
+      : found;
 
   if (candidates.length === 0 && !options.thorough) return flaggedNew("unknown-food");
 
@@ -146,9 +155,11 @@ export async function askWhatFoodThisIs(
     }, budgetMs);
   });
   const trace = options.trace ?? { considered: [], englishName: null };
-  const asked = options.thorough
-    ? readThenCompare(text, candidates, excludeId, trace)
-    : askAbout(text, candidates);
+  const asked = (
+    options.thorough
+      ? readThenCompare(text, candidates, excludeId, trace)
+      : askAbout(text, candidates)
+  ).then((answer) => settleWithWords(text, answer, words, candidates));
 
   if (!options.thorough) trace.considered.push(...candidates.map((candidate) => candidate.name));
 
@@ -171,7 +182,7 @@ async function readThenCompare(
   found: readonly IngredientCandidate[],
   excludeId: string | null,
   trace: AskTrace
-): Promise<AIResolution> {
+): Promise<Answered> {
   const reading = await readName(text).catch((error: unknown) => {
     aiLogger.warn({ err: error, feature: "ingredient-resolution", text }, "Reading a name failed");
 
@@ -192,11 +203,110 @@ async function readThenCompare(
 
   trace.considered.push(...candidates.map((candidate) => candidate.name));
   if (candidates.length > 0) return await askAbout(text, candidates);
-  if (!reading) return flaggedNew("ai-unavailable");
+  if (!reading) return { answer: flaggedNew("ai-unavailable"), from: "language-model" };
 
-  return reading.sure
-    ? { kind: "new", kindOf: null, flagged: false, reason: null }
-    : flaggedNew("ai-unsure");
+  return {
+    answer: reading.sure
+      ? { kind: "new", kindOf: null, flagged: false, reason: null }
+      : flaggedNew("ai-unsure"),
+    from: "language-model",
+  };
+}
+
+/** An answer and which path gave it: the Decision's word is final, the language model's is not. */
+interface Answered {
+  answer: AIResolution;
+  from: "decision" | "language-model";
+}
+
+/**
+ * The words' say against AI's. Where AI names the food the words point at,
+ * sure or not, the two agree and the answer is sure: a kind of that food,
+ * unflagged. Where the language model names another food, or none, and a
+ * Decision Model is in use, the Decision has the final call between the two;
+ * a pick below the threshold leaves the language model's answer as it was.
+ * Without a Decision Model AI's answer stands. A Decision's own answer is
+ * never second-guessed: it saw the words' food among its options.
+ */
+async function settleWithWords(
+  text: string,
+  { answer, from }: Answered,
+  words: { id: string } | null,
+  candidates: readonly IngredientCandidate[]
+): Promise<AIResolution> {
+  if (!words) return answer;
+  if (answer.kind === "same") return answer;
+  if (answer.kindOf === words.id)
+    return { kind: "new", kindOf: words.id, flagged: false, reason: null };
+  if (from === "decision" || !(await isDecisionUseEnabled("ingredientResolution"))) return answer;
+
+  const wordsFood = candidates.find((candidate) => candidate.id === words.id);
+  const aiFood = answer.kindOf
+    ? candidates.find((candidate) => candidate.id === answer.kindOf)
+    : null;
+
+  if (!wordsFood || (answer.kindOf && !aiFood)) return answer;
+
+  const settled = await decideBetween(text, wordsFood, aiFood ?? null).catch((error: unknown) => {
+    aiLogger.warn(
+      { err: error, feature: "ingredient-resolution", text },
+      "Decision between the words' food and the language model's failed"
+    );
+
+    return null;
+  });
+
+  return settled ?? answer;
+}
+
+/**
+ * One two-way Choice: a kind of the words' food, or what the language model
+ * said (a kind of another food, or a food of its own). Null below the
+ * threshold.
+ */
+async function decideBetween(
+  text: string,
+  wordsFood: IngredientCandidate,
+  aiFood: IngredientCandidate | null
+): Promise<AIResolution | null> {
+  const criteria = {
+    words: `Is a kind of ${wordsFood.name}`,
+    ai: aiFood ? `Is a kind of ${aiFood.name}` : "Is none of these, but a food of its own",
+  };
+  const { answers } = await decide({
+    feature: "ingredient-resolution",
+    state: {
+      name: text,
+      foods: [wordsFood, ...(aiFood ? [aiFood] : [])].map((candidate) => ({
+        name: candidate.name,
+        alsoKnownAs: candidate.aliases.slice(0, SHOWN_ALIASES),
+      })),
+    },
+    questions: {
+      food: {
+        type: "choice",
+        instructions:
+          "The name's own words say it is a kind of the first food; a language model read it otherwise. Which is right?",
+        criteria,
+      },
+    },
+  });
+  const { choice, probabilities } = answers.food;
+  const probability = probabilities[choice] ?? 0;
+
+  aiLogger.info(
+    { text, words: wordsFood.name, ai: aiFood?.name ?? null, choice, probability },
+    "Decision settled the words' food against the language model's"
+  );
+
+  if (probability < RESOLUTION_THRESHOLD) return null;
+
+  return {
+    kind: "new",
+    kindOf: choice === "words" ? wordsFood.id : (aiFood?.id ?? null),
+    flagged: false,
+    reason: null,
+  };
 }
 
 const readingSchema = z
@@ -243,7 +353,7 @@ async function readName(text: string): Promise<Reading> {
 async function askAbout(
   text: string,
   candidates: readonly IngredientCandidate[]
-): Promise<AIResolution> {
+): Promise<Answered> {
   if (candidates.length > 0 && (await isDecisionUseEnabled("ingredientResolution"))) {
     // A Decision failure of any retryability is a warn log and the fallback.
     const decided = await decideFood(text, candidates).catch((error: unknown) => {
@@ -255,10 +365,10 @@ async function askAbout(
       return null;
     });
 
-    if (decided) return decided;
+    if (decided) return { answer: decided, from: "decision" };
   }
 
-  return await askLanguageModel(text, candidates).catch((error: unknown) => {
+  const answer = await askLanguageModel(text, candidates).catch((error: unknown) => {
     aiLogger.warn(
       { err: error, feature: "ingredient-resolution", text },
       "Ingredient resolution failed, minting a flagged Ingredient"
@@ -266,6 +376,8 @@ async function askAbout(
 
     return flaggedNew("ai-unavailable");
   });
+
+  return { answer, from: "language-model" };
 }
 
 const NEW = "new";

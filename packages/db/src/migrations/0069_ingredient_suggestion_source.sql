@@ -1,0 +1,1 @@
+ALTER TABLE "ingredient_suggestions" ADD COLUMN "source" text DEFAULT 'ai' NOT NULL;

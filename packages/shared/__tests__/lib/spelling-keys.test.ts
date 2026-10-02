@@ -48,8 +48,51 @@ describe("spelling keys", () => {
       fold: "onions diced",
       bare: "Onions",
       bareFold: "onions",
+      plain: "Onions",
       plainFold: "onions",
     });
+  });
+
+  it("strips preparation written without a comma, at either end, and names the food as written", () => {
+    expect(spellingKeys("Garlic cloves crushed", phrases)).toMatchObject({
+      bare: "Garlic cloves crushed",
+      plain: "Garlic cloves",
+      plainFold: "garlic cloves",
+    });
+    expect(foodKey("piece of ginger peeled and finely chopped", phrases)).toBe("ginger");
+    expect(foodKey("finely chopped onion", phrases)).toBe("onion");
+    expect(foodKey("cherry tomatoes 5 chopped", phrases)).toBe("cherry tomatoes");
+    expect(foodKey("coriander leaves picked, stalks finely chopped", phrases)).toBe(
+      "coriander leaves"
+    );
+    expect(foodKey("gesnipperde ui", phrases)).toBe("ui");
+    // A joiner is stripped only beside a preparation word.
+    expect(foodKey("salt and pepper", phrases)).toBe("salt and pepper");
+    // A word that names a different food stays.
+    expect(foodKey("ground beef", phrases)).toBe("ground beef");
+    expect(foodKey("dried apricots", phrases)).toBe("dried apricots");
+    expect(foodKey("chopped", phrases)).toBe("chopped");
+  });
+
+  it("keeps the text as written where the cut would split a word of it", () => {
+    expect(spellingKeys("thumb-sized piece ginger grated", phrases)).toMatchObject({
+      plain: "thumb-sized piece ginger",
+      plainFold: "thumb sized piece ginger",
+    });
+    // "freeze-dried" folds to two words; nothing is stripped from inside it.
+    expect(spellingKeys("freeze-dried curry leaves", phrases).plain).toBe(
+      "freeze-dried curry leaves"
+    );
+  });
+
+  it("strips a container from the units map at the start of a text, never at its end", () => {
+    expect(foodKey("can of chickpeas drained and rinsed", phrases)).toBe("chickpeas");
+    expect(foodKey("400g can chickpeas", phrases)).toBe("400g can chickpeas");
+    expect(foodKey("pak koriander", phrases)).toBe("koriander");
+    expect(foodKey("blik tomaten", phrases)).toBe("tomaten");
+    expect(foodKey("pepper pot", phrases)).toBe("pepper pot");
+    expect(foodKey("onion pieces", phrases)).toBe("onion pieces");
+    expect(foodKey("can of chickpeas")).toBe("can of chickpeas");
   });
 
   it("strips a units-map phrase at either end, with the word that joins a leading one", () => {

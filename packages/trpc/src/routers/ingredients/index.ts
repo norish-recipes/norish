@@ -7,6 +7,7 @@ import type {
   IngredientNutrition,
   NutritionFoodSummary,
 } from "@norish/shared/contracts/ingredient-nutrition";
+import { assertAIEnabled } from "@norish/auth/permissions";
 import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
 import { findRunningReviewRound, readReviewReport } from "@norish/queue/ingredient-review/progress";
@@ -215,11 +216,13 @@ const removeAlias = authedProcedure
 
 /**
  * Ask AI what a Flagged Ingredient is, and act on a sure answer. Follows
- * `edit` on the Ingredient. Answers what came of it, for the page to say.
+ * `edit` on the Ingredient, and AI being on for the instance, as every AI
+ * use does. Answers what came of it, for the page to say.
  */
 const reviewWithAI = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .mutation(async ({ ctx, input }) => {
+    await assertAIEnabled();
     log.info(
       { userId: ctx.user.id, ingredientId: input.ingredientId },
       "Asking AI about a flagged Ingredient"
@@ -244,6 +247,7 @@ const reviewWithAI = authedProcedure
 const findParentWithAI_ = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .mutation(async ({ ctx, input }) => {
+    await assertAIEnabled();
     log.info(
       { userId: ctx.user.id, ingredientId: input.ingredientId },
       "Asking AI what an Ingredient is a kind of"
@@ -275,6 +279,7 @@ const reviewAllWithAI = authedProcedure
     })
   )
   .mutation(async ({ ctx, input }) => {
+    await assertAIEnabled();
     log.info(
       { userId: ctx.user.id, count: input.ingredientIds.length, mode: input.mode ?? "review" },
       "Starting a round of Ask AI over Ingredients"

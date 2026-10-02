@@ -4,7 +4,12 @@ import { alias } from "drizzle-orm/pg-core";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { db } from "@norish/db/drizzle";
-import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
+import {
+  ingredientAliases,
+  ingredients,
+  ingredientSuggestions,
+  recipeIngredients,
+} from "@norish/db/schema";
 import { CATALOGUE_LANGUAGES, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 
 import { isConstraintViolation } from "./constraint-violation";
@@ -156,6 +161,12 @@ export interface MintIngredientInput {
   flagReason?: FlagReason | null;
   /** The Parent Ingredient, where the food is a kind of a known one; none where that one is gone. */
   parentId?: string | null;
+  /**
+   * Whether the parent is a guess from the words of the name that a person
+   * should confirm: a `words` suggestion is recorded beside the mint, in the
+   * same transaction, so the two never disagree.
+   */
+  suggestParent?: boolean;
 }
 
 /**
@@ -211,6 +222,20 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
       )[0]?.id;
 
     if (!ingredientId) throw new Error("Failed to mint or find ingredient");
+
+    // Only a parent that was actually applied is put to a person; a name that
+    // joined an existing Ingredient got none.
+    if (minted && input.parentId && input.suggestParent) {
+      await tx
+        .insert(ingredientSuggestions)
+        .values({
+          ingredientId: minted.id,
+          kind: "parent",
+          targetId: input.parentId,
+          source: "words",
+        })
+        .onConflictDoNothing();
+    }
 
     await tx
       .insert(ingredientAliases)
@@ -403,6 +428,22 @@ async function withParents(
   );
 
   return [...picked, ...(await candidatesFor(missing))];
+}
+
+/**
+ * These Ingredients as candidates, where they still exist: the food a name's
+ * own words point at, put to the question beside what the word starts found.
+ */
+export async function findIngredientCandidatesById(
+  ids: readonly string[]
+): Promise<IngredientCandidate[]> {
+  if (ids.length === 0) return [];
+  const rows = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .where(inArray(ingredients.id, [...ids]));
+
+  return await candidatesFor(rows);
 }
 
 /** Candidate rows for known Ingredients: each with its shortest other names. */

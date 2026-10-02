@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { asc, count, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
@@ -165,6 +165,27 @@ export async function setCatalogueIngredientParent(
 }
 
 /**
+ * Take off a parent the resolver gave an Ingredient from the words of its
+ * name, where that is still its parent and no person chose one since: what
+ * dismissing a `words` suggestion does. Whether anything changed.
+ */
+export async function unfileIngredient(id: string, parentId: string): Promise<boolean> {
+  const unfiled = await db
+    .update(ingredients)
+    .set({ parentId: null, version: sql`${ingredients.version} + 1` })
+    .where(
+      and(
+        eq(ingredients.id, id),
+        eq(ingredients.parentId, parentId),
+        eq(ingredients.parentChosen, false)
+      )
+    )
+    .returning({ id: ingredients.id });
+
+  return unfiled.length > 0;
+}
+
+/**
  * Merge one Ingredient into another: every spelling of the source becomes
  * the target's, so every recipe line, grocery and Pantry Ingredient behind
  * them now means the target, and the source is deleted. What the household
@@ -172,14 +193,17 @@ export async function setCatalogueIngredientParent(
  * preferences — joins the target, except where the target already has one
  * at that Store (or for that member): the target's is kept. A household that
  * held both foods in the Pantry keeps the one Pantry Ingredient. The target's
- * flag is cleared, and it takes the source's Open Food Facts id when it has
- * none, so the seed keeps finding the food. Takes the tree lock and both
- * rows itself; false, and nothing written, where either is gone.
+ * flag is cleared — a person merged into it — unless `keepFlag`, for a merge
+ * nobody decided (the startup pass folding one undecided mint into another),
+ * and it takes the source's Open Food Facts id when it has none, so the seed
+ * keeps finding the food. Takes the tree lock and both rows itself; false,
+ * and nothing written, where either is gone.
  */
 export async function mergeCatalogueIngredients(
   tx: DbTransaction,
   sourceId: string,
-  targetId: string
+  targetId: string,
+  { keepFlag = false }: { keepFlag?: boolean } = {}
 ): Promise<boolean> {
   await lockTree(tx);
   if ((await lockIngredients(tx, [sourceId, targetId])) < 2) return false;
@@ -216,10 +240,15 @@ export async function mergeCatalogueIngredients(
     .where(eq(ingredients.id, sourceId))
     .returning({ offId: ingredients.offId });
 
-  await tx.execute(sql`
-    update ${ingredients} set flagged = false, flag_reason = null, version = version + 1,
-      off_id = coalesce(off_id, ${gone?.offId ?? null})
-    where id = ${targetId}`);
+  await tx.execute(
+    keepFlag
+      ? sql`update ${ingredients} set version = version + 1,
+          off_id = coalesce(off_id, ${gone?.offId ?? null})
+        where id = ${targetId}`
+      : sql`update ${ingredients} set flagged = false, flag_reason = null, version = version + 1,
+          off_id = coalesce(off_id, ${gone?.offId ?? null})
+        where id = ${targetId}`
+  );
 
   return true;
 }

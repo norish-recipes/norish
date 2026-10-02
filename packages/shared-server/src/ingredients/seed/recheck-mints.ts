@@ -5,20 +5,29 @@
  * runs once per `RUNG_VERSION`, so lines on legacy recipes reach the seeded
  * Ingredients each time the rules for reading a name improve, without AI.
  *
- * For every flagged mint no person decided about (`listUndecidedMints`):
- * where its spellings now resolve, by the resolver's first two rungs, to one
- * other Ingredient, it is merged there, and its lines follow their aliases;
- * where they name none, it is filed under the seeded spelling its name ends
- * with, and stays flagged; where they name several, it is left for a person.
+ * For every flagged mint no person decided about (`listUndecidedMints`), in
+ * the order they were minted: where its spellings now resolve, by the
+ * resolver's first two rungs, to one other Ingredient, it is merged there,
+ * and its lines follow their aliases; where they name none, it takes the
+ * plain name the resolver would mint it under today ("garlic cloves" for
+ * "garlic cloves crushed"), so the sibling mints after it ("garlic cloves
+ * thinly sliced") resolve to it and merge, and is filed under the seeded
+ * spelling its name contains, staying flagged — with a suggestion to confirm
+ * where the spelling is not what the name ends with; where they name
+ * several, it is left for a person.
  * Nothing here is the resolver's rules over again: it asks the resolver.
  */
 import { withTransaction } from "@norish/db/drizzle";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
-import { fileUndecidedMint, listUndecidedMints } from "@norish/db/repositories/ingredient-seed";
+import {
+  adoptPlainName,
+  fileUndecidedMint,
+  listUndecidedMints,
+} from "@norish/db/repositories/ingredient-seed";
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 
-import { findOtherIngredientsFor, parentFromWordsOf, RUNG_VERSION } from "../resolver";
+import { findOtherIngredientsFor, parentFromWordsOf, plainNameOf, RUNG_VERSION } from "../resolver";
 import { readIngredientSeedState, updateIngredientSeedState } from "./catalogue-seed";
 
 const log = createLogger("ingredient-recheck");
@@ -38,16 +47,26 @@ export async function recheckUndecidedMints(): Promise<RecheckOutcome> {
     if (targets.size === 1) {
       const [target] = targets;
 
-      if (await withTransaction((tx) => mergeCatalogueIngredients(tx, mint.id, target!))) {
+      // Into a seeded food, or into an earlier undecided mint: that one stays flagged.
+      if (
+        await withTransaction((tx) =>
+          mergeCatalogueIngredients(tx, mint.id, target!, { keepFlag: true })
+        )
+      ) {
         outcome.merged += 1;
       }
       continue;
     }
-    if (targets.size > 1 || mint.parentId !== null) continue;
+    if (targets.size > 1) continue;
 
-    const parentId = await parentFromWordsOf(mint.name);
+    const plain = await plainNameOf(mint.name);
 
-    if (parentId && (await fileUndecidedMint(mint.id, parentId))) outcome.filed += 1;
+    if (plain) await adoptPlainName(mint.id, plain);
+    if (mint.parentId !== null) continue;
+
+    const parent = await parentFromWordsOf(mint.name);
+
+    if (parent && (await fileUndecidedMint(mint.id, parent.id, !parent.sure))) outcome.filed += 1;
   }
 
   return outcome;

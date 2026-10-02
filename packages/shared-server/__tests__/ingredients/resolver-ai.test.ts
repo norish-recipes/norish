@@ -7,12 +7,18 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
 import { withTransaction } from "@norish/db/drizzle";
 import {
   findIngredientAncestors,
   mergeCatalogueIngredients,
 } from "@norish/db/repositories/ingredient-relocation";
+import {
+  applyIngredientSeed,
+  listSeededIngredientIds,
+} from "@norish/db/repositories/ingredient-seed";
+import { listIngredientSuggestions } from "@norish/db/repositories/ingredient-suggestions";
 import { ingredientAliases, ingredients } from "@norish/db/schema";
 import {
   RESOLUTION_BUDGET_MS,
@@ -24,6 +30,7 @@ import {
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -83,6 +90,35 @@ function answers(answer: {
   sure: boolean;
 }) {
   vi.mocked(generateStructured).mockResolvedValueOnce(answer);
+}
+
+/** The language model's answer naming a listed food by name, whatever its number. */
+function answersAbout(name: string, verdict: "same" | "kind-of", sure: boolean) {
+  vi.mocked(generateStructured).mockImplementationOnce((async ({
+    sections,
+  }: {
+    sections: string[];
+  }) => {
+    const line = sections
+      .join("\n")
+      .split("\n")
+      .find((row) => /^\d+\. /.test(row) && row.slice(row.indexOf(" ") + 1).startsWith(name));
+
+    if (!line) throw new Error(`no listed food reads "${name}": ${sections.join(" | ")}`);
+
+    return { verdict, food: Number(line.split(".")[0]), sure, englishName: null };
+  }) as never);
+}
+
+function entry(offId: string, ...names: string[]): SeedEntry {
+  return {
+    offId,
+    name: names[0]!,
+    nameFold: ingredientAliasFold(names[0]!),
+    parentOffId: null,
+    nutrition: null,
+    aliases: names.map((text) => ({ text, fold: ingredientAliasFold(text), locale: null })),
+  };
 }
 
 describe("ingredient resolver, rung 3", () => {
@@ -345,6 +381,81 @@ describe("ingredient resolver, rung 3", () => {
 
     await expect(resolveOne("red onions")).resolves.toMatchObject({
       ingredientId: onion.ingredientId,
+    });
+  });
+
+  describe("weighed against the words of the name", () => {
+    let seeded: Map<string, string>;
+
+    beforeEach(async () => {
+      // "garlic cloves crushed" points at garlic by its words; "clov" also finds the spice.
+      await applyIngredientSeed([entry("en:garlic", "garlic"), entry("en:clove", "clove")]);
+      seeded = await listSeededIngredientIds();
+    });
+
+    async function parentOf(ingredientId: string) {
+      return (await findIngredientAncestors([ingredientId])).get(ingredientId)?.[0] ?? null;
+    }
+
+    it("takes an unsure answer that agrees with the words as sure: filed, unflagged, no question", async () => {
+      vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+      answersAbout("garlic", "kind-of", false);
+      const cloves = await resolveOne("garlic cloves crushed");
+
+      await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({
+        name: "garlic cloves",
+        flagged: false,
+      });
+      expect(await parentOf(cloves.ingredientId)).toBe(seeded.get("en:garlic"));
+      expect(await listIngredientSuggestions()).toHaveLength(0);
+    });
+
+    it("lets the Decision settle the language model against the words, either way", async () => {
+      decides("Is a kind of garlic", 0.4);
+      answersAbout("clove", "kind-of", true);
+      decides("Is a kind of garlic", 0.9);
+      const cloves = await resolveOne("garlic cloves crushed");
+
+      await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({ flagged: false });
+      expect(await parentOf(cloves.ingredientId)).toBe(seeded.get("en:garlic"));
+
+      decides("Is a kind of garlic", 0.4);
+      answersAbout("clove", "kind-of", true);
+      decides("Is a kind of clove", 0.9);
+      const sliced = await resolveOne("garlic bulb cloves");
+
+      expect(sliced.ingredientId).not.toBe(cloves.ingredientId);
+      expect(await parentOf(sliced.ingredientId)).toBe(seeded.get("en:clove"));
+      expect(vi.mocked(decide)).toHaveBeenCalledTimes(4);
+    });
+
+    it("keeps the language model's answer where the Decision cannot settle it, or there is none", async () => {
+      decides("Is a kind of garlic", 0.4);
+      answersAbout("clove", "kind-of", true);
+      decides("Is a kind of garlic", 0.6);
+      const undecided = await resolveOne("garlic cloves crushed");
+
+      expect(await parentOf(undecided.ingredientId)).toBe(seeded.get("en:clove"));
+
+      vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+      answersAbout("clove", "kind-of", true);
+      const alone = await resolveOne("garlic bulb cloves");
+
+      expect(await parentOf(alone.ingredientId)).toBe(seeded.get("en:clove"));
+      await expect(ingredientFor(alone.aliasId)).resolves.toMatchObject({ flagged: false });
+    });
+
+    it("falls back to the words, with a question for a person, where AI is unsure and names nothing", async () => {
+      vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+      answers({ verdict: "new", food: null, sure: false });
+      const cloves = await resolveOne("garlic cloves crushed");
+
+      await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({
+        flagged: true,
+        flagReason: "ai-unsure",
+      });
+      expect(await parentOf(cloves.ingredientId)).toBe(seeded.get("en:garlic"));
+      expect(await listIngredientSuggestions()).toMatchObject([{ source: "words" }]);
     });
   });
 

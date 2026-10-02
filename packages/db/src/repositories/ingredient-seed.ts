@@ -10,6 +10,7 @@ import {
   ingredientNutritionCorrections,
   ingredients,
   ingredientStorePreferences,
+  ingredientSuggestions,
   pantryIngredients,
   recipeIngredients,
   recurringGroceries,
@@ -475,12 +476,47 @@ export async function listUndecidedMints(): Promise<
 }
 
 /**
+ * Give an undecided mint the plain name the resolver would mint it under
+ * today: the name as a spelling, so later lines that strip to it land here
+ * and a sibling mint that strips to it merges here, and as its name where
+ * the mint still carries the text it was minted for and no other Ingredient
+ * holds the plain name. A spelling another Ingredient holds is left there.
+ */
+export async function adoptPlainName(
+  id: string,
+  plain: { text: string; fold: string }
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(ingredientAliases)
+      .values({ text: plain.text, fold: plain.fold, ingredientId: id, ownerId: null })
+      .onConflictDoNothing();
+    await tx
+      .update(ingredients)
+      .set({ name: plain.text, version: sql`${ingredients.version} + 1` })
+      .where(
+        and(
+          eq(ingredients.id, id),
+          eq(ingredients.flagged, true),
+          eq(ingredients.parentChosen, false),
+          sql`not exists (select 1 from ${ingredients} o where o.id <> ${id} and lower(o.name) = lower(${plain.text}))`
+        )
+      );
+  });
+}
+
+/**
  * File an undecided mint under the parent its words suggest, leaving it
  * flagged and the parent unchosen: only where it still has no parent, no
  * person decided about it meanwhile, and the parent would close no cycle.
- * Whether it was filed.
+ * With `suggest`, a `words` suggestion is recorded beside it for a person
+ * to confirm or dismiss, replacing any older one. Whether it was filed.
  */
-export async function fileUndecidedMint(id: string, parentId: string): Promise<boolean> {
+export async function fileUndecidedMint(
+  id: string,
+  parentId: string,
+  suggest = false
+): Promise<boolean> {
   return await db.transaction(async (tx) => {
     await lockTree(tx);
     if ((await findIngredientAncestors([parentId], tx)).get(parentId)?.includes(id)) return false;
@@ -499,6 +535,18 @@ export async function fileUndecidedMint(id: string, parentId: string): Promise<b
         )
       )
       .returning({ id: ingredients.id });
+
+    if (filed.length > 0 && suggest) {
+      const values = { kind: "parent", targetId: parentId, source: "words" };
+
+      await tx
+        .insert(ingredientSuggestions)
+        .values({ ingredientId: id, ...values })
+        .onConflictDoUpdate({
+          target: ingredientSuggestions.ingredientId,
+          set: { ...values, englishName: null, considered: [], createdAt: new Date() },
+        });
+    }
 
     return filed.length > 0;
   });

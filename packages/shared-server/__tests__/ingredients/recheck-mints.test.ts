@@ -18,6 +18,7 @@ import {
   applyIngredientSeed,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
+import { listIngredientSuggestions } from "@norish/db/repositories/ingredient-suggestions";
 import { ingredients, serverConfig } from "@norish/db/schema";
 import { listIngredients, markDistinct } from "@norish/shared-server/ingredients/catalogue";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
@@ -61,6 +62,8 @@ describe("looking at old Flagged Ingredients again", () => {
       entry("en:salt", "salt", "zout"),
       entry("en:parsley", "parsley", "peterselie"),
       entry("en:cumin", "cumin"),
+      entry("en:garlic", "garlic"),
+      entry("en:chickpea", "chickpeas"),
     ]);
     seeded = await listSeededIngredientIds();
   });
@@ -128,6 +131,47 @@ describe("looking at old Flagged Ingredients again", () => {
       flagged: true,
       parent: { id: seeded.get("en:parsley") },
     });
+  });
+
+  it("merges a legacy mint whose preparation was written without a comma", async () => {
+    const legacy = await legacyMint("can of chickpeas drained and rinsed");
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 1, filed: 0 });
+    expect(await shown(legacy)).toBeNull();
+  });
+
+  it("gives a legacy mint its plain name, so its siblings merge into it", async () => {
+    const crushed = await legacyMint("garlic cloves crushed");
+    const sliced = await legacyMint("garlic cloves thinly sliced");
+    const chopped = await legacyMint("garlic cloves, finely chopped");
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 2, filed: 1 });
+    expect(await shown(sliced)).toBeNull();
+    expect(await shown(chopped)).toBeNull();
+    expect(await shown(crushed)).toMatchObject({
+      name: "garlic cloves",
+      flagged: true,
+      parent: { id: seeded.get("en:garlic") },
+    });
+    expect((await shown(crushed))!.aliases.map((alias) => alias.text).sort()).toEqual([
+      "garlic cloves",
+      "garlic cloves crushed",
+      "garlic cloves thinly sliced",
+      "garlic cloves, finely chopped",
+    ]);
+  });
+
+  it("files a legacy mint under a food inside its words, with a suggestion to confirm", async () => {
+    const legacy = await legacyMint("garlic cloves crushed");
+
+    await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 1 });
+    expect(await shown(legacy)).toMatchObject({
+      flagged: true,
+      parent: { id: seeded.get("en:garlic") },
+    });
+    expect(await listIngredientSuggestions()).toMatchObject([
+      { ingredientId: legacy, kind: "parent", source: "words" },
+    ]);
   });
 
   it("leaves alone what a person decided, even under a flag raised again since", async () => {

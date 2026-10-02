@@ -5,10 +5,19 @@
  * as their own edit, under their permissions — or dismisses it, which leaves
  * the food as it was. Either follows `edit` on the food the suggestion is
  * about; a merge needs `edit` on its target too, as a merge by hand does.
+ *
+ * One suggestion is not AI's: the parent the resolver gave a mint from inside
+ * the words of its name (`source: "words"`, ADR-0037 as amended). That parent
+ * is already in place, so confirming keeps it as the person's choice and
+ * dismissing takes it off again.
  */
-import type { SuggestionKind } from "@norish/shared/contracts/ingredient-catalogue";
+import type {
+  SuggestionKind,
+  SuggestionSource,
+} from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
+import { unfileIngredient } from "@norish/db/repositories/ingredient-relocation";
 import {
   deleteIngredientSuggestion,
   findIngredientSuggestions,
@@ -34,6 +43,7 @@ export interface IngredientSuggestionItem {
   target: { id: string; name: string; localeNames: LocaleNames } | null;
   englishName: string | null;
   considered: string[];
+  source: SuggestionSource;
   canAnswer: boolean;
 }
 
@@ -58,6 +68,7 @@ export async function listSuggestions(actor: CatalogueActor): Promise<Ingredient
     target: row.target ? { ...row.target, localeNames: names.get(row.target.id) ?? {} } : null,
     englishName: row.englishName,
     considered: row.considered,
+    source: row.source,
     canAnswer: mayEditIngredientRow(policy.edit, actor, row.ingredientOwnerId),
   }));
 }
@@ -89,7 +100,11 @@ export async function confirmSuggestion(
   }
 }
 
-/** Dismiss a suggestion: the food stays as it was, and the page stops offering it. */
+/**
+ * Dismiss a suggestion: the food stays as it was, and the page stops offering
+ * it. A parent the words of the name gave is taken off again, since "as it
+ * was" is before the guess.
+ */
 export async function dismissSuggestion(
   actor: CatalogueActor,
   suggestionId: string
@@ -106,6 +121,15 @@ export async function dismissSuggestion(
   await deleteIngredientSuggestion(suggestionId);
 
   const changed = [suggestion.ingredientId];
+
+  if (
+    suggestion.source === "words" &&
+    suggestion.kind === "parent" &&
+    suggestion.target &&
+    (await unfileIngredient(suggestion.ingredientId, suggestion.target.id))
+  ) {
+    changed.push(suggestion.target.id);
+  }
 
   await ingredientChanges().changed(changed);
 

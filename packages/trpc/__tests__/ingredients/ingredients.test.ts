@@ -15,6 +15,7 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
+import { isAIEnabled } from "../mocks/permissions";
 import { ingredients as ingredientsRealtime } from "../mocks/realtime/ingredients";
 
 const catalogue = vi.hoisted(() => ({
@@ -65,6 +66,7 @@ const TX = vi.hoisted(() => ({ tx: true }));
 vi.mock("@norish/db/drizzle", () => ({
   withTransaction: (run: (tx: unknown) => unknown) => run(TX),
 }));
+vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/queue/registry", () => ({ getQueues: () => ({ ingredientReview: reviewQueue }) }));
 vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
@@ -254,8 +256,9 @@ describe("the edit policy", () => {
       if (allowed) {
         await expect(set).resolves.toEqual({ success: true });
         expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledWith(TX, ONION, UIEN);
+        // The move is announced with the parent it went to, so its tree refreshes.
         expect(ingredientsRealtime.published).toEqual([
-          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION, UIEN] } }),
         ]);
       } else {
         await expect(set).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -431,6 +434,23 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     );
   });
 
+  it("refuses every AI question while AI is off for the instance", async () => {
+    isAIEnabled.mockResolvedValue(false);
+
+    await expect(callerFor().reviewWithAI({ ingredientId: UIEN })).rejects.toThrow(
+      "AI features are disabled"
+    );
+    await expect(callerFor().findParentWithAI({ ingredientId: UIEN })).rejects.toThrow(
+      "AI features are disabled"
+    );
+    await expect(callerFor().reviewAllWithAI({ ingredientIds: [UIEN] })).rejects.toThrow(
+      "AI features are disabled"
+    );
+    expect(reviewer.reviewFlaggedWithAI).not.toHaveBeenCalled();
+    expect(reviewQueue.add).not.toHaveBeenCalled();
+    isAIEnabled.mockResolvedValue(true);
+  });
+
   it("asks what one food is a kind of, and announces the suggestion", async () => {
     reviewer.findParentWithAI.mockResolvedValueOnce({
       outcome: "parent",
@@ -548,6 +568,7 @@ describe("AI's suggestions", () => {
       target: kind === "distinct" ? null : { id: ONION, name: "onion" },
       englishName: "onions",
       considered: ["onion"],
+      source: "ai" as const,
     };
   }
 
