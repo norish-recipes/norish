@@ -58,4 +58,8 @@ export const SPELLING_CASES: ReadonlyArray<readonly [string, string, boolean]> =
   ["bosui", "ongeveer 4 el fijngesneden bosui", true],
   ["ui", "grote ui", true],
   ["chickpeas", "400g can chickpeas", true],
+  // A weight or a volume an import left at the start without its number.
+  ["cherrytomaten", "GR CHERRYTOMATEN", true],
+  ["buttermilk", "Cup (250ml) - Buttermilk", true],
+  ["honing", "tl. honing", true],
 ];

@@ -127,6 +127,25 @@ describe("spelling keys", () => {
     expect(foodKey("can of chickpeas")).toBe("can of chickpeas");
   });
 
+  it("strips a weight or a volume at the start of a text, with or without its number", () => {
+    // An import that moved the number to the amount and left its unit in the name.
+    expect(foodKey("GR CHERRYTOMATEN", phrases)).toBe("cherrytomaten");
+    expect(foodKey("tl. Citroensap", phrases)).toBe("citroensap");
+    expect(foodKey("EL MAYONAISE", phrases)).toBe("mayonaise");
+    expect(spellingKeys("Cup (250ml) - Buttermilk", phrases)).toMatchObject({
+      plain: "Buttermilk",
+      plainFold: "buttermilk",
+    });
+    expect(foodKey("heaped tablespoons peanut butter", phrases)).toBe("peanut butter");
+    expect(foodKey("cup of milk", phrases)).toBe("milk");
+    // A one-letter spelling is left alone: "T-bone", "L. reuteri".
+    expect(foodKey("T-bone steak", phrases)).toBe("t bone steak");
+    // A measure alone stands, as any text does.
+    expect(foodKey("el", phrases)).toBe("el");
+    // Without a units map nothing is a measure.
+    expect(foodKey("GR CHERRYTOMATEN")).toBe("gr cherrytomaten");
+  });
+
   it("strips a units-map phrase at either end, with the word that joins a leading one", () => {
     expect(foodKey("Salt to taste", phrases)).toBe("salt");
     expect(foodKey("a pinch of nutmeg", phrases)).toBe("nutmeg");
@@ -143,7 +162,7 @@ describe("spelling keys", () => {
     expect(foodKey("vitamin c", phrases)).toBe("vitamin c");
   });
 
-  it("strips vague amounts and serving phrases, never a measure or a piece, which name foods too", () => {
+  it("strips vague amounts and serving phrases, never a piece, which names foods too", () => {
     expect(foodKey("onion rings", phrases)).toBe("onion rings");
     expect(foodKey("glass noodles", phrases)).toBe("glass noodles");
     expect(foodKey("garlic cloves", phrases)).toBe("garlic cloves");

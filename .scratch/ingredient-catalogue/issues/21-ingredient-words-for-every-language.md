@@ -43,3 +43,9 @@ The words a name is read by become data per language beside the units map, shipp
   - Still flagged: "strengen bosui", under spring onion, and "0 cal sweetener of choice", which Mike expected.
   - The totals went from 7,260 to 7,088 Ingredients, 1,559 to 1,387 flagged, and 404 to 372 unseeded with no parent.
   - The backfill takes 9 s and the recheck under 1 s, down from 43 s and 50 s before the rules were cached per pass.
+- 2026-10-04, Mike on the production copy: "i still see products with just el or GR runderhakt … we should always filter out the UOMS".
+  - Rung 2 strips a weight or a volume at a name's start without a number before it. `MEASURE_MAP_IDS` (`@norish/shared/lib/units`) says which units-map entries those are, and it is the unit table nutrition's `leadingUnitOf` reads too. Pieces stay ("glass noodles").
+  - `namesNoFood` also covers an amount alone ("el", "1 el", "200g"), by `isMeasure(resolveUnit(word))`.
+  - `RUNG_VERSION` 5.
+  - Measured on the copy's 3,228 line names: all 57 that started with a weight or a volume were left-over units. 56 now read as their food, and the bare "el" names no food. In the 69,415 seeded spellings only "gram flour", "gram-meel", "grammo nero" and "cup mushroom" start with one; they still match exactly.
+  - The amount-alone rule makes 1 line name no food on the copy ("el", in "Gehaktballen"), and 1 seeded spelling: a Dutch "c" alias of golden chanterelle.

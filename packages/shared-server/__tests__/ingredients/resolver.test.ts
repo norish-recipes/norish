@@ -396,6 +396,35 @@ describe("ingredient resolver", () => {
       expect((await resolveOne("sauce")).ingredientId).toBe(sauce.ingredientId);
     });
 
+    it("keeps a line that is an amount alone as naming no food, and mints nothing for it", async () => {
+      const recipeId = crypto.randomUUID();
+
+      await createRecipeWithRefs(
+        recipeId,
+        userId,
+        await withResolvedIngredients(
+          {
+            name: "Gehaktballen",
+            systemUsed: "metric",
+            recipeIngredients: [line("el", 0), line("GR RUNDERGEHAKT", 1)],
+          },
+          { userId }
+        )
+      );
+
+      expect((await getRecipeFull(recipeId))?.recipeIngredients).toMatchObject([
+        { ingredientName: "el", ingredientId: null },
+        { ingredientName: "GR RUNDERGEHAKT" },
+      ]);
+      await expect(findIngredientFor("el")).resolves.toBeNull();
+      // The gram an import left in the name is no part of the food's.
+      const [, beef] = (await getRecipeFull(recipeId))!.recipeIngredients;
+
+      await expect(
+        ingredientFor((await resolveOne("rundergehakt")).aliasId)
+      ).resolves.toMatchObject({ id: beef!.ingredientId, name: "RUNDERGEHAKT" });
+    });
+
     it("re-resolves an edited line's text on update", async () => {
       const recipeId = crypto.randomUUID();
 

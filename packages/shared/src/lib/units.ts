@@ -242,6 +242,16 @@ const BY_SPELLING: Map<string, ResolvedUnit> = (() => {
 
 const BY_ID = new Map(TABLE.map((entry) => [entry.id, entry] as const));
 
+/** Whether a unit is a weight or a volume: a unit of measure, where a piece or a pack is a count. */
+export function isMeasure(unit: ResolvedUnit | null | undefined): boolean {
+  return unit?.family === "mass" || unit?.family === "volume";
+}
+
+/** The units-map entries that spell a weight or a volume: "gram", "tablespoon", "heaping_teaspoon". */
+export const MEASURE_MAP_IDS: ReadonlySet<string> = new Set(
+  TABLE.flatMap((entry) => (isMeasure(entry) ? entry.mapIds : []))
+);
+
 /** UN/CEFACT codes, and the codes retailers write in their place. */
 const BY_CODE: Record<string, UnitId> = {
   GRM: "gram",

@@ -29,8 +29,9 @@ When Norish meets a name it does not know, it checks it against the translations
 has, then without the preparation (“onions, diced” is “onions”, and so are “onions
 finely chopped” and “finely chopped onions”, as many sites write it without the
 comma), without a size (“grote ui” is “ui”), without a quantity an import left at
-the start (“ongeveer 4 el bosui” is “bosui”), without a container at the start (“can
-of chickpeas”, “pack coriander”) and without a serving phrase or vague amount at
+the start (“ongeveer 4 el bosui” is “bosui”), without a weight or volume at the start
+even where its number is gone (“GR CHERRYTOMATEN”, “tl. citroensap”), without a
+container at the start (“can of chickpeas”, “pack coriander”) and without a serving phrase or vague amount at
 either end (“salt to taste”, “a pinch of nutmeg”, “parsley for garnish” are salt,
 nutmeg and parsley). A plural or diminutive of a name it knows is that food:
 “onions” is onion, and “bosuien” and “bosuitjes” are “bosui”. Only then, if
@@ -49,7 +50,7 @@ among the options: if it agrees, the ingredient is filed without a flag; if it
 names another food, a Decision Model gets the final say between the two, and
 without one AI's answer wins.
 
-The serving phrases, amounts and containers come from your server's units list, so
+The serving phrases, amounts, measures and containers come from your server's units list, so
 an admin can add a household's own phrasing there. The preparation words (chopped,
 crushed, peeled, drained, finely, roughly, and their Dutch counterparts) are fixed;
 words that name a different food, such as “ground”, “dried” or “smoked”, are never

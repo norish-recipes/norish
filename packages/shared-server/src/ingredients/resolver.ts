@@ -33,10 +33,11 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
  *   2. an alias whose fold is the text's with preparation stripped — the part
  *      after the first comma and anything in brackets ("onions, diced" and
  *      "onions (red)" are "onions") — else with a phrase of the units map at
- *      either end, a container at the start and preparation words at either
- *      end stripped too ("salt to taste", "a pinch of nutmeg", "naar smaak
- *      zout", "can of chickpeas drained and rinsed" and "garlic cloves
- *      crushed" are salt, nutmeg, zout, chickpeas and garlic cloves);
+ *      either end, a container, weight or volume at the start and
+ *      preparation words at either end stripped too ("salt to taste", "a
+ *      pinch of nutmeg", "naar smaak zout", "can of chickpeas drained and
+ *      rinsed", "GR CHERRYTOMATEN" and "garlic cloves crushed" are salt,
+ *      nutmeg, zout, chickpeas, CHERRYTOMATEN and garlic cloves);
  *   (both keys are `@norish/shared/lib/spelling-keys`, which the clients
  *   match unresolved text on too);
  *   3. what AI makes of it (`ai/resolution/ingredient-resolution`): a Decision, or the language
@@ -61,8 +62,9 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
  * again under the new rules (`recheckUndecidedMints`). 3: the ingredient
  * words of every language, plurals and diminutives at rung 2, and a
  * quantity left at a name's start. 4: a social media mention names no food.
+ * 5: a weight or a volume at a name's start, with or without its number.
  */
-export const RUNG_VERSION = 4;
+export const RUNG_VERSION = 5;
 
 /** Who the resolution is for: the owner of anything it mints. */
 export interface ResolveActor {
