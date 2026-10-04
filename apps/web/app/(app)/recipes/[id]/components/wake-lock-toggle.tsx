@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
-import { Button, Tooltip, toast } from "@heroui/react";
+import { Button, toast, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useWakeLockContext } from "./wake-lock-context";
