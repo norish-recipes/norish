@@ -1,5 +1,5 @@
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const toggle = vi.fn();
@@ -111,7 +111,9 @@ describe("WakeLockToggle", () => {
     button.click();
 
     expect(toggle).toHaveBeenCalledTimes(1);
-    expect(mockToast).toHaveBeenCalledWith("activeToast");
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith("activeToast");
+    });
   });
 
   it("shows inactive toast when manually turning wake lock off", async () => {
@@ -127,6 +129,8 @@ describe("WakeLockToggle", () => {
     button.click();
 
     expect(toggle).toHaveBeenCalledTimes(1);
-    expect(mockToast).toHaveBeenCalledWith("inactiveToast");
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith("inactiveToast");
+    });
   });
 });
