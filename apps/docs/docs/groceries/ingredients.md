@@ -29,26 +29,29 @@ When Norish meets a name it does not know, it checks it against the translations
 has, then without the preparation (“onions, diced” is “onions”, and so are “onions
 finely chopped” and “finely chopped onions”, as many sites write it without the
 comma), without a size (“grote ui” is “ui”), without a quantity an import left at
-the start (“ongeveer 4 el bosui” is “bosui”), without a weight or volume at the start
-even where its number is gone (“GR CHERRYTOMATEN”, “tl. citroensap”), without a
-container at the start (“can of chickpeas”, “pack coriander”) and without a serving phrase or vague amount at
-either end (“salt to taste”, “a pinch of nutmeg”, “parsley for garnish” are salt,
-nutmeg and parsley). A plural or diminutive of a name it knows is that food:
-“onions” is onion, and “bosuien” and “bosuitjes” are “bosui”. Only then, if
+the start (“ongeveer 4 el bosui” is “bosui”), without a weight or volume at the
+start even where its number is gone (“GR CHERRYTOMATEN”, “tl. citroensap”), without
+a container at the start (“can of chickpeas”, “pack coriander”) and without a
+serving phrase or vague amount at either end (“salt to taste”, “a pinch of nutmeg”,
+“parsley for garnish” are salt, nutmeg and parsley). A recipe line an older import
+saved with its unit in the text beside its amount is read the way the recipe editor
+reads it: “1 rol bladerdeeg” is bladerdeeg, and the line itself stays as written. A
+plural or diminutive of a name it knows is that food: “onions” is onion, and
+“bosuien” and “bosuitjes” are “bosui”. Only then, if
 [AI](../configuration/ai-provider.md) is set up, does it ask what food it is. The
-words it reads past, and the plural and diminutive endings, are the
-[ingredient words](../configuration/admin-settings.md#ingredient-words), shipped for
-every language Norish speaks and editable by an admin. Only when
-none of these is sure does it add a new ingredient, **flagged** for you to check,
-and named without the preparation: “garlic cloves crushed” becomes “garlic cloves”.
-A new ingredient whose name contains a food Norish knows is filed under it, so it
-uses that food's aisle and nutrition while it waits for you. “Ground cumin” goes
-under cumin without a question, and so does “dried tomatoes” under tomato.
-“Garlic cloves” goes under garlic with a **suggestion** for you to confirm or
-dismiss, because the food was not the last word of the name. With AI set up, AI is asked about the same name with that food
-among the options: if it agrees, the ingredient is filed without a flag; if it
-names another food, a Decision Model gets the final say between the two, and
-without one AI's answer wins.
+words it reads past, and the plural and diminutive endings, are the [ingredient
+words](../configuration/admin-settings.md#ingredient-words), shipped for every
+language Norish speaks and editable by an admin. Only when none of these is sure
+does it add a new ingredient, **flagged** for you to check, and named without the
+preparation: “garlic cloves crushed” becomes “garlic cloves”. A new ingredient whose
+name contains a food Norish knows is filed under it, so it uses that food's aisle
+and nutrition while it waits for you. “Ground cumin” goes under cumin without a
+question, and so does “dried tomatoes” under tomato. “Garlic cloves” goes under
+garlic with a **suggestion** for you to confirm or dismiss, because the food was not
+the last word of the name. With AI set up, AI is asked about the same name with that
+food among the options: if it agrees, the ingredient is filed without a flag; if it
+names another food, a Decision Model gets the final say between the two, and without
+one AI's answer wins.
 
 The serving phrases, amounts, measures and containers come from your server's units list, so
 an admin can add a household's own phrasing there. The preparation words (chopped,

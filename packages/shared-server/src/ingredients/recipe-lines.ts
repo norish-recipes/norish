@@ -7,7 +7,8 @@ import type {
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
 import { findIngredientNamesByIds } from "@norish/db/repositories/ingredient-aliases";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
-import { namesNoFood } from "@norish/shared/lib/ingredient-text";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { lineFoodText, namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import type { ResolveActor } from "./resolver";
 import { cleanIngredientText, resolveIngredients, writeResolved } from "./resolver";
@@ -15,6 +16,8 @@ import { cleanIngredientText, resolveIngredients, writeResolved } from "./resolv
 interface RecipeLineInput {
   ingredientId?: string | null;
   ingredientName?: string;
+  amount?: unknown;
+  unit?: string | null;
 }
 
 /**
@@ -23,7 +26,9 @@ interface RecipeLineInput {
  * `ingredientName` as written; a line that names only an Ingredient by id is
  * given that Ingredient's name as its text. A line left with no text is
  * dropped, as the recipe write always skipped it, and one that names no
- * food (a heading, a text with no letter or digit) is written as it is.
+ * food (a heading, a text with no letter or digit) is written as it is. A
+ * line's food is resolved from `lineFoodText`; a text written twice is read
+ * the first way.
  */
 export async function withResolvedIngredients<
   L extends RecipeLineInput,
@@ -48,17 +53,22 @@ export async function withResolvedIngredients<
 
     return text ? [{ ...line, ingredientName: text }] : [];
   });
-  const texts = Array.from(
-    new Set(
-      written.flatMap((line) =>
-        line.ingredientName && !namesNoFood(line.ingredientName) ? [line.ingredientName] : []
-      )
-    )
-  );
+  const units = await getUnits();
+  const foodTexts = new Map<string, string>();
+
+  for (const line of written) {
+    const text = line.ingredientName;
+
+    if (text && !namesNoFood(text) && !foodTexts.has(text)) {
+      foodTexts.set(text, lineFoodText({ text, amount: line.amount, unit: line.unit }, units));
+    }
+  }
+
+  const foods = await resolveIngredients([...foodTexts.values()], actor);
   const resolved: IngredientResolutions = new Map(
-    (await resolveIngredients(texts, actor)).map((row) => [
-      row.text,
-      { aliasId: row.aliasId, ingredientId: row.ingredientId },
+    [...foodTexts.keys()].map((text, index) => [
+      text,
+      { aliasId: foods[index]!.aliasId, ingredientId: foods[index]!.ingredientId },
     ])
   );
 

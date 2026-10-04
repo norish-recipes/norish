@@ -49,3 +49,10 @@ The words a name is read by become data per language beside the units map, shipp
   - `RUNG_VERSION` 5.
   - Measured on the copy's 3,228 line names: all 57 that started with a weight or a volume were left-over units. 56 now read as their food, and the bare "el" names no food. In the 69,415 seeded spellings only "gram flour", "gram-meel", "grammo nero" and "cup mushroom" start with one; they still match exactly.
   - The amount-alone rule makes 1 line name no food on the copy ("el", in "Gehaktballen"), and 1 seeded spelling: a Dutch "c" alias of golden chanterelle.
+- 2026-10-04, later, Mike: "we have proper UOM detection right?", then "would that change user recipes? if not feel free to do that".
+  - Re-splitting the old lines at upgrade (writing the unit and name the parser reads) was declined, because it rewrites recipes.
+  - Instead `lineFoodText` (`@norish/shared/lib/ingredient-text`): a line with an amount and no unit is read for its food as the recipe editor reads it, number in front. `withResolvedIngredients` (every save) and the upgrade backfill resolve that text. The line keeps its text, amount and unit, and the text becomes no alias.
+  - Measured: of the copy's 1,107 lines with an amount and no unit, the parser finds a unit in 78. All 78 are right, including the 16 piece-unit lines the weight-and-volume rule leaves ("rol bladerdeeg", "krop ijsbergsla", "Teen Knoflook", "blokje kippenbouillon", "stalks celery").
+  - Never without a number: the parser takes a leading unit word even then, so "glass noodles" is glass + "noodles" and "filet americain" is fillet + "americain".
+  - Replayed from pristine: 7,039 Ingredients and 1,337 flagged (7,089 and 1,387 before today's two changes). The backfill takes 7.1 s, and the parse costs 0.46 ms a line.
+  - Not covered: a line whose unit column is set and whose text starts with a second unit ("1 | teen | Teen Knoflook", "150 | gram | bol mozzarella"), because the parser takes one unit. There are 4 such lines on the copy.

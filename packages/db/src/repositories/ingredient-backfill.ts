@@ -29,16 +29,30 @@ import {
 export type ResolvedReference = { id: string } & IngredientRef;
 
 /**
- * Recipe lines written before aliases existed, with the recipe's owner, after
- * the given id. A `#` heading names no food and never has an alias, so it is
- * never listed.
+ * Recipe lines written before aliases existed, with their amount and unit and
+ * the recipe's owner, after the given id. A `#` heading names no food and
+ * never has an alias, so it is never listed.
  */
 export async function listRecipeLinesWithoutAlias(
   limit: number,
   afterId: string | null = null
-): Promise<Array<{ id: string; name: string; userId: string | null }>> {
+): Promise<
+  Array<{
+    id: string;
+    name: string;
+    amount: string | null;
+    unit: string | null;
+    userId: string | null;
+  }>
+> {
   return await db
-    .select({ id: recipeIngredients.id, name: recipeIngredients.name, userId: recipes.userId })
+    .select({
+      id: recipeIngredients.id,
+      name: recipeIngredients.name,
+      amount: recipeIngredients.amount,
+      unit: recipeIngredients.unit,
+      userId: recipes.userId,
+    })
     .from(recipeIngredients)
     .innerJoin(recipes, eq(recipeIngredients.recipeId, recipes.id))
     .where(

@@ -17,13 +17,14 @@ import {
   listLegacyKeyedRows,
   listResolvedGroceryNames,
 } from "@norish/db/repositories/legacy-link-backfill";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import {
   cleanIngredientText,
   resolveIngredient,
   resolveIngredients,
 } from "@norish/shared-server/ingredients/resolver";
 import { dbLogger as log } from "@norish/shared-server/logger";
-import { namesNoFood } from "@norish/shared/lib/ingredient-text";
+import { lineFoodText, namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const BATCH_SIZE = 500;
@@ -35,12 +36,13 @@ const NO_AI = { ai: false } as const;
  * Carry an instance over to Ingredient Aliases (ADR-0037). It runs at boot
  * after the first seed (ADR-0038), so the catalogue already holds its foods
  * and their spellings, and every reference is resolved from its text as a
- * new import would resolve it with AI off: a recipe line's, a grocery's and a
- * recurring grocery's as written, a Pantry Ingredient's its old ingredient's
- * name. A text the catalogue knows lands on its food ("knoflook
- * (fijngehakt)" is garlic); one it does not is minted flagged, named for its
- * plain name and filed under the food its words name. A `#` heading names no
- * food and is left without an alias.
+ * new import would resolve it with AI off: a recipe line's as the recipe
+ * editor reads it (`lineFoodText`), a grocery's and a recurring grocery's as
+ * written, a Pantry Ingredient's its old ingredient's name. A text the
+ * catalogue knows lands on its food ("knoflook (fijngehakt)" is garlic); one
+ * it does not is minted flagged, named for its plain name and filed under
+ * the food its words name. A `#` heading names no food and is left without
+ * an alias.
  *
  * The old `ingredients` rows are no foods of their own: the seed adopted the
  * one whose name is an entry's, and every other one is removed once nothing
@@ -69,9 +71,12 @@ export async function backfillIngredientAliases(): Promise<void> {
   };
 
   try {
+    const units = await getUnits();
+
     written.recipeLines = await resolveReferences(
       listRecipeLinesWithoutAlias,
-      setRecipeLineAliases
+      setRecipeLineAliases,
+      (line) => lineFoodText({ text: line.name, amount: line.amount, unit: line.unit }, units)
     );
     written.pantryIngredients = await resolveReferences(
       listPantryIngredientsWithoutAlias,
@@ -104,11 +109,13 @@ type Reference = { id: string; name: string; userId: string | null };
 /**
  * Resolve every reference a listing yields, batch by batch, as the member it
  * belongs to, and store the answers. A reference with no text has nothing to
- * resolve and is passed over.
+ * resolve and is passed over; the food of one with text is resolved from
+ * `foodTextOf`, the text itself unless said otherwise.
  */
-async function resolveReferences(
-  list: (limit: number, afterId: string | null) => Promise<Reference[]>,
-  store: (rows: ResolvedReference[]) => Promise<void>
+async function resolveReferences<R extends Reference>(
+  list: (limit: number, afterId: string | null) => Promise<R[]>,
+  store: (rows: ResolvedReference[]) => Promise<void>,
+  foodTextOf: (row: R) => string = (row) => row.name
 ): Promise<number> {
   let resolvedCount = 0;
   let afterId: string | null = null;
@@ -125,11 +132,7 @@ async function resolveReferences(
 
     for (const owner of new Set(named.map((row) => row.userId))) {
       const owned = named.filter((row) => row.userId === owner);
-      const resolved = await resolveIngredients(
-        owned.map((row) => row.name),
-        { userId: owner },
-        NO_AI
-      );
+      const resolved = await resolveIngredients(owned.map(foodTextOf), { userId: owner }, NO_AI);
 
       await store(
         owned.map((row, index) => ({

@@ -150,6 +150,31 @@ describe("backfillIngredientAliases", () => {
     expect(lines.get("creme fraiche, cold")).toBe(lines.get("Crème fraîche"));
   });
 
+  it("reads an old line's food past the unit its import left beside the number, and leaves the line as written", async () => {
+    await applyIngredientSeed([entry("en:puff-pastry", "puff pastry", "bladerdeeg")]);
+    await getTestDb()
+      .insert(recipeIngredients)
+      .values([
+        { recipeId, name: "rol bladerdeeg", amount: "1", order: "0", systemUsed: "metric" },
+        // Without a number, a unit word may be the food's own ("glass noodles"): read as written.
+        { recipeId, name: "rol bladerdeeg", order: "1", systemUsed: "metric" },
+      ]);
+
+    await backfillIngredientAliases();
+
+    const pastry = (await listSeededIngredientIds()).get("en:puff-pastry");
+    const [counted, uncounted] = (await getRecipeFull(recipeId))!.recipeIngredients;
+
+    expect(counted).toMatchObject({
+      ingredientName: "rol bladerdeeg",
+      amount: 1,
+      unit: null,
+      ingredientId: pastry,
+    });
+    expect(uncounted!.ingredientName).toBe("rol bladerdeeg");
+    expect(uncounted!.ingredientId).not.toBe(pastry);
+  });
+
   it("leaves a heading without an alias, as naming no food", async () => {
     await applyIngredientSeed([entry("en:sauce", "sauce")]);
     await legacyIngredient("# Sauce", new Date("2025-01-01"));

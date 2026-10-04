@@ -425,6 +425,48 @@ describe("ingredient resolver", () => {
       ).resolves.toMatchObject({ id: beef!.ingredientId, name: "RUNDERGEHAKT" });
     });
 
+    it("reads a line's food past the unit an import left beside its number, and keeps the line as written", async () => {
+      const pastry = await resolveOne("bladerdeeg");
+      const lettuce = await resolveOne("ijsbergsla");
+      const recipeId = crypto.randomUUID();
+
+      await createRecipeWithRefs(
+        recipeId,
+        userId,
+        await withResolvedIngredients(
+          {
+            name: "Saucijzenbroodjes",
+            systemUsed: "metric",
+            recipeIngredients: [
+              { ...line("rol bladerdeeg", 0), amount: 1 },
+              { ...line("krop ijsbergsla", 1), amount: 0.25 },
+              // A unit of its own: the text is the food's, as written.
+              { ...line("bol mozzarella", 2), amount: 150, unit: "gram" },
+            ],
+          },
+          { userId }
+        )
+      );
+
+      expect((await getRecipeFull(recipeId))?.recipeIngredients).toMatchObject([
+        {
+          ingredientName: "rol bladerdeeg",
+          amount: 1,
+          unit: "",
+          ingredientId: pastry.ingredientId,
+        },
+        {
+          ingredientName: "krop ijsbergsla",
+          amount: 0.25,
+          unit: "",
+          ingredientId: lettuce.ingredientId,
+        },
+        { ingredientName: "bol mozzarella", amount: 150, unit: "gram" },
+      ]);
+      // Read past, never learned: the text is no spelling of the food.
+      await expect(findIngredientFor("rol bladerdeeg")).resolves.toBeNull();
+    });
+
     it("re-resolves an edited line's text on update", async () => {
       const recipeId = crypto.randomUUID();
 

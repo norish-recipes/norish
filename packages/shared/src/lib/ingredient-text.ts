@@ -1,4 +1,7 @@
+import type { UnitsMap } from "@norish/config/zod/server-config";
+
 import { foldName } from "./fold-name";
+import { parseIngredientWithDefaults } from "./helpers";
 import { isMeasure, resolveUnit } from "./units";
 
 /**
@@ -41,3 +44,31 @@ export function namesNoFood(text: string | null | undefined): boolean {
   );
 }
 
+/** A recipe line's text as written, and the amount and unit it keeps apart from it. */
+export interface RecipeLineText {
+  text: string;
+  /** As stored or sent: a number, a numeric string, or nothing. */
+  amount?: unknown;
+  unit?: string | null;
+}
+
+/**
+ * The text a recipe line's food is resolved from: its text as written, except
+ * where an import kept the line's number apart and left its unit in the text
+ * ("150 | – | GR CHERRYTOMATEN", "1 | – | rol bladerdeeg"). Such a line is
+ * read as the recipe editor reads it, number in front, and its food is what
+ * the parser leaves once it has taken the unit: "CHERRYTOMATEN", "bladerdeeg".
+ * The line keeps its text, amount and unit as written, and its text becomes
+ * no spelling of the food. Never without a number: alone, a unit word at the
+ * start of a text may be the food's own ("glass noodles").
+ */
+export function lineFoodText({ text, amount, unit }: RecipeLineText, units: UnitsMap): string {
+  const count = amount === null || amount === undefined || amount === "" ? NaN : Number(amount);
+
+  if (unit || !Number.isFinite(count)) return text;
+
+  const [read] = parseIngredientWithDefaults(`${count} ${text}`, units);
+  const food = read?.description.replace(/\s+/g, " ").trim() ?? "";
+
+  return (read?.unitOfMeasureID ?? read?.unitOfMeasure) && food ? food : text;
+}
