@@ -16,18 +16,41 @@ vi.mock("@heroicons/react/20/solid", () => ({
 }));
 
 vi.mock("@heroui/react", () => {
-  const Switch = ({ onValueChange, onChange, children }: { onValueChange?: () => void; onChange?: () => void; children?: React.ReactNode }) => (
-    <button type="button" onClick={onValueChange || onChange}>
-      {children || "switch"}
+  const Button = ({
+    onPress,
+    onClick,
+    children,
+    isDisabled,
+    "aria-label": ariaLabel,
+    "aria-pressed": ariaPressed,
+    className,
+    variant,
+  }: {
+    onPress?: () => void;
+    onClick?: () => void;
+    children?: React.ReactNode;
+    isDisabled?: boolean;
+    "aria-label"?: string;
+    "aria-pressed"?: boolean;
+    className?: string;
+    variant?: string;
+  }) => (
+    <button
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      className={className}
+      data-variant={variant}
+      disabled={isDisabled}
+      type="button"
+      onClick={onPress || onClick}
+    >
+      {children}
     </button>
   );
-  Switch.Content = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
-  Switch.Control = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
-  Switch.Thumb = () => <div />;
 
   return {
     Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    Switch,
+    Button,
     toast: (...args: unknown[]) => mockToast(...args),
   };
 });
@@ -80,7 +103,12 @@ describe("WakeLockToggle", () => {
     isActive = false;
 
     const { getByRole } = render(<WakeLockToggle autoEnable={false} />);
-    getByRole("button").click();
+    const button = getByRole("button");
+    expect(button.getAttribute("aria-label")).toBe("ariaLabel");
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+    expect(button.getAttribute("data-variant")).toBe("secondary");
+
+    button.click();
 
     expect(toggle).toHaveBeenCalledTimes(1);
     expect(mockToast).toHaveBeenCalledWith("activeToast");
@@ -91,7 +119,12 @@ describe("WakeLockToggle", () => {
     isActive = true;
 
     const { getByRole } = render(<WakeLockToggle autoEnable={false} />);
-    getByRole("button").click();
+    const button = getByRole("button");
+    expect(button.getAttribute("aria-label")).toBe("ariaLabel");
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    expect(button.getAttribute("data-variant")).toBe("primary");
+
+    button.click();
 
     expect(toggle).toHaveBeenCalledTimes(1);
     expect(mockToast).toHaveBeenCalledWith("inactiveToast");
