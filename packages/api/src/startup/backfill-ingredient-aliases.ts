@@ -1,20 +1,16 @@
 import type { ResolvedReference } from "@norish/db/repositories/ingredient-backfill";
 import type { LegacyKeyedTable } from "@norish/db/repositories/legacy-link-backfill";
-import { withTransaction } from "@norish/db/drizzle";
-import { findIngredientAliasesByFolds } from "@norish/db/repositories/ingredient-aliases";
 import {
-  addOwnNameAliases,
   listGroceriesWithoutAlias,
-  listIngredientsWithoutAlias,
   listPantryIngredientsWithoutAlias,
   listRecipeLinesWithoutAlias,
   listRecurringGroceriesWithoutAlias,
+  removeIngredientsWithoutSpelling,
   setGroceryAliases,
   setPantryIngredientAliases,
   setRecipeLineAliases,
   setRecurringGroceryAliases,
 } from "@norish/db/repositories/ingredient-backfill";
-import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import {
   dropLegacyRow,
   keyLegacyRow,
@@ -27,6 +23,7 @@ import {
   resolveIngredients,
 } from "@norish/shared-server/ingredients/resolver";
 import { dbLogger as log } from "@norish/shared-server/logger";
+import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const BATCH_SIZE = 500;
@@ -35,34 +32,32 @@ const BATCH_SIZE = 500;
 const NO_AI = { ai: false } as const;
 
 /**
- * Carry an instance over to Ingredient Aliases (ADR-0037). The fold is the
- * JavaScript grocery folding, so this runs at startup rather than in the SQL
- * migration, after the ingredient-name backfill.
+ * Carry an instance over to Ingredient Aliases (ADR-0037). It runs at boot
+ * after the first seed (ADR-0038), so the catalogue already holds its foods
+ * and their spellings, and every reference is resolved from its text as a
+ * new import would resolve it with AI off: a recipe line's, a grocery's and a
+ * recurring grocery's as written, a Pantry Ingredient's its old ingredient's
+ * name. A text the catalogue knows lands on its food ("knoflook
+ * (fijngehakt)" is garlic); one it does not is minted flagged, named for its
+ * plain name and filed under the food its words name. A `#` heading names no
+ * food and is left without an alias.
  *
- * Every Ingredient first gets its own name as an alias, oldest first, so
- * where two names fold alike the older Ingredient keeps the spelling and the
- * newer one, left with no spelling of its own, is merged into it. Then
- * every reference is resolved from its text — a recipe line's, a grocery's and
- * a recurring grocery's as written, a Pantry Ingredient's its Ingredient's
- * name — which finds those aliases. Last, every Product Link, Aisle Link and
- * store preference keyed by a folded name is keyed by the Ingredient the
- * groceries of that name resolved to, or, where no grocery has that name, the
+ * The old `ingredients` rows are no foods of their own: the seed adopted the
+ * one whose name is an entry's, and every other one is removed once nothing
+ * points at it. Before that, every Product Link, Aisle Link and store
+ * preference keyed by a folded name is keyed by the Ingredient the groceries
+ * of that name resolved to, or, where no grocery has that name, the
  * Ingredient the name itself resolves to (minted where need be, so no link is
  * dropped). Two that land on one Ingredient at one Store (or for one member)
  * keep the most recently updated.
  *
  * Idempotent by shape: only rows without an alias are listed. A failure
  * leaves the remaining rows for the next startup and never stops the server.
- *
- * This is the upgrade and nothing more: it merges only names that fold alike,
- * a name nothing knows is minted flagged, and a row that has an alias is never
- * visited again. Merging existing Ingredients into the catalogue seed is the
- * seed's own pass, once a seed exists.
+ * With no seed (no URL, or no internet at that boot) the same resolution
+ * mints every name flagged, and the first seed merges them later.
  */
 export async function backfillIngredientAliases(): Promise<void> {
   const written = {
-    ingredients: 0,
-    merged: 0,
     recipeLines: 0,
     pantryIngredients: 0,
     groceries: 0,
@@ -70,35 +65,10 @@ export async function backfillIngredientAliases(): Promise<void> {
     productLinks: 0,
     aisleLinks: 0,
     storePreferences: 0,
+    oldIngredientsRemoved: 0,
   };
 
   try {
-    let after: { createdAt: string; id: string } | null = null;
-
-    for (;;) {
-      const batch = await listIngredientsWithoutAlias(BATCH_SIZE, after);
-
-      if (batch.length === 0) break;
-
-      const ownNames = batch
-        .map((row) => ({
-          ingredientId: row.id,
-          text: row.name,
-          fold: ingredientAliasFold(row.name),
-          ownerId: row.ownerId,
-        }))
-        // A name of whitespace alone folds to nothing, and nothing is no spelling.
-        .filter((row) => row.fold.length > 0);
-
-      await addOwnNameAliases(ownNames);
-      written.ingredients += batch.length;
-      written.merged += await mergeSpellingless(ownNames);
-
-      const last = batch[batch.length - 1]!;
-
-      after = { createdAt: last.createdAt, id: last.id };
-    }
-
     written.recipeLines = await resolveReferences(
       listRecipeLinesWithoutAlias,
       setRecipeLineAliases
@@ -119,40 +89,14 @@ export async function backfillIngredientAliases(): Promise<void> {
       written[table] = await keyLegacyRows(table, groceryIngredients);
     }
 
+    written.oldIngredientsRemoved = await removeIngredientsWithoutSpelling();
+
     if (Object.values(written).some((count) => count > 0)) {
       log.info(written, "Ingredient alias backfill complete");
     }
   } catch (err) {
     log.error({ err, written }, "Ingredient alias backfill could not finish");
   }
-}
-
-/**
- * Merge each Ingredient whose own name another Ingredient already held into
- * that one: the names fold alike, so they are one food, and an Ingredient no
- * spelling reaches would sit on the Ingredients page with nothing to show.
- */
-async function mergeSpellingless(
-  ownNames: ReadonlyArray<{ ingredientId: string; fold: string }>
-): Promise<number> {
-  const holders = new Map(
-    (await findIngredientAliasesByFolds(ownNames.map((row) => row.fold))).map((alias) => [
-      alias.fold,
-      alias.ingredientId,
-    ])
-  );
-  let merged = 0;
-
-  for (const { ingredientId, fold } of ownNames) {
-    const holder = holders.get(fold);
-
-    if (holder && holder !== ingredientId) {
-      await withTransaction((tx) => mergeCatalogueIngredients(tx, ingredientId, holder));
-      merged += 1;
-    }
-  }
-
-  return merged;
 }
 
 type Reference = { id: string; name: string; userId: string | null };
@@ -174,8 +118,10 @@ async function resolveReferences(
 
     if (batch.length === 0) break;
 
-    // Text that is markup alone names nothing the resolver could read.
-    const named = batch.filter((row) => cleanIngredientText(row.name).length > 0);
+    // Markup alone, punctuation alone or a heading names nothing the resolver could read.
+    const named = batch.filter(
+      (row) => cleanIngredientText(row.name).length > 0 && !namesNoFood(row.name)
+    );
 
     for (const owner of new Set(named.map((row) => row.userId))) {
       const owned = named.filter((row) => row.userId === owner);

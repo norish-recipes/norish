@@ -355,7 +355,7 @@
       "ai-unsure": "KI wurde gefragt, ob dies eine bekannte Zutat ist, und war nicht sicher.",
       "ai-unavailable": "KI hat nicht rechtzeitig geantwortet, als dieser Name hinzugefügt wurde.",
       "food-gone": "KI ordnete dies einer Zutat zu, die zusammengeführt wurde, bevor der Name dazukommen konnte.",
-      "upgrade": "Beim Upgrade auf den Katalog hinzugefügt, das KI nicht fragt.",
+      "upgrade": "Es konnte keine bekannte Zutat zugeordnet werden.",
       "seed-ambiguous": "Der Katalog kennt mehrere Zutaten, die dies sein könnten."
     },
     "empty": "Keine Zutaten gefunden",
@@ -541,13 +541,6 @@
     "dismissAll": "Alle verwerfen",
     "suggestedByAI": "Von der KI vorgeschlagen",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Maßeinheiten",
         "subtitle": "Maßeinheits-Definitionen zum Analysieren",
         "description": "Definiere Maßeinheiten mit ihrer Kurzform, Plural und alternativen Schreibweisen. Werden beim Analysieren von Zutat-Mengen verwendet."
+      },
+      "ingredientWords": {
+        "title": "Zutatenwörter",
+        "subtitle": "Wörter, nach denen Zutatennamen gelesen werden, je Sprache",
+        "description": "Die Wörter, über die Norish hinwegliest, wenn es einen Zutatennamen einem Lebensmittel zuordnet, je Sprache: Zubereitung („gewürfelt“), Größen („groß“), Schätzungen („etwa“), worin oder womit etwas kommt („in Olivenöl“), Wörter, die nie ein Lebensmittel bezeichnen („und“), und die Plural- und Verkleinerungsendungen, die „Zwiebeln“ zur Zwiebel machen. Jede Sprache gilt für jeden Namen."
       },
       "recurrence": {
         "title": "Wiederholungsmuster",

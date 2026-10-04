@@ -17,10 +17,10 @@ const removePantryIngredient = vi.fn();
 let items: PantryIngredientDto[] = [];
 
 vi.mock("@/hooks/config", async () => {
-  const { unitPhrases } = await import("@norish/shared/lib/spelling-keys");
+  const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
   const units = (await import("@norish/config/units.default.json")).default;
 
-  return { useUnitPhrases: () => unitPhrases(units as UnitsMap) };
+  return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
 vi.mock("@/hooks/pantry", () => ({
   usePantryQuery: () => ({ items, isLoading: false }),

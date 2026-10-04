@@ -15,6 +15,7 @@ import {
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
 import { listIngredientSuggestions } from "@norish/db/repositories/ingredient-suggestions";
+import { ingredientAliases } from "@norish/db/schema";
 import { listIngredients, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import {
@@ -24,6 +25,7 @@ import {
 } from "@norish/shared-server/ingredients/suggestions";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
+import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 function entry(offId: string, ...names: string[]): SeedEntry {
@@ -59,6 +61,18 @@ describe("a mint's parent from the words of its text", () => {
       entry("en:noodle", "noodles"),
       entry("en:garlic", "garlic", "knoflook"),
       entry("en:kale", "kale"),
+      entry("en:olive-oil", "olive oil", "olijfolie"),
+      entry("en:sardine", "sardines"),
+      entry("en:chicken", "chicken", "kip"),
+      entry("en:rice", "rice", "rijst"),
+      entry("en:tomato", "tomato"),
+      entry("en:cherry", "cherry"),
+      entry("en:onion", "onion", "ui"),
+      entry("en:avocado", "avocado"),
+      entry("en:red-bell-pepper", "red bell pepper"),
+      entry("en:pepper", "pepper"),
+      entry("en:guajillo-chili", "guajillo"),
+      entry("en:chicken-thigh", "chicken thigh"),
     ]);
     seeded = await listSeededIngredientIds();
   });
@@ -104,6 +118,64 @@ describe("a mint's parent from the words of its text", () => {
 
     expect(await mintOne("dragon fruit")).toMatchObject({ flagged: true, parent: null });
     expect(await mintOne("ground saffron")).toMatchObject({ flagged: true, parent: null });
+  });
+
+  it("reads only the words before in, met or with, which may name the parent whole", async () => {
+    expect(await mintOne("tonijnstukken in olijfolie")).toMatchObject({ parent: null });
+    expect(await mintOne("sardines in water")).toMatchObject({
+      parent: { id: seeded.get("en:sardine") },
+    });
+    expect(await mintOne("kip met rijst")).toMatchObject({
+      parent: { id: seeded.get("en:chicken") },
+    });
+    // Each was the whole of the words read, so none is a guess to confirm.
+    expect(await listIngredientSuggestions()).toHaveLength(0);
+  });
+
+  it("never files under a word of recipe language another language spells a food with", async () => {
+    await applyIngredientSeed([entry("en:duck", "duck", "and"), entry("en:carrot", "carrots")]);
+    seeded = await listSeededIngredientIds();
+
+    expect(await mintOne("frozen peas and carrots")).toMatchObject({
+      parent: { id: seeded.get("en:carrot") },
+    });
+    expect(await mintOne("this and that")).toMatchObject({ parent: null });
+  });
+
+  it("files a name under the singular of the plural its words end with", async () => {
+    expect(await mintOne("dried tomatoes")).toMatchObject({
+      flagged: true,
+      parent: { id: seeded.get("en:tomato") },
+    });
+    expect(await mintOne("rode uien")).toMatchObject({ parent: { id: seeded.get("en:onion") } });
+    expect(await mintOne("boneless chicken thighs")).toMatchObject({
+      parent: { id: seeded.get("en:chicken-thigh") },
+    });
+    // The singular is the food its words end with: nothing to confirm.
+    expect(await listIngredientSuggestions()).toHaveLength(0);
+  });
+
+  it("reads a word as written before a plural read as its singular", async () => {
+    expect(await mintOne("dried guajillo peppers")).toMatchObject({
+      parent: { id: seeded.get("en:guajillo-chili") },
+    });
+  });
+
+  it("takes a plural alone as the food itself, and reads one only where the food is named", async () => {
+    expect((await mintOne("tomatoes")).id).toBe(seeded.get("en:tomato"));
+    expect((await mintOne("cherries")).id).toBe(seeded.get("en:cherry"));
+    expect((await mintOne("avocado's")).id).toBe(seeded.get("en:avocado"));
+    expect(await mintOne("tomatoes soup")).toMatchObject({ parent: null });
+  });
+
+  it("reads a spelling a seeded food gained after the seed as the food's", async () => {
+    await getTestDb()
+      .insert(ingredientAliases)
+      .values({ text: "look", fold: "look", ingredientId: seeded.get("en:garlic")! });
+
+    expect(await mintOne("verse look")).toMatchObject({
+      parent: { id: seeded.get("en:garlic") },
+    });
   });
 
   it("files a mint under a seeded food found inside its words, with a suggestion to confirm", async () => {

@@ -1,6 +1,7 @@
 import type { ServerConfigKey } from "@norish/db/zodSchemas/server-config";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
@@ -51,6 +52,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return DEFAULT_LOCALE_CONFIG;
     case ServerConfigKeys.TIMER_KEYWORDS:
       return { ...defaultTimerKeywords, isOverridden: false };
+    case ServerConfigKeys.INGREDIENT_WORDS:
+      return { words: defaultIngredientWords, isOverridden: false };
     default:
       return null;
   }

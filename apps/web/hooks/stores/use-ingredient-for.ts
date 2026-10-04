@@ -1,10 +1,11 @@
 "use client";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useSpellingRules } from "@/hooks/config";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
-import { foodKey } from "@norish/shared/lib/spelling-keys";
+import { sameFood } from "@norish/shared/lib/spelling-keys";
 
 /** How long a shopper stops typing a name before its Ingredient is asked for. */
 const LOOKUP_DEBOUNCE_MS = 400;
@@ -24,8 +25,9 @@ export function useIngredientFor(
   grocery?: { name: string | null; ingredientId?: string | null } | null
 ): string | null {
   const trpc = useTRPC();
+  const rules = useSpellingRules();
   const own =
-    grocery?.ingredientId && foodKey(grocery.name) === foodKey(name) ? grocery.ingredientId : null;
+    grocery?.ingredientId && sameFood(grocery.name, name, rules) ? grocery.ingredientId : null;
   const [settled] = useDebounceValue(name, LOOKUP_DEBOUNCE_MS);
 
   const term = settled.trim();

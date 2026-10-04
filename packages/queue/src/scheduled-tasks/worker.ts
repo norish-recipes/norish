@@ -7,6 +7,7 @@ import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cle
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
 import { refreshIngredientCatalogue } from "@norish/shared-server/ingredients/seed/catalogue-seed";
+import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredients/seed/recheck-mints";
 import { createLogger } from "@norish/shared-server/logger";
 
 import type { ScheduledTaskJobData } from "./queue";
@@ -90,6 +91,10 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       const result = await refreshIngredientCatalogue();
 
       log.info({ result }, "Ingredient catalogue refresh completed");
+
+      // A first seed that arrived after the upgrade (an offline first boot):
+      // what was minted without it is looked at again against it.
+      if (result === "applied") await recheckUndecidedMintsOnRungChange();
       break;
     }
 

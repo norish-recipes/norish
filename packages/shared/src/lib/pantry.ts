@@ -1,8 +1,8 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
-import type { UnitPhrases } from "@norish/shared/lib/spelling-keys";
+import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { foodKey, NO_UNIT_PHRASES } from "@norish/shared/lib/spelling-keys";
+import { BASE_SPELLING_RULES, foodKey, sameFood } from "@norish/shared/lib/spelling-keys";
 
 /**
  * The Pantry Ingredient that covers a line, or null where the household has
@@ -13,18 +13,18 @@ import { foodKey, NO_UNIT_PHRASES } from "@norish/shared/lib/spelling-keys";
  * or of a food it is a kind of: "red onion" covers "onion", never the reverse.
  * A text nothing has resolved yet (typed or edited on this screen, or added
  * to the Pantry offline) is matched on the keys the resolver's first two
- * rungs use (`foodKey`, with the units map's phrases) against the
- * Ingredient's name or its name in a language, so "onions, diced" and "salt
- * to taste" are covered offline as they will be once synced,
- * and on nothing looser: "salt" never covers "salted butter", because Norish
- * never guesses from words.
+ * rungs use (`sameFood`, with the units map and the ingredient words)
+ * against the Ingredient's name or its name in a language, so "onions,
+ * diced", "salt to taste" and "uien" are covered offline as they will be
+ * once synced, and on nothing looser: "salt" never covers "salted butter",
+ * because Norish never guesses from words.
  */
 export function pantryIngredientFor(
   items: readonly PantryIngredientDto[],
   line: { ingredientId?: string | null; ingredientName?: string | null },
-  phrases: UnitPhrases = NO_UNIT_PHRASES
+  rules: SpellingRules = BASE_SPELLING_RULES
 ): PantryIngredientDto | null {
-  const key = foodKey(line.ingredientName, phrases);
+  const key = foodKey(line.ingredientName, rules);
 
   return (
     items.find((item) =>
@@ -33,8 +33,8 @@ export function pantryIngredientFor(
       line.ingredientId && item.ingredientId
         ? item.ingredientId === line.ingredientId || item.ancestorIds.includes(line.ingredientId)
         : key !== "" &&
-          [item.name, ...Object.values(item.localeNames ?? {})].some(
-            (name) => foodKey(name, phrases) === key
+          [item.name, ...Object.values(item.localeNames ?? {})].some((name) =>
+            sameFood(name, line.ingredientName, rules)
           )
     ) ?? null
   );

@@ -318,7 +318,7 @@ const reviewReport = authedProcedure
     readReviewReport(getQueues().ingredientReview, input.jobId)
   );
 
-/** Every suggestion AI left waiting on a person, and whether the viewer may answer each. */
+/** The suggestions waiting on the viewer: only those about foods they may edit. */
 const suggestions = authedProcedure.query(({ ctx }) => listSuggestions(actorOf(ctx)));
 
 const suggestionIds = z.object({ suggestionIds: z.array(z.uuid()).min(1).max(500) });

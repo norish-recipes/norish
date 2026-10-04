@@ -7,6 +7,7 @@ import type {
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
 import { findIngredientNamesByIds } from "@norish/db/repositories/ingredient-aliases";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
+import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import type { ResolveActor } from "./resolver";
 import { cleanIngredientText, resolveIngredients, writeResolved } from "./resolver";
@@ -21,7 +22,8 @@ interface RecipeLineInput {
  * is the only way a recipe write accepts them. Each line's text is its
  * `ingredientName` as written; a line that names only an Ingredient by id is
  * given that Ingredient's name as its text. A line left with no text is
- * dropped, as the recipe write always skipped it.
+ * dropped, as the recipe write always skipped it, and one that names no
+ * food (a heading, a text with no letter or digit) is written as it is.
  */
 export async function withResolvedIngredients<
   L extends RecipeLineInput,
@@ -47,7 +49,11 @@ export async function withResolvedIngredients<
     return text ? [{ ...line, ingredientName: text }] : [];
   });
   const texts = Array.from(
-    new Set(written.flatMap((line) => (line.ingredientName ? [line.ingredientName] : [])))
+    new Set(
+      written.flatMap((line) =>
+        line.ingredientName && !namesNoFood(line.ingredientName) ? [line.ingredientName] : []
+      )
+    )
   );
   const resolved: IngredientResolutions = new Map(
     (await resolveIngredients(texts, actor)).map((row) => [

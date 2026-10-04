@@ -17,6 +17,10 @@ vi.mock("@/hooks/config/use-units-query", () => ({
   useUnitsQuery: () => ({ units: {} }),
 }));
 
+vi.mock("@/hooks/config/use-ingredient-words-query", () => ({
+  useIngredientWordsQuery: () => ({ words: undefined }),
+}));
+
 const chooseProduct = vi.fn();
 
 function product(id: string, storeId: string, name: string, price: number): StoreProductDto {

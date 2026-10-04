@@ -4,19 +4,19 @@ import type {
   IngredientRow,
 } from "@norish/db/repositories/ingredient-aliases";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
-import type { SpellingKeys, UnitPhrases } from "@norish/shared/lib/spelling-keys";
+import type { SpellingKeys, SpellingRules } from "@norish/shared/lib/spelling-keys";
 import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
 import {
   addIngredientAliases,
   findIngredientAliasesByFolds,
   findIngredientByAliasId,
-  findSeededAliasesByFolds,
+  findSeededFoodSpellingsByFolds,
   mintIngredientWithAliases,
 } from "@norish/db/repositories/ingredient-aliases";
-import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { getIngredientWords, getUnits } from "@norish/shared-server/config/server-config-loader";
 import { dbLogger } from "@norish/shared-server/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
-import { spellingKeys, unitPhrases } from "@norish/shared/lib/spelling-keys";
+import { inflectedReadings, spellingKeys, spellingRules } from "@norish/shared/lib/spelling-keys";
 
 import type { AIResolution } from "../ai/resolution/ingredient-resolution";
 import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resolution";
@@ -58,9 +58,11 @@ import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resol
 /**
  * Which rules the first two rungs and the parent from words follow. Raised
  * whenever they change, so the startup pass looks at old Flagged Ingredients
- * again under the new rules (`recheckUndecidedMints`).
+ * again under the new rules (`recheckUndecidedMints`). 3: the ingredient
+ * words of every language, plurals and diminutives at rung 2, and a
+ * quantity left at a name's start. 4: a social media mention names no food.
  */
-export const RUNG_VERSION = 2;
+export const RUNG_VERSION = 4;
 
 /** Who the resolution is for: the owner of anything it mints. */
 export interface ResolveActor {
@@ -86,18 +88,59 @@ export interface ResolvedIngredient extends IngredientRef {
   text: string;
 }
 
-/** A text as the first two rungs read it: its fold, and its folds with the preparation stripped. */
+/**
+ * A text as the first two rungs read it: its fold, its folds with the
+ * preparation stripped, the other readings of its plain name as the same
+ * food (its plurals and diminutives), and the rules it was read by.
+ */
 interface Spelling extends SpellingKeys {
   text: string;
+  inflected: string[];
+  rules: SpellingRules;
 }
 
-function spellingOf(text: string, phrases: UnitPhrases): Spelling {
-  return { text, ...spellingKeys(text, phrases) };
+function spellingOf(text: string, rules: SpellingRules): Spelling {
+  const keys = spellingKeys(text, rules);
+
+  return {
+    text,
+    ...keys,
+    inflected: inflectedReadings(keys.plainFold || keys.bareFold || keys.fold, rules, true),
+    rules,
+  };
 }
 
-/** The units map's phrases as rung 2 strips them: the administrator's map, read once per call. */
-async function currentPhrases(): Promise<UnitPhrases> {
-  return unitPhrases(await getUnits());
+/** How long built rules are reused: a pass over an instance's history asks thousands of times a minute. */
+const RULES_TTL_MS = 10_000;
+
+let builtRules: { at: number; rules: Promise<SpellingRules> } | null = null;
+
+/**
+ * The rules rung 2 reads a name by: the administrator's units map and
+ * ingredient words, built at most once every few seconds, so an edit lands
+ * almost at once and an upgrade's thousands of names don't rebuild them each.
+ */
+/** Read the units map and the ingredient words afresh next time: an administrator just changed one. */
+export function forgetSpellingRules(): void {
+  builtRules = null;
+}
+
+async function currentRules(): Promise<SpellingRules> {
+  const now = Date.now();
+
+  if (!builtRules || now - builtRules.at > RULES_TTL_MS) {
+    const rules = Promise.all([getUnits(), getIngredientWords()]).then(([units, words]) =>
+      spellingRules(units, words)
+    );
+
+    builtRules = { at: now, rules };
+    // A failed read is not kept: the next call reads again.
+    rules.catch(() => {
+      if (builtRules?.rules === rules) builtRules = null;
+    });
+  }
+
+  return await builtRules.rules;
 }
 
 /** The aliases Norish already has for these spellings, by fold, in one query. */
@@ -105,7 +148,12 @@ async function knownAliases(
   spellings: readonly Spelling[]
 ): Promise<Map<string, IngredientAliasRow>> {
   const rows = await findIngredientAliasesByFolds(
-    spellings.flatMap((spelling) => [spelling.fold, spelling.bareFold, spelling.plainFold])
+    spellings.flatMap((spelling) => [
+      spelling.fold,
+      spelling.bareFold,
+      spelling.plainFold,
+      ...spelling.inflected,
+    ])
   );
 
   return new Map(rows.map((row) => [row.fold, row]));
@@ -113,7 +161,9 @@ async function knownAliases(
 
 /**
  * Rungs 1 and 2: the alias with the text's fold, else the one with its
- * preparation stripped, else the one with the units map's phrases stripped too.
+ * preparation stripped, else the one with the units map's phrases and the
+ * ingredient words stripped too, else one its plain name is a plural or a
+ * diminutive of, or the reverse ("bosuien" and "bosuitjes" are "bosui").
  */
 function matchKnown(
   spelling: Spelling,
@@ -122,7 +172,8 @@ function matchKnown(
   return (
     known.get(spelling.fold) ??
     (spelling.bareFold ? known.get(spelling.bareFold) : undefined) ??
-    (spelling.plainFold ? known.get(spelling.plainFold) : undefined)
+    (spelling.plainFold ? known.get(spelling.plainFold) : undefined) ??
+    spelling.inflected.map((reading) => known.get(reading)).find((row) => row !== undefined)
   );
 }
 
@@ -147,8 +198,8 @@ export async function resolveIngredients(
     throw new Error("Ingredient text cannot be empty");
   }
 
-  const phrases = await currentPhrases();
-  const spellings = cleaned.map((text) => spellingOf(text, phrases));
+  const rules = await currentRules();
+  const spellings = cleaned.map((text) => spellingOf(text, rules));
   const known = await knownAliases(spellings);
   const answers = await askAboutUnknown(
     spellings.filter((spelling) => !matchKnown(spelling, known)),
@@ -308,29 +359,55 @@ export interface ParentFromWords {
 
 /**
  * The parent a flagged mint is filed under from the words of its text: the
- * longest seeded spelling the text, stripped as rung 2 strips it, contains
- * as whole words and is longer than ("verse peterselie" under peterselie,
- * "smoked sweet paprika" under sweet paprika, "garlic cloves" under garlic),
- * or none. Of two the same length, the one the text ends with.
+ * longest spelling of a seeded food the text, stripped as rung 2 strips it,
+ * contains as whole words and is longer than ("verse peterselie" under
+ * peterselie, "smoked sweet paprika" under sweet paprika, "garlic cloves"
+ * under garlic), or none. Of two the same length, the one the text ends
+ * with. Only the words before an "in", "met" or "with" are read, and those
+ * may name the parent whole ("sardines in water" under sardine); a word of
+ * recipe language alone ("and", "more") names none. Where the words end in
+ * a plural, its singular is read too, the whole text included ("carrots"
+ * under carrot, "red bell peppers" under red bell pepper): the plural stays
+ * a food of its own, for AI or a person to merge.
  */
 async function parentFromWords(spelling: Spelling): Promise<ParentFromWords | null> {
-  const words = (spelling.plainFold || spelling.bareFold || spelling.fold).split(" ");
+  const { rules } = spelling;
+  const all = (spelling.plainFold || spelling.bareFold || spelling.fold).split(" ");
+  const cut = all.findIndex((word, index) => index > 0 && rules.servedWith.has(word));
+  const words = cut > 0 ? all.slice(0, cut) : all;
   const windows: Array<{ fold: string; sure: boolean }> = [];
 
-  // Longest first, and within a length from the end of the text backwards.
-  for (let length = words.length - 1; length >= 1; length -= 1) {
-    for (let start = words.length - length; start >= 0; start -= 1) {
-      windows.push({
-        fold: words.slice(start, start + length).join(" "),
-        sure: start + length === words.length,
-      });
+  // Longest first; within a length, the words as written from the end of the
+  // text backwards, then the last of them read in the singular, since the
+  // food is named last ("dried guajillo peppers" under guajillo, not under
+  // the peppercorn "pepper" names). The whole of the words read is no parent
+  // of itself, but its singular may be.
+  for (let length = words.length; length >= 1; length -= 1) {
+    // Where the window the words end with starts.
+    const tail = words.length - length;
+    const readable = (start: number) => !(length === 1 && rules.notFoods.has(words[start]!));
+
+    if (length < words.length || cut > 0) {
+      for (let start = tail; start >= 0; start -= 1) {
+        if (readable(start)) {
+          windows.push({
+            fold: words.slice(start, start + length).join(" "),
+            sure: start === tail,
+          });
+        }
+      }
+    }
+    if (readable(tail)) {
+      for (const reading of inflectedReadings(words.slice(tail).join(" "), rules)) {
+        windows.push({ fold: reading, sure: true });
+      }
     }
   }
 
   if (windows.length === 0) return null;
 
   const seeded = new Map(
-    (await findSeededAliasesByFolds(windows.map((window) => window.fold))).map((row) => [
+    (await findSeededFoodSpellingsByFolds(windows.map((window) => window.fold))).map((row) => [
       row.fold,
       row.ingredientId,
     ])
@@ -347,7 +424,7 @@ async function parentFromWords(spelling: Spelling): Promise<ParentFromWords | nu
 
 /** The parent a text would be filed under from its words, for the startup pass over old mints. */
 export async function parentFromWordsOf(text: string): Promise<ParentFromWords | null> {
-  return await parentFromWords(spellingOf(cleanIngredientText(text), await currentPhrases()));
+  return await parentFromWords(spellingOf(cleanIngredientText(text), await currentRules()));
 }
 
 /**
@@ -356,7 +433,7 @@ export async function parentFromWordsOf(text: string): Promise<ParentFromWords |
  * is its own plain name already.
  */
 export async function plainNameOf(text: string): Promise<{ text: string; fold: string } | null> {
-  const spelling = spellingOf(cleanIngredientText(text), await currentPhrases());
+  const spelling = spellingOf(cleanIngredientText(text), await currentRules());
 
   return spelling.plainFold && spelling.plainFold !== spelling.fold
     ? { text: spelling.plain, fold: spelling.plainFold }
@@ -391,7 +468,7 @@ export async function findIngredientFor(text: string): Promise<IngredientRef | n
 
   if (!cleaned) return null;
 
-  const spelling = spellingOf(cleaned, await currentPhrases());
+  const spelling = spellingOf(cleaned, await currentRules());
   const match = matchKnown(spelling, await knownAliases([spelling]));
 
   return match ? { aliasId: match.aliasId, ingredientId: match.ingredientId } : null;
@@ -407,11 +484,11 @@ export async function findOtherIngredientsFor(
   ingredientId: string,
   texts: readonly string[]
 ): Promise<Set<string>> {
-  const phrases = await currentPhrases();
+  const rules = await currentRules();
   const spellings = texts
     .map(cleanIngredientText)
     .filter((text) => text.length > 0)
-    .map((text) => spellingOf(text, phrases));
+    .map((text) => spellingOf(text, rules));
   const known = new Map(
     [...(await knownAliases(spellings))].filter(([, row]) => row.ingredientId !== ingredientId)
   );

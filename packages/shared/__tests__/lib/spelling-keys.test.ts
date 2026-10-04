@@ -8,8 +8,8 @@ import {
   foodKey,
   ingredientAliasFold,
   spellingKeys,
+  spellingRules,
   stripPreparation,
-  unitPhrases,
 } from "@norish/shared/lib/spelling-keys";
 
 import { SPELLING_CASES } from "./spelling-cases";
@@ -27,7 +27,7 @@ function unsynced(name: string): PantryIngredientDto {
   };
 }
 
-const phrases = unitPhrases(defaultUnits as UnitsMap);
+const phrases = spellingRules(defaultUnits as UnitsMap);
 
 describe("spelling keys", () => {
   it("strips the preparation after a comma and in brackets, an unclosed one to the end", () => {
@@ -35,6 +35,25 @@ describe("spelling keys", () => {
     expect(stripPreparation("onions (red), sliced")).toBe("onions");
     expect(stripPreparation("onion (red, diced")).toBe("onion");
     expect(stripPreparation("(2)")).toBe("");
+  });
+
+  it("strips a social media mention wherever it stands, and nothing that only looks like one", () => {
+    expect(stripPreparation("@blueband_nl Finesse")).toBe("Finesse");
+    expect(stripPreparation("olijfolie @bertolli.nl extra vergine")).toBe(
+      "olijfolie extra vergine"
+    );
+    expect(stripPreparation("@kikkoman @kikkoman_nl sojasaus")).toBe("sojasaus");
+    expect(stripPreparation("info@example.com")).toBe("info@example.com");
+    expect(stripPreparation("@ 200 g")).toBe("@ 200 g");
+    // A text that is only a mention keeps no bare name, as a bracket alone keeps none.
+    expect(stripPreparation("@blueband_nl")).toBe("");
+    // The food is named without it, and found under its own name.
+    expect(spellingKeys("@blueband_nl Finesse 15%", phrases)).toMatchObject({
+      bare: "Finesse 15%",
+      plain: "Finesse",
+      plainFold: "finesse",
+    });
+    expect(foodKey("@kikkoman sojasaus", phrases)).toBe(foodKey("sojasaus", phrases));
   });
 
   it("keys a punctuation-only text by its lowercase self, never by nothing", () => {
@@ -74,6 +93,18 @@ describe("spelling keys", () => {
     expect(foodKey("chopped", phrases)).toBe("chopped");
   });
 
+  it("names the food without the punctuation at the edges of its words", () => {
+    expect(spellingKeys("(2.7lbs) - Fresh Salmon, Cut Into 5 Fillets", phrases)).toMatchObject({
+      bare: "- Fresh Salmon",
+      bareFold: "fresh salmon",
+      plain: "Fresh Salmon",
+      plainFold: "fresh salmon",
+    });
+    expect(spellingKeys("chicken breasts * ", phrases).plain).toBe("chicken breasts");
+    // Punctuation inside a word is the word's.
+    expect(spellingKeys("half-and-half", phrases).plain).toBe("half-and-half");
+  });
+
   it("keeps the text as written where the cut would split a word of it", () => {
     expect(spellingKeys("thumb-sized piece ginger grated", phrases)).toMatchObject({
       plain: "thumb-sized piece ginger",
@@ -87,7 +118,8 @@ describe("spelling keys", () => {
 
   it("strips a container from the units map at the start of a text, never at its end", () => {
     expect(foodKey("can of chickpeas drained and rinsed", phrases)).toBe("chickpeas");
-    expect(foodKey("400g can chickpeas", phrases)).toBe("400g can chickpeas");
+    // A quantity an import left at the start goes first, so the can is at the start then.
+    expect(foodKey("400g can chickpeas", phrases)).toBe("chickpeas");
     expect(foodKey("pak koriander", phrases)).toBe("koriander");
     expect(foodKey("blik tomaten", phrases)).toBe("tomaten");
     expect(foodKey("pepper pot", phrases)).toBe("pepper pot");
@@ -121,7 +153,7 @@ describe("spelling keys", () => {
   });
 
   it("strips what the administrator's units map says, and nothing without one", () => {
-    const own = unitPhrases({
+    const own = spellingRules({
       pinch: {
         short: [{ locale: "en", name: "pinch" }],
         plural: [{ locale: "en", name: "pinches" }],

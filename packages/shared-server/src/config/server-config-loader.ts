@@ -20,6 +20,7 @@ import type {
   I18nLocaleConfig,
   ImageGenerationConfig,
   IngredientPermissionPolicy,
+  IngredientWordsMap,
   PromptsConfig,
   RecipePermissionPolicy,
   RecurrenceConfig,
@@ -30,6 +31,7 @@ import type {
 } from "@norish/config/zod/server-config";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
@@ -40,6 +42,8 @@ import {
   DEFAULT_INGREDIENT_PERMISSION_POLICY,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   DEFAULT_TAG_STRATEGY,
+  IngredientWordsConfigSchema,
+  IngredientWordsMapSchema,
   isDecisionConfigValid,
   isDecisionUseSelected,
   isImageGenerationConfigValid,
@@ -104,6 +108,20 @@ export async function getUnits(): Promise<UnitsMap> {
   }
 
   return defaultUnits as UnitsMap;
+}
+
+/**
+ * The ingredient words names are read by (ADR-0037), the administrator's
+ * where edited, else the ones Norish ships.
+ */
+export async function getIngredientWords(): Promise<IngredientWordsMap> {
+  const stored = IngredientWordsConfigSchema.safeParse(
+    await getConfig<unknown>(ServerConfigKeys.INGREDIENT_WORDS)
+  );
+
+  return stored.success
+    ? stored.data.words
+    : IngredientWordsMapSchema.parse(defaultIngredientWords);
 }
 
 /**

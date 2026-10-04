@@ -355,7 +355,7 @@
       "ai-unsure": "AI ble spurt om dette er en kjent ingrediens og var ikke sikker.",
       "ai-unavailable": "AI svarte ikke i tide da dette navnet ble lagt til.",
       "food-gone": "AI knyttet det til en ingrediens som ble slått sammen før navnet rakk å bli med.",
-      "upgrade": "Lagt til av oppgraderingen til katalogen, som ikke spør AI.",
+      "upgrade": "Fant ingen kjent ingrediens som passet.",
       "seed-ambiguous": "Katalogen kjenner flere ingredienser dette kan være."
     },
     "empty": "Fant ingen ingredienser",
@@ -541,13 +541,6 @@
     "dismissAll": "Avvis alle",
     "suggestedByAI": "Foreslått av AI",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Måleenheter",
         "subtitle": "Definisjoner av måleenheter for analyse",
         "description": "Definer måleenheter med kortform, flertall og alternative stavemåter. Brukes ved analyse av ingrediensmengder."
+      },
+      "ingredientWords": {
+        "title": "Ingrediensord",
+        "subtitle": "Ord ingrediensnavn leses etter, per språk",
+        "description": "Ordene Norish leser forbi når det knytter et ingrediensnavn til en matvare, per språk: tilberedning (“hakket”), størrelser (“stor”), tilnærminger (“ca.”), hva en matvare kommer i eller med (“i olivenolje”), ord som aldri er en matvare (“og”), og flertalls- og diminutivendelsene som gjør “tomater” til tomat. Hvert språk gjelder for hvert navn."
       },
       "recurrence": {
         "title": "Gjentakelsesmønstre",

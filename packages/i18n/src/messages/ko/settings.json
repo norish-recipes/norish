@@ -355,7 +355,7 @@
       "ai-unsure": "AI에 알려진 재료인지 물었지만 확신하지 못했습니다.",
       "ai-unavailable": "이 이름을 추가할 때 AI가 제때 응답하지 않았습니다.",
       "food-gone": "AI가 연결한 재료가 이름이 합류하기 전에 병합되어 사라졌습니다.",
-      "upgrade": "카탈로그 업그레이드 과정에서 추가되었으며, 이 과정은 AI에 묻지 않습니다.",
+      "upgrade": "일치하는 알려진 재료를 찾지 못했습니다.",
       "seed-ambiguous": "카탈로그에 이것일 수 있는 재료가 여럿 있습니다."
     },
     "empty": "재료를 찾을 수 없습니다",
@@ -541,13 +541,6 @@
     "dismissAll": "모두 무시",
     "suggestedByAI": "AI 제안",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "측정 단위",
         "subtitle": "구문 분석을 위한 측정 단위 정의",
         "description": "짧은 형식, 복수형 및 대체 철자로 측정 단위를 정의합니다. 성분 수량을 분석할 때 사용됩니다."
+      },
+      "ingredientWords": {
+        "title": "재료 단어",
+        "subtitle": "언어별로 재료 이름을 읽는 데 쓰이는 단어",
+        "description": "Norish가 재료 이름을 식품과 연결할 때 건너뛰는 단어(언어별): 손질(“채썬”), 크기(“큰”), 어림(“약”), 식품이 들어 있거나 함께 오는 것을 나타내는 말, 식품을 뜻하지 않는 단어, 그리고 복수형과 지소형 어미. 모든 언어가 모든 이름에 적용됩니다."
       },
       "recurrence": {
         "title": "반복 패턴",

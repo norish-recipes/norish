@@ -337,7 +337,6 @@ function suggestion(
     englishName: "onions",
     considered: ["onion"],
     source,
-    canAnswer: true,
   };
 }
 
@@ -1150,6 +1149,83 @@ describe("IngredientsSettingsContent", () => {
     });
 
     expect(mutations.dismissSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1"] });
+  });
+
+  it("offers the suggestions only while some wait on the viewer", async () => {
+    // The server lists only what the viewer may answer: with none, nothing is offered.
+    const { rerender } = render(<IngredientsSettingsContent />);
+
+    expect(screen.queryByTestId("ingredients-suggestions-open")).toBeNull();
+
+    suggestions = [
+      suggestion("s1", "merge", "uitjes", "onion"),
+      suggestion("s2", "parent", "red onion", "onion"),
+    ];
+    rerender(<IngredientsSettingsContent />);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredients-suggestions-open"));
+    });
+    const shown = screen.getByRole("dialog", { name: "suggestionsTitle" });
+
+    for (const row of within(shown).getAllByTestId("ingredient-suggestion")) {
+      expect(within(row).getByTestId("ingredient-suggestion-confirm")).toBeInTheDocument();
+    }
+    await act(async () => {
+      fireEvent.click(within(shown).getByTestId("ingredient-suggestions-confirm-all"));
+    });
+    expect(mutations.confirmSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1", "s2"] });
+  });
+
+  it("opens a food's own panel from its name in the suggestions, over them", async () => {
+    suggestions = [suggestion("s1", "merge", "uitjes", "onion")];
+    // The list does not list uitjes, so its panel reads the food on its own.
+    ownItem = { ...onion, id: "uitjes", name: "uitjes" };
+    report = {
+      jobId: "round-1",
+      finished: true,
+      entries: [
+        { ingredientId: "knaks", name: "Unox Knaks", outcome: "failed", error: "Failed query" },
+        { ingredientId: "gone", name: "Gone", outcome: "skipped", reason: "not-found" },
+      ],
+    };
+    render(<IngredientsSettingsContent />);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredients-ask-ai-all"));
+    });
+    act(() => {
+      review.onEvent?.({
+        jobId: "round-1",
+        done: 1,
+        total: 1,
+        counts: { merge: 1, parent: 0, distinct: 0, unsure: 0, skipped: 1, failed: 1 },
+        pending: [],
+        finished: true,
+      });
+    });
+    const shown = screen.getByRole("dialog", { name: "suggestionsTitle" });
+    const [failed, gone] = within(shown).getAllByTestId("ingredients-review-entry");
+
+    // A food the round got nothing for opens too, unless it is gone.
+    expect(within(failed!).getByTestId("ingredient-suggestion-open")).toHaveTextContent(
+      "Unox Knaks"
+    );
+    expect(within(gone!).queryByTestId("ingredient-suggestion-open")).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(
+        within(within(shown).getByTestId("ingredient-suggestion")).getByTestId(
+          "ingredient-suggestion-open"
+        )
+      );
+    });
+
+    // The food's panel opens over the suggestions, with what AI suggests at its top.
+    const opened = screen.getByRole("dialog", { name: "uitjes" });
+
+    expect(within(opened).getByTestId("ingredient-suggestion-notice")).toHaveTextContent(
+      "suggestion.merge"
+    );
+    expect(screen.getByRole("dialog", { name: "suggestionsTitle" })).toBeInTheDocument();
   });
 
   it("offers no AI round where nothing on screen is flagged", () => {

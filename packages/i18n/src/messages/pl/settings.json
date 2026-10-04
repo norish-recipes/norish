@@ -355,7 +355,7 @@
       "ai-unsure": "Zapytano AI, czy to znany składnik, i nie było pewne.",
       "ai-unavailable": "AI nie odpowiedziało na czas, gdy dodano tę nazwę.",
       "food-gone": "AI dopasowało to do składnika scalonego, zanim nazwa zdążyła do niego dołączyć.",
-      "upgrade": "Dodane przez aktualizację do katalogu, która nie pyta AI.",
+      "upgrade": "Nie udało się dopasować żadnego znanego składnika.",
       "seed-ambiguous": "Katalog zna kilka składników, którymi to może być."
     },
     "empty": "Nie znaleziono składników",
@@ -541,13 +541,6 @@
     "dismissAll": "Odrzuć wszystkie",
     "suggestedByAI": "Zasugerowane przez AI",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Jednostki miary",
         "subtitle": "Definicje jednostek do parsowania",
         "description": "Zdefiniuj jednostki miary: skrót, liczbę mnogą i alternatywne pisownie. Używane podczas parsowania ilości składników."
+      },
+      "ingredientWords": {
+        "title": "Słowa składników",
+        "subtitle": "Słowa, według których czytane są nazwy składników, dla każdego języka",
+        "description": "Słowa, które Norish pomija, łącząc nazwę składnika z produktem, dla każdego języka: przygotowanie („posiekany”), rozmiary („duży”), przybliżenia („około”), w czym lub z czym produkt jest podany („w oliwie”), słowa, które nigdy nie nazywają produktu („i”), oraz końcówki liczby mnogiej i zdrobnień. Każdy język dotyczy każdej nazwy."
       },
       "recurrence": {
         "title": "Wzorce powtarzania",

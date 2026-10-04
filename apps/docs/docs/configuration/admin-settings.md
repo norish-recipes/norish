@@ -17,7 +17,8 @@ You can manage:
   and for editing ingredients.
 - **Auth providers** (OIDC, GitHub, Google).
 - **OIDC claim mapping** for admin role assignment and household auto-join.
-- **Content detection settings** (units, content indicators, recurrence config).
+- **Content detection settings** (units, [ingredient words](#ingredient-words),
+  content indicators, recurrence config).
 - **AI and video processing settings**.
 - **[Job queue](#job-queue)** Information about background jobs and possible restarts.
 - **System scheduler** and server restart actions.
@@ -30,6 +31,29 @@ instance, the [database](./database.md), the encryption key in
 
 Some settings may require a reboot, this is indicated in the UI.
 :::
+
+## Ingredient words
+
+**Settings => Admin => Content Detection => Ingredient words** holds the words
+Norish reads past when it matches an ingredient name to a food, one set per
+language:
+
+- `preparation`: what is done to a food (“chopped”, “fijngesneden”);
+- `sizes`: “large”, “grote”, also counted as one piece when a line's unit is one;
+- `approximately`: “about”, “ongeveer”, read past with the quantity they come with;
+- `connectors`: the word between a measure and its food (“a pinch **of** nutmeg”);
+- `joiners`: the word between two preparations (“peeled **and** chopped”);
+- `servedWith`: what a food comes in or with (“tuna **in** olive oil” is tuna);
+- `notFoods`: words that never name a food alone (“and”, “een”);
+- `inflections`: plural and diminutive endings, each with the ending it stands
+  for, so “onions” is onion and “bosuitjes” is “bosui”: `["ies", "y"]` reads
+  “cherries” as “cherry”.
+
+Every language's words apply to every name, since a recipe's language is not
+recorded. Norish ships them for every language it speaks and updates them with
+each release until you save your own; **Restore defaults** follows the shipped
+words again. A change applies to names read from then on; a name already
+matched keeps its food.
 
 ## Permissions
 

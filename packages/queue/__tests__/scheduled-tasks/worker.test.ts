@@ -19,6 +19,7 @@ import { recordModelUse } from "@norish/shared-server/ai/runtime/model-use-ledge
 
 const scheduler = vi.hoisted(() => ({ checkRecurringGroceries: vi.fn() }));
 const seed = vi.hoisted(() => ({ refreshIngredientCatalogue: vi.fn() }));
+const recheck = vi.hoisted(() => ({ recheckUndecidedMintsOnRungChange: vi.fn() }));
 const captured = vi.hoisted(() => ({
   processor: undefined as ((job: unknown) => Promise<unknown>) | undefined,
 }));
@@ -45,6 +46,7 @@ vi.mock("@norish/queue/scheduler/old-calendar-cleanup", () => ({
 }));
 vi.mock("@norish/queue/scheduler/old-groceries-cleanup", () => ({ cleanupOldGroceries: vi.fn() }));
 vi.mock("@norish/shared-server/ingredients/seed/catalogue-seed", () => seed);
+vi.mock("@norish/shared-server/ingredients/seed/recheck-mints", () => recheck);
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
@@ -109,6 +111,12 @@ describe("startScheduledTasksWorker", () => {
     seed.refreshIngredientCatalogue.mockResolvedValueOnce("applied");
     await captured.processor!(jobFor("ingredient-catalogue-refresh"));
     expect(seed.refreshIngredientCatalogue).toHaveBeenCalledTimes(1);
+    // A file applied may be the first seed: the mints made without it are looked at again.
+    expect(recheck.recheckUndecidedMintsOnRungChange).toHaveBeenCalledTimes(1);
+
+    seed.refreshIngredientCatalogue.mockResolvedValueOnce("unchanged");
+    await captured.processor!(jobFor("ingredient-catalogue-refresh"));
+    expect(recheck.recheckUndecidedMintsOnRungChange).toHaveBeenCalledTimes(1);
 
     seed.refreshIngredientCatalogue.mockRejectedValueOnce(new Error("HTTP 503"));
     await expect(captured.processor!(jobFor("ingredient-catalogue-refresh"))).rejects.toThrow(

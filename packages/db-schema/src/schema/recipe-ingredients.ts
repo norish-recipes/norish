@@ -8,8 +8,8 @@ import { versionColumn } from "./shared";
  * A recipe line. `name` is the line's text as written ("onions, diced"),
  * which is what the recipe shows; `ingredientAliasId` is the Ingredient Alias
  * the resolver resolved that text to, and through it the Ingredient. The alias
- * is the line's only pointer at its food (ADR-0037); it is null only on a line
- * the upgrade has not reached yet.
+ * is the line's only pointer at its food (ADR-0037); it is null only on a `#`
+ * heading, which names no food, and on a line the upgrade has not reached yet.
  */
 export const recipeIngredients = pgTable(
   "recipe_ingredients",

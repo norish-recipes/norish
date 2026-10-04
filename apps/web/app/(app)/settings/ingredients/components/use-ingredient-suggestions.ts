@@ -16,7 +16,7 @@ import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import type { IngredientItem } from "./ingredient-row";
 import { useIngredientCache } from "./use-ingredient-cache";
 
-/** One suggestion AI left waiting on a person, as the server lists it. */
+/** One suggestion waiting on the viewer, as the server lists it: only ones they may answer. */
 export type IngredientSuggestion = {
   id: string;
   kind: SuggestionKind;
@@ -25,7 +25,6 @@ export type IngredientSuggestion = {
   englishName: string | null;
   considered: string[];
   source: SuggestionSource;
-  canAnswer: boolean;
 };
 
 /**

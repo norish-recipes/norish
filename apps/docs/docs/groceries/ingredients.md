@@ -28,17 +28,23 @@ recipe you import and every grocery you add.
 When Norish meets a name it does not know, it checks it against the translations it
 has, then without the preparation (“onions, diced” is “onions”, and so are “onions
 finely chopped” and “finely chopped onions”, as many sites write it without the
-comma), without a container at the start (“can of chickpeas”, “pack coriander”) and
-without a serving phrase or vague amount at either end (“salt to taste”, “a pinch of
-nutmeg”, “parsley for garnish” are salt, nutmeg and parsley), and then, if
-[AI](../configuration/ai-provider.md) is set up, asks what food it is. Only when
+comma), without a size (“grote ui” is “ui”), without a quantity an import left at
+the start (“ongeveer 4 el bosui” is “bosui”), without a container at the start (“can
+of chickpeas”, “pack coriander”) and without a serving phrase or vague amount at
+either end (“salt to taste”, “a pinch of nutmeg”, “parsley for garnish” are salt,
+nutmeg and parsley). A plural or diminutive of a name it knows is that food:
+“onions” is onion, and “bosuien” and “bosuitjes” are “bosui”. Only then, if
+[AI](../configuration/ai-provider.md) is set up, does it ask what food it is. The
+words it reads past, and the plural and diminutive endings, are the
+[ingredient words](../configuration/admin-settings.md#ingredient-words), shipped for
+every language Norish speaks and editable by an admin. Only when
 none of these is sure does it add a new ingredient, **flagged** for you to check,
 and named without the preparation: “garlic cloves crushed” becomes “garlic cloves”.
 A new ingredient whose name contains a food Norish knows is filed under it, so it
 uses that food's aisle and nutrition while it waits for you. “Ground cumin” goes
-under cumin without a question; “garlic cloves” goes under garlic with a
-**suggestion** for you to confirm or dismiss, because the food was not the last
-word of the name. With AI set up, AI is asked about the same name with that food
+under cumin without a question, and so does “dried tomatoes” under tomato.
+“Garlic cloves” goes under garlic with a **suggestion** for you to confirm or
+dismiss, because the food was not the last word of the name. With AI set up, AI is asked about the same name with that food
 among the options: if it agrees, the ingredient is filed without a flag; if it
 names another food, a Decision Model gets the final say between the two, and
 without one AI's answer wins.
@@ -166,15 +172,20 @@ on if you close the tab: each flagged row shows **Asking AI…** until the round
 ends. It asks a few ingredients at once, and the answers land together: the
 **Suggestions** panel then opens on its own for whoever started the round,
 and the suggestions button in the card's header opens it whenever any are
-waiting. The panel is a table, one row per ingredient: the ingredient, the
-proposal (merge into, file under, or a food of its own), what it is based on
-(what AI read the name as and compared it with, or “Based on name”), and
-**Confirm** and **Dismiss**, with **Confirm all** / **Dismiss all** at the bottom. Confirming makes the change as your own edit. Many ingredients
-may be suggested under the same parent. Below them, the ingredients the round
-had nothing to suggest for say why: AI was not sure, the ingredient was passed
-over, or its question failed. Anyone who opens the page meanwhile sees the same
-rows waiting, and the round shows in the admin job monitor as **Ask AI about
-ingredients**, with the models it asked.
+waiting for you. You only see suggestions for ingredients you may change, so
+someone who may change none of them gets no button at all. The panel has a
+row per ingredient: the ingredient, the proposal
+(merge into, file under, or a food of its own), what it is based on (what AI
+read the name as and compared it with, or “Based on name”), and **Confirm** and
+**Dismiss**, with **Confirm all** / **Dismiss all** at the bottom. Confirming
+makes the change as your own edit. Many ingredients may be suggested under the
+same parent. Below them, the ingredients the round had nothing to suggest for
+say why: AI was not sure, the ingredient was passed over, or its question
+failed. Press an ingredient's name to open its own panel over the suggestions,
+to look at it whole or fix it by hand; closing it brings you back. Anyone else
+who may change those ingredients sees the same rows waiting, and the round
+shows in the admin job monitor as **Ask AI about ingredients**, with the models
+it asked.
 
 Whenever an update improves how Norish reads names, it looks at the flagged
 ingredients it added in the past once more when it starts: one that now

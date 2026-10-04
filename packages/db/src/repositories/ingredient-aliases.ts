@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
@@ -53,24 +53,34 @@ const aliasColumns = {
   ingredientId: ingredientAliases.ingredientId,
 };
 
+/** How many folds one lookup carries: an upgrade batch reads every plural of every line. */
+const FOLDS_PER_QUERY = 5000;
+
 export async function findIngredientAliasesByFolds(
   folds: readonly string[]
 ): Promise<IngredientAliasRow[]> {
   const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
+  const rows: IngredientAliasRow[] = [];
 
-  if (unique.length === 0) return [];
+  for (let start = 0; start < unique.length; start += FOLDS_PER_QUERY) {
+    rows.push(
+      ...(await db
+        .select(aliasColumns)
+        .from(ingredientAliases)
+        .where(inArray(ingredientAliases.fold, unique.slice(start, start + FOLDS_PER_QUERY))))
+    );
+  }
 
-  return await db
-    .select(aliasColumns)
-    .from(ingredientAliases)
-    .where(inArray(ingredientAliases.fold, unique));
+  return rows;
 }
 
 /**
- * The seeded aliases among these folds: the spellings the catalogue seed
- * wrote, which a new mint may be filed under by the words its text ends with.
+ * The spellings of seeded foods among these folds, which a new mint may be
+ * filed under by the words its text ends with: the ones the catalogue seed
+ * wrote, and the ones a seeded food gained since, by a merge or a person
+ * (an instance's own word for garlic is as good a word for it as the seed's).
  */
-export async function findSeededAliasesByFolds(
+export async function findSeededFoodSpellingsByFolds(
   folds: readonly string[]
 ): Promise<IngredientAliasRow[]> {
   const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
@@ -80,7 +90,8 @@ export async function findSeededAliasesByFolds(
   return await db
     .select(aliasColumns)
     .from(ingredientAliases)
-    .where(and(inArray(ingredientAliases.fold, unique), eq(ingredientAliases.seeded, true)));
+    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+    .where(and(inArray(ingredientAliases.fold, unique), isNotNull(ingredients.offId)));
 }
 
 export async function findIngredientByAliasId(aliasId: string): Promise<IngredientRow | null> {
@@ -177,7 +188,9 @@ export interface MintIngredientInput {
  * already taken keeps pointing where it points, and the new Ingredient is
  * removed again with any spelling it did get joining the one that won. A name that is already an
  * Ingredient's (regardless of case) is that Ingredient, so the aliases join it
- * and nothing is minted or flagged.
+ * and nothing is minted or flagged; unless that one has no spelling at all,
+ * which only a row from before the upgrade lacks (ADR-0037): nobody decided
+ * on it, so the mint takes it over, flag and parent included.
  */
 export async function mintIngredientWithAliases(
   input: MintIngredientInput
@@ -211,25 +224,45 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
       .onConflictDoNothing()
       .returning({ id: ingredients.id });
 
-    const ingredientId =
-      minted?.id ??
-      (
-        await tx
-          .select({ id: ingredients.id })
+    const [holder] = minted
+      ? []
+      : await tx
+          .select({
+            id: ingredients.id,
+            spelled: sql<boolean>`exists (select 1 from ${ingredientAliases} a where a.ingredient_id = ${ingredients.id})`,
+          })
           .from(ingredients)
           .where(eq(sql`lower(${ingredients.name})`, sql`lower(${input.name})`))
-          .limit(1)
-      )[0]?.id;
+          .limit(1);
+    const ingredientId = minted?.id ?? holder?.id;
 
     if (!ingredientId) throw new Error("Failed to mint or find ingredient");
 
+    const takenOver = holder !== undefined && !holder.spelled;
+
+    if (takenOver) {
+      await tx
+        .update(ingredients)
+        .set({
+          name: input.name,
+          ownerId: sql`coalesce(${ingredients.ownerId}, ${input.ownerId})`,
+          flagged: input.flagged,
+          flagReason: input.flagged ? (input.flagReason ?? null) : null,
+          parentId: input.parentId
+            ? sql`(select p.id from ${ingredients} p where p.id = ${input.parentId})`
+            : null,
+          version: sql`${ingredients.version} + 1`,
+        })
+        .where(eq(ingredients.id, ingredientId));
+    }
+
     // Only a parent that was actually applied is put to a person; a name that
     // joined an existing Ingredient got none.
-    if (minted && input.parentId && input.suggestParent) {
+    if ((minted || takenOver) && input.parentId && input.suggestParent) {
       await tx
         .insert(ingredientSuggestions)
         .values({
-          ingredientId: minted.id,
+          ingredientId,
           kind: "parent",
           targetId: input.parentId,
           source: "words",

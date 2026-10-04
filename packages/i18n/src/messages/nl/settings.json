@@ -355,7 +355,7 @@
       "ai-unsure": "AI is gevraagd of dit een bekend ingrediënt is en wist het niet zeker.",
       "ai-unavailable": "AI antwoordde niet op tijd toen deze naam werd toegevoegd.",
       "food-gone": "AI koppelde dit aan een ingrediënt dat werd samengevoegd voordat de naam erbij kon.",
-      "upgrade": "Toegevoegd door de upgrade naar de catalogus, die AI niet vraagt.",
+      "upgrade": "Er kon geen bekend ingrediënt aan worden gekoppeld.",
       "seed-ambiguous": "De catalogus kent meerdere ingrediënten die dit kunnen zijn."
     },
     "empty": "Geen ingrediënten gevonden",
@@ -541,13 +541,6 @@
     "dismissAll": "Alles negeren",
     "suggestedByAI": "Voorgesteld door AI",
     "suggestedFromName": "Op basis van de naam",
-    "suggestionColumns": {
-      "ingredient": "Ingrediënt",
-      "proposal": "Voorstel",
-      "basis": "Op basis van",
-      "outcome": "Uitkomst",
-      "actions": "Acties"
-    },
     "proposal": {
       "merge": "Samenvoegen met {into}",
       "parent": "Plaatsen onder {of}",
@@ -778,6 +771,11 @@
         "title": "Meeteenheden",
         "subtitle": "Definities van meeteenheden voor parsing",
         "description": "Definieer meeteenheden met hun korte vorm, meervoud en alternatieve schrijfwijzen. Wordt gebruikt bij het parseren van ingrediënthoeveelheden."
+      },
+      "ingredientWords": {
+        "title": "Ingrediëntwoorden",
+        "subtitle": "Woorden waarmee ingrediëntnamen gelezen worden, per taal",
+        "description": "De woorden waar Norish langs leest als het een ingrediëntnaam aan een voedingsmiddel koppelt, per taal: bereiding (“fijngesneden”), maten (“grote”), schattingen (“ongeveer”), waar iets in of mee komt (“in olijfolie”), woorden die nooit een voedingsmiddel zijn (“en”), en de meervouds- en verkleinwoorduitgangen die van “bosuitjes” bosui maken. Elke taal geldt voor elke naam."
       },
       "recurrence": {
         "title": "Herhalingspatronen",

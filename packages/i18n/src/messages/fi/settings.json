@@ -355,7 +355,7 @@
       "ai-unsure": "Tekoälyltä kysyttiin, onko tämä tunnettu ainesosa, eikä se ollut varma.",
       "ai-unavailable": "Tekoäly ei vastannut ajoissa, kun tämä nimi lisättiin.",
       "food-gone": "Tekoäly yhdisti tämän ainesosaan, joka yhdistettiin ennen kuin nimi ehti mukaan.",
-      "upgrade": "Lisätty luetteloon päivityksessä, joka ei kysy tekoälyltä.",
+      "upgrade": "Vastaavaa tunnettua ainesosaa ei löytynyt.",
       "seed-ambiguous": "Luettelo tuntee useita ainesosia, joita tämä voisi olla."
     },
     "empty": "Ainesosia ei löytynyt",
@@ -541,13 +541,6 @@
     "dismissAll": "Hylkää kaikki",
     "suggestedByAI": "Tekoälyn ehdottama",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Mittayksiköt",
         "subtitle": "Mittayksiköiden määritykset jäsennystä varten",
         "description": "Määritä mittayksiköt lyhenteineen, monikkomuotoineen ja vaihtoehtoisine kirjoitusasuineen. Käytetään ainesosien määriä jäsennettäessä."
+      },
+      "ingredientWords": {
+        "title": "Ainesosasanat",
+        "subtitle": "Sanat, joiden mukaan ainesosien nimet luetaan, kielittäin",
+        "description": "Sanat, joiden ohi Norish lukee yhdistäessään ainesosan nimen ruoka-aineeseen, kielittäin: valmistus (”hienonnettu”), koot (”iso”), arviot (”noin”), sanat, jotka eivät koskaan nimeä ruoka-ainetta (”ja”), sekä monikon ja deminutiivin päätteet. Jokainen kieli koskee jokaista nimeä."
       },
       "recurrence": {
         "title": "Toistokaavat",

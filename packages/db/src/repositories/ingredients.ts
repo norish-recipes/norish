@@ -25,6 +25,7 @@ import {
   RecipeIngredientSelectWithNameSchema,
   RecipeIngredientsInsertBaseSchema,
 } from "@norish/shared/contracts/zod/recipe-ingredients";
+import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 export async function getUnitsForNormalization(): Promise<UnitsMap> {
@@ -72,13 +73,15 @@ export type IngredientResolutions = ReadonlyMap<string, IngredientRef>;
 /**
  * The row values a recipe line is written with: its text as written, the
  * alias that text resolved to, and that alias's Ingredient. A line with no
- * text is not a line and is skipped.
+ * text is not a line and is skipped; one that names no food (a heading, a
+ * text with no letter or digit) keeps no alias.
  */
 export function resolvedRecipeLineValues(
   ingredientName: string | undefined,
   resolutions: IngredientResolutions
-): { name: string; ingredientAliasId: string } | null {
+): { name: string; ingredientAliasId: string | null } | null {
   if (!ingredientName) return null;
+  if (namesNoFood(ingredientName)) return { name: ingredientName, ingredientAliasId: null };
 
   const resolved = resolutions.get(ingredientName);
 

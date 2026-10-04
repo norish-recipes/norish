@@ -1,7 +1,8 @@
 export { useTagsQuery } from "./use-tags-query";
 export { useCuisinesQuery } from "./use-cuisines-query";
 export { useUnitsQuery } from "./use-units-query";
-export { useUnitPhrases } from "./use-unit-phrases";
+export { useIngredientWordsQuery } from "./use-ingredient-words-query";
+export { useSpellingRules } from "./use-spelling-rules";
 export { useTimersEnabledQuery } from "./use-timers-enabled-query";
 export { useTimerKeywordsQuery } from "./use-timer-keywords-query";
 export { useRecurrenceConfigQuery } from "./use-recurrence-config-query";

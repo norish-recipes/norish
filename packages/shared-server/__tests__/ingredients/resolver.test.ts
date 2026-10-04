@@ -17,6 +17,7 @@ import { setConfig } from "@norish/db/repositories/server-config";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import {
   findIngredientFor,
+  forgetSpellingRules,
   ingredientFor,
   resolveIngredient,
   resolveIngredients,
@@ -37,6 +38,9 @@ describe("ingredient resolver", () => {
 
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
+
+    // Each test starts on the units map its own database holds.
+    forgetSpellingRules();
 
     userId = user.id;
   });
@@ -199,6 +203,7 @@ describe("ingredient resolver", () => {
 
     expect((await resolveOne("a smidgen of nutmeg")).ingredientId).not.toBe(nutmeg.ingredientId);
     await setConfig(ServerConfigKeys.UNITS, { units, isOverridden: true }, null, false);
+    forgetSpellingRules();
     expect((await resolveOne("smidgen of nutmeg, grated")).ingredientId).not.toBe(
       nutmeg.ingredientId
     );
@@ -214,6 +219,7 @@ describe("ingredient resolver", () => {
       null,
       false
     );
+    forgetSpellingRules();
     const garlic = await resolveOne("garlic cloves");
     const chickpeas = await resolveOne("chickpeas");
 
@@ -224,7 +230,8 @@ describe("ingredient resolver", () => {
     expect((await resolveOne("can of chickpeas drained and rinsed")).ingredientId).toBe(
       chickpeas.ingredientId
     );
-    expect((await resolveOne("400g can chickpeas")).ingredientId).not.toBe(chickpeas.ingredientId);
+    // A quantity an import left at the start goes first, and then the can is at the start.
+    expect((await resolveOne("400g can chickpeas")).ingredientId).toBe(chickpeas.ingredientId);
   });
 
   it("names a new food for its text without such preparation, and keeps the text as a spelling", async () => {
@@ -239,6 +246,32 @@ describe("ingredient resolver", () => {
     const onion = await resolveOne("onion");
 
     expect((await resolveOne("onion rings")).ingredientId).not.toBe(onion.ingredientId);
+  });
+
+  it("resolves a plural or a diminutive to the food it names, in any language", async () => {
+    const tomato = await resolveOne("tomato");
+    const bosui = await resolveOne("bosui");
+    const zwiebel = await resolveOne("Zwiebel");
+
+    expect((await resolveOne("tomatoes")).ingredientId).toBe(tomato.ingredientId);
+    expect((await resolveOne("bosuien")).ingredientId).toBe(bosui.ingredientId);
+    expect((await resolveOne("bosuitjes")).ingredientId).toBe(bosui.ingredientId);
+    expect((await resolveOne("rote Zwiebeln")).ingredientId).not.toBe(zwiebel.ingredientId);
+    expect((await resolveOne("Zwiebeln")).ingredientId).toBe(zwiebel.ingredientId);
+    // And the reverse: a singular finds a food known only by its plural.
+    const krieltjes = await resolveOne("krieltjes");
+
+    expect((await resolveOne("krieltje")).ingredientId).toBe(krieltjes.ingredientId);
+  });
+
+  it("reads past a quantity an import left at a name's start, and its size", async () => {
+    const bosui = await resolveOne("bosui");
+
+    expect((await resolveOne("ongeveer 4 el fijngesneden bosui")).ingredientId).toBe(
+      bosui.ingredientId
+    );
+    expect((await resolveOne("4el bosui")).ingredientId).toBe(bosui.ingredientId);
+    expect((await resolveOne("grote bosui")).ingredientId).toBe(bosui.ingredientId);
   });
 
   it("finds what a text already resolves to without minting anything", async () => {
@@ -332,6 +365,37 @@ describe("ingredient resolver", () => {
       ]);
     });
 
+    it("keeps a heading as a line that names no food, and mints nothing for it", async () => {
+      const sauce = await resolveOne("sauce");
+      const recipeId = crypto.randomUUID();
+
+      await createRecipeWithRefs(
+        recipeId,
+        userId,
+        await withResolvedIngredients(
+          {
+            name: "Soup",
+            systemUsed: "metric",
+            recipeIngredients: [
+              line("# Sauce", 0),
+              line("# For the topping:", 1),
+              line("leeks", 2),
+            ],
+          },
+          { userId }
+        )
+      );
+
+      expect((await getRecipeFull(recipeId))?.recipeIngredients).toMatchObject([
+        { ingredientName: "# Sauce", ingredientId: null },
+        { ingredientName: "# For the topping:", ingredientId: null },
+        { ingredientName: "leeks" },
+      ]);
+      // "# Sauce" folds like "sauce", and still never became a spelling of it.
+      await expect(findIngredientFor("# For the topping:")).resolves.toBeNull();
+      expect((await resolveOne("sauce")).ingredientId).toBe(sauce.ingredientId);
+    });
+
     it("re-resolves an edited line's text on update", async () => {
       const recipeId = crypto.randomUUID();
 
@@ -361,8 +425,8 @@ describe("ingredient resolver", () => {
       expect((await getRecipeFull(recipeId))?.recipeIngredients).toMatchObject([
         { id: leekLine!.id, ingredientName: "carrots (peeled)" },
       ]);
-      // "carrots" is not "carrot": plurals are the seed's and the Decision's to know.
-      expect((await getRecipeFull(recipeId))?.recipeIngredients[0]?.ingredientId).not.toBe(
+      // A plural is its singular's food, by the ingredient words' endings.
+      expect((await getRecipeFull(recipeId))?.recipeIngredients[0]?.ingredientId).toBe(
         carrot.ingredientId
       );
     });

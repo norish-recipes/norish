@@ -167,11 +167,11 @@ describe("ingredient resolver, rung 3", () => {
       )
     );
 
-    const onions = await resolveOne("onions");
+    const ui = await resolveOne("ui");
 
-    expect(onions.ingredientId).not.toBe(onion.ingredientId);
-    await expect(ingredientFor(onions.aliasId)).resolves.toMatchObject({
-      name: "onions",
+    expect(ui.ingredientId).not.toBe(onion.ingredientId);
+    await expect(ingredientFor(ui.aliasId)).resolves.toMatchObject({
+      name: "ui",
       flagged: true,
     });
   });
@@ -180,13 +180,13 @@ describe("ingredient resolver, rung 3", () => {
     const onion = await known("onion");
 
     decides("Is onion", 0.95);
-    const onions = await resolveOne("onions");
+    const bulbs = await resolveOne("onion bulbs");
 
-    expect(onions.ingredientId).toBe(onion.ingredientId);
+    expect(bulbs.ingredientId).toBe(onion.ingredientId);
     expect(vi.mocked(isDecisionUseEnabled)).toHaveBeenCalledWith("ingredientResolution");
 
     // Now a spelling of onion: the next one matches exactly, and nothing is asked.
-    await expect(resolveOne("Onions")).resolves.toMatchObject({
+    await expect(resolveOne("Onion Bulbs")).resolves.toMatchObject({
       ingredientId: onion.ingredientId,
     });
     expect(vi.mocked(decide)).toHaveBeenCalledTimes(1);
@@ -196,7 +196,7 @@ describe("ingredient resolver, rung 3", () => {
     const tomato = await known("tomato");
 
     decides("Is tomato", RESOLUTION_THRESHOLD);
-    await expect(resolveOne("tomatoes")).resolves.toMatchObject({
+    await expect(resolveOne("tomaat")).resolves.toMatchObject({
       ingredientId: tomato.ingredientId,
     });
     expect(vi.mocked(generateStructured)).not.toHaveBeenCalled();
@@ -463,7 +463,9 @@ describe("ingredient resolver, rung 3", () => {
     const onion = await known("onion");
 
     decides("Is onion", 0.95);
-    const [diced, bare] = await resolveIngredients(["onions, diced", "onions (2)"], { userId });
+    const [diced, bare] = await resolveIngredients(["onion bulbs, diced", "onion bulbs (2)"], {
+      userId,
+    });
 
     expect(diced!.ingredientId).toBe(onion.ingredientId);
     expect(bare!.ingredientId).toBe(onion.ingredientId);

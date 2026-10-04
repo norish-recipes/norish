@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
 import Panel from "@/components/Panel/Panel";
 import { IconActionButton } from "@/components/shared/action-button";
-import { useUnitPhrases } from "@/hooks/config";
+import { useSpellingRules } from "@/hooks/config";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button, FieldError, Input, TextField } from "@heroui/react";
@@ -32,7 +32,7 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
   const t = useTranslations("groceries.pantry");
   const locale = useLocale();
   const { items } = usePantryQuery();
-  const phrases = useUnitPhrases();
+  const rules = useSpellingRules();
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const [draft, setDraft] = useState("");
   const field = useRef<HTMLInputElement>(null);
@@ -41,9 +41,9 @@ export function PantryPanel({ open, onOpenChange }: PantryPanelProps) {
     if (!open) setDraft("");
   }, [open]);
 
-  const draftFolded = foodKey(draft, phrases);
+  const draftFolded = foodKey(draft, rules);
   const draftDuplicate =
-    draftFolded !== "" && pantryIngredientFor(items, { ingredientName: draft }, phrases) !== null;
+    draftFolded !== "" && pantryIngredientFor(items, { ingredientName: draft }, rules) !== null;
   const sorted = sortPantryIngredients(items, locale);
 
   const add = () => {

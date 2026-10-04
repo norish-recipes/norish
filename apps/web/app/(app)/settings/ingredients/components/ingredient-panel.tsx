@@ -70,6 +70,7 @@ export function IngredientPanel({
   id = null,
   item,
   open,
+  nested = false,
   reviewing = false,
   onClose,
   onChanged,
@@ -79,6 +80,8 @@ export function IngredientPanel({
   /** The food as the list now has it; null while the list does not list it. */
   item: IngredientItem | null;
   open: boolean;
+  /** Opened from another panel, over it: closing comes back to that one. */
+  nested?: boolean;
   /** A round of Ask AI is asking about this food: nothing is edited meanwhile. */
   reviewing?: boolean;
   onClose: () => void;
@@ -112,6 +115,7 @@ export function IngredientPanel({
       // Another food is another panel: its fields start from that food.
       key={shown.id}
       item={shown}
+      nested={nested}
       open={open}
       reviewing={reviewing}
       onChanged={onChanged}
@@ -123,12 +127,14 @@ export function IngredientPanel({
 function IngredientPanelContent({
   item,
   open,
+  nested,
   reviewing,
   onClose,
   onChanged,
 }: {
   item: IngredientItem;
   open: boolean;
+  nested: boolean;
   reviewing: boolean;
   onClose: () => void;
   onChanged: () => void;
@@ -455,6 +461,8 @@ function IngredientPanelContent({
 
   return (
     <Panel
+      className={nested ? "contents" : undefined}
+      nested={nested}
       open={open}
       title={displayName}
       titleAddon={<IngredientStatusChip flagged={item.flagged} reviewing={asking} />}
@@ -477,28 +485,26 @@ function IngredientPanelContent({
                 {suggestion.source === "ai" ? (
                   <p className="text-muted text-sm">{suggestionTrace(t, suggestion)}</p>
                 ) : null}
-                {suggestion.canAnswer ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      data-testid="ingredient-suggestion-confirm"
-                      isDisabled={busy}
-                      size="sm"
-                      variant="secondary"
-                      onPress={() => answerSuggestion(true)}
-                    >
-                      {t("confirmSuggestion")}
-                    </Button>
-                    <Button
-                      data-testid="ingredient-suggestion-dismiss"
-                      isDisabled={busy}
-                      size="sm"
-                      variant="danger-soft"
-                      onPress={() => answerSuggestion(false)}
-                    >
-                      {t("dismissSuggestion")}
-                    </Button>
-                  </div>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    data-testid="ingredient-suggestion-confirm"
+                    isDisabled={busy}
+                    size="sm"
+                    variant="secondary"
+                    onPress={() => answerSuggestion(true)}
+                  >
+                    {t("confirmSuggestion")}
+                  </Button>
+                  <Button
+                    data-testid="ingredient-suggestion-dismiss"
+                    isDisabled={busy}
+                    size="sm"
+                    variant="danger-soft"
+                    onPress={() => answerSuggestion(false)}
+                  >
+                    {t("dismissSuggestion")}
+                  </Button>
+                </div>
               </div>
             </Section>
           ) : null}

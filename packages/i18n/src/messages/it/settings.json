@@ -355,7 +355,7 @@
       "ai-unsure": "All'IA è stato chiesto se è un ingrediente noto e non era sicura.",
       "ai-unavailable": "L'IA non ha risposto in tempo quando questo nome è stato aggiunto.",
       "food-gone": "L'IA lo ha associato a un ingrediente unito prima che il nome potesse raggiungerlo.",
-      "upgrade": "Aggiunto dall'aggiornamento al catalogo, che non interpella l'IA.",
+      "upgrade": "Non è stato trovato nessun ingrediente noto corrispondente.",
       "seed-ambiguous": "Il catalogo conosce più ingredienti che potrebbero essere questo."
     },
     "empty": "Nessun ingrediente trovato",
@@ -541,13 +541,6 @@
     "dismissAll": "Ignora tutto",
     "suggestedByAI": "Suggerito dall'IA",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Unità di misura",
         "subtitle": "Definizioni delle unità di misura per l'analisi",
         "description": "Definisci le unità di misura con la loro forma abbreviata, plurale e grafie alternative. Utilizzate durante l'analisi delle quantità degli ingredienti."
+      },
+      "ingredientWords": {
+        "title": "Parole degli ingredienti",
+        "subtitle": "Le parole con cui si leggono i nomi degli ingredienti, per lingua",
+        "description": "Le parole che Norish salta quando collega il nome di un ingrediente a un alimento, per lingua: preparazione («tagliato»), misure («grande»), approssimazioni («circa»), in cosa o con cosa arriva un alimento («in olio d’oliva»), parole che non indicano mai un alimento («e»), e le desinenze del plurale e del diminutivo che fanno di «pomodori» il pomodoro. Ogni lingua vale per ogni nome."
       },
       "recurrence": {
         "title": "Modelli di ricorrenza",

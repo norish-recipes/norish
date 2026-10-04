@@ -355,7 +355,7 @@
       "ai-unsure": "L'IA a été interrogée sur cet ingrédient et n'était pas sûre.",
       "ai-unavailable": "L'IA n'a pas répondu à temps lors de l'ajout de ce nom.",
       "food-gone": "L'IA l'a associé à un ingrédient fusionné avant que le nom ne puisse le rejoindre.",
-      "upgrade": "Ajouté par la mise à niveau vers le catalogue, qui ne sollicite pas l'IA.",
+      "upgrade": "Aucun ingrédient connu n'a pu être associé.",
       "seed-ambiguous": "Le catalogue connaît plusieurs ingrédients que cela pourrait être."
     },
     "empty": "Aucun ingrédient trouvé",
@@ -541,13 +541,6 @@
     "dismissAll": "Tout ignorer",
     "suggestedByAI": "Suggéré par l'IA",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Unités de mesure",
         "subtitle": "Définitions des unités pour l’analyse",
         "description": "Définissez les unités avec leurs abréviations, pluriels et variantes orthographiques. Utilisé lors de l’analyse des ingrédients."
+      },
+      "ingredientWords": {
+        "title": "Mots des ingrédients",
+        "subtitle": "Les mots selon lesquels les noms d’ingrédients sont lus, par langue",
+        "description": "Les mots que Norish ignore lorsqu’il rapproche un nom d’ingrédient d’un aliment, par langue : préparation (« émincé »), tailles (« gros »), approximations (« environ »), ce dans quoi ou avec quoi un aliment vient (« à l’huile d’olive »), mots qui ne désignent jamais un aliment (« et »), et les terminaisons du pluriel et du diminutif qui font de « tomates » la tomate. Chaque langue s’applique à chaque nom."
       },
       "recurrence": {
         "title": "Modèles de récurrence",

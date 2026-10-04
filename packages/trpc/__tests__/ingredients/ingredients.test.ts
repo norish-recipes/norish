@@ -572,7 +572,7 @@ describe("AI's suggestions", () => {
     };
   }
 
-  it("lists what waits on a person, and whether the viewer may answer each", async () => {
+  it("lists only what the viewer may answer", async () => {
     suggestionsRepo.listIngredientSuggestions.mockResolvedValueOnce([
       suggested("parent"),
       { ...suggested("distinct", STRANGER), id: OTHER },
@@ -580,10 +580,7 @@ describe("AI's suggestions", () => {
 
     const listed = await callerFor().suggestions();
 
-    expect(listed.map((it) => [it.kind, it.target?.name ?? null, it.canAnswer])).toEqual([
-      ["parent", "onion", true],
-      ["distinct", null, false],
-    ]);
+    expect(listed.map((it) => [it.kind, it.target?.name ?? null])).toEqual([["parent", "onion"]]);
   });
 
   it("confirms a parent as the viewer's own edit, which settles it", async () => {

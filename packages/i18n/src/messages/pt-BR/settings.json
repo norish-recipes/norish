@@ -355,7 +355,7 @@
       "ai-unsure": "A IA foi consultada se é um ingrediente conhecido e não tinha certeza.",
       "ai-unavailable": "A IA não respondeu a tempo quando este nome foi adicionado.",
       "food-gone": "A IA o associou a um ingrediente mesclado antes que o nome pudesse se juntar a ele.",
-      "upgrade": "Adicionado pela atualização para o catálogo, que não consulta a IA.",
+      "upgrade": "Nenhum ingrediente conhecido correspondente foi encontrado.",
       "seed-ambiguous": "O catálogo conhece vários ingredientes que este poderia ser."
     },
     "empty": "Nenhum ingrediente encontrado",
@@ -541,13 +541,6 @@
     "dismissAll": "Descartar tudo",
     "suggestedByAI": "Sugerido pela IA",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Unidades de medida",
         "subtitle": "Definições de unidades de medida para análise",
         "description": "Defina unidades de medida com sua forma curta, plural e grafias alternativas. Usadas ao analisar quantidades de ingredientes."
+      },
+      "ingredientWords": {
+        "title": "Palavras dos ingredientes",
+        "subtitle": "Palavras pelas quais os nomes dos ingredientes são lidos, por idioma",
+        "description": "As palavras que o Norish ignora ao ligar o nome de um ingrediente a um alimento, por idioma: preparo (“picado”), tamanhos (“grande”), aproximações (“aproximadamente”), em que ou com que um alimento vem (“em azeite”), palavras que nunca nomeiam um alimento (“e”), e as terminações de plural e diminutivo que fazem de “cebolas” a cebola. Cada idioma vale para cada nome."
       },
       "recurrence": {
         "title": "Padrões de recorrência",

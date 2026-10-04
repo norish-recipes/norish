@@ -300,6 +300,20 @@ test("asking AI about the flagged foods on screen runs as one round of suggestio
   await expect(suggestion).toContainText("knoflookteentjes");
   await expect(suggestion).toContainText("Food of its own");
   await expect(suggestion).toContainText("AI read it as “garlic cloves”.");
+  // The panel is a phone's width on a desktop too; the suggestions never scroll it sideways.
+  const panelBody = panel.locator('[data-slot="panel-body"]');
+
+  expect(await panelBody.evaluate((body) => body.scrollWidth - body.clientWidth)).toBe(0);
+  // A food's name opens its own panel over the suggestions; closing it comes back to them.
+  await suggestion.getByTestId("ingredient-suggestion-open").click();
+  const food = ingredientPanel("knoflookteentjes");
+
+  await expect(food.getByTestId("ingredient-suggestion-notice")).toContainText(
+    "Keep knoflookteentjes as a food of its own"
+  );
+  await food.getByRole("button", { name: "Close panel" }).click();
+  await expect(food).toBeHidden();
+  await expect(panel).toBeVisible();
   await suggestion.getByTestId("ingredient-suggestion-confirm").click();
   await expect(suggestion).toHaveCount(0);
   await expect(panel.getByText("Nothing is waiting on you.")).toBeVisible();

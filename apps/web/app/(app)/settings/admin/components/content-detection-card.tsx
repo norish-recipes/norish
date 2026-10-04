@@ -17,10 +17,12 @@ export default function ContentDetectionCard() {
   const {
     contentIndicators,
     units,
+    ingredientWords,
     recurrenceConfig,
     timerKeywords,
     updateContentIndicators,
     updateUnits,
+    updateIngredientWords,
     updateRecurrenceConfig,
     updateTimerKeywords,
     restoreDefaultConfig,
@@ -30,6 +32,7 @@ export default function ContentDetectionCard() {
     timerKeywords: false,
     contentIndicators: false,
     units: false,
+    ingredientWords: false,
     recurrence: false,
   });
 
@@ -136,6 +139,36 @@ export default function ContentDetectionCard() {
                     onDirtyChange={updateDirtySection("units")}
                     onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.UNITS)}
                     onSave={updateUnits}
+                  />
+                </div>
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          <Accordion.Item id="ingredient-words">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex min-w-0 flex-col items-start gap-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {t("ingredientWords.title")}
+                    {dirtySections.ingredientWords && <UnsavedChangesChip />}
+                  </div>
+                  <span className="text-muted text-sm">{t("ingredientWords.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <div className="p-2">
+                  <JsonEditor
+                    description={t("ingredientWords.description")}
+                    value={ingredientWords}
+                    onDirtyChange={updateDirtySection("ingredientWords")}
+                    onRestoreDefaults={() =>
+                      restoreDefaultConfig(ServerConfigKeys.INGREDIENT_WORDS)
+                    }
+                    onSave={updateIngredientWords}
                   />
                 </div>
               </Accordion.Body>

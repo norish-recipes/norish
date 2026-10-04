@@ -47,14 +47,14 @@ async function main() {
   await backfillDishColors();
   log.info("-".repeat(50));
 
-  // Give every existing ingredient its name as an Ingredient Alias and point
-  // every existing reference at one (ADR-0037).
-  await backfillIngredientAliases();
-  log.info("-".repeat(50));
-
   // A first boot seeds the catalogue before traffic; later boots leave it to
   // the refresh job, so an unchanged file never holds the server up.
   await seedIngredientCatalogueOnFirstBoot();
+  log.info("-".repeat(50));
+
+  // After the seed, so every existing reference is resolved against the
+  // catalogue's foods, as a new import would be (ADR-0037).
+  await backfillIngredientAliases();
   log.info("-".repeat(50));
 
   // Old flagged mints, looked at again whenever the resolver's rules change.

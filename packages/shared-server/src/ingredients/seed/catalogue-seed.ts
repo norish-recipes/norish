@@ -96,7 +96,8 @@ async function applySeedEntries(entries: SeedEntry[]): Promise<{
 }
 
 /**
- * The seed's one pass over the Ingredients that existed before it: each one
+ * The seed's one pass over the Ingredients made before it, which an upgrade
+ * leaves only where its first boot had no seed to resolve against: each one
  * whose spellings (or the same with their preparation stripped) the seed
  * gives to exactly one entry is merged into that entry's Ingredient, as sure
  * as an exact alias match; one whose spellings the seed gives to several is
@@ -230,16 +231,20 @@ export async function refreshIngredientCatalogue(
   }
 
   const { entries, outcome } = await applySeedEntries(read);
-  const merged = state.mergedExisting ? 0 : (await mergeExistingIntoSeed(entries)).merged;
+  const firstSeed = !state.mergedExisting;
+  const merged = firstSeed ? (await mergeExistingIntoSeed(entries)).merged : 0;
 
   // The validators are stored only once the file and the one pass are both
-  // through, so a failure in either is retried in full the next time.
+  // through, so a failure in either is retried in full the next time. After
+  // a first seed, the undecided mints made before it are looked at again
+  // against it (`recheckUndecidedMintsOnRungChange`).
   await updateIngredientSeedState({
     etag: response.headers.get("etag"),
     lastModified: response.headers.get("last-modified"),
     appliedAt: new Date().toISOString(),
     entries: entries.length,
     mergedExisting: true,
+    ...(firstSeed ? { rungVersion: 0 } : {}),
   });
 
   // Merges, parents and removals change which food lines mean: open clients

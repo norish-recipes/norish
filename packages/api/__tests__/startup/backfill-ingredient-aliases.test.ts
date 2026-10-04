@@ -1,22 +1,27 @@
 // @vitest-environment node
 /**
- * The upgrade to Ingredient Aliases (ADR-0037), against a real database: an
- * instance's existing ingredients and the lines, pantry rows and groceries
- * pointing at them are carried over so resolution finds what the household
- * already had, and nothing it taught Norish is lost.
+ * The upgrade to Ingredient Aliases (ADR-0037), against a real database. It
+ * runs after the first seed, so the lines, pantry rows and groceries that
+ * pointed at an instance's old ingredients are resolved from their text as a
+ * new import would be, AI aside; the old rows are no foods of their own, and
+ * nothing the household taught Norish is lost.
  */
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
 import { getRecipeFull } from "@norish/db";
 import { listAisleLinksByStoreIds } from "@norish/db/repositories/aisles";
 import {
   listGroceriesWithoutAlias,
-  listIngredientsWithoutAlias,
   listRecipeLinesWithoutAlias,
   listRecurringGroceriesWithoutAlias,
 } from "@norish/db/repositories/ingredient-backfill";
+import {
+  applyIngredientSeed,
+  listSeededIngredientIds,
+} from "@norish/db/repositories/ingredient-seed";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { resolveProductLinks } from "@norish/db/repositories/store-products";
 import { findBestIngredientStorePreference } from "@norish/db/repositories/stores";
@@ -34,9 +39,21 @@ import {
 } from "@norish/db/schema";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
+
+function entry(offId: string, ...names: string[]): SeedEntry {
+  return {
+    offId,
+    name: names[0]!,
+    nameFold: ingredientAliasFold(names[0]!),
+    parentOffId: null,
+    nutrition: null,
+    aliases: names.map((text) => ({ text, fold: ingredientAliasFold(text), locale: null })),
+  };
+}
 
 describe("backfillIngredientAliases", () => {
   const testBase = new RepositoryTestBase("test_backfill_ingredient_aliases");
@@ -64,51 +81,127 @@ describe("backfillIngredientAliases", () => {
     const db = getTestDb();
     const [row] = await db.insert(ingredients).values({ name, createdAt }).returning();
 
-    await db
-      .insert(recipeIngredients)
-      .values({ recipeId, ingredientId: row!.id, name, order: "0", systemUsed: "metric" });
+    await db.insert(recipeIngredients).values({ recipeId, name, order: "0", systemUsed: "metric" });
 
     return row!;
   }
 
-  it("resolves an existing ingredient's name to it rather than minting another", async () => {
+  /** The Ingredient each of the recipe's lines points at, by the line's text. */
+  async function linesOfRecipe() {
+    const lines = (await getRecipeFull(recipeId))!.recipeIngredients;
+
+    return new Map(lines.map((line) => [line.ingredientName, line.ingredientId]));
+  }
+
+  async function ingredientById(id: string) {
+    const [row] = await getTestDb()
+      .select({
+        name: ingredients.name,
+        flagged: ingredients.flagged,
+        flagReason: ingredients.flagReason,
+        parentId: ingredients.parentId,
+      })
+      .from(ingredients)
+      .where(eq(ingredients.id, id));
+
+    return row ?? null;
+  }
+
+  it("resolves an old line to the seeded food its text names", async () => {
+    await applyIngredientSeed([entry("en:garlic", "garlic", "knoflook")]);
+    await legacyIngredient("knoflook (fijngehakt)", new Date("2025-01-01"));
+
+    await backfillIngredientAliases();
+
+    const garlic = (await listSeededIngredientIds()).get("en:garlic");
+
+    expect((await linesOfRecipe()).get("knoflook (fijngehakt)")).toBe(garlic);
+  });
+
+  it("mints a name the catalogue does not know as a new import would: flagged, plain, filed", async () => {
+    await applyIngredientSeed([entry("en:courgette", "courgette")]);
+    await legacyIngredient("gegrilde courgette, in plakjes", new Date("2025-01-01"));
+    await legacyIngredient("kleine courgette, in kleine blokjes", new Date("2025-01-01"));
+
+    await backfillIngredientAliases();
+
+    const lines = await linesOfRecipe();
+    const courgette = (await listSeededIngredientIds()).get("en:courgette");
+
+    await expect(ingredientById(lines.get("gegrilde courgette, in plakjes")!)).resolves.toEqual({
+      name: "gegrilde courgette",
+      flagged: true,
+      flagReason: "upgrade",
+      parentId: courgette,
+    });
+    // A size is no part of the food: a small courgette is courgette.
+    expect(lines.get("kleine courgette, in kleine blokjes")).toBe(courgette);
+  });
+
+  it("gives lines that name one food the one Ingredient, with no seed at all", async () => {
+    await legacyIngredient("Crème fraîche", new Date("2025-01-01"));
+    await legacyIngredient("creme fraiche, cold", new Date("2025-06-01"));
+
+    await backfillIngredientAliases();
+
+    const lines = await linesOfRecipe();
+
+    expect(lines.get("Crème fraîche")).toBeTruthy();
+    expect(lines.get("creme fraiche, cold")).toBe(lines.get("Crème fraîche"));
+  });
+
+  it("leaves a heading without an alias, as naming no food", async () => {
+    await applyIngredientSeed([entry("en:sauce", "sauce")]);
+    await legacyIngredient("# Sauce", new Date("2025-01-01"));
+
+    await backfillIngredientAliases();
+
+    expect((await linesOfRecipe()).get("# Sauce")).toBeNull();
+    await expect(listRecipeLinesWithoutAlias(10)).resolves.toEqual([]);
+    await expect(
+      getTestDb().select().from(ingredients).where(eq(ingredients.name, "# Sauce"))
+    ).resolves.toEqual([]);
+  });
+
+  it("keeps an old row the seed adopted by its name, under the seed's name", async () => {
+    const salt = await legacyIngredient("Salt", new Date("2025-01-01"));
+
+    // At boot the seed comes first, and takes the row that holds its name.
+    await applyIngredientSeed([entry("en:salt", "salt", "zout")]);
+    await backfillIngredientAliases();
+
+    expect((await linesOfRecipe()).get("Salt")).toBe(salt.id);
+    await expect(ingredientById(salt.id)).resolves.toMatchObject({ name: "salt", flagged: false });
+  });
+
+  it("mints into an old row that holds the plain name, flag and all", async () => {
     const olive = await legacyIngredient("Olive Oil", new Date("2025-01-01"));
 
     await backfillIngredientAliases();
 
-    const [resolved] = await resolveIngredients(["olive oil"], { userId });
-
-    expect(resolved!.ingredientId).toBe(olive.id);
+    expect((await linesOfRecipe()).get("Olive Oil")).toBe(olive.id);
+    await expect(ingredientById(olive.id)).resolves.toMatchObject({
+      name: "Olive Oil",
+      flagged: true,
+      flagReason: "upgrade",
+    });
   });
 
-  it("gives names that fold alike to the ingredient that had the spelling first", async () => {
-    const older = await legacyIngredient("Crème fraîche", new Date("2025-01-01"));
-
-    await legacyIngredient("creme fraiche", new Date("2025-06-01"));
+  it("removes the old rows nothing points at any more", async () => {
+    await legacyIngredient("kleine courgette, in kleine blokjes", new Date("2025-01-01"));
+    const [orphan] = await getTestDb()
+      .insert(ingredients)
+      .values({ name: "from a deleted recipe" })
+      .returning();
 
     await backfillIngredientAliases();
 
-    const [resolved] = await resolveIngredients(["Creme Fraiche"], { userId });
-
-    expect(resolved!.ingredientId).toBe(older.id);
-  });
-
-  it("merges a name that folds like an older one into it, so no Ingredient is left without a spelling", async () => {
-    const older = await legacyIngredient("Crème fraîche", new Date("2025-01-01"));
-    const newer = await legacyIngredient("creme fraiche", new Date("2025-06-01"));
-
-    await backfillIngredientAliases();
-
-    await expect(listIngredientsWithoutAlias(10, null)).resolves.toEqual([]);
-    const [row] = await getTestDb()
-      .select({ id: ingredients.id })
-      .from(ingredients)
-      .where(eq(ingredients.id, newer.id));
-
-    expect(row).toBeUndefined();
-    const [resolved] = await resolveIngredients(["creme fraiche"], { userId });
-
-    expect(resolved!.ingredientId).toBe(older.id);
+    await expect(
+      getTestDb()
+        .select({ name: ingredients.name })
+        .from(ingredients)
+        .where(inArray(ingredients.name, ["kleine courgette, in kleine blokjes", orphan!.name]))
+    ).resolves.toEqual([]);
   });
 
   it("points every existing recipe line at an alias", async () => {
@@ -121,7 +214,7 @@ describe("backfillIngredientAliases", () => {
   });
 
   it("keeps every Pantry Ingredient, and it covers the recipe lines of its food", async () => {
-    const older = await legacyIngredient("Crème fraîche", new Date("2025-01-01"));
+    await legacyIngredient("Crème fraîche", new Date("2025-01-01"));
     const [twin] = await getTestDb()
       .insert(ingredients)
       .values({ name: "creme fraiche", createdAt: new Date("2025-06-01") })
@@ -135,7 +228,7 @@ describe("backfillIngredientAliases", () => {
     const [line] = (await getRecipeFull(recipeId))!.recipeIngredients;
 
     expect(pantry).toHaveLength(1);
-    expect(pantry[0]!.ingredientId).toBe(older.id);
+    expect(pantry[0]!.ingredientId).toBe(line!.ingredientId);
     expect(pantryIngredientFor(pantry, line!)).not.toBeNull();
   });
 

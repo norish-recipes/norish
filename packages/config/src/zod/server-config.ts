@@ -25,6 +25,7 @@ export const ServerConfigKeys = {
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
   TIMER_KEYWORDS: "timer_keywords",
+  INGREDIENT_WORDS: "ingredient_words",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -201,6 +202,50 @@ export const UnitsConfigSchema = z.object({
 });
 
 export type UnitsConfig = z.infer<typeof UnitsConfigSchema>;
+
+// ============================================================================
+// Ingredient Words Schema
+// ============================================================================
+
+/**
+ * The words of one language an ingredient name is read by (ADR-0037): what
+ * the resolver's second rung strips from a name, what files a new food under
+ * a known one, and what a plural's ending stands for. Written as a cook
+ * writes them; folded when read.
+ */
+export const IngredientWordsLanguageSchema = z.object({
+  /** What is done to a food, never which food: "chopped", "fijngesneden". */
+  preparation: z.array(z.string()).default([]),
+  /** The word between two preparations: "peeled and chopped". */
+  joiners: z.array(z.string()).default([]),
+  /** The word between a leading measure and its food: "a pinch of nutmeg". */
+  connectors: z.array(z.string()).default([]),
+  /** After these comes what a food is packed or served in or with: "tuna in olive oil". */
+  servedWith: z.array(z.string()).default([]),
+  /** Words that never name a food alone, however another language spells one with them. */
+  notFoods: z.array(z.string()).default([]),
+  /** Words that say an amount is a guess: "about", "ongeveer". */
+  approximately: z.array(z.string()).default([]),
+  /** Sizes: "large", "grote". A line's unit that is one counts a piece. */
+  sizes: z.array(z.string()).default([]),
+  /** Plural and diminutive endings, each with the ending of the form it stands for. */
+  inflections: z.array(z.tuple([z.string(), z.string()])).default([]),
+});
+
+export type IngredientWordsLanguage = z.infer<typeof IngredientWordsLanguageSchema>;
+
+/** Every language's ingredient words, by locale: read together, since a recipe's language is not recorded. */
+export const IngredientWordsMapSchema = z.record(z.string(), IngredientWordsLanguageSchema);
+
+export type IngredientWordsMap = z.infer<typeof IngredientWordsMapSchema>;
+
+/** The ingredient words as stored, with whether an administrator edited them. */
+export const IngredientWordsConfigSchema = z.object({
+  words: IngredientWordsMapSchema,
+  isOverridden: z.boolean().default(false),
+});
+
+export type IngredientWordsConfig = z.infer<typeof IngredientWordsConfigSchema>;
 
 // Flat units map (for parse-ingredient library compatibility)
 export type FlatUnitsMap = Record<
@@ -937,6 +982,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return I18nLocaleConfigSchema;
     case ServerConfigKeys.TIMER_KEYWORDS:
       return TimerKeywordsSchema;
+    case ServerConfigKeys.INGREDIENT_WORDS:
+      return IngredientWordsConfigSchema;
     default:
       return z.any();
   }

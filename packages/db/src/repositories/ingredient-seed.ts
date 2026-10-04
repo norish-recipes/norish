@@ -127,7 +127,9 @@ function closesCycle(parents: ReadonlyMap<string, string | null>, id: string, pa
  *
  * - An entry's Ingredient is the one that already carries its id; else the
  *   one that holds its name as a spelling or as a name, which is adopted
- *   (given the id) when it carries no other; else a new, ownerless one.
+ *   (given the id) when it carries no other; else a new, ownerless one. An
+ *   adopted Ingredient takes the entry's name where no other holds it, and
+ *   is flagged no longer: the seed vouches for it, and files it.
  *   One that carries another entry's id absorbed this entry in a merge, and
  *   the entry is left there.
  * - Every spelling of every entry is added as a seeded alias; a spelling
@@ -194,7 +196,25 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
       } else if (row.offId === null && !adopted.has(row.id)) {
         adopted.add(row.id);
         ingredientOf.set(entry.offId, row.id);
-        await tx.update(ingredients).set({ offId: entry.offId }).where(eq(ingredients.id, row.id));
+        await tx
+          .update(ingredients)
+          .set({
+            offId: entry.offId,
+            name: sql`case when exists (select 1 from ${ingredients} o where o.id <> ${row.id} and lower(o.name) = lower(${entry.name})) then ${ingredients.name} else ${entry.name} end`,
+            flagged: false,
+            flagReason: null,
+            version: sql`${ingredients.version} + 1`,
+          })
+          .where(eq(ingredients.id, row.id));
+        // Where its words would file it is the seed's to say now.
+        await tx
+          .delete(ingredientSuggestions)
+          .where(
+            and(
+              eq(ingredientSuggestions.ingredientId, row.id),
+              eq(ingredientSuggestions.source, "words")
+            )
+          );
         outcome.adopted += 1;
       } else {
         outcome.absorbed += 1;

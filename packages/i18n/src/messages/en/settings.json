@@ -355,7 +355,7 @@
       "ai-unsure": "AI was asked whether this is a known food and was not sure.",
       "ai-unavailable": "AI did not answer in time when this name was added.",
       "food-gone": "AI matched this to a food that was merged away before the name could join it.",
-      "upgrade": "Added by the upgrade to the catalogue, which does not ask AI.",
+      "upgrade": "No known food could be matched.",
       "seed-ambiguous": "The catalogue lists several foods this could be."
     },
     "empty": "No ingredients found",
@@ -541,13 +541,6 @@
     "dismissAll": "Dismiss all",
     "suggestedByAI": "Suggested by AI",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Units of Measure",
         "subtitle": "Measurement unit definitions for parsing",
         "description": "Define measurement units with their short form, plural, and alternate spellings. Used when parsing ingredient quantities."
+      },
+      "ingredientWords": {
+        "title": "Ingredient words",
+        "subtitle": "Words ingredient names are read by, per language",
+        "description": "The words Norish reads past when it matches an ingredient name to a food, per language: preparation (“chopped”), sizes (“large”), approximations (“about”), what a food comes in or with (“in olive oil”), words that never name a food (“and”), and the plural and diminutive endings that make “onions” onion. Every language applies to every name."
       },
       "recurrence": {
         "title": "Recurrence Patterns",

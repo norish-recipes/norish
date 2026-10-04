@@ -355,7 +355,7 @@
       "ai-unsure": "Se preguntó a la IA si es un ingrediente conocido y no estaba segura.",
       "ai-unavailable": "La IA no respondió a tiempo cuando se añadió este nombre.",
       "food-gone": "La IA lo asoció a un ingrediente que se fusionó antes de que el nombre pudiera unirse.",
-      "upgrade": "Añadido por la actualización al catálogo, que no consulta a la IA.",
+      "upgrade": "No se encontró ningún ingrediente conocido que coincida.",
       "seed-ambiguous": "El catálogo conoce varios ingredientes que podrían ser este."
     },
     "empty": "No se encontraron ingredientes",
@@ -541,13 +541,6 @@
     "dismissAll": "Descartar todo",
     "suggestedByAI": "Sugerido por la IA",
     "suggestedFromName": "Based on name",
-    "suggestionColumns": {
-      "ingredient": "Ingredient",
-      "proposal": "Proposal",
-      "basis": "Based on",
-      "outcome": "Outcome",
-      "actions": "Actions"
-    },
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
@@ -778,6 +771,11 @@
         "title": "Unidades de medida",
         "subtitle": "Definiciones de unidades para el parsing",
         "description": "Define unidades de medida con su forma corta, plural y variantes. Se usan al analizar cantidades de ingredientes."
+      },
+      "ingredientWords": {
+        "title": "Palabras de ingredientes",
+        "subtitle": "Palabras con las que se leen los nombres de ingredientes, por idioma",
+        "description": "Las palabras que Norish pasa por alto al relacionar el nombre de un ingrediente con un alimento, por idioma: preparación («cortado»), tamaños («grande»), aproximaciones («aproximadamente»), en qué o con qué viene un alimento («en aceite de oliva»), palabras que nunca nombran un alimento («y»), y las terminaciones de plural y diminutivo que hacen de «cebollas» la cebolla. Cada idioma se aplica a cada nombre."
       },
       "recurrence": {
         "title": "Patrones de recurrencia",

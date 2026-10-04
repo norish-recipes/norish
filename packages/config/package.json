@@ -11,7 +11,8 @@
     "./content-indicators.default.json": "./src/content-indicators.default.json",
     "./recurrence-config.default.json": "./src/recurrence-config.default.json",
     "./timer-keywords.default.json": "./src/timer-keywords.default.json",
-    "./units.default.json": "./src/units.default.json"
+    "./units.default.json": "./src/units.default.json",
+    "./ingredient-words.default.json": "./src/ingredient-words.default.json"
   },
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",

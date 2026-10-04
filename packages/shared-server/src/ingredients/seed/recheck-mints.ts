@@ -3,7 +3,8 @@
  * the mints made before the resolver read "salt to taste" as salt, or filed
  * "verse peterselie" under peterselie (ADR-0037 as amended by ADR-0039). It
  * runs once per `RUNG_VERSION`, so lines on legacy recipes reach the seeded
- * Ingredients each time the rules for reading a name improve, without AI.
+ * Ingredients each time the rules for reading a name improve, without AI,
+ * and once after the first seed, for what was minted before there was one.
  *
  * For every flagged mint no person decided about (`listUndecidedMints`), in
  * the order they were minted: where its spellings now resolve, by the

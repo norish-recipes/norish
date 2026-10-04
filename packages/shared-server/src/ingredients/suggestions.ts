@@ -5,6 +5,7 @@
  * as their own edit, under their permissions — or dismisses it, which leaves
  * the food as it was. Either follows `edit` on the food the suggestion is
  * about; a merge needs `edit` on its target too, as a merge by hand does.
+ * A person is only shown the suggestions they may answer.
  *
  * One suggestion is not AI's: the parent the resolver gave a mint from inside
  * the words of its name (`source: "words"`, ADR-0037 as amended). That parent
@@ -35,7 +36,7 @@ import {
 } from "./catalogue";
 import { ingredientChanges } from "./changes";
 
-/** One suggestion as the page shows it: both foods, how AI got there, and whether the viewer may answer it. */
+/** One suggestion as the page shows it: both foods, and how AI got there. */
 export interface IngredientSuggestionItem {
   id: string;
   kind: SuggestionKind;
@@ -44,15 +45,18 @@ export interface IngredientSuggestionItem {
   englishName: string | null;
   considered: string[];
   source: SuggestionSource;
-  canAnswer: boolean;
 }
 
-/** Every suggestion waiting on a person, oldest first. */
+/**
+ * The suggestions waiting on the actor, oldest first: those about a food
+ * they may edit. One they could not answer is not theirs to see.
+ */
 export async function listSuggestions(actor: CatalogueActor): Promise<IngredientSuggestionItem[]> {
-  const [policy, rows] = await Promise.all([
+  const [policy, all] = await Promise.all([
     getIngredientPermissionPolicy(),
     listIngredientSuggestions(),
   ]);
+  const rows = all.filter((row) => mayEditIngredientRow(policy.edit, actor, row.ingredientOwnerId));
   const names = await findLocaleNames(
     rows.flatMap((row) => (row.target ? [row.ingredientId, row.target.id] : [row.ingredientId]))
   );
@@ -69,7 +73,6 @@ export async function listSuggestions(actor: CatalogueActor): Promise<Ingredient
     englishName: row.englishName,
     considered: row.considered,
     source: row.source,
-    canAnswer: mayEditIngredientRow(policy.edit, actor, row.ingredientOwnerId),
   }));
 }
 

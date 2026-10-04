@@ -3,13 +3,18 @@ import { and, asc, eq, gt, isNotNull, isNull, notExists, sql } from "drizzle-orm
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import { db } from "@norish/db/drizzle";
 import {
+  aisleLinks,
   groceries,
   ingredientAliases,
+  ingredientNutritionCorrections,
   ingredients,
+  ingredientStorePreferences,
+  ingredientSuggestions,
   pantryIngredients,
   recipeIngredients,
   recipes,
   recurringGroceries,
+  storeProductLinks,
 } from "@norish/db/schema";
 
 /**
@@ -24,58 +29,10 @@ import {
 export type ResolvedReference = { id: string } & IngredientRef;
 
 /**
- * Ingredients written before aliases existed that have no alias yet, oldest
- * first, after the given one. The startup backfill gives each its own name as
- * its first alias; one whose spelling another already holds stays without, so
- * the walk moves on by cursor rather than by what is left.
+ * Recipe lines written before aliases existed, with the recipe's owner, after
+ * the given id. A `#` heading names no food and never has an alias, so it is
+ * never listed.
  */
-export async function listIngredientsWithoutAlias(
-  limit: number,
-  after: { createdAt: string; id: string } | null
-): Promise<Array<{ id: string; name: string; ownerId: string | null; createdAt: string }>> {
-  return await db
-    .select({
-      id: ingredients.id,
-      name: ingredients.name,
-      ownerId: ingredients.ownerId,
-      // As text, so the cursor keeps the microseconds a Date would drop.
-      createdAt: sql<string>`${ingredients.createdAt}::text`,
-    })
-    .from(ingredients)
-    .where(
-      and(
-        notExists(
-          db
-            .select({ one: sql`1` })
-            .from(ingredientAliases)
-            .where(eq(ingredientAliases.ingredientId, ingredients.id))
-        ),
-        after
-          ? sql`(${ingredients.createdAt}, ${ingredients.id}) > (${after.createdAt}::timestamptz, ${after.id}::uuid)`
-          : undefined
-      )
-    )
-    .orderBy(asc(ingredients.createdAt), asc(ingredients.id))
-    .limit(limit);
-}
-
-/**
- * Give an existing Ingredient its own name as an alias. A fold another
- * Ingredient already holds is left where it is: the names fold alike, so the
- * first Ingredient to hold the spelling keeps it and this one resolves there.
- */
-export async function addOwnNameAliases(
-  rows: ReadonlyArray<{ ingredientId: string; text: string; fold: string; ownerId: string | null }>
-): Promise<void> {
-  if (rows.length === 0) return;
-
-  await db
-    .insert(ingredientAliases)
-    .values([...rows])
-    .onConflictDoNothing();
-}
-
-/** Recipe lines written before aliases existed, with the recipe's owner, after the given id. */
 export async function listRecipeLinesWithoutAlias(
   limit: number,
   afterId: string | null = null
@@ -87,6 +44,7 @@ export async function listRecipeLinesWithoutAlias(
     .where(
       and(
         isNull(recipeIngredients.ingredientAliasId),
+        sql`${recipeIngredients.name} !~ '^\\s*#'`,
         afterId ? gt(recipeIngredients.id, afterId) : undefined
       )
     )
@@ -226,4 +184,32 @@ export async function setRecurringGroceryAliases(
       .set({ ingredientAliasId: row.aliasId, ingredientId: row.ingredientId })
       .where(and(eq(recurringGroceries.id, row.id), isNull(recurringGroceries.ingredientAliasId)));
   }
+}
+
+/**
+ * Remove the `ingredients` rows written before aliases existed that the
+ * upgrade left behind: no spelling reaches them, since every reference was
+ * resolved from its text instead, and nothing points at them any more. An
+ * Ingredient made since always keeps a spelling, so only those rows match.
+ * How many were removed.
+ */
+export async function removeIngredientsWithoutSpelling(): Promise<number> {
+  const removed = await db.execute(sql`
+    delete from ${ingredients} i
+     where i.off_id is null
+       and not exists (select 1 from ${ingredientAliases} r where r.ingredient_id = i.id)
+       and not exists (select 1 from ${pantryIngredients} r where r.ingredient_id = i.id)
+       and not exists (select 1 from ${groceries} r where r.ingredient_id = i.id)
+       and not exists (select 1 from ${recurringGroceries} r where r.ingredient_id = i.id)
+       and not exists (select 1 from ${aisleLinks} r where r.ingredient_id = i.id)
+       and not exists (select 1 from ${storeProductLinks} r where r.ingredient_id = i.id)
+       and not exists (select 1 from ${ingredientStorePreferences} r where r.ingredient_id = i.id)
+       and not exists (select 1 from ${ingredientNutritionCorrections} r where r.ingredient_id = i.id)
+       and not exists (
+         select 1 from ${ingredientSuggestions} r where r.ingredient_id = i.id or r.target_id = i.id
+       )
+       and not exists (select 1 from ${ingredients} k where k.parent_id = i.id)
+  `);
+
+  return removed.rowCount ?? 0;
 }

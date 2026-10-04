@@ -19,6 +19,7 @@ const mocked = vi.hoisted(() => ({
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   // The resolver strips the units map's phrases; none are needed here.
   getUnits: vi.fn().mockResolvedValue({}),
+  getIngredientWords: vi.fn().mockResolvedValue({}),
   getAIConfig: vi.fn().mockResolvedValue({
     automaticEnrichment: {
       autoTagging: false,

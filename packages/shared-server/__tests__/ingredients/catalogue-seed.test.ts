@@ -75,7 +75,12 @@ describe("the ingredient catalogue seed", () => {
 
   async function ingredientNamed(name: string) {
     const [row] = await getTestDb()
-      .select({ id: ingredients.id, offId: ingredients.offId, ownerId: ingredients.ownerId })
+      .select({
+        id: ingredients.id,
+        offId: ingredients.offId,
+        ownerId: ingredients.ownerId,
+        flagged: ingredients.flagged,
+      })
       .from(ingredients)
       .where(eq(ingredients.name, name));
 
@@ -162,9 +167,28 @@ describe("the ingredient catalogue seed", () => {
       await applySeedFile(excerpt);
 
       await expect(resolve("ui")).resolves.toMatchObject({ ingredientId: mine.ingredientId });
-      await expect(ingredientNamed("Onion")).resolves.toMatchObject({
+      // The seed vouches for it: the entry's name, and no flag.
+      await expect(ingredientNamed("onion")).resolves.toMatchObject({
+        id: mine.ingredientId,
         offId: "en:onion",
         ownerId: actor.userId,
+        flagged: false,
+      });
+    });
+
+    it("keeps an adopted Ingredient's own name where another Ingredient holds the entry's", async () => {
+      const mine = await resolve("onion");
+
+      await getTestDb()
+        .update(ingredients)
+        .set({ name: "my onion" })
+        .where(eq(ingredients.id, mine.ingredientId));
+      await getTestDb().insert(ingredients).values({ name: "onion" });
+      await applySeedFile(excerpt);
+
+      await expect(ingredientNamed("my onion")).resolves.toMatchObject({
+        id: mine.ingredientId,
+        offId: "en:onion",
       });
     });
 

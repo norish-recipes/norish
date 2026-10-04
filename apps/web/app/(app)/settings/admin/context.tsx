@@ -17,6 +17,7 @@ import type {
   I18nLocaleConfig,
   ImageGenerationConfig,
   IngredientPermissionPolicy,
+  IngredientWordsMap,
   PromptsConfig,
   PromptsConfigInput,
   RecipePermissionPolicy,
@@ -39,6 +40,7 @@ interface AdminSettingsContextValue {
   authProviderGoogle: AuthProviderGoogle | undefined;
   contentIndicators: ContentIndicatorsConfig | undefined;
   units: UnitsMap | undefined;
+  ingredientWords: IngredientWordsMap | undefined;
   recurrenceConfig: RecurrenceConfig | undefined;
   aiConfig: AIConfig | undefined;
   videoConfig: VideoConfig | undefined;
@@ -74,6 +76,7 @@ interface AdminSettingsContextValue {
   ) => Promise<{ success: boolean; error?: string }>;
   updateContentIndicators: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateUnits: (json: string) => Promise<{ success: boolean; error?: string }>;
+  updateIngredientWords: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;
   updateVideoConfig: (config: VideoConfig) => Promise<{ success: boolean; error?: string }>;
@@ -135,6 +138,10 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const unitsConfig = configs[ServerConfigKeys.UNITS] as
     { units: UnitsMap; isOverridden: boolean } | undefined;
   const units = unitsConfig?.units;
+  const ingredientWords = (
+    configs[ServerConfigKeys.INGREDIENT_WORDS] as
+      { words: IngredientWordsMap; isOverridden: boolean } | undefined
+  )?.words;
   const recurrenceConfig = configs[ServerConfigKeys.RECURRENCE_CONFIG] as
     RecurrenceConfig | undefined;
   const aiConfig = configs[ServerConfigKeys.AI_CONFIG] as AIConfig | undefined;
@@ -211,6 +218,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const updateUnitsConfig = useCallback(
     async (json: string) => {
       return mutations.updateUnits(json);
+    },
+    [mutations]
+  );
+
+  const updateIngredientWordsConfig = useCallback(
+    async (json: string) => {
+      return mutations.updateIngredientWords(json);
     },
     [mutations]
   );
@@ -337,6 +351,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     authProviderGoogle,
     contentIndicators,
     units,
+    ingredientWords,
     recurrenceConfig,
     aiConfig,
     videoConfig,
@@ -357,6 +372,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     deleteAuthProvider: deleteProvider,
     updateContentIndicators: updateContent,
     updateUnits: updateUnitsConfig,
+    updateIngredientWords: updateIngredientWordsConfig,
     updateRecurrenceConfig: updateRecurrence,
     updateAIConfig: updateAI,
     updateVideoConfig: updateVideo,

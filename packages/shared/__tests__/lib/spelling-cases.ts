@@ -16,7 +16,8 @@ export const SPELLING_CASES: ReadonlyArray<readonly [string, string, boolean]> =
   ["onions, diced", "onions, sliced", true],
   ["onions (red)", "onions, sliced", true],
   ["Crème fraîche", "creme fraiche", true],
-  ["onion", "onions", false],
+  ["onion", "onions", true],
+  ["onions", "onion", true],
   ["salt", "salted butter", false],
   ["red onion", "onion", false],
   ["!!!", "!!!", true],
@@ -45,4 +46,16 @@ export const SPELLING_CASES: ReadonlyArray<readonly [string, string, boolean]> =
   ["apricots", "dried apricots", false],
   ["onion", "onion pieces", false],
   ["chickpeas", "chickpeas, 1 can", true],
+  // Plurals and diminutives, by the ingredient words of every language.
+  ["bosui", "bosuien", true],
+  ["bosui", "bosuitjes", true],
+  ["tomato", "tomatoes", true],
+  ["cherry", "cherries", true],
+  ["Zwiebel", "Zwiebeln", true],
+  ["cebolla", "cebollas", true],
+  ["avocado", "avocado's", true],
+  // A quantity an import left at the start, and sizes.
+  ["bosui", "ongeveer 4 el fijngesneden bosui", true],
+  ["ui", "grote ui", true],
+  ["chickpeas", "400g can chickpeas", true],
 ];

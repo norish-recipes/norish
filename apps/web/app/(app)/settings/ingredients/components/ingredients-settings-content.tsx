@@ -272,6 +272,8 @@ export default function IngredientsSettingsContent() {
       <SuggestionsPanel
         jobId={reportJobId}
         open={suggestionsOpen}
+        reviewing={reviewing}
+        onChanged={refresh}
         onClose={() => setSuggestionsOpen(false)}
       />
     </div>
