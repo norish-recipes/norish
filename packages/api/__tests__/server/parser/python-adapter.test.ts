@@ -225,6 +225,40 @@ describe("adaptRecipeScrapersResponse", () => {
     );
   });
 
+  it("rejects a scraper result that yields no steps", async () => {
+    // Regression: lecker.de returned title + ingredients but an empty
+    // instruction list. The adapter accepted it, so a recipe with zero
+    // steps was created and the import reported success.
+    mockParseSteps.mockReturnValue([]);
+
+    const { adaptRecipeScrapersResponse } = await import("@norish/api/parser/python/adapter");
+
+    const result = await adaptRecipeScrapersResponse(
+      {
+        ok: true,
+        canonicalUrl: "https://example.com/canonical-recipe",
+        parser: {
+          mode: "supported",
+          scraper: "ExampleScraper",
+          host: "example.com",
+          siteName: "Example",
+          version: "15.12.0",
+        },
+        recipe: {
+          title: "Example Recipe",
+          ingredients: ["1 egg"],
+          instructions_list: [],
+          instructions: "",
+        },
+        media: { images: [], videos: [] },
+      },
+      "recipe-1",
+      "https://example.com/original-recipe"
+    );
+
+    expect(result).toBeNull();
+  });
+
   it("prefers recipe.image over media image candidates", async () => {
     const { adaptRecipeScrapersResponse } = await import("@norish/api/parser/python/adapter");
 

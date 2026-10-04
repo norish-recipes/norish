@@ -174,8 +174,16 @@ function buildNutrition(recipe: ScraperRecipe) {
   });
 }
 
+/**
+ * What a scraped recipe must carry to be worth keeping: a name, and at least
+ * one step. A parse that lost the instructions is not a usable recipe, and
+ * accepting it writes a recipe nobody can cook while the import reports
+ * success. Returning null here routes the URL into the AI fallback in
+ * `tryStructuredParser`'s caller, which already stands in when the structured
+ * parse fails — no Decision Model required.
+ */
 function hasRequiredRecipeFields(recipe: FullRecipeInsertDTO): boolean {
-  return hasRecipeName(recipe);
+  return hasRecipeName(recipe) && recipe.steps.length > 0;
 }
 
 export async function adaptRecipeScrapersResponse(
@@ -243,7 +251,7 @@ export async function adaptRecipeScrapersResponse(
         stepCount: steps.length,
         title: dto.name,
       },
-      "Recipe parser result did not include a valid title"
+      "Recipe parser result is missing a title or has no steps"
     );
 
     return null;
