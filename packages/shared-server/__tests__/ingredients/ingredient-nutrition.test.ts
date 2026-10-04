@@ -69,6 +69,10 @@ const TABLE: SourceTable = {
     ["cofid", "13-829", "Garam masala", 379, 15, 45, 15, null, null, null],
     ["usda", "170169", "Nuts, coconut meat, raw", 354, 33, 15, 3.3, 397, 0.3333, "12104"],
     ["ciqual", "15007", "Coconut, pulp, dried", 680, 64, 7, 7, null, null, null],
+    ["ciqual", "22000", "Egg, raw", 140, 9.8, 0.3, 12.7, null, null, null],
+    ["ciqual", "22002", "Egg yolk, raw", 307, 26.7, 1.1, 15.5, null, null, null],
+    ["usda", "172184", "Egg, yolk, raw, fresh", 322, 26.5, 3.6, 15.9, 17, 1.0125, null],
+    ["ciqual", "13125", "Lemon zest, raw", 51, 0.3, 5.4, 1.4, null, null, null],
   ],
   fixes: { "en:milk": "ciqual:19016", "en:cumin": "usda:999001" },
   densityFixes: {
@@ -76,6 +80,7 @@ const TABLE: SourceTable = {
     "en:sauce": "usda:171595",
     "en:spice": "usda:170924",
   },
+  pieceFixes: { "en:egg-yolk": "usda:172184", "en:lemon-zest": null },
   names: {
     "en:sauerkraut": "cofid:13-336",
     "en:sauce": "ciqual:11184",
@@ -132,6 +137,10 @@ const ENTRIES = [
   entry("en:garam-masala", "en:mixed-spices"),
   entry("en:coconut", null, codes({ usda: ["ndb:12104"] })),
   entry("en:desiccated-coconut", "en:coconut", codes({ ciqual: ["15007"] })),
+  entry("en:egg", null, codes({ ciqual: ["22000"], pieceWeight: 60 })),
+  entry("en:egg-yolk", "en:egg", codes({ ciqual: ["22002"] })),
+  entry("en:lemon", null, codes({ pieceWeight: 60 })),
+  entry("en:lemon-zest", "en:lemon", codes({ ciqual: ["13125"] })),
 ];
 
 describe("Ingredient Nutrition", () => {
@@ -190,6 +199,22 @@ describe("Ingredient Nutrition", () => {
           source: { kind: "code", food: { dataset: "usda", code: "170000", name: "Onions, raw" } },
           borrowedFrom: null,
         },
+      });
+    });
+
+    it("weighs a piece by Norish's piece fix, and never borrows one beside it", async () => {
+      await expect(read("en:egg-yolk")).resolves.toMatchObject({
+        pieceWeight: {
+          value: 17,
+          source: { kind: "fix", food: { dataset: "usda", code: "172184" } },
+          borrowedFrom: null,
+        },
+      });
+      // A fix that says no piece at all: the lemon's 60 g is no zest's.
+      await expect(read("en:lemon-zest")).resolves.toMatchObject({ pieceWeight: null });
+      // A kind with no fix still takes its parent's.
+      await expect(read("en:red-onion")).resolves.toMatchObject({
+        pieceWeight: { value: 150, borrowedFrom: { id: id("en:onion") } },
       });
     });
 

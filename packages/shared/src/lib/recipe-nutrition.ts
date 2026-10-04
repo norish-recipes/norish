@@ -5,10 +5,15 @@
  * reader's household, and nothing cleverer:
  *
  * - a weight line converts directly;
- * - a counted line (no unit, a piece, a clove, a slice, a chunk) goes
- *   through the Ingredient's piece weight;
+ * - a counted line (no unit, a piece, a clove, a slice, a chunk, a size
+ *   word such as "large") goes through the Ingredient's piece weight;
  * - a volume line (ml, a teaspoon of 5, a tablespoon of 15, a cup of 240,
  *   the unit table's own sizes) goes through its density, never water's;
+ * - a line none of those weigh takes the weight its brackets state, as
+ *   many recipes write it ("1 (15 ounce) can", "1 tsp (3 g)"): each
+ *   piece's or container's, else the whole measure's;
+ * - a line with no unit whose text starts with one, as older imports left
+ *   some ("150" of "GR cherrytomaten"), is read with that unit;
  * - anything else is left out of the total and named with the one reason
  *   that stopped it, seasoning (a pinch, a dash, "to taste") included:
  *   nothing is left out without the reader knowing.
@@ -35,6 +40,9 @@ import type {
 import { creditOf, NUTRITION_CREDITS } from "@norish/shared/contracts/ingredient-nutrition";
 import { foldName } from "@norish/shared/lib/fold-name";
 
+import type { SpellingRules } from "./spelling-keys";
+import type { ResolvedUnit } from "./units";
+import { BASE_SPELLING_RULES } from "./spelling-keys";
 import { resolveUnit } from "./units";
 
 /** What the arithmetic needs of a recipe: its servings, its stored nutrition, its lines. */
@@ -188,9 +196,52 @@ const ESTIMATED_SHARE = 0.1;
 /**
  * The units counted in pieces besides the unit table's own: a garlic's
  * clove, a bread's slice, a chunk (which "stuk" was stored as before it
- * named a piece).
+ * named a piece). A size word a parser stores as a unit ("2 large eggs") is
+ * one too, by the ingredient words' sizes: one egg, whatever its size.
  */
 const PIECE_UNITS = new Set(["clove", "cloves", "slice", "slices", "chunk", "chunks"]);
+
+/**
+ * The unit of mass or volume a unitless line's text starts with, where an
+ * older import left it there ("150" and "GR cherrytomaten" for "150 gr
+ * cherrytomaten"); read as the line's unit, never stored. A count or a
+ * container there stays the food's words.
+ */
+function leadingUnitOf(text: string): ResolvedUnit | null {
+  const unit = resolveUnit(text.trim().split(/\s+/)[0]);
+
+  return unit?.family === "mass" || unit?.family === "volume" ? unit : null;
+}
+
+/**
+ * A weight a line's text states in brackets, in grams: the first bracket
+ * that opens with a number and a unit of mass, after an approximation if any
+ * ("(15 ounce)", "(about 1 lb.)", "(ongeveer 200 g)", "(~8 ounce)"), or
+ * null. A volume there ("(400 ml)") is no weight.
+ */
+export function bracketedGrams(
+  text: string,
+  rules: SpellingRules = BASE_SPELLING_RULES
+): number | null {
+  for (const match of text.matchAll(/\(([^()]*)/g)) {
+    const tokens = match[1]!.trim().split(/\s+/);
+    const folded = tokens.map((token) => foldName(token));
+    const approximation = rules.approximately.find((phrase) =>
+      phrase.every((word, index) => folded[index] === word)
+    );
+    const at = approximation?.length ?? 0;
+    const quantity = /^[~±≈]?(\d*[.,]?\d+)(\p{L}*\.?)$/u.exec(tokens[at] ?? "");
+
+    if (!quantity) continue;
+
+    const value = Number(quantity[1]!.replace(",", "."));
+    const unit = resolveUnit(quantity[2] || tokens[at + 1]);
+
+    if (value > 0 && unit?.family === "mass") return value * unit.magnitude;
+  }
+
+  return null;
+}
 
 /**
  * The phrases of those entries, folded: what marks a line written without a
@@ -241,11 +292,13 @@ function isSeasoning(line: NutritionLine, seasoning: readonly string[]): boolean
 /**
  * What one line weighs, and the facts it took to know; or the first thing
  * that stopped it: its amount, then its measure, then its food's numbers,
- * then the weight its measure goes through.
+ * then the weight its measure goes through. A weight its brackets state
+ * stands in for a measure or a fact the line lacks, never for one it has.
  */
 function weigh(
   line: NutritionLine,
-  facts: IngredientNutrition | undefined
+  facts: IngredientNutrition | undefined,
+  rules: SpellingRules
 ):
   | { grams: number; through: NutritionFact<number> | null; numbers: NutritionFact<Per100g> }
   | { reason: LeftOutReason } {
@@ -253,30 +306,43 @@ function weigh(
 
   if (amount === null || !(amount > 0)) return { reason: "no-amount" };
 
-  const unit = line.unit ? resolveUnit(line.unit) : null;
-  const counted =
-    !line.unit || unit?.family === "count" || PIECE_UNITS.has(line.unit.toLowerCase());
+  const unit = line.unit ? resolveUnit(line.unit) : leadingUnitOf(line.name);
+  const counted = line.unit
+    ? unit?.family === "count" ||
+      PIECE_UNITS.has(line.unit.toLowerCase()) ||
+      rules.sizes.has(foldName(line.unit))
+    : unit === null;
   const measured = !counted && (unit?.family === "mass" || unit?.family === "volume") ? unit : null;
+  const written = bracketedGrams(line.name, rules);
 
-  if (!counted && !measured) return { reason: "no-size" };
+  if (!counted && !measured && written === null) return { reason: "no-size" };
   if (!facts?.numbers) return { reason: "no-numbers" };
 
   const { numbers, pieceWeight, density } = facts;
 
+  // A can or a jar holds what its brackets say: "1 can (400 g)".
+  if (!counted && !measured) return { grams: amount * written!, through: null, numbers };
   if (!measured) {
     const pieces = amount * (unit?.magnitude ?? 1);
 
-    return pieceWeight
-      ? { grams: pieces * pieceWeight.value, through: pieceWeight, numbers }
-      : { reason: "no-piece-weight" };
+    if (pieceWeight) return { grams: pieces * pieceWeight.value, through: pieceWeight, numbers };
+
+    // Each piece weighs what the brackets say: "2 (8 ounce) chicken breasts".
+    return written === null
+      ? { reason: "no-piece-weight" }
+      : { grams: pieces * written, through: null, numbers };
   }
   if (measured.family === "mass") {
     return { grams: amount * measured.magnitude, through: null, numbers };
   }
+  if (density) {
+    return { grams: amount * measured.magnitude * density.value, through: density, numbers };
+  }
 
-  return density
-    ? { grams: amount * measured.magnitude * density.value, through: density, numbers }
-    : { reason: "no-spoon-weight" };
+  // The brackets weigh the whole measure: "2 tbsp (30 g) oil".
+  return written === null
+    ? { reason: "no-spoon-weight" }
+    : { grams: written, through: null, numbers };
 }
 
 export function workOutNutrition({
@@ -284,6 +350,7 @@ export function workOutNutrition({
   servings,
   nutrition,
   seasoning,
+  rules = BASE_SPELLING_RULES,
   estimate = null,
 }: {
   lines: readonly NutritionLine[];
@@ -291,6 +358,8 @@ export function workOutNutrition({
   nutrition: ReadonlyMap<string, IngredientNutrition>;
   /** `seasoningPhrases` of the units map. */
   seasoning: readonly string[];
+  /** The units map and ingredient words, for the sizes and the approximations a line is read by. */
+  rules?: SpellingRules;
   /** The language model's stored share of the lines left out, if any. */
   estimate?: NutritionGapEstimate | null;
 }): WorkedOutNutrition {
@@ -304,7 +373,7 @@ export function workOutNutrition({
   for (const line of lines) {
     const weighed: ReturnType<typeof weigh> = isSeasoning(line, seasoning)
       ? { reason: "seasoning" }
-      : weigh(line, line.ingredientId ? nutrition.get(line.ingredientId) : undefined);
+      : weigh(line, line.ingredientId ? nutrition.get(line.ingredientId) : undefined, rules);
 
     if ("reason" in weighed) {
       leftOut.push({

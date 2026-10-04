@@ -53,6 +53,13 @@ describe("resolveUnit", () => {
     expect(resolveUnit("t")).toMatchObject({ id: "teaspoon", magnitude: 5 });
   });
 
+  it("reads the Dutch eetl and theel as a tablespoon and a teaspoon", () => {
+    expect(resolveUnit("eetl")?.id).toBe("tablespoon");
+    expect(resolveUnit("eetl.")?.id).toBe("tablespoon");
+    expect(resolveUnit("theel")?.id).toBe("teaspoon");
+    expect(resolveUnit("theel.")?.id).toBe("teaspoon");
+  });
+
   it("reads a container word on a grocery as a number of packs", () => {
     for (const word of [
       "pack",

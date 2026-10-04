@@ -7,13 +7,14 @@
  * supplies Nutrition Information of its own has none worked out.
  */
 import type { RecipeForNutrition, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
-import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { getIngredientWords, getUnits } from "@norish/shared-server/config/server-config-loader";
 import {
   nutritionLinesOf,
   seasoningPhrases,
   suppliesNutrition,
   workOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
+import { spellingRules } from "@norish/shared/lib/spelling-keys";
 
 import type { NutritionReader } from "./ingredient-nutrition";
 import { resolveIngredientNutrition } from "./ingredient-nutrition";
@@ -31,10 +32,13 @@ export async function workOutRecipeNutrition(
     reader
   );
 
+  const units = await getUnits();
+
   return workOutNutrition({
     lines,
     servings: recipe.servings,
     nutrition,
-    seasoning: seasoningPhrases(await getUnits()),
+    seasoning: seasoningPhrases(units),
+    rules: spellingRules(units, await getIngredientWords()),
   });
 }

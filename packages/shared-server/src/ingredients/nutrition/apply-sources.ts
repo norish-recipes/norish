@@ -24,6 +24,7 @@ export async function applySourceTable(table: SourceTable): Promise<void> {
       kind: "density",
       food,
     })),
+    ...Object.entries(table.pieceFixes).map(([offId, food]) => ({ offId, kind: "piece", food })),
     ...Object.entries(table.names).map(([offId, food]) => ({ offId, kind: "name", food })),
     ...table.neverLend.map((offId) => ({ offId, kind: "never-lend", food: null })),
   ]);

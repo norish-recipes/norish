@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useSpellingRules } from "@/hooks/config/use-spelling-rules";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { useQuery } from "@tanstack/react-query";
 
@@ -31,6 +32,7 @@ export function useWorkedOutNutrition(
 ): WorkedOutNutrition | null {
   const trpc = useTRPC();
   const { units } = useUnitsQuery();
+  const rules = useSpellingRules();
   const supplied = !recipe || suppliesNutrition(recipe);
   const lines = useMemo(
     () => (recipe && !supplied ? nutritionLinesOf(recipe) : []),
@@ -55,7 +57,8 @@ export function useWorkedOutNutrition(
       servings: recipe.servings,
       nutrition: new Map(Object.entries(data ?? {})),
       seasoning,
+      rules,
       estimate: recipe.nutritionEstimate ?? null,
     });
-  }, [supplied, recipe, ingredientIds.length, data, lines, seasoning]);
+  }, [supplied, recipe, ingredientIds.length, data, lines, seasoning, rules]);
 }

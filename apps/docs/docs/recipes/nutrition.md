@@ -19,18 +19,26 @@ Each line of the recipe is turned into grams and counted through the numbers
 per 100 g of its [ingredient](../groceries/ingredients.md):
 
 - A weight (“200 g onion”, “1 lb rice”) is used as it is.
-- A count (“2 onions”, “3 cloves garlic”, “1 slice bread”) uses what one piece
-  of that food weighs.
+- A count (“2 onions”, “2 large eggs”, “3 cloves garlic”, “1 slice bread”) uses
+  what one piece of that food weighs. A kind weighs its own size: an egg yolk
+  is no whole egg, and a cherry tomato no tomato.
 - A volume (“1 tsp cumin”, “2 tbsp olive oil”, “1 cup milk”, “100 ml stock”)
   uses its [spoon weight](#spoon-weights): what a teaspoon, tablespoon or cup
   of that food weighs. Norish never assumes water: flour by the cup is not
   guessed.
+- A line none of those weigh uses the weight it states in brackets, as many
+  recipes write it: “1 (15 ounce) can coconut milk”, “1 can (400 g)
+  tomatoes”, “1 tsp (3 g) paprika”.
+- A unit an older import left at the start of a line's text (“150 GR
+  cherrytomaten”, kept as 150 of “GR cherrytomaten”) is read as the line's
+  unit.
 - A pinch, a dash or “to taste” is seasoning: never counted, but named with the
   lines left out.
 
 A teaspoon is 5 ml, a tablespoon 15 ml and a cup 240 ml, whatever language the
 recipe was written in. The American “T” is a tablespoon and “t” a teaspoon,
-“stuk” and “Stück” are pieces, and the British “heaped tsp” is a heaping
+the Dutch “eetl” and “theel” are a tablespoon and a teaspoon too, “stuk” and
+“Stück” are pieces, and the British “heaped tsp” is a heaping
 teaspoon.
 
 The total is divided by the recipe's servings, and changes as soon as you

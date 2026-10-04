@@ -99,6 +99,28 @@ export const DENSITY_FIXES: Readonly<Record<string, DatasetFoodKey>> = {
 };
 
 /**
+ * The piece fixes: the dataset food whose piece a taxonomy entry weighs, for
+ * its piece weight alone, or none where the entry is no piece at all. Either
+ * way the entry never borrows one: a kind's size is what tells it from its
+ * parent, so an egg yolk borrowing the egg's 60 g counted three yolks per
+ * egg's worth of fat. Each entry names a dataset food with a piece weight,
+ * or none, or the build fails. Found on a real instance's recipes
+ * (`.scratch/ingredient-nutrition/issues/19-nutrition-on-an-upgraded-instance.md`).
+ */
+export const PIECE_FIXES: Readonly<Record<string, DatasetFoodKey | null>> = {
+  "en:cherry-tomato": "usda:321360", // Tomatoes, grape, raw: 5 for 49.7 g; else a tomato's 150 g
+  "en:egg-yolk": "usda:172184", // Egg, yolk, raw, fresh: 17 g; else an egg's 60 g
+  "en:egg-white": "usda:172183", // Egg, white, raw, fresh: 33 g; else an egg's 60 g
+  "en:spring-onion": "usda:170005", // Onions, spring or scallions: medium, 15 g; the taxonomy says 100 g
+  "en:pickled-gherkin": "usda:168558", // Pickles, cucumber, dill: small spear, 35 g; else a cucumber's 300 g
+  "en:gherkin": "usda:168558",
+  "en:pak-choi": "usda:170390", // Cabbage, chinese (pak-choi), raw: head, 840 g; else a cabbage's 1,248 g
+  // Zest is spooned, never counted: "the zest of a lemon" weighs no lemon.
+  "en:lemon-zest": null,
+  "en:orange-zest": null,
+};
+
+/**
  * The lenders that never lend: entries whose numbers are wrong for most of
  * their children (a leave-one-out test found each wrong at least half the
  * time). A child of one has no numbers rather than an average sauce's or

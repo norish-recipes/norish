@@ -23,7 +23,7 @@ import { resolveWorkspaceRootPath } from "@norish/shared-server/lib/workspace-pa
 import type { Download } from "./sources";
 import { buildSourceTable } from "./build";
 import { downloadAll, locateDownloads } from "./download";
-import { DENSITY_FIXES, FIX_LIST, NEVER_LEND } from "./lists";
+import { DENSITY_FIXES, FIX_LIST, NEVER_LEND, PIECE_FIXES } from "./lists";
 import { DOWNLOADS, readSources } from "./sources";
 
 /** A line of what the build did, for the person or the workflow running it. */
@@ -68,14 +68,19 @@ async function main(): Promise<void> {
 
   const table = buildSourceTable(
     await readSources(dir),
-    { fixes: FIX_LIST, densityFixes: DENSITY_FIXES, neverLend: NEVER_LEND },
+    {
+      fixes: FIX_LIST,
+      densityFixes: DENSITY_FIXES,
+      pieceFixes: PIECE_FIXES,
+      neverLend: NEVER_LEND,
+    },
     editions
   );
   const path = resolveWorkspaceRootPath(SOURCE_TABLE_PATH);
   const previous = existsSync(path) ? previousVersion(await readFile(path, "utf8")) : null;
 
   say(
-    `Built table ${table.version}: ${table.foods.length} foods, ${Object.keys(table.names).length} name matches, ${Object.keys(table.fixes).length} fixes, ${Object.keys(table.densityFixes).length} density fixes`
+    `Built table ${table.version}: ${table.foods.length} foods, ${Object.keys(table.names).length} name matches, ${Object.keys(table.fixes).length} fixes, ${Object.keys(table.densityFixes).length} density fixes, ${Object.keys(table.pieceFixes).length} piece fixes`
   );
   if (previous === table.version) {
     say("The table is unchanged");

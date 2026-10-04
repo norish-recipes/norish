@@ -66,6 +66,7 @@ const EDITIONS = { ciqual: "2025-11-03" };
 const LISTS = {
   fixes: { "en:brandy": "ciqual:1023" as const },
   densityFixes: { "en:onion": "usda:170000" as const },
+  pieceFixes: { "en:onion": "usda:170000" as const, "en:brandy": null },
   neverLend: ["en:alcohol"],
 };
 
@@ -123,12 +124,23 @@ describe("building the source table", () => {
     expect(table.names).toEqual({ "en:red-onion": "usda:170000" });
   });
 
-  it("carries the fix list, the density fixes and the lenders that never lend", () => {
+  it("carries the fix list, the density and piece fixes and the lenders that never lend", () => {
     const table = buildSourceTable(sources(), LISTS, EDITIONS);
 
     expect(table.fixes).toEqual({ "en:brandy": "ciqual:1023" });
     expect(table.densityFixes).toEqual({ "en:onion": "usda:170000" });
+    expect(table.pieceFixes).toEqual({ "en:onion": "usda:170000", "en:brandy": null });
     expect(table.neverLend).toEqual(["en:alcohol"]);
+  });
+
+  it("fails where a piece fix names an entry the taxonomy lacks, or a food with no piece weight", () => {
+    const build = (pieceFixes: Record<string, `usda:${string}` | `ciqual:${string}` | null>) =>
+      buildSourceTable(sources(), { ...LISTS, pieceFixes }, EDITIONS);
+
+    expect(() => build({ "en:shallot": null })).toThrow(/en:shallot/);
+    expect(() => build({ "en:onion": "usda:999999" })).toThrow(/usda:999999/);
+    // CIQUAL weighs no pieces either.
+    expect(() => build({ "en:onion": "ciqual:20034" })).toThrow(/ciqual:20034/);
   });
 
   it("fails where a density fix names an entry the taxonomy lacks, or no USDA food with a density", () => {

@@ -1,5 +1,5 @@
 {
-  "version": "f99017737582655c",
+  "version": "35fa7cd90b73f782",
   "editions": {"calnut":"2020-07-07","ciqual":"2025-11-03","ciqual-2020":"2020-07-07","cofid":"2021","usda":"SR Legacy 2018-04, Foundation Foods 2026-04-30"},
   "fixes": {
     "en:barley": "usda:170284",
@@ -58,6 +58,17 @@
     "en:white-wine": "usda:174837",
     "en:worcestershire-sauce": "usda:171610",
     "en:yeast": "usda:175043"
+  },
+  "pieceFixes": {
+    "en:cherry-tomato": "usda:321360",
+    "en:egg-white": "usda:172183",
+    "en:egg-yolk": "usda:172184",
+    "en:gherkin": "usda:168558",
+    "en:lemon-zest": null,
+    "en:orange-zest": null,
+    "en:pak-choi": "usda:170390",
+    "en:pickled-gherkin": "usda:168558",
+    "en:spring-onion": "usda:170005"
   },
   "neverLend": [
     "en:alcohol",

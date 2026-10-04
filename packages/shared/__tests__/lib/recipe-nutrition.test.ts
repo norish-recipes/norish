@@ -17,6 +17,7 @@ import type {
 import type { NutritionLine } from "@norish/shared/lib/recipe-nutrition";
 import defaultUnits from "@norish/config/units.default.json";
 import {
+  bracketedGrams,
   lineKey,
   nutritionLinesOf,
   seasoningPhrases,
@@ -234,6 +235,42 @@ describe("workOutNutrition", () => {
     ]).leftOut.map((named) => named.reason);
 
     expect(reasons).toEqual(["no-amount", "no-size", "no-numbers", "no-spoon-weight"]);
+  });
+
+  it("takes the weight a line's brackets state where nothing else weighs it", () => {
+    const worked = workOut([
+      // A container holds it, each piece weighs it, a measure weighs it whole.
+      line(1, "can", "rice", "(400 g) rice"),
+      line(2, null, "rice", "(8 ounce) rice cakes"),
+      line(2, "tablespoon", "flour", "flour (30 g)"),
+      // A volume in brackets is no weight.
+      line(1, "cup", "flour", "flour (400 ml)"),
+    ]);
+
+    expect(worked.counted.map((counted) => Math.round(counted.grams))).toEqual([400, 454, 30]);
+    expect(worked.leftOut.map((named) => named.reason)).toEqual(["no-spoon-weight"]);
+  });
+
+  it("weighs a counted line by its food's piece weight before its brackets", () => {
+    expect(workOut([line(1, null, "onion", "(200 g) onion")]).counted[0]!.grams).toBe(150);
+  });
+
+  it("reads a unit an older import left at the start of a unitless line's text", () => {
+    const worked = workOut([
+      line(150, null, "rice", "GR rice"),
+      line(150, "", "rice", "gram rice"),
+      line(2, null, "flour", "TBSP flour"),
+      // A count or a container there is the food's words, and the line counts pieces.
+      line(2, null, "onion", "stuks onion"),
+    ]);
+
+    expect(worked.counted.map((counted) => counted.grams)).toEqual([150, 150, 300]);
+    expect(worked.leftOut.map((named) => named.reason)).toEqual(["no-spoon-weight"]);
+  });
+
+  it("counts a size word stored as the unit as one piece", () => {
+    expect(workOut([line(2, "large", "onion", "onions")]).counted[0]!.grams).toBe(300);
+    expect(workOut([line(1, "Medium", "onion", "onion")]).counted[0]!.grams).toBe(150);
   });
 
   it("names every line left out in the recipe's order, seasoning among them", () => {
@@ -459,5 +496,23 @@ describe("a recipe's lines and supplied numbers", () => {
     expect(suppliesNutrition({ ...recipe, calories: 320 })).toBe(true);
     expect(suppliesNutrition({ ...recipe, fat: "12.5" })).toBe(true);
     expect(suppliesNutrition({ ...recipe, fat: "" })).toBe(false);
+  });
+});
+
+describe("bracketedGrams", () => {
+  it("reads the first weight a text states in brackets, in grams", () => {
+    expect(bracketedGrams("(15 ounce) can coconut milk")).toBeCloseTo(425.24, 1);
+    expect(bracketedGrams("chicken breast (about 1 lb.)")).toBeCloseTo(453.59, 1);
+    expect(bracketedGrams("(~8 ounce) chicken breasts")).toBeCloseTo(226.8, 1);
+    expect(bracketedGrams("mixed seeds (30g (pumpkin seeds, sunflower seeds))")).toBe(30);
+    expect(bracketedGrams("(.25 ounce) package active dry yeast")).toBeCloseTo(7.09, 1);
+    expect(bracketedGrams("boter (1,5 kg)")).toBe(1500);
+  });
+
+  it("reads no weight from a volume, a count or a bracket without a number", () => {
+    expect(bracketedGrams("kokosmelk (400 ml)")).toBeNull();
+    expect(bracketedGrams("coconut milk (15 fl oz)")).toBeNull();
+    expect(bracketedGrams("(4) zoete aardappelen")).toBeNull();
+    expect(bracketedGrams("onions (red)")).toBeNull();
   });
 });

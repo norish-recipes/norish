@@ -2,8 +2,8 @@
  * The committed source table of Ingredient Nutrition (ADR-0039): every
  * dataset food's four numbers per 100 g, and its piece weight and density
  * where USDA gives a portion for them, plus Norish's own lists — the fix
- * list, the density fixes, the name matches and the lenders that never
- * lend — keyed by Open Food Facts id. Built by `tooling/nutrition` from the public downloads,
+ * list, the density fixes, the piece fixes, the name matches and the lenders
+ * that never lend — keyed by Open Food Facts id. Built by `tooling/nutrition` from the public downloads,
  * read by a pull request's reviewer, and applied by an instance at boot when
  * its version changed. Nothing here is a household's: corrections live
  * apart, so a table refresh never touches them.
@@ -72,6 +72,12 @@ export const SourceTableSchema = z
      * correction, while its numbers keep their own source.
      */
     densityFixes: z.record(z.string(), datasetFoodKey),
+    /**
+     * Norish's piece fixes: the dataset food whose piece an entry weighs, or
+     * none where it is no piece at all (a zest), for its piece weight alone.
+     * Either way the entry never borrows a piece weight: a yolk is no egg.
+     */
+    pieceFixes: z.record(z.string(), datasetFoodKey.nullable()).default({}),
     /** Name matches for entries without numbers from a code, made by the build script. */
     names: z.record(z.string(), datasetFoodKey),
     /** Entries whose numbers are never lent to their children: a borrow ends there. */
@@ -149,7 +155,7 @@ export function readSourceTable(
  */
 export function serializeSourceTable(table: SourceTable): string {
   const line = (value: unknown) => JSON.stringify(value);
-  const entries = (record: Record<string, string>) =>
+  const entries = (record: Record<string, string | null>) =>
     Object.keys(record)
       .sort()
       .map((key) => `    ${line(key)}: ${line(record[key])}`)
@@ -168,6 +174,7 @@ export function serializeSourceTable(table: SourceTable): string {
     `  "editions": ${line(editions)},`,
     `  "fixes": {\n${entries(table.fixes)}\n  },`,
     `  "densityFixes": {\n${entries(table.densityFixes)}\n  },`,
+    `  "pieceFixes": {\n${entries(table.pieceFixes)}\n  },`,
     `  "neverLend": [\n${[...table.neverLend]
       .sort()
       .map((id) => `    ${line(id)}`)

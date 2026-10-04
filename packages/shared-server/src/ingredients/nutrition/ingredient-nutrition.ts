@@ -28,6 +28,12 @@
  * density, because an average sauce misleads about calories, not about what
  * a spoonful weighs. A group whose foods share a form (spices, sauces,
  * syrups, vinegars) carries a density fix for its members to borrow.
+ *
+ * So has the piece weight: Norish's piece fix, the dataset food whose piece
+ * an entry weighs, comes right after the household's correction, and an
+ * entry with one never borrows a piece weight, even where the fix says it is
+ * no piece at all (a zest). A kind's numbers are its parent's often enough;
+ * its size is what tells a yolk from an egg and a cherry tomato from a tomato.
  */
 import type {
   NutritionCorrectionRow,
@@ -97,12 +103,14 @@ async function readSources(nodes: readonly NutritionNode[], reader: NutritionRea
   const rules = await findNutritionRules(nodes.flatMap((node) => (node.offId ? [node.offId] : [])));
   const fixes = new Map<string, string>();
   const densityFixes = new Map<string, string>();
+  const pieceFixes = new Map<string, string | null>();
   const names = new Map<string, string>();
   const neverLend = new Set<string>();
 
   for (const rule of rules) {
     if (rule.kind === "fix" && rule.food) fixes.set(rule.offId, rule.food);
     else if (rule.kind === "density" && rule.food) densityFixes.set(rule.offId, rule.food);
+    else if (rule.kind === "piece") pieceFixes.set(rule.offId, rule.food);
     else if (rule.kind === "name" && rule.food) names.set(rule.offId, rule.food);
     else if (rule.kind === "never-lend") neverLend.add(rule.offId);
   }
@@ -110,6 +118,7 @@ async function readSources(nodes: readonly NutritionNode[], reader: NutritionRea
   const keys: string[] = [
     ...fixes.values(),
     ...densityFixes.values(),
+    ...[...pieceFixes.values()].filter((key): key is string => key !== null),
     ...names.values(),
     ...[...corrections.values()].flatMap((correction) =>
       [correction.numbersFood, correction.pieceWeightFood, correction.densityFood].filter(
@@ -140,7 +149,7 @@ async function readSources(nodes: readonly NutritionNode[], reader: NutritionRea
 
   for (const food of foods) if (food.ndb && !byNdb.has(food.ndb)) byNdb.set(food.ndb, food);
 
-  return { corrections, fixes, densityFixes, names, neverLend, byKey, byNdb };
+  return { corrections, fixes, densityFixes, pieceFixes, names, neverLend, byKey, byNdb };
 }
 
 type Sources = Awaited<ReturnType<typeof readSources>>;
@@ -211,10 +220,10 @@ function correctionOffers(
 /**
  * An Ingredient's own facts, before any borrowing: its household's
  * correction, then the sources. The numbers come from the first step with a
- * food. The piece weight takes the taxonomy's own after a
- * fix and before any code's portion; the density takes its density fix
- * first, then the codes' portions before the taxonomy's own, and a name
- * match's last.
+ * food. The piece weight takes its piece fix and nothing else where it has
+ * one, else the taxonomy's own after a fix and before any code's portion;
+ * the density takes its density fix first, then the codes' portions before
+ * the taxonomy's own, and a name match's last.
  */
 function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
   const steps = stepsOf(node, sources);
@@ -228,6 +237,8 @@ function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
   const corrected = correctionOffers(sources.corrections.get(node.id), sources);
   const densityFixKey = node.offId ? sources.densityFixes.get(node.offId) : undefined;
   const densityFix = densityFixKey ? sources.byKey.get(densityFixKey) : undefined;
+  const pieceFixKey = node.offId ? sources.pieceFixes.get(node.offId) : undefined;
+  const pieceFix = pieceFixKey ? sources.byKey.get(pieceFixKey) : undefined;
 
   return {
     numbers: first([
@@ -236,10 +247,21 @@ function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
     ]),
     pieceWeight: first([
       ...corrected.pieceWeight,
-      ...kind("fix").map(offer("pieceWeight")),
-      ...taxonomy(node.nutritionCodes?.pieceWeight),
-      ...kind("code").map(offer("pieceWeight")),
-      ...kind("name").map(offer("pieceWeight")),
+      ...(pieceFixKey !== undefined
+        ? pieceFix
+          ? [
+              {
+                source: { kind: "fix" as const, food: refOf(pieceFix) },
+                value: pieceFix.pieceWeight,
+              },
+            ]
+          : []
+        : [
+            ...kind("fix").map(offer("pieceWeight")),
+            ...taxonomy(node.nutritionCodes?.pieceWeight),
+            ...kind("code").map(offer("pieceWeight")),
+            ...kind("name").map(offer("pieceWeight")),
+          ]),
     ]),
     density: first([
       ...corrected.density,
@@ -274,6 +296,10 @@ export async function resolveIngredientNutrition(
     const mine = own.get(node.id)?.[fact];
 
     if (mine) return { ...mine, borrowedFrom: null } as IngredientNutrition[K];
+    // A piece fix is the last word on what one piece of it weighs, none included.
+    if (fact === "pieceWeight" && node.offId && sources.pieceFixes.has(node.offId)) {
+      return null as IngredientNutrition[K];
+    }
 
     const seen = new Set([node.id]);
 
