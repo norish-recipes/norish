@@ -313,7 +313,9 @@
     "notSupported": "Mantener la pantalla despierta no está soportado en este navegador",
     "activeTooltip": "La pantalla se mantendrá encendida mientras cocinas",
     "inactiveTooltip": "Mantén la pantalla encendida mientras sigues los pasos",
-    "ariaLabel": "Mantener la pantalla encendida"
+    "ariaLabel": "Mantener la pantalla encendida",
+    "activeToast": "La pantalla se mantendrá encendida",
+    "inactiveToast": "Tiempo de espera de la pantalla restaurado"
   },
   "toasts": {
     "imported": "Receta importada",

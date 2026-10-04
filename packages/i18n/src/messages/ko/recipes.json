@@ -313,7 +313,9 @@
     "notSupported": "이 브라우저에서는 화면 활성 유지가 지원되지 않습니다.",
     "activeTooltip": "요리하는 동안 화면이 계속 켜져 있습니다.",
     "inactiveTooltip": "조리 중 화면 켜짐 유지",
-    "ariaLabel": "화면 켜짐 유지"
+    "ariaLabel": "화면 켜짐 유지",
+    "activeToast": "화면이 계속 켜져 있습니다",
+    "inactiveToast": "화면 꺼짐 시간이 복원되었습니다"
   },
   "toasts": {
     "imported": "레시피 가져오기 완료",
