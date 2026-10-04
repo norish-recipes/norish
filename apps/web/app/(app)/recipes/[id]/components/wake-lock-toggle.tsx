@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import UiSwitch from "@/components/shared/ui-switch";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
-import { Tooltip } from "@heroui/react";
+import { Tooltip, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useWakeLockContext } from "./wake-lock-context";
@@ -40,6 +40,16 @@ export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProp
     );
   }
 
+  const handleToggle = async () => {
+    await toggle();
+    // Use the *current* isActive to determine what the state was before toggle
+    if (isActive) {
+      toast(t("inactiveToast"));
+    } else {
+      toast(t("activeToast"));
+    }
+  };
+
   return (
     <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
       <div className="flex items-center gap-2">
@@ -49,7 +59,7 @@ export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProp
           color="success"
           isSelected={isActive}
           size="sm"
-          onValueChange={toggle}
+          onValueChange={handleToggle}
         />
       </div>
     </Tooltip>
