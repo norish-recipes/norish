@@ -201,7 +201,7 @@ export default function MiniGroceries({
       edited !== undefined || !item.ingredientId
         ? (edited ?? item.ingredientName)
         : { ingredientId: item.ingredientId, name: item.ingredientName }
-    ).catch(() => toast(t("keepFailed"), { variant: "warning" }));
+    ).catch(() => toast(t("keepFailed"), { variant: "danger" }));
   };
   const { toBuy, inPantry } = useMemo(() => {
     const buy: typeof scaledIngredients = [];

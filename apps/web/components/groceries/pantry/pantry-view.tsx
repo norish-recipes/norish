@@ -113,15 +113,17 @@ export function PantryView() {
       pantryIngredientFor([item], { ingredientName: draft }, rules) !== null
   );
   const keptIds = new Set(items.map((item) => item.ingredientId));
+  // Only the answer for the text in the field: a press on matches for an
+  // earlier text, or for the text an add just cleared, would add the wrong food.
   const matches =
-    !isOffline && typed.length >= SEARCH_MIN_LENGTH
+    !isOffline && typed.length >= SEARCH_MIN_LENGTH && search === typed
       ? (catalogue.data?.items ?? [])
           .filter((food) => !keptIds.has(food.id))
           .slice(0, CATALOGUE_MATCHES)
       : [];
+  const canAdd = foodKey(draft, rules) !== "" && !duplicate;
   const addTyped = () => {
-    if (foodKey(draft, rules) === "" || duplicate) return;
-    keep(typed);
+    if (canAdd) keep(typed);
   };
 
   return (
@@ -163,7 +165,7 @@ export function PantryView() {
             aria-label={t("add")}
             className="mt-1 shrink-0"
             data-testid="add-pantry-ingredient"
-            isDisabled={foodKey(draft, rules) === "" || duplicate}
+            isDisabled={!canAdd}
             size="sm"
             variant="tertiary"
             onPress={addTyped}
