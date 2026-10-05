@@ -43,10 +43,26 @@ export const PantryIngredientSelectSchema = createSelectSchema(pantryIngredients
     localeNames: z.record(z.string(), z.string()),
   });
 
-// Adding to the Pantry: a client-minted id (ADR-0003) and a name. The server folds it.
-export const PantryIngredientAddSchema = z.object({
-  id: clientMintedId,
-  name: PantryIngredientNameSchema,
+/**
+ * Adding to the Pantry: a client-minted id (ADR-0003) and either a name the
+ * member typed, which the server resolves, or the food they picked, which it
+ * keeps as picked.
+ */
+export const PantryIngredientAddSchema = z.union([
+  z.object({ id: clientMintedId, name: PantryIngredientNameSchema }),
+  z.object({ id: clientMintedId, ingredientId: z.uuid() }),
+]);
+
+/**
+ * A food the household's own recipes use and its Pantry does not cover,
+ * offered under "From your recipes": `recipeCount` is how many of those
+ * recipes name it, each counted once.
+ */
+export const PantrySuggestionSchema = z.object({
+  ingredientId: z.string(),
+  name: z.string(),
+  localeNames: z.record(z.string(), z.string()),
+  recipeCount: z.number().int().positive(),
 });
 
 export const PantryIngredientRemoveSchema = z.object({

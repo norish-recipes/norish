@@ -1,13 +1,14 @@
 import { TRPCError } from "@trpc/server";
 
-import type { PantryIngredientDto } from "@norish/shared/contracts";
+import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   deletePantryIngredient,
   getPantryIngredientOwnerId,
   listPantryIngredientsByUserIds,
+  listPantrySuggestions,
 } from "@norish/db/repositories/pantry";
-import { addToPantry } from "@norish/shared-server/ingredients/pantry";
+import { addPickedToPantry, addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { pantry } from "@norish/shared-server/realtime/pantry";
 import {
@@ -23,18 +24,28 @@ const list = authedProcedure.query(async ({ ctx }): Promise<PantryIngredientDto[
   return listPantryIngredientsByUserIds(ctx.userIds);
 });
 
+/** The foods the household's own recipes use that its Pantry does not cover, most used first. */
+const suggestions = authedProcedure.query(async ({ ctx }): Promise<PantrySuggestionDto[]> => {
+  return listPantrySuggestions(ctx.userIds);
+});
+
 /**
- * Put a name in the Pantry. The name is resolved to an Ingredient, so "Olive
- * Oil" and "olive oil, cold-pressed" are one item; an Ingredient the household
- * already has is that item, and nothing is written or announced for it. Returns the item's
- * id, which is the client's own for a name that was not there (ADR-0003).
+ * Put a food in the Pantry: a typed name, resolved to an Ingredient so "Olive
+ * Oil" and "olive oil, cold-pressed" are one item, or a picked Ingredient,
+ * kept as picked. An Ingredient the household already has is that item, and
+ * nothing is written or announced for it. Returns the item's id, which is
+ * the client's own for a food that was not there (ADR-0003).
  */
 const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ ctx, input }) => {
-  const { item, created } = await addToPantry(input.id ?? crypto.randomUUID(), {
-    userId: ctx.user.id,
-    userIds: ctx.userIds,
-    name: input.name,
-  });
+  const id = input.id ?? crypto.randomUUID();
+  const actor = { userId: ctx.user.id, userIds: ctx.userIds };
+  const added =
+    "ingredientId" in input
+      ? await addPickedToPantry(id, { ...actor, ingredientId: input.ingredientId })
+      : await addToPantry(id, { ...actor, name: input.name });
+
+  if (!added) throw new TRPCError({ code: "NOT_FOUND", message: "Ingredient not found" });
+  const { item, created } = added;
 
   if (created) {
     log.info({ userId: ctx.user.id, pantryIngredientId: item.id }, "Pantry ingredient added");
@@ -66,6 +77,7 @@ const remove = authedProcedure
 
 export const pantryProcedures = router({
   list,
+  suggestions,
   add,
   remove,
 });

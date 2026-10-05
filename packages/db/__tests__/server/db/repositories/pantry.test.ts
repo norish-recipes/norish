@@ -13,8 +13,9 @@ import {
   findPantryIngredientInHousehold,
   getPantryIngredientOwnerId,
   listPantryIngredientsByUserIds,
+  listPantrySuggestions,
 } from "@norish/db/repositories/pantry";
-import { ingredients, pantryIngredients, users } from "@norish/db/schema";
+import { ingredients, pantryIngredients, recipeIngredients, recipes, users } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
 import { createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
@@ -213,5 +214,81 @@ describe("pantry ingredients", () => {
     await expect(
       db.select().from(pantryIngredients).where(eq(pantryIngredients.id, OLIVE))
     ).resolves.toEqual([]);
+  });
+
+  describe("From your recipes", () => {
+    /** A recipe owned by a member, its lines resolved as a recipe save resolves them. */
+    async function recipe(ownerId: string, lines: string[]) {
+      const db = getTestDb();
+      const [row] = await db
+        .insert(recipes)
+        .values({ userId: ownerId, name: "Soup" })
+        .returning({ id: recipes.id });
+      const foods = lines.filter((line) => !line.startsWith("#"));
+      const resolved = await resolveIngredients(
+        foods.map((line) => line.replace(/\(id:.*\)$/, "").replace(/[[\]]/g, "")),
+        { userId: ownerId }
+      );
+
+      for (const [order, name] of lines.entries()) {
+        const at = foods.indexOf(name);
+
+        await db.insert(recipeIngredients).values({
+          recipeId: row!.id,
+          name,
+          ingredientAliasId: at >= 0 ? resolved[at]!.aliasId : null,
+          order: String(order),
+        });
+      }
+    }
+
+    const offered = async (userIds: string[]) =>
+      (await listPantrySuggestions(userIds)).map(({ name, recipeCount }) => [name, recipeCount]);
+
+    it("ranks the foods by how many of the household's recipes name them, once each", async () => {
+      await recipe(userId, ["onion", "garlic", "onion, diced"]);
+      await recipe(userId, ["onion", "rice"]);
+
+      expect(await offered([userId])).toEqual([
+        ["onion", 2],
+        ["garlic", 1],
+        ["rice", 1],
+      ]);
+    });
+
+    it("counts only recipes the household's members own", async () => {
+      const housemate = await createTestUser();
+      const stranger = await createTestUser();
+
+      await recipe(userId, ["garlic"]);
+      await recipe(housemate.id, ["garlic", "rice"]);
+      await recipe(stranger.id, ["rice", "saffron"]);
+
+      expect(await offered([userId, housemate.id])).toEqual([
+        ["garlic", 2],
+        ["rice", 1],
+      ]);
+    });
+
+    it("never counts a line that names no food", async () => {
+      await recipe(userId, ["# For the sauce", "[pizza dough](id:7e300351-13a4-4bfb-8b40-7a1a5a5f8d01)", "basil"]);
+
+      expect(await offered([userId])).toEqual([["basil", 1]]);
+    });
+
+    it("leaves out what the Pantry covers: the same food, or a food a kept kind of it is", async () => {
+      await recipe(userId, ["onion", "olive oil", "rice"]);
+      await add(OLIVE, { userId, userIds: [userId], name: "olive oil" });
+
+      const { item: red } = await add(SALT, { userId, userIds: [userId], name: "red onion" });
+      const [onion] = await resolveIngredients(["onion"], { userId });
+
+      await getTestDb()
+        .update(ingredients)
+        .set({ parentId: onion!.ingredientId })
+        .where(eq(ingredients.id, red.ingredientId));
+
+      expect(await offered([userId])).toEqual([["rice", 1]]);
+    });
   });
 });

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
-import { addToPantry } from "@norish/shared-server/ingredients/pantry";
+import { addPickedToPantry, addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
@@ -92,5 +92,29 @@ describe("the Pantry through aliases", () => {
     expect(first.created).toBe(true);
     expect(second).toEqual({ item: first.item, created: false });
     expect(await listPantryIngredientsByUserIds(userIds)).toHaveLength(1);
+  });
+
+  it("keeps a picked food as picked, once per household", async () => {
+    const [line] = await recipeLines("onions, diced");
+    const first = await addPickedToPantry(crypto.randomUUID(), {
+      userId,
+      userIds: [userId],
+      ingredientId: line!.ingredientId!,
+    });
+    const again = await addPickedToPantry(crypto.randomUUID(), {
+      userId,
+      userIds: [userId],
+      ingredientId: line!.ingredientId!,
+    });
+
+    expect(first).toMatchObject({ item: { ingredientId: line!.ingredientId }, created: true });
+    expect(again).toEqual({ item: first!.item, created: false });
+    await expect(
+      addPickedToPantry(crypto.randomUUID(), {
+        userId,
+        userIds: [userId],
+        ingredientId: crypto.randomUUID(),
+      })
+    ).resolves.toBeNull();
   });
 });

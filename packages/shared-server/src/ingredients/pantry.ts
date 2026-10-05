@@ -1,5 +1,5 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
-import { addPantryIngredient } from "@norish/db/repositories/pantry";
+import { addPantryIngredient, findIngredientOwnSpelling } from "@norish/db/repositories/pantry";
 
 import { resolveIngredient, writeResolved } from "./resolver";
 
@@ -26,4 +26,25 @@ export async function addToPantry(
       });
     }
   );
+}
+
+/**
+ * Put a food a member picked in the Pantry: the Ingredient as picked, with
+ * no resolver call, the row pointing at the Ingredient's own spelling. A
+ * food the household already keeps is answered with the item it holds; null
+ * where the Ingredient is gone (merged away or deleted since it was picked).
+ */
+export async function addPickedToPantry(
+  id: string,
+  input: { userId: string; userIds: string[]; ingredientId: string }
+): Promise<{ item: PantryIngredientDto; created: boolean } | null> {
+  const spelling = await findIngredientOwnSpelling(input.ingredientId);
+
+  if (!spelling) return null;
+
+  return await addPantryIngredient(id, {
+    userId: input.userId,
+    userIds: input.userIds,
+    ...spelling,
+  });
 }
