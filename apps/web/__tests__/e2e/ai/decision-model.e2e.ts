@@ -163,11 +163,12 @@ async function eventuallyOnRecipe(assertion: () => Promise<void>): Promise<void>
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 }
 
-/** One model a job asked, as the admin job detail reports it. */
+/** One model a job asked, as the admin job detail reports it, with the tokens it took. */
 interface JobModel {
   provider: string;
   model: string;
   outcome: "completed" | "failed";
+  tokens: number | null;
 }
 
 /**
@@ -268,10 +269,16 @@ test("an unsure Decision hands categorization to the AI provider, whose answer i
   // The job monitor names both: the Decision Model that was unsure and then
   // checked, by the model id the provider answered with rather than the
   // configured jev-latest, and the AI provider that answered, each once
-  // however many times it was asked.
+  // however many times it was asked, with the tokens each provider reported:
+  // the harness answers a chat request as two tokens, and this job asked one.
   expect(await newestJobModels("auto-categorization")).toEqual([
-    { provider: "typesafe", model: "jev-e2e-harness", outcome: "completed" },
-    { provider: "generic-openai", model: "test-model", outcome: "completed" },
+    {
+      provider: "typesafe",
+      model: "jev-e2e-harness",
+      outcome: "completed",
+      tokens: expect.any(Number),
+    },
+    { provider: "generic-openai", model: "test-model", outcome: "completed", tokens: 2 },
   ]);
 });
 

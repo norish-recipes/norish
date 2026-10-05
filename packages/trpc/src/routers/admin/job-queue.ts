@@ -270,23 +270,24 @@ function groupLogsByAttempt(logs: string[]): Map<number, string[]> {
 /**
  * The models the job used, from the latest attempt that asked one: each
  * provider, model and outcome once, in the order first asked, so a Decision
- * that failed and the language model that answered instead both show.
+ * that failed and the language model that answered instead both show. Each
+ * carries the tokens its requests took, added up, where the provider
+ * reported any.
  */
 function deriveModels(progress: unknown): AdminJobModelDTO[] {
   const attempts = readStepProgress(progress)?.attempts ?? [];
   const latest = [...attempts].reverse().find((entry) => (entry.models?.length ?? 0) > 0);
-  const seen = new Set<string>();
-  const models: AdminJobModelDTO[] = [];
+  const byKey = new Map<string, AdminJobModelDTO>();
 
-  for (const { provider, model, outcome } of latest?.models ?? []) {
+  for (const { provider, model, outcome, tokens } of latest?.models ?? []) {
     const key = `${provider}\u0000${model}\u0000${outcome}`;
+    const seen = byKey.get(key) ?? { provider, model, outcome, tokens: null };
 
-    if (seen.has(key)) continue;
-    seen.add(key);
-    models.push({ provider, model, outcome });
+    if (tokens !== undefined) seen.tokens = (seen.tokens ?? 0) + tokens;
+    byKey.set(key, seen);
   }
 
-  return models;
+  return [...byKey.values()];
 }
 
 function toRowDTO(queueName: QueueName, job: Job, state: AdminJobState): AdminJobRowDTO {

@@ -1150,9 +1150,11 @@
           "duration": "Продължителност",
           "attempts": "Опити",
           "models": "Модели",
+          "tokens": "Токени",
           "runsAt": "Изпълнява се в",
           "nextRun": "Следващо изпълнение"
         },
+        "modelTokens": "{tokens} токена",
         "attempt": "Опит {number}",
         "stackTrace": "Проследяване на стека"
       },

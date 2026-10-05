@@ -1150,9 +1150,11 @@
           "duration": "Kesto",
           "attempts": "Yritykset",
           "models": "Mallit",
+          "tokens": "Tokenit",
           "runsAt": "Ajetaan",
           "nextRun": "Seuraava ajo"
         },
+        "modelTokens": "{tokens} tokenia",
         "attempt": "Yritys {number}",
         "stackTrace": "Kutsupino"
       },

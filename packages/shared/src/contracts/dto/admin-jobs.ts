@@ -65,6 +65,8 @@ export interface AdminJobModelDTO {
   provider: string;
   model: string;
   outcome: "completed" | "failed";
+  /** The tokens this model's requests took, added up, as the provider reported them; null for none. */
+  tokens: number | null;
 }
 
 export interface AdminJobDetailDTO extends AdminJobRowDTO {

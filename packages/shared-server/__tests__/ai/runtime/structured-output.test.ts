@@ -50,8 +50,10 @@ interface CapturedRequest {
 let captured: CapturedRequest[] = [];
 let replies: (() => { status: number; body: unknown })[] = [];
 
-/** The answer the model gives when it plays along. */
-function tagged(): { status: number; body: unknown } {
+/** The answer the model gives when it plays along, with the usage it reports. */
+function tagged(
+  usage: Record<string, number> = { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }
+): { status: number; body: unknown } {
   return {
     status: 200,
     body: {
@@ -66,7 +68,7 @@ function tagged(): { status: number; body: unknown } {
           finish_reason: "stop",
         },
       ],
-      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      usage,
     },
   };
 }
@@ -93,7 +95,7 @@ const server = createServer((req, res) => {
     captured.push({ body: JSON.parse(Buffer.concat(chunks).toString() || "{}") });
 
     const next = replies.length > 1 ? replies.shift() : replies[0];
-    const { status, body } = (next ?? tagged)();
+    const { status, body } = (next ?? (() => tagged()))();
 
     res.statusCode = status;
     res.setHeader("content-type", "application/json");
@@ -139,7 +141,7 @@ function responseFormats(): unknown[] {
 
 beforeEach(() => {
   captured = [];
-  replies = [tagged];
+  replies = [() => tagged()];
   mockGetAIConfig.mockResolvedValue(aiConfig());
   mockGetPrompts.mockResolvedValue({});
 });
@@ -159,7 +161,7 @@ describe("an endpoint that serves structured output", () => {
 
 describe("an endpoint that cannot serve structured output", () => {
   it("is retried in plain JSON mode and the answer is used", async () => {
-    replies = [noEndpoints, tagged];
+    replies = [noEndpoints, () => tagged()];
 
     await expect(generate()).resolves.toEqual({ tags: ["Italian"] });
 
@@ -170,7 +172,7 @@ describe("an endpoint that cannot serve structured output", () => {
   });
 
   it("is told the shape it must answer in, which json_object mode does not carry", async () => {
-    replies = [noEndpoints, tagged];
+    replies = [noEndpoints, () => tagged()];
 
     await generate();
 
@@ -239,18 +241,44 @@ describe("the job's model ledger", () => {
     await runWithModelUseLedger(ledger, () => generate().catch(() => undefined));
 
     expect(ledger.uses).toEqual([
-      { ...use, outcome: "completed" },
+      { ...use, outcome: "completed", tokens: 2 },
       { ...use, outcome: "failed" },
     ]);
+  });
+
+  it("records the tokens the provider reported, reasoning included", async () => {
+    const ledger = createModelUseLedger();
+
+    replies = [
+      () =>
+        tagged({
+          prompt_tokens: 748,
+          completion_tokens: 165,
+          total_tokens: 913,
+          completion_tokens_details: { reasoning_tokens: 120 },
+        } as Record<string, number>),
+    ];
+    await runWithModelUseLedger(ledger, generate);
+
+    expect(ledger.uses).toEqual([{ ...use, outcome: "completed", tokens: 913 }]);
+  });
+
+  it("records no tokens where the provider reported none", async () => {
+    const ledger = createModelUseLedger();
+
+    replies = [() => tagged({})];
+    await runWithModelUseLedger(ledger, generate);
+
+    expect(ledger.uses).toEqual([{ ...use, outcome: "completed" }]);
   });
 
   it("records one completed use when the plain-JSON retry is what answered", async () => {
     const ledger = createModelUseLedger();
 
-    replies = [noEndpoints, tagged];
+    replies = [noEndpoints, () => tagged()];
     await runWithModelUseLedger(ledger, generate);
 
-    expect(ledger.uses).toEqual([{ ...use, outcome: "completed" }]);
+    expect(ledger.uses).toEqual([{ ...use, outcome: "completed", tokens: 2 }]);
   });
 
   it("records nothing for a configuration that sends no request", async () => {

@@ -177,6 +177,26 @@ async function jsonModeInstruction<T>(schema: z.ZodType<T>): Promise<string> {
   ].join("\n");
 }
 
+/** A request's answer, with the tokens it took for the model-use ledger. */
+interface Answered<T> {
+  output: T;
+  tokens: number | undefined;
+}
+
+/**
+ * Input and output together, as the provider reported them. Undefined where
+ * it reported none, which the SDK hands on as zero: no request costs nothing.
+ */
+function reportedTokens(usage: {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+}): number | undefined {
+  const tokens = usage.totalTokens ?? (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
+
+  return tokens > 0 ? tokens : undefined;
+}
+
 interface ObjectRequest<T> {
   config: AIConfig;
   promptName: StructuredPromptName;
@@ -198,7 +218,7 @@ async function requestObject<T>({
   schema,
   images,
   jsonMode,
-}: ObjectRequest<T>): Promise<T> {
+}: ObjectRequest<T>): Promise<Answered<T>> {
   const { model, visionModel, providerName } = createModelsFromConfig(config, {
     structuredOutputs: !jsonMode,
   });
@@ -259,7 +279,7 @@ async function requestObject<T>({
     "AI request completed"
   );
 
-  return result.output;
+  return { output: result.output, tokens: result.usage ? reportedTokens(result.usage) : undefined };
 }
 
 /** Log a failed request once, as the typed error the caller will see. */
@@ -312,9 +332,15 @@ export async function generateStructured<T>(options: GenerateOptions<T>): Promis
   // One ledger entry per request a feature made, whichever request shape
   // ended up answering it.
   try {
-    const output = await requestStructured({ config, promptName, prompt, schema, images });
+    const { output, tokens } = await requestStructured({
+      config,
+      promptName,
+      prompt,
+      schema,
+      images,
+    });
 
-    recordModelUse({ ...use, outcome: "completed" });
+    recordModelUse({ ...use, outcome: "completed", ...(tokens === undefined ? {} : { tokens }) });
 
     return output;
   } catch (error) {
@@ -335,7 +361,7 @@ async function requestStructured<T>(request: {
   prompt: string;
   schema: z.ZodType<T>;
   images: readonly AIImage[];
-}): Promise<T> {
+}): Promise<Answered<T>> {
   const { config, promptName } = request;
 
   try {
@@ -786,7 +812,7 @@ async function requestDecision<Q extends DecisionQuestions>({
   questions,
   settings,
   timeoutMs,
-}: DecisionRequest<Q>): Promise<DecisionResult<Q>> {
+}: DecisionRequest<Q>): Promise<Answered<DecisionResult<Q>>> {
   const decisionModel = createDecisionModelFromConfig({ ...settings, timeoutMs });
   const asked: DecisionQuestions = questions;
 
@@ -863,10 +889,13 @@ async function requestDecision<Q extends DecisionQuestions>({
   );
 
   return {
-    // Built one question at a time above; the mapped type is what that loop
-    // guarantees, keyed exactly as the questions were.
-    answers: answers as DecisionResult<Q>["answers"],
-    model: result.response.modelId,
+    output: {
+      // Built one question at a time above; the mapped type is what that loop
+      // guarantees, keyed exactly as the questions were.
+      answers: answers as DecisionResult<Q>["answers"],
+      model: result.response.modelId,
+    },
+    tokens: reportedTokens(result.usage),
   };
 }
 
@@ -911,7 +940,7 @@ export async function decide<const Q extends DecisionQuestions>(
   };
 
   try {
-    const result = await requestDecision({
+    const { output: result, tokens } = await requestDecision({
       feature,
       state,
       questions,
@@ -920,7 +949,12 @@ export async function decide<const Q extends DecisionQuestions>(
     });
 
     // The resolved id, so the job monitor shows the release behind jev-latest.
-    recordModelUse({ provider: settings.provider, model: result.model, outcome: "completed" });
+    recordModelUse({
+      provider: settings.provider,
+      model: result.model,
+      outcome: "completed",
+      ...(tokens === undefined ? {} : { tokens }),
+    });
 
     return result;
   } catch (error) {

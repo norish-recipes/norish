@@ -1150,9 +1150,11 @@
           "duration": "Duration",
           "attempts": "Attempts",
           "models": "Modelle",
+          "tokens": "Token",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },
+        "modelTokens": "{tokens} Token",
         "attempt": "Attempt {number}",
         "stackTrace": "Stack trace"
       },

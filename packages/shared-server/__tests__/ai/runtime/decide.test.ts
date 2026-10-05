@@ -334,7 +334,7 @@ describe("decide", () => {
 });
 
 describe("the job's model ledger", () => {
-  it("records the resolved model that answered, and the configured one that failed", async () => {
+  it("records the resolved model that answered, with its tokens, and the configured one that failed", async () => {
     const ledger = createModelUseLedger();
 
     await runWithModelUseLedger(ledger, ask);
@@ -343,7 +343,7 @@ describe("the job's model ledger", () => {
     await runWithModelUseLedger(ledger, () => ask().catch(() => undefined));
 
     expect(ledger.uses).toEqual([
-      { provider: "typesafe", model: "jev-2026-09-01", outcome: "completed" },
+      { provider: "typesafe", model: "jev-2026-09-01", outcome: "completed", tokens: 120 },
       { provider: "typesafe", model: "jev-latest", outcome: "failed" },
     ]);
   });

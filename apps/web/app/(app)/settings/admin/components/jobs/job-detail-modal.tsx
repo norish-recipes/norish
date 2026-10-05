@@ -11,7 +11,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Accordion, Button, Chip, Modal, Spinner } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import type {
   AdminJobAttemptDTO,
@@ -108,8 +108,13 @@ function StepList({ steps, t }: { steps: AdminJobStepDTO[]; t: Translate }) {
   );
 }
 
-/** Which models the job asked, the failed ones marked, so "jev or openai?" is answered at a glance. */
+/**
+ * Which models the job asked, the failed ones marked, so "jev or openai?" is
+ * answered at a glance, each with the tokens it took where its provider said.
+ */
 function ModelChips({ models, t }: { models: AdminJobModelDTO[]; t: Translate }) {
+  const format = useFormatter();
+
   return (
     <div className="flex flex-wrap gap-1">
       {models.map((use) => (
@@ -121,10 +126,27 @@ function ModelChips({ models, t }: { models: AdminJobModelDTO[]; t: Translate })
         >
           <span className="font-mono">{`${use.provider} · ${use.model}`}</span>
           {use.outcome === "failed" ? ` (${t("stepStatus.failed")})` : null}
+          {use.tokens !== null ? (
+            <span className="text-muted tabular-nums">
+              {` · ${t("detail.modelTokens", {
+                tokens: format.number(use.tokens, {
+                  notation: "compact",
+                  maximumFractionDigits: 1,
+                }),
+              })}`}
+            </span>
+          ) : null}
         </Chip>
       ))}
     </div>
   );
+}
+
+/** Every token the job's models took, where any provider said; null where none did. */
+function totalTokens(models: readonly AdminJobModelDTO[]): number | null {
+  const counted = models.filter((use) => use.tokens !== null);
+
+  return counted.length > 0 ? counted.reduce((sum, use) => sum + (use.tokens ?? 0), 0) : null;
 }
 
 /** Body of one attempt's accordion panel: error, steps, and logs. */
@@ -160,6 +182,7 @@ function AttemptBody({ attempt, t }: { attempt: AdminJobAttemptDTO; t: Translate
 export default function JobDetailModal({ queue, jobId, onClose }: Props) {
   const t = useTranslations("settings.admin.jobQueue");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
   const isOpen = !!queue && !!jobId;
   const { job, isLoading, error } = useJobDetailQuery({
     queue: queue ?? "",
@@ -167,6 +190,7 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
     enabled: isOpen,
   });
   const { retryJob, removeJob, isRetrying, isRemoving } = useJobQueueMutations();
+  const tokensUsed = job ? totalTokens(job.models) : null;
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -258,6 +282,9 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                       {field(t("detail.fields.finished"), formatTimestamp(job.finishedOn))}
                       {field(t("detail.fields.duration"), formatDuration(job.durationMs))}
                       {field(t("detail.fields.attempts"), `${job.attemptsMade}/${job.maxAttempts}`)}
+                      {tokensUsed !== null
+                        ? field(t("detail.fields.tokens"), format.number(tokensUsed))
+                        : null}
                       {job.models.length > 0 ? (
                         <div className="col-span-2">
                           <dt className="text-muted mb-1 text-xs">{t("detail.fields.models")}</dt>

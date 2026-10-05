@@ -1150,9 +1150,11 @@
           "duration": "Duration",
           "attempts": "Attempts",
           "models": "모델",
+          "tokens": "토큰",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },
+        "modelTokens": "{tokens} 토큰",
         "attempt": "Attempt {number}",
         "stackTrace": "Stack trace"
       },
