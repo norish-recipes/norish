@@ -70,3 +70,17 @@ Until now the button started a round at once over the flagged foods **on screen*
   - 3,757,879 tokens: gpt-5.6-luna 1,827,548 over 1,740 requests, jev-1.13.0 1,930,331 over 925 requests.
   - About 4,019 per food. The prompt-based estimate (2,563) was 36% low.
   - The median ask took 5.9 s, p90 9.7 s. 935 foods took about 10 minutes at concurrency 10.
+- 2026-10-04, Mike: "Confirm all on 1300 entries lags the UI."
+  - Two causes. The browser patched its cache once per suggestion, three `setQueriesData` calls each copying every loaded row: about 3,900 full rewrites in one synchronous loop.
+  - And the server refused the request, since `suggestionIds` was capped at 500 (two 400s in the copy's log). So nothing was confirmed after the freeze, and the rollback brought everything back.
+  - Now the hook works out every row's patch first and rewrites the lists once (`patchRowsById`). Measured on the copy: 1,311 answered, the panel empty 73 ms after the click, no long task.
+  - The cap is 5,000.
+  - `answerSuggestions` runs inside `announcingTogether` (an AsyncLocalStorage-scoped hold in `ingredients/changes.ts`), so a batch is one `changed` announcement, not one per suggestion. Each announcement makes every open tab refetch six query families.
+  - Confirm all runs in `inConfirmOrder`: parents and "its own food" first, then merges from the far end of each chain. A merge takes its food away, and the FK cascade takes every suggestion naming that food.
+  - A suggestion gone by its turn (`not-found`) counts as settled, not refused.
+  - Measured on a clone of the copy: 1,311 confirmed in 5.7 s, the order computed in 15 ms. Unordered, 104 failed with not-found; ordered, 0 failed and 66 settled. Those 66 were mutual pairs, two flagged duplicates suggested into each other, which the first merge settles.
+- 2026-10-05, Mike: "why do we have a limit?" No product reason.
+  - The 500 caps on `suggestionIds` and on Find parents' `ingredientIds` were a defensive default from ticket 13 (abf46d84). A list can never be longer than the catalogue, and the server sets no body limit.
+  - Both caps are gone.
+  - The one real ceiling: each list becomes a single `IN (…)` query, and Postgres takes at most 65,535 bind parameters. 65,535 work and 70,000 fail ("bind message has 4464 parameter formats": the 16-bit count wraps).
+  - `findIngredientSuggestions` and `findCatalogueIngredientNames` now look up a thousand ids to a query (`CHUNK`, as the seed and nutrition repositories do). A test runs 70,000 ids through both.

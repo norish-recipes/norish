@@ -34,7 +34,7 @@ import {
   saveDraft as saveIngredientDraft,
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
-import { ingredientChanges } from "@norish/shared-server/ingredients/changes";
+import { announcingTogether, ingredientChanges } from "@norish/shared-server/ingredients/changes";
 import {
   correctNutrition as correctHouseholdNutrition,
   NutritionCorrectionError,
@@ -53,6 +53,7 @@ import {
 import {
   confirmSuggestion,
   dismissSuggestion,
+  inConfirmOrder,
   listSuggestions,
 } from "@norish/shared-server/ingredients/suggestions";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -380,39 +381,49 @@ const reviewReport = authedProcedure
 /** The suggestions waiting on the viewer: only those about foods they may edit. */
 const suggestions = authedProcedure.query(({ ctx }) => listSuggestions(actorOf(ctx)));
 
-const suggestionIds = z.object({ suggestionIds: z.array(z.uuid()).min(1).max(500) });
+// As many as there are: Confirm all answers every suggestion a round over the catalogue left.
+const suggestionIds = z.object({ suggestionIds: z.array(z.uuid()).min(1) });
 
 /**
  * Answer suggestions one by one, confirming (the edit each proposes is made
- * as the viewer's own) or dismissing them; each announces what it changed.
- * One that is refused or already gone does not stop the rest; the answer
- * counts both and names the first refusal, for the page to say why.
+ * as the viewer's own) or dismissing them, and announce what they changed
+ * once, together. One that is refused does not stop the rest; the answer
+ * counts them and names the first refusal, for the page to say why. One
+ * already gone by its turn was settled another way, by an earlier answer in
+ * the same go (two foods suggested into each other) or by someone else, and
+ * is neither done nor refused.
  */
 async function answerSuggestions(
   ctx: AuthedProcedureContext,
   ids: readonly string[],
   answer: typeof confirmSuggestion
 ): Promise<{ done: number; failed: number; refusal: CatalogueRefusal | null }> {
-  let done = 0;
-  let refusal: CatalogueRefusal | null = null;
+  return announcingTogether(async () => {
+    let done = 0;
+    let failed = 0;
+    let refusal: CatalogueRefusal | null = null;
 
-  for (const id of ids) {
-    try {
-      await answer(actorOf(ctx), id);
-      done += 1;
-    } catch (error) {
-      if (!(error instanceof CatalogueEditError)) throw error;
-      refusal ??= error.refusal;
+    for (const id of ids) {
+      try {
+        await answer(actorOf(ctx), id);
+        done += 1;
+      } catch (error) {
+        if (!(error instanceof CatalogueEditError)) throw error;
+        if (error.refusal === "not-found") continue;
+        failed += 1;
+        refusal ??= error.refusal;
+      }
     }
-  }
 
-  return { done, failed: ids.length - done, refusal };
+    return { done, failed, refusal };
+  });
 }
 
-const confirmSuggestions = authedProcedure.input(suggestionIds).mutation(({ ctx, input }) => {
+const confirmSuggestions = authedProcedure.input(suggestionIds).mutation(async ({ ctx, input }) => {
   log.info({ userId: ctx.user.id, count: input.suggestionIds.length }, "Confirming AI suggestions");
 
-  return answerSuggestions(ctx, input.suggestionIds, confirmSuggestion);
+  // A merge first would take away the food a merge into it names.
+  return answerSuggestions(ctx, await inConfirmOrder(input.suggestionIds), confirmSuggestion);
 });
 
 const dismissSuggestions = authedProcedure.input(suggestionIds).mutation(({ ctx, input }) => {

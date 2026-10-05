@@ -1259,6 +1259,32 @@ describe("IngredientsSettingsContent", () => {
     expect(mutations.confirmSuggestions).toHaveBeenCalledWith({ suggestionIds: ["s1", "s2"] });
   });
 
+  it("answers hundreds at once in one pass over the lists, not one pass each", async () => {
+    const kinds = ["merge", "parent", "distinct"] as const;
+
+    suggestions = Array.from({ length: 300 }, (_, index) =>
+      suggestion(`s${index}`, kinds[index % 3]!, `food ${index}`, "onion")
+    );
+    const ids = suggestions.map((it) => (it as { id: string }).id);
+
+    render(<IngredientsSettingsContent />);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("ingredients-suggestions-open"));
+    });
+    const shown = screen.getByRole("dialog", { name: "suggestionsTitle" });
+
+    setQueriesData.mockClear();
+    await act(async () => {
+      fireEvent.click(within(shown).getByTestId("ingredient-suggestions-confirm-all"));
+    });
+
+    expect(mutations.confirmSuggestions).toHaveBeenCalledWith({ suggestionIds: ids });
+    // Answered, they left the list at once.
+    expect(suggestions).toEqual([]);
+    // The suggestions once, then the list, the folded kinds and an open food's own read: once each.
+    expect(setQueriesData).toHaveBeenCalledTimes(4);
+  });
+
   it("opens a food's own panel from its name in the suggestions, over them", async () => {
     suggestions = [suggestion("s1", "merge", "uitjes", "onion")];
     // The list does not list uitjes, so its panel reads the food on its own.

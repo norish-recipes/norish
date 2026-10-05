@@ -77,6 +77,51 @@ export async function listSuggestions(actor: CatalogueActor): Promise<Ingredient
 }
 
 /**
+ * The order to confirm these suggestions in, so one does not take another's
+ * food away first. A merge takes its food away, and with it every suggestion
+ * naming that food, so a merge waits for the merges into its own food: in a
+ * chain "uien" into "ui" into "onion", "uien" goes first. Parents and foods
+ * of their own take nothing away and lead. Two foods suggested into each
+ * other are merged by whichever goes first; the other's suggestion goes with
+ * it. A suggestion already gone keeps its place at the end.
+ */
+export async function inConfirmOrder(suggestionIds: readonly string[]): Promise<string[]> {
+  const suggestions = await findIngredientSuggestions(suggestionIds);
+  const mergesInto = new Map<string, string[]>();
+
+  for (const suggestion of suggestions) {
+    if (suggestion.kind !== "merge" || !suggestion.target) continue;
+    const into = mergesInto.get(suggestion.target.id) ?? [];
+
+    into.push(suggestion.ingredientId);
+    mergesInto.set(suggestion.target.id, into);
+  }
+
+  // How many merges deep the merges into this food go; a loop counts once.
+  const depths = new Map<string, number>();
+  const depthOf = (ingredientId: string, seen: ReadonlySet<string>): number => {
+    const known = depths.get(ingredientId);
+
+    if (known !== undefined) return known;
+    const into = (mergesInto.get(ingredientId) ?? []).filter((id) => !seen.has(id));
+    const depth =
+      into.length === 0
+        ? 0
+        : 1 + Math.max(...into.map((id) => depthOf(id, new Set([...seen, ingredientId]))));
+
+    depths.set(ingredientId, depth);
+
+    return depth;
+  };
+  const turn = (suggestion: (typeof suggestions)[number]) =>
+    suggestion.kind === "merge" ? 1 + depthOf(suggestion.ingredientId, new Set()) : 0;
+  const ordered = [...suggestions].sort((a, b) => turn(a) - turn(b)).map((it) => it.id);
+  const found = new Set(ordered);
+
+  return [...ordered, ...suggestionIds.filter((id) => !found.has(id))];
+}
+
+/**
  * Confirm a suggestion: make the edit it proposes as the actor's own, which
  * also settles the suggestion and announces what it changed.
  */

@@ -205,19 +205,29 @@ export async function findCatalogueIngredient(
   return row ?? null;
 }
 
-/** The names of these Ingredients, by id; an id the catalogue no longer holds is left out. */
+/** How many ids one lookup names: a query takes at most 65,535 parameters. */
+const CHUNK = 1000;
+
+/**
+ * The names of these Ingredients, by id, any number at once, a thousand to
+ * a query; an id the catalogue no longer holds is left out.
+ */
 export async function findCatalogueIngredientNames(
   ids: readonly string[]
 ): Promise<Map<string, string>> {
   const unique = Array.from(new Set(ids));
+  const names = new Map<string, string>();
 
-  if (unique.length === 0) return new Map();
-  const rows = await db
-    .select({ id: ingredients.id, name: ingredients.name })
-    .from(ingredients)
-    .where(inArray(ingredients.id, unique));
+  for (let start = 0; start < unique.length; start += CHUNK) {
+    const rows = await db
+      .select({ id: ingredients.id, name: ingredients.name })
+      .from(ingredients)
+      .where(inArray(ingredients.id, unique.slice(start, start + CHUNK)));
 
-  return new Map(rows.map((row) => [row.id, row.name]));
+    for (const row of rows) names.set(row.id, row.name);
+  }
+
+  return names;
 }
 
 /**

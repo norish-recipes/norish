@@ -11,6 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
+import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
 import {
   listIngredientSuggestions,
@@ -37,6 +38,7 @@ import {
 import {
   confirmSuggestion,
   dismissSuggestion,
+  inConfirmOrder,
 } from "@norish/shared-server/ingredients/suggestions";
 
 import { createTestUser } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -543,5 +545,98 @@ describe("what a round of Ask AI picks from", () => {
 
   it("estimates nothing for a round with no foods", async () => {
     await expect(estimateReviewTokens([])).resolves.toEqual([]);
+  });
+});
+
+describe("confirming many suggestions at once", () => {
+  const testBase = new RepositoryTestBase("test_ingredient_confirm_order");
+
+  let actor: CatalogueActor;
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    const [user] = await testBase.beforeEachTest();
+
+    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    vi.mocked(isAIEnabled).mockResolvedValue(false);
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  async function food(text: string) {
+    const [resolved] = await resolveIngredients([text], { userId: actor.userId });
+
+    return resolved!.ingredientId;
+  }
+
+  async function suggest(ingredientId: string, kind: "merge" | "parent", targetId: string) {
+    await upsertIngredientSuggestion({
+      ingredientId,
+      kind,
+      targetId,
+      englishName: null,
+      considered: [],
+    });
+
+    return (await listIngredientSuggestions()).find((it) => it.ingredientId === ingredientId)!.id;
+  }
+
+  it("confirms a chain of merges from its far end, so none takes away a food another names", async () => {
+    // Unrelated words, so none is a spelling of another: kwartel into fazant into patrijs, snip under fazant.
+    const kwartel = await food("kwartel");
+    const fazant = await food("fazant");
+    const patrijs = await food("patrijs");
+    const snip = await food("snip");
+    // "fazant" into "patrijs" is listed first; confirmed first, it would take "fazant" away from the others.
+    const fazantIntoPatrijs = await suggest(fazant, "merge", patrijs);
+    const kwartelIntoFazant = await suggest(kwartel, "merge", fazant);
+    const snipUnderFazant = await suggest(snip, "parent", fazant);
+    const gone = crypto.randomUUID();
+    const ordered = await inConfirmOrder([
+      fazantIntoPatrijs,
+      kwartelIntoFazant,
+      snipUnderFazant,
+      gone,
+    ]);
+
+    expect(ordered).toEqual([snipUnderFazant, kwartelIntoFazant, fazantIntoPatrijs, gone]);
+    for (const id of ordered.slice(0, 3)) await confirmSuggestion(actor, id);
+    // Every food ended in patrijs, the parent carried along by the merge.
+    const [kwartelNow] = await resolveIngredients(["kwartel"], { userId: actor.userId });
+
+    expect(kwartelNow!.ingredientId).toBe(patrijs);
+    expect((await findIngredientAncestors([snip])).get(snip)).toEqual([patrijs]);
+  });
+
+  it("takes more ids at once than one query can name", async () => {
+    const kwartel = await food("kwartel");
+    const fazant = await food("fazant");
+    const real = await suggest(kwartel, "merge", fazant);
+    // A query takes at most 65,535 parameters; the lookups go a thousand at a time.
+    const many = [...Array.from({ length: 70_000 }, () => crypto.randomUUID()), real];
+    const ordered = await inConfirmOrder(many);
+
+    expect(ordered).toHaveLength(70_001);
+    // The one still waiting leads; the rest are gone and keep their place at the end.
+    expect(ordered[0]).toBe(real);
+    expect((await findCatalogueIngredientNames([...many, kwartel])).get(kwartel)).toBe("kwartel");
+  });
+
+  it("merges two foods suggested into each other once, the second suggestion going with the first", async () => {
+    const crackers = await food("crackers");
+    const crackertjes = await food("crackertjes");
+    const one = await suggest(crackers, "merge", crackertjes);
+    const other = await suggest(crackertjes, "merge", crackers);
+    const ordered = await inConfirmOrder([one, other]);
+
+    await confirmSuggestion(actor, ordered[0]!);
+    await expect(confirmSuggestion(actor, ordered[1]!)).rejects.toMatchObject({
+      refusal: "not-found",
+    });
   });
 });

@@ -681,9 +681,16 @@ describe("AI's suggestions", () => {
     expect(listed.map((it) => [it.kind, it.target?.name ?? null])).toEqual([["parent", "onion"]]);
   });
 
+  /** The suggestions the repository holds, found by id whatever order they are asked for in. */
+  function holding(...stored: ReturnType<typeof suggested>[]) {
+    suggestionsRepo.findIngredientSuggestions.mockImplementation(async (ids: readonly string[]) =>
+      stored.filter((it) => ids.includes(it.id))
+    );
+  }
+
   it("confirms a parent as the viewer's own edit, which settles it", async () => {
     ownedBy(ME);
-    suggestionsRepo.findIngredientSuggestions.mockResolvedValueOnce([suggested("parent")]);
+    holding(suggested("parent"));
 
     await expect(callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION] })).resolves.toEqual({
       done: 1,
@@ -697,20 +704,46 @@ describe("AI's suggestions", () => {
 
   it("confirms a merge and a food of its own the way the page's own edits do", async () => {
     ownedBy(ME);
-    suggestionsRepo.findIngredientSuggestions
-      .mockResolvedValueOnce([suggested("merge")])
-      .mockResolvedValueOnce([{ ...suggested("distinct"), id: OTHER }]);
+    holding(suggested("merge"), { ...suggested("distinct"), id: OTHER });
 
     await expect(
       callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
     ).resolves.toMatchObject({ done: 2, failed: 0 });
     expect(relocation.mergeCatalogueIngredients).toHaveBeenCalledWith(TX, UIEN, ONION);
     expect(catalogue.keepIngredientDistinct).toHaveBeenCalledWith(TX, UIEN);
+    // What both changed is announced once, together.
+    expect(ingredientsRealtime.published).toHaveLength(1);
+  });
+
+  it("confirms well over five hundred at once, and announces them together", async () => {
+    ownedBy(ME);
+    const many = Array.from({ length: 1300 }, (_, index) => ({
+      ...suggested("parent"),
+      id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+    }));
+
+    holding(...many);
+
+    await expect(
+      callerFor().confirmSuggestions({ suggestionIds: many.map((it) => it.id) })
+    ).resolves.toEqual({ done: 1300, failed: 0, refusal: null });
+    expect(relocation.setCatalogueIngredientParent).toHaveBeenCalledTimes(1300);
+    expect(ingredientsRealtime.published).toHaveLength(1);
+  });
+
+  it("counts a suggestion gone by its turn as settled, not refused", async () => {
+    holding();
+
+    await expect(callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION] })).resolves.toEqual({
+      done: 0,
+      failed: 0,
+      refusal: null,
+    });
   });
 
   it("goes on past a refused one and says why", async () => {
     ownedBy(STRANGER);
-    suggestionsRepo.findIngredientSuggestions.mockResolvedValue([suggested("parent", STRANGER)]);
+    holding(suggested("parent", STRANGER), { ...suggested("parent", STRANGER), id: OTHER });
 
     await expect(
       callerFor().confirmSuggestions({ suggestionIds: [SUGGESTION, OTHER] })
@@ -720,7 +753,7 @@ describe("AI's suggestions", () => {
   });
 
   it("dismisses a suggestion without touching the food, under the edit policy", async () => {
-    suggestionsRepo.findIngredientSuggestions.mockResolvedValueOnce([suggested("merge")]);
+    holding(suggested("merge"));
 
     await expect(
       callerFor().dismissSuggestions({ suggestionIds: [SUGGESTION] })
@@ -728,7 +761,7 @@ describe("AI's suggestions", () => {
     expect(suggestionsRepo.deleteIngredientSuggestion).toHaveBeenCalledWith(SUGGESTION);
     expect(relocation.mergeCatalogueIngredients).not.toHaveBeenCalled();
 
-    suggestionsRepo.findIngredientSuggestions.mockResolvedValueOnce([suggested("merge", STRANGER)]);
+    holding(suggested("merge", STRANGER));
     await expect(
       callerFor().dismissSuggestions({ suggestionIds: [SUGGESTION] })
     ).resolves.toMatchObject({ done: 0, refusal: "forbidden" });

@@ -14,6 +14,7 @@ import type {
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 
 import type { IngredientItem } from "./ingredient-row";
+import type { RowPatch } from "./use-ingredient-cache";
 import { useIngredientCache } from "./use-ingredient-cache";
 
 /** One suggestion waiting on the viewer, as the server lists it: only ones they may answer. */
@@ -74,18 +75,22 @@ export function useIngredientSuggestions() {
       const ids = new Set(suggestionIds);
       const answered = suggestions.filter((suggestion) => ids.has(suggestion.id));
 
-      // The answer shows now; the server's own word on it follows.
-      cache.dropSuggestions(ids);
+      // The answer shows now; the server's own word on it follows. Every
+      // row's change is worked out first and the lists rewritten once.
+      const patches = new Map<string, RowPatch>();
+
       for (const suggestion of answered) {
         if (accepted && suggestion.kind === "merge") {
-          cache.dropRow(suggestion.ingredient.id);
+          patches.set(suggestion.ingredient.id, () => null);
         } else if (accepted) {
-          cache.patchRow(suggestion.ingredient.id, confirmed(suggestion));
+          patches.set(suggestion.ingredient.id, confirmed(suggestion));
         } else if (suggestion.kind === "parent" && suggestion.source === "words") {
           // A dismissed parent the words gave comes off again.
-          cache.patchRow(suggestion.ingredient.id, (item) => ({ ...item, parent: null }));
+          patches.set(suggestion.ingredient.id, (item) => ({ ...item, parent: null }));
         }
       }
+      cache.dropSuggestions(ids);
+      if (patches.size > 0) cache.patchRowsById(patches);
 
       try {
         const result = await mutation.mutateAsync({ suggestionIds });

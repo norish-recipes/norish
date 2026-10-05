@@ -20,7 +20,7 @@ interface ListPage {
 type ListData = { pages: ListPage[]; pageParams: unknown[] } | ListPage;
 
 /** What a patch does to one row: a new version of it, or null to drop it. */
-type RowPatch = (item: IngredientItem) => IngredientItem | null;
+export type RowPatch = (item: IngredientItem) => IngredientItem | null;
 
 /**
  * The Ingredients page's cache, patched in place so an edit shows the moment
@@ -74,6 +74,17 @@ export function useIngredientCache() {
       /** Take one food off every list: merged away or deleted. */
       dropRow: (ingredientId: string) =>
         patchRows((item) => (item.id === ingredientId ? null : item)),
+      /**
+       * Change many foods in one pass over every list, each by its own patch
+       * (null drops it): a thousand answers at once rewrite the lists once,
+       * not a thousand times.
+       */
+      patchRowsById: (patches: ReadonlyMap<string, RowPatch>) =>
+        patchRows((item) => {
+          const patch = patches.get(item.id);
+
+          return patch ? patch(item) : item;
+        }),
       /** Take answered suggestions off the list waiting on a person. */
       dropSuggestions: (suggestionIds: ReadonlySet<string>) =>
         queryClient.setQueriesData<IngredientSuggestion[]>(

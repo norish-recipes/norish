@@ -101,14 +101,28 @@ export async function listIngredientSuggestions(): Promise<StoredIngredientSugge
   return rows.map(stored);
 }
 
-/** These suggestions, where they are still waiting; one already settled is left out. */
+/** How many ids one lookup names: a query takes at most 65,535 parameters. */
+const CHUNK = 1000;
+
+/**
+ * These suggestions, where they are still waiting; one already settled is
+ * left out. Any number at once, a thousand to a query: Confirm all names
+ * every suggestion a round over the catalogue left.
+ */
 export async function findIngredientSuggestions(
   ids: readonly string[]
 ): Promise<StoredIngredientSuggestion[]> {
-  if (ids.length === 0) return [];
-  const rows = await selectSuggestions().where(inArray(ingredientSuggestions.id, [...ids]));
+  const found: StoredIngredientSuggestion[] = [];
 
-  return rows.map(stored);
+  for (let start = 0; start < ids.length; start += CHUNK) {
+    const rows = await selectSuggestions().where(
+      inArray(ingredientSuggestions.id, ids.slice(start, start + CHUNK))
+    );
+
+    found.push(...rows.map(stored));
+  }
+
+  return found;
 }
 
 /** Drop a suggestion: dismissed, or its Ingredient was settled another way. */

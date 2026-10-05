@@ -7,6 +7,8 @@
  * which Ingredients an edit touched. Production announces over realtime;
  * tests swap in an in-memory publisher with `publishIngredientChangesTo`.
  */
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 
@@ -34,9 +36,43 @@ export const realtimeIngredientChanges: IngredientChangePublisher = {
 
 let publisher: IngredientChangePublisher = realtimeIngredientChanges;
 
-/** The publisher edits announce through. */
+/**
+ * The changes a run of edits holds back, per async call tree. On `globalThis`
+ * under a `Symbol.for` key, as the model-use ledger is, so a bundler that
+ * copies this module into two chunks still holds them in one place.
+ */
+const HELD_KEY = Symbol.for("norish:ingredient-changes-held");
+const g = globalThis as { [HELD_KEY]?: AsyncLocalStorage<Set<string>> };
+const held: AsyncLocalStorage<Set<string>> =
+  g[HELD_KEY] ?? (g[HELD_KEY] = new AsyncLocalStorage<Set<string>>());
+
+/** The publisher edits announce through: inside `announcingTogether`, one that holds the changes back. */
 export function ingredientChanges(): IngredientChangePublisher {
-  return publisher;
+  const batch = held.getStore();
+
+  if (!batch) return publisher;
+
+  return {
+    async changed(ingredientIds) {
+      for (const id of ingredientIds) batch.add(id);
+    },
+  };
+}
+
+/**
+ * Run many edits as one: what each announces is held back and announced
+ * once, together, when they are all done, so a thousand suggestions
+ * confirmed at once are one refetch on every client rather than a thousand.
+ * Other requests meanwhile announce as ever.
+ */
+export async function announcingTogether<T>(run: () => Promise<T>): Promise<T> {
+  const batch = new Set<string>();
+
+  try {
+    return await held.run(batch, run);
+  } finally {
+    if (batch.size > 0) await publisher.changed([...batch]);
+  }
 }
 
 /** Announce through `next` from now on; answers a function that puts the previous one back. */
