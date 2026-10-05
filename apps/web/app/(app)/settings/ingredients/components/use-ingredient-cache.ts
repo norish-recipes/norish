@@ -5,7 +5,6 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { IngredientItem } from "./ingredient-row";
-import type { IngredientSuggestion } from "./use-ingredient-suggestions";
 
 /** A page of the list as the infinite query holds it. */
 interface ListPage {
@@ -85,9 +84,12 @@ export function useIngredientCache() {
 
           return patch ? patch(item) : item;
         }),
-      /** Take answered suggestions off the list waiting on a person. */
+      /**
+       * Take answered suggestions off the list waiting on a person. Only their
+       * ids are read, so this file needn't import the hook that lists them.
+       */
       dropSuggestions: (suggestionIds: ReadonlySet<string>) =>
-        queryClient.setQueriesData<IngredientSuggestion[]>(
+        queryClient.setQueriesData<Array<{ id: string }>>(
           { queryKey: trpc.ingredients.suggestions.pathKey() },
           (list) => (list ? list.filter((it) => !suggestionIds.has(it.id)) : list)
         ),
