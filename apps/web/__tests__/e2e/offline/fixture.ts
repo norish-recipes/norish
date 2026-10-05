@@ -26,6 +26,8 @@ export const SEEDED_RECIPE_IMAGE = `/recipes/${SEEDED_RECIPE_ID}/primary.png`;
 export const SEEDED_RECIPE_DISH_COLOR = "#b05a2a";
 export const SEEDED_GROCERY_NAME = "Warm Set Oat Milk";
 export const SEEDED_NOTE_TITLE = "Warm Set Leftovers";
+/** A food the household keeps, so the Pantry has a row offline. */
+export const SEEDED_PANTRY_FOOD = "warm set honey";
 export const UNWARMED_RECIPE_ID = "44444444-4444-4444-8444-444444444444";
 
 type BackendState = "live" | "stopped" | "unresponsive";
@@ -65,6 +67,24 @@ async function seed(stack: ProductionStack): Promise<void> {
     await database.query(`delete from planned_items where user_id = $1`, [userA.id]);
     await database.query(`delete from groceries where user_id = $1`, [userA.id]);
     await database.query(`delete from recipes where user_id = $1`, [userA.id]);
+    await database.query(`delete from pantry_ingredients where user_id = $1`, [userA.id]);
+    const food = await database.query<{ id: string }>(
+      `insert into ingredients (name) values ($1)
+       on conflict (lower(name)) do update set name = excluded.name
+       returning id`,
+      [SEEDED_PANTRY_FOOD]
+    );
+    const alias = await database.query<{ id: string }>(
+      `insert into ingredient_aliases (text, fold, ingredient_id) values ($1, $1, $2)
+       on conflict (fold) do update set text = ingredient_aliases.text
+       returning id`,
+      [SEEDED_PANTRY_FOOD, food.rows[0]!.id]
+    );
+
+    await database.query(
+      `insert into pantry_ingredients (user_id, ingredient_id, ingredient_alias_id) values ($1, $2, $3)`,
+      [userA.id, food.rows[0]!.id, alias.rows[0]!.id]
+    );
     await database.query(
       `insert into recipes (id, user_id, name, description, image, dish_color, servings)
        values ($1, $2, $3, 'Seeded for the Offline browser project.', $4, $5, 4)`,

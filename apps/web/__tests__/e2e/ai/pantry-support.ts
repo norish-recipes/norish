@@ -9,7 +9,48 @@ export function resetPantryScenario(): Promise<void> {
   return withDatabase(async (database) => {
     await database.query("delete from recipes");
     await database.query("delete from groceries");
+    await database.query("delete from recurring_groceries");
     await database.query("delete from ingredients");
+  });
+}
+
+/**
+ * A Store the household sends a food to: the store preference a grocery
+ * added without a Store is filed by. Answers with the Store's id.
+ */
+export function seedStorePreference(storeName: string, ingredientName: string): Promise<string> {
+  return withDatabase(async (database) => {
+    const owner = (
+      await database.query<{ id: string }>(`select id from "user" order by "createdAt" asc limit 1`)
+    ).rows[0];
+
+    if (!owner) throw new Error("The harness has provisioned no accounts");
+    await database.query(`delete from stores where name = $1`, [storeName]);
+    const store = await database.query<{ id: string }>(
+      `insert into stores (user_id, name) values ($1, $2) returning id`,
+      [owner.id, storeName]
+    );
+
+    await database.query(
+      `insert into ingredient_store_preferences (user_id, ingredient_id, store_id)
+       select $1, id, $3 from ingredients where lower(name) = lower($2)`,
+      [owner.id, ingredientName, store.rows[0]!.id]
+    );
+
+    return store.rows[0]!.id;
+  });
+}
+
+/** The groceries as the database has them: each one's name, Store and tick. */
+export function readGroceries(): Promise<
+  Array<{ name: string; storeId: string | null; isDone: boolean }>
+> {
+  return withDatabase(async (database) => {
+    const rows = await database.query<{ name: string; store_id: string | null; is_done: boolean }>(
+      `select name, store_id, is_done from groceries order by name`
+    );
+
+    return rows.rows.map((row) => ({ name: row.name, storeId: row.store_id, isDone: row.is_done }));
   });
 }
 

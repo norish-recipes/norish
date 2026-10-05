@@ -82,17 +82,13 @@ test.afterAll(async () => {
   await page?.context().close();
 });
 
-/** The Pantry panel, opened from the groceries page's menu. */
+/** The Pantry page, reached from the groceries page's switch. */
 async function openPantry(): Promise<Locator> {
   await page.goto("/groceries");
-  await page.getByRole("button", { name: "View Mode" }).click();
-  await page.getByRole("menuitem", { name: "Pantry" }).click();
+  await page.getByRole("link", { name: "Pantry" }).click();
+  await expect(page).toHaveURL(/\/groceries\/pantry$/);
 
-  const panel = page.getByRole("dialog", { name: "Pantry" });
-
-  await expect(panel).toBeVisible();
-
-  return panel;
+  return page.locator("main");
 }
 
 /** The Ingredients page's row for an Ingredient, by its own name. */

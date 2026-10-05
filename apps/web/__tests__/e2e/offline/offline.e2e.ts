@@ -11,6 +11,7 @@ import {
   expect,
   SEEDED_GROCERY_NAME,
   SEEDED_NOTE_TITLE,
+  SEEDED_PANTRY_FOOD,
   SEEDED_RECIPE_ID,
   SEEDED_RECIPE_IMAGE,
   SEEDED_RECIPE_NAME,
@@ -437,6 +438,29 @@ test("a link copied while the backend is down is offered, and Import is Queued",
   });
 
   // …and drains once the server is back, leaving the queue as it was found.
+  await offline.transition("live");
+  await page.goto("/");
+  await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
+});
+
+test("the Pantry boots from a cold offline start, and Put on the list is Queued", async () => {
+  await offline.transition("stopped");
+
+  // An address never visited in this profile: the offline shell boots it.
+  await page.goto("/groceries/pantry");
+  const row = page.locator(`[data-pantry-ingredient="${SEEDED_PANTRY_FOOD}"]`);
+
+  await expect(row).toBeVisible();
+  await row.getByRole("button", { name: "Put on the list" }).click();
+  // The kept food is handled on this screen before the server has heard of it.
+  await expect(row.getByTestId("on-the-list")).toBeVisible();
+  await expect.poll(() => readOutbox(page)).toHaveLength(1);
+  expect((await readOutbox(page))[0]).toMatchObject({
+    path: "groceries.create",
+    status: "pending",
+  });
+
+  // Drained once the server is back, leaving the queue as it was found.
   await offline.transition("live");
   await page.goto("/");
   await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
