@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
-import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, NutritionBody } from "@/components/recipes/readonly-nutrition";
 import { useWorkedOutNutrition } from "@/hooks/recipes/use-worked-out-nutrition";

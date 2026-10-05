@@ -15,7 +15,13 @@ import {
   listPantryIngredientsByUserIds,
   listPantrySuggestions,
 } from "@norish/db/repositories/pantry";
-import { ingredients, pantryIngredients, recipeIngredients, recipes, users } from "@norish/db/schema";
+import {
+  ingredients,
+  pantryIngredients,
+  recipeIngredients,
+  recipes,
+  users,
+} from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
 import { createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
@@ -271,7 +277,11 @@ describe("pantry ingredients", () => {
     });
 
     it("never counts a line that names no food", async () => {
-      await recipe(userId, ["# For the sauce", "[pizza dough](id:7e300351-13a4-4bfb-8b40-7a1a5a5f8d01)", "basil"]);
+      await recipe(userId, [
+        "# For the sauce",
+        "[pizza dough](id:7e300351-13a4-4bfb-8b40-7a1a5a5f8d01)",
+        "basil",
+      ]);
 
       expect(await offered([userId])).toEqual([["basil", 1]]);
     });

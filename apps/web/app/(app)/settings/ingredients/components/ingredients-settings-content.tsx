@@ -3,6 +3,8 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
+import { useIngredientSuggestions } from "@/components/ingredients/use-ingredient-suggestions";
 import { AIButton } from "@/components/shared/ai-button";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -31,10 +33,8 @@ import {
   IngredientFiltersPanel,
 } from "./ingredient-filters-panel";
 import { IngredientList } from "./ingredient-list";
-import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IngredientSearch } from "./ingredient-search";
 import { SuggestionsPanel } from "./suggestions-panel";
-import { useIngredientSuggestions } from "@/components/ingredients/use-ingredient-suggestions";
 import { useIngredientTree } from "./use-ingredient-tree";
 
 /**
