@@ -16,6 +16,17 @@ vi.mock("@/hooks/recipes", () => ({
   useRecipesMutations: () => ({ importRecipe: importRecipeMock }),
 }));
 
+// The action toast closes itself; here it is the toast it asks for, with its action.
+vi.mock("@/lib/ui/action-toast", () => ({
+  showActionToast: (
+    title: string,
+    { action, ...options }: { action: { label: string; onPress: () => void } }
+  ) =>
+    toastMock(title, {
+      ...options,
+      actionProps: { children: action.label, onPress: action.onPress },
+    }),
+}));
 vi.mock("@heroui/react", () => ({
   toast: Object.assign(toastMock, { close: toastCloseMock }),
 }));
@@ -87,7 +98,6 @@ describe("ClipboardImportPrompt", () => {
       options.actionProps.onPress();
     });
 
-    expect(toastCloseMock).toHaveBeenCalledWith("toast-key");
     expect(importRecipeMock).toHaveBeenCalledWith(LINK);
     // The import is announced in place; nothing here navigates.
     expect(toastMock).toHaveBeenCalledTimes(2);

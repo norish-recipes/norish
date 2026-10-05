@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { readClipboardUrl } from "@/lib/clipboard-url";
+import { showActionToast } from "@/lib/ui/action-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -81,15 +82,15 @@ export default function ClipboardImportPrompt() {
 
         rememberOffered(url);
         const { t, tActions } = latestRef.current;
-        const key = toast(t("title"), {
+
+        showActionToast(t("title"), {
           description: <span className="line-clamp-2 break-all">{url}</span>,
           timeout: PROMPT_TIMEOUT_MS,
-          actionProps: {
-            children: tActions("import"),
+          action: {
+            label: tActions("import"),
             onPress: () => {
               const { importRecipe, tPaste } = latestRef.current;
 
-              toast.close(key);
               importRecipe(url);
               toast(tPaste("importing"), { description: tPaste("inProgress"), variant: "default" });
             },

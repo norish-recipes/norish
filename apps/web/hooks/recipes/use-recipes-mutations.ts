@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useWarmSet } from "@/hooks/use-warm-set";
+import { showActionToast } from "@/lib/ui/action-toast";
 import { isQueuedForReplay, showQueuedOfflineToast } from "@/lib/ui/queued-offline-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { RecipesMutationsResult } from "@norish/shared-react/hooks";
@@ -32,9 +32,9 @@ export function useRecipesMutations(): RecipesMutationsResult {
   // Importing a URL the household already holds is an answer, not a failure:
   // say so, and offer the recipe the import was reaching for.
   const showAlreadyExistsToast = (recipeId: string): void => {
-    toast(tImport("alreadyExists"), {
-      actionProps: {
-        children: tImport("openExisting"),
+    showActionToast(tImport("alreadyExists"), {
+      action: {
+        label: tImport("openExisting"),
         onPress: () => router.push(`/recipes/${recipeId}`),
       },
     });

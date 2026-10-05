@@ -26,7 +26,9 @@ vi.mock("@tanstack/react-query", async () => {
 });
 
 vi.mock("@heroui/react", () => ({
-  toast: vi.fn(),
+  toast: Object.assign(vi.fn(), { close: vi.fn() }),
+  // The already-exists toast carries its Open action as a button.
+  Button: () => null,
 }));
 
 vi.mock("next-intl", () => ({
