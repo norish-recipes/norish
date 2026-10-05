@@ -9,7 +9,9 @@
     "manageStores": "Winkels beheren",
     "storeViewOptions": "Winkelweergave opties",
     "groupIngredients": "Groepeer ingrediënten",
-    "pantry": "Voorraadkast"
+    "pantry": "Voorraadkast",
+    "list": "Lijst",
+    "views": "Boodschappenweergaven"
   },
   "empty": {
     "title": "Je boodschappenlijst wacht op je",
@@ -85,13 +87,26 @@
     "aisleDuplicate": "Deze winkel heeft al een gangpad met die naam"
   },
   "pantry": {
-    "title": "Voorraadkast",
-    "hint": "Wat je al in huis hebt. Ingrediënten uit je voorraadkast blijven van de lijst als je een recept toevoegt.",
+    "hint": "Wat je altijd in huis hebt. Als je een recept aan je boodschappen toevoegt, komt dit niet op de lijst.",
     "empty": "Nog niets in je voorraadkast",
-    "namePlaceholder": "bijv. Olijfolie",
+    "unavailable": "Je voorraadkast kon niet worden gelezen. Er is niets veranderd; probeer het opnieuw als je weer online bent.",
+    "fieldLabel": "Zoek of voeg een product toe",
+    "fieldPlaceholder": "Zoek of voeg toe, bijv. olijfolie",
     "add": "Toevoegen aan voorraadkast",
-    "remove": "Verwijderen uit voorraadkast",
-    "duplicate": "Dat zit al in je voorraadkast"
+    "duplicate": "Dat zit al in je voorraadkast",
+    "noMatch": "Niets in je voorraadkast heet zo",
+    "fromCatalogue": "Product toevoegen",
+    "addFood": "{name} toevoegen aan je voorraadkast",
+    "putOnTheList": "Op de lijst zetten",
+    "onTheList": "Op de lijst",
+    "putOnTheListToast": "{name} staat op de lijst",
+    "undo": "Ongedaan maken",
+    "keepFailed": "{name} kon niet aan je voorraadkast worden toegevoegd",
+    "fromYourRecipes": "Uit je recepten",
+    "fromYourRecipesHint": "Wat je recepten het vaakst gebruiken. Voeg toe wat je altijd in huis hebt.",
+    "inRecipes": "{count, plural, one {in # recept} other {in # recepten}}",
+    "showMore": "Meer tonen",
+    "inYourPantry": "In je voorraadkast"
   },
   "panel": {
     "addTitle": "Boodschap toevoegen",
@@ -132,7 +147,9 @@
     "addToGroceries": "Toevoegen aan boodschappen",
     "aisle": "Gangpad",
     "noAisle": "Geen gangpad",
-    "inPantry": "In je voorraadkast"
+    "inPantry": "In je voorraadkast",
+    "weKeepThis": "Hebben we altijd",
+    "keepFailed": "Dat kon niet aan je voorraadkast worden toegevoegd"
   },
   "picker": {
     "unlink": "Product ontkoppelen",

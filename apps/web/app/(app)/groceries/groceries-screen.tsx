@@ -1,6 +1,8 @@
 import type { GroceryGroupSimilar, GroceryViewMode } from "@/lib/grocery-preferences";
 
+import type { GroceriesView } from "./components/groceries-header";
 import { GroceriesPage as GroceriesPageContent } from "./components/groceries-page";
+import { PantryPage } from "./components/pantry-page";
 import { GroceriesContextProvider } from "./context";
 import { StoresContextProvider } from "./stores-context";
 
@@ -12,9 +14,11 @@ import { StoresContextProvider } from "./stores-context";
  * read them itself.
  */
 export function GroceriesScreen({
+  view = "list",
   initialViewMode,
   initialGroupSimilar,
 }: {
+  view?: GroceriesView;
   initialViewMode?: GroceryViewMode;
   initialGroupSimilar?: GroceryGroupSimilar;
 }) {
@@ -24,7 +28,7 @@ export function GroceriesScreen({
         initialGroupSimilar={initialGroupSimilar}
         initialViewMode={initialViewMode}
       >
-        <GroceriesPageContent />
+        {view === "pantry" ? <PantryPage /> : <GroceriesPageContent />}
       </GroceriesContextProvider>
     </StoresContextProvider>
   );

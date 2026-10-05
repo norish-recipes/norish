@@ -9,7 +9,9 @@
     "manageStores": "Gerenciar lojas",
     "storeViewOptions": "Opções de visualização por loja",
     "groupIngredients": "Agrupar ingredientes",
-    "pantry": "Despensa"
+    "pantry": "Despensa",
+    "list": "Lista",
+    "views": "Visualizações de compras"
   },
   "empty": {
     "title": "Sua lista de compras espera por você",
@@ -85,13 +87,26 @@
     "aisleDuplicate": "Esta loja já tem um corredor com esse nome"
   },
   "pantry": {
-    "title": "Despensa",
-    "hint": "O que você já tem em casa. Ingredientes da sua despensa ficam fora da lista quando você adiciona uma receita.",
+    "hint": "Os alimentos que você sempre tem em casa. Ao adicionar uma receita às compras, eles ficam fora da lista.",
     "empty": "Nada na sua despensa ainda",
-    "namePlaceholder": "ex.: Azeite",
+    "unavailable": "Não foi possível ler sua despensa. Nada mudou; tente de novo quando estiver online.",
+    "fieldLabel": "Buscar ou adicionar um alimento",
+    "fieldPlaceholder": "Buscar ou adicionar, ex.: azeite",
     "add": "Adicionar à despensa",
-    "remove": "Remover da despensa",
-    "duplicate": "Isso já está na sua despensa"
+    "duplicate": "Isso já está na sua despensa",
+    "noMatch": "Nada na sua despensa tem esse nome",
+    "fromCatalogue": "Adicionar um alimento",
+    "addFood": "Adicionar {name} à despensa",
+    "putOnTheList": "Pôr na lista",
+    "onTheList": "Na lista",
+    "putOnTheListToast": "{name} está na lista",
+    "undo": "Desfazer",
+    "keepFailed": "Não foi possível adicionar {name} à despensa",
+    "fromYourRecipes": "Das suas receitas",
+    "fromYourRecipesHint": "Os alimentos que suas receitas mais usam. Adicione os que você sempre tem em casa.",
+    "inRecipes": "{count, plural, one {em # receita} other {em # receitas}}",
+    "showMore": "Mostrar mais",
+    "inYourPantry": "Na sua despensa"
   },
   "panel": {
     "addTitle": "Adicionar item",
@@ -132,7 +147,9 @@
     "addToGroceries": "Adicionar à lista de compras",
     "aisle": "Corredor",
     "noAisle": "Sem corredor",
-    "inPantry": "Na sua despensa"
+    "inPantry": "Na sua despensa",
+    "weKeepThis": "Sempre temos",
+    "keepFailed": "Não foi possível adicionar à despensa"
   },
   "picker": {
     "unlink": "Desvincular produto",

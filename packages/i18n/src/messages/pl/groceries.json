@@ -9,7 +9,9 @@
     "manageStores": "Zarządzaj sklepami",
     "storeViewOptions": "Opcje widoku sklepu",
     "groupIngredients": "Grupuj składniki",
-    "pantry": "Spiżarnia"
+    "pantry": "Spiżarnia",
+    "list": "Lista",
+    "views": "Widoki zakupów"
   },
   "empty": {
     "title": "Twoja lista zakupów czeka",
@@ -85,13 +87,26 @@
     "aisleDuplicate": "Ten sklep ma już alejkę o tej nazwie"
   },
   "pantry": {
-    "title": "Spiżarnia",
-    "hint": "To, co już masz w domu. Składniki ze spiżarni nie trafiają na listę, gdy dodajesz przepis.",
+    "hint": "Produkty, które zawsze masz w domu. Gdy dodajesz przepis do zakupów, nie trafiają na listę.",
     "empty": "W spiżarni nie ma jeszcze niczego",
-    "namePlaceholder": "np. Oliwa z oliwek",
+    "unavailable": "Nie udało się odczytać spiżarni. Nic się nie zmieniło; spróbuj ponownie po powrocie do sieci.",
+    "fieldLabel": "Znajdź lub dodaj produkt",
+    "fieldPlaceholder": "Znajdź lub dodaj, np. oliwa z oliwek",
     "add": "Dodaj do spiżarni",
-    "remove": "Usuń ze spiżarni",
-    "duplicate": "To już jest w Twojej spiżarni"
+    "duplicate": "To już jest w Twojej spiżarni",
+    "noMatch": "Nic w spiżarni nie nazywa się tak",
+    "fromCatalogue": "Dodaj produkt",
+    "addFood": "Dodaj {name} do spiżarni",
+    "putOnTheList": "Dodaj do listy",
+    "onTheList": "Na liście",
+    "putOnTheListToast": "{name} jest na liście",
+    "undo": "Cofnij",
+    "keepFailed": "Nie udało się dodać {name} do spiżarni",
+    "fromYourRecipes": "Z Twoich przepisów",
+    "fromYourRecipesHint": "Produkty najczęściej używane w Twoich przepisach. Dodaj te, które zawsze masz w domu.",
+    "inRecipes": "{count, plural, one {w # przepisie} few {w # przepisach} many {w # przepisach} other {w # przepisu}}",
+    "showMore": "Pokaż więcej",
+    "inYourPantry": "W Twojej spiżarni"
   },
   "panel": {
     "addTitle": "Dodaj zakup",
@@ -132,7 +147,9 @@
     "addToGroceries": "Dodaj do zakupów",
     "aisle": "Alejka",
     "noAisle": "Bez alejki",
-    "inPantry": "W Twojej spiżarni"
+    "inPantry": "W Twojej spiżarni",
+    "weKeepThis": "Zawsze to mamy",
+    "keepFailed": "Nie udało się dodać do spiżarni"
   },
   "picker": {
     "unlink": "Odłącz produkt",

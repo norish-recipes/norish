@@ -9,7 +9,9 @@
     "manageStores": "Gérer les magasins",
     "storeViewOptions": "Options d'affichage par magasin",
     "groupIngredients": "Grouper les ingrédients",
-    "pantry": "Garde-manger"
+    "pantry": "Garde-manger",
+    "list": "Liste",
+    "views": "Vues des courses"
   },
   "empty": {
     "title": "Votre liste de courses vous attend",
@@ -85,13 +87,26 @@
     "aisleDuplicate": "Ce magasin a déjà un rayon portant ce nom"
   },
   "pantry": {
-    "title": "Garde-manger",
-    "hint": "Ce que vous avez déjà chez vous. Les ingrédients de votre garde-manger ne sont pas ajoutés à la liste quand vous ajoutez une recette.",
+    "hint": "Les aliments que vous avez toujours chez vous. Quand vous ajoutez une recette aux courses, ils restent hors de la liste.",
     "empty": "Rien dans votre garde-manger pour l'instant",
-    "namePlaceholder": "p. ex. Huile d'olive",
+    "unavailable": "Votre garde-manger n'a pas pu être lu. Rien n'a changé ; réessayez une fois de retour en ligne.",
+    "fieldLabel": "Chercher ou ajouter un aliment",
+    "fieldPlaceholder": "Chercher ou ajouter, p. ex. huile d'olive",
     "add": "Ajouter au garde-manger",
-    "remove": "Retirer du garde-manger",
-    "duplicate": "C'est déjà dans votre garde-manger"
+    "duplicate": "C'est déjà dans votre garde-manger",
+    "noMatch": "Rien dans votre garde-manger ne porte ce nom",
+    "fromCatalogue": "Ajouter un aliment",
+    "addFood": "Ajouter {name} au garde-manger",
+    "putOnTheList": "Mettre sur la liste",
+    "onTheList": "Sur la liste",
+    "putOnTheListToast": "{name} est sur la liste",
+    "undo": "Annuler",
+    "keepFailed": "{name} n'a pas pu être ajouté au garde-manger",
+    "fromYourRecipes": "D'après vos recettes",
+    "fromYourRecipesHint": "Les aliments que vos recettes utilisent le plus. Ajoutez ceux que vous avez toujours.",
+    "inRecipes": "{count, plural, one {dans # recette} other {dans # recettes}}",
+    "showMore": "Afficher plus",
+    "inYourPantry": "Dans votre garde-manger"
   },
   "panel": {
     "addTitle": "Ajouter un article",
@@ -132,7 +147,9 @@
     "addToGroceries": "Ajouter aux courses",
     "aisle": "Rayon",
     "noAisle": "Aucun rayon",
-    "inPantry": "Dans votre garde-manger"
+    "inPantry": "Dans votre garde-manger",
+    "weKeepThis": "On en a toujours",
+    "keepFailed": "Impossible de l'ajouter au garde-manger"
   },
   "picker": {
     "unlink": "Dissocier le produit",

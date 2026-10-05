@@ -9,7 +9,9 @@
     "manageStores": "Hallinnoi kauppoja",
     "storeViewOptions": "Kauppanäkymän asetukset",
     "groupIngredients": "Ryhmittele ainesosat",
-    "pantry": "Ruokakomero"
+    "pantry": "Ruokakomero",
+    "list": "Lista",
+    "views": "Ostoslistan näkymät"
   },
   "empty": {
     "title": "Ostoslistasi odottaa",
@@ -85,13 +87,26 @@
     "aisleDuplicate": "Tässä kaupassa on jo samanniminen osasto"
   },
   "pantry": {
-    "title": "Ruokakomero",
-    "hint": "Mitä sinulla on jo kotona. Ruokakomerossa olevia ainesosia ei lisätä listalle, kun lisäät reseptin.",
+    "hint": "Ruoat, joita teillä on aina kotona. Kun lisäät reseptin ostoksiin, ne jäävät pois listalta.",
     "empty": "Ruokakomerossa ei ole vielä mitään",
-    "namePlaceholder": "esim. oliiviöljy",
+    "unavailable": "Ruokakomeroa ei voitu lukea. Mikään ei muuttunut; yritä uudelleen, kun olet taas verkossa.",
+    "fieldLabel": "Etsi tai lisää ruoka",
+    "fieldPlaceholder": "Etsi tai lisää, esim. oliiviöljy",
     "add": "Lisää ruokakomeroon",
-    "remove": "Poista ruokakomerosta",
-    "duplicate": "Tämä on jo ruokakomerossasi"
+    "duplicate": "Tämä on jo ruokakomerossasi",
+    "noMatch": "Ruokakomerossa ei ole sen nimistä",
+    "fromCatalogue": "Lisää ruoka",
+    "addFood": "Lisää {name} ruokakomeroon",
+    "putOnTheList": "Lisää listalle",
+    "onTheList": "Listalla",
+    "putOnTheListToast": "{name} on listalla",
+    "undo": "Kumoa",
+    "keepFailed": "Kohdetta {name} ei voitu lisätä ruokakomeroon",
+    "fromYourRecipes": "Resepteistäsi",
+    "fromYourRecipesHint": "Ruoat, joita reseptisi käyttävät eniten. Lisää ne, joita teillä on aina kotona.",
+    "inRecipes": "{count, plural, one {# reseptissä} other {# reseptissä}}",
+    "showMore": "Näytä lisää",
+    "inYourPantry": "Ruokakomerossasi"
   },
   "panel": {
     "addTitle": "Lisää ostos",
@@ -132,7 +147,9 @@
     "addToGroceries": "Lisää ostoslistalle",
     "aisle": "Osasto",
     "noAisle": "Ei osastoa",
-    "inPantry": "Ruokakomerossasi"
+    "inPantry": "Ruokakomerossasi",
+    "weKeepThis": "Tätä on aina",
+    "keepFailed": "Sitä ei voitu lisätä ruokakomeroon"
   },
   "picker": {
     "unlink": "Poista tuotelinkitys",

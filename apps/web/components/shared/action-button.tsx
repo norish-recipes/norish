@@ -93,6 +93,8 @@ export function ActionButton({
 type IconActionButtonProps = Omit<ButtonProps, "aria-label" | "children" | "isIconOnly"> & {
   action: ActionKind;
   label: string;
+  /** An icon that says more than the action's own, where one does. */
+  icon?: ActionIcon;
   tooltipPlacement?: "top" | "bottom" | "left" | "right";
 };
 
@@ -100,12 +102,13 @@ export function IconActionButton({
   action,
   className,
   label,
+  icon,
   tooltipPlacement = "top",
   variant,
   ...props
 }: IconActionButtonProps) {
   const config = ACTION_CONFIG[action];
-  const Icon = config.icon;
+  const Icon = icon ?? config.icon;
   const portalContainer = usePanelPortalContainer();
 
   return (

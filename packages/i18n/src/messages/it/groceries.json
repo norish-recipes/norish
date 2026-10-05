@@ -9,7 +9,9 @@
     "manageStores": "Gestisci negozi",
     "storeViewOptions": "Opzioni vista negozio",
     "groupIngredients": "Raggruppa ingredienti",
-    "pantry": "Dispensa"
+    "pantry": "Dispensa",
+    "list": "Lista",
+    "views": "Viste della spesa"
   },
   "empty": {
     "title": "La tua lista della spesa ti aspetta",
@@ -85,13 +87,26 @@
     "aisleDuplicate": "Questo negozio ha già una corsia con quel nome"
   },
   "pantry": {
-    "title": "Dispensa",
-    "hint": "Quello che hai già in casa. Gli ingredienti nella dispensa restano fuori dalla lista quando aggiungi una ricetta.",
+    "hint": "Gli alimenti che tieni sempre in casa. Quando aggiungi una ricetta alla spesa, restano fuori dalla lista.",
     "empty": "Ancora niente nella dispensa",
-    "namePlaceholder": "es. Olio d'oliva",
+    "unavailable": "Impossibile leggere la dispensa. Non è cambiato nulla; riprova quando torni online.",
+    "fieldLabel": "Cerca o aggiungi un alimento",
+    "fieldPlaceholder": "Cerca o aggiungi, es. olio d'oliva",
     "add": "Aggiungi alla dispensa",
-    "remove": "Rimuovi dalla dispensa",
-    "duplicate": "È già nella tua dispensa"
+    "duplicate": "È già nella tua dispensa",
+    "noMatch": "Niente nella dispensa si chiama così",
+    "fromCatalogue": "Aggiungi un alimento",
+    "addFood": "Aggiungi {name} alla dispensa",
+    "putOnTheList": "Metti in lista",
+    "onTheList": "In lista",
+    "putOnTheListToast": "{name} è in lista",
+    "undo": "Annulla",
+    "keepFailed": "Impossibile aggiungere {name} alla dispensa",
+    "fromYourRecipes": "Dalle tue ricette",
+    "fromYourRecipesHint": "Gli alimenti più usati nelle tue ricette. Aggiungi quelli che hai sempre in casa.",
+    "inRecipes": "{count, plural, one {in # ricetta} other {in # ricette}}",
+    "showMore": "Mostra altri",
+    "inYourPantry": "Nella tua dispensa"
   },
   "panel": {
     "addTitle": "Aggiungi articolo",
@@ -132,7 +147,9 @@
     "addToGroceries": "Aggiungi alla spesa",
     "aisle": "Corsia",
     "noAisle": "Nessuna corsia",
-    "inPantry": "Nella tua dispensa"
+    "inPantry": "Nella tua dispensa",
+    "weKeepThis": "Lo abbiamo sempre",
+    "keepFailed": "Impossibile aggiungerlo alla dispensa"
   },
   "picker": {
     "unlink": "Scollega prodotto",

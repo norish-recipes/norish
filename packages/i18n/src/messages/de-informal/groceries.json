@@ -9,7 +9,9 @@
     "manageStores": "Geschäfte verwalten",
     "storeViewOptions": "Optionen Geschäftsansicht",
     "groupIngredients": "Zutaten gruppieren",
-    "pantry": "Vorratskammer"
+    "pantry": "Vorratskammer",
+    "list": "Liste",
+    "views": "Einkaufsansichten"
   },
   "empty": {
     "title": "Deine Einkaufsliste wartet",
@@ -85,13 +87,26 @@
     "aisleDuplicate": "Dieses Geschäft hat bereits einen Gang mit diesem Namen"
   },
   "pantry": {
-    "title": "Vorratskammer",
-    "hint": "Was du bereits zu Hause hast. Zutaten aus deiner Vorratskammer bleiben von der Liste, wenn du ein Rezept hinzufügst.",
+    "hint": "Was du immer zu Hause hast. Wenn du ein Rezept zum Einkauf hinzufügst, bleibt es von der Liste.",
     "empty": "Noch nichts in deiner Vorratskammer",
-    "namePlaceholder": "z. B. Olivenöl",
+    "unavailable": "Deine Vorratskammer konnte nicht gelesen werden. Es hat sich nichts geändert; versuch es erneut, wenn du wieder online bist.",
+    "fieldLabel": "Lebensmittel suchen oder hinzufügen",
+    "fieldPlaceholder": "Suchen oder hinzufügen, z. B. Olivenöl",
     "add": "Zur Vorratskammer hinzufügen",
-    "remove": "Aus der Vorratskammer entfernen",
-    "duplicate": "Das ist bereits in deiner Vorratskammer"
+    "duplicate": "Das ist bereits in deiner Vorratskammer",
+    "noMatch": "Nichts in deiner Vorratskammer heißt so",
+    "fromCatalogue": "Lebensmittel hinzufügen",
+    "addFood": "{name} zur Vorratskammer hinzufügen",
+    "putOnTheList": "Auf die Liste setzen",
+    "onTheList": "Auf der Liste",
+    "putOnTheListToast": "{name} steht auf der Liste",
+    "undo": "Rückgängig",
+    "keepFailed": "{name} konnte nicht zur Vorratskammer hinzugefügt werden",
+    "fromYourRecipes": "Aus deinen Rezepten",
+    "fromYourRecipesHint": "Was deine Rezepte am häufigsten verwenden. Füge hinzu, was du immer zu Hause hast.",
+    "inRecipes": "{count, plural, one {in # Rezept} other {in # Rezepten}}",
+    "showMore": "Mehr anzeigen",
+    "inYourPantry": "In deiner Vorratskammer"
   },
   "panel": {
     "addTitle": "Einkauf hinzufügen",
@@ -132,7 +147,9 @@
     "addToGroceries": "Zur Einkaufsliste hinzufügen",
     "aisle": "Gang",
     "noAisle": "Kein Gang",
-    "inPantry": "In deiner Vorratskammer"
+    "inPantry": "In deiner Vorratskammer",
+    "weKeepThis": "Haben wir immer",
+    "keepFailed": "Das konnte nicht zur Vorratskammer hinzugefügt werden"
   },
   "picker": {
     "unlink": "Produkt entkoppeln",

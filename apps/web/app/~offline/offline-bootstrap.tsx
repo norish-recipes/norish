@@ -16,6 +16,7 @@ function offlineSurface(pathname: string) {
 
   if (path === "/") return <Dashboard />;
   if (path === "/groceries") return <GroceriesScreen />;
+  if (path === "/groceries/pantry") return <GroceriesScreen view="pantry" />;
   if (path === "/calendar") return <CalendarPage />;
 
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
@@ -39,7 +40,8 @@ function offlineSurface(pathname: string) {
  * holds the originally requested URL. After mount — never during the static
  * prerender, which must stay free of user data (ADR-0005) — it reads that
  * URL and boots the matching Warm Set surface under the full provider shell:
- * dashboard, warmed recipe detail, warmed cookbook, groceries, or calendar.
+ * dashboard, warmed recipe detail, warmed cookbook, groceries, the Pantry, or
+ * calendar.
  * Anything outside the floor and any unsupported route get the explicit
  * Offline-unavailable state.
  */
