@@ -25,7 +25,9 @@ jobs:
     # "Verify" gave no hint that a red here could be a failing test.
     name: Build, test & lint
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # On 2026-10-05 the RC build hit 30 minutes at E2E test 130 of 147 with
+    # nothing failing: the suites had simply outgrown the limit.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v7
