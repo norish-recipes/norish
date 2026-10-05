@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# превод} other {# превода}}{kinds, plural, =0 {} one {, # вид} other {, # вида}}{parent, select, none {} other {, родител: {parent}}}",
     "askAI": "Попитай ИИ",
     "askAIAll": "Попитай ИИ за маркираните съставки",
+    "askAIRound": {
+      "intro": "ИИ прочита всяко име и го сравнява с храните, които Norish познава. Нищо не се променя, докато не потвърдите предложение.",
+      "scopeLabel": "Кои съставки",
+      "scopes": {
+        "unsuggested": "Само тези без предложение",
+        "flagged": "Всички маркирани съставки"
+      },
+      "scopeSize": "{count, plural, =0 {Няма съставки} one {# съставка · около {tokens} токена} other {# съставки · около {tokens} токена}}",
+      "replaces": "Заменя вече чакащите предложения.",
+      "modelTokens": "около {tokens} токена",
+      "basisMeasured": "Според използваното в последния кръг.",
+      "basisPrompt": "Оценено по промпта, така че реалният брой вероятно е по-висок."
+    },
+    "roundProgress": "Питане на ИИ · {done, number} от {total, number}",
+    "roundSection": {
+      "title": "Питане на ИИ",
+      "progress": "{done, number} от {total, number}",
+      "waiting": "{count, plural, one {# съставка чака} other {# съставки чакат}}"
+    },
     "reviewing": "Питаме AI…",
     "aiOutcomes": {
       "parent": "ИИ предлага {name} да се класира като вид {of}.",
@@ -506,7 +525,6 @@
       "empty": "Въведете име",
       "unknown": "Нещо се обърка. Опитайте отново."
     },
-    "reportRunning": "Кръгът още тече; изброено е решеното досега.",
     "keepAlias": "Запази {alias}",
     "reportOutcomes": {
       "parent": "Под родител",

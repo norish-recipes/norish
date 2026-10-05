@@ -227,6 +227,51 @@ export async function completeStep(job: Job, detail?: unknown): Promise<void> {
 }
 
 /**
+ * Record steps that have already run, in one write. For a job with many short
+ * steps: progress is one value, rewritten whole on every write and copied into
+ * the queue's event stream each time, so a write per step stores the square
+ * of the step count. Each step is still logged on its own.
+ * Best-effort: never throws.
+ */
+export async function recordCompletedSteps(
+  job: Job,
+  steps: readonly (JobStepEvent & { endedAt: number })[]
+): Promise<void> {
+  const last = steps[steps.length - 1];
+
+  if (!last) return;
+
+  try {
+    const attempts = cloneAttempts(job);
+    const entry = currentAttemptEntry(attempts, job);
+
+    entry.timeline.push(...steps.map((step) => ({ ...step })));
+
+    const results = await Promise.allSettled([
+      job.updateProgress({
+        step: last.id,
+        updatedAt: Date.now(),
+        attempts,
+      } satisfies JobStepProgress),
+      ...steps.map((step) =>
+        job.log(
+          `${new Date(step.endedAt).toISOString()} [attempt ${entry.attempt}] ${step.id}` +
+            (step.detail === undefined ? "" : ` ${JSON.stringify(step.detail)}`)
+        )
+      ),
+    ]);
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        log.debug({ err: result.reason, jobId: job.id }, "Failed to record completed job steps");
+      }
+    }
+  } catch (err) {
+    log.debug({ err, jobId: job.id }, "Failed to record completed job steps");
+  }
+}
+
+/**
  * Record which models the current attempt asked, so the job monitor can say
  * "jev" or "openai" beside the job. Written once, when the attempt settles,
  * so it never races a step report. Best-effort: never throws.

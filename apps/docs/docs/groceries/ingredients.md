@@ -168,15 +168,39 @@ ingredient uses garlic's aisle and nutrition meanwhile; confirming keeps it as
 your choice and clears the flag, dismissing takes the parent off again. These
 suggestions sit in the **Suggestions** panel beside AI's.
 
-Whenever the list shows flagged ingredients you may edit, a button in the
-card's header asks AI about all of them at once. Under **Without parent or
-kinds**, the button asks instead what each ingredient on screen is a kind of.
-That runs on the server as one job with a step per ingredient, so it carries
-on if you close the tab: each flagged row shows **Asking AI…** until the round
-ends. It asks a few ingredients at once, and the answers land together: the
-**Suggestions** panel then opens on its own for whoever started the round,
-and the suggestions button in the card's header opens it whenever any are
-waiting for you. You only see suggestions for ingredients you may change, so
+Whenever the list shows flagged ingredients you may edit, **Ask AI about
+flagged ingredients** in the card's header first asks which ones:
+
+- **Only those without a suggestion**, the ones with nothing waiting for you
+  yet. This is where it starts.
+- **Every flagged ingredient**, asking again about the ones that have a
+  suggestion; AI's new answer replaces it.
+
+Both count every flagged ingredient you may change, not just the ones on screen,
+and each says how many that is and about how many tokens asking about them will
+use, so you can compare the two. Below them, the tokens of the round you chose
+are split by model: your AI provider's model and, where one is set up, the
+Decision Model, since each bills for its own share. A line under that says what
+the counts are based on: what the last round used per ingredient, as the
+providers reported it, or, before the first round, the length of the prompt.
+That first estimate leaves out the thinking some models do before they answer,
+so the real count is likely higher. The admin job monitor shows the tokens each
+round actually used.
+
+![Choosing which flagged ingredients to ask AI about](/img/screenshots/ingredients-ask-ai.png)
+
+Under **Without parent or kinds**, **Find parents with AI** asks instead what
+each ingredient on screen is a kind of, without the dialog. Either runs on the
+server as one job with a step per ingredient, so it carries on if you close the
+tab. While it runs, the card's header shows how far it has come (**Asking AI ·
+470 of 935**) in place of the button that started it; press it to open the
+**Suggestions** panel, which leads with the same progress and, folded, the
+ingredients still waiting their turn. It asks a few ingredients at once, and
+its answers come in as it goes, a twentieth of the round at a time: a row shows
+**Asking AI…** until its answer is in, and the suggestions appear in the panel.
+When the round ends, the panel opens on its own for whoever started it, and the
+suggestions button in the card's header opens it whenever any are waiting for
+you. You only see suggestions for ingredients you may change, so
 someone who may change none of them gets no button at all. The panel has a
 row per ingredient: the ingredient, the proposal
 (merge into, file under, or a food of its own), what it is based on (what AI
@@ -189,7 +213,7 @@ failed. Press an ingredient's name to open its own panel over the suggestions,
 to look at it whole or fix it by hand; closing it brings you back. Anyone else
 who may change those ingredients sees the same rows waiting, and the round
 shows in the admin job monitor as **Ask AI about ingredients**, with the models
-it asked.
+it asked and the tokens each used.
 
 Whenever an update improves how Norish reads names, it looks at the flagged
 ingredients it added in the past once more when it starts: one that now

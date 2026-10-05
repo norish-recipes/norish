@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# tłumaczenie} few {# tłumaczenia} other {# tłumaczeń}}{kinds, plural, =0 {} one {, # rodzaj} few {, # rodzaje} many {, # rodzajów} other {, # rodzaju}}{parent, select, none {} other {, nadrzędny: {parent}}}",
     "askAI": "Zapytaj AI",
     "askAIAll": "Zapytaj AI o oznaczone składniki",
+    "askAIRound": {
+      "intro": "AI odczytuje każdą nazwę i porównuje ją z produktami, które zna Norish. Nic się nie zmieni, dopóki nie potwierdzisz sugestii.",
+      "scopeLabel": "Które składniki",
+      "scopes": {
+        "unsuggested": "Tylko te bez sugestii",
+        "flagged": "Wszystkie oznaczone składniki"
+      },
+      "scopeSize": "{count, plural, =0 {Brak składników} one {# składnik · około {tokens} tokenów} few {# składniki · około {tokens} tokenów} many {# składników · około {tokens} tokenów} other {# składnika · około {tokens} tokenów}}",
+      "replaces": "Zastępuje oczekujące już sugestie.",
+      "modelTokens": "około {tokens} tokenów",
+      "basisMeasured": "Na podstawie zużycia w ostatniej rundzie.",
+      "basisPrompt": "Oszacowano na podstawie promptu, więc rzeczywista liczba będzie pewnie wyższa."
+    },
+    "roundProgress": "Pytanie AI · {done, number} z {total, number}",
+    "roundSection": {
+      "title": "Pytanie AI",
+      "progress": "{done, number} z {total, number}",
+      "waiting": "{count, plural, one {# składnik czeka} few {# składniki czekają} many {# składników czeka} other {# składnika czeka}}"
+    },
     "reviewing": "Pytam AI…",
     "aiOutcomes": {
       "parent": "AI sugeruje przypisanie {name} jako rodzaju {of}.",
@@ -506,7 +525,6 @@
       "empty": "Wpisz nazwę",
       "unknown": "Coś poszło nie tak. Spróbuj ponownie."
     },
-    "reportRunning": "Runda wciąż trwa; poniżej to, co już rozstrzygnięto.",
     "keepAlias": "Zachowaj {alias}",
     "reportOutcomes": {
       "parent": "Pod rodzicem",

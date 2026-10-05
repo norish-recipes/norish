@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# traduzione} other {# traduzioni}}{kinds, plural, =0 {} one {, # tipo} other {, # tipi}}{parent, select, none {} other {, genitore: {parent}}}",
     "askAI": "Chiedi all'IA",
     "askAIAll": "Chiedi all'IA degli ingredienti segnalati",
+    "askAIRound": {
+      "intro": "L'IA legge ogni nome e lo confronta con gli alimenti che Norish conosce. Non cambia nulla finché non confermi un suggerimento.",
+      "scopeLabel": "Quali ingredienti",
+      "scopes": {
+        "unsuggested": "Solo quelli senza suggerimento",
+        "flagged": "Tutti gli ingredienti segnalati"
+      },
+      "scopeSize": "{count, plural, =0 {Nessun ingrediente} one {# ingrediente · circa {tokens} token} other {# ingredienti · circa {tokens} token}}",
+      "replaces": "Sostituisce i suggerimenti già in attesa.",
+      "modelTokens": "circa {tokens} token",
+      "basisMeasured": "In base a quanto usato nell'ultimo giro.",
+      "basisPrompt": "Stimato dal prompt, quindi il numero reale sarà probabilmente più alto."
+    },
+    "roundProgress": "Richiesta all'IA · {done, number} di {total, number}",
+    "roundSection": {
+      "title": "Richiesta all'IA",
+      "progress": "{done, number} di {total, number}",
+      "waiting": "{count, plural, one {# ingrediente in attesa} other {# ingredienti in attesa}}"
+    },
     "reviewing": "Chiedo all’IA…",
     "aiOutcomes": {
       "parent": "L'IA suggerisce di classificare {name} come un tipo di {of}.",
@@ -506,7 +525,6 @@
       "empty": "Inserisci un nome",
       "unknown": "Qualcosa è andato storto. Riprova."
     },
-    "reportRunning": "Il giro è ancora in corso; è elencato ciò che è già stato risolto.",
     "keepAlias": "Mantieni {alias}",
     "reportOutcomes": {
       "parent": "Sotto un genitore",

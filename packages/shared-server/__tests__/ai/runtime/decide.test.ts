@@ -36,7 +36,8 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => logger,
 }));
 
-const { decide, testDecisionModel } = await import("@norish/shared-server/ai/runtime/runtime");
+const { decide, estimateDecisionInputTokens, testDecisionModel } =
+  await import("@norish/shared-server/ai/runtime/runtime");
 const { AIConfigurationError, AIDisabledError, AIProviderError, AIResponseError } =
   await import("@norish/shared-server/ai/runtime/errors");
 const { createModelUseLedger, runWithModelUseLedger } =
@@ -355,6 +356,32 @@ describe("the job's model ledger", () => {
     await runWithModelUseLedger(ledger, () => ask().catch(() => undefined));
 
     expect(ledger.uses).toEqual([]);
+  });
+});
+
+describe("an estimate of a Decision", () => {
+  it("counts the state and the questions as JSON, four characters a token, for the configured model, and asks nothing", async () => {
+    const questions = {
+      food: {
+        type: "choice" as const,
+        instructions: "Which food is it?",
+        criteria: { same_1: "Is onion", new: "Is none of these" },
+      },
+    };
+    const small = await estimateDecisionInputTokens({ state: { name: "uien" }, questions });
+    const large = await estimateDecisionInputTokens({
+      state: { name: "u".repeat(4004) },
+      questions,
+    });
+
+    expect(large.tokens - small.tokens).toBe(1000);
+    expect(small).toEqual({
+      provider: "typesafe",
+      model: expect.any(String),
+      tokens: Math.ceil(JSON.stringify({ state: { name: "uien" }, questions }).length / 4),
+    });
+    expect(small.model).not.toBe("");
+    expect(captured).toHaveLength(0);
   });
 });
 

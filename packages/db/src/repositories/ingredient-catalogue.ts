@@ -10,6 +10,7 @@ import {
   groceries,
   ingredientAliases,
   ingredients,
+  ingredientSuggestions,
   pantryIngredients,
   recipeIngredients,
   recurringGroceries,
@@ -217,6 +218,34 @@ export async function findCatalogueIngredientNames(
     .where(inArray(ingredients.id, unique));
 
   return new Map(rows.map((row) => [row.id, row.name]));
+}
+
+/**
+ * A Flagged Ingredient as a round of Ask AI picks from them: whose it is, and
+ * whether a suggestion waits on it.
+ */
+export interface FlaggedCatalogueIngredient extends CatalogueOwner {
+  id: string;
+  name: string;
+  suggested: boolean;
+}
+
+/**
+ * Every Flagged Ingredient, by name. Nothing here decides which the asker may
+ * edit. An Ingredient has one suggestion at most, so the join adds no rows.
+ */
+export async function listFlaggedCatalogueIngredients(): Promise<FlaggedCatalogueIngredient[]> {
+  return db
+    .select({
+      id: ingredients.id,
+      name: ingredients.name,
+      ownerId: ingredients.ownerId,
+      suggested: sql<boolean>`${ingredientSuggestions.id} is not null`,
+    })
+    .from(ingredients)
+    .leftJoin(ingredientSuggestions, eq(ingredientSuggestions.ingredientId, ingredients.id))
+    .where(eq(ingredients.flagged, true))
+    .orderBy(asc(sql`lower(${ingredients.name})`), asc(ingredients.id));
 }
 
 /** Say anew why a Flagged Ingredient is one: AI was asked again and is still not sure. */

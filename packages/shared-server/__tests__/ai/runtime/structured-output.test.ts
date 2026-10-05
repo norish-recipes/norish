@@ -38,7 +38,8 @@ vi.mock("@norish/shared-server/logger", () => {
   return { aiLogger: logger, serverLogger: logger, createLogger: () => logger };
 });
 
-const { generateStructured } = await import("@norish/shared-server/ai/runtime/runtime");
+const { estimateStructuredInputTokens, generateStructured } =
+  await import("@norish/shared-server/ai/runtime/runtime");
 const { AIProviderError } = await import("@norish/shared-server/ai/runtime/errors");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
@@ -300,5 +301,42 @@ describe("the job's model ledger", () => {
     await runWithModelUseLedger(ledger, () => generate().catch(() => undefined));
 
     expect(ledger.uses).toEqual([{ ...use, outcome: "failed" }]);
+  });
+});
+
+describe("an estimate of a request", () => {
+  /** What one request under the auto-tagging prompt would send, with these sections. */
+  const estimate = async (sections: string[]) =>
+    (await estimateStructuredInputTokens({ prompt: "auto-tagging", schema, sections })).tokens;
+
+  it("names the model the request would go to", async () => {
+    await expect(
+      estimateStructuredInputTokens({ prompt: "auto-tagging", schema, sections: [] })
+    ).resolves.toMatchObject({ provider: "generic-openai", model: "test-model" });
+  });
+
+  it("counts the sections a feature appends, four characters a token", async () => {
+    const bare = await estimate([]);
+    const withRecipe = await estimate(["x".repeat(4000)]);
+
+    // The section, and the blank line it is joined by.
+    expect(withRecipe - bare).toBeGreaterThanOrEqual(1000);
+    expect(withRecipe - bare).toBeLessThanOrEqual(1001);
+  });
+
+  it("counts the prompt as the administrator left it, not the shipped one", async () => {
+    const shipped = await estimate([]);
+
+    mockGetPrompts.mockResolvedValue({ autoTagging: "Tag it." });
+
+    expect(await estimate([])).toBeLessThan(shipped);
+  });
+
+  it("counts the system message and the answer's schema too, and asks nothing", async () => {
+    mockGetPrompts.mockResolvedValue({ autoTagging: "" });
+
+    // An empty prompt still sends the system message and the schema.
+    expect(await estimate([])).toBeGreaterThan(20);
+    expect(captured).toHaveLength(0);
   });
 });

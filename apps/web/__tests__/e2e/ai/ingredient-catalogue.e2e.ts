@@ -17,6 +17,7 @@ import {
   resetCatalogueScenario,
   seedCatalogue,
   seedStoreFiling,
+  seedSuggestion,
   setParent,
 } from "./ingredient-catalogue-support";
 import { readGroceryNames, readPantryNames, seedRecipeWithIngredients } from "./pantry-support";
@@ -32,11 +33,13 @@ const AISLE = "Groente";
 
 let page: Page;
 let recipeId: string;
+/** The seeded foods' ids, by name. */
+let ids: Record<string, string>;
 
 test.beforeAll(async ({ browser, aiStack }) => {
   await resetCatalogueScenario();
 
-  const ids = await seedCatalogue([
+  ids = await seedCatalogue([
     {
       name: "onion",
       aliases: [
@@ -259,7 +262,7 @@ test("the filters can show only the foods with neither parent nor kinds", async 
   await ingredientPanel("shallot").getByRole("button", { name: "Close panel" }).click();
 });
 
-test("asking AI about the flagged foods on screen runs as one round of suggestions to confirm", async ({
+test("asking AI about the flagged foods without a suggestion runs as one round of suggestions to confirm", async ({
   ai,
 }) => {
   // The round asks the language model to read the name, then to compare it
@@ -279,23 +282,51 @@ test("asking AI about the flagged foods on screen runs as one round of suggestio
       }),
     }
   );
+  // An earlier question left a suggestion waiting on "uitjes", so it is the one flagged food
+  // with an answer already: a round over the rest leaves it be, and it stays for the merge below.
+  await seedSuggestion(ids.uitjes!, "merge", ids.onion!);
   await page.goto("/settings?tab=ingredients");
   await page.getByTestId("ingredients-search").fill("knoflook");
   await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-flagged")).toBeVisible();
   await expect(ingredientRow("uitjes")).toHaveCount(0);
 
-  // One round over the flagged foods on screen; the page follows it over the socket.
+  // The button asks first, about the whole catalogue's flagged foods rather than the screen's,
+  // and says what the round costs: estimated from the prompt, since no round was measured yet.
   await page.getByTestId("ingredients-ask-ai-all").click();
-  // The row itself shows its turn in the round.
+  const dialog = page.getByTestId("ingredients-ask-ai-dialog");
+  const unsuggested = dialog.getByRole("radio", { name: "Only those without a suggestion" });
+
+  await expect(unsuggested).toBeChecked();
+  await expect(dialog).toContainText(/1 ingredient · about [\d.,]+K? tokens/);
+  await expect(dialog).toContainText(/2 ingredients · about [\d.,]+K? tokens/);
+  await expect(dialog).toContainText("Replaces the suggestions already waiting.");
+  // The tokens split by the model each request goes to: here the one language model.
+  await expect(dialog.getByTestId("ingredients-ask-ai-models")).toContainText(
+    "generic-openai · test-model"
+  );
+  await expect(dialog.getByTestId("ingredients-ask-ai-tokens")).toContainText(
+    "Estimated from the prompt"
+  );
+  // One round over them; the page follows it over the socket. The model's answers are held
+  // until the row has shown its turn: a round of one is otherwise over before anyone looks.
+  ai.control.hold();
+  await dialog.getByTestId("ingredients-ask-ai-start").click();
+  await expect(dialog).toBeHidden();
   await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-reviewing")).toBeVisible();
+  // The header says how far the round has come, where the button that started it was.
+  await expect(page.getByTestId("ingredients-round-progress")).toContainText("Asking AI · 0 of 1");
+  ai.control.release();
   // The round ends with the suggestions drawer open: AI changed nothing on its own.
   const panel = page.getByRole("dialog", { name: "Suggestions" });
 
   await expect(panel).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("ingredient-reviewing")).toHaveCount(0);
-  const suggestion = panel.getByTestId("ingredient-suggestion");
+  // The round's own answer, beside the one that was already waiting.
+  await expect(panel.getByTestId("ingredient-suggestion")).toHaveCount(2);
+  const suggestion = panel
+    .getByTestId("ingredient-suggestion")
+    .filter({ hasText: "knoflookteentjes" });
 
-  await expect(suggestion).toHaveCount(1);
   await expect(suggestion).toHaveAttribute("data-kind", "distinct");
   await expect(suggestion).toContainText("knoflookteentjes");
   await expect(suggestion).toContainText("Food of its own");
@@ -316,6 +347,12 @@ test("asking AI about the flagged foods on screen runs as one round of suggestio
   await expect(panel).toBeVisible();
   await suggestion.getByTestId("ingredient-suggestion-confirm").click();
   await expect(suggestion).toHaveCount(0);
+  // Dismissing the one that was waiting leaves "uitjes" as it was: flagged, for the merge below.
+  await panel
+    .getByTestId("ingredient-suggestion")
+    .filter({ hasText: "uitjes" })
+    .getByTestId("ingredient-suggestion-dismiss")
+    .click();
   await expect(panel.getByText("Nothing is waiting on you.")).toBeVisible();
   await panel.getByRole("button", { name: "Close panel" }).click();
   await expect(panel).toBeHidden();

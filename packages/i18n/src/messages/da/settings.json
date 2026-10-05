@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# oversættelse} other {# oversættelser}}{kinds, plural, =0 {} one {, # slags} other {, # slags}}{parent, select, none {} other {, overordnet: {parent}}}",
     "askAI": "Spørg AI",
     "askAIAll": "Spørg AI om markerede ingredienser",
+    "askAIRound": {
+      "intro": "AI læser hvert navn og sammenligner det med de fødevarer, Norish kender. Intet ændres, før du bekræfter et forslag.",
+      "scopeLabel": "Hvilke ingredienser",
+      "scopes": {
+        "unsuggested": "Kun dem uden et forslag",
+        "flagged": "Alle markerede ingredienser"
+      },
+      "scopeSize": "{count, plural, =0 {Ingen ingredienser} one {# ingrediens · omkring {tokens} tokens} other {# ingredienser · omkring {tokens} tokens}}",
+      "replaces": "Erstatter de forslag, der allerede venter.",
+      "modelTokens": "omkring {tokens} tokens",
+      "basisMeasured": "Baseret på, hvad den seneste runde brugte.",
+      "basisPrompt": "Anslået ud fra prompten, så det reelle antal er sandsynligvis højere."
+    },
+    "roundProgress": "Spørger AI · {done, number} af {total, number}",
+    "roundSection": {
+      "title": "Spørger AI",
+      "progress": "{done, number} af {total, number}",
+      "waiting": "{count, plural, one {# ingrediens venter} other {# ingredienser venter}}"
+    },
     "reviewing": "Spørger AI…",
     "aiOutcomes": {
       "parent": "AI foreslår at placere {name} som en slags {of}.",
@@ -506,7 +525,6 @@
       "empty": "Indtast et navn",
       "unknown": "Noget gik galt. Prøv igen."
     },
-    "reportRunning": "Runden kører stadig; det, der er afklaret indtil nu, er vist.",
     "keepAlias": "Behold {alias}",
     "reportOutcomes": {
       "parent": "Under en forælder",

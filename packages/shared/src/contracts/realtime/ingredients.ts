@@ -17,10 +17,11 @@ import { defineRealtimeCatalogue } from "./catalogue";
  * `skipped` counts foods no longer flagged by the time the round reached
  * them, or that the person who asked may not edit; `failed` the foods whose
  * question or edit broke, each recorded on its own step. `pending` names the
- * foods the round is about until it ends: the foods are asked a few at once
- * and their answers land together, so every row waits until then. Broadcast like `changed`,
- * because the catalogue is the instance's and so is the round: whoever opens
- * the Ingredients page sees it running and is not offered a second one.
+ * foods it has still to answer: the foods are asked a few at once and their
+ * answers written down a twentieth of the round at a time, so a row waits
+ * until its answer is. Broadcast like `changed`, because the catalogue is the
+ * instance's and so is the round: whoever opens the Ingredients page sees it
+ * running and is not offered a second one.
  */
 export const ReviewRoundSchema = z.object({
   jobId: z.string(),
@@ -43,7 +44,7 @@ export type ReviewRound = z.infer<typeof ReviewRoundSchema>;
 export const ingredientsRealtime = defineRealtimeCatalogue("ingredients", {
   /** Any edit to these Ingredients: what they are (a merge, an alias move, a rename, a parent, a deletion) or how they read (a spelling, a flag). */
   changed: { scope: "broadcast", payload: z.object({ ingredientIds: z.array(z.string()) }) },
-  /** A round of Ask AI moved on by a food, or ended. */
+  /** A round of Ask AI moved on, or ended. */
   review: { scope: "broadcast", payload: ReviewRoundSchema },
   /**
    * A member of the household corrected these Ingredients' nutrition, or

@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# перевод} few {# перевода} other {# переводов}}{kinds, plural, =0 {} one {, # вид} few {, # вида} many {, # видов} other {, # вида}}{parent, select, none {} other {, родительский: {parent}}}",
     "askAI": "Спросить ИИ",
     "askAIAll": "Спросить ИИ об отмеченных ингредиентах",
+    "askAIRound": {
+      "intro": "ИИ читает каждое название и сравнивает его с продуктами, которые знает Norish. Ничего не изменится, пока вы не подтвердите предложение.",
+      "scopeLabel": "Какие ингредиенты",
+      "scopes": {
+        "unsuggested": "Только без предложения",
+        "flagged": "Все отмеченные ингредиенты"
+      },
+      "scopeSize": "{count, plural, =0 {Нет ингредиентов} one {# ингредиент · около {tokens} токенов} few {# ингредиента · около {tokens} токенов} many {# ингредиентов · около {tokens} токенов} other {# ингредиента · около {tokens} токенов}}",
+      "replaces": "Заменяет уже ожидающие предложения.",
+      "modelTokens": "около {tokens} токенов",
+      "basisMeasured": "По расходу последнего раунда.",
+      "basisPrompt": "Оценка по промпту, поэтому реальное число, скорее всего, выше."
+    },
+    "roundProgress": "Опрос ИИ · {done, number} из {total, number}",
+    "roundSection": {
+      "title": "Опрос ИИ",
+      "progress": "{done, number} из {total, number}",
+      "waiting": "{count, plural, one {# ингредиент ждёт} few {# ингредиента ждут} many {# ингредиентов ждут} other {# ингредиента ждут}}"
+    },
     "reviewing": "Спрашиваем ИИ…",
     "aiOutcomes": {
       "parent": "ИИ предлагает отнести {name} к разновидностям {of}.",
@@ -506,7 +525,6 @@
       "empty": "Введите название",
       "unknown": "Что-то пошло не так. Попробуйте ещё раз."
     },
-    "reportRunning": "Раунд ещё идёт; ниже то, что уже решено.",
     "keepAlias": "Оставить {alias}",
     "reportOutcomes": {
       "parent": "Под родителем",

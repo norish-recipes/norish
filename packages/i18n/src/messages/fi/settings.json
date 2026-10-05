@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# käännös} other {# käännöstä}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
     "askAI": "Kysy tekoälyltä",
     "askAIAll": "Kysy tekoälyltä merkityistä ainesosista",
+    "askAIRound": {
+      "intro": "Tekoäly lukee jokaisen nimen ja vertaa sitä Norishin tuntemiin elintarvikkeisiin. Mikään ei muutu ennen kuin vahvistat ehdotuksen.",
+      "scopeLabel": "Mitkä ainesosat",
+      "scopes": {
+        "unsuggested": "Vain ne, joilla ei ole ehdotusta",
+        "flagged": "Kaikki merkityt ainesosat"
+      },
+      "scopeSize": "{count, plural, =0 {Ei ainesosia} one {# ainesosa · noin {tokens} tokenia} other {# ainesosaa · noin {tokens} tokenia}}",
+      "replaces": "Korvaa jo odottavat ehdotukset.",
+      "modelTokens": "noin {tokens} tokenia",
+      "basisMeasured": "Edellisen kierroksen käytön mukaan.",
+      "basisPrompt": "Arvioitu kehotteen perusteella, joten todellinen määrä on todennäköisesti suurempi."
+    },
+    "roundProgress": "Kysytään tekoälyltä · {done, number}/{total, number}",
+    "roundSection": {
+      "title": "Kysytään tekoälyltä",
+      "progress": "{done, number}/{total, number}",
+      "waiting": "{count, plural, one {# ainesosa odottaa} other {# ainesosaa odottaa}}"
+    },
     "reviewing": "Kysytään tekoälyltä…",
     "aiOutcomes": {
       "parent": "Tekoäly ehdottaa, että {name} luokitellaan kohteen {of} alalajiksi.",
@@ -506,7 +525,6 @@
       "empty": "Anna nimi",
       "unknown": "Jokin meni vikaan. Yritä uudelleen."
     },
-    "reportRunning": "Kierros on yhä kesken; tähän mennessä ratkaistut on listattu.",
     "keepAlias": "Säilytä {alias}",
     "reportOutcomes": {
       "parent": "Yläkäsitteen alle",

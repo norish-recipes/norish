@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# oversettelse} other {# oversettelser}}{kinds, plural, =0 {} one {, # type} other {, # typer}}{parent, select, none {} other {, overordnet: {parent}}}",
     "askAI": "Spør AI",
     "askAIAll": "Spør AI om merkede ingredienser",
+    "askAIRound": {
+      "intro": "AI leser hvert navn og sammenligner det med matvarene Norish kjenner. Ingenting endres før du bekrefter et forslag.",
+      "scopeLabel": "Hvilke ingredienser",
+      "scopes": {
+        "unsuggested": "Bare de uten forslag",
+        "flagged": "Alle merkede ingredienser"
+      },
+      "scopeSize": "{count, plural, =0 {Ingen ingredienser} one {# ingrediens · omtrent {tokens} tokens} other {# ingredienser · omtrent {tokens} tokens}}",
+      "replaces": "Erstatter forslagene som allerede venter.",
+      "modelTokens": "omtrent {tokens} tokens",
+      "basisMeasured": "Basert på hva forrige runde brukte.",
+      "basisPrompt": "Anslått ut fra prompten, så det faktiske antallet er trolig høyere."
+    },
+    "roundProgress": "Spør AI · {done, number} av {total, number}",
+    "roundSection": {
+      "title": "Spør AI",
+      "progress": "{done, number} av {total, number}",
+      "waiting": "{count, plural, one {# ingrediens venter} other {# ingredienser venter}}"
+    },
     "reviewing": "Spør AI…",
     "aiOutcomes": {
       "parent": "AI foreslår å plassere {name} som en type {of}.",
@@ -506,7 +525,6 @@
       "empty": "Skriv inn et navn",
       "unknown": "Noe gikk galt. Prøv igjen."
     },
-    "reportRunning": "Runden pågår fortsatt; det som er avklart så langt, er listet.",
     "keepAlias": "Behold {alias}",
     "reportOutcomes": {
       "parent": "Under en forelder",

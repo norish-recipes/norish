@@ -10,6 +10,7 @@ import type { Job, Queue } from "bullmq";
 
 import type { IngredientReviewJobData } from "@norish/queue/contracts/job-types";
 import type {
+  ModelTokenEstimate,
   ReviewReport,
   ReviewReportEntry,
 } from "@norish/shared/contracts/ingredient-catalogue";
@@ -84,6 +85,7 @@ export function summarizeReviewRound(
   // Every food answered is a round over, even while the job is still winding up:
   // a page that asks then would otherwise see every row waiting again.
   const over = finished || done >= job.data.ingredients.length;
+  const answered = new Set(settled.map((step) => step.ingredientId));
 
   for (const step of settled) counts[COUNTED[step.outcome]] += 1;
 
@@ -92,8 +94,10 @@ export function summarizeReviewRound(
     done,
     total: job.data.ingredients.length,
     counts,
-    // Every food waits until the round ends: its answer lands with the others'.
-    pending: over ? [] : job.data.ingredients.map((food) => food.id),
+    // A food waits until its answer is written down, a twentieth of the round at a time.
+    pending: over
+      ? []
+      : job.data.ingredients.flatMap((food) => (answered.has(food.id) ? [] : [food.id])),
     finished: over,
   };
 }
@@ -112,8 +116,9 @@ export async function findRunningReviewRound(
 
 /**
  * A round read back once it is over, or as far as it has come: what AI did
- * to each food and how. Nothing for a job the queue no longer holds; a round
- * is kept as long as any job is.
+ * to each food and how, and, while it runs, the foods it has still to ask
+ * about, by name. Nothing for a job the queue no longer holds; a round is
+ * kept as long as any job is.
  */
 export async function readReviewReport(
   queue: Queue<IngredientReviewJobData>,
@@ -123,10 +128,62 @@ export async function readReviewReport(
 
   if (!job) return null;
   const state = await job.getState();
+  const finished = state === "completed" || state === "failed";
+  const entries = settledSteps(job.progress);
+  const answered = new Set(entries.map((entry) => entry.ingredientId));
 
   return {
     jobId,
-    finished: state === "completed" || state === "failed",
-    entries: settledSteps(job.progress),
+    finished,
+    entries,
+    waiting: finished
+      ? []
+      : job.data.ingredients.flatMap((food) =>
+          answered.has(food.id) ? [] : [{ ingredientId: food.id, name: food.name }]
+        ),
   };
+}
+
+/** How many of the latest finished rounds are looked through for one that recorded its tokens. */
+const MEASURED_ROUNDS = 10;
+
+/**
+ * About how many tokens a food's question took on each model in the latest
+ * finished round that recorded them, as the providers reported them: each
+ * model's tokens over the foods the round asked about, since a food passed
+ * over asked nothing. Null where no round the queue still holds recorded
+ * any: one from before Norish counted tokens, or none kept at all.
+ */
+export async function readRoundTokens(
+  queue: Queue<IngredientReviewJobData>
+): Promise<{ foods: number; models: ModelTokenEstimate[] } | null> {
+  const jobs = await queue.getJobs(["completed"], 0, MEASURED_ROUNDS - 1, false);
+
+  for (const job of jobs) {
+    const attempts = readStepProgress(job.progress)?.attempts ?? [];
+    const asked = settledSteps(job.progress).filter((step) => step.outcome !== "skipped").length;
+    const byModel = new Map<string, { provider: string; model: string; tokens: number }>();
+
+    for (const use of attempts[attempts.length - 1]?.models ?? []) {
+      if (use.tokens === undefined) continue;
+      const key = `${use.provider}\u0000${use.model}`;
+      const seen = byModel.get(key) ?? { provider: use.provider, model: use.model, tokens: 0 };
+
+      seen.tokens += use.tokens;
+      byModel.set(key, seen);
+    }
+
+    if (byModel.size === 0 || asked === 0) continue;
+
+    return {
+      foods: asked,
+      models: [...byModel.values()].map(({ provider, model, tokens }) => ({
+        provider,
+        model,
+        perFood: Math.round(tokens / asked),
+      })),
+    };
+  }
+
+  return null;
 }

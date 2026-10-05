@@ -8,7 +8,7 @@ import { usePermissionsContext } from "@/context/permissions-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon, SparklesIcon } from "@heroicons/react/24/outline";
-import { Button, Card } from "@heroui/react";
+import { Button, Card, Spinner } from "@heroui/react";
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -18,10 +18,12 @@ import {
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { ReviewScope } from "@norish/shared/contracts/ingredient-catalogue";
 import type { ReviewRound } from "@norish/shared/contracts/realtime/ingredients";
 import { useRealtimeSubscription } from "@norish/shared-react/realtime";
 
 import type { IngredientFilters } from "./ingredient-filters-panel";
+import { AskAIRoundModal } from "./ask-ai-round-modal";
 import DataSourcesCard from "./data-sources-card";
 import {
   DEFAULT_INGREDIENT_FILTERS,
@@ -104,25 +106,31 @@ export default function IngredientsSettingsContent() {
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.kinds.pathKey() }),
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.suggestions.pathKey() }),
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewScope.pathKey() }),
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewReport.pathKey() }),
       ]),
     [queryClient, trpc]
   );
 
-  // Asking AI about every flagged food on screen is one job on the server, a
-  // step per food, that outlives this tab. The page watches it over the
-  // socket: each answer lands as a suggestion waiting on a person, and the
-  // round's count follows. A round is the instance's, so a tab opened mid-round, or a
-  // housemate's, shows the same count and is not offered a second round.
+  // Asking AI about the flagged foods is one job on the server, a step per
+  // food, that outlives this tab. Which foods is asked first, in a dialog: the
+  // catalogue's, not the screen's, so a round may be every flagged food there
+  // is. The page watches the round over the socket: each answer lands as a
+  // suggestion waiting on a person, and the round's count follows. A round is
+  // the instance's, so a tab opened mid-round, or a housemate's, shows the
+  // same count and is not offered a second round.
   const startRound = useMutation(trpc.ingredients.reviewAllWithAI.mutationOptions());
   const roundQuery = useQuery(trpc.ingredients.reviewRound.queryOptions());
   const [round, setRound] = useState<ReviewRound | null>(null);
   const [startedJobId, setStartedJobId] = useState<string | null>(null);
+  const [askOpen, setAskOpen] = useState(false);
   // The last round this tab saw end: what it got no suggestion for rides along with the suggestions.
   const [reportJobId, setReportJobId] = useState<string | null>(null);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const { suggestions } = useIngredientSuggestions();
   const running = round?.finished ? null : (round ?? roundQuery.data ?? null);
-  const flaggedIds = shown.filter((item) => item.flagged && item.canEdit).map((item) => item.id);
+  // The dialog is offered while the list holds a flagged food the viewer may edit.
+  const hasFlagged = shown.some((item) => item.flagged && item.canEdit);
   // Under the standalone filter, the round asks what each food is a kind of instead.
   const standaloneIds = filters.standaloneOnly
     ? shown.filter((item) => !item.parent && item.canEdit).map((item) => item.id)
@@ -134,9 +142,10 @@ export default function IngredientsSettingsContent() {
     lagQueryKeys: [trpc.ingredients.reviewRound.queryKey()],
     onEvent: (payload) => {
       setRound(payload);
+      // What the round has written down shows as it goes: its suggestions, the flags it updated.
+      void refresh();
       if (!payload.finished) return;
       void queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewRound.queryKey() });
-      void refresh();
       // What AI suggests opens for whoever asked; everyone else sees the count in the header.
       if (payload.jobId !== startedJobId) return;
       setStartedJobId(null);
@@ -145,11 +154,10 @@ export default function IngredientsSettingsContent() {
     },
   });
 
-  const askAIAboutAll = async (mode: "review" | "parent") => {
-    const ingredientIds = mode === "parent" ? standaloneIds : flaggedIds;
-
+  /** Start a round and watch it: every food it asks about shows its turn until the round ends. */
+  const startAndWatch = async (input: Parameters<typeof startRound.mutateAsync>[0]) => {
     try {
-      const started = await startRound.mutateAsync({ ingredientIds, mode });
+      const started = await startRound.mutateAsync(input);
 
       setStartedJobId(started.jobId);
       setRound({
@@ -157,9 +165,11 @@ export default function IngredientsSettingsContent() {
         done: 0,
         total: started.total,
         counts: { merge: 0, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 },
-        pending: ingredientIds,
+        pending: started.pending,
         finished: false,
       });
+
+      return true;
     } catch (error) {
       showSafeErrorToast({
         title: t("errors.title"),
@@ -167,7 +177,14 @@ export default function IngredientsSettingsContent() {
         error,
         context: "ingredients:review-all",
       });
+
+      return false;
     }
+  };
+
+  // The server picks the foods for the scope, however many: the dialog closes once the round is on.
+  const askAIAboutFlagged = async (scope: ReviewScope) => {
+    if (await startAndWatch({ mode: "review", scope })) setAskOpen(false);
   };
 
   return (
@@ -190,24 +207,38 @@ export default function IngredientsSettingsContent() {
                 {t("suggestionsOpen", { count: suggestions.length })}
               </Button>
             ) : null}
-            {isAIEnabled && standaloneIds.length > 0 ? (
-              <AIButton
-                data-testid="ingredients-find-parents-all"
-                isDisabled={running !== null || startRound.isPending}
+            {running ? (
+              // A round in progress takes the place of the buttons that start one, and opens what it has done so far.
+              <Button
+                data-testid="ingredients-round-progress"
                 size="sm"
                 variant="tertiary"
-                onPress={() => void askAIAboutAll("parent")}
+                onPress={() => setSuggestionsOpen(true)}
+              >
+                <Spinner color="current" size="sm" />
+                <span className="tabular-nums">
+                  {t("roundProgress", { done: running.done, total: running.total })}
+                </span>
+              </Button>
+            ) : null}
+            {isAIEnabled && standaloneIds.length > 0 && !running ? (
+              <AIButton
+                data-testid="ingredients-find-parents-all"
+                isDisabled={startRound.isPending}
+                size="sm"
+                variant="tertiary"
+                onPress={() => void startAndWatch({ mode: "parent", ingredientIds: standaloneIds })}
               >
                 {t("findParentsAll")}
               </AIButton>
             ) : null}
-            {isAIEnabled && flaggedIds.length > 0 ? (
+            {isAIEnabled && hasFlagged && !running ? (
               <AIButton
                 data-testid="ingredients-ask-ai-all"
-                isDisabled={running !== null || startRound.isPending}
+                isDisabled={startRound.isPending}
                 size="sm"
                 variant="tertiary"
-                onPress={() => void askAIAboutAll("review")}
+                onPress={() => setAskOpen(true)}
               >
                 {t("askAIAll")}
               </AIButton>
@@ -269,8 +300,15 @@ export default function IngredientsSettingsContent() {
         onChanged={refresh}
         onClose={() => setOpenId(null)}
       />
+      <AskAIRoundModal
+        isOpen={askOpen}
+        isStarting={startRound.isPending}
+        onClose={() => setAskOpen(false)}
+        onStart={(scope) => void askAIAboutFlagged(scope)}
+      />
       <SuggestionsPanel
         jobId={reportJobId}
+        round={running}
         open={suggestionsOpen}
         reviewing={reviewing}
         onChanged={refresh}

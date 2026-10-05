@@ -14,7 +14,7 @@
 import { z } from "zod";
 
 import type { IngredientCandidate } from "@norish/db/repositories/ingredient-aliases";
-import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
+import type { FlagReason, ModelTokenEstimate } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   findIngredientCandidates,
   findIngredientCandidatesById,
@@ -27,7 +27,13 @@ import {
 import { aiLogger } from "@norish/shared-server/logger";
 import { foldName } from "@norish/shared/lib/fold-name";
 
-import { decide, generateStructured } from "../runtime/runtime";
+import type { TokenEstimate } from "../runtime/runtime";
+import {
+  decide,
+  estimateDecisionInputTokens,
+  estimateStructuredInputTokens,
+  generateStructured,
+} from "../runtime/runtime";
 
 /**
  * At or above: the Decision's pick is acted on — a text it names as a known
@@ -325,15 +331,20 @@ const readingSchema = z
   })
   .strict();
 
+/** What the language model is told when it is asked only to read a name. */
+function readingSections(text: string): string[] {
+  return [
+    `New name: ${text}`,
+    "There is no list of foods yet. Say what plain food this name is (englishName), and what more general food it is a kind of (generalFood), so the catalogue can be searched for them.",
+  ];
+}
+
 /** What the language model reads a name as, with no catalogue in front of it. */
 async function readName(text: string): Promise<Reading> {
   const reading = await generateStructured({
     prompt: "ingredient-resolution",
     schema: readingSchema,
-    sections: [
-      `New name: ${text}`,
-      "There is no list of foods yet. Say what plain food this name is (englishName), and what more general food it is a kind of (generalFood), so the catalogue can be searched for them.",
-    ],
+    sections: readingSections(text),
   });
 
   aiLogger.info({ text, ...reading }, "Language model read what food a name is");
@@ -384,14 +395,11 @@ const NEW = "new";
 
 /**
  * One Choice over every candidate twice — the food itself, or a kind of it —
- * plus a food of its own. The descriptions are the domain's own option set,
- * which is why a Decision has no Prompt. Null where the pick is below the
- * threshold: the unclear case, for the language model.
+ * plus a food of its own, with the answer each option stands for. The
+ * descriptions are the domain's own option set, which is why a Decision has
+ * no Prompt.
  */
-async function decideFood(
-  text: string,
-  candidates: readonly IngredientCandidate[]
-): Promise<AIResolution | null> {
+function foodChoice(text: string, candidates: readonly IngredientCandidate[]) {
   const options = new Map<string, AIResolution>();
   const criteria: Record<string, string> = {};
 
@@ -409,8 +417,7 @@ async function decideFood(
   criteria[NEW] = "Is none of these, but a food of its own";
   options.set(NEW, { kind: "new", kindOf: null, flagged: false, reason: null });
 
-  const { answers } = await decide({
-    feature: "ingredient-resolution",
+  return {
     state: {
       name: text,
       foods: candidates.map((candidate) => ({
@@ -420,13 +427,26 @@ async function decideFood(
     },
     questions: {
       food: {
-        type: "choice",
+        type: "choice" as const,
         instructions:
           "Which food in the catalogue does this name name, if any? A name that only shares a word with a food is a different food.",
         criteria,
       },
     },
-  });
+    options,
+  };
+}
+
+/**
+ * The Decision over a name's candidates. Null where the pick is below the
+ * threshold: the unclear case, for the language model.
+ */
+async function decideFood(
+  text: string,
+  candidates: readonly IngredientCandidate[]
+): Promise<AIResolution | null> {
+  const { state, questions, options } = foodChoice(text, candidates);
+  const { answers } = await decide({ feature: "ingredient-resolution", state, questions });
   const { choice, probabilities } = answers.food;
   const probability = probabilities[choice] ?? 0;
 
@@ -456,6 +476,23 @@ const languageModelAnswerSchema = z
   })
   .strict();
 
+/** What the language model is told when it compares a name with the catalogue's foods. */
+function comparingSections(text: string, candidates: readonly IngredientCandidate[]): string[] {
+  return [
+    `New name: ${text}`,
+    candidates.length === 0
+      ? "Foods in the catalogue: none share a word with the new name."
+      : [
+          "Foods in the catalogue:",
+          ...candidates.map((candidate, index) =>
+            candidate.aliases.length > 0
+              ? `${index + 1}. ${candidate.name} (also: ${candidate.aliases.slice(0, SHOWN_ALIASES).join(", ")})`
+              : `${index + 1}. ${candidate.name}`
+          ),
+        ].join("\n"),
+  ];
+}
+
 /**
  * The language model's answer to the same question, under the administrator's
  * Prompt. It says itself whether it is sure, and an unsure answer mints a
@@ -468,19 +505,7 @@ async function askLanguageModel(
   const answer = await generateStructured({
     prompt: "ingredient-resolution",
     schema: languageModelAnswerSchema,
-    sections: [
-      `New name: ${text}`,
-      candidates.length === 0
-        ? "Foods in the catalogue: none share a word with the new name."
-        : [
-            "Foods in the catalogue:",
-            ...candidates.map((candidate, index) =>
-              candidate.aliases.length > 0
-                ? `${index + 1}. ${candidate.name} (also: ${candidate.aliases.slice(0, SHOWN_ALIASES).join(", ")})`
-                : `${index + 1}. ${candidate.name}`
-            ),
-          ].join("\n"),
-    ],
+    sections: comparingSections(text, candidates),
   });
   const food = answer.food === null ? undefined : candidates[answer.food - 1];
 
@@ -495,4 +520,70 @@ async function askLanguageModel(
   return answer.sure
     ? { kind: "new", kindOf, flagged: false, reason: null }
     : flaggedNew("ai-unsure", kindOf);
+}
+
+/**
+ * What the answer to one request takes on top of what is sent: a small JSON
+ * object. A model that reasons before it answers takes more.
+ */
+const ANSWER_TOKENS = 50;
+
+/**
+ * About how many tokens asking a person's question about these names takes
+ * on each model it asks, a name on average, counted from what would be sent
+ * rather than by asking: the reading and the comparison with the foods each
+ * name's words find on the language model, and the Decision where one is in
+ * use, each with its answer. Every request counts in full, though a sure
+ * Decision spares the comparison and a reading the catalogue finds nothing
+ * for spares both. `bare` is each text without its preparation, as
+ * `askWhatFoodThisIs` takes it.
+ */
+export async function estimateQuestionTokens(
+  names: readonly { text: string; bare: string }[]
+): Promise<ModelTokenEstimate[]> {
+  if (names.length === 0) return [];
+  const deciding = await isDecisionUseEnabled("ingredientResolution");
+  const byModel = new Map<string, TokenEstimate>();
+  const add = ({ provider, model, tokens }: TokenEstimate) => {
+    const key = `${provider}\u0000${model}`;
+    const seen = byModel.get(key) ?? { provider, model, tokens: 0 };
+
+    seen.tokens += tokens + ANSWER_TOKENS;
+    byModel.set(key, seen);
+  };
+
+  await Promise.all(
+    names.map(async ({ text, bare }) => {
+      const candidates = await findIngredientCandidates(
+        wordStarts(bare || text),
+        MAX_CANDIDATES,
+        null
+      );
+      const [reading, comparing, decision] = await Promise.all([
+        estimateStructuredInputTokens({
+          prompt: "ingredient-resolution",
+          schema: readingSchema,
+          sections: readingSections(text),
+        }),
+        estimateStructuredInputTokens({
+          prompt: "ingredient-resolution",
+          schema: languageModelAnswerSchema,
+          sections: comparingSections(text, candidates),
+        }),
+        deciding && candidates.length > 0
+          ? estimateDecisionInputTokens(foodChoice(text, candidates))
+          : null,
+      ]);
+
+      add(reading);
+      add(comparing);
+      if (decision) add(decision);
+    })
+  );
+
+  return [...byModel.values()].map(({ provider, model, tokens }) => ({
+    provider,
+    model,
+    perFood: Math.round(tokens / names.length),
+  }));
 }

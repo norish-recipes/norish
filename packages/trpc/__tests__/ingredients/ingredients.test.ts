@@ -52,7 +52,12 @@ const suggestionsRepo = vi.hoisted(() => ({
   findIngredientSuggestions: vi.fn(async (): Promise<unknown[]> => []),
   listIngredientSuggestions: vi.fn(async (): Promise<unknown[]> => []),
 }));
-const reviewer = vi.hoisted(() => ({ reviewFlaggedWithAI: vi.fn(), findParentWithAI: vi.fn() }));
+const reviewer = vi.hoisted(() => ({
+  reviewFlaggedWithAI: vi.fn(),
+  findParentWithAI: vi.fn(),
+  listReviewableIngredients: vi.fn(async (): Promise<unknown[]> => []),
+  estimateReviewTokens: vi.fn(async (): Promise<unknown[]> => []),
+}));
 
 const reviewQueue = vi.hoisted(() => ({
   add: vi.fn(async () => ({ id: "round-1" })),
@@ -400,22 +405,31 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     reviewQueue.add.mockClear();
     reviewQueue.getJobs.mockReset();
     reviewQueue.getJobs.mockResolvedValue([]);
+    reviewer.listReviewableIngredients.mockReset().mockResolvedValue([]);
+    reviewer.estimateReviewTokens.mockReset().mockResolvedValue([]);
   });
 
-  it("queues one job carrying the foods by name and the asker, and answers the job to watch", async () => {
-    catalogue.findCatalogueIngredientNames.mockResolvedValue(new Map([[UIEN, "uien"]]));
+  it("queues one job over the flagged foods the server picks for the scope, and answers the job to watch", async () => {
+    reviewer.listReviewableIngredients.mockResolvedValue([
+      { id: UIEN, name: "uien", ownerId: ME, suggested: false },
+      { id: ONION, name: "onion", ownerId: HOUSEMATE, suggested: false },
+    ]);
 
-    await expect(callerFor().reviewAllWithAI({ ingredientIds: [UIEN, ONION] })).resolves.toEqual({
-      jobId: "round-1",
-      total: 2,
-    });
+    await expect(
+      callerFor().reviewAllWithAI({ mode: "review", scope: "unsuggested" })
+    ).resolves.toEqual({ jobId: "round-1", total: 2, pending: [UIEN, ONION] });
 
-    // A food the catalogue no longer names keeps its id as its name.
+    // The foods are the whole catalogue's the asker may edit, not a page's.
+    expect(reviewer.listReviewableIngredients).toHaveBeenCalledExactlyOnceWith(
+      { userId: ME, householdUserIds: [ME, HOUSEMATE], isServerAdmin: false },
+      "unsuggested"
+    );
     expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith("review", {
       ingredients: [
         { id: UIEN, name: "uien" },
-        { id: ONION, name: ONION },
+        { id: ONION, name: "onion" },
       ],
+      mode: "review",
       actor: { userId: ME, householdUserIds: [ME, HOUSEMATE], isServerAdmin: false },
     });
     // Nothing is asked here: the round asks, and announces, from the worker.
@@ -423,15 +437,92 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     expect(ingredientsRealtime.published).toHaveLength(0);
   });
 
-  it("asks what each food is a kind of instead, when told to", async () => {
-    catalogue.findCatalogueIngredientNames.mockResolvedValue(new Map());
+  it("asks what each food on the page is a kind of instead, when told to", async () => {
+    catalogue.findCatalogueIngredientNames.mockResolvedValue(new Map([[UIEN, "uien"]]));
 
-    await callerFor().reviewAllWithAI({ ingredientIds: [UIEN], mode: "parent" });
+    await expect(
+      callerFor().reviewAllWithAI({ mode: "parent", ingredientIds: [UIEN, ONION] })
+    ).resolves.toEqual({ jobId: "round-1", total: 2, pending: [UIEN, ONION] });
 
+    // A food the catalogue no longer names keeps its id as its name.
     expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith(
       "review",
-      expect.objectContaining({ mode: "parent" })
+      expect.objectContaining({
+        mode: "parent",
+        ingredients: [
+          { id: UIEN, name: "uien" },
+          { id: ONION, name: ONION },
+        ],
+      })
     );
+    expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
+  });
+
+  it("says how many foods each scope holds, and the tokens a food took in the last round", async () => {
+    reviewer.listReviewableIngredients.mockResolvedValue([
+      { id: UIEN, name: "uien", ownerId: ME, suggested: false },
+      { id: ONION, name: "onion", ownerId: ME, suggested: true },
+    ]);
+    reviewQueue.getJobs.mockImplementation((async (types: string[]) =>
+      types.includes("completed")
+        ? [
+            {
+              id: "round-0",
+              data: { ingredients: [{ id: UIEN, name: "uien" }] },
+              progress: {
+                step: "asking-ai:1/1",
+                updatedAt: 1,
+                attempts: [
+                  {
+                    attempt: 1,
+                    timeline: [
+                      {
+                        id: "asking-ai:1/1",
+                        startedAt: 1,
+                        endedAt: 2,
+                        detail: { ingredientId: UIEN, outcome: "distinct" },
+                      },
+                    ],
+                    models: [
+                      { provider: "openai", model: "gpt", outcome: "completed", tokens: 1864 },
+                      { provider: "typesafe", model: "jev", outcome: "completed", tokens: 1689 },
+                    ],
+                  },
+                ],
+              },
+            },
+          ]
+        : []) as never);
+
+    await expect(callerFor().reviewScope()).resolves.toEqual({
+      flagged: 2,
+      unsuggested: 1,
+      tokens: {
+        basis: "measured",
+        foods: 1,
+        models: [
+          { provider: "openai", model: "gpt", perFood: 1864 },
+          { provider: "typesafe", model: "jev", perFood: 1689 },
+        ],
+      },
+    });
+    expect(reviewer.estimateReviewTokens).not.toHaveBeenCalled();
+  });
+
+  it("counts a food's tokens from the prompt before any round was measured", async () => {
+    reviewer.listReviewableIngredients.mockResolvedValue([
+      { id: UIEN, name: "uien", ownerId: ME, suggested: false },
+    ]);
+    const models = [{ provider: "openai", model: "gpt-5.6-luna", perFood: 2600 }];
+
+    reviewer.estimateReviewTokens.mockResolvedValue(models);
+
+    await expect(callerFor().reviewScope()).resolves.toEqual({
+      flagged: 1,
+      unsuggested: 1,
+      tokens: { basis: "prompt", models },
+    });
+    expect(reviewer.estimateReviewTokens).toHaveBeenCalledWith(["uien"]);
   });
 
   it("refuses every AI question while AI is off for the instance", async () => {
@@ -443,10 +534,12 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     await expect(callerFor().findParentWithAI({ ingredientId: UIEN })).rejects.toThrow(
       "AI features are disabled"
     );
-    await expect(callerFor().reviewAllWithAI({ ingredientIds: [UIEN] })).rejects.toThrow(
+    await expect(callerFor().reviewAllWithAI({ mode: "review", scope: "flagged" })).rejects.toThrow(
       "AI features are disabled"
     );
+    await expect(callerFor().reviewScope()).rejects.toThrow("AI features are disabled");
     expect(reviewer.reviewFlaggedWithAI).not.toHaveBeenCalled();
+    expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
     expect(reviewQueue.add).not.toHaveBeenCalled();
     isAIEnabled.mockResolvedValue(true);
   });
@@ -468,9 +561,13 @@ describe("a round of Ask AI over flagged Ingredients", () => {
   });
 
   it("asks about nothing without a food", async () => {
-    await expect(callerFor().reviewAllWithAI({ ingredientIds: [] })).rejects.toMatchObject({
-      code: "BAD_REQUEST",
-    });
+    await expect(
+      callerFor().reviewAllWithAI({ mode: "parent", ingredientIds: [] })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    // Nothing left in the scope by the time the round would start.
+    await expect(
+      callerFor().reviewAllWithAI({ mode: "review", scope: "unsuggested" })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     expect(reviewQueue.add).not.toHaveBeenCalled();
   });
 
@@ -546,6 +643,7 @@ describe("a round of Ask AI over flagged Ingredients", () => {
           englishName: "onions",
         },
       ],
+      waiting: [],
     });
     expect(reviewQueue.getJob).toHaveBeenCalledWith("round-1");
 

@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# translation} other {# translations}}{kinds, plural, =0 {} one {, # kind} other {, # kinds}}{parent, select, none {} other {, parent: {parent}}}",
     "askAI": "Ask AI",
     "askAIAll": "Ask AI about flagged ingredients",
+    "askAIRound": {
+      "intro": "AI reads each name and compares it with the foods Norish knows. Nothing changes until you confirm a suggestion.",
+      "scopeLabel": "Which ingredients",
+      "scopes": {
+        "unsuggested": "Only those without a suggestion",
+        "flagged": "Every flagged ingredient"
+      },
+      "scopeSize": "{count, plural, =0 {No ingredients} one {# ingredient · about {tokens} tokens} other {# ingredients · about {tokens} tokens}}",
+      "replaces": "Replaces the suggestions already waiting.",
+      "modelTokens": "about {tokens} tokens",
+      "basisMeasured": "Based on what the last round used.",
+      "basisPrompt": "Estimated from the prompt, so the real count is likely higher."
+    },
+    "roundProgress": "Asking AI · {done, number} of {total, number}",
+    "roundSection": {
+      "title": "Asking AI",
+      "progress": "{done, number} of {total, number}",
+      "waiting": "{count, plural, one {# ingredient waiting} other {# ingredients waiting}}"
+    },
     "reviewing": "Asking AI…",
     "aiOutcomes": {
       "parent": "AI suggests filing {name} as a kind of {of}.",
@@ -506,7 +525,6 @@
       "empty": "Enter a name",
       "unknown": "Something went wrong. Try again."
     },
-    "reportRunning": "The round is still going; what it has settled so far is listed.",
     "keepAlias": "Keep {alias}",
     "reportOutcomes": {
       "parent": "Filed under a parent",

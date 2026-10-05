@@ -25,9 +25,10 @@ import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ing
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients } from "@norish/shared-server/realtime/ingredients";
 
+import type { JobStepEvent } from "../job-steps";
 import type { ReviewStepDetail } from "./progress";
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
-import { completeStep, reportStep } from "../job-steps";
+import { recordCompletedSteps } from "../job-steps";
 import { REVIEW_STEP, summarizeReviewRound } from "./progress";
 
 const log = createLogger("worker:ingredient-review");
@@ -92,29 +93,54 @@ function reviewConcurrency(): number {
   return SERVER_CONFIG.INGREDIENT_REVIEW_CONCURRENCY;
 }
 
+/**
+ * How many times a round writes its answers down and tells the pages how far
+ * it has come. A round may be every flagged food in the catalogue, and the
+ * job's progress is one value rewritten whole on each write, so a write per
+ * food would store the square of the round's size; twenty keep it linear.
+ */
+const ROUND_WRITES = 20;
+
 /** Exported so the job body can be exercised without a Redis-backed worker. */
 export async function processIngredientReviewJob(job: Job<IngredientReviewJobData>): Promise<void> {
   const { ingredients: foods } = job.data;
   const changed: string[] = [];
+  const writeEvery = Math.max(1, Math.ceil(foods.length / ROUND_WRITES));
   let next = 0;
   let settled = 0;
-  // The job's steps are a timeline, one open at a time: answers are written to it in turn.
+  // The answers not yet written down, as the steps the job monitor shows.
+  let unwritten: (JobStepEvent & { endedAt: number })[] = [];
+  // Writes go out one after another, so the timeline keeps the order foods settled in.
   let recording = Promise.resolve();
 
   log.info({ jobId: job.id, count: foods.length }, "Asking AI about flagged Ingredients");
 
-  const record = (food: { id: string; name: string }, detail: ReviewStepDetail) => {
+  const record = (
+    food: { id: string; name: string },
+    startedAt: number,
+    detail: ReviewStepDetail
+  ) => {
+    const { ingredientId, ...outcome } = detail;
+
+    settled += 1;
+    unwritten.push({
+      id: `${REVIEW_STEP}:${settled}/${foods.length}`,
+      startedAt,
+      endedAt: Date.now(),
+      detail: { ingredientId, name: food.name, ...outcome },
+    });
+    // A suggestion recorded, or a flag's reason brought up to date, is worth announcing.
+    if (detail.outcome !== "skipped" && detail.outcome !== "failed") changed.push(food.id);
+    if (unwritten.length < writeEvery && settled < foods.length) return recording;
+
+    const steps = unwritten;
+    const over = settled === foods.length;
+
+    unwritten = [];
     recording = recording.then(async () => {
-      settled += 1;
-      await reportStep(job, `${REVIEW_STEP}:${settled}/${foods.length}`, {
-        ingredientId: food.id,
-        name: food.name,
-      });
-      await completeStep(job, detail);
-      // A suggestion recorded, or a flag's reason brought up to date, is worth announcing.
-      if (detail.outcome !== "skipped" && detail.outcome !== "failed") changed.push(food.id);
-      // The count follows as answers come; the answers themselves land together at the end.
-      if (settled < foods.length) await announceRound(job, false);
+      await recordCompletedSteps(job, steps);
+      // The count, and which foods still wait, follow as answers are written down.
+      if (!over) await announceRound(job, false);
     });
 
     return recording;
@@ -123,8 +149,9 @@ export async function processIngredientReviewJob(job: Job<IngredientReviewJobDat
   const askNext = async (): Promise<void> => {
     while (next < foods.length) {
       const food = foods[next++]!;
+      const startedAt = Date.now();
 
-      await record(food, await ask(job, food.id));
+      await record(food, startedAt, await ask(job, food.id));
     }
   };
 

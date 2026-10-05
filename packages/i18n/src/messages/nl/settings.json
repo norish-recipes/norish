@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
     "askAI": "Vraag AI",
     "askAIAll": "Vraag AI over gemarkeerde ingrediënten",
+    "askAIRound": {
+      "intro": "AI leest elke naam en vergelijkt die met de voedingsmiddelen die Norish kent. Er verandert niets tot je een voorstel bevestigt.",
+      "scopeLabel": "Welke ingrediënten",
+      "scopes": {
+        "unsuggested": "Alleen die zonder voorstel",
+        "flagged": "Alle gemarkeerde ingrediënten"
+      },
+      "scopeSize": "{count, plural, =0 {Geen ingrediënten} one {# ingrediënt · ongeveer {tokens} tokens} other {# ingrediënten · ongeveer {tokens} tokens}}",
+      "replaces": "Vervangt de voorstellen die al klaarstaan.",
+      "modelTokens": "ongeveer {tokens} tokens",
+      "basisMeasured": "Op basis van wat de vorige ronde gebruikte.",
+      "basisPrompt": "Geschat op basis van de prompt, dus in werkelijkheid waarschijnlijk meer."
+    },
+    "roundProgress": "AI wordt gevraagd · {done, number} van {total, number}",
+    "roundSection": {
+      "title": "AI wordt gevraagd",
+      "progress": "{done, number} van {total, number}",
+      "waiting": "{count, plural, one {# ingrediënt wacht} other {# ingrediënten wachten}}"
+    },
     "reviewing": "AI wordt gevraagd…",
     "aiOutcomes": {
       "parent": "AI stelt voor {name} te plaatsen als een soort {of}.",
@@ -506,7 +525,6 @@
       "empty": "Voer een naam in",
       "unknown": "Er ging iets mis. Probeer het opnieuw."
     },
-    "reportRunning": "De ronde loopt nog; wat tot nu toe is afgehandeld staat hieronder.",
     "keepAlias": "{alias} behouden",
     "reportOutcomes": {
       "parent": "Onder een ouder geplaatst",

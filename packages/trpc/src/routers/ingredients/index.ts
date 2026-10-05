@@ -2,7 +2,10 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
-import type { ReviewReport } from "@norish/shared/contracts/ingredient-catalogue";
+import type {
+  ReviewReport,
+  ReviewScopeSummary,
+} from "@norish/shared/contracts/ingredient-catalogue";
 import type {
   IngredientNutrition,
   NutritionFoodSummary,
@@ -11,7 +14,11 @@ import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { assertAIEnabled } from "@norish/auth/permissions";
 import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
-import { findRunningReviewRound, readReviewReport } from "@norish/queue/ingredient-review/progress";
+import {
+  findRunningReviewRound,
+  readReviewReport,
+  readRoundTokens,
+} from "@norish/queue/ingredient-review/progress";
 import { getQueues } from "@norish/queue/registry";
 import {
   addAlias as addCatalogueAlias,
@@ -37,13 +44,19 @@ import {
 import { resolveIngredientNutrition } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import { spoonMeasureFor } from "@norish/shared-server/ingredients/nutrition/spoon-measure";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
-import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
+import {
+  estimateReviewTokens,
+  findParentWithAI,
+  listReviewableIngredients,
+  reviewFlaggedWithAI,
+} from "@norish/shared-server/ingredients/review";
 import {
   confirmSuggestion,
   dismissSuggestion,
   listSuggestions,
 } from "@norish/shared-server/ingredients/suggestions";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { REVIEW_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   INGREDIENT_SEARCH_FIELDS,
   INGREDIENT_SEARCH_MATCHES,
@@ -265,33 +278,57 @@ const findParentWithAI_ = authedProcedure
     });
   });
 
+/** These Ingredients by id and by name, so the job monitor's input reads as foods, not ids. */
+async function namedFoods(ids: readonly string[]): Promise<{ id: string; name: string }[]> {
+  const names = await findCatalogueIngredientNames(ids);
+
+  return ids.map((id) => ({ id, name: names.get(id) ?? id }));
+}
+
 /**
- * Ask AI about every flagged Ingredient on the page at once, or what food
- * each Ingredient on the page is a kind of (`mode: "parent"`): one job, a step
- * per food, that keeps going after the tab is closed. Each food's edit follows
- * `edit` on that food, checked by the round as it reaches it, so a food the
- * asker may not edit is passed over rather than refused here. Answers the job
- * the page watches the round by, over `onReview`.
+ * Ask AI about the flagged Ingredients the asker may edit, every one or only
+ * those no suggestion waits on (`scope`), which the server picks, however
+ * many there are; or what food each Ingredient on the page is a kind of
+ * (`mode: "parent"`). One job, a step per food, that keeps going after the
+ * tab is closed. Each food's edit follows `edit` on that food, checked again
+ * by the round as it reaches it, so a food the asker may no longer edit is
+ * passed over rather than refused here. Answers the job the page watches the
+ * round by, over `onReview`, and the foods it waits on.
  */
 const reviewAllWithAI = authedProcedure
   .input(
-    z.object({
-      ingredientIds: z.array(z.uuid()).min(1).max(500),
-      mode: z.enum(["review", "parent"]).optional(),
-    })
+    z.discriminatedUnion("mode", [
+      z.object({ mode: z.literal("review"), scope: z.enum(REVIEW_SCOPES) }),
+      z.object({ mode: z.literal("parent"), ingredientIds: z.array(z.uuid()).min(1) }),
+    ])
   )
   .mutation(async ({ ctx, input }) => {
     await assertAIEnabled();
+
+    const foods =
+      input.mode === "review"
+        ? (await listReviewableIngredients(actorOf(ctx), input.scope)).map(({ id, name }) => ({
+            id,
+            name,
+          }))
+        : await namedFoods(input.ingredientIds);
+
     log.info(
-      { userId: ctx.user.id, count: input.ingredientIds.length, mode: input.mode ?? "review" },
+      {
+        userId: ctx.user.id,
+        count: foods.length,
+        mode: input.mode,
+        ...(input.mode === "review" ? { scope: input.scope } : {}),
+      },
       "Starting a round of Ask AI over Ingredients"
     );
+    if (foods.length === 0) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Nothing to ask AI about" });
+    }
 
-    // The job carries each food's name, so the monitor's input reads as foods, not ids.
-    const names = await findCatalogueIngredientNames(input.ingredientIds);
     const jobId = await addIngredientReviewJob(getQueues().ingredientReview, {
-      ingredients: input.ingredientIds.map((id) => ({ id, name: names.get(id) ?? id })),
-      ...(input.mode ? { mode: input.mode } : {}),
+      ingredients: foods,
+      mode: input.mode,
       actor: {
         userId: ctx.user.id,
         householdUserIds: ctx.householdUserIds ? [...ctx.householdUserIds] : null,
@@ -299,8 +336,30 @@ const reviewAllWithAI = authedProcedure
       },
     });
 
-    return { jobId, total: input.ingredientIds.length };
+    return { jobId, total: foods.length, pending: foods.map((food) => food.id) };
   });
+
+/**
+ * What a round of Ask AI over the flagged Ingredients would ask about, for
+ * the asker: how many each scope holds, and about how many tokens a food's
+ * question takes. Measured over the latest finished round where the queue
+ * still holds one that recorded its tokens; counted from the prompt
+ * otherwise.
+ */
+const reviewScope = authedProcedure.query(async ({ ctx }): Promise<ReviewScopeSummary> => {
+  await assertAIEnabled();
+
+  const foods = await listReviewableIngredients(actorOf(ctx));
+  const measured = await readRoundTokens(getQueues().ingredientReview);
+
+  return {
+    flagged: foods.length,
+    unsuggested: foods.filter((food) => !food.suggested).length,
+    tokens: measured
+      ? { basis: "measured", ...measured }
+      : { basis: "prompt", models: await estimateReviewTokens(foods.map((food) => food.name)) },
+  };
+});
 
 /** The round of Ask AI running on the instance, for a page that opens mid-round. */
 const reviewRound = authedProcedure.query(() =>
@@ -555,6 +614,7 @@ export const ingredientsRouter = router({
   reviewWithAI,
   findParentWithAI: findParentWithAI_,
   reviewAllWithAI,
+  reviewScope,
   reviewRound,
   reviewReport,
   suggestions,

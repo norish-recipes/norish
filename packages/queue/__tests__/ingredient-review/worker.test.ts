@@ -2,7 +2,8 @@
 /**
  * A round of Ask AI over Flagged Ingredients: one job, a step per food, each
  * step saying what came of it and what AI was asked, every settled food
- * announced as its own change and the round's count following after each. A
+ * announced as its own change and the round's count following, written down
+ * every twentieth of the way so a round of every flagged food stays cheap. A
  * food no longer flagged or out of the asker's reach is passed over, a food
  * whose question broke is recorded as failed with the cause, and neither ends
  * the round; only a round that has spent its attempts is told to every page
@@ -14,6 +15,7 @@ import type { IngredientReviewJobData } from "@norish/queue/contracts/job-types"
 import {
   findRunningReviewRound,
   readReviewReport,
+  readRoundTokens,
   summarizeReviewRound,
 } from "@norish/queue/ingredient-review/progress";
 import {
@@ -184,8 +186,8 @@ describe("processIngredientReviewJob", () => {
         done: 1,
         total: 2,
         counts: { ...ZERO, parent: 1 },
-        // Every row waits until the round ends: the answers land together.
-        pending: ["fusilli", "knaks"],
+        // A row waits until its own answer is written down.
+        pending: ["knaks"],
         finished: false,
       },
       {
@@ -197,6 +199,45 @@ describe("processIngredientReviewJob", () => {
         finished: true,
       },
     ]);
+  });
+
+  it("writes the round down and tells the pages every twentieth of the way, not after every food", async () => {
+    reviewer.reviewFlaggedWithAI.mockResolvedValue({ outcome: "distinct", ...trace });
+    const ids = Array.from({ length: 100 }, (_, index) => `food-${index}`);
+    const job = fakeJob(ids);
+
+    await processIngredientReviewJob(job);
+
+    // A hundred foods, written five at a time: twenty writes rather than a hundred.
+    expect(vi.mocked(job.updateProgress)).toHaveBeenCalledTimes(20);
+    // Each food is still a step of its own and a line of its own in the log.
+    const [attempt] = readStepProgress(job.progress)!.attempts;
+
+    expect(attempt!.timeline.map((step) => step.id)).toEqual(
+      ids.map((_, index) => `asking-ai:${index + 1}/100`)
+    );
+    expect(vi.mocked(job.log)).toHaveBeenCalledTimes(100);
+    // The count follows at each write, and the end is told once.
+    expect(published("review").map((round) => round.done)).toEqual([
+      ...Array.from({ length: 19 }, (_, index) => (index + 1) * 5),
+      100,
+    ]);
+    expect(published("review").filter((round) => round.finished)).toHaveLength(1);
+  });
+
+  it("records how long each food's question took", async () => {
+    reviewer.reviewFlaggedWithAI.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      return { outcome: "distinct" };
+    });
+    const job = fakeJob(["slow"]);
+
+    await processIngredientReviewJob(job);
+
+    const [step] = readStepProgress(job.progress)!.attempts[0]!.timeline;
+
+    expect(step!.endedAt! - step!.startedAt).toBeGreaterThanOrEqual(15);
   });
 
   it("passes over a food the asker may not edit, or that is gone, and goes on", async () => {
@@ -299,7 +340,7 @@ describe("summarizeReviewRound", () => {
     expect(summarizeReviewRound(job, false)).toMatchObject({
       done: 1,
       counts: { merge: 0, skipped: 1 },
-      pending: ["a", "b"],
+      pending: ["b"],
     });
   });
 });
@@ -341,8 +382,8 @@ describe("findRunningReviewRound", () => {
 });
 
 describe("readReviewReport", () => {
-  it("reads back what the latest attempt did to each food, in order, and whether the round is over", async () => {
-    const job = fakeJob(["a", "b"]);
+  it("reads back what the latest attempt did to each food, in order, what it has still to ask, and whether the round is over", async () => {
+    const job = fakeJob(["a", "b", "c"]);
 
     await reportStep(job, "asking-ai:1/2", { ingredientId: "a", name: "uitjes" });
     await completeStep(job, {
@@ -371,14 +412,101 @@ describe("readReviewReport", () => {
         { ingredientId: "a", name: "uitjes", outcome: "merge", into: "onion", ...trace },
         { ingredientId: "b", name: "Unox Knaks", outcome: "failed", error: "Failed query" },
       ],
+      waiting: [{ ingredientId: "c", name: "c!" }],
     });
     expect(queue.getJob).toHaveBeenCalledWith("round-1");
 
     getState.mockResolvedValue("completed");
-    await expect(read()).resolves.toMatchObject({ finished: true });
+    await expect(read()).resolves.toMatchObject({ finished: true, waiting: [] });
 
     // A round the queue has let go is no longer on record.
     queue.getJob.mockResolvedValue(null as never);
     await expect(read()).resolves.toBeNull();
+  });
+});
+
+describe("readRoundTokens", () => {
+  /** A finished round's job: what came of each food, and the models its attempt asked. */
+  function finishedRound(
+    outcomes: Record<string, unknown>[],
+    uses: { model: string; tokens?: number }[]
+  ) {
+    return {
+      id: "round-done",
+      data: { ingredients: [], actor },
+      progress: {
+        step: "asking-ai",
+        updatedAt: 0,
+        attempts: [
+          {
+            attempt: 1,
+            timeline: outcomes.map((outcome, index) => ({
+              id: `asking-ai:${index + 1}/${outcomes.length}`,
+              startedAt: 0,
+              endedAt: 1,
+              detail: { ingredientId: `food-${index}`, ...outcome },
+            })),
+            models: uses.map(({ model, tokens }) => ({
+              provider: model.startsWith("jev") ? "typesafe" : "openai",
+              model,
+              outcome: tokens === undefined ? "failed" : "completed",
+              ...(tokens === undefined ? {} : { tokens }),
+            })),
+          },
+        ],
+      },
+    };
+  }
+
+  function queueOf(...jobs: unknown[]) {
+    const queue = { getJobs: vi.fn(async () => jobs) };
+
+    return {
+      queue,
+      read: () => readRoundTokens(queue as unknown as Parameters<typeof readRoundTokens>[0]),
+    };
+  }
+
+  it("measures a food's question per model over the latest finished round, leaving out the foods it passed over", async () => {
+    const { queue, read } = queueOf(
+      finishedRound(
+        [
+          { outcome: "distinct", ...trace },
+          { outcome: "skipped", reason: "not-flagged" },
+          { outcome: "merge", into: "onion", ...trace },
+        ],
+        [
+          { model: "gpt-5.6-luna", tokens: 900 },
+          { model: "jev-1.13.0", tokens: 1700 },
+          { model: "gpt-5.6-luna", tokens: 1100 },
+          { model: "gpt-5.6-luna" },
+        ]
+      )
+    );
+
+    // Over the two foods it asked about: 2,000 tokens on the language model, 1,700 on the Decision Model.
+    await expect(read()).resolves.toEqual({
+      foods: 2,
+      models: [
+        { provider: "openai", model: "gpt-5.6-luna", perFood: 1000 },
+        { provider: "typesafe", model: "jev-1.13.0", perFood: 850 },
+      ],
+    });
+    expect(queue.getJobs).toHaveBeenCalledWith(["completed"], 0, 9, false);
+  });
+
+  it("looks past a round from before tokens were counted, and answers null where no round counted any", async () => {
+    const old = finishedRound([{ outcome: "distinct", ...trace }], [{ model: "gpt-5.6-luna" }]);
+    const measured = finishedRound(
+      [{ outcome: "distinct", ...trace }],
+      [{ model: "gpt-5.6-luna", tokens: 3553 }]
+    );
+
+    await expect(queueOf(old, measured).read()).resolves.toEqual({
+      foods: 1,
+      models: [{ provider: "openai", model: "gpt-5.6-luna", perFood: 3553 }],
+    });
+    await expect(queueOf(old).read()).resolves.toBeNull();
+    await expect(queueOf().read()).resolves.toBeNull();
   });
 });

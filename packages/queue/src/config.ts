@@ -138,8 +138,9 @@ export const HANGING_THRESHOLD_MS: Record<QueueName, number> = {
   [QUEUE_NAMES.INGREDIENT_LINKING]: 15 * 60_000,
   [QUEUE_NAMES.IMAGE_GENERATION]: 15 * 60_000,
   [QUEUE_NAMES.STORE_LOOKUP]: 10 * 60_000,
-  // A round asks every flagged food on a page, each within its 30 s budget.
-  [QUEUE_NAMES.INGREDIENT_REVIEW]: 60 * 60_000,
+  // A round may ask every flagged food in the catalogue, each within its 30 s
+  // budget: a thousand of them, a few at a time, run for well over an hour.
+  [QUEUE_NAMES.INGREDIENT_REVIEW]: 4 * 60 * 60_000,
 };
 
 export type QueueRemovalOptions = Pick<DefaultJobOptions, "removeOnComplete" | "removeOnFail">;

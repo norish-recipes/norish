@@ -10,13 +10,17 @@
  * parent: it asks what the food is a kind of, never what is a kind of it.
  * Follows `edit` on the Ingredient.
  */
+import type { FlaggedCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import type {
+  ModelTokenEstimate,
   ReviewOutcome,
+  ReviewScope,
   ReviewVerdict,
   SuggestionKind,
 } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   findCatalogueIngredient,
+  listFlaggedCatalogueIngredients,
   setIngredientFlagReason,
 } from "@norish/db/repositories/ingredient-catalogue";
 import {
@@ -28,7 +32,7 @@ import { stripPreparation } from "@norish/shared/lib/spelling-keys";
 
 import type { AskTrace } from "../ai/resolution/ingredient-resolution";
 import type { CatalogueActor } from "./catalogue";
-import { askWhatFoodThisIs } from "../ai/resolution/ingredient-resolution";
+import { askWhatFoodThisIs, estimateQuestionTokens } from "../ai/resolution/ingredient-resolution";
 import { CatalogueEditError, mayEditIngredientRow } from "./catalogue";
 
 /**
@@ -63,6 +67,44 @@ async function ask(ingredientId: string, name: string, trace: AskTrace): Promise
     budgetMs: REVIEW_BUDGET_MS,
     trace,
   });
+}
+
+/**
+ * The Flagged Ingredients the actor may edit, by name, each saying whether a
+ * suggestion waits on it: what a round of Ask AI over `scope` asks about,
+ * every one or only those no suggestion waits on.
+ */
+export async function listReviewableIngredients(
+  actor: CatalogueActor,
+  scope: ReviewScope = "flagged"
+): Promise<FlaggedCatalogueIngredient[]> {
+  const [rows, policy] = await Promise.all([
+    listFlaggedCatalogueIngredients(),
+    getIngredientPermissionPolicy(),
+  ]);
+
+  return rows.filter(
+    (row) =>
+      mayEditIngredientRow(policy.edit, actor, row.ownerId) &&
+      (scope === "flagged" || !row.suggested)
+  );
+}
+
+/** How many of a round's foods the estimate reads, spread over them: enough to even out their names. */
+const ESTIMATE_SAMPLE = 5;
+
+/**
+ * About how many tokens one food's question takes on each model it asks,
+ * counted from what would be sent for a few of these names, before any round
+ * was measured.
+ */
+export async function estimateReviewTokens(
+  names: readonly string[]
+): Promise<ModelTokenEstimate[]> {
+  const every = Math.max(1, Math.floor(names.length / ESTIMATE_SAMPLE));
+  const sample = names.filter((_, index) => index % every === 0).slice(0, ESTIMATE_SAMPLE);
+
+  return estimateQuestionTokens(sample.map((text) => ({ text, bare: stripPreparation(text) })));
 }
 
 /** Ask AI about a Flagged Ingredient, and record what it proposes. */

@@ -108,9 +108,49 @@ export type ReviewReportEntry = { ingredientId: string; name?: string } & (
   | { outcome: "failed"; error: string }
 );
 
-/** A round of Ask AI read back: what it came to for each food, in the order it took them. */
+/**
+ * A round of Ask AI read back: what it came to for each food, in the order it
+ * took them, and while it runs, the foods it has still to ask about.
+ */
 export interface ReviewReport {
   jobId: string;
   finished: boolean;
   entries: ReviewReportEntry[];
+  waiting: Array<{ ingredientId: string; name: string }>;
+}
+
+/**
+ * Which flagged foods a round of Ask AI asks about: every one the asker may
+ * edit, or only those no suggestion waits on. Asking about a food again
+ * replaces the suggestion it had.
+ */
+export const REVIEW_SCOPES = ["flagged", "unsuggested"] as const;
+
+export type ReviewScope = (typeof REVIEW_SCOPES)[number];
+
+/** About how many tokens one food's question takes on one model. */
+export interface ModelTokenEstimate {
+  provider: string;
+  model: string;
+  perFood: number;
+}
+
+/**
+ * About how many tokens one food's question takes, per model it asks:
+ * measured over the last round, as the providers reported them; or, before
+ * any round was measured, counted from what would be sent, which leaves out
+ * a model's reasoning.
+ */
+export type ReviewTokenEstimate =
+  | { basis: "measured"; foods: number; models: ModelTokenEstimate[] }
+  | { basis: "prompt"; models: ModelTokenEstimate[] };
+
+/**
+ * What a round of Ask AI would ask about, for the asker: how many foods each
+ * scope holds, and the tokens a food takes.
+ */
+export interface ReviewScopeSummary {
+  flagged: number;
+  unsuggested: number;
+  tokens: ReviewTokenEstimate;
 }

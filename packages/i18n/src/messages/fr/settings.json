@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# traduction} other {# traductions}}{kinds, plural, =0 {} one {, # sorte} other {, # sortes}}{parent, select, none {} other {, parent: {parent}}}",
     "askAI": "Demander à l'IA",
     "askAIAll": "Demander à l'IA pour les ingrédients signalés",
+    "askAIRound": {
+      "intro": "L'IA lit chaque nom et le compare aux aliments que Norish connaît. Rien ne change tant que vous n'avez pas confirmé une suggestion.",
+      "scopeLabel": "Quels ingrédients",
+      "scopes": {
+        "unsuggested": "Seulement ceux sans suggestion",
+        "flagged": "Tous les ingrédients signalés"
+      },
+      "scopeSize": "{count, plural, =0 {Aucun ingrédient} one {# ingrédient · environ {tokens} tokens} other {# ingrédients · environ {tokens} tokens}}",
+      "replaces": "Remplace les suggestions déjà en attente.",
+      "modelTokens": "environ {tokens} tokens",
+      "basisMeasured": "D'après la consommation de la dernière série.",
+      "basisPrompt": "Estimé d'après le prompt, le nombre réel sera donc probablement plus élevé."
+    },
+    "roundProgress": "Interrogation de l'IA · {done, number} sur {total, number}",
+    "roundSection": {
+      "title": "Interrogation de l'IA",
+      "progress": "{done, number} sur {total, number}",
+      "waiting": "{count, plural, one {# ingrédient en attente} other {# ingrédients en attente}}"
+    },
     "reviewing": "Demande à l’IA…",
     "aiOutcomes": {
       "parent": "L'IA propose de classer {name} comme une sorte de {of}.",
@@ -506,7 +525,6 @@
       "empty": "Saisissez un nom",
       "unknown": "Une erreur s'est produite. Réessayez."
     },
-    "reportRunning": "La série est encore en cours ; ce qui est déjà réglé est listé.",
     "keepAlias": "Garder {alias}",
     "reportOutcomes": {
       "parent": "Rangé sous un parent",

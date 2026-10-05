@@ -45,7 +45,7 @@ const mutations = {
     considered: ["salt"],
     englishName: null,
   })),
-  reviewAllWithAI: vi.fn(async () => ({ jobId: "round-1", total: 1 })),
+  reviewAllWithAI: vi.fn(async () => ({ jobId: "round-1", total: 1, pending: ["onion"] })),
   confirmSuggestions: vi.fn(async () => ({ done: 1, failed: 0, refusal: null })),
   dismissSuggestions: vi.fn(async () => ({ done: 1, failed: 0, refusal: null })),
   findParentWithAI: vi.fn(async () => ({
@@ -95,6 +95,16 @@ const cache = vi.hoisted(() => {
 });
 /** The round running on the server when the page opens, as `reviewRound` answers. */
 let runningRound: unknown = null;
+/** What a round would ask about, across the catalogue, as `reviewScope` answers. */
+const scope = {
+  flagged: 3,
+  unsuggested: 2,
+  tokens: {
+    basis: "measured" as const,
+    foods: 20,
+    models: [{ provider: "openai", model: "gpt-5.6-luna", perFood: 3000 }],
+  },
+};
 /** What `reviewReport` answers for the round this tab watched. */
 let report: unknown = null;
 /** What AI suggests, waiting on a person, as `suggestions` answers. */
@@ -151,8 +161,13 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         queryOptions: () => ({ queryKey: ["ingredients.reviewRound"] }),
         queryKey: () => ["ingredients.reviewRound"],
       },
+      reviewScope: {
+        queryOptions: () => ({ queryKey: ["ingredients.reviewScope"] }),
+        pathKey: () => ["ingredients.reviewScope"],
+      },
       reviewReport: {
         queryOptions: (input: unknown) => ({ queryKey: ["ingredients.reviewReport", input] }),
+        pathKey: () => ["ingredients.reviewReport"],
       },
       kinds: {
         queryOptions: (input: { parentId: string }) => ({ queryKey: ["ingredients.kinds", input] }),
@@ -160,6 +175,18 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
       onReview: "onReview",
     },
+  }),
+}));
+
+// jsdom lays nothing out, so a panel's scrolling body is 0 tall and the
+// suggestions panel's virtualised list would show no row: here it shows them all.
+vi.mock("@tanstack/react-virtual", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-virtual")>()),
+  useVirtualizer: ({ count }: { count: number }) => ({
+    getVirtualItems: () =>
+      Array.from({ length: count }, (_, index) => ({ index, key: index, start: 0, size: 0 })),
+    getTotalSize: () => 0,
+    measureElement: () => undefined,
   }),
 }));
 
@@ -176,6 +203,8 @@ vi.mock("@tanstack/react-query", () => ({
     switch (queryKey[0]) {
       case "ingredients.reviewRound":
         return { data: runningRound, isFetching: false, isPending: false };
+      case "ingredients.reviewScope":
+        return { data: enabled ? scope : undefined, isFetching: false, isPending: false };
       case "ingredients.get":
         return { data: enabled ? ownItem : undefined, isFetching: false, isPending: false };
       case "ingredients.suggestions":
@@ -217,6 +246,7 @@ vi.mock("usehooks-ts", () => ({
 vi.mock("next-intl", () => ({
   useTranslations: () => Object.assign((key: string) => key, { rich: (key: string) => key }),
   useLocale: () => viewerLocale,
+  useFormatter: () => ({ number: (value: number) => String(value) }),
 }));
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
@@ -745,15 +775,16 @@ describe("IngredientsSettingsContent", () => {
     expect(listInputs.at(-1)).toMatchObject({ standaloneOnly: true });
     expect(listInputs.at(-1)).not.toHaveProperty("rootsOnly", true);
 
-    // Only onion is the viewer's to file; salt has a parent already.
+    // Only onion is the viewer's to file; salt has a parent already. No dialog: the foods are on screen.
     await act(async () => {
       fireEvent.click(screen.getByTestId("ingredients-find-parents-all"));
     });
 
     expect(mutations.reviewAllWithAI).toHaveBeenCalledExactlyOnceWith({
-      ingredientIds: ["onion"],
       mode: "parent",
+      ingredientIds: ["onion"],
     });
+    expect(screen.queryByTestId("ingredients-ask-ai-dialog")).toBeNull();
     // Unflagged, the row still shows its turn in the round.
     expect(within(row("onion")).getByTestId("ingredient-reviewing")).toBeInTheDocument();
   });
@@ -937,22 +968,31 @@ describe("IngredientsSettingsContent", () => {
     expect(invalidateQueries).toHaveBeenCalled();
   });
 
-  it("asks AI about every flagged food on screen as one round, and watches it", async () => {
+  it("asks which flagged foods first, then asks AI about them as one round, and watches it", async () => {
     render(<IngredientsSettingsContent />);
 
+    fireEvent.click(screen.getByTestId("ingredients-ask-ai-all"));
+
+    // Nothing is asked yet: a dialog says what a round would cover, across the catalogue.
+    const dialog = screen.getByTestId("ingredients-ask-ai-dialog");
+
+    expect(mutations.reviewAllWithAI).not.toHaveBeenCalled();
+    expect(within(dialog).getByTestId("ingredients-ask-ai-tokens")).toBeInTheDocument();
     await act(async () => {
-      fireEvent.click(screen.getByTestId("ingredients-ask-ai-all"));
+      fireEvent.click(within(dialog).getByTestId("ingredients-ask-ai-start"));
     });
 
-    // Only onion is flagged and editable; the server asks, not the page.
+    // The server picks the foods for the scope; the page waits on the ones it names.
     expect(mutations.reviewAllWithAI).toHaveBeenCalledExactlyOnceWith({
-      ingredientIds: ["onion"],
       mode: "review",
+      scope: "unsuggested",
     });
+    expect(screen.queryByTestId("ingredients-ask-ai-dialog")).toBeNull();
     expect(mutations.reviewWithAI).not.toHaveBeenCalled();
-    // The round shows on the row itself, not as a count above the list.
+    // The row shows its turn, and the header how far the round has come, in place of the button.
     expect(within(row("onion")).getByTestId("ingredient-reviewing")).toBeInTheDocument();
-    expect(screen.getByTestId("ingredients-ask-ai-all")).toBeDisabled();
+    expect(screen.getByTestId("ingredients-round-progress")).toHaveTextContent("roundProgress");
+    expect(screen.queryByTestId("ingredients-ask-ai-all")).toBeNull();
 
     // By the time the round ends, AI's suggestions are waiting.
     suggestions = [
@@ -1077,10 +1117,31 @@ describe("IngredientsSettingsContent", () => {
       pending: ["onion", "x", "y"],
       finished: false,
     };
+    report = {
+      jobId: "theirs",
+      finished: false,
+      entries: [],
+      waiting: [
+        { ingredientId: "onion", name: "uitjes" },
+        { ingredientId: "x", name: "Unox Knaks" },
+        { ingredientId: "y", name: "AH pesto" },
+      ],
+    };
     render(<IngredientsSettingsContent />);
 
     expect(within(row("onion")).getByTestId("ingredient-reviewing")).toBeInTheDocument();
-    expect(screen.getByTestId("ingredients-ask-ai-all")).toBeDisabled();
+    expect(screen.queryByTestId("ingredients-ask-ai-all")).toBeNull();
+    // Its progress opens what it has done so far, and, folded, what it has still to ask.
+    fireEvent.click(screen.getByTestId("ingredients-round-progress"));
+    const panel = screen.getByRole("dialog", { name: "suggestionsTitle" });
+    const progress = within(panel).getByTestId("ingredients-round");
+
+    expect(within(progress).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "40");
+    expect(progress).toHaveTextContent("roundSection.progress");
+    expect(within(panel).queryByRole("button", { name: "Unox Knaks" })).toBeNull();
+    fireEvent.click(within(progress).getByRole("button", { name: /roundSection.waiting/ }));
+    expect(within(panel).getByRole("button", { name: "Unox Knaks" })).toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: "AH pesto" })).toBeInTheDocument();
 
     act(() => {
       review.onEvent?.({ ...(runningRound as object), done: 5, pending: [], finished: true });
@@ -1089,7 +1150,29 @@ describe("IngredientsSettingsContent", () => {
     // Not this tab's round: the rows settled, and that is the whole message.
     expect(toast).not.toHaveBeenCalled();
     expect(screen.queryByTestId("ingredient-reviewing")).toBeNull();
+    expect(screen.queryByTestId("ingredients-round-progress")).toBeNull();
     expect(screen.getByTestId("ingredients-ask-ai-all")).toBeEnabled();
+  });
+
+  it("reads what a round has written down as it goes, not only when it ends", () => {
+    runningRound = {
+      jobId: "theirs",
+      done: 0,
+      total: 40,
+      counts: { merge: 0, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 },
+      pending: ["onion"],
+      finished: false,
+    };
+    render(<IngredientsSettingsContent />);
+    invalidateQueries.mockClear();
+
+    act(() => {
+      review.onEvent?.({ ...(runningRound as object), done: 20, pending: ["onion"] });
+    });
+
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["ingredients.suggestions"] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["ingredients.list"] });
+    expect(screen.getByTestId("ingredients-round-progress")).toBeInTheDocument();
   });
 
   it("locks a food's panel while a round of Ask AI is asking about it", async () => {
@@ -1189,8 +1272,9 @@ describe("IngredientsSettingsContent", () => {
       ],
     };
     render(<IngredientsSettingsContent />);
+    fireEvent.click(screen.getByTestId("ingredients-ask-ai-all"));
     await act(async () => {
-      fireEvent.click(screen.getByTestId("ingredients-ask-ai-all"));
+      fireEvent.click(screen.getByTestId("ingredients-ask-ai-start"));
     });
     act(() => {
       review.onEvent?.({

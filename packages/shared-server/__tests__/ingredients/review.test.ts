@@ -12,15 +12,28 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
-import { listIngredientSuggestions } from "@norish/db/repositories/ingredient-suggestions";
-import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
+import {
+  listIngredientSuggestions,
+  upsertIngredientSuggestion,
+} from "@norish/db/repositories/ingredient-suggestions";
+import {
+  decide,
+  estimateDecisionInputTokens,
+  estimateStructuredInputTokens,
+  generateStructured,
+} from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { markDistinct, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
-import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
+import {
+  estimateReviewTokens,
+  findParentWithAI,
+  listReviewableIngredients,
+  reviewFlaggedWithAI,
+} from "@norish/shared-server/ingredients/review";
 import {
   confirmSuggestion,
   dismissSuggestion,
@@ -32,6 +45,8 @@ import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-tes
 vi.mock("@norish/shared-server/ai/runtime/runtime", () => ({
   decide: vi.fn(),
   generateStructured: vi.fn(),
+  estimateStructuredInputTokens: vi.fn(),
+  estimateDecisionInputTokens: vi.fn(),
 }));
 vi.mock("@norish/shared-server/config/server-config-loader", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -402,5 +417,131 @@ describe("asking AI about a flagged Ingredient", () => {
         onion.ingredientId
       )
     ).rejects.toMatchObject({ refusal: "forbidden" });
+  });
+});
+
+describe("what a round of Ask AI picks from", () => {
+  const testBase = new RepositoryTestBase("test_ingredient_review_scope");
+
+  let actor: CatalogueActor;
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    const [user] = await testBase.beforeEachTest();
+
+    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    vi.mocked(isAIEnabled).mockResolvedValue(false);
+    vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
+    vi.mocked(estimateStructuredInputTokens)
+      .mockReset()
+      .mockResolvedValue({ provider: "openai", model: "gpt-5.6-luna", tokens: 700 });
+    vi.mocked(estimateDecisionInputTokens)
+      .mockReset()
+      .mockResolvedValue({ provider: "typesafe", model: "jev-latest", tokens: 500 });
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  /** A food minted while AI was off, flagged, as `owner`'s. */
+  async function flaggedAs(text: string, owner: string | null = actor.userId) {
+    const [resolved] = await resolveIngredients([text], { userId: owner });
+
+    return resolved!.ingredientId;
+  }
+
+  it("lists the flagged foods the asker may edit, by name, saying which a suggestion waits on", async () => {
+    const bulbs = await flaggedAs("onion bulbs");
+    const uien = await flaggedAs("uien");
+    const knaks = await flaggedAs("Unox Knaks");
+    const settled = await flaggedAs("shallot");
+    const nobodys = await flaggedAs("anna avondeten", null);
+    const strangers = await flaggedAs("bosuitjes", (await createTestUser()).id);
+
+    await markDistinct(actor, settled);
+    await upsertIngredientSuggestion({
+      ingredientId: uien,
+      kind: "merge",
+      targetId: bulbs,
+      englishName: "onions",
+      considered: ["onion bulbs"],
+    });
+
+    const listed = await listReviewableIngredients(actor);
+
+    expect(listed.map(({ id, name, suggested }) => ({ id, name, suggested }))).toEqual([
+      { id: bulbs, name: "onion bulbs", suggested: false },
+      { id: uien, name: "uien", suggested: true },
+      { id: knaks, name: "Unox Knaks", suggested: false },
+    ]);
+    // Only those no suggestion waits on, for a round over the gap.
+    expect((await listReviewableIngredients(actor, "unsuggested")).map((food) => food.id)).toEqual([
+      bulbs,
+      knaks,
+    ]);
+    // A server admin may edit every food, the ones nobody owns included.
+    expect(
+      (await listReviewableIngredients({ ...actor, isServerAdmin: true })).map((food) => food.id)
+    ).toEqual(expect.arrayContaining([nobodys, strangers]));
+  });
+
+  it("estimates a food's question from what would be sent, each request in full, with nothing asked", async () => {
+    await flaggedAs("onion");
+
+    // "onion bulbs" shares a word with onion: read, compare, and a Decision.
+    // "Unox Knaks" shares none: read and compare, with no Decision to ask.
+    const perModel = await estimateReviewTokens(["onion bulbs", "Unox Knaks"]);
+
+    // Each request with its 50-token answer, averaged over the two names.
+    expect(perModel).toEqual([
+      { provider: "openai", model: "gpt-5.6-luna", perFood: 750 + 750 },
+      { provider: "typesafe", model: "jev-latest", perFood: (500 + 50) / 2 },
+    ]);
+    const comparing = vi
+      .mocked(estimateStructuredInputTokens)
+      .mock.calls.map(([options]) => options.sections?.join("\n") ?? "")
+      .filter((text) => text.includes("Foods in the catalogue"));
+
+    expect(comparing).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("1. onion"),
+        expect.stringContaining("none share a word"),
+      ])
+    );
+    expect(vi.mocked(generateStructured)).not.toHaveBeenCalled();
+    expect(vi.mocked(decide)).not.toHaveBeenCalled();
+  });
+
+  it("leaves out the Decision where none is in use, and reads a few names spread over the round", async () => {
+    vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
+    const names = Array.from({ length: 20 }, (_, index) => `food ${index}`);
+
+    await expect(estimateReviewTokens(names)).resolves.toEqual([
+      { provider: "openai", model: "gpt-5.6-luna", perFood: 700 + 50 + 700 + 50 },
+    ]);
+
+    // Two requests a name, for five names spread over the twenty.
+    const read = vi
+      .mocked(estimateStructuredInputTokens)
+      .mock.calls.map(([options]) => options.sections?.[0]);
+
+    expect(new Set(read)).toEqual(
+      new Set([
+        "New name: food 0",
+        "New name: food 4",
+        "New name: food 8",
+        "New name: food 12",
+        "New name: food 16",
+      ])
+    );
+    expect(vi.mocked(estimateDecisionInputTokens)).not.toHaveBeenCalled();
+  });
+
+  it("estimates nothing for a round with no foods", async () => {
+    await expect(estimateReviewTokens([])).resolves.toEqual([]);
   });
 });

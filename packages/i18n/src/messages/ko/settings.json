@@ -368,6 +368,25 @@
     "summary": "번역 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
     "askAI": "AI에게 묻기",
     "askAIAll": "플래그된 재료에 대해 AI에게 묻기",
+    "askAIRound": {
+      "intro": "AI가 각 이름을 읽고 Norish가 알고 있는 식품과 비교합니다. 제안을 확인하기 전까지는 아무것도 바뀌지 않습니다.",
+      "scopeLabel": "어떤 재료",
+      "scopes": {
+        "unsuggested": "제안이 없는 재료만",
+        "flagged": "표시된 모든 재료"
+      },
+      "scopeSize": "{count, plural, =0 {재료 없음} other {재료 #개 · 약 {tokens} 토큰}}",
+      "replaces": "이미 대기 중인 제안을 대체합니다.",
+      "modelTokens": "약 {tokens} 토큰",
+      "basisMeasured": "지난 라운드 사용량 기준.",
+      "basisPrompt": "프롬프트 기준 추정치이므로 실제로는 더 많을 수 있습니다."
+    },
+    "roundProgress": "AI에게 묻는 중 · {total, number}개 중 {done, number}개",
+    "roundSection": {
+      "title": "AI에게 묻는 중",
+      "progress": "{total, number}개 중 {done, number}개",
+      "waiting": "{count, plural, other {대기 중인 재료 #개}}"
+    },
     "reviewing": "AI에 묻는 중…",
     "aiOutcomes": {
       "parent": "AI가 {name}을(를) {of}의 한 종류로 분류할 것을 제안합니다.",
@@ -506,7 +525,6 @@
       "empty": "이름을 입력하세요",
       "unknown": "문제가 발생했습니다. 다시 시도하세요."
     },
-    "reportRunning": "라운드가 아직 진행 중입니다. 지금까지 처리된 항목이 표시됩니다.",
     "keepAlias": "{alias} 유지",
     "reportOutcomes": {
       "parent": "상위 항목 아래",

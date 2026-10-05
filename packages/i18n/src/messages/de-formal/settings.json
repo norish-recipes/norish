@@ -368,6 +368,25 @@
     "summary": "{spellings, plural, one {# Übersetzung} other {# Übersetzungen}}{kinds, plural, =0 {} one {, # Sorte} other {, # Sorten}}{parent, select, none {} other {, übergeordnet: {parent}}}",
     "askAI": "KI fragen",
     "askAIAll": "KI zu markierten Zutaten fragen",
+    "askAIRound": {
+      "intro": "Die KI liest jeden Namen und vergleicht ihn mit den Lebensmitteln, die Norish kennt. Nichts ändert sich, bis Sie einen Vorschlag bestätigen.",
+      "scopeLabel": "Welche Zutaten",
+      "scopes": {
+        "unsuggested": "Nur die ohne Vorschlag",
+        "flagged": "Alle markierten Zutaten"
+      },
+      "scopeSize": "{count, plural, =0 {Keine Zutaten} one {# Zutat · etwa {tokens} Token} other {# Zutaten · etwa {tokens} Token}}",
+      "replaces": "Ersetzt die bereits wartenden Vorschläge.",
+      "modelTokens": "etwa {tokens} Token",
+      "basisMeasured": "Basierend auf dem Verbrauch der letzten Runde.",
+      "basisPrompt": "Anhand des Prompts geschätzt, der tatsächliche Verbrauch ist wahrscheinlich höher."
+    },
+    "roundProgress": "KI wird gefragt · {done, number} von {total, number}",
+    "roundSection": {
+      "title": "KI wird gefragt",
+      "progress": "{done, number} von {total, number}",
+      "waiting": "{count, plural, one {# Zutat wartet} other {# Zutaten warten}}"
+    },
     "reviewing": "KI wird gefragt…",
     "aiOutcomes": {
       "parent": "Die KI schlägt vor, {name} als eine Art {of} einzuordnen.",
@@ -506,7 +525,6 @@
       "empty": "Geben Sie einen Namen ein",
       "unknown": "Etwas ist schiefgelaufen. Versuchen Sie es erneut."
     },
-    "reportRunning": "Die Runde läuft noch; was bisher erledigt ist, steht hier.",
     "keepAlias": "{alias} behalten",
     "reportOutcomes": {
       "parent": "Unter eine übergeordnete Zutat gestellt",

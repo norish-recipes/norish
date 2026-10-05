@@ -130,3 +130,44 @@ test("captures the Data sources section", async () => {
   await page.getByTestId("data-sources").scrollIntoViewIfNeeded();
   await snap(page.getByTestId("data-sources"), "data-sources", "ingredients-data-sources.png");
 });
+
+test("captures asking AI about the flagged ingredients", async () => {
+  // The numbers a long-running instance shows after its first round, from a copy of a real one;
+  // the scenario's own catalogue has one flagged food and has measured no round.
+  await page.route("**/api/trpc/**", async (route) => {
+    const procedures = new URL(route.request().url()).pathname.split("/api/trpc/")[1]?.split(",");
+    const at = procedures?.indexOf("ingredients.reviewScope") ?? -1;
+
+    if (at < 0) return route.continue();
+    const response = await route.fetch();
+    const body = (await response.json()) as unknown[];
+
+    body[at] = {
+      result: {
+        data: {
+          json: {
+            flagged: 1337,
+            unsuggested: 935,
+            // What the copy's 935-food round used, per food on each model.
+            tokens: {
+              basis: "measured",
+              foods: 935,
+              models: [
+                { provider: "openai", model: "gpt-5.6-luna", perFood: 1955 },
+                { provider: "typesafe", model: "jev-1.13.0", perFood: 2065 },
+              ],
+            },
+          },
+        },
+      },
+    };
+    await route.fulfill({ response, json: body });
+  });
+  await page.goto("/settings?tab=ingredients");
+  await page.getByTestId("ingredients-ask-ai-all").click();
+  const dialog = page.getByTestId("ingredients-ask-ai-dialog");
+
+  await expect(dialog.getByTestId("ingredients-ask-ai-models")).toContainText("jev-1.13.0");
+  await snap(dialog, "ask-ai", "ingredients-ask-ai.png");
+  await page.unroute("**/api/trpc/**");
+});
