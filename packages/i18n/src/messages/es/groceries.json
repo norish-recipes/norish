@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Los alimentos que más usan tus recetas. Añade los que siempre tienes en casa.",
     "inRecipes": "{count, plural, one {en # receta} other {en # recetas}}",
     "showMore": "Mostrar más",
-    "inYourPantry": "En tu despensa"
+    "inYourPantry": "En tu despensa",
+    "offlineDetails": "Los detalles de un alimento se abren cuando vuelvas a estar en línea."
   },
   "panel": {
     "addTitle": "Añadir producto",

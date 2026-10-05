@@ -164,6 +164,12 @@ export function PantryView() {
           </InputGroup>
         </TextField>
         <p className="text-muted text-sm">{t("hint")}</p>
+        {/* A food's details are read from the server, so offline its row opens nothing. */}
+        {isOffline ? (
+          <p className="text-muted text-sm" data-testid="pantry-offline-details">
+            {t("offlineDetails")}
+          </p>
+        ) : null}
       </div>
 
       {items.length === 0 ? (
@@ -189,7 +195,7 @@ export function PantryView() {
                 data-pantry-ingredient={foldName(item.name)}
               >
                 {/* Added offline, a food has no Ingredient to open until it syncs. */}
-                {item.ingredientId ? (
+                {item.ingredientId && !isOffline ? (
                   <button
                     className="min-w-0 flex-1 cursor-[var(--cursor-interactive)] truncate text-left font-medium hover:underline"
                     type="button"

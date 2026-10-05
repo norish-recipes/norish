@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Produkty najczęściej używane w Twoich przepisach. Dodaj te, które zawsze masz w domu.",
     "inRecipes": "{count, plural, one {w # przepisie} few {w # przepisach} many {w # przepisach} other {w # przepisu}}",
     "showMore": "Pokaż więcej",
-    "inYourPantry": "W Twojej spiżarni"
+    "inYourPantry": "W Twojej spiżarni",
+    "offlineDetails": "Szczegóły produktu otworzą się po powrocie do sieci."
   },
   "panel": {
     "addTitle": "Dodaj zakup",

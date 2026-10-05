@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Wat je recepten het vaakst gebruiken. Voeg toe wat je altijd in huis hebt.",
     "inRecipes": "{count, plural, one {in # recept} other {in # recepten}}",
     "showMore": "Meer tonen",
-    "inYourPantry": "In je voorraadkast"
+    "inYourPantry": "In je voorraadkast",
+    "offlineDetails": "De details van een product openen weer als je online bent."
   },
   "panel": {
     "addTitle": "Boodschap toevoegen",

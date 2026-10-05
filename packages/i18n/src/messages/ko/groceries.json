@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "레시피에서 가장 많이 쓰는 식품입니다. 늘 집에 있는 것을 추가하세요.",
     "inRecipes": "{count, plural, other {레시피 #개}}",
     "showMore": "더 보기",
-    "inYourPantry": "팬트리에 있음"
+    "inYourPantry": "팬트리에 있음",
+    "offlineDetails": "식품 상세 정보는 다시 온라인이 되면 열립니다."
   },
   "panel": {
     "addTitle": "장보기 추가",

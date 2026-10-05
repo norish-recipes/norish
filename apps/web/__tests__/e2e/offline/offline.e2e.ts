@@ -14,6 +14,7 @@ import {
   SEEDED_PANTRY_FOOD,
   SEEDED_RECIPE_ID,
   SEEDED_RECIPE_IMAGE,
+  SEEDED_RECIPE_LINE,
   SEEDED_RECIPE_NAME,
   test,
   UNWARMED_RECIPE_ID,
@@ -464,6 +465,45 @@ test("the Pantry boots from a cold offline start, and Put on the list is Queued"
   await offline.transition("live");
   await page.goto("/");
   await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
+});
+
+test("offline, typed foods and We keep this join the Pantry queued, and sync when back", async () => {
+  await offline.transition("stopped");
+  await page.goto("/groceries/pantry");
+
+  // A food's details are read from the server: offline its row opens nothing, and says why.
+  await expect(page.getByTestId("pantry-offline-details")).toBeVisible();
+  const honey = page.locator(`[data-pantry-ingredient="${SEEDED_PANTRY_FOOD}"]`);
+
+  await expect(honey).toBeVisible();
+  await expect(honey.getByRole("button", { name: SEEDED_PANTRY_FOOD })).toHaveCount(0);
+
+  // Typed text joins the Pantry at once and is resolved once synced.
+  await page.getByTestId("pantry-name").fill("warm set oats");
+  await page.getByTestId("pantry-name").press("Enter");
+  await expect(page.locator('[data-pantry-ingredient="warm set oats"]')).toBeVisible();
+
+  // We keep this, while adding the warmed recipe: the line moves under In your pantry.
+  await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);
+  await page.getByRole("button", { name: "Add", exact: true }).first().click();
+  const panel = page.getByRole("dialog", { name: "Add to Groceries" });
+
+  await panel.getByRole("button", { name: "We keep this", exact: true }).click();
+  await expect(
+    panel.getByTestId("pantry-section").getByRole("checkbox", { name: SEEDED_RECIPE_LINE })
+  ).not.toBeChecked();
+  await expect
+    .poll(async () => (await readOutbox(page)).map(({ path }) => path))
+    .toEqual(["pantry.add", "pantry.add"]);
+
+  // Both reach the server once it is back, and the rows open their panels again.
+  await offline.transition("live");
+  await page.goto("/");
+  await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
+  await page.goto("/groceries/pantry");
+  await expect(page.getByTestId("pantry-offline-details")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "warm set oats", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: SEEDED_RECIPE_LINE, exact: true })).toBeVisible();
 });
 
 /**

@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "The foods your recipes use most. Add the ones you always have at home.",
     "inRecipes": "{count, plural, one {in # recipe} other {in # recipes}}",
     "showMore": "Show more",
-    "inYourPantry": "In your pantry"
+    "inYourPantry": "In your pantry",
+    "offlineDetails": "A food's details open when you're back online."
   },
   "panel": {
     "addTitle": "Add Grocery",

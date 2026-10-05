@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Les aliments que vos recettes utilisent le plus. Ajoutez ceux que vous avez toujours.",
     "inRecipes": "{count, plural, one {dans # recette} other {dans # recettes}}",
     "showMore": "Afficher plus",
-    "inYourPantry": "Dans votre garde-manger"
+    "inYourPantry": "Dans votre garde-manger",
+    "offlineDetails": "Le détail d'un aliment s'ouvre une fois de retour en ligne."
   },
   "panel": {
     "addTitle": "Ajouter un article",

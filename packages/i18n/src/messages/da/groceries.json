@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "De madvarer dine opskrifter bruger mest. Tilføj dem, I altid har hjemme.",
     "inRecipes": "{count, plural, one {i # opskrift} other {i # opskrifter}}",
     "showMore": "Vis flere",
-    "inYourPantry": "I dit spisekammer"
+    "inYourPantry": "I dit spisekammer",
+    "offlineDetails": "En madvares detaljer åbner, når du er online igen."
   },
   "panel": {
     "addTitle": "Tilføj indkøbsvare",

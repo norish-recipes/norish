@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Matvarene oppskriftene dine bruker mest. Legg til dem dere alltid har hjemme.",
     "inRecipes": "{count, plural, one {i # oppskrift} other {i # oppskrifter}}",
     "showMore": "Vis flere",
-    "inYourPantry": "I spiskammeret ditt"
+    "inYourPantry": "I spiskammeret ditt",
+    "offlineDetails": "Detaljene for en matvare åpnes når du er tilkoblet igjen."
   },
   "panel": {
     "addTitle": "Legg til handlevare",

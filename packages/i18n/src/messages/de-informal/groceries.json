@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Was deine Rezepte am häufigsten verwenden. Füge hinzu, was du immer zu Hause hast.",
     "inRecipes": "{count, plural, one {in # Rezept} other {in # Rezepten}}",
     "showMore": "Mehr anzeigen",
-    "inYourPantry": "In deiner Vorratskammer"
+    "inYourPantry": "In deiner Vorratskammer",
+    "offlineDetails": "Die Details eines Lebensmittels öffnen sich, sobald du wieder online bist."
   },
   "panel": {
     "addTitle": "Einkauf hinzufügen",

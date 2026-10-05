@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Ruoat, joita reseptisi käyttävät eniten. Lisää ne, joita teillä on aina kotona.",
     "inRecipes": "{count, plural, one {# reseptissä} other {# reseptissä}}",
     "showMore": "Näytä lisää",
-    "inYourPantry": "Ruokakomerossasi"
+    "inYourPantry": "Ruokakomerossasi",
+    "offlineDetails": "Ruoan tiedot avautuvat, kun olet taas verkossa."
   },
   "panel": {
     "addTitle": "Lisää ostos",

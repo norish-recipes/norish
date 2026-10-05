@@ -104,7 +104,8 @@
     "fromYourRecipesHint": "Gli alimenti più usati nelle tue ricette. Aggiungi quelli che hai sempre in casa.",
     "inRecipes": "{count, plural, one {in # ricetta} other {in # ricette}}",
     "showMore": "Mostra altri",
-    "inYourPantry": "Nella tua dispensa"
+    "inYourPantry": "Nella tua dispensa",
+    "offlineDetails": "I dettagli di un alimento si aprono quando torni online."
   },
   "panel": {
     "addTitle": "Aggiungi articolo",

@@ -28,6 +28,8 @@ export const SEEDED_GROCERY_NAME = "Warm Set Oat Milk";
 export const SEEDED_NOTE_TITLE = "Warm Set Leftovers";
 /** A food the household keeps, so the Pantry has a row offline. */
 export const SEEDED_PANTRY_FOOD = "warm set honey";
+/** The warmed recipe's one line, a food the household does not keep. */
+export const SEEDED_RECIPE_LINE = "warm set flour";
 export const UNWARMED_RECIPE_ID = "44444444-4444-4444-8444-444444444444";
 
 type BackendState = "live" | "stopped" | "unresponsive";
@@ -95,6 +97,24 @@ async function seed(stack: ProductionStack): Promise<void> {
         SEEDED_RECIPE_IMAGE,
         SEEDED_RECIPE_DISH_COLOR,
       ]
+    );
+    const flour = await database.query<{ id: string }>(
+      `insert into ingredients (name) values ($1)
+       on conflict (lower(name)) do update set name = excluded.name
+       returning id`,
+      [SEEDED_RECIPE_LINE]
+    );
+    const flourAlias = await database.query<{ id: string }>(
+      `insert into ingredient_aliases (text, fold, ingredient_id) values ($1, $1, $2)
+       on conflict (fold) do update set text = ingredient_aliases.text
+       returning id`,
+      [SEEDED_RECIPE_LINE, flour.rows[0]!.id]
+    );
+
+    await database.query(
+      `insert into recipe_ingredients (recipe_id, name, ingredient_alias_id, amount, unit, "order", system_used)
+       values ($1, $2, $3, null, null, 0, 'metric')`,
+      [SEEDED_RECIPE_ID, SEEDED_RECIPE_LINE, flourAlias.rows[0]!.id]
     );
     await database.query(
       `insert into groceries (user_id, name, unit, amount, is_done) values ($1, $2, null, 2, false)`,

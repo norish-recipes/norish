@@ -24,6 +24,7 @@ let groceries: Partial<GroceryDto>[] = [];
 let suggestions: PantrySuggestionDto[] = [];
 let pantry = { isLoading: false, isUnavailable: false };
 let viewerLocale = "en";
+let offline = false;
 
 vi.mock("@/hooks/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
@@ -51,7 +52,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 }));
 vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: undefined }) }));
 vi.mock("@/app/providers/connectivity-provider", () => ({
-  useConnectivity: () => ({ isOffline: false }),
+  useConnectivity: () => ({ isOffline: offline }),
 }));
 vi.mock("@/components/ingredients/ingredient-panel", () => ({
   IngredientPanel: ({ id, open }: { id: string | null; open: boolean }) =>
@@ -91,6 +92,7 @@ describe("PantryView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     viewerLocale = "en";
+    offline = false;
     pantry = { isLoading: false, isUnavailable: false };
     items = [kept("salt", { nl: "zout" }), kept("olive oil", { nl: "olijfolie" })];
     groceries = [];
@@ -191,5 +193,15 @@ describe("PantryView", () => {
     fireEvent.click(screen.getByRole("button", { name: "salt" }));
 
     expect(screen.getByTestId("ingredient-panel")).toHaveTextContent("i-salt");
+  });
+
+  it("offline, says a food's details wait for the connection and opens nothing", () => {
+    offline = true;
+    render(<PantryView />);
+
+    expect(screen.getByTestId("pantry-offline-details")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "salt" })).not.toBeInTheDocument();
+    // Running out still works offline: it queues like any grocery.
+    expect(screen.getAllByRole("button", { name: "putOnTheList" })).toHaveLength(2);
   });
 });
