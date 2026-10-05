@@ -41,6 +41,44 @@ export function pantryIngredientFor(
 }
 
 /**
+ * The grocery that puts a kept food _on the list_, or null where none does:
+ * a grocery of the same Ingredient still to buy, however it got there
+ * (typed, added from a recipe, or put there from the Pantry). Asked by the
+ * Pantry page, the Ingredient panel and the add-to-groceries panel alike.
+ *
+ * It deliberately differs from `pantryIngredientFor` (ADR-0036's 2026-10-05
+ * amendment): only the same food counts, never a kind of it, because red
+ * onions bought for one recipe restock nobody's onions; and a ticked grocery
+ * never counts, because ticking it off was the restock. A grocery nothing
+ * has resolved yet (added offline, or a moment ago), or a kept food added
+ * offline, is matched on its food key against the food's name or its name in
+ * a language, the fallback coverage uses, and on nothing looser.
+ */
+export function groceryOnTheList<
+  G extends { name?: string | null; ingredientId?: string | null; isDone: boolean },
+>(
+  groceries: readonly G[],
+  item: Pick<PantryIngredientDto, "ingredientId" | "name"> & { localeNames?: LocaleNames },
+  rules: SpellingRules = BASE_SPELLING_RULES
+): G | null {
+  const names = [item.name, ...Object.values(item.localeNames ?? {})];
+
+  return (
+    groceries.find((grocery) => {
+      if (grocery.isDone) return false;
+      if (grocery.ingredientId && item.ingredientId) {
+        return grocery.ingredientId === item.ingredientId;
+      }
+
+      return (
+        foodKey(grocery.name, rules) !== "" &&
+        names.some((name) => sameFood(name, grocery.name, rules))
+      );
+    }) ?? null
+  );
+}
+
+/**
  * The Pantry as a person reads it: by the name they see, in their own
  * language and alphabet. The locale is the reader's, not the runtime's — "ö"
  * files with "o" in German and after "z" in Swedish, and a server and a
