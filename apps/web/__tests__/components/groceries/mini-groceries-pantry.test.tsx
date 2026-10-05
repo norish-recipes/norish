@@ -14,6 +14,9 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 
 const createGroceriesFromData = vi.fn(async (_lines: { name: string }[]) => undefined);
 let pantry: PantryIngredientDto[] = [];
+let groceries: Array<{ id: string; name: string; ingredientId: string | null; isDone: boolean }> =
+  [];
+const addPantryIngredient = vi.fn(async () => "kept");
 let pantryLoading = false;
 let pantryUnavailable = false;
 
@@ -49,6 +52,7 @@ const INGREDIENTS = [
 
 vi.mock("@/hooks/groceries", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData }),
+  useGroceriesQuery: () => ({ groceries }),
 }));
 vi.mock("@/hooks/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
@@ -57,6 +61,7 @@ vi.mock("@/hooks/config", async () => {
   return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
 vi.mock("@/hooks/pantry", () => ({
+  usePantryMutations: () => ({ addPantryIngredient }),
   usePantryQuery: () => ({
     items: pantry,
     isLoading: pantryLoading,
@@ -137,6 +142,42 @@ describe("MiniGroceries with a Pantry", () => {
     pantry = [pantryIngredient("Olive oil", "olive oil"), pantryIngredient("salt", "salt")];
     pantryLoading = false;
     pantryUnavailable = false;
+    groceries = [];
+  });
+
+  it("keeps a line's own food with We keep this", () => {
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    // Only the line to buy offers it: a kept line has no way out from here.
+    expect(screen.getAllByRole("button", { name: "weKeepThis" })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "weKeepThis" }));
+
+    expect(addPantryIngredient).toHaveBeenCalledWith({
+      ingredientId: "i-chicken breast",
+      name: "chicken breast",
+    });
+  });
+
+  it("keeps the food of the name as edited here", () => {
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    fireEvent.click(screen.getByText("chicken breast"));
+    const field = screen.getByDisplayValue("500 g chicken breast");
+
+    fireEvent.change(field, { target: { value: "500 g chicken thighs" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    fireEvent.click(screen.getByRole("button", { name: "weKeepThis" }));
+
+    expect(addPantryIngredient).toHaveBeenCalledWith("chicken thighs");
+  });
+
+  it("marks a kept line whose food is already on the list", () => {
+    groceries = [{ id: "g1", name: "olive oil", ingredientId: "i-olive oil", isDone: false }];
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    const section = screen.getByTestId("pantry-section");
+
+    expect(within(section).getAllByTestId("on-the-list")).toHaveLength(1);
   });
 
   it("shows what the household has apart, unticked, and leaves it off the list", async () => {

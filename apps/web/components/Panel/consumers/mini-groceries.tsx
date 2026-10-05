@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
+import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -9,17 +10,18 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import { useSpellingRules } from "@/hooks/config";
-import { useGroceriesMutations } from "@/hooks/groceries";
-import { usePantryQuery } from "@/hooks/pantry";
+import { useGroceriesMutations, useGroceriesQuery } from "@/hooks/groceries";
+import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import {
   useLinkedRecipeIngredients,
   useRecipeIngredients,
 } from "@/hooks/recipes/use-recipe-ingredients";
+import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
-import { pantryIngredientFor } from "@norish/shared/lib/pantry";
+import { groceryOnTheList, pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 type MiniGroceriesProps = {
   open: boolean;
@@ -168,21 +170,39 @@ export default function MiniGroceries({
     isUnavailable: pantryUnavailable,
   } = usePantryQuery();
   const rules = useSpellingRules();
+  const { addPantryIngredient } = usePantryMutations();
+  const { groceries } = useGroceriesQuery();
 
-  const isInPantry = useCallback(
+  /** The Pantry Ingredient that covers a line, as edited here if it was. */
+  const keptFor = useCallback(
     (item: GroceryIngredient) => {
       const edited = editedIngredients[item.id]?.name;
 
-      return (
-        pantryIngredientFor(
-          pantryIngredients,
-          edited === undefined ? item : { ingredientName: edited },
-          rules
-        ) !== null
+      return pantryIngredientFor(
+        pantryIngredients,
+        edited === undefined ? item : { ingredientName: edited },
+        rules
       );
     },
     [pantryIngredients, editedIngredients, rules]
   );
+  const isInPantry = useCallback((item: GroceryIngredient) => keptFor(item) !== null, [keptFor]);
+
+  /**
+   * "We keep this": the line's own food goes in the Pantry, or the food of
+   * the name as edited here, resolved as a typed name is. The Pantry's
+   * optimistic row moves the line under "In your pantry" at once, and the
+   * line takes that section's default: unticked.
+   */
+  const keepLine = (item: GroceryIngredient) => {
+    const edited = editedIngredients[item.id]?.name;
+
+    void addPantryIngredient(
+      edited !== undefined || !item.ingredientId
+        ? (edited ?? item.ingredientName)
+        : { ingredientId: item.ingredientId, name: item.ingredientName }
+    ).catch(() => toast(t("keepFailed"), { variant: "warning" }));
+  };
   const { toBuy, inPantry } = useMemo(() => {
     const buy: typeof scaledIngredients = [];
     const have: typeof scaledIngredients = [];
@@ -331,9 +351,14 @@ export default function MiniGroceries({
       });
   };
 
-  /** One ingredient line, to buy or in the Pantry alike: a name, its amount, and a tick. */
+  /**
+   * One ingredient line, to buy or in the Pantry alike: a name, its amount,
+   * and a tick. A line to buy can be kept from here; a kept line whose food
+   * is already on the list says so, so it is not bought twice.
+   */
   const renderRow = (item: GroceryIngredient) => {
     const isEditing = editingId === item.id;
+    const kept = keptFor(item);
 
     return (
       <div
@@ -380,6 +405,22 @@ export default function MiniGroceries({
             </>
           )}
         </div>
+        {/* A press here is its own (React Aria stops it reaching the row). */}
+        {kept === null ? (
+          <IconActionButton
+            action="add"
+            className="ml-2 shrink-0"
+            icon={ArchiveBoxArrowDownIcon}
+            label={t("weKeepThis")}
+            size="sm"
+            variant="tertiary"
+            onPress={() => keepLine(item)}
+          />
+        ) : groceryOnTheList(groceries, kept, rules) ? (
+          <span className="ml-2">
+            <OnTheListMark />
+          </span>
+        ) : null}
         <GroceryCheckbox
           aria-label={item.ingredientName}
           className="ml-2 shrink-0"
