@@ -67,14 +67,14 @@ export function FromYourRecipes({
       {open ? (
         <>
           <p className="text-muted text-sm">{t("fromYourRecipesHint")}</p>
-          <ul className="flex flex-col gap-2">
+          <ul className="divide-border divide-y overflow-hidden rounded-lg">
             {shown.map((food) => {
               const name = ingredientDisplayName(food, locale);
 
               return (
                 <li
                   key={food.ingredientId}
-                  className="bg-surface flex items-center gap-3 rounded-lg px-3 py-2"
+                  className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
                   data-pantry-suggestion={food.name}
                 >
                   <span className="min-w-0 flex-1 truncate font-medium">{name}</span>

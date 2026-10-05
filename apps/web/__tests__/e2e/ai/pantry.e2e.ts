@@ -60,7 +60,7 @@ function suggestion(name: string): Locator {
 /** The Pantry page, reached the way a member reaches it: from the list's switch. */
 async function openPantry(): Promise<void> {
   await page.goto("/groceries");
-  await page.getByRole("link", { name: "Pantry" }).click();
+  await page.getByRole("tab", { name: "Pantry" }).click();
   await expect(page).toHaveURL(/\/groceries\/pantry$/);
 }
 
@@ -121,18 +121,21 @@ test("the field narrows the kept foods, adds a catalogue food as picked, and add
   await expect(keptRow("saffron")).toBeVisible();
   await expect.poll(readPantryNames).toEqual(["garlic", "olive oil", "saffron"]);
 
+  // A food already kept is simply what the field narrows to; Enter adds nothing.
   await field.fill("Garlic");
-  await expect(page.getByTestId("pantry-duplicate")).toBeVisible();
+  await field.press("Enter");
+  await expect(keptRow("garlic")).toBeVisible();
+  await expect.poll(readPantryNames).toEqual(["garlic", "olive oil", "saffron"]);
   await field.fill("");
 });
 
 test("Put on the list files a grocery under its Store, and ticking it off is the restock", async () => {
-  await keptRow("olive oil").getByRole("button", { name: "Put on the list" }).click();
+  await keptRow("olive oil").getByRole("button", { name: "Add to groceries" }).click();
 
   await expect(keptRow("olive oil").getByTestId("on-the-list")).toBeVisible();
   await expect.poll(readGroceries).toEqual([{ name: "olive oil", storeId, isDone: false }]);
 
-  await page.getByRole("link", { name: "List" }).click();
+  await page.getByRole("tab", { name: "List" }).click();
   await expect(page).toHaveURL(/\/groceries$/);
   await page
     .locator('[data-grocery-name="olive oil"]')
@@ -142,11 +145,13 @@ test("Put on the list files a grocery under its Store, and ticking it off is the
     .click();
   await expect.poll(readGroceries).toEqual([{ name: "olive oil", storeId, isDone: true }]);
 
-  await page.getByRole("link", { name: "Pantry" }).click();
-  await expect(keptRow("olive oil").getByRole("button", { name: "Put on the list" })).toBeVisible();
+  await page.getByRole("tab", { name: "Pantry" }).click();
+  await expect(
+    keptRow("olive oil").getByRole("button", { name: "Add to groceries" })
+  ).toBeVisible();
 });
 
-test("a kept food's Ingredient panel takes it out of the Pantry", async () => {
+test("a kept food's Ingredient panel takes it out of the Pantry with Save", async () => {
   await keptRow("saffron").getByRole("button", { name: "saffron" }).click();
 
   const panel = page.getByRole("dialog", { name: "saffron" });
@@ -156,6 +161,9 @@ test("a kept food's Ingredient panel takes it out of the Pantry", async () => {
   // The switch's input sits behind its control; the label is what takes the press.
   await panel.getByText("In your pantry", { exact: true }).click();
   await expect(kept).not.toBeChecked();
+  // The switch is part of the panel's draft: nothing changes until Save.
+  await expect.poll(readPantryNames).toEqual(["garlic", "olive oil", "saffron"]);
+  await panel.getByTestId("ingredient-save").click();
   await expect.poll(readPantryNames).toEqual(["garlic", "olive oil"]);
   await page.getByRole("button", { name: "Close panel" }).click();
   await expect(keptRow("saffron")).toHaveCount(0);
@@ -163,7 +171,7 @@ test("a kept food's Ingredient panel takes it out of the Pantry", async () => {
 
 test("adding a recipe teaches the Pantry a staple, and a kept line on the list says so", async () => {
   await openPantry();
-  await keptRow("olive oil").getByRole("button", { name: "Put on the list" }).click();
+  await keptRow("olive oil").getByRole("button", { name: "Add to groceries" }).click();
   await expect(keptRow("olive oil").getByTestId("on-the-list")).toBeVisible();
 
   const panel = await openAddToGroceries();

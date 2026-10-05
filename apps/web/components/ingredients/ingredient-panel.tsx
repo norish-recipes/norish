@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { PutOnTheList, usePutOnTheList } from "@/components/groceries/pantry/put-on-the-list";
+import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, IconActionButton } from "@/components/shared/action-button";
 import { AIButton } from "@/components/shared/ai-button";
@@ -24,6 +24,7 @@ import { Button, Chip, Input, TextField, toast } from "@heroui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type {
   CatalogueRefusal,
   ReviewOutcome,
@@ -181,6 +182,14 @@ function IngredientPanelContent({
     suggestion?.kind === "parent" && suggestion.source === "ai" ? suggestion.target : null;
   const { isAIEnabled } = usePermissionsContext();
 
+  // Whether the household keeps the food, and the draft's say on it (null: untouched).
+  const tPantry = useTranslations("groceries.pantry");
+  const tGroceries = useTranslations("groceries.page");
+  const { items: pantry } = usePantryQuery();
+  const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
+  const kept = pantry.find((held) => held.ingredientId === item.id) ?? null;
+  const [keeps, setKeeps] = useState<boolean | null>(null);
+
   // A refused save is read back from the server, which would overwrite the
   // draft the viewer still has to fix: that one read leaves the draft alone.
   const keepDraft = useRef(false);
@@ -246,11 +255,28 @@ function IngredientPanelContent({
   const nextName = name.trim();
   const nameChanged = nextName !== "" && nextName !== item.name;
   const parentChanged = (parent?.id ?? null) !== (item.parent?.id ?? null);
-  const dirty = nameChanged || parentChanged || added.length > 0 || removed.size > 0;
+  const catalogueDirty = nameChanged || parentChanged || added.length > 0 || removed.size > 0;
+  const pantryChanged = keeps !== null && keeps !== (kept !== null);
+  const dirty = catalogueDirty || pantryChanged;
 
-  /** Land the draft as one edit; a refusal changes nothing, keeps the draft and says why. */
+  /**
+   * Land the draft: the Pantry switch, which is the household's and open to
+   * any member, and the catalogue fields as one edit; a refusal of those
+   * changes nothing, keeps them in the draft and says why.
+   */
   const save = async () => {
     if (!dirty || busy) return;
+    if (pantryChanged) {
+      if (kept) removePantryIngredient(kept.id);
+      else
+        void addPantryIngredient({
+          ingredientId: item.id,
+          name: item.name,
+          localeNames: item.localeNames,
+        }).catch(() => toast(tPantry("keepFailed", { name: displayName }), { variant: "danger" }));
+      setKeeps(null);
+    }
+    if (!catalogueDirty) return;
     const draft = { added, removed, parent };
 
     // The row reads as the draft has it, and the draft is spent, at once.
@@ -583,7 +609,14 @@ function IngredientPanelContent({
             {displayName !== item.name ? (
               <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
             ) : null}
-            <PantryRow item={item} />
+          </Section>
+
+          <Section title={tGroceries("pantry")}>
+            <PantryRow
+              keeping={keeps ?? kept !== null}
+              kept={kept}
+              onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
+            />
           </Section>
 
           <Section title={t("parentSection")}>
@@ -793,50 +826,34 @@ function IngredientPanelContent({
 }
 
 /**
- * Whether the household keeps this food, and the switch that changes it, at
- * once and outside the draft: keeping a food is a household matter, open to
- * any member whatever the edit policy says, and never lost with an unsaved
- * edit. It reflects the food itself only; a kept kind of it does not turn it
- * on. A kept food can be put on the list from here, as from the Pantry page.
+ * Whether the household keeps this food. The switch is part of the draft and
+ * lands with Save, open to any member whatever the edit policy says, since
+ * keeping a food is a household matter. It reflects the food itself only; a
+ * kept kind of it does not turn it on. A kept food whose grocery is still to
+ * buy says so; putting it on the list is the Pantry page's.
  */
-function PantryRow({ item }: { item: IngredientItem }) {
+function PantryRow({
+  kept,
+  keeping,
+  onKeepingChange,
+}: {
+  kept: PantryIngredientDto | null;
+  keeping: boolean;
+  onKeepingChange: (keeping: boolean) => void;
+}) {
   const t = useTranslations("groceries.pantry");
-  const locale = useLocale();
   const rules = useSpellingRules();
-  const { items } = usePantryQuery();
-  const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const { groceries } = useGroceriesQuery();
-  const putOnTheList = usePutOnTheList();
-  const kept = items.find((held) => held.ingredientId === item.id) ?? null;
-  const keep = (on: boolean) => {
-    if (!on) {
-      if (kept) removePantryIngredient(kept.id);
-
-      return;
-    }
-    void addPantryIngredient({
-      ingredientId: item.id,
-      name: item.name,
-      localeNames: item.localeNames,
-    }).catch(() =>
-      toast(t("keepFailed", { name: ingredientDisplayName(item, locale) }), { variant: "danger" })
-    );
-  };
 
   return (
     <div
-      className="flex min-h-9 flex-wrap items-center justify-between gap-2"
+      className="flex min-h-9 flex-wrap items-center justify-between gap-3"
       data-testid="ingredient-pantry"
     >
-      <UiSwitch isSelected={kept !== null} size="sm" onValueChange={keep}>
+      <UiSwitch isSelected={keeping} onValueChange={onKeepingChange}>
         <span className="text-sm">{t("inYourPantry")}</span>
       </UiSwitch>
-      {kept ? (
-        <PutOnTheList
-          onPut={() => putOnTheList(kept)}
-          onTheList={groceryOnTheList(groceries, kept, rules) !== null}
-        />
-      ) : null}
+      {kept && keeping && groceryOnTheList(groceries, kept, rules) ? <OnTheListMark /> : null}
     </div>
   );
 }

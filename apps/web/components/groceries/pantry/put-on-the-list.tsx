@@ -2,8 +2,9 @@
 
 import { IconActionButton } from "@/components/shared/action-button";
 import { useGroceriesMutations } from "@/hooks/groceries";
+import { showActionToast } from "@/lib/ui/action-toast";
 import { CheckIcon, ShoppingCartIcon } from "@heroicons/react/16/solid";
-import { Chip, toast } from "@heroui/react";
+import { Chip } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
@@ -30,14 +31,11 @@ export function usePutOnTheList(): (food: KeptFood) => void {
     const created = createGroceriesFromData([{ name, amount: null, unit: null }]);
 
     created.catch(() => undefined);
-    const key = toast(t("putOnTheListToast", { name }), {
+    showActionToast(t("putOnTheListToast", { name }), {
       variant: "success",
-      actionProps: {
-        children: t("undo"),
-        onPress: () => {
-          toast.close(key);
-          void created.then(deleteGroceries, () => undefined);
-        },
+      action: {
+        label: t("undo"),
+        onPress: () => void created.then(deleteGroceries, () => undefined),
       },
     });
   };
@@ -70,7 +68,7 @@ export function OnTheListMark() {
   const t = useTranslations("groceries.pantry");
 
   return (
-    <Chip className="shrink-0" color="success" data-testid="on-the-list" size="sm" variant="soft">
+    <Chip className="shrink-0" color="accent" data-testid="on-the-list" size="sm" variant="soft">
       <CheckIcon className="size-3" />
       {t("onTheList")}
     </Chip>

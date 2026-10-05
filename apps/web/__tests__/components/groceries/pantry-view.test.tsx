@@ -151,7 +151,7 @@ describe("PantryView", () => {
     expect(rowNames()).toEqual(["olive oil"]);
   });
 
-  it("adds typed text on Enter, clears the field, and refuses a food already kept", async () => {
+  it("adds typed text on Enter, clears the field, and adds nothing for a food already kept", async () => {
     render(<PantryView />);
     const field = screen.getByTestId("pantry-name");
 
@@ -167,7 +167,8 @@ describe("PantryView", () => {
     await act(async () => {
       fireEvent.change(field, { target: { value: "Zout" } });
     });
-    expect(screen.getByTestId("pantry-duplicate")).toBeInTheDocument();
+    // The kept food is what the field narrows to; no error, and no second add.
+    expect(rowNames()).toEqual(["salt"]);
     await act(async () => {
       fireEvent.keyDown(field, { key: "Enter" });
     });

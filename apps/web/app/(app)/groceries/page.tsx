@@ -1,20 +1,6 @@
-import { cookies } from "next/headers";
-import {
-  groceryGroupSimilarPreference,
-  groceryViewModePreference,
-} from "@/lib/grocery-preferences";
+import { GroceriesPage as GroceriesPageContent } from "./components/groceries-page";
 
-import { GroceriesScreen } from "./groceries-screen";
-
-export default async function GroceriesPage() {
-  // Rendering the stored view and grouping server-side is what keeps a
-  // recipe-view reader from watching the store-grouped list paint first.
-  const cookieStore = await cookies();
-
-  return (
-    <GroceriesScreen
-      initialGroupSimilar={groceryGroupSimilarPreference.readFrom(cookieStore)}
-      initialViewMode={groceryViewModePreference.readFrom(cookieStore)}
-    />
-  );
+/** The grocery list: the first view of Groceries, under the shared layout. */
+export default function GroceriesPage() {
+  return <GroceriesPageContent />;
 }

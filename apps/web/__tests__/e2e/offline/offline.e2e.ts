@@ -451,7 +451,7 @@ test("the Pantry boots from a cold offline start, and Put on the list is Queued"
   const row = page.locator(`[data-pantry-ingredient="${SEEDED_PANTRY_FOOD}"]`);
 
   await expect(row).toBeVisible();
-  await row.getByRole("button", { name: "Put on the list" }).click();
+  await row.getByRole("button", { name: "Add to groceries" }).click();
   // The kept food is handled on this screen before the server has heard of it.
   await expect(row.getByTestId("on-the-list")).toBeVisible();
   await expect.poll(() => readOutbox(page)).toHaveLength(1);

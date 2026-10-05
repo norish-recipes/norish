@@ -79,8 +79,8 @@ The Pantry is still consulted in one place only: when a recipe is added to the g
 39. As a household member, I want pressing a kept food to open its Ingredient panel, so that I can see its spellings, its parent and its nutrition.
 40. As a household member, I want the Ingredient panel to say whether we keep the food wherever I open it, so that Settings → Ingredients and a recipe's nutrition card tell me too.
 41. As a household member, I want to switch a food into or out of the Pantry from its Ingredient panel, so that I can keep a food I am looking at and stop keeping one we gave up.
-42. As a household member, I want that switch to take effect at once, outside the panel's draft and Save, so that keeping a food is never lost with an unsaved edit.
-43. As a household member, I want to put a kept food on the list from its Ingredient panel and see when it is on the list, so that the panel and the page always agree.
+42. As a household member, I want that switch to land with the panel's Save, like every other field there, so that the panel behaves one way. (Changed 2026-10-05 after review: it took effect at once.)
+43. As a household member, I want the Ingredient panel to show when a kept food is on the list, so that the panel and the page always agree. (Changed 2026-10-05 after review: the panel no longer puts a food on the list; that is the page's, to keep the panel calm.)
 44. As a household member who may not edit an Ingredient, I want the Pantry switch to work for me anyway, so that keeping a food is a household matter rather than a catalogue permission.
 45. As a household member, I want a food that is only covered by a kept kind of it shown as not kept, so that the switch says exactly what the Pantry holds.
 
@@ -107,7 +107,7 @@ The Pantry is still consulted in one place only: when a recipe is added to the g
 
 **The page.**
 
-- A second view of Groceries with its own address under the groceries route. The Groceries header carries a two-way _List · Pantry_ switch made of real links on both views; it replaces the Pantry item in the cog menu, and the Pantry panel is removed.
+- A second view of Groceries with its own address under the groceries route. The Groceries header, kept mounted by a shared layout, carries a two-way _List · Pantry_ switch (the app's segmented Tabs toggle; changed 2026-10-05 after review from plain links) on both views, and its title reads _Pantry_ on the Pantry; it replaces the Pantry item in the cog menu, and the Pantry panel is removed.
 - The Pantry view hides the cog menu, the desktop _Add item_ button and the floating add button. The dock's Groceries entry is active on both views.
 - The page renders under the same providers as the list, because it reads the household's groceries and creates them.
 - Kept foods are sorted by the reader's display name (the existing sort). A row is the display name, a button that opens the food's Ingredient panel, and at its end either an icon button _Put on the list_ (with that accessible name) or an _On the list_ mark. A row added offline that has no Ingredient yet shows its name without opening a panel until it syncs.
@@ -126,7 +126,7 @@ The Pantry is still consulted in one place only: when a recipe is added to the g
 
 **_On the list_ is one shared rule.** It is a pure function beside the pantry coverage helper in the shared pantry module. Given the household's groceries and a Pantry Ingredient, it answers with the unticked grocery of the same Ingredient, or, for a grocery with no Ingredient yet, one whose name is the same food by the food key, the same fallback coverage uses. A kind of the food never counts, and neither does a ticked grocery. The page's rows, the Ingredient panel and the add-to-groceries panel all ask it.
 
-**_Put on the list_** creates one grocery through the existing grocery create: the food's display name for the reader, no amount and no Store, so the server files it under the household's store preference for that food, else Unsorted. It is optimistic and goes through the Outbox offline like any grocery. A toast offers Undo, which deletes that grocery.
+**_Put on the list_** (labelled _Add to groceries_ since review) creates one grocery through the existing grocery create: the food's display name for the reader, no amount and no Store, so the server files it under the household's store preference for that food, else Unsorted. It is optimistic and goes through the Outbox offline like any grocery. A toast offers Undo, which deletes that grocery.
 
 **From your recipes.**
 
@@ -139,7 +139,7 @@ The Pantry is still consulted in one place only: when a recipe is added to the g
 **The Ingredient panel.**
 
 - It moves out of the Settings page's folder into the shared components, since it now opens from the Pantry page, Settings → Ingredients, the recipe's nutrition card and the suggestions panel. Its page-only hooks stay optional, as they already are for the nutrition card.
-- A Pantry row sits under the name: an _In your pantry_ switch and, when it is on, _Put on the list_ or _On the list_. The switch adds the Ingredient or removes the household's Pantry Ingredient for it, at once, outside the draft and Save.
+- A _Pantry_ section sits under the name: an _In your pantry_ switch and, for a kept food on the list, the _On the list_ mark. The switch joins the draft; Save adds the Ingredient or removes the household's Pantry Ingredient for it, and needs no edit permission. (Changed 2026-10-05 after review.)
 - The row is open to any household member, whatever the ingredient edit policy says, as removing a Pantry Ingredient is today. The switch reflects the food itself only; a kept kind of it does not turn it on.
 - The pantry row's ✕ goes once the panel can take a food out.
 

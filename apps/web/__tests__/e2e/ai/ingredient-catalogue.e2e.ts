@@ -85,7 +85,7 @@ test.afterAll(async () => {
 /** The Pantry page, reached from the groceries page's switch. */
 async function openPantry(): Promise<Locator> {
   await page.goto("/groceries");
-  await page.getByRole("link", { name: "Pantry" }).click();
+  await page.getByRole("tab", { name: "Pantry" }).click();
   await expect(page).toHaveURL(/\/groceries\/pantry$/);
 
   return page.locator("main");

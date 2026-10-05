@@ -24,7 +24,7 @@ nutrition.
 
 ## Running out
 
-When a food runs out, press **Put on the list** (the cart) beside it. Norish
+When a food runs out, press **Add to groceries** (the cart) beside it. Norish
 adds it to your grocery list, under the store you usually buy it at, and the
 food stays in your pantry. While it is still to buy, the food shows **On the
 list**, so your household can see it is handled. Ticking it off in the shop is
@@ -61,7 +61,7 @@ list**.
 ## Taking a food out
 
 Taking a food out means your household no longer keeps it. Open the food's
-panel and switch **In your pantry** off. The same switch is on the ingredient's
+panel, switch **In your pantry** off and press **Save**. The same switch is on the ingredient's
 panel wherever it opens: on **Settings → Ingredients** and from a recipe's
 nutrition, too.
 

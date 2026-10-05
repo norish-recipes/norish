@@ -86,7 +86,7 @@ test("captures the Pantry with a food on the list", async () => {
   }
   await page
     .locator('[data-pantry-ingredient="olive oil"]')
-    .getByRole("button", { name: "Put on the list" })
+    .getByRole("button", { name: "Add to groceries" })
     .click();
   await expect(page.getByTestId("on-the-list")).toBeVisible();
   // The suggestions stay open as left; fold them so the page shows what is kept.

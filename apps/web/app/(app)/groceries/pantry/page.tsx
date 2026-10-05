@@ -1,10 +1,9 @@
-import { GroceriesScreen } from "../groceries-screen";
+import { PantryView } from "@/components/groceries";
 
 /**
- * The Pantry: the foods the household keeps, a second view of Groceries with
- * an address of its own. It renders under the list's providers, because it
- * reads the household's groceries and creates them.
+ * The Pantry: the foods the household keeps, the second view of Groceries
+ * with an address of its own, under the layout it shares with the list.
  */
 export default function PantryPage() {
-  return <GroceriesScreen view="pantry" />;
+  return <PantryView />;
 }

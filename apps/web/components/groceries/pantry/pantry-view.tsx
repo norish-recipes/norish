@@ -4,14 +4,14 @@ import type { PickedFood } from "@/hooks/pantry";
 import { useRef, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
+import { FIELD_STYLE } from "@/components/groceries/grocery-field";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
 import { useSpellingRules } from "@/hooks/config";
 import { useGroceriesQuery } from "@/hooks/groceries";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { Button, FieldError, Input, Skeleton, TextField, toast } from "@heroui/react";
+import { Button, InputGroup, Skeleton, TextField, toast } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
@@ -55,6 +55,7 @@ function goesBy(item: PantryIngredientDto, needle: string): boolean {
  */
 export function PantryView() {
   const t = useTranslations("groceries.pantry");
+  const tStatus = useTranslations("common.status");
   const locale = useLocale();
   const trpc = useTRPC();
   const rules = useSpellingRules();
@@ -129,26 +130,17 @@ export function PantryView() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <div className="flex items-start gap-2">
-          <TextField
-            aria-label={t("fieldLabel")}
-            className="relative min-w-0 flex-1"
-            isInvalid={duplicate}
-            value={draft}
-            onChange={setDraft}
-          >
-            <MagnifyingGlassIcon
-              aria-hidden
-              className="text-muted pointer-events-none absolute top-[1.15rem] left-3 z-10 size-4 -translate-y-1/2"
-            />
-            <Input
+        <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
+          <InputGroup variant="secondary">
+            <InputGroup.Prefix>
+              <MagnifyingGlassIcon aria-hidden className="text-muted size-4" />
+            </InputGroup.Prefix>
+            <InputGroup.Input
               ref={field}
-              className={`${FIELD_CLASS} pl-9`}
               data-testid="pantry-name"
               maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
               placeholder={t("fieldPlaceholder")}
               style={FIELD_STYLE}
-              variant="secondary"
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
@@ -156,23 +148,21 @@ export function PantryView() {
                 }
               }}
             />
-            {duplicate ? (
-              <FieldError data-testid="pantry-duplicate">{t("duplicate")}</FieldError>
-            ) : null}
-          </TextField>
-          <Button
-            isIconOnly
-            aria-label={t("add")}
-            className="mt-1 shrink-0"
-            data-testid="add-pantry-ingredient"
-            isDisabled={!canAdd}
-            size="sm"
-            variant="tertiary"
-            onPress={addTyped}
-          >
-            <PlusIcon className="size-4" />
-          </Button>
-        </div>
+            <InputGroup.Suffix className="pr-1">
+              <Button
+                isIconOnly
+                aria-label={t("add")}
+                data-testid="add-pantry-ingredient"
+                isDisabled={!canAdd}
+                size="sm"
+                variant="ghost"
+                onPress={addTyped}
+              >
+                <PlusIcon className="size-4" />
+              </Button>
+            </InputGroup.Suffix>
+          </InputGroup>
+        </TextField>
         <p className="text-muted text-sm">{t("hint")}</p>
       </div>
 
@@ -182,17 +172,20 @@ export function PantryView() {
         </p>
       ) : kept.length === 0 ? (
         <p className="text-muted py-2 text-center" data-testid="pantry-no-match">
-          {t("noMatch")}
+          {tStatus("noResults")}
         </p>
       ) : (
-        <ul className="flex flex-col gap-2" data-testid="pantry-ingredients">
+        <ul
+          className="divide-border divide-y overflow-hidden rounded-lg"
+          data-testid="pantry-ingredients"
+        >
           {kept.map((item) => {
             const name = ingredientDisplayName(item, locale);
 
             return (
               <li
                 key={item.id}
-                className="bg-surface flex min-h-12 items-center gap-3 rounded-lg px-3 py-1.5"
+                className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
                 data-pantry-ingredient={foldName(item.name)}
               >
                 {/* Added offline, a food has no Ingredient to open until it syncs. */}
@@ -222,14 +215,14 @@ export function PantryView() {
           <h2 className="text-muted text-xs font-semibold tracking-wide uppercase">
             {t("fromCatalogue")}
           </h2>
-          <ul className="flex flex-col gap-2">
+          <ul className="divide-border divide-y overflow-hidden rounded-lg">
             {matches.map((food) => {
               const name = ingredientDisplayName(food, locale);
 
               return (
                 <li
                   key={food.id}
-                  className="flex items-center gap-3 rounded-lg px-3 py-1.5"
+                  className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
                   data-catalogue-food={food.name}
                 >
                   <span className="min-w-0 flex-1 truncate">{name}</span>
