@@ -21,7 +21,7 @@ vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
   useWorkedOutNutrition: () => mocks.workedOut,
 }));
 
-vi.mock("@/app/(app)/settings/ingredients/components/ingredient-panel", () => ({
+vi.mock("@/components/ingredients/ingredient-panel", () => ({
   IngredientPanel: ({ id, open }: { id: string | null; open: boolean }) => {
     mocks.panel = { id, open };
 

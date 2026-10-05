@@ -13,7 +13,7 @@ import type {
 } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 
-import type { IngredientItem } from "./ingredient-row";
+import type { IngredientItem } from "./types";
 import type { RowPatch } from "./use-ingredient-cache";
 import { useIngredientCache } from "./use-ingredient-cache";
 

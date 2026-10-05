@@ -15,10 +15,10 @@ import type { ReviewReportEntry } from "@norish/shared/contracts/ingredient-cata
 import type { ReviewRound } from "@norish/shared/contracts/realtime/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
-import type { IngredientSuggestion } from "./use-ingredient-suggestions";
-import { IngredientPanel } from "./ingredient-panel";
-import { reviewTrace, skippedReason, suggestionProposal, suggestionTrace } from "./review-copy";
-import { useIngredientSuggestions } from "./use-ingredient-suggestions";
+import type { IngredientSuggestion } from "@/components/ingredients/use-ingredient-suggestions";
+import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
+import { reviewTrace, skippedReason, suggestionProposal, suggestionTrace } from "@/components/ingredients/review-copy";
+import { useIngredientSuggestions } from "@/components/ingredients/use-ingredient-suggestions";
 
 /** The foods a round asked about that got no suggestion, and so are worth a word. */
 const UNSUGGESTED: ReadonlySet<ReviewReportEntry["outcome"]> = new Set([

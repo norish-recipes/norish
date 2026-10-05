@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { IngredientNutritionSection } from "@/app/(app)/settings/ingredients/components/ingredient-nutrition";
+import { IngredientNutritionSection } from "@/components/ingredients/ingredient-nutrition";
 
 import type {
   IngredientNutrition,

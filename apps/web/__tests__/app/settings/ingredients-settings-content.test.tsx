@@ -297,7 +297,7 @@ vi.mock("@/components/Panel/Panel", () => {
 });
 
 // A food's nutrition and its corrections are the nutrition section's own tests' business.
-vi.mock("@/app/(app)/settings/ingredients/components/ingredient-nutrition", () => ({
+vi.mock("@/components/ingredients/ingredient-nutrition", () => ({
   IngredientNutritionSection: () => <section data-testid="ingredient-nutrition" />,
 }));
 
@@ -309,7 +309,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 // The picker searches the catalogue; here it offers salt.
-vi.mock("@/app/(app)/settings/ingredients/components/ingredient-picker", () => ({
+vi.mock("@/components/ingredients/ingredient-picker", () => ({
   IngredientPicker: ({ onPick, editableOnly, excludeId }: any) => (
     <div data-editable-only={editableOnly} data-exclude={excludeId} data-testid="picker">
       <button type="button" onClick={() => onPick({ id: "salt", name: "salt" })}>

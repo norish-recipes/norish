@@ -29,7 +29,7 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { IngredientPick } from "./ingredient-picker";
 import type { Relocation } from "./ingredient-relocation";
-import type { IngredientItem, Spelling } from "./ingredient-row";
+import type { IngredientItem, Spelling } from "./types";
 import { DeleteIngredientModal } from "./delete-ingredient-modal";
 import { IngredientNutritionSection } from "./ingredient-nutrition";
 import { IngredientRelocationPanel } from "./ingredient-relocation";

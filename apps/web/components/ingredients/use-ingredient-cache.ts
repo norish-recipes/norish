@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { IngredientItem } from "./ingredient-row";
+import type { IngredientItem } from "./types";
 
 /** A page of the list as the infinite query holds it. */
 interface ListPage {

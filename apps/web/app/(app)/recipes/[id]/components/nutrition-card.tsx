@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
-import { IngredientPanel } from "@/app/(app)/settings/ingredients/components/ingredient-panel";
+import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, NutritionBody } from "@/components/recipes/readonly-nutrition";

@@ -31,10 +31,10 @@ import {
   IngredientFiltersPanel,
 } from "./ingredient-filters-panel";
 import { IngredientList } from "./ingredient-list";
-import { IngredientPanel } from "./ingredient-panel";
+import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IngredientSearch } from "./ingredient-search";
 import { SuggestionsPanel } from "./suggestions-panel";
-import { useIngredientSuggestions } from "./use-ingredient-suggestions";
+import { useIngredientSuggestions } from "@/components/ingredients/use-ingredient-suggestions";
 import { useIngredientTree } from "./use-ingredient-tree";
 
 /**
