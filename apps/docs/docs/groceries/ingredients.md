@@ -105,6 +105,11 @@ for a line whose fix is one of these facts. Changes to the name, the parent and 
 at the bottom of the panel; close the panel to drop them. What you may change
 depends on who added the ingredient; a control you may not use is not shown.
 
+Under the name, **In your pantry** says whether your household keeps the
+ingredient, and switches it into or out of your [pantry](./pantry.md) at once,
+without waiting for **Save**. Anyone in the household may use it, whoever added
+the ingredient. A kept ingredient can be put on the grocery list from there too.
+
 ![An ingredient's panel](/img/screenshots/ingredients-panel.png)
 
 - **Name**: type a new name. The old translations stay.
