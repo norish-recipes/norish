@@ -3,10 +3,15 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { PutOnTheList, usePutOnTheList } from "@/components/groceries/pantry/put-on-the-list";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, IconActionButton } from "@/components/shared/action-button";
 import { AIButton } from "@/components/shared/ai-button";
+import UiSwitch from "@/components/shared/ui-switch";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useSpellingRules } from "@/hooks/config";
+import { useGroceriesQuery } from "@/hooks/groceries";
+import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowRightIcon,
@@ -26,6 +31,7 @@ import type {
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { isCatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
+import { groceryOnTheList } from "@norish/shared/lib/pantry";
 
 import type { IngredientPick } from "./ingredient-picker";
 import type { Relocation } from "./ingredient-relocation";
@@ -85,7 +91,8 @@ export function IngredientPanel({
   /** A round of Ask AI is asking about this food: nothing is edited meanwhile. */
   reviewing?: boolean;
   onClose: () => void;
-  onChanged: () => void;
+  /** An edit landed: the opener reads what it lists again. */
+  onChanged?: () => void;
 }) {
   const locale = useLocale();
   const trpc = useTRPC();
@@ -137,7 +144,7 @@ function IngredientPanelContent({
   nested: boolean;
   reviewing: boolean;
   onClose: () => void;
-  onChanged: () => void;
+  onChanged?: () => void;
 }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
@@ -213,7 +220,7 @@ function IngredientPanelContent({
     try {
       show();
       await edit();
-      onChanged();
+      onChanged?.();
 
       return true;
     } catch (error) {
@@ -576,6 +583,7 @@ function IngredientPanelContent({
             {displayName !== item.name ? (
               <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
             ) : null}
+            <PantryRow item={item} />
           </Section>
 
           <Section title={t("parentSection")}>
@@ -781,6 +789,55 @@ function IngredientPanelContent({
         onConfirm={confirmDelete}
       />
     </Panel>
+  );
+}
+
+/**
+ * Whether the household keeps this food, and the switch that changes it, at
+ * once and outside the draft: keeping a food is a household matter, open to
+ * any member whatever the edit policy says, and never lost with an unsaved
+ * edit. It reflects the food itself only; a kept kind of it does not turn it
+ * on. A kept food can be put on the list from here, as from the Pantry page.
+ */
+function PantryRow({ item }: { item: IngredientItem }) {
+  const t = useTranslations("groceries.pantry");
+  const locale = useLocale();
+  const rules = useSpellingRules();
+  const { items } = usePantryQuery();
+  const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
+  const { groceries } = useGroceriesQuery();
+  const putOnTheList = usePutOnTheList();
+  const kept = items.find((held) => held.ingredientId === item.id) ?? null;
+  const keep = (on: boolean) => {
+    if (!on) {
+      if (kept) removePantryIngredient(kept.id);
+
+      return;
+    }
+    void addPantryIngredient({
+      ingredientId: item.id,
+      name: item.name,
+      localeNames: item.localeNames,
+    }).catch(() =>
+      toast(t("keepFailed", { name: ingredientDisplayName(item, locale) }), { variant: "danger" })
+    );
+  };
+
+  return (
+    <div
+      className="flex min-h-9 flex-wrap items-center justify-between gap-2"
+      data-testid="ingredient-pantry"
+    >
+      <UiSwitch isSelected={kept !== null} size="sm" onValueChange={keep}>
+        <span className="text-sm">{t("inYourPantry")}</span>
+      </UiSwitch>
+      {kept ? (
+        <PutOnTheList
+          onPut={() => putOnTheList(kept)}
+          onTheList={groceryOnTheList(groceries, kept, rules) !== null}
+        />
+      ) : null}
+    </div>
   );
 }
 

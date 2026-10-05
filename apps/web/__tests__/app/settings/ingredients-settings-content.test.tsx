@@ -297,6 +297,21 @@ vi.mock("@/components/Panel/Panel", () => {
 });
 
 // A food's nutrition and its corrections are the nutrition section's own tests' business.
+// The panel's Pantry row reads the household's Pantry and groceries; the
+// browser spec walks it, so here it is a household that keeps nothing.
+vi.mock("@/hooks/config", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useSpellingRules: () => undefined,
+}));
+vi.mock("@/hooks/pantry", () => ({
+  usePantryQuery: () => ({ items: [] }),
+  usePantryMutations: () => ({ addPantryIngredient: vi.fn(), removePantryIngredient: vi.fn() }),
+}));
+vi.mock("@/hooks/groceries", () => ({ useGroceriesQuery: () => ({ groceries: [] }) }));
+vi.mock("@/components/groceries/pantry/put-on-the-list", () => ({
+  PutOnTheList: () => null,
+  usePutOnTheList: () => vi.fn(),
+}));
 vi.mock("@/components/ingredients/ingredient-nutrition", () => ({
   IngredientNutritionSection: () => <section data-testid="ingredient-nutrition" />,
 }));
