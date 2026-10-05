@@ -25,6 +25,7 @@ export function createUseIngredientsSubscription({ useTRPC }: CreateIngredientsH
       trpc.ingredients.pathKey(),
       trpc.groceries.list.queryKey(),
       trpc.pantry.list.queryKey(),
+      trpc.pantry.suggestions.queryKey(),
       trpc.stores.aisleLinks.queryKey(),
       trpc.stores.groceryPrices.queryKey(),
       trpc.stores.linkFor.queryKey(),
