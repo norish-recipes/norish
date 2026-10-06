@@ -150,6 +150,11 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         queryOptions: (input: unknown) => ({ queryKey: ["ingredients.spellings", input] }),
       },
       saveDraft: { mutationOptions: () => ({ name: "saveDraft" }) },
+      uploadIcon: { mutationOptions: () => ({ name: "uploadIcon" }) },
+      icons: {
+        queryOptions: (input: unknown) => ({ queryKey: ["ingredients.icons", input] }),
+        pathKey: () => ["ingredients.icons"],
+      },
       markDistinct: { mutationOptions: () => ({ name: "markDistinct" }) },
       merge: { mutationOptions: () => ({ name: "merge" }) },
       moveAlias: { mutationOptions: () => ({ name: "moveAlias" }) },

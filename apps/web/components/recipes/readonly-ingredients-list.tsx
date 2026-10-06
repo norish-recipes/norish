@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { GroceryCheckbox } from "@/components/groceries/grocery-checkbox";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { AnimatedNumber } from "@/components/recipes/animated-number";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
@@ -18,6 +19,10 @@ type IngredientLike = {
   unit: string | null;
   systemUsed: string;
   order: number;
+  /** The line's food, whose icon the surface read; absent until the server resolved it. */
+  ingredientId?: string | null;
+  /** The icon's address outright, where the surface has no ids to look it up by. */
+  icon?: string | null;
 };
 
 export type ReadonlyIngredientsListProps = {
@@ -136,6 +141,12 @@ function ReadonlyIngredientsListContent({
                 ) : (
                   <span className="bg-surface-secondary mt-1 h-2.5 w-2.5 shrink-0 rounded-full" />
                 )}
+
+                <IngredientIcon
+                  className={interactive && isChecked ? "opacity-50" : undefined}
+                  ingredientId={it.ingredientId}
+                  src={it.icon}
+                />
 
                 <div
                   className={`flex flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 transition-opacity duration-200 ${

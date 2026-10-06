@@ -133,7 +133,8 @@
           "favorites": "즐겨찾기",
           "conversion": "재료 단위 변환",
           "timers": "레시피 타이머",
-          "cookbooks": "요리책"
+          "cookbooks": "요리책",
+          "ingredientIcons": "재료 아이콘"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
       "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "아이콘 변경",
+      "upload": "사진 업로드",
+      "remove": "아이콘 제거",
+      "failed": "이 사진으로 아이콘을 만들 수 없습니다."
     }
   },
   "admin": {

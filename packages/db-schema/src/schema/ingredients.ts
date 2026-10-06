@@ -57,6 +57,11 @@ export interface NutritionCodes {
  * (ADR-0038). `nutritionCodes` is what that entry says about its nutrition,
  * as the seed last read it, so a code fixed upstream arrives overnight
  * (ADR-0039); null for an Ingredient no entry gives any.
+ *
+ * `icon` is the Ingredient Icon a person set for the food, uploaded or
+ * generated: the file name of a 128px transparent WebP under the uploads
+ * directory, named for its content. Null shows the icon Norish ships for
+ * `offId`, else the nearest Parent Ingredient's.
  */
 export const ingredients = pgTable(
   "ingredients",
@@ -73,6 +78,7 @@ export const ingredients = pgTable(
     parentChosen: boolean("parent_chosen").notNull().default(false),
     offId: text("off_id"),
     nutritionCodes: jsonb("nutrition_codes").$type<NutritionCodes>(),
+    icon: text("icon"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
   },

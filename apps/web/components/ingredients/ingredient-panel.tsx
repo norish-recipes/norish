@@ -21,7 +21,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Button, Chip, Input, TextField, toast } from "@heroui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { PantryIngredientDto } from "@norish/shared/contracts";
@@ -34,10 +34,12 @@ import { isCatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogu
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { groceryOnTheList } from "@norish/shared/lib/pantry";
 
+import type { IconDraft } from "./ingredient-icon-field";
 import type { IngredientPick } from "./ingredient-picker";
 import type { Relocation } from "./ingredient-relocation";
 import type { IngredientItem, Spelling } from "./types";
 import { DeleteIngredientModal } from "./delete-ingredient-modal";
+import { IngredientIconField } from "./ingredient-icon-field";
 import { IngredientNutritionSection } from "./ingredient-nutrition";
 import { IngredientRelocationPanel } from "./ingredient-relocation";
 import { IngredientStatusChip } from "./ingredient-status-chip";
@@ -56,9 +58,10 @@ function refusalOf(error: unknown): CatalogueRefusal | null {
 type DraftParent = { id: string; name: string; localeNames?: LocaleNames } | null;
 
 /**
- * One Ingredient, opened: its name, what it is a kind of, the spellings it
- * goes by, and every edit the server says the viewer may make. The name,
- * the parent and the spellings are a draft the panel holds until Save, as
+ * One Ingredient, opened: its icon, its name, what it is a kind of, the
+ * spellings it goes by, and every edit the server says the viewer may make.
+ * The icon, the name, the parent and the spellings are a draft the panel
+ * holds until Save, as
  * every other panel does; nothing lands on its own. What names another
  * Ingredient (a merge, a parent, a spelling's move) is picked in a second
  * panel over this one: a parent joins the draft, a merge or a move is an
@@ -151,6 +154,7 @@ function IngredientPanelContent({
   const tActions = useTranslations("common.actions");
   const locale = useLocale();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const cache = useIngredientCache();
   const displayName = ingredientDisplayName(item, locale);
   const [allSpellings, setAllSpellings] = useState(false);
@@ -169,6 +173,7 @@ function IngredientPanelContent({
   const [parent, setParent] = useState<DraftParent>(item.parent);
   const [added, setAdded] = useState<string[]>([]);
   const [removed, setRemoved] = useState<ReadonlySet<string>>(new Set());
+  const [icon, setIcon] = useState<IconDraft>(undefined);
   // What the row counts: every spelling the food has, and the draft's changes to them.
   const spellingCount = item.aliases.length + hiddenSpellings + added.length - removed.size;
   const [alias, setAlias] = useState("");
@@ -255,7 +260,9 @@ function IngredientPanelContent({
   const nextName = name.trim();
   const nameChanged = nextName !== "" && nextName !== item.name;
   const parentChanged = (parent?.id ?? null) !== (item.parent?.id ?? null);
-  const catalogueDirty = nameChanged || parentChanged || added.length > 0 || removed.size > 0;
+  const iconChanged = icon !== undefined;
+  const catalogueDirty =
+    nameChanged || parentChanged || iconChanged || added.length > 0 || removed.size > 0;
   const pantryChanged = keeps !== null && keeps !== (kept !== null);
   const dirty = catalogueDirty || pantryChanged;
 
@@ -277,11 +284,12 @@ function IngredientPanelContent({
       setKeeps(null);
     }
     if (!catalogueDirty) return;
-    const draft = { added, removed, parent };
+    const draft = { added, removed, parent, icon };
 
     // The row reads as the draft has it, and the draft is spent, at once.
     setAdded([]);
     setRemoved(new Set());
+    setIcon(undefined);
     const saved = await run(
       "save",
       () =>
@@ -291,6 +299,8 @@ function IngredientPanelContent({
           ...(parentChanged ? { parent: parent ? { ...parent } : null } : {}),
           // A flagged food the viewer saved by hand is settled by it.
           ...(parentChanged && parent ? { flagged: false, flagReason: null } : {}),
+          // A removed icon's fallback is the server's to say, on the read that follows.
+          ...(icon ? { icon: icon.address, ownIcon: true } : {}),
           aliases: [
             ...row.aliases.filter((spelling) => !removed.has(spelling.id)),
             ...added.map((text) => ({ id: `draft:${text}`, text, canRemove: true })),
@@ -303,6 +313,7 @@ function IngredientPanelContent({
           ...(parentChanged ? { parentId: parent?.id ?? null } : {}),
           add: added,
           remove: [...removed],
+          ...(iconChanged ? { icon: icon?.file ?? null } : {}),
         })
     );
 
@@ -313,6 +324,10 @@ function IngredientPanelContent({
       setRemoved(draft.removed);
       setName(nextName);
       setParent(draft.parent);
+      setIcon(draft.icon);
+    } else if (iconChanged) {
+      // Every surface showing this food, or a kind of it that borrows its icon, reads again.
+      void queryClient.invalidateQueries({ queryKey: trpc.ingredients.icons.pathKey() });
     }
   };
 
@@ -586,26 +601,29 @@ function IngredientPanelContent({
           ) : null}
 
           <Section title={t("nameSection")}>
-            {item.canEdit ? (
-              <TextField
-                aria-label={t("rename")}
-                className="min-w-0"
-                isDisabled={busy}
-                value={name}
-                onChange={setName}
-              >
-                <Input
-                  data-testid="ingredient-name-input"
-                  variant="secondary"
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") void save();
-                    if (event.key === "Escape") setName(item.name);
-                  }}
-                />
-              </TextField>
-            ) : (
-              <p className="font-medium">{item.name}</p>
-            )}
+            <div className="flex items-center gap-3">
+              <IngredientIconField busy={busy} draft={icon} item={item} onDraftChange={setIcon} />
+              {item.canEdit ? (
+                <TextField
+                  aria-label={t("rename")}
+                  className="min-w-0 flex-1"
+                  isDisabled={busy}
+                  value={name}
+                  onChange={setName}
+                >
+                  <Input
+                    data-testid="ingredient-name-input"
+                    variant="secondary"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void save();
+                      if (event.key === "Escape") setName(item.name);
+                    }}
+                  />
+                </TextField>
+              ) : (
+                <p className="font-medium">{item.name}</p>
+              )}
+            </div>
             {displayName !== item.name ? (
               <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
             ) : null}

@@ -4,9 +4,13 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done, pending gates and review
 
-- [ ] A merge coalesces the own icon onto the target, the target's winning, beside the existing `off_id` coalesce.
-- [ ] A scheduled task removes own-icon files that no Ingredient references. A file younger than a grace period is kept, so an open draft's upload survives until Save.
-- [ ] The task is registered like every scheduled task, and its worker is wrapped in `instrumentProcessor`.
-- [ ] Tests: the merge both ways against a real database, and the sweep keeping referenced and recent files while removing the rest.
+- [x] A merge coalesces the own icon onto the target, the target's winning, beside the existing `off_id` coalesce.
+- [x] A scheduled task removes own-icon files that no Ingredient references. A file younger than a grace period is kept, so an open draft's upload survives until Save.
+- [x] The task is registered like every scheduled task, and its worker is wrapped in `instrumentProcessor`.
+- [x] Tests: the merge both ways against a real database, and the sweep keeping referenced and recent files while removing the rest.
+
+## Comments
+
+2026-10-06 (implementation): the sweep runs inside the existing nightly `media-cleanup` scheduled task (already wrapped in `instrumentProcessor`) rather than as a task of its own; the grace is 24 hours.

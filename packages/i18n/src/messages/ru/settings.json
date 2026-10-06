@@ -133,7 +133,8 @@
           "favorites": "Избранное",
           "conversion": "Конвертация ингредиентов",
           "timers": "Таймеры рецептов",
-          "cookbooks": "Кулинарные книги"
+          "cookbooks": "Кулинарные книги",
+          "ingredientIcons": "Значки ингредиентов"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
       "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Изменить значок",
+      "upload": "Загрузить изображение",
+      "remove": "Убрать значок",
+      "failed": "Из этого изображения не удалось сделать значок."
     }
   },
   "admin": {

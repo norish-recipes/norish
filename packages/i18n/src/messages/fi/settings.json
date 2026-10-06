@@ -133,7 +133,8 @@
           "favorites": "Suosikit",
           "conversion": "Ainesosien muunnos",
           "timers": "Reseptien ajastimet",
-          "cookbooks": "Keittokirjat"
+          "cookbooks": "Keittokirjat",
+          "ingredientIcons": "Ainesosien kuvakkeet"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
       "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Vaihda kuvake",
+      "upload": "Lataa kuva",
+      "remove": "Poista kuvake",
+      "failed": "Kuvasta ei voitu tehdä kuvaketta."
     }
   },
   "admin": {

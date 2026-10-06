@@ -133,7 +133,8 @@
           "favorites": "Favoritter",
           "conversion": "Ingredienskonvertering",
           "timers": "Opskriftstimere",
-          "cookbooks": "Kogebøger"
+          "cookbooks": "Kogebøger",
+          "ingredientIcons": "Ingrediensikoner"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
       "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Skift ikonet",
+      "upload": "Upload et billede",
+      "remove": "Fjern ikonet",
+      "failed": "Billedet kunne ikke laves til et ikon."
     }
   },
   "admin": {

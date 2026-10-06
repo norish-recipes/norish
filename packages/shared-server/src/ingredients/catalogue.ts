@@ -50,6 +50,7 @@ import {
   listCatalogueIngredients,
   renameCatalogueIngredient,
 } from "@norish/db/repositories/ingredient-catalogue";
+import { setIngredientIcon } from "@norish/db/repositories/ingredient-icons";
 import {
   countAliasesOf,
   findIngredientAncestors,
@@ -62,12 +63,15 @@ import {
 } from "@norish/db/repositories/ingredient-relocation";
 import { deleteSuggestionFor } from "@norish/db/repositories/ingredient-suggestions";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { ownIconExists } from "@norish/shared-server/media/ingredient-icon";
 import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
+import type { IngredientIcon } from "./icons";
 import { ingredientChanges } from "./changes";
+import { ingredientIcons } from "./icons";
 import { cleanIngredientText } from "./resolver";
 
 /** Who is editing: what the policy is asked about. */
@@ -130,6 +134,10 @@ export interface IngredientListItem {
   parent: { id: string; name: string; localeNames: LocaleNames } | null;
   /** How many Ingredients are kinds of this one, for the fold on the page. */
   kinds: number;
+  /** The Ingredient Icon it shows (its own, shipped or borrowed), by address; null shows the placeholder. */
+  icon: string | null;
+  /** Whether the icon is the food's own, which is the one a person may remove. */
+  ownIcon: boolean;
   canEdit: boolean;
   /**
    * The spellings worth showing the viewer: the ones in their language, the
@@ -186,12 +194,15 @@ export async function listIngredients(
   ]);
   const may = (ownerId: string | null) => mayEditIngredientRow(policy.edit, actor, ownerId);
   const page = rows.slice(0, INGREDIENT_PAGE_SIZE);
-  const parentNames = await findLocaleNames(
-    page.flatMap((row) => (row.parent ? [row.parent.id] : []))
-  );
+  const [parentNames, icons] = await Promise.all([
+    findLocaleNames(page.flatMap((row) => (row.parent ? [row.parent.id] : []))),
+    ingredientIcons(page.map((row) => row.id)),
+  ]);
 
   return {
-    items: page.map((row) => listItem(row, may, parentNames, languages)),
+    items: page.map((row) =>
+      listItem(row, may, parentNames, languages, icons.get(row.id) ?? { address: null, own: false })
+    ),
     nextOffset: rows.length > INGREDIENT_PAGE_SIZE ? offset + INGREDIENT_PAGE_SIZE : null,
   };
 }
@@ -228,7 +239,8 @@ function listItem(
   row: CatalogueIngredient,
   may: (ownerId: string | null) => boolean,
   parentNames: ReadonlyMap<string, LocaleNames>,
-  languages: readonly string[]
+  languages: readonly string[],
+  icon: IngredientIcon
 ): IngredientListItem {
   const all = row.aliases.map((alias) => spelling(alias, may));
   const own = all.filter(
@@ -246,6 +258,8 @@ function listItem(
       ? { ...row.parent, localeNames: parentNames.get(row.parent.id) ?? {} }
       : null,
     kinds: row.kinds,
+    icon: icon.address,
+    ownIcon: icon.own,
     canEdit: may(row.ownerId),
     aliases: shown,
     hiddenSpellings: all.length - shown.length,
@@ -306,6 +320,18 @@ async function assertMayEditIngredient(
   ingredientId: string
 ): Promise<void> {
   await assertMayEdit(actor, await findCatalogueIngredientOwner(tx, ingredientId));
+}
+
+/**
+ * Refuse unless the Ingredient is there and `actor` may edit it: what
+ * uploading or generating its icon follows, before the draft that holds it
+ * is saved under the same rule.
+ */
+export async function assertMayEditFood(
+  actor: CatalogueActor,
+  ingredientId: string
+): Promise<void> {
+  await withTransaction((tx) => assertMayEditIngredient(tx, actor, ingredientId));
 }
 
 /**
@@ -587,12 +613,16 @@ export interface IngredientDraft {
   add: readonly string[];
   /** The ids of spellings of this Ingredient to remove. */
   remove: readonly string[];
+  /** A stored icon file to make the food's own, or null to remove its own; omitted leaves it. */
+  icon?: string | null;
 }
 
 /**
  * Save an Ingredient's draft as one edit: the rename, the parent, the
- * spellings removed and those added, each under its own rule, in one
- * transaction. A refusal anywhere changes nothing.
+ * spellings removed and those added, and its icon, each under its own rule,
+ * in one transaction. A refusal anywhere changes nothing. The icon follows
+ * `edit` on the Ingredient, and must be a file an upload or a generation
+ * stored; removing the food's own brings back what it showed before.
  */
 export async function saveDraft(
   actor: CatalogueActor,
@@ -610,7 +640,19 @@ export async function saveDraft(
     }
     for (const aliasId of draft.remove) await removeAliasIn(tx, actor, aliasId, ingredientId);
     for (const text of draft.add) await addAliasIn(tx, actor, ingredientId, text);
+    if (draft.icon !== undefined) await setIconIn(tx, actor, ingredientId, draft.icon);
 
     return { changed: [...changed] };
   });
+}
+
+async function setIconIn(
+  tx: DbTransaction,
+  actor: CatalogueActor,
+  ingredientId: string,
+  icon: string | null
+): Promise<void> {
+  await assertMayEditIngredient(tx, actor, ingredientId);
+  if (icon !== null && !(await ownIconExists(icon))) throw new CatalogueEditError("not-found");
+  if (!(await setIngredientIcon(tx, ingredientId, icon))) throw new CatalogueEditError("not-found");
 }

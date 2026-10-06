@@ -133,7 +133,8 @@
           "favorites": "Любими",
           "conversion": "Преобразуване на съставки",
           "timers": "Таймери за рецепти",
-          "cookbooks": "Готварски книги"
+          "cookbooks": "Готварски книги",
+          "ingredientIcons": "Икони на съставките"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
       "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Смени иконата",
+      "upload": "Качи снимка",
+      "remove": "Премахни иконата",
+      "failed": "От тази снимка не може да се направи икона."
     }
   },
   "admin": {

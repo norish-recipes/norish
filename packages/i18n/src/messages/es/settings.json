@@ -133,7 +133,8 @@
           "favorites": "Favoritos",
           "conversion": "Conversión de ingredientes",
           "timers": "Temporizadores de recetas",
-          "cookbooks": "Libros de cocina"
+          "cookbooks": "Libros de cocina",
+          "ingredientIcons": "Iconos de ingredientes"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
       "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Cambiar el icono",
+      "upload": "Subir una imagen",
+      "remove": "Quitar el icono",
+      "failed": "No se pudo crear un icono con esa imagen."
     }
   },
   "admin": {

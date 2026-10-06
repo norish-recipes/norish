@@ -45,6 +45,14 @@ const relocation = vi.hoisted(() => ({
   setCatalogueIngredientParent: vi.fn(),
 }));
 const aliases = vi.hoisted(() => ({ findLocaleNames: vi.fn(async () => new Map()) }));
+const iconsRepo = vi.hoisted(() => ({
+  findIconLineage: vi.fn(async (): Promise<Map<string, unknown>> => new Map()),
+  setIngredientIcon: vi.fn(async () => true),
+}));
+const iconFiles = vi.hoisted(() => ({
+  storeIngredientIcon: vi.fn(async () => "0123456789abcdef0123456789abcdef.webp"),
+  ownIconExists: vi.fn(async () => true),
+}));
 const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
 const suggestionsRepo = vi.hoisted(() => ({
   deleteIngredientSuggestion: vi.fn(),
@@ -77,6 +85,11 @@ vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
 vi.mock("@norish/db/repositories/ingredient-relocation", () => relocation);
 vi.mock("@norish/db/repositories/ingredient-aliases", () => aliases);
+vi.mock("@norish/db/repositories/ingredient-icons", () => iconsRepo);
+vi.mock("@norish/shared-server/media/ingredient-icon", async (original) => ({
+  ...(await original<typeof import("@norish/shared-server/media/ingredient-icon")>()),
+  ...iconFiles,
+}));
 vi.mock("@norish/db/repositories/ingredient-suggestions", () => suggestionsRepo);
 vi.mock("@norish/shared-server/ingredients/review", () => reviewer);
 vi.mock("@norish/shared-server/config/server-config-loader", () => policy);
@@ -981,6 +994,8 @@ describe("the list", () => {
           flagged: true,
           flagReason: "ai-unsure",
           parent: null,
+          icon: null,
+          ownIcon: false,
           canEdit: false,
           // An English viewer sees the household's own spelling; the Dutch one is counted.
           aliases: [{ id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true }],
@@ -1002,5 +1017,123 @@ describe("the list", () => {
       { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true },
       { id: "seeded-alias", text: "ui", locale: "nl", seeded: true, canRemove: false },
     ]);
+  });
+});
+
+describe("Ingredient Icons", () => {
+  const FILE = "0123456789abcdef0123456789abcdef.webp";
+
+  function picture(type = "image/png") {
+    const form = new FormData();
+
+    form.set("ingredientId", ONION);
+    form.set("image", new File([new Uint8Array([1, 2, 3])], "onion.png", { type }));
+
+    return form;
+  }
+
+  it("answers which icon each food shows, borrowed from its parent where it has none", async () => {
+    iconsRepo.findIconLineage.mockResolvedValue(
+      new Map([
+        [ONION, { id: ONION, parentId: null, offId: null, icon: FILE, ownerId: ME }],
+        [UIEN, { id: UIEN, parentId: ONION, offId: null, icon: null, ownerId: ME }],
+      ])
+    );
+
+    await expect(callerFor().icons({ ids: [ONION, UIEN, ALIAS] })).resolves.toEqual({
+      [ONION]: `/ingredient-icons/${FILE}`,
+      [UIEN]: `/ingredient-icons/${FILE}`,
+      [ALIAS]: null,
+    });
+  });
+
+  // [policy, owner, may the member set the icon?]
+  const matrix: Array<[PermissionLevel, string | null, boolean]> = [
+    ["everyone", STRANGER, true],
+    ["household", HOUSEMATE, true],
+    ["household", STRANGER, false],
+    ["owner", ME, true],
+    ["owner", HOUSEMATE, false],
+    // A seeded food is an administrator's, whatever the policy.
+    ["everyone", null, false],
+  ];
+
+  it.each(matrix)(
+    "under %s, uploading an icon for a food owned by %s is allowed: %s",
+    async (level, owner, allowed) => {
+      withPolicy(level);
+      ownedBy(owner);
+
+      const upload = callerFor().uploadIcon(picture());
+
+      if (allowed) {
+        await expect(upload).resolves.toEqual({ file: FILE, address: `/ingredient-icons/${FILE}` });
+        expect(iconFiles.storeIngredientIcon).toHaveBeenCalledWith(Buffer.from([1, 2, 3]));
+      } else {
+        await expect(upload).rejects.toMatchObject({ code: "FORBIDDEN" });
+        expect(iconFiles.storeIngredientIcon).not.toHaveBeenCalled();
+      }
+    }
+  );
+
+  it.each(matrix)(
+    "under %s, saving a draft icon for a food owned by %s is allowed: %s",
+    async (level, owner, allowed) => {
+      withPolicy(level);
+      ownedBy(owner);
+
+      const save = callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [], icon: FILE });
+
+      if (allowed) {
+        await expect(save).resolves.toEqual({ success: true });
+        expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, FILE);
+        expect(ingredientsRealtime.published).toEqual([
+          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+        ]);
+      } else {
+        await expect(save).rejects.toMatchObject({ code: "FORBIDDEN" });
+        expect(iconsRepo.setIngredientIcon).not.toHaveBeenCalled();
+      }
+    }
+  );
+
+  it("lets an administrator set a seeded food's icon, and remove it", async () => {
+    ownedBy(null);
+
+    await expect(callerFor({ admin: true }).uploadIcon(picture())).resolves.toMatchObject({
+      file: FILE,
+    });
+    await callerFor({ admin: true }).saveDraft({
+      ingredientId: ONION,
+      add: [],
+      remove: [],
+      icon: null,
+    });
+    expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, null);
+  });
+
+  it("refuses a draft icon no upload stored", async () => {
+    ownedBy(ME);
+    iconFiles.ownIconExists.mockResolvedValueOnce(false);
+
+    await expect(
+      callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [], icon: FILE })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(iconsRepo.setIngredientIcon).not.toHaveBeenCalled();
+  });
+
+  it("takes only a stored icon's file name, never a path", async () => {
+    await expect(
+      callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [], icon: "../../etc/passwd" })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("refuses something other than a picture", async () => {
+    ownedBy(ME);
+
+    await expect(callerFor().uploadIcon(picture("application/pdf"))).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    expect(iconFiles.storeIngredientIcon).not.toHaveBeenCalled();
   });
 });

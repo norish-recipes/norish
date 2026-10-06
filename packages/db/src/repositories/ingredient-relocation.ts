@@ -196,8 +196,9 @@ export async function unfileIngredient(id: string, parentId: string): Promise<bo
  * flag is cleared — a person merged into it — unless `keepFlag`, for a merge
  * nobody decided (the startup pass folding one undecided mint into another),
  * and it takes the source's Open Food Facts id when it has none, so the seed
- * keeps finding the food. Takes the tree lock and both rows itself; false,
- * and nothing written, where either is gone.
+ * keeps finding the food, and the source's own Ingredient Icon when it has
+ * none of its own, so no picture is lost. Takes the tree lock and both rows
+ * itself; false, and nothing written, where either is gone.
  */
 export async function mergeCatalogueIngredients(
   tx: DbTransaction,
@@ -234,19 +235,22 @@ export async function mergeCatalogueIngredients(
     .where(eq(ingredientAliases.ingredientId, sourceId));
   // The target is what a person decided the food is: that settles its flag.
   // A seeded source hands its Open Food Facts id on where the target has
-  // none, so the nightly seed keeps finding the food instead of minting it again.
+  // none, so the nightly seed keeps finding the food instead of minting it again;
+  // its own icon goes the same way.
   const [gone] = await tx
     .delete(ingredients)
     .where(eq(ingredients.id, sourceId))
-    .returning({ offId: ingredients.offId });
+    .returning({ offId: ingredients.offId, icon: ingredients.icon });
 
   await tx.execute(
     keepFlag
       ? sql`update ${ingredients} set version = version + 1,
-          off_id = coalesce(off_id, ${gone?.offId ?? null})
+          off_id = coalesce(off_id, ${gone?.offId ?? null}),
+          icon = coalesce(icon, ${gone?.icon ?? null})
         where id = ${targetId}`
       : sql`update ${ingredients} set flagged = false, flag_reason = null, version = version + 1,
-          off_id = coalesce(off_id, ${gone?.offId ?? null})
+          off_id = coalesce(off_id, ${gone?.offId ?? null}),
+          icon = coalesce(icon, ${gone?.icon ?? null})
         where id = ${targetId}`
   );
 

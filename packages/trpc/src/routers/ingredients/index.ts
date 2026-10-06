@@ -12,6 +12,7 @@ import type {
 } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { assertAIEnabled } from "@norish/auth/permissions";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
 import {
@@ -35,6 +36,8 @@ import {
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { announcingTogether, ingredientChanges } from "@norish/shared-server/ingredients/changes";
+import { uploadIngredientIcon } from "@norish/shared-server/ingredients/icon-drafts";
+import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import {
   correctNutrition as correctHouseholdNutrition,
   NutritionCorrectionError,
@@ -57,6 +60,8 @@ import {
   listSuggestions,
 } from "@norish/shared-server/ingredients/suggestions";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { ICON_FILE_PATTERN } from "@norish/shared-server/media/ingredient-icon";
+import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
 import { REVIEW_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   INGREDIENT_SEARCH_FIELDS,
@@ -64,6 +69,7 @@ import {
 } from "@norish/shared/lib/ingredient-search";
 
 import type { AuthedProcedureContext } from "../../middleware";
+import { formDataInputSchema, getFormDataString, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { ingredientsSubscriptions } from "./subscriptions";
@@ -433,9 +439,51 @@ const dismissSuggestions = authedProcedure.input(suggestionIds).mutation(({ ctx,
 });
 
 /**
+ * Which Ingredient Icon each of these foods shows, by address, or null for
+ * the placeholder: what every surface that names foods reads, once for all
+ * the foods it shows. Ingredients are always visible, so the answer is
+ * nobody's in particular.
+ */
+const icons = authedProcedure
+  .input(z.object({ ids: z.array(z.uuid()).max(500) }))
+  .query(async ({ input }): Promise<Record<string, string | null>> => {
+    const shown = await ingredientIcons(input.ids);
+
+    return Object.fromEntries([...shown].map(([id, icon]) => [id, icon.address]));
+  });
+
+/** What an icon is made from: the pictures a recipe takes, and an iPhone's. */
+const ICON_PICTURE_TYPES = new Set([...ALLOWED_IMAGE_MIME_SET, "image/heic", "image/heif"]);
+
+/**
+ * A picture uploaded in the Ingredient panel (FormData: `ingredientId`,
+ * `image`), cut out to an icon and stored for the panel's draft, which Save
+ * attaches. Follows `edit` on the Ingredient.
+ */
+const uploadIcon = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
+  const ingredientId = z.uuid().safeParse(getFormDataString(input, "ingredientId"));
+  const picture = getUploadedFile(input, "image");
+
+  if (!ingredientId.success || !picture || !ICON_PICTURE_TYPES.has(picture.type)) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Not a picture an icon is made from" });
+  }
+  if (picture.size > SERVER_CONFIG.MAX_IMAGE_FILE_SIZE) {
+    throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "The picture is too large" });
+  }
+  log.info(
+    { userId: ctx.user.id, ingredientId: ingredientId.data },
+    "Uploading an Ingredient Icon"
+  );
+  const bytes = Buffer.from(await picture.arrayBuffer());
+
+  return translated(() => uploadIngredientIcon(actorOf(ctx), ingredientId.data, bytes));
+});
+
+/**
  * Save an Ingredient's draft from its panel as one edit: a new name, a new
- * parent (null clears it), spellings removed and added, each under its own
- * rule. A refusal anywhere changes nothing, and says why.
+ * parent (null clears it), spellings removed and added, and its icon (a
+ * stored file, or null to remove its own), each under its own rule. A
+ * refusal anywhere changes nothing, and says why.
  */
 const saveDraft = authedProcedure
   .input(
@@ -445,6 +493,7 @@ const saveDraft = authedProcedure
       parentId: z.uuid().nullable().optional(),
       add: z.array(ingredientName).max(100),
       remove: z.array(z.uuid()).max(100),
+      icon: z.string().regex(ICON_FILE_PATTERN).nullable().optional(),
     })
   )
   .mutation(({ ctx, input }) => {
@@ -620,6 +669,8 @@ export const ingredientsRouter = router({
   rename,
   markDistinct,
   removeAlias,
+  icons,
+  uploadIcon,
   saveDraft,
   remove,
   reviewWithAI,

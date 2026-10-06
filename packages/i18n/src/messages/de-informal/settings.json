@@ -133,7 +133,8 @@
           "favorites": "Favoriten",
           "conversion": "Zutatenumrechnung",
           "timers": "Rezept-Timer",
-          "cookbooks": "Kochbücher"
+          "cookbooks": "Kochbücher",
+          "ingredientIcons": "Zutatensymbole"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
       "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Symbol ändern",
+      "upload": "Bild hochladen",
+      "remove": "Symbol entfernen",
+      "failed": "Aus diesem Bild konnte kein Symbol erstellt werden."
     }
   },
   "admin": {

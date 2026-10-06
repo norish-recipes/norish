@@ -134,7 +134,8 @@
           "favorites": "Favorieten",
           "conversion": "Ingrediëntconversie",
           "timers": "Recepttimers",
-          "cookbooks": "Kookboeken"
+          "cookbooks": "Kookboeken",
+          "ingredientIcons": "Ingrediënticonen"
         }
       },
       "todaySection": {
@@ -568,6 +569,12 @@
       "notFlagged": "Niet meer gemarkeerd",
       "forbidden": "Niet van jou om te bewerken",
       "notFound": "Bestaat niet meer"
+    },
+    "icon": {
+      "change": "Icoon wijzigen",
+      "upload": "Afbeelding uploaden",
+      "remove": "Icoon verwijderen",
+      "failed": "Van deze afbeelding kon geen icoon worden gemaakt."
     }
   },
   "admin": {

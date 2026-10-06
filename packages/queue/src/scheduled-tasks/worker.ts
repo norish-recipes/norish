@@ -6,6 +6,7 @@ import { getBullClient } from "@norish/queue/redis/bullmq";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
+import { sweepIngredientIcons } from "@norish/shared-server/ingredients/icon-drafts";
 import { refreshIngredientCatalogue } from "@norish/shared-server/ingredients/seed/catalogue-seed";
 import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredients/seed/recheck-mints";
 import { createLogger } from "@norish/shared-server/logger";
@@ -47,13 +48,16 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       const recipeResult = await cleanupOrphanedImages();
       const avatarResult = await cleanupOrphanedAvatars();
       const stepResult = await cleanupOrphanedStepImages();
+      // Ingredient Icons no food points at: a draft nobody saved, an icon removed or replaced.
+      const iconResult = await sweepIngredientIcons();
 
       log.info(
         {
           mediaDeleted: recipeResult.deleted,
           avatarsDeleted: avatarResult.deleted,
           stepImagesDeleted: stepResult.deleted,
-          errors: recipeResult.errors + avatarResult.errors + stepResult.errors,
+          ingredientIconsDeleted: iconResult.deleted,
+          errors: recipeResult.errors + avatarResult.errors + stepResult.errors + iconResult.errors,
         },
         "Media cleanup completed"
       );
