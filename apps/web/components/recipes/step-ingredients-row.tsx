@@ -1,5 +1,6 @@
 "use client";
 
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Chip } from "@heroui/react";
@@ -17,6 +18,10 @@ type IngredientLike = {
   unit?: string | null;
   systemUsed: string;
   order: number;
+  /** The line's food, whose icon its chip shows. */
+  ingredientId?: string | null;
+  /** The icon's address outright, where the surface has no ids. */
+  icon?: string | null;
 };
 
 export type StepIngredientsRowProps = {
@@ -36,7 +41,7 @@ type StepIngredientsRowContentProps = Omit<StepIngredientsRowProps, "units"> & {
  * amounts of the lines it uses, derived at this moment from the live lines —
  * so they follow every edit, the active measurement system, and the servings
  * control, exactly like the ingredient list above them. A line with no
- * amount shows its name only.
+ * amount shows its name only. Each chip carries its line's Ingredient Icon.
  */
 function StepIngredientsRowContent({
   refs,
@@ -60,6 +65,10 @@ function StepIngredientsRowContent({
 
   if (resolved.length === 0) return null;
 
+  const lineAt = new Map(
+    ingredients.filter((line) => line.systemUsed === systemUsed).map((line) => [line.order, line])
+  );
+
   return (
     <ul className="flex flex-wrap gap-1.5">
       {resolved.map((item) => {
@@ -70,10 +79,15 @@ function StepIngredientsRowContent({
         return (
           <Chip<"li">
             key={`${item.ingredientOrder}`}
-            className="rounded-full px-2.5 py-1 text-sm"
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm"
             render={(props) => <li {...props} />}
             variant="tertiary"
           >
+            <IngredientIcon
+              ingredientId={lineAt.get(item.ingredientOrder)?.ingredientId}
+              size="chip"
+              src={lineAt.get(item.ingredientOrder)?.icon}
+            />
             {label}
           </Chip>
         );

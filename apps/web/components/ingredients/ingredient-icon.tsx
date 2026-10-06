@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useHiddenItems } from "@/context/hidden-items-context";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
+import { useDebounceValue } from "usehooks-ts";
 
 /** The sizes an Ingredient Icon is shown at: beside a step's chip, a line or a row, and in its panel. */
 const SIZES = { chip: 20, line: 32, panel: 64 } as const;
@@ -13,6 +14,9 @@ export type IngredientIconSize = keyof typeof SIZES;
 
 /** How many foods one read asks about: the procedure's own limit. */
 const MAX_IDS = 500;
+
+/** How long typing pauses before a typed name is looked up. */
+const FIND_DELAY_MS = 400;
 
 interface IconsOnSurface {
   /** Each food's icon by its Ingredient's id; null shows the placeholder. */
@@ -50,6 +54,29 @@ export function useIngredientIcons(
   });
 
   return data ?? NO_ICONS;
+}
+
+/**
+ * The food each typed name already names, by the name, or null where it
+ * names none yet: what an editor row shows the icon of as soon as Norish
+ * knows what was typed. A reader: it never mints. Names are looked up once
+ * typing pauses; a name not looked up yet answers nothing.
+ */
+export function useFoodsByName(names: readonly string[]): ReadonlyMap<string, string | null> {
+  const trpc = useTRPC();
+  const [typed] = useDebounceValue(
+    [...new Set(names.filter((name) => name !== ""))].join("\n"),
+    FIND_DELAY_MS
+  );
+  const looked = typed ? typed.split("\n") : [];
+  const found = useQueries({
+    queries: looked.map((name) => ({
+      ...trpc.ingredients.find.queryOptions({ name: name.slice(0, 300) }),
+      staleTime: Infinity,
+    })),
+  });
+
+  return new Map(looked.map((name, index) => [name, found[index]?.data?.ingredientId ?? null]));
 }
 
 /**

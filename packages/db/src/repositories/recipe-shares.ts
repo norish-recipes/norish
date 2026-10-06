@@ -274,9 +274,15 @@ export async function getActiveRecipeShareByToken(
   return touchRecipeShareLastAccessed(share);
 }
 
+/**
+ * A shared recipe's public view, with each line's Ingredient Icon read by
+ * `iconsFor` (which icon a food shows is the ingredient module's to say).
+ */
 export async function getPublicRecipeView(
   recipeId: string,
-  shareToken: string
+  shareToken: string,
+  iconsFor: (ingredientIds: string[]) => Promise<ReadonlyMap<string, string | null>> = async () =>
+    new Map()
 ): Promise<PublicRecipeViewDTO | null> {
   const recipe = await getRecipeFull(recipeId);
 
@@ -284,7 +290,11 @@ export async function getPublicRecipeView(
     return null;
   }
 
-  return mapRecipeToPublicRecipeView(recipe, shareToken);
+  const icons = await iconsFor(
+    recipe.recipeIngredients.flatMap((line) => (line.ingredientId ? [line.ingredientId] : []))
+  );
+
+  return mapRecipeToPublicRecipeView(recipe, shareToken, icons);
 }
 
 export { getRecipeShareStatus, mapRecipeToPublicRecipeView, resolveRecipeShareExpiresAt };

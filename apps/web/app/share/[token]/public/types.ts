@@ -14,6 +14,8 @@ export type ShareIngredient = {
   unit: string | null;
   systemUsed: string;
   order: number;
+  /** The line's Ingredient Icon by address: the public view carries no ids. */
+  icon?: string | null;
 };
 
 export type ShareRecipeState = {
