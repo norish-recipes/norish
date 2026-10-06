@@ -11,6 +11,13 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
 
 export type AllowedImageMimeType = (typeof ALLOWED_IMAGE_MIME_TYPES)[number];
 
+/** What an Ingredient Icon is made from: the pictures a recipe takes, and an iPhone's. */
+export const ICON_PICTURE_MIME_TYPES = [
+  ...ALLOWED_IMAGE_MIME_TYPES,
+  "image/heic",
+  "image/heif",
+] as const;
+
 /**
  * Set for efficient MIME type lookup
  */

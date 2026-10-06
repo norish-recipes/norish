@@ -14,7 +14,7 @@ import { getIngredientPermissionPolicy } from "@norish/shared-server/config/serv
 
 import type { CatalogueActor } from "./catalogue";
 import type { IconSet } from "./icons";
-import { CatalogueEditError, mayEditIngredientRow, saveDraft } from "./catalogue";
+import { CatalogueEditError, mayEditIngredientRow, setDrawnIcon } from "./catalogue";
 import { generateIngredientIcon } from "./icon-drafts";
 import { chooseIcon, shippedIconSet } from "./icons";
 
@@ -54,8 +54,8 @@ export type IconRoundOutcome =
 /**
  * Draw one food's icon and set it as its own. A food is passed over where
  * the asker may no longer edit it, it is gone, or a person gave it an icon
- * of its own since the round began. A provider's failure is the caller's to
- * record.
+ * of its own since the round began, or while it was being drawn. A
+ * provider's failure is the caller's to record.
  */
 export async function drawRoundIcon(
   actor: CatalogueActor,
@@ -69,9 +69,9 @@ export async function drawRoundIcon(
   try {
     const drawn = await generateIngredientIcon(actor, ingredientId);
 
-    await saveDraft(actor, ingredientId, { add: [], remove: [], icon: drawn.file });
-
-    return { outcome: "drawn" };
+    return (await setDrawnIcon(actor, ingredientId, drawn.file))
+      ? { outcome: "drawn" }
+      : { outcome: "skipped", reason: "has-icon" };
   } catch (error) {
     if (
       error instanceof CatalogueEditError &&

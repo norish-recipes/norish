@@ -63,7 +63,7 @@ import {
 } from "@norish/db/repositories/ingredient-relocation";
 import { deleteSuggestionFor } from "@norish/db/repositories/ingredient-suggestions";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
-import { ownIconExists } from "@norish/shared-server/media/ingredient-icon";
+import { claimOwnIcon } from "@norish/shared-server/media/ingredient-icon";
 import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
@@ -653,6 +653,27 @@ async function setIconIn(
   icon: string | null
 ): Promise<void> {
   await assertMayEditIngredient(tx, actor, ingredientId);
-  if (icon !== null && !(await ownIconExists(icon))) throw new CatalogueEditError("not-found");
+  if (icon !== null && !(await claimOwnIcon(icon))) throw new CatalogueEditError("not-found");
   if (!(await setIngredientIcon(tx, ingredientId, icon))) throw new CatalogueEditError("not-found");
+}
+
+/**
+ * Make a drawn icon a food's own, unless a person gave it one while it was
+ * being drawn: what a Draw icons round sets, with no review, under `edit` on
+ * the Ingredient. Whether it was set.
+ */
+export async function setDrawnIcon(
+  actor: CatalogueActor,
+  ingredientId: string,
+  file: string
+): Promise<boolean> {
+  const edit = await inEdit(async (tx) => {
+    await assertMayEditIngredient(tx, actor, ingredientId);
+    if (!(await claimOwnIcon(file))) throw new CatalogueEditError("not-found");
+    const set = await setIngredientIcon(tx, ingredientId, file, { unlessSet: true });
+
+    return { changed: set ? [ingredientId] : [] };
+  });
+
+  return edit.changed.length > 0;
 }

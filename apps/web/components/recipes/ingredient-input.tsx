@@ -234,8 +234,8 @@ export default function IngredientInput({
           <IngredientRow
             key={item.id}
             dragConstraintsRef={dragConstraintsRef}
-            index={index}
             foodId={foods.get(foodNames[index]) ?? null}
+            index={index}
             ingredientNumber={getIngredientNumber(index)}
             ingredientPlaceholder={t("placeholder")}
             isLast={index === items.length - 1}
@@ -323,11 +323,7 @@ function IngredientRow({
       </div>
 
       {/* The food's icon; a heading names no food and gets none. */}
-      {ingredientNumber !== null ? (
-        <div className="flex h-10 shrink-0 items-center">
-          <IngredientIcon ingredientId={foodId} />
-        </div>
-      ) : null}
+      {ingredientNumber !== null ? <IngredientIcon className="mt-1" ingredientId={foodId} /> : null}
 
       {/* Input field */}
       <div className="flex-1">

@@ -210,12 +210,18 @@ export async function storeIngredientIcon(picture: Buffer): Promise<string> {
   return file;
 }
 
-/** Whether an own icon's file is stored: what a draft may attach. */
-export async function ownIconExists(file: string): Promise<boolean> {
+/**
+ * Claim a stored own icon for a food: whether it is there, and a fresh age
+ * for it, so the sweep, which spares recent files, never takes a file in the
+ * moment it is being attached.
+ */
+export async function claimOwnIcon(file: string): Promise<boolean> {
   if (!ICON_FILE_PATTERN.test(file)) return false;
 
   try {
-    await fs.access(path.join(ownIconsDir(), file));
+    const now = new Date();
+
+    await fs.utimes(path.join(ownIconsDir(), file), now, now);
 
     return true;
   } catch {

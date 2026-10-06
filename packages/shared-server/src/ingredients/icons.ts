@@ -96,3 +96,12 @@ export async function ingredientIcons(
     })
   );
 }
+
+/** The icon each of these Ingredients shows, by address, or null for the placeholder. */
+export async function ingredientIconAddresses(
+  ids: readonly string[]
+): Promise<Map<string, string | null>> {
+  const shown = await ingredientIcons(ids);
+
+  return new Map([...shown].map(([id, icon]) => [id, icon.address]));
+}

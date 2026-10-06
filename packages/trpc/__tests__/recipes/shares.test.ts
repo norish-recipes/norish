@@ -27,7 +27,7 @@ const revokeRecipeShareMock = vi.hoisted(() => vi.fn());
 const updateRecipeShareMock = vi.hoisted(() => vi.fn());
 const getCachedHouseholdForUserMock = vi.hoisted(() => vi.fn());
 const isUserServerAdminMock = vi.hoisted(() => vi.fn());
-const ingredientIconsMock = vi.hoisted(() => vi.fn());
+const ingredientIconAddressesMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../src/routers/recipes/helpers", () => ({
   assertRecipeAccess: assertRecipeAccessMock,
@@ -59,7 +59,7 @@ vi.mock("@norish/db/repositories/recipes", () => ({
 }));
 
 vi.mock("@norish/shared-server/ingredients/icons", () => ({
-  ingredientIcons: ingredientIconsMock,
+  ingredientIconAddresses: ingredientIconAddressesMock,
 }));
 
 vi.mock("@norish/db", () => ({
@@ -207,16 +207,7 @@ describe("recipe share procedures", () => {
     expect(result.image).toBe("/share/valid-token/media/cover.jpg");
 
     // The lines' icons are read by address, the way every surface reads them.
-    const iconsFor = getPublicRecipeViewMock.mock.calls[0]![2] as (
-      ids: string[]
-    ) => Promise<Map<string, string | null>>;
-
-    ingredientIconsMock.mockResolvedValue(
-      new Map([["onion-id", { address: "/ingredient-icons/onion.webp", own: false }]])
-    );
-    await expect(iconsFor(["onion-id"])).resolves.toEqual(
-      new Map([["onion-id", "/ingredient-icons/onion.webp"]])
-    );
+    expect(getPublicRecipeViewMock.mock.calls[0]![2]).toBe(ingredientIconAddressesMock);
   });
 
   it("returns the public share config for a valid share token", async () => {
@@ -482,7 +473,7 @@ describe("the public view of a shared recipe", () => {
   it("gives a line with no icon, or no food, the placeholder", async () => {
     const { mapRecipeToPublicRecipeView } =
       await import("@norish/db/repositories/recipe-share-helpers");
-    const view = mapRecipeToPublicRecipeView(createMockFullRecipe(), "public-token");
+    const view = mapRecipeToPublicRecipeView(createMockFullRecipe(), "public-token", new Map());
 
     expect(view.recipeIngredients.every((line) => line.icon === null)).toBe(true);
   });

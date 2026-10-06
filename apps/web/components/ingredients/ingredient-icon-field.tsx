@@ -11,6 +11,8 @@ import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
+import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
+
 import type { IngredientItem } from "./types";
 import { IngredientIcon, useIngredientIconsHidden } from "./ingredient-icon";
 
@@ -19,9 +21,6 @@ import { IngredientIcon, useIngredientIconsHidden } from "./ingredient-icon";
  * file to make the food's own, or the food's own removed (null).
  */
 export type IconDraft = { file: string; address: string } | null | undefined;
-
-/** The pictures the file picker offers, HEIC from an iPhone included. */
-const PICTURE_TYPES = "image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif";
 
 /**
  * The food's Ingredient Icon at the head of its panel. One the viewer may
@@ -109,7 +108,7 @@ export function IngredientIconField({
     <>
       <input
         ref={picker}
-        accept={PICTURE_TYPES}
+        accept={ICON_PICTURE_MIME_TYPES.join(",")}
         className="hidden"
         data-testid="ingredient-icon-file"
         type="file"

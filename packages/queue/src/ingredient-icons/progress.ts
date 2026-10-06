@@ -21,7 +21,8 @@ export type IconStepDetail = { ingredientId: string; name?: string } & (
   IconRoundOutcome | { outcome: "failed"; error: string }
 );
 
-const COUNTED = { drawn: "drawn", skipped: "skipped", failed: "failed" } as const;
+/** What a settled food's step can come to, each counted under its own name. */
+const OUTCOMES: ReadonlySet<string> = new Set(["drawn", "skipped", "failed"]);
 
 /** The foods the latest attempt has settled, with what came of each. */
 function settledSteps(progress: unknown): IconStepDetail[] {
@@ -35,7 +36,7 @@ function settledSteps(progress: unknown): IconStepDetail[] {
       step.endedAt !== undefined &&
       typeof detail?.ingredientId === "string" &&
       typeof detail.outcome === "string" &&
-      detail.outcome in COUNTED
+      OUTCOMES.has(detail.outcome)
       ? [detail as IconStepDetail]
       : [];
   });
@@ -49,7 +50,7 @@ export function summarizeIconRound(
   const counts = { drawn: 0, skipped: 0, failed: 0 };
   const settled = settledSteps(job.progress);
 
-  for (const step of settled) counts[COUNTED[step.outcome]] += 1;
+  for (const step of settled) counts[step.outcome] += 1;
 
   return {
     jobId: job.id ?? "",

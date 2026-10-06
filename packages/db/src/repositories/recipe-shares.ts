@@ -281,8 +281,7 @@ export async function getActiveRecipeShareByToken(
 export async function getPublicRecipeView(
   recipeId: string,
   shareToken: string,
-  iconsFor: (ingredientIds: string[]) => Promise<ReadonlyMap<string, string | null>> = async () =>
-    new Map()
+  iconsFor: (ingredientIds: string[]) => Promise<ReadonlyMap<string, string | null>>
 ): Promise<PublicRecipeViewDTO | null> {
   const recipe = await getRecipeFull(recipeId);
 

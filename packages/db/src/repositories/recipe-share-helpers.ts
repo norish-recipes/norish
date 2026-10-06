@@ -97,7 +97,7 @@ export function toSharedMediaUrl(
 export function mapRecipeToPublicRecipeView(
   recipe: FullRecipeDTO,
   shareToken: string,
-  icons: ReadonlyMap<string, string | null> = new Map()
+  icons: ReadonlyMap<string, string | null>
 ): PublicRecipeViewDTO {
   return PublicRecipeViewSchema.parse({
     name: recipe.name,

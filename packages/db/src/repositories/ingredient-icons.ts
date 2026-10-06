@@ -1,4 +1,4 @@
-import { eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
@@ -88,16 +88,21 @@ function toNode(row: {
   };
 }
 
-/** Set or clear an Ingredient's own icon. Whether the Ingredient is still there. */
+/**
+ * Set or clear an Ingredient's own icon; with `unlessSet`, only where it has
+ * none, so a drawing that took a while never replaces one a person set
+ * meanwhile. Whether a row was written.
+ */
 export async function setIngredientIcon(
   tx: DbTransaction | typeof db,
   id: string,
-  icon: string | null
+  icon: string | null,
+  { unlessSet = false }: { unlessSet?: boolean } = {}
 ): Promise<boolean> {
   const updated = await tx
     .update(ingredients)
     .set({ icon, version: sql`${ingredients.version} + 1` })
-    .where(eq(ingredients.id, id))
+    .where(and(eq(ingredients.id, id), unlessSet ? isNull(ingredients.icon) : undefined))
     .returning({ id: ingredients.id });
 
   return updated.length > 0;

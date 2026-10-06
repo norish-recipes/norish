@@ -25,7 +25,7 @@ import {
   getUnits,
   isTimersEnabled,
 } from "@norish/shared-server/config/server-config-loader";
-import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
+import { ingredientIconAddresses } from "@norish/shared-server/ingredients/icons";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import {
@@ -238,18 +238,12 @@ const remove = authedProcedure
     return { success: true, stale: result.stale };
   });
 
-/** Each line's Ingredient Icon by address: the public view carries no ids to look one up by. */
-async function iconAddresses(ingredientIds: string[]): Promise<Map<string, string | null>> {
-  const shown = await ingredientIcons(ingredientIds);
-
-  return new Map([...shown].map(([id, icon]) => [id, icon.address]));
-}
-
 const getShared = sharedRecipeProcedure.output(PublicRecipeViewSchema).query(async ({ ctx }) => {
   const publicRecipe = await getPublicRecipeView(
     ctx.sharedRecipe.share.recipeId,
     ctx.sharedRecipe.token,
-    iconAddresses
+    // Each line's icon by address: the public view carries no ids to look one up by.
+    ingredientIconAddresses
   );
 
   if (!publicRecipe) {

@@ -1,9 +1,9 @@
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import { isUserServerAdmin } from "@norish/db";
 import {
-  canDrawImages,
   getRecipePermissionPolicy,
   isAIEnabled,
+  isImageGenerationConfigured,
 } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
@@ -13,10 +13,10 @@ import { router } from "../../trpc";
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting permissions");
 
-  const [recipePolicy, aiEnabled, canDraw, serverAdmin] = await Promise.all([
+  const [recipePolicy, aiEnabled, imageConfigured, serverAdmin] = await Promise.all([
     getRecipePermissionPolicy() as Promise<RecipePermissionPolicy>,
     isAIEnabled(),
-    canDrawImages(),
+    isImageGenerationConfigured(),
     isUserServerAdmin(ctx.user.id),
   ]);
 
@@ -24,7 +24,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
     recipePolicy,
     isAIEnabled: aiEnabled,
     // AI on and an image provider configured: Ingredient Icons can be drawn.
-    canDrawImages: canDraw,
+    canDrawImages: aiEnabled && imageConfigured,
     householdUserIds: ctx.householdUserIds,
     isServerAdmin: serverAdmin,
   };

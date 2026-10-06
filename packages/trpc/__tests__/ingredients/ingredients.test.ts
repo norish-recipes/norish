@@ -56,7 +56,7 @@ const iconQueue = vi.hoisted(() => ({
 }));
 const iconFiles = vi.hoisted(() => ({
   storeIngredientIcon: vi.fn(async () => "0123456789abcdef0123456789abcdef.webp"),
-  ownIconExists: vi.fn(async () => true),
+  claimOwnIcon: vi.fn(async () => true),
 }));
 const policy = vi.hoisted(() => ({
   getIngredientPermissionPolicy: vi.fn(),
@@ -1136,7 +1136,7 @@ describe("Ingredient Icons", () => {
 
   it("refuses a draft icon no upload stored", async () => {
     ownedBy(ME);
-    iconFiles.ownIconExists.mockResolvedValueOnce(false);
+    iconFiles.claimOwnIcon.mockResolvedValueOnce(false);
 
     await expect(
       callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [], icon: FILE })

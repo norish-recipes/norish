@@ -12,6 +12,7 @@ import { useLocale } from "next-intl";
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import { useUnitFormatter as useSharedUnitFormatter } from "@norish/shared-react/hooks";
 import { formatAmount } from "@norish/shared/lib/format-amount";
+import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 type IngredientLike = {
   ingredientName: string;
@@ -142,11 +143,14 @@ function ReadonlyIngredientsListContent({
                   <span className="bg-surface-secondary mt-1 h-2.5 w-2.5 shrink-0 rounded-full" />
                 )}
 
-                <IngredientIcon
-                  className={interactive && isChecked ? "opacity-50" : undefined}
-                  ingredientId={it.ingredientId}
-                  src={it.icon}
-                />
+                {/* A line that names no food ("200 g" alone) gets no icon, like a heading. */}
+                {namesNoFood(it.ingredientName) ? null : (
+                  <IngredientIcon
+                    className={interactive && isChecked ? "opacity-50" : undefined}
+                    ingredientId={it.ingredientId}
+                    src={it.icon}
+                  />
+                )}
 
                 <div
                   className={`flex flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 transition-opacity duration-200 ${

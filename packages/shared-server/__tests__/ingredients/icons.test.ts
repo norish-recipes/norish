@@ -21,6 +21,7 @@ import {
   CatalogueEditError,
   mergeIngredients,
   saveDraft,
+  setDrawnIcon,
   setParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import {
@@ -210,5 +211,16 @@ describe("Ingredient Icons", () => {
     await expect(sweepIngredientIcons(now)).resolves.toEqual({ deleted: 1, errors: 0 });
     // The other own icon nothing points at is as recent as an open draft's.
     expect((await fs.readdir(dir)).sort()).toEqual([OWN, OTHER_OWN, fresh].sort());
+  });
+
+  it("never lets a drawn icon replace one a person set while it was being drawn", async () => {
+    const onion = await food("onion", { icon: OWN });
+    const kohlrabi = await food("kohlrabi");
+
+    await expect(setDrawnIcon(actor, onion, OTHER_OWN)).resolves.toBe(false);
+    expect(await shown(onion)).toBe(address(OWN));
+
+    await expect(setDrawnIcon(actor, kohlrabi, OTHER_OWN)).resolves.toBe(true);
+    expect(await shown(kohlrabi)).toBe(address(OTHER_OWN));
   });
 });

@@ -171,7 +171,7 @@ describe("recipe share repository", () => {
       order: "0",
     });
 
-    const publicRecipe = await getPublicRecipeView(testRecipeId, token);
+    const publicRecipe = await getPublicRecipeView(testRecipeId, token, async () => new Map());
 
     expect(publicRecipe).not.toBeNull();
     expect(publicRecipe).not.toHaveProperty("id");
@@ -208,7 +208,7 @@ describe("recipe share repository", () => {
       order: "0",
     });
 
-    const publicRecipe = await getPublicRecipeView(testRecipeId, token);
+    const publicRecipe = await getPublicRecipeView(testRecipeId, token, async () => new Map());
 
     // The reference resolves by line order within the system — the recipient
     // derives 25 ml at display time, and no row id crosses the boundary.

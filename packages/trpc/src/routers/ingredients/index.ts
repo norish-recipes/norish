@@ -45,7 +45,7 @@ import {
   uploadIngredientIcon,
 } from "@norish/shared-server/ingredients/icon-drafts";
 import { listIconRoundFoods } from "@norish/shared-server/ingredients/icon-rounds";
-import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
+import { ingredientIconAddresses } from "@norish/shared-server/ingredients/icons";
 import {
   correctNutrition as correctHouseholdNutrition,
   NutritionCorrectionError,
@@ -69,7 +69,7 @@ import {
 } from "@norish/shared-server/ingredients/suggestions";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ICON_FILE_PATTERN } from "@norish/shared-server/media/ingredient-icon";
-import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
+import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
 import { ICON_SCOPES, REVIEW_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   INGREDIENT_SEARCH_FIELDS,
@@ -454,14 +454,11 @@ const dismissSuggestions = authedProcedure.input(suggestionIds).mutation(({ ctx,
  */
 const icons = authedProcedure
   .input(z.object({ ids: z.array(z.uuid()).max(500) }))
-  .query(async ({ input }): Promise<Record<string, string | null>> => {
-    const shown = await ingredientIcons(input.ids);
+  .query(async ({ input }): Promise<Record<string, string | null>> =>
+    Object.fromEntries(await ingredientIconAddresses(input.ids))
+  );
 
-    return Object.fromEntries([...shown].map(([id, icon]) => [id, icon.address]));
-  });
-
-/** What an icon is made from: the pictures a recipe takes, and an iPhone's. */
-const ICON_PICTURE_TYPES = new Set([...ALLOWED_IMAGE_MIME_SET, "image/heic", "image/heif"]);
+const ICON_PICTURE_TYPES: ReadonlySet<string> = new Set(ICON_PICTURE_MIME_TYPES);
 
 /**
  * A picture uploaded in the Ingredient panel (FormData: `ingredientId`,
