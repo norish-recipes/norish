@@ -19,12 +19,14 @@ export function flag(name: string): string | undefined {
   return at >= 0 ? process.argv[at + 1] : undefined;
 }
 
-/** A seeded food: one the catalogue seed wrote, ownerless and named for an Open Food Facts entry. */
+/**
+ * A seeded food: one named for an Open Food Facts entry. Not only the
+ * ownerless ones: on an upgraded instance the seed merged into the foods a
+ * household already had (apple, avocado), which keep their owner.
+ */
 export function seededFoods(nodes: ReadonlyMap<string, IconNode>): Map<string, string> {
   return new Map(
-    [...nodes.values()].flatMap((node) =>
-      node.offId && node.ownerId === null ? [[node.offId, node.id] as const] : []
-    )
+    [...nodes.values()].flatMap((node) => (node.offId ? [[node.offId, node.id] as const] : []))
   );
 }
 

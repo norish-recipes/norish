@@ -1,8 +1,9 @@
 # Ingredient Icons tool
 
 Draws the Ingredient Icons Norish ships for its seeded foods into
-`packages/shared-server/src/ingredients/icon-set/`. Uses the database in
-`.env.local` and that instance's Image Generation provider and Decision Model.
+`packages/shared-server/src/ingredients/icon-set/`. Reads the foods from the
+database in `.env.local` and draws with that instance's AI settings (image
+provider, Decision Model), so it needs no keys of its own.
 
 ```sh
 # Contact sheet of ~20 foods, to check the style: out/sample-sheet.png
