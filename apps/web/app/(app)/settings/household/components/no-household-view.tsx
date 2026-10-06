@@ -30,8 +30,6 @@ export default function NoHouseholdView() {
   };
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-2xl font-bold">{t("pageTitle")}</h1>
-
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Create Household */}
         <Card>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { EyeIcon, EyeSlashIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
+import { Note } from "@/components/shared/note";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import {
   Button,
@@ -150,55 +151,48 @@ export default function CalDavConfigCard() {
   return (
     <Card>
       <Card.Header>
-        <div className="flex items-center gap-3">
-          <ServerIcon className="text-accent h-6 w-6" />
-          <div>
-            <h2 className="text-lg font-semibold">{t("title")}</h2>
-            <p className="text-muted mt-1 text-base">{t("description")}</p>
-          </div>
-        </div>
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <ServerIcon className="h-5 w-5" />
+          {t("title")}
+        </h2>
       </Card.Header>
 
       <Card.Content className="gap-4">
+        <p className="text-muted text-base">{t("description")}</p>
+
         {/* Guidance Section */}
-        <div className="bg-accent/10 border-accent/20 rounded-lg border p-4">
-          <div className="flex gap-3">
-            <InformationCircleIcon className="text-accent mt-0.5 h-5 w-5 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-accent mb-2 text-base font-medium">{t("gettingStarted")}</p>
-              <p className="text-muted mb-2 text-xs">{t("providerDescription")}</p>
-              <ul className="text-muted ml-4 list-disc space-y-1 text-xs">
-                <li>
-                  <Link
-                    isExternal
-                    href="https://docs.nextcloud.com/server/latest/user_manual/en/groupware/calendar.html"
-                    size="sm"
-                    target="_blank"
-                  >
-                    Nextcloud Calendar
-                  </Link>
-                </li>
-                <li>
-                  <Link isExternal href="https://radicale.org/" size="sm" target="_blank">
-                    Radicale
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    isExternal
-                    href="https://support.apple.com/guide/calendar/set-up-accounts-icl4308d6701/mac"
-                    size="sm"
-                    target="_blank"
-                  >
-                    Apple Calendar
-                  </Link>
-                </li>
-                {/* No Google Calendar here: its CalDAV endpoint now requires
-                    OAuth/OIDC, which this username/password setup cannot do. */}
-              </ul>
-            </div>
-          </div>
-        </div>
+        <Note status="accent" title={t("gettingStarted")}>
+          <p className="mb-2">{t("providerDescription")}</p>
+          <ul className="ml-4 list-disc space-y-1">
+            <li>
+              <Link
+                isExternal
+                href="https://docs.nextcloud.com/server/latest/user_manual/en/groupware/calendar.html"
+                size="sm"
+                target="_blank"
+              >
+                Nextcloud Calendar
+              </Link>
+            </li>
+            <li>
+              <Link isExternal href="https://radicale.org/" size="sm" target="_blank">
+                Radicale
+              </Link>
+            </li>
+            <li>
+              <Link
+                isExternal
+                href="https://support.apple.com/guide/calendar/set-up-accounts-icl4308d6701/mac"
+                size="sm"
+                target="_blank"
+              >
+                Apple Calendar
+              </Link>
+            </li>
+            {/* No Google Calendar here: its CalDAV endpoint now requires
+                OAuth/OIDC, which this username/password setup cannot do. */}
+          </ul>
+        </Note>
 
         {/* Setup Form */}
         <TextField isRequired value={serverUrl} onChange={setServerUrl}>
@@ -255,9 +249,9 @@ export default function CalDavConfigCard() {
             <Select.Value />
             <Select.Indicator />
           </Select.Trigger>
-          <span className="text-muted px-1 text-xs">
+          <Description>
             {calendars.length === 0 ? t("calendarDescriptionDisabled") : t("calendarDescription")}
-          </span>
+          </Description>
           <Select.Popover>
             <ListBox>
               {calendars.map((cal) => (
@@ -300,7 +294,7 @@ export default function CalDavConfigCard() {
           </div>
         )}
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button
             isDisabled={!canSave}
             onPress={handleTestConnection}

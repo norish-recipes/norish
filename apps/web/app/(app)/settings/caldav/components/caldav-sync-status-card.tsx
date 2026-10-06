@@ -79,10 +79,10 @@ export default function CalDavSyncStatusCard() {
         <div className="flex w-full flex-col gap-4">
           {/* Title and Sync Button */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <ClockIcon className="text-accent h-6 w-6" />
-              <h2 className="text-lg font-semibold">{t("title")}</h2>
-            </div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <ClockIcon className="h-5 w-5" />
+              {t("title")}
+            </h2>
             <Button
               className="min-w-16"
               isPending={syncing}

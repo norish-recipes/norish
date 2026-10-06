@@ -81,12 +81,12 @@ describe("ShareLinksTableCard", () => {
     expect(screen.getByRole("grid", { name: "Share links" })).toBeInTheDocument();
   });
 
-  it("renders a simple none state when no share links exist", () => {
+  it("says so in a line when no share links exist", () => {
     render(
       <ShareLinksTableCard isLoading={false} namespace="settings.user.shareLinks" shares={[]} />
     );
 
-    expect(screen.getByText("None")).toBeInTheDocument();
+    expect(screen.getByText("No links")).toBeInTheDocument();
     expect(screen.queryByRole("grid", { name: "Share links" })).not.toBeInTheDocument();
   });
 });

@@ -164,9 +164,9 @@ export default function ShareLinksTableCard({
           <p className="text-muted text-base">{t("description")}</p>
 
           {shares.length === 0 ? (
-            <div className="bg-surface-secondary text-muted rounded-lg px-4 py-6 text-center text-sm">
-              {isLoading ? tCommon("status.loading") : "None"}
-            </div>
+            <p className="text-muted text-base">
+              {isLoading ? tCommon("status.loading") : t("empty")}
+            </p>
           ) : (
             <Table>
               <Table.ScrollContainer>

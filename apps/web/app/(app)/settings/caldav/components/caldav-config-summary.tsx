@@ -120,22 +120,22 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
   return (
     <>
       <Card>
-        <Card.Header className="flex items-start justify-between pb-2">
-          <div className="flex flex-1 items-center gap-3">
-            <ServerIcon className="text-accent h-6 w-6" />
-            <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-semibold">{t("title")}</h2>
-              <Chip color={getConnectionStatusColor()} size="sm" variant="soft">
-                {connectionStatus === "checking" ? (
-                  <ArrowPathIcon className="h-3 w-3 animate-spin" />
-                ) : connectionStatus === "connected" ? (
-                  <CheckCircleIcon className="h-3 w-3" />
-                ) : (
-                  <XCircleIcon className="h-3 w-3" />
-                )}
-                <Chip.Label>{getConnectionStatusText()}</Chip.Label>
-              </Chip>
-            </div>
+        <Card.Header className="flex-row flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <ServerIcon className="h-5 w-5" />
+              {t("title")}
+            </h2>
+            <Chip color={getConnectionStatusColor()} size="sm" variant="soft">
+              {connectionStatus === "checking" ? (
+                <ArrowPathIcon className="h-3 w-3 animate-spin" />
+              ) : connectionStatus === "connected" ? (
+                <CheckCircleIcon className="h-3 w-3" />
+              ) : (
+                <XCircleIcon className="h-3 w-3" />
+              )}
+              <Chip.Label>{getConnectionStatusText()}</Chip.Label>
+            </Chip>
           </div>
           <div className="flex gap-2">
             <Button size="sm" onPress={onEditClick} variant="tertiary" className="min-w-16">
