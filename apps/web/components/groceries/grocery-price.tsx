@@ -16,7 +16,8 @@ import { SalePrice } from "./sale-price";
 /**
  * What this row costs at its Store, in two quiet lines: the Line Cost with
  * the purchase arithmetic beside it, `€4.38 (2 × €2.19)`, and the product
- * that price is for. On a Sale the money line reads the way a shelf tag
+ * that price is for. A phone's row has room for the Line Cost alone; the rest
+ * is in the grocery's panel. On a Sale the money line reads the way a shelf tag
  * does: the regular Line Cost struck through, the new one beside it like any
  * other price, the shop's own words for the deal as its title.
  * Where the amount could not be reconciled with the pack, a note that one
@@ -55,7 +56,7 @@ export function GroceryPrice({ line }: { line: PricedLine }) {
 
   return (
     <span
-      className="flex w-full min-w-0 flex-col items-start gap-0.5 text-left sm:w-auto sm:max-w-[55%] sm:items-end sm:text-right"
+      className="flex min-w-0 shrink-0 flex-col items-end gap-0.5 text-right sm:max-w-[55%] sm:shrink"
       data-grocery-packs={cost.packs}
       data-grocery-price={product.id}
       data-testid="grocery-price"
@@ -77,19 +78,22 @@ export function GroceryPrice({ line }: { line: PricedLine }) {
           }}
           words={product.dealWords ?? null}
         />
-        <span className="text-muted text-xs font-normal" data-testid="grocery-price-calculation">
+        <span
+          className="text-muted hidden text-xs font-normal sm:inline"
+          data-testid="grocery-price-calculation"
+        >
           {` (${detail})`}
         </span>
       </span>
       <span
-        className="text-muted w-full truncate text-xs"
+        className="text-muted hidden w-full truncate text-xs sm:block"
         data-testid="grocery-product"
         title={product.name}
       >
         {product.name}
       </span>
       {!cost.matched && (
-        <span className="text-muted text-xs" data-testid="grocery-one-pack">
+        <span className="text-muted hidden text-xs sm:block" data-testid="grocery-one-pack">
           {t("onePack")}
         </span>
       )}

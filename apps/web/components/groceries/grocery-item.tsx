@@ -61,14 +61,16 @@ function GroceryItemComponent({
         onChange={(checked) => onToggle(grocery.id, checked)}
       />
 
+      {/* Decoration a phone's row has no room for. */}
       <IngredientIcon
-        className={grocery.isDone ? "opacity-50" : undefined}
+        className={`max-sm:hidden ${grocery.isDone ? "opacity-50" : ""}`}
         ingredientId={grocery.ingredientId ?? recurringGrocery?.ingredientId}
       />
 
-      {/* Clickable content area */}
+      {/* Clickable content area. The price keeps to the name's line, and the
+          name wraps rather than give way to it. */}
       <button
-        className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+        className="flex min-w-0 flex-1 cursor-pointer items-baseline justify-between gap-3 text-left sm:gap-4"
         type="button"
         onClick={() => onEdit(grocery)}
       >
@@ -84,7 +86,7 @@ function GroceryItemComponent({
               </span>
             )}
             <span
-              className={`truncate text-base ${
+              className={`min-w-0 text-base break-words ${
                 grocery.isDone ? "text-muted line-through" : "text-foreground"
               }`}
             >
@@ -94,7 +96,7 @@ function GroceryItemComponent({
 
           {/* Recipe name indicator */}
           {recipeName && !recurringGrocery && (
-            <span className="text-muted mt-0.5 truncate text-xs">{recipeName}</span>
+            <span className="text-muted mt-0.5 max-w-full truncate text-xs">{recipeName}</span>
           )}
 
           {/* Recurring pill underneath */}
