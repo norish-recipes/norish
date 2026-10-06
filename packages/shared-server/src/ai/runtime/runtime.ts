@@ -65,6 +65,12 @@ import {
   isRequestShapeRejection,
   toAIError,
 } from "./errors";
+import {
+  imageModelKey,
+  refusedImageParameter,
+  refusedImageParameters,
+  rememberRefusedImageParameter,
+} from "./image-parameter-fallback";
 import { recordModelUse } from "./model-use-ledger";
 import {
   canDegradeToJsonMode,
@@ -692,16 +698,37 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
     );
 
     const providerOptions = tier ? imageModel.tier?.(tier) : undefined;
-    const result = await generateImageWithModel({
-      model: imageModel.model,
-      prompt,
-      ...imageModel[shape],
-      ...(providerOptions ? { providerOptions } : {}),
-      // Image calls are billed per request, so the SDK's silent in-call
-      // retries are disabled: the queue's attempts are the one retry budget.
-      maxRetries: 0,
-      abortSignal: AbortSignal.timeout(aiConfig.timeoutMs),
-    });
+    const draw = () =>
+      generateImageWithModel({
+        model: imageModel.model,
+        prompt,
+        ...imageModel[shape],
+        ...(providerOptions ? { providerOptions } : {}),
+        // Image calls are billed per request, so the SDK's silent in-call
+        // retries are disabled: the queue's attempts are the one retry budget.
+        maxRetries: 0,
+        abortSignal: AbortSignal.timeout(aiConfig.timeoutMs),
+      });
+    const key = imageModelKey(provider, model);
+    let result: Awaited<ReturnType<typeof draw>> | undefined;
+
+    // A model that refuses a parameter it may go without is asked again
+    // without it, once per parameter, and remembers it (ADR-0014). A refused
+    // request is not billed.
+    while (!result) {
+      try {
+        result = await draw();
+      } catch (error) {
+        const refused = refusedImageParameter(error);
+
+        if (!refused || refusedImageParameters(key).has(refused)) throw error;
+        aiLogger.warn(
+          { feature: promptName, provider, model, parameter: refused },
+          "Image model refused a parameter; asking again without it"
+        );
+        rememberRefusedImageParameter(key, refused);
+      }
+    }
 
     const bytes = Buffer.from(result.image.uint8Array);
 

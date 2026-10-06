@@ -26,3 +26,5 @@
 ## Comments
 
 2026-10-06 (implementation): the runtime's image entry point takes `shape: "square"` (1024×1024, Google's 1:1) and a `tier` (`low`/`medium`, the latter for the maintainers' sample sheet). Tiers follow the model's name: gpt-image's low/medium, DALL·E 3's standard; DALL·E 2, Google, Ollama and OpenAI-compatible endpoints take none. "Can draw" is `canDrawImages` on `permissions.get` and `canDrawImages()` in the server config loader. The menu item reads "Generate with AI".
+
+2026-10-06 (after the first sample run): the tier by model name is gone. `gpt-6-luna` draws but refused the `response_format` the SDK adds to any model whose name it does not know. Per ADR-0014, every OpenAI-family model is now asked for the tier, and a model that refuses `quality` or `response_format` is asked again without it and remembered for the process (`ai/runtime/image-parameter-fallback.ts`). This holds for a dish's picture too.

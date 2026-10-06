@@ -32,6 +32,8 @@ vi.mock("@norish/shared-server/logger", () => {
 
 const { generateImage } = await import("@norish/shared-server/ai/runtime/runtime");
 const { createImageModelFromConfig } = await import("@norish/shared-server/ai/runtime/providers");
+const { resetImageParameterFallback } =
+  await import("@norish/shared-server/ai/runtime/image-parameter-fallback");
 const { drawIngredientIcon } =
   await import("@norish/shared-server/ai/enrichment/ingredient-icon-drawer");
 const { createModelUseLedger, runWithModelUseLedger } =
@@ -112,6 +114,7 @@ function imageConfig(overrides: Partial<ImageGenerationConfig> = {}): ImageGener
 }
 
 beforeEach(() => {
+  resetImageParameterFallback();
   captured = [];
   holdResponses = false;
   reply = () => ({ status: 200, body: { data: [{ b64_json: imageBase64 }] } });
@@ -305,11 +308,9 @@ describe("generateImage", () => {
     });
 
     it.each([
-      ["gpt-image-1-mini", "low", "low"],
-      ["gpt-image-2", "medium", "medium"],
-      ["dall-e-3", "low", "standard"],
-      ["dall-e-2", "low", undefined],
-    ] as const)("asks %s at the %s tier for %s", async (model, tier, quality) => {
+      ["gpt-image-1-mini", "low"],
+      ["gpt-image-2", "medium"],
+    ] as const)("asks an OpenAI-family model (%s) for the %s tier", async (model, tier) => {
       // Azure's image model is OpenAI's and reaches a configured endpoint.
       mockGetImageGenerationConfig.mockResolvedValue(
         imageConfig({ provider: "azure", model, endpoint: baseUrl, apiKey: "azure-key" })
@@ -317,12 +318,67 @@ describe("generateImage", () => {
 
       await drawIngredientIcon({ name: "pepper", kindOf: [] }, tier);
 
-      expect(captured[0]!.body.quality).toBe(quality);
+      expect(captured[0]!.body.quality).toBe(tier);
       expect(captured[0]!.body.size).toBe("1024x1024");
+    });
+
+    /** OpenAI's answer to a parameter a model does not take. */
+    function refusing(parameter: string, message = `Unknown parameter: '${parameter}'.`) {
+      return {
+        status: 400,
+        body: { error: { message, type: "invalid_request_error", param: parameter } },
+      };
+    }
+
+    it("asks again without a parameter the model refuses, and leaves it out from then on", async () => {
+      // gpt-6-luna draws, but the SDK adds response_format to a model it does not know, and it refuses it.
+      mockGetImageGenerationConfig.mockResolvedValue(
+        imageConfig({ provider: "azure", model: "gpt-6-luna", endpoint: baseUrl, apiKey: "k" })
+      );
+      reply = () =>
+        "response_format" in (captured.at(-1)?.body ?? {})
+          ? refusing("response_format")
+          : { status: 200, body: { data: [{ b64_json: imageBase64 }] } };
+
+      await drawIngredientIcon({ name: "pepper", kindOf: [] });
+      expect(captured.map((request) => "response_format" in request.body)).toEqual([true, false]);
+
+      // Learned: the next drawing asks without it straight away.
+      await drawIngredientIcon({ name: "salt", kindOf: [] });
+      expect(captured).toHaveLength(3);
+      expect(captured[2]!.body).not.toHaveProperty("response_format");
+      expect(captured[2]!.body.quality).toBe("low");
+    });
+
+    it("draws at the model's default where it refuses the tier", async () => {
+      mockGetImageGenerationConfig.mockResolvedValue(
+        imageConfig({ provider: "azure", model: "dall-e-3", endpoint: baseUrl, apiKey: "k" })
+      );
+      reply = () =>
+        "quality" in (captured.at(-1)?.body ?? {})
+          ? refusing("quality", "Invalid value: 'low'. Supported values are: 'standard' and 'hd'.")
+          : { status: 200, body: { data: [{ b64_json: imageBase64 }] } };
+
+      await drawIngredientIcon({ name: "pepper", kindOf: [] });
+
+      expect(captured.map((request) => request.body.quality)).toEqual(["low", undefined]);
+    });
+
+    it("keeps a refusal of something it cannot go without", async () => {
+      mockGetImageGenerationConfig.mockResolvedValue(
+        imageConfig({ provider: "azure", model: "gpt-6-luna", endpoint: baseUrl, apiKey: "k" })
+      );
+      reply = () => refusing("size", "Invalid value: '1024x1024'.");
+
+      await expect(drawIngredientIcon({ name: "pepper", kindOf: [] })).rejects.toBeInstanceOf(
+        AIProviderError
+      );
+      expect(captured).toHaveLength(1);
     });
 
     it.each([
       ["openai", { size: "1024x1024" }, { openai: { quality: "low" } }],
+      ["azure", { size: "1024x1024" }, { openai: { quality: "low" } }],
       ["google", { aspectRatio: "1:1" }, undefined],
       ["ollama", { size: "1024x1024" }, undefined],
       ["generic-openai", { size: "1024x1024" }, undefined],

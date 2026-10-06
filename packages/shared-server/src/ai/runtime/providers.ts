@@ -36,6 +36,7 @@ import {
   normalizeOllamaEndpoint,
   normalizeOpenAICompatibleEndpoint,
 } from "./endpoints";
+import { imageModelKey, withoutRefusedImageParameters } from "./image-parameter-fallback";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
 
@@ -297,17 +298,11 @@ function openAILandscapeSize(model: string): `${number}x${number}` {
 }
 
 /**
- * OpenAI's quality tiers, by model family as the name says: the gpt-image
- * family's `low` and `medium`, DALL·E 3's `standard` (its cheapest, and the
- * only tier below `hd`). DALL·E 2 and a name this guess does not know take
- * no tier, so the provider's own default stands (ADR-0014).
+ * OpenAI's quality tiers, asked of every model: a model that refuses the
+ * tier (DALL·E only knows `standard` and `hd`) is asked again without it and
+ * draws at its default, which is its cheapest (ADR-0014).
  */
-function openAITier(model: string): ImageModelConfig["tier"] {
-  if (model.startsWith("gpt-image")) return (tier) => ({ openai: { quality: tier } });
-  if (model.startsWith("dall-e-3")) return () => ({ openai: { quality: "standard" } });
-
-  return undefined;
-}
+const openAITier: ImageModelConfig["tier"] = (tier) => ({ openai: { quality: tier } });
 
 /**
  * Build an image model from the Image Generation block. Only the providers
@@ -322,7 +317,11 @@ export function createImageModelFromConfig(config: {
   timeoutMs?: number;
 }): ImageModelConfig {
   const { provider, model, endpoint, apiKey, timeoutMs } = config;
-  const customFetch = createFetchWithTimeout(timeoutMs as number);
+  // A parameter this model refused before stays out of the request (ADR-0014).
+  const customFetch = withoutRefusedImageParameters(
+    createFetchWithTimeout(timeoutMs as number),
+    imageModelKey(provider, model)
+  );
 
   switch (provider) {
     case "openai": {
@@ -333,7 +332,7 @@ export function createImageModelFromConfig(config: {
         providerName: "OpenAI",
         landscape: { size: openAILandscapeSize(model) },
         square: SQUARE,
-        tier: openAITier(model),
+        tier: openAITier,
       };
     }
 
@@ -361,7 +360,7 @@ export function createImageModelFromConfig(config: {
         landscape: { size: openAILandscapeSize(model) },
         square: SQUARE,
         // Azure's image model is OpenAI's, reading the same `openai` options.
-        tier: openAITier(model),
+        tier: openAITier,
       };
     }
 
