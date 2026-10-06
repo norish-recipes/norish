@@ -9,19 +9,23 @@ See `.scratch/ingredient-icons/spec.md`.
 
 **Blocked by:** 05, 06
 
-**Status:** ready-for-agent
+**Status:** done, pending gates and review
 
-- [ ] A tooling workspace holds the tool and the hand-picked list of vague groups (fruit, vegetable, plant, preparation, dairy, meat and the like, about 25). The list is written into the set's manifest as "drawn none".
-- [ ] Each food is drawn with ticket 05's sections, and made into an icon with ticket 01's function.
-- [ ] Full mode:
-  - [ ] writes the 128px files and the manifest in the format ticket 06 reads;
-  - [ ] resumes after a stop, skipping foods already drawn;
-  - [ ] reports failures at the end without stopping;
-  - [ ] discards the 1024px originals.
-- [ ] Before a full run, it prints how many icons it will draw.
-- [ ] A short README in the workspace explains the steps:
-  - [ ] point it at a database with an image provider;
-  - [ ] run the sample;
-  - [ ] approve;
-  - [ ] run full;
-  - [ ] commit.
+- [x] A tooling workspace holds the tool and the hand-picked list of vague groups (fruit, vegetable, plant, preparation, dairy, meat and the like, about 25). The list is written into the set's manifest as "drawn none".
+- [x] Each food is drawn with ticket 05's sections, and made into an icon with ticket 01's function.
+- [x] Full mode:
+  - [x] writes the 128px files and the manifest in the format ticket 06 reads;
+  - [x] resumes after a stop, skipping foods already drawn;
+  - [x] reports failures at the end without stopping;
+  - [x] discards the 1024px originals.
+- [x] Before a full run, it prints how many icons it will draw.
+- [x] A short README in the workspace explains the steps:
+  - [x] point it at a database with an image provider;
+  - [x] run the sample;
+  - [x] approve;
+  - [x] run full;
+  - [x] commit.
+
+## Comments
+
+2026-10-06 (implementation): `tooling/ingredient-icons` (`pnpm --filter @norish/ingredient-icons-tool draw sample|full`), reading `.env.local` like the dev server. Seeded foods are the ownerless ones with an Open Food Facts id; on the dev copy that is 5,699, 5,663 to draw once the 31 vague groups and the 5 placeholders are left out. Full mode draws four at a time (`--concurrency`) and writes each icon and the manifest as it lands, so a stop loses nothing. The vague-groups list is also written into the committed manifest now, so a Draw icons round leaves those groups out before the real set exists. The sample sheet's layout was checked with stub icons; it has not been run against a real provider (that is ticket 09).
