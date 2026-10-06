@@ -15,7 +15,7 @@ manifest as `none`, so a food under them borrows nothing vague.
 1. **Point it at a database with an image provider.** The tool reads the
    repository's `.env.local` like the dev server: `DATABASE_URL` and
    `MASTER_KEY` of an instance whose catalogue is seeded, with AI on and an
-   Image Generation provider set in its admin settings.
+   Image Generation provider and a Decision Model set in its admin settings.
 2. **Run the sample.**
 
    ```sh
@@ -46,12 +46,20 @@ manifest as `none`, so a food under them borrows nothing vague.
    pnpm --filter @norish/ingredient-icons-tool draw full --tier low --yes
    ```
 
-   The first says how many icons it will draw; the second draws them, one at a
-   time unless `--concurrency` says more, writing each icon and the manifest as
-   it lands. A refusal for the provider's rate limit is waited out. Mind the
-   limit: an OpenAI account on its first usage tier draws 5 images a minute,
-   which makes the full set of about 5,600 icons a run of some 19 hours; a
-   higher tier draws many more. A stopped run picks up where it stopped.
+   Most seeded foods look like a food above them in the tree (every olive oil
+   is the same bottle, a cured chicken fillet is a chicken fillet), and a food
+   with no icon of its own shows its parent's. So before counting, the tool
+   asks the Decision Model, from the top of the tree down, whether each food
+   would look clearly different from the icon it would borrow; the ones that
+   would not are never drawn. The answers are kept in `shares.json`, so a
+   later run asks only about foods it has not decided. Delete an entry to
+   have it asked again, or set it to `draw` or `borrow` by hand.
+
+   The first command decides and says how many icons it will draw; the
+   second draws them, one at a time unless `--concurrency` says more, writing
+   each icon and the manifest as it lands. A refusal for the provider's rate
+   limit is waited out. Mind the limit: an OpenAI account on its first usage
+   tier draws 5 images a minute, 300 an hour; a higher tier draws many more. A stopped run picks up where it stopped.
    Failures are listed at the end: run again to retry them, or leave them to
    borrow their parent's. A running Norish server picks the new set up by
    itself.
@@ -62,5 +70,5 @@ manifest as `none`, so a food under them borrows nothing vague.
    that, restore `icon-set/` from git before the real run, so nothing drawn in
    the old style is kept.
 
-5. **Commit** the icon files and `manifest.json`. The provider's originals are
-   never kept.
+5. **Commit** the icon files, `manifest.json` and `shares.json`. The
+   provider's originals are never kept.

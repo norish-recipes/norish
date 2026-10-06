@@ -9,9 +9,12 @@
  *
  * `sample` draws a handful of chosen foods at both tiers into one contact
  * sheet, on a light and a dark ground, for the style and tier to be approved.
- * `full` draws every seeded food not on the vague-groups list and not drawn
- * already, so a stopped run resumes where it stopped: it says how many first,
- * and draws only with `--yes`, one at a time unless `--concurrency` says
+ * `full` first asks the instance's Decision Model, top-down, which seeded
+ * foods would look like the icon they borrow anyway (every olive oil, one
+ * bottle), remembering the answers in `shares.json` so no food is asked
+ * twice; those borrow. It draws every other food not on the vague-groups
+ * list and not drawn already, so a stopped run resumes where it stopped: it
+ * says how many first, and draws only with `--yes`, one at a time unless `--concurrency` says
  * more (as many as the provider's rate limit allows; a refusal for the rate
  * limit is waited out). Each icon is written as it lands, with the
  * manifest; the provider's 1024px originals are never kept. Failures are
@@ -21,10 +24,15 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
 
+import type { IconNode } from "@norish/db/repositories/ingredient-icons";
 import type { ImageTier } from "@norish/shared-server/ai/runtime/providers";
 import { resetDbConnection } from "@norish/db/drizzle";
+import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import { countRecipeUses, listIconCatalogue } from "@norish/db/repositories/ingredient-icons";
-import { drawIngredientIcon } from "@norish/shared-server/ai/enrichment/ingredient-icon-drawer";
+import {
+  drawIngredientIcon,
+  needsOwnIcon,
+} from "@norish/shared-server/ai/enrichment/ingredient-icon-drawer";
 import { foodToDraw } from "@norish/shared-server/ingredients/icon-drafts";
 import {
   ICON_SIZE,
@@ -78,9 +86,7 @@ function flag(name: string): string | undefined {
 }
 
 /** A seeded food: one the catalogue seed wrote, ownerless and named for an Open Food Facts entry. */
-async function seededFoods(): Promise<Map<string, string>> {
-  const nodes = await listIconCatalogue();
-
+function seededFoods(nodes: ReadonlyMap<string, IconNode>): Map<string, string> {
   return new Map(
     [...nodes.values()].flatMap((node) =>
       node.offId && node.ownerId === null ? [[node.offId, node.id] as const] : []
@@ -159,7 +165,7 @@ async function writeSheet(rows: readonly SheetRow[], file: string): Promise<void
  * the sheet only: nothing reaches the set or an instance.
  */
 async function sample(out: string): Promise<void> {
-  const seeded = await seededFoods();
+  const seeded = seededFoods(await listIconCatalogue());
   const file = join(out, "sample-sheet.png");
   const rows: SheetRow[] = [];
 
@@ -206,8 +212,86 @@ async function writeManifest(manifest: Manifest): Promise<void> {
   );
 }
 
+/** Which seeded foods get an icon of their own ("draw") and which show their lender's ("borrow"), by Open Food Facts id. */
+type Shares = Record<string, "draw" | "borrow">;
+
+const SHARES = join(process.cwd(), "shares.json");
+
+async function readShares(): Promise<Shares> {
+  try {
+    return JSON.parse(await readFile(SHARES, "utf-8")) as Shares;
+  } catch {
+    return {};
+  }
+}
+
+async function writeShares(shares: Shares): Promise<void> {
+  const sorted = Object.fromEntries(Object.entries(shares).sort(([a], [b]) => (a < b ? -1 : 1)));
+
+  await writeFile(SHARES, `${JSON.stringify(sorted, null, 2)}\n`);
+}
+
 /**
- * The full set: every seeded food not vague and not drawn yet, written as it
+ * Decide the seeded foods not decided or drawn yet, a level of the tree at
+ * a time from the top, so each is asked against the icon it would really
+ * show: its nearest ancestor that is drawn. A food with no such ancestor
+ * (at the top, or under a vague group) is drawn without asking.
+ */
+async function decideShares(
+  nodes: ReadonlyMap<string, IconNode>,
+  seeded: ReadonlyMap<string, string>,
+  manifest: Manifest,
+  vague: ReadonlySet<string>
+): Promise<Shares> {
+  const shares = await readShares();
+  const parent = (node: IconNode) => (node.parentId ? nodes.get(node.parentId) : undefined);
+  const drawn = (node: IconNode) =>
+    Boolean(node.offId && (manifest.icons[node.offId] || shares[node.offId] === "draw"));
+  const lender = (node: IconNode) => {
+    for (let up = parent(node); up; up = parent(up)) if (drawn(up)) return up;
+
+    return undefined;
+  };
+  const depth = (node: IconNode) => {
+    let levels = 0;
+
+    for (let up = parent(node); up && levels < 64; up = parent(up)) levels++;
+
+    return levels;
+  };
+  const undecided = [...seeded]
+    .filter(([offId]) => !vague.has(offId) && !manifest.icons[offId] && !shares[offId])
+    .map(([, id]) => nodes.get(id)!);
+
+  if (undecided.length === 0) return shares;
+
+  const names = await findLocaleNames([...nodes.keys()]);
+  const nameOf = (node: IconNode) => names.get(node.id)?.en ?? node.name;
+  const depths = new Map(undecided.map((node) => [node, depth(node)]));
+
+  say(`Asking which of ${undecided.length} foods need an icon of their own…`);
+  for (const level of [...new Set(depths.values())].sort((a, b) => a - b)) {
+    const loans = undecided
+      .filter((node) => depths.get(node) === level)
+      .flatMap((node) => {
+        const from = lender(node);
+
+        if (!from) shares[node.offId!] = "draw";
+
+        return from ? [{ node, food: nameOf(node), lender: nameOf(from) }] : [];
+      });
+    const own = await needsOwnIcon(loans);
+
+    loans.forEach(({ node }, index) => (shares[node.offId!] = own[index] ? "draw" : "borrow"));
+    await writeShares(shares);
+  }
+
+  return shares;
+}
+
+/**
+ * The full set: every seeded food not vague, not drawn yet and not one that
+ * borrows, written as it
  * lands. The foods this instance's recipes use most come first, so a run cut
  * short, or one told to stop after `limit`, has drawn the icons readers meet.
  */
@@ -217,16 +301,19 @@ async function full(
   limit: number,
   confirmed: boolean
 ): Promise<void> {
-  const [seeded, uses] = await Promise.all([seededFoods(), countRecipeUses()]);
+  const [nodes, uses] = await Promise.all([listIconCatalogue(), countRecipeUses()]);
+  const seeded = seededFoods(nodes);
   const manifest = await readManifest();
   const vague = new Set(VAGUE_GROUPS);
+  const shares = await decideShares(nodes, seeded, manifest, vague);
+  const borrowing = Object.values(shares).filter((share) => share === "borrow").length;
   const left = [...seeded]
-    .filter(([offId]) => !vague.has(offId) && !manifest.icons[offId])
+    .filter(([offId]) => !vague.has(offId) && !manifest.icons[offId] && shares[offId] === "draw")
     .sort(([a, idA], [b, idB]) => (uses.get(idB) ?? 0) - (uses.get(idA) ?? 0) || (a < b ? -1 : 1));
   const todo = left.slice(0, limit);
 
   say(
-    `${todo.length} icons to draw at ${tier}${todo.length < left.length ? `, the first of ${left.length} left` : ""} (${seeded.size} seeded foods, ${Object.keys(manifest.icons).length} drawn, ${vague.size} vague groups).`
+    `${todo.length} icons to draw at ${tier}${todo.length < left.length ? `, the first of ${left.length} left` : ""} (${seeded.size} seeded foods, ${Object.keys(manifest.icons).length} drawn, ${borrowing} borrow, ${vague.size} vague groups).`
   );
   if (!confirmed) {
     say("Run again with --yes to draw them.");

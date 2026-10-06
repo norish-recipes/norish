@@ -1,9 +1,10 @@
 import { setTimeout as sleep } from "node:timers/promises";
 
 import type { ImageTier } from "../runtime/providers";
-import type { GeneratedImageBytes } from "../runtime/runtime";
+import type { DecisionBooleanQuestion, GeneratedImageBytes } from "../runtime/runtime";
 import { rateLimitWaitMs } from "../runtime/errors";
-import { generateImage } from "../runtime/runtime";
+import { decide, generateImage } from "../runtime/runtime";
+import { chunk, MAX_QUESTIONS_PER_DECISION } from "./verification";
 
 /** A food as an icon is drawn of it: its name and what it is a kind of, English where known. */
 export interface FoodToDraw {
@@ -70,4 +71,51 @@ export async function drawIngredientIcon(
       await sleep(Math.min(wait, LONGEST_WAIT_MS));
     }
   }
+}
+
+/**
+ * At or above this probability that a food looks clearly different from the
+ * icon it would borrow, it is drawn one of its own; below it, it borrows:
+ * every olive oil shows the one bottle.
+ */
+export const OWN_ICON_THRESHOLD = 0.5;
+
+/** A food, and the food whose icon it shows unless it is drawn one: both by name, English where known. */
+export interface IconLoan {
+  food: string;
+  lender: string;
+}
+
+/**
+ * Which of these foods need an icon of their own, in order: the Decision
+ * Model asked of each whether a small icon of it would look clearly
+ * different from its lender's, in as many requests as the question limit
+ * needs. Throws whatever `decide` throws.
+ */
+export async function needsOwnIcon(loans: readonly IconLoan[]): Promise<boolean[]> {
+  const own: boolean[] = [];
+
+  for (const batch of chunk(loans, MAX_QUESTIONS_PER_DECISION)) {
+    const questions: Record<string, DecisionBooleanQuestion> = Object.fromEntries(
+      batch.map(({ food, lender }, index) => [
+        `food${index}`,
+        {
+          type: "boolean",
+          instructions: `Would a small icon of "${food}" look clearly different from one of "${lender}": another shape, colour, cut or container, so that the ${lender} icon would mislead?`,
+        },
+      ])
+    );
+    const { answers } = await decide({
+      feature: "ingredient-icon-sharing",
+      state:
+        "The ingredient icons of a recipe app: one small, simple picture per food, recognisable at a glance.",
+      questions,
+    });
+
+    own.push(
+      ...batch.map((_, index) => answers[`food${index}`]!.probability >= OWN_ICON_THRESHOLD)
+    );
+  }
+
+  return own;
 }
