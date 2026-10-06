@@ -128,3 +128,55 @@ describe("recurrence/parser Latin locales", () => {
     expect(result.cleanText).toBe("Acheter du lait");
   });
 });
+
+describe("recurrence/parser Ukrainian locale", () => {
+  const config = defaultRecurrenceConfig as RecurrenceConfig;
+
+  it("parses a one-word daily phrase", () => {
+    const result = parseRecurrence("Купити хліб щодня", config);
+
+    expect(result.recurrence).toEqual({ rule: "day", interval: 1 });
+    expect(result.matchedLocale).toBe("uk");
+    expect(result.cleanText).toBe("Купити хліб");
+  });
+
+  it("parses a one-word weekly phrase", () => {
+    const result = parseRecurrence("молоко щотижня", config);
+
+    expect(result.recurrence).toEqual({ rule: "week", interval: 1 });
+    expect(result.matchedLocale).toBe("uk");
+    expect(result.cleanText).toBe("молоко");
+  });
+
+  it("parses an interval with a number", () => {
+    const result = parseRecurrence("Кава кожні 2 тижні", config);
+
+    expect(result.recurrence?.rule).toBe("week");
+    expect(result.recurrence?.interval).toBe(2);
+    expect(result.matchedLocale).toBe("uk");
+    expect(result.cleanText).toBe("Кава");
+  });
+
+  it("parses a weekday in the genitive", () => {
+    const result = parseRecurrence("Йога кожного понеділка", config);
+
+    expect(result.recurrence).toEqual({ rule: "week", interval: 1, weekday: 1 });
+    expect(result.matchedLocale).toBe("uk");
+    expect(result.cleanText).toBe("Йога");
+  });
+
+  it("parses a weekday with an apostrophe in any spelling", () => {
+    const typographic = parseRecurrence("Риба кожної п’ятниці", config);
+    const ascii = parseRecurrence("Риба кожної п'ятниці", config);
+
+    expect(typographic.recurrence).toEqual({ rule: "week", interval: 1, weekday: 5 });
+    expect(ascii.recurrence).toEqual({ rule: "week", interval: 1, weekday: 5 });
+  });
+
+  it("parses every other week", () => {
+    const result = parseRecurrence("Прибирання через тиждень", config);
+
+    expect(result.recurrence).toEqual({ rule: "week", interval: 2 });
+    expect(result.cleanText).toBe("Прибирання");
+  });
+});
