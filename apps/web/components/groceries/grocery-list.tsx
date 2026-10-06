@@ -135,7 +135,7 @@ function GroceryListContent({
           <div className="flex flex-col items-center gap-6 p-10 text-center">
             <div className="relative">
               <div className={cssEmptyStateGlow} />
-              <div className="bg-accent-soft0/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
+              <div className="bg-accent/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
                 <ShoppingCartIcon className="h-7 w-7" />
               </div>
             </div>
