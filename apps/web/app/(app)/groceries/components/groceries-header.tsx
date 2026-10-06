@@ -35,7 +35,7 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
   const slots = Math.max(...Object.values(titles).map((title) => [...title].length));
 
   return (
-    <div className="mb-6 flex min-h-10 shrink-0 items-center justify-between gap-3">
+    <div className="mb-6 flex min-h-10 shrink-0 flex-wrap items-center justify-between gap-3">
       <h1 aria-label={titles[view]} className="truncate text-2xl font-bold">
         <span aria-hidden className="inline-flex items-baseline whitespace-pre">
           <RollingText
@@ -47,20 +47,24 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
         </span>
       </h1>
       <div className="flex shrink-0 items-center gap-2">
-        <AnimatePresence initial={false}>
-          {view === "list" ? (
-            <motion.div
-              key="list-actions"
-              animate={{ opacity: 1 }}
-              className="flex items-center gap-2"
-              exit={{ opacity: 0 }}
-              initial={{ opacity: 0 }}
-              transition={VIEW_TRANSITION}
-            >
-              <GroceriesListActions />
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+        {/* On a phone the gear's room stays in the Pantry too, so both views
+            wrap alike and the switch never jumps a row. */}
+        <div className="flex justify-end max-md:min-h-9 max-md:min-w-9">
+          <AnimatePresence initial={false}>
+            {view === "list" ? (
+              <motion.div
+                key="list-actions"
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-2"
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                transition={VIEW_TRANSITION}
+              >
+                <GroceriesListActions />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
         <Tabs
           selectedKey={view}
           onSelectionChange={(key) =>
@@ -75,10 +79,11 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
                   ["pantry", ArchiveBoxIcon],
                 ] as const
               ).map(([id, Icon]) => (
-                <Tabs.Tab key={id} className="h-7 min-w-8 px-2.5 text-xs sm:min-w-16" id={id}>
-                  <div className="flex items-center gap-1.5" title={t(id)}>
-                    <Icon className="size-4 shrink-0" />
-                    <span className="sr-only sm:not-sr-only">{t(id)}</span>
+                <Tabs.Tab key={id} className="h-7 px-2.5 text-xs sm:min-w-16" id={id}>
+                  {/* A phone shows the words alone: the icons only guess at a list and a pantry. */}
+                  <div className="flex items-center gap-1.5">
+                    <Icon className="size-4 shrink-0 max-sm:hidden" />
+                    <span>{t(id)}</span>
                   </div>
                   <Tabs.Indicator />
                 </Tabs.Tab>

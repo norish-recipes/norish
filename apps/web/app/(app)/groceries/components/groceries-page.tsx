@@ -6,6 +6,7 @@ import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
 import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 import {
+  AdjustmentsHorizontalIcon,
   BookOpenIcon,
   BuildingStorefrontIcon,
   CheckIcon,
@@ -233,7 +234,7 @@ export function GroceriesListActions() {
       {/* Settings dropdown with view mode and store management */}
       <Dropdown>
         <Button isIconOnly aria-label={t("viewMode")} size="sm" variant="tertiary">
-          <Cog6ToothIcon className="h-5 w-5" />
+          <AdjustmentsHorizontalIcon className="h-5 w-5" />
         </Button>
         <Dropdown.Popover className="bg-overlay">
           <Dropdown.Menu aria-label={t("viewMode")}>
