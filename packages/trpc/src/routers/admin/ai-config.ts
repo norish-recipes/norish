@@ -257,6 +257,8 @@ const listAvailableModels = adminProcedure
       provider: AIConfigInputSchema.shape.provider,
       endpoint: z.string().optional(),
       apiKey: z.string().optional(),
+      /** Image Generation's models rather than the AI settings' text models. */
+      purpose: z.enum(["text", "image"]).optional(),
     })
   )
   .query(async ({ input, ctx }) => {
@@ -277,6 +279,7 @@ const listAvailableModels = adminProcedure
       listModels(input.provider, {
         endpoint: input.endpoint,
         apiKey,
+        purpose: input.purpose,
       })
     );
   });

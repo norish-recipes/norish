@@ -107,3 +107,72 @@ describe("chat model listing", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe("image model listing", () => {
+  it("suggests only OpenAI's models that draw, by the names its image models go by", async () => {
+    stubFetch(
+      new Response(
+        JSON.stringify({
+          object: "list",
+          data: [
+            "gpt-6-luna",
+            "gpt-image-1-mini",
+            "dall-e-3",
+            "chatgpt-image-latest",
+            "gpt-4o",
+          ].map((id) => ({ id, object: "model" })),
+        }),
+        { status: 200 }
+      )
+    );
+
+    const models = await listModels("openai", { apiKey: "sk-test", purpose: "image" });
+
+    expect(models.map((m) => m.id)).toEqual([
+      "chatgpt-image-latest",
+      "dall-e-3",
+      "gpt-image-1-mini",
+    ]);
+  });
+
+  it("suggests only Google's Gemini image models, which are the ones the SDK draws with", async () => {
+    stubFetch(
+      new Response(
+        JSON.stringify({
+          models: [
+            { name: "models/gemini-2.5-flash", supportedGenerationMethods: ["generateContent"] },
+            {
+              name: "models/gemini-2.5-flash-image",
+              supportedGenerationMethods: ["generateContent"],
+            },
+            { name: "models/imagen-4.0-generate-001", supportedGenerationMethods: ["predict"] },
+          ],
+        }),
+        { status: 200 }
+      )
+    );
+
+    const models = await listModels("google", { apiKey: "key", purpose: "image" });
+
+    expect(models.map((m) => m.id)).toEqual(["gemini-2.5-flash-image"]);
+  });
+
+  it("keeps the AI settings' text listing as it was", async () => {
+    stubFetch(
+      new Response(
+        JSON.stringify({
+          object: "list",
+          data: ["gpt-6-luna", "gpt-image-1-mini", "dall-e-3"].map((id) => ({
+            id,
+            object: "model",
+          })),
+        }),
+        { status: 200 }
+      )
+    );
+
+    const models = await listModels("openai", { apiKey: "sk-test" });
+
+    expect(models.map((m) => m.id)).toEqual(["gpt-6-luna", "gpt-image-1-mini"]);
+  });
+});

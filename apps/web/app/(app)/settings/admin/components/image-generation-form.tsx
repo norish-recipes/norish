@@ -97,6 +97,8 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     provider: provider === "disabled" ? "openai" : provider,
     endpoint: endpoint || (aiProviderMatches ? aiConfig?.endpoint : undefined),
     apiKey: apiKey || undefined,
+    // Only the provider's models that can draw, where their names say so; any name may still be typed.
+    purpose: "image",
     enabled: !!canFetchModels,
   });
 

@@ -177,10 +177,17 @@ Configure it under **Settings => Admin => AI & Processing => Image Generation**:
 | **Image Provider** | OpenAI, Google AI, Azure OpenAI, Ollama, LM Studio, or a generic OpenAI-compatible endpoint, only providers that can actually generate images are offered |
 | **Endpoint URL**   | For Ollama, LM Studio and generic endpoints; optional custom resource URL for Azure                                                                       |
 | **API Key**        | For the cloud providers                                                                                                                                   |
-| **Image Model**    | Must be an image model, e.g. `gpt-image-1`, `imagen-4.0-generate-001` or Ollama's `x/z-image-turbo`, not a text model                                     |
+| **Image Model**    | Must be an image model, e.g. `gpt-image-1-mini`, `gemini-2.5-flash-image` or Ollama's `x/z-image-turbo`, not a text model                                 |
 
 When the image provider is the **same** provider as your AI configuration, the
 endpoint and API key fall back to it, so you don't type a key twice.
+
+For OpenAI and Google the model list suggests only the provider's image models,
+the ones whose names say they draw (`gpt-image-…`, `dall-e-…`, Gemini's
+`…-image` models). A text model such as `gpt-6-luna` can read pictures but not
+draw them, so it isn't offered. You can still type any model name, for a new
+image model the list doesn't know yet. Google's Imagen models are no longer
+supported for drawing; use a Gemini image model.
 
 All prompts for the image generation feature are editable under **Prompts**.
 

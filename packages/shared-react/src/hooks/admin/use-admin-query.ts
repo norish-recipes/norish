@@ -34,16 +34,19 @@ export function createUseAdminQuery({ useTRPC }: CreateAdminHooksOptions) {
     provider: AIConfig["provider"];
     endpoint?: string;
     apiKey?: string;
+    /** Image Generation's models rather than the AI settings' text models. */
+    purpose?: "text" | "image";
     enabled?: boolean;
   }) {
     const trpc = useTRPC();
-    const { provider, endpoint, apiKey, enabled = true } = options;
+    const { provider, endpoint, apiKey, purpose, enabled = true } = options;
 
     const { data, error, isLoading } = useQuery({
       ...trpc.admin.listAvailableModels.queryOptions({
         provider,
         endpoint,
         apiKey,
+        purpose,
       }),
       enabled: enabled && !!provider,
       staleTime: 60000,

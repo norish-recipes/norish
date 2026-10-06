@@ -154,11 +154,21 @@ type ModelMapper = (m: RawModel) => AvailableModel;
 // Provider Configurations
 // ============================================================================
 
+/** What a model is listed for: the AI settings' text models, or Image Generation's. */
+export type ModelPurpose = "text" | "image";
+
 interface ProviderConfig {
   url: string | ((apiKey: string) => string);
   headers: (apiKey: string) => Record<string, string>;
   dataPath?: "data" | "models";
   filter?: ModelFilter;
+  /**
+   * Which of the provider's models can draw, by the names its image models
+   * go by. A suggestion only (ADR-0014): the field still takes any name, so a
+   * new image model this does not know is typed rather than refused. A
+   * provider with none lists nothing for Image Generation.
+   */
+  imageFilter?: ModelFilter;
   mapper: ModelMapper;
 }
 
@@ -181,6 +191,8 @@ const providerConfigs: Record<string, ProviderConfig> = {
         !id.startsWith("ft:")
       );
     },
+    // The names @ai-sdk/openai itself reads as image models.
+    imageFilter: (m) => /^(dall-e-|gpt-image-|chatgpt-image-)/.test(m.id.toLowerCase()),
     mapper: (m) => ({
       id: m.id,
       name: m.id,
@@ -233,6 +245,8 @@ const providerConfigs: Record<string, ProviderConfig> = {
     headers: () => ({}),
     dataPath: "models",
     filter: (m) => m.supportedGenerationMethods?.includes("generateContent") ?? false,
+    // @ai-sdk/google draws with Gemini image models only ("gemini-2.5-flash-image"), not Imagen.
+    imageFilter: (m) => /^(models\/)?gemini-.*-image/.test((m.name || m.id).toLowerCase()),
     mapper: (m) => {
       // name format is "models/gemini-1.5-flash" - extract just the model ID
       const id = (m.name || m.id).replace("models/", "");
@@ -259,10 +273,17 @@ const providerConfigs: Record<string, ProviderConfig> = {
 /**
  * List models using provider config.
  */
-async function listModelsWithConfig(provider: string, apiKey: string): Promise<AvailableModel[]> {
+async function listModelsWithConfig(
+  provider: string,
+  apiKey: string,
+  purpose: ModelPurpose
+): Promise<AvailableModel[]> {
   const config = providerConfigs[provider];
 
   if (!config) return [];
+  const filter = purpose === "image" ? config.imageFilter : config.filter;
+
+  if (purpose === "image" && !filter) return [];
 
   const url = typeof config.url === "function" ? config.url(apiKey) : config.url;
   const models = await fetchModelsRaw({
@@ -274,8 +295,8 @@ async function listModelsWithConfig(provider: string, apiKey: string): Promise<A
 
   let result = models;
 
-  if (config.filter) {
-    result = result.filter(config.filter);
+  if (filter) {
+    result = result.filter(filter);
   }
 
   const mapped = result.map(config.mapper).sort((a, b) => a.id.localeCompare(b.id));
@@ -367,9 +388,9 @@ export async function listOpenAICompatibleModels(
  */
 export async function listModels(
   provider: AIProvider,
-  options: { endpoint?: string; apiKey?: string }
+  options: { endpoint?: string; apiKey?: string; purpose?: ModelPurpose }
 ): Promise<AvailableModel[]> {
-  const { endpoint, apiKey } = options;
+  const { endpoint, apiKey, purpose = "text" } = options;
 
   // Providers with standard config-based listing
   if (providerConfigs[provider]) {
@@ -379,7 +400,7 @@ export async function listModels(
       return [];
     }
 
-    return listModelsWithConfig(provider, apiKey);
+    return listModelsWithConfig(provider, apiKey, purpose);
   }
 
   // Special cases
