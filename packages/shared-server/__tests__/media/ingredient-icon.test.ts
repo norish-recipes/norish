@@ -3,7 +3,7 @@
  * Making an Ingredient Icon from a picture: a product shot on a plain
  * background comes out cut free, standing on nothing; a photo whose
  * background is not one flat colour is kept as it is; a picture that already
- * stands on nothing is only trimmed. Whatever goes in, a 128px square WebP
+ * stands on nothing is only trimmed. Whatever goes in, a 64px square WebP
  * comes out. The pictures are drawn by sharp inside the test.
  */
 import sharp from "sharp";
@@ -39,15 +39,15 @@ async function pixelAt(icon: Buffer, x: number, y: number) {
 const WHITE = `<rect width="${SIZE}" height="${SIZE}" fill="#ffffff"/>`;
 
 describe("makeIngredientIcon", () => {
-  it("makes a 128px square WebP", async () => {
+  it("makes a 64px square WebP", async () => {
     const icon = await makeIngredientIcon(
       await picture(`${WHITE}<circle cx="100" cy="100" r="60" fill="#d02020"/>`)
     );
     const meta = await sharp(icon).metadata();
 
     expect(meta.format).toBe("webp");
-    expect(meta.width).toBe(128);
-    expect(meta.height).toBe(128);
+    expect(meta.width).toBe(64);
+    expect(meta.height).toBe(64);
     expect(meta.hasAlpha).toBe(true);
   });
 
@@ -57,8 +57,8 @@ describe("makeIngredientIcon", () => {
     );
 
     // The corner of the food's box is the background's, now see-through.
-    expect((await pixelAt(icon, 12, 12)).a).toBe(0);
-    const centre = await pixelAt(icon, 64, 64);
+    expect((await pixelAt(icon, 6, 6)).a).toBe(0);
+    const centre = await pixelAt(icon, 32, 32);
 
     expect(centre.a).toBe(255);
     expect(centre.r).toBeGreaterThan(150);
@@ -72,7 +72,7 @@ describe("makeIngredientIcon", () => {
         `${WHITE}<circle cx="100" cy="100" r="60" fill="#d02020"/><circle cx="100" cy="100" r="25" fill="#ffffff"/>`
       )
     );
-    const middle = await pixelAt(icon, 64, 64);
+    const middle = await pixelAt(icon, 32, 32);
 
     expect(middle.a).toBe(255);
     expect(middle.r).toBeGreaterThan(230);
@@ -86,8 +86,8 @@ describe("makeIngredientIcon", () => {
     );
 
     // Nothing cut: the corners keep the photo's own background.
-    expect((await pixelAt(icon, 8, 8)).a).toBe(255);
-    expect((await pixelAt(icon, 119, 119)).a).toBe(255);
+    expect((await pixelAt(icon, 4, 4)).a).toBe(255);
+    expect((await pixelAt(icon, 59, 59)).a).toBe(255);
   });
 
   it("only trims and fits a picture that already stands on nothing", async () => {
@@ -95,7 +95,7 @@ describe("makeIngredientIcon", () => {
     const icon = await makeIngredientIcon(
       await picture(`<rect x="10" y="10" width="40" height="40" fill="#20a040"/>`)
     );
-    const centre = await pixelAt(icon, 64, 64);
+    const centre = await pixelAt(icon, 32, 32);
 
     // Trimmed, the square fills the icon rather than sitting in its corner.
     expect(centre.a).toBe(255);

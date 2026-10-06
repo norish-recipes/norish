@@ -16,11 +16,15 @@ import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspac
  * new address (ADR-0021).
  */
 
-/** An icon's side in pixels: twice the largest it is shown at. */
-export const ICON_SIZE = 128;
+/**
+ * An icon's side in pixels: the largest it is shown at, twice a line's, so
+ * a line stays sharp on a high-density screen and the panel goes a little
+ * soft. Small on purpose: the shipped set is about 5,600 files in the repo.
+ */
+export const ICON_SIZE = 64;
 /** The food fits inside this, centred, so no icon touches its edge. */
-const FOOD_SIZE = 116;
-/** The size the cut-out reads a picture at: plenty for a 128px icon, cheap to flood. */
+const FOOD_SIZE = 58;
+/** The size the cut-out reads a picture at: plenty for a 64px icon, cheap to flood. */
 const WORK_SIZE = 512;
 /**
  * How far a pixel's colour may stray from the background's and still be
@@ -143,7 +147,7 @@ function foodBounds(pixels: Buffer, width: number, height: number) {
 
 /**
  * Turn picture bytes (JPEG, PNG, WebP, AVIF or HEIC, within the image size
- * limit) into an Ingredient Icon: a 128px square WebP that stands on
+ * limit) into an Ingredient Icon: a 64px square WebP that stands on
  * nothing. A picture that already has transparency is only trimmed to its
  * food and fitted; otherwise the flat background touching its edges is cut
  * away first; a picture with no flat background is fitted as it is.
@@ -185,7 +189,7 @@ export async function makeIngredientIcon(input: Buffer): Promise<Buffer> {
   return await (bounds ? food.extract(bounds) : food)
     .resize(FOOD_SIZE, FOOD_SIZE, { fit: "contain", background: clear })
     .extend({ top: margin, bottom: margin, left: margin, right: margin, background: clear })
-    .webp({ quality: 82, alphaQuality: 90 })
+    .webp({ quality: 70, alphaQuality: 80 })
     .toBuffer();
 }
 

@@ -29,7 +29,7 @@ A food shows, first match wins:
 
 Headings, and lines that name no food, show nothing.
 
-**The shipped set.** Norish ships its own set, drawn once by the maintainers in one style: about 5,600 icons covering every seeded food except a short list of vague groups (fruit, vegetable, dairy…), which are left without one so borrowing stops before it turns vague. The set is 128px WebP files committed to the repo and built into the Docker image. It is AGPL like the rest of the repo.
+**The shipped set.** Norish ships its own set, drawn once by the maintainers in one style: about 5,600 icons covering every seeded food except a short list of vague groups (fruit, vegetable, dairy…), which are left without one so borrowing stops before it turns vague. The set is 64px WebP files committed to the repo and built into the Docker image. It is AGPL like the rest of the repo.
 
 **On an instance.** Anyone who may edit a food can upload or generate its icon in the Ingredient panel. A generated icon is drawn by the configured image provider from the food's name and its parent chain, then cut out. A **Draw icons** round on the Ingredients page fills many foods at once. Readers who don't want icons hide them as a Hidden Item.
 
@@ -100,7 +100,7 @@ Headings, and lines that name no food, show nothing.
 
 **Files and addresses**
 
-- **Making an icon.** A pure function takes picture bytes and returns a 128px square transparent WebP:
+- **Making an icon.** A pure function takes picture bytes and returns a 64px square transparent WebP:
   - if the picture already has transparency, it is only trimmed and fitted;
   - otherwise the flat background touching the edges is removed by a flood from the border within a tolerance, so an egg's white survives;
   - if the border isn't one flat colour, the picture is kept as it is.
@@ -153,7 +153,7 @@ Headings, and lines that name no food, show nothing.
 - **Full mode**:
   - draws every seeded food not in the vague list;
   - resumes and skips foods already present;
-  - writes the 128px files and the manifest;
+  - writes the 64px files and the manifest;
   - discards the 1024px originals.
 - Industrial entries ("acid whey", "mono and diglycerides") are drawn too. Nobody sees them unless a recipe names one, and filtering them saves less than it costs.
 
@@ -174,7 +174,7 @@ A good test states a fact a person would recognise ("a red onion with no icon sh
   - an interior patch in the background colour survives
   - an uneven border is kept as it is
   - an already-transparent picture is only trimmed
-  - the output is a 128px WebP
+  - the output is a 64px WebP
 - **The AI Runtime's image entry point** (extending its existing image-generation test): a square shape per provider, the cheapest tier where one exists, the icon Prompt, and appended sections.
 - **The ingredients router,** at the tRPC caller with mocked repositories (prior art: the existing ingredients router tests). It covers:
   - upload, generate and saving an icon in a draft under the everyone/household/owner matrix, with seeded foods administrator-only
@@ -212,7 +212,7 @@ A good test states a fact a person would recognise ("a red onion with no icon sh
   - Atlas covers about a fifth of the seed, so most of the catalogue would still need drawing.
   - Its photo style goes muddy at 32px.
   - A test cut-out kept its baked-in shadows as pale smudges, and some of its shots carry props (a bowl, a spoon, flowers).
-- **Assumed:** the cheapest quality tier holds up at 128px. The sample sheet confirms or overturns this before the full run. Expected cost of the full run is roughly $30–35 at a low tier and $60–300 at medium, depending on the model.
-- Expected size: about 2–4 KB per icon, so about 15–20 MB for the set.
+- **Assumed:** the cheapest quality tier holds up at 64px. The sample sheet confirms or overturns this before the full run. Expected cost of the full run is roughly $30–35 at a low tier and $60–300 at medium, depending on the model.
+- Size: 64px rather than the 128px first planned, after the first 50 drawn came to 5 KB each at 128px. At 64px and lighter compression they are about 1.5 KB, so about 8 MB for the set. A line stays sharp on a high-density screen; the panel goes a little soft.
 - Glossary: **Ingredient Icon** (new); Parent Ingredient and Hidden Item updated. ADR-0037 amended 2026-10-05 for the new reader.
 - Target the current release's notes and the docs (a page with screenshots, plus the Hidden Items and AI provider pages), per `docs/agents/feature-docs.md`. No new environment variables.
