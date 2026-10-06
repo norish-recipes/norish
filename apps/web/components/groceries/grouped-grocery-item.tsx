@@ -17,21 +17,34 @@ import { lineOfGroup } from "./store-total";
 
 /**
  * Format inline source breakdown showing recipe names and amounts.
- * e.g., "Recipe A (300g), Recipe B (200g)" or "Recipe A, Recipe B"
+ * e.g., "Recipe A (300g), Recipe B (200g)" or "Recipe A, Recipe B". The
+ * lines added by hand are named once, with their amounts together:
+ * "Recipe A (300g), Manual Items (2×, 1×)", where a line that states no
+ * amount is the one the group's total counts it as.
  */
-function formatInlineSourceBreakdown(
+export function formatInlineSourceBreakdown(
   sources: GroupedGrocerySource[],
   formatFn: (amount: number | null | undefined, unit: string | null | undefined) => string,
   manualLabel: string
 ): string {
-  return sources
-    .map((source) => {
-      const name = source.recipeName ?? manualLabel;
-      const amount = formatFn(source.grocery.amount, source.grocery.unit);
+  const named = (name: string, amounts: string[]) =>
+    amounts.length > 0 ? `${name} (${amounts.join(", ")})` : name;
+  const amountOf = (source: GroupedGrocerySource) =>
+    formatFn(source.grocery.amount, source.grocery.unit);
+  const manual = sources.filter((source) => !source.recipeName);
+  const entries = sources.flatMap((source) =>
+    source.recipeName ? [named(source.recipeName, [amountOf(source)].filter(Boolean))] : []
+  );
 
-      return amount ? `${name} (${amount})` : name;
-    })
-    .join(", ");
+  if (manual.length > 0) {
+    const amounts = manual.map((source) =>
+      formatFn(source.grocery.amount ?? 1, source.grocery.unit)
+    );
+
+    entries.push(named(manualLabel, amounts.filter(Boolean)));
+  }
+
+  return entries.join(", ");
 }
 
 interface GroupedGroceryItemProps {
@@ -162,7 +175,9 @@ function GroupedGroceryItemComponent({
 
             {/* Single item from a recipe: the recipe's name; a manual one has nothing to add */}
             {isSingleItem && !singleRecurringGrocery && singleSource?.recipeName && (
-              <span className="text-muted mt-0.5 max-w-full truncate text-xs">{singleSource.recipeName}</span>
+              <span className="text-muted mt-0.5 max-w-full truncate text-xs">
+                {singleSource.recipeName}
+              </span>
             )}
 
             {/* Single item: show recurring pill */}
