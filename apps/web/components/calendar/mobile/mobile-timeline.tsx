@@ -66,9 +66,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     [dateRange.start, dateRange.end]
   );
   const dayKeys = useMemo(() => allDays.map((d) => dateKey(d)), [allDays]);
-  const { captureAnchor, restoreAnchor, shouldAdjustScrollForSizeChange } = usePrependAnchorRestore(
-    { keys: dayKeys }
-  );
+  const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys: dayKeys });
 
   // Date formatters
   const weekdayFormatter = useMemo(
@@ -116,11 +114,6 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     estimateSize: () => ESTIMATED_DAY_HEIGHT,
     overscan: 5,
     scrollMargin,
-    shouldAdjustScrollPositionOnItemSizeChange: (item, _delta, instance) => {
-      const scrollOffset = instance.scrollOffset ?? 0;
-
-      return shouldAdjustScrollForSizeChange(item.start, scrollOffset, scrollMargin);
-    },
   });
 
   // Track if we've scrolled to today and if we've triggered expand

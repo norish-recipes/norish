@@ -17,27 +17,6 @@ describe("usePrependAnchorRestore", () => {
     expect(scrollToOffset).not.toHaveBeenCalled();
   });
 
-  it("applies normal size-change adjustment when no prepend anchor is pending", () => {
-    const { result } = renderHook(() => usePrependAnchorRestore({ keys: ["2026-01-01"] }));
-
-    expect(result.current.shouldAdjustScrollForSizeChange(100, 150, 0)).toBe(true);
-    expect(result.current.shouldAdjustScrollForSizeChange(200, 150, 0)).toBe(false);
-  });
-
-  it("disables size-change adjustment while prepend anchor is pending", () => {
-    const { result } = renderHook(() => usePrependAnchorRestore({ keys: ["2026-01-01"] }));
-
-    act(() => {
-      result.current.captureAnchor({
-        index: 0,
-        itemStart: 100,
-        scrollOffset: 140,
-      });
-    });
-
-    expect(result.current.shouldAdjustScrollForSizeChange(50, 200, 0)).toBe(false);
-  });
-
   it("restores scroll offset from captured anchor and clears pending state", () => {
     const { result } = renderHook(() =>
       usePrependAnchorRestore({
@@ -68,7 +47,11 @@ describe("usePrependAnchorRestore", () => {
     expect(scrollToOffset).toHaveBeenCalledWith(530);
 
     // Pending state should be cleared after restore.
-    expect(result.current.shouldAdjustScrollForSizeChange(50, 200, 0)).toBe(true);
+    act(() => {
+      result.current.restoreAnchor(() => [{ index: 1, start: 900 }], scrollToOffset);
+    });
+
+    expect(scrollToOffset).toHaveBeenCalledTimes(1);
   });
 
   it("clears pending state when target item is not found", () => {
@@ -93,7 +76,12 @@ describe("usePrependAnchorRestore", () => {
     });
 
     expect(scrollToOffset).not.toHaveBeenCalled();
-    expect(result.current.shouldAdjustScrollForSizeChange(50, 200, 0)).toBe(true);
+
+    act(() => {
+      result.current.restoreAnchor(() => [{ index: 1, start: 900 }], scrollToOffset);
+    });
+
+    expect(scrollToOffset).not.toHaveBeenCalled();
   });
 
   it("clears pending state when captured key is no longer in keys", () => {
@@ -118,6 +106,11 @@ describe("usePrependAnchorRestore", () => {
     });
 
     expect(scrollToOffset).not.toHaveBeenCalled();
-    expect(result.current.shouldAdjustScrollForSizeChange(50, 200, 0)).toBe(true);
+
+    act(() => {
+      result.current.restoreAnchor(() => [{ index: 1, start: 900 }], scrollToOffset);
+    });
+
+    expect(scrollToOffset).not.toHaveBeenCalled();
   });
 });

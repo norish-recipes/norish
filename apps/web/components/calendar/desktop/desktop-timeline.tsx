@@ -100,9 +100,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     () => rows.map((row, index) => (row[0] ? dateKey(row[0]) : `row-${index}`)),
     [rows]
   );
-  const { captureAnchor, restoreAnchor, shouldAdjustScrollForSizeChange } = usePrependAnchorRestore(
-    { keys: rowKeys }
-  );
+  const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys: rowKeys });
 
   // Date formatters
   const weekdayFormatter = useMemo(
@@ -142,11 +140,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     overscan: 2,
     scrollMargin,
-    shouldAdjustScrollPositionOnItemSizeChange: (item, _delta, instance) => {
-      const scrollOffset = instance.scrollOffset ?? 0;
-
-      return shouldAdjustScrollForSizeChange(item.start, scrollOffset, scrollMargin);
-    },
   });
 
   // Track if we've scrolled to today and if we've triggered expand

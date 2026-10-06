@@ -37,15 +37,6 @@ export function usePrependAnchorRestore({ keys }: UsePrependAnchorRestoreArgs) {
     [keys]
   );
 
-  const shouldAdjustScrollForSizeChange = useCallback(
-    (itemStart: number, scrollOffset: number, scrollMargin: number) => {
-      if (pendingPrependAnchorRef.current) return false;
-
-      return itemStart < scrollOffset + scrollMargin;
-    },
-    []
-  );
-
   const restoreAnchor = useCallback(
     (getVirtualItems: () => VirtualAnchorItem[], scrollToOffset: (offset: number) => void) => {
       const anchor = pendingPrependAnchorRef.current;
@@ -74,6 +65,5 @@ export function usePrependAnchorRestore({ keys }: UsePrependAnchorRestoreArgs) {
   return {
     captureAnchor,
     restoreAnchor,
-    shouldAdjustScrollForSizeChange,
   };
 }
