@@ -415,6 +415,7 @@ describe("prices as Europe writes them", () => {
   it("falls back to what the website's top-level domain implies", () => {
     expect(currencyForUrl("https://www.dirk.nl/zoeken")).toBe("EUR");
     expect(currencyForUrl("https://shop.example.pl/szukaj")).toBe("PLN");
+    expect(currencyForUrl("https://shop.example.ua/poshuk")).toBe("UAH");
   });
 });
 
