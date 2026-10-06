@@ -519,14 +519,15 @@ describe("IngredientsSettingsContent", () => {
     expect(screen.queryByTestId("ingredients-draw-icons")).toBeNull();
   });
 
-  it("shows each food's icon in its row, and the placeholder for one with none", () => {
+  it("shows each food's icon in its row, and nothing for one with none", () => {
     const icon = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
 
     items = [{ ...onion, icon, ownIcon: true }, salt];
     render(<IngredientsSettingsContent />);
 
     expect(within(row("onion")).getByTestId("ingredient-icon").getAttribute("src")).toBe(icon);
-    expect(within(row("salt")).getByTestId("ingredient-icon-placeholder")).toBeInTheDocument();
+    expect(within(row("salt")).queryByTestId("ingredient-icon")).toBeNull();
+    expect(within(row("salt")).queryByTestId("ingredient-icon-placeholder")).toBeNull();
   });
 
   it("lists each food on a line, marks the flagged ones, and opens one to its spellings", async () => {

@@ -1,8 +1,7 @@
 /**
  * A recipe's ingredient lines and their Ingredient Icons: a line that names
- * a food shows its icon, or the placeholder while it has none, so the column
- * keeps its alignment; a heading and a line that names no food ("200 g"
- * alone) show nothing.
+ * a food shows its icon; a food with none, a heading and a line that names
+ * no food ("200 g" alone) show nothing.
  */
 import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredients-list";
 import { render, screen } from "@testing-library/react";
@@ -29,7 +28,7 @@ function line(ingredientName: string, order: number, icon: string | null = null)
 }
 
 describe("ReadonlyIngredientsList", () => {
-  it("gives a food's line its icon or the placeholder, and a heading or a line with no food nothing", () => {
+  it("gives a food's line its icon, and a food with none, a heading or a line with no food nothing", () => {
     render(
       <ReadonlyIngredientsList
         ingredients={[
@@ -43,7 +42,7 @@ describe("ReadonlyIngredientsList", () => {
     );
 
     expect(screen.getByTestId("ingredient-icon").getAttribute("src")).toBe(ICON);
-    // Kohlrabi's placeholder only: the heading and the amount alone have no slot.
-    expect(screen.getAllByTestId("ingredient-icon-placeholder")).toHaveLength(1);
+    expect(screen.getAllByTestId("ingredient-icon")).toHaveLength(1);
+    expect(screen.queryByTestId("ingredient-icon-placeholder")).toBeNull();
   });
 });

@@ -7,8 +7,12 @@ import { useHiddenItems } from "@/context/hidden-items-context";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
-/** The sizes an Ingredient Icon is shown at: beside a step's chip, a line or a row, and in its panel. */
-const SIZES = { chip: 20, line: 32, panel: 64 } as const;
+/**
+ * The sizes an Ingredient Icon is shown at: beside a step's chip, a line or
+ * a row (smaller on a phone, where every pixel beside a line wraps it), and
+ * in its panel.
+ */
+const SIZES = { chip: "size-5", line: "size-6 md:size-8", panel: "size-16" } as const;
 
 export type IngredientIconSize = keyof typeof SIZES;
 
@@ -19,7 +23,7 @@ const MAX_IDS = 500;
 const FIND_DELAY_MS = 400;
 
 interface IconsOnSurface {
-  /** Each food's icon by its Ingredient's id; null shows the placeholder. */
+  /** Each food's icon by its Ingredient's id; null where it has none. */
   addresses: Readonly<Record<string, string | null>>;
   /** The reader hid Ingredient Icons on this device. */
   hidden: boolean;
@@ -43,7 +47,7 @@ export function useIngredientIcons(
   const trpc = useTRPC();
   const key = ids.filter(Boolean).join(",");
   const wanted = useMemo(
-    // ponytail: a surface past 500 foods shows placeholders beyond them; page the read if one ever does.
+    // ponytail: a surface past 500 foods shows no icons beyond them; page the read if one ever does.
     () => [...new Set(key ? key.split(",") : [])].sort().slice(0, MAX_IDS),
     [key]
   );
@@ -106,23 +110,26 @@ export function useIngredientIconsHidden(): boolean {
 /**
  * An Ingredient Icon: a small picture of the food standing on nothing,
  * decoration beside its name and never in place of it. A food with no icon
- * anywhere shows a muted placeholder of the same size, so a column of lines
- * keeps its alignment (rounded square, so it never reads as a line's round
- * checkbox); a reader who hid icons gets neither, nor the slot. A
- * heading is not a food and is given no icon at all. `src` is the address
- * outright, where a surface has it (the share page exposes no ids);
- * otherwise the surface's read is looked up by `ingredientId`, and a line
- * whose food the server has not resolved yet shows the placeholder.
+ * anywhere shows nothing, nor does a line whose food the server has not
+ * resolved yet; only while the surface's read is on its way does it hold an
+ * empty slot, so the line does not jump when the icon lands. `placeholder`
+ * shows a muted square instead of nothing, for the panel field an icon is set
+ * in. A reader who hid icons gets none of these. A heading is not a food and
+ * is given no icon at all. `src` is the address outright, where a surface has
+ * it (the share page exposes no ids); otherwise the surface's read is looked
+ * up by `ingredientId`.
  */
 export function IngredientIcon({
   ingredientId,
   src,
   size = "line",
+  placeholder = false,
   className = "",
 }: {
   ingredientId?: string | null;
   src?: string | null;
   size?: IngredientIconSize;
+  placeholder?: boolean;
   className?: string;
 }) {
   const { addresses, hidden } = useContext(IconsContext);
@@ -130,15 +137,16 @@ export function IngredientIcon({
   if (hidden) return null;
 
   const address = src !== undefined ? src : ingredientId ? (addresses[ingredientId] ?? null) : null;
-  const px = SIZES[size];
+  const reading = src === undefined && ingredientId != null && !(ingredientId in addresses);
 
   if (!address) {
+    if (!placeholder && !reading) return null;
+
     return (
       <span
         aria-hidden
-        className={`bg-surface-secondary block shrink-0 rounded-[30%] opacity-60 ${className}`}
-        data-testid="ingredient-icon-placeholder"
-        style={{ width: px, height: px }}
+        className={`block shrink-0 ${placeholder ? "bg-surface-secondary rounded-[30%] opacity-60" : ""} ${SIZES[size]} ${className}`}
+        data-testid={placeholder ? "ingredient-icon-placeholder" : undefined}
       />
     );
   }
@@ -147,13 +155,11 @@ export function IngredientIcon({
     <img
       aria-hidden
       alt=""
-      className={`block shrink-0 object-contain ${className}`}
+      className={`block shrink-0 object-contain ${SIZES[size]} ${className}`}
       data-testid="ingredient-icon"
       decoding="async"
-      height={px}
       loading="lazy"
       src={address}
-      width={px}
     />
   );
 }

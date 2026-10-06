@@ -115,10 +115,10 @@ function ReadonlyIngredientsListContent({
           const unit = it.unit ? formatUnitOnly(it.unit, it.amount) : "";
           const isChecked = checked.has(idx);
           const wrapperClassName = interactive
-            ? `group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 select-none ${
+            ? `group flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 md:gap-3 transition-all duration-200 select-none ${
                 isChecked ? "bg-surface-secondary/50" : "hover:bg-surface-secondary"
               }`
-            : "flex items-start gap-3 rounded-xl px-3 py-2.5";
+            : "flex items-start gap-2 rounded-xl px-3 py-2.5 md:gap-3";
 
           return (
             <li key={`${it.ingredientName}-${idx}`}>

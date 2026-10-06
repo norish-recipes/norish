@@ -59,7 +59,7 @@ export function IngredientIconField({
   const pending = upload.isPending || generate.isPending;
   const icon = (
     <span className="relative block">
-      <IngredientIcon size="panel" src={shown} />
+      <IngredientIcon placeholder size="panel" src={shown} />
       {pending ? (
         <span className="absolute inset-0 flex items-center justify-center">
           <Spinner size="sm" />

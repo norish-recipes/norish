@@ -1,7 +1,7 @@
 /**
  * A grocery shows its food's Ingredient Icon, read once for the whole list:
- * a typed one too, once Norish knows its food, and the placeholder while a
- * grocery added offline waits for the server to resolve it.
+ * a typed one too, once Norish knows its food, and nothing while a grocery
+ * added offline waits for the server to resolve it.
  */
 import { GroceryItem } from "@/components/groceries/grocery-item";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
@@ -70,10 +70,11 @@ function onList(groceries: GroceryDto[]) {
 }
 
 describe("GroceryItem", () => {
-  it("shows its food's icon, and the placeholder while the server has yet to resolve its food", async () => {
+  it("shows its food's icon, and nothing while the server has yet to resolve its food", async () => {
     onList([grocery({ ingredientId: ONION }), grocery({ name: "added offline" })]);
 
     expect((await screen.findByTestId("ingredient-icon")).getAttribute("src")).toBe(ONION_ICON);
-    expect(screen.getAllByTestId("ingredient-icon-placeholder")).toHaveLength(1);
+    expect(screen.getAllByTestId("ingredient-icon")).toHaveLength(1);
+    expect(screen.queryByTestId("ingredient-icon-placeholder")).toBeNull();
   });
 });

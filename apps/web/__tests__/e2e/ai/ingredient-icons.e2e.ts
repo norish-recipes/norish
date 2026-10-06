@@ -118,13 +118,13 @@ test("a kind of the food with no icon of its own shows its parent's", async () =
 
   await openRecipe();
   await expect(lineIcon("red onion")).toHaveAttribute("src", icon);
-  // A food with no icon anywhere keeps its place with the placeholder.
-  await expect(
-    page
-      .locator("li:visible")
-      .filter({ has: page.getByText("kohlrabi", { exact: true }) })
-      .getByTestId("ingredient-icon-placeholder")
-  ).toBeVisible();
+  // A food with no icon anywhere shows none.
+  const kohlrabi = page
+    .locator("li:visible")
+    .filter({ has: page.getByText("kohlrabi", { exact: true }) });
+
+  await expect(kohlrabi).toBeVisible();
+  await expect(kohlrabi.getByTestId("ingredient-icon")).toHaveCount(0);
 });
 
 test("Generate draws an icon into the draft, which shows on the recipe only after Save", async () => {
@@ -170,9 +170,6 @@ test("hiding Ingredient icons takes them off the recipe page", async () => {
     await openRecipe();
     await expect(page.getByText("kohlrabi", { exact: true }).first()).toBeVisible();
     await expect(page.locator('[data-testid="ingredient-icon"]:visible')).toHaveCount(0);
-    await expect(page.locator('[data-testid="ingredient-icon-placeholder"]:visible')).toHaveCount(
-      0
-    );
   } finally {
     await page.context().clearCookies({ name: "norish_hidden_items" });
   }

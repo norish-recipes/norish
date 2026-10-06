@@ -109,7 +109,7 @@ describe("PantryView", () => {
     icons = {};
   });
 
-  it("shows each kept food's icon, and the placeholder for one with none", () => {
+  it("shows each kept food's icon, and nothing for one with none", () => {
     icons = {
       "i-salt": "/ingredient-icons/0123456789abcdef0123456789abcdef.webp",
       "i-olive oil": null,
@@ -123,8 +123,8 @@ describe("PantryView", () => {
 
     expect(row("salt").querySelector("img")?.getAttribute("src")).toBe(icons["i-salt"]);
     expect(
-      row("olive oil").querySelector('[data-testid="ingredient-icon-placeholder"]')
-    ).toBeInTheDocument();
+      row("olive oil").querySelector("img, [data-testid=ingredient-icon-placeholder]")
+    ).toBeNull();
   });
 
   it("shows a loading state, never an empty Pantry, while it loads", () => {

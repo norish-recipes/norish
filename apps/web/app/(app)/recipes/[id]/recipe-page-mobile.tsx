@@ -168,7 +168,11 @@ export default function RecipePageMobile() {
               </div>
             </div>
 
-            <IngredientsList />
+            {/* The rows' highlight reaches into the card's padding, so their
+                text starts where the heading does rather than a step in. */}
+            <div className="-mx-3">
+              <IngredientsList />
+            </div>
 
             <AddToGroceries recipeId={recipe.id} />
           </Card.Content>
