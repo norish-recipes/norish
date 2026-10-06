@@ -45,8 +45,9 @@ export type ReviewRound = z.infer<typeof ReviewRoundSchema>;
  * How far a Draw icons round has come: how many foods it has settled of how
  * many, and what came of each: an icon drawn and set, a food passed over (out
  * of the asker's reach, gone, or given an icon of its own meanwhile), or a
- * drawing that failed, recorded on its own step. Broadcast like the Ask AI
- * round: the catalogue and its icons are the instance's.
+ * drawing that failed, recorded on its own step. `pending` names the foods
+ * still to be drawn, so each row shows its own turn. Broadcast like the Ask
+ * AI round: the catalogue and its icons are the instance's.
  */
 export const IconRoundSchema = z.object({
   jobId: z.string(),
@@ -57,6 +58,7 @@ export const IconRoundSchema = z.object({
     skipped: z.number().int().nonnegative(),
     failed: z.number().int().nonnegative(),
   }),
+  pending: z.array(z.string()),
   finished: z.boolean(),
 });
 

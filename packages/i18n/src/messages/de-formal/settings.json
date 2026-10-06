@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Keine Symbole} one {# Symbol} other {# Symbole}}",
       "start": "Symbole zeichnen",
-      "progress": "Symbole werden gezeichnet · {done, number} von {total, number}"
+      "progress": "Symbole werden gezeichnet · {done, number} von {total, number}",
+      "drawing": "Symbol wird gezeichnet…"
     }
   },
   "admin": {

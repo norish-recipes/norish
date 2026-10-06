@@ -1266,6 +1266,7 @@ describe("Ingredient Icons", () => {
       await expect(callerFor().drawIcons({ scope: "unowned" })).resolves.toEqual({
         jobId: "icons-1",
         total: 3,
+        pending: [KOHLRABI, ONION, RED],
       });
       expect(iconQueue.add).toHaveBeenCalledWith("draw", {
         ingredients: [

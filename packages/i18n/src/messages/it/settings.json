@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Nessuna icona} one {# icona} other {# icone}}",
       "start": "Disegna icone",
-      "progress": "Disegno icone · {done, number} di {total, number}"
+      "progress": "Disegno icone · {done, number} di {total, number}",
+      "drawing": "Disegno icona…"
     }
   },
   "admin": {

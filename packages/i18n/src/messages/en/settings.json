@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {No icons} one {# icon} other {# icons}}",
       "start": "Draw icons",
-      "progress": "Drawing icons · {done, number} of {total, number}"
+      "progress": "Drawing icons · {done, number} of {total, number}",
+      "drawing": "Drawing icon…"
     }
   },
   "admin": {

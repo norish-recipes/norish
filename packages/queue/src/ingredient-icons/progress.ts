@@ -42,13 +42,20 @@ function settledSteps(progress: unknown): IconStepDetail[] {
   });
 }
 
-/** The round as the job's progress tells it; only the latest attempt counts. */
+/**
+ * The round as the job's progress tells it, with the foods the worker has
+ * settled but not yet written down (`unwritten`); only the latest attempt
+ * counts.
+ */
 export function summarizeIconRound(
   job: Pick<Job<IngredientIconsJobData>, "id" | "data" | "progress">,
-  finished: boolean
+  finished: boolean,
+  unwritten: readonly IconStepDetail[] = []
 ): IconRound {
   const counts = { drawn: 0, skipped: 0, failed: 0 };
-  const settled = settledSteps(job.progress);
+  const settled = [...settledSteps(job.progress), ...unwritten];
+  const over = finished || settled.length >= job.data.ingredients.length;
+  const drawn = new Set(settled.map((step) => step.ingredientId));
 
   for (const step of settled) counts[step.outcome] += 1;
 
@@ -57,7 +64,10 @@ export function summarizeIconRound(
     done: settled.length,
     total: job.data.ingredients.length,
     counts,
-    finished: finished || settled.length >= job.data.ingredients.length,
+    pending: over
+      ? []
+      : job.data.ingredients.flatMap((food) => (drawn.has(food.id) ? [] : [food.id])),
+    finished: over,
   };
 }
 

@@ -4,8 +4,9 @@
  * A Draw icons round (`@norish/shared-server/ingredients/icon-rounds`): one
  * job for however many foods a person asked to be drawn, one step per food,
  * drawn one after another with the instance's image provider and set as the
- * food's own icon. The round's count follows over the socket as icons land,
- * and the changes are announced together once every food is drawn. A food
+ * food's own icon. The round's count, and which foods are still to be drawn,
+ * follow over the socket as icons land, and the changes are announced
+ * together once every food is drawn. A food
  * the asker may no longer edit, one that is gone or one a person gave an icon
  * meanwhile is passed over, and a food whose drawing broke is recorded as
  * failed on its own step, with the cause; neither ends the round. Uses the
@@ -30,11 +31,18 @@ import { ICON_STEP, summarizeIconRound } from "./progress";
 const log = createLogger("worker:ingredient-icons");
 
 /**
- * How many times a round writes its steps down and tells the pages how far it
- * has come: the job's progress is rewritten whole on each write, so a write
- * per food would store the square of the round's size.
+ * How many times a round writes its steps down: the job's progress is
+ * rewritten whole on each write, so a write per food would store the square
+ * of the round's size.
  */
 const ROUND_WRITES = 20;
+
+/**
+ * How often, at most, a round tells the pages how far it has come. Telling
+ * costs no write, so the pages hear of each drawing; foods passed over settle
+ * at once, and are told together.
+ */
+const ANNOUNCE_EVERY_MS = 1000;
 
 /** An error's message, with the cause a wrapper hides. */
 function describe(error: unknown): string {
@@ -58,10 +66,17 @@ async function draw(
   }
 }
 
-/** Tell every open page how far the round is. Best-effort: the icons themselves have landed. */
-async function announceRound(job: Job<IngredientIconsJobData>, finished: boolean): Promise<void> {
+/**
+ * Tell every open page how far the round is, counting the foods settled but
+ * not yet written down. Best-effort: the icons themselves have landed.
+ */
+async function announceRound(
+  job: Job<IngredientIconsJobData>,
+  finished: boolean,
+  unwritten: readonly IconStepDetail[] = []
+): Promise<void> {
   try {
-    await ingredients.publish("icons", summarizeIconRound(job, finished), undefined);
+    await ingredients.publish("icons", summarizeIconRound(job, finished, unwritten), undefined);
   } catch (error) {
     log.warn({ err: error, jobId: job.id }, "Could not announce the round's progress");
   }
@@ -71,7 +86,8 @@ async function announceRound(job: Job<IngredientIconsJobData>, finished: boolean
 export async function processIngredientIconsJob(job: Job<IngredientIconsJobData>): Promise<void> {
   const { ingredients: foods } = job.data;
   const writeEvery = Math.max(1, Math.ceil(foods.length / ROUND_WRITES));
-  let unwritten: (JobStepEvent & { endedAt: number })[] = [];
+  let unwritten: (JobStepEvent & { endedAt: number; detail: IconStepDetail })[] = [];
+  let announcedAt = 0;
 
   log.info({ jobId: job.id, count: foods.length }, "Drawing Ingredient Icons");
 
@@ -88,11 +104,20 @@ export async function processIngredientIconsJob(job: Job<IngredientIconsJobData>
         endedAt: Date.now(),
         detail: { ingredientId, name: food.name, ...outcome },
       });
-      if (unwritten.length < writeEvery && index + 1 < foods.length) continue;
+      const last = index + 1 === foods.length;
 
-      await recordCompletedSteps(job, unwritten);
-      unwritten = [];
-      if (index + 1 < foods.length) await announceRound(job, false);
+      if (unwritten.length >= writeEvery || last) {
+        await recordCompletedSteps(job, unwritten);
+        unwritten = [];
+      }
+      if (last || Date.now() - announcedAt < ANNOUNCE_EVERY_MS) continue;
+
+      announcedAt = Date.now();
+      await announceRound(
+        job,
+        false,
+        unwritten.map((step) => step.detail)
+      );
     }
   });
   await announceRound(job, true);

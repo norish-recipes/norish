@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Brak ikon} one {# ikona} few {# ikony} many {# ikon} other {# ikony}}",
       "start": "Narysuj ikony",
-      "progress": "Rysowanie ikon · {done, number} z {total, number}"
+      "progress": "Rysowanie ikon · {done, number} z {total, number}",
+      "drawing": "Rysowanie ikony…"
     }
   },
   "admin": {

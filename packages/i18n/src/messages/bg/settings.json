@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Няма икони} one {# икона} other {# икони}}",
       "start": "Нарисувай икони",
-      "progress": "Рисуване на икони · {done, number} от {total, number}"
+      "progress": "Рисуване на икони · {done, number} от {total, number}",
+      "drawing": "Рисуване на икона…"
     }
   },
   "admin": {

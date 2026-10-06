@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Aucune icône} one {# icône} other {# icônes}}",
       "start": "Dessiner les icônes",
-      "progress": "Dessin des icônes · {done, number} sur {total, number}"
+      "progress": "Dessin des icônes · {done, number} sur {total, number}",
+      "drawing": "Dessin de l’icône…"
     }
   },
   "admin": {

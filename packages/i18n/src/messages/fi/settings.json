@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Ei kuvakkeita} one {# kuvake} other {# kuvaketta}}",
       "start": "Piirrä kuvakkeet",
-      "progress": "Piirretään kuvakkeita · {done, number}/{total, number}"
+      "progress": "Piirretään kuvakkeita · {done, number}/{total, number}",
+      "drawing": "Piirretään kuvaketta…"
     }
   },
   "admin": {

@@ -28,7 +28,7 @@ import { useRealtimeSubscription } from "@norish/shared-react/realtime";
 import type { IngredientFilters } from "./ingredient-filters-panel";
 import { AskAIRoundModal } from "./ask-ai-round-modal";
 import DataSourcesCard from "./data-sources-card";
-import { DrawIconsControl } from "./draw-icons-control";
+import { DrawIconsControl, useIconRound } from "./draw-icons-control";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
@@ -139,6 +139,12 @@ export default function IngredientsSettingsContent() {
     : [];
   // Each flagged row shows its own turn in the round rather than a count above the list.
   const reviewing = useMemo(() => new Set(running?.pending ?? []), [running?.pending]);
+  // A Draw icons round, likewise: each food it has still to draw shows its turn in its icon's place.
+  const iconRound = useIconRound(() => void refresh());
+  const drawing = useMemo(
+    () => new Set(iconRound.running?.pending ?? []),
+    [iconRound.running?.pending]
+  );
 
   useRealtimeSubscription<ReviewRound>(trpc.ingredients.onReview, {
     lagQueryKeys: [trpc.ingredients.reviewRound.queryKey()],
@@ -238,7 +244,7 @@ export default function IngredientsSettingsContent() {
                   {t("findParentsAll")}
                 </AIButton>
               ) : null}
-              <DrawIconsControl onProgress={() => void refresh()} />
+              <DrawIconsControl round={iconRound} />
               {isAIEnabled && hasFlagged && !running ? (
                 <AIButton
                   data-testid="ingredients-ask-ai-all"
@@ -279,6 +285,7 @@ export default function IngredientsSettingsContent() {
               </p>
             ) : (
               <IngredientList
+                drawing={drawing}
                 hasMore={hasNextPage}
                 isFetchingMore={isFetchingNextPage}
                 loadMore={loadMore}

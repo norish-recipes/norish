@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Ingen ikoner} one {# ikon} other {# ikoner}}",
       "start": "Tegn ikoner",
-      "progress": "Tegner ikoner · {done, number} af {total, number}"
+      "progress": "Tegner ikoner · {done, number} af {total, number}",
+      "drawing": "Tegner ikon…"
     }
   },
   "admin": {

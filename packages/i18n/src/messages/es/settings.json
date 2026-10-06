@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Ningún icono} one {# icono} other {# iconos}}",
       "start": "Dibujar iconos",
-      "progress": "Dibujando iconos · {done, number} de {total, number}"
+      "progress": "Dibujando iconos · {done, number} de {total, number}",
+      "drawing": "Dibujando icono…"
     }
   },
   "admin": {

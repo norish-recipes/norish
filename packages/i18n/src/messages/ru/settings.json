@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Нет значков} one {# значок} few {# значка} many {# значков} other {# значка}}",
       "start": "Нарисовать значки",
-      "progress": "Рисуем значки · {done, number} из {total, number}"
+      "progress": "Рисуем значки · {done, number} из {total, number}",
+      "drawing": "Рисуем значок…"
     }
   },
   "admin": {

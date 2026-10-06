@@ -526,7 +526,7 @@ const iconScope = authedProcedure.query(async ({ ctx }): Promise<IconScopeSummar
  * server picks, however many: one job, a step per food, that outlives the
  * tab. Each icon is set as the food's own, with no review, under `edit` on
  * that food, checked again as the round reaches it. Answers the job the page
- * watches the round by, over `onIcons`.
+ * watches the round by, over `onIcons`, and the foods it is to draw.
  */
 const drawIcons = authedProcedure
   .input(z.object({ scope: z.enum(ICON_SCOPES) }))
@@ -551,7 +551,7 @@ const drawIcons = authedProcedure
       },
     });
 
-    return { jobId, total: foods.length };
+    return { jobId, total: foods.length, pending: foods.map((food) => food.id) };
   });
 
 /** The Draw icons round running on the instance, for a page that opens mid-round. */

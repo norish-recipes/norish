@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {Geen iconen} one {# icoon} other {# iconen}}",
       "start": "Iconen tekenen",
-      "progress": "Iconen tekenen · {done, number} van {total, number}"
+      "progress": "Iconen tekenen · {done, number} van {total, number}",
+      "drawing": "Icoon tekenen…"
     }
   },
   "admin": {

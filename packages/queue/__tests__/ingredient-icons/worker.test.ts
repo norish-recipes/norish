@@ -1,13 +1,13 @@
 // @vitest-environment node
 /**
  * A Draw icons round: one job, a step per food, drawn one after another,
- * each step saying what came of it, and the round's count following as the
- * steps are written down. A food out of the asker's reach, gone, or given an
+ * each step saying what came of it, and the round's count and the foods
+ * still to draw following as each food settles. A food out of the asker's reach, gone, or given an
  * icon meanwhile is passed over; a food whose drawing broke is recorded as
  * failed with the cause; neither ends the round, and only a round that has
  * spent its attempts is told to every page as ended.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { IngredientIconsJobData } from "@norish/queue/contracts/job-types";
 import { summarizeIconRound } from "@norish/queue/ingredient-icons/progress";
@@ -60,6 +60,10 @@ beforeEach(() => {
   realtime.publish.mockClear();
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("processIngredientIconsJob", () => {
   it("draws each food in turn as the asker, one step each, and says how it ended", async () => {
     rounds.drawRoundIcon
@@ -90,6 +94,7 @@ describe("processIngredientIconsJob", () => {
       done: 3,
       total: 3,
       counts: { drawn: 2, skipped: 1, failed: 0 },
+      pending: [],
       finished: true,
     });
   });
@@ -111,17 +116,42 @@ describe("processIngredientIconsJob", () => {
     });
   });
 
-  it("writes a long round down a twentieth at a time, telling the pages how far it is", async () => {
+  it("writes a long round down a twentieth at a time", async () => {
     rounds.drawRoundIcon.mockResolvedValue({ outcome: "drawn" });
-    const ids = Array.from({ length: 40 }, (_, index) => `food-${index}`);
-    const job = fakeJob(ids);
+    const job = fakeJob(Array.from({ length: 40 }, (_, index) => `food-${index}`));
 
     await processIngredientIconsJob(job);
 
-    const counts = published("icons").map((round) => round.done);
-
-    expect(counts).toEqual([...Array.from({ length: 19 }, (_, index) => (index + 1) * 2), 40]);
     expect(job.updateProgress).toHaveBeenCalledTimes(20);
+  });
+
+  it("tells the pages of each drawing and the foods still to draw, before they are written down", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    // Each drawing takes a few seconds.
+    rounds.drawRoundIcon.mockImplementation(async () => {
+      vi.setSystemTime(Date.now() + 5000);
+
+      return { outcome: "drawn" };
+    });
+    const job = fakeJob(["onion", "kohlrabi", "leek"]);
+
+    await processIngredientIconsJob(job);
+
+    expect(published("icons").map((round) => [round.done, round.pending])).toEqual([
+      [1, ["kohlrabi", "leek"]],
+      [2, ["leek"]],
+      [3, []],
+    ]);
+  });
+
+  it("tells foods passed over at once together, rather than one by one", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    rounds.drawRoundIcon.mockResolvedValue({ outcome: "skipped", reason: "has-icon" });
+    const job = fakeJob(["onion", "kohlrabi", "leek", "carrot"]);
+
+    await processIngredientIconsJob(job);
+
+    expect(published("icons").map((round) => round.done)).toEqual([1, 4]);
   });
 });
 

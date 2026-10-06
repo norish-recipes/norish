@@ -25,6 +25,7 @@ const LOAD_MORE_MARGIN = "600px";
 export function IngredientList({
   rows,
   reviewing,
+  drawing,
   settling,
   hasMore,
   isFetchingMore,
@@ -36,6 +37,8 @@ export function IngredientList({
   rows: IngredientTreeRow[];
   /** The foods waiting their turn in a round of Ask AI. */
   reviewing: ReadonlySet<string>;
+  /** The foods waiting their turn in a Draw icons round. */
+  drawing: ReadonlySet<string>;
   /** A search or filter is being applied: the list dims but stays. */
   settling: boolean;
   hasMore: boolean;
@@ -118,6 +121,7 @@ export function IngredientList({
             >
               <IngredientRow
                 depth={row.depth}
+                drawing={drawing.has(row.item.id)}
                 expanded={row.expanded}
                 item={row.item}
                 loadingKinds={row.loading}

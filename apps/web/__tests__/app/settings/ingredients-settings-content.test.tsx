@@ -503,7 +503,7 @@ describe("IngredientsSettingsContent", () => {
     expect(screen.queryByTestId("ingredients-draw-icons")).toBeNull();
   });
 
-  it("shows a running Draw icons round's count in place of its button", () => {
+  it("shows a running Draw icons round's count in place of its button, and each food still to draw in its row", () => {
     permissions.canDrawImages = true;
     iconScope = { bare: 2, unowned: 5 };
     iconRound = {
@@ -511,12 +511,15 @@ describe("IngredientsSettingsContent", () => {
       done: 3,
       total: 20,
       counts: { drawn: 3, skipped: 0, failed: 0 },
+      pending: ["onion"],
       finished: false,
     };
     render(<IngredientsSettingsContent />);
 
     expect(screen.getByTestId("ingredients-icon-round-progress")).toHaveTextContent("progress");
     expect(screen.queryByTestId("ingredients-draw-icons")).toBeNull();
+    expect(within(row("onion")).getByTestId("ingredient-icon-drawing")).toBeInTheDocument();
+    expect(within(row("salt")).queryByTestId("ingredient-icon-drawing")).toBeNull();
   });
 
   it("shows each food's icon in its row, and nothing for one with none", () => {

@@ -589,7 +589,8 @@
       },
       "scopeSize": "{count, plural, =0 {아이콘 없음} other {아이콘 #개}}",
       "start": "아이콘 그리기",
-      "progress": "아이콘 그리는 중 · {total, number}개 중 {done, number}개"
+      "progress": "아이콘 그리는 중 · {total, number}개 중 {done, number}개",
+      "drawing": "아이콘 그리는 중…"
     }
   },
   "admin": {
