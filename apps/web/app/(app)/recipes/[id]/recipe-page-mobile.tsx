@@ -168,8 +168,8 @@ export default function RecipePageMobile() {
               </div>
             </div>
 
-            {/* The rows' highlight reaches into the card's padding, so their
-                text starts where the heading does rather than a step in. */}
+            {/* The rows' highlight reaches into the card's padding, so they
+                start where the heading does rather than a step in. */}
             <div className="-mx-3">
               <IngredientsList />
             </div>
@@ -181,7 +181,10 @@ export default function RecipePageMobile() {
         <Card className="rounded-2xl">
           <Card.Content className="space-y-4 p-5 text-left">
             <h2 className="text-lg font-semibold">{t("steps")}</h2>
-            <StepsList />
+            {/* As the ingredients: the step numbers line up with the heading. */}
+            <div className="-mx-3">
+              <StepsList />
+            </div>
           </Card.Content>
         </Card>
 

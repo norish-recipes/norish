@@ -137,7 +137,7 @@ export function ReadonlyStepsList({
             <li key={i}>
               <div
                 aria-pressed={interactive ? isDone : undefined}
-                className={`flex gap-4 rounded-xl p-3 transition-all duration-200 select-none ${
+                className={`flex gap-3 rounded-xl p-3 transition-all duration-200 select-none md:gap-4 ${
                   interactive ? "group hover:bg-surface-secondary cursor-pointer" : "bg-transparent"
                 }`}
                 role={interactive ? "button" : undefined}
