@@ -6,7 +6,7 @@
  */
 
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetCaldavConfigDecrypted = vi.fn();
 const mockGetCaldavSyncStatusByItemId = vi.fn();
@@ -32,7 +32,8 @@ vi.mock("@norish/shared-server/caldav/client", () => ({
   },
 }));
 
-const { deletePlannedItem, syncPlannedItem } = await import("../../src/caldav/sync-manager");
+const { deletePlannedItem, getEventTimeRange, syncPlannedItem } =
+  await import("../../src/caldav/sync-manager");
 
 const CONFIG = {
   enabled: true,
@@ -55,6 +56,26 @@ beforeEach(() => {
   mockUpdateEvent.mockImplementation(({ uid }: { uid: string }) =>
     Promise.resolve({ uid, href: "h", rawIcs: "" })
   );
+});
+
+describe("getEventTimeRange", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("reads slot times as wall-clock time in the server's timezone", () => {
+    vi.stubEnv("TZ", "Europe/Kyiv");
+
+    expect(getEventTimeRange("2026-08-21", "Dinner", CONFIG)).toEqual({
+      start: new Date("2026-08-21T15:00:00Z"),
+      end: new Date("2026-08-21T16:00:00Z"),
+    });
+    // Same slot after the switch to winter time.
+    expect(getEventTimeRange("2026-12-21", "Dinner", CONFIG)).toEqual({
+      start: new Date("2026-12-21T16:00:00Z"),
+      end: new Date("2026-12-21T17:00:00Z"),
+    });
+  });
 });
 
 describe("syncPlannedItem", () => {
@@ -84,8 +105,8 @@ describe("syncPlannedItem", () => {
       expect.objectContaining({
         uid: "event-uid",
         summary: "Lasagne",
-        start: new Date(Date.UTC(2026, 7, 25, 12, 0)),
-        end: new Date(Date.UTC(2026, 7, 25, 13, 0)),
+        start: new Date(2026, 7, 25, 12, 0),
+        end: new Date(2026, 7, 25, 13, 0),
       })
     );
   });

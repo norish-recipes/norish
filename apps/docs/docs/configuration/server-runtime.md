@@ -11,14 +11,15 @@ General settings for the Norish server process. Most have sensible defaults;
 
 ## Core
 
-| Variable     | Description                                  | Default                                |
-| ------------ | -------------------------------------------- | -------------------------------------- |
-| `MASTER_KEY` | 32+ character key for encryption derivation  | (required)                             |
-| `AUTH_URL`   | Public URL used for auth callbacks and links | `http://localhost:3000`                |
-| `NODE_ENV`   | Runtime environment                          | `production` (set by the Docker image) |
-| `HOST`       | Server bind address                          | `0.0.0.0`                              |
-| `PORT`       | Server port                                  | `3000`                                 |
-| `REDIS_URL`  | Redis connection URL for events and jobs     | `redis://localhost:6379`               |
+| Variable     | Description                                                      | Default                                |
+| ------------ | ---------------------------------------------------------------- | -------------------------------------- |
+| `MASTER_KEY` | 32+ character key for encryption derivation                      | (required)                             |
+| `AUTH_URL`   | Public URL used for auth callbacks and links                     | `http://localhost:3000`                |
+| `NODE_ENV`   | Runtime environment                                              | `production` (set by the Docker image) |
+| `HOST`       | Server bind address                                              | `0.0.0.0`                              |
+| `PORT`       | Server port                                                      | `3000`                                 |
+| `REDIS_URL`  | Redis connection URL for events and jobs                         | `redis://localhost:6379`               |
+| `TZ`         | Timezone for "today" and CalDAV meal times, e.g. `Europe/Berlin` | `UTC`                                  |
 
 :::info Generate a `MASTER_KEY`
 `MASTER_KEY` derives the encryption keys used to protect stored secrets. Generate

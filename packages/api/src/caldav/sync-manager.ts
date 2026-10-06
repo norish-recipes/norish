@@ -46,9 +46,11 @@ export function getEventTimeRange(
   const [startHour = 0, startMinute = 0] = startTime.split(":").map(Number);
   const [endHour = 0, endMinute = 0] = endTime.split(":").map(Number);
 
+  // Slot times are wall-clock times in the server's timezone (TZ), the same one
+  // the plan's dates are read in, not UTC.
   return {
-    start: new Date(Date.UTC(year, month - 1, day, startHour, startMinute)),
-    end: new Date(Date.UTC(year, month - 1, day, endHour, endMinute)),
+    start: new Date(year, month - 1, day, startHour, startMinute),
+    end: new Date(year, month - 1, day, endHour, endMinute),
   };
 }
 
