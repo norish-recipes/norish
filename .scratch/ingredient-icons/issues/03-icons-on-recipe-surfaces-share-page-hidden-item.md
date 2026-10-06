@@ -11,7 +11,7 @@ A reader can hide all icons on their device as a Hidden Item. See `.scratch/ingr
 
 **Blocked by:** 01
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] Cooking mode and step chips read the icon through their recipe line's food.
 - [x] Editor rows find their food through the existing `ingredients.find` (which never mints), then read the icons query. A row that matches nothing shows the placeholder.

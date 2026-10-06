@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] A merge coalesces the own icon onto the target, the target's winning, beside the existing `off_id` coalesce.
 - [x] A scheduled task removes own-icon files that no Ingredient references. A file younger than a grace period is kept, so an open draft's upload survives until Save.

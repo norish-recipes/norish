@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] The set lives as data in a workspace package, which the Docker image already copies. Its manifest maps `off_id` to a file and lists the `off_id`s deliberately drawn none.
 - [x] The service's order becomes: own, then shipped for the food's `off_id`, then the nearest ancestor's own or shipped icon. A food adopted by the seed later gets its shipped icon with no extra step.

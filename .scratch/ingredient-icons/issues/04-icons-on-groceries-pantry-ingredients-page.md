@@ -11,7 +11,7 @@ Icons a person has seen before still show offline. See `.scratch/ingredient-icon
 
 **Blocked by:** 01
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] Each surface collects the food ids it shows and reads the icons query once, not once per row.
 - [x] The recurring groceries DTO gains its `ingredientId`.

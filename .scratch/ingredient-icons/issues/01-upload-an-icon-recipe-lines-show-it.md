@@ -10,7 +10,7 @@ Headings show nothing. Remove, in the same draft, takes the food's own icon off 
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] One migration gives an Ingredient a nullable own icon (a reference to a stored file). Nothing is added to recipe lines, groceries or Pantry rows.
 - [x] A pure function turns picture bytes into a 128px square transparent WebP:

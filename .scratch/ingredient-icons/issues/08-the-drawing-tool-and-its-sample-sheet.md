@@ -9,7 +9,7 @@ See `.scratch/ingredient-icons/spec.md`.
 
 **Blocked by:** 05, 06
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] A tooling workspace holds the tool and the hand-picked list of vague groups (fruit, vegetable, plant, preparation, dairy, meat and the like, about 25). The list is written into the set's manifest as "drawn none".
 - [x] Each food is drawn with ticket 05's sections, and made into an icon with ticket 01's function.

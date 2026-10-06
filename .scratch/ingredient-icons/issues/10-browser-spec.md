@@ -4,7 +4,7 @@
 
 **Blocked by:** 03, 04, 05, 07
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] An icon uploaded in the Ingredient panel shows on a recipe line and on the grocery list after Save, not before.
 - [x] A child with no icon shows its parent's.

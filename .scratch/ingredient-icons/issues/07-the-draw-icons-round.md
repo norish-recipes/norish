@@ -9,7 +9,7 @@ Each scope shows how many icons it will draw, and starting it runs a background 
 
 **Blocked by:** 05, 06
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] Scope counts cover the whole catalogue: only foods the person may edit, never the set's "drawn none" list. No price is shown.
 - [x] The round is one job with one step per food, on its own queue (wired like the ingredient-review queue), and its worker is wrapped in `instrumentProcessor`.

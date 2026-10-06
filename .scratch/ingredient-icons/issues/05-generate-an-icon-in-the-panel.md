@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** done, pending gates and review
+**Status:** done, pending review
 
 - [x] The AI Runtime's image entry point accepts a square shape: 1024×1024, or the provider's square aspect, per provider.
 - [x] It also accepts the cheapest quality tier where the provider has one (OpenAI-family `low`). Providers without tiers are unchanged, and recipe pictures keep their current behaviour.
