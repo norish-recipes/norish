@@ -18,8 +18,7 @@ type TimelineDaySectionProps = {
   isDragOver?: boolean;
   isToday: boolean;
   items: PlannedItemDisplay[];
-  weekdayFormatter: Intl.DateTimeFormat;
-  monthFormatter: Intl.DateTimeFormat;
+  dateFormatter: Intl.DateTimeFormat;
   onAddItem: (dateKey: string, slot: Slot) => void;
   onNoteClick?: (item: PlannedItemDisplay) => void;
   onRecipeClick?: (item: PlannedItemDisplay) => void;
@@ -30,8 +29,7 @@ export const TimelineDaySection = memo(function TimelineDaySection({
   isDragOver = false,
   isToday,
   items,
-  weekdayFormatter,
-  monthFormatter,
+  dateFormatter,
   onAddItem,
   onNoteClick,
   onRecipeClick,
@@ -84,26 +82,23 @@ export const TimelineDaySection = memo(function TimelineDaySection({
   return (
     <Card
       ref={setNodeRef}
-      className={`shadow-sm transition-all duration-200 ${showDragHighlight ? "ring-accent ring-2" : ""} ${isToday ? "ring-accent/50 shadow-md ring-2" : ""}`}
+      className={`p-3 shadow-sm transition-all duration-200 ${showDragHighlight ? "ring-accent ring-2" : ""} ${isToday ? "ring-accent/50 shadow-md ring-2" : ""}`}
     >
-      <Card.Content className="flex flex-col gap-2 px-4 py-3">
-        {/* Day header */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col">
+      <Card.Content className="flex flex-col gap-2 p-0">
+        {/* Day header: the date on one line, and an empty day is nothing more */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-baseline gap-2">
             {isToday ? (
               <>
-                <span className="text-accent text-lg font-bold">{tMobile("today")}</span>
-                <span className="text-muted text-sm">
-                  {weekdayFormatter.format(date)}, {monthFormatter.format(date)} {date.getDate()}
+                <span className="text-accent shrink-0 text-base font-semibold">
+                  {tMobile("today")}
                 </span>
+                <span className="text-muted truncate text-sm">{dateFormatter.format(date)}</span>
               </>
             ) : (
-              <>
-                <span className="text-foreground text-base font-semibold">
-                  {monthFormatter.format(date)} {date.getDate()}
-                </span>
-                <span className="text-muted text-sm">{weekdayFormatter.format(date)}</span>
-              </>
+              <span className="text-foreground truncate text-base font-semibold">
+                {dateFormatter.format(date)}
+              </span>
             )}
           </div>
 
@@ -139,29 +134,27 @@ export const TimelineDaySection = memo(function TimelineDaySection({
           </Dropdown>
         </div>
 
-        <Separator />
-
-        {/* Slot containers */}
-        {hasItems ? (
-          <div className="flex flex-col">
-            {SLOTS.map((slot) => {
-              const slotItems = itemsBySlot[slot];
-              if (!slotItems || slotItems.length === 0) return null;
-              return (
-                <TimelineSlotContainer
-                  key={slot}
-                  dateKey={dateKey}
-                  items={slotItems}
-                  slot={slot}
-                  slotLabel={slotLabels[slot] ?? slot}
-                  onNoteClick={onNoteClick}
-                  onRecipeClick={onRecipeClick}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <span className="text-muted py-1 text-xs italic">{t("noItems")}</span>
+        {hasItems && (
+          <>
+            <Separator />
+            <div className="flex flex-col">
+              {SLOTS.map((slot) => {
+                const slotItems = itemsBySlot[slot];
+                if (!slotItems || slotItems.length === 0) return null;
+                return (
+                  <TimelineSlotContainer
+                    key={slot}
+                    dateKey={dateKey}
+                    items={slotItems}
+                    slot={slot}
+                    slotLabel={slotLabels[slot] ?? slot}
+                    onNoteClick={onNoteClick}
+                    onRecipeClick={onRecipeClick}
+                  />
+                );
+              })}
+            </div>
+          </>
         )}
       </Card.Content>
     </Card>
