@@ -200,12 +200,13 @@ export default function IngredientsSettingsContent() {
     <IngredientIconsProvider>
       <div className="flex flex-col gap-6">
         <Card>
-          <Card.Header className="flex-row items-center justify-between gap-3">
+          <Card.Header className="flex-row flex-wrap items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <BookOpenIcon className="h-5 w-5" />
               {t("title")}
             </h2>
-            <div className="flex items-center gap-2">
+            {/* On a phone the actions wrap under the title rather than run off the card. */}
+            <div className="flex flex-wrap items-center gap-2">
               {suggestions.length > 0 || reportJobId ? (
                 <Button
                   data-testid="ingredients-suggestions-open"

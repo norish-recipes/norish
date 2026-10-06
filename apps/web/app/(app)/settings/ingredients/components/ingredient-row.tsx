@@ -4,7 +4,7 @@ import type { IngredientItem } from "@/components/ingredients/types";
 import { memo } from "react";
 import { IngredientIcon, useIngredientIconsHidden } from "@/components/ingredients/ingredient-icon";
 import { IngredientStatusChip } from "@/components/ingredients/ingredient-status-chip";
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -83,10 +83,12 @@ export const IngredientRow = memo(function IngredientRow({
         >
           {loadingKinds ? (
             <Spinner color="current" size="sm" />
-          ) : expanded ? (
-            <ChevronDownIcon className="size-4" />
           ) : (
-            <ChevronRightIcon className="size-4" />
+            <ChevronRightIcon
+              className={`size-4 transition-transform duration-200 motion-reduce:transition-none ${
+                expanded ? "rotate-90" : ""
+              }`}
+            />
           )}
         </button>
       ) : null}
@@ -130,7 +132,6 @@ export const IngredientRow = memo(function IngredientRow({
             )}
           </span>
         </div>
-        <ChevronRightIcon aria-hidden className="text-muted size-4 shrink-0" />
       </button>
     </div>
   );
