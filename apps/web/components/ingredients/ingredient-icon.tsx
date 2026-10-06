@@ -107,7 +107,8 @@ export function useIngredientIconsHidden(): boolean {
  * An Ingredient Icon: a small picture of the food standing on nothing,
  * decoration beside its name and never in place of it. A food with no icon
  * anywhere shows a muted placeholder of the same size, so a column of lines
- * keeps its alignment; a reader who hid icons gets neither, nor the slot. A
+ * keeps its alignment (rounded square, so it never reads as a line's round
+ * checkbox); a reader who hid icons gets neither, nor the slot. A
  * heading is not a food and is given no icon at all. `src` is the address
  * outright, where a surface has it (the share page exposes no ids);
  * otherwise the surface's read is looked up by `ingredientId`, and a line
@@ -135,7 +136,7 @@ export function IngredientIcon({
     return (
       <span
         aria-hidden
-        className={`bg-surface-secondary block shrink-0 rounded-full opacity-60 ${className}`}
+        className={`bg-surface-secondary block shrink-0 rounded-[30%] opacity-60 ${className}`}
         data-testid="ingredient-icon-placeholder"
         style={{ width: px, height: px }}
       />
