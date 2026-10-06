@@ -5,7 +5,7 @@
  * AI boundary gets no second provider client:
  *
  *   pnpm --filter @norish/ingredient-icons-tool draw sample [--out <dir>]
- *   pnpm --filter @norish/ingredient-icons-tool draw full [--tier low|medium] [--concurrency 1] [--yes]
+ *   pnpm --filter @norish/ingredient-icons-tool draw full [--tier low|medium] [--limit n] [--concurrency 1] [--yes]
  *
  * `sample` draws a handful of chosen foods at both tiers into one contact
  * sheet, on a light and a dark ground, for the style and tier to be approved.
@@ -23,7 +23,7 @@ import sharp from "sharp";
 
 import type { ImageTier } from "@norish/shared-server/ai/runtime/providers";
 import { resetDbConnection } from "@norish/db/drizzle";
-import { listIconCatalogue } from "@norish/db/repositories/ingredient-icons";
+import { countRecipeUses, listIconCatalogue } from "@norish/db/repositories/ingredient-icons";
 import { drawIngredientIcon } from "@norish/shared-server/ai/enrichment/ingredient-icon-drawer";
 import { foodToDraw } from "@norish/shared-server/ingredients/icon-drafts";
 import {
@@ -206,15 +206,27 @@ async function writeManifest(manifest: Manifest): Promise<void> {
   );
 }
 
-/** The full set: every seeded food not vague and not drawn yet, written as it lands. */
-async function full(tier: ImageTier, concurrency: number, confirmed: boolean): Promise<void> {
-  const seeded = await seededFoods();
+/**
+ * The full set: every seeded food not vague and not drawn yet, written as it
+ * lands. The foods this instance's recipes use most come first, so a run cut
+ * short, or one told to stop after `limit`, has drawn the icons readers meet.
+ */
+async function full(
+  tier: ImageTier,
+  concurrency: number,
+  limit: number,
+  confirmed: boolean
+): Promise<void> {
+  const [seeded, uses] = await Promise.all([seededFoods(), countRecipeUses()]);
   const manifest = await readManifest();
   const vague = new Set(VAGUE_GROUPS);
-  const todo = [...seeded].filter(([offId]) => !vague.has(offId) && !manifest.icons[offId]);
+  const left = [...seeded]
+    .filter(([offId]) => !vague.has(offId) && !manifest.icons[offId])
+    .sort(([a, idA], [b, idB]) => (uses.get(idB) ?? 0) - (uses.get(idA) ?? 0) || (a < b ? -1 : 1));
+  const todo = left.slice(0, limit);
 
   say(
-    `${todo.length} icons to draw at ${tier} (${seeded.size} seeded foods, ${Object.keys(manifest.icons).length} drawn, ${vague.size} vague groups).`
+    `${todo.length} icons to draw at ${tier}${todo.length < left.length ? `, the first of ${left.length} left` : ""} (${seeded.size} seeded foods, ${Object.keys(manifest.icons).length} drawn, ${vague.size} vague groups).`
   );
   if (!confirmed) {
     say("Run again with --yes to draw them.");
@@ -274,14 +286,16 @@ async function main(): Promise<void> {
 
     // One at a time unless asked: a new account draws only a few images a minute.
     const concurrency = Number(flag("--concurrency") ?? 1);
+    const limit = Number(flag("--limit") ?? Infinity);
 
     if (tier !== "low" && tier !== "medium") throw new Error(`Unknown tier: ${tier}`);
     if (!Number.isInteger(concurrency) || concurrency < 1)
       throw new Error("--concurrency is a count");
-    await full(tier, concurrency, process.argv.includes("--yes"));
+    if (!(limit > 0)) throw new Error("--limit is a count");
+    await full(tier, concurrency, limit, process.argv.includes("--yes"));
   } else {
     say(
-      "Usage: draw sample [--out <dir>] | draw full [--tier low|medium] [--concurrency n] [--yes]"
+      "Usage: draw sample [--out <dir>] | draw full [--tier low|medium] [--limit n] [--concurrency n] [--yes]"
     );
     process.exitCode = 1;
   }

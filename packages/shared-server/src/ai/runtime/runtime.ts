@@ -745,6 +745,8 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
         provider: imageModel.providerName,
         model,
         imageBytes: bytes.length,
+        // What the provider billed, where it reports it: the way to price a large run.
+        usage: result.usage,
       },
       "Image generation completed"
     );

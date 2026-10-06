@@ -2,7 +2,7 @@ import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
-import { ingredients } from "@norish/db/schema";
+import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
 
 /**
  * What Ingredient Icons read and write in the catalogue: the tree of
@@ -116,4 +116,15 @@ export async function listIngredientIconFiles(): Promise<Set<string>> {
     .where(isNotNull(ingredients.icon));
 
   return new Set(rows.flatMap((row) => (row.icon ? [row.icon] : [])));
+}
+
+/** How many recipe lines name each Ingredient: which foods a reader meets most. */
+export async function countRecipeUses(): Promise<Map<string, number>> {
+  const rows = await db
+    .select({ id: ingredientAliases.ingredientId, uses: sql<number>`count(*)::int` })
+    .from(recipeIngredients)
+    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredients.ingredientAliasId))
+    .groupBy(ingredientAliases.ingredientId);
+
+  return new Map(rows.map((row) => [row.id, row.uses]));
 }

@@ -31,7 +31,15 @@ manifest as `none`, so a food under them borrows nothing vague.
    `packages/shared-server/src/ai/prompts/` (then run
    `node tooling/monorepo/scripts/generate-retired-prompt-defaults.mjs`) and run
    the sample again. Choose the tier.
-4. **Run full.**
+4. **Run full.** The placeholder shapes the set held before it was drawn count
+   as drawn, so clear them first:
+
+   ```sh
+   rm packages/shared-server/src/ingredients/icon-set/icons/*.webp
+   node -e 'const f="packages/shared-server/src/ingredients/icon-set/manifest.json",m=require("./"+f);m.icons={};require("fs").writeFileSync(f,JSON.stringify(m,null,2)+"\n")'
+   ```
+
+   Then:
 
    ```sh
    pnpm --filter @norish/ingredient-icons-tool draw full --tier low
@@ -47,6 +55,12 @@ manifest as `none`, so a food under them borrows nothing vague.
    Failures are listed at the end: run again to retry them, or leave them to
    borrow their parent's. A running Norish server picks the new set up by
    itself.
+
+   The foods this instance's recipes use most are drawn first. `--limit 50`
+   draws only the first fifty, to see real icons in the app before paying for
+   the rest; a later run carries on from there. If the style changes after
+   that, restore `icon-set/` from git before the real run, so nothing drawn in
+   the old style is kept.
 
 5. **Commit** the icon files and `manifest.json`. The provider's originals are
    never kept.
