@@ -13,7 +13,8 @@ const config = vi.hoisted(() => ({ MAX_IMAGE_FILE_SIZE: 10 * 1024 * 1024, UPLOAD
 
 vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: config }));
 
-const { makeIngredientIcon } = await import("@norish/shared-server/media/ingredient-icon");
+const { makeIngredientIcon, standsOnTile } =
+  await import("@norish/shared-server/media/ingredient-icon");
 
 const SIZE = 200;
 
@@ -111,5 +112,27 @@ describe("makeIngredientIcon", () => {
     } finally {
       config.MAX_IMAGE_FILE_SIZE = 10 * 1024 * 1024;
     }
+  });
+});
+
+describe("standsOnTile", () => {
+  /** An icon made from shapes drawn on nothing, as a transparent drawing arrives. */
+  const iconOf = async (shapes: string) => await makeIngredientIcon(await picture(shapes));
+
+  it("finds the rounded square a model drew behind the food", async () => {
+    const tile = `<rect x="10" y="10" width="180" height="180" rx="36" fill="#f3d9b1"/>`;
+
+    expect(
+      await standsOnTile(await iconOf(`${tile}<circle cx="100" cy="100" r="50" fill="#d02020"/>`))
+    ).toBe(true);
+  });
+
+  it("passes a round food, and a can's straight sides", async () => {
+    const can = `<rect x="40" y="30" width="120" height="140" fill="#a0a0a0"/><ellipse cx="100" cy="30" rx="60" ry="14" fill="#c0c0c0"/><ellipse cx="100" cy="170" rx="60" ry="14" fill="#a0a0a0"/>`;
+
+    expect(
+      await standsOnTile(await iconOf(`<circle cx="100" cy="100" r="80" fill="#d02020"/>`))
+    ).toBe(false);
+    expect(await standsOnTile(await iconOf(can))).toBe(false);
   });
 });

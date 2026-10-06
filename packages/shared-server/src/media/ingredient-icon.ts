@@ -193,6 +193,55 @@ export async function makeIngredientIcon(input: Buffer): Promise<Buffer> {
     .toBuffer();
 }
 
+/** How far in from where a side starts a tile's edge is solid; a round food takes four or more. */
+const TILE_EDGE = 2;
+
+/**
+ * Whether an icon stands on a tile: an opaque rounded square drawn behind
+ * the food, as a model asked for "an app icon" sometimes does. A tile fills
+ * the icon's whole square both ways, and on all four sides it turns solid
+ * across its middle half within a couple of pixels of where it starts. A
+ * round food curves first, and a can or a glass is taller than it is wide.
+ */
+export async function standsOnTile(icon: Buffer): Promise<boolean> {
+  const { data, info } = await sharp(icon)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const size = info.width;
+  const alpha = (x: number, y: number) => data[(y * size + x) * 4 + 3]!;
+  // Each side as lines going inwards: line `d` in from the side, pixel `i` along it.
+  const sides = [
+    (d: number, i: number) => alpha(i, d),
+    (d: number, i: number) => alpha(i, size - 1 - d),
+    (d: number, i: number) => alpha(d, i),
+    (d: number, i: number) => alpha(size - 1 - d, i),
+  ];
+  const solidity = (side: (d: number, i: number) => number, d: number) => {
+    let solid = 0;
+
+    for (let i = size / 4; i < (size * 3) / 4; i++) if (side(d, i) > 128) solid++;
+
+    return solid / (size / 2);
+  };
+  const starts = sides.map((side) => {
+    for (let d = 0; d < size / 2; d++) if (solidity(side, d) > 0) return d;
+
+    return size;
+  });
+  const [top, bottom, left, right] = starts as [number, number, number, number];
+  const fillsSquare = Math.min(size - top - bottom, size - left - right) >= FOOD_SIZE - 3;
+
+  return (
+    fillsSquare &&
+    sides.every((side, at) =>
+      Array.from({ length: TILE_EDGE + 1 }, (_, d) => starts[at]! + d).some(
+        (d) => solidity(side, d) >= 0.95
+      )
+    )
+  );
+}
+
 /** An icon file's name: the first half of its content's SHA-256. */
 export function iconFileName(icon: Buffer): string {
   return `${createHash("sha256").update(icon).digest("hex").slice(0, 32)}.webp`;

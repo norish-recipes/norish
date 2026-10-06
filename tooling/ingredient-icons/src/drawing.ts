@@ -7,7 +7,7 @@ import type { ImageTier } from "@norish/shared-server/ai/runtime/providers";
 import { resetDbConnection } from "@norish/db/drizzle";
 import { drawIngredientIcon } from "@norish/shared-server/ai/enrichment/ingredient-icon-drawer";
 import { foodToDraw } from "@norish/shared-server/ingredients/icon-drafts";
-import { makeIngredientIcon } from "@norish/shared-server/media/ingredient-icon";
+import { makeIngredientIcon, standsOnTile } from "@norish/shared-server/media/ingredient-icon";
 
 export function say(...parts: unknown[]): void {
   process.stdout.write(`${parts.map(String).join(" ")}\n`);
@@ -30,13 +30,21 @@ export function seededFoods(nodes: ReadonlyMap<string, IconNode>): Map<string, s
   );
 }
 
-/** Draw one food at a tier and make it an icon. */
+/** How many drawings of one food may stand on a tile before it is given up on. */
+const TILE_ATTEMPTS = 3;
+
+/** Draw one food at a tier and make it an icon, drawing it again when the model put it on a tile. */
 export async function drawIcon(ingredientId: string, tier: ImageTier): Promise<Buffer> {
   const food = await foodToDraw(ingredientId);
 
   if (!food) throw new Error(`Ingredient ${ingredientId} is gone`);
 
-  return await makeIngredientIcon((await drawIngredientIcon(food, tier)).bytes);
+  for (let attempt = 1; ; attempt++) {
+    const icon = await makeIngredientIcon((await drawIngredientIcon(food, tier)).bytes);
+
+    if (!(await standsOnTile(icon))) return icon;
+    if (attempt === TILE_ATTEMPTS) throw new Error(`drawn on a tile ${TILE_ATTEMPTS} times`);
+  }
 }
 
 /** Run a script to its end: a failure is printed and sets the exit code, and the database is let go either way. */

@@ -20,7 +20,8 @@ export interface FoodToDraw {
  */
 const COMPOSITION = [
   "Show exactly one food, whole or as one natural portion, centred and filling most of the square.",
-  "Put it on a plain, flat, evenly lit background of one solid colour that the food itself does not contain.",
+  "Nothing stands behind it: no tile, card, badge, rounded square or frame.",
+  "Where the background cannot be transparent, make it plain, flat, evenly lit and of one solid colour that the food itself does not contain.",
   "No shadow beneath it, no reflection, and no plate, board, cutlery, garnish or other props.",
   "A food with no shape of its own sits in the plainest vessel that holds it: milk in a glass, oil in a bottle, flour in a small bowl.",
 ].join(" ");

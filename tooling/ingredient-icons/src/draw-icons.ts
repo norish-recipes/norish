@@ -19,7 +19,7 @@
  *
  * `draw-sample-icons` draws a contact sheet to approve the style first.
  */
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import type { IconNode } from "@norish/db/repositories/ingredient-icons";
@@ -27,7 +27,11 @@ import type { ImageTier } from "@norish/shared-server/ai/runtime/providers";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import { countRecipeUses, listIconCatalogue } from "@norish/db/repositories/ingredient-icons";
 import { needsOwnIcon } from "@norish/shared-server/ai/enrichment/ingredient-icon-drawer";
-import { iconFileName, iconSetDir } from "@norish/shared-server/media/ingredient-icon";
+import {
+  iconFileName,
+  iconSetDir,
+  standsOnTile,
+} from "@norish/shared-server/media/ingredient-icon";
 
 import { drawIcon, flag, run, say, seededFoods } from "./drawing";
 import { VAGUE_GROUPS } from "./vague-groups";
@@ -136,6 +140,25 @@ async function decideShares(
 }
 
 /**
+ * Take the icons a model drew on a tile out of the set, files and all, so
+ * this run draws them again. How many there were.
+ */
+async function dropTiles(manifest: Manifest): Promise<number> {
+  const icons = join(iconSetDir(), "icons");
+  let dropped = 0;
+
+  for (const [offId, file] of Object.entries(manifest.icons)) {
+    if (!(await standsOnTile(await readFile(join(icons, file))))) continue;
+    delete manifest.icons[offId];
+    await rm(join(icons, file), { force: true });
+    dropped++;
+  }
+  if (dropped > 0) await writeManifest(manifest);
+
+  return dropped;
+}
+
+/**
  * The full set: every seeded food not vague, not drawn yet and not one that
  * borrows, written as it lands. The foods this instance's recipes use most come first, so a run cut
  * short, or one told to stop after `limit`, has drawn the icons readers meet.
@@ -149,6 +172,7 @@ async function full(
   const [nodes, uses] = await Promise.all([listIconCatalogue(), countRecipeUses()]);
   const seeded = seededFoods(nodes);
   const manifest = await readManifest();
+  const tiled = await dropTiles(manifest);
   const vague = new Set(VAGUE_GROUPS);
   const shares = await decideShares(nodes, seeded, manifest, vague);
   const borrowing = Object.values(shares).filter((share) => share === "borrow").length;
@@ -158,7 +182,7 @@ async function full(
   const todo = left.slice(0, limit);
 
   say(
-    `${todo.length} icons to draw at ${tier}${todo.length < left.length ? `, the first of ${left.length} left` : ""} (${seeded.size} seeded foods, ${Object.keys(manifest.icons).length} drawn, ${borrowing} borrow, ${vague.size} vague groups).`
+    `${todo.length} icons to draw at ${tier}${todo.length < left.length ? `, the first of ${left.length} left` : ""} (${seeded.size} seeded foods, ${Object.keys(manifest.icons).length} drawn, ${borrowing} borrow, ${vague.size} vague groups${tiled > 0 ? `; ${tiled} drawn on a tile, dropped to draw again` : ""}).`
   );
   if (!confirmed) {
     say("Run again with --yes to draw them.");
