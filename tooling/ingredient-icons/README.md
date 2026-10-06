@@ -24,7 +24,8 @@ manifest as `none`, so a food under them borrows nothing vague.
 
    About twenty foods (pale ones, liquids, powders, spices, cuts of meat) at
    the low and the medium tier, on a light and a dark ground, in
-   `tooling/ingredient-icons/out/sample-sheet.png`.
+   `tooling/ingredient-icons/out/sample-sheet.png`, rewritten after each food.
+   The sample only draws into the sheet; nothing reaches the set or the app.
 
 3. **Approve.** If the style is off, tune `ingredient-icon-style.txt` in
    `packages/shared-server/src/ai/prompts/` (then run
@@ -37,10 +38,15 @@ manifest as `none`, so a food under them borrows nothing vague.
    pnpm --filter @norish/ingredient-icons-tool draw full --tier low --yes
    ```
 
-   The first says how many icons it will draw; the second draws them, four at
-   a time (`--concurrency`), writing each icon and the manifest as it lands.
-   A stopped run picks up where it stopped. Failures are listed at the end:
-   run again to retry them, or leave them to borrow their parent's.
+   The first says how many icons it will draw; the second draws them, one at a
+   time unless `--concurrency` says more, writing each icon and the manifest as
+   it lands. A refusal for the provider's rate limit is waited out. Mind the
+   limit: an OpenAI account on its first usage tier draws 5 images a minute,
+   which makes the full set of about 5,600 icons a run of some 19 hours; a
+   higher tier draws many more. A stopped run picks up where it stopped.
+   Failures are listed at the end: run again to retry them, or leave them to
+   borrow their parent's. A running Norish server picks the new set up by
+   itself.
 
 5. **Commit** the icon files and `manifest.json`. The provider's originals are
    never kept.

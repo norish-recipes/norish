@@ -630,6 +630,8 @@ export interface GenerateImageOptions {
    * the provider's default, as a dish's picture does.
    */
   tier?: ImageTier;
+  /** Ask for a transparent background where the provider can draw one: an icon's. */
+  transparent?: boolean;
 }
 
 export interface GeneratedImageBytes {
@@ -653,7 +655,7 @@ export interface GeneratedImageBytes {
  * and provider failures follow the SDK's own retryability.
  */
 export async function generateImage(options: GenerateImageOptions): Promise<GeneratedImageBytes> {
-  const { prompt: promptName, sections = [], shape = "landscape", tier } = options;
+  const { prompt: promptName, sections = [], shape = "landscape", tier, transparent } = options;
 
   const [aiConfig, imageConfig] = await Promise.all([
     getAIConfig(true),
@@ -697,7 +699,8 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
       "Sending image generation request"
     );
 
-    const providerOptions = tier ? imageModel.tier?.(tier) : undefined;
+    const providerOptions =
+      tier || transparent ? imageModel.preferences?.({ tier, transparent }) : undefined;
     const draw = () =>
       generateImageWithModel({
         model: imageModel.model,

@@ -5,14 +5,15 @@
  * AI boundary gets no second provider client:
  *
  *   pnpm --filter @norish/ingredient-icons-tool draw sample [--out <dir>]
- *   pnpm --filter @norish/ingredient-icons-tool draw full [--tier low|medium] [--concurrency 4] [--yes]
+ *   pnpm --filter @norish/ingredient-icons-tool draw full [--tier low|medium] [--concurrency 1] [--yes]
  *
  * `sample` draws a handful of chosen foods at both tiers into one contact
  * sheet, on a light and a dark ground, for the style and tier to be approved.
  * `full` draws every seeded food not on the vague-groups list and not drawn
  * already, so a stopped run resumes where it stopped: it says how many first,
- * and draws only with `--yes`, a few at once (`--concurrency`, as many as
- * the provider's rate limit allows). Each icon is written as it lands, with the
+ * and draws only with `--yes`, one at a time unless `--concurrency` says
+ * more (as many as the provider's rate limit allows; a refusal for the rate
+ * limit is waited out). Each icon is written as it lands, with the
  * manifest; the provider's 1024px originals are never kept. Failures are
  * listed at the end and left to borrow, or to the next run.
  */
@@ -110,28 +111,10 @@ function escape(text: string): string {
   return text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-/** The sample: every chosen food at both tiers, on a light and a dark ground, in one sheet. */
-async function sample(out: string): Promise<void> {
-  const seeded = await seededFoods();
-  const rows: Array<{ offId: string; icons: Partial<Record<ImageTier, Buffer>> }> = [];
+type SheetRow = { offId: string; icons: Partial<Record<ImageTier, Buffer>> };
 
-  for (const offId of SAMPLE) {
-    const id = seeded.get(offId);
-    const icons: Partial<Record<ImageTier, Buffer>> = {};
-
-    for (const tier of ["low", "medium"] as const) {
-      if (!id) break;
-      try {
-        icons[tier] = await drawIcon(id, tier);
-        say(`drew ${offId} at ${tier}`);
-      } catch (error) {
-        say(`FAILED ${offId} at ${tier}: ${error instanceof Error ? error.message : error}`);
-      }
-    }
-    if (!id) say(`skipped ${offId}: not in this catalogue`);
-    rows.push({ offId, icons });
-  }
-
+/** The contact sheet: each food's row at both tiers, on a light and a dark ground. */
+async function writeSheet(rows: readonly SheetRow[], file: string): Promise<void> {
   const width = LABEL + COLUMNS.length * CELL;
   const height = HEADER + rows.length * CELL;
   const text = (x: number, y: number, body: string, fill = "#18181b") =>
@@ -159,13 +142,7 @@ async function sample(out: string): Promise<void> {
           const icon = row.icons[column.tier];
 
           return icon
-            ? [
-                {
-                  input: icon,
-                  left: LABEL + at * CELL + inset,
-                  top: HEADER + index * CELL + inset,
-                },
-              ]
+            ? [{ input: icon, left: LABEL + at * CELL + inset, top: HEADER + index * CELL + inset }]
             : [];
         })
       )
@@ -173,9 +150,39 @@ async function sample(out: string): Promise<void> {
     .png()
     .toBuffer();
 
+  await writeFile(file, sheet);
+}
+
+/**
+ * The sample: every chosen food at both tiers, into a contact sheet that is
+ * rewritten after each food, so it can be watched as it fills. It draws into
+ * the sheet only: nothing reaches the set or an instance.
+ */
+async function sample(out: string): Promise<void> {
+  const seeded = await seededFoods();
+  const file = join(out, "sample-sheet.png");
+  const rows: SheetRow[] = [];
+
   await mkdir(out, { recursive: true });
-  await writeFile(join(out, "sample-sheet.png"), sheet);
-  say(`Wrote ${join(out, "sample-sheet.png")}`);
+  say(`Drawing the sample into ${file}`);
+  for (const offId of SAMPLE) {
+    const id = seeded.get(offId);
+    const icons: Partial<Record<ImageTier, Buffer>> = {};
+
+    for (const tier of ["low", "medium"] as const) {
+      if (!id) break;
+      try {
+        icons[tier] = await drawIcon(id, tier);
+        say(`drew ${offId} at ${tier}`);
+      } catch (error) {
+        say(`FAILED ${offId} at ${tier}: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+    if (!id) say(`skipped ${offId}: not in this catalogue`);
+    rows.push({ offId, icons });
+    await writeSheet(rows, file);
+  }
+  say(`Wrote ${file}`);
 }
 
 async function readManifest(): Promise<Manifest> {
@@ -265,7 +272,8 @@ async function main(): Promise<void> {
   } else if (mode === "full") {
     const tier = flag("--tier") ?? "low";
 
-    const concurrency = Number(flag("--concurrency") ?? 4);
+    // One at a time unless asked: a new account draws only a few images a minute.
+    const concurrency = Number(flag("--concurrency") ?? 1);
 
     if (tier !== "low" && tier !== "medium") throw new Error(`Unknown tier: ${tier}`);
     if (!Number.isInteger(concurrency) || concurrency < 1)

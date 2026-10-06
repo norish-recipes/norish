@@ -272,7 +272,14 @@ export type ImageTier = "low" | "medium";
 /** The provider options a request carries, by provider. */
 export type ImageProviderOptions = Record<string, Record<string, string>>;
 
-/** An image model plus how to ask it for each shape, and for a tier where it has them. */
+/** What a request may ask of an image model beyond its shape, where the provider has a way to. */
+export interface ImageRequestPreferences {
+  tier?: ImageTier;
+  /** The picture standing on nothing, so no background has to be cut away. */
+  transparent?: boolean;
+}
+
+/** An image model plus how to ask it for each shape, and for a tier or transparency where it has them. */
 export interface ImageModelConfig {
   model: ImageModel;
   providerName: string;
@@ -280,8 +287,8 @@ export interface ImageModelConfig {
   landscape: ImageShape;
   /** A square, for an Ingredient Icon: 1024×1024, or the provider's square aspect. */
   square: ImageShape;
-  /** The options asking for a tier; absent where the provider has none, which leaves it unchanged. */
-  tier?: (tier: ImageTier) => ImageProviderOptions;
+  /** The options asking for a tier and transparency; absent where the provider has neither, which leaves it unchanged. */
+  preferences?: (asked: ImageRequestPreferences) => ImageProviderOptions;
 }
 
 /** The square every provider that takes a size accepts. */
@@ -298,11 +305,17 @@ function openAILandscapeSize(model: string): `${number}x${number}` {
 }
 
 /**
- * OpenAI's quality tiers, asked of every model: a model that refuses the
- * tier (DALL·E only knows `standard` and `hd`) is asked again without it and
- * draws at its default, which is its cheapest (ADR-0014).
+ * OpenAI's quality tiers and transparent background, asked of every model:
+ * a model that refuses one (DALL·E only knows `standard` and `hd`, and draws
+ * no transparency) is asked again without it, drawing at its default, which
+ * is its cheapest, or on a background that is then cut away (ADR-0014).
  */
-const openAITier: ImageModelConfig["tier"] = (tier) => ({ openai: { quality: tier } });
+const openAIPreferences: ImageModelConfig["preferences"] = ({ tier, transparent }) => ({
+  openai: {
+    ...(tier ? { quality: tier } : {}),
+    ...(transparent ? { background: "transparent" } : {}),
+  },
+});
 
 /**
  * Build an image model from the Image Generation block. Only the providers
@@ -332,7 +345,7 @@ export function createImageModelFromConfig(config: {
         providerName: "OpenAI",
         landscape: { size: openAILandscapeSize(model) },
         square: SQUARE,
-        tier: openAITier,
+        preferences: openAIPreferences,
       };
     }
 
@@ -360,7 +373,7 @@ export function createImageModelFromConfig(config: {
         landscape: { size: openAILandscapeSize(model) },
         square: SQUARE,
         // Azure's image model is OpenAI's, reading the same `openai` options.
-        tier: openAITier,
+        preferences: openAIPreferences,
       };
     }
 

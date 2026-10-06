@@ -14,7 +14,7 @@
  * tree (vegetable, dairy) are shipped with no icon, so borrowing stops
  * before it turns vague; they stop nothing themselves.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 
@@ -43,15 +43,21 @@ const IconSetSchema = z.object({
   none: z.array(z.string()),
 });
 
-let shipped: IconSet | null = null;
+let shipped: { set: IconSet; mtimeMs: number } | null = null;
 
-/** The set this release ships, read once. */
+/**
+ * The set this release ships, read again only when its manifest changed, so
+ * a running server picks up the set the drawing tool has just written.
+ */
 export function shippedIconSet(): IconSet {
-  shipped ??= IconSetSchema.parse(
-    JSON.parse(readFileSync(join(iconSetDir(), "manifest.json"), "utf-8"))
-  );
+  const manifest = join(iconSetDir(), "manifest.json");
+  const { mtimeMs } = statSync(manifest);
 
-  return shipped;
+  if (shipped?.mtimeMs !== mtimeMs) {
+    shipped = { set: IconSetSchema.parse(JSON.parse(readFileSync(manifest, "utf-8"))), mtimeMs };
+  }
+
+  return shipped.set;
 }
 
 /** How far up the tree a food borrows: the lineage query's own depth. */

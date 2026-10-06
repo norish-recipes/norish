@@ -50,6 +50,8 @@ interface CapturedRequest {
 
 let captured: CapturedRequest[] = [];
 let reply: () => { status: number; body: unknown } = () => ({ status: 200, body: {} });
+/** Headers a refusal for the rate limit carries, as OpenAI's do. */
+let rateLimitHeaders: Record<string, string> = {};
 let holdResponses = false;
 
 const server = createServer((req, res) => {
@@ -69,6 +71,9 @@ const server = createServer((req, res) => {
     const { status, body } = reply();
 
     res.statusCode = status;
+    if (status === 429) {
+      for (const [name, value] of Object.entries(rateLimitHeaders)) res.setHeader(name, value);
+    }
     res.setHeader("content-type", "application/json");
     res.end(JSON.stringify(body));
   });
@@ -115,6 +120,7 @@ function imageConfig(overrides: Partial<ImageGenerationConfig> = {}): ImageGener
 
 beforeEach(() => {
   resetImageParameterFallback();
+  rateLimitHeaders = {};
   captured = [];
   holdResponses = false;
   reply = () => ({ status: 200, body: { data: [{ b64_json: imageBase64 }] } });
@@ -350,6 +356,55 @@ describe("generateImage", () => {
       expect(captured[2]!.body.quality).toBe("low");
     });
 
+    it("asks an OpenAI-family model for a transparent background, and a dish's picture for none", async () => {
+      mockGetImageGenerationConfig.mockResolvedValue(
+        imageConfig({
+          provider: "azure",
+          model: "gpt-image-1-mini",
+          endpoint: baseUrl,
+          apiKey: "k",
+        })
+      );
+
+      await drawIngredientIcon({ name: "pepper", kindOf: [] });
+      await generateImage({ prompt: "image-generation-style", sections: [] });
+
+      expect(captured[0]!.body.background).toBe("transparent");
+      expect(captured[1]!.body).not.toHaveProperty("background");
+    });
+
+    it("cuts the background away itself where the model refuses transparency", async () => {
+      mockGetImageGenerationConfig.mockResolvedValue(
+        imageConfig({ provider: "azure", model: "dall-e-3", endpoint: baseUrl, apiKey: "k" })
+      );
+      reply = () =>
+        "background" in (captured.at(-1)?.body ?? {})
+          ? refusing("background")
+          : { status: 200, body: { data: [{ b64_json: imageBase64 }] } };
+
+      await drawIngredientIcon({ name: "pepper", kindOf: [] });
+
+      expect(captured.map((request) => request.body.background)).toEqual([
+        "transparent",
+        undefined,
+      ]);
+    });
+
+    it("waits out the provider's rate limit, as long as it asks, and draws", async () => {
+      let refusals = 1;
+
+      reply = () =>
+        refusals-- > 0
+          ? { status: 429, body: { error: { message: "Rate limit reached", type: "requests" } } }
+          : { status: 200, body: { data: [{ b64_json: imageBase64 }] } };
+      rateLimitHeaders = { "retry-after-ms": "20" };
+
+      const drawn = await drawIngredientIcon({ name: "pepper", kindOf: [] });
+
+      expect(drawn.bytes.equals(Buffer.from(imageBase64, "base64"))).toBe(true);
+      expect(captured).toHaveLength(2);
+    });
+
     it("draws at the model's default where it refuses the tier", async () => {
       mockGetImageGenerationConfig.mockResolvedValue(
         imageConfig({ provider: "azure", model: "dall-e-3", endpoint: baseUrl, apiKey: "k" })
@@ -393,7 +448,7 @@ describe("generateImage", () => {
         });
 
         expect(model.square).toEqual(square);
-        expect(model.tier?.("low")).toEqual(low);
+        expect(model.preferences?.({ tier: "low" })).toEqual(low);
       }
     );
 
