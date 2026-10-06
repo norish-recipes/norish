@@ -76,7 +76,10 @@ export async function drawIngredientIcon(
 /**
  * At or above this probability that a food looks clearly different from the
  * icon it would borrow, it is drawn one of its own; below it, it borrows:
- * every olive oil shows the one bottle.
+ * every olive oil shows the one bottle. Jev answers this question between
+ * about 0.25 and 0.75, and a bar above 0.5 loses onion (0.55) and chicken
+ * breast (0.53) before it loses a raspberry variety (0.61): at 0.8 only 4 of
+ * 4,657 foods were drawn.
  */
 export const OWN_ICON_THRESHOLD = 0.5;
 
