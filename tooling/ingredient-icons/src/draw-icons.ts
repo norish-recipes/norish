@@ -12,10 +12,12 @@
  * borrow. It draws every other food not on the vague-groups list and not
  * drawn already, so a stopped run resumes where it stopped: it says how many
  * first, and draws only with `--yes`, one at a time unless `--concurrency`
- * says more (as many as the provider's rate limit allows; a refusal for the
- * rate limit is waited out). Each icon is written as it lands, with the
- * manifest; the provider's 1024px originals are never kept. Failures are
- * listed at the end and left to borrow, or to the next run.
+ * says more (as many as the provider's rate limit allows). A refusal for the
+ * rate limit is waited out, and a provider failure a retry can fix (a 5xx, a
+ * timeout) is asked again a few times, so a run can be left to finish. Each
+ * icon is written as it lands, with the manifest; the provider's 1024px
+ * originals are never kept. Failures are listed at the end and left to
+ * borrow, or to the next run.
  *
  * `draw-sample-icons` draws a contact sheet to approve the style first.
  */
