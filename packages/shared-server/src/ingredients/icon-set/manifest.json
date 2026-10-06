@@ -1,4 +1,13 @@
 {
-  "icons": {},
-  "none": []
+  "icons": {
+    "en:onion": "924fbb873a264d04b3082d2ee307a61d.webp",
+    "en:garlic": "0dfbc8f18e3499f318a5d7907056fbc4.webp",
+    "en:tomato": "9a077f1ca746bb54e7eee38d80081d1e.webp",
+    "en:carrot": "7752343514ff666d4da8f1645ad7e5f2.webp",
+    "en:egg": "949cb612f6ef8282263346745deda1b0.webp"
+  },
+  "none": [
+    "en:fruit",
+    "en:vegetable"
+  ]
 }
