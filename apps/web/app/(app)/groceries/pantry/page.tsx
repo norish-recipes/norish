@@ -1,9 +1,4 @@
-import { PantryView } from "@/components/groceries";
-
-/**
- * The Pantry: the foods the household keeps, the second view of Groceries
- * with an address of its own, under the layout it shares with the list.
- */
+/** The Pantry's address. The Groceries layout renders the view itself. */
 export default function PantryPage() {
-  return <PantryView />;
+  return null;
 }

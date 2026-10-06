@@ -21,7 +21,6 @@ import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
 
 import { useGroceriesContext, useGroceriesUiContext } from "../context";
 import { useStoresContext } from "../stores-context";
-import AddGroceryButton from "./add-grocery-button";
 
 export function GroceriesPage() {
   const {
@@ -172,9 +171,6 @@ export function GroceriesPage() {
           className="shrink-0 md:hidden"
           style={{ height: cssFloatingDockContentClearance }}
         />
-
-        {/* Mobile: Floating add button that syncs with nav auto-hide */}
-        <AddGroceryButton />
       </div>
 
       {/* Panels */}

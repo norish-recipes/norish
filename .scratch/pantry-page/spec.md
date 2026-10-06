@@ -107,7 +107,7 @@ The Pantry is still consulted in one place only: when a recipe is added to the g
 
 **The page.**
 
-- A second view of Groceries with its own address under the groceries route. The Groceries header, kept mounted by a shared layout, carries a two-way _List · Pantry_ switch (the app's segmented Tabs toggle; changed 2026-10-05 after review from plain links) on both views, and its title reads _Pantry_ on the Pantry; it replaces the Pantry item in the cog menu, and the Pantry panel is removed.
+- A second view of Groceries with its own address under the groceries route. The Groceries header, kept mounted by a shared layout, carries a two-way _List · Pantry_ switch (the app's segmented Tabs toggle; changed 2026-10-05 after review from plain links) on both views; the switch only rewrites the address, so the views slide across on the client with no navigation (changed 2026-10-05 after review: it navigated, and jumped), and its title reads _Pantry_ on the Pantry; it replaces the Pantry item in the cog menu, and the Pantry panel is removed.
 - The Pantry view hides the cog menu, the desktop _Add item_ button and the floating add button. The dock's Groceries entry is active on both views.
 - The page renders under the same providers as the list, because it reads the household's groceries and creates them.
 - Kept foods are sorted by the reader's display name (the existing sort). A row is the display name, a button that opens the food's Ingredient panel, and at its end either an icon button _Put on the list_ (with that accessible name) or an _On the list_ mark. A row added offline that has no Ingredient yet shows its name without opening a panel until it syncs.

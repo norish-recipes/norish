@@ -15,8 +15,7 @@ function offlineSurface(pathname: string) {
   const path = pathname.replace(/\/+$/, "") || "/";
 
   if (path === "/") return <Dashboard />;
-  if (path === "/groceries") return <GroceriesScreen />;
-  if (path === "/groceries/pantry") return <GroceriesScreen view="pantry" />;
+  if (path === "/groceries" || path === "/groceries/pantry") return <GroceriesScreen />;
   if (path === "/calendar") return <CalendarPage />;
 
   const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];

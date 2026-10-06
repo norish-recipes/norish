@@ -1,6 +1,4 @@
-import { GroceriesPage as GroceriesPageContent } from "./components/groceries-page";
-
-/** The grocery list: the first view of Groceries, under the shared layout. */
+/** The grocery list's address. The Groceries layout renders the view itself. */
 export default function GroceriesPage() {
-  return <GroceriesPageContent />;
+  return null;
 }
