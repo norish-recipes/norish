@@ -22,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergien",
-      "description": "Geben Sie Ihre Lebensmittelallergien an, um Warnungen zu erhalten, wenn Sie Rezepte planen, die Allergene enthalten. Diese Informationen werden verwendet, um Sie zu warnen, wenn ein geplantes Rezept Zutaten enthält, die Ihren Allergien entsprechen.",
+      "description": "Geben Sie Ihre Lebensmittelallergien an, um beim Planen von Rezepten mit Allergenen gewarnt zu werden.",
       "placeholder": "Geben Sie Allergien an (z.B. Gluten, Nüsse, Milchprodukte)...",
       "saveButton": "Allergien speichern"
     },
     "apiKeys": {
       "title": "API-Schlüssel",
-      "description": "API-Schlüssel ermöglichen programmatischen Zugriff auf die Norish API. Nutzen Sie sie für Integrationen, Shortcuts und Automatisierung.",
+      "description": "Mit API-Schlüsseln können Sie eigene Integrationen, Shortcuts und Automatisierungen bauen.",
       "docsLink": "API-Dokumentation öffnen",
       "keyNameLabel": "Schlüsselbenennung (optional)",
       "keyNamePlaceholder": "z.B. iOS-Verknüpfung",
@@ -62,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Rezeptarchiv importieren",
-      "description": "Importiere Rezepte aus Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) oder Mealie/Tandoor (.zip)-Exporten"
+      "description": "Importieren Sie Rezepte, die aus Norish, Mela, Paprika, Mealie oder Tandoor exportiert wurden."
     },
     "archiveExport": {
       "title": "Rezeptarchiv exportieren",
@@ -71,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Website-Authentifizierungstoken",
-      "description": "Fügen Sie Header oder Cookies hinzu, die beim Importieren von Rezepten von bestimmten Websites gesendet werden. Nützlich für Websites, die eine Anmeldung erfordern (z.B. Instagram, Facebook).",
+      "description": "Header oder Cookies, die beim Import von Websites mit Anmeldung gesendet werden, etwa Instagram oder Facebook.",
       "accountsDescription": "Benennen Sie ein Konto, wenn Sie mehrere Anmeldungen für eine Website haben. Jeder Import verwendet dann eines der Konten dieser Website, zufällig ausgewählt, sodass nicht eine einzelne Anmeldung alle Importe trägt. Ein Token ohne Kontonamen wird bei jedem Import für diese Domain gesendet.",
       "domain": "Domain",
       "domainPlaceholder": "z.B. instagram.com",
@@ -99,7 +99,8 @@
         "title": "Token löschen",
         "message": "Sind Sie sicher, dass Sie dieses Authentifizierungstoken löschen möchten? Importe von dieser Website funktionieren möglicherweise nicht mehr.",
         "confirmButton": "Token löschen"
-      }
+      },
+      "accountsHelp": "Über Konten"
     },
     "dangerZone": {
       "title": "Gefahrenzone",
@@ -123,7 +124,7 @@
       },
       "hidden": {
         "title": "Ausgeblendete Elemente",
-        "description": "Wählen Sie, was Ihnen lieber nicht angezeigt werden soll. Standardmäßig wird alles angezeigt, und dies ändert nur Ihre eigene Ansicht.",
+        "description": "Blenden Sie Elemente aus, die Sie nicht sehen möchten",
         "placeholder": "Nichts ausgeblendet",
         "options": {
           "provenance": "Herkunft",
@@ -139,7 +140,7 @@
       },
       "todaySection": {
         "title": "Heute-Bereich",
-        "description": "Wählen Sie, wie der Heute-Bereich auf dem Dashboard auf diesem Gerät angezeigt wird",
+        "description": "Wie sich der Heute-Bereich auf dem Dashboard verhält",
         "options": {
           "always": "Immer sichtbar",
           "planned": "Nur geplante Mahlzeiten",
@@ -148,7 +149,7 @@
       },
       "recipePageColor": {
         "title": "Farbe der Rezeptseiten",
-        "description": "Färben Sie jede Rezeptseite im Ton ihres eigenen Fotos, oder behalten Sie auf diesem Gerät die normalen Themenfarben",
+        "description": "Rezeptseite dynamisch einfärben oder den Themenfarben folgen",
         "options": {
           "dish": "Aus dem Foto des Gerichts",
           "theme": "Normale Themenfarben"
@@ -185,7 +186,6 @@
     }
   },
   "household": {
-    "pageTitle": "Haushaltseinstellungen",
     "info": {
       "yourRole": "Ihre Rolle",
       "admin": "Administrator",
@@ -334,7 +334,7 @@
   },
   "ingredients": {
     "title": "Zutaten",
-    "description": "Jedes Lebensmittel, das Norish kennt, mit den Übersetzungen, unter denen es bekannt ist. Norish markiert die, bei denen es unsicher war: Führen Sie sie mit dem Lebensmittel zusammen, das sie sind, oder markieren Sie sie als eigenständig.",
+    "description": "Der Zutatenkatalog, mit dem Norish Nährwerte, Zutatensymbole und Übersetzungen bestimmt.",
     "search": "Zutaten suchen",
     "searchMatch": "Treffer",
     "searchIn": "Suchen in",
@@ -692,11 +692,11 @@
         "owner": "Nur Eigentümer",
         "ownerDescription": "Nur der Rezept-Eigentümer"
       },
-      "note": "Einkaufslisten- und Kalendereinträge folgen automatisch den Haushaltsregeln. Haushaltsmitglieder können Einträge aller anderen im gleichen Haushalt immer bearbeiten/löschen."
+      "note": "Einkaufs- und Kalendereinträge folgen immer den Haushaltsregeln: Haushaltsmitglieder können die Einträge der anderen bearbeiten oder löschen."
     },
     "ingredientPermissions": {
       "title": "Zutatenberechtigungen",
-      "description": "Legen Sie fest, wer Zutaten umbenennen, als eigenständig markieren und ihre Übersetzungen entfernen darf. Jeder darf eine Übersetzung hinzufügen, und Serveradministratoren haben immer vollen Zugriff.",
+      "description": "Wer Zutaten umbenennen, als eigenständig markieren oder ihre Übersetzungen entfernen darf. Jeder darf eine Übersetzung hinzufügen.",
       "editIngredients": "Zutaten bearbeiten",
       "editDescription": "Wer eine Zutat ändern darf, die jemand anderes hinzugefügt hat",
       "levels": {
@@ -735,7 +735,7 @@
     "authProviders": {
       "title": "Authentifizierungsanbieter",
       "requiresRestart": "Neustart erforderlich",
-      "description": "Konfiguriere Authentifizierungsmethoden. Änderungen erfordern einen Server-Neustart.",
+      "description": "Legen Sie fest, wie man sich anmeldet.",
       "passwordAuth": {
         "title": "E-Mail & Passwort",
         "description": "Erlauben Sie Benutzern, sich mit E-Mail und Passwort anzumelden"
@@ -756,7 +756,7 @@
         },
         "claimMapping": {
           "title": "Claim-Zuordnung",
-          "description": "Automatisch Rollen und Haushalte basierend auf OIDC-Claims zuweisen. Benutzer mit der Admin-Gruppe erhalten Server-Admin-Privilegien. Benutzer mit einer Haushalts-Gruppe werden automatisch diesem Haushalt hinzugefügt.",
+          "description": "Admin-Rechte und Haushalte anhand der Gruppen-Claims Ihres Anbieters zuweisen.",
           "securityWarning": "Warnung: Das Aktivieren der Claim-Zuordnung ermöglicht Ihrem Identitätsanbieter, Admin-Privilegien und Haushaltsmitgliedschaften zu kontrollieren. Aktivieren Sie dies nur, wenn Sie Ihrem OIDC-Anbieter vollständig vertrauen und die Group-Claims richtig konfiguriert haben.",
           "scopes": "Zusätzliche Scopes",
           "scopesPlaceholder": "groups, roles",
@@ -816,12 +816,12 @@
       "ingredientWords": {
         "title": "Zutatenwörter",
         "subtitle": "Wörter, nach denen Zutatennamen gelesen werden, je Sprache",
-        "description": "Die Wörter, über die Norish hinwegliest, wenn es einen Zutatennamen einem Lebensmittel zuordnet, je Sprache: Zubereitung („gewürfelt“), Größen („groß“), Schätzungen („etwa“), worin oder womit etwas kommt („in Olivenöl“), Wörter, die nie ein Lebensmittel bezeichnen („und“), und die Plural- und Verkleinerungsendungen, die „Zwiebeln“ zur Zwiebel machen. Jede Sprache gilt für jeden Namen."
+        "description": "Wörter, die Norish beim Abgleich von Zutatennamen überspringt, etwa „gehackt“, „groß“ oder das „n“ in „Zwiebeln“."
       },
       "recurrence": {
         "title": "Wiederholungsmuster",
         "subtitle": "Natürlichsprachige Muster für wiederkehrende Einträge",
-        "description": "Definieren Sie gebietsschemaspezifische Muster zum Parsen von Wiederholungsregeln aus natürlicher Sprache (z. B. 'jede Woche', 'jeden Tag')."
+        "description": "Wörter je Sprache, durch die sich ein Einkaufseintrag wiederholt, etwa „jede Woche“ oder „jeden zweiten Tag“."
       },
       "timerKeywords": {
         "title": "Timer-Schlüsselwörter",
@@ -870,7 +870,7 @@
       "bulkEnrichment": {
         "title": "Massen-Anreicherung",
         "subtitle": "Aktivierte Anreicherung für alle Rezepte ausführen",
-        "description": "Stellen Sie für alle Rezepte auf diesem Server jede Anreicherungsart in die Warteschlange, deren automatischer Schalter aktiviert ist. Standardmäßig werden nur Lücken gefüllt; in der Bestätigung können Sie vorhandene Daten überschreiben lassen.",
+        "description": "Alle aktivierten Anreicherungen in die Warteschlange stellen",
         "button": "Alle Rezepte anreichern",
         "confirmTitle": "Anreicherung für alle Rezepte ausführen?",
         "confirmMessage": "Dies stellt KI-Arbeit für jedes Rezept auf diesem Server in die Warteschlange. Jede Anreicherungsart, deren automatischer Schalter aktiviert ist, läuft überall dort, wo Daten fehlen.",
@@ -922,7 +922,7 @@
       "testConnection": "Verbindung testen",
       "vision": "Vision",
       "automaticEnrichment": "Automatische Rezeptanreicherung",
-      "automaticEnrichmentDescription": "Wählen Sie, welche KI-Anreicherung für neue Rezepte automatisch läuft. Mitglieder können jede Anreicherung weiterhin manuell starten, solange KI aktiviert ist.",
+      "automaticEnrichmentDescription": "Welche KI-Anreicherungen bei neuen Rezepten laufen. Mitglieder können jede weiterhin manuell starten.",
       "automaticEnrichmentPlaceholder": "Nichts läuft automatisch",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatische Tags",
@@ -1000,7 +1000,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Leer lassen für lokale Server"
     },
     "imageGenerationConfig": {
-      "description": "Die Bildgenerierung nutzt einen eigenen Anbieter, da die meisten KI-Anbieter nicht zeichnen können. Bilder werden mit diesem Anbieter erzeugt; der KI-Anbieter oben übernimmt alles andere.",
+      "description": "Bilder brauchen einen eigenen Anbieter, da die meisten KI-Anbieter nicht zeichnen können.",
       "provider": "Bild-Anbieter",
       "providers": {
         "disabled": "Deaktiviert",
@@ -1217,7 +1217,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "Wie viele abgeschlossene Jobs pro Warteschlange behalten werden."
       },
       "pagination": "Page {current} of {total}"
     },

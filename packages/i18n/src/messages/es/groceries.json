@@ -101,7 +101,7 @@
     "undo": "Deshacer",
     "keepFailed": "No se pudo añadir {name} a la despensa",
     "fromYourRecipes": "De tus recetas",
-    "fromYourRecipesHint": "Los alimentos que más usan tus recetas. Añade los que siempre tienes en casa.",
+    "fromYourRecipesHint": "Ingredientes más usados",
     "inRecipes": "{count, plural, one {en # receta} other {en # recetas}}",
     "showMore": "Mostrar más",
     "inYourPantry": "En tu despensa",

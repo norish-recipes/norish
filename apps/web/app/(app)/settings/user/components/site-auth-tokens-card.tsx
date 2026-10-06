@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { InfoHint } from "@/components/shared/info-hint";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PlusIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
@@ -121,7 +122,6 @@ export default function SiteAuthTokensCard() {
         </Card.Header>
         <Card.Content className="gap-4">
           <p className="text-muted text-base">{t("description")}</p>
-          <p className="text-muted text-base">{t("accountsDescription")}</p>
 
           {/* Create form */}
           <div className="flex flex-col gap-3">
@@ -131,7 +131,10 @@ export default function SiteAuthTokensCard() {
                 <Input variant="secondary" placeholder={t("domainPlaceholder")} />
               </TextField>
               <TextField className="min-w-0" value={account} onChange={setAccount}>
-                <Label>{t("account")}</Label>
+                <span className="flex items-center gap-1">
+                  <Label>{t("account")}</Label>
+                  <InfoHint label={t("accountsHelp")}>{t("accountsDescription")}</InfoHint>
+                </span>
                 <Input variant="secondary" placeholder={t("accountPlaceholder")} />
               </TextField>
               <TextField className="min-w-0" value={name} onChange={setName}>

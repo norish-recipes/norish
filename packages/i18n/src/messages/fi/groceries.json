@@ -101,7 +101,7 @@
     "undo": "Kumoa",
     "keepFailed": "Kohdetta {name} ei voitu lisätä ruokakomeroon",
     "fromYourRecipes": "Resepteistäsi",
-    "fromYourRecipesHint": "Ruoat, joita reseptisi käyttävät eniten. Lisää ne, joita teillä on aina kotona.",
+    "fromYourRecipesHint": "Käytetyimmät ainesosat",
     "inRecipes": "{count, plural, one {# reseptissä} other {# reseptissä}}",
     "showMore": "Näytä lisää",
     "inYourPantry": "Ruokakomerossasi",

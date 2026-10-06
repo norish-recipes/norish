@@ -22,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergier",
-      "description": "Legg til matallergiene dine for å motta advarsler når du planlegger oppskrifter som inneholder allergener. Denne informasjonen brukes til å advare deg når en planlagt oppskrift inneholder ingredienser som samsvarer med allergiene dine.",
+      "description": "Legg til matallergiene dine for å få advarsler når du planlegger oppskrifter med allergener.",
       "placeholder": "Skriv allergier (f.eks. gluten, nøtter, meieriprodukter)...",
       "saveButton": "Lagre allergier"
     },
     "apiKeys": {
       "title": "API-nøkler",
-      "description": "API-nøkler gir programmatisk tilgang til Norish API. Bruk dem til integrasjoner, snarveier og automatisering.",
+      "description": "API-nøkler kan brukes til å lage egne integrasjoner, snarveier og automatiseringer.",
       "docsLink": "Åpne API-dokumentasjon",
       "keyNameLabel": "Nøkkelnavn (valgfritt)",
       "keyNamePlaceholder": "f.eks. iOS-snarvei",
@@ -62,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Importer oppskriftarkiv",
-      "description": "Importer oppskrifter fra Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) eller Mealie/Tandoor (.zip)-eksporter"
+      "description": "Importer oppskrifter eksportert fra Norish, Mela, Paprika, Mealie eller Tandoor."
     },
     "archiveExport": {
       "title": "Eksporter oppskriftsarkiv",
@@ -71,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Nettstedsautentiseringstokens",
-      "description": "Legg til headere eller informasjonskapsler som sendes ved import av oppskrifter fra bestemte nettsteder. Nyttig for nettsteder som krever innlogging (f.eks. Instagram, Facebook).",
+      "description": "Headere eller informasjonskapsler som sendes ved import fra nettsteder som krever innlogging, f.eks. Instagram eller Facebook.",
       "accountsDescription": "Gi kontoen et navn når du har mer enn én pålogging for et nettsted. Hver import bruker da en av nettstedets kontoer, valgt tilfeldig, slik at ikke én pålogging bærer alle importene. Et token uten kontonavn sendes med hver import for domenet sitt.",
       "domain": "Domene",
       "domainPlaceholder": "f.eks. instagram.com",
@@ -99,7 +99,8 @@
         "title": "Slett token",
         "message": "Er du sikker på at du vil slette dette autentiseringstokenet? Import fra dette nettstedet kan slutte å fungere.",
         "confirmButton": "Slett token"
-      }
+      },
+      "accountsHelp": "Om kontoer"
     },
     "dangerZone": {
       "title": "Faresone",
@@ -123,7 +124,7 @@
       },
       "hidden": {
         "title": "Skjulte elementer",
-        "description": "Velg hva du helst ikke vil se. Alt vises som standard, og dette endrer bare din egen visning.",
+        "description": "Skjul elementer du ikke vil se",
         "placeholder": "Ingenting skjult",
         "options": {
           "provenance": "Opphav",
@@ -139,7 +140,7 @@
       },
       "todaySection": {
         "title": "I dag-seksjon",
-        "description": "Velg hvordan I dag-seksjonen på dashbordet vises på denne enheten",
+        "description": "Hvordan I dag-seksjonen på dashbordet oppfører seg",
         "options": {
           "always": "Alltid synlig",
           "planned": "Kun planlagte måltider",
@@ -148,7 +149,7 @@
       },
       "recipePageColor": {
         "title": "Farge på oppskriftssider",
-        "description": "Ton hver oppskriftsside med fargene fra sitt eget foto, eller behold temaets farger på denne enheten",
+        "description": "Ton oppskriftssiden dynamisk eller følg temaets farger",
         "options": {
           "dish": "Fra rettens foto",
           "theme": "Temaets farger"
@@ -185,7 +186,6 @@
     }
   },
   "household": {
-    "pageTitle": "Husstandsinnstillinger",
     "info": {
       "yourRole": "Din rolle",
       "admin": "Administrator",
@@ -334,7 +334,7 @@
   },
   "ingredients": {
     "title": "Ingredienser",
-    "description": "Alle matvarer Norish kjenner, med oversettelsene de er kjent under. Norish markerer dem det var usikker på: slå dem sammen med matvaren de er, eller marker dem som egne.",
+    "description": "Ingredienskatalogen Norish bruker til å bestemme næringsinnhold, ingrediensikoner og oversettelser.",
     "search": "Søk i ingredienser",
     "searchMatch": "Treff",
     "searchIn": "Søk i",
@@ -692,11 +692,11 @@
         "owner": "Bare eieren",
         "ownerDescription": "Bare oppskriftens eier"
       },
-      "note": "Merk: Handlelister og kalenderhendelser følger husstandsregler automatisk; husstandsmedlemmer kan alltid redigere/slette elementer som tilhører hvem som helst i samme husstand."
+      "note": "Handlelister og kalenderelementer følger alltid husstandens regler: husstandsmedlemmer kan redigere eller slette hverandres elementer."
     },
     "ingredientPermissions": {
       "title": "Ingredienstillatelser",
-      "description": "Bestem hvem som kan gi ingredienser nytt navn, markere dem som egne og fjerne oversettelsene deres. Alle kan legge til en oversettelse, og serveradministratorer har alltid full tilgang.",
+      "description": "Hvem som kan gi ingredienser nytt navn, markere dem som egne eller fjerne oversettelsene deres. Alle kan legge til en oversettelse.",
       "editIngredients": "Rediger ingredienser",
       "editDescription": "Hvem som kan endre en ingrediens noen andre har lagt til",
       "levels": {
@@ -735,7 +735,7 @@
     "authProviders": {
       "title": "Autentiseringsleverandører",
       "requiresRestart": "Krever omstart",
-      "description": "Konfigurer autentiseringsmetoder. Endringer krever en serveromstart for å tre i kraft.",
+      "description": "Konfigurer hvordan folk logger inn.",
       "passwordAuth": {
         "title": "E-post og passord",
         "description": "Tillat brukere å logge inn med e-post og passord"
@@ -756,7 +756,7 @@
         },
         "claimMapping": {
           "title": "Krav-mapping",
-          "description": "Tildel automatisk roller og husstander basert på OIDC-krav. Brukere med administratorgruppen får serveradministratorrettigheter. Brukere med en husstandsgruppe meldes automatisk inn i den husstanden.",
+          "description": "Tildel administratorrettigheter og husstander ut fra leverandørens gruppekrav.",
           "securityWarning": "Advarsel: Aktivering av krav-mapping gir identitetsleverandøren din kontroll over administratorrettigheter og husstandsmedlemskap. Aktiver dette bare hvis du fullt ut stoler på OIDC-leverandøren din og har konfigurert gruppekravene riktig.",
           "scopes": "Ytterligere scopes",
           "scopesPlaceholder": "groups, roles",
@@ -816,12 +816,12 @@
       "ingredientWords": {
         "title": "Ingrediensord",
         "subtitle": "Ord ingrediensnavn leses etter, per språk",
-        "description": "Ordene Norish leser forbi når det knytter et ingrediensnavn til en matvare, per språk: tilberedning (“hakket”), størrelser (“stor”), tilnærminger (“ca.”), hva en matvare kommer i eller med (“i olivenolje”), ord som aldri er en matvare (“og”), og flertalls- og diminutivendelsene som gjør “tomater” til tomat. Hvert språk gjelder for hvert navn."
+        "description": "Ord Norish hopper over når det matcher ingrediensnavn, f.eks. «hakket», «stor» eller «er» i «tomater»."
       },
       "recurrence": {
         "title": "Gjentakelsesmønstre",
         "subtitle": "Mønstre i naturlig språk for tilbakevendende elementer",
-        "description": "Definer språkspesifikke mønstre for analyse av gjentakelsesregler fra naturlig språk (f.eks. 'hver uke', 'hver dag')."
+        "description": "Ord per språk som får en vare til å gjenta seg, f.eks. «hver uke» eller «annenhver dag»."
       },
       "timerKeywords": {
         "title": "Timer-nøkkelord",
@@ -870,7 +870,7 @@
       "bulkEnrichment": {
         "title": "Masseberikelse",
         "subtitle": "Kjør aktivert berikelse på alle oppskrifter",
-        "description": "Legg hver berikelsestype som har automatisk bryter på, i kø for alle oppskrifter på denne serveren. Som standard fylles bare hull; bekreftelsen tilbyr å overskrive det som allerede finnes.",
+        "description": "Legg alle aktiverte berikelser i kø",
         "button": "Berik alle oppskrifter",
         "confirmTitle": "Kjøre berikelse på alle oppskrifter?",
         "confirmMessage": "Dette setter AI-arbeid i kø for hver oppskrift på denne serveren. Hver berikelsestype med automatisk bryter slått på kjøres der data mangler.",
@@ -922,7 +922,7 @@
       "testConnection": "Test tilkobling",
       "vision": "visjon",
       "automaticEnrichment": "Automatisk oppskriftsberikelse",
-      "automaticEnrichmentDescription": "Velg hvilken AI-berikelse som kjøres automatisk for nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt når AI er på.",
+      "automaticEnrichmentDescription": "Hvilke AI-berikelser som kjøres på nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt.",
       "automaticEnrichmentPlaceholder": "Ingenting kjører automatisk",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatiske tagger",
@@ -1000,7 +1000,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "La stå tomt for lokale servere"
     },
     "imageGenerationConfig": {
-      "description": "Bildegenerering bruker sin egen leverandør, fordi de fleste AI-leverandører ikke kan tegne. Bilder genereres med denne leverandøren; AI-leverandøren ovenfor håndterer alt annet.",
+      "description": "Bilder trenger sin egen leverandør, siden de fleste AI-leverandører ikke kan tegne.",
       "provider": "Bildeleverandør",
       "providers": {
         "disabled": "Deaktivert",
@@ -1217,7 +1217,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "Hvor mange fullførte jobber som beholdes per kø."
       },
       "pagination": "Page {current} of {total}"
     },

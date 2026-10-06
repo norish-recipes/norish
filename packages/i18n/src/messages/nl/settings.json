@@ -22,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergieën",
-      "description": "Voeg je voedselallergieën toe om waarschuwingen te ontvangen bij het plannen van recepten die allergenen bevatten. Wordt gebruikt om je te waarschuwen wanneer een gepland recept ingrediënten bevat die overeenkomen met je allergieën.",
+      "description": "Voeg je voedselallergieën toe om gewaarschuwd te worden bij het plannen van recepten met allergenen.",
       "placeholder": "Typ allergieën (bijv. gluten, noten, zuivel)...",
       "saveButton": "Allergieën opslaan"
     },
     "apiKeys": {
       "title": "API-sleutels",
-      "description": "API-sleutels bieden toegang tot de Norish API. Gebruik ze voor integraties, snelkoppelingen en automatisering.",
+      "description": "Met API-sleutels bouw je eigen integraties, snelkoppelingen en automatiseringen.",
       "docsLink": "API-documentatie openen",
       "keyNameLabel": "Sleutelnaam (optioneel)",
       "keyNamePlaceholder": "bijv. iOS Snelkoppeling",
@@ -62,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Archief importeren",
-      "description": "Importeer recepten van Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes), of Mealie/Tandoor (.zip) exports"
+      "description": "Importeer recepten die zijn geëxporteerd uit Norish, Mela, Paprika, Mealie of Tandoor."
     },
     "archiveExport": {
       "title": "Archief exporteren",
@@ -71,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Site-authenticatietokens",
-      "description": "Voeg headers of cookies toe die worden meegestuurd bij het importeren van recepten van specifieke sites. Handig voor sites die inloggen vereisen (bijv. Instagram, Facebook).",
+      "description": "Headers of cookies om mee te sturen bij het importeren van sites waarvoor je moet inloggen, zoals Instagram of Facebook.",
       "accountsDescription": "Geef een account een naam als je meerdere logins voor een site hebt. Elke import gebruikt dan één van de accounts van die site, willekeurig gekozen, zodat niet één login alle imports draagt. Een token zonder accountnaam wordt bij elke import voor dat domein meegestuurd.",
       "domain": "Domein",
       "domainPlaceholder": "bijv. instagram.com",
@@ -99,7 +99,8 @@
         "title": "Token verwijderen",
         "message": "Weet je zeker dat je dit authenticatietoken wilt verwijderen? Imports van deze site werken mogelijk niet meer.",
         "confirmButton": "Token verwijderen"
-      }
+      },
+      "accountsHelp": "Over accounts"
     },
     "dangerZone": {
       "title": "Gevaarlijke Zone",
@@ -124,7 +125,7 @@
       "applyError": "Instelling kon niet worden toegepast",
       "hidden": {
         "title": "Verborgen onderdelen",
-        "description": "Kies wat je liever niet ziet. Standaard wordt alles getoond en dit verandert alleen jouw eigen weergave.",
+        "description": "Verberg onderdelen die je niet wilt zien",
         "placeholder": "Niets verborgen",
         "options": {
           "provenance": "Herkomst",
@@ -140,7 +141,7 @@
       },
       "todaySection": {
         "title": "Vandaag-sectie",
-        "description": "Kies hoe de Vandaag-sectie op het dashboard op dit apparaat wordt weergegeven",
+        "description": "Hoe de Vandaag-sectie op het dashboard werkt",
         "options": {
           "always": "Altijd zichtbaar",
           "planned": "Alleen geplande maaltijden",
@@ -149,7 +150,7 @@
       },
       "recipePageColor": {
         "title": "Kleur van receptpagina's",
-        "description": "Geef elke receptpagina een tint uit de eigen foto, of houd op dit apparaat de gewone themakleuren",
+        "description": "Kleur de receptpagina dynamisch of volg de themakleuren",
         "options": {
           "dish": "Uit de foto van het gerecht",
           "theme": "Gewone themakleuren"
@@ -185,7 +186,6 @@
     }
   },
   "household": {
-    "pageTitle": "Instellingen huishouden",
     "info": {
       "yourRole": "Jouw rol",
       "admin": "Beheerder",
@@ -334,7 +334,7 @@
   },
   "ingredients": {
     "title": "Ingrediënten",
-    "description": "Elk voedingsmiddel dat Norish kent, met de vertalingen waaronder het bekend is. Norish markeert de ingrediënten waarover het twijfelde: voeg ze samen met het voedingsmiddel dat ze zijn, of markeer ze als apart.",
+    "description": "De ingrediëntencatalogus waarmee Norish voedingswaarden, ingrediënticonen en vertalingen bepaalt.",
     "search": "Ingrediënten zoeken",
     "searchMatch": "Overeenkomst",
     "searchIn": "Zoek in",
@@ -692,11 +692,11 @@
         "owner": "Alleen eigenaar",
         "ownerDescription": "Alleen de eigenaar van het recept"
       },
-      "note": "Opmerking: Boodschappen en agenda-items volgen automatisch de huishoudregels, huishoudleden kunnen altijd items bewerken/verwijderen die behoren tot iemand in hetzelfde huishouden."
+      "note": "Boodschappen en agenda-items volgen altijd de huishoudregels: huishoudleden kunnen elkaars items bewerken of verwijderen."
     },
     "ingredientPermissions": {
       "title": "Ingrediëntrechten",
-      "description": "Bepaal wie ingrediënten mag hernoemen, als apart mag markeren en vertalingen mag verwijderen. Iedereen mag een vertaling toevoegen, en serverbeheerders hebben altijd volledige toegang.",
+      "description": "Wie ingrediënten mag hernoemen, als apart mag markeren of hun vertalingen mag verwijderen. Iedereen mag een vertaling toevoegen.",
       "editIngredients": "Ingrediënten bewerken",
       "editDescription": "Wie een ingrediënt mag wijzigen dat iemand anders heeft toegevoegd",
       "levels": {
@@ -735,7 +735,7 @@
     "authProviders": {
       "title": "Authenticatieproviders",
       "requiresRestart": "Herstart vereist",
-      "description": "Configureer authenticatiemethoden. Wijzigingen vereisen een herstart van de server.",
+      "description": "Stel in hoe mensen inloggen.",
       "passwordAuth": {
         "title": "E-mail & Wachtwoord",
         "description": "Sta gebruikers toe zich aan te melden met e-mail en wachtwoord"
@@ -756,7 +756,7 @@
         },
         "claimMapping": {
           "title": "Claim-toewijzing",
-          "description": "Wijs automatisch rollen en huishoudens toe op basis van OIDC claims. Gebruikers met de admin-groep krijgen serverbeheerdersrechten. Gebruikers met een huishoudgroep worden automatisch aan dat huishouden toegevoegd.",
+          "description": "Wijs beheerdersrechten en huishoudens toe op basis van de groepsclaims van je provider.",
           "securityWarning": "Let op: Het inschakelen van claim mapping geeft je identity provider controle over adminrechten en huishoudens. Schakel dit alleen in als je je OIDC provider volledig vertrouwt en correct hebt geconfigureerd.",
           "scopes": "Extra Scopes",
           "scopesPlaceholder": "groups, roles",
@@ -816,12 +816,12 @@
       "ingredientWords": {
         "title": "Ingrediëntwoorden",
         "subtitle": "Woorden waarmee ingrediëntnamen gelezen worden, per taal",
-        "description": "De woorden waar Norish langs leest als het een ingrediëntnaam aan een voedingsmiddel koppelt, per taal: bereiding (“fijngesneden”), maten (“grote”), schattingen (“ongeveer”), waar iets in of mee komt (“in olijfolie”), woorden die nooit een voedingsmiddel zijn (“en”), en de meervouds- en verkleinwoorduitgangen die van “bosuitjes” bosui maken. Elke taal geldt voor elke naam."
+        "description": "Woorden die Norish overslaat bij het koppelen van ingrediëntnamen, zoals “gesneden”, “grote” of de “en” in “uien”."
       },
       "recurrence": {
         "title": "Herhalingspatronen",
         "subtitle": "Natuurlijke taalpatronen voor terugkerende items",
-        "description": "Definieer locale-specifieke patronen voor het parsen van herhalingsregels uit natuurlijke taal (bijv. 'elke week', 'om de dag')."
+        "description": "Woorden per taal waardoor een boodschap terugkeert, zoals “elke week” of “om de dag”."
       },
       "timerKeywords": {
         "title": "Timer trefwoorden",
@@ -870,7 +870,7 @@
       "bulkEnrichment": {
         "title": "Bulkverrijking",
         "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
-        "description": "Zet voor alle recepten op deze server elke verrijkingssoort in de wachtrij waarvan de automatische schakelaar aanstaat. Standaard worden alleen ontbrekende gegevens aangevuld; in de bevestiging kun je kiezen om bestaande gegevens te overschrijven.",
+        "description": "Zet alle ingeschakelde verrijkingen in de wachtrij",
         "button": "Alle recepten verrijken",
         "confirmTitle": "Verrijking op alle recepten uitvoeren?",
         "confirmMessage": "Dit zet AI-werk in de wachtrij voor elk recept op deze server. Elke verrijkingssoort waarvan de automatische schakelaar aanstaat draait waar gegevens ontbreken.",
@@ -922,7 +922,7 @@
       "testConnection": "Test verbinding",
       "vision": "vision",
       "automaticEnrichment": "Automatische receptverrijking",
-      "automaticEnrichmentDescription": "Kies welke AI-verrijking automatisch draait voor nieuwe recepten. Leden kunnen elke verrijking handmatig blijven starten zolang AI aanstaat.",
+      "automaticEnrichmentDescription": "Welke AI-verrijkingen op nieuwe recepten draaien. Leden kunnen elke verrijking nog steeds handmatig starten.",
       "automaticEnrichmentPlaceholder": "Niets draait automatisch",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatisch taggen",
@@ -1000,7 +1000,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Laat leeg voor lokale servers"
     },
     "imageGenerationConfig": {
-      "description": "Afbeeldingen genereren gebruikt een eigen provider, omdat de meeste AI-providers niet kunnen tekenen. Afbeeldingen worden met deze provider gemaakt; de AI-provider hierboven doet al het andere.",
+      "description": "Afbeeldingen hebben een eigen provider nodig, omdat de meeste AI-providers niet kunnen tekenen.",
       "provider": "Afbeeldingsprovider",
       "providers": {
         "disabled": "Uitgeschakeld",
@@ -1217,7 +1217,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "Hoeveel afgeronde jobs per wachtrij bewaard blijven."
       },
       "pagination": "Page {current} of {total}"
     },

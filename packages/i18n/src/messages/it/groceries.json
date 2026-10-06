@@ -101,7 +101,7 @@
     "undo": "Annulla",
     "keepFailed": "Impossibile aggiungere {name} alla dispensa",
     "fromYourRecipes": "Dalle tue ricette",
-    "fromYourRecipesHint": "Gli alimenti più usati nelle tue ricette. Aggiungi quelli che hai sempre in casa.",
+    "fromYourRecipesHint": "Ingredienti più usati",
     "inRecipes": "{count, plural, one {in # ricetta} other {in # ricette}}",
     "showMore": "Mostra altri",
     "inYourPantry": "Nella tua dispensa",

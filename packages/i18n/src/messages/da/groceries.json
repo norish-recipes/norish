@@ -101,7 +101,7 @@
     "undo": "Fortryd",
     "keepFailed": "{name} kunne ikke tilføjes til spisekammeret",
     "fromYourRecipes": "Fra dine opskrifter",
-    "fromYourRecipesHint": "De madvarer dine opskrifter bruger mest. Tilføj dem, I altid har hjemme.",
+    "fromYourRecipesHint": "Mest brugte ingredienser",
     "inRecipes": "{count, plural, one {i # opskrift} other {i # opskrifter}}",
     "showMore": "Vis flere",
     "inYourPantry": "I dit spisekammer",

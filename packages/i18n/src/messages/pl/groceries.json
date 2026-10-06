@@ -101,7 +101,7 @@
     "undo": "Cofnij",
     "keepFailed": "Nie udało się dodać {name} do spiżarni",
     "fromYourRecipes": "Z Twoich przepisów",
-    "fromYourRecipesHint": "Produkty najczęściej używane w Twoich przepisach. Dodaj te, które zawsze masz w domu.",
+    "fromYourRecipesHint": "Najczęściej używane składniki",
     "inRecipes": "{count, plural, one {w # przepisie} few {w # przepisach} many {w # przepisach} other {w # przepisu}}",
     "showMore": "Pokaż więcej",
     "inYourPantry": "W Twojej spiżarni",

@@ -101,7 +101,7 @@
     "undo": "Annuler",
     "keepFailed": "{name} n'a pas pu être ajouté au garde-manger",
     "fromYourRecipes": "D'après vos recettes",
-    "fromYourRecipesHint": "Les aliments que vos recettes utilisent le plus. Ajoutez ceux que vous avez toujours.",
+    "fromYourRecipesHint": "Ingrédients les plus utilisés",
     "inRecipes": "{count, plural, one {dans # recette} other {dans # recettes}}",
     "showMore": "Afficher plus",
     "inYourPantry": "Dans votre garde-manger",

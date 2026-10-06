@@ -101,7 +101,7 @@
     "undo": "Rückgängig",
     "keepFailed": "{name} konnte nicht zur Vorratskammer hinzugefügt werden",
     "fromYourRecipes": "Aus deinen Rezepten",
-    "fromYourRecipesHint": "Was deine Rezepte am häufigsten verwenden. Füge hinzu, was du immer zu Hause hast.",
+    "fromYourRecipesHint": "Meistverwendete Zutaten",
     "inRecipes": "{count, plural, one {in # Rezept} other {in # Rezepten}}",
     "showMore": "Mehr anzeigen",
     "inYourPantry": "In deiner Vorratskammer",

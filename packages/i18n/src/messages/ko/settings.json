@@ -22,13 +22,13 @@
     },
     "allergies": {
       "title": "알러지",
-      "description": "알러지 유발 물질이 포함된 레시피를 계획할 때 경고를 받으려면 음식 알러지를 추가하세요. 이 정보는 계획된 레시피에 내 알러지와 일치하는 재료가 포함되어 있을 때 경고하는 데 사용됩니다.",
+      "description": "음식 알러지를 추가하면 알러지 유발 물질이 포함된 레시피를 계획할 때 경고를 받을 수 있습니다.",
       "placeholder": "알러지를 입력하세요 (예: 글루텐, 견과류, 유제품)...",
       "saveButton": "알러지 저장"
     },
     "apiKeys": {
       "title": "API 키",
-      "description": "API 키를 사용하면 Norish API에 프로그래밍 방식으로 접근할 수 있습니다. 통합, 바로가기, 자동화에 사용하세요.",
+      "description": "API 키로 맞춤 통합, 바로가기, 자동화를 만들 수 있습니다.",
       "docsLink": "API 문서 열기",
       "keyNameLabel": "키 이름(선택사항)",
       "keyNamePlaceholder": "예: iOS 단축키",
@@ -62,7 +62,7 @@
     },
     "archiveImport": {
       "title": "레시피 아카이브 가져오기",
-      "description": "Norish(.norishrecipes), Mela(.melarecipes), Paprika(.paprikarecipes) 또는 Mealie/Tandoor(.zip) 내보내기에서 레시피 가져오기"
+      "description": "Norish, Mela, Paprika, Mealie 또는 Tandoor에서 내보낸 레시피를 가져옵니다."
     },
     "archiveExport": {
       "title": "레시피 아카이브 내보내기",
@@ -71,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "사이트 인증 토큰",
-      "description": "특정 사이트에서 레시피를 가져올 때 전송되는 헤더나 쿠키를 추가하세요. 로그인이 필요한 사이트(예: Instagram, Facebook)에 유용합니다.",
+      "description": "Instagram이나 Facebook처럼 로그인이 필요한 사이트에서 가져올 때 보낼 헤더나 쿠키입니다.",
       "accountsDescription": "한 사이트에 로그인이 여러 개 있으면 계정 이름을 지정하세요. 그러면 가져오기마다 해당 사이트의 계정 중 하나를 무작위로 사용하므로 한 로그인이 모든 가져오기를 감당하지 않습니다. 계정 이름이 없는 토큰은 해당 도메인의 모든 가져오기에 함께 전송됩니다.",
       "domain": "도메인",
       "domainPlaceholder": "예: instagram.com",
@@ -99,7 +99,8 @@
         "title": "토큰 삭제",
         "message": "이 인증 토큰을 삭제하시겠습니까? 이 사이트에서 가져오기가 작동하지 않을 수 있습니다.",
         "confirmButton": "토큰 삭제"
-      }
+      },
+      "accountsHelp": "계정 안내"
     },
     "dangerZone": {
       "title": "위험 구역",
@@ -123,7 +124,7 @@
       },
       "hidden": {
         "title": "숨긴 항목",
-        "description": "표시하지 않을 항목을 선택하세요. 기본적으로 모두 표시되며, 이 설정은 내 화면에만 적용됩니다.",
+        "description": "보고 싶지 않은 UI 요소를 숨깁니다",
         "placeholder": "숨긴 항목 없음",
         "options": {
           "provenance": "출처",
@@ -139,7 +140,7 @@
       },
       "todaySection": {
         "title": "오늘 섹션",
-        "description": "이 기기에서 대시보드의 오늘 섹션 표시 방식을 선택합니다",
+        "description": "대시보드의 오늘 섹션 동작 방식",
         "options": {
           "always": "항상 표시",
           "planned": "계획된 식사만 표시",
@@ -148,7 +149,7 @@
       },
       "recipePageColor": {
         "title": "레시피 페이지 색상",
-        "description": "각 레시피 페이지를 요리 사진의 색으로 물들이거나 이 기기에서 기본 테마 색상을 유지합니다",
+        "description": "레시피 페이지를 동적으로 물들이거나 테마 색상을 따릅니다",
         "options": {
           "dish": "요리 사진에서",
           "theme": "기본 테마 색상"
@@ -185,7 +186,6 @@
     }
   },
   "household": {
-    "pageTitle": "가구 설정",
     "info": {
       "yourRole": "내 역할",
       "admin": "관리자",
@@ -334,7 +334,7 @@
   },
   "ingredients": {
     "title": "재료",
-    "description": "Norish가 아는 모든 식품과 그 식품을 부르는 번역입니다. Norish가 확신하지 못한 재료는 표시됩니다. 해당하는 식품에 병합하거나 별개로 표시하세요.",
+    "description": "Norish가 영양 정보, 재료 아이콘, 번역을 정하는 데 쓰는 재료 카탈로그입니다.",
     "search": "재료 검색",
     "searchMatch": "일치 방식",
     "searchIn": "검색 범위",
@@ -692,11 +692,11 @@
         "owner": "소유자만",
         "ownerDescription": "레시피 소유자만"
       },
-      "note": "참고: 장보기 및 달력 항목은 자동으로 가구 규칙을 따르며, 가구 구성원은 언제든지 같은 가구에 속한 모든 사람의 항목을 편집/삭제할 수 있습니다."
+      "note": "장보기 및 달력 항목은 항상 가구 규칙을 따릅니다. 가구 구성원은 서로의 항목을 편집하거나 삭제할 수 있습니다."
     },
     "ingredientPermissions": {
       "title": "재료 권한",
-      "description": "누가 재료 이름을 바꾸고, 별개로 표시하고, 번역를 제거할 수 있는지 정합니다. 번역 추가는 누구나 할 수 있으며 서버 관리자는 항상 모든 권한을 가집니다.",
+      "description": "누가 재료 이름을 바꾸고, 별개로 표시하거나 번역을 제거할 수 있는지 정합니다. 번역 추가는 누구나 할 수 있습니다.",
       "editIngredients": "재료 편집",
       "editDescription": "다른 사람이 추가한 재료를 누가 변경할 수 있는지",
       "levels": {
@@ -735,7 +735,7 @@
     "authProviders": {
       "title": "인증 제공자",
       "requiresRestart": "다시 시작해야 함",
-      "description": "인증 방법을 구성합니다. 변경 사항을 적용하려면 서버를 다시 시작해야 합니다.",
+      "description": "사용자가 로그인하는 방법을 구성합니다.",
       "passwordAuth": {
         "title": "이메일 및 비밀번호",
         "description": "사용자가 이메일과 비밀번호로 로그인하도록 허용"
@@ -756,7 +756,7 @@
         },
         "claimMapping": {
           "title": "클레임 매핑",
-          "description": "OIDC 클레임을 기반으로 역할과 가구를 자동으로 할당합니다. admin 그룹의 사용자는 서버 관리자 권한을 얻습니다. 가구 그룹이 있는 사용자는 해당 가구에 자동으로 추가됩니다.",
+          "description": "제공자의 그룹 클레임으로 관리자 권한과 가구를 할당합니다.",
           "securityWarning": "경고: 클레임 매핑을 활성화하면 OIDC 제공업체가 관리자 권한과 가구 구성원을 제어할 수 있습니다. OIDC 제공업체를 완전히 신뢰하고 그룹 클레임을 올바르게 구성한 경우에만 이 기능을 활성화하세요.",
           "scopes": "추가 범위",
           "scopesPlaceholder": "그룹, 역할",
@@ -816,12 +816,12 @@
       "ingredientWords": {
         "title": "재료 단어",
         "subtitle": "언어별로 재료 이름을 읽는 데 쓰이는 단어",
-        "description": "Norish가 재료 이름을 식품과 연결할 때 건너뛰는 단어(언어별): 손질(“채썬”), 크기(“큰”), 어림(“약”), 식품이 들어 있거나 함께 오는 것을 나타내는 말, 식품을 뜻하지 않는 단어, 그리고 복수형과 지소형 어미. 모든 언어가 모든 이름에 적용됩니다."
+        "description": "Norish가 재료 이름을 맞출 때 건너뛰는 단어입니다. 예: “다진”, “큰”, “양파들”의 “들”."
       },
       "recurrence": {
         "title": "반복 패턴",
         "subtitle": "반복 항목에 대한 자연어 패턴",
-        "description": "자연어에서 반복 규칙을 구문 분석하기 위한 로케일별 패턴을 정의합니다(예: '매주', 'om de dag')."
+        "description": "장보기 항목을 반복하게 만드는 언어별 단어입니다. 예: “매주”, “격일로”."
       },
       "timerKeywords": {
         "title": "타이머 키워드",
@@ -870,7 +870,7 @@
       "bulkEnrichment": {
         "title": "대량 보강",
         "subtitle": "모든 레시피에 활성화된 보강 실행",
-        "description": "이 서버의 모든 레시피에 대해 자동 스위치가 켜진 보강 종류를 모두 대기열에 넣습니다. 기본적으로는 빈 항목만 채우며, 확인 창에서 기존 데이터를 덮어쓰도록 선택할 수 있습니다.",
+        "description": "사용 설정된 모든 보강을 대기열에 추가",
         "button": "모든 레시피 보강",
         "confirmTitle": "모든 레시피에 보강을 실행할까요?",
         "confirmMessage": "이 서버의 모든 레시피에 대한 AI 작업을 대기열에 추가합니다. 자동 스위치가 켜진 모든 보강 종류가 데이터가 없는 곳에서 실행됩니다.",
@@ -922,7 +922,7 @@
       "testConnection": "연결 테스트",
       "vision": "비전",
       "automaticEnrichment": "자동 레시피 보강",
-      "automaticEnrichmentDescription": "새 레시피에 자동으로 실행할 AI 보강을 선택하세요. AI가 켜져 있으면 구성원은 각 항목을 수동으로 실행할 수 있습니다.",
+      "automaticEnrichmentDescription": "새 레시피에 실행할 AI 보강입니다. 구성원은 각 항목을 계속 직접 실행할 수 있습니다.",
       "automaticEnrichmentPlaceholder": "자동으로 실행되는 항목 없음",
       "automaticEnrichmentKinds": {
         "autoTagging": "자동 태그 지정",
@@ -1000,7 +1000,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "로컬 서버의 경우 비워 두세요."
     },
     "imageGenerationConfig": {
-      "description": "대부분의 AI 제공자는 그림을 그릴 수 없기 때문에 이미지 생성은 자체 제공자를 사용합니다. 이미지는 이 제공자로 생성되며, 위의 AI 제공자가 나머지 모든 작업을 처리합니다.",
+      "description": "대부분의 AI 제공자는 그림을 그릴 수 없으므로 이미지에는 별도 제공자가 필요합니다.",
       "provider": "이미지 제공자",
       "providers": {
         "disabled": "사용 안 함",
@@ -1217,7 +1217,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "대기열마다 보관할 완료된 작업 수입니다."
       },
       "pagination": "Page {current} of {total}"
     },

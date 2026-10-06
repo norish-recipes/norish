@@ -22,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergies",
-      "description": "Add your food allergies to receive warnings when planning recipes that contain allergens. This information is used to warn you when a planned recipe contains ingredients that match your allergies.",
+      "description": "Add your food allergies to receive warnings when planning recipes that contain allergens.",
       "placeholder": "Type allergies (e.g., gluten, nuts, dairy)...",
       "saveButton": "Save Allergies"
     },
     "apiKeys": {
       "title": "API Keys",
-      "description": "API keys allow programmatic access to the Norish API. Use them for integrations, shortcuts, and automation.",
+      "description": "API keys can be used to build custom integrations, shortcuts, and automations.",
       "docsLink": "Open API docs",
       "keyNameLabel": "Key Name (optional)",
       "keyNamePlaceholder": "e.g., iOS Shortcut",
@@ -62,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Import Recipe Archive",
-      "description": "Import recipes from Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes), or Mealie/Tandoor (.zip) exports"
+      "description": "Import recipes exported from Norish, Mela, Paprika, Mealie or Tandoor."
     },
     "archiveExport": {
       "title": "Export Recipe Archive",
@@ -71,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Site Authentication Tokens",
-      "description": "Add headers or cookies that are sent when importing recipes from specific sites. Useful for sites that require login (e.g. Instagram, Facebook).",
+      "description": "Headers or cookies to send when importing from sites that need a login, such as Instagram or Facebook.",
       "accountsDescription": "Name an account when you have more than one login for a site. Each import then uses one of that site's accounts, picked at random, so no single login carries every import. A token left without an account name is sent with every import for its domain.",
       "domain": "Domain",
       "domainPlaceholder": "e.g. instagram.com",
@@ -99,7 +99,8 @@
         "title": "Delete Token",
         "message": "Are you sure you want to delete this authentication token? Imports from this site may stop working.",
         "confirmButton": "Delete Token"
-      }
+      },
+      "accountsHelp": "About accounts"
     },
     "dangerZone": {
       "title": "Danger Zone",
@@ -123,7 +124,7 @@
       },
       "hidden": {
         "title": "Hidden Items",
-        "description": "Choose what you would rather not be shown. Everything is shown by default, and this changes only your own view.",
+        "description": "Hide UI elements you don't want to see",
         "placeholder": "Nothing hidden",
         "options": {
           "provenance": "Provenance",
@@ -139,7 +140,7 @@
       },
       "todaySection": {
         "title": "Today Section",
-        "description": "Choose how the Today section on the dashboard is shown on this device",
+        "description": "How the dashboard's Today section behaves",
         "options": {
           "always": "Always visible",
           "planned": "Only planned meals",
@@ -148,7 +149,7 @@
       },
       "recipePageColor": {
         "title": "Recipe page color",
-        "description": "Tint each recipe page with its own photo's color, or keep the plain theme colors on this device",
+        "description": "Choose to tint the recipe page dynamically or follow the theme colors",
         "options": {
           "dish": "From the dish photo",
           "theme": "Plain theme colors"
@@ -185,7 +186,6 @@
     }
   },
   "household": {
-    "pageTitle": "Household Settings",
     "info": {
       "yourRole": "Your Role",
       "admin": "Admin",
@@ -334,7 +334,7 @@
   },
   "ingredients": {
     "title": "Ingredients",
-    "description": "Every food Norish knows, with the translations it goes by. Norish marks the ones it was not sure about: merge them into the food they are, or mark them distinct.",
+    "description": "The ingredient catalogue Norish uses to determine macros, ingredient icons and translations.",
     "search": "Search ingredients",
     "searchMatch": "Match",
     "searchIn": "Search in",
@@ -692,11 +692,11 @@
         "owner": "Owner Only",
         "ownerDescription": "Only the recipe owner"
       },
-      "note": "Note: Groceries and Calendar items follow household rules automatically, household members can always edit/delete items belonging to anyone in the same household."
+      "note": "Groceries and calendar items always follow household rules: household members can edit or delete each other's items."
     },
     "ingredientPermissions": {
       "title": "Ingredient Permissions",
-      "description": "Control who can rename ingredients, mark them distinct and remove their translations. Anyone can add a translation, and server admins always have full access.",
+      "description": "Who may rename ingredients, mark them distinct or remove their translations. Anyone can add a translation.",
       "editIngredients": "Edit Ingredients",
       "editDescription": "Who can change an ingredient someone else added",
       "levels": {
@@ -735,7 +735,7 @@
     "authProviders": {
       "title": "Authentication Providers",
       "requiresRestart": "Requires restart",
-      "description": "Configure authentication methods. Changes require a server restart to take effect.",
+      "description": "Configure how people sign in.",
       "passwordAuth": {
         "title": "Email & Password",
         "description": "Allow users to sign in with email and password"
@@ -756,7 +756,7 @@
         },
         "claimMapping": {
           "title": "Claim Mapping",
-          "description": "Automatically assign roles and households based on OIDC claims. Users with the admin group get server admin privileges. Users with a household group are auto-joined to that household.",
+          "description": "Assign admin rights and households from your provider's group claims.",
           "securityWarning": "Warning: Enabling claim mapping allows your identity provider to control admin privileges and household membership. Only enable this if you fully trust your OIDC provider and have properly configured the group claims.",
           "scopes": "Additional Scopes",
           "scopesPlaceholder": "groups, roles",
@@ -816,12 +816,12 @@
       "ingredientWords": {
         "title": "Ingredient words",
         "subtitle": "Words ingredient names are read by, per language",
-        "description": "The words Norish reads past when it matches an ingredient name to a food, per language: preparation (“chopped”), sizes (“large”), approximations (“about”), what a food comes in or with (“in olive oil”), words that never name a food (“and”), and the plural and diminutive endings that make “onions” onion. Every language applies to every name."
+        "description": "Words Norish skips when matching ingredient names, like “chopped”, “large” or the “s” in “onions”."
       },
       "recurrence": {
         "title": "Recurrence Patterns",
         "subtitle": "Natural language patterns for recurring items",
-        "description": "Define locale-specific patterns for parsing recurrence rules from natural language (e.g., 'every week', 'om de dag')."
+        "description": "Words per language that make a grocery repeat, like “every week” or “om de dag”."
       },
       "timerKeywords": {
         "title": "Timer Keywords",
@@ -870,7 +870,7 @@
       "bulkEnrichment": {
         "title": "Bulk Enrichment",
         "subtitle": "Run enabled enrichment on every recipe",
-        "description": "Queue every enrichment kind whose automatic switch is enabled, for all recipes on this server. Gaps are filled by default; the confirmation offers to overwrite what is already there.",
+        "description": "Queue all enabled enrichments",
         "button": "Enrich All Recipes",
         "confirmTitle": "Run enrichment on all recipes?",
         "confirmMessage": "This queues AI work for every recipe on this server. Every enrichment kind whose automatic switch is enabled runs wherever data is missing.",
@@ -922,7 +922,7 @@
       "testConnection": "Test Connection",
       "vision": "vision",
       "automaticEnrichment": "Automatic Recipe Enrichment",
-      "automaticEnrichmentDescription": "Choose which AI enrichment runs automatically for newly created recipes. Members can still run each one manually while AI is enabled.",
+      "automaticEnrichmentDescription": "Which AI enrichments run on new recipes. Members can still run each one by hand.",
       "automaticEnrichmentPlaceholder": "Nothing runs automatically",
       "automaticEnrichmentKinds": {
         "autoTagging": "Auto-Tagging",
@@ -1000,7 +1000,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Leave empty for local servers"
     },
     "imageGenerationConfig": {
-      "description": "Image Generation uses its own provider, because most AI providers cannot draw. Pictures are generated with this provider; the AI provider above handles everything else.",
+      "description": "Pictures need their own provider, since most AI providers cannot draw.",
       "provider": "Image Provider",
       "providers": {
         "disabled": "Disabled",
@@ -1217,7 +1217,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "How many finished jobs to keep per queue."
       },
       "pagination": "Page {current} of {total}"
     },

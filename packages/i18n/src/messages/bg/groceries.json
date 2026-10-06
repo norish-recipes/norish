@@ -101,7 +101,7 @@
     "undo": "Отмени",
     "keepFailed": "{name} не можа да бъде добавен в килера",
     "fromYourRecipes": "От вашите рецепти",
-    "fromYourRecipesHint": "Продуктите, които рецептите ви използват най-често. Добавете тези, които винаги имате.",
+    "fromYourRecipesHint": "Най-използвани съставки",
     "inRecipes": "{count, plural, one {в # рецепта} other {в # рецепти}}",
     "showMore": "Покажи още",
     "inYourPantry": "В килера ви",

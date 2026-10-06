@@ -22,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergiat",
-      "description": "Lisää ruoka-allergiasi, niin saat varoituksen suunnitellessasi reseptejä, jotka sisältävät allergeeneja. Näiden tietojen perusteella sinua varoitetaan, kun suunniteltu resepti sisältää allergioihisi sopivia ainesosia.",
+      "description": "Lisää ruoka-allergiasi, niin saat varoituksen suunnitellessasi reseptejä, jotka sisältävät allergeeneja.",
       "placeholder": "Kirjoita allergiat (esim. gluteeni, pähkinät, maito)...",
       "saveButton": "Tallenna allergiat"
     },
     "apiKeys": {
       "title": "API-avaimet",
-      "description": "API-avaimet mahdollistavat ohjelmallisen pääsyn Norishin rajapintaan. Käytä niitä integraatioihin, pikakomentoihin ja automaatioon.",
+      "description": "API-avaimilla voit rakentaa omia integraatioita, pikakomentoja ja automaatioita.",
       "docsLink": "Avaa API-dokumentaatio",
       "keyNameLabel": "Avaimen nimi (valinnainen)",
       "keyNamePlaceholder": "esim. iOS-pikakomento",
@@ -62,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Tuo reseptiarkisto",
-      "description": "Tuo reseptejä Norishin (.norishrecipes), Melan (.melarecipes), Paprikan (.paprikarecipes) tai Mealien/Tandoorin (.zip) vienneistä"
+      "description": "Tuo reseptejä, jotka on viety Norishista, Melasta, Paprikasta, Mealiesta tai Tandoorista."
     },
     "archiveExport": {
       "title": "Vie reseptiarkisto",
@@ -71,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Sivustojen tunnistautumistunnisteet",
-      "description": "Lisää otsakkeita tai evästeitä, jotka lähetetään tuotaessa reseptejä tietyiltä sivustoilta. Hyödyllinen sivustoille, jotka vaativat kirjautumisen (esim. Instagram, Facebook).",
+      "description": "Otsakkeet tai evästeet, jotka lähetetään tuotaessa kirjautumista vaativilta sivustoilta, kuten Instagram tai Facebook.",
       "accountsDescription": "Nimeä tili, kun sinulla on sivustolle useampi kuin yksi kirjautuminen. Jokainen tuonti käyttää tällöin satunnaisesti valittua sivuston tiliä, jolloin yksikään kirjautuminen ei kanna kaikkia tuonteja. Ilman tilin nimeä jätetty tunniste lähetetään kaikissa oman verkkotunnuksensa tuonneissa.",
       "domain": "Verkkotunnus",
       "domainPlaceholder": "esim. instagram.com",
@@ -99,7 +99,8 @@
         "title": "Poista tunniste",
         "message": "Haluatko varmasti poistaa tämän tunnistautumistunnisteen? Tuonnit tältä sivustolta voivat lakata toimimasta.",
         "confirmButton": "Poista tunniste"
-      }
+      },
+      "accountsHelp": "Tietoa tileistä"
     },
     "dangerZone": {
       "title": "Vaaravyöhyke",
@@ -123,7 +124,7 @@
       },
       "hidden": {
         "title": "Piilotetut osiot",
-        "description": "Valitse, mitä et halua näkyviin. Oletuksena kaikki näytetään, ja tämä muuttaa vain omaa näkymääsi.",
+        "description": "Piilota osiot, joita et halua nähdä",
         "placeholder": "Mitään ei ole piilotettu",
         "options": {
           "provenance": "Alkuperä",
@@ -139,7 +140,7 @@
       },
       "todaySection": {
         "title": "Tänään-osio",
-        "description": "Valitse, miten etusivun Tänään-osio näytetään tällä laitteella",
+        "description": "Miten etusivun Tänään-osio toimii",
         "options": {
           "always": "Aina näkyvissä",
           "planned": "Vain suunnitellut ateriat",
@@ -148,7 +149,7 @@
       },
       "recipePageColor": {
         "title": "Reseptisivun väri",
-        "description": "Sävytä jokainen reseptisivu sen oman kuvan väreillä tai pidä teeman perusvärit tällä laitteella",
+        "description": "Sävytä reseptisivu dynaamisesti tai käytä teeman värejä",
         "options": {
           "dish": "Ruoan kuvasta",
           "theme": "Teeman perusvärit"
@@ -185,7 +186,6 @@
     }
   },
   "household": {
-    "pageTitle": "Kotitalouden asetukset",
     "info": {
       "yourRole": "Roolisi",
       "admin": "Ylläpitäjä",
@@ -334,7 +334,7 @@
   },
   "ingredients": {
     "title": "Ainesosat",
-    "description": "Jokainen Norishin tuntema ruoka ja käännökset, joilla se tunnetaan. Norish merkitsee ne, joista se ei ollut varma: yhdistä ne siihen ruokaan, joka ne ovat, tai merkitse ne erillisiksi.",
+    "description": "Ainesosaluettelo, jonka avulla Norish määrittää ravintosisällön, ainesosien kuvakkeet ja käännökset.",
     "search": "Hae ainesosia",
     "searchMatch": "Vastaavuus",
     "searchIn": "Hae kohteesta",
@@ -692,11 +692,11 @@
         "owner": "Vain omistaja",
         "ownerDescription": "Vain reseptin omistaja"
       },
-      "note": "Huom: Ostokset ja kalenterimerkinnät noudattavat kotitalouden sääntöjä automaattisesti; kotitalouden jäsenet voivat aina muokata ja poistaa saman kotitalouden kenen tahansa jäsenen merkintöjä."
+      "note": "Ostokset ja kalenterimerkinnät noudattavat aina kotitalouden sääntöjä: kotitalouden jäsenet voivat muokata tai poistaa toistensa merkintöjä."
     },
     "ingredientPermissions": {
       "title": "Ainesosien oikeudet",
-      "description": "Määritä, kuka voi nimetä ainesosia uudelleen, merkitä ne erillisiksi ja poistaa niiden käännöksiä. Kuka tahansa voi lisätä käännöksen, ja palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "description": "Kuka saa nimetä ainesosia uudelleen, merkitä ne erillisiksi tai poistaa niiden käännöksiä. Kuka tahansa voi lisätä käännöksen.",
       "editIngredients": "Muokkaa ainesosia",
       "editDescription": "Kuka voi muuttaa jonkun toisen lisäämää ainesosaa",
       "levels": {
@@ -735,7 +735,7 @@
     "authProviders": {
       "title": "Kirjautumistavat",
       "requiresRestart": "Vaatii uudelleenkäynnistyksen",
-      "description": "Määritä kirjautumistavat. Muutokset tulevat voimaan vasta palvelimen uudelleenkäynnistyksen jälkeen.",
+      "description": "Määritä, miten käyttäjät kirjautuvat.",
       "passwordAuth": {
         "title": "Sähköposti ja salasana",
         "description": "Salli käyttäjien kirjautua sähköpostilla ja salasanalla"
@@ -756,7 +756,7 @@
         },
         "claimMapping": {
           "title": "Claim-kartoitus",
-          "description": "Määritä roolit ja kotitaloudet automaattisesti OIDC-claimien perusteella. Ylläpitäjäryhmään kuuluvat käyttäjät saavat palvelimen ylläpito-oikeudet. Kotitalousryhmään kuuluvat käyttäjät liitetään automaattisesti kyseiseen kotitalouteen.",
+          "description": "Määritä ylläpito-oikeudet ja kotitaloudet palveluntarjoajasi ryhmä-claimien perusteella.",
           "securityWarning": "Varoitus: Claim-kartoituksen käyttöönotto antaa identiteetintarjoajallesi vallan hallita ylläpito-oikeuksia ja kotitalouksien jäsenyyksiä. Ota tämä käyttöön vain, jos luotat OIDC-palveluntarjoajaasi täysin ja olet määrittänyt ryhmäclaimit oikein.",
           "scopes": "Lisäscopet",
           "scopesPlaceholder": "groups, roles",
@@ -816,12 +816,12 @@
       "ingredientWords": {
         "title": "Ainesosasanat",
         "subtitle": "Sanat, joiden mukaan ainesosien nimet luetaan, kielittäin",
-        "description": "Sanat, joiden ohi Norish lukee yhdistäessään ainesosan nimen ruoka-aineeseen, kielittäin: valmistus (”hienonnettu”), koot (”iso”), arviot (”noin”), sanat, jotka eivät koskaan nimeä ruoka-ainetta (”ja”), sekä monikon ja deminutiivin päätteet. Jokainen kieli koskee jokaista nimeä."
+        "description": "Sanat, jotka Norish ohittaa yhdistäessään ainesosien nimiä, kuten ”hienonnettu”, ”iso” tai ”t” sanassa ”sipulit”."
       },
       "recurrence": {
         "title": "Toistokaavat",
         "subtitle": "Luonnollisen kielen kaavat toistuville kohteille",
-        "description": "Määritä kielikohtaiset kaavat toistosääntöjen jäsentämiseen luonnollisesta kielestä (esim. 'joka viikko', 'om de dag')."
+        "description": "Kielikohtaiset sanat, jotka tekevät ostoksesta toistuvan, kuten ”joka viikko” tai ”joka toinen päivä”."
       },
       "timerKeywords": {
         "title": "Ajastimien avainsanat",
@@ -870,7 +870,7 @@
       "bulkEnrichment": {
         "title": "Joukkorikastus",
         "subtitle": "Aja käytössä olevat rikastukset kaikille resepteille",
-        "description": "Asettaa jonoon jokaisen rikastustyypin, jonka automaattinen kytkin on päällä, kaikille tämän palvelimen resepteille. Oletuksena täydennetään vain puuttuvat tiedot; vahvistuksessa voi valita myös olemassa olevien korvaamisen.",
+        "description": "Aseta kaikki käytössä olevat rikastukset jonoon",
         "button": "Rikasta kaikki reseptit",
         "confirmTitle": "Ajetaanko rikastus kaikille resepteille?",
         "confirmMessage": "Tämä asettaa jonoon tekoälytyötä jokaiselle tämän palvelimen reseptille. Jokainen rikastustyyppi, jonka automaattinen kytkin on päällä, ajetaan siellä missä tietoja puuttuu.",
@@ -922,7 +922,7 @@
       "testConnection": "Testaa yhteys",
       "vision": "konenäkö",
       "automaticEnrichment": "Reseptien automaattinen rikastus",
-      "automaticEnrichmentDescription": "Valitse, mikä tekoälyrikastus ajetaan automaattisesti uusille resepteille. Jäsenet voivat silti ajaa kunkin käsin, kun tekoäly on käytössä.",
+      "automaticEnrichmentDescription": "Mitkä tekoälyrikastukset ajetaan uusille resepteille. Jäsenet voivat silti ajaa kunkin käsin.",
       "automaticEnrichmentPlaceholder": "Mitään ei ajeta automaattisesti",
       "automaticEnrichmentKinds": {
         "autoTagging": "Tunnisteiden luonti",
@@ -1000,7 +1000,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Jätä tyhjäksi paikallisia palvelimia varten"
     },
     "imageGenerationConfig": {
-      "description": "Kuvien luonti käyttää omaa palveluntarjoajaansa, koska useimmat tekoälypalvelut eivät osaa piirtää. Kuvat luodaan tällä palvelulla; yllä oleva tekoälypalvelu hoitaa kaiken muun.",
+      "description": "Kuvat tarvitsevat oman palveluntarjoajan, koska useimmat tekoälypalvelut eivät osaa piirtää.",
       "provider": "Kuvapalvelu",
       "providers": {
         "disabled": "Pois käytöstä",
@@ -1217,7 +1217,7 @@
         "keepCompleted": "Säilytä valmiit työt",
         "keepFailed": "Säilytä epäonnistuneet työt",
         "maxAgeDays": "Enimmäisikä (päivää)",
-        "description": "Kuinka monta päättynyttä työtä jonoa kohden säilytetään seurantaa varten. Muutokset vaativat palvelimen uudelleenkäynnistyksen."
+        "description": "Kuinka monta päättynyttä työtä säilytetään jonoa kohden."
       },
       "pagination": "Sivu {current} / {total}"
     },

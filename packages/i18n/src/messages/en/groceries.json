@@ -101,7 +101,7 @@
     "undo": "Undo",
     "keepFailed": "{name} could not be added to your pantry",
     "fromYourRecipes": "From your recipes",
-    "fromYourRecipesHint": "The foods your recipes use most. Add the ones you always have at home.",
+    "fromYourRecipesHint": "Most used ingredients",
     "inRecipes": "{count, plural, one {in # recipe} other {in # recipes}}",
     "showMore": "Show more",
     "inYourPantry": "In your pantry",

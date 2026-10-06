@@ -101,7 +101,7 @@
     "undo": "Angre",
     "keepFailed": "{name} kunne ikke legges i spiskammeret",
     "fromYourRecipes": "Fra oppskriftene dine",
-    "fromYourRecipesHint": "Matvarene oppskriftene dine bruker mest. Legg til dem dere alltid har hjemme.",
+    "fromYourRecipesHint": "Mest brukte ingredienser",
     "inRecipes": "{count, plural, one {i # oppskrift} other {i # oppskrifter}}",
     "showMore": "Vis flere",
     "inYourPantry": "I spiskammeret ditt",

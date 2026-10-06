@@ -22,13 +22,13 @@
     },
     "allergies": {
       "title": "Alergie",
-      "description": "Dodaj swoje alergie pokarmowe, aby otrzymywać ostrzeżenia podczas planowania przepisów zawierających alergeny. Informacja ta służy do ostrzegania, gdy zaplanowany przepis zawiera składniki pasujące do Twoich alergii.",
+      "description": "Dodaj swoje alergie pokarmowe, aby otrzymywać ostrzeżenia podczas planowania przepisów zawierających alergeny.",
       "placeholder": "Wpisz alergie (np. gluten, orzechy, nabiał)...",
       "saveButton": "Zapisz alergie"
     },
     "apiKeys": {
       "title": "Klucze API",
-      "description": "Klucze API umożliwiają programowy dostęp do API Norish. Używaj ich do integracji, skrótów i automatyzacji.",
+      "description": "Klucze API pozwalają tworzyć własne integracje, skróty i automatyzacje.",
       "docsLink": "Otwórz dokumentację API",
       "keyNameLabel": "Nazwa klucza (opcjonalnie)",
       "keyNamePlaceholder": "np. Skrót iOS",
@@ -62,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Import archiwum przepisów",
-      "description": "Importuj przepisy z eksportów Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) lub Mealie/Tandoor (.zip)"
+      "description": "Importuj przepisy wyeksportowane z Norish, Mela, Paprika, Mealie lub Tandoor."
     },
     "archiveExport": {
       "title": "Eksportuj archiwum przepisów",
@@ -71,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Tokeny uwierzytelniania stron",
-      "description": "Dodaj nagłówki lub cookies wysyłane podczas importowania przepisów z określonych stron. Przydatne dla stron wymagających logowania (np. Instagram, Facebook).",
+      "description": "Nagłówki lub cookies wysyłane przy imporcie ze stron wymagających logowania, takich jak Instagram czy Facebook.",
       "accountsDescription": "Nazwij konto, gdy masz więcej niż jedno logowanie do witryny. Każdy import użyje wtedy jednego z kont tej witryny, wybranego losowo, aby żadne logowanie nie obsługiwało wszystkich importów. Token bez nazwy konta jest wysyłany przy każdym imporcie z jego domeny.",
       "domain": "Domena",
       "domainPlaceholder": "np. instagram.com",
@@ -99,7 +99,8 @@
         "title": "Usuń token",
         "message": "Czy na pewno chcesz usunąć ten token uwierzytelniania? Importy z tej strony mogą przestać działać.",
         "confirmButton": "Usuń token"
-      }
+      },
+      "accountsHelp": "O kontach"
     },
     "dangerZone": {
       "title": "Strefa niebezpieczna",
@@ -123,7 +124,7 @@
       },
       "hidden": {
         "title": "Ukryte elementy",
-        "description": "Wybierz, czego wolisz nie oglądać. Domyślnie wyświetlane jest wszystko, a to zmienia tylko Twój własny widok.",
+        "description": "Ukryj elementy, których nie chcesz widzieć",
         "placeholder": "Nic nie ukryto",
         "options": {
           "provenance": "Pochodzenie",
@@ -139,7 +140,7 @@
       },
       "todaySection": {
         "title": "Sekcja Dzisiaj",
-        "description": "Wybierz, jak sekcja Dzisiaj na pulpicie jest wyświetlana na tym urządzeniu",
+        "description": "Jak działa sekcja Dzisiaj na pulpicie",
         "options": {
           "always": "Zawsze widoczna",
           "planned": "Tylko zaplanowane posiłki",
@@ -148,7 +149,7 @@
       },
       "recipePageColor": {
         "title": "Kolor stron przepisów",
-        "description": "Zabarw każdą stronę przepisu kolorami jej własnego zdjęcia lub zachowaj kolory motywu na tym urządzeniu",
+        "description": "Zabarwiaj stronę przepisu dynamicznie lub używaj kolorów motywu",
         "options": {
           "dish": "Ze zdjęcia potrawy",
           "theme": "Kolory motywu"
@@ -185,7 +186,6 @@
     }
   },
   "household": {
-    "pageTitle": "Ustawienia gospodarstwa domowego",
     "info": {
       "yourRole": "Twoja rola",
       "admin": "Administrator",
@@ -334,7 +334,7 @@
   },
   "ingredients": {
     "title": "Składniki",
-    "description": "Każdy produkt, który zna Norish, wraz z tłumaczeniami, pod którymi jest znany. Norish oznacza te, co do których nie był pewien: połącz je z produktem, którym są, albo oznacz jako odrębne.",
+    "description": "Katalog składników, z którego Norish korzysta, by określać wartości odżywcze, ikony składników i tłumaczenia.",
     "search": "Szukaj składników",
     "searchMatch": "Dopasowanie",
     "searchIn": "Szukaj w",
@@ -692,11 +692,11 @@
         "owner": "Tylko właściciel",
         "ownerDescription": "Tylko właściciel przepisu"
       },
-      "note": "Uwaga: elementy Zakupów i Kalendarza automatycznie podlegają zasadom gospodarstwa domowego; członkowie gospodarstwa domowego zawsze mogą edytować/usuwać elementy należące do kogokolwiek w tym samym gospodarstwie."
+      "note": "Elementy zakupów i kalendarza zawsze podlegają zasadom gospodarstwa domowego: jego członkowie mogą edytować lub usuwać elementy pozostałych."
     },
     "ingredientPermissions": {
       "title": "Uprawnienia składników",
-      "description": "Określ, kto może zmieniać nazwy składników, oznaczać je jako odrębne i usuwać ich tłumaczenia. Każdy może dodać tłumaczeńę, a administratorzy serwera zawsze mają pełny dostęp.",
+      "description": "Kto może zmieniać nazwy składników, oznaczać je jako odrębne lub usuwać ich tłumaczenia. Każdy może dodać tłumaczenie.",
       "editIngredients": "Edytuj składniki",
       "editDescription": "Kto może zmienić składnik dodany przez kogoś innego",
       "levels": {
@@ -735,7 +735,7 @@
     "authProviders": {
       "title": "Dostawcy uwierzytelniania",
       "requiresRestart": "Wymaga restartu",
-      "description": "Skonfiguruj metody logowania. Zmiany wymagają restartu serwera, aby zaczęły działać.",
+      "description": "Skonfiguruj sposób logowania.",
       "passwordAuth": {
         "title": "E-mail i hasło",
         "description": "Zezwalaj na logowanie za pomocą e-maila i hasła"
@@ -756,7 +756,7 @@
         },
         "claimMapping": {
           "title": "Mapowanie claimów",
-          "description": "Automatycznie przypisuj role i gospodarstwa domowe na podstawie claimów OIDC. Użytkownicy z grupą admin otrzymają uprawnienia administratora serwera. Użytkownicy z grupą gospodarstwa domowego zostaną do niego automatycznie dodani.",
+          "description": "Przypisuj uprawnienia administratora i gospodarstwa domowe na podstawie grupowych claimów Twojego dostawcy.",
           "securityWarning": "Ostrzeżenie: Włączenie mapowania claimów pozwala dostawcy tożsamości kontrolować uprawnienia administratora oraz członkostwo w gospodarstwach domowych. Włączaj to tylko, jeśli w pełni ufasz swojemu dostawcy i poprawnie skonfigurowałeś/aś claimy grup.",
           "scopes": "Dodatkowe scope’y",
           "scopesPlaceholder": "groups, roles",
@@ -816,12 +816,12 @@
       "ingredientWords": {
         "title": "Słowa składników",
         "subtitle": "Słowa, według których czytane są nazwy składników, dla każdego języka",
-        "description": "Słowa, które Norish pomija, łącząc nazwę składnika z produktem, dla każdego języka: przygotowanie („posiekany”), rozmiary („duży”), przybliżenia („około”), w czym lub z czym produkt jest podany („w oliwie”), słowa, które nigdy nie nazywają produktu („i”), oraz końcówki liczby mnogiej i zdrobnień. Każdy język dotyczy każdej nazwy."
+        "description": "Słowa, które Norish pomija przy dopasowywaniu nazw składników, np. „posiekany”, „duży” albo „e” w „cebule”."
       },
       "recurrence": {
         "title": "Wzorce powtarzania",
         "subtitle": "Wzorce języka naturalnego dla elementów cyklicznych",
-        "description": "Zdefiniuj wzorce dla danego języka do parsowania reguł cykliczności z tekstu (np. „co tydzień”, „om de dag”)."
+        "description": "Słowa w danym języku, przez które produkt na liście zakupów się powtarza, np. „co tydzień” albo „co drugi dzień”."
       },
       "timerKeywords": {
         "title": "Słowa kluczowe timerów",
@@ -870,7 +870,7 @@
       "bulkEnrichment": {
         "title": "Masowe wzbogacanie",
         "subtitle": "Uruchom włączone wzbogacanie dla wszystkich przepisów",
-        "description": "Dodaj do kolejki, dla wszystkich przepisów na tym serwerze, każdy rodzaj wzbogacania, którego automatyczny przełącznik jest włączony. Domyślnie uzupełniane są tylko braki; potwierdzenie pozwala nadpisać to, co już istnieje.",
+        "description": "Dodaj do kolejki wszystkie włączone wzbogacania",
         "button": "Wzbogać wszystkie przepisy",
         "confirmTitle": "Uruchomić wzbogacanie dla wszystkich przepisów?",
         "confirmMessage": "To dodaje do kolejki pracę AI dla każdego przepisu na tym serwerze. Każdy rodzaj wzbogacania z włączonym przełącznikiem automatycznym uruchamia się tam, gdzie brakuje danych.",
@@ -922,7 +922,7 @@
       "testConnection": "Testuj połączenie",
       "vision": "vision",
       "automaticEnrichment": "Automatyczne wzbogacanie przepisów",
-      "automaticEnrichmentDescription": "Wybierz, które wzbogacanie AI uruchamia się automatycznie dla nowych przepisów. Członkowie nadal mogą uruchomić każde ręcznie, gdy AI jest włączone.",
+      "automaticEnrichmentDescription": "Które wzbogacania AI są uruchamiane dla nowych przepisów. Członkowie nadal mogą uruchomić każde ręcznie.",
       "automaticEnrichmentPlaceholder": "Nic nie działa automatycznie",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatyczne tagowanie",
@@ -1000,7 +1000,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Zostaw puste dla serwerów lokalnych"
     },
     "imageGenerationConfig": {
-      "description": "Generowanie obrazów używa własnego dostawcy, ponieważ większość dostawców AI nie potrafi rysować. Obrazy są generowane u tego dostawcy; dostawca AI powyżej obsługuje całą resztę.",
+      "description": "Obrazy wymagają własnego dostawcy, ponieważ większość dostawców AI nie potrafi rysować.",
       "provider": "Dostawca obrazów",
       "providers": {
         "disabled": "Wyłączone",
@@ -1217,7 +1217,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "Ile zakończonych zadań przechowywać w każdej kolejce."
       },
       "pagination": "Page {current} of {total}"
     },
