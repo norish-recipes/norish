@@ -184,6 +184,14 @@ endpoint and API key fall back to it, so you don't type a key twice.
 
 All prompts for the image generation feature are editable under **Prompts**.
 
+The same image provider draws [ingredient icons](../groceries/ingredient-icons.md)
+when someone uses **Generate with AI** in an ingredient's panel or **Draw icons**
+on the Ingredients page. An icon is shown small, so it is asked for as a square at
+the provider's cheapest quality: `low` for OpenAI's GPT Image models, `standard`
+for DALL·E 3; other providers draw at their default. The look every icon shares is
+the **Ingredient Icon Style Prompt** under **Prompts**; the food's name and what
+it is a kind of are added after it.
+
 How pictures reach recipes:
 
 - **Automatically**, when the **Image Generation** switch above is on: newly

@@ -26,6 +26,9 @@ can choose not to see:
 - **Ingredient conversion**, the measurement conversion control on the recipe
   page
 - **Recipe timers**, the automatic timer detection in recipe steps.
+- **Ingredient icons**, the small picture beside each food wherever a food is
+  named: recipe lines, steps, groceries, the Pantry and the Ingredients page.
+  See [Ingredient icons](../groceries/ingredient-icons.md).
 
 ![The Hidden Items control in user settings](/img/screenshots/hidden-items-settings.png)
 
@@ -41,4 +44,5 @@ the recipe page simply make the page slimmer:
 A Hidden Item settles nothing about the recipe. What is stored, what may be
 edited and what Recipe Enrichment produces are all unchanged, and every other
 member of your household still sees everything. Someone reading a recipe
-through a share link, or signed out, sees the whole page.
+through a share link, or signed out, sees the whole page; only Ingredient
+icons, hidden on a device, stay hidden on a shared recipe opened there.
