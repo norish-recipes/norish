@@ -22,6 +22,7 @@ import type { Slot } from "@norish/shared/contracts";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
 import type { PlannedItemDisplay } from "./types";
+import { landOnDay, settleLanding } from "../land-on-day";
 import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
 import { TimelineDaySection } from "./timeline-day-section";
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
@@ -114,6 +115,10 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     estimateSize: () => ESTIMATED_DAY_HEIGHT,
     overscan: 5,
     scrollMargin,
+    // Today lands where the first day sits with the page at its top: below the
+    // status bar's fade rather than under it.
+    scrollPaddingStart: scrollMargin,
+    onChange: settleLanding,
   });
 
   // Track if we've scrolled to today and if we've triggered expand
@@ -126,7 +131,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     if (hasScrolledRef.current || isLoading || todayIndex < 0) return;
 
     requestAnimationFrame(() => {
-      virtualizer.scrollToIndex(todayIndex, { align: "start" });
+      landOnDay(virtualizer, todayIndex);
       hasScrolledRef.current = true;
     });
   }, [isLoading, todayIndex, virtualizer]);
