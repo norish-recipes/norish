@@ -217,7 +217,7 @@ An input block a feature composes and the AI Runtime appends after the Prompt �
 _Avoid_: Prompt variable (names the rejected placeholder mechanism)
 
 **Generation Preference**:
-A generation parameter Norish asks a model for — temperature today — that the model is free to refuse. Norish never claims to know in advance which parameters a model accepts, because a self-hoster chooses the model. A refused preference is dropped and the request answered without it, so a preference is never the reason a feature fails (ADR-0014).
+A generation parameter Norish asks a model for — temperature, or an image's quality tier — that the model is free to refuse. Norish never claims to know in advance which parameters a model accepts, because a self-hoster chooses the model. A refused preference is dropped and the request answered without it, so a preference is never the reason a feature fails (ADR-0014).
 _Avoid_: Model Capability (claims foreknowledge Norish does not have), Generation Setting (a setting is honoured, a preference may be declined)
 
 **Decision Model**:
