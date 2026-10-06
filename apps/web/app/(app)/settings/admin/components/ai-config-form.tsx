@@ -531,7 +531,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       >
         <Select
           aria-label={t("automaticEnrichment")}
-          className="w-full sm:w-80"
+          className="w-full"
           isDisabled={!enabled}
           placeholder={t("automaticEnrichmentPlaceholder")}
           selectionMode="multiple"

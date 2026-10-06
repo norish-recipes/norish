@@ -28,7 +28,7 @@ export function PermissionLevelSelect({
   return (
     <Select
       aria-label={ariaLabel}
-      className="w-full sm:w-48"
+      className="w-full"
       isDisabled={isDisabled}
       placeholder={ariaLabel}
       selectedKey={value}

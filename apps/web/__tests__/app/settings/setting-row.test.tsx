@@ -33,7 +33,7 @@ describe("SettingRow", () => {
     expect(container.querySelector(".min-w-0")).not.toBeNull();
   });
 
-  it("gives the control the full width on a phone and its own from sm", () => {
+  it("gives the control the full width on a phone and one fixed width from sm", () => {
     render(
       <SettingRow title="Title">
         <button type="button">control</button>
@@ -42,7 +42,7 @@ describe("SettingRow", () => {
     const control = screen.getByRole("button").parentElement;
 
     expect(control).toHaveClass("w-full");
-    expect(control).toHaveClass("sm:w-auto");
+    expect(control).toHaveClass("sm:w-72", "sm:shrink-0");
   });
 
   it("pushes a control that does not fill the line to the end of it", () => {

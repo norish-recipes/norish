@@ -188,7 +188,7 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
       <SettingRow title={t("uses")}>
         <Select
           aria-label={t("uses")}
-          className="w-full sm:w-80"
+          className="w-full"
           isDisabled={!enabled}
           placeholder={t("usesPlaceholder")}
           selectionMode="multiple"

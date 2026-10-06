@@ -23,10 +23,11 @@ interface SettingRowBaseProps {
  * control moves under the text and takes the full width; from `sm` up the row
  * reads exactly as it always has.
  *
- * The control keeps its own width classes, in the `w-full sm:w-56` shape the
- * permission selects already used: this only decides where it sits. A control
- * that does not fill the line sits at the end of it, the way every Save button
- * in these cards already does; a `w-full` one has nowhere to be pushed.
+ * From `sm` up the control's column is one fixed width on every settings card,
+ * so no select is squeezed by a long description and none grows or shrinks as
+ * the window does. A select fills it (`w-full`); a control that does not fill
+ * the line sits at the end of it, the way every Save button in these cards
+ * already does.
  */
 export function SettingRow({ title, description, badges, children }: SettingRowBaseProps) {
   return (
@@ -38,7 +39,7 @@ export function SettingRow({ title, description, badges, children }: SettingRowB
         </span>
         {description ? <span className="text-muted text-base">{description}</span> : null}
       </div>
-      <div className="flex w-full justify-end sm:w-auto sm:shrink-0">{children}</div>
+      <div className="flex w-full justify-end sm:w-72 sm:shrink-0">{children}</div>
     </div>
   );
 }

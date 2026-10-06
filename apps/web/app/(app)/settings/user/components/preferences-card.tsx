@@ -3,6 +3,7 @@
 import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { useHiddenItemsState } from "@/context/hidden-items-context";
 import { useRecipePageColor } from "@/context/recipe-page-color-context";
 import { useTodaySectionVisibility } from "@/context/todays-meals-visibility-context";
@@ -71,15 +72,10 @@ export default function PreferencesCard() {
       <Card.Content className="gap-4">
         <p className="text-muted text-base">{t("description")}</p>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("language.title")}</div>
-            <div className="text-muted text-sm">{t("language.description")}</div>
-          </div>
-
+        <SettingRow description={t("language.description")} title={t("language.title")}>
           <Select
             aria-label={t("language.title")}
-            className="max-w-[200px]"
+            className="w-full"
             isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
             placeholder={t("language.title")}
             value={selectedLocale ?? null}
@@ -103,17 +99,12 @@ export default function PreferencesCard() {
               </ListBox>
             </Select.Popover>
           </Select>
-        </div>
+        </SettingRow>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("hidden.title")}</div>
-            <div className="text-muted text-sm">{t("hidden.description")}</div>
-          </div>
-
+        <SettingRow description={t("hidden.description")} title={t("hidden.title")}>
           <Select
             aria-label={t("hidden.title")}
-            className="max-w-[200px]"
+            className="w-full"
             placeholder={t("hidden.placeholder")}
             selectionMode="multiple"
             value={selectedHidden}
@@ -142,16 +133,11 @@ export default function PreferencesCard() {
               </ListBox>
             </Select.Popover>
           </Select>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("todaySection.title")}</div>
-            <div className="text-muted text-sm">{t("todaySection.description")}</div>
-          </div>
-
+        </SettingRow>
+        <SettingRow description={t("todaySection.description")} title={t("todaySection.title")}>
           <Select
             aria-label={t("todaySection.title")}
-            className="max-w-[200px]"
+            className="w-full"
             value={todaySectionVisibility}
             variant="secondary"
             onChange={(selected) => {
@@ -179,19 +165,17 @@ export default function PreferencesCard() {
               </ListBox>
             </Select.Popover>
           </Select>
-        </div>
+        </SettingRow>
 
         {/* A choice between two colourings, not a Hidden Item: nothing is
             hidden and the page is no slimmer for it (ADR-0023). */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("recipePageColor.title")}</div>
-            <div className="text-muted text-sm">{t("recipePageColor.description")}</div>
-          </div>
-
+        <SettingRow
+          description={t("recipePageColor.description")}
+          title={t("recipePageColor.title")}
+        >
           <Select
             aria-label={t("recipePageColor.title")}
-            className="max-w-[200px]"
+            className="w-full"
             value={recipePageColor}
             variant="secondary"
             onChange={(selected) => {
@@ -219,7 +203,7 @@ export default function PreferencesCard() {
               </ListBox>
             </Select.Popover>
           </Select>
-        </div>
+        </SettingRow>
       </Card.Content>
     </Card>
   );

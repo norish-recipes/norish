@@ -138,7 +138,7 @@ export default function GeneralCard() {
         >
           <Select
             aria-label={t("locales")}
-            className="w-full sm:w-80"
+            className="w-full"
             isDisabled={isLoading || isSaving}
             placeholder={t("locales")}
             selectedKeys={new Set(enabledLocales)}
@@ -186,7 +186,7 @@ export default function GeneralCard() {
           <Select
             aria-label={t("defaultLocale")}
             variant="secondary"
-            className="w-full sm:w-80"
+            className="w-full"
             isDisabled={isLoading || isSaving}
             placeholder={t("defaultLocale")}
             selectedKey={defaultLocale || null}
