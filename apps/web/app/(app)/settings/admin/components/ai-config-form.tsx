@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableModelsQuery } from "@/hooks/admin";
 import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -335,11 +336,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         <SettingsSwitch color="success" isSelected={enabled} onValueChange={setEnabled} />
       </SwitchRow>
 
-      {showValidationWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          {t("configureWarning")}
-        </div>
-      )}
+      {showValidationWarning && <Note status="warning">{t("configureWarning")}</Note>}
 
       <Select
         variant="secondary"

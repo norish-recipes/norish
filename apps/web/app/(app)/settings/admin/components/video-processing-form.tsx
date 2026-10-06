@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableTranscriptionModelsQuery, useYtDlpVersionQuery } from "@/hooks/admin";
 import { CheckIcon } from "@heroicons/react/16/solid";
@@ -266,17 +267,9 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         />
       </SwitchRow>
 
-      {showAiDisabledWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          {t("aiDisabledWarning")}
-        </div>
-      )}
+      {showAiDisabledWarning && <Note status="warning">{t("aiDisabledWarning")}</Note>}
 
-      {showValidationWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          {t("configureWarning")}
-        </div>
-      )}
+      {showValidationWarning && <Note status="warning">{t("configureWarning")}</Note>}
 
       <TextField
         isDisabled={isVideoUiDisabled}

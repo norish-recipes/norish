@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { Note } from "@/components/shared/note";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -106,7 +107,7 @@ export default function PermissionPolicyCard() {
         </Section>
 
         <Section id="ingredients" note={tIngredients("note")} title={t("ingredients")}>
-          <p className="text-muted text-sm">{tIngredients("description")}</p>
+          <p className="text-muted text-base">{tIngredients("description")}</p>
           <SettingRow
             description={tIngredients("editDescription")}
             title={tIngredients("editIngredients")}
@@ -141,9 +142,7 @@ function Section({
     <section className="flex flex-col gap-4" data-testid={`permissions-${id}`}>
       <h3 className="text-base font-semibold">{title}</h3>
       {children}
-      {/* The note names itself; a hard-coded "Note:" in front of it read as
-          "Note: Note:" and was the one English word on a translated card. */}
-      <div className="bg-surface-secondary text-muted rounded-lg p-3 text-base">{note}</div>
+      <Note>{note}</Note>
     </section>
   );
 }

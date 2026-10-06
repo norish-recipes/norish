@@ -69,6 +69,11 @@ vi.mock("@heroui/react", () => {
       Body: Passthrough,
       Footer: Passthrough,
     },
+    Alert: Object.assign(Passthrough, {
+      Indicator: () => null,
+      Content: Passthrough,
+      Title: Passthrough,
+    }),
   };
 });
 

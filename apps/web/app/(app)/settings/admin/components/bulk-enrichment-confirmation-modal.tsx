@@ -1,6 +1,7 @@
 "use client";
 
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { Note } from "@/components/shared/note";
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -50,9 +51,9 @@ export default function BulkEnrichmentConfirmationModal({
               />
             </div>
             {replaceExisting && (
-              <div className="bg-danger/10 dark:bg-danger/10 border-danger/30 dark:border-danger/30 mt-2 rounded-lg border p-4">
-                <p className="text-danger dark:text-danger text-base">{t("replaceWarning")}</p>
-              </div>
+              <Note className="mt-2" status="danger">
+                {t("replaceWarning")}
+              </Note>
             )}
             {imageCounts?.enabled && (
               <p className="text-muted mt-2 text-base">
@@ -61,9 +62,9 @@ export default function BulkEnrichmentConfirmationModal({
                 })}
               </p>
             )}
-            <div className="bg-warning/10 dark:bg-warning/10 border-warning/30 dark:border-warning/30 mt-2 rounded-lg border p-4">
-              <p className="text-warning dark:text-warning text-base">{t("costWarning")}</p>
-            </div>
+            <Note className="mt-2" status="warning">
+              {t("costWarning")}
+            </Note>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="tertiary" onPress={onClose}>
