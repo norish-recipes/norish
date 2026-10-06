@@ -1,7 +1,5 @@
 import { setTimeout as sleep } from "node:timers/promises";
 
-import { aiLogger } from "@norish/shared-server/logger";
-
 import type { ImageTier } from "../runtime/providers";
 import type { GeneratedImageBytes } from "../runtime/runtime";
 import { rateLimitWaitMs } from "../runtime/errors";
@@ -69,7 +67,6 @@ export async function drawIngredientIcon(
       const wait = rateLimitWaitMs(error);
 
       if (wait === null || waited >= RATE_LIMIT_WAITS) throw error;
-      aiLogger.info({ food: food.name, waitMs: wait }, "Image provider's rate limit; waiting");
       await sleep(Math.min(wait, LONGEST_WAIT_MS));
     }
   }

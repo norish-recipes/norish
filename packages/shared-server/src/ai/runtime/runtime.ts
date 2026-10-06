@@ -63,6 +63,7 @@ import {
   AIResponseError,
   isCredentialRejection,
   isRequestShapeRejection,
+  rateLimitWaitMs,
   toAIError,
 } from "./errors";
 import {
@@ -755,11 +756,20 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
     return { bytes, mediaType: result.image.mediaType };
   } catch (error) {
     const aiError = toAIError(error);
+    const waitMs = rateLimitWaitMs(error);
 
-    aiLogger.error(
-      { err: error, feature: promptName, provider, model, retryable: aiError.retryable },
-      "Image generation failed"
-    );
+    // A rate limit is waited out by the caller, not a failure worth a stack.
+    if (waitMs !== null) {
+      aiLogger.warn(
+        { feature: promptName, provider, model, waitMs },
+        "Image provider's rate limit"
+      );
+    } else {
+      aiLogger.error(
+        { err: error, feature: promptName, provider, model, retryable: aiError.retryable },
+        "Image generation failed"
+      );
+    }
     recordModelUse({ provider, model, outcome: "failed" });
 
     throw aiError;
