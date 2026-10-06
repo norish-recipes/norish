@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useTranslations } from "next-intl";
 
@@ -58,6 +59,11 @@ function GroceryItemComponent({
         isSelected={grocery.isDone}
         size="lg"
         onChange={(checked) => onToggle(grocery.id, checked)}
+      />
+
+      <IngredientIcon
+        className={grocery.isDone ? "opacity-50" : undefined}
+        ingredientId={grocery.ingredientId ?? recurringGrocery?.ingredientId}
       />
 
       {/* Clickable content area */}

@@ -20,6 +20,8 @@ type Item = {
   hiddenSpellings?: number;
   parent: { id: string; name: string } | null;
   kinds?: number;
+  icon?: string | null;
+  ownIcon?: boolean;
   canEdit: boolean;
   localeNames?: Record<string, string>;
   aliases: Array<{
@@ -259,6 +261,8 @@ vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 /** Whether the instance has AI: with it off, nothing on the page offers it. */
 const permissions = vi.hoisted(() => ({ isAIEnabled: true }));
 
+vi.mock("@/context/hidden-items-context", () => ({ useHiddenItems: () => [] }));
+
 vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({ isAIEnabled: permissions.isAIEnabled }),
 }));
@@ -454,6 +458,16 @@ describe("IngredientsSettingsContent", () => {
       listEnd.onIntersect?.([{ isIntersecting: true }]);
     });
     expect(fetchNextPage).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows each food's icon in its row, and the placeholder for one with none", () => {
+    const icon = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
+
+    items = [{ ...onion, icon, ownIcon: true }, salt];
+    render(<IngredientsSettingsContent />);
+
+    expect(within(row("onion")).getByTestId("ingredient-icon").getAttribute("src")).toBe(icon);
+    expect(within(row("salt")).getByTestId("ingredient-icon-placeholder")).toBeInTheDocument();
   });
 
   it("lists each food on a line, marks the flagged ones, and opens one to its spellings", async () => {

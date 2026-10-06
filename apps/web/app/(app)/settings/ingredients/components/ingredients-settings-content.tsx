@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { useIngredientSuggestions } from "@/components/ingredients/use-ingredient-suggestions";
 import { AIButton } from "@/components/shared/ai-button";
@@ -188,132 +189,137 @@ export default function IngredientsSettingsContent() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <Card>
-        <Card.Header className="flex-row items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <BookOpenIcon className="h-5 w-5" />
-            {t("title")}
-          </h2>
-          <div className="flex items-center gap-2">
-            {suggestions.length > 0 || reportJobId ? (
-              <Button
-                data-testid="ingredients-suggestions-open"
-                size="sm"
-                variant="tertiary"
-                onPress={() => setSuggestionsOpen(true)}
-              >
-                <SparklesIcon className="size-4" />
-                {t("suggestionsOpen", { count: suggestions.length })}
-              </Button>
-            ) : null}
-            {running ? (
-              // A round in progress takes the place of the buttons that start one, and opens what it has done so far.
-              <Button
-                data-testid="ingredients-round-progress"
-                size="sm"
-                variant="tertiary"
-                onPress={() => setSuggestionsOpen(true)}
-              >
-                <Spinner color="current" size="sm" />
-                <span className="tabular-nums">
-                  {t("roundProgress", { done: running.done, total: running.total })}
-                </span>
-              </Button>
-            ) : null}
-            {isAIEnabled && standaloneIds.length > 0 && !running ? (
-              <AIButton
-                data-testid="ingredients-find-parents-all"
-                isDisabled={startRound.isPending}
-                size="sm"
-                variant="tertiary"
-                onPress={() => void startAndWatch({ mode: "parent", ingredientIds: standaloneIds })}
-              >
-                {t("findParentsAll")}
-              </AIButton>
-            ) : null}
-            {isAIEnabled && hasFlagged && !running ? (
-              <AIButton
-                data-testid="ingredients-ask-ai-all"
-                isDisabled={startRound.isPending}
-                size="sm"
-                variant="tertiary"
-                onPress={() => setAskOpen(true)}
-              >
-                {t("askAIAll")}
-              </AIButton>
-            ) : null}
-          </div>
-        </Card.Header>
-        <Card.Content className="gap-4">
-          <p className="text-muted text-base">{t("description")}</p>
-
-          <div className="flex items-center gap-2">
-            <IngredientSearch busy={settling} onSearch={onSearch} />
-            <Button
-              isIconOnly
-              aria-label={tFilters("title")}
-              // A plain field beside the search box, as the dashboard's is; the dot alone says a filter is on.
-              className="shadow-field bg-field hover:bg-field-hover dark:bg-default dark:hover:bg-surface-tertiary relative shrink-0 border border-transparent"
-              data-testid="ingredients-filters"
-              variant="tertiary"
-              onPress={() => setFiltersOpen(true)}
-            >
-              <FunnelIcon className="size-4" />
-              {hasIngredientFilters(filters) ? (
-                <span className="bg-accent shadow-background absolute top-2 right-2 inline-flex h-2 w-2 rounded-full shadow-[0_0_0_2px]" />
+    // The rows carry their icons; the provider says whether the reader hid them.
+    <IngredientIconsProvider>
+      <div className="flex flex-col gap-6">
+        <Card>
+          <Card.Header className="flex-row items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <BookOpenIcon className="h-5 w-5" />
+              {t("title")}
+            </h2>
+            <div className="flex items-center gap-2">
+              {suggestions.length > 0 || reportJobId ? (
+                <Button
+                  data-testid="ingredients-suggestions-open"
+                  size="sm"
+                  variant="tertiary"
+                  onPress={() => setSuggestionsOpen(true)}
+                >
+                  <SparklesIcon className="size-4" />
+                  {t("suggestionsOpen", { count: suggestions.length })}
+                </Button>
               ) : null}
-            </Button>
-          </div>
+              {running ? (
+                // A round in progress takes the place of the buttons that start one, and opens what it has done so far.
+                <Button
+                  data-testid="ingredients-round-progress"
+                  size="sm"
+                  variant="tertiary"
+                  onPress={() => setSuggestionsOpen(true)}
+                >
+                  <Spinner color="current" size="sm" />
+                  <span className="tabular-nums">
+                    {t("roundProgress", { done: running.done, total: running.total })}
+                  </span>
+                </Button>
+              ) : null}
+              {isAIEnabled && standaloneIds.length > 0 && !running ? (
+                <AIButton
+                  data-testid="ingredients-find-parents-all"
+                  isDisabled={startRound.isPending}
+                  size="sm"
+                  variant="tertiary"
+                  onPress={() =>
+                    void startAndWatch({ mode: "parent", ingredientIds: standaloneIds })
+                  }
+                >
+                  {t("findParentsAll")}
+                </AIButton>
+              ) : null}
+              {isAIEnabled && hasFlagged && !running ? (
+                <AIButton
+                  data-testid="ingredients-ask-ai-all"
+                  isDisabled={startRound.isPending}
+                  size="sm"
+                  variant="tertiary"
+                  onPress={() => setAskOpen(true)}
+                >
+                  {t("askAIAll")}
+                </AIButton>
+              ) : null}
+            </div>
+          </Card.Header>
+          <Card.Content className="gap-4">
+            <p className="text-muted text-base">{t("description")}</p>
 
-          {!isLoading && items.length === 0 ? (
-            <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
-              {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
-            </p>
-          ) : (
-            <IngredientList
-              hasMore={hasNextPage}
-              isFetchingMore={isFetchingNextPage}
-              loadMore={loadMore}
-              reviewing={reviewing}
-              rows={tree.rows}
-              settling={settling}
-              onOpen={setOpenId}
-              onToggleKinds={treeMode ? tree.toggle : undefined}
-            />
-          )}
-        </Card.Content>
-      </Card>
-      <DataSourcesCard />
+            <div className="flex items-center gap-2">
+              <IngredientSearch busy={settling} onSearch={onSearch} />
+              <Button
+                isIconOnly
+                aria-label={tFilters("title")}
+                // A plain field beside the search box, as the dashboard's is; the dot alone says a filter is on.
+                className="shadow-field bg-field hover:bg-field-hover dark:bg-default dark:hover:bg-surface-tertiary relative shrink-0 border border-transparent"
+                data-testid="ingredients-filters"
+                variant="tertiary"
+                onPress={() => setFiltersOpen(true)}
+              >
+                <FunnelIcon className="size-4" />
+                {hasIngredientFilters(filters) ? (
+                  <span className="bg-accent shadow-background absolute top-2 right-2 inline-flex h-2 w-2 rounded-full shadow-[0_0_0_2px]" />
+                ) : null}
+              </Button>
+            </div>
 
-      <IngredientFiltersPanel
-        open={filtersOpen}
-        value={filters}
-        onApply={(next) => startTransition(() => setFilters(next))}
-        onOpenChange={setFiltersOpen}
-      />
-      <IngredientPanel
-        id={openId}
-        item={openItem}
-        open={openId !== null}
-        reviewing={openId !== null && reviewing.has(openId)}
-        onChanged={refresh}
-        onClose={() => setOpenId(null)}
-      />
-      <AskAIRoundModal
-        isOpen={askOpen}
-        isStarting={startRound.isPending}
-        onClose={() => setAskOpen(false)}
-        onStart={(scope) => void askAIAboutFlagged(scope)}
-      />
-      <SuggestionsPanel
-        jobId={reportJobId}
-        round={running}
-        open={suggestionsOpen}
-        reviewing={reviewing}
-        onChanged={refresh}
-        onClose={() => setSuggestionsOpen(false)}
-      />
-    </div>
+            {!isLoading && items.length === 0 ? (
+              <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
+                {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
+              </p>
+            ) : (
+              <IngredientList
+                hasMore={hasNextPage}
+                isFetchingMore={isFetchingNextPage}
+                loadMore={loadMore}
+                reviewing={reviewing}
+                rows={tree.rows}
+                settling={settling}
+                onOpen={setOpenId}
+                onToggleKinds={treeMode ? tree.toggle : undefined}
+              />
+            )}
+          </Card.Content>
+        </Card>
+        <DataSourcesCard />
+
+        <IngredientFiltersPanel
+          open={filtersOpen}
+          value={filters}
+          onApply={(next) => startTransition(() => setFilters(next))}
+          onOpenChange={setFiltersOpen}
+        />
+        <IngredientPanel
+          id={openId}
+          item={openItem}
+          open={openId !== null}
+          reviewing={openId !== null && reviewing.has(openId)}
+          onChanged={refresh}
+          onClose={() => setOpenId(null)}
+        />
+        <AskAIRoundModal
+          isOpen={askOpen}
+          isStarting={startRound.isPending}
+          onClose={() => setAskOpen(false)}
+          onStart={(scope) => void askAIAboutFlagged(scope)}
+        />
+        <SuggestionsPanel
+          jobId={reportJobId}
+          round={running}
+          open={suggestionsOpen}
+          reviewing={reviewing}
+          onChanged={refresh}
+          onClose={() => setSuggestionsOpen(false)}
+        />
+      </div>
+    </IngredientIconsProvider>
   );
 }

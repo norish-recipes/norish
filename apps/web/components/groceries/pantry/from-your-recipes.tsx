@@ -3,6 +3,7 @@
 import type { PickedFood } from "@/hooks/pantry";
 import { useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
+import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IconActionButton } from "@/components/shared/action-button";
 import { useSpellingRules } from "@/hooks/config";
 import { usePantrySuggestions } from "@/hooks/pantry";
@@ -67,32 +68,35 @@ export function FromYourRecipes({
       {open ? (
         <>
           <p className="text-muted text-sm">{t("fromYourRecipesHint")}</p>
-          <ul className="divide-border divide-y overflow-hidden rounded-lg">
-            {shown.map((food) => {
-              const name = ingredientDisplayName(food, locale);
+          <IngredientIconsProvider ids={shown.map((food) => food.ingredientId)}>
+            <ul className="divide-border divide-y overflow-hidden rounded-lg">
+              {shown.map((food) => {
+                const name = ingredientDisplayName(food, locale);
 
-              return (
-                <li
-                  key={food.ingredientId}
-                  className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
-                  data-pantry-suggestion={food.name}
-                >
-                  <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
-                  <span className="text-muted shrink-0 text-xs">
-                    {t("inRecipes", { count: food.recipeCount })}
-                  </span>
-                  <IconActionButton
-                    action="add"
-                    className="shrink-0"
-                    label={t("addFood", { name })}
-                    size="sm"
-                    variant="tertiary"
-                    onPress={() => onKeep(food)}
-                  />
-                </li>
-              );
-            })}
-          </ul>
+                return (
+                  <li
+                    key={food.ingredientId}
+                    className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
+                    data-pantry-suggestion={food.name}
+                  >
+                    <IngredientIcon ingredientId={food.ingredientId} />
+                    <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    <span className="text-muted shrink-0 text-xs">
+                      {t("inRecipes", { count: food.recipeCount })}
+                    </span>
+                    <IconActionButton
+                      action="add"
+                      className="shrink-0"
+                      label={t("addFood", { name })}
+                      size="sm"
+                      variant="tertiary"
+                      onPress={() => onKeep(food)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </IngredientIconsProvider>
           {!showAll && offered.length > HANDFUL ? (
             <Button className="w-fit" size="sm" variant="tertiary" onPress={() => setShowAll(true)}>
               {t("showMore")}

@@ -2,6 +2,7 @@
 
 import type { IngredientItem } from "@/components/ingredients/types";
 import { memo } from "react";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientStatusChip } from "@/components/ingredients/ingredient-status-chip";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
@@ -91,6 +92,7 @@ export const IngredientRow = memo(function IngredientRow({
         type="button"
         onClick={() => onOpen(item.id)}
       >
+        <IngredientIcon src={item.icon ?? null} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="min-w-0 truncate font-medium">{displayName}</span>

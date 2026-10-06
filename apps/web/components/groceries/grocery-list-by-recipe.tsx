@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -34,7 +35,21 @@ interface RecipeGroup {
   groceries: GroceryDto[];
 }
 
-export function GroceryListByRecipe({
+/** The list by recipe, under one read of the icons of every food on it. */
+export function GroceryListByRecipe(props: GroceryListByRecipeProps) {
+  const foods = [
+    ...props.groceries.map((grocery) => grocery.ingredientId),
+    ...props.recurringGroceries.map((recurring) => recurring.ingredientId),
+  ];
+
+  return (
+    <IngredientIconsProvider ids={foods}>
+      <GroceryListByRecipeContent {...props} />
+    </IngredientIconsProvider>
+  );
+}
+
+function GroceryListByRecipeContent({
   groceries,
   stores,
   recurringGroceries,

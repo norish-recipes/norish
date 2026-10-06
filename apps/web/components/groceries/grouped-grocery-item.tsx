@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { memo, useCallback, useState } from "react";
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
@@ -129,6 +130,14 @@ function GroupedGroceryItemComponent({
           isSelected={group.allDone}
           size="lg"
           onChange={handleGroupToggle}
+        />
+
+        {/* One food's groceries, so the first that knows its food speaks for the group. */}
+        <IngredientIcon
+          className={group.allDone ? "opacity-50" : undefined}
+          ingredientId={
+            group.sources.find((source) => source.grocery.ingredientId)?.grocery.ingredientId
+          }
         />
 
         {/* Clickable content area */}

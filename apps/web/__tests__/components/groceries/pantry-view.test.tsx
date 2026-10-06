@@ -25,6 +25,8 @@ let suggestions: PantrySuggestionDto[] = [];
 let pantry = { isLoading: false, isUnavailable: false };
 let viewerLocale = "en";
 let offline = false;
+// The icons the surface read, by Ingredient.
+let icons: Record<string, string | null> = {};
 
 vi.mock("@/hooks/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
@@ -47,10 +49,17 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       list: {
         queryOptions: () => ({ queryKey: ["catalogue"], queryFn: async () => ({ items: [] }) }),
       },
+      icons: { queryOptions: (input: unknown) => ({ queryKey: ["icons", input] }) },
     },
   }),
 }));
-vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: undefined }) }));
+vi.mock("@tanstack/react-query", () => ({
+  keepPreviousData: (data: unknown) => data,
+  useQuery: ({ queryKey }: { queryKey: unknown[] }) => ({
+    data: queryKey[0] === "icons" ? icons : undefined,
+  }),
+}));
+vi.mock("@/context/hidden-items-context", () => ({ useHiddenItems: () => [] }));
 vi.mock("@/app/providers/connectivity-provider", () => ({
   useConnectivity: () => ({ isOffline: offline }),
 }));
@@ -97,6 +106,25 @@ describe("PantryView", () => {
     items = [kept("salt", { nl: "zout" }), kept("olive oil", { nl: "olijfolie" })];
     groceries = [];
     suggestions = [];
+    icons = {};
+  });
+
+  it("shows each kept food's icon, and the placeholder for one with none", () => {
+    icons = {
+      "i-salt": "/ingredient-icons/0123456789abcdef0123456789abcdef.webp",
+      "i-olive oil": null,
+    };
+    render(<PantryView />);
+
+    const row = (name: string) =>
+      screen
+        .getAllByRole("listitem")
+        .find((it) => it.getAttribute("data-pantry-ingredient") === name)!;
+
+    expect(row("salt").querySelector("img")?.getAttribute("src")).toBe(icons["i-salt"]);
+    expect(
+      row("olive oil").querySelector('[data-testid="ingredient-icon-placeholder"]')
+    ).toBeInTheDocument();
   });
 
   it("shows a loading state, never an empty Pantry, while it loads", () => {

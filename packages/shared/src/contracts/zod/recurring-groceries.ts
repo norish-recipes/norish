@@ -7,13 +7,17 @@ import { recurringGroceries } from "@norish/db-schema/schema";
 export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroceries)
   .omit({
     ingredientAliasId: true,
-    ingredientId: true,
     userId: true,
     createdAt: true,
     updatedAt: true,
   })
   .extend({
     amount: z.coerce.number().nullable(),
+    /**
+     * The Ingredient its name resolved to, whose icon it shows. Absent on one
+     * added offline until the server has resolved it.
+     */
+    ingredientId: z.uuid().nullable().optional(),
   });
 
 export const RecurringGroceryInsertBaseSchema = createInsertSchema(recurringGroceries)

@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { FIELD_STYLE } from "@/components/groceries/grocery-field";
+import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
 import { useSpellingRules } from "@/hooks/config";
@@ -128,139 +129,143 @@ export function PantryView() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
-          <InputGroup variant="secondary">
-            <InputGroup.Prefix>
-              <MagnifyingGlassIcon aria-hidden className="text-muted size-4" />
-            </InputGroup.Prefix>
-            <InputGroup.Input
-              ref={field}
-              data-testid="pantry-name"
-              maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
-              placeholder={t("fieldPlaceholder")}
-              style={FIELD_STYLE}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  addTyped();
-                }
-              }}
-            />
-            <InputGroup.Suffix className="pr-1">
-              <Button
-                isIconOnly
-                aria-label={t("add")}
-                data-testid="add-pantry-ingredient"
-                isDisabled={!canAdd}
-                size="sm"
-                variant="ghost"
-                onPress={addTyped}
-              >
-                <PlusIcon className="size-4" />
-              </Button>
-            </InputGroup.Suffix>
-          </InputGroup>
-        </TextField>
-        <p className="text-muted text-sm">{t("hint")}</p>
-        {/* A food's details are read from the server, so offline its row opens nothing. */}
-        {isOffline ? (
-          <p className="text-muted text-sm" data-testid="pantry-offline-details">
-            {t("offlineDetails")}
+    <IngredientIconsProvider ids={items.map((item) => item.ingredientId)}>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
+            <InputGroup variant="secondary">
+              <InputGroup.Prefix>
+                <MagnifyingGlassIcon aria-hidden className="text-muted size-4" />
+              </InputGroup.Prefix>
+              <InputGroup.Input
+                ref={field}
+                data-testid="pantry-name"
+                maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
+                placeholder={t("fieldPlaceholder")}
+                style={FIELD_STYLE}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addTyped();
+                  }
+                }}
+              />
+              <InputGroup.Suffix className="pr-1">
+                <Button
+                  isIconOnly
+                  aria-label={t("add")}
+                  data-testid="add-pantry-ingredient"
+                  isDisabled={!canAdd}
+                  size="sm"
+                  variant="ghost"
+                  onPress={addTyped}
+                >
+                  <PlusIcon className="size-4" />
+                </Button>
+              </InputGroup.Suffix>
+            </InputGroup>
+          </TextField>
+          <p className="text-muted text-sm">{t("hint")}</p>
+          {/* A food's details are read from the server, so offline its row opens nothing. */}
+          {isOffline ? (
+            <p className="text-muted text-sm" data-testid="pantry-offline-details">
+              {t("offlineDetails")}
+            </p>
+          ) : null}
+        </div>
+
+        {items.length === 0 ? (
+          <p className="text-muted py-2 text-center" data-testid="pantry-empty">
+            {t("empty")}
           </p>
-        ) : null}
-      </div>
-
-      {items.length === 0 ? (
-        <p className="text-muted py-2 text-center" data-testid="pantry-empty">
-          {t("empty")}
-        </p>
-      ) : kept.length === 0 ? (
-        <p className="text-muted py-2 text-center" data-testid="pantry-no-match">
-          {tStatus("noResults")}
-        </p>
-      ) : (
-        <ul
-          className="divide-border divide-y overflow-hidden rounded-lg"
-          data-testid="pantry-ingredients"
-        >
-          {kept.map((item) => {
-            const name = ingredientDisplayName(item, locale);
-
-            return (
-              <li
-                key={item.id}
-                className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
-                data-pantry-ingredient={foldName(item.name)}
-              >
-                {/* Added offline, a food has no Ingredient to open until it syncs. */}
-                {item.ingredientId && !isOffline ? (
-                  <button
-                    className="min-w-0 flex-1 cursor-[var(--cursor-interactive)] truncate text-left font-medium hover:underline"
-                    type="button"
-                    onClick={() => setOpenId(item.ingredientId)}
-                  >
-                    {name}
-                  </button>
-                ) : (
-                  <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
-                )}
-                <PutOnTheList
-                  onPut={() => putOnTheList(item)}
-                  onTheList={groceryOnTheList(groceries, item, rules) !== null}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {matches.length > 0 ? (
-        <section className="flex flex-col gap-2" data-testid="pantry-catalogue-matches">
-          <h2 className="text-muted text-xs font-semibold tracking-wide uppercase">
-            {t("fromCatalogue")}
-          </h2>
-          <ul className="divide-border divide-y overflow-hidden rounded-lg">
-            {matches.map((food) => {
-              const name = ingredientDisplayName(food, locale);
+        ) : kept.length === 0 ? (
+          <p className="text-muted py-2 text-center" data-testid="pantry-no-match">
+            {tStatus("noResults")}
+          </p>
+        ) : (
+          <ul
+            className="divide-border divide-y overflow-hidden rounded-lg"
+            data-testid="pantry-ingredients"
+          >
+            {kept.map((item) => {
+              const name = ingredientDisplayName(item, locale);
 
               return (
                 <li
-                  key={food.id}
+                  key={item.id}
                   className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
-                  data-catalogue-food={food.name}
+                  data-pantry-ingredient={foldName(item.name)}
                 >
-                  <span className="min-w-0 flex-1 truncate">{name}</span>
-                  <IconActionButton
-                    action="add"
-                    className="shrink-0"
-                    label={t("addFood", { name })}
-                    size="sm"
-                    variant="tertiary"
-                    onPress={() =>
-                      keep({
-                        ingredientId: food.id,
-                        name: food.name,
-                        localeNames: food.localeNames,
-                      })
-                    }
+                  <IngredientIcon ingredientId={item.ingredientId} />
+                  {/* Added offline, a food has no Ingredient to open until it syncs. */}
+                  {item.ingredientId && !isOffline ? (
+                    <button
+                      className="min-w-0 flex-1 cursor-[var(--cursor-interactive)] truncate text-left font-medium hover:underline"
+                      type="button"
+                      onClick={() => setOpenId(item.ingredientId)}
+                    >
+                      {name}
+                    </button>
+                  ) : (
+                    <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                  )}
+                  <PutOnTheList
+                    onPut={() => putOnTheList(item)}
+                    onTheList={groceryOnTheList(groceries, item, rules) !== null}
                   />
                 </li>
               );
             })}
           </ul>
-        </section>
-      ) : null}
+        )}
 
-      <FromYourRecipes items={items} onKeep={keep} />
+        {matches.length > 0 ? (
+          <section className="flex flex-col gap-2" data-testid="pantry-catalogue-matches">
+            <h2 className="text-muted text-xs font-semibold tracking-wide uppercase">
+              {t("fromCatalogue")}
+            </h2>
+            <ul className="divide-border divide-y overflow-hidden rounded-lg">
+              {matches.map((food) => {
+                const name = ingredientDisplayName(food, locale);
 
-      <IngredientPanel
-        id={openId}
-        item={null}
-        open={openId !== null}
-        onClose={() => setOpenId(null)}
-      />
-    </div>
+                return (
+                  <li
+                    key={food.id}
+                    className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
+                    data-catalogue-food={food.name}
+                  >
+                    <IngredientIcon src={food.icon ?? null} />
+                    <span className="min-w-0 flex-1 truncate">{name}</span>
+                    <IconActionButton
+                      action="add"
+                      className="shrink-0"
+                      label={t("addFood", { name })}
+                      size="sm"
+                      variant="tertiary"
+                      onPress={() =>
+                        keep({
+                          ingredientId: food.id,
+                          name: food.name,
+                          localeNames: food.localeNames,
+                        })
+                      }
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
+
+        <FromYourRecipes items={items} onKeep={keep} />
+
+        <IngredientPanel
+          id={openId}
+          item={null}
+          open={openId !== null}
+          onClose={() => setOpenId(null)}
+        />
+      </div>
+    </IngredientIconsProvider>
   );
 }
