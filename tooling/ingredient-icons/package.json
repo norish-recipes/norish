@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Draws the Ingredient Icons Norish ships for its seeded foods, through an instance's image provider.",
   "scripts": {
-    "draw": "tsx src/cli.ts",
+    "draw-icons": "tsx src/draw-icons.ts",
+    "draw-sample-icons": "tsx src/draw-sample-icons.ts",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "pnpm exec tsc --noEmit",

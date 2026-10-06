@@ -19,7 +19,7 @@ manifest as `none`, so a food under them borrows nothing vague.
 2. **Run the sample.**
 
    ```sh
-   pnpm --filter @norish/ingredient-icons-tool draw sample
+   pnpm --filter @norish/ingredient-icons-tool draw-sample-icons
    ```
 
    About twenty foods (pale ones, liquids, powders, spices, cuts of meat) at
@@ -42,8 +42,8 @@ manifest as `none`, so a food under them borrows nothing vague.
    Then:
 
    ```sh
-   pnpm --filter @norish/ingredient-icons-tool draw full --tier low
-   pnpm --filter @norish/ingredient-icons-tool draw full --tier low --yes
+   pnpm --filter @norish/ingredient-icons-tool draw-icons --tier low
+   pnpm --filter @norish/ingredient-icons-tool draw-icons --tier low --yes
    ```
 
    Most seeded foods look like a food above them in the tree (every olive oil
