@@ -28,6 +28,7 @@ const DEFAULTS: PromptValues = {
   ingredientResolution: "Recognise the ingredient.",
   imageGenerationBrief: "Write the visual brief.",
   imageGenerationStyle: "Draw the dish.",
+  ingredientIconStyle: "Draw the food.",
 };
 
 describe("isSamePromptText", () => {

@@ -234,6 +234,17 @@ export async function isImageGenerationConfigured(): Promise<boolean> {
 }
 
 /**
+ * Whether the instance can draw: AI on and an Image Generation provider
+ * configured. What Generate and Draw icons on the Ingredients page follow,
+ * so a button is hidden rather than offered to fail.
+ */
+export async function canDrawImages(): Promise<boolean> {
+  const [enabled, configured] = await Promise.all([isAIEnabled(), isImageGenerationConfigured()]);
+
+  return enabled && configured;
+}
+
+/**
  * Get the Decision Model block (ADR-0035). Ships unconfigured: a deployment
  * that never saved it has no row and gets null. A stored row that no longer
  * matches the contract is reported and treated as absent, so a Decision is

@@ -31,6 +31,9 @@ vi.mock("@norish/shared-server/logger", () => {
 });
 
 const { generateImage } = await import("@norish/shared-server/ai/runtime/runtime");
+const { createImageModelFromConfig } = await import("@norish/shared-server/ai/runtime/providers");
+const { drawIngredientIcon } =
+  await import("@norish/shared-server/ai/enrichment/ingredient-icon-drawer");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
 const { AIConfigurationError, AIDisabledError, AIProviderError, AIResponseError } =
@@ -279,5 +282,70 @@ describe("generateImage", () => {
     expect(Date.now() - startedAt).toBeLessThan(5_000);
     expect(failure).toBeInstanceOf(AIProviderError);
     expect((failure as InstanceType<typeof AIProviderError>).retryable).toBe(true);
+  });
+
+  describe("an Ingredient Icon", () => {
+    it("is drawn square from its own prompt, the food and the composition appended", async () => {
+      await drawIngredientIcon({ name: "pepper", kindOf: ["spice"] });
+
+      expect(captured[0]!.body.size).toBe("1024x1024");
+      const prompt = captured[0]!.body.prompt as string;
+
+      // The administrator's icon style leads; the food follows, then the code's composition.
+      expect(prompt).toMatch(/^A small icon of one food/);
+      expect(prompt).toMatch(/The food: pepper, a kind of spice\.\n\n/);
+      expect(prompt).toMatch(/one solid colour that the food itself does not contain/);
+      expect(prompt).toMatch(/flour in a small bowl\.$/);
+    });
+
+    it("leaves quality alone where the provider has no tiers", async () => {
+      await drawIngredientIcon({ name: "pepper", kindOf: [] });
+
+      expect(captured[0]!.body).not.toHaveProperty("quality");
+    });
+
+    it.each([
+      ["gpt-image-1-mini", "low", "low"],
+      ["gpt-image-2", "medium", "medium"],
+      ["dall-e-3", "low", "standard"],
+      ["dall-e-2", "low", undefined],
+    ] as const)("asks %s at the %s tier for %s", async (model, tier, quality) => {
+      // Azure's image model is OpenAI's and reaches a configured endpoint.
+      mockGetImageGenerationConfig.mockResolvedValue(
+        imageConfig({ provider: "azure", model, endpoint: baseUrl, apiKey: "azure-key" })
+      );
+
+      await drawIngredientIcon({ name: "pepper", kindOf: [] }, tier);
+
+      expect(captured[0]!.body.quality).toBe(quality);
+      expect(captured[0]!.body.size).toBe("1024x1024");
+    });
+
+    it.each([
+      ["openai", { size: "1024x1024" }, { openai: { quality: "low" } }],
+      ["google", { aspectRatio: "1:1" }, undefined],
+      ["ollama", { size: "1024x1024" }, undefined],
+      ["generic-openai", { size: "1024x1024" }, undefined],
+    ] as const)(
+      "asks %s for its square, and its cheapest tier where it has one",
+      (provider, square, low) => {
+        const model = createImageModelFromConfig({
+          provider,
+          model: provider === "openai" ? "gpt-image-1-mini" : "some-model",
+          endpoint: baseUrl,
+          apiKey: "key",
+        });
+
+        expect(model.square).toEqual(square);
+        expect(model.tier?.("low")).toEqual(low);
+      }
+    );
+
+    it("keeps a dish's picture as it was: landscape, no tier", async () => {
+      await generateImage({ prompt: "image-generation-style", sections: [] });
+
+      expect(captured[0]!.body.size).not.toBe("1024x1024");
+      expect(captured[0]!.body).not.toHaveProperty("quality");
+    });
   });
 });

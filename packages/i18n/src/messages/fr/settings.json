@@ -574,7 +574,9 @@
       "change": "Changer l’icône",
       "upload": "Importer une image",
       "remove": "Retirer l’icône",
-      "failed": "Impossible de faire une icône de cette image."
+      "failed": "Impossible de faire une icône de cette image.",
+      "generate": "Générer avec l’IA",
+      "generateFailed": "L’icône n’a pas pu être générée."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "Prompt pour la description visuelle...",
       "imageGenerationStyle": "Prompt de style d'image",
       "imageGenerationStyleDescription": "Envoyé au modèle d'image, avec la description visuelle ajoutée après. Définit le rendu partagé par toutes les images générées.",
-      "imageGenerationStylePlaceholder": "Prompt pour le style d'image..."
+      "imageGenerationStylePlaceholder": "Prompt pour le style d'image...",
+      "ingredientIconStyle": "Prompt de style des icônes d'ingrédients",
+      "ingredientIconStyleDescription": "Envoyé au modèle d'image quand l'icône d'un ingrédient est dessinée, avec le nom de l'aliment et ce dont il est une sorte ajoutés après. Définit le rendu partagé par toutes les icônes dessinées.",
+      "ingredientIconStylePlaceholder": "Prompt pour le style des icônes d'ingrédients..."
     },
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {

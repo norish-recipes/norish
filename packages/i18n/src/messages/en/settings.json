@@ -574,7 +574,9 @@
       "change": "Change the icon",
       "upload": "Upload a picture",
       "remove": "Remove icon",
-      "failed": "That picture could not be made into an icon."
+      "failed": "That picture could not be made into an icon.",
+      "generate": "Generate with AI",
+      "generateFailed": "The icon could not be generated."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "Prompt for writing the visual brief...",
       "imageGenerationStyle": "Image Style Prompt",
       "imageGenerationStyleDescription": "Sent to the image model, with the visual brief appended after it. Sets the look every generated picture shares.",
-      "imageGenerationStylePlaceholder": "Prompt for the image style..."
+      "imageGenerationStylePlaceholder": "Prompt for the image style...",
+      "ingredientIconStyle": "Ingredient Icon Style Prompt",
+      "ingredientIconStyleDescription": "Sent to the image model when an ingredient's icon is drawn, with the food's name and what it is a kind of appended after it. Sets the look every drawn icon shares.",
+      "ingredientIconStylePlaceholder": "Prompt for the ingredient icon style..."
     },
     "unsavedChanges": "Unsaved changes",
     "jsonEditor": {

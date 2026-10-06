@@ -574,7 +574,9 @@
       "change": "아이콘 변경",
       "upload": "사진 업로드",
       "remove": "아이콘 제거",
-      "failed": "이 사진으로 아이콘을 만들 수 없습니다."
+      "failed": "이 사진으로 아이콘을 만들 수 없습니다.",
+      "generate": "AI로 생성",
+      "generateFailed": "아이콘을 생성할 수 없습니다."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "시각적 설명을 위한 프롬프트...",
       "imageGenerationStyle": "이미지 스타일 프롬프트",
       "imageGenerationStyleDescription": "시각적 설명과 함께 이미지 모델로 전송됩니다. 생성되는 모든 이미지가 공유하는 스타일을 정합니다.",
-      "imageGenerationStylePlaceholder": "이미지 스타일을 위한 프롬프트..."
+      "imageGenerationStylePlaceholder": "이미지 스타일을 위한 프롬프트...",
+      "ingredientIconStyle": "재료 아이콘 스타일 프롬프트",
+      "ingredientIconStyleDescription": "재료 아이콘을 그릴 때 이미지 모델로 전송되며, 그 뒤에 식품 이름과 그것이 어떤 종류인지가 덧붙여집니다. 그려지는 모든 아이콘이 공유하는 스타일을 정합니다.",
+      "ingredientIconStylePlaceholder": "재료 아이콘 스타일을 위한 프롬프트..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {

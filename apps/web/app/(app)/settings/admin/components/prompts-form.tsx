@@ -28,6 +28,7 @@ const PROMPT_FIELDS = [
   { key: "ingredientResolution", rows: 6 },
   { key: "imageGenerationBrief", rows: 6 },
   { key: "imageGenerationStyle", rows: 4 },
+  { key: "ingredientIconStyle", rows: 4 },
 ] as const satisfies readonly { key: keyof PromptsConfigInput; rows: number }[];
 
 type PromptKey = (typeof PROMPT_FIELDS)[number]["key"];

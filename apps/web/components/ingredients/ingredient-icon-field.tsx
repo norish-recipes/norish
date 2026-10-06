@@ -3,8 +3,10 @@
 import { useRef } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { usePanelPortalContainer } from "@/components/Panel/Panel";
+import { cssAIIconColor } from "@/config/css-tokens";
+import { usePermissionsContext } from "@/context/permissions-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { ArrowUpTrayIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { ArrowUpTrayIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -23,10 +25,11 @@ const PICTURE_TYPES = "image/jpeg,image/png,image/webp,image/avif,image/heic,ima
 
 /**
  * The food's Ingredient Icon at the head of its panel. One the viewer may
- * edit is a button: Upload a picture (cut out on the server), or Remove the
- * food's own icon, so the shipped one or its parent's comes back. Either is
- * part of the draft and lands with Save, so Cancel leaves the food as it was.
- * A reader who hid Ingredient Icons is shown none here either.
+ * edit is a button: Upload a picture (cut out on the server), Generate one
+ * with the instance's image provider (offered only where it can draw), or
+ * Remove the food's own icon, so the shipped one or its parent's comes
+ * back. Each is part of the draft and lands with Save, so Cancel leaves the
+ * food as it was. A reader who hid Ingredient Icons is shown none here either.
  */
 export function IngredientIconField({
   item,
@@ -45,6 +48,8 @@ export function IngredientIconField({
   const portalContainer = usePanelPortalContainer();
   const picker = useRef<HTMLInputElement>(null);
   const upload = useMutation(trpc.ingredients.uploadIcon.mutationOptions());
+  const generate = useMutation(trpc.ingredients.generateIcon.mutationOptions());
+  const { canDrawImages } = usePermissionsContext();
   const hidden = useIngredientIconsHidden();
 
   if (hidden) return null;
@@ -52,7 +57,7 @@ export function IngredientIconField({
   // A removed own icon shows the placeholder until Save brings back what it falls back to.
   const shown = draft === undefined ? (item.icon ?? null) : (draft?.address ?? null);
   const hasOwn = draft === undefined ? Boolean(item.ownIcon) : draft !== null;
-  const pending = upload.isPending;
+  const pending = upload.isPending || generate.isPending;
   const icon = (
     <span className="relative block">
       <IngredientIcon size="panel" src={shown} />
@@ -81,6 +86,21 @@ export function IngredientIconField({
         description: t("failed"),
         error,
         context: "ingredients:upload-icon",
+      });
+    }
+  };
+
+  const generateIcon = async () => {
+    try {
+      const drawn = await generate.mutateAsync({ ingredientId: item.id });
+
+      onDraftChange({ file: drawn.file, address: drawn.address });
+    } catch (error) {
+      showSafeErrorToast({
+        title: tIngredients("errors.title"),
+        description: t("generateFailed"),
+        error,
+        context: "ingredients:generate-icon",
       });
     }
   };
@@ -119,6 +139,16 @@ export function IngredientIconField({
               <ArrowUpTrayIcon className="size-4" />
               <Label>{t("upload")}</Label>
             </Dropdown.Item>
+            {canDrawImages ? (
+              <Dropdown.Item
+                id="generate"
+                textValue={t("generate")}
+                onAction={() => void generateIcon()}
+              >
+                <SparklesIcon className={`size-4 ${cssAIIconColor}`} />
+                <Label>{t("generate")}</Label>
+              </Dropdown.Item>
+            ) : null}
             {hasOwn ? (
               <Dropdown.Item
                 className="text-danger"

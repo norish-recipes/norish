@@ -21,6 +21,7 @@ import {
   readRoundTokens,
 } from "@norish/queue/ingredient-review/progress";
 import { getQueues } from "@norish/queue/registry";
+import { canDrawImages } from "@norish/shared-server/config/server-config-loader";
 import {
   addAlias as addCatalogueAlias,
   CatalogueEditError,
@@ -36,7 +37,10 @@ import {
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { announcingTogether, ingredientChanges } from "@norish/shared-server/ingredients/changes";
-import { uploadIngredientIcon } from "@norish/shared-server/ingredients/icon-drafts";
+import {
+  generateIngredientIcon,
+  uploadIngredientIcon,
+} from "@norish/shared-server/ingredients/icon-drafts";
 import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import {
   correctNutrition as correctHouseholdNutrition,
@@ -480,6 +484,25 @@ const uploadIcon = authedProcedure.input(formDataInputSchema).mutation(async ({ 
 });
 
 /**
+ * Draw a food's icon with the instance's image provider, in the request,
+ * for the panel's draft, which Save attaches. Follows `edit` on the
+ * Ingredient, and refused where nothing can draw.
+ */
+const generateIcon = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .mutation(async ({ ctx, input }) => {
+    if (!(await canDrawImages())) {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No image provider can draw" });
+    }
+    log.info(
+      { userId: ctx.user.id, ingredientId: input.ingredientId },
+      "Generating an Ingredient Icon"
+    );
+
+    return translated(() => generateIngredientIcon(actorOf(ctx), input.ingredientId));
+  });
+
+/**
  * Save an Ingredient's draft from its panel as one edit: a new name, a new
  * parent (null clears it), spellings removed and added, and its icon (a
  * stored file, or null to remove its own), each under its own rule. A
@@ -671,6 +694,7 @@ export const ingredientsRouter = router({
   removeAlias,
   icons,
   uploadIcon,
+  generateIcon,
   saveDraft,
   remove,
   reviewWithAI,

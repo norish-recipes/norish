@@ -29,6 +29,7 @@ const NEW_DEFAULTS = {
   ingredientResolution: "NEW ingredient resolution instructions",
   imageGenerationBrief: "NEW image generation brief instructions",
   imageGenerationStyle: "NEW image generation style instructions",
+  ingredientIconStyle: "NEW ingredient icon style instructions",
 };
 
 /** What older releases shipped (and seeded into deployments' databases). */

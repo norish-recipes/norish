@@ -4,21 +4,25 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done, pending gates and review
 
-- [ ] The AI Runtime's image entry point accepts a square shape: 1024×1024, or the provider's square aspect, per provider.
-- [ ] It also accepts the cheapest quality tier where the provider has one (OpenAI-family `low`). Providers without tiers are unchanged, and recipe pictures keep their current behaviour.
-- [ ] A new administrator-editable Prompt, `ingredient-icon-style`:
-  - [ ] has a shipped default describing the soft-3D style;
-  - [ ] has no system turn, like `image-generation-style`;
-  - [ ] has config, loader and translations in every locale;
-  - [ ] passes the prompt-sync and prompt-default tests.
-- [ ] The feature appends Prompt Sections and never passes a finished prompt (ADR-0016):
-  - [ ] the food's name, English where known;
-  - [ ] its parent chain;
-  - [ ] a code-owned section asking for one food centred on a flat background with no shadow or props, and for foods with no shape of their own to sit in the plainest vessel.
-- [ ] Generate runs inside the request. Its result is made into an icon (ticket 01's function), stored as an unattached file and put in the draft. A failure shows a toast and leaves the draft as it was.
-- [ ] "Can draw" (AI enabled and an Image Generation provider configured) reaches the browser beside `isAIEnabled`. Generate is hidden without it, and the server refuses without it or without edit rights.
-- [ ] Tests:
-  - [ ] the runtime image test is extended (square per provider, cheapest tier, the icon Prompt and its sections);
-  - [ ] the router at the tRPC caller (refused when it can't draw or may not edit).
+- [x] The AI Runtime's image entry point accepts a square shape: 1024×1024, or the provider's square aspect, per provider.
+- [x] It also accepts the cheapest quality tier where the provider has one (OpenAI-family `low`). Providers without tiers are unchanged, and recipe pictures keep their current behaviour.
+- [x] A new administrator-editable Prompt, `ingredient-icon-style`:
+  - [x] has a shipped default describing the soft-3D style;
+  - [x] has no system turn, like `image-generation-style`;
+  - [x] has config, loader and translations in every locale;
+  - [x] passes the prompt-sync and prompt-default tests.
+- [x] The feature appends Prompt Sections and never passes a finished prompt (ADR-0016):
+  - [x] the food's name, English where known;
+  - [x] its parent chain;
+  - [x] a code-owned section asking for one food centred on a flat background with no shadow or props, and for foods with no shape of their own to sit in the plainest vessel.
+- [x] Generate runs inside the request. Its result is made into an icon (ticket 01's function), stored as an unattached file and put in the draft. A failure shows a toast and leaves the draft as it was.
+- [x] "Can draw" (AI enabled and an Image Generation provider configured) reaches the browser beside `isAIEnabled`. Generate is hidden without it, and the server refuses without it or without edit rights.
+- [x] Tests:
+  - [x] the runtime image test is extended (square per provider, cheapest tier, the icon Prompt and its sections);
+  - [x] the router at the tRPC caller (refused when it can't draw or may not edit).
+
+## Comments
+
+2026-10-06 (implementation): the runtime's image entry point takes `shape: "square"` (1024×1024, Google's 1:1) and a `tier` (`low`/`medium`, the latter for the maintainers' sample sheet). Tiers follow the model's name: gpt-image's low/medium, DALL·E 3's standard; DALL·E 2, Google, Ollama and OpenAI-compatible endpoints take none. "Can draw" is `canDrawImages` on `permissions.get` and `canDrawImages()` in the server config loader. The menu item reads "Generate with AI".

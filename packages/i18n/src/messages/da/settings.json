@@ -574,7 +574,9 @@
       "change": "Skift ikonet",
       "upload": "Upload et billede",
       "remove": "Fjern ikonet",
-      "failed": "Billedet kunne ikke laves til et ikon."
+      "failed": "Billedet kunne ikke laves til et ikon.",
+      "generate": "Generér med AI",
+      "generateFailed": "Ikonet kunne ikke genereres."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "Prompt til den visuelle beskrivelse...",
       "imageGenerationStyle": "Billedstil-prompt",
       "imageGenerationStyleDescription": "Sendes til billedmodellen med den visuelle beskrivelse tilføjet efter. Bestemmer det udtryk, alle genererede billeder deler.",
-      "imageGenerationStylePlaceholder": "Prompt til billedstilen..."
+      "imageGenerationStylePlaceholder": "Prompt til billedstilen...",
+      "ingredientIconStyle": "Prompt til stil for ingrediensikoner",
+      "ingredientIconStyleDescription": "Sendes til billedmodellen, når en ingrediens får tegnet et ikon, med fødevarens navn og hvad den er en slags af tilføjet bagefter. Bestemmer det udseende, alle tegnede ikoner deler.",
+      "ingredientIconStylePlaceholder": "Prompt til stilen for ingrediensikoner..."
     },
     "unsavedChanges": "Ugemte ændringer",
     "jsonEditor": {

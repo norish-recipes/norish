@@ -574,7 +574,9 @@
       "change": "Vaihda kuvake",
       "upload": "Lataa kuva",
       "remove": "Poista kuvake",
-      "failed": "Kuvasta ei voitu tehdä kuvaketta."
+      "failed": "Kuvasta ei voitu tehdä kuvaketta.",
+      "generate": "Luo tekoälyllä",
+      "generateFailed": "Kuvaketta ei voitu luoda."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "Kehote visuaalisen briefin kirjoittamiseen...",
       "imageGenerationStyle": "Kuvatyylin kehote",
       "imageGenerationStyleDescription": "Lähetetään kuvamallille, ja visuaalinen brief liitetään sen perään. Määrittää ilmeen, joka on yhteinen kaikille luoduille kuville.",
-      "imageGenerationStylePlaceholder": "Kehote kuvan tyylille..."
+      "imageGenerationStylePlaceholder": "Kehote kuvan tyylille...",
+      "ingredientIconStyle": "Ainesosakuvakkeiden tyylikehote",
+      "ingredientIconStyleDescription": "Lähetetään kuvamallille, kun ainesosalle piirretään kuvake, ja sen perään liitetään ruoan nimi ja se, minkä lajia se on. Määrää ilmeen, joka on yhteinen kaikille piirretyille kuvakkeille.",
+      "ingredientIconStylePlaceholder": "Kehote ainesosakuvakkeiden tyylille..."
     },
     "unsavedChanges": "Tallentamattomia muutoksia",
     "jsonEditor": {

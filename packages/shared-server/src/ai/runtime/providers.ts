@@ -258,13 +258,33 @@ function createProviderModels(
 // Image models — beside the language models they belong with (ADR-0024)
 // ============================================================================
 
-/** An image model plus how to ask it for the widest landscape it supports. */
+/** A picture's shape: providers differ in whether they take a size or an aspect ratio. */
+export type ImageShape = { size?: `${number}x${number}`; aspectRatio?: `${number}:${number}` };
+
+/**
+ * A quality tier asked of an image model: the cheapest it has, or the one
+ * above. An Ingredient Icon is shown at 32px, so it never needs a full
+ * illustration's.
+ */
+export type ImageTier = "low" | "medium";
+
+/** The provider options a request carries, by provider. */
+export type ImageProviderOptions = Record<string, Record<string, string>>;
+
+/** An image model plus how to ask it for each shape, and for a tier where it has them. */
 export interface ImageModelConfig {
   model: ImageModel;
   providerName: string;
-  /** Providers differ in whether they take a size or an aspect ratio. */
-  landscape: { size?: `${number}x${number}`; aspectRatio?: `${number}:${number}` };
+  /** The widest landscape it supports, for a Generated Image. */
+  landscape: ImageShape;
+  /** A square, for an Ingredient Icon: 1024×1024, or the provider's square aspect. */
+  square: ImageShape;
+  /** The options asking for a tier; absent where the provider has none, which leaves it unchanged. */
+  tier?: (tier: ImageTier) => ImageProviderOptions;
 }
+
+/** The square every provider that takes a size accepts. */
+const SQUARE: ImageShape = { size: "1024x1024" };
 
 /**
  * The widest landscape OpenAI's image models accept. The DALL·E family tops
@@ -274,6 +294,19 @@ export interface ImageModelConfig {
  */
 function openAILandscapeSize(model: string): `${number}x${number}` {
   return model.startsWith("dall-e") ? "1792x1024" : "1536x1024";
+}
+
+/**
+ * OpenAI's quality tiers, by model family as the name says: the gpt-image
+ * family's `low` and `medium`, DALL·E 3's `standard` (its cheapest, and the
+ * only tier below `hd`). DALL·E 2 and a name this guess does not know take
+ * no tier, so the provider's own default stands (ADR-0014).
+ */
+function openAITier(model: string): ImageModelConfig["tier"] {
+  if (model.startsWith("gpt-image")) return (tier) => ({ openai: { quality: tier } });
+  if (model.startsWith("dall-e-3")) return () => ({ openai: { quality: "standard" } });
+
+  return undefined;
 }
 
 /**
@@ -299,6 +332,8 @@ export function createImageModelFromConfig(config: {
         model: createOpenAI({ apiKey, fetch: customFetch }).image(model),
         providerName: "OpenAI",
         landscape: { size: openAILandscapeSize(model) },
+        square: SQUARE,
+        tier: openAITier(model),
       };
     }
 
@@ -309,6 +344,7 @@ export function createImageModelFromConfig(config: {
         model: createGoogle({ apiKey, fetch: customFetch }).image(model),
         providerName: "Google AI",
         landscape: { aspectRatio: "16:9" },
+        square: { aspectRatio: "1:1" },
       };
     }
 
@@ -323,6 +359,9 @@ export function createImageModelFromConfig(config: {
         model: azure.image(model),
         providerName: "Azure OpenAI",
         landscape: { size: openAILandscapeSize(model) },
+        square: SQUARE,
+        // Azure's image model is OpenAI's, reading the same `openai` options.
+        tier: openAITier(model),
       };
     }
 
@@ -339,6 +378,7 @@ export function createImageModelFromConfig(config: {
         // provider turns a size into exactly that — so, as for the other
         // self-hosted route, ask for the stored shape itself.
         landscape: { size: "1280x720" },
+        square: SQUARE,
       };
     }
 
@@ -359,6 +399,7 @@ export function createImageModelFromConfig(config: {
         // No published size list to lean on, so ask for exactly the stored
         // shape: self-hosted image servers generally accept arbitrary sizes.
         landscape: { size: "1280x720" },
+        square: SQUARE,
       };
     }
   }

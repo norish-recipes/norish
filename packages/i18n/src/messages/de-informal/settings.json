@@ -574,7 +574,9 @@
       "change": "Symbol ändern",
       "upload": "Bild hochladen",
       "remove": "Symbol entfernen",
-      "failed": "Aus diesem Bild konnte kein Symbol erstellt werden."
+      "failed": "Aus diesem Bild konnte kein Symbol erstellt werden.",
+      "generate": "Mit KI erstellen",
+      "generateFailed": "Das Symbol konnte nicht erstellt werden."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "Prompt für die visuelle Beschreibung...",
       "imageGenerationStyle": "Bildstil-Prompt",
       "imageGenerationStyleDescription": "Wird mit der angehängten visuellen Beschreibung an das Bildmodell gesendet. Bestimmt den Stil aller generierten Bilder.",
-      "imageGenerationStylePlaceholder": "Prompt für den Bildstil..."
+      "imageGenerationStylePlaceholder": "Prompt für den Bildstil...",
+      "ingredientIconStyle": "Zutatensymbol-Stil-Prompt",
+      "ingredientIconStyleDescription": "Wird an das Bildmodell gesendet, wenn ein Zutatensymbol gezeichnet wird, mit dem Namen des Lebensmittels und dem, wovon es eine Art ist, danach angehängt. Bestimmt den Stil aller gezeichneten Symbole.",
+      "ingredientIconStylePlaceholder": "Prompt für den Stil der Zutatensymbole..."
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {

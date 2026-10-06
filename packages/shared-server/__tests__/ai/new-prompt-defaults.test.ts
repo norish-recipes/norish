@@ -57,7 +57,7 @@ describe("the shipped ingredient-resolution prompt", () => {
 });
 
 describe("loadDefaultPrompts", () => {
-  it("ships a default for all twelve administrator-editable prompts", () => {
+  it("ships a default for all thirteen administrator-editable prompts", () => {
     const defaults = loadDefaultPrompts();
 
     expect(Object.keys(defaults).sort()).toEqual(
@@ -68,6 +68,7 @@ describe("loadDefaultPrompts", () => {
         "imageExtraction",
         "imageGenerationBrief",
         "imageGenerationStyle",
+        "ingredientIconStyle",
         "ingredientLinking",
         "ingredientResolution",
         "nutritionEstimation",

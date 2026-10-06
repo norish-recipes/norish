@@ -151,6 +151,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
       saveDraft: { mutationOptions: () => ({ name: "saveDraft" }) },
       uploadIcon: { mutationOptions: () => ({ name: "uploadIcon" }) },
+      generateIcon: { mutationOptions: () => ({ name: "generateIcon" }) },
       icons: {
         queryOptions: (input: unknown) => ({ queryKey: ["ingredients.icons", input] }),
         pathKey: () => ["ingredients.icons"],

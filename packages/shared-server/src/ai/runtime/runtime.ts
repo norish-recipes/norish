@@ -54,6 +54,7 @@ import {
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { PromptName } from "../prompts/loader";
+import type { ImageTier } from "./providers";
 import { fillPrompt, loadPrompt } from "../prompts/loader";
 import {
   AIConfigurationError,
@@ -80,12 +81,15 @@ import {
 // ============================================================================
 
 /**
- * Prompts that start a structured-generation request. The image style prompt
- * is the one exception: it is sent to an image model, which takes a single
- * prompt and no system turn, so it can never be the base of a structured
- * request and needs no system message.
+ * Prompts that start a structured-generation request. The image style
+ * prompts are the exception: they are sent to an image model, which takes a
+ * single prompt and no system turn, so they can never be the base of a
+ * structured request and need no system message.
  */
-export type StructuredPromptName = Exclude<PromptName, "image-generation-style">;
+export type StructuredPromptName = Exclude<PromptName, ImagePromptName>;
+
+/** The prompts that start an image request: a dish's picture's style, and an Ingredient Icon's. */
+export type ImagePromptName = "image-generation-style" | "ingredient-icon-style";
 
 /**
  * System messages are not configuration. They encode invariants the code
@@ -610,9 +614,16 @@ async function transcribeWithProvider(
 
 export interface GenerateImageOptions {
   /** The administrator-editable prompt the request starts from. */
-  prompt: "image-generation-style";
+  prompt: ImagePromptName;
   /** Input blocks appended after the prompt, blank-line separated (ADR-0016). */
   sections?: readonly string[];
+  /** The picture's shape: a dish's widest landscape (the default), or an icon's square. */
+  shape?: "landscape" | "square";
+  /**
+   * The quality tier asked for where the provider has tiers; omitted leaves
+   * the provider's default, as a dish's picture does.
+   */
+  tier?: ImageTier;
 }
 
 export interface GeneratedImageBytes {
@@ -626,7 +637,8 @@ export interface GeneratedImageBytes {
  * Reads the Image Generation block rather than the server's AI provider
  * (ADR-0024), with endpoint and key falling back to the AI configuration when
  * the provider matches. The provider is asked for its widest supported
- * landscape; cropping to the stored size is the save path's job. There is no
+ * landscape, or a square, and a tier where it has them; cropping to the
+ * stored size is the save path's job. There is no
  * image timeout: the request runs under the existing AI timeout on the shared
  * transport (ADR-0015).
  *
@@ -635,7 +647,7 @@ export interface GeneratedImageBytes {
  * and provider failures follow the SDK's own retryability.
  */
 export async function generateImage(options: GenerateImageOptions): Promise<GeneratedImageBytes> {
-  const { prompt: promptName, sections = [] } = options;
+  const { prompt: promptName, sections = [], shape = "landscape", tier } = options;
 
   const [aiConfig, imageConfig] = await Promise.all([
     getAIConfig(true),
@@ -679,10 +691,12 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
       "Sending image generation request"
     );
 
+    const providerOptions = tier ? imageModel.tier?.(tier) : undefined;
     const result = await generateImageWithModel({
       model: imageModel.model,
       prompt,
-      ...imageModel.landscape,
+      ...imageModel[shape],
+      ...(providerOptions ? { providerOptions } : {}),
       // Image calls are billed per request, so the SDK's silent in-call
       // retries are disabled: the queue's attempts are the one retry budget.
       maxRetries: 0,

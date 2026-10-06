@@ -53,7 +53,13 @@ const iconFiles = vi.hoisted(() => ({
   storeIngredientIcon: vi.fn(async () => "0123456789abcdef0123456789abcdef.webp"),
   ownIconExists: vi.fn(async () => true),
 }));
-const policy = vi.hoisted(() => ({ getIngredientPermissionPolicy: vi.fn() }));
+const policy = vi.hoisted(() => ({
+  getIngredientPermissionPolicy: vi.fn(),
+  canDrawImages: vi.fn(async () => true),
+}));
+const drawer = vi.hoisted(() => ({
+  drawIngredientIcon: vi.fn(async () => ({ bytes: Buffer.from([9, 9]), mediaType: "image/png" })),
+}));
 const suggestionsRepo = vi.hoisted(() => ({
   deleteIngredientSuggestion: vi.fn(),
   deleteSuggestionFor: vi.fn(),
@@ -92,6 +98,7 @@ vi.mock("@norish/shared-server/media/ingredient-icon", async (original) => ({
 }));
 vi.mock("@norish/db/repositories/ingredient-suggestions", () => suggestionsRepo);
 vi.mock("@norish/shared-server/ingredients/review", () => reviewer);
+vi.mock("@norish/shared-server/ai/enrichment/ingredient-icon-drawer", () => drawer);
 vi.mock("@norish/shared-server/config/server-config-loader", () => policy);
 vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
 vi.mock(
@@ -1136,4 +1143,54 @@ describe("Ingredient Icons", () => {
     });
     expect(iconFiles.storeIngredientIcon).not.toHaveBeenCalled();
   });
+
+  it("generates a food's icon from its name and what it is a kind of, for the draft", async () => {
+    ownedBy(ME);
+    iconsRepo.findIconLineage.mockResolvedValue(
+      new Map([
+        [UIEN, { id: UIEN, name: "uien", parentId: ONION, offId: null, icon: null, ownerId: ME }],
+        [ONION, { id: ONION, name: "onion", parentId: null, offId: null, icon: null, ownerId: ME }],
+      ])
+    );
+    aliases.findLocaleNames.mockResolvedValueOnce(new Map([[UIEN, { en: "onions" }]]));
+
+    await expect(callerFor().generateIcon({ ingredientId: UIEN })).resolves.toEqual({
+      file: FILE,
+      address: `/ingredient-icons/${FILE}`,
+    });
+    expect(drawer.drawIngredientIcon).toHaveBeenCalledWith({ name: "onions", kindOf: ["onion"] });
+    expect(iconFiles.storeIngredientIcon).toHaveBeenCalledWith(Buffer.from([9, 9]));
+    // Nothing is set until the draft is saved.
+    expect(iconsRepo.setIngredientIcon).not.toHaveBeenCalled();
+  });
+
+  it("refuses to generate where nothing can draw", async () => {
+    ownedBy(ME);
+    policy.canDrawImages.mockResolvedValueOnce(false);
+
+    await expect(callerFor().generateIcon({ ingredientId: ONION })).rejects.toMatchObject({
+      code: "PRECONDITION_FAILED",
+    });
+    expect(drawer.drawIngredientIcon).not.toHaveBeenCalled();
+  });
+
+  it.each(matrix)(
+    "under %s, generating an icon for a food owned by %s is allowed: %s",
+    async (level, owner, allowed) => {
+      withPolicy(level);
+      ownedBy(owner);
+      iconsRepo.findIconLineage.mockResolvedValue(
+        new Map([[ONION, { id: ONION, name: "onion", parentId: null, offId: null, icon: null }]])
+      );
+
+      const generate = callerFor().generateIcon({ ingredientId: ONION });
+
+      if (allowed) {
+        await expect(generate).resolves.toMatchObject({ file: FILE });
+      } else {
+        await expect(generate).rejects.toMatchObject({ code: "FORBIDDEN" });
+        expect(drawer.drawIngredientIcon).not.toHaveBeenCalled();
+      }
+    }
+  );
 });

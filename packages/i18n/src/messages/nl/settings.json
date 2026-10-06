@@ -574,7 +574,9 @@
       "change": "Icoon wijzigen",
       "upload": "Afbeelding uploaden",
       "remove": "Icoon verwijderen",
-      "failed": "Van deze afbeelding kon geen icoon worden gemaakt."
+      "failed": "Van deze afbeelding kon geen icoon worden gemaakt.",
+      "generate": "Genereren met AI",
+      "generateFailed": "Het icoon kon niet worden gegenereerd."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "Prompt voor de visuele omschrijving...",
       "imageGenerationStyle": "Afbeeldingsstijl Prompt",
       "imageGenerationStyleDescription": "Wordt naar het afbeeldingsmodel gestuurd, met de visuele omschrijving erachter. Bepaalt de stijl die elke gegenereerde afbeelding deelt.",
-      "imageGenerationStylePlaceholder": "Prompt voor de afbeeldingsstijl..."
+      "imageGenerationStylePlaceholder": "Prompt voor de afbeeldingsstijl...",
+      "ingredientIconStyle": "Ingrediënticoonstijl Prompt",
+      "ingredientIconStyleDescription": "Wordt naar het afbeeldingsmodel gestuurd als een ingrediënt een icoon krijgt, met de naam van het voedingsmiddel en waar het een soort van is erachter. Bepaalt de stijl die elk getekend icoon deelt.",
+      "ingredientIconStylePlaceholder": "Prompt voor de stijl van ingrediënticonen..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {

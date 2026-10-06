@@ -1,0 +1,8 @@
+A small icon of one food, for the ingredient lists of a recipe app.
+
+Soft 3D illustration, like a polished app icon or a smooth clay render:
+rounded, gently shaded forms with soft gradients, lit softly from the upper
+left, a little glossy where the food is shiny. Natural, appetising colours,
+slightly brighter than life. Simple and clean, so the food is recognisable at
+a glance when shown very small: no fine detail that turns to noise, no
+outlines. No text, labels, logos, brand packaging, people or hands.

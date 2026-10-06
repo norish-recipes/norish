@@ -574,7 +574,9 @@
       "change": "Zmień ikonę",
       "upload": "Prześlij zdjęcie",
       "remove": "Usuń ikonę",
-      "failed": "Z tego zdjęcia nie udało się zrobić ikony."
+      "failed": "Z tego zdjęcia nie udało się zrobić ikony.",
+      "generate": "Wygeneruj z AI",
+      "generateFailed": "Nie udało się wygenerować ikony."
     }
   },
   "admin": {
@@ -1073,7 +1075,10 @@
       "imageGenerationBriefPlaceholder": "Prompt dla opisu wizualnego...",
       "imageGenerationStyle": "Prompt stylu obrazu",
       "imageGenerationStyleDescription": "Wysyłany do modelu obrazów z dołączonym opisem wizualnym. Określa wygląd wspólny dla wszystkich wygenerowanych obrazów.",
-      "imageGenerationStylePlaceholder": "Prompt dla stylu obrazu..."
+      "imageGenerationStylePlaceholder": "Prompt dla stylu obrazu...",
+      "ingredientIconStyle": "Prompt stylu ikon składników",
+      "ingredientIconStyleDescription": "Wysyłany do modelu obrazów, gdy rysowana jest ikona składnika, z dopisaną po nim nazwą produktu i tym, czego jest rodzajem. Określa wygląd wspólny dla wszystkich rysowanych ikon.",
+      "ingredientIconStylePlaceholder": "Prompt dla stylu ikon składników..."
     },
     "unsavedChanges": "Niezapisane zmiany",
     "jsonEditor": {
