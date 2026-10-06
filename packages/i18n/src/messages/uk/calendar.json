@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Календар"
+  },
+  "mobile": {
+    "today": "Сьогодні",
+    "scrollToToday": "Перейти до сьогодні"
+  },
+  "editNote": {
+    "title": "Редагувати нотатку",
+    "noteLabel": "Нотатка",
+    "notePlaceholder": "Введіть нотатку...",
+    "date": "Дата",
+    "slot": "Прийом їжі"
+  },
+  "navigation": {
+    "previousMonth": "Попередній місяць",
+    "nextMonth": "Наступний місяць",
+    "prev": "Назад",
+    "next": "Далі"
+  },
+  "weekdays": {
+    "mon": "Пн",
+    "tue": "Вт",
+    "wed": "Ср",
+    "thu": "Чт",
+    "fri": "Пт",
+    "sat": "Сб",
+    "sun": "Нд"
+  },
+  "timeline": {
+    "noItems": "Нічого не заплановано",
+    "goToRecipe": "Перейти до рецепта",
+    "addItem": "Додати",
+    "untitled": "Без назви",
+    "serving": "порція",
+    "servings": "порц.",
+    "noImage": "Немає зображення",
+    "recipe": "Рецепт",
+    "note": "Нотатка"
+  },
+  "editPlannedRecipe": {
+    "title": "Редагувати запланований рецепт",
+    "date": "Дата",
+    "slot": "Прийом їжі"
+  },
+  "panel": {
+    "addToCalendar": "Додати в календар",
+    "addRecipe": "Додати рецепт",
+    "noDaysAvailable": "Немає доступних днів.",
+    "searchPlaceholder": "Шукайте рецепти або додайте нотатки...",
+    "addNote": "Додати нотатку: {input}",
+    "randomRecipe": "Випадковий рецепт",
+    "noRecipesFound": "Рецептів не знайдено.",
+    "failedToLoadRecipes": "Не вдалося завантажити рецепти."
+  }
+}
