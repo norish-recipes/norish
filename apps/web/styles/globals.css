@@ -213,10 +213,12 @@
     width: 100%;
   }
 
-  /* One radius for every field the reader types or picks in: a plain input, a
-     combo box's own input group, and a select's trigger. A shopping list with
-     three fields in a row must not show three shapes. */
+  /* One radius for every field the reader types or picks in: a plain input, an
+     input with a prefix or suffix (a secret's eye, a search's icon), a combo
+     box's own input group, and a select's trigger. A shopping list with three
+     fields in a row must not show three shapes. */
   .input,
+  .input-group,
   .combo-box__input-group,
   .number-field__group,
   .select__trigger {

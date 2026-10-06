@@ -133,9 +133,10 @@ export function PantryView() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
-            <InputGroup variant="secondary">
-              <InputGroup.Prefix>
-                <MagnifyingGlassIcon aria-hidden className="text-muted size-4" />
+            {/* Shaped as the dashboard's search field is. */}
+            <InputGroup className="h-12">
+              <InputGroup.Prefix className="pl-4">
+                <MagnifyingGlassIcon aria-hidden className="text-muted size-5" />
               </InputGroup.Prefix>
               <InputGroup.Input
                 ref={field}
@@ -150,7 +151,7 @@ export function PantryView() {
                   }
                 }}
               />
-              <InputGroup.Suffix className="pr-1">
+              <InputGroup.Suffix className="pr-2">
                 <Button
                   isIconOnly
                   aria-label={t("add")}
