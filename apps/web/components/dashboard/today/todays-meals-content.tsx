@@ -1,7 +1,7 @@
 "use client";
 
 import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
 import TodaysMealsSkeleton from "@/components/skeleton/todays-meals-skeleton";
@@ -13,7 +13,7 @@ import { dateKey } from "@norish/shared/lib/helpers";
 
 import TodayMealSlotCard from "./today-meal-slot-card";
 import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "./todays-meals-constants";
-import { groupTodayItemsBySlot } from "./todays-meals-helpers";
+import { firstSlotFrom, groupTodayItemsBySlot, nextMealSlot } from "./todays-meals-helpers";
 
 type TodaysMealsContentProps = {
   visibility: TodaySectionVisibility;
@@ -49,6 +49,27 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
       ? TODAY_MEAL_SLOTS.filter((slot) => itemsBySlot[slot].length > 0)
       : TODAY_MEAL_SLOTS;
 
+  // A phone shows two and a half slots, so the row opens on the next meal
+  // rather than always on breakfast. Once, when the day's plan has loaded.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const hasOpenedOnNextMealRef = useRef(false);
+
+  useLayoutEffect(() => {
+    if (isLoading || hasOpenedOnNextMealRef.current) return;
+    hasOpenedOnNextMealRef.current = true;
+
+    const scroller = scrollerRef.current;
+    const slot = firstSlotFrom(visibleSlots, nextMealSlot(new Date().getHours()));
+    const card = slot && scroller?.querySelector<HTMLElement>(`[data-slot-card="${slot}"]`);
+
+    if (!scroller || !card) return;
+
+    scroller.scrollLeft +=
+      card.getBoundingClientRect().left -
+      scroller.getBoundingClientRect().left -
+      parseFloat(getComputedStyle(scroller).paddingLeft);
+  }, [isLoading, visibleSlots]);
+
   const openPlanner = (slot: Slot) => {
     setPlanningSlot(slot);
     setPlanningOpen(true);
@@ -66,8 +87,9 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
       </div>
 
       <ScrollShadow
+        ref={scrollerRef}
         hideScrollBar
-        className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0"
+        className="-mx-4 snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:scroll-px-0 sm:px-0"
         orientation="horizontal"
       >
         {isLoading ? (

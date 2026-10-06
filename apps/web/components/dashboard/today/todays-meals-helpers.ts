@@ -49,3 +49,22 @@ export function groupTodayItemsBySlot(items: PlannedItemFromQuery[]) {
 
   return grouped;
 }
+
+/**
+ * The meal someone opening the dashboard most likely means: breakfast until
+ * ten, lunch until two, dinner after. A snack is never the next meal.
+ */
+// ponytail: fixed meal hours; make them a household setting if anyone asks.
+export function nextMealSlot(hour: number): Slot {
+  if (hour < 10) return "Breakfast";
+  if (hour < 14) return "Lunch";
+
+  return "Dinner";
+}
+
+/** The first of `slots` at or after `slot` in the day's order, if any. */
+export function firstSlotFrom(slots: Slot[], slot: Slot): Slot | undefined {
+  const from = TODAY_MEAL_SLOTS.indexOf(slot);
+
+  return slots.find((candidate) => TODAY_MEAL_SLOTS.indexOf(candidate) >= from);
+}
