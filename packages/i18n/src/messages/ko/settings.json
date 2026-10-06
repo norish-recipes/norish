@@ -577,6 +577,19 @@
       "failed": "이 사진으로 아이콘을 만들 수 없습니다.",
       "generate": "AI로 생성",
       "generateFailed": "아이콘을 생성할 수 없습니다."
+    },
+    "drawIcons": {
+      "open": "아이콘 그리기",
+      "title": "아이콘 그리기",
+      "intro": "이미지 제공자가 각 식품의 아이콘을 그리며, 그 아이콘은 바로 그 식품의 아이콘이 됩니다. 식품의 패널에서 다른 아이콘을 지정할 수 있습니다.",
+      "scopeLabel": "대상 식품",
+      "scopes": {
+        "bare": "아이콘이 전혀 없는 식품만",
+        "unowned": "자체 아이콘이 없는 모든 식품"
+      },
+      "scopeSize": "{count, plural, =0 {아이콘 없음} other {아이콘 #개}}",
+      "start": "아이콘 그리기",
+      "progress": "아이콘 그리는 중 · {total, number}개 중 {done, number}개"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Search the shop",
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "식품 아이콘 그리기"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "이미지 생성",
         "store-lookup": "매장 조회",
-        "ingredient-review": "AI에게 재료 묻기"
+        "ingredient-review": "AI에게 재료 묻기",
+        "ingredient-icons": "재료 아이콘 그리기"
       },
       "summary": {
         "failed": "{count} failed"

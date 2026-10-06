@@ -577,6 +577,19 @@
       "failed": "Van deze afbeelding kon geen icoon worden gemaakt.",
       "generate": "Genereren met AI",
       "generateFailed": "Het icoon kon niet worden gegenereerd."
+    },
+    "drawIcons": {
+      "open": "Iconen tekenen",
+      "title": "Iconen tekenen",
+      "intro": "De afbeeldingsprovider tekent voor elk voedingsmiddel een icoon, dat meteen het eigen icoon wordt. Een voedingsmiddel kun je in zijn paneel een ander icoon geven.",
+      "scopeLabel": "Welke voedingsmiddelen",
+      "scopes": {
+        "bare": "Alleen voedingsmiddelen zonder enig icoon",
+        "unowned": "Elk voedingsmiddel zonder eigen icoon"
+      },
+      "scopeSize": "{count, plural, =0 {Geen iconen} one {# icoon} other {# iconen}}",
+      "start": "Iconen tekenen",
+      "progress": "Iconen tekenen · {done, number} van {total, number}"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Search the shop",
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Het icoon van het voedingsmiddel tekenen"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Afbeeldingen genereren",
         "store-lookup": "Winkelopzoeking",
-        "ingredient-review": "AI vragen over ingrediënten"
+        "ingredient-review": "AI vragen over ingrediënten",
+        "ingredient-icons": "Ingrediënticonen tekenen"
       },
       "summary": {
         "failed": "{count} failed"

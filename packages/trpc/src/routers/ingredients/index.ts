@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
 import type {
+  IconScopeSummary,
   ReviewReport,
   ReviewScopeSummary,
 } from "@norish/shared/contracts/ingredient-catalogue";
@@ -14,6 +15,8 @@ import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { assertAIEnabled } from "@norish/auth/permissions";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
+import { addIngredientIconsJob } from "@norish/queue/ingredient-icons/producer";
+import { findRunningIconRound } from "@norish/queue/ingredient-icons/progress";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
 import {
   findRunningReviewRound,
@@ -41,6 +44,7 @@ import {
   generateIngredientIcon,
   uploadIngredientIcon,
 } from "@norish/shared-server/ingredients/icon-drafts";
+import { listIconRoundFoods } from "@norish/shared-server/ingredients/icon-rounds";
 import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import {
   correctNutrition as correctHouseholdNutrition,
@@ -66,7 +70,7 @@ import {
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ICON_FILE_PATTERN } from "@norish/shared-server/media/ingredient-icon";
 import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
-import { REVIEW_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
+import { ICON_SCOPES, REVIEW_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   INGREDIENT_SEARCH_FIELDS,
   INGREDIENT_SEARCH_MATCHES,
@@ -491,9 +495,7 @@ const uploadIcon = authedProcedure.input(formDataInputSchema).mutation(async ({ 
 const generateIcon = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .mutation(async ({ ctx, input }) => {
-    if (!(await canDrawImages())) {
-      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No image provider can draw" });
-    }
+    await assertCanDraw();
     log.info(
       { userId: ctx.user.id, ingredientId: input.ingredientId },
       "Generating an Ingredient Icon"
@@ -501,6 +503,62 @@ const generateIcon = authedProcedure
 
     return translated(() => generateIngredientIcon(actorOf(ctx), input.ingredientId));
   });
+
+/** Refuse unless the instance can draw: AI on and an image provider configured. */
+async function assertCanDraw(): Promise<void> {
+  if (!(await canDrawImages())) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No image provider can draw" });
+  }
+}
+
+/**
+ * How many icons each scope of a Draw icons round would draw for the asker,
+ * over the whole catalogue: only the foods they may edit, and never a vague
+ * group the shipped set leaves without one. No price: image pricing differs
+ * by provider and model.
+ */
+const iconScope = authedProcedure.query(async ({ ctx }): Promise<IconScopeSummary> => {
+  await assertCanDraw();
+  const scopes = await listIconRoundFoods(actorOf(ctx));
+
+  return { bare: scopes.bare.length, unowned: scopes.unowned.length };
+});
+
+/**
+ * Draw the icons of every food in `scope` the asker may edit, which the
+ * server picks, however many: one job, a step per food, that outlives the
+ * tab. Each icon is set as the food's own, with no review, under `edit` on
+ * that food, checked again as the round reaches it. Answers the job the page
+ * watches the round by, over `onIcons`.
+ */
+const drawIcons = authedProcedure
+  .input(z.object({ scope: z.enum(ICON_SCOPES) }))
+  .mutation(async ({ ctx, input }) => {
+    await assertCanDraw();
+    const foods = (await listIconRoundFoods(actorOf(ctx)))[input.scope];
+
+    log.info(
+      { userId: ctx.user.id, count: foods.length, scope: input.scope },
+      "Starting a Draw icons round"
+    );
+    if (foods.length === 0) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "No icons to draw" });
+    }
+
+    const jobId = await addIngredientIconsJob(getQueues().ingredientIcons, {
+      ingredients: foods,
+      actor: {
+        userId: ctx.user.id,
+        householdUserIds: ctx.householdUserIds ? [...ctx.householdUserIds] : null,
+        isServerAdmin: ctx.isServerAdmin,
+      },
+    });
+
+    return { jobId, total: foods.length };
+  });
+
+/** The Draw icons round running on the instance, for a page that opens mid-round. */
+const iconRound = authedProcedure.query(() => findRunningIconRound(getQueues().ingredientIcons));
 
 /**
  * Save an Ingredient's draft from its panel as one edit: a new name, a new
@@ -695,6 +753,9 @@ export const ingredientsRouter = router({
   icons,
   uploadIcon,
   generateIcon,
+  iconScope,
+  drawIcons,
+  iconRound,
   saveDraft,
   remove,
   reviewWithAI,

@@ -47,7 +47,12 @@ const relocation = vi.hoisted(() => ({
 const aliases = vi.hoisted(() => ({ findLocaleNames: vi.fn(async () => new Map()) }));
 const iconsRepo = vi.hoisted(() => ({
   findIconLineage: vi.fn(async (): Promise<Map<string, unknown>> => new Map()),
+  listIconCatalogue: vi.fn(async (): Promise<Map<string, unknown>> => new Map()),
   setIngredientIcon: vi.fn(async () => true),
+}));
+const iconQueue = vi.hoisted(() => ({
+  add: vi.fn(async () => ({ id: "icons-1" })),
+  getJobs: vi.fn(async () => []),
 }));
 const iconFiles = vi.hoisted(() => ({
   storeIngredientIcon: vi.fn(async () => "0123456789abcdef0123456789abcdef.webp"),
@@ -86,7 +91,17 @@ vi.mock("@norish/db/drizzle", () => ({
   withTransaction: (run: (tx: unknown) => unknown) => run(TX),
 }));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
-vi.mock("@norish/queue/registry", () => ({ getQueues: () => ({ ingredientReview: reviewQueue }) }));
+vi.mock("@norish/queue/registry", () => ({
+  getQueues: () => ({ ingredientReview: reviewQueue, ingredientIcons: iconQueue }),
+}));
+// A fixture set stands in for the one Norish ships: onion drawn, vegetable a vague group.
+vi.mock("@norish/shared-server/ingredients/icons", async (original) => ({
+  ...(await original<typeof import("@norish/shared-server/ingredients/icons")>()),
+  shippedIconSet: () => ({
+    icons: { "en:onion": "0123456789abcdef0123456789abcdef.webp" },
+    none: ["en:vegetable"],
+  }),
+}));
 vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/db/repositories/ingredient-catalogue", () => catalogue);
 vi.mock("@norish/db/repositories/ingredient-relocation", () => relocation);
@@ -1193,4 +1208,93 @@ describe("Ingredient Icons", () => {
       }
     }
   );
+
+  describe("a Draw icons round", () => {
+    const RED = "66666666-6666-4666-8666-666666666666";
+    const KOHLRABI = "77777777-7777-4777-8777-777777777777";
+    const VEGETABLE = "88888888-8888-4888-8888-888888888888";
+    const CARROT = "99999999-9999-4999-8999-999999999999";
+    const SALSIFY = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab";
+    const PARSNIP = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbc";
+
+    function catalogue(
+      ...foods: Array<
+        [
+          string,
+          string,
+          Partial<{ parentId: string; offId: string; icon: string; ownerId: string | null }>,
+        ]
+      >
+    ) {
+      iconsRepo.listIconCatalogue.mockResolvedValue(
+        new Map(
+          foods.map(([id, name, values]) => [
+            id,
+            { id, name, parentId: null, offId: null, icon: null, ownerId: ME, ...values },
+          ])
+        )
+      );
+    }
+
+    beforeEach(() => {
+      withPolicy("household");
+      catalogue(
+        // Shipped an icon: drawn only by the wider scope.
+        [ONION, "onion", { offId: "en:onion" }],
+        // Borrows the onion's: drawn only by the wider scope.
+        [RED, "red onion", { parentId: ONION, ownerId: HOUSEMATE }],
+        // No icon anywhere: drawn by both.
+        [KOHLRABI, "kohlrabi", {}],
+        // A vague group, and a food with an icon of its own: drawn by neither.
+        [VEGETABLE, "vegetable", { offId: "en:vegetable" }],
+        [CARROT, "carrot", { icon: FILE }],
+        // Out of the member's reach: a stranger's, and a seeded one.
+        [SALSIFY, "salsify", { ownerId: STRANGER }],
+        [PARSNIP, "parsnip", { ownerId: null }]
+      );
+    });
+
+    it("counts each scope over the whole catalogue, only what the asker may edit and never a vague group", async () => {
+      await expect(callerFor().iconScope()).resolves.toEqual({ bare: 1, unowned: 3 });
+      await expect(callerFor({ admin: true }).iconScope()).resolves.toEqual({
+        bare: 3,
+        unowned: 5,
+      });
+    });
+
+    it("starts one round over the scope's foods, as the asker", async () => {
+      await expect(callerFor().drawIcons({ scope: "unowned" })).resolves.toEqual({
+        jobId: "icons-1",
+        total: 3,
+      });
+      expect(iconQueue.add).toHaveBeenCalledWith("draw", {
+        ingredients: [
+          { id: KOHLRABI, name: "kohlrabi" },
+          { id: ONION, name: "onion" },
+          { id: RED, name: "red onion" },
+        ],
+        actor: expect.objectContaining({ userId: ME, isServerAdmin: false }),
+      });
+    });
+
+    it("refuses a round with nothing to draw", async () => {
+      catalogue([CARROT, "carrot", { icon: FILE }]);
+
+      await expect(callerFor().drawIcons({ scope: "bare" })).rejects.toMatchObject({
+        code: "BAD_REQUEST",
+      });
+      expect(iconQueue.add).not.toHaveBeenCalled();
+    });
+
+    it("offers no round, and starts none, where nothing can draw", async () => {
+      policy.canDrawImages.mockResolvedValue(false);
+
+      await expect(callerFor().iconScope()).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
+      await expect(callerFor().drawIcons({ scope: "bare" })).rejects.toMatchObject({
+        code: "PRECONDITION_FAILED",
+      });
+      expect(iconQueue.add).not.toHaveBeenCalled();
+      policy.canDrawImages.mockResolvedValue(true);
+    });
+  });
 });

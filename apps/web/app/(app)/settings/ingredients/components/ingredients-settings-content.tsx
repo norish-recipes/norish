@@ -28,6 +28,7 @@ import { useRealtimeSubscription } from "@norish/shared-react/realtime";
 import type { IngredientFilters } from "./ingredient-filters-panel";
 import { AskAIRoundModal } from "./ask-ai-round-modal";
 import DataSourcesCard from "./data-sources-card";
+import { DrawIconsControl } from "./draw-icons-control";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
@@ -237,6 +238,7 @@ export default function IngredientsSettingsContent() {
                   {t("findParentsAll")}
                 </AIButton>
               ) : null}
+              <DrawIconsControl onProgress={() => void refresh()} />
               {isAIEnabled && hasFlagged && !running ? (
                 <AIButton
                   data-testid="ingredients-ask-ai-all"

@@ -577,6 +577,19 @@
       "failed": "Impossible de faire une icône de cette image.",
       "generate": "Générer avec l’IA",
       "generateFailed": "L’icône n’a pas pu être générée."
+    },
+    "drawIcons": {
+      "open": "Dessiner les icônes",
+      "title": "Dessiner les icônes",
+      "intro": "Le fournisseur d’images dessine une icône pour chaque aliment, qui devient aussitôt la sienne. Vous pouvez donner une autre icône à un aliment dans son panneau.",
+      "scopeLabel": "Quels aliments",
+      "scopes": {
+        "bare": "Seulement les aliments sans aucune icône",
+        "unowned": "Tous les aliments sans icône propre"
+      },
+      "scopeSize": "{count, plural, =0 {Aucune icône} one {# icône} other {# icônes}}",
+      "start": "Dessiner les icônes",
+      "progress": "Dessin des icônes · {done, number} sur {total, number}"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Search the shop",
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Dessiner l’icône de l’aliment"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Génération d'images",
         "store-lookup": "Recherche en boutique",
-        "ingredient-review": "Demander à l'IA sur les ingrédients"
+        "ingredient-review": "Demander à l'IA sur les ingrédients",
+        "ingredient-icons": "Dessin des icônes d’ingrédients"
       },
       "summary": {
         "failed": "{count} failed"

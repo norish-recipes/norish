@@ -577,6 +577,19 @@
       "failed": "Aus diesem Bild konnte kein Symbol erstellt werden.",
       "generate": "Mit KI erstellen",
       "generateFailed": "Das Symbol konnte nicht erstellt werden."
+    },
+    "drawIcons": {
+      "open": "Symbole zeichnen",
+      "title": "Symbole zeichnen",
+      "intro": "Der Bildanbieter zeichnet für jedes Lebensmittel ein Symbol, das sofort zu seinem eigenen wird. Ein anderes Symbol können Sie einem Lebensmittel in seinem Panel geben.",
+      "scopeLabel": "Welche Lebensmittel",
+      "scopes": {
+        "bare": "Nur Lebensmittel ganz ohne Symbol",
+        "unowned": "Jedes Lebensmittel ohne eigenes Symbol"
+      },
+      "scopeSize": "{count, plural, =0 {Keine Symbole} one {# Symbol} other {# Symbole}}",
+      "start": "Symbole zeichnen",
+      "progress": "Symbole werden gezeichnet · {done, number} von {total, number}"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Search the shop",
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Symbol des Lebensmittels zeichnen"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Bildgenerierung",
         "store-lookup": "Geschäftsabfrage",
-        "ingredient-review": "KI zu Zutaten fragen"
+        "ingredient-review": "KI zu Zutaten fragen",
+        "ingredient-icons": "Zutatensymbole zeichnen"
       },
       "summary": {
         "failed": "{count} failed"

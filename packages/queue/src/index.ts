@@ -40,6 +40,7 @@ export { createCaldavSyncQueue } from "./caldav-sync/queue";
 export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 export { createStoreLookupQueue } from "./store-lookup/queue";
 export { createIngredientReviewQueue } from "./ingredient-review/queue";
+export { createIngredientIconsQueue } from "./ingredient-icons/queue";
 
 // Producers
 export { addImportJob } from "./recipe-import/producer";
@@ -61,6 +62,8 @@ export { initializeScheduledJobs } from "./scheduled-tasks/producer";
 export { addStoreMatchJob, addStoreRefreshJob } from "./store-lookup/producer";
 export { addIngredientReviewJob } from "./ingredient-review/producer";
 export { findRunningReviewRound } from "./ingredient-review/progress";
+export { addIngredientIconsJob } from "./ingredient-icons/producer";
+export { findRunningIconRound } from "./ingredient-icons/progress";
 
 // Workers
 export { startRecipeImportWorker, stopRecipeImportWorker } from "./recipe-import/worker";

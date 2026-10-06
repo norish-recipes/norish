@@ -577,6 +577,19 @@
       "failed": "That picture could not be made into an icon.",
       "generate": "Generate with AI",
       "generateFailed": "The icon could not be generated."
+    },
+    "drawIcons": {
+      "open": "Draw icons",
+      "title": "Draw icons",
+      "intro": "The image provider draws an icon for each food, and it becomes the food's own at once. You can give a food another icon in its panel.",
+      "scopeLabel": "Which foods",
+      "scopes": {
+        "bare": "Only foods with no icon at all",
+        "unowned": "Every food without its own icon"
+      },
+      "scopeSize": "{count, plural, =0 {No icons} one {# icon} other {# icons}}",
+      "start": "Draw icons",
+      "progress": "Drawing icons · {done, number} of {total, number}"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Search the shop",
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Draw the food's icon"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Image generation",
         "store-lookup": "Store lookup",
-        "ingredient-review": "Ask AI about ingredients"
+        "ingredient-review": "Ask AI about ingredients",
+        "ingredient-icons": "Draw ingredient icons"
       },
       "summary": {
         "failed": "{count} failed"

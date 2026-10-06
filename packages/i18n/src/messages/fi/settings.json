@@ -577,6 +577,19 @@
       "failed": "Kuvasta ei voitu tehdä kuvaketta.",
       "generate": "Luo tekoälyllä",
       "generateFailed": "Kuvaketta ei voitu luoda."
+    },
+    "drawIcons": {
+      "open": "Piirrä kuvakkeet",
+      "title": "Piirrä kuvakkeet",
+      "intro": "Kuvapalvelu piirtää jokaiselle ruoalle kuvakkeen, josta tulee heti ruoan oma. Ruoalle voi antaa toisen kuvakkeen sen paneelissa.",
+      "scopeLabel": "Mitkä ruoat",
+      "scopes": {
+        "bare": "Vain ruoat, joilla ei ole lainkaan kuvaketta",
+        "unowned": "Kaikki ruoat ilman omaa kuvaketta"
+      },
+      "scopeSize": "{count, plural, =0 {Ei kuvakkeita} one {# kuvake} other {# kuvaketta}}",
+      "start": "Piirrä kuvakkeet",
+      "progress": "Piirretään kuvakkeita · {done, number}/{total, number}"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Hae kaupasta",
         "reading-product": "Lue tuotesivu",
         "saving-link": "Tallenna linkki",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Piirrä ruoan kuvake"
       },
       "queues": {
         "recipe-import": "Reseptien tuonti",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Ajastetut tehtävät",
         "image-generation": "Kuvien luonti",
         "store-lookup": "Kaupan haku",
-        "ingredient-review": "Kysy tekoälyltä ainesosista"
+        "ingredient-review": "Kysy tekoälyltä ainesosista",
+        "ingredient-icons": "Ainesosien kuvakkeiden piirto"
       },
       "summary": {
         "failed": "{count} epäonnistui"

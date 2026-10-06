@@ -97,6 +97,9 @@ const cache = vi.hoisted(() => {
 });
 /** The round running on the server when the page opens, as `reviewRound` answers. */
 let runningRound: unknown = null;
+// A Draw icons round: what each scope holds, and the round running, if any.
+let iconScope: { bare: number; unowned: number } | undefined = undefined;
+let iconRound: unknown = null;
 /** What a round would ask about, across the catalogue, as `reviewScope` answers. */
 const scope = {
   flagged: 3,
@@ -182,6 +185,16 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         pathKey: () => ["ingredients.kinds"],
       },
       onReview: "onReview",
+      onIcons: "onIcons",
+      iconScope: {
+        queryOptions: () => ({ queryKey: ["ingredients.iconScope"] }),
+        queryKey: () => ["ingredients.iconScope"],
+      },
+      iconRound: {
+        queryOptions: () => ({ queryKey: ["ingredients.iconRound"] }),
+        queryKey: () => ["ingredients.iconRound"],
+      },
+      drawIcons: { mutationOptions: () => ({ name: "drawIcons" }) },
     },
   }),
 }));
@@ -199,8 +212,8 @@ vi.mock("@tanstack/react-virtual", async (importOriginal) => ({
 }));
 
 vi.mock("@norish/shared-react/realtime", () => ({
-  useRealtimeSubscription: (_procedure: unknown, handlers: { onEvent: (p: unknown) => void }) => {
-    review.onEvent = handlers.onEvent;
+  useRealtimeSubscription: (procedure: unknown, handlers: { onEvent: (p: unknown) => void }) => {
+    if (procedure === "onReview") review.onEvent = handlers.onEvent;
   },
 }));
 
@@ -211,6 +224,10 @@ vi.mock("@tanstack/react-query", () => ({
     switch (queryKey[0]) {
       case "ingredients.reviewRound":
         return { data: runningRound, isFetching: false, isPending: false };
+      case "ingredients.iconScope":
+        return { data: enabled ? iconScope : undefined, isFetching: false, isPending: false };
+      case "ingredients.iconRound":
+        return { data: enabled ? iconRound : undefined, isFetching: false, isPending: false };
       case "ingredients.reviewScope":
         return { data: enabled ? scope : undefined, isFetching: false, isPending: false };
       case "ingredients.get":
@@ -259,12 +276,15 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 /** Whether the instance has AI: with it off, nothing on the page offers it. */
-const permissions = vi.hoisted(() => ({ isAIEnabled: true }));
+const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
 
 vi.mock("@/context/hidden-items-context", () => ({ useHiddenItems: () => [] }));
 
 vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({ isAIEnabled: permissions.isAIEnabled }),
+  usePermissionsContext: () => ({
+    isAIEnabled: permissions.isAIEnabled,
+    canDrawImages: permissions.canDrawImages,
+  }),
 }));
 
 vi.mock("@heroui/react", async (importOriginal) => ({
@@ -434,6 +454,9 @@ describe("IngredientsSettingsContent", () => {
     items = [onion, salt];
     everySpelling = [];
     runningRound = null;
+    iconScope = undefined;
+    iconRound = null;
+    permissions.canDrawImages = false;
     report = null;
     suggestions = [];
     ownItem = undefined;
@@ -458,6 +481,42 @@ describe("IngredientsSettingsContent", () => {
       listEnd.onIntersect?.([{ isIntersecting: true }]);
     });
     expect(fetchNextPage).toHaveBeenCalledTimes(2);
+  });
+
+  it("offers Draw icons only where the instance can draw and the viewer may draw a food", () => {
+    iconScope = { bare: 2, unowned: 5 };
+    const { unmount } = render(<IngredientsSettingsContent />);
+
+    // Nothing can draw: not offered, whatever is left.
+    expect(screen.queryByTestId("ingredients-draw-icons")).toBeNull();
+    unmount();
+
+    permissions.canDrawImages = true;
+    const drawing = render(<IngredientsSettingsContent />);
+
+    expect(screen.getByTestId("ingredients-draw-icons")).toBeInTheDocument();
+    drawing.unmount();
+
+    // Nothing left that the viewer may draw, in either scope.
+    iconScope = { bare: 0, unowned: 0 };
+    render(<IngredientsSettingsContent />);
+    expect(screen.queryByTestId("ingredients-draw-icons")).toBeNull();
+  });
+
+  it("shows a running Draw icons round's count in place of its button", () => {
+    permissions.canDrawImages = true;
+    iconScope = { bare: 2, unowned: 5 };
+    iconRound = {
+      jobId: "icons-1",
+      done: 3,
+      total: 20,
+      counts: { drawn: 3, skipped: 0, failed: 0 },
+      finished: false,
+    };
+    render(<IngredientsSettingsContent />);
+
+    expect(screen.getByTestId("ingredients-icon-round-progress")).toHaveTextContent("progress");
+    expect(screen.queryByTestId("ingredients-draw-icons")).toBeNull();
   });
 
   it("shows each food's icon in its row, and the placeholder for one with none", () => {

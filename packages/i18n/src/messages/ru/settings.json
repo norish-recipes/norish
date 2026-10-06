@@ -577,6 +577,19 @@
       "failed": "Из этого изображения не удалось сделать значок.",
       "generate": "Создать с помощью ИИ",
       "generateFailed": "Не удалось создать значок."
+    },
+    "drawIcons": {
+      "open": "Нарисовать значки",
+      "title": "Нарисовать значки",
+      "intro": "Поставщик изображений рисует значок для каждого продукта, и он сразу становится собственным значком продукта. Другой значок продукту можно задать в его панели.",
+      "scopeLabel": "Какие продукты",
+      "scopes": {
+        "bare": "Только продукты совсем без значка",
+        "unowned": "Все продукты без собственного значка"
+      },
+      "scopeSize": "{count, plural, =0 {Нет значков} one {# значок} few {# значка} many {# значков} other {# значка}}",
+      "start": "Нарисовать значки",
+      "progress": "Рисуем значки · {done, number} из {total, number}"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Search the shop",
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Нарисовать значок продукта"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Генерация изображений",
         "store-lookup": "Поиск в магазине",
-        "ingredient-review": "Спросить ИИ об ингредиентах"
+        "ingredient-review": "Спросить ИИ об ингредиентах",
+        "ingredient-icons": "Рисование значков ингредиентов"
       },
       "summary": {
         "failed": "{count} failed"

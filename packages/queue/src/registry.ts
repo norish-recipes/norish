@@ -14,6 +14,7 @@ import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type {
   CaldavSyncJobData,
   ImageImportJobData,
+  IngredientIconsJobData,
   IngredientReviewJobData,
   PasteImportJobData,
   RecipeEnrichmentJobData,
@@ -33,6 +34,7 @@ import { createCaldavSyncQueue } from "./caldav-sync/queue";
 import { buildRemovalOptions, QUEUE_NAMES } from "./config";
 import { createImageGenerationQueue } from "./image-generation/queue";
 import { createImageImportQueue } from "./image-import/queue";
+import { createIngredientIconsQueue } from "./ingredient-icons/queue";
 import { createIngredientLinkingQueue } from "./ingredient-linking/queue";
 import { createIngredientReviewQueue } from "./ingredient-review/queue";
 import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
@@ -75,6 +77,7 @@ interface QueueRegistry {
   scheduledTasks: Queue<ScheduledTaskJobData>;
   storeLookup: Queue<StoreLookupJobData>;
   ingredientReview: Queue<IngredientReviewJobData>;
+  ingredientIcons: Queue<IngredientIconsJobData>;
 }
 
 async function loadJobRetention(): Promise<JobRetentionConfig> {
@@ -134,6 +137,7 @@ export async function initializeQueues(): Promise<QueueRegistry> {
       scheduledTasks: createScheduledTasksQueue(removalOptions),
       storeLookup: createStoreLookupQueue(removalOptions),
       ingredientReview: createIngredientReviewQueue(removalOptions),
+      ingredientIcons: createIngredientIconsQueue(removalOptions),
     };
 
     globalForRegistry.queueRegistry = created;
@@ -185,6 +189,7 @@ export function getQueueByName(name: QueueName): Queue {
     [QUEUE_NAMES.SCHEDULED_TASKS]: getQueues().scheduledTasks,
     [QUEUE_NAMES.STORE_LOOKUP]: getQueues().storeLookup,
     [QUEUE_NAMES.INGREDIENT_REVIEW]: getQueues().ingredientReview,
+    [QUEUE_NAMES.INGREDIENT_ICONS]: getQueues().ingredientIcons,
   };
 
   return byName[name];
@@ -229,6 +234,7 @@ export async function closeAllQueues(): Promise<void> {
     registry.scheduledTasks.close(),
     registry.storeLookup.close(),
     registry.ingredientReview.close(),
+    registry.ingredientIcons.close(),
   ]);
 
   globalForRegistry.queueRegistry = null;

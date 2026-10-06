@@ -577,6 +577,19 @@
       "failed": "Billedet kunne ikke laves til et ikon.",
       "generate": "Generér med AI",
       "generateFailed": "Ikonet kunne ikke genereres."
+    },
+    "drawIcons": {
+      "open": "Tegn ikoner",
+      "title": "Tegn ikoner",
+      "intro": "Billedudbyderen tegner et ikon til hver fødevare, og det bliver straks fødevarens eget. Du kan give en fødevare et andet ikon i dens panel.",
+      "scopeLabel": "Hvilke fødevarer",
+      "scopes": {
+        "bare": "Kun fødevarer helt uden ikon",
+        "unowned": "Alle fødevarer uden eget ikon"
+      },
+      "scopeSize": "{count, plural, =0 {Ingen ikoner} one {# ikon} other {# ikoner}}",
+      "start": "Tegn ikoner",
+      "progress": "Tegner ikoner · {done, number} af {total, number}"
     }
   },
   "admin": {
@@ -1130,7 +1143,8 @@
         "searching": "Search the shop",
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food"
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Tegn fødevarens ikon"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1146,7 +1160,8 @@
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Billedgenerering",
         "store-lookup": "Butiksopslag",
-        "ingredient-review": "Spørg AI om ingredienser"
+        "ingredient-review": "Spørg AI om ingredienser",
+        "ingredient-icons": "Tegn ingrediensikoner"
       },
       "summary": {
         "failed": "{count} failed"
