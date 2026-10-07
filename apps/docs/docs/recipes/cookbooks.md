@@ -39,7 +39,9 @@ Items**, this is a per device setting.
 
 **Edit cookbook** — from a cookbook's card in the Library, or from the menu on
 its own page, opens the name and the list of what is in it. Rename
-it, untick anything that should go, and **Save** applies both.
+it, untick anything that should go, and **Save** applies both. On the
+cookbook's page, a single recipe can also be taken out from its card: swipe
+it left (or use its three dots) and press the minus.
 
 ![Editing a cookbook: its name and what is in it, in one panel](/img/screenshots/cookbooks-edit.png)
 
