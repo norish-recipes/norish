@@ -712,12 +712,10 @@
     "system": {
       "title": "Systemeinstellungen",
       "cleanup": {
-        "title": "Bereinigungsplaner",
         "label": "Bereinigungsmonate",
         "description": "Lösche geplante Mahlzeiten, die älter als diese Anzahl von Monaten sind"
       },
       "server": {
-        "title": "Serververwaltung",
         "restartLabel": "Server neu starten",
         "restartDescription": "Konfigurationsänderungen übernehmen, die einen Neustart erfordern",
         "restartButton": "Server neu starten"

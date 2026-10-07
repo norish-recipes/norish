@@ -712,12 +712,10 @@
     "system": {
       "title": "Paramètres système",
       "cleanup": {
-        "title": "Planificateur de nettoyage",
         "label": "Mois de nettoyage",
         "description": "Supprimer les repas planifiés plus anciens que ce nombre de mois"
       },
       "server": {
-        "title": "Gestion du serveur",
         "restartLabel": "Redémarrer le serveur",
         "restartDescription": "Appliquer les modifications nécessitant un redémarrage",
         "restartButton": "Redémarrer le serveur"

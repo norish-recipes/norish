@@ -712,12 +712,10 @@
     "system": {
       "title": "Systeminnstillinger",
       "cleanup": {
-        "title": "Oppryddingsplanlegger",
         "label": "Oppryddingsmåneder",
         "description": "Slett planlagte måltider som er eldre enn dette antallet måneder"
       },
       "server": {
-        "title": "Serveradministrasjon",
         "restartLabel": "Start server på nytt",
         "restartDescription": "Bruk konfigurasjonsendringer som krever en omstart",
         "restartButton": "Start server på nytt"

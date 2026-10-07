@@ -76,7 +76,7 @@ test("an edited auto-categorization prompt reaches the model", async () => {
   const SENTINEL = "PREFER SNACK WHEN THE DISH IS FINGER FOOD (categorization sentinel).";
   const ai = stack!.ai;
 
-  await editPrompts(page, { "Auto-Categorization Prompt": SENTINEL });
+  await editPrompts(page, { "Auto-categorization prompt": SENTINEL });
   await setAutomaticEnrichment({ autoCategorization: true });
 
   ai.control.reset();
@@ -103,7 +103,7 @@ test("an edited allergy-detection prompt reaches the model, with the household's
   const ai = stack!.ai;
 
   await supplyUserAllergies(stack!.baseURL, cookies!, ["peanut"]);
-  await editPrompts(page, { "Allergy Detection Prompt": SENTINEL });
+  await editPrompts(page, { "Allergy detection prompt": SENTINEL });
   await setAutomaticEnrichment({ allergyDetection: true });
 
   ai.control.reset();
@@ -135,8 +135,8 @@ test("image extraction runs under its own prompt, and editing the webpage prompt
 
   await setAutomaticEnrichment({});
   await editPrompts(page, {
-    "Recipe Extraction Prompt": EXTRACTION_SENTINEL,
-    "Image Extraction Prompt": IMAGE_SENTINEL,
+    "Recipe extraction prompt": EXTRACTION_SENTINEL,
+    "Image extraction prompt": IMAGE_SENTINEL,
   });
 
   ai.control.reset();

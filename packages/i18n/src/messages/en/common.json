@@ -29,7 +29,7 @@
     "goHome": "Go Home",
     "test": "Test",
     "format": "Format",
-    "restoreDefaults": "Restore Defaults",
+    "restoreDefaults": "Restore defaults",
     "saveChanges": "Save Changes"
   },
   "secret": {

@@ -712,12 +712,10 @@
     "system": {
       "title": "Järjestelmäasetukset",
       "cleanup": {
-        "title": "Siivousajastin",
         "label": "Siivouskuukaudet",
         "description": "Poista suunnitellut ateriat, jotka ovat tätä useamman kuukauden vanhoja"
       },
       "server": {
-        "title": "Palvelimen hallinta",
         "restartLabel": "Käynnistä palvelin uudelleen",
         "restartDescription": "Ota käyttöön asetusmuutokset, jotka vaativat uudelleenkäynnistyksen",
         "restartButton": "Käynnistä palvelin uudelleen"

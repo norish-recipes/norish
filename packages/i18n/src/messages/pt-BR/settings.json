@@ -712,12 +712,10 @@
     "system": {
       "title": "Configurações do sistema",
       "cleanup": {
-        "title": "Agendador de limpeza",
         "label": "Meses para limpeza",
         "description": "Excluir refeições planejadas mais antigas que este número de meses"
       },
       "server": {
-        "title": "Gerenciamento do servidor",
         "restartLabel": "Reiniciar servidor",
         "restartDescription": "Aplicar alterações de configuração que exigem reinicialização",
         "restartButton": "Reiniciar servidor"

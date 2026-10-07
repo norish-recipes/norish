@@ -18,22 +18,22 @@
       "emailLabel": "Email",
       "avatarHint": "Click your avatar to change picture",
       "deleteAvatar": "Delete profile picture",
-      "saveChanges": "Save Changes"
+      "saveChanges": "Save changes"
     },
     "allergies": {
       "title": "Allergies",
       "description": "Add your food allergies to receive warnings when planning recipes that contain allergens.",
       "placeholder": "Type allergies (e.g., gluten, nuts, dairy)...",
-      "saveButton": "Save Allergies"
+      "saveButton": "Save allergies"
     },
     "apiKeys": {
-      "title": "API Keys",
+      "title": "API keys",
       "description": "API keys can be used to build custom integrations, shortcuts, and automations.",
       "docsLink": "Open API docs",
-      "keyNameLabel": "Key Name (optional)",
+      "keyNameLabel": "Key name (optional)",
       "keyNamePlaceholder": "e.g., iOS Shortcut",
-      "createKey": "Create Key",
-      "yourKeys": "Your API Keys",
+      "createKey": "Create key",
+      "yourKeys": "Your API keys",
       "noKeys": "No API keys yet. Create one to get started.",
       "tableHeaders": {
         "name": "NAME",
@@ -49,28 +49,28 @@
       "enableKey": "Enable key",
       "deleteKey": "Delete key",
       "generatedModal": {
-        "title": "API Key Generated",
+        "title": "API key generated",
         "warning": "Save this key now! You won't be able to see it again. We store only a hash and cannot recover this key.",
         "hint": "Use this key in the <code>x-api-key</code> header when making API requests.",
-        "confirmButton": "I've Saved It"
+        "confirmButton": "I've saved it"
       },
       "deleteModal": {
-        "title": "Delete API Key",
+        "title": "Delete API key",
         "message": "Are you sure you want to delete this API key? Any applications using it will immediately lose access. This cannot be undone.",
-        "confirmButton": "Delete Key"
+        "confirmButton": "Delete key"
       }
     },
     "archiveImport": {
-      "title": "Import Recipe Archive",
+      "title": "Import recipe archive",
       "description": "Import recipes exported from Norish, Mela, Paprika, Mealie or Tandoor."
     },
     "archiveExport": {
-      "title": "Export Recipe Archive",
+      "title": "Export recipe archive",
       "description": "Download every recipe you can see.",
       "button": "Export"
     },
     "siteAuthTokens": {
-      "title": "Site Authentication Tokens",
+      "title": "Site authentication tokens",
       "description": "Headers or cookies to send when importing from sites that need a login, such as Instagram or Facebook.",
       "accountsDescription": "Name an account when you have more than one login for a site. Each import then uses one of that site's accounts, picked at random, so no single login carries every import. A token left without an account name is sent with every import for its domain.",
       "domain": "Domain",
@@ -85,7 +85,7 @@
       "type": "Type",
       "typeHeader": "Header",
       "typeCookie": "Cookie",
-      "addButton": "Add Token",
+      "addButton": "Add token",
       "noTokens": "No site authentication tokens configured.",
       "tableHeaders": {
         "domain": "DOMAIN",
@@ -96,23 +96,23 @@
         "actions": "ACTIONS"
       },
       "deleteModal": {
-        "title": "Delete Token",
+        "title": "Delete token",
         "message": "Are you sure you want to delete this authentication token? Imports from this site may stop working.",
-        "confirmButton": "Delete Token"
+        "confirmButton": "Delete token"
       },
       "accountsHelp": "About accounts"
     },
     "dangerZone": {
-      "title": "Danger Zone",
+      "title": "Danger zone",
       "description": "Once you delete your account, there is no going back. Please be certain.",
-      "deleteButton": "Delete My Account",
+      "deleteButton": "Delete my account",
       "deleteModal": {
-        "title": "Delete Account",
+        "title": "Delete account",
         "permanentWarning": "This action is permanent and cannot be undone!",
         "dataWarning": "Your personal data including groceries, calendar entries, and notes will be permanently deleted.",
         "recipesNote": "Recipes you created will be preserved but will no longer be linked to your account.",
         "adminNote": "If you are the admin of a household with other members, you must transfer admin privileges first.",
-        "confirmButton": "Delete My Account"
+        "confirmButton": "Delete my account"
       }
     },
     "preferences": {
@@ -123,7 +123,7 @@
         "description": "Choose your preferred language"
       },
       "hidden": {
-        "title": "Hidden Items",
+        "title": "Hidden items",
         "description": "Hide UI elements you don't want to see",
         "placeholder": "Nothing hidden",
         "options": {
@@ -139,7 +139,7 @@
         }
       },
       "todaySection": {
-        "title": "Today Section",
+        "title": "Today section",
         "description": "How the dashboard's Today section behaves",
         "options": {
           "always": "Always visible",
@@ -187,16 +187,16 @@
   },
   "household": {
     "info": {
-      "yourRole": "Your Role",
+      "yourRole": "Your role",
       "admin": "Admin",
       "member": "Member",
       "members": "Members",
-      "leaveButton": "Leave Household",
+      "leaveButton": "Leave household",
       "leaveModal": {
-        "title": "Leave Household",
+        "title": "Leave household",
         "confirmMessage": "Are you sure you want to leave {name}?",
         "adminWarning": "You are the admin. You must transfer admin privileges before leaving.",
-        "confirmButton": "Leave Household"
+        "confirmButton": "Leave household"
       }
     },
     "members": {
@@ -208,18 +208,18 @@
       },
       "you": "You",
       "kickButton": "Kick",
-      "makeAdminButton": "Make Admin",
+      "makeAdminButton": "Make admin",
       "kickModal": {
-        "title": "Kick User",
+        "title": "Kick user",
         "confirmMessage": "Are you sure you want to kick {name} from the household?",
         "warning": "They will lose access to all shared recipes, groceries, and calendar entries.",
-        "confirmButton": "Kick User"
+        "confirmButton": "Kick user"
       },
       "transferModal": {
-        "title": "Transfer Admin Privileges",
+        "title": "Transfer admin privileges",
         "confirmMessage": "Are you sure you want to transfer admin privileges to {name}?",
         "warning": "You will become a regular member and will no longer be able to kick users or manage join codes.",
-        "confirmButton": "Transfer Admin"
+        "confirmButton": "Transfer admin"
       },
       "toasts": {
         "kickFailed": "Failed to kick user",
@@ -228,36 +228,36 @@
       }
     },
     "joinCode": {
-      "title": "Join Code",
+      "title": "Join code",
       "shareDescription": "Share this code with others to invite them to your household.",
       "expiresIn": "Expires in:",
       "regenerateButton": "Regenerate",
       "expired": "Expired",
       "noCodeDescription": "No active join code. Generate one to invite new members.",
-      "generateButton": "Generate Join Code",
+      "generateButton": "Generate join code",
       "copySuccess": "Join code copied",
       "copyFailed": "Failed to copy join code"
     },
     "create": {
-      "title": "Create Household",
+      "title": "Create household",
       "description": "Create a new household to share recipes and groceries with family or friends.",
-      "nameLabel": "Household Name",
+      "nameLabel": "Household name",
       "namePlaceholder": "e.g., Smith Family",
-      "submitButton": "Create Household"
+      "submitButton": "Create household"
     },
     "join": {
-      "title": "Join Household",
+      "title": "Join household",
       "description": "Enter a join code to join an existing household.",
-      "codeLabel": "Join Code",
+      "codeLabel": "Join code",
       "codePlaceholder": "8-character code",
-      "submitButton": "Join Household"
+      "submitButton": "Join household"
     }
   },
   "caldav": {
     "setup": {
-      "title": "Setup CalDAV Sync",
+      "title": "Setup CalDAV sync",
       "description": "Connect your CalDAV-compatible calendar to automatically sync your meal plans",
-      "gettingStarted": "Getting Started with CalDAV",
+      "gettingStarted": "Getting started with CalDAV",
       "providerDescription": "You'll need a CalDAV-compatible calendar service. Popular providers include:",
       "serverUrlLabel": "Server URL",
       "serverUrlDescription": "Base URL of your CalDAV server (e.g., https://dav.example.com)",
@@ -273,23 +273,23 @@
       "calendarDescriptionDisabled": "Test connection to load available calendars",
       "timeFormat": "Format: HH:MM-HH:MM",
       "timeFormatError": "Format must be HH:MM-HH:MM",
-      "breakfastTime": "Breakfast Time",
-      "lunchTime": "Lunch Time",
-      "dinnerTime": "Dinner Time",
-      "snackTime": "Snack Time",
-      "testConnection": "Test Connection",
-      "saveConfiguration": "Save Configuration"
+      "breakfastTime": "Breakfast time",
+      "lunchTime": "Lunch time",
+      "dinnerTime": "Dinner time",
+      "snackTime": "Snack time",
+      "testConnection": "Test connection",
+      "saveConfiguration": "Save configuration"
     },
     "config": {
-      "title": "CalDAV Configuration",
-      "editTitle": "Edit CalDAV Configuration",
+      "title": "CalDAV configuration",
+      "editTitle": "Edit CalDAV configuration",
       "serverUrl": "Server URL",
       "enabled": "Enabled",
       "disabled": "Disabled",
       "editButton": "Edit",
       "deleteButton": "Delete",
-      "saveChanges": "Save Changes",
-      "advancedSettings": "Advanced Settings",
+      "saveChanges": "Save changes",
+      "advancedSettings": "Advanced settings",
       "timezone": "Timezone: {timezone}",
       "connectionStatus": {
         "connected": "Connected",
@@ -299,15 +299,15 @@
       }
     },
     "deleteModal": {
-      "title": "Delete CalDAV Configuration",
+      "title": "Delete CalDAV configuration",
       "confirmMessage": "Are you sure you want to delete your CalDAV configuration?",
       "deleteEventsLabel": "Delete synced events",
       "deleteEventsDescription": "Remove all events that were created in your CalDAV calendar",
       "confirmButton": "Delete"
     },
     "syncStatus": {
-      "title": "Sync Status",
-      "syncNow": "Sync Now",
+      "title": "Sync status",
+      "syncNow": "Sync now",
       "clearFilter": "Clear filter",
       "clickToFilter": "Click a badge to filter",
       "showingItems": "Showing {start}-{end} of {total} items",
@@ -328,7 +328,7 @@
       },
       "emptyFiltered": "No {status} items found",
       "emptyDefault": "No sync records found",
-      "errorDetails": "Error Details",
+      "errorDetails": "Error details",
       "pagination": "Page {current} of {total}"
     }
   },
@@ -626,18 +626,18 @@
       "title": "General",
       "allowRegistration": "Allow new user registration",
       "registrationDescription": "When disabled, only existing users can sign in",
-      "locales": "Enabled Languages",
+      "locales": "Enabled languages",
       "localesDescription": "Select which languages users can choose from",
-      "defaultLocale": "Default Language",
+      "defaultLocale": "Default language",
       "defaultLocaleDescription": "Language used for new users and as fallback",
-      "saveLocales": "Save Language Settings",
+      "saveLocales": "Save language settings",
       "localesSaved": "Language settings saved",
       "localesError": "Failed to save language settings",
       "atLeastOneLocale": "At least one language must be enabled",
       "export": {
-        "title": "Recipe Archive",
+        "title": "Recipe archive",
         "description": "Download every recipe on this server.",
-        "button": "Export Recipe Archive"
+        "button": "Export recipe archive"
       }
     },
     "users": {
@@ -678,94 +678,92 @@
       "description": "Who may see and change what others made. Server admins always have full access.",
       "recipes": "Recipes",
       "ingredients": "Ingredients",
-      "viewRecipes": "View Recipes",
+      "viewRecipes": "View recipes",
       "viewDescription": "Who can see recipes in the dashboard",
-      "editRecipes": "Edit Recipes",
+      "editRecipes": "Edit recipes",
       "editDescription": "Who can modify recipe details",
-      "deleteRecipes": "Delete Recipes",
+      "deleteRecipes": "Delete recipes",
       "deleteDescription": "Who can remove recipes",
       "levels": {
         "everyone": "Everyone",
         "everyoneDescription": "All authenticated users",
         "household": "Household",
         "householdDescription": "Recipe owner and their household members",
-        "owner": "Owner Only",
+        "owner": "Owner only",
         "ownerDescription": "Only the recipe owner"
       },
       "note": "Groceries and calendar items always follow household rules: household members can edit or delete each other's items."
     },
     "ingredientPermissions": {
-      "title": "Ingredient Permissions",
+      "title": "Ingredient permissions",
       "description": "Who may rename ingredients, mark them distinct or remove their translations. Anyone can add a translation.",
-      "editIngredients": "Edit Ingredients",
+      "editIngredients": "Edit ingredients",
       "editDescription": "Who can change an ingredient someone else added",
       "levels": {
         "everyone": "Everyone",
         "everyoneDescription": "All authenticated users",
         "household": "Household",
         "householdDescription": "Whoever added it and their household members",
-        "owner": "Owner Only",
+        "owner": "Owner only",
         "ownerDescription": "Only whoever added it"
       },
       "note": "Ingredients from the built-in catalogue can only be edited by server admins."
     },
     "system": {
-      "title": "System Settings",
+      "title": "System settings",
       "cleanup": {
-        "title": "Cleanup Scheduler",
-        "label": "Cleanup Months",
+        "label": "Cleanup months",
         "description": "Delete planned meals older than this many months"
       },
       "server": {
-        "title": "Server Management",
-        "restartLabel": "Restart Server",
+        "restartLabel": "Restart server",
         "restartDescription": "Apply configuration changes that require a restart",
-        "restartButton": "Restart Server"
+        "restartButton": "Restart server"
       }
     },
     "restart": {
-      "title": "Restart Server",
+      "title": "Restart server",
       "confirmMessage": "Are you sure you want to restart the server?",
       "importantTitle": "Important:",
       "warning1": "All active connections will be disconnected",
       "warning2": "The server will be unavailable for a few seconds",
       "warning3": "Ensure your deployment has <code>restart: always</code> configured, or the server will not come back online automatically",
-      "confirmButton": "Restart Now"
+      "confirmButton": "Restart now"
     },
     "authProviders": {
-      "title": "Authentication Providers",
+      "title": "Authentication providers",
       "requiresRestart": "Requires restart",
       "description": "Configure how people sign in.",
       "passwordAuth": {
-        "title": "Email & Password",
+        "title": "Email & password",
         "description": "Allow users to sign in with email and password"
       },
       "oauthDescription": "Configure OAuth providers for SSO authentication.",
       "oidc": {
-        "title": "OIDC Provider",
+        "title": "OIDC provider",
         "subtitle": "Generic OpenID Connect",
         "fields": {
-          "name": "Provider Name",
+          "name": "Provider name",
           "namePlaceholder": "e.g., Authentik, Keycloak",
           "issuer": "Issuer URL",
           "issuerPlaceholder": "https://your-idp.com",
           "clientId": "Client ID",
-          "clientSecret": "Client Secret",
+          "clientSecret": "Client secret",
           "wellknown": "Well-known URL (optional)",
           "wellknownPlaceholder": "Auto-derived from issuer if not set"
         },
         "claimMapping": {
-          "title": "Claim Mapping",
+          "title": "Claim mapping",
           "description": "Assign admin rights and households from your provider's group claims.",
           "securityWarning": "Warning: Enabling claim mapping allows your identity provider to control admin privileges and household membership. Only enable this if you fully trust your OIDC provider and have properly configured the group claims.",
-          "scopes": "Additional Scopes",
+          "scopes": "Additional scopes",
           "scopesPlaceholder": "groups, roles",
           "scopesDescription": "Comma-separated list of additional OAuth scopes to request (e.g., groups for Keycloak)",
-          "groupsClaim": "Groups Claim",
+          "groupsClaim": "Groups claim",
           "groupsClaimDescription": "Name of the claim containing user groups/roles",
-          "adminGroup": "Admin Group",
+          "adminGroup": "Admin group",
           "adminGroupDescription": "Group name that grants server admin role (case-insensitive)",
-          "householdPrefix": "Household Prefix",
+          "householdPrefix": "Household prefix",
           "householdPrefixDescription": "Prefix for household group names (e.g., norish_household_family => household 'family')"
         }
       },
@@ -774,7 +772,7 @@
         "subtitle": "GitHub OAuth",
         "fields": {
           "clientId": "Client ID",
-          "clientSecret": "Client Secret"
+          "clientSecret": "Client secret"
         }
       },
       "google": {
@@ -783,7 +781,7 @@
         "fields": {
           "clientId": "Client ID",
           "clientIdPlaceholder": "*.apps.googleusercontent.com",
-          "clientSecret": "Client Secret"
+          "clientSecret": "Client secret"
         }
       },
       "form": {
@@ -797,19 +795,19 @@
       }
     },
     "contentDetection": {
-      "title": "Content Detection",
+      "title": "Content detection",
       "description": "Configure how recipes are detected and parsed from web pages.",
       "contentIndicators": {
-        "title": "Content Indicators",
+        "title": "Content indicators",
         "subtitle": "Keywords that identify recipe pages",
         "description": "Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe.",
         "timersEnabled": {
-          "title": "Enable Recipe Timers",
+          "title": "Enable recipe timers",
           "description": "Detect and show interactive timers in recipes"
         }
       },
       "units": {
-        "title": "Units of Measure",
+        "title": "Units of measure",
         "subtitle": "Measurement unit definitions for parsing",
         "description": "Define measurement units with their short form, plural, and alternate spellings. Used when parsing ingredient quantities."
       },
@@ -819,44 +817,44 @@
         "description": "Words Norish skips when matching ingredient names, like “chopped”, “large” or the “s” in “onions”."
       },
       "recurrence": {
-        "title": "Recurrence Patterns",
+        "title": "Recurrence patterns",
         "subtitle": "Natural language patterns for recurring items",
         "description": "Words per language that make a grocery repeat, like “every week” or “om de dag”."
       },
       "timerKeywords": {
-        "title": "Timer Keywords",
+        "title": "Timer keywords",
         "subtitle": "Time unit keywords for timer detection",
         "description": "Configure keywords used to detect timers in recipe instructions. Supports multiple languages.",
-        "enableToggle": "Enable Timer Detection",
-        "hoursLabel": "Hour Keywords",
+        "enableToggle": "Enable timer detection",
+        "hoursLabel": "Hour keywords",
         "hoursPlaceholder": "hour, hours, hr, hrs, h",
         "hoursHelp": "Keywords for hours (e.g., hour, stunde, heure, uur)",
-        "minutesLabel": "Minute Keywords",
+        "minutesLabel": "Minute keywords",
         "minutesPlaceholder": "minute, minutes, min, mins, m",
         "minutesHelp": "Keywords for minutes (e.g., minute, minuten, minuut)",
-        "secondsLabel": "Second Keywords",
+        "secondsLabel": "Second keywords",
         "secondsPlaceholder": "second, seconds, sec, secs, s",
         "secondsHelp": "Keywords for seconds (e.g., second, sekunde, seconde)",
         "unsavedChanges": "Unsaved changes"
       }
     },
     "aiProcessing": {
-      "title": "AI & Processing",
+      "title": "AI & processing",
       "description": "Configure AI-powered features for recipe extraction and video processing.",
       "aiConfig": {
-        "title": "AI Configuration",
+        "title": "AI configuration",
         "subtitle": "Recipe parsing and extraction"
       },
       "video": {
-        "title": "Video Processing",
+        "title": "Video processing",
         "subtitle": "Social media video extraction & transcription"
       },
       "imageGeneration": {
-        "title": "Image Generation",
+        "title": "Image generation",
         "subtitle": "Draw a picture of the dish for recipes without one"
       },
       "decisionModel": {
-        "title": "Decision Model",
+        "title": "Decision model",
         "subtitle": "Fast, cheap answers to closed questions"
       },
       "prompts": {
@@ -868,18 +866,18 @@
         "subtitle": "The vocabulary recipes and AI pick from"
       },
       "bulkEnrichment": {
-        "title": "Bulk Enrichment",
+        "title": "Bulk enrichment",
         "subtitle": "Run enabled enrichment on every recipe",
         "description": "Queue all enabled enrichments",
-        "button": "Enrich All Recipes",
+        "button": "Enrich all recipes",
         "confirmTitle": "Run enrichment on all recipes?",
         "confirmMessage": "This queues AI work for every recipe on this server. Every enrichment kind whose automatic switch is enabled runs wherever data is missing.",
         "replaceExisting": "Overwrite existing data",
         "replaceExistingDescription": "Redo categories, nutrition, provenance and step ingredients even where a recipe already has them. Tags and allergy indications are only ever added to.",
         "replaceWarning": "This cannot be undone. Data you entered yourself is replaced too, including step ingredients you linked by hand: nothing records which values came from AI.",
         "costWarning": "This can be an expensive operation: with many recipes it may take a long time and, on a paid AI provider, use a significant amount of credits.",
-        "confirmButton": "Run on All Recipes",
-        "confirmButtonReplace": "Overwrite All Recipes",
+        "confirmButton": "Run on all recipes",
+        "confirmButtonReplace": "Overwrite all recipes",
         "queued": "{queued, plural, =0 {No runs queued} one {# run queued} other {# runs queued}} across {recipes, plural, one {# recipe} other {# recipes}}",
         "aiDisabled": "AI is disabled on this server. Enable AI first.",
         "error": "Failed to start bulk enrichment",
@@ -887,10 +885,10 @@
       }
     },
     "aiConfig": {
-      "enableAI": "Enable AI Features",
+      "enableAI": "Enable AI features",
       "enableAIDescription": "Use AI to extract recipes from unstructured content",
       "configureWarning": "Configure the AI provider settings below to enable AI features.",
-      "provider": "AI Provider",
+      "provider": "AI provider",
       "providers": {
         "openai": "OpenAI",
         "azure": "Azure OpenAI",
@@ -900,58 +898,58 @@
         "deepseek": "DeepSeek",
         "perplexity": "Perplexity",
         "groq": "Groq",
-        "ollama": "Ollama (Local)",
-        "lmStudio": "LM Studio (Local)",
+        "ollama": "Ollama (local)",
+        "lmStudio": "LM Studio (local)",
         "genericOpenai": "Generic OpenAI-compatible"
       },
       "endpointUrl": "Endpoint URL",
-      "azureEndpoint": "Azure Resource URL (Optional)",
+      "azureEndpoint": "Azure resource URL (optional)",
       "azureEndpointDescription": "Custom Azure OpenAI endpoint. Leave empty for default.",
       "model": "Model",
-      "visionModel": "Vision Model (Optional)",
+      "visionModel": "Vision model (optional)",
       "visionModelDescription": "Optional: Use a different model for image/vision tasks. Leave empty to use the model above.",
-      "apiKey": "API Key",
+      "apiKey": "API key",
       "apiKeyPlaceholder": "Enter API key",
       "temperature": "Temperature: {value}",
       "temperatureHint": "Lower = more focused, Higher = more creative",
-      "maxTokens": "Max Tokens",
-      "requestTimeout": "Request Timeout (ms)",
-      "alwaysUseAI": "Always Use AI Importing",
+      "maxTokens": "Max tokens",
+      "requestTimeout": "Request timeout (ms)",
+      "alwaysUseAI": "Always use AI importing",
       "alwaysUseAIDescription": "Skip structured parsers and extract recipes using AI only",
       "connectionSuccess": "Connection successful",
-      "testConnection": "Test Connection",
+      "testConnection": "Test connection",
       "vision": "vision",
-      "automaticEnrichment": "Automatic Recipe Enrichment",
+      "automaticEnrichment": "Automatic recipe enrichment",
       "automaticEnrichmentDescription": "Which AI enrichments run on new recipes. Members can still run each one by hand.",
       "automaticEnrichmentPlaceholder": "Nothing runs automatically",
       "automaticEnrichmentKinds": {
         "autoTagging": "Auto-Tagging",
         "autoTaggingDescription": "Add AI-suggested tags to new recipes without removing existing tags",
-        "allergyDetection": "Allergy Detection",
+        "allergyDetection": "Allergy detection",
         "allergyDetectionDescription": "Automatically add allergy-related tags when importing recipes",
         "autoCategorization": "Auto-Categorization",
         "autoCategorizationDescription": "Set meal categories on new recipes that have none",
-        "nutritionEstimation": "Nutrition Estimation",
+        "nutritionEstimation": "Nutrition estimation",
         "nutritionEstimationDescription": "Estimate calories, fat, carbs, and protein for new recipes that supply none",
-        "recipeProvenance": "Recipe Provenance",
+        "recipeProvenance": "Recipe provenance",
         "recipeProvenanceDescription": "Work out the country, region, Cuisines, and a short note for new recipes, filling in only what is still missing",
-        "ingredientLinking": "Ingredient Linking",
+        "ingredientLinking": "Ingredient linking",
         "ingredientLinkingDescription": "Link each step to the ingredient lines it uses, for steps that have none",
-        "imageGeneration": "Image Generation",
+        "imageGeneration": "Image generation",
         "imageGenerationDescription": "Draw a picture of the dish for new recipes that have no image at all"
       },
-      "tagStrategy": "Tag Strategy",
+      "tagStrategy": "Tag strategy",
       "tagStrategyDescription": "Which tags auto-tagging may use, whether it runs automatically or manually",
       "tagStrategies": {
-        "predefined": "Predefined Tags Only",
-        "predefinedDb": "Predefined + Existing Tags",
-        "freeform": "AI Can Create New Tags"
+        "predefined": "Predefined tags only",
+        "predefinedDb": "Predefined + existing tags",
+        "freeform": "AI can create new tags"
       },
-      "cuisineStrategy": "Cuisine Strategy",
+      "cuisineStrategy": "Cuisine strategy",
       "cuisineStrategyDescription": "Whether provenance inference may add Cuisines to your vocabulary or only pick from it",
       "cuisineStrategies": {
-        "existing": "Only Existing Cuisines",
-        "extend": "AI Can Add New Cuisines"
+        "existing": "Only existing cuisines",
+        "extend": "AI can add new cuisines"
       }
     },
     "modelListing": {
@@ -960,24 +958,24 @@
       "unreachable": "Could not reach {provider}. Check the endpoint."
     },
     "videoConfig": {
-      "enableVideo": "Enable Video Parsing",
+      "enableVideo": "Enable video parsing",
       "enableVideoDescription": "Extract recipes from TikTok, Instagram, YouTube Shorts, Facebook, Pinterest, and more",
       "configureWarning": "Configure a transcription provider below to enable video processing.",
       "aiDisabledWarning": "Enable AI configuration before turning on video processing.",
-      "maxLength": "Max Video Length (seconds)",
+      "maxLength": "Max video length (seconds)",
       "maxLengthDescription": "Longer videos take more time and resources to process",
-      "maxFileSize": "Max Video File Size",
+      "maxFileSize": "Max video file size",
       "maxFileSizeDescription": "Maximum size for downloaded video files",
-      "ytDlpVersion": "yt-dlp Version",
+      "ytDlpVersion": "yt-dlp version",
       "ytDlpVersionDescription": "Version of yt-dlp this server is running. Not changeable here.",
       "ytDlpVersionMissing": "No yt-dlp binary found",
       "ytDlpVersionUnknown": "Could not check",
       "ytDlpVersionLoading": "Checking …",
-      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxy": "yt-dlp proxy",
       "ytDlpProxyDescription": "HTTP/SOCKS5 proxy for yt-dlp",
       "transcription": "Transcription",
       "transcriptionDescription": "Convert video audio to text for recipe extraction",
-      "transcriptionProvider": "Transcription Provider",
+      "transcriptionProvider": "Transcription provider",
       "transcriptionProviderDescription": "Only OpenAI and OpenAI-compatible endpoints support Whisper transcription",
       "transcriptionProviders": {
         "disabled": "Disabled",
@@ -992,105 +990,105 @@
       "transcriptionModel": "Model",
       "transcriptionModelDescription": "Whisper model to use for transcription",
       "transcriptionModelPlaceholder": "Select or enter model name",
-      "transcriptionApiKey": "API Key",
+      "transcriptionApiKey": "API key",
       "transcriptionApiKeyDescription": "Falls back to AI Configuration API key if not set",
       "transcriptionApiKeyPlaceholder": "Leave empty to use AI config key",
-      "transcriptionApiKeyOptional": "API Key (Optional)",
+      "transcriptionApiKeyOptional": "API key (optional)",
       "transcriptionApiKeyOptionalDescription": "Most local Whisper servers don't require an API key",
       "transcriptionApiKeyOptionalPlaceholder": "Leave empty for local servers"
     },
     "imageGenerationConfig": {
       "description": "Pictures need their own provider, since most AI providers cannot draw.",
-      "provider": "Image Provider",
+      "provider": "Image provider",
       "providers": {
         "disabled": "Disabled",
         "openai": "OpenAI",
         "google": "Google AI",
         "azure": "Azure OpenAI",
-        "ollama": "Ollama (Local)",
+        "ollama": "Ollama (local)",
         "lmStudio": "LM Studio",
         "genericOpenai": "Generic OpenAI-compatible"
       },
       "endpoint": "Endpoint URL",
       "endpointOptional": "Optional: custom Azure resource URL",
-      "apiKey": "API Key",
+      "apiKey": "API key",
       "apiKeyPlaceholder": "Enter API key...",
       "apiKeyInherited": "Using the API key from your AI configuration.",
-      "model": "Image Model",
+      "model": "Image model",
       "modelPlaceholder": "e.g. gpt-image-1",
       "modelDescription": "The model that draws the picture. It must be an image model, not a text model.",
       "fallbackHint": "Same provider as your AI configuration: the endpoint and API key fall back to it unless you set them here."
     },
     "decisionConfig": {
-      "provider": "Decision Provider",
+      "provider": "Decision provider",
       "providers": {
         "disabled": "Disabled",
         "typesafe": "TypeSafe AI"
       },
-      "apiKey": "API Key",
+      "apiKey": "API key",
       "apiKeyPlaceholder": "Enter API key...",
       "apiKeyDescription": "Get a key from your account at typesafe.ai",
-      "model": "Decision Model",
-      "uses": "Use the Decision Model for",
+      "model": "Decision model",
+      "uses": "Use the decision model for",
       "usesPlaceholder": "Nothing",
       "useNames": {
         "autoCategorization": "Auto-Categorization",
         "autoCategorizationDescription": "Decide whether a recipe is a breakfast, lunch, dinner or snack",
         "autoTagging": "Auto-Tagging",
         "autoTaggingDescription": "Pick tags from the predefined list, and confirm each tag the AI proposes",
-        "allergyDetection": "Allergy Detection",
+        "allergyDetection": "Allergy detection",
         "allergyDetectionDescription": "Decide which household allergens a recipe contains",
-        "recipeProvenance": "Recipe Provenance",
+        "recipeProvenance": "Recipe provenance",
         "recipeProvenanceDescription": "Settle the country and Cuisines before the note is written",
-        "groceryLinking": "Grocery Linking",
+        "groceryLinking": "Grocery linking",
         "groceryLinkingDescription": "Order a store's offered products and link one it is sure of",
-        "ingredientResolution": "Ingredient Resolution",
+        "ingredientResolution": "Ingredient resolution",
         "ingredientResolutionDescription": "Decide whether a new ingredient name is a food Norish already knows",
-        "validateEnrichments": "Validate Enrichments",
+        "validateEnrichments": "Validate enrichments",
         "validateEnrichmentsDescription": "Check every enrichment run's own claims before they are written"
       },
-      "testConnection": "Test Connection",
+      "testConnection": "Test connection",
       "connectionSuccess": "Connection successful",
       "aiDisabledHint": "AI is disabled on this server. Enable it in the AI Configuration to test and use the Decision Model."
     },
     "promptsConfig": {
-      "recipeExtraction": "Recipe Extraction Prompt",
+      "recipeExtraction": "Recipe extraction prompt",
       "recipeExtractionDescription": "This prompt is used when extracting recipe data from web pages or video transcripts.",
       "recipeExtractionPlaceholder": "Enter the recipe extraction prompt...",
-      "imageExtraction": "Image Extraction Prompt",
+      "imageExtraction": "Image extraction prompt",
       "imageExtractionDescription": "This prompt is used when extracting recipe data from uploaded images, such as photos of a cookbook or a recipe card.",
       "imageExtractionPlaceholder": "Enter the image extraction prompt...",
-      "unitConversion": "Unit Conversion Prompt",
+      "unitConversion": "Unit conversion prompt",
       "unitConversionDescription": "This prompt is used when converting recipe measurements between metric and US systems. Available variables: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "Enter the unit conversion prompt...",
-      "nutritionEstimation": "Nutrition Estimation Prompt",
+      "nutritionEstimation": "Nutrition estimation prompt",
       "nutritionEstimationDescription": "This prompt is used when estimating nutrition information for a recipe. Available variables: recipeName, servings, ingredients",
       "nutritionEstimationPlaceholder": "Enter the nutrition estimation prompt...",
-      "autoTagging": "Auto-Tagging Prompt",
+      "autoTagging": "Auto-tagging prompt",
       "autoTaggingDescription": "This prompt is used to generate tags for imported recipes. Define tagging rules and predefined tags list.",
       "autoTaggingPlaceholder": "Enter the auto-tagging prompt...",
-      "autoCategorization": "Auto-Categorization Prompt",
+      "autoCategorization": "Auto-categorization prompt",
       "autoCategorizationDescription": "This prompt is used to sort recipes into meal categories (Breakfast, Lunch, Dinner, Snack).",
       "autoCategorizationPlaceholder": "Enter the auto-categorization prompt...",
-      "allergyDetection": "Allergy Detection Prompt",
+      "allergyDetection": "Allergy detection prompt",
       "allergyDetectionDescription": "This prompt is used to detect the household's configured allergens in a recipe's ingredients.",
       "allergyDetectionPlaceholder": "Enter the allergy detection prompt...",
-      "recipeProvenance": "Recipe Provenance Prompt",
+      "recipeProvenance": "Recipe provenance prompt",
       "recipeProvenanceDescription": "This prompt is used to work out where a recipe comes from. The note it produces is written in the language of the recipe itself. Available variables: recipeName, description, ingredients",
       "recipeProvenancePlaceholder": "Enter the Recipe Provenance prompt...",
-      "ingredientLinking": "Ingredient Linking Prompt",
+      "ingredientLinking": "Ingredient linking prompt",
       "ingredientLinkingDescription": "Used when linking each step to the ingredient lines it uses",
       "ingredientLinkingPlaceholder": "Prompt for linking ingredients to steps...",
-      "ingredientResolution": "Ingredient Resolution Prompt",
+      "ingredientResolution": "Ingredient resolution prompt",
       "ingredientResolutionDescription": "Used when deciding whether a new ingredient name is a food Norish already knows",
       "ingredientResolutionPlaceholder": "Prompt for recognising ingredient names...",
-      "imageGenerationBrief": "Image Brief Prompt",
+      "imageGenerationBrief": "Image brief prompt",
       "imageGenerationBriefDescription": "Used to turn a recipe into a short visual brief before its picture is generated. The recipe is appended after the prompt.",
       "imageGenerationBriefPlaceholder": "Prompt for writing the visual brief...",
-      "imageGenerationStyle": "Image Style Prompt",
+      "imageGenerationStyle": "Image style prompt",
       "imageGenerationStyleDescription": "Sent to the image model, with the visual brief appended after it. Sets the look every generated picture shares.",
       "imageGenerationStylePlaceholder": "Prompt for the image style...",
-      "ingredientIconStyle": "Ingredient Icon Style Prompt",
+      "ingredientIconStyle": "Ingredient icon style prompt",
       "ingredientIconStyleDescription": "Sent to the image model when an ingredient's icon is drawn, with the food's name and what it is a kind of appended after it. Sets the look every drawn icon shares.",
       "ingredientIconStylePlaceholder": "Prompt for the ingredient icon style..."
     },
@@ -1102,7 +1100,7 @@
       "failedToRestore": "Failed to restore defaults"
     },
     "jobQueue": {
-      "title": "Job Queues",
+      "title": "Job queues",
       "description": "Monitor background jobs across all queues: status, current step, duration, and failures.",
       "empty": "No jobs found",
       "filters": {
@@ -1176,11 +1174,11 @@
         "runsAt": "Runs {time}"
       },
       "detail": {
-        "title": "Job Details",
+        "title": "Job details",
         "notFound": "Job not found. It may have been cleaned up.",
         "sections": {
           "error": "Error",
-          "pipelineSteps": "Pipeline Steps",
+          "pipelineSteps": "Pipeline steps",
           "input": "Input",
           "logs": "Logs",
           "errors": "Errors"
@@ -1213,7 +1211,7 @@
         "confirm": "Remove job"
       },
       "retention": {
-        "title": "Job Retention",
+        "title": "Job retention",
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
@@ -1224,7 +1222,7 @@
     "cuisineVocabulary": {
       "description": "Cuisines are a curated vocabulary you own. Names are shown exactly as written here, in every language.",
       "namePlaceholder": "Cuisine name",
-      "addLabel": "Add a Cuisine",
+      "addLabel": "Add a cuisine",
       "renameLabel": "Rename {name}",
       "deleteLabel": "Delete {name}",
       "deleteConfirm": "Delete \"{name}\"? Recipes using it will lose it.",

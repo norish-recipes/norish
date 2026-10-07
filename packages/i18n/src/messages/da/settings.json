@@ -712,12 +712,10 @@
     "system": {
       "title": "Systemindstillinger",
       "cleanup": {
-        "title": "Oprydningsplanlægger",
         "label": "Oprydningsmåneder",
         "description": "Slet planlagte måltider, der er ældre end dette antal måneder"
       },
       "server": {
-        "title": "Serveradministration",
         "restartLabel": "Genstart server",
         "restartDescription": "Anvend konfigurationsændringer, der kræver en genstart",
         "restartButton": "Genstart server"

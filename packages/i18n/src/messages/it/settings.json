@@ -712,12 +712,10 @@
     "system": {
       "title": "Impostazioni di sistema",
       "cleanup": {
-        "title": "Pulizia programmata",
         "label": "Mesi di pulizia",
         "description": "Elimina i pasti pianificati più vecchi di questo numero di mesi"
       },
       "server": {
-        "title": "Gestione server",
         "restartLabel": "Riavvia server",
         "restartDescription": "Applica le modifiche alla configurazione che richiedono un riavvio",
         "restartButton": "Riavvia server"

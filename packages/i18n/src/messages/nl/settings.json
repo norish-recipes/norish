@@ -712,12 +712,10 @@
     "system": {
       "title": "Systeeminstellingen",
       "cleanup": {
-        "title": "Opruimplanner",
         "label": "Opruimmaanden",
         "description": "Verwijder geplande maaltijden ouder dan dit aantal maanden"
       },
       "server": {
-        "title": "Server beheer",
         "restartLabel": "Server herstarten",
         "restartDescription": "Pas configuratiewijzigingen toe die een herstart vereisen",
         "restartButton": "Server herstarten"

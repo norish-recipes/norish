@@ -712,12 +712,10 @@
     "system": {
       "title": "Ustawienia systemowe",
       "cleanup": {
-        "title": "Harmonogram czyszczenia",
         "label": "Miesiące przechowywania",
         "description": "Usuń zaplanowane posiłki starsze niż podana liczba miesięcy"
       },
       "server": {
-        "title": "Zarządzanie serwerem",
         "restartLabel": "Restart serwera",
         "restartDescription": "Zastosuj zmiany konfiguracji, które wymagają restartu",
         "restartButton": "Uruchom ponownie serwer"

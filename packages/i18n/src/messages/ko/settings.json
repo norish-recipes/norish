@@ -712,12 +712,10 @@
     "system": {
       "title": "시스템 설정",
       "cleanup": {
-        "title": "정리 스케줄러",
         "label": "정리 기간(월)",
         "description": "이 개월보다 오래된 계획된 식사 삭제"
       },
       "server": {
-        "title": "서버 관리",
         "restartLabel": "서버 다시 시작",
         "restartDescription": "다시 시작해야 하는 구성 변경 사항 적용",
         "restartButton": "서버 다시 시작"
