@@ -55,7 +55,7 @@ ever adds links to steps that have none.
   starts spending AI on its own.
 - A recipe with no ingredients or no steps has nothing to link, and the run
   skips it.
-- The one exception to gap-filling is an administrator's **Enrich All Recipes**
+- The one exception to gap-filling is an administrator's **Enrich all recipes**
   sweep with **Overwrite existing data** turned on.
 
 Like every enrichment kind, an automatic run that fails stays quiet, and a run

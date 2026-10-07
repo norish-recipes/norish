@@ -34,7 +34,7 @@ Some settings may require a reboot, this is indicated in the UI.
 
 ## Ingredient words
 
-**Settings => Admin => Content Detection => Ingredient words** holds the words
+**Settings => Admin => Content detection => Ingredient words** holds the words
 Norish reads past when it matches an ingredient name to a food, one set per
 language:
 
@@ -84,6 +84,6 @@ belongs to no one too, so it is left to server admins in the same way.
 ![Job details with the models a job asked](/img/screenshots/admin-job-details.png)
 
 Most tasks executed in Norish are run in the background via queues.
-You may view these queues and their steps in: **Settings => Admin => Job Queues**
+You may view these queues and their steps in: **Settings => Admin => Job queues**
 A queue has the following states: waiting, running, finished or failed.
 Opening a job shows details for debugging purposes.

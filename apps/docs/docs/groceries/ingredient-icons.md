@@ -83,7 +83,7 @@ you to draw.
 ## Hiding icons
 
 A reader who would rather see plain text, on a small phone say, can hide every
-icon on their device under **Settings → User → Hidden Items → Ingredient icons**.
+icon on their device under **Settings → User → Hidden items → Ingredient icons**.
 See [Hidden Items](../recipes/hidden-items.md).
 
 ## For self-hosters

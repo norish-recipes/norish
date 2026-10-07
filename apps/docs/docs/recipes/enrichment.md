@@ -42,7 +42,7 @@ text.
 
 Automatic enrichment runs once, when the recipe is new. Editing a recipe later
 never re-runs it, so an edit can't unexpectedly replace values you just set.
-An administrator can catch older recipes up with **Enrich All Recipes** in the
+An administrator can catch older recipes up with **Enrich all recipes** in the
 admin settings, which runs the enabled kinds across the whole library under
 these same rules — or, by turning on **Overwrite existing data** in its
 confirmation, deliberately redo them and replace what is stored, including

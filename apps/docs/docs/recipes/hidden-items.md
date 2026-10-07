@@ -12,7 +12,7 @@ By default everything is **enabled** disabling is on a per device basis.
 
 ## What can be hidden
 
-Settings => User => **Hidden Items** is a single control listing everything you
+Settings => User => **Hidden items** is a single control listing everything you
 can choose not to see:
 
 - **Provenance**, the Recipe Provenance section: country, region, cuisines and
