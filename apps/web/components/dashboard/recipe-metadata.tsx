@@ -47,8 +47,8 @@ export default function RecipeMetadata({
         </div>
       )}
 
-      {/* Right side metadata */}
-      <div className="pointer-events-auto absolute top-2 right-2 z-20 flex items-center gap-2">
+      {/* Right side metadata; a phone's narrow card lists it under the name instead */}
+      <div className="pointer-events-auto absolute top-2 right-2 z-20 flex items-center gap-2 max-sm:hidden">
         {typeof averageRating === "number" && averageRating > 0 && (
           <Chip className={photoChipClassName} size="sm" variant="soft">
             <StarIcon className="text-warning h-4 w-4" />

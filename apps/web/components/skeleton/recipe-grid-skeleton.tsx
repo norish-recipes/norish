@@ -18,7 +18,7 @@ export default function RecipeGridSkeleton({ variant = "grid" }: RecipeGridSkele
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {Array.from({ length: 50 }).map((_, i) => (
         <RecipeCardSkeleton key={i} />
       ))}

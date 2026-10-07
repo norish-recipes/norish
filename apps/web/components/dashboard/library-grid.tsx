@@ -15,6 +15,7 @@ import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
 // Estimated row height (card height + gap). Both kinds of card match these,
 // or the estimate degrades for every row on a mixed page (ADR-0026).
 const ESTIMATED_GRID_ROW_HEIGHT = 356;
+const ESTIMATED_PHONE_GRID_ROW_HEIGHT = 288;
 const ESTIMATED_LIST_ROW_HEIGHT = 144;
 const GRID_ROW_OVERSCAN = 3;
 const LIST_ROW_OVERSCAN = 12;
@@ -74,7 +75,9 @@ export default function LibraryGrid({
     viewMode === "list" ? LIST_LOAD_MORE_ROW_THRESHOLD : GRID_LOAD_MORE_ROW_THRESHOLD;
 
   // Track window size to recalculate scrollMargin on resize
-  const { height: _windowHeight } = useWindowSize();
+  const { height: _windowHeight, width: windowWidth = 1024 } = useWindowSize();
+  const gridRowHeight =
+    windowWidth < 640 ? ESTIMATED_PHONE_GRID_ROW_HEIGHT : ESTIMATED_GRID_ROW_HEIGHT;
 
   // Calculate scrollMargin from container position
   const scrollMargin = useMemo(() => {
@@ -95,8 +98,7 @@ export default function LibraryGrid({
 
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
-    estimateSize: () =>
-      viewMode === "list" ? ESTIMATED_LIST_ROW_HEIGHT : ESTIMATED_GRID_ROW_HEIGHT,
+    estimateSize: () => (viewMode === "list" ? ESTIMATED_LIST_ROW_HEIGHT : gridRowHeight),
     overscan: rowOverscan,
     scrollMargin,
     initialOffset: savedState?.scrollOffset,

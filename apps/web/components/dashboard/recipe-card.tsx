@@ -282,11 +282,8 @@ function RecipeCardComponent({
       </div>
     );
 
-  const metadataChips = (
-    <div
-      className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
-      title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
-    >
+  const factChips = (
+    <>
       {typeof averageRating === "number" && averageRating > 0 && showRatings && (
         <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
           <StarIcon className="text-warning h-3.5 w-3.5" />
@@ -307,6 +304,15 @@ function RecipeCardComponent({
           <Chip.Label>{servings}</Chip.Label>
         </Chip>
       )}
+    </>
+  );
+
+  const metadataChips = (
+    <div
+      className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
+      title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
+    >
+      {factChips}
 
       {visibleTagNames.map((tag) => {
         const isAllergen = isAllergenTag(tag, allergySet);
@@ -437,7 +443,7 @@ function RecipeCardComponent({
       <div
         ref={cardRef}
         data-recipe-card
-        className={`relative h-[340px] w-full overflow-hidden transition-all duration-300 ${open ? "rounded-none opacity-70" : "rounded-3xl"} `}
+        className={`relative h-[272px] w-full overflow-hidden transition-all duration-300 sm:h-[340px] ${open ? "rounded-none opacity-70" : "rounded-3xl"} `}
         role="button"
         tabIndex={open ? 0 : -1}
         onClick={() => {
@@ -456,7 +462,7 @@ function RecipeCardComponent({
             variant="default"
           >
             <DoubleTapContainer
-              className="relative h-[236px] w-full shrink-0 cursor-pointer overflow-hidden"
+              className="relative h-40 w-full shrink-0 cursor-pointer overflow-hidden sm:h-[236px]"
               disabled={open || mobileSearchOpen}
               doubleTapEnabled={showFavorites}
               onDoubleTap={() => {
@@ -484,11 +490,11 @@ function RecipeCardComponent({
             </DoubleTapContainer>
 
             <Card.Content
-              className="h-[104px] cursor-pointer overflow-hidden px-4 pt-3 pb-3"
+              className="flex h-[112px] cursor-pointer flex-col overflow-hidden px-3 pt-2.5 pb-3 sm:h-[104px] sm:px-4 sm:pt-3"
               onClick={handleNavigate}
             >
               <h3
-                className={`text-foreground truncate text-base font-semibold ${open ? "" : "group-hover/row:underline"} `}
+                className={`text-foreground shrink-0 text-sm font-semibold max-sm:line-clamp-2 sm:truncate sm:text-base ${open ? "" : "group-hover/row:underline"} `}
                 title={recipe.name}
               >
                 <OriginFlag className="mr-1.5" originCountry={recipe.originCountry} />
@@ -497,18 +503,17 @@ function RecipeCardComponent({
 
               {description && (
                 <p
-                  className="text-muted mt-1 text-sm"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
+                  className="text-muted mt-0.5 shrink-0 truncate text-xs sm:mt-1 sm:line-clamp-2 sm:text-sm sm:whitespace-normal"
                   title={description}
                 >
                   <SmartMarkdownRenderer disableLinks text={description} />
                 </p>
               )}
+
+              {/* A phone's card: the facts the photo carries on a wider card, under one line of description */}
+              <div className="mt-auto flex h-6 shrink-0 flex-wrap gap-1.5 overflow-hidden sm:hidden">
+                {factChips}
+              </div>
             </Card.Content>
           </Card>
         </div>

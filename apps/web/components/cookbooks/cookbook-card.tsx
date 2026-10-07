@@ -213,14 +213,17 @@ function CookbookCardComponent({
   // recipe card puts its tags.
   const coverMetadata = (
     <div className="pointer-events-none absolute top-2 right-2 z-20 flex items-center gap-2">
-      <CookbookMetadata
-        chipClassName={photoChipClassName}
-        chipVariant="soft"
-        iconClassName="h-4 w-4"
-        memberCount={cookbook.memberCount}
-        servings={servings}
-        timeLabel={timeLabel}
-      />
+      {/* A phone's narrow card lists these under the title instead */}
+      <div className="contents max-sm:hidden">
+        <CookbookMetadata
+          chipClassName={photoChipClassName}
+          chipVariant="soft"
+          iconClassName="h-4 w-4"
+          memberCount={cookbook.memberCount}
+          servings={servings}
+          timeLabel={timeLabel}
+        />
+      </div>
 
       <div className="pointer-events-auto" role="presentation" onClick={stopParentActivation}>
         <Button
@@ -308,7 +311,7 @@ function CookbookCardComponent({
     ) : (
       <div
         data-cookbook-card
-        className={`relative h-[340px] w-full cursor-pointer overflow-hidden transition-all duration-300 ${rowOpen ? "rounded-none opacity-70" : "rounded-3xl"}`}
+        className={`relative h-[272px] w-full cursor-pointer overflow-hidden transition-all duration-300 sm:h-[340px] ${rowOpen ? "rounded-none opacity-70" : "rounded-3xl"}`}
         role="button"
         tabIndex={rowOpen ? 0 : -1}
         onClick={() => {
@@ -328,7 +331,7 @@ function CookbookCardComponent({
             className="border-border bg-surface shadow-surface relative h-full w-full gap-0 overflow-hidden rounded-3xl border p-0 focus-visible:outline-none"
             variant="default"
           >
-            <div className="relative h-[236px] w-full shrink-0 overflow-hidden">
+            <div className="relative h-40 w-full shrink-0 overflow-hidden sm:h-[236px]">
               <CookbookCover images={cookbook.coverImages} title={cookbook.title} />
               {coverMetadata}
               {allergens.length > 0 && (
@@ -338,9 +341,9 @@ function CookbookCardComponent({
               )}
             </div>
 
-            <Card.Content className="h-[104px] overflow-hidden px-4 pt-3 pb-3">
+            <Card.Content className="flex h-[112px] flex-col overflow-hidden px-3 pt-2.5 pb-3 sm:h-[104px] sm:px-4 sm:pt-3">
               <h3
-                className={`text-foreground truncate text-base font-semibold ${rowOpen ? "" : "group-hover/row:underline"}`}
+                className={`text-foreground shrink-0 text-sm font-semibold max-sm:line-clamp-2 sm:truncate sm:text-base ${rowOpen ? "" : "group-hover/row:underline"}`}
                 title={cookbook.title}
               >
                 {kindMark}
@@ -348,18 +351,22 @@ function CookbookCardComponent({
               </h3>
               {description && (
                 <p
-                  className="text-muted mt-1 text-sm"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
+                  className="text-muted mt-0.5 shrink-0 truncate text-xs sm:mt-1 sm:line-clamp-2 sm:text-sm sm:whitespace-normal"
                   title={description}
                 >
                   {description}
                 </p>
               )}
+              <div className="mt-auto flex h-6 shrink-0 flex-wrap gap-1.5 overflow-hidden sm:hidden">
+                <CookbookMetadata
+                  chipClassName={listChipClassName}
+                  chipVariant="tertiary"
+                  iconClassName="h-3.5 w-3.5"
+                  memberCount={cookbook.memberCount}
+                  servings={servings}
+                  timeLabel={timeLabel}
+                />
+              </div>
             </Card.Content>
           </Card>
         </div>
