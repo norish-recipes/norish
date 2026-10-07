@@ -51,6 +51,14 @@ export const cssButtonPill =
 export const cssButtonPillDanger =
   "rounded-full text-danger data-[hovered=true]:bg-danger/10 data-[pressed=true]:bg-danger/15";
 
+// A page header's controls: a view switch and the buttons beside it are one
+// height, 28px on a phone and 32px from `sm`, with 16px icons at both.
+// A switch's tab is its height less the list's 2px rim on either side.
+export const cssHeaderControl = "h-7 min-w-7 text-xs sm:h-8 sm:min-w-8 sm:text-sm";
+export const cssHeaderIconControl = "size-7 min-w-7 sm:size-8 sm:min-w-8";
+export const cssHeaderTab = "h-6 px-2 text-xs sm:h-7 sm:min-w-16 sm:px-2.5";
+export const cssHeaderIcon = "size-4 shrink-0";
+
 // Dropdown/Menu item pill styling to unify hover/pressed across menus
 // Uses important overrides to beat component defaults and keeps base transparent
 export const cssMenuItemPill =

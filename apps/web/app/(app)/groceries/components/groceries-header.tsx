@@ -6,6 +6,8 @@ import { Tabs } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import { cssHeaderIcon, cssHeaderTab } from "@norish/web/config/css-tokens";
+
 import { GroceriesListActions } from "./groceries-page";
 
 export type GroceriesView = "list" | "pantry";
@@ -49,7 +51,7 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
       <div className="flex shrink-0 items-center gap-2">
         {/* On a phone the gear's room stays in the Pantry too, so both views
             wrap alike and the switch never jumps a row. */}
-        <div className="flex justify-end max-md:min-h-10 max-md:min-w-10">
+        <div className="flex justify-end max-sm:min-h-7 max-sm:min-w-7 sm:max-md:min-h-8 sm:max-md:min-w-8">
           <AnimatePresence initial={false}>
             {view === "list" ? (
               <motion.div
@@ -79,10 +81,10 @@ export function GroceriesHeader({ view }: { view: GroceriesView }) {
                   ["pantry", ArchiveBoxIcon],
                 ] as const
               ).map(([id, Icon]) => (
-                <Tabs.Tab key={id} className="h-9 px-3 text-sm sm:min-w-20" id={id}>
+                <Tabs.Tab key={id} className={cssHeaderTab} id={id}>
                   {/* A phone shows the words alone: the icons only guess at a list and a pantry. */}
                   <div className="flex items-center gap-1.5">
-                    <Icon className="size-5 shrink-0 max-sm:hidden" />
+                    <Icon className={`${cssHeaderIcon} max-sm:hidden`} />
                     <span>{t(id)}</span>
                   </div>
                   <Tabs.Indicator />

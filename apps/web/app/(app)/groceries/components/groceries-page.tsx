@@ -17,7 +17,12 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
+import {
+  cssFloatingDockContentClearance,
+  cssHeaderControl,
+  cssHeaderIcon,
+  cssHeaderIconControl,
+} from "@norish/web/config/css-tokens";
 
 import { useGroceriesContext, useGroceriesUiContext } from "../context";
 import { useStoresContext } from "../stores-context";
@@ -222,18 +227,24 @@ export function GroceriesListActions() {
     <>
       {/* Desktop add button: Full text with icon */}
       <Button
-        className="hidden rounded-full font-medium md:flex"
+        className={`hidden rounded-full px-3 font-medium md:flex ${cssHeaderControl}`}
         size="md"
         variant="primary"
         onPress={() => setAddGroceryPanelOpen(true)}
       >
-        {<PlusIcon className="h-5 w-5" />}
+        {<PlusIcon className={cssHeaderIcon} />}
         {t("addItem")}
       </Button>
       {/* Settings dropdown with view mode and store management */}
       <Dropdown>
-        <Button isIconOnly aria-label={t("viewMode")} size="md" variant="tertiary">
-          <Cog6ToothIcon className="h-5 w-5" />
+        <Button
+          isIconOnly
+          aria-label={t("viewMode")}
+          className={cssHeaderIconControl}
+          size="md"
+          variant="tertiary"
+        >
+          <Cog6ToothIcon className={cssHeaderIcon} />
         </Button>
         <Dropdown.Popover className="bg-overlay">
           <Dropdown.Menu aria-label={t("viewMode")}>

@@ -27,7 +27,12 @@ import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
-import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
+import {
+  cssButtonPill,
+  cssButtonPillDanger,
+  cssHeaderIcon,
+  cssHeaderIconControl,
+} from "@norish/web/config/css-tokens";
 
 import CookbookMembers from "./cookbook-members";
 
@@ -120,11 +125,11 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
                   <Button
                     isIconOnly
                     aria-label={t("options")}
-                    className="transition active:scale-95"
+                    className={`transition active:scale-95 ${cssHeaderIconControl}`}
                     size="md"
                     variant="tertiary"
                   >
-                    <EllipsisHorizontalIcon className="h-5 w-5" />
+                    <EllipsisHorizontalIcon className={cssHeaderIcon} />
                   </Button>
                   <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
                     <Dropdown.Menu aria-label={t("options")}>
