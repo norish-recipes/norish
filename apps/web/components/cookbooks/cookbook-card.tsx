@@ -225,7 +225,12 @@ function CookbookCardComponent({
         />
       </div>
 
-      <div className="pointer-events-auto" role="presentation" onClick={stopParentActivation}>
+      {/* A phone opens the actions by swiping, as on a recipe card */}
+      <div
+        className="pointer-events-auto hidden md:block"
+        role="presentation"
+        onClick={stopParentActivation}
+      >
         <Button
           isIconOnly
           aria-label={t("options")}
