@@ -232,7 +232,7 @@ export function GroceriesListActions() {
       </Button>
       {/* Settings dropdown with view mode and store management */}
       <Dropdown>
-        <Button isIconOnly aria-label={t("viewMode")} size="sm" variant="tertiary">
+        <Button isIconOnly aria-label={t("viewMode")} size="md" variant="tertiary">
           <Cog6ToothIcon className="h-5 w-5" />
         </Button>
         <Dropdown.Popover className="bg-overlay">

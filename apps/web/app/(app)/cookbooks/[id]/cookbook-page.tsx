@@ -119,10 +119,10 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
                     isIconOnly
                     aria-label={t("options")}
                     className="transition active:scale-95"
-                    size="sm"
+                    size="md"
                     variant="tertiary"
                   >
-                    <EllipsisHorizontalIcon className="text-muted h-5 w-5" />
+                    <EllipsisHorizontalIcon className="h-5 w-5" />
                   </Button>
                   <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
                     <Dropdown.Menu aria-label={t("options")}>
