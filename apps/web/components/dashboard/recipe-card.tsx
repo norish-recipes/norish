@@ -443,7 +443,7 @@ function RecipeCardComponent({
       <div
         ref={cardRef}
         data-recipe-card
-        className={`relative h-[272px] w-full overflow-hidden transition-all duration-300 sm:h-[340px] ${open ? "rounded-none opacity-70" : "rounded-3xl"} `}
+        className={`relative h-[286px] w-full overflow-hidden transition-all duration-300 sm:h-[378px] ${open ? "rounded-none opacity-70" : "rounded-3xl"} `}
         role="button"
         tabIndex={open ? 0 : -1}
         onClick={() => {
@@ -475,10 +475,7 @@ function RecipeCardComponent({
               </div>
 
               <RecipeMetadata
-                averageRating={showRatings ? averageRating : null}
                 isFavorite={recipeIsFavorite}
-                servings={servings}
-                timeLabel={timeLabel}
                 onOptionsPress={() => {
                   if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
                   else rowRef.current?.openRow();
@@ -490,11 +487,11 @@ function RecipeCardComponent({
             </DoubleTapContainer>
 
             <Card.Content
-              className="flex h-[112px] cursor-pointer flex-col overflow-hidden px-3 pt-2.5 pb-3 sm:h-[104px] sm:px-4 sm:pt-3"
+              className="flex h-[124px] cursor-pointer flex-col overflow-hidden px-3 pt-2.5 pb-3 sm:h-[140px] sm:px-4 sm:pt-3"
               onClick={handleNavigate}
             >
               <h3
-                className={`text-foreground shrink-0 text-sm font-semibold max-sm:line-clamp-2 sm:truncate sm:text-base ${open ? "" : "group-hover/row:underline"} `}
+                className={`text-foreground line-clamp-2 shrink-0 text-sm font-semibold sm:text-base ${open ? "" : "group-hover/row:underline"} `}
                 title={recipe.name}
               >
                 <OriginFlag className="mr-1.5" originCountry={recipe.originCountry} />
@@ -503,15 +500,15 @@ function RecipeCardComponent({
 
               {description && (
                 <p
-                  className="text-muted mt-0.5 shrink-0 truncate text-xs sm:mt-1 sm:line-clamp-2 sm:text-sm sm:whitespace-normal"
+                  className="text-muted mt-0.5 shrink-0 truncate text-xs sm:mt-1 sm:text-sm"
                   title={description}
                 >
                   <SmartMarkdownRenderer disableLinks text={description} />
                 </p>
               )}
 
-              {/* A phone's card: the facts the photo carries on a wider card, under one line of description */}
-              <div className="mt-auto flex h-6 shrink-0 flex-wrap gap-1.5 overflow-hidden sm:hidden">
+              {/* The facts sit under one line of description, at the card's foot */}
+              <div className="mt-auto flex max-h-9 shrink-0 flex-wrap gap-1.5 overflow-hidden pt-3">
                 {factChips}
               </div>
             </Card.Content>

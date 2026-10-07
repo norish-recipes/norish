@@ -12,7 +12,6 @@ import {
   VISIBLE_ALLERGENS_IN_ROW,
 } from "@/components/cookbooks/cookbook-metadata";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
-import { photoChipClassName } from "@/components/dashboard/recipe-metadata";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { withOrigin } from "@/lib/back-destination";
@@ -207,24 +206,10 @@ function CookbookCardComponent({
     </div>
   );
 
-  // Over the cover, chips carry their own contrast rather than tinting the
-  // picture — the same rule the recipe card follows (ADR-0020). The allergens
-  // are not here: in grid they run along the bottom of the cover, where the
-  // recipe card puts its tags.
+  // Over the cover only the options button; the facts sit under the title, as
+  // on a recipe card, and the allergens run along the bottom of the cover.
   const coverMetadata = (
     <div className="pointer-events-none absolute top-2 right-2 z-20 flex items-center gap-2">
-      {/* A phone's narrow card lists these under the title instead */}
-      <div className="contents max-sm:hidden">
-        <CookbookMetadata
-          chipClassName={photoChipClassName}
-          chipVariant="soft"
-          iconClassName="h-4 w-4"
-          memberCount={cookbook.memberCount}
-          servings={servings}
-          timeLabel={timeLabel}
-        />
-      </div>
-
       {/* A phone opens the actions by swiping, as on a recipe card */}
       <div
         className="pointer-events-auto hidden md:block"
@@ -316,7 +301,7 @@ function CookbookCardComponent({
     ) : (
       <div
         data-cookbook-card
-        className={`relative h-[272px] w-full cursor-pointer overflow-hidden transition-all duration-300 sm:h-[340px] ${rowOpen ? "rounded-none opacity-70" : "rounded-3xl"}`}
+        className={`relative h-[286px] w-full cursor-pointer overflow-hidden transition-all duration-300 sm:h-[378px] ${rowOpen ? "rounded-none opacity-70" : "rounded-3xl"}`}
         role="button"
         tabIndex={rowOpen ? 0 : -1}
         onClick={() => {
@@ -346,9 +331,9 @@ function CookbookCardComponent({
               )}
             </div>
 
-            <Card.Content className="flex h-[112px] flex-col overflow-hidden px-3 pt-2.5 pb-3 sm:h-[104px] sm:px-4 sm:pt-3">
+            <Card.Content className="flex h-[124px] flex-col overflow-hidden px-3 pt-2.5 pb-3 sm:h-[140px] sm:px-4 sm:pt-3">
               <h3
-                className={`text-foreground shrink-0 text-sm font-semibold max-sm:line-clamp-2 sm:truncate sm:text-base ${rowOpen ? "" : "group-hover/row:underline"}`}
+                className={`text-foreground line-clamp-2 shrink-0 text-sm font-semibold sm:text-base ${rowOpen ? "" : "group-hover/row:underline"}`}
                 title={cookbook.title}
               >
                 {kindMark}
@@ -356,13 +341,13 @@ function CookbookCardComponent({
               </h3>
               {description && (
                 <p
-                  className="text-muted mt-0.5 shrink-0 truncate text-xs sm:mt-1 sm:line-clamp-2 sm:text-sm sm:whitespace-normal"
+                  className="text-muted mt-0.5 shrink-0 truncate text-xs sm:mt-1 sm:text-sm"
                   title={description}
                 >
                   {description}
                 </p>
               )}
-              <div className="mt-auto flex h-6 shrink-0 flex-wrap gap-1.5 overflow-hidden sm:hidden">
+              <div className="mt-auto flex max-h-9 shrink-0 flex-wrap gap-1.5 overflow-hidden pt-3">
                 <CookbookMetadata
                   chipClassName={listChipClassName}
                   chipVariant="tertiary"
