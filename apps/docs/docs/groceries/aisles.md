@@ -31,7 +31,8 @@ to no aisle at the top of a store or the unsorted section.
 
 There are two ways to add groceries to an aisle.
 
-**Drag the row** into an aisle. Dragging it back to the top of the Store
+**Drag the row** into an aisle by its handle, or on a phone by pressing and
+holding the row. Dragging it back to the top of the Store
 unlinks it. Dragging a row into another Store's aisle moves it to that Store
 and aisles. Dragging it into another Store's top area moves it there and
 leaves that Store's own memory to place it.
