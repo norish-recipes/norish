@@ -8,7 +8,6 @@ import RecipeCard from "@/components/dashboard/recipe-card";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbooks";
-import { MinusCircleIcon } from "@heroicons/react/20/solid";
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -48,42 +47,34 @@ export default function CookbookMembers({
     [recipes]
   );
 
+  // Taking a recipe out of the cookbook it is being read in, from the card's
+  // swipe actions. The member list is this cookbook's own read, so drop the
+  // row now rather than waiting for a refetch that Offline never comes.
+  const removeFromCookbook = useCallback(
+    (recipeId: string) => {
+      setMembership({ cookbookId, recipeId, isMember: false });
+      removeMember(recipeId);
+    },
+    [setMembership, cookbookId, removeMember]
+  );
+
   const renderItem = useCallback(
     (item: LibraryGridItem) => {
       if (item.kind !== "recipe") return null;
 
       return (
-        <div className="relative">
-          <RecipeCard
-            allergies={allergies}
-            isFavorite={isFavorite(item.recipe.id)}
-            recipe={item.recipe}
-            variant={variant}
-            onDelete={deleteRecipe}
-            onToggleFavorite={toggleFavorite}
-          />
-          {/* Taking a recipe out of the cookbook it is being read in. This
-              never touches the recipe — only its membership (ADR-0027). */}
-          <button
-            aria-label={t("removeFromCookbook")}
-            className="bg-overlay text-muted hover:text-danger shadow-surface absolute right-2 bottom-2 z-20 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-            data-remove-from-cookbook={item.recipe.name}
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setMembership({ cookbookId, recipeId: item.recipe.id, isMember: false });
-              // The member list is this cookbook's own read, so drop the row
-              // now rather than waiting for a refetch that Offline never comes.
-              removeMember(item.recipe.id);
-            }}
-          >
-            <MinusCircleIcon className="h-5 w-5" />
-          </button>
-        </div>
+        <RecipeCard
+          allergies={allergies}
+          isFavorite={isFavorite(item.recipe.id)}
+          recipe={item.recipe}
+          variant={variant}
+          onDelete={deleteRecipe}
+          onRemoveFromCookbook={removeFromCookbook}
+          onToggleFavorite={toggleFavorite}
+        />
       );
     },
-    [allergies, isFavorite, deleteRecipe, toggleFavorite, variant, setMembership, cookbookId, t]
+    [allergies, isFavorite, deleteRecipe, toggleFavorite, variant, removeFromCookbook]
   );
 
   // The contract's own predicate, so "no matches" here means what it means on

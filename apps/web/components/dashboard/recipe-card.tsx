@@ -17,6 +17,7 @@ import {
   CalendarDaysIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
+  MinusCircleIcon,
   ShoppingBagIcon,
   StarIcon,
   TrashIcon,
@@ -47,6 +48,8 @@ type RecipeCardProps = {
   variant?: "grid" | "list";
   onToggleFavorite: (recipeId: string) => void;
   onDelete: (recipeId: string, version: number) => void;
+  /** Inside a cookbook, the card's last action takes the recipe out of it instead of deleting it. */
+  onRemoveFromCookbook?: (recipeId: string) => void;
 };
 
 type RecipeTagValue = RecipeDashboardDTO["tags"][number] | string | null | undefined;
@@ -112,6 +115,7 @@ function RecipeCardComponent({
   variant = "grid",
   onToggleFavorite,
   onDelete,
+  onRemoveFromCookbook,
 }: RecipeCardProps) {
   const router = useRouter();
   // This card stands on the Library and inside a cookbook, so where the reader
@@ -132,6 +136,7 @@ function RecipeCardComponent({
     close: onDeleteModalClose,
   } = useOverlayState();
   const t = useTranslations("recipes.card");
+  const tCookbooks = useTranslations("recipes.cookbooks");
   const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   // Automatically prefetch recipe when card enters viewport
@@ -226,7 +231,17 @@ function RecipeCardComponent({
       },
     ];
 
-    if (showDeleteAction) {
+    if (onRemoveFromCookbook) {
+      // Taking a recipe out of the cookbook it is being read in. This never
+      // touches the recipe, only its membership (ADR-0027).
+      baseActions.push({
+        key: "remove-from-cookbook",
+        icon: MinusCircleIcon,
+        color: "danger",
+        onPress: () => onRemoveFromCookbook(recipe.id),
+        label: tCookbooks("removeFromCookbook"),
+      });
+    } else if (showDeleteAction) {
       baseActions.push({
         key: "delete",
         icon: TrashIcon,
@@ -238,7 +253,7 @@ function RecipeCardComponent({
     }
 
     return baseActions;
-  }, [showDeleteAction, handleDeleteClick, t]);
+  }, [showDeleteAction, handleDeleteClick, t, onRemoveFromCookbook, recipe.id, tCookbooks]);
 
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>
@@ -564,6 +579,7 @@ const RecipeCard = memo(RecipeCardComponent, (prevProps, nextProps) => {
   // Functions are stable via useCallback in parent, but check identity anyway
   if (prevProps.onToggleFavorite !== nextProps.onToggleFavorite) return false;
   if (prevProps.onDelete !== nextProps.onDelete) return false;
+  if (prevProps.onRemoveFromCookbook !== nextProps.onRemoveFromCookbook) return false;
 
   const prev = prevProps.recipe;
   const next = nextProps.recipe;
