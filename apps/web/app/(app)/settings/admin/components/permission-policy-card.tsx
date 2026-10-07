@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { Note } from "@/components/shared/note";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { Card } from "@heroui/react";
+import { Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
@@ -84,45 +85,46 @@ export default function PermissionPolicyCard() {
   );
 
   return (
-    <Card>
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <ShieldCheckIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-      <Card.Content className="gap-6">
-        <p className="text-muted text-base">{t("description")}</p>
+    <SettingsCard
+      contentClassName="gap-6"
+      description={t("description")}
+      icon={ShieldCheckIcon}
+      title={t("title")}
+    >
+      <Section id="recipes" note={t("note")} title={t("recipes")}>
+        <SettingRow description={t("viewDescription")} title={t("viewRecipes")}>
+          {renderPolicySelect("view", t("viewRecipes"))}
+        </SettingRow>
+        <SettingRow description={t("editDescription")} title={t("editRecipes")}>
+          {renderPolicySelect("edit", t("editRecipes"))}
+        </SettingRow>
+        <SettingRow description={t("deleteDescription")} title={t("deleteRecipes")}>
+          {renderPolicySelect("delete", t("deleteRecipes"))}
+        </SettingRow>
+      </Section>
 
-        <Section id="recipes" note={t("note")} title={t("recipes")}>
-          <SettingRow description={t("viewDescription")} title={t("viewRecipes")}>
-            {renderPolicySelect("view", t("viewRecipes"))}
-          </SettingRow>
-          <SettingRow description={t("editDescription")} title={t("editRecipes")}>
-            {renderPolicySelect("edit", t("editRecipes"))}
-          </SettingRow>
-          <SettingRow description={t("deleteDescription")} title={t("deleteRecipes")}>
-            {renderPolicySelect("delete", t("deleteRecipes"))}
-          </SettingRow>
-        </Section>
+      <Separator />
 
-        <Section id="ingredients" note={tIngredients("note")} title={t("ingredients")}>
-          <p className="text-muted text-base">{tIngredients("description")}</p>
-          <SettingRow
-            description={tIngredients("editDescription")}
-            title={tIngredients("editIngredients")}
-          >
-            <PermissionLevelSelect
-              ariaLabel={tIngredients("editIngredients")}
-              isDisabled={saving !== null}
-              labels={ingredientLabels}
-              value={ingredientPermissionPolicy?.edit ?? null}
-              onChange={(level) => void handleIngredientChange(level)}
-            />
-          </SettingRow>
-        </Section>
-      </Card.Content>
-    </Card>
+      <Section
+        description={tIngredients("description")}
+        id="ingredients"
+        note={tIngredients("note")}
+        title={t("ingredients")}
+      >
+        <SettingRow
+          description={tIngredients("editDescription")}
+          title={tIngredients("editIngredients")}
+        >
+          <PermissionLevelSelect
+            ariaLabel={tIngredients("editIngredients")}
+            isDisabled={saving !== null}
+            labels={ingredientLabels}
+            value={ingredientPermissionPolicy?.edit ?? null}
+            onChange={(level) => void handleIngredientChange(level)}
+          />
+        </SettingRow>
+      </Section>
+    </SettingsCard>
   );
 }
 
@@ -130,17 +132,22 @@ export default function PermissionPolicyCard() {
 function Section({
   id,
   title,
+  description,
   note,
   children,
 }: {
   id: string;
   title: string;
+  description?: string;
   note: string;
   children: ReactNode;
 }) {
   return (
     <section className="flex flex-col gap-4" data-testid={`permissions-${id}`}>
-      <h3 className="text-base font-semibold">{title}</h3>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-base font-semibold">{title}</h3>
+        {description ? <p className="text-muted text-base">{description}</p> : null}
+      </div>
       {children}
       <Note>{note}</Note>
     </section>

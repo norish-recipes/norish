@@ -32,14 +32,18 @@ export function PermissionLevelSelect({
       isDisabled={isDisabled}
       placeholder={ariaLabel}
       selectedKey={value}
-      size="sm"
       variant="secondary"
       onSelectionChange={(key) => {
         if (typeof key === "string") onChange(key as PermissionLevel);
       }}
     >
       <Select.Trigger>
-        <Select.Value />
+        {/* The field names the level; what it means is read in the list. */}
+        <Select.Value>
+          {({ defaultChildren, isPlaceholder }) =>
+            isPlaceholder || !value ? defaultChildren : labels[value].label
+          }
+        </Select.Value>
         <Select.Indicator />
       </Select.Trigger>
       <Select.Popover placement="bottom end">

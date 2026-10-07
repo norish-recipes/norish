@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
-import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { Button, Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -214,7 +214,6 @@ export default function TimerKeywordsEditor({
           variant="primary"
           isPending={saving}
         >
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

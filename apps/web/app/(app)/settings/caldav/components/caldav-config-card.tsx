@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { Note } from "@/components/shared/note";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import {
   Button,
-  Card,
   Description,
   Input,
   InputGroup,
@@ -149,170 +149,159 @@ export default function CalDavConfigCard() {
   // If no config, show initial setup form with guidance
   const canSave = serverUrl && username && password && calendarUrl;
   return (
-    <Card>
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <ServerIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-
-      <Card.Content className="gap-4">
-        <p className="text-muted text-base">{t("description")}</p>
-
-        {/* Guidance Section */}
-        <Note status="accent" title={t("gettingStarted")}>
-          <p className="mb-2">{t("providerDescription")}</p>
-          <ul className="ml-4 list-disc space-y-1">
-            <li>
-              <Link
-                isExternal
-                href="https://docs.nextcloud.com/server/latest/user_manual/en/groupware/calendar.html"
-                size="sm"
-                target="_blank"
-              >
-                Nextcloud Calendar
-              </Link>
-            </li>
-            <li>
-              <Link isExternal href="https://radicale.org/" size="sm" target="_blank">
-                Radicale
-              </Link>
-            </li>
-            <li>
-              <Link
-                isExternal
-                href="https://support.apple.com/guide/calendar/set-up-accounts-icl4308d6701/mac"
-                size="sm"
-                target="_blank"
-              >
-                Apple Calendar
-              </Link>
-            </li>
-            {/* No Google Calendar here: its CalDAV endpoint now requires
+    <SettingsCard description={t("description")} icon={ServerIcon} title={t("title")}>
+      {/* Guidance Section */}
+      <Note status="accent" title={t("gettingStarted")}>
+        <p className="mb-2">{t("providerDescription")}</p>
+        <ul className="ml-4 list-disc space-y-1">
+          <li>
+            <Link
+              isExternal
+              href="https://docs.nextcloud.com/server/latest/user_manual/en/groupware/calendar.html"
+              size="sm"
+              target="_blank"
+            >
+              Nextcloud Calendar
+            </Link>
+          </li>
+          <li>
+            <Link isExternal href="https://radicale.org/" size="sm" target="_blank">
+              Radicale
+            </Link>
+          </li>
+          <li>
+            <Link
+              isExternal
+              href="https://support.apple.com/guide/calendar/set-up-accounts-icl4308d6701/mac"
+              size="sm"
+              target="_blank"
+            >
+              Apple Calendar
+            </Link>
+          </li>
+          {/* No Google Calendar here: its CalDAV endpoint now requires
                 OAuth/OIDC, which this username/password setup cannot do. */}
-          </ul>
-        </Note>
+        </ul>
+      </Note>
 
-        {/* Setup Form */}
-        <TextField isRequired value={serverUrl} onChange={setServerUrl}>
-          <Label>{t("serverUrlLabel")}</Label>
-          <Input variant="secondary" placeholder={t("serverUrlPlaceholder")} />
-          <Description>{t("serverUrlDescription")}</Description>
+      {/* Setup Form */}
+      <TextField isRequired value={serverUrl} onChange={setServerUrl}>
+        <Label>{t("serverUrlLabel")}</Label>
+        <Input variant="secondary" placeholder={t("serverUrlPlaceholder")} />
+        <Description>{t("serverUrlDescription")}</Description>
+      </TextField>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <TextField isRequired value={username} onChange={setUsername}>
+          <Label>{t("usernameLabel")}</Label>
+          <Input variant="secondary" placeholder={t("usernamePlaceholder")} />
         </TextField>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextField isRequired value={username} onChange={setUsername}>
-            <Label>{t("usernameLabel")}</Label>
-            <Input variant="secondary" placeholder={t("usernamePlaceholder")} />
-          </TextField>
-          <TextField
-            isRequired
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={setPassword}
-          >
-            <Label>{t("passwordLabel")}</Label>
-            <InputGroup variant="secondary">
-              <InputGroup.Input placeholder={t("passwordPlaceholder")} />
-              <InputGroup.Suffix>
-                <button
-                  className="focus:outline-none"
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeSlashIcon className="text-muted h-4 w-4" />
-                  ) : (
-                    <EyeIcon className="text-muted h-4 w-4" />
-                  )}
-                </button>
-              </InputGroup.Suffix>
-            </InputGroup>
-          </TextField>
-        </div>
-
-        {/* Calendar Selection - always visible, disabled until calendars fetched */}
-        <Select
-          variant="secondary"
-          isDisabled={calendars.length === 0}
-          placeholder={
-            calendars.length === 0 ? t("calendarPlaceholderDisabled") : t("calendarPlaceholder")
-          }
-          value={calendarUrl}
-          onChange={(selected) => {
-            setCalendarUrl(typeof selected === "string" ? selected : null);
-          }}
+        <TextField
+          isRequired
+          type={showPassword ? "text" : "password"}
+          value={password}
+          onChange={setPassword}
         >
-          <Label>{t("calendarLabel")}</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Description>
-            {calendars.length === 0 ? t("calendarDescriptionDisabled") : t("calendarDescription")}
-          </Description>
-          <Select.Popover>
-            <ListBox>
-              {calendars.map((cal) => (
-                <ListBox.Item key={cal.url} id={cal.url} textValue={cal.displayName}>
-                  {cal.displayName}
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          <Label>{t("passwordLabel")}</Label>
+          <InputGroup variant="secondary">
+            <InputGroup.Input placeholder={t("passwordPlaceholder")} />
+            <InputGroup.Suffix>
+              <button
+                className="focus:outline-none"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeSlashIcon className="text-muted h-4 w-4" />
+                ) : (
+                  <EyeIcon className="text-muted h-4 w-4" />
+                )}
+              </button>
+            </InputGroup.Suffix>
+          </InputGroup>
+        </TextField>
+      </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextField value={breakfastTime} onChange={setBreakfastTime}>
-            <Label>{t("breakfastTime")}</Label>
-            <Input variant="secondary" placeholder="07:00-08:00" />
-            <Description>{t("timeFormat")}</Description>
-          </TextField>
-          <TextField value={lunchTime} onChange={setLunchTime}>
-            <Label>{t("lunchTime")}</Label>
-            <Input variant="secondary" placeholder="12:00-13:00" />
-            <Description>{t("timeFormat")}</Description>
-          </TextField>
-          <TextField value={dinnerTime} onChange={setDinnerTime}>
-            <Label>{t("dinnerTime")}</Label>
-            <Input variant="secondary" placeholder="18:00-19:00" />
-            <Description>{t("timeFormat")}</Description>
-          </TextField>
-          <TextField value={snackTime} onChange={setSnackTime}>
-            <Label>{t("snackTime")}</Label>
-            <Input variant="secondary" placeholder="15:00-16:00" />
-            <Description>{t("timeFormat")}</Description>
-          </TextField>
+      {/* Calendar Selection - always visible, disabled until calendars fetched */}
+      <Select
+        variant="secondary"
+        isDisabled={calendars.length === 0}
+        placeholder={
+          calendars.length === 0 ? t("calendarPlaceholderDisabled") : t("calendarPlaceholder")
+        }
+        value={calendarUrl}
+        onChange={(selected) => {
+          setCalendarUrl(typeof selected === "string" ? selected : null);
+        }}
+      >
+        <Label>{t("calendarLabel")}</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <Description>
+          {calendars.length === 0 ? t("calendarDescriptionDisabled") : t("calendarDescription")}
+        </Description>
+        <Select.Popover>
+          <ListBox>
+            {calendars.map((cal) => (
+              <ListBox.Item key={cal.url} id={cal.url} textValue={cal.displayName}>
+                {cal.displayName}
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </Select.Popover>
+      </Select>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <TextField value={breakfastTime} onChange={setBreakfastTime}>
+          <Label>{t("breakfastTime")}</Label>
+          <Input variant="secondary" placeholder="07:00-08:00" />
+          <Description>{t("timeFormat")}</Description>
+        </TextField>
+        <TextField value={lunchTime} onChange={setLunchTime}>
+          <Label>{t("lunchTime")}</Label>
+          <Input variant="secondary" placeholder="12:00-13:00" />
+          <Description>{t("timeFormat")}</Description>
+        </TextField>
+        <TextField value={dinnerTime} onChange={setDinnerTime}>
+          <Label>{t("dinnerTime")}</Label>
+          <Input variant="secondary" placeholder="18:00-19:00" />
+          <Description>{t("timeFormat")}</Description>
+        </TextField>
+        <TextField value={snackTime} onChange={setSnackTime}>
+          <Label>{t("snackTime")}</Label>
+          <Input variant="secondary" placeholder="15:00-16:00" />
+          <Description>{t("timeFormat")}</Description>
+        </TextField>
+      </div>
+
+      {testResult && (
+        <div
+          className={`rounded-lg p-3 text-base ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
+        >
+          {testResult.message}
         </div>
+      )}
 
-        {testResult && (
-          <div
-            className={`rounded-lg p-3 text-base ${testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
-          >
-            {testResult.message}
-          </div>
-        )}
-
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            isDisabled={!canSave}
-            onPress={handleTestConnection}
-            variant="secondary"
-            isPending={testing}
-          >
-            {t("testConnection")}
-          </Button>
-          <Button
-            isDisabled={!canSave}
-            onPress={handleInitialSetup}
-            variant="primary"
-            isPending={saving}
-          >
-            {t("saveConfiguration")}
-          </Button>
-        </div>
-      </Card.Content>
-    </Card>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          isDisabled={!canSave}
+          onPress={handleTestConnection}
+          variant="secondary"
+          isPending={testing}
+        >
+          {t("testConnection")}
+        </Button>
+        <Button
+          isDisabled={!canSave}
+          onPress={handleInitialSetup}
+          variant="primary"
+          isPending={saving}
+        >
+          {t("saveConfiguration")}
+        </Button>
+      </div>
+    </SettingsCard>
   );
 }

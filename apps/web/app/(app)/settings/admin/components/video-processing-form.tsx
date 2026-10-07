@@ -6,7 +6,6 @@ import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableTranscriptionModelsQuery, useYtDlpVersionQuery } from "@/hooks/admin";
-import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   Button,
   ComboBox,
@@ -256,7 +255,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     }
   };
   return (
-    <div className="flex flex-col gap-4 p-2">
+    <div className="flex flex-col gap-4">
       {/* Video Processing Section */}
       <SwitchRow description={t("enableVideoDescription")} title={t("enableVideo")}>
         <SettingsSwitch
@@ -456,7 +455,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
           variant="primary"
           isPending={saving}
         >
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

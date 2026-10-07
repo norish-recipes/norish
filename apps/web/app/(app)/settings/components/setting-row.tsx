@@ -33,7 +33,7 @@ export function SettingRow({ title, description, badges, children }: SettingRowB
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="flex flex-wrap items-center gap-2 font-medium">
+        <span className="text-foreground flex flex-wrap items-center gap-2 text-base font-medium">
           {title}
           {badges}
         </span>
@@ -56,7 +56,7 @@ export function SettingRow({ title, description, badges, children }: SettingRowB
 export function SwitchRow({ title, description, badges, children }: SettingRowBaseProps) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1">
-      <span className="col-start-1 row-start-1 flex flex-wrap items-center gap-2 font-medium">
+      <span className="text-foreground col-start-1 row-start-1 flex flex-wrap items-center gap-2 text-base font-medium">
         {title}
         {badges}
       </span>

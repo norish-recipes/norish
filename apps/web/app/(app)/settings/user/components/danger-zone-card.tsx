@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { TrashIcon } from "@heroicons/react/16/solid";
-import { Button, Card, Modal } from "@heroui/react";
+import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
@@ -17,20 +19,19 @@ export default function DangerZoneCard() {
   };
   return (
     <>
-      <Card className="border-danger/30 dark:border-danger/30">
-        <Card.Header>
-          <h2 className="text-danger text-lg font-semibold">{t("title")}</h2>
-        </Card.Header>
-        <Card.Content className="gap-4">
-          <p className="text-muted text-base">{t("description")}</p>
-          <div className="flex justify-end">
-            <Button onPress={() => setShowAccountDeleteModal(true)} variant="danger-soft">
-              {<TrashIcon className="h-4 w-4" />}
-              {t("deleteButton")}
-            </Button>
-          </div>
-        </Card.Content>
-      </Card>
+      <SettingsCard
+        danger
+        description={t("description")}
+        icon={ExclamationCircleIcon}
+        title={t("title")}
+      >
+        <div className="flex justify-end">
+          <Button onPress={() => setShowAccountDeleteModal(true)} variant="danger-soft">
+            {<TrashIcon className="h-4 w-4" />}
+            {t("deleteButton")}
+          </Button>
+        </div>
+      </SettingsCard>
 
       {/* Delete Account Confirmation */}
       <Modal.Backdrop

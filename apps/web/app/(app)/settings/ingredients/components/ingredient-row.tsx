@@ -98,7 +98,7 @@ export const IngredientRow = memo(function IngredientRow({
         type="button"
         onClick={() => onOpen(item.id)}
       >
-        {drawing && !iconsHidden ? (
+        {iconsHidden ? null : drawing ? (
           <span
             className="text-muted flex size-6 shrink-0 items-center justify-center md:size-8"
             data-testid="ingredient-icon-drawing"
@@ -107,7 +107,10 @@ export const IngredientRow = memo(function IngredientRow({
             <span className="sr-only">{t("drawIcons.drawing")}</span>
           </span>
         ) : (
-          <IngredientIcon src={item.icon ?? null} />
+          // A food with no icon keeps the slot empty, so every name in the list starts in line.
+          <span className="size-6 shrink-0 md:size-8">
+            <IngredientIcon src={item.icon ?? null} />
+          </span>
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">

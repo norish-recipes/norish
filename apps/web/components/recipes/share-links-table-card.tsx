@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
 import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { PauseIcon, PlayIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Modal, Table } from "@heroui/react";
+import { LinkIcon, PauseIcon, PlayIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Button, Modal, Table } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type {
@@ -153,50 +154,45 @@ export default function ShareLinksTableCard({
   };
   return (
     <>
-      <Card>
-        <Card.Header>
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            {t("title")}
-            <NewFeatureChip showOnVersion="0.18.0" />
-          </h2>
-        </Card.Header>
-        <Card.Content className="gap-4">
-          <p className="text-muted text-base">{t("description")}</p>
-
-          {shares.length === 0 ? (
-            <p className="text-muted text-base">
-              {isLoading ? tCommon("status.loading") : t("empty")}
-            </p>
-          ) : (
-            <Table>
-              <Table.ScrollContainer>
-                <Table.Content aria-label={t("title")}>
-                  <Table.Header columns={columns}>
-                    {(column) => (
-                      <Table.Column
-                        key={column.key}
-                        id={column.key}
-                        isRowHeader={column.key === "recipe"}
-                      >
-                        {column.label}
-                      </Table.Column>
-                    )}
-                  </Table.Header>
-                  <Table.Body items={shares}>
-                    {(share) => (
-                      <Table.Row key={share.id} id={share.id}>
-                        <Table.Collection items={columns}>
-                          {(column) => <Table.Cell>{renderCell(share, column.key)}</Table.Cell>}
-                        </Table.Collection>
-                      </Table.Row>
-                    )}
-                  </Table.Body>
-                </Table.Content>
-              </Table.ScrollContainer>
-            </Table>
-          )}
-        </Card.Content>
-      </Card>
+      <SettingsCard
+        badges={<NewFeatureChip showOnVersion="0.18.0" />}
+        description={t("description")}
+        icon={LinkIcon}
+        title={t("title")}
+      >
+        {shares.length === 0 ? (
+          <p className="text-muted text-base">
+            {isLoading ? tCommon("status.loading") : t("empty")}
+          </p>
+        ) : (
+          <Table>
+            <Table.ScrollContainer>
+              <Table.Content aria-label={t("title")}>
+                <Table.Header columns={columns}>
+                  {(column) => (
+                    <Table.Column
+                      key={column.key}
+                      id={column.key}
+                      isRowHeader={column.key === "recipe"}
+                    >
+                      {column.label}
+                    </Table.Column>
+                  )}
+                </Table.Header>
+                <Table.Body items={shares}>
+                  {(share) => (
+                    <Table.Row key={share.id} id={share.id}>
+                      <Table.Collection items={columns}>
+                        {(column) => <Table.Cell>{renderCell(share, column.key)}</Table.Cell>}
+                      </Table.Collection>
+                    </Table.Row>
+                  )}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
+        )}
+      </SettingsCard>
       <Modal.Backdrop isOpen={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
         <Modal.Container>
           <Modal.Dialog>

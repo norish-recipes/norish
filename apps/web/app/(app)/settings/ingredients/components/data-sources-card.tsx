@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { ArrowDownTrayIcon, CircleStackIcon } from "@heroicons/react/24/outline";
-import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 const OPEN_FOOD_FACTS_URL = "https://world.openfoodfacts.org";
@@ -36,37 +36,29 @@ export default function DataSourcesCard() {
   const t = useTranslations("settings.ingredients.dataSources");
 
   return (
-    <Card data-testid="data-sources">
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <CircleStackIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-      <Card.Content className="gap-4">
-        <p className="text-muted text-base">
-          {t.rich("notice", {
-            off: (chunks) => <ExternalLink href={OPEN_FOOD_FACTS_URL}>{chunks}</ExternalLink>,
-            odbl: (chunks) => <ExternalLink href={ODBL_URL}>{chunks}</ExternalLink>,
-          })}
-        </p>
-        <p className="text-muted text-base" data-testid="nutrition-sources">
-          {t.rich("nutritionNotice", {
-            ciqual: (chunks) => <ExternalLink href={CIQUAL_URL}>{chunks}</ExternalLink>,
-            usda: (chunks) => <ExternalLink href={USDA_URL}>{chunks}</ExternalLink>,
-            cofid: (chunks) => <ExternalLink href={COFID_URL}>{chunks}</ExternalLink>,
-          })}
-        </p>
-        <a
-          download
-          className="text-accent inline-flex items-center gap-2 self-start text-sm font-medium hover:underline"
-          data-testid="catalogue-export"
-          href="/export/ingredients"
-        >
-          <ArrowDownTrayIcon aria-hidden className="h-4 w-4" />
-          {t("download")}
-        </a>
-      </Card.Content>
-    </Card>
+    <SettingsCard data-testid="data-sources" icon={CircleStackIcon} title={t("title")}>
+      <p className="text-muted text-base">
+        {t.rich("notice", {
+          off: (chunks) => <ExternalLink href={OPEN_FOOD_FACTS_URL}>{chunks}</ExternalLink>,
+          odbl: (chunks) => <ExternalLink href={ODBL_URL}>{chunks}</ExternalLink>,
+        })}
+      </p>
+      <p className="text-muted text-base" data-testid="nutrition-sources">
+        {t.rich("nutritionNotice", {
+          ciqual: (chunks) => <ExternalLink href={CIQUAL_URL}>{chunks}</ExternalLink>,
+          usda: (chunks) => <ExternalLink href={USDA_URL}>{chunks}</ExternalLink>,
+          cofid: (chunks) => <ExternalLink href={COFID_URL}>{chunks}</ExternalLink>,
+        })}
+      </p>
+      <a
+        download
+        className="text-accent inline-flex items-center gap-2 self-start text-sm font-medium hover:underline"
+        data-testid="catalogue-export"
+        href="/export/ingredients"
+      >
+        <ArrowDownTrayIcon aria-hidden className="h-4 w-4" />
+        {t("download")}
+      </a>
+    </SettingsCard>
   );
 }

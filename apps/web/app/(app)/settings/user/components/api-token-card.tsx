@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import {
+  ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
   KeyIcon,
   PauseIcon,
@@ -9,7 +11,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { Button, Card, Chip, Input, Label, Link, Modal, Table, TextField } from "@heroui/react";
+import { Button, Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import NewFeatureChip from "../../components/new-feature-chip";
@@ -50,116 +52,107 @@ export default function ApiKeyCard() {
   };
   return (
     <>
-      <Card>
-        <Card.Header>
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <KeyIcon className="h-5 w-5" />
-            {t("title")}
-            <NewFeatureChip showOnVersion="0.18.0" />
-          </h2>
-        </Card.Header>
-        <Card.Content className="gap-4">
-          <p className="text-muted text-base">{t("description")}</p>
-          <Link
-            className="w-fit"
-            href="/api/docs"
-            rel="noopener noreferrer"
-            size="sm"
-            target="_blank"
-          >
-            {t("docsLink")}
-          </Link>
+      <SettingsCard
+        badges={<NewFeatureChip showOnVersion="0.18.0" />}
+        description={t("description")}
+        icon={KeyIcon}
+        title={t("title")}
+      >
+        <a
+          className="text-accent inline-flex items-center gap-2 self-start text-sm font-medium hover:underline"
+          href="/api/docs"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <ArrowTopRightOnSquareIcon aria-hidden className="h-4 w-4" />
+          {t("docsLink")}
+        </a>
 
-          {/* Create new key section */}
-          <div className="flex flex-col gap-3">
-            <TextField value={newKeyName} onChange={setNewKeyName}>
-              <Label>{t("keyNameLabel")}</Label>
-              <Input variant="secondary" placeholder={t("keyNamePlaceholder")} />
-            </TextField>
-            <div className="flex justify-end">
-              <Button onPress={handleGenerateKey} variant="primary" isPending={generatingKey}>
-                {<PlusIcon className="h-4 w-4" />}
-                {t("createKey")}
-              </Button>
-            </div>
+        {/* Create new key section */}
+        <div className="flex flex-col gap-3">
+          <TextField value={newKeyName} onChange={setNewKeyName}>
+            <Label>{t("keyNameLabel")}</Label>
+            <Input variant="secondary" placeholder={t("keyNamePlaceholder")} />
+          </TextField>
+          <div className="flex justify-end">
+            <Button onPress={handleGenerateKey} variant="primary" isPending={generatingKey}>
+              {<PlusIcon className="h-4 w-4" />}
+              {t("createKey")}
+            </Button>
           </div>
+        </div>
 
-          {/* Existing keys list */}
-          {apiKeys.length > 0 && (
-            <div className="mt-4">
-              <h3 className="mb-2 text-base font-medium">{t("yourKeys")}</h3>
-              <Table>
-                <Table.ScrollContainer>
-                  <Table.Content aria-label={t("title")}>
-                    <Table.Header>
-                      <Table.Column id="name" isRowHeader>
-                        {t("tableHeaders.name")}
-                      </Table.Column>
-                      <Table.Column id="keyPrefix">{t("tableHeaders.keyPrefix")}</Table.Column>
-                      <Table.Column id="created">{t("tableHeaders.created")}</Table.Column>
-                      <Table.Column id="status">{t("tableHeaders.status")}</Table.Column>
-                      <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
-                    </Table.Header>
-                    <Table.Body>
-                      {apiKeys.map((key) => (
-                        <Table.Row key={key.id} id={key.id}>
-                          <Table.Cell>{key.name || t("unnamed")}</Table.Cell>
-                          <Table.Cell>
-                            <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
-                              {key.start || "***"}...
-                            </code>
-                          </Table.Cell>
-                          <Table.Cell>{new Date(key.createdAt).toLocaleDateString()}</Table.Cell>
-                          <Table.Cell>
-                            <Chip
-                              color={key.enabled ? "success" : "danger"}
+        {/* Existing keys list */}
+        {apiKeys.length > 0 && (
+          <div className="mt-4">
+            <h3 className="mb-2 text-base font-medium">{t("yourKeys")}</h3>
+            <Table>
+              <Table.ScrollContainer>
+                <Table.Content aria-label={t("title")}>
+                  <Table.Header>
+                    <Table.Column id="name" isRowHeader>
+                      {t("tableHeaders.name")}
+                    </Table.Column>
+                    <Table.Column id="keyPrefix">{t("tableHeaders.keyPrefix")}</Table.Column>
+                    <Table.Column id="created">{t("tableHeaders.created")}</Table.Column>
+                    <Table.Column id="status">{t("tableHeaders.status")}</Table.Column>
+                    <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {apiKeys.map((key) => (
+                      <Table.Row key={key.id} id={key.id}>
+                        <Table.Cell>{key.name || t("unnamed")}</Table.Cell>
+                        <Table.Cell>
+                          <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
+                            {key.start || "***"}...
+                          </code>
+                        </Table.Cell>
+                        <Table.Cell>{new Date(key.createdAt).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>
+                          <Chip color={key.enabled ? "success" : "danger"} size="sm" variant="soft">
+                            {key.enabled ? t("active") : t("disabled")}
+                          </Chip>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex gap-1">
+                            <Button
+                              isIconOnly
                               size="sm"
-                              variant="soft"
+                              title={key.enabled ? t("disableKey") : t("enableKey")}
+                              onPress={() => toggleApiKey(key.id, !key.enabled)}
+                              variant="tertiary"
                             >
-                              {key.enabled ? t("active") : t("disabled")}
-                            </Chip>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <div className="flex gap-1">
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                title={key.enabled ? t("disableKey") : t("enableKey")}
-                                onPress={() => toggleApiKey(key.id, !key.enabled)}
-                                variant="tertiary"
-                              >
-                                {key.enabled ? (
-                                  <PauseIcon className="h-4 w-4" />
-                                ) : (
-                                  <PlayIcon className="h-4 w-4" />
-                                )}
-                              </Button>
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                title={t("deleteKey")}
-                                onPress={() => {
-                                  setKeyToDelete(key.id);
-                                  setShowDeleteModal(true);
-                                }}
-                                variant="danger-soft"
-                              >
-                                <TrashIcon className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table.Content>
-                </Table.ScrollContainer>
-              </Table>
-            </div>
-          )}
+                              {key.enabled ? (
+                                <PauseIcon className="h-4 w-4" />
+                              ) : (
+                                <PlayIcon className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              title={t("deleteKey")}
+                              onPress={() => {
+                                setKeyToDelete(key.id);
+                                setShowDeleteModal(true);
+                              }}
+                              variant="danger-soft"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
+          </div>
+        )}
 
-          {apiKeys.length === 0 && <p className="text-muted py-4 text-base">{t("noKeys")}</p>}
-        </Card.Content>
-      </Card>
+        {apiKeys.length === 0 && <p className="text-muted py-4 text-base">{t("noKeys")}</p>}
+      </SettingsCard>
 
       {/* Key Generation Modal */}
       <Modal.Backdrop

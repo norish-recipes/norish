@@ -331,7 +331,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     }
   };
   return (
-    <div className="flex flex-col gap-4 p-2">
+    <div className="flex flex-col gap-4">
       <SwitchRow description={t("enableAIDescription")} title={t("enableAI")}>
         <SettingsSwitch color="success" isSelected={enabled} onValueChange={setEnabled} />
       </SwitchRow>
@@ -672,7 +672,6 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           variant="primary"
           isPending={saving}
         >
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

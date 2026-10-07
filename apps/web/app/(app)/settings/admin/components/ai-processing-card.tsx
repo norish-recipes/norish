@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { SettingsAccordion, SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { SparklesIcon } from "@heroicons/react/24/outline";
-import { Accordion, Card } from "@heroui/react";
+import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import AIConfigForm from "./ai-config-form";
@@ -34,153 +35,142 @@ export default function AIProcessingCard() {
   );
 
   return (
-    <Card>
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <SparklesIcon className="h-5 w-5 shrink-0" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-      <Card.Content>
-        <p className="text-muted mb-4 text-base">{t("description")}</p>
-        <Accordion allowsMultipleExpanded variant="surface">
-          <Accordion.Item id="ai">
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t("aiConfig.title")}
-                    {dirtySections.ai && <UnsavedChangesChip />}
-                  </div>
-                  <span className="text-muted text-sm">{t("aiConfig.subtitle")}</span>
+    <SettingsCard description={t("description")} icon={SparklesIcon} title={t("title")}>
+      <SettingsAccordion>
+        <Accordion.Item id="ai">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {t("aiConfig.title")}
+                  {dirtySections.ai && <UnsavedChangesChip />}
                 </div>
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <AIConfigForm onDirtyChange={updateDirtySection("ai")} />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+                <span className="text-muted text-sm">{t("aiConfig.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <AIConfigForm onDirtyChange={updateDirtySection("ai")} />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-          <Accordion.Item id="video">
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t("video.title")}
-                    {dirtySections.video && <UnsavedChangesChip />}
-                  </div>
-                  <span className="text-muted text-sm">{t("video.subtitle")}</span>
+        <Accordion.Item id="video">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {t("video.title")}
+                  {dirtySections.video && <UnsavedChangesChip />}
                 </div>
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <VideoProcessingForm onDirtyChange={updateDirtySection("video")} />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+                <span className="text-muted text-sm">{t("video.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <VideoProcessingForm onDirtyChange={updateDirtySection("video")} />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-          <Accordion.Item id="imageGeneration">
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t("imageGeneration.title")}
-                    {dirtySections.imageGeneration && <UnsavedChangesChip />}
-                  </div>
-                  <span className="text-muted text-sm">{t("imageGeneration.subtitle")}</span>
+        <Accordion.Item id="imageGeneration">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {t("imageGeneration.title")}
+                  {dirtySections.imageGeneration && <UnsavedChangesChip />}
                 </div>
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <ImageGenerationForm onDirtyChange={updateDirtySection("imageGeneration")} />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+                <span className="text-muted text-sm">{t("imageGeneration.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <ImageGenerationForm onDirtyChange={updateDirtySection("imageGeneration")} />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-          <Accordion.Item id="decisionModel">
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t("decisionModel.title")}
-                    {dirtySections.decisionModel && <UnsavedChangesChip />}
-                  </div>
-                  <span className="text-muted text-sm">{t("decisionModel.subtitle")}</span>
+        <Accordion.Item id="decisionModel">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {t("decisionModel.title")}
+                  {dirtySections.decisionModel && <UnsavedChangesChip />}
                 </div>
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <DecisionModelForm onDirtyChange={updateDirtySection("decisionModel")} />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+                <span className="text-muted text-sm">{t("decisionModel.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <DecisionModelForm onDirtyChange={updateDirtySection("decisionModel")} />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-          <Accordion.Item id="prompts">
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t("prompts.title")}
-                    {dirtySections.prompts && <UnsavedChangesChip />}
-                  </div>
-                  <span className="text-muted text-sm">{t("prompts.subtitle")}</span>
+        <Accordion.Item id="prompts">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {t("prompts.title")}
+                  {dirtySections.prompts && <UnsavedChangesChip />}
                 </div>
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <PromptsForm onDirtyChange={updateDirtySection("prompts")} />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+                <span className="text-muted text-sm">{t("prompts.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <PromptsForm onDirtyChange={updateDirtySection("prompts")} />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-          <Accordion.Item id="cuisines">
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2">{t("cuisines.title")}</div>
-                  <span className="text-muted text-sm">{t("cuisines.subtitle")}</span>
-                </div>
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <CuisineVocabularyForm />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
+        <Accordion.Item id="cuisines">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">{t("cuisines.title")}</div>
+                <span className="text-muted text-sm">{t("cuisines.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <CuisineVocabularyForm />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
 
-          <Accordion.Item id="bulkEnrichment">
-            <Accordion.Heading>
-              <Accordion.Trigger>
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t("bulkEnrichment.title")}
-                  </div>
-                  <span className="text-muted text-sm">{t("bulkEnrichment.subtitle")}</span>
-                </div>
-                <Accordion.Indicator />
-              </Accordion.Trigger>
-            </Accordion.Heading>
-            <Accordion.Panel>
-              <Accordion.Body>
-                <BulkEnrichmentForm />
-              </Accordion.Body>
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion>
-      </Card.Content>
-    </Card>
+        <Accordion.Item id="bulkEnrichment">
+          <Accordion.Heading>
+            <Accordion.Trigger>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <div className="flex flex-wrap items-center gap-2">{t("bulkEnrichment.title")}</div>
+                <span className="text-muted text-sm">{t("bulkEnrichment.subtitle")}</span>
+              </div>
+              <Accordion.Indicator />
+            </Accordion.Trigger>
+          </Accordion.Heading>
+          <Accordion.Panel>
+            <Accordion.Body>
+              <BulkEnrichmentForm />
+            </Accordion.Body>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </SettingsAccordion>
+    </SettingsCard>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ShieldCheckIcon, UserMinusIcon } from "@heroicons/react/16/solid";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Chip, Modal, Table, toast } from "@heroui/react";
+import { Button, Chip, Modal, Table, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -76,95 +77,87 @@ export default function MembersCard() {
   };
   return (
     <>
-      <Card>
-        <Card.Header>
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <UserGroupIcon className="h-5 w-5" />
-            {t("title")}
-          </h2>
-        </Card.Header>
-        <Card.Content>
-          <Table>
-            <Table.ScrollContainer>
-              <Table.Content aria-label={t("title")}>
-                <Table.Header>
-                  <Table.Column id="name" isRowHeader>
-                    {t("tableHeaders.name")}
-                  </Table.Column>
-                  <Table.Column id="role">{t("tableHeaders.role")}</Table.Column>
-                  <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
-                </Table.Header>
-                <Table.Body>
-                  {household.users.map((user) => {
-                    const isSelf = user.id === currentUserId;
-                    const isUserAdmin = user.isAdmin === true;
+      <SettingsCard icon={UserGroupIcon} title={t("title")}>
+        <Table>
+          <Table.ScrollContainer>
+            <Table.Content aria-label={t("title")}>
+              <Table.Header>
+                <Table.Column id="name" isRowHeader>
+                  {t("tableHeaders.name")}
+                </Table.Column>
+                <Table.Column id="role">{t("tableHeaders.role")}</Table.Column>
+                <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {household.users.map((user) => {
+                  const isSelf = user.id === currentUserId;
+                  const isUserAdmin = user.isAdmin === true;
 
-                    return (
-                      <Table.Row key={user.id} id={user.id}>
-                        <Table.Cell>
-                          <div className="flex items-center gap-2">
-                            {user.name}
-                            {isSelf && (
-                              <Chip color="default" size="sm" variant="soft">
-                                {t("you")}
-                              </Chip>
-                            )}
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Chip color={isUserAdmin ? "accent" : "default"} size="sm" variant="soft">
-                            {isUserAdmin ? ti("admin") : ti("member")}
-                          </Chip>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex gap-2">
-                            {isAdmin && !isSelf && (
-                              <>
+                  return (
+                    <Table.Row key={user.id} id={user.id}>
+                      <Table.Cell>
+                        <div className="flex items-center gap-2">
+                          {user.name}
+                          {isSelf && (
+                            <Chip color="default" size="sm" variant="soft">
+                              {t("you")}
+                            </Chip>
+                          )}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Chip color={isUserAdmin ? "accent" : "default"} size="sm" variant="soft">
+                          {isUserAdmin ? ti("admin") : ti("member")}
+                        </Chip>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex gap-2">
+                          {isAdmin && !isSelf && (
+                            <>
+                              <Button
+                                size="sm"
+                                onPress={() => {
+                                  setUserToKick({
+                                    id: user.id,
+                                    name: user.name || "Unknown",
+                                  });
+                                  setShowKickModal(true);
+                                }}
+                                variant="danger-soft"
+                                className="min-w-16"
+                              >
+                                {<UserMinusIcon className="h-4 w-4" />}
+                                {t("kickButton")}
+                              </Button>
+                              {!isUserAdmin && (
                                 <Button
                                   size="sm"
                                   onPress={() => {
-                                    setUserToKick({
+                                    setUserToTransfer({
                                       id: user.id,
                                       name: user.name || "Unknown",
                                     });
-                                    setShowKickModal(true);
+                                    setShowTransferModal(true);
                                   }}
-                                  variant="danger-soft"
+                                  variant="tertiary"
                                   className="min-w-16"
                                 >
-                                  {<UserMinusIcon className="h-4 w-4" />}
-                                  {t("kickButton")}
+                                  {<ShieldCheckIcon className="h-4 w-4" />}
+                                  {t("makeAdminButton")}
                                 </Button>
-                                {!isUserAdmin && (
-                                  <Button
-                                    size="sm"
-                                    onPress={() => {
-                                      setUserToTransfer({
-                                        id: user.id,
-                                        name: user.name || "Unknown",
-                                      });
-                                      setShowTransferModal(true);
-                                    }}
-                                    variant="tertiary"
-                                    className="min-w-16"
-                                  >
-                                    {<ShieldCheckIcon className="h-4 w-4" />}
-                                    {t("makeAdminButton")}
-                                  </Button>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    );
-                  })}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
-        </Card.Content>
-      </Card>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
+      </SettingsCard>
 
       {/* Kick User Modal */}
       <Modal.Backdrop className="z-[1099]" isOpen={showKickModal} onOpenChange={setShowKickModal}>

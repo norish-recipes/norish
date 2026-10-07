@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import TagInput from "@/components/shared/tag-input";
-import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { Button, Card } from "@heroui/react";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
@@ -26,32 +27,22 @@ export default function AllergiesCard() {
     await updateAllergies(localAllergies);
   }, [localAllergies, updateAllergies]);
   return (
-    <Card>
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <ExclamationTriangleIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-      <Card.Content className="gap-4">
-        <p className="text-muted text-base">{t("description")}</p>
-        <TagInput
-          placeholder={t("placeholder")}
-          value={localAllergies}
-          onChange={setLocalAllergies}
-        />
-        <div className="flex justify-end">
-          <Button
-            isDisabled={!hasChanges}
-            onPress={handleSave}
-            variant="primary"
-            isPending={isUpdatingAllergies}
-          >
-            {<CheckIcon className="h-4 w-4" />}
-            {t("saveButton")}
-          </Button>
-        </div>
-      </Card.Content>
-    </Card>
+    <SettingsCard description={t("description")} icon={ExclamationTriangleIcon} title={t("title")}>
+      <TagInput
+        placeholder={t("placeholder")}
+        value={localAllergies}
+        onChange={setLocalAllergies}
+      />
+      <div className="flex justify-end">
+        <Button
+          isDisabled={!hasChanges}
+          onPress={handleSave}
+          variant="primary"
+          isPending={isUpdatingAllergies}
+        >
+          {t("saveButton")}
+        </Button>
+      </div>
+    </SettingsCard>
   );
 }

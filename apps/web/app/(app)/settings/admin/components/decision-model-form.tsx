@@ -139,7 +139,7 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   };
 
   return (
-    <div className="flex flex-col gap-4 p-2">
+    <div className="flex flex-col gap-4">
       <Select
         variant="secondary"
         placeholder={t("provider")}
@@ -258,7 +258,6 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
           {t("testConnection")}
         </Button>
         <Button isDisabled={!hasChanges} onPress={handleSave} variant="primary" isPending={saving}>
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

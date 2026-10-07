@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import DataTable from "@/components/ui/data-table";
 import {
   useAdminConfigsQuery,
@@ -8,21 +9,16 @@ import {
   useJobQueueMutations,
   useQueueSummaryQuery,
 } from "@/hooks/admin";
-import {
-  CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  QueueListIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon, QueueListIcon } from "@heroicons/react/24/outline";
 import {
   Button,
-  Card,
   Chip,
   Input,
   Label,
   ListBox,
   Pagination,
   Select,
+  Separator,
   TextField,
 } from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
@@ -119,7 +115,7 @@ export default function JobQueueCard() {
     max: number
   ) => (
     <TextField
-      className="w-full sm:max-w-40"
+      className="w-full"
       type="number"
       value={retention[key].toString()}
       onChange={(value) =>
@@ -159,200 +155,196 @@ export default function JobQueueCard() {
   );
 
   return (
-    <Card>
-      <Card.Header>
-        <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <QueueListIcon className="h-5 w-5 shrink-0" />
-            {t("title")}
-          </h2>
-          {totals.failed > 0 ? (
-            <Chip className="sm:ms-auto" color="danger" size="sm" variant="soft">
-              {t("summary.failed", { count: totals.failed })}
-            </Chip>
-          ) : null}
-        </div>
-      </Card.Header>
-      <Card.Content className="gap-6">
-        {/* Retention settings */}
-        <div className="flex flex-col gap-4">
+    <SettingsCard
+      actions={
+        totals.failed > 0 ? (
+          <Chip color="danger" size="sm" variant="soft">
+            {t("summary.failed", { count: totals.failed })}
+          </Chip>
+        ) : null
+      }
+      contentClassName="gap-6"
+      icon={QueueListIcon}
+      title={t("title")}
+    >
+      {/* Retention settings */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-0.5">
           <h3 className="flex flex-wrap items-center gap-2 font-medium">
             {t("retention.title")}
             <RestartRequiredChip />
             {hasRetentionChanges && <UnsavedChangesChip />}
           </h3>
-          <div className="flex flex-col gap-4 sm:flex-row">
-            {retentionField("keepCompleted", t("retention.keepCompleted"), 10, 5000)}
-            {retentionField("keepFailed", t("retention.keepFailed"), 10, 5000)}
-            {retentionField("maxAgeDays", t("retention.maxAgeDays"), 1, 90)}
+          <p className="text-muted text-base">{t("retention.description")}</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {retentionField("keepCompleted", t("retention.keepCompleted"), 10, 5000)}
+          {retentionField("keepFailed", t("retention.keepFailed"), 10, 5000)}
+          {retentionField("maxAgeDays", t("retention.maxAgeDays"), 1, 90)}
+        </div>
+        <div className="flex justify-end">
+          <Button
+            isDisabled={!hasRetentionChanges}
+            isPending={isUpdatingRetention}
+            variant="primary"
+            onPress={handleSaveRetention}
+          >
+            {tActions("save")}
+          </Button>
+        </div>
+      </div>
+
+      {/* Jobs */}
+      <Separator />
+
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {filterChip("active", "default")}
+            {filterChip("waiting", "warning")}
+            {filterChip("failed", "danger")}
+            {filterChip("completed", "accent")}
           </div>
-          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <p className="text-muted text-xs">{t("retention.description")}</p>
-            <Button
-              className="self-end sm:self-auto"
-              isDisabled={!hasRetentionChanges}
-              isPending={isUpdatingRetention}
-              variant="primary"
-              onPress={handleSaveRetention}
-            >
-              <CheckIcon className="h-5 w-5" />
-              {tActions("save")}
-            </Button>
-          </div>
+          <Select
+            aria-label={t("filters.queue")}
+            className="w-full sm:w-56"
+            selectedKey={queueFilter}
+            size="sm"
+            variant="secondary"
+            onSelectionChange={(key) => {
+              if (typeof key === "string") {
+                setQueueFilter(key);
+                setPage(1);
+              }
+            }}
+          >
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover placement="bottom end">
+              <ListBox>
+                <ListBox.Item key={ALL} id={ALL} textValue={t("filters.allQueues")}>
+                  {t("filters.allQueues")}
+                </ListBox.Item>
+                {QUEUE_OPTIONS.map((option) => {
+                  const label = t.has(`queues.${option}`) ? t(`queues.${option}`) : option;
+
+                  return (
+                    <ListBox.Item key={option} id={option} textValue={label}>
+                      {label}
+                    </ListBox.Item>
+                  );
+                })}
+              </ListBox>
+            </Select.Popover>
+          </Select>
         </div>
 
-        {/* Jobs */}
-        <div className="border-divider flex flex-col gap-4 border-t pt-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              {filterChip("active", "default")}
-              {filterChip("waiting", "warning")}
-              {filterChip("failed", "danger")}
-              {filterChip("completed", "accent")}
-            </div>
-            <Select
-              aria-label={t("filters.queue")}
-              className="w-full sm:w-56"
-              selectedKey={queueFilter}
-              size="sm"
-              variant="secondary"
-              onSelectionChange={(key) => {
-                if (typeof key === "string") {
-                  setQueueFilter(key);
-                  setPage(1);
-                }
-              }}
-            >
-              <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover placement="bottom end">
-                <ListBox>
-                  <ListBox.Item key={ALL} id={ALL} textValue={t("filters.allQueues")}>
-                    {t("filters.allQueues")}
-                  </ListBox.Item>
-                  {QUEUE_OPTIONS.map((option) => {
-                    const label = t.has(`queues.${option}`) ? t(`queues.${option}`) : option;
-
-                    return (
-                      <ListBox.Item key={option} id={option} textValue={label}>
-                        {label}
-                      </ListBox.Item>
-                    );
-                  })}
-                </ListBox>
-              </Select.Popover>
-            </Select>
-          </div>
-
-          <DataTable
-            aria-label={t("title")}
-            columns={[
-              {
-                key: "job",
-                label: t("table.job"),
-                isRowHeader: true,
-                render: (job: AdminJobRowDTO) => (
-                  <div className="flex min-w-0 flex-col">
-                    <span className="font-medium">
-                      {t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue}
+        <DataTable
+          aria-label={t("title")}
+          columns={[
+            {
+              key: "job",
+              label: t("table.job"),
+              isRowHeader: true,
+              render: (job: AdminJobRowDTO) => (
+                <div className="flex min-w-0 flex-col">
+                  <span className="font-medium">
+                    {t.has(`queues.${job.queue}`) ? t(`queues.${job.queue}`) : job.queue}
+                  </span>
+                  {job.target ? (
+                    <span
+                      className="text-muted max-w-28 truncate text-xs min-[400px]:max-w-40 sm:max-w-64"
+                      title={job.target}
+                    >
+                      {job.target}
                     </span>
-                    {job.target ? (
-                      <span
-                        className="text-muted max-w-28 truncate text-xs min-[400px]:max-w-40 sm:max-w-64"
-                        title={job.target}
-                      >
-                        {job.target}
-                      </span>
-                    ) : null}
-                  </div>
-                ),
-              },
-              {
-                key: "status",
-                label: t("table.status"),
-                render: (job: AdminJobRowDTO) => (
-                  <JobStatusChip isHanging={job.isHanging} state={job.state} />
-                ),
-              },
-              {
-                key: "step",
-                hideOnNarrow: true,
-                label: t("table.step"),
-                className: "text-sm",
-                render: (job: AdminJobRowDTO) =>
-                  job.state === "active" && job.step ? formatStep(job.step, t) : "-",
-              },
-              {
-                key: "duration",
-                hideOnNarrow: true,
-                label: t("table.duration"),
-                className: "text-sm",
-                render: (job: AdminJobRowDTO) =>
-                  job.state === "delayed" && job.runAt !== null
-                    ? t("table.runsAt", {
-                        time: formatDistanceToNow(new Date(job.runAt), { addSuffix: true }),
-                      })
-                    : formatDuration(job.durationMs),
-              },
-              {
-                key: "created",
-                hideOnNarrow: true,
-                label: t("table.created"),
-                className: "text-muted text-xs",
-                render: (job: AdminJobRowDTO) =>
-                  formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }),
-              },
-            ]}
-            emptyState={t("empty")}
-            rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
-            rows={pageJobs}
-            onRowAction={(job: AdminJobRowDTO) =>
-              setSelectedJob({ queue: job.queue, jobId: job.id })
-            }
-          />
+                  ) : null}
+                </div>
+              ),
+            },
+            {
+              key: "status",
+              label: t("table.status"),
+              render: (job: AdminJobRowDTO) => (
+                <JobStatusChip isHanging={job.isHanging} state={job.state} />
+              ),
+            },
+            {
+              key: "step",
+              hideOnNarrow: true,
+              label: t("table.step"),
+              className: "text-sm",
+              render: (job: AdminJobRowDTO) =>
+                job.state === "active" && job.step ? formatStep(job.step, t) : "-",
+            },
+            {
+              key: "duration",
+              hideOnNarrow: true,
+              label: t("table.duration"),
+              className: "text-sm",
+              render: (job: AdminJobRowDTO) =>
+                job.state === "delayed" && job.runAt !== null
+                  ? t("table.runsAt", {
+                      time: formatDistanceToNow(new Date(job.runAt), { addSuffix: true }),
+                    })
+                  : formatDuration(job.durationMs),
+            },
+            {
+              key: "created",
+              hideOnNarrow: true,
+              label: t("table.created"),
+              className: "text-muted text-xs",
+              render: (job: AdminJobRowDTO) =>
+                formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }),
+            },
+          ]}
+          emptyState={t("empty")}
+          rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
+          rows={pageJobs}
+          onRowAction={(job: AdminJobRowDTO) => setSelectedJob({ queue: job.queue, jobId: job.id })}
+        />
 
-          {totalPages > 1 ? (
-            <div className="flex justify-center">
-              {/* Pagination is a "dumb" compound component (Root/Previous/
+        {totalPages > 1 ? (
+          <div className="flex justify-center">
+            {/* Pagination is a "dumb" compound component (Root/Previous/
                   Summary/Next) with no built-in state — no flat
                   page/total/onChange API, so wire it up manually. */}
-              <Pagination aria-label={t("title")} size="sm">
-                <Pagination.Content>
-                  <Pagination.Item>
-                    <Pagination.Previous
-                      isDisabled={currentPage === 1}
-                      onPress={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      <ChevronLeftIcon className="h-4 w-4" />
-                    </Pagination.Previous>
-                  </Pagination.Item>
-                  <Pagination.Item>
-                    <Pagination.Summary>
-                      {t("pagination", { current: currentPage, total: totalPages })}
-                    </Pagination.Summary>
-                  </Pagination.Item>
-                  <Pagination.Item>
-                    <Pagination.Next
-                      isDisabled={currentPage === totalPages}
-                      onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    >
-                      <ChevronRightIcon className="h-4 w-4" />
-                    </Pagination.Next>
-                  </Pagination.Item>
-                </Pagination.Content>
-              </Pagination>
-            </div>
-          ) : null}
-        </div>
-      </Card.Content>
+            <Pagination aria-label={t("title")} size="sm">
+              <Pagination.Content>
+                <Pagination.Item>
+                  <Pagination.Previous
+                    isDisabled={currentPage === 1}
+                    onPress={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeftIcon className="h-4 w-4" />
+                  </Pagination.Previous>
+                </Pagination.Item>
+                <Pagination.Item>
+                  <Pagination.Summary>
+                    {t("pagination", { current: currentPage, total: totalPages })}
+                  </Pagination.Summary>
+                </Pagination.Item>
+                <Pagination.Item>
+                  <Pagination.Next
+                    isDisabled={currentPage === totalPages}
+                    onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Pagination.Next>
+                </Pagination.Item>
+              </Pagination.Content>
+            </Pagination>
+          </div>
+        ) : null}
+      </div>
 
       <JobDetailModal
         jobId={selectedJob?.jobId ?? null}
         queue={selectedJob?.queue ?? null}
         onClose={() => setSelectedJob(null)}
       />
-    </Card>
+    </SettingsCard>
   );
 }

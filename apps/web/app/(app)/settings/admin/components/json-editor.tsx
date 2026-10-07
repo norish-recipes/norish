@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { Button, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -156,7 +156,6 @@ export default function JsonEditor({
           variant="primary"
           isPending={saving}
         >
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

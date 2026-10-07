@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
+import { ArrowPathIcon } from "@heroicons/react/16/solid";
 import { Button, Description, Label, Spinner, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -95,7 +95,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-2">
+    <div className="flex flex-col gap-6">
       {PROMPT_FIELDS.map(({ key, rows }) => (
         <div key={key} className="flex flex-col gap-2">
           <TextField
@@ -115,7 +115,6 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
           {tActions("restoreDefaults")}
         </Button>
         <Button isDisabled={!hasChanges} isPending={saving} variant="primary" onPress={handleSave}>
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

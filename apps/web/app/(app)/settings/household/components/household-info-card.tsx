@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/16/solid";
 import { HomeIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Chip, Modal, Separator } from "@heroui/react";
+import { Button, Chip, Modal, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -27,33 +28,25 @@ export default function HouseholdInfoCard() {
   };
   return (
     <>
-      <Card>
-        <Card.Header>
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <HomeIcon className="h-5 w-5" />
-            {household.name}
-          </h2>
-        </Card.Header>
-        <Card.Content className="gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-muted text-base">{t("yourRole")}</span>
-            <Chip color={isAdmin ? "accent" : "default"} size="sm" variant="soft">
-              {isAdmin ? t("admin") : t("member")}
-            </Chip>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted text-base">{t("members")}</span>
-            <span className="text-base font-medium">{household.users.length}</span>
-          </div>
-          <Separator />
-          <div className="flex justify-end">
-            <Button onPress={() => setShowLeaveModal(true)} variant="danger-soft">
-              {<ArrowLeftStartOnRectangleIcon className="h-4 w-4" />}
-              {t("leaveButton")}
-            </Button>
-          </div>
-        </Card.Content>
-      </Card>
+      <SettingsCard icon={HomeIcon} title={household.name}>
+        <div className="flex items-center justify-between">
+          <span className="text-muted text-base">{t("yourRole")}</span>
+          <Chip color={isAdmin ? "accent" : "default"} size="sm" variant="soft">
+            {isAdmin ? t("admin") : t("member")}
+          </Chip>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted text-base">{t("members")}</span>
+          <span className="text-base font-medium">{household.users.length}</span>
+        </div>
+        <Separator />
+        <div className="flex justify-end">
+          <Button onPress={() => setShowLeaveModal(true)} variant="danger-soft">
+            {<ArrowLeftStartOnRectangleIcon className="h-4 w-4" />}
+            {t("leaveButton")}
+          </Button>
+        </div>
+      </SettingsCard>
 
       {/* Leave Household Modal */}
       <Modal.Backdrop className="z-[1099]" isOpen={showLeaveModal} onOpenChange={setShowLeaveModal}>

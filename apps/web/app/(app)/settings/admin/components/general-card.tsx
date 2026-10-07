@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import ArchiveExportButton from "@/app/(app)/settings/components/archive-export-button";
 import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Button, Card, ListBox, Select, Separator, toast } from "@heroui/react";
+import { Button, ListBox, Select, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
@@ -110,128 +111,120 @@ export default function GeneralCard() {
   // Filter enabled locales for default selector
   const enabledLocaleOptions = allLocales.filter((l) => enabledLocales.includes(l.code));
   return (
-    <Card>
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Cog6ToothIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-      <Card.Content className="flex flex-col gap-6">
-        {/* Registration Toggle */}
-        <SwitchRow description={t("registrationDescription")} title={t("allowRegistration")}>
-          <SettingsSwitch
-            color="success"
-            isDisabled={isLoading}
-            isSelected={registrationEnabled ?? false}
-            onValueChange={handleRegistrationToggle}
-          />
-        </SwitchRow>
+    <SettingsCard contentClassName="gap-6" icon={Cog6ToothIcon} title={t("title")}>
+      {/* Registration Toggle */}
+      <SwitchRow description={t("registrationDescription")} title={t("allowRegistration")}>
+        <SettingsSwitch
+          color="success"
+          isDisabled={isLoading}
+          isSelected={registrationEnabled ?? false}
+          onValueChange={handleRegistrationToggle}
+        />
+      </SwitchRow>
 
-        <Separator />
+      <Separator />
 
-        {/* Locale Configuration */}
-        <SettingRow
-          badges={hasLocaleChanges ? <UnsavedChangesChip /> : null}
-          description={t("localesDescription")}
-          title={t("locales")}
+      {/* Locale Configuration */}
+      <SettingRow
+        badges={hasLocaleChanges ? <UnsavedChangesChip /> : null}
+        description={t("localesDescription")}
+        title={t("locales")}
+      >
+        <Select
+          aria-label={t("locales")}
+          className="w-full"
+          isDisabled={isLoading || isSaving}
+          placeholder={t("locales")}
+          selectedKeys={new Set(enabledLocales)}
+          value={enabledLocales}
+          selectionMode="multiple"
+          variant="secondary"
+          onChange={(e: any) => {
+            const val = e?.target ? e.target.value : e;
+            if (typeof val === "string") {
+              handleEnabledLocalesChange(val ? val.split(",") : []);
+            } else if (Array.isArray(val)) {
+              handleEnabledLocalesChange(val);
+            }
+          }}
         >
-          <Select
-            aria-label={t("locales")}
-            className="w-full"
-            isDisabled={isLoading || isSaving}
-            placeholder={t("locales")}
-            selectedKeys={new Set(enabledLocales)}
-            value={enabledLocales}
-            selectionMode="multiple"
-            variant="secondary"
-            onChange={(e: any) => {
-              const val = e?.target ? e.target.value : e;
-              if (typeof val === "string") {
-                handleEnabledLocalesChange(val ? val.split(",") : []);
-              } else if (Array.isArray(val)) {
-                handleEnabledLocalesChange(val);
+          <Select.Trigger>
+            <Select.Value className="min-w-0">
+              {({ defaultChildren, isPlaceholder }) =>
+                isPlaceholder ? (
+                  defaultChildren
+                ) : (
+                  <span className="block truncate">
+                    {enabledLocaleOptions.map((locale) => locale.name).join(", ")}
+                  </span>
+                )
               }
-            }}
-          >
-            <Select.Trigger>
-              <Select.Value className="min-w-0">
-                {({ defaultChildren, isPlaceholder }) =>
-                  isPlaceholder ? (
-                    defaultChildren
-                  ) : (
-                    <span className="block truncate">
-                      {enabledLocaleOptions.map((locale) => locale.name).join(", ")}
-                    </span>
-                  )
-                }
-              </Select.Value>
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox selectionMode="multiple">
-                {allLocales.map((locale) => (
-                  <ListBox.Item key={locale.code} id={locale.code} textValue={locale.name}>
-                    {locale.name}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
-        </SettingRow>
+            </Select.Value>
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox selectionMode="multiple">
+              {allLocales.map((locale) => (
+                <ListBox.Item key={locale.code} id={locale.code} textValue={locale.name}>
+                  {locale.name}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
 
-        {/* Default Locale Selector */}
-        <SettingRow description={t("defaultLocaleDescription")} title={t("defaultLocale")}>
-          <Select
-            aria-label={t("defaultLocale")}
-            variant="secondary"
-            className="w-full"
-            isDisabled={isLoading || isSaving}
-            placeholder={t("defaultLocale")}
-            selectedKey={defaultLocale || null}
-            onSelectionChange={(selected) => {
-              if (typeof selected === "string" && selected) {
-                setDefaultLocale(selected);
-              }
-            }}
-          >
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {enabledLocaleOptions.map((locale) => (
-                  <ListBox.Item key={locale.code} id={locale.code} textValue={locale.name}>
-                    {locale.name}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
-        </SettingRow>
+      {/* Default Locale Selector */}
+      <SettingRow description={t("defaultLocaleDescription")} title={t("defaultLocale")}>
+        <Select
+          aria-label={t("defaultLocale")}
+          variant="secondary"
+          className="w-full"
+          isDisabled={isLoading || isSaving}
+          placeholder={t("defaultLocale")}
+          selectedKey={defaultLocale || null}
+          onSelectionChange={(selected) => {
+            if (typeof selected === "string" && selected) {
+              setDefaultLocale(selected);
+            }
+          }}
+        >
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {enabledLocaleOptions.map((locale) => (
+                <ListBox.Item key={locale.code} id={locale.code} textValue={locale.name}>
+                  {locale.name}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button
-            isDisabled={isLoading || !hasLocaleChanges}
-            onPress={handleSaveLocales}
-            variant="primary"
-            isPending={isSaving}
-          >
-            {t("saveLocales")}
-          </Button>
-        </div>
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <Button
+          isDisabled={isLoading || !hasLocaleChanges}
+          onPress={handleSaveLocales}
+          variant="primary"
+          isPending={isSaving}
+        >
+          {t("saveLocales")}
+        </Button>
+      </div>
 
-        <Separator />
+      <Separator />
 
-        {/* Instance-wide Recipe Archive export */}
-        <SettingRow description={t("export.description")} title={t("export.title")}>
-          <ArchiveExportButton label={t("export.button")} scope="instance" />
-        </SettingRow>
-      </Card.Content>
-    </Card>
+      {/* Instance-wide Recipe Archive export */}
+      <SettingRow description={t("export.description")} title={t("export.title")}>
+        <ArchiveExportButton label={t("export.button")} scope="instance" />
+      </SettingRow>
+    </SettingsCard>
   );
 }

@@ -136,24 +136,24 @@ function SettingsContent({ showAdminTab }: { showAdminTab: boolean }) {
           </Tabs.List>
         </Tabs.ListContainer>
 
-        <Tabs.Panel id="user" className="py-4">
+        <Tabs.Panel id="user" className="px-0 py-4">
           <UserSettingsTab />
         </Tabs.Panel>
 
-        <Tabs.Panel id="household" className="py-4">
+        <Tabs.Panel id="household" className="px-0 py-4">
           <HouseholdSettingsTab />
         </Tabs.Panel>
 
-        <Tabs.Panel id="caldav" className="py-4">
+        <Tabs.Panel id="caldav" className="px-0 py-4">
           <CalDavSettingsTab />
         </Tabs.Panel>
 
-        <Tabs.Panel id="ingredients" className="py-4">
+        <Tabs.Panel id="ingredients" className="px-0 py-4">
           <IngredientsSettingsTab />
         </Tabs.Panel>
 
         {showAdminTab ? (
-          <Tabs.Panel id="admin" className="py-4">
+          <Tabs.Panel id="admin" className="px-0 py-4">
             <AdminSettingsTab />
           </Tabs.Panel>
         ) : null}

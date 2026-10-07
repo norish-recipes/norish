@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
@@ -11,7 +12,7 @@ import { usePermissionsContext } from "@/context/permissions-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon, SparklesIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Spinner } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -199,14 +200,9 @@ export default function IngredientsSettingsContent() {
     // The rows carry their icons; the provider says whether the reader hid them.
     <IngredientIconsProvider>
       <div className="flex flex-col gap-6">
-        <Card>
-          <Card.Header className="flex-row flex-wrap items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <BookOpenIcon className="h-5 w-5" />
-              {t("title")}
-            </h2>
-            {/* On a phone the actions wrap under the title rather than run off the card. */}
-            <div className="flex flex-wrap items-center gap-2">
+        <SettingsCard
+          actions={
+            <>
               {suggestions.length > 0 || reportJobId ? (
                 <Button
                   data-testid="ingredients-suggestions-open"
@@ -257,48 +253,52 @@ export default function IngredientsSettingsContent() {
                   {t("askAIAll")}
                 </AIButton>
               ) : null}
-            </div>
-          </Card.Header>
-          <Card.Content className="gap-4">
-            <p className="text-muted text-base">{t("description")}</p>
-
-            <div className="flex items-center gap-2">
-              <IngredientSearch busy={settling} onSearch={onSearch} />
+            </>
+          }
+          description={t("description")}
+          icon={BookOpenIcon}
+          title={t("title")}
+        >
+          <IngredientSearch
+            busy={settling}
+            suffix={
               <Button
                 isIconOnly
                 aria-label={tFilters("title")}
-                // A plain field beside the search box, as the dashboard's is; the dot alone says a filter is on.
-                className="shadow-field bg-field hover:bg-field-hover dark:bg-default dark:hover:bg-surface-tertiary relative shrink-0 border border-transparent"
+                // The dot alone says a filter is on.
+                className="relative"
                 data-testid="ingredients-filters"
-                variant="tertiary"
+                size="sm"
+                variant="ghost"
                 onPress={() => setFiltersOpen(true)}
               >
                 <FunnelIcon className="size-4" />
                 {hasIngredientFilters(filters) ? (
-                  <span className="bg-accent shadow-background absolute top-2 right-2 inline-flex h-2 w-2 rounded-full shadow-[0_0_0_2px]" />
+                  <span className="bg-accent absolute top-1 right-1 inline-flex size-2 rounded-full" />
                 ) : null}
               </Button>
-            </div>
+            }
+            onSearch={onSearch}
+          />
 
-            {!isLoading && items.length === 0 ? (
-              <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
-                {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
-              </p>
-            ) : (
-              <IngredientList
-                drawing={drawing}
-                hasMore={hasNextPage}
-                isFetchingMore={isFetchingNextPage}
-                loadMore={loadMore}
-                reviewing={reviewing}
-                rows={tree.rows}
-                settling={settling}
-                onOpen={setOpenId}
-                onToggleKinds={treeMode ? tree.toggle : undefined}
-              />
-            )}
-          </Card.Content>
-        </Card>
+          {!isLoading && items.length === 0 ? (
+            <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
+              {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
+            </p>
+          ) : (
+            <IngredientList
+              drawing={drawing}
+              hasMore={hasNextPage}
+              isFetchingMore={isFetchingNextPage}
+              loadMore={loadMore}
+              reviewing={reviewing}
+              rows={tree.rows}
+              settling={settling}
+              onOpen={setOpenId}
+              onToggleKinds={treeMode ? tree.toggle : undefined}
+            />
+          )}
+        </SettingsCard>
         <DataSourcesCard />
 
         <IngredientFiltersPanel
