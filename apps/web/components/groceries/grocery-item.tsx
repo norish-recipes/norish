@@ -44,7 +44,7 @@ function GroceryItemComponent({
 
   return (
     <div
-      className={`bg-surface flex min-h-12 items-center gap-3 px-4 py-3 pl-10 ${roundedClass}`}
+      className={`bg-surface flex min-h-12 items-center gap-3 px-4 py-3 sm:pl-10 ${roundedClass}`}
       data-grocery-name={grocery.name ?? ""}
       data-testid="grocery-row"
       // In the By Recipe view the row is the only thing that knows its Store,

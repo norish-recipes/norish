@@ -7,6 +7,10 @@ import { Bars3Icon } from "@heroicons/react/16/solid";
 
 import type { GroceryDto } from "@norish/shared/contracts";
 
+/** A sortable row: a touch's long press must neither select its text nor open the callout. */
+export const ROW_CLASS_NAME =
+  "relative touch-pan-y pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]";
+
 interface SortableGroceryItemProps {
   grocery: GroceryDto;
   children: ReactNode;
@@ -33,11 +37,18 @@ export function SortableGroceryItem({ grocery, children }: SortableGroceryItemPr
   };
 
   return (
-    <div ref={setNodeRef} className="relative" style={style}>
+    // A finger picks the row up anywhere with a long press, as it does a meal
+    // on the calendar; the handle is for a pointer, and a phone has no room for it.
+    <div
+      ref={setNodeRef}
+      className={ROW_CLASS_NAME}
+      style={style}
+      onTouchStart={listeners?.onTouchStart}
+    >
       {/* Drag handle - positioned absolutely on the left */}
       <button
         ref={setActivatorNodeRef}
-        className="absolute top-1/2 left-2 z-10 flex h-8 w-8 -translate-y-1/2 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+        className="absolute top-1/2 left-2 z-10 flex h-8 w-8 -translate-y-1/2 cursor-grab touch-none items-center justify-center active:cursor-grabbing max-sm:hidden"
         type="button"
         {...attributes}
         {...listeners}

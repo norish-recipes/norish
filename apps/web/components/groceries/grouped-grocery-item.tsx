@@ -124,7 +124,7 @@ function GroupedGroceryItemComponent({
     >
       {/* Main row */}
       <div className="flex min-h-12 items-center gap-3 px-4 py-3">
-        <div className="flex h-8 w-8 items-center justify-center">{dragHandle}</div>
+        <div className="flex h-8 w-8 items-center justify-center max-sm:hidden">{dragHandle}</div>
 
         {/* Group checkbox - toggles all items */}
         <GroceryCheckbox
