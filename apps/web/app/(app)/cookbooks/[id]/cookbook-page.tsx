@@ -99,16 +99,18 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
           </div>
 
           <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2">
+            {/* The count under the title, as Today's date sits under Today, so a
+                long title keeps the row instead of giving way to it */}
+            <div className="min-w-0">
               <h1
-                className="text-foreground truncate text-2xl leading-8 font-semibold"
+                className="text-foreground text-2xl leading-8 font-semibold break-words"
                 id={COOKBOOK_HEADING_ID}
               >
                 {cookbook.title}
               </h1>
-              <span className="text-muted shrink-0 text-sm">
+              <p className="text-muted mt-1 text-sm">
                 {t("recipeCount", { count: cookbook.memberCount })}
-              </span>
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
