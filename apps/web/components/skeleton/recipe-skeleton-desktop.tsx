@@ -1,8 +1,12 @@
 "use client";
 
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { Skeleton } from "@heroui/react";
 
+/** The page's shape while it loads, without the rating or nutrition the reader hid. */
 export default function RecipeSkeletonDesktop() {
+  const { showRatings, showNutrition } = useHiddenItemVisibility();
+
   return (
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
       {/* Back link */}
@@ -59,20 +63,25 @@ export default function RecipeSkeletonDesktop() {
           </div>
 
           {/* Nutrition Card */}
-          <div className="bg-surface space-y-3 rounded-2xl p-5 shadow-md">
-            <Skeleton className="h-6 w-24 rounded-lg" />
-            <div className="space-y-1">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-4 w-16 rounded-md" />
+          {showNutrition && (
+            <div
+              className="bg-surface space-y-3 rounded-2xl p-5 shadow-md"
+              data-skeleton-part="nutrition"
+            >
+              <Skeleton className="h-6 w-24 rounded-lg" />
+              <div className="space-y-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between py-1.5">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <Skeleton className="h-4 w-16 rounded-md" />
+                    </div>
+                    <Skeleton className="h-4 w-12 rounded-md" />
                   </div>
-                  <Skeleton className="h-4 w-12 rounded-md" />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* RIGHT column: Image + Steps Card */}
@@ -99,14 +108,19 @@ export default function RecipeSkeletonDesktop() {
             </div>
 
             {/* Rating Section */}
-            <div className="bg-surface-secondary mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
-              <Skeleton className="h-5 w-48 rounded-md" />
-              <div className="flex gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-8 rounded-md" />
-                ))}
+            {showRatings && (
+              <div
+                className="bg-surface-secondary mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6"
+                data-skeleton-part="rating"
+              >
+                <Skeleton className="h-5 w-48 rounded-md" />
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-8 rounded-md" />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

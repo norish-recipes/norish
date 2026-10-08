@@ -312,6 +312,61 @@ async function amountFormatShown(page: Page): Promise<"fraction" | "decimal"> {
   return (await page.getByText("½", { exact: false }).count()) > 0 ? "fraction" : "decimal";
 }
 
+/** The rating and nutrition placeholders the server's recipe skeleton drew for one kind. */
+async function recipeSkeletonAsServed(browser: Browser, kind: DeviceKind, id: string) {
+  const { context, page } = await openStatic(browser, kind);
+
+  try {
+    await page.goto(`/recipes/${id}`);
+    await expect(page.locator(".skeleton").first()).toBeAttached();
+
+    return {
+      rating: (await page.locator('[data-skeleton-part="rating"]').count()) > 0,
+      nutrition: (await page.locator('[data-skeleton-part="nutrition"]').count()) > 0,
+    };
+  } finally {
+    await context.close();
+  }
+}
+
+test("a recipe skeleton leaves out the rating and nutrition hidden on the phone, only on a phone", async ({
+  browser,
+}) => {
+  const id = await ensureRecipe();
+
+  await seed("phone", { hiddenItems: ["rating", "nutrition"] });
+
+  expect(await recipeSkeletonAsServed(browser, "phone", id)).toEqual({
+    rating: false,
+    nutrition: false,
+  });
+  // Nothing hidden: both placeholders.
+  expect(await recipeSkeletonAsServed(browser, "desktop", id)).toEqual({
+    rating: true,
+    nutrition: true,
+  });
+});
+
+test("groceries arrives with a by-recipe skeleton when that view is stored", async ({
+  browser,
+}) => {
+  await seed("phone", { groceryViewMode: "recipe" });
+
+  for (const [kind, view] of [
+    ["phone", "recipe"],
+    ["desktop", "store"],
+  ] as const) {
+    const { context, page } = await openStatic(browser, kind);
+
+    try {
+      await page.goto("/groceries");
+      await expect(page.locator(`[data-grocery-skeleton="${view}"]`).first()).toBeAttached();
+    } finally {
+      await context.close();
+    }
+  }
+});
+
 test("a recipe's amounts are drawn in the format stored for the phone, only on a phone", async ({
   browser,
 }) => {

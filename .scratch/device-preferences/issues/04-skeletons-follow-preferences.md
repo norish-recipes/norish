@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The recipe skeleton, in its phone and desktop layouts, leaves out the rating placeholder when the rating is a Hidden Item, and the nutrition placeholder when Nutrition Information is. Everything else stays as it is.
-- [ ] The grocery skeleton is drawn in the reader's view (by store or by recipe) and grouping.
-- [ ] The library skeleton and Today's meals are unchanged.
-- [ ] The first-paint browser tests, with JavaScript turned off, prove that:
-  - [ ] a recipe page with the rating and Nutrition Information hidden arrives without either placeholder;
-  - [ ] one with nothing hidden arrives with both;
-  - [ ] the groceries page arrives with a by-recipe skeleton when that view is stored.
+- [x] The recipe skeleton, in its phone and desktop layouts, leaves out the rating placeholder when the rating is a Hidden Item, and the nutrition placeholder when Nutrition Information is. Everything else stays as it is.
+- [x] The grocery skeleton is drawn in the reader's view (by store or by recipe) and grouping.
+- [x] The library skeleton and Today's meals are unchanged.
+- [x] The first-paint browser tests, with JavaScript turned off, prove that:
+  - [x] a recipe page with the rating and Nutrition Information hidden arrives without either placeholder;
+  - [x] one with nothing hidden arrives with both;
+  - [x] the groceries page arrives with a by-recipe skeleton when that view is stored.
 
   The tests seed choices the way the first-paint tests do at the time: cookies before 03, the API after.
