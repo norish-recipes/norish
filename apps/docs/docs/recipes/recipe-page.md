@@ -45,6 +45,22 @@ Two of the cards draw a chart:
 
 ![The Cooking time card with an Other Time segment, above the Nutrition ring](/img/screenshots/recipe-page-cards.png)
 
+## Metric and US measurements
+
+The Ingredients card's options convert a recipe between metric and US
+measurements, no AI needed. Cups become millilitres and ounces
+grams, and back. Where the ingredient catalogue knows what a cup of a food
+weighs, a cup of something you don't pour, like flour or butter, becomes grams,
+and a spoonful's weight becomes spoons again. Teaspoons and tablespoons stay as
+they are, and oven temperatures in the steps are converted too.
+
+The converted copy is kept beside the recipe as it was written, and switching
+back shows the original unchanged. On a server with AI, **Convert with AI**
+writes the converted copy with the language model instead; it never touches the
+original.
+
+![The Ingredients card options on a phone, offering Convert to US and Convert to US with AI](/img/screenshots/recipe-convert-menu.png)
+
 ## The Cook button
 
 Starting to cook is a floating button in the bottom-left corner. It never

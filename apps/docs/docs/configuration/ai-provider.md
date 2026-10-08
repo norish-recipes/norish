@@ -15,7 +15,8 @@ AI enables:
 - **Video import** from YouTube Shorts, Instagram Reels, TikTok, Pinterest,
   and more
 - **Recipe Enrichment**: tags, allergy indications, meal categories, nutrition values, ingredient to step linking, and a generated picture of the dish.
-- **Unit conversion** between metric and US units
+- **Unit conversion** between metric and US units, as an alternative to the
+  conversion Norish does without AI
 
 Optionally a user can also set a [Decision Model](#decision-model), this model
 answers the closed questions faster and cheaper, and validates the AI provider's
