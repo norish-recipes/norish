@@ -1,17 +1,29 @@
 import z from "zod";
 
-// Hidden Items left this contract with ticket 23: the hidden list is a device
-// preference on the `norish_hidden_items` cookie, not server state. A stored
-// `hidden` key from before the move is simply ignored by this parse.
+import { DevicePreferencesSchema } from "./device-preferences";
+
+// A stored `hidden` key from before the Device Preferences moved per kind is
+// simply ignored by this parse.
 /**
  * What happens once a recipe is planned: nothing, the groceries panel for it,
  * or its lines to buy straight onto the list. Absent means the panel.
  */
 export const AFTER_PLANNING_CHOICES = ["nothing", "openGroceries", "addGroceries"] as const;
 
-export const UserPreferencesSchema = z.object({
+/** What follows the person to every device. */
+const PersonPreferencesSchema = z.object({
   locale: z.string().nullable().optional(),
   afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional(),
+});
+
+/**
+ * The profile's preferences document: the person's own choices plus a block
+ * of Device Preferences per Device Kind. A broken block reads as absent, so
+ * it can never cost the reader their language.
+ */
+export const UserPreferencesSchema = PersonPreferencesSchema.extend({
+  phone: DevicePreferencesSchema.optional().catch(undefined),
+  desktop: DevicePreferencesSchema.optional().catch(undefined),
 });
 
 export type UserPreferencesDto = z.infer<typeof UserPreferencesSchema>;
@@ -35,7 +47,7 @@ export const UpdateUserNameInputSchema = z.object({
 
 export const UpdateUserPreferencesInputSchema = z.object({
   version: z.number().int().positive(),
-  preferences: UserPreferencesSchema.partial(),
+  preferences: PersonPreferencesSchema.partial(),
 });
 
 export const DeleteUserAvatarInputSchema = z.object({

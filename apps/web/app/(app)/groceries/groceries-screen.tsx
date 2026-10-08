@@ -1,6 +1,5 @@
 "use client";
 
-import type { GroceryGroupSimilar, GroceryViewMode } from "@/lib/grocery-preferences";
 import { usePathname } from "next/navigation";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { PantryView } from "@/components/groceries";
@@ -25,17 +24,8 @@ const SLIDE_PX = 24;
  * own side of the switch while the other slides in from its side, and nothing
  * above them moves. The Pantry is read while the list shows, so its first
  * visit lands whole rather than as a skeleton.
- *
- * The Live route passes the cookies' values, read on the server; the Offline
- * bootstrap has no server pass and lets the provider read them itself.
  */
-export function GroceriesScreen({
-  initialViewMode,
-  initialGroupSimilar,
-}: {
-  initialViewMode?: GroceryViewMode;
-  initialGroupSimilar?: GroceryGroupSimilar;
-}) {
+export function GroceriesScreen() {
   const view: GroceriesView = usePathname()?.startsWith("/groceries/pantry") ? "pantry" : "list";
   const offset = useReducedMotion() ? 0 : view === "pantry" ? SLIDE_PX : -SLIDE_PX;
   const { isOffline } = useConnectivity();
@@ -45,10 +35,7 @@ export function GroceriesScreen({
 
   return (
     <StoresContextProvider>
-      <GroceriesContextProvider
-        initialGroupSimilar={initialGroupSimilar}
-        initialViewMode={initialViewMode}
-      >
+      <GroceriesContextProvider>
         <div className="flex min-h-0 w-full flex-1 flex-col">
           <GroceriesHeader view={view} />
           <div className="relative flex min-h-0 w-full flex-1 flex-col">

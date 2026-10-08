@@ -1,8 +1,10 @@
 /**
- * First-paint fidelity for device-preference cookies (tickets 16-19).
+ * First-paint fidelity for Device Preferences.
  *
  * The claim under test is that the HTML the server sends already reflects
- * the stored device preference — the wrong shape never paints. That is only
+ * the reader's stored Device Preferences for the Device Kind the request
+ * comes from — the wrong shape never paints. Choices are seeded through the
+ * real API and the same page is opened as an iPhone and as a desktop. That is only
  * observable at the seam that speaks real HTTP, so each assertion here reads
  * the server's markup through a JavaScript-disabled page: what shows is
  * exactly what the server sent, with no hydration to repaint it.
@@ -12,7 +14,15 @@
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 
+import type { DeviceKind } from "../harness/device-preferences";
 import type { AIE2EStack } from "./fixture";
+import {
+  clearDevicePreferences,
+  DESKTOP_USER_AGENT,
+  IPHONE_USER_AGENT,
+  setDevicePreferences,
+} from "../harness/device-preferences";
+import { databaseUrl } from "./database";
 import { expect, test } from "./fixture";
 import { submitPasteImport } from "./import-support";
 import { setAutomaticEnrichment } from "./recipe-enrichment-support";
@@ -26,17 +36,25 @@ test.beforeEach(async ({ aiStack, page: fixturePage }) => {
   stack = aiStack;
   page = fixturePage;
   await setAutomaticEnrichment({});
+  await clearDevicePreferences(databaseUrl());
 });
 
-/** A page that renders the server's bytes and nothing else. */
+const USER_AGENTS: Record<DeviceKind, string> = {
+  phone: IPHONE_USER_AGENT,
+  desktop: DESKTOP_USER_AGENT,
+};
+
+/** A page that renders the server's bytes and nothing else, as one Device Kind. */
 async function openStatic(
   browser: Browser,
-  cookies: { name: string; value: string }[]
+  cookies: { name: string; value: string }[] = [],
+  kind: DeviceKind = "desktop"
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext({
     baseURL: stack.baseURL,
     javaScriptEnabled: false,
     storageState: { cookies: stack.ownerCookies, origins: [] },
+    userAgent: USER_AGENTS[kind],
   });
 
   await context.addCookies(cookies.map((cookie) => ({ ...cookie, url: stack.baseURL })));
@@ -44,42 +62,59 @@ async function openStatic(
   return { context, page: await context.newPage() };
 }
 
-test("groceries arrives in the stored view", async ({ browser }) => {
-  const { context, page: staticPage } = await openStatic(browser, [
-    { name: "norish_grocery_view_mode", value: "recipe" },
-  ]);
+/** The groceries page's view and grouping as the server drew them for one kind. */
+async function groceriesAsServed(browser: Browser, kind: DeviceKind) {
+  const { context, page: staticPage } = await openStatic(browser, [], kind);
 
   try {
     await staticPage.goto("/groceries");
-    await expect(staticPage.locator('[data-grocery-view="recipe"]')).toBeAttached();
-    await expect(staticPage.locator('[data-grocery-view="store"]')).toHaveCount(0);
+    const marked = staticPage.locator("[data-grocery-view]").first();
+
+    await expect(marked).toBeAttached();
+
+    return {
+      view: await marked.getAttribute("data-grocery-view"),
+      grouping: await marked.getAttribute("data-grocery-grouping"),
+    };
   } finally {
     await context.close();
   }
+}
+
+test("groceries arrives in the view and grouping stored for the phone, only on a phone", async ({
+  browser,
+}) => {
+  await setDevicePreferences(stack.baseURL, stack.ownerCookies, "phone", {
+    groceryViewMode: "recipe",
+    groceryGroupSimilar: false,
+  });
+
+  expect(await groceriesAsServed(browser, "phone")).toEqual({ view: "recipe", grouping: "flat" });
+  expect(await groceriesAsServed(browser, "desktop")).toEqual({
+    view: "store",
+    grouping: "grouped",
+  });
 });
 
-test("groceries defaults to the store view when nothing is stored", async ({ browser }) => {
-  const { context, page: staticPage } = await openStatic(browser, []);
+test("groceries arrives in the view stored for the desktop, only on a desktop", async ({
+  browser,
+}) => {
+  await setDevicePreferences(stack.baseURL, stack.ownerCookies, "desktop", {
+    groceryViewMode: "recipe",
+  });
 
-  try {
-    await staticPage.goto("/groceries");
-    await expect(staticPage.locator('[data-grocery-view="store"]')).toBeAttached();
-    await expect(staticPage.locator('[data-grocery-grouping="grouped"]')).toBeAttached();
-  } finally {
-    await context.close();
-  }
+  expect(await groceriesAsServed(browser, "desktop")).toEqual({
+    view: "recipe",
+    grouping: "grouped",
+  });
+  expect(await groceriesAsServed(browser, "phone")).toEqual({ view: "store", grouping: "grouped" });
 });
 
-test("groceries arrives ungrouped when grouping is turned off", async ({ browser }) => {
-  const { context, page: staticPage } = await openStatic(browser, [
-    { name: "norish_grocery_group_similar", value: "false" },
-  ]);
-
-  try {
-    await staticPage.goto("/groceries");
-    await expect(staticPage.locator('[data-grocery-grouping="flat"]')).toBeAttached();
-  } finally {
-    await context.close();
+test("groceries arrives in the default view and grouping when nothing is stored", async ({
+  browser,
+}) => {
+  for (const kind of ["phone", "desktop"] as const) {
+    expect(await groceriesAsServed(browser, kind)).toEqual({ view: "store", grouping: "grouped" });
   }
 });
 

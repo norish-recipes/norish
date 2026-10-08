@@ -1,4 +1,5 @@
 import type { RecipePageColorMode } from "@/lib/recipe-page-color";
+import type { DevicePreferencesSeed } from "@/lib/request-profile";
 import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
@@ -8,6 +9,7 @@ import { TimerDock } from "@/components/timer-dock";
 import { AmountDisplayProvider } from "@/context/amount-display-context";
 import { ArchiveImportProvider } from "@/context/archive-import-context";
 import { CookbooksRealtimeProvider } from "@/context/cookbooks-realtime-context";
+import { DevicePreferencesProvider } from "@/context/device-preferences-context";
 import { HiddenItemsProvider } from "@/context/hidden-items-context";
 import { HouseholdProvider } from "@/context/household-context";
 import { IngredientsRealtime } from "@/context/ingredients-realtime";
@@ -34,12 +36,15 @@ import {
  */
 export function AppShell({
   children,
+  devicePreferences,
   initialTodaysMealsVisibility,
   initialAmountDisplayMode,
   initialHiddenItems,
   initialRecipePageColor,
 }: {
   children: React.ReactNode;
+  /** The profile's Device Preferences as the layout's server pass read them; absent offline. */
+  devicePreferences?: DevicePreferencesSeed;
   /** The cookies as the layout's server pass read them; absent offline. */
   initialTodaysMealsVisibility?: TodaySectionVisibility;
   initialAmountDisplayMode?: AmountDisplayMode;
@@ -52,56 +57,58 @@ export function AppShell({
         <UserProvider>
           <HiddenItemsProvider initialHiddenItems={initialHiddenItems}>
             <OfflineCacheController>
-              <HouseholdProvider>
-                <PermissionsProvider>
-                  <RecipesFiltersProvider>
-                    <RecipesContextProvider>
-                      <CookbooksRealtimeProvider>
-                        <PantryRealtimeProvider>
-                          <TodaysMealsVisibilityProvider
-                            initialValue={initialTodaysMealsVisibility}
-                          >
-                            <AmountDisplayProvider initialValue={initialAmountDisplayMode}>
-                              <RecipePageColorProvider initialValue={initialRecipePageColor}>
-                                <div
-                                  data-app-container
-                                  className="relative flex min-h-dvh flex-col overflow-x-hidden"
-                                >
-                                  {/* Installed-PWA polish: content scrolls under the translucent
+              <DevicePreferencesProvider seed={devicePreferences}>
+                <HouseholdProvider>
+                  <PermissionsProvider>
+                    <RecipesFiltersProvider>
+                      <RecipesContextProvider>
+                        <CookbooksRealtimeProvider>
+                          <PantryRealtimeProvider>
+                            <TodaysMealsVisibilityProvider
+                              initialValue={initialTodaysMealsVisibility}
+                            >
+                              <AmountDisplayProvider initialValue={initialAmountDisplayMode}>
+                                <RecipePageColorProvider initialValue={initialRecipePageColor}>
+                                  <div
+                                    data-app-container
+                                    className="relative flex min-h-dvh flex-col overflow-x-hidden"
+                                  >
+                                    {/* Installed-PWA polish: content scrolls under the translucent
                           status bar (viewport-fit: cover), so a soft background fade
                           masks it instead of a hard clip. Mobile-only — desktop has
                           no status bar — and height collapses to the small tail
                           where the safe-area inset is zero. Below the nav's z-60,
                           above content; theme-aware via the background token. */}
-                                  <div
-                                    aria-hidden
-                                    className="from-background via-background/80 dark:via-background/80 pointer-events-none fixed inset-x-0 top-0 z-50 bg-gradient-to-b via-35% to-transparent md:hidden dark:via-40%"
-                                    style={{
-                                      height: "calc(env(safe-area-inset-top, 0px) + 0.85rem)",
-                                    }}
-                                  />
-                                  <Navbar />
-                                  <main
-                                    className={`container mx-auto flex max-w-7xl flex-1 flex-col ${APP_MAIN_HORIZONTAL_PADDING_CLASS} ${APP_MAIN_BOTTOM_PADDING_CLASS}`}
-                                    style={{
-                                      paddingTop: "calc(1.5rem + env(safe-area-inset-top))",
-                                    }}
-                                  >
-                                    {children}
-                                  </main>
-                                </div>
-                                <TimerDock />
-                                <ClipboardImportPrompt />
-                                <IngredientsRealtime />
-                              </RecipePageColorProvider>
-                            </AmountDisplayProvider>
-                          </TodaysMealsVisibilityProvider>
-                        </PantryRealtimeProvider>
-                      </CookbooksRealtimeProvider>
-                    </RecipesContextProvider>
-                  </RecipesFiltersProvider>
-                </PermissionsProvider>
-              </HouseholdProvider>
+                                    <div
+                                      aria-hidden
+                                      className="from-background via-background/80 dark:via-background/80 pointer-events-none fixed inset-x-0 top-0 z-50 bg-gradient-to-b via-35% to-transparent md:hidden dark:via-40%"
+                                      style={{
+                                        height: "calc(env(safe-area-inset-top, 0px) + 0.85rem)",
+                                      }}
+                                    />
+                                    <Navbar />
+                                    <main
+                                      className={`container mx-auto flex max-w-7xl flex-1 flex-col ${APP_MAIN_HORIZONTAL_PADDING_CLASS} ${APP_MAIN_BOTTOM_PADDING_CLASS}`}
+                                      style={{
+                                        paddingTop: "calc(1.5rem + env(safe-area-inset-top))",
+                                      }}
+                                    >
+                                      {children}
+                                    </main>
+                                  </div>
+                                  <TimerDock />
+                                  <ClipboardImportPrompt />
+                                  <IngredientsRealtime />
+                                </RecipePageColorProvider>
+                              </AmountDisplayProvider>
+                            </TodaysMealsVisibilityProvider>
+                          </PantryRealtimeProvider>
+                        </CookbooksRealtimeProvider>
+                      </RecipesContextProvider>
+                    </RecipesFiltersProvider>
+                  </PermissionsProvider>
+                </HouseholdProvider>
+              </DevicePreferencesProvider>
             </OfflineCacheController>
           </HiddenItemsProvider>
         </UserProvider>

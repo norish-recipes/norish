@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { UserPreferencesSchema } from "@norish/shared/contracts/zod/user";
+import {
+  DEVICE_PREFERENCE_DEFAULTS,
+  parseDevicePreferences,
+  SetDevicePreferencesInputSchema,
+} from "@norish/shared/contracts/zod/device-preferences";
+import {
+  UpdateUserPreferencesInputSchema,
+  UserPreferencesSchema,
+} from "@norish/shared/contracts/zod/user";
 import {
   getAfterPlanningPreference,
   getLocalePreference,
@@ -33,11 +41,50 @@ describe("user preferences", () => {
   });
 
   it("ignores a stored hidden key from before the device-preference move", () => {
-    // Hidden Items left this contract with ticket 23: the list is a device
-    // cookie now. A row written before the move still parses, hidden dropped.
     const parsed = UserPreferencesSchema.safeParse({ hidden: ["rating"], locale: "en" });
 
     expect(parsed.success).toBe(true);
     expect(parsed.data).toEqual({ locale: "en" });
+  });
+
+  it("reads a kind's block as full values, an absent or broken choice as its default", () => {
+    expect(parseDevicePreferences(undefined)).toEqual(DEVICE_PREFERENCE_DEFAULTS);
+    expect(parseDevicePreferences("not a block")).toEqual(DEVICE_PREFERENCE_DEFAULTS);
+    expect(parseDevicePreferences({ groceryViewMode: "recipe" })).toEqual({
+      ...DEVICE_PREFERENCE_DEFAULTS,
+      groceryViewMode: "recipe",
+    });
+    expect(
+      parseDevicePreferences({ groceryViewMode: "aisle", groceryGroupSimilar: false })
+    ).toEqual({ ...DEVICE_PREFERENCE_DEFAULTS, groceryGroupSimilar: false });
+  });
+
+  it("keeps the language when a kind's block is broken", () => {
+    const parsed = UserPreferencesSchema.safeParse({ locale: "nl", phone: "broken" });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data).toEqual({ locale: "nl" });
+  });
+
+  it("rejects a Device Preference write with a value outside its set", () => {
+    const write = (preferences: unknown) =>
+      SetDevicePreferencesInputSchema.safeParse({ kind: "phone", preferences }).success;
+
+    expect(write({ groceryViewMode: "recipe", groceryGroupSimilar: false })).toBe(true);
+    expect(write({ groceryViewMode: "aisle" })).toBe(false);
+    expect(write({ groceryGroupSimilar: "false" })).toBe(false);
+    expect(write({ somethingElse: true })).toBe(false);
+    expect(
+      SetDevicePreferencesInputSchema.safeParse({ kind: "tablet", preferences: {} }).success
+    ).toBe(false);
+  });
+
+  it("never lets the language update write a kind's block", () => {
+    const parsed = UpdateUserPreferencesInputSchema.parse({
+      version: 1,
+      preferences: { locale: "nl", phone: { groceryViewMode: "recipe" } },
+    });
+
+    expect(parsed.preferences).toEqual({ locale: "nl" });
   });
 });

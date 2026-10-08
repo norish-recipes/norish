@@ -17,6 +17,7 @@ export * from "./recurring-groceries";
 export * from "./stores";
 export * from "./store-products";
 export * from "./user";
+export * from "./device-preferences";
 export * from "./favorites";
 export * from "./ratings";
 export * from "./user-allergies";

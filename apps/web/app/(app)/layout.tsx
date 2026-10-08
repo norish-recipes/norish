@@ -3,6 +3,7 @@ import { AppShell } from "@/app/(app)/app-shell";
 import { amountDisplayPreference } from "@/lib/amount-display";
 import { hiddenItemsPreference } from "@/lib/hidden-items";
 import { recipePageColorPreference } from "@/lib/recipe-page-color";
+import { readDevicePreferencesSeed } from "@/lib/request-profile";
 import { todaysMealsVisibilityPreference } from "@/lib/todays-meals-visibility";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
+      devicePreferences={await readDevicePreferencesSeed()}
       initialAmountDisplayMode={amountDisplayPreference.readFrom(cookieStore)}
       initialHiddenItems={hiddenItemsPreference.readFrom(cookieStore)}
       initialRecipePageColor={recipePageColorPreference.readFrom(cookieStore)}
