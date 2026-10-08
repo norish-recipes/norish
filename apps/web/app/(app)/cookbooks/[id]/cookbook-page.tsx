@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
-import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
+import RecipeViewModeToggle, {
+  RecipeViewModeTabs,
+} from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import { NotFoundView } from "@/components/shared/not-found-view";
-import { useDevicePreference } from "@/context/device-preferences-context";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { useBackDestination } from "@/hooks/use-back-destination";
@@ -23,7 +24,6 @@ import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
-import { RECIPE_VIEW_MODES } from "@norish/shared/contracts/zod/device-preferences";
 import {
   cssButtonPill,
   cssButtonPillDanger,
@@ -47,7 +47,6 @@ const COOKBOOK_HEADING_ID = "cookbook-heading";
  */
 export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   const router = useRouter();
-  const [viewMode, setViewMode] = useDevicePreference("recipeViewMode");
   const t = useTranslations("recipes.cookbooks");
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
   const { deleteCookbook } = useCookbooksMutations();
@@ -83,15 +82,7 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
 
   return (
     <section aria-labelledby={COOKBOOK_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
-      <Tabs
-        className="min-h-0 flex-1 gap-5"
-        selectedKey={viewMode}
-        onSelectionChange={(key) => {
-          const mode = RECIPE_VIEW_MODES.find((option) => option === key);
-
-          if (mode) setViewMode(mode);
-        }}
-      >
+      <RecipeViewModeTabs>
         <div className="flex shrink-0 flex-col gap-4">
           {/* A cookbook is reached from the Library and from a recipe that is
               in it, so the way back names wherever that was. */}
@@ -230,7 +221,7 @@ export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
           <CookbookMembers cookbookId={cookbookId} variant="list" />
         </Tabs.Panel>
-      </Tabs>
+      </RecipeViewModeTabs>
 
       <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
 

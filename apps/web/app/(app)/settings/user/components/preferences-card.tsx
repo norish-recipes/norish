@@ -103,37 +103,14 @@ export default function PreferencesCard() {
 
       {/* Stored with the user, on every device: it is about how they plan. */}
       <SettingRow description={t("afterPlanning.description")} title={t("afterPlanning.title")}>
-        <Select
-          aria-label={t("afterPlanning.title")}
-          className="w-full"
+        <ChoiceSelect
           isDisabled={isUpdatingPreferences}
+          label={t("afterPlanning.title")}
+          optionLabel={(option) => t(`afterPlanning.options.${option}`)}
+          options={AFTER_PLANNING_CHOICES}
           value={getAfterPlanningPreference(user)}
-          variant="secondary"
-          onChange={(selected) => {
-            const choice = AFTER_PLANNING_CHOICES.find((option) => option === selected);
-
-            if (choice) void updatePreferences({ afterPlanning: choice });
-          }}
-        >
-          <Label className="sr-only">{t("afterPlanning.title")}</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {AFTER_PLANNING_CHOICES.map((option) => (
-                <ListBox.Item
-                  key={option}
-                  id={option}
-                  textValue={t(`afterPlanning.options.${option}`)}
-                >
-                  {t(`afterPlanning.options.${option}`)}
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          onChange={(afterPlanning) => void updatePreferences({ afterPlanning })}
+        />
       </SettingRow>
       {/* The rows below are Device Preferences: they change the kind in use. */}
       <Note>{t(`deviceKind.${deviceKind}`)}</Note>
@@ -172,72 +149,73 @@ export default function PreferencesCard() {
         </Select>
       </SettingRow>
       <SettingRow description={t("todaySection.description")} title={t("todaySection.title")}>
-        <Select
-          aria-label={t("todaySection.title")}
-          className="w-full"
+        <ChoiceSelect
+          label={t("todaySection.title")}
+          optionLabel={(option) => t(`todaySection.options.${option}`)}
+          options={TODAY_SECTION_VISIBILITIES}
           value={todaySectionVisibility}
-          variant="secondary"
-          onChange={(selected) => {
-            const choice = TODAY_SECTION_VISIBILITIES.find((option) => option === selected);
-
-            if (choice) setTodaySectionVisibility(choice);
-          }}
-        >
-          <Label className="sr-only">{t("todaySection.title")}</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {TODAY_SECTION_VISIBILITIES.map((option) => (
-                <ListBox.Item
-                  key={option}
-                  id={option}
-                  textValue={t(`todaySection.options.${option}`)}
-                >
-                  {t(`todaySection.options.${option}`)}
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          onChange={setTodaySectionVisibility}
+        />
       </SettingRow>
 
       {/* A choice between two colourings, not a Hidden Item: nothing is
             hidden and the page is no slimmer for it (ADR-0023). */}
       <SettingRow description={t("recipePageColor.description")} title={t("recipePageColor.title")}>
-        <Select
-          aria-label={t("recipePageColor.title")}
-          className="w-full"
+        <ChoiceSelect
+          label={t("recipePageColor.title")}
+          optionLabel={(option) => t(`recipePageColor.options.${option}`)}
+          options={RECIPE_PAGE_COLORS}
           value={recipePageColor}
-          variant="secondary"
-          onChange={(selected) => {
-            const choice = RECIPE_PAGE_COLORS.find((option) => option === selected);
-
-            if (choice) setRecipePageColor(choice);
-          }}
-        >
-          <Label className="sr-only">{t("recipePageColor.title")}</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {RECIPE_PAGE_COLORS.map((option) => (
-                <ListBox.Item
-                  key={option}
-                  id={option}
-                  textValue={t(`recipePageColor.options.${option}`)}
-                >
-                  {t(`recipePageColor.options.${option}`)}
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          onChange={setRecipePageColor}
+        />
       </SettingRow>
     </SettingsCard>
+  );
+}
+
+/** A Select over a fixed set of choices; only a choice from the set reaches `onChange`. */
+function ChoiceSelect<T extends string>({
+  label,
+  options,
+  value,
+  optionLabel,
+  onChange,
+  isDisabled,
+}: {
+  label: string;
+  options: readonly T[];
+  value: T;
+  optionLabel: (option: T) => string;
+  onChange: (choice: T) => void;
+  isDisabled?: boolean;
+}) {
+  return (
+    <Select
+      aria-label={label}
+      className="w-full"
+      isDisabled={isDisabled}
+      value={value}
+      variant="secondary"
+      onChange={(selected) => {
+        const choice = options.find((option) => option === selected);
+
+        if (choice) onChange(choice);
+      }}
+    >
+      <Label className="sr-only">{label}</Label>
+      <Select.Trigger>
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover>
+        <ListBox>
+          {options.map((option) => (
+            <ListBox.Item key={option} id={option} textValue={optionLabel(option)}>
+              {optionLabel(option)}
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
+    </Select>
   );
 }

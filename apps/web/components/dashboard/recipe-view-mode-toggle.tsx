@@ -1,14 +1,40 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { ListBulletIcon, Squares2X2Icon } from "@heroicons/react/20/solid";
 import { Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { RECIPE_VIEW_MODES } from "@norish/shared/contracts/zod/device-preferences";
 import { cssHeaderIcon, cssHeaderTab } from "@norish/web/config/css-tokens";
 
 /**
- * The tab list for the library's grid/list switch. The `Tabs` root lives in
- * the dashboard so the panels it controls can sit below the search input.
+ * The `Tabs` root for the grid/list switch, bound to the reader's Device
+ * Preference. The Library and a cookbook put their panels inside it.
+ */
+export function RecipeViewModeTabs({ children }: { children: ReactNode }) {
+  const [viewMode, setViewMode] = useDevicePreference("recipeViewMode");
+
+  return (
+    <Tabs
+      className="min-h-0 flex-1 gap-5"
+      selectedKey={viewMode}
+      onSelectionChange={(key) => {
+        const mode = RECIPE_VIEW_MODES.find((option) => option === key);
+
+        if (mode) setViewMode(mode);
+      }}
+    >
+      {children}
+    </Tabs>
+  );
+}
+
+/**
+ * The tab list for the grid/list switch. The `Tabs` root is
+ * {@link RecipeViewModeTabs}, so the panels it controls can sit below the
+ * search input.
  * As tall as the buttons beside it, wherever it is used.
  */
 export default function RecipeViewModeToggle() {
