@@ -217,7 +217,13 @@ export const RecipeDeleteInputSchema = z.object({
 });
 
 export const RecipeImportInputSchema = z.object({
-  url: z.url(),
+  // "www.site.com/recipe" names a page as well as a full link does, so a
+  // missing scheme is filled in rather than refused.
+  url: z
+    .string()
+    .trim()
+    .transform((url) => (/^[a-z][a-z\d+.-]*:\/\//i.test(url) ? url : `https://${url}`))
+    .pipe(z.url()),
 });
 
 export const RecipeConvertInputSchema = z.object({
