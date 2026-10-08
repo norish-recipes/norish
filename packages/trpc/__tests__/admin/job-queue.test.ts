@@ -414,6 +414,7 @@ describe("admin job queue procedures", () => {
       const first = detail.attempts[0]!;
 
       expect(first.attempt).toBe(1);
+      expect(first.outcome).toBe("failed");
       expect(first.message).toBe("Error: Cannot fetch recipe page.");
       expect(first.steps.map((s) => [s.id, s.status])).toEqual([
         ["dedupe-check", "done"],
@@ -428,6 +429,7 @@ describe("admin job queue procedures", () => {
       const second = detail.attempts[1]!;
 
       expect(second.attempt).toBe(2);
+      expect(second.outcome).toBe("running");
       expect(second.message).toBeNull();
       expect(second.steps.map((s) => [s.id, s.status])).toEqual([
         ["dedupe-check", "running"],

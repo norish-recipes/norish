@@ -108,7 +108,7 @@ function deriveRecipeId(data: unknown): string | null {
 }
 
 /** How a single attempt ended, which drives its last step's status. */
-type AttemptOutcome = "failed" | "done" | "running" | "pending";
+type AttemptOutcome = AdminJobAttemptDTO["outcome"];
 
 /**
  * Build the pipeline view for one attempt: steps that ran (from the timeline,
@@ -227,6 +227,7 @@ function deriveAttempts(input: {
 
     attempts.push({
       attempt,
+      outcome,
       message,
       stack,
       steps: deriveStepsForAttempt({

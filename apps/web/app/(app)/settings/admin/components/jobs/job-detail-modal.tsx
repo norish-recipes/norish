@@ -328,13 +328,11 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                                       {t("detail.attempt", { number: attempt.attempt })}
                                     </span>
                                     <Chip
-                                      color={attempt.message ? "danger" : "success"}
+                                      color={stepStatusColors[attempt.outcome]}
                                       size="sm"
                                       variant="soft"
                                     >
-                                      {attempt.message
-                                        ? t("stepStatus.failed")
-                                        : t("stepStatus.done")}
+                                      {t(`stepStatus.${attempt.outcome}`)}
                                     </Chip>
                                   </div>
                                   <Accordion.Indicator />
