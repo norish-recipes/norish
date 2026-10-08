@@ -7,6 +7,7 @@
 import type { Page } from "@playwright/test";
 
 import type { OfflineHarness } from "./fixture";
+import { readProfilePreferences, setDevicePreferences } from "../harness/device-preferences";
 import {
   expect,
   SEEDED_GROCERY_NAME,
@@ -504,6 +505,99 @@ test("offline, typed foods and We keep this join the Pantry queued, and sync whe
   await expect(page.getByTestId("pantry-offline-details")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "warm set oats", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: SEEDED_RECIPE_LINE, exact: true })).toBeVisible();
+});
+
+/**
+ * Record every grocery view the page draws from the moment it starts, so a
+ * frame drawn with the wrong view fails a test even once it is corrected.
+ */
+async function watchGroceryViews(): Promise<void> {
+  await offline.context.addInitScript(() => {
+    const seen: string[] = [];
+
+    (window as unknown as { __groceryViews: string[] }).__groceryViews = seen;
+    new MutationObserver(() => {
+      const view = document.querySelector("[data-grocery-view]")?.getAttribute("data-grocery-view");
+
+      if (view && seen[seen.length - 1] !== view) seen.push(view);
+      // The document itself: an init script runs before <html> exists.
+    }).observe(document, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-grocery-view"],
+    });
+  });
+}
+
+function groceryViewsSeen(target: Page): Promise<string[]> {
+  return target.evaluate(() => (window as unknown as { __groceryViews: string[] }).__groceryViews);
+}
+
+test("a grocery view changed Offline applies at once, and is on the profile once Live", async () => {
+  // A Live visit caches this document as it is now, by store; the next
+  // scenario is served that copy.
+  await offline.transition("live");
+  await page.goto("/groceries");
+  await expect(page.getByRole("button", { name: "View Mode" })).toBeVisible();
+  await expect(page.locator('[data-grocery-view="store"]').first()).toBeAttached();
+  await offline.transition("stopped");
+
+  await page.goto("/groceries");
+  await page.getByRole("button", { name: "View Mode" }).click();
+  await page.getByRole("menuitem", { name: "By Recipe" }).click();
+  await expect(page.locator('[data-grocery-view="recipe"]').first()).toBeAttached();
+  await expect
+    .poll(async () => (await readOutbox(page)).map(({ path }) => path))
+    .toEqual(["user.setDevicePreferences"]);
+
+  await offline.transition("live");
+  await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
+  // The suite's browser is a desktop.
+  const preferences = await readProfilePreferences(
+    offline.baseURL,
+    await offline.context.cookies()
+  );
+
+  expect(preferences.desktop).toMatchObject({ groceryViewMode: "recipe" });
+  expect(preferences.phone).toBeUndefined();
+});
+
+test("a page the service worker cached before the change settles on the profile's view", async () => {
+  await watchGroceryViews();
+  await offline.transition("stopped");
+
+  await page.goto("/groceries");
+  await expect(page.locator('[data-grocery-view="recipe"]').first()).toBeAttached();
+  // Arming check: the copy served was the one drawn by store.
+  expect(await groceryViewsSeen(page)).toEqual(["store", "recipe"]);
+});
+
+test("Offline start-up on a page it never saved draws the stored view from the first frame", async () => {
+  // Forget the saved copy, so the offline shell boots the page itself.
+  await page.evaluate(async () => {
+    for (const name of await caches.keys()) {
+      const cache = await caches.open(name);
+
+      for (const request of await cache.keys()) {
+        if (new URL(request.url).pathname === "/groceries") await cache.delete(request);
+      }
+    }
+  });
+
+  await page.goto("/groceries");
+  await expect(page.getByRole("button", { name: "View Mode" })).toBeVisible();
+  await expect(page.locator('[data-grocery-view="recipe"]').first()).toBeAttached();
+  expect(await groceryViewsSeen(page)).toEqual(["recipe"]);
+
+  // Hand the next scenario what it inherited: Live, the view by store,
+  // parked on a cached surface.
+  await offline.transition("live");
+  await setDevicePreferences(offline.baseURL, await offline.context.cookies(), "desktop", {
+    groceryViewMode: "store",
+  });
+  await page.goto("/");
+  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
 });
 
 /**

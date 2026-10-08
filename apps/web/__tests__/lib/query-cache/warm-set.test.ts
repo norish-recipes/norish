@@ -151,6 +151,14 @@ function makeTrpc() {
         queryKey: () => [["pantry", "list"], { type: "query" }],
       },
     },
+    user: {
+      get: {
+        queryOptions: () => ({
+          queryKey: [["user", "get"], { type: "query" }],
+          queryFn: async () => ({ user: { id: "owner-1", preferences: {} }, apiKeys: [] }),
+        }),
+      },
+    },
     calendar: {
       listItems: {
         queryOptions: (range: { startISO: string; endISO: string }) => ({
@@ -194,6 +202,10 @@ describe("WarmSet", () => {
       groceries: [{ id: "g1" }],
     });
     expect(queryClient.getQueryData([["stores", "list"], { type: "query" }])).toEqual([]);
+    // The profile, so Offline start-up draws the reader's Device Preferences.
+    expect(queryClient.getQueryData([["user", "get"], { type: "query" }])).toMatchObject({
+      user: { id: "owner-1" },
+    });
     expect(writeLastWarmedAt).toHaveBeenCalledWith("owner-1", expect.any(Number));
   });
 

@@ -8,6 +8,7 @@ import { OfflineCookbook } from "@/app/~offline/offline-cookbook";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { Dashboard } from "@/components/dashboard/dashboard";
+import { cacheManager } from "@/lib/query-cache";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -43,12 +44,18 @@ function offlineSurface(pathname: string) {
  * calendar.
  * Anything outside the floor and any unsupported route get the explicit
  * Offline-unavailable state.
+ *
+ * The worker serves this document only when a navigation failed, so the
+ * reader is Offline: the last reader's cache is restored before anything
+ * renders, and the first frame already carries their Device Preferences.
  */
 export function OfflineBootstrap() {
   const [pathname, setPathname] = useState<string | null>(null);
 
   useEffect(() => {
-    setPathname(window.location.pathname);
+    void cacheManager
+      .reconcileIdentity({ sessionUserId: null, isOffline: true })
+      .then(() => setPathname(window.location.pathname));
   }, []);
 
   if (pathname === null) {

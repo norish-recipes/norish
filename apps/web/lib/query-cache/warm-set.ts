@@ -107,6 +107,12 @@ interface WarmSetTRPC {
       queryKey: () => readonly unknown[];
     };
   };
+  user: {
+    /** The profile; it carries the reader's Device Preferences for Offline start-up. */
+    get: {
+      queryOptions: () => object;
+    };
+  };
   calendar: {
     listItems: {
       queryOptions: (range: CalendarRange) => object;
@@ -327,6 +333,7 @@ async function warmLists(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<b
     queryClient.fetchQuery(withWarmGcTime(trpc.stores.list.queryOptions()) as never),
     queryClient.fetchQuery(withWarmGcTime(trpc.stores.aisleLinks.queryOptions()) as never),
     queryClient.fetchQuery(withWarmGcTime(trpc.pantry.list.queryOptions()) as never),
+    queryClient.fetchQuery(withWarmGcTime(trpc.user.get.queryOptions()) as never),
     ...calendarRanges().map((range) =>
       queryClient.fetchQuery(withWarmGcTime(trpc.calendar.listItems.queryOptions(range)) as never)
     ),
