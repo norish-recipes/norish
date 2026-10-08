@@ -29,6 +29,7 @@ import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions } from "./ingredients";
 import type { MutationOutcome } from "./mutation-outcomes";
+import type { StepInsertWithImages } from "./steps";
 import {
   cookbookRecipes,
   householdUsers,
@@ -1083,6 +1084,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       cookMinutes: true,
       totalMinutes: true,
       systemUsed: true,
+      originalSystem: true,
       calories: true,
       fat: true,
       carbs: true,
@@ -1190,6 +1192,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     cookMinutes: full.cookMinutes ?? null,
     totalMinutes: full.totalMinutes ?? null,
     systemUsed: full.systemUsed,
+    originalSystem: full.originalSystem ?? null,
     calories: full.calories ?? null,
     fat: full.fat ?? null,
     carbs: full.carbs ?? null,
@@ -1277,6 +1280,42 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   return parsed.data;
 }
 
+/**
+ * Write a recipe's converted copy: the lines and steps it holds in the
+ * target system go, these take their place, and the system converted from is
+ * recorded as the original if nothing was yet. A conversion with AI writes
+ * over an earlier copy this way; the original is never the target.
+ */
+export async function writeConvertedCopy(
+  recipeId: string,
+  conversion: { from: MeasurementSystem; to: MeasurementSystem },
+  steps: StepInsertWithImages[],
+  ingredients: RecipeIngredientInsertDto[],
+  resolutions: IngredientResolutions
+): Promise<{ steps: StepDto[]; ingredients: RecipeIngredientsDto[] }> {
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(recipeIngredients)
+      .where(
+        and(
+          eq(recipeIngredients.recipeId, recipeId),
+          eq(recipeIngredients.systemUsed, conversion.to)
+        )
+      );
+    await tx
+      .delete(stepsTable)
+      .where(and(eq(stepsTable.recipeId, recipeId), eq(stepsTable.systemUsed, conversion.to)));
+    await tx
+      .update(recipes)
+      .set({
+        originalSystem: sql`coalesce(${recipes.originalSystem}, ${conversion.from}::measurement_system)`,
+      })
+      .where(eq(recipes.id, recipeId));
+
+    return addStepsAndIngredientsTx(tx, steps, ingredients, resolutions);
+  });
+}
+
 export async function addStepsAndIngredientsToRecipeByInput(
   steps: StepInsertDto[],
   ingredients: RecipeIngredientInsertDto[],
@@ -1286,25 +1325,32 @@ export async function addStepsAndIngredientsToRecipeByInput(
     return { steps: [], ingredients: [] };
   }
 
-  return db.transaction(async (tx) => {
-    let createdSteps: StepDto[] = [];
-    let createdIngredients: RecipeIngredientsDto[] = [];
+  return db.transaction((tx) => addStepsAndIngredientsTx(tx, steps, ingredients, resolutions));
+}
 
-    // Ingredients before steps, so step payloads that carry Step Ingredient
-    // references can land them on the lines this same call creates.
-    if (ingredients?.length) {
-      createdIngredients = await attachIngredientsToRecipeByInputTx(tx, ingredients, resolutions);
-    }
+async function addStepsAndIngredientsTx(
+  tx: any,
+  steps: StepInsertWithImages[],
+  ingredients: RecipeIngredientInsertDto[],
+  resolutions: IngredientResolutions
+): Promise<{ steps: StepDto[]; ingredients: RecipeIngredientsDto[] }> {
+  let createdSteps: StepDto[] = [];
+  let createdIngredients: RecipeIngredientsDto[] = [];
 
-    if (steps?.length) {
-      createdSteps = await createManyRecipeStepsTx(tx, steps);
-    }
+  // Ingredients before steps, so step payloads that carry Step Ingredient
+  // references can land them on the lines this same call creates.
+  if (ingredients?.length) {
+    createdIngredients = await attachIngredientsToRecipeByInputTx(tx, ingredients, resolutions);
+  }
 
-    return {
-      steps: createdSteps,
-      ingredients: createdIngredients,
-    };
-  });
+  if (steps?.length) {
+    createdSteps = await createManyRecipeStepsTx(tx, steps);
+  }
+
+  return {
+    steps: createdSteps,
+    ingredients: createdIngredients,
+  };
 }
 
 async function syncRecipeIngredientsTx(

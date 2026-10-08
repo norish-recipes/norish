@@ -154,6 +154,8 @@
     "ariaLabel": "Maßeinheit umwandeln",
     "toMetric": "In metrisch umwandeln",
     "toUS": "In US umwandeln",
+    "toMetricWithAI": "Mit KI in metrisch umwandeln",
+    "toUSWithAI": "Mit KI in US umwandeln",
     "converting": "Wird umgerechnet…"
   },
   "deleteModal": {

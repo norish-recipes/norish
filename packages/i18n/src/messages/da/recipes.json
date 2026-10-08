@@ -154,6 +154,8 @@
     "ariaLabel": "Konverter målesystem",
     "toMetric": "Konverter til metrisk",
     "toUS": "Konverter til amerikansk",
+    "toMetricWithAI": "Konverter til metrisk med AI",
+    "toUSWithAI": "Konverter til amerikansk med AI",
     "converting": "Konverterer…"
   },
   "deleteModal": {

@@ -154,6 +154,8 @@
     "ariaLabel": "Converteer meetsysteem",
     "toMetric": "Converteer naar metrisch",
     "toUS": "Converteer naar US",
+    "toMetricWithAI": "Converteer naar metrisch met AI",
+    "toUSWithAI": "Converteer naar US met AI",
     "converting": "Bezig met omrekenen…"
   },
   "deleteModal": {

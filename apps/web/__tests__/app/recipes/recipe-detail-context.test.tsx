@@ -202,6 +202,9 @@ describe("RecipeDetailContext", () => {
         <button type="button" onClick={() => startConversion("us")}>
           Convert
         </button>
+        <button type="button" onClick={() => startConversion("us", true)}>
+          Convert with AI
+        </button>
       </>
     );
   }
@@ -259,6 +262,27 @@ describe("RecipeDetailContext", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("recipe-system")).toHaveTextContent("us");
+    });
+  });
+
+  it("keeps converting with AI on the copy already showing until the recipe changes", async () => {
+    recipeFixture = { ...localConversionRecipe, systemUsed: "us" };
+
+    render(
+      <RecipeDetailProvider recipeId={baseRecipe.id}>
+        <Consumer />
+      </RecipeDetailProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Convert with AI" }));
+
+    expect(screen.getByTestId("converting-to")).toHaveTextContent("us");
+
+    // The converted recipe arrives with the copy written again.
+    React.act(() => setRecipeData!((previous) => previous && { ...previous, version: 2 }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("converting-to")).toHaveTextContent("none");
     });
   });
 

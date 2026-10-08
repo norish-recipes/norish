@@ -154,6 +154,8 @@
     "ariaLabel": "Converter sistema de medidas",
     "toMetric": "Converter para métrico",
     "toUS": "Converter para unidades dos EUA",
+    "toMetricWithAI": "Converter para métrico com IA",
+    "toUSWithAI": "Converter para unidades dos EUA com IA",
     "converting": "Convertendo…"
   },
   "deleteModal": {

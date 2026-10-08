@@ -498,6 +498,13 @@
       "when": 1791268874929,
       "tag": "0070_ingredient_icon",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1791464914057,
+      "tag": "0071_original_system",
+      "breakpoints": true
     }
   ]
 }

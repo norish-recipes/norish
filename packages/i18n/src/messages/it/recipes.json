@@ -154,6 +154,8 @@
     "ariaLabel": "Converti sistema di misura",
     "toMetric": "Converti in metrico",
     "toUS": "Converti in US",
+    "toMetricWithAI": "Converti in metrico con IA",
+    "toUSWithAI": "Converti in US con IA",
     "converting": "Conversione in corso…"
   },
   "deleteModal": {
@@ -367,7 +369,7 @@
     "cuisines": "Cucine",
     "inferring": "Sto capendo da dove viene questa ricetta…",
     "noInfo": "Ancora nessuna informazione sulla provenienza",
-    "inferWithAI": "Deduci con l'IA"
+    "inferWithAI": "Deduci con IA"
   },
   "import": {
     "alreadyExists": "Hai già questa ricetta",

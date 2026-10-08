@@ -154,6 +154,8 @@
     "ariaLabel": "Konverter målesystem",
     "toMetric": "Konverter til metrisk",
     "toUS": "Konverter til amerikansk",
+    "toMetricWithAI": "Konverter til metrisk med AI",
+    "toUSWithAI": "Konverter til amerikansk med AI",
     "converting": "Konverterer…"
   },
   "deleteModal": {
@@ -367,7 +369,7 @@
     "cuisines": "Kjøkken",
     "inferring": "Finner ut hvor denne oppskriften kommer fra …",
     "noInfo": "Ingen opphavsinformasjon ennå",
-    "inferWithAI": "Finn ut med KI"
+    "inferWithAI": "Finn ut med AI"
   },
   "import": {
     "alreadyExists": "Du har allerede denne oppskriften",

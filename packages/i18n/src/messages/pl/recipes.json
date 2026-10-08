@@ -154,6 +154,8 @@
     "ariaLabel": "Przelicz system miar",
     "toMetric": "Przelicz na metryczny",
     "toUS": "Przelicz na amerykański",
+    "toMetricWithAI": "Przelicz na metryczny z AI",
+    "toUSWithAI": "Przelicz na amerykański z AI",
     "converting": "Przeliczanie…"
   },
   "deleteModal": {

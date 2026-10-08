@@ -10,10 +10,11 @@ import type { MeasurementSystem } from "@norish/shared/contracts";
 import { useRecipeContextRequired } from "../context";
 
 export type SystemConversionOption = {
-  key: MeasurementSystem;
+  key: string;
+  system: MeasurementSystem;
   label: string;
-  /** Nothing stored in this system: converting means asking the AI for it. */
-  requiresAI: boolean;
+  /** The language model writes the copy in this system again. */
+  withAI: boolean;
 };
 
 export type SystemConversion = {
@@ -22,16 +23,17 @@ export type SystemConversion = {
   options: SystemConversionOption[];
   currentSystem: MeasurementSystem;
   isConverting: boolean;
-  convertTo: (target: MeasurementSystem) => void;
+  convertTo: (option: SystemConversionOption) => void;
 };
 
 /**
- * The measurement conversion a recipe can offer, in one place: which systems
- * are reachable, which of them need an AI run, and whether this reader is
- * offered any of it. Converting is a permission-gated action on the recipe
- * and a Hidden Item, so the gate has to answer the same way wherever the
- * action is drawn — the mobile actions menu and the desktop control read it
- * from here rather than each deciding for themselves.
+ * The measurement conversion a recipe can offer, in one place: back to the
+ * system it was written in, to the other one by the unit table and the
+ * ingredient catalogue, and, where AI is on, to the other one by the language
+ * model. Converting is a permission-gated action on the recipe and a Hidden
+ * Item, so the gate has to answer the same way wherever the action is drawn —
+ * the mobile actions menu and the desktop control read it from here rather
+ * than each deciding for themselves.
  */
 export function useSystemConversion(): SystemConversion {
   const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
@@ -39,40 +41,40 @@ export function useSystemConversion(): SystemConversion {
   const { isAIEnabled } = usePermissionsContext();
   const t = useTranslations("recipes.convert");
 
-  const availableSystems = useMemo(
-    () => Array.from(new Set(recipe.recipeIngredients.map((ri) => ri.systemUsed))),
-    [recipe.recipeIngredients]
-  );
+  const original = recipe.originalSystem ?? recipe.systemUsed;
 
   const options = useMemo(() => {
-    const built: SystemConversionOption[] = [];
-    const metricRequiresAI = !availableSystems.includes("metric");
-    const usRequiresAI = !availableSystems.includes("us");
+    const other: MeasurementSystem = original === "metric" ? "us" : "metric";
+    const label = (system: MeasurementSystem) => (system === "metric" ? t("toMetric") : t("toUS"));
+    const built: SystemConversionOption[] = [
+      { key: original, system: original, label: label(original), withAI: false },
+      { key: other, system: other, label: label(other), withAI: false },
+    ];
 
-    if (!metricRequiresAI || isAIEnabled) {
-      built.push({ key: "metric", label: t("toMetric"), requiresAI: metricRequiresAI });
-    }
-
-    if (!usRequiresAI || isAIEnabled) {
-      built.push({ key: "us", label: t("toUS"), requiresAI: usRequiresAI });
+    if (isAIEnabled) {
+      built.push({
+        key: `${other}-ai`,
+        system: other,
+        label: other === "metric" ? t("toMetricWithAI") : t("toUSWithAI"),
+        withAI: true,
+      });
     }
 
     return built;
-  }, [availableSystems, isAIEnabled, t]);
+  }, [original, isAIEnabled, t]);
 
   const currentSystem: MeasurementSystem = convertingTo != null ? convertingTo : recipe.systemUsed;
 
   return {
-    // One option is the system the recipe is already in: there is nothing to
-    // convert to, so the control has nothing to say.
-    isAvailable: showConversion && options.length > 1,
+    // A recipe with no lines has nothing to convert.
+    isAvailable: showConversion && recipe.recipeIngredients.length > 0,
     options,
     currentSystem,
     isConverting: convertingTo != null,
-    convertTo: (target: MeasurementSystem) => {
-      if (target === currentSystem) return;
+    convertTo: (option: SystemConversionOption) => {
+      if (!option.withAI && option.system === currentSystem) return;
 
-      startConversion(target);
+      startConversion(option.system, option.withAI);
     },
   };
 }

@@ -154,6 +154,8 @@
     "ariaLabel": "Muunna mittajärjestelmä",
     "toMetric": "Muunna metrisiksi",
     "toUS": "Muunna amerikkalaisiksi",
+    "toMetricWithAI": "Muunna metrisiksi tekoälyllä",
+    "toUSWithAI": "Muunna amerikkalaisiksi tekoälyllä",
     "converting": "Muunnetaan…"
   },
   "deleteModal": {

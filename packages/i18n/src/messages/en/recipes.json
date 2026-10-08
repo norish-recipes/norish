@@ -154,6 +154,8 @@
     "ariaLabel": "Convert measurement system",
     "toMetric": "Convert to Metric",
     "toUS": "Convert to US",
+    "toMetricWithAI": "Convert to Metric with AI",
+    "toUSWithAI": "Convert to US with AI",
     "converting": "Converting…"
   },
   "deleteModal": {

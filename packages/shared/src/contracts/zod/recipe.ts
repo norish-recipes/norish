@@ -39,6 +39,7 @@ export const AuthorSchema = z
 
 export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   systemUsed: true,
+  originalSystem: true,
   fat: true,
   carbs: true,
   protein: true,
@@ -230,6 +231,10 @@ export const RecipeConvertInputSchema = z.object({
   recipeId: z.uuid(),
   targetSystem: z.enum(["metric", "us"]),
   version: z.number().int().positive(),
+  // With AI, the copy in the target system is written again by the language
+  // model; without, an existing copy is switched to and a missing one worked
+  // out from the unit table and the ingredient catalogue.
+  withAI: z.boolean().default(false),
 });
 
 export const RecipeUpdateInputSchema = z.object({

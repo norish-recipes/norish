@@ -178,7 +178,9 @@ function buildArchiveRecipe(record: NorishArchiveRecord): NorishArchiveRecipe {
     url: recipe.url,
     notes: recipe.notes,
     servings: recipe.servings,
-    systemUsed: recipe.systemUsed,
+    // The system the recipe was written in, whichever one it was showing: an
+    // import takes it for the original, the one AI never writes over.
+    systemUsed: recipe.originalSystem ?? recipe.systemUsed,
     prepMinutes: recipe.prepMinutes,
     cookMinutes: recipe.cookMinutes,
     totalMinutes: recipe.totalMinutes,
