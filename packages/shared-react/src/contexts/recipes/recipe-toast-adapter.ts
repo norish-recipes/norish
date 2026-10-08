@@ -50,12 +50,6 @@ export function createRecipeSubscriptionToasts(
             : undefined,
       });
     },
-    onConverted: () => {
-      adapter.show({
-        severity: "success",
-        title: adapter.translate("recipes.toasts.converted"),
-      });
-    },
     onFailed: (payload) => {
       adapter.show({
         severity: "danger",

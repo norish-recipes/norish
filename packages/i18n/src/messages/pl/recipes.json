@@ -317,8 +317,6 @@
   },
   "toasts": {
     "imported": "Przepis zaimportowany",
-    "converted": "Miary przeliczone",
-    "convertedDescription": "Przepis przeliczony na jednostki {system}",
     "failed": "Operacja na przepisie nie powiodła się",
     "failedDescription": "Coś poszło nie tak. Sprawdź konsolę przeglądarki.",
     "batchImported": "Przepisy zaimportowane",

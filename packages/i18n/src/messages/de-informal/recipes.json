@@ -317,8 +317,6 @@
   },
   "toasts": {
     "imported": "Rezept importiert",
-    "converted": "Maße umgerechnet",
-    "convertedDescription": "Rezept in {system}-Einheiten umgerechnet",
     "failed": "Rezept-Operation fehlgeschlagen",
     "failedDescription": "Beim Verarbeiten deines Rezepts ist ein Fehler aufgetreten. Schau in die Browser-Konsole für technische Details.",
     "batchImported": "Rezepte importiert",

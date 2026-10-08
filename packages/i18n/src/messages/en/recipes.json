@@ -317,8 +317,6 @@
   },
   "toasts": {
     "imported": "Recipe imported",
-    "converted": "Measurements converted",
-    "convertedDescription": "Recipe converted to {system} units",
     "failed": "Recipe operation failed",
     "failedDescription": "Something went wrong while processing your recipe. Check the browser console for technical details.",
     "batchImported": "Recipes imported",

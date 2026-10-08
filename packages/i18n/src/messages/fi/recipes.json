@@ -317,8 +317,6 @@
   },
   "toasts": {
     "imported": "Resepti tuotu",
-    "converted": "Mitat muunnettu",
-    "convertedDescription": "Resepti muunnettiin {system}-yksiköihin",
     "failed": "Reseptitoiminto epäonnistui",
     "failedDescription": "Reseptin käsittelyssä meni jokin pieleen. Tekniset tiedot löytyvät selaimen konsolista.",
     "batchImported": "Reseptit tuotu",

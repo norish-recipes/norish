@@ -8,7 +8,6 @@ import { useRealtimeSubscription } from "../../../realtime/use-realtime-subscrip
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
 export type RecipeSubscriptionCallbacks = {
-  onConverted?: (payload: Payload<"converted">) => void;
   onDeleted?: (payload: Payload<"deleted">) => void;
   onFailed?: (payload: Payload<"failed">) => void;
 };
@@ -48,7 +47,6 @@ export function createUseRecipeSubscription(
         if (payload.recipe.id !== recipeId) return;
 
         setRecipeData(() => payload.recipe);
-        callbacks.onConverted?.(payload);
       },
     });
 

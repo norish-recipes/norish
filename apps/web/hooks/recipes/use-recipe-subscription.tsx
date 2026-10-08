@@ -19,12 +19,6 @@ export function useRecipeSubscription(recipeId: string | null) {
   const router = useRouter();
 
   useSharedRecipeSubscription(recipeId, {
-    onConverted: (payload) => {
-      toast("Measurements converted", {
-        description: `Recipe converted to ${payload.recipe.systemUsed} units`,
-        variant: "success",
-      });
-    },
     onDeleted: () => {
       toast("Recipe deleted", { description: "This recipe has been removed.", variant: "warning" });
 

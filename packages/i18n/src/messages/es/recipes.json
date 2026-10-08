@@ -317,8 +317,6 @@
   },
   "toasts": {
     "imported": "Receta importada",
-    "converted": "Medidas convertidas",
-    "convertedDescription": "Receta convertida a unidades {system}",
     "failed": "Operación de receta fallida",
     "failedDescription": "Algo ha salido mal al procesar tu receta. Comprueba la consola del navegador para obtener detalles técnicos.",
     "batchImported": "Recetas importadas",

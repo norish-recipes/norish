@@ -317,8 +317,6 @@
   },
   "toasts": {
     "imported": "Oppskrift importert",
-    "converted": "Mål konvertert",
-    "convertedDescription": "Oppskrift konvertert til {system}-enheter",
     "failed": "Oppskrifthandling mislyktes",
     "failedDescription": "Noe gikk galt under behandling av oppskriften din. Sjekk nettleserkonsollen for tekniske detaljer.",
     "batchImported": "Oppskrifter importert",

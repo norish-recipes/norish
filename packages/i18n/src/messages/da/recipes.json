@@ -317,8 +317,6 @@
   },
   "toasts": {
     "imported": "Opskrift importeret",
-    "converted": "Mål konverteret",
-    "convertedDescription": "Opskrift konverteret til {system}-enheder",
     "failed": "Opskrifthandling mislykkedes",
     "failedDescription": "Noget gik galt under behandling af din opskrift. Tjek browserkonsollen for tekniske detaljer.",
     "batchImported": "Opskrifter importeret",
