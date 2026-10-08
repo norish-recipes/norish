@@ -91,7 +91,7 @@ A picture of a dish that AI drew rather than a camera captured, stored in the re
 _Avoid_: AI Photo (it is a photograph of nothing), Placeholder Image (it is the recipe's real primary image, not a stand-in for one)
 
 **Hidden Item**:
-Something a reader has chosen not to be shown: Recipe Provenance, Nutrition Information, a recipe's notes, its rating, favourites, the cookbooks it is in, the measurement conversion control, recipe timers, or Ingredient Icons. Hiding belongs to that reader alone and is kept per device, like every visibility preference — a cramped phone can hide what a desktop keeps. It suppresses the item everywhere it would appear for them, so hiding the rating takes the recipe page's stars, the Library chip and the rating filter together, while the items that exist only on the recipe page simply make it slimmer. It settles nothing about the recipe: what is stored, what may be edited and what Recipe Enrichment produces are all unchanged, and a recipe read by someone signed out shows everything. An origin flag beside a recipe's title is chrome rather than Recipe Provenance, so it stays when Recipe Provenance is hidden.
+Something a reader has chosen not to be shown: Recipe Provenance, Nutrition Information, a recipe's notes, its rating, favourites, the cookbooks it is in, the measurement conversion control, recipe timers, or Ingredient Icons. Hiding belongs to that reader alone and is a Device Preference — a cramped phone can hide what a desktop keeps. It suppresses the item everywhere it would appear for them, so hiding the rating takes the recipe page's stars, the Library chip and the rating filter together, while the items that exist only on the recipe page simply make it slimmer. It settles nothing about the recipe: what is stored, what may be edited and what Recipe Enrichment produces are all unchanged, and a recipe read by someone signed out shows everything. An origin flag beside a recipe's title is chrome rather than Recipe Provenance, so it stays when Recipe Provenance is hidden.
 _Avoid_: Disabled (suggests the thing stops working), Hidden Section (not every hidden item is a section), Display Preference (names where it is stored, not what it is)
 
 **Glance Bar**:
@@ -111,7 +111,7 @@ The clock time a recipe is projected to be done: the moment its Cooking Session 
 _Avoid_: Finish time, ETA (both read as a commitment Norish is not making)
 
 **Dish Colour**:
-One colour taken from a recipe's primary image when that image is stored, and kept with the recipe so a page can be tinted before the photo has even arrived. Only its hue and a clamped amount of its saturation are ever used: lightness always comes from the reader's theme, so a recipe colours its page without ever deciding how readable that page is. A recipe with no image, or one stored before the colour existed, simply has none and renders on the plain theme background. A reader may also decline the tint outright and read every recipe on that plain background, which is a preference about their own device and never a change to the recipe. It is derived from the image rather than supplied with the recipe, so it is never Supplied Recipe Data and never travels in a Recipe Archive — a receiving instance takes its own from the image it received.
+One colour taken from a recipe's primary image when that image is stored, and kept with the recipe so a page can be tinted before the photo has even arrived. Only its hue and a clamped amount of its saturation are ever used: lightness always comes from the reader's theme, so a recipe colours its page without ever deciding how readable that page is. A recipe with no image, or one stored before the colour existed, simply has none and renders on the plain theme background. A reader may also decline the tint outright and read every recipe on that plain background, which is a Device Preference and never a change to the recipe. It is derived from the image rather than supplied with the recipe, so it is never Supplied Recipe Data and never travels in a Recipe Archive — a receiving instance takes its own from the image it received.
 _Avoid_: Dominant colour (names the algorithm), Theme colour (collides with the reader's light and dark themes), Accent (that is the app's own, and it never shifts)
 
 ### Library & Cookbooks
@@ -269,6 +269,14 @@ _Avoid_: User icon (ambiguous with App Icon), profile photo
 **App Icon**:
 The Norish mark as an installed platform presents it — home screen, dock, favicon. Norish supplies a flat, fully opaque, full-bleed square; the platform applies its own shape, masking, and effects, which Norish neither imitates nor overrides.
 _Avoid_: PWA icon (names one mechanism, not the thing), User icon
+
+**Device Kind**:
+Phone or desktop, the only thing Norish knows about the screen a reader is using. It is read from the browser on every request rather than remembered, so it can never be lost or forgotten. A tablet counts as a desktop, two phones are the same kind, and a narrow desktop window is still a desktop.
+_Avoid_: Device (suggests one particular handset that could be forgotten), Breakpoint (a layout width, which changes as a window is resized)
+
+**Device Preference**:
+A choice a reader makes about how Norish is shown to them, kept on their profile once for each Device Kind, so a cramped phone can hide what a desktop keeps and a new phone starts from the reader's phone choices. Because it lives on the profile, the first frame is drawn with it already applied, skeletons included, so nothing appears only to vanish when the choice arrives. It never changes what is stored for the household. A reader who is signed out has none: they see the defaults, and a switch they flip lasts only for that visit. A reader's language is not one: it follows the person to every device.
+_Avoid_: Display Preference, Local Setting (it is not kept on the device), Cookie Preference (names a storage mechanism)
 
 ### Connectivity & Offline
 
