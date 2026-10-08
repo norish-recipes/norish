@@ -317,7 +317,7 @@ function RecipeCardComponent({
       className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
       title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
     >
-      <span className="flex items-center gap-3 empty:hidden">{facts}</span>
+      <span className="flex items-center gap-1.5 empty:hidden">{facts}</span>
 
       {visibleTagNames.map((tag) => {
         const isAllergen = isAllergenTag(tag, allergySet);
@@ -325,7 +325,7 @@ function RecipeCardComponent({
         return (
           <Chip
             key={tag.toLowerCase()}
-            className="max-w-[8rem] min-w-0 rounded-full px-2 text-[11px]"
+            className={`max-w-[8rem] min-w-0 rounded-full px-2 text-[11px] ${isAllergen ? "" : "dark:bg-surface-tertiary"}`}
             color={isAllergen ? "warning" : undefined}
             size="sm"
             variant={isAllergen ? "primary" : "tertiary"}
@@ -339,7 +339,7 @@ function RecipeCardComponent({
         <Tooltip delay={0}>
           <Tooltip.Trigger aria-label={tagNames.join(", ")} onClick={stopParentActivation}>
             <Chip
-              className="shrink-0 rounded-full px-2 text-[11px]"
+              className={`shrink-0 rounded-full px-2 text-[11px] ${hiddenAllergenCount > 0 ? "" : "dark:bg-surface-tertiary"}`}
               color={hiddenAllergenCount > 0 ? "warning" : undefined}
               size="sm"
               variant={hiddenAllergenCount > 0 ? "primary" : "tertiary"}

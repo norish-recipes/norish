@@ -140,7 +140,10 @@ describe("CookbookCard", () => {
     expect(screen.getByText("Weeknights")).toBeInTheDocument();
     expect(screen.getByText('recipeCount:{"count":3}')).toBeInTheDocument();
     expect(screen.queryByText(/h$|m$/)).toBeNull();
-    expect(screen.queryAllByTestId("chip")).toEqual([]);
+    // The count is the one chip left: no time, no servings, no allergens.
+    expect(screen.queryAllByTestId("chip").map((chip) => chip.textContent)).toEqual([
+      'recipeCount:{"count":3}',
+    ]);
   });
 
   it("says nothing about time when no member states one", () => {

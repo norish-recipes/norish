@@ -1,12 +1,12 @@
 "use client";
 
 import type { ComponentType, ReactNode } from "react";
-import { ScrollShadow } from "@heroui/react";
+import { Chip, ScrollShadow } from "@heroui/react";
 
 /**
- * One fact a card states: a muted icon and its value in the card's own text
- * colour, with no fill of its own, so it reads on a dark card as well as a
- * light one.
+ * One fact a card states, as a chip: a muted icon and its value, drawn like
+ * the tag chips beside it in a list row. A dark card is barely darker than the
+ * chip's own fill, so there it takes the next surface up.
  */
 export function CardFact({
   icon: Icon,
@@ -18,30 +18,35 @@ export function CardFact({
   children: ReactNode;
 }) {
   return (
-    <span className="text-foreground inline-flex shrink-0 items-center gap-1 text-xs font-medium tabular-nums">
-      {Icon ? <Icon className={`size-3.5 ${iconClassName}`} /> : null}
-      {children}
-    </span>
+    <Chip
+      className="dark:bg-surface-tertiary shrink-0 gap-1 rounded-full px-1.5 text-[11px] tabular-nums sm:px-2"
+      size="sm"
+      variant="tertiary"
+    >
+      {Icon ? <Icon className={`size-3 sm:size-3.5 ${iconClassName}`} /> : null}
+      <Chip.Label>{children}</Chip.Label>
+    </Chip>
   );
 }
 
 /**
- * A grid card's facts along its foot: every one on one line, which scrolls
- * sideways where the card is too narrow for them all. A finger that scrolls
- * them is not swiping the card open; where they all fit, it is.
+ * A grid card's facts along its foot, under a hairline as wide as the text:
+ * every one on one line, which scrolls sideways where the card is too
+ * narrow for them all. A finger that scrolls them is not swiping the card
+ * open; where they all fit, it is.
  */
 export function CardFacts({ children }: { children: ReactNode }) {
   return (
     <ScrollShadow
       hideScrollBar
-      className="mt-auto shrink-0 pt-3"
+      className="border-border mt-auto shrink-0 border-t pt-2.5 sm:pt-3"
       orientation="horizontal"
       size={24}
       onPointerDown={(e) => {
         if (e.currentTarget.scrollWidth > e.currentTarget.clientWidth) e.stopPropagation();
       }}
     >
-      <div className="flex w-max items-center gap-3">{children}</div>
+      <div className="flex w-max items-center gap-1 sm:gap-1.5">{children}</div>
     </ScrollShadow>
   );
 }

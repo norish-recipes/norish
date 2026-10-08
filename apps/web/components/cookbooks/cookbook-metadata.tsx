@@ -90,7 +90,7 @@ export function CookbookMetadata({
 
   return (
     <>
-      <span className="flex items-center gap-3">
+      <span className="flex items-center gap-1 sm:gap-1.5">
         <CardFact>{t("recipeCount", { count: memberCount })}</CardFact>
         {timeLabel && <CardFact icon={ClockIcon}>{timeLabel}</CardFact>}
         {typeof servings === "number" && servings > 0 && (
