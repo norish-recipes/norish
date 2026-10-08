@@ -6,7 +6,7 @@ import { useDevicePreference } from "@/context/device-preferences-context";
 import TodaysMealsContent from "./todays-meals-content";
 
 export default function TodaysMeals() {
-  const [visibility] = useDevicePreference("todaysMeals");
+  const [visibility] = useDevicePreference("todaySectionVisibility");
 
   if (visibility === "hidden") return null;
 

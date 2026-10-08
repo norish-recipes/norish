@@ -7,7 +7,7 @@ import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
-import type { RecipeDashboardViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useScrollRestoration } from "@norish/shared-react/hooks";
 
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
@@ -23,7 +23,7 @@ const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
 const LIST_LOAD_MORE_ROW_THRESHOLD = 6;
 
 type LibraryGridProps = {
-  variant: RecipeDashboardViewMode;
+  variant: RecipeViewMode;
   items: LibraryGridItem[];
   isLoading: boolean;
   isFetchingMore: boolean;

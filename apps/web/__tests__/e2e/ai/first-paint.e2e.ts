@@ -183,7 +183,7 @@ async function dashboardHasTodaysMeals(browser: Browser, kind: DeviceKind): Prom
 test("a hidden Today's meals never reaches the phone's dashboard markup, only the phone's", async ({
   browser,
 }) => {
-  await seed("phone", { todaysMeals: "hidden" });
+  await seed("phone", { todaySectionVisibility: "hidden" });
 
   expect(await dashboardHasTodaysMeals(browser, "phone")).toBe(false);
   expect(await dashboardHasTodaysMeals(browser, "desktop")).toBe(true);
@@ -198,7 +198,7 @@ test("Today's meals is in the dashboard markup by default", async ({ browser }) 
 test("a planned rule keeps the block in the dashboard markup", async ({ browser }) => {
   // What is planned is client data, so the server's share of the planned
   // rule is rendering the block; the empty-day collapse is the client's.
-  await seed("desktop", { todaysMeals: "planned" });
+  await seed("desktop", { todaySectionVisibility: "planned" });
 
   expect(await dashboardHasTodaysMeals(browser, "desktop")).toBe(true);
 });

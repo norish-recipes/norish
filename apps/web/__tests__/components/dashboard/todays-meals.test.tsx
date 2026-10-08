@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/context/device-preferences-context", async () =>
   (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
-    () => ({ todaysMeals: visibilityMock }),
+    () => ({ todaySectionVisibility: visibilityMock }),
     { set: (_key, next) => setVisibilityMock(next) }
   )
 );

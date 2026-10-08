@@ -27,7 +27,7 @@ export type TodaySectionVisibility = (typeof TODAY_SECTION_VISIBILITIES)[number]
 
 export const RECIPE_VIEW_MODES = ["grid", "list"] as const;
 
-export type RecipeDashboardViewMode = (typeof RECIPE_VIEW_MODES)[number];
+export type RecipeViewMode = (typeof RECIPE_VIEW_MODES)[number];
 
 /**
  * The Hidden Items list. It has no closed set: a control that writes the
@@ -49,7 +49,7 @@ export const DevicePreferencesSchema = z.object({
   amountDisplay: z.enum(AMOUNT_DISPLAY_MODES).catch("fraction"),
   hiddenItems: HiddenItemsSchema.catch([]),
   recipePageColor: z.enum(RECIPE_PAGE_COLORS).catch("dish"),
-  todaysMeals: z.enum(TODAY_SECTION_VISIBILITIES).catch("always"),
+  todaySectionVisibility: z.enum(TODAY_SECTION_VISIBILITIES).catch("always"),
   recipeViewMode: z.enum(RECIPE_VIEW_MODES).catch("grid"),
 });
 

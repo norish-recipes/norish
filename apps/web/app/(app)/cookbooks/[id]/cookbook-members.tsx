@@ -10,7 +10,7 @@ import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbook
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { RecipeDashboardViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
@@ -29,7 +29,7 @@ export default function CookbookMembers({
   variant,
 }: {
   cookbookId: string;
-  variant: RecipeDashboardViewMode;
+  variant: RecipeViewMode;
 }) {
   const t = useTranslations("recipes.cookbooks");
   const { filters } = useRecipesFiltersContext();

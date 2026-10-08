@@ -30,7 +30,8 @@ export default function PreferencesCard() {
   const { globalEnabled } = useTimersEnabledQuery();
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
   const router = useRouter();
-  const [todaySectionVisibility, setTodaySectionVisibility] = useDevicePreference("todaysMeals");
+  const [todaySectionVisibility, setTodaySectionVisibility] =
+    useDevicePreference("todaySectionVisibility");
   const [hiddenItems, setHiddenItems] = useDevicePreference("hiddenItems");
   const [recipePageColor, setRecipePageColor] = useDevicePreference("recipePageColor");
   const deviceKind = useDeviceKind();

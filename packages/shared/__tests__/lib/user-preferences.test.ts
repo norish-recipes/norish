@@ -100,7 +100,7 @@ describe("user preferences", () => {
     expect(write({ groceryGroupSimilar: "false" })).toBe(false);
     expect(write({ somethingElse: true })).toBe(false);
     expect(
-      write({ amountDisplay: "decimal", todaysMeals: "planned", recipeViewMode: "list" })
+      write({ amountDisplay: "decimal", todaySectionVisibility: "planned", recipeViewMode: "list" })
     ).toBe(true);
     expect(write({ recipePageColor: "neon" })).toBe(false);
     expect(write({ hiddenItems: ["timers", "fromANewerVersion"] })).toBe(true);

@@ -47,7 +47,7 @@ const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 vi.mock("@/context/device-preferences-context", async () =>
   (await import("../../../helpers/device-preferences-mock")).mockDevicePreferences(
     () => ({
-      todaysMeals: todaysMealsMock.visibility,
+      todaySectionVisibility: todaysMealsMock.visibility,
       hiddenItems: hiddenItemsMock.hidden,
       recipePageColor: recipePageColorMock.mode,
     }),
@@ -55,7 +55,7 @@ vi.mock("@/context/device-preferences-context", async () =>
       kind: () => deviceKindMock.kind,
       set: (key, next) => {
         const setters: Record<string, (next: unknown) => void> = {
-          todaysMeals: todaysMealsMock.setVisibility,
+          todaySectionVisibility: todaysMealsMock.setVisibility,
           hiddenItems: hiddenItemsMock.setHidden,
           recipePageColor: recipePageColorMock.setMode,
         };
