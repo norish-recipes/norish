@@ -1,23 +1,13 @@
-"use client";
-
-import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 import { Skeleton } from "@heroui/react";
 
-/**
- * The page's shape while it loads, without the rating or nutrition the reader
- * hid. A page that decides those itself (the shared recipe) says so instead.
- */
+/** The page's shape while it loads; {@link RecipeSkeleton} decides which parts. */
 export default function RecipeSkeletonMobile({
-  rating,
-  nutrition,
+  showRatings,
+  showNutrition,
 }: {
-  rating?: boolean;
-  nutrition?: boolean;
+  showRatings: boolean;
+  showNutrition: boolean;
 }) {
-  const shows = useHiddenItemVisibility();
-  const showRatings = rating ?? shows.showRatings;
-  const showNutrition = nutrition ?? shows.showNutrition;
-
   return (
     <div className="flex w-full flex-col">
       {/* Hero Image */}
