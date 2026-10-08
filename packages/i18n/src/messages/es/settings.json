@@ -119,8 +119,9 @@
       "title": "Preferencias",
       "description": "Personaliza tu experiencia.",
       "deviceKind": {
-        "phone": "Se aplican a los teléfonos",
-        "desktop": "Se aplican a los ordenadores"
+        "help": "Cómo se guardan las preferencias",
+        "phone": "«{language}» y «{afterPlanning}» te acompañan en todas partes. El resto se guarda por tipo de dispositivo: lo que elijas aquí se aplica en cada teléfono donde inicies sesión, y los ordenadores y tabletas conservan lo suyo.",
+        "desktop": "«{language}» y «{afterPlanning}» te acompañan en todas partes. El resto se guarda por tipo de dispositivo: lo que elijas aquí se aplica en cada ordenador y tableta donde inicies sesión, y los teléfonos conservan lo suyo."
       },
       "language": {
         "title": "Idioma",

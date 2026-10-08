@@ -119,8 +119,9 @@
       "title": "Préférences",
       "description": "Personnalisez votre expérience.",
       "deviceKind": {
-        "phone": "Ces choix s'appliquent aux téléphones",
-        "desktop": "Ces choix s'appliquent aux ordinateurs"
+        "help": "Comment les préférences sont enregistrées",
+        "phone": "« {language} » et « {afterPlanning} » vous suivent partout. Le reste est enregistré par type d'appareil : vos choix ici s'appliquent à chaque téléphone où vous êtes connecté, et les ordinateurs et tablettes gardent les leurs.",
+        "desktop": "« {language} » et « {afterPlanning} » vous suivent partout. Le reste est enregistré par type d'appareil : vos choix ici s'appliquent à chaque ordinateur et tablette où vous êtes connecté, et les téléphones gardent les leurs."
       },
       "language": {
         "title": "Langue",

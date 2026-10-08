@@ -119,8 +119,9 @@
       "title": "Preferências",
       "description": "Personalize sua experiência.",
       "deviceKind": {
-        "phone": "Valem para celulares",
-        "desktop": "Valem para computadores"
+        "help": "Como as preferências são salvas",
+        "phone": "“{language}” e “{afterPlanning}” valem em todo lugar. O resto é salvo por tipo de dispositivo: o que você escolher aqui vale em todo celular em que você entrar, e computadores e tablets mantêm as próprias escolhas.",
+        "desktop": "“{language}” e “{afterPlanning}” valem em todo lugar. O resto é salvo por tipo de dispositivo: o que você escolher aqui vale em todo computador e tablet em que você entrar, e celulares mantêm as próprias escolhas."
       },
       "language": {
         "title": "Idioma",

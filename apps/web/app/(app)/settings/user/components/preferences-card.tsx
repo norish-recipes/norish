@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
-import { Note } from "@/components/shared/note";
+import { InfoHint } from "@/components/shared/info-hint";
 import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
@@ -69,6 +69,15 @@ export default function PreferencesCard() {
 
   return (
     <SettingsCard
+      // Which rows follow the account and which are Device Preferences.
+      badges={
+        <InfoHint label={t("deviceKind.help")}>
+          {t(`deviceKind.${deviceKind}`, {
+            language: t("language.title"),
+            afterPlanning: t("afterPlanning.title"),
+          })}
+        </InfoHint>
+      }
       description={t("description")}
       icon={AdjustmentsHorizontalIcon}
       title={t("title")}
@@ -114,8 +123,6 @@ export default function PreferencesCard() {
         />
       </SettingRow>
       {/* The rows below are Device Preferences: they change the kind in use. */}
-      <Note>{t(`deviceKind.${deviceKind}`)}</Note>
-
       <SettingRow description={t("hidden.description")} title={t("hidden.title")}>
         <Select
           aria-label={t("hidden.title")}

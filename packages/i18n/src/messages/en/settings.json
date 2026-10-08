@@ -119,8 +119,9 @@
       "title": "Preferences",
       "description": "Customize your experience.",
       "deviceKind": {
-        "phone": "These apply to phones",
-        "desktop": "These apply to desktops"
+        "help": "How preferences are saved",
+        "phone": "“{language}” and “{afterPlanning}” follow you everywhere. The rest is saved per kind of device: what you pick here applies to every phone you sign in on, and desktops and tablets keep their own.",
+        "desktop": "“{language}” and “{afterPlanning}” follow you everywhere. The rest is saved per kind of device: what you pick here applies to every desktop and tablet you sign in on, and phones keep their own."
       },
       "language": {
         "title": "Language",

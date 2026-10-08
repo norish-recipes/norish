@@ -119,8 +119,9 @@
       "title": "Einstellungen",
       "description": "Passe deine Erfahrung an.",
       "deviceKind": {
-        "phone": "Diese gelten für Smartphones",
-        "desktop": "Diese gelten für Computer"
+        "help": "Wie Einstellungen gespeichert werden",
+        "phone": "„{language}“ und „{afterPlanning}“ gelten überall. Der Rest wird je Geräteart gespeichert: Was du hier wählst, gilt auf jedem Smartphone, auf dem du angemeldet bist, und Computer und Tablets behalten ihre eigenen Einstellungen.",
+        "desktop": "„{language}“ und „{afterPlanning}“ gelten überall. Der Rest wird je Geräteart gespeichert: Was du hier wählst, gilt auf jedem Computer und Tablet, auf dem du angemeldet bist, und Smartphones behalten ihre eigenen Einstellungen."
       },
       "language": {
         "title": "Sprache",

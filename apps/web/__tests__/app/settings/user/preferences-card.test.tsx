@@ -79,12 +79,16 @@ vi.mock("@/hooks/config", () => ({
   }),
 }));
 
+// The popover itself is HeroUI's; what is pinned here is what it says.
+vi.mock("@/components/shared/info-hint", () => ({
+  InfoHint: ({ label, children }: any) => (
+    <div aria-label={label} role="note">
+      {children}
+    </div>
+  ),
+}));
+
 vi.mock("@heroui/react", () => ({
-  Alert: Object.assign(({ children }: any) => <div role="note">{children}</div>, {
-    Indicator: () => null,
-    Content: ({ children }: any) => <>{children}</>,
-    Title: ({ children }: any) => <>{children}</>,
-  }),
   Card: Object.assign(({ children }: any) => <div>{children}</div>, {
     Header: ({ children }: any) => <div>{children}</div>,
     Content: ({ children }: any) => <div>{children}</div>,
@@ -343,12 +347,14 @@ describe("PreferencesCard", () => {
     expect((control as HTMLSelectElement).value).toBe("nothing");
   });
 
-  it("says which kind of device its display choices apply to", () => {
+  it("says behind the title which kind of device its display choices apply to", () => {
     deviceKindMock.kind = "desktop";
 
     render(<PreferencesCard />);
 
-    expect(screen.getByRole("note")).toHaveTextContent("deviceKind.desktop");
+    expect(screen.getByRole("note", { name: "deviceKind.help" })).toHaveTextContent(
+      "deviceKind.desktop"
+    );
 
     deviceKindMock.kind = "phone";
   });

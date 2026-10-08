@@ -119,8 +119,9 @@
       "title": "Voorkeuren",
       "description": "Pas je ervaring aan.",
       "deviceKind": {
-        "phone": "Deze gelden voor telefoons",
-        "desktop": "Deze gelden voor computers"
+        "help": "Hoe voorkeuren worden bewaard",
+        "phone": "„{language}” en „{afterPlanning}” gelden overal. De rest wordt per soort apparaat bewaard: wat je hier kiest geldt op elke telefoon waarop je inlogt, en computers en tablets houden hun eigen keuzes.",
+        "desktop": "„{language}” en „{afterPlanning}” gelden overal. De rest wordt per soort apparaat bewaard: wat je hier kiest geldt op elke computer en tablet waarop je inlogt, en telefoons houden hun eigen keuzes."
       },
       "language": {
         "title": "Taal",

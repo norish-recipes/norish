@@ -119,8 +119,9 @@
       "title": "Preferanser",
       "description": "Tilpass opplevelsen din.",
       "deviceKind": {
-        "phone": "Disse gjelder for telefoner",
-        "desktop": "Disse gjelder for datamaskiner"
+        "help": "Slik lagres preferanser",
+        "phone": "«{language}» og «{afterPlanning}» følger deg overalt. Resten lagres per enhetstype: det du velger her, gjelder på alle telefoner du er logget inn på, og datamaskiner og nettbrett beholder sine egne valg.",
+        "desktop": "«{language}» og «{afterPlanning}» følger deg overalt. Resten lagres per enhetstype: det du velger her, gjelder på alle datamaskiner og nettbrett du er logget inn på, og telefoner beholder sine egne valg."
       },
       "language": {
         "title": "Språk",

@@ -119,8 +119,9 @@
       "title": "Preferencje",
       "description": "Dostosuj działanie aplikacji.",
       "deviceKind": {
-        "phone": "Dotyczą telefonów",
-        "desktop": "Dotyczą komputerów"
+        "help": "Jak zapisywane są preferencje",
+        "phone": "„{language}” i „{afterPlanning}” obowiązują wszędzie. Reszta jest zapisywana osobno dla każdego rodzaju urządzenia: to, co wybierzesz tutaj, obowiązuje na każdym telefonie, na którym się zalogujesz, a komputery i tablety mają własne ustawienia.",
+        "desktop": "„{language}” i „{afterPlanning}” obowiązują wszędzie. Reszta jest zapisywana osobno dla każdego rodzaju urządzenia: to, co wybierzesz tutaj, obowiązuje na każdym komputerze i tablecie, na którym się zalogujesz, a telefony mają własne ustawienia."
       },
       "language": {
         "title": "Język",

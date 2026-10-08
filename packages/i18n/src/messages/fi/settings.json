@@ -119,8 +119,9 @@
       "title": "Asetukset",
       "description": "Mukauta käyttökokemustasi.",
       "deviceKind": {
-        "phone": "Nämä koskevat puhelimia",
-        "desktop": "Nämä koskevat tietokoneita"
+        "help": "Miten asetukset tallennetaan",
+        "phone": "”{language}” ja ”{afterPlanning}” seuraavat sinua kaikkialle. Muut tallennetaan laitetyypin mukaan: tässä tekemäsi valinnat koskevat jokaista puhelinta, jolla kirjaudut sisään, ja tietokoneilla ja tableteilla on omansa.",
+        "desktop": "”{language}” ja ”{afterPlanning}” seuraavat sinua kaikkialle. Muut tallennetaan laitetyypin mukaan: tässä tekemäsi valinnat koskevat jokaista tietokonetta ja tablettia, jolla kirjaudut sisään, ja puhelimilla on omansa."
       },
       "language": {
         "title": "Kieli",

@@ -119,8 +119,9 @@
       "title": "Præferencer",
       "description": "Tilpas din oplevelse.",
       "deviceKind": {
-        "phone": "Disse gælder for telefoner",
-        "desktop": "Disse gælder for computere"
+        "help": "Sådan gemmes præferencer",
+        "phone": "“{language}” og “{afterPlanning}” følger dig overalt. Resten gemmes pr. enhedstype: det, du vælger her, gælder på alle telefoner, du er logget ind på, og computere og tablets beholder deres egne valg.",
+        "desktop": "“{language}” og “{afterPlanning}” følger dig overalt. Resten gemmes pr. enhedstype: det, du vælger her, gælder på alle computere og tablets, du er logget ind på, og telefoner beholder deres egne valg."
       },
       "language": {
         "title": "Sprog",

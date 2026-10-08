@@ -119,8 +119,9 @@
       "title": "Preferenze",
       "description": "Personalizza la tua esperienza.",
       "deviceKind": {
-        "phone": "Valgono per i telefoni",
-        "desktop": "Valgono per i computer"
+        "help": "Come vengono salvate le preferenze",
+        "phone": "«{language}» e «{afterPlanning}» ti seguono ovunque. Il resto viene salvato per tipo di dispositivo: ciò che scegli qui vale su ogni telefono su cui accedi, mentre computer e tablet mantengono le proprie scelte.",
+        "desktop": "«{language}» e «{afterPlanning}» ti seguono ovunque. Il resto viene salvato per tipo di dispositivo: ciò che scegli qui vale su ogni computer e tablet su cui accedi, mentre i telefoni mantengono le proprie scelte."
       },
       "language": {
         "title": "Lingua",
