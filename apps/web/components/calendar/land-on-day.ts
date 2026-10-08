@@ -1,7 +1,8 @@
 import type { Virtualizer } from "@tanstack/react-virtual";
 
-type Timeline = Pick<
-  Virtualizer<Window, Element>,
+/** The page's own timeline scrolls the window; a panel's scrolls an element. */
+type Timeline<TScroll extends Element | Window> = Pick<
+  Virtualizer<TScroll, Element>,
   "isScrolling" | "scrollToIndex" | "shouldAdjustScrollPositionOnItemSizeChange"
 >;
 
@@ -12,12 +13,15 @@ type Timeline = Pick<
  * growth twice: iOS applies its deferred correction once the landing has
  * settled, which left today under the status bar.
  */
-export function landOnDay(timeline: Timeline, index: number): void {
+export function landOnDay<TScroll extends Element | Window>(
+  timeline: Timeline<TScroll>,
+  index: number
+): void {
   timeline.shouldAdjustScrollPositionOnItemSizeChange = () => false;
   timeline.scrollToIndex(index, { align: "start" });
 }
 
 /** The virtualizer's `onChange`: once it stops scrolling, TanStack corrects again. */
-export function settleLanding(timeline: Timeline): void {
+export function settleLanding<TScroll extends Element | Window>(timeline: Timeline<TScroll>): void {
   if (!timeline.isScrolling) timeline.shouldAdjustScrollPositionOnItemSizeChange = undefined;
 }

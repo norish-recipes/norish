@@ -1,9 +1,10 @@
 "use client";
 
 import { memo, useMemo } from "react";
+import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import { Button, Card, Dropdown, Label, Separator } from "@heroui/react";
+import { Button, Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { Slot } from "@norish/shared/contracts";
@@ -22,6 +23,8 @@ type TimelineDaySectionProps = {
   onAddItem: (dateKey: string, slot: Slot) => void;
   onNoteClick?: (item: PlannedItemDisplay) => void;
   onRecipeClick?: (item: PlannedItemDisplay) => void;
+  /** On a panel the card takes the panel's secondary surface, flat, instead of the page's. */
+  inPanel?: boolean;
 };
 export const TimelineDaySection = memo(function TimelineDaySection({
   date,
@@ -33,6 +36,7 @@ export const TimelineDaySection = memo(function TimelineDaySection({
   onAddItem,
   onNoteClick,
   onRecipeClick,
+  inPanel = false,
 }: TimelineDaySectionProps) {
   const t = useTranslations("calendar.timeline");
   const tMobile = useTranslations("calendar.mobile");
@@ -82,7 +86,8 @@ export const TimelineDaySection = memo(function TimelineDaySection({
   return (
     <Card
       ref={setNodeRef}
-      className={`p-3 shadow-sm transition-all duration-200 ${showDragHighlight ? "ring-accent ring-2" : ""} ${isToday ? "ring-accent/50 shadow-md ring-2" : ""}`}
+      className={`p-3 transition-all duration-200 ${inPanel ? "shadow-none" : isToday ? "shadow-md" : "shadow-sm"} ${showDragHighlight ? "ring-accent ring-2" : ""} ${isToday ? "ring-accent/50 ring-2" : ""}`}
+      variant={inPanel ? "secondary" : "default"}
     >
       <Card.Content className="flex flex-col gap-2 p-0">
         {/* Day header: the date on one line, and an empty day is nothing more */}
@@ -102,41 +107,22 @@ export const TimelineDaySection = memo(function TimelineDaySection({
             )}
           </div>
 
-          <Dropdown>
+          <SlotDropdown onSelectSlot={(slot) => onAddItem(dateKey, slot)}>
             <Button
               isIconOnly
               aria-label={t("addItem")}
-              className="bg-surface-secondary text-muted hover:text-accent h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95"
+              className={`${inPanel ? "bg-surface" : "bg-surface-secondary"} text-muted hover:text-accent h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95`}
               size="sm"
               variant="tertiary"
             >
               <PlusIcon className="h-4 w-4" />
             </Button>
-            <Dropdown.Popover className="bg-overlay">
-              <Dropdown.Menu
-                aria-label={tSlots("chooseSlot")}
-                onAction={(slot) => onAddItem(dateKey, slot as Slot)}
-              >
-                <Dropdown.Item key="Breakfast" id="Breakfast" textValue="Breakfast">
-                  <Label>{slotLabels.Breakfast}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Lunch" id="Lunch" textValue="Lunch">
-                  <Label>{slotLabels.Lunch}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Dinner" id="Dinner" textValue="Dinner">
-                  <Label>{slotLabels.Dinner}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item key="Snack" id="Snack" textValue="Snack">
-                  <Label>{slotLabels.Snack}</Label>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown.Popover>
-          </Dropdown>
+          </SlotDropdown>
         </div>
 
         {hasItems && (
           <>
-            <Separator />
+            <Separator className={inPanel ? "bg-surface-tertiary" : undefined} />
             <div className="flex flex-col">
               {SLOTS.map((slot) => {
                 const slotItems = itemsBySlot[slot];
