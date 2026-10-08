@@ -8,19 +8,17 @@ import { DevicePreferencesSchema } from "./device-preferences";
  */
 export const AFTER_PLANNING_CHOICES = ["nothing", "openGroceries", "addGroceries"] as const;
 
-/** What follows the person to every device. */
-export const PersonPreferencesSchema = z.object({
-  locale: z.string().nullable().optional(),
-  afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional(),
-});
-
 /**
- * The profile's preferences document: the person's own choices plus a block
- * of Device Preferences per Device Kind. A broken block reads as absent, so
- * it can never cost the reader their language, and a stored `hidden` key from
- * before Hidden Items moved per kind is ignored.
+ * The profile's preferences document: the person's own choices, which follow
+ * them to every device, plus a block of Device Preferences per Device Kind.
+ * Every choice is read on its own, so one this version does not know (a
+ * broken block, an `afterPlanning` from a newer version) reads as absent and
+ * never costs the reader the rest; a stored `hidden` key from before Hidden
+ * Items moved per kind is ignored.
  */
-export const UserPreferencesSchema = PersonPreferencesSchema.extend({
+export const UserPreferencesSchema = z.object({
+  locale: z.string().nullable().optional().catch(undefined),
+  afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional().catch(undefined),
   phone: DevicePreferencesSchema.optional().catch(undefined),
   desktop: DevicePreferencesSchema.optional().catch(undefined),
 });
@@ -46,7 +44,12 @@ export const UpdateUserNameInputSchema = z.object({
 
 export const UpdateUserPreferencesInputSchema = z.object({
   version: z.number().int().positive(),
-  preferences: PersonPreferencesSchema.partial(),
+  // Each person-level choice without its fallback, so a write rejects a value
+  // outside its set; the device blocks are written by setDevicePreferences.
+  preferences: z.object({
+    locale: UserPreferencesSchema.shape.locale.unwrap(),
+    afterPlanning: UserPreferencesSchema.shape.afterPlanning.unwrap(),
+  }),
 });
 
 export const DeleteUserAvatarInputSchema = z.object({

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   DEVICE_PREFERENCE_DEFAULTS,
-  parseDevicePreferences,
   SetDevicePreferencesInputSchema,
 } from "@norish/shared/contracts/zod/device-preferences";
 import {
@@ -14,6 +13,9 @@ import {
   getLocalePreference,
   getUserPreferences,
 } from "@norish/shared/lib/user-preferences";
+
+/** The phone's block as the profile document reads it. */
+const phoneBlock = (phone: unknown) => UserPreferencesSchema.parse({ phone }).phone;
 
 describe("user preferences", () => {
   it("answers with empty preferences for a reader who has none", () => {
@@ -37,7 +39,9 @@ describe("user preferences", () => {
     expect(getAfterPlanningPreference({ preferences: { afterPlanning: "addGroceries" } })).toBe(
       "addGroceries"
     );
-    expect(UserPreferencesSchema.safeParse({ afterPlanning: "somethingElse" }).success).toBe(false);
+    expect(UserPreferencesSchema.parse({ afterPlanning: "somethingElse" }).afterPlanning).toBe(
+      undefined
+    );
   });
 
   it("ignores a stored hidden key from before the device-preference move", () => {
@@ -48,22 +52,36 @@ describe("user preferences", () => {
   });
 
   it("reads a kind's block as full values, an absent or broken choice as its default", () => {
-    expect(parseDevicePreferences(undefined)).toEqual(DEVICE_PREFERENCE_DEFAULTS);
-    expect(parseDevicePreferences("not a block")).toEqual(DEVICE_PREFERENCE_DEFAULTS);
-    expect(parseDevicePreferences({ groceryViewMode: "recipe" })).toEqual({
+    expect(phoneBlock(undefined)).toBeUndefined();
+    expect(phoneBlock("not a block")).toBeUndefined();
+    expect(phoneBlock({ groceryViewMode: "recipe" })).toEqual({
       ...DEVICE_PREFERENCE_DEFAULTS,
       groceryViewMode: "recipe",
     });
-    expect(
-      parseDevicePreferences({ groceryViewMode: "aisle", groceryGroupSimilar: false })
-    ).toEqual({ ...DEVICE_PREFERENCE_DEFAULTS, groceryGroupSimilar: false });
+    expect(phoneBlock({ groceryViewMode: "aisle", groceryGroupSimilar: false })).toEqual({
+      ...DEVICE_PREFERENCE_DEFAULTS,
+      groceryGroupSimilar: false,
+    });
   });
 
   it("keeps Hidden Items the reader's version does not know, so writing the list back drops none", () => {
-    expect(parseDevicePreferences({ hiddenItems: ["rating", "fromANewerVersion"] })).toMatchObject({
+    expect(phoneBlock({ hiddenItems: ["rating", "fromANewerVersion"] })).toMatchObject({
       hiddenItems: ["rating", "fromANewerVersion"],
     });
-    expect(parseDevicePreferences({ hiddenItems: "rating" }).hiddenItems).toEqual([]);
+    expect(phoneBlock({ hiddenItems: "rating" })?.hiddenItems).toEqual([]);
+  });
+
+  it("keeps a kind's block when a person-level choice is one this version does not know", () => {
+    const parsed = UserPreferencesSchema.safeParse({
+      locale: 42,
+      afterPlanning: "fromANewerVersion",
+      phone: { groceryViewMode: "recipe" },
+    });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.phone?.groceryViewMode).toBe("recipe");
+    expect(parsed.data?.afterPlanning).toBeUndefined();
+    expect(parsed.data?.locale).toBeUndefined();
   });
 
   it("keeps the language when a kind's block is broken", () => {

@@ -11,10 +11,7 @@ import type {
   DevicePreferences,
   DevicePreferencesUpdate,
 } from "@norish/shared/contracts/zod/device-preferences";
-import {
-  DEVICE_PREFERENCE_DEFAULTS,
-  parseDevicePreferences,
-} from "@norish/shared/contracts/zod/device-preferences";
+import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
 /** What a server pass seeds the provider with: this request's kind and its choices. */
@@ -86,7 +83,7 @@ export function DevicePreferencesProvider({
   const values = useMemo(
     () =>
       profileWins
-        ? parseDevicePreferences(stored)
+        ? (stored ?? DEVICE_PREFERENCE_DEFAULTS)
         : { ...(seed?.values ?? DEVICE_PREFERENCE_DEFAULTS), ...changes },
     [profileWins, stored, seed?.values, changes]
   );

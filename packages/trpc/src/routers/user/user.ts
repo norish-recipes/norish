@@ -27,11 +27,9 @@ import { households } from "@norish/shared-server/realtime/households";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import {
   DeleteUserAvatarInputSchema,
-  PersonPreferencesSchema,
   SetDevicePreferencesInputSchema,
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
-  UserPreferencesSchema,
 } from "@norish/shared/contracts/zod";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared/lib/helpers";
@@ -73,7 +71,6 @@ const get = authedProcedure.query(async ({ ctx }) => {
   const freshUser = await getUserById(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
   const preferences = await getUserPreferences(ctx.user.id);
-  const parsedPreferences = UserPreferencesSchema.safeParse(preferences);
 
   // completed DB reads
 
@@ -84,7 +81,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
       name: freshUser?.name ?? ctx.user.name,
       image: freshUser?.image ?? ctx.user.image,
       version: freshUser?.version ?? 1,
-      preferences: parsedPreferences.success ? parsedPreferences.data : {},
+      preferences,
     },
     apiKeys: apiKeys.map((k) => ({
       id: k.id,
@@ -117,12 +114,12 @@ const updatePreferences = authedProcedure
 
       // The stored language and after-planning, so the client drops its
       // optimistic copy; never the device blocks, which a toggle owns.
-      const stored = PersonPreferencesSchema.safeParse(await getUserPreferences(ctx.user.id));
+      const { locale, afterPlanning } = await getUserPreferences(ctx.user.id);
 
       return {
         success: true,
         stale: true,
-        preferences: stored.success ? stored.data : {},
+        preferences: { locale, afterPlanning },
         version: input.version,
       };
     }

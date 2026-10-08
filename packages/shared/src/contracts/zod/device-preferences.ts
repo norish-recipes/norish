@@ -57,11 +57,6 @@ export type DevicePreferences = z.output<typeof DevicePreferencesSchema>;
 
 export const DEVICE_PREFERENCE_DEFAULTS: DevicePreferences = DevicePreferencesSchema.parse({});
 
-/** A stored block, whatever shape it is in, as full values. */
-export function parseDevicePreferences(block: unknown): DevicePreferences {
-  return DevicePreferencesSchema.catch(DEVICE_PREFERENCE_DEFAULTS).parse(block);
-}
-
 const shape = DevicePreferencesSchema.shape;
 
 /** Each choice without its fallback, so a write rejects a value outside its set. */

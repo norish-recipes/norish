@@ -4,9 +4,9 @@ import type { DevicePreferencesSeed } from "@/context/device-preferences-context
 import { cache } from "react";
 import { headers } from "next/headers";
 
-import { auth } from "@norish/auth/auth";
+import { readSessionPrincipal } from "@norish/auth/session";
 import { getUserPreferences } from "@norish/db/repositories/users";
-import { parseDevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
+import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
 /**
@@ -17,16 +17,9 @@ import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 export const readRequestProfile = cache(async () => {
   const requestHeaders = await headers();
   const kind = deviceKindFromUserAgent(requestHeaders.get("user-agent"));
-  let userId: string | null = null;
-
-  try {
-    const session = await auth.api.getSession({ headers: requestHeaders });
-
-    userId = session?.user?.id ?? null;
-  } catch {
-    // An unreadable session is a signed-out request.
-  }
-
+  // An unreadable session is a signed-out request.
+  const principal = await readSessionPrincipal(requestHeaders).catch(() => null);
+  const userId = principal?.userId ?? null;
   const preferences = userId ? await getUserPreferences(userId) : {};
 
   return { userId, kind, preferences };
@@ -37,7 +30,7 @@ export async function readDevicePreferencesSeed(): Promise<DevicePreferencesSeed
 
   return {
     kind,
-    values: parseDevicePreferences(preferences[kind]),
+    values: preferences[kind] ?? DEVICE_PREFERENCE_DEFAULTS,
     signedIn: userId !== null,
   };
 }

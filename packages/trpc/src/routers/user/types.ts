@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import type { User, UserPreferences } from "@norish/shared/contracts";
+import type { User } from "@norish/shared/contracts";
+import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import {
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
@@ -30,7 +31,7 @@ type UpdateNameInput = {
 
 type UpdatePreferencesInput = {
   version: number;
-  preferences: Partial<UserPreferences>;
+  preferences: Partial<UserPreferencesDto>;
 };
 
 // User settings response (user + api keys)

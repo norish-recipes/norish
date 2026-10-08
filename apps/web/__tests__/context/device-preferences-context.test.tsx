@@ -8,6 +8,7 @@ import "@testing-library/jest-dom";
 import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
 
 import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
+import { UserPreferencesSchema } from "@norish/shared/contracts/zod/user";
 
 import {
   renderWithDevicePreferences,
@@ -46,8 +47,10 @@ function seed(overrides: Partial<DevicePreferencesSeed> = {}): DevicePreferences
   return { kind: "phone", values: DEVICE_PREFERENCE_DEFAULTS, signedIn: true, ...overrides };
 }
 
-/** The profile query's answer, saved earlier (`updatedAt`) or read just now. */
-function storeProfile(preferences: object, updatedAt?: number) {
+/** The profile query's answer as the server parses it, saved earlier (`updatedAt`) or read just now. */
+function storeProfile(stored: object, updatedAt?: number) {
+  const preferences = UserPreferencesSchema.parse(stored);
+
   queryClient.setQueryData(
     userQueryKey,
     { user: { id: "user-1", version: 1, preferences }, apiKeys: [] },

@@ -32,8 +32,7 @@ async function resolveLocale(): Promise<Locale> {
   // 1. Check if user is authenticated and has a locale preference. The
   // profile read is shared with the request's Device Preferences.
   try {
-    const { preferences } = await readRequestProfile();
-    const userLocale = typeof preferences.locale === "string" ? preferences.locale : null;
+    const userLocale = (await readRequestProfile()).preferences.locale;
 
     // User's locale must be valid AND enabled
     if (userLocale && isValidLocale(userLocale) && (await isValidEnabledLocale(userLocale))) {

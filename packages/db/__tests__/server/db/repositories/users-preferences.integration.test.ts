@@ -66,13 +66,10 @@ describe("User preferences - DB integration", () => {
     expect(prefs.b).toBe(2);
   });
 
-  it("getUserPreferences returns an object reflecting the stored JSONB", async () => {
-    await updateUserPreferences(userId, { someList: ["one", "two"] });
+  it("getUserPreferences reads the stored document, each choice on its own", async () => {
+    await updateUserPreferences(userId, { afterPlanning: "nothing", locale: 42, stray: true });
 
-    const prefs = await getUserPreferences(userId);
-
-    expect(prefs).toBeDefined();
-    expect((prefs as any).someList).toEqual(["one", "two"]);
+    expect(await getUserPreferences(userId)).toEqual({ afterPlanning: "nothing" });
   });
 
   it("stores and retrieves locale in JSONB preferences", async () => {
@@ -81,17 +78,17 @@ describe("User preferences - DB integration", () => {
     const prefs = await getUserPreferences(userId);
 
     expect(prefs).toBeDefined();
-    expect((prefs as any).locale).toBe("de-informal");
+    expect(prefs.locale).toBe("de-informal");
   });
 
   it("updates locale without affecting other preferences", async () => {
-    await updateUserPreferences(userId, { someList: [], locale: "en" });
+    await updateUserPreferences(userId, { afterPlanning: "nothing", locale: "en" });
     await updateUserPreferences(userId, { locale: "fr" });
 
     const prefs = await getUserPreferences(userId);
 
-    expect((prefs as any).someList).toEqual([]);
-    expect((prefs as any).locale).toBe("fr");
+    expect(prefs.afterPlanning).toBe("nothing");
+    expect(prefs.locale).toBe("fr");
   });
 
   async function readRow() {
