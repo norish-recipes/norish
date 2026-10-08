@@ -739,7 +739,7 @@ function IngredientPanelContent({
               isDisabled={busy}
               onPress={() => setRelocation({ kind: "merge" })}
             >
-              {t("mergeInto")}
+              {t("merge")}
             </ActionButton>
           ) : null}
           <ActionButton

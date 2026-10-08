@@ -67,10 +67,11 @@ function GroceryItemComponent({
         ingredientId={grocery.ingredientId ?? recurringGrocery?.ingredientId}
       />
 
-      {/* Clickable content area. The price keeps to the name's line, and the
-          name wraps rather than give way to it. */}
+      {/* Clickable content area. The name and the price centre on each other,
+          so one line of name beside the price's two sits in the row's middle;
+          the name wraps rather than give way to the price. */}
       <button
-        className="flex min-w-0 flex-1 cursor-pointer items-baseline justify-between gap-3 text-left sm:gap-4"
+        className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left sm:gap-4"
         type="button"
         onClick={() => onEdit(grocery)}
       >

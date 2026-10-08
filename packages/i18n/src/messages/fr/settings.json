@@ -155,7 +155,16 @@
           "theme": "Couleurs du thème"
         }
       },
-      "applyError": "Échec de l'application du paramètre"
+      "applyError": "Échec de l'application du paramètre",
+      "afterPlanning": {
+        "title": "Après avoir planifié une recette",
+        "description": "Ce qui se passe quand vous planifiez une recette",
+        "options": {
+          "nothing": "Rien",
+          "openGroceries": "Ouvrir le panneau des courses",
+          "addGroceries": "Ajouter les ingrédients aux courses"
+        }
+      }
     },
     "shareLinks": {
       "title": "Liens de partage de recettes",

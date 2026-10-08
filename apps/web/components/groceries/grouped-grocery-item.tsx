@@ -145,11 +145,11 @@ function GroupedGroceryItemComponent({
           }
         />
 
-        {/* Clickable content area; on a group it is what folds the sources out. The
-            price keeps to the name's line, and the name wraps rather than give way to it. */}
+        {/* Clickable content area; on a group it is what folds the sources out. The name
+            and the price centre on each other, and the name wraps rather than give way to it. */}
         <button
           aria-expanded={isSingleItem ? undefined : isExpanded}
-          className="flex min-w-0 flex-1 cursor-pointer items-baseline justify-between gap-3 text-left sm:gap-4"
+          className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left sm:gap-4"
           type="button"
           onClick={handleContentClick}
         >

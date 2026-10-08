@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GroceryCheckbox, isCheckboxEvent } from "@/components/groceries/grocery-checkbox";
 import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
+import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -16,8 +17,9 @@ import {
   useLinkedRecipeIngredients,
   useRecipeIngredients,
 } from "@/hooks/recipes/use-recipe-ingredients";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
-import { Button, Input, Separator, toast } from "@heroui/react";
+import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
@@ -29,6 +31,12 @@ type MiniGroceriesProps = {
   recipeId: string;
   initialServings?: number;
   originalServings?: number;
+  /**
+   * Put the lines to buy on the list without showing the panel, then close:
+   * what "Add ingredients to groceries" after planning does. The panel opens
+   * only where it has something to say, as when the Pantry cannot be read.
+   */
+  addAtOnce?: boolean;
 };
 
 type GroceryIngredient = {
@@ -120,21 +128,23 @@ export default function MiniGroceries({
   onOpenChange,
   initialServings = 1,
   originalServings = 1,
+  addAtOnce = false,
 }: MiniGroceriesProps) {
   const t = useTranslations("groceries.panel");
   const tActions = useTranslations("common.actions");
   const { createGroceriesFromData } = useGroceriesMutations();
+  const { formatAmountUnit } = useUnitFormatter();
   const {
     ingredients: rawIngredients,
     systemUsed,
     isLoading,
-  } = useRecipeIngredients(open ? recipeId : null);
+  } = useRecipeIngredients(open || addAtOnce ? recipeId : null);
 
   const linkedRecipeIds = useMemo(
     () => extractLinkedRecipeIds(rawIngredients as GroceryIngredient[]),
     [rawIngredients]
   );
-  const { ingredients: linkedIngredients } = useLinkedRecipeIngredients(
+  const { ingredients: linkedIngredients, isLoading: linkedLoading } = useLinkedRecipeIngredients(
     linkedRecipeIds,
     systemUsed
   );
@@ -278,8 +288,6 @@ export default function MiniGroceries({
     () => inPantry.filter((item) => selectedIds.includes(item.id)).length,
     [inPantry, selectedIds]
   );
-  const allSelected = toBuy.length > 0 && selectedCount === toBuy.length;
-  const allInPantrySelected = inPantry.length > 0 && inPantrySelectedCount === inPantry.length;
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
@@ -324,46 +332,83 @@ export default function MiniGroceries({
     setEditingId(null);
   };
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
-  const handleConfirm = () => {
-    const selectedIngredients = scaledIngredients
-      .filter((g) => selectedIds.includes(g.id))
-      .map((ri) => ({
-        name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
-        amount:
-          editedIngredients[ri.id]?.amount ??
-          (ri.amount !== null && ri.amount !== undefined ? Number(ri.amount) : null),
-        unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
-        isDone: false,
-        recipeIngredientId: ri.id,
-      }));
+  /** Puts these lines on the list, as edited here; true once they are on it. */
+  const addLines = useCallback(
+    (lines: GroceryIngredient[]) =>
+      createGroceriesFromData(
+        lines.map((ri) => ({
+          name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
+          amount:
+            editedIngredients[ri.id]?.amount ??
+            (ri.amount !== null && ri.amount !== undefined ? Number(ri.amount) : null),
+          unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
+          isDone: false,
+          recipeIngredientId: ri.id,
+        }))
+      )
+        .then(() => {
+          toast(t("ingredientsAdded"), { variant: "success" });
 
-    createGroceriesFromData(selectedIngredients)
-      .then(() => {
-        close();
-        toast(t("ingredientsAdded"), {
-          variant: "success",
-        });
-      })
-      .catch(() => {
-        toast(t("ingredientsFailed"), {
-          variant: "warning",
-        });
-      });
+          return true;
+        })
+        .catch(() => {
+          toast(t("ingredientsFailed"), { variant: "warning" });
+
+          return false;
+        }),
+    [createGroceriesFromData, editedIngredients, t]
+  );
+  const handleConfirm = () => {
+    void addLines(scaledIngredients.filter((g) => selectedIds.includes(g.id))).then(
+      (added) => added && close()
+    );
   };
 
+  /* Adding at once takes what the panel would have ticked — every line to
+     buy, none the Pantry holds — once the recipe and the Pantry have
+     answered. A Pantry that cannot be read ticks nothing, so the panel opens
+     instead, to say so and let the person tick. */
+  const addedAtOnce = useRef(false);
+
+  useEffect(() => {
+    if (!addAtOnce || open || addedAtOnce.current) return;
+    if (isLoading || linkedLoading || pantryLoading) return;
+    addedAtOnce.current = true;
+    if (pantryUnavailable) onOpenChange(true);
+    else if (toBuy.length === 0) close();
+    else void addLines(toBuy).finally(close);
+  }, [
+    addAtOnce,
+    open,
+    isLoading,
+    linkedLoading,
+    pantryLoading,
+    pantryUnavailable,
+    toBuy,
+    addLines,
+    close,
+    onOpenChange,
+  ]);
+
   /**
-   * One ingredient line, to buy or in the Pantry alike: a name, its amount,
-   * and a tick. A line to buy can be kept from here; a kept line whose food
-   * is already on the list says so, so it is not bought twice.
+   * One ingredient line, to buy or in the Pantry alike, drawn as a row of the
+   * groceries page: the tick first, the food's icon, then the amount and the
+   * name on one line. A line to buy can be kept from here; a kept line whose
+   * food is already on the list says so, so it is not bought twice.
    */
   const renderRow = (item: GroceryIngredient) => {
     const isEditing = editingId === item.id;
     const kept = keptFor(item);
+    const edited = editedIngredients[item.id];
+    const amountDisplay = formatAmountUnit(
+      edited?.amount ?? item.amount,
+      edited?.unit ?? item.unit
+    );
 
     return (
       <div
         key={item.id}
-        className="flex cursor-pointer items-center px-2 py-2"
+        className="flex min-h-12 cursor-pointer items-center gap-3 px-4 py-3"
         role="button"
         tabIndex={0}
         onClick={(e) => !isEditing && !isCheckboxEvent(e) && handleEditStart(item.id)}
@@ -374,42 +419,49 @@ export default function MiniGroceries({
           }
         }}
       >
-        <div className="flex min-w-0 flex-1 flex-col">
-          {isEditing ? (
-            <Input
-              className="text-base"
-              size="sm"
-              style={{
-                fontSize: "16px",
-              }}
-              value={editValue}
-              variant="underlined"
-              onBlur={handleEditSubmit}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleEditSubmit();
-                if (e.key === "Escape") setEditingId(null);
-              }}
-            />
-          ) : (
-            <>
-              <span className="truncate text-base font-semibold">
-                {editedIngredients[item.id]?.name ?? item.ingredientName}
-              </span>
-              {(editedIngredients[item.id]?.amount ?? item.amount) ? (
-                <span className="text-accent mt-[-3px] text-xs font-medium">
-                  {editedIngredients[item.id]?.amount ?? item.amount}{" "}
-                  {editedIngredients[item.id]?.unit ?? item.unit ?? ""}
-                </span>
-              ) : null}
-            </>
-          )}
-        </div>
+        <GroceryCheckbox
+          aria-label={item.ingredientName}
+          isSelected={selectedIds.includes(item.id)}
+          size="lg"
+          onChange={() => toggleSelect(item.id)}
+        />
+        {/* As on the list, decoration a phone's row has no room for; a line
+            edited here is only text, so it shows no food's icon. */}
+        <IngredientIcon
+          className="max-sm:hidden"
+          ingredientId={edited ? null : item.ingredientId}
+        />
+        {isEditing ? (
+          <Input
+            className="min-w-0 flex-1 text-base"
+            size="sm"
+            style={{
+              fontSize: "16px",
+            }}
+            value={editValue}
+            variant="underlined"
+            onBlur={handleEditSubmit}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleEditSubmit();
+              if (e.key === "Escape") setEditingId(null);
+            }}
+          />
+        ) : (
+          <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-1.5">
+            {amountDisplay && (
+              <span className="text-accent shrink-0 font-medium">{amountDisplay}</span>
+            )}
+            <span className="text-foreground min-w-0 text-base break-words">
+              {edited?.name ?? item.ingredientName}
+            </span>
+          </span>
+        )}
         {/* A press here is its own (React Aria stops it reaching the row). */}
         {kept === null ? (
           <IconActionButton
             action="add"
-            className="ml-2 shrink-0"
+            className="shrink-0"
             icon={ArchiveBoxArrowDownIcon}
             label={t("weKeepThis")}
             size="sm"
@@ -417,121 +469,115 @@ export default function MiniGroceries({
             onPress={() => keepLine(item)}
           />
         ) : groceryOnTheList(groceries, kept, rules) ? (
-          <span className="ml-2">
-            <OnTheListMark />
-          </span>
+          <OnTheListMark />
         ) : null}
-        <GroceryCheckbox
-          aria-label={item.ingredientName}
-          className="ml-2 shrink-0"
-          isSelected={selectedIds.includes(item.id)}
-          size="md"
-          onChange={() => toggleSelect(item.id)}
-        />
       </div>
     );
   };
 
+  /**
+   * One section of the panel, drawn as a Store's card on the groceries page:
+   * a heading bar with its name and how many of its lines are ticked, and
+   * select-all where the Store's kebab would be, then its rows.
+   */
+  const renderSection = (
+    section: GroceryIngredient[],
+    other: GroceryIngredient[],
+    {
+      name,
+      selected,
+      testId,
+      toggleTestId,
+    }: { name: string; selected: number; testId: string; toggleTestId: string }
+  ) => (
+    <div
+      className="border-border bg-surface shadow-surface shrink-0 overflow-hidden rounded-xl border"
+      data-testid={testId}
+    >
+      <div className="bg-surface-secondary flex items-center gap-2.5 py-2.5 pr-3 pl-4">
+        <span className="shrink-0 font-semibold">{name}</span>
+        <span className="text-muted min-w-0 truncate text-sm tabular-nums">
+          {t("selectedCount", { selected, total: section.length })}
+        </span>
+        <Button
+          className="ml-auto shrink-0"
+          data-testid={toggleTestId}
+          size="sm"
+          variant="tertiary"
+          onPress={() => toggleSection(section, other)}
+        >
+          {selected === section.length ? tActions("deselectAll") : tActions("selectAll")}
+        </Button>
+      </div>
+      <div className="divide-border divide-y">{section.map(renderRow)}</div>
+    </div>
+  );
+
   return (
     <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
       <Panel.Body className="flex min-h-0 flex-1 flex-col">
-        {open && isLoading ? (
-          <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
-        ) : open ? (
-          <div className="flex min-h-0 flex-1 flex-col">
-            {/* Servings Control */}
-            <div className="mb-3 flex items-center justify-between px-2">
-              <span className="text-foreground text-sm font-medium">{t("servings")}</span>
-              <div className="inline-flex items-center gap-2">
-                <IconActionButton
-                  action="decrease"
-                  className="bg-surface-secondary"
-                  label="Decrease servings"
-                  size="sm"
-                  tooltipPlacement="bottom"
-                  onPress={decrementServings}
-                />
-                <span className="min-w-8 text-center text-sm font-semibold">
-                  {formatServings(servings)}
-                </span>
-                <IconActionButton
-                  action="increase"
-                  className="bg-surface-secondary"
-                  label="Increase servings"
-                  size="sm"
-                  tooltipPlacement="bottom"
-                  onPress={incrementServings}
-                />
-              </div>
-            </div>
-
-            <Separator className="bg-surface-tertiary/40 mb-2" />
-
-            {pantryUnavailable && (
-              <p className="text-muted mb-2 px-2 text-xs" data-testid="pantry-unavailable">
-                {t("pantryUnavailable")}
-              </p>
-            )}
-
-            {scaledIngredients.length === 0 ? (
-              <div className="text-muted flex flex-1 items-center justify-center text-base">
-                {t("noIngredients")}
-              </div>
-            ) : (
-              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-                {toBuy.length > 0 && (
-                  <div data-testid="to-buy-section">
-                    <div className="mb-1 flex items-center justify-between px-2">
-                      <span className="text-muted text-xs font-medium">
-                        {t("selectedCount", {
-                          selected: selectedCount,
-                          total: toBuy.length,
-                        })}
-                      </span>
-                      <Button
-                        className="bg-surface-secondary"
-                        data-testid="toggle-all"
-                        size="sm"
-                        variant="tertiary"
-                        onPress={() => toggleSection(toBuy, inPantry)}
-                      >
-                        {allSelected ? tActions("deselectAll") : tActions("selectAll")}
-                      </Button>
-                    </div>
-                    <div className="divide-border/40 flex flex-col divide-y">
-                      {toBuy.map(renderRow)}
-                    </div>
-                  </div>
-                )}
-                {toBuy.length > 0 && inPantry.length > 0 && (
-                  <Separator
-                    className="bg-surface-tertiary/40 my-2"
-                    data-testid="pantry-separator"
+        <IngredientIconsProvider ids={ingredients.map((item) => item.ingredientId)}>
+          {open && isLoading ? (
+            <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
+          ) : open ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              {/* Servings Control */}
+              <div className="mb-3 flex items-center justify-between px-1">
+                <span className="text-foreground text-sm font-medium">{t("servings")}</span>
+                <div className="inline-flex items-center gap-2">
+                  <IconActionButton
+                    action="decrease"
+                    className="bg-surface-secondary"
+                    label="Decrease servings"
+                    size="sm"
+                    tooltipPlacement="bottom"
+                    onPress={decrementServings}
                   />
-                )}
-                {inPantry.length > 0 && (
-                  <div data-testid="pantry-section">
-                    <div className="mb-1 flex items-center justify-between px-2">
-                      <span className="text-muted text-xs font-medium">{t("inPantry")}</span>
-                      <Button
-                        className="bg-surface-secondary"
-                        data-testid="toggle-all-pantry"
-                        size="sm"
-                        variant="tertiary"
-                        onPress={() => toggleSection(inPantry, toBuy)}
-                      >
-                        {allInPantrySelected ? tActions("deselectAll") : tActions("selectAll")}
-                      </Button>
-                    </div>
-                    <div className="divide-border/40 flex flex-col divide-y">
-                      {inPantry.map(renderRow)}
-                    </div>
-                  </div>
-                )}
+                  <span className="min-w-8 text-center text-sm font-semibold">
+                    {formatServings(servings)}
+                  </span>
+                  <IconActionButton
+                    action="increase"
+                    className="bg-surface-secondary"
+                    label="Increase servings"
+                    size="sm"
+                    tooltipPlacement="bottom"
+                    onPress={incrementServings}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        ) : null}
+
+              {pantryUnavailable && (
+                <p className="text-muted mb-2 px-1 text-xs" data-testid="pantry-unavailable">
+                  {t("pantryUnavailable")}
+                </p>
+              )}
+
+              {scaledIngredients.length === 0 ? (
+                <div className="text-muted flex flex-1 items-center justify-center text-base">
+                  {t("noIngredients")}
+                </div>
+              ) : (
+                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1">
+                  {toBuy.length > 0 &&
+                    renderSection(toBuy, inPantry, {
+                      name: t("toBuy"),
+                      selected: selectedCount,
+                      testId: "to-buy-section",
+                      toggleTestId: "toggle-all",
+                    })}
+                  {inPantry.length > 0 &&
+                    renderSection(inPantry, toBuy, {
+                      name: t("inPantry"),
+                      selected: inPantrySelectedCount,
+                      testId: "pantry-section",
+                      toggleTestId: "toggle-all-pantry",
+                    })}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </IngredientIconsProvider>
       </Panel.Body>
 
       {open && !isLoading && scaledIngredients.length > 0 && (

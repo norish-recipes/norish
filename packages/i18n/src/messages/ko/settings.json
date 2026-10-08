@@ -155,7 +155,16 @@
           "theme": "기본 테마 색상"
         }
       },
-      "applyError": "환경설정을 적용하지 못했습니다"
+      "applyError": "환경설정을 적용하지 못했습니다",
+      "afterPlanning": {
+        "title": "레시피 계획 후",
+        "description": "레시피를 계획할 때 일어나는 일",
+        "options": {
+          "nothing": "아무것도 안 함",
+          "openGroceries": "장보기 패널 열기",
+          "addGroceries": "재료를 장보기 목록에 추가"
+        }
+      }
     },
     "shareLinks": {
       "title": "레시피 공유 링크",

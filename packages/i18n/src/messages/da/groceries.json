@@ -146,6 +146,7 @@
     "addToGroceries": "Tilføj til indkøbsliste",
     "aisle": "Gang",
     "noAisle": "Ingen gang",
+    "toBuy": "Skal købes",
     "inPantry": "I dit spisekammer",
     "weKeepThis": "Har vi altid",
     "keepFailed": "Det kunne ikke tilføjes til spisekammeret"

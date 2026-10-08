@@ -38,6 +38,7 @@ import {
 import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 import DoubleTapContainer from "../shared/double-tap-container";
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
+import { CardFact, CardFacts } from "./card-facts";
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
 
@@ -297,27 +298,16 @@ function RecipeCardComponent({
       </div>
     );
 
-  const factChips = (
+  const facts = (
     <>
       {typeof averageRating === "number" && averageRating > 0 && showRatings && (
-        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
-          <StarIcon className="text-warning h-3.5 w-3.5" />
-          <Chip.Label>{Math.round(averageRating)}</Chip.Label>
-        </Chip>
+        <CardFact icon={StarIcon} iconClassName="text-warning">
+          {Math.round(averageRating)}
+        </CardFact>
       )}
-
-      {timeLabel && (
-        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
-          <ClockIcon className="h-3.5 w-3.5" />
-          <Chip.Label>{timeLabel}</Chip.Label>
-        </Chip>
-      )}
-
+      {timeLabel && <CardFact icon={ClockIcon}>{timeLabel}</CardFact>}
       {typeof servings === "number" && servings > 0 && (
-        <Chip className="shrink-0 rounded-full px-2 text-[11px]" size="sm" variant="tertiary">
-          <UserGroupIcon className="h-3.5 w-3.5" />
-          <Chip.Label>{servings}</Chip.Label>
-        </Chip>
+        <CardFact icon={UserGroupIcon}>{servings}</CardFact>
       )}
     </>
   );
@@ -327,7 +317,7 @@ function RecipeCardComponent({
       className="flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden"
       title={tagNames.length > 0 ? tagNames.join(", ") : undefined}
     >
-      {factChips}
+      <span className="flex items-center gap-3 empty:hidden">{facts}</span>
 
       {visibleTagNames.map((tag) => {
         const isAllergen = isAllergenTag(tag, allergySet);
@@ -523,9 +513,7 @@ function RecipeCardComponent({
               )}
 
               {/* The facts sit under one line of description, at the card's foot */}
-              <div className="mt-auto flex max-h-9 shrink-0 flex-wrap gap-1.5 overflow-hidden pt-3">
-                {factChips}
-              </div>
+              <CardFacts>{facts}</CardFacts>
             </Card.Content>
           </Card>
         </div>

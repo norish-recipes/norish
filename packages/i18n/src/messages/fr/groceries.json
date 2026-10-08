@@ -146,6 +146,7 @@
     "addToGroceries": "Ajouter aux courses",
     "aisle": "Rayon",
     "noAisle": "Aucun rayon",
+    "toBuy": "À acheter",
     "inPantry": "Dans votre garde-manger",
     "weKeepThis": "On en a toujours",
     "keepFailed": "Impossible de l'ajouter au garde-manger"

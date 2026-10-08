@@ -155,7 +155,16 @@
           "theme": "Temaets farger"
         }
       },
-      "applyError": "Kunne ikke bruke preferanse"
+      "applyError": "Kunne ikke bruke preferanse",
+      "afterPlanning": {
+        "title": "Etter planlegging av en oppskrift",
+        "description": "Hva som skjer når du planlegger en oppskrift",
+        "options": {
+          "nothing": "Ingenting",
+          "openGroceries": "Åpne handlepanelet",
+          "addGroceries": "Legg ingrediensene til handlelisten"
+        }
+      }
     },
     "shareLinks": {
       "title": "Oppskriftdelelenker",

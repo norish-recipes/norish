@@ -155,6 +155,15 @@
           "dish": "Da foto do prato",
           "theme": "Cores do tema"
         }
+      },
+      "afterPlanning": {
+        "title": "Depois de planejar uma receita",
+        "description": "O que acontece quando você planeja uma receita",
+        "options": {
+          "nothing": "Nada",
+          "openGroceries": "Abrir o painel de compras",
+          "addGroceries": "Adicionar os ingredientes às compras"
+        }
       }
     },
     "shareLinks": {

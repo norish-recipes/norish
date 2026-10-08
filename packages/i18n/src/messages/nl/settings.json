@@ -155,6 +155,15 @@
           "dish": "Uit de foto van het gerecht",
           "theme": "Gewone themakleuren"
         }
+      },
+      "afterPlanning": {
+        "title": "Na het plannen van een recept",
+        "description": "Wat er gebeurt als je een recept plant",
+        "options": {
+          "nothing": "Niets",
+          "openGroceries": "Boodschappenpaneel openen",
+          "addGroceries": "Ingrediënten aan boodschappen toevoegen"
+        }
       }
     },
     "shareLinks": {

@@ -155,7 +155,16 @@
           "theme": "Plain theme colors"
         }
       },
-      "applyError": "Failed to apply preference"
+      "applyError": "Failed to apply preference",
+      "afterPlanning": {
+        "title": "After planning a recipe",
+        "description": "What happens when you plan a recipe",
+        "options": {
+          "nothing": "Nothing",
+          "openGroceries": "Open groceries panel",
+          "addGroceries": "Add ingredients to groceries"
+        }
+      }
     },
     "shareLinks": {
       "title": "Recipe share links",

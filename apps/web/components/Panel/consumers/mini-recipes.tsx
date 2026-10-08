@@ -16,6 +16,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { RecipeCategory, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import { dateKey } from "@norish/shared/lib/helpers";
 
+import { useAfterPlanning } from "./after-planning";
+
 const ESTIMATED_ITEM_HEIGHT = 88; // ~80px image + 8px padding
 
 const SLOT_TO_CATEGORY: Record<Slot, RecipeCategory> = {
@@ -171,10 +173,12 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
 function MiniRecipesContent({
   date,
   onOpenChange,
+  onPlanned,
   slot,
 }: {
   date: Date;
   onOpenChange: (open: boolean) => void;
+  onPlanned: (recipeId: string) => void;
   slot?: Slot;
 }) {
   const t = useTranslations("calendar.panel");
@@ -206,8 +210,9 @@ function MiniRecipesContent({
     (recipe: RecipeDashboardDTO, slot: Slot) => {
       planMeal(dateString, slot, recipe.id);
       close();
+      onPlanned(recipe.id);
     },
-    [dateString, close, planMeal]
+    [dateString, close, planMeal, onPlanned]
   );
   const handleRandomSelect = useCallback(async () => {
     if (!slot) return;
@@ -217,11 +222,12 @@ function MiniRecipesContent({
       if (result) {
         planMeal(dateString, slot, result.id);
         close();
+        onPlanned(result.id);
       }
     } finally {
       setIsRandomLoading(false);
     }
-  }, [slot, getRandomRecipe, planMeal, dateString, close]);
+  }, [slot, getRandomRecipe, planMeal, dateString, close, onPlanned]);
   const handlePlanNote = useCallback(
     (targetSlot: Slot) => {
       if (rawInput.trim()) {
@@ -381,11 +387,23 @@ export default function MiniRecipes({ open, onOpenChange, date, slot }: MiniReci
         day: "numeric",
       }).format(date)}`
     : t("addRecipe");
+  const { afterPlanning, afterPlanningPanel } = useAfterPlanning();
+
   return (
-    <Panel open={open} panelClassName="h-[80dvh]" title={title} onOpenChange={onOpenChange}>
-      <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {open && <MiniRecipesContent date={date} slot={slot} onOpenChange={onOpenChange} />}
-      </Panel.Body>
-    </Panel>
+    <>
+      <Panel open={open} panelClassName="h-[80dvh]" title={title} onOpenChange={onOpenChange}>
+        <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {open && (
+            <MiniRecipesContent
+              date={date}
+              slot={slot}
+              onOpenChange={onOpenChange}
+              onPlanned={afterPlanning}
+            />
+          )}
+        </Panel.Body>
+      </Panel>
+      {afterPlanningPanel}
+    </>
   );
 }

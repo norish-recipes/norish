@@ -155,7 +155,16 @@
           "theme": "Temaets farver"
         }
       },
-      "applyError": "Kunne ikke anvende præference"
+      "applyError": "Kunne ikke anvende præference",
+      "afterPlanning": {
+        "title": "Efter planlægning af en opskrift",
+        "description": "Hvad der sker, når du planlægger en opskrift",
+        "options": {
+          "nothing": "Intet",
+          "openGroceries": "Åbn indkøbspanelet",
+          "addGroceries": "Tilføj ingredienserne til indkøb"
+        }
+      }
     },
     "shareLinks": {
       "title": "Opskriftdelelinks",

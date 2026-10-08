@@ -12,6 +12,7 @@ import {
   VISIBLE_ALLERGENS_IN_ROW,
 } from "@/components/cookbooks/cookbook-metadata";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
+import { CardFacts } from "@/components/dashboard/card-facts";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useMountedOnceOpened } from "@/hooks/use-mounted-once-opened";
 import { withOrigin } from "@/lib/back-destination";
@@ -196,8 +197,6 @@ function CookbookCardComponent({
       <CookbookMetadata
         allergens={allergens}
         chipClassName={listChipClassName}
-        chipVariant="tertiary"
-        iconClassName="h-3.5 w-3.5"
         memberCount={cookbook.memberCount}
         servings={servings}
         timeLabel={timeLabel}
@@ -347,16 +346,13 @@ function CookbookCardComponent({
                   {description}
                 </p>
               )}
-              <div className="mt-auto flex max-h-9 shrink-0 flex-wrap gap-1.5 overflow-hidden pt-3">
+              <CardFacts>
                 <CookbookMetadata
-                  chipClassName={listChipClassName}
-                  chipVariant="tertiary"
-                  iconClassName="h-3.5 w-3.5"
                   memberCount={cookbook.memberCount}
                   servings={servings}
                   timeLabel={timeLabel}
                 />
-              </div>
+              </CardFacts>
             </Card.Content>
           </Card>
         </div>

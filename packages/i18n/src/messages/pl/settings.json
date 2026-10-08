@@ -155,7 +155,16 @@
           "theme": "Kolory motywu"
         }
       },
-      "applyError": "Nie udało się zastosować preferencji"
+      "applyError": "Nie udało się zastosować preferencji",
+      "afterPlanning": {
+        "title": "Po zaplanowaniu przepisu",
+        "description": "Co się dzieje, gdy planujesz przepis",
+        "options": {
+          "nothing": "Nic",
+          "openGroceries": "Otwórz panel zakupów",
+          "addGroceries": "Dodaj składniki do zakupów"
+        }
+      }
     },
     "shareLinks": {
       "title": "Linki do udostępniania przepisów",

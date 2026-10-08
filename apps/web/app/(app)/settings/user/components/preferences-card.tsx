@@ -15,7 +15,11 @@ import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { getLocalePreference } from "@norish/shared/lib/user-preferences";
+import { AFTER_PLANNING_CHOICES } from "@norish/shared/contracts/zod/user";
+import {
+  getAfterPlanningPreference,
+  getLocalePreference,
+} from "@norish/shared/lib/user-preferences";
 
 import { useUserSettingsContext } from "../context";
 
@@ -191,6 +195,41 @@ export default function PreferencesCard() {
                   textValue={t(`recipePageColor.options.${option}`)}
                 >
                   {t(`recipePageColor.options.${option}`)}
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
+
+      {/* Stored with the user, not the device: it is about how they plan. */}
+      <SettingRow description={t("afterPlanning.description")} title={t("afterPlanning.title")}>
+        <Select
+          aria-label={t("afterPlanning.title")}
+          className="w-full"
+          isDisabled={isUpdatingPreferences}
+          value={getAfterPlanningPreference(user)}
+          variant="secondary"
+          onChange={(selected) => {
+            const choice = AFTER_PLANNING_CHOICES.find((option) => option === selected);
+
+            if (choice) void updatePreferences({ afterPlanning: choice });
+          }}
+        >
+          <Label className="sr-only">{t("afterPlanning.title")}</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {AFTER_PLANNING_CHOICES.map((option) => (
+                <ListBox.Item
+                  key={option}
+                  id={option}
+                  textValue={t(`afterPlanning.options.${option}`)}
+                >
+                  {t(`afterPlanning.options.${option}`)}
                 </ListBox.Item>
               ))}
             </ListBox>

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { UserPreferencesSchema } from "@norish/shared/contracts/zod/user";
-import { getLocalePreference, getUserPreferences } from "@norish/shared/lib/user-preferences";
+import {
+  getAfterPlanningPreference,
+  getLocalePreference,
+  getUserPreferences,
+} from "@norish/shared/lib/user-preferences";
 
 describe("user preferences", () => {
   it("answers with empty preferences for a reader who has none", () => {
@@ -14,6 +18,18 @@ describe("user preferences", () => {
     expect(getLocalePreference({ preferences: { locale: "de-informal" } })).toBe("de-informal");
     expect(getLocalePreference({ preferences: {} })).toBeNull();
     expect(getLocalePreference(null)).toBeNull();
+  });
+
+  it("opens the groceries panel after planning unless the reader chose otherwise", () => {
+    expect(getAfterPlanningPreference(null)).toBe("openGroceries");
+    expect(getAfterPlanningPreference({ preferences: {} })).toBe("openGroceries");
+    expect(getAfterPlanningPreference({ preferences: { afterPlanning: "nothing" } })).toBe(
+      "nothing"
+    );
+    expect(getAfterPlanningPreference({ preferences: { afterPlanning: "addGroceries" } })).toBe(
+      "addGroceries"
+    );
+    expect(UserPreferencesSchema.safeParse({ afterPlanning: "somethingElse" }).success).toBe(false);
   });
 
   it("ignores a stored hidden key from before the device-preference move", () => {

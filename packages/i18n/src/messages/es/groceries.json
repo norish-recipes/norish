@@ -146,6 +146,7 @@
     "addToGroceries": "Añadir a la lista de la compra",
     "aisle": "Pasillo",
     "noAisle": "Sin pasillo",
+    "toBuy": "Por comprar",
     "inPantry": "En tu despensa",
     "weKeepThis": "Siempre lo tenemos",
     "keepFailed": "No se pudo añadir a la despensa"

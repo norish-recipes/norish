@@ -60,7 +60,14 @@ test("a recipe planned on the dashboard shows on the calendar page from the cach
 
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button").filter({ hasText: NAME }).first().click();
-  await expect(dialog).toBeHidden();
+
+  // Planning opens Add to Groceries for the recipe: After planning a recipe's
+  // default. Closing it leaves the plan in place.
+  const groceries = page.getByRole("dialog", { name: "Add to Groceries" });
+
+  await expect(groceries).toBeVisible();
+  await groceries.getByRole("button", { name: "Close panel" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByText(NAME).first()).toBeVisible();
 
   // From here on the calendar range cannot be refetched: what the page shows

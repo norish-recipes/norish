@@ -295,4 +295,32 @@ describe("PreferencesCard", () => {
 
     todaysMealsMock.visibility = "always";
   });
+
+  it("opens the groceries panel after planning by default and stores a new choice with the user", () => {
+    render(<PreferencesCard />);
+
+    const control = screen.getByRole("combobox", { name: /afterPlanning\.title/i });
+    const options = within(control).getAllByRole("option") as HTMLOptionElement[];
+
+    expect(options.map((option) => option.value)).toEqual([
+      "nothing",
+      "openGroceries",
+      "addGroceries",
+    ]);
+    expect((control as HTMLSelectElement).value).toBe("openGroceries");
+
+    fireEvent.change(control, { target: { value: "addGroceries" } });
+
+    expect(mockContext.updatePreferences).toHaveBeenCalledWith({ afterPlanning: "addGroceries" });
+  });
+
+  it("reflects a stored after-planning choice", () => {
+    mockContext.user = { preferences: { afterPlanning: "nothing" } } as any;
+
+    render(<PreferencesCard />);
+
+    const control = screen.getByRole("combobox", { name: /afterPlanning\.title/i });
+
+    expect((control as HTMLSelectElement).value).toBe("nothing");
+  });
 });

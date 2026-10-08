@@ -107,10 +107,8 @@ describe("CookbookCard", () => {
   it("adds the members' cooking times up and names the smallest serving", () => {
     renderCard();
 
-    const chips = screen.getAllByTestId("chip").map((chip) => chip.textContent);
-
-    expect(chips).toContain("1:45h");
-    expect(chips).toContain("2");
+    expect(screen.getByText("1:45h")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
   });
 
   it("names the reader's own allergens and no other member tag", () => {
@@ -140,16 +138,14 @@ describe("CookbookCard", () => {
     );
 
     expect(screen.getByText("Weeknights")).toBeInTheDocument();
-    expect(screen.getAllByTestId("chip").map((chip) => chip.textContent)).toEqual([
-      'recipeCount:{"count":3}',
-    ]);
+    expect(screen.getByText('recipeCount:{"count":3}')).toBeInTheDocument();
+    expect(screen.queryByText(/h$|m$/)).toBeNull();
+    expect(screen.queryAllByTestId("chip")).toEqual([]);
   });
 
   it("says nothing about time when no member states one", () => {
     renderCard({ totalMinutes: null });
 
-    const chips = screen.getAllByTestId("chip").map((chip) => chip.textContent);
-
-    expect(chips).not.toContain("0m");
+    expect(screen.queryByText("0m")).toBeNull();
   });
 });

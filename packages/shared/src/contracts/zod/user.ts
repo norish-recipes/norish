@@ -3,8 +3,15 @@ import z from "zod";
 // Hidden Items left this contract with ticket 23: the hidden list is a device
 // preference on the `norish_hidden_items` cookie, not server state. A stored
 // `hidden` key from before the move is simply ignored by this parse.
+/**
+ * What happens once a recipe is planned: nothing, the groceries panel for it,
+ * or its lines to buy straight onto the list. Absent means the panel.
+ */
+export const AFTER_PLANNING_CHOICES = ["nothing", "openGroceries", "addGroceries"] as const;
+
 export const UserPreferencesSchema = z.object({
   locale: z.string().nullable().optional(),
+  afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional(),
 });
 
 export type UserPreferencesDto = z.infer<typeof UserPreferencesSchema>;

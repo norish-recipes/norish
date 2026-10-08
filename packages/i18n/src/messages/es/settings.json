@@ -155,7 +155,16 @@
           "theme": "Colores del tema"
         }
       },
-      "applyError": "No se pudo aplicar la preferencia"
+      "applyError": "No se pudo aplicar la preferencia",
+      "afterPlanning": {
+        "title": "Después de planificar una receta",
+        "description": "Qué ocurre al planificar una receta",
+        "options": {
+          "nothing": "Nada",
+          "openGroceries": "Abrir el panel de la compra",
+          "addGroceries": "Añadir los ingredientes a la compra"
+        }
+      }
     },
     "shareLinks": {
       "title": "Enlaces para compartir recetas",

@@ -146,6 +146,7 @@
     "addToGroceries": "장보기에 추가",
     "aisle": "통로",
     "noAisle": "통로 없음",
+    "toBuy": "살 것",
     "inPantry": "팬트리에 있음",
     "weKeepThis": "늘 있어요",
     "keepFailed": "팬트리에 추가하지 못했습니다"

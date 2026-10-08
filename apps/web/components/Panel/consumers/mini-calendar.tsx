@@ -20,6 +20,8 @@ import {
   startOfMonth,
 } from "@norish/shared/lib/helpers";
 
+import { useAfterPlanning } from "./after-planning";
+
 const ESTIMATED_DAY_HEIGHT = 180;
 type MiniCalendarProps = {
   open: boolean;
@@ -120,9 +122,11 @@ const DayRow = memo(function DayRow({
 function MiniCalendarContent({
   recipeId,
   onOpenChange,
+  onPlanned,
 }: {
   recipeId: string;
   onOpenChange: (open: boolean) => void;
+  onPlanned: (recipeId: string) => void;
 }) {
   const t = useTranslations("calendar.panel");
   const tSlots = useTranslations("common.slots");
@@ -208,8 +212,9 @@ function MiniCalendarContent({
       if (!recipe) return;
       createItem(dayKey, slot, "recipe", recipe.id, undefined);
       onOpenChange(false);
+      onPlanned(recipe.id);
     },
-    [recipe, onOpenChange, createItem]
+    [recipe, onOpenChange, createItem, onPlanned]
   );
   if (isLoading) {
     return <>Loading...</>;
@@ -295,17 +300,27 @@ function MiniCalendarContent({
 }
 export default function MiniCalendar({ open, onOpenChange, recipeId }: MiniCalendarProps) {
   const t = useTranslations("calendar.panel");
+  const { afterPlanning, afterPlanningPanel } = useAfterPlanning();
 
   return (
-    <Panel
-      open={open}
-      panelClassName="h-[80dvh]"
-      title={t("addToCalendar")}
-      onOpenChange={onOpenChange}
-    >
-      <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {open && <MiniCalendarContent recipeId={recipeId} onOpenChange={onOpenChange} />}
-      </Panel.Body>
-    </Panel>
+    <>
+      <Panel
+        open={open}
+        panelClassName="h-[80dvh]"
+        title={t("addToCalendar")}
+        onOpenChange={onOpenChange}
+      >
+        <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {open && (
+            <MiniCalendarContent
+              recipeId={recipeId}
+              onOpenChange={onOpenChange}
+              onPlanned={afterPlanning}
+            />
+          )}
+        </Panel.Body>
+      </Panel>
+      {afterPlanningPanel}
+    </>
   );
 }

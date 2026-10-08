@@ -68,6 +68,16 @@ vi.mock("@/hooks/pantry", () => ({
     isUnavailable: pantryUnavailable,
   }),
 }));
+vi.mock("@/hooks/use-unit-formatter", () => ({
+  useUnitFormatter: () => ({
+    formatAmountUnit: (amount: number | null, unit: string | null) =>
+      [amount, unit].filter((part) => part !== null).join(" "),
+  }),
+}));
+vi.mock("@/components/ingredients/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconsProvider: ({ children }: { children: ReactNode }) => children,
+}));
 vi.mock("@/hooks/recipes/use-recipe-ingredients", () => ({
   useRecipeIngredients: () => ({
     ingredients: INGREDIENTS,
@@ -186,7 +196,7 @@ describe("MiniGroceries with a Pantry", () => {
     const section = screen.getByTestId("pantry-section");
 
     expect(within(section).getByText("inPantry")).toBeInTheDocument();
-    expect(screen.getByTestId("pantry-separator")).toBeInTheDocument();
+    expect(screen.getByTestId("to-buy-section")).toBeInTheDocument();
     expect(within(section).getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
     expect(within(section).getByRole("checkbox", { name: "Salt" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "chicken breast" })).toBeChecked();
@@ -323,7 +333,6 @@ describe("MiniGroceries with a Pantry", () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     expect(screen.queryByTestId("pantry-section")).toBeNull();
-    expect(screen.queryByTestId("pantry-separator")).toBeNull();
     expect(screen.getAllByRole("checkbox").every((box) => (box as HTMLInputElement).checked)).toBe(
       true
     );
@@ -339,9 +348,73 @@ describe("MiniGroceries with a Pantry", () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     expect(screen.queryByTestId("to-buy-section")).toBeNull();
-    expect(screen.queryByTestId("pantry-separator")).toBeNull();
     expect(screen.getByTestId("action-add")).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox", { name: "Salt" }));
     expect(screen.getByTestId("action-add")).toBeEnabled();
+  });
+
+  describe("adding at once, after planning", () => {
+    const addAtOnce = (onOpenChange: (open: boolean) => void) =>
+      render(<MiniGroceries addAtOnce open={false} recipeId="r1" onOpenChange={onOpenChange} />);
+
+    it("adds what is to buy without showing the panel, then closes", async () => {
+      const onOpenChange = vi.fn();
+
+      await act(async () => {
+        addAtOnce(onOpenChange);
+      });
+
+      expect(screen.queryByTestId("to-buy-section")).toBeNull();
+      expect(addedNames()).toEqual(["chicken breast"]);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(onOpenChange).not.toHaveBeenCalledWith(true);
+    });
+
+    it("waits for the Pantry before deciding what to buy", async () => {
+      pantryLoading = true;
+      const onOpenChange = vi.fn();
+      const { rerender } = addAtOnce(onOpenChange);
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+
+      pantryLoading = false;
+      await act(async () => {
+        rerender(
+          <MiniGroceries addAtOnce open={false} recipeId="r1" onOpenChange={onOpenChange} />
+        );
+      });
+
+      expect(createGroceriesFromData).toHaveBeenCalledTimes(1);
+      expect(addedNames()).toEqual(["chicken breast"]);
+    });
+
+    it("opens the panel instead when the Pantry cannot be read", async () => {
+      pantry = [];
+      pantryUnavailable = true;
+      const onOpenChange = vi.fn();
+
+      await act(async () => {
+        addAtOnce(onOpenChange);
+      });
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+    });
+
+    it("adds nothing when the Pantry holds every line", async () => {
+      pantry = [
+        pantryIngredient("olive oil", "olive oil"),
+        pantryIngredient("chicken breast", "chicken breast"),
+        pantryIngredient("salt", "salt"),
+      ];
+      const onOpenChange = vi.fn();
+
+      await act(async () => {
+        addAtOnce(onOpenChange);
+      });
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
   });
 });

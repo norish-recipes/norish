@@ -155,7 +155,16 @@
           "theme": "Normale Themenfarben"
         }
       },
-      "applyError": "Einstellung konnte nicht angewendet werden"
+      "applyError": "Einstellung konnte nicht angewendet werden",
+      "afterPlanning": {
+        "title": "Nach dem Planen eines Rezepts",
+        "description": "Was passiert, wenn Sie ein Rezept planen",
+        "options": {
+          "nothing": "Nichts",
+          "openGroceries": "Einkaufsliste öffnen",
+          "addGroceries": "Zutaten zur Einkaufsliste hinzufügen"
+        }
+      }
     },
     "shareLinks": {
       "title": "Rezept-Freigabe-Links",

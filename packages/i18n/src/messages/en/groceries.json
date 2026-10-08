@@ -146,6 +146,7 @@
     "addToGroceries": "Add to Groceries",
     "aisle": "Aisle",
     "noAisle": "No aisle",
+    "toBuy": "To buy",
     "inPantry": "In your pantry",
     "weKeepThis": "We keep this",
     "keepFailed": "That could not be added to your pantry"

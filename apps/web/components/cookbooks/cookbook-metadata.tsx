@@ -1,5 +1,6 @@
 "use client";
 
+import { CardFact } from "@/components/dashboard/card-facts";
 import { ClockIcon, UserGroupIcon } from "@heroicons/react/20/solid";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -13,8 +14,6 @@ import { useTranslations } from "next-intl";
  */
 const VISIBLE_ALLERGENS = 3;
 export const VISIBLE_ALLERGENS_IN_ROW = 2;
-
-type ChipVariant = "soft" | "tertiary";
 
 /**
  * The allergens a reader would meet somewhere inside a cookbook.
@@ -65,15 +64,11 @@ export function CookbookAllergenChips({
 }
 
 /**
- * What a cookbook states about itself, in whichever chrome the caller needs.
+ * What a cookbook states about itself: its recipe count, time and servings as
+ * a card's plain facts, then, where the caller asks for them, its allergens as
+ * warning chips.
  *
- * The same three facts are drawn twice per card — over the cover in grid, in
- * the content row in list — and over an arbitrary photo a chip has to carry
- * its own contrast rather than tint the picture (ADR-0020). That is the only
- * difference between the two, so it is a parameter rather than a second copy
- * of the cascade.
- *
- * Chips only, with no wrapper: each caller lays them out its own way.
+ * No wrapper: each caller lays them out its own way.
  */
 export function CookbookMetadata({
   memberCount,
@@ -81,9 +76,7 @@ export function CookbookMetadata({
   servings,
   allergens,
   visibleAllergens,
-  chipClassName,
-  chipVariant,
-  iconClassName,
+  chipClassName = "",
 }: {
   memberCount: number;
   timeLabel?: string;
@@ -91,31 +84,19 @@ export function CookbookMetadata({
   /** Omitted where the caller draws them somewhere else on the card. */
   allergens?: string[];
   visibleAllergens?: number;
-  chipClassName: string;
-  chipVariant: ChipVariant;
-  iconClassName: string;
+  chipClassName?: string;
 }) {
   const t = useTranslations("recipes.cookbooks");
 
   return (
     <>
-      <Chip className={`shrink-0 ${chipClassName}`} size="sm" variant={chipVariant}>
-        <Chip.Label>{t("recipeCount", { count: memberCount })}</Chip.Label>
-      </Chip>
-
-      {timeLabel && (
-        <Chip className={`shrink-0 ${chipClassName}`} size="sm" variant={chipVariant}>
-          <ClockIcon className={iconClassName} />
-          <Chip.Label>{timeLabel}</Chip.Label>
-        </Chip>
-      )}
-
-      {typeof servings === "number" && servings > 0 && (
-        <Chip className={`shrink-0 ${chipClassName}`} size="sm" variant={chipVariant}>
-          <UserGroupIcon className={iconClassName} />
-          <Chip.Label>{servings}</Chip.Label>
-        </Chip>
-      )}
+      <span className="flex items-center gap-3">
+        <CardFact>{t("recipeCount", { count: memberCount })}</CardFact>
+        {timeLabel && <CardFact icon={ClockIcon}>{timeLabel}</CardFact>}
+        {typeof servings === "number" && servings > 0 && (
+          <CardFact icon={UserGroupIcon}>{servings}</CardFact>
+        )}
+      </span>
 
       {allergens && allergens.length > 0 && (
         <CookbookAllergenChips

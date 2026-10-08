@@ -155,7 +155,16 @@
           "theme": "Colori del tema"
         }
       },
-      "applyError": "Applicazione della preferenza non riuscita"
+      "applyError": "Applicazione della preferenza non riuscita",
+      "afterPlanning": {
+        "title": "Dopo aver pianificato una ricetta",
+        "description": "Cosa succede quando pianifichi una ricetta",
+        "options": {
+          "nothing": "Niente",
+          "openGroceries": "Apri il pannello della spesa",
+          "addGroceries": "Aggiungi gli ingredienti alla spesa"
+        }
+      }
     },
     "shareLinks": {
       "title": "Link di condivisione ricette",

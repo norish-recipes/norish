@@ -155,7 +155,16 @@
           "theme": "Teeman perusvärit"
         }
       },
-      "applyError": "Asetuksen käyttöönotto epäonnistui"
+      "applyError": "Asetuksen käyttöönotto epäonnistui",
+      "afterPlanning": {
+        "title": "Reseptin suunnittelun jälkeen",
+        "description": "Mitä tapahtuu, kun suunnittelet reseptin",
+        "options": {
+          "nothing": "Ei mitään",
+          "openGroceries": "Avaa ostospaneeli",
+          "addGroceries": "Lisää ainekset ostoslistaan"
+        }
+      }
     },
     "shareLinks": {
       "title": "Reseptien jakolinkit",

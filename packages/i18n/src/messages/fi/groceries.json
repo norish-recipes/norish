@@ -146,6 +146,7 @@
     "addToGroceries": "Lisää ostoslistalle",
     "aisle": "Osasto",
     "noAisle": "Ei osastoa",
+    "toBuy": "Ostettavat",
     "inPantry": "Ruokakomerossasi",
     "weKeepThis": "Tätä on aina",
     "keepFailed": "Sitä ei voitu lisätä ruokakomeroon"
