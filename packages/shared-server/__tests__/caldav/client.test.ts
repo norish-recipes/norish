@@ -101,8 +101,10 @@ describe("updateEvent", () => {
     const { iCalString } = mockCreateCalendarObject.mock.calls[0]![0];
 
     expect(iCalString).toContain("UID:event-uid");
-    expect(iCalString).toContain("DTSTART:20260825T120000Z");
-    expect(iCalString).toContain("DTEND:20260825T130000Z");
+    // A floating time: 12:00 in whatever timezone the calendar is viewed in.
+    expect(iCalString).toContain("DTSTART:20260825T120000\r\n");
+    expect(iCalString).toContain("DTEND:20260825T130000\r\n");
+    expect(iCalString).toMatch(/DTSTAMP:\d{8}T\d{6}Z\r\n/);
   });
 
   it("surfaces a rejected write", async () => {
