@@ -1,34 +1,22 @@
 import type { DevicePreferencesSeed } from "@/lib/request-profile";
 import type { QueryClient } from "@tanstack/react-query";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import {
-  DevicePreferencesProvider,
-  useDeviceKind,
-  useDevicePreference,
-} from "@/context/device-preferences-context";
+import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
 
 import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 
-import { createTestQueryClient, createTestWrapper } from "../hooks/user/test-utils";
+import {
+  renderWithDevicePreferences,
+  userQueryKey,
+  deviceWrite as write,
+} from "../helpers/device-preferences";
+import { createTestQueryClient } from "../hooks/user/test-utils";
 
-const userQueryKey = [["user", "get"], { type: "query" }] as const;
-const write = vi.hoisted(() => vi.fn());
-
-vi.mock("@/app/providers/trpc-provider", () => ({
-  useTRPC: () => ({
-    user: {
-      get: {
-        queryKey: () => userQueryKey,
-        queryOptions: () => ({ queryKey: userQueryKey, queryFn: async () => null }),
-      },
-      setDevicePreferences: { mutationOptions: () => ({ mutationFn: write }) },
-    },
-  }),
-}));
+vi.mock("@/app/providers/trpc-provider", () => import("../helpers/device-preferences-trpc"));
 
 const IPHONE =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
@@ -64,15 +52,7 @@ function storeProfile(preferences: object, updatedAt?: number) {
 }
 
 function renderProvider(providerSeed?: DevicePreferencesSeed) {
-  const Wrapper = createTestWrapper(queryClient);
-
-  return render(
-    <Wrapper>
-      <DevicePreferencesProvider seed={providerSeed}>
-        <Probe />
-      </DevicePreferencesProvider>
-    </Wrapper>
-  );
+  return renderWithDevicePreferences(<Probe />, { seed: providerSeed ?? null, queryClient });
 }
 
 beforeEach(() => {

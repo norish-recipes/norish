@@ -1,13 +1,13 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
+import type { RecipeDashboardViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useScrollRestoration } from "@norish/shared-react/hooks";
 
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";

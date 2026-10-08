@@ -1,17 +1,11 @@
 "use client";
 
-import { createDevicePreferenceContext } from "@/context/device-preference-context";
-import { recipePageColorPreference } from "@/lib/recipe-page-color";
+import { useDevicePreference } from "@/context/device-preferences-context";
 
 /**
- * Mounted in the app shell and in the share route's layout — the two
- * surfaces that render recipe pages — each seeding from its own server
- * pass; the offline bootstrap mounts the shell unseeded and the provider
- * reads the cookie itself. Seeding is the whole point here: a reader who
- * chose theme colours must render untinted on the very first frame, never
- * tinted-then-corrected.
+ * Dish colour or plain theme on recipe pages: a Device Preference, so a
+ * reader who chose the theme renders untinted on the very first frame.
  */
-const { Provider: RecipePageColorProvider, usePreference: useRecipePageColor } =
-  createDevicePreferenceContext(recipePageColorPreference, "RecipePageColor");
-
-export { RecipePageColorProvider, useRecipePageColor };
+export function useRecipePageColor() {
+  return useDevicePreference("recipePageColor");
+}

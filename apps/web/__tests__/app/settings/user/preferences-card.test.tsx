@@ -52,6 +52,12 @@ vi.mock("@/context/recipe-page-color-context", () => ({
   useRecipePageColor: () => [recipePageColorMock.mode, recipePageColorMock.setMode],
 }));
 
+const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as "phone" | "desktop" }));
+
+vi.mock("@/context/device-preferences-context", () => ({
+  useDeviceKind: () => deviceKindMock.kind,
+}));
+
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
 vi.mock("@/hooks/config", () => ({
@@ -66,6 +72,11 @@ vi.mock("@/hooks/config", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
+  Alert: Object.assign(({ children }: any) => <div role="note">{children}</div>, {
+    Indicator: () => null,
+    Content: ({ children }: any) => <>{children}</>,
+    Title: ({ children }: any) => <>{children}</>,
+  }),
   Card: Object.assign(({ children }: any) => <div>{children}</div>, {
     Header: ({ children }: any) => <div>{children}</div>,
     Content: ({ children }: any) => <div>{children}</div>,
@@ -322,5 +333,15 @@ describe("PreferencesCard", () => {
     const control = screen.getByRole("combobox", { name: /afterPlanning\.title/i });
 
     expect((control as HTMLSelectElement).value).toBe("nothing");
+  });
+
+  it("says which kind of device its display choices apply to", () => {
+    deviceKindMock.kind = "desktop";
+
+    render(<PreferencesCard />);
+
+    expect(screen.getByRole("note")).toHaveTextContent("deviceKind.desktop");
+
+    deviceKindMock.kind = "phone";
   });
 });

@@ -118,6 +118,10 @@
     "preferences": {
       "title": "Preferencje",
       "description": "Dostosuj działanie aplikacji.",
+      "deviceKind": {
+        "phone": "Dotyczą telefonów",
+        "desktop": "Dotyczą komputerów"
+      },
       "language": {
         "title": "Język",
         "description": "Wybierz preferowany język"

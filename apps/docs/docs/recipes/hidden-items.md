@@ -8,7 +8,7 @@ description: Choose what you would rather not be shown, from Recipe Provenance a
 
 The recipe page displays a lot of information, not every user wants to see the same settings.
 Not every device needs the same information density, for this reason a lot of elements can be hidden.
-By default everything is **enabled** disabling is on a per device basis.
+By default everything is **enabled**; what you disable is kept per phone or desktop, on your profile.
 
 ## What can be hidden
 
@@ -45,4 +45,4 @@ A Hidden Item settles nothing about the recipe. What is stored, what may be
 edited and what Recipe Enrichment produces are all unchanged, and every other
 member of your household still sees everything. Someone reading a recipe
 through a share link, or signed out, sees the whole page; only Ingredient
-icons, hidden on a device, stay hidden on a shared recipe opened there.
+icons you hid stay hidden on a shared recipe you open while signed in.

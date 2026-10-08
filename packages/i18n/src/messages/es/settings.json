@@ -118,6 +118,10 @@
     "preferences": {
       "title": "Preferencias",
       "description": "Personaliza tu experiencia.",
+      "deviceKind": {
+        "phone": "Se aplican a los teléfonos",
+        "desktop": "Se aplican a los ordenadores"
+      },
       "language": {
         "title": "Idioma",
         "description": "Elige tu idioma preferido"

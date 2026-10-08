@@ -118,6 +118,10 @@
     "preferences": {
       "title": "Einstellungen",
       "description": "Passe deine Erfahrung an.",
+      "deviceKind": {
+        "phone": "Diese gelten für Smartphones",
+        "desktop": "Diese gelten für Computer"
+      },
       "language": {
         "title": "Sprache",
         "description": "Wähle deine bevorzugte Sprache"

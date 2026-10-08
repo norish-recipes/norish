@@ -6,7 +6,7 @@ import { useAmountDisplayMode } from "@/context/amount-display-context";
 import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
 
 /**
- * The shared hook's interface over the web's cookie binding: every consumer
+ * The shared hook's interface over the web's Device Preference: every consumer
  * — the readonly ingredients list, the per-step rows, the toggle — is
  * untouched, only the storage underneath changed. Mobile keeps the shared
  * factory over its own native binding.

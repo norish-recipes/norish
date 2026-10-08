@@ -59,6 +59,13 @@ describe("user preferences", () => {
     ).toEqual({ ...DEVICE_PREFERENCE_DEFAULTS, groceryGroupSimilar: false });
   });
 
+  it("keeps Hidden Items the reader's version does not know, so writing the list back drops none", () => {
+    expect(parseDevicePreferences({ hiddenItems: ["rating", "fromANewerVersion"] })).toMatchObject({
+      hiddenItems: ["rating", "fromANewerVersion"],
+    });
+    expect(parseDevicePreferences({ hiddenItems: "rating" }).hiddenItems).toEqual([]);
+  });
+
   it("keeps the language when a kind's block is broken", () => {
     const parsed = UserPreferencesSchema.safeParse({ locale: "nl", phone: "broken" });
 
@@ -74,6 +81,12 @@ describe("user preferences", () => {
     expect(write({ groceryViewMode: "aisle" })).toBe(false);
     expect(write({ groceryGroupSimilar: "false" })).toBe(false);
     expect(write({ somethingElse: true })).toBe(false);
+    expect(
+      write({ amountDisplay: "decimal", todaysMeals: "planned", recipeViewMode: "list" })
+    ).toBe(true);
+    expect(write({ recipePageColor: "neon" })).toBe(false);
+    expect(write({ hiddenItems: ["timers", "fromANewerVersion"] })).toBe(true);
+    expect(write({ hiddenItems: [""] })).toBe(false);
     expect(
       SetDevicePreferencesInputSchema.safeParse({ kind: "tablet", preferences: {} }).success
     ).toBe(false);

@@ -1,7 +1,6 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
 import { useCallback, useMemo } from "react";
 import CookbookCard from "@/components/cookbooks/cookbook-card";
 import LibraryGrid from "@/components/dashboard/library-grid";
@@ -15,6 +14,7 @@ import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useCookbooksMutations } from "@/hooks/cookbooks";
 import { useLibraryQuery } from "@/hooks/library";
 
+import type { RecipeDashboardViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { toRecipesQueryFilters } from "@norish/shared-react/contexts";
 
 /**

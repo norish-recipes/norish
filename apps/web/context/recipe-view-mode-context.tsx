@@ -1,9 +1,8 @@
 "use client";
 
-import { createDevicePreferenceContext } from "@/context/device-preference-context";
-import { recipeViewModePreference } from "@/lib/recipe-view-mode";
+import { useDevicePreference } from "@/context/device-preferences-context";
 
-const { Provider: RecipeViewModeProvider, usePreference: useRecipeDashboardViewMode } =
-  createDevicePreferenceContext(recipeViewModePreference, "RecipeDashboardViewMode");
-
-export { RecipeViewModeProvider, useRecipeDashboardViewMode };
+/** Grid or list, for the library and every cookbook. */
+export function useRecipeDashboardViewMode() {
+  return useDevicePreference("recipeViewMode");
+}

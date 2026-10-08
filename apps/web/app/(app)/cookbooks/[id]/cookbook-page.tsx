@@ -9,13 +9,9 @@ import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle
 import SearchInput from "@/components/dashboard/search-input";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { usePermissionsContext } from "@/context/permissions-context";
-import {
-  RecipeViewModeProvider,
-  useRecipeDashboardViewMode,
-} from "@/context/recipe-view-mode-context";
+import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { useBackDestination } from "@/hooks/use-back-destination";
-import { recipeViewModePreference } from "@/lib/recipe-view-mode";
 import {
   ArrowLeftIcon,
   EllipsisHorizontalIcon,
@@ -27,6 +23,7 @@ import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
+import { RECIPE_VIEW_MODES } from "@norish/shared/contracts/zod/device-preferences";
 import {
   cssButtonPill,
   cssButtonPillDanger,
@@ -88,7 +85,11 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
       <Tabs
         className="min-h-0 flex-1 gap-5"
         selectedKey={viewMode}
-        onSelectionChange={(key) => setViewMode(recipeViewModePreference.parse(String(key)))}
+        onSelectionChange={(key) => {
+          const mode = RECIPE_VIEW_MODES.find((option) => option === key);
+
+          if (mode) setViewMode(mode);
+        }}
       >
         <div className="flex shrink-0 flex-col gap-4">
           {/* A cookbook is reached from the Library and from a recipe that is
@@ -245,14 +246,9 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
 }
 
 /**
- * The stored grid-or-list preference is the same device preference the
- * Library uses, so a cookbook looks like the rest of the app rather than
- * having a view mode of its own.
+ * Grid or list is the same Device Preference the Library uses, so a cookbook
+ * looks like the rest of the app, from the server's first frame.
  */
 export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
-  return (
-    <RecipeViewModeProvider>
-      <CookbookPageContent cookbookId={cookbookId} />
-    </RecipeViewModeProvider>
-  );
+  return <CookbookPageContent cookbookId={cookbookId} />;
 }

@@ -163,13 +163,49 @@ test("the Dish Colour tint is present while Offline (ADR-0023)", async () => {
   await expect(scope).toHaveAttribute("style", /--dish-h/);
 });
 
+/** Whether this browser's saved copy of its reads holds `fragment`. */
+function persistedReadsHold(target: Page, fragment: string): Promise<boolean> {
+  return target.evaluate(
+    (needle) =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open("norish-offline");
+
+        open.onsuccess = () => {
+          const db = open.result;
+          const req = db.transaction("keyval", "readonly").objectStore("keyval").getAll();
+
+          req.onsuccess = () => {
+            db.close();
+            resolve(JSON.stringify(req.result).includes(needle));
+          };
+          req.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+        open.onerror = () => resolve(false);
+      }),
+    fragment
+  );
+}
+
 test("a reader who declined the tint never renders a tinted frame offline", async () => {
-  // The two load paths the device-preference machinery exists to cover
-  // without a server pass: a navigation answered from the service worker's
-  // HTML cache (this document was cached while the preference was still
-  // `dish`), and the offline bootstrap fallback. The observer records the
-  // tint attribute ever attaching, so a tinted-then-corrected frame fails
-  // this test even though the corrected state would look right.
+  // The choice is made on another desktop; this browser's copy of the
+  // profile learns it on its next Live visit.
+  await offline.transition("live");
+  await setDevicePreferences(offline.baseURL, await offline.context.cookies(), "desktop", {
+    recipePageColor: "theme",
+  });
+  await page.goto("/");
+  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect
+    .poll(() => persistedReadsHold(page, '"recipePageColor":"theme"'), { timeout: 15_000 })
+    .toBe(true);
+  await offline.transition("stopped");
+
+  // The observer records the tint attribute ever attaching, so a
+  // tinted-then-corrected frame fails this test even though the corrected
+  // state would look right.
   await offline.context.addInitScript(() => {
     (window as unknown as { __dishTintSeen: boolean }).__dishTintSeen = false;
     const record = () => {
@@ -177,20 +213,14 @@ test("a reader who declined the tint never renders a tinted frame offline", asyn
         document.querySelector("[data-dish-tint]") != null;
     };
 
-    new MutationObserver(record).observe(document.documentElement, {
+    // The document itself: an init script runs before <html> exists.
+    new MutationObserver(record).observe(document, {
       subtree: true,
       childList: true,
       attributes: true,
       attributeFilter: ["data-dish-tint"],
     });
   });
-  await offline.context.addCookies([
-    {
-      name: "norish_recipe_page_color",
-      value: "theme",
-      url: offline.baseURL,
-    },
-  ]);
 
   await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);
   await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
@@ -209,10 +239,7 @@ test("a reader who declined the tint never renders a tinted frame offline", asyn
     await page.evaluate(() => (window as unknown as { __dishTintSeen: boolean }).__dishTintSeen)
   ).toBe(false);
 
-  // Hand the next scenario the state it inherited before this test: the
-  // preference cookie gone, the session cookies intact, parked on a cached
-  // surface.
-  await offline.selectIdentity("a");
+  // Hand the next scenario a cached surface to start from.
   await page.goto("/");
   await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
 });
@@ -483,6 +510,10 @@ test("offline, typed foods and We keep this join the Pantry queued, and sync whe
   await page.getByTestId("pantry-name").fill("warm set oats");
   await page.getByTestId("pantry-name").press("Enter");
   await expect(page.locator('[data-pantry-ingredient="warm set oats"]')).toBeVisible();
+  // Queued before anything navigates, or the navigation can abort the add.
+  await expect
+    .poll(async () => (await readOutbox(page)).map(({ path }) => path))
+    .toEqual(["pantry.add"]);
 
   // We keep this, while adding the warmed recipe: the line moves under In your pantry.
   await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);

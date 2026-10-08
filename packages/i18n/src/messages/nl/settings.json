@@ -118,6 +118,10 @@
     "preferences": {
       "title": "Voorkeuren",
       "description": "Pas je ervaring aan.",
+      "deviceKind": {
+        "phone": "Deze gelden voor telefoons",
+        "desktop": "Deze gelden voor computers"
+      },
       "language": {
         "title": "Taal",
         "description": "Kies je voorkeurstaal"

@@ -118,6 +118,10 @@
     "preferences": {
       "title": "Preferences",
       "description": "Customize your experience.",
+      "deviceKind": {
+        "phone": "These apply to phones",
+        "desktop": "These apply to desktops"
+      },
       "language": {
         "title": "Language",
         "description": "Choose your preferred language"

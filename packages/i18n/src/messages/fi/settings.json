@@ -118,6 +118,10 @@
     "preferences": {
       "title": "Asetukset",
       "description": "Mukauta käyttökokemustasi.",
+      "deviceKind": {
+        "phone": "Nämä koskevat puhelimia",
+        "desktop": "Nämä koskevat tietokoneita"
+      },
       "language": {
         "title": "Kieli",
         "description": "Valitse haluamasi kieli"

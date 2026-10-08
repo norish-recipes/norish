@@ -14,6 +14,7 @@ import { request } from "@playwright/test";
 import { Client } from "pg";
 
 import type { AIE2EStack } from "./fixture";
+import { clearDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
 import { databaseUrl } from "./database";
 import { expect, test } from "./fixture";
 import { setAutomaticEnrichment } from "./recipe-enrichment-support";
@@ -297,16 +298,21 @@ test("cooking mode pages its steps, keeps both swipes, and projects Ready At onl
 });
 
 test("hiding Nutrition Information takes the card and the Glance Bar's calories together", async () => {
-  await context.addCookies([
-    { name: "norish_hidden_items", value: "nutrition", url: stack.baseURL },
-  ]);
+  // A phone-sized window, but the browser's user agent is a desktop's.
+  await setDevicePreferences(stack.baseURL, stack.ownerCookies, "desktop", {
+    hiddenItems: ["nutrition"],
+  });
 
-  await page.goto(`/recipes/${recipeId}`);
+  try {
+    await page.goto(`/recipes/${recipeId}`);
 
-  const glanceBar = page.getByTestId("glance-bar");
+    const glanceBar = page.getByTestId("glance-bar");
 
-  await expect(glanceBar).toBeVisible();
-  await expect(glanceBar).toContainText("45m");
-  await expect(glanceBar).not.toContainText("640");
-  await expect(page.locator("h2:visible").filter({ hasText: "Nutrition" })).toHaveCount(0);
+    await expect(glanceBar).toBeVisible();
+    await expect(glanceBar).toContainText("45m");
+    await expect(glanceBar).not.toContainText("640");
+    await expect(page.locator("h2:visible").filter({ hasText: "Nutrition" })).toHaveCount(0);
+  } finally {
+    await clearDevicePreferences(databaseUrl());
+  }
 });

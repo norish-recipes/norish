@@ -83,15 +83,16 @@ a dark photo can never produce an unreadable page. A recipe with no photo
 simply keeps the plain theme colours.
 
 If you would rather read every recipe on the plain theme background, that is
-yours to choose: **Settings => User => Recipe page color**, per device, with
-`From the dish photo` as the default and `Plain theme colors` as the
-alternative. The colour is still stored either way, so switching back is
-instant.
+yours to choose: **Settings => User => Recipe page color**, per phone or
+desktop, on your profile, with `From the dish photo` as the default and
+`Plain theme colors` as the alternative. The colour is still stored either
+way, so switching back is instant.
 
 ## The share page
 
 A shared recipe link gets the same phone layout — header, Glance Bar and the
 cards through Source — so a recipe you send someone looks like Norish. What
 needs an account stays out: no favourites, rating, provenance or cooking
-mode, and since Hidden Items belong to a signed-in reader's own devices, a
-share link always shows everything the recipe stores.
+mode, and since Hidden Items are a signed-in reader's own, a share link shows
+everything the recipe stores; only Ingredient icons you hid stay hidden on a
+shared recipe you open while signed in.

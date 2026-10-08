@@ -118,6 +118,10 @@
     "preferences": {
       "title": "Preferanser",
       "description": "Tilpass opplevelsen din.",
+      "deviceKind": {
+        "phone": "Disse gjelder for telefoner",
+        "desktop": "Disse gjelder for datamaskiner"
+      },
       "language": {
         "title": "Språk",
         "description": "Velg foretrukket språk"

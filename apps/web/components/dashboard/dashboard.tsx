@@ -1,6 +1,5 @@
 "use client";
 
-import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
 import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import LibraryHeading from "@/components/dashboard/library-heading";
@@ -9,12 +8,10 @@ import LibraryView from "@/components/dashboard/library-view";
 import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
-import {
-  RecipeViewModeProvider,
-  useRecipeDashboardViewMode,
-} from "@/context/recipe-view-mode-context";
-import { recipeViewModePreference } from "@/lib/recipe-view-mode";
+import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
 import { Tabs } from "@heroui/react";
+
+import { RECIPE_VIEW_MODES } from "@norish/shared/contracts/zod/device-preferences";
 
 const LIBRARY_HEADING_ID = "recipe-library-heading";
 
@@ -26,7 +23,11 @@ function RecipeLibrary() {
       <Tabs
         className="min-h-0 flex-1 gap-5"
         selectedKey={viewMode}
-        onSelectionChange={(key) => setViewMode(recipeViewModePreference.parse(String(key)))}
+        onSelectionChange={(key) => {
+          const mode = RECIPE_VIEW_MODES.find((option) => option === key);
+
+          if (mode) setViewMode(mode);
+        }}
       >
         <div className="flex shrink-0 flex-col gap-4">
           <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
@@ -54,20 +55,13 @@ function RecipeLibrary() {
   );
 }
 
-/**
- * The dashboard surface shared by the Live route and Offline bootstrap.
- *
- * `initialViewMode` comes from the cookie the Live route read on the server;
- * the Offline bootstrap has no server pass and lets the provider read it.
- */
-export function Dashboard({ initialViewMode }: { initialViewMode?: RecipeDashboardViewMode }) {
+/** The dashboard surface shared by the Live route and Offline bootstrap. */
+export function Dashboard() {
   return (
-    <RecipeViewModeProvider initialValue={initialViewMode}>
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
-        <TodaysMeals />
-        <RecipeLibrary />
-        <FloatingRecipeChip />
-      </div>
-    </RecipeViewModeProvider>
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
+      <TodaysMeals />
+      <RecipeLibrary />
+      <FloatingRecipeChip />
+    </div>
   );
 }

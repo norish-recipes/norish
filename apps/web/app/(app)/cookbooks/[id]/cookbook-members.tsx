@@ -1,7 +1,6 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
 import { useCallback, useMemo } from "react";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import RecipeCard from "@/components/dashboard/recipe-card";
@@ -11,6 +10,7 @@ import { useCookbookRecipesQuery, useCookbooksMutations } from "@/hooks/cookbook
 import { Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { RecipeDashboardViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,

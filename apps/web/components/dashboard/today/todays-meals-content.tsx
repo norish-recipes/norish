@@ -1,6 +1,5 @@
 "use client";
 
-import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
@@ -9,6 +8,7 @@ import { ScrollShadow } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { Slot } from "@norish/shared/contracts";
+import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 import TodayMealSlotCard from "./today-meal-slot-card";

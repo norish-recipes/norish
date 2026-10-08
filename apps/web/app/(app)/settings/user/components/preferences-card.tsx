@@ -1,20 +1,24 @@
 "use client";
 
-import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { Note } from "@/components/shared/note";
+import { useDeviceKind } from "@/context/device-preferences-context";
 import { useHiddenItemsState } from "@/context/hidden-items-context";
 import { useRecipePageColor } from "@/context/recipe-page-color-context";
 import { useTodaySectionVisibility } from "@/context/todays-meals-visibility-context";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
-import { recipePageColorPreference } from "@/lib/recipe-page-color";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import {
+  RECIPE_PAGE_COLORS,
+  TODAY_SECTION_VISIBILITIES,
+} from "@norish/shared/contracts/zod/device-preferences";
 import { AFTER_PLANNING_CHOICES } from "@norish/shared/contracts/zod/user";
 import {
   getAfterPlanningPreference,
@@ -32,8 +36,7 @@ export default function PreferencesCard() {
   const [todaySectionVisibility, setTodaySectionVisibility] = useTodaySectionVisibility();
   const [hiddenItems, setHiddenItems] = useHiddenItemsState();
   const [recipePageColor, setRecipePageColor] = useRecipePageColor();
-
-  const todaySectionOptions: TodaySectionVisibility[] = ["always", "planned", "hidden"];
+  const deviceKind = useDeviceKind();
 
   const currentLocale = getLocalePreference(user) ?? defaultLocale;
   const selectedLocale = enabledLocales.some((locale) => locale.code === currentLocale)
@@ -101,6 +104,43 @@ export default function PreferencesCard() {
         </Select>
       </SettingRow>
 
+      {/* Stored with the user, on every device: it is about how they plan. */}
+      <SettingRow description={t("afterPlanning.description")} title={t("afterPlanning.title")}>
+        <Select
+          aria-label={t("afterPlanning.title")}
+          className="w-full"
+          isDisabled={isUpdatingPreferences}
+          value={getAfterPlanningPreference(user)}
+          variant="secondary"
+          onChange={(selected) => {
+            const choice = AFTER_PLANNING_CHOICES.find((option) => option === selected);
+
+            if (choice) void updatePreferences({ afterPlanning: choice });
+          }}
+        >
+          <Label className="sr-only">{t("afterPlanning.title")}</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {AFTER_PLANNING_CHOICES.map((option) => (
+                <ListBox.Item
+                  key={option}
+                  id={option}
+                  textValue={t(`afterPlanning.options.${option}`)}
+                >
+                  {t(`afterPlanning.options.${option}`)}
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
+      {/* The rows below are Device Preferences: they change the kind in use. */}
+      <Note>{t(`deviceKind.${deviceKind}`)}</Note>
+
       <SettingRow description={t("hidden.description")} title={t("hidden.title")}>
         <Select
           aria-label={t("hidden.title")}
@@ -141,9 +181,9 @@ export default function PreferencesCard() {
           value={todaySectionVisibility}
           variant="secondary"
           onChange={(selected) => {
-            if (selected === "always" || selected === "planned" || selected === "hidden") {
-              setTodaySectionVisibility(selected);
-            }
+            const choice = TODAY_SECTION_VISIBILITIES.find((option) => option === selected);
+
+            if (choice) setTodaySectionVisibility(choice);
           }}
         >
           <Label className="sr-only">{t("todaySection.title")}</Label>
@@ -153,7 +193,7 @@ export default function PreferencesCard() {
           </Select.Trigger>
           <Select.Popover>
             <ListBox>
-              {todaySectionOptions.map((option) => (
+              {TODAY_SECTION_VISIBILITIES.map((option) => (
                 <ListBox.Item
                   key={option}
                   id={option}
@@ -176,9 +216,9 @@ export default function PreferencesCard() {
           value={recipePageColor}
           variant="secondary"
           onChange={(selected) => {
-            if (selected === "dish" || selected === "theme") {
-              setRecipePageColor(selected);
-            }
+            const choice = RECIPE_PAGE_COLORS.find((option) => option === selected);
+
+            if (choice) setRecipePageColor(choice);
           }}
         >
           <Label className="sr-only">{t("recipePageColor.title")}</Label>
@@ -188,48 +228,13 @@ export default function PreferencesCard() {
           </Select.Trigger>
           <Select.Popover>
             <ListBox>
-              {recipePageColorPreference.values.map((option) => (
+              {RECIPE_PAGE_COLORS.map((option) => (
                 <ListBox.Item
                   key={option}
                   id={option}
                   textValue={t(`recipePageColor.options.${option}`)}
                 >
                   {t(`recipePageColor.options.${option}`)}
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
-      </SettingRow>
-
-      {/* Stored with the user, not the device: it is about how they plan. */}
-      <SettingRow description={t("afterPlanning.description")} title={t("afterPlanning.title")}>
-        <Select
-          aria-label={t("afterPlanning.title")}
-          className="w-full"
-          isDisabled={isUpdatingPreferences}
-          value={getAfterPlanningPreference(user)}
-          variant="secondary"
-          onChange={(selected) => {
-            const choice = AFTER_PLANNING_CHOICES.find((option) => option === selected);
-
-            if (choice) void updatePreferences({ afterPlanning: choice });
-          }}
-        >
-          <Label className="sr-only">{t("afterPlanning.title")}</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {AFTER_PLANNING_CHOICES.map((option) => (
-                <ListBox.Item
-                  key={option}
-                  id={option}
-                  textValue={t(`afterPlanning.options.${option}`)}
-                >
-                  {t(`afterPlanning.options.${option}`)}
                 </ListBox.Item>
               ))}
             </ListBox>

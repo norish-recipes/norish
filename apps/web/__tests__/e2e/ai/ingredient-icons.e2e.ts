@@ -14,6 +14,8 @@
 import type { Locator, Page } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
+import { clearDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
+import { databaseUrl } from "./database";
 import { expect, test } from "./fixture";
 import { configureImageGeneration } from "./image-generation-support";
 import { resetCatalogueScenario, seedCatalogue, setParent } from "./ingredient-catalogue-support";
@@ -163,15 +165,16 @@ test("Generate draws an icon into the draft, which shows on the recipe only afte
 });
 
 test("hiding Ingredient icons takes them off the recipe page", async () => {
-  await page
-    .context()
-    .addCookies([{ name: "norish_hidden_items", value: "ingredientIcons", url: stack.baseURL }]);
+  // The suite's browser is a desktop.
+  await setDevicePreferences(stack.baseURL, stack.ownerCookies, "desktop", {
+    hiddenItems: ["ingredientIcons"],
+  });
   try {
     await openRecipe();
     await expect(page.getByText("kohlrabi", { exact: true }).first()).toBeVisible();
     await expect(page.locator('[data-testid="ingredient-icon"]:visible')).toHaveCount(0);
   } finally {
-    await page.context().clearCookies({ name: "norish_hidden_items" });
+    await clearDevicePreferences(databaseUrl());
   }
 });
 

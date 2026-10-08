@@ -1,25 +1,23 @@
-import { render } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import type { RecipePageColorMode } from "@/lib/recipe-page-color";
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
-import { RecipePageColorProvider } from "@/context/recipe-page-color-context";
+
+import type { RecipePageColorMode } from "@norish/shared/contracts/zod/device-preferences";
+
+import { renderWithDevicePreferences } from "../../helpers/device-preferences";
+
+vi.mock("@/app/providers/trpc-provider", () => import("../../helpers/device-preferences-trpc"));
 
 function renderTint(dishColor: string | null | undefined, colorMode?: RecipePageColorMode) {
-  return render(
-    <RecipePageColorProvider initialValue={colorMode}>
-      <RecipePageTint dishColor={dishColor}>
-        <span data-testid="content">the page</span>
-      </RecipePageTint>
-    </RecipePageColorProvider>
+  return renderWithDevicePreferences(
+    <RecipePageTint dishColor={dishColor}>
+      <span data-testid="content">the page</span>
+    </RecipePageTint>,
+    { values: colorMode ? { recipePageColor: colorMode } : {} }
   );
 }
-
-beforeEach(() => {
-  document.cookie = "norish_recipe_page_color=;path=/;max-age=0";
-});
 
 describe("RecipePageTint", () => {
   it("scopes the channel variables and paints the viewport underlay for a Dish Colour", () => {
@@ -57,18 +55,10 @@ describe("RecipePageTint", () => {
   });
 
   it("never paints a tinted first frame for a reader seeded to theme colours", () => {
-    // Seeded server-side (or read from the cookie before first paint), the
+    // Seeded server-side (or read from the restored profile Offline), the
     // preference is already `theme` on the very first render — there is no
     // tinted-then-corrected frame for the reader to see.
     const { container } = renderTint("#c04020", "theme");
-
-    expect(container.querySelector("[data-dish-tint]")).toBeNull();
-  });
-
-  it("reads the cookie itself on an unseeded mount, as the offline bootstrap does", () => {
-    document.cookie = "norish_recipe_page_color=theme;path=/";
-
-    const { container } = renderTint("#c04020");
 
     expect(container.querySelector("[data-dish-tint]")).toBeNull();
   });
