@@ -338,9 +338,7 @@ export default function MiniGroceries({
       createGroceriesFromData(
         lines.map((ri) => ({
           name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
-          amount:
-            editedIngredients[ri.id]?.amount ??
-            (ri.amount !== null && ri.amount !== undefined ? Number(ri.amount) : null),
+          amount: editedIngredients[ri.id]?.amount ?? ri.amount,
           unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
           isDone: false,
           recipeIngredientId: ri.id,
