@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
-import { ChevronRightIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Button, Skeleton } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
@@ -93,19 +94,18 @@ export function IngredientNutritionSection({
           </div>
         </Panel.Body>
         <Panel.Footer>
-          <div className="flex w-full items-center justify-between gap-2">
-            <Button
+          <ActionButtonGroup>
+            <ActionButton
+              action="edit"
               data-testid="ingredient-nutrition-correct"
-              variant="secondary"
               onPress={() => correct(false)}
             >
-              <PencilSquareIcon className="size-4" />
               {t("correct")}
-            </Button>
-            <Button variant="tertiary" onPress={() => setOpen(false)}>
+            </ActionButton>
+            <ActionButton action="done" onPress={() => setOpen(false)}>
               {tActions("done")}
-            </Button>
-          </div>
+            </ActionButton>
+          </ActionButtonGroup>
         </Panel.Footer>
         <NutritionCorrectionPanel
           key={opening.count}

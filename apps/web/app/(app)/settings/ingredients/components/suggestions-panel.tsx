@@ -13,6 +13,7 @@ import {
 } from "@/components/ingredients/review-copy";
 import { useIngredientSuggestions } from "@/components/ingredients/use-ingredient-suggestions";
 import Panel from "@/components/Panel/Panel";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { Button, Chip, Label, ProgressBar, Spinner } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -405,22 +406,22 @@ export function SuggestionsPanel({
       </Panel.Body>
       {suggestions.length > 0 ? (
         <Panel.Footer>
-          <div className="flex w-full items-center justify-end gap-2">
-            <Button
+          <ActionButtonGroup>
+            <ActionButton
+              action="dismiss"
               data-testid="ingredient-suggestions-dismiss-all"
-              variant="ghost"
               onPress={() => void dismiss(suggestions.map((suggestion) => suggestion.id))}
             >
               {t("dismissAll")}
-            </Button>
-            <Button
+            </ActionButton>
+            <ActionButton
+              action="apply"
               data-testid="ingredient-suggestions-confirm-all"
-              variant="primary"
               onPress={() => void confirm(suggestions.map((suggestion) => suggestion.id))}
             >
               {t("confirmAll", { count: suggestions.length })}
-            </Button>
-          </div>
+            </ActionButton>
+          </ActionButtonGroup>
         </Panel.Footer>
       ) : null}
 

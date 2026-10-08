@@ -80,10 +80,13 @@ export default function EditTagPanel({
         </div>
       </Panel.Body>
       <Panel.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="delete" onPress={handleDelete}>
-            {tActions("delete")}
-          </ActionButton>
+        <ActionButtonGroup
+          start={
+            <ActionButton action="delete" onPress={handleDelete}>
+              {tActions("delete")}
+            </ActionButton>
+          }
+        >
           <ActionButton action="save" isDisabled={!canSave} onPress={handleSubmit}>
             {tActions("save")}
           </ActionButton>

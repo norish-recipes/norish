@@ -321,18 +321,16 @@ export function RecurrencePanel({
         </AnimatePresence>
       </Panel.Body>
       <Panel.Footer>
-        <ActionButtonGroup>
-          {initialPattern && (
-            <ActionButton action="remove" className="font-medium" onPress={handleRemove}>
-              {tActions("remove")}
-            </ActionButton>
-          )}
-          <ActionButton
-            action="done"
-            className="font-medium"
-            isDisabled={!pattern}
-            onPress={handleSave}
-          >
+        <ActionButtonGroup
+          start={
+            initialPattern && (
+              <ActionButton action="remove" onPress={handleRemove}>
+                {tActions("remove")}
+              </ActionButton>
+            )
+          }
+        >
+          <ActionButton action="done" isDisabled={!pattern} onPress={handleSave}>
             {tActions("done")}
           </ActionButton>
         </ActionButtonGroup>

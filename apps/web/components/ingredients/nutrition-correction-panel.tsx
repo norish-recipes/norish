@@ -4,10 +4,9 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel, { usePanelPortalContainer } from "@/components/Panel/Panel";
-import { ActionButton } from "@/components/shared/action-button";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
-  Button,
   ComboBox,
   Input,
   Label,
@@ -366,14 +365,19 @@ export function NutritionCorrectionPanel({
         </div>
       </Panel.Body>
       <Panel.Footer>
-        <div className="flex w-full flex-wrap items-center justify-between gap-2">
-          {corrected ? (
-            <Button data-testid="nutrition-correction-remove" variant="ghost" onPress={removeAll}>
-              {t("remove")}
-            </Button>
-          ) : (
-            <span />
-          )}
+        <ActionButtonGroup
+          start={
+            corrected ? (
+              <ActionButton
+                action="remove"
+                data-testid="nutrition-correction-remove"
+                onPress={removeAll}
+              >
+                {t("remove")}
+              </ActionButton>
+            ) : null
+          }
+        >
           <ActionButton
             action="save"
             data-testid="nutrition-correction-save"
@@ -382,7 +386,7 @@ export function NutritionCorrectionPanel({
           >
             {tActions("save")}
           </ActionButton>
-        </div>
+        </ActionButtonGroup>
       </Panel.Footer>
     </Panel>
   );

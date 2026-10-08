@@ -206,10 +206,13 @@ export default function EditGroceryPanel({
           </div>
         </Panel.Body>
         <Panel.Footer>
-          <ActionButtonGroup>
-            <ActionButton action="delete" onPress={onDelete}>
-              {tActions("delete")}
-            </ActionButton>
+          <ActionButtonGroup
+            start={
+              <ActionButton action="delete" onPress={onDelete}>
+                {tActions("delete")}
+              </ActionButton>
+            }
+          >
             <ActionButton
               action="save"
               isDisabled={!itemName.trim() || !productValid}

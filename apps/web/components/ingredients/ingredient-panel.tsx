@@ -5,7 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
 import Panel from "@/components/Panel/Panel";
-import { ActionButton, IconActionButton } from "@/components/shared/action-button";
+import {
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
 import { AIButton } from "@/components/shared/ai-button";
 import UiSwitch from "@/components/shared/ui-switch";
 import { usePermissionsContext } from "@/context/permissions-context";
@@ -14,7 +18,6 @@ import { useGroceriesQuery } from "@/hooks/groceries";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
-  ArrowRightIcon,
   ArrowUturnLeftIcon,
   ChevronRightIcon,
   PencilSquareIcon,
@@ -715,41 +718,39 @@ function IngredientPanelContent({
       </Panel.Body>
 
       <Panel.Footer>
-        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+        <ActionButtonGroup
+          start={
+            item.canEdit ? (
+              <ActionButton
+                action="delete"
+                data-testid="ingredient-delete"
+                isDisabled={busy}
+                onPress={() => setDeleting(true)}
+              >
+                {t("delete")}
+              </ActionButton>
+            ) : null
+          }
+        >
           {item.canEdit ? (
             <ActionButton
-              action="delete"
-              data-testid="ingredient-delete"
+              action="merge"
+              data-testid="ingredient-merge"
               isDisabled={busy}
-              onPress={() => setDeleting(true)}
+              onPress={() => setRelocation({ kind: "merge" })}
             >
-              {t("delete")}
+              {t("mergeInto")}
             </ActionButton>
-          ) : (
-            <span />
-          )}
-          <div className="flex items-center gap-2">
-            {item.canEdit ? (
-              <Button
-                data-testid="ingredient-merge"
-                isDisabled={busy}
-                variant="secondary"
-                onPress={() => setRelocation({ kind: "merge" })}
-              >
-                <ArrowRightIcon className="size-4" />
-                {t("mergeInto")}
-              </Button>
-            ) : null}
-            <ActionButton
-              action="save"
-              data-testid="ingredient-save"
-              isDisabled={busy || !dirty}
-              onPress={() => void save()}
-            >
-              {tActions("save")}
-            </ActionButton>
-          </div>
-        </div>
+          ) : null}
+          <ActionButton
+            action="save"
+            data-testid="ingredient-save"
+            isDisabled={busy || !dirty}
+            onPress={() => void save()}
+          >
+            {tActions("save")}
+          </ActionButton>
+        </ActionButtonGroup>
       </Panel.Footer>
 
       <Panel
@@ -819,9 +820,11 @@ function IngredientPanelContent({
           </div>
         </Panel.Body>
         <Panel.Footer>
-          <Button className="ml-auto" variant="tertiary" onPress={() => setAllSpellings(false)}>
-            {tActions("done")}
-          </Button>
+          <ActionButtonGroup>
+            <ActionButton action="done" onPress={() => setAllSpellings(false)}>
+              {tActions("done")}
+            </ActionButton>
+          </ActionButtonGroup>
         </Panel.Footer>
       </Panel>
 

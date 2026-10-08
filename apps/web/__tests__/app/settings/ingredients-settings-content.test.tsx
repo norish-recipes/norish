@@ -298,7 +298,12 @@ vi.mock("@/components/shared/action-button", () => ({
       {children}
     </button>
   ),
-  ActionButtonGroup: ({ children }: any) => <div>{children}</div>,
+  ActionButtonGroup: ({ children, start }: any) => (
+    <div>
+      {start}
+      {children}
+    </div>
+  ),
   IconActionButton: ({ label, onPress, action, isDisabled, "data-testid": testId }: any) => (
     <button
       aria-label={label}

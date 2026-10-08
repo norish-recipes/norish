@@ -4,11 +4,7 @@ import type { Key } from "react";
 import { useEffect, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { Panel, usePanelPortalContainer } from "@/components/Panel/Panel";
-import {
-  ActionButton,
-  ActionButtonGroup,
-  IconActionButton,
-} from "@/components/shared/action-button";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { DatePicker, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { useTranslations } from "next-intl";
@@ -99,8 +95,13 @@ export function EditNotePanel({
         </div>
       </Panel.Body>
       <Panel.Footer>
-        <ActionButtonGroup>
-          <IconActionButton action="delete" label={tActions("delete")} onPress={handleDelete} />
+        <ActionButtonGroup
+          start={
+            <ActionButton action="delete" onPress={handleDelete}>
+              {tActions("delete")}
+            </ActionButton>
+          }
+        >
           <ActionButton action="duplicate" onPress={handleDuplicate}>
             {tActions("duplicate")}
           </ActionButton>

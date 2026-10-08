@@ -218,7 +218,12 @@ vi.mock("@/components/shared/action-button", () => ({
       {children}
     </button>
   ),
-  ActionButtonGroup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  ActionButtonGroup: ({ children, start }: { children: ReactNode; start?: ReactNode }) => (
+    <div>
+      {start}
+      {children}
+    </div>
+  ),
 }));
 
 // The Store picker itself is not what these are about; a plain select drives

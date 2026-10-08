@@ -73,6 +73,12 @@ vi.mock("@/components/shared/action-button", () => ({
       {children}
     </button>
   ),
+  ActionButtonGroup: ({ children, start }: any) => (
+    <div>
+      {start}
+      {children}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/Panel/Panel", () => {
