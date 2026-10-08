@@ -417,6 +417,12 @@
     "searchRecipes": "Hae reseptejä",
     "noRecipesToAdd": "Reseptejä ei löytynyt.",
     "addCount": "{count, plural, one {Lisää # resepti} other {Lisää # reseptiä}}",
-    "everythingAlreadyIn": "Jokainen resepti on jo tässä keittokirjassa."
+    "everythingAlreadyIn": "Jokainen resepti on jo tässä keittokirjassa.",
+    "coverLabel": "Kansikuva",
+    "chooseImage": "Valitse kuva",
+    "changeImage": "Vaihda kuva",
+    "removeImage": "Poista kuva",
+    "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
+    "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
   }
 }

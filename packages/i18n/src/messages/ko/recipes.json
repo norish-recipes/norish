@@ -417,6 +417,12 @@
     "searchRecipes": "레시피 검색",
     "noRecipesToAdd": "레시피를 찾을 수 없습니다.",
     "addCount": "{count, plural, other {레시피 #개 추가}}",
-    "everythingAlreadyIn": "모든 레시피가 이미 이 요리책에 있습니다."
+    "everythingAlreadyIn": "모든 레시피가 이미 이 요리책에 있습니다.",
+    "coverLabel": "표지",
+    "chooseImage": "이미지 선택",
+    "changeImage": "이미지 변경",
+    "removeImage": "이미지 삭제",
+    "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
+    "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
   }
 }

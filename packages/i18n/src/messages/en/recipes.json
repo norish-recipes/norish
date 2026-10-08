@@ -417,6 +417,12 @@
     "searchRecipes": "Search recipes",
     "noRecipesToAdd": "No recipes found.",
     "addCount": "{count, plural, one {Add # recipe} other {Add # recipes}}",
-    "everythingAlreadyIn": "Every recipe is already in this cookbook."
+    "everythingAlreadyIn": "Every recipe is already in this cookbook.",
+    "coverLabel": "Cover",
+    "chooseImage": "Choose image",
+    "changeImage": "Change image",
+    "removeImage": "Remove image",
+    "imageUploadFailed": "The image could not be uploaded.",
+    "imageNeedsConnection": "Images can be changed once you are back online."
   }
 }

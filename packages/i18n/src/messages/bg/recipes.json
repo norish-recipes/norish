@@ -417,6 +417,12 @@
     "searchRecipes": "Търси рецепти",
     "noRecipesToAdd": "Няма намерени рецепти.",
     "addCount": "{count, plural, one {Добави # рецепта} other {Добави # рецепти}}",
-    "everythingAlreadyIn": "Всички рецепти вече са в тази готварска книга."
+    "everythingAlreadyIn": "Всички рецепти вече са в тази готварска книга.",
+    "coverLabel": "Корица",
+    "chooseImage": "Избор на изображение",
+    "changeImage": "Смяна на изображението",
+    "removeImage": "Премахване на изображението",
+    "imageUploadFailed": "Изображението не можа да бъде качено.",
+    "imageNeedsConnection": "Изображенията могат да се сменят, когато отново сте онлайн."
   }
 }

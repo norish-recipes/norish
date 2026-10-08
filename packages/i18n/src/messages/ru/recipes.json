@@ -417,6 +417,12 @@
     "searchRecipes": "Поиск рецептов",
     "noRecipesToAdd": "Рецепты не найдены.",
     "addCount": "{count, plural, one {Добавить # рецепт} few {Добавить # рецепта} many {Добавить # рецептов} other {Добавить # рецепта}}",
-    "everythingAlreadyIn": "Все рецепты уже в этой книге."
+    "everythingAlreadyIn": "Все рецепты уже в этой книге.",
+    "coverLabel": "Обложка",
+    "chooseImage": "Выбрать изображение",
+    "changeImage": "Заменить изображение",
+    "removeImage": "Убрать изображение",
+    "imageUploadFailed": "Не удалось загрузить изображение.",
+    "imageNeedsConnection": "Изображения можно будет изменить, когда вы снова будете в сети."
   }
 }

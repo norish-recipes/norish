@@ -58,6 +58,18 @@ export function readCookbookMembers(title: string): Promise<string[]> {
   });
 }
 
+/** A cookbook's uploaded cover URL, by title, or null when it has none. */
+export function readCookbookImage(title: string): Promise<string | null> {
+  return withDatabase(async (database) => {
+    const result = await database.query<{ image: string | null }>(
+      `select image from cookbooks where title = $1`,
+      [title]
+    );
+
+    return result.rows[0]?.image ?? null;
+  });
+}
+
 /** Every stored cookbook title. */
 export function readCookbookTitles(): Promise<string[]> {
   return withDatabase(async (database) => {

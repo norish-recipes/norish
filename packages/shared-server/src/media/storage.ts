@@ -634,6 +634,48 @@ export async function deleteRecipeStepImagesDir(recipeId: string): Promise<void>
   }
 }
 
+const COOKBOOKS_BASE_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "cookbooks");
+
+/**
+ * Save a cookbook's uploaded cover.
+ * Path: uploads/cookbooks/{cookbookId}/{hash}.jpg
+ * URL: /cookbooks/{cookbookId}/{hash}.jpg
+ */
+export async function saveCookbookImageBytes(bytes: Buffer, cookbookId: string): Promise<string> {
+  return saveImageBytesCore(bytes, {
+    directory: path.join(COOKBOOKS_BASE_DIR, cookbookId),
+    webPrefix: `/cookbooks/${cookbookId}`,
+  });
+}
+
+/**
+ * Delete every file in a cookbook's upload directory except the one `keep`
+ * points at, so a replaced cover and uploads that were never saved go too.
+ * No `keep` removes the directory.
+ */
+export async function sweepCookbookImages(cookbookId: string, keep?: string | null): Promise<void> {
+  const directory = path.join(COOKBOOKS_BASE_DIR, cookbookId);
+  const kept = keep ? path.basename(keep) : null;
+
+  try {
+    if (!kept) {
+      await fs.rm(directory, { recursive: true, force: true });
+
+      return;
+    }
+
+    const files = await fs.readdir(directory).catch(() => [] as string[]);
+
+    await Promise.all(
+      files
+        .filter((file) => file !== kept)
+        .map((file) => fs.rm(path.join(directory, file), { force: true }))
+    );
+  } catch (err) {
+    log.warn({ err, cookbookId }, "Could not sweep cookbook images");
+  }
+}
+
 /**
  * Download all images from JSON-LD image field, up to maxImages count.
  * Returns array of web URLs for successfully downloaded images.

@@ -417,6 +417,12 @@
     "searchRecipes": "Recepten zoeken",
     "noRecipesToAdd": "Geen recepten gevonden.",
     "addCount": "{count, plural, one {# recept toevoegen} other {# recepten toevoegen}}",
-    "everythingAlreadyIn": "Alle recepten staan al in dit kookboek."
+    "everythingAlreadyIn": "Alle recepten staan al in dit kookboek.",
+    "coverLabel": "Omslag",
+    "chooseImage": "Afbeelding kiezen",
+    "changeImage": "Afbeelding wijzigen",
+    "removeImage": "Afbeelding verwijderen",
+    "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
+    "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
   }
 }

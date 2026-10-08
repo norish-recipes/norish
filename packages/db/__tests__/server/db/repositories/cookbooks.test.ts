@@ -205,17 +205,35 @@ describe("cookbook repository", () => {
     it("renames on a matching version and refuses a stale one", async () => {
       const cookbook = await createCookbook({ userId: ownerId, title: "Xmas" });
 
-      const applied = await updateCookbook(cookbook.id, "Christmas baking", cookbook.version);
+      const applied = await updateCookbook(
+        cookbook.id,
+        { title: "Christmas baking" },
+        cookbook.version
+      );
 
       expect(applied.applied).toBe(true);
       expect(applied.value?.title).toBe("Christmas baking");
 
-      const stale = await updateCookbook(cookbook.id, "Nope", cookbook.version);
+      const stale = await updateCookbook(cookbook.id, { title: "Nope" }, cookbook.version);
 
       expect(stale.stale).toBe(true);
       expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.title).toBe(
         "Christmas baking"
       );
+    });
+
+    it("keeps its image through a retitle and drops it when cleared", async () => {
+      const cookbook = await createCookbook({ userId: ownerId, title: "Xmas" });
+      const image = `/cookbooks/${cookbook.id}/cover.jpg`;
+
+      const set = await updateCookbook(cookbook.id, { title: "Xmas", image }, cookbook.version);
+      const retitled = await updateCookbook(cookbook.id, { title: "Yule" }, set.value!.version);
+
+      expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.image).toBe(image);
+
+      await updateCookbook(cookbook.id, { title: "Yule", image: null }, retitled.value!.version);
+
+      expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.image).toBeNull();
     });
   });
 
@@ -508,7 +526,7 @@ describe("cookbook repository", () => {
     it("refuses a delete carrying a stale version", async () => {
       const cookbook = await createCookbook({ userId: ownerId, title: "Weeknights" });
 
-      await updateCookbook(cookbook.id, "Renamed", cookbook.version);
+      await updateCookbook(cookbook.id, { title: "Renamed" }, cookbook.version);
 
       const stale = await deleteCookbookById(cookbook.id, cookbook.version);
 

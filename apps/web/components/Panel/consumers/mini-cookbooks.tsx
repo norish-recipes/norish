@@ -181,6 +181,7 @@ export default function MiniCookbooks({ open, onOpenChange, recipeId }: MiniCook
                     media={
                       <CookbookCover
                         emptyIconClassName="h-5 w-5"
+                        image={cookbook.image}
                         images={cookbook.coverImages}
                         title={cookbook.title}
                       />

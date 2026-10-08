@@ -417,6 +417,12 @@
     "searchRecipes": "Søk oppskrifter",
     "noRecipesToAdd": "Ingen oppskrifter funnet.",
     "addCount": "{count, plural, one {Legg til # oppskrift} other {Legg til # oppskrifter}}",
-    "everythingAlreadyIn": "Alle oppskrifter er allerede i denne kokeboken."
+    "everythingAlreadyIn": "Alle oppskrifter er allerede i denne kokeboken.",
+    "coverLabel": "Forside",
+    "chooseImage": "Velg bilde",
+    "changeImage": "Bytt bilde",
+    "removeImage": "Fjern bilde",
+    "imageUploadFailed": "Bildet kunne ikke lastes opp.",
+    "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
   }
 }

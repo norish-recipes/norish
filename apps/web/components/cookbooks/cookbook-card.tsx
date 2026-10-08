@@ -272,6 +272,7 @@ function CookbookCardComponent({
               <div className="bg-surface-secondary relative h-full w-[112px] shrink-0 overflow-hidden">
                 <CookbookCover
                   emptyIconClassName="h-8 w-8"
+                  image={cookbook.image}
                   images={cookbook.coverImages}
                   title={cookbook.title}
                 />
@@ -321,7 +322,11 @@ function CookbookCardComponent({
             variant="default"
           >
             <div className="relative h-40 w-full shrink-0 overflow-hidden sm:h-[236px]">
-              <CookbookCover images={cookbook.coverImages} title={cookbook.title} />
+              <CookbookCover
+                image={cookbook.image}
+                images={cookbook.coverImages}
+                title={cookbook.title}
+              />
               {coverMetadata}
               {allergens.length > 0 && (
                 <div className="absolute inset-x-0 bottom-0 z-30 flex flex-wrap gap-2 overflow-hidden p-2">
@@ -418,6 +423,7 @@ const CookbookCard = memo(CookbookCardComponent, (previous, next) => {
       a.memberCount === b.memberCount &&
       a.totalMinutes === b.totalMinutes &&
       a.minServings === b.minServings &&
+      a.image === b.image &&
       sameStrings(a.coverImages, b.coverImages) &&
       sameStrings(a.memberTitles, b.memberTitles) &&
       sameStrings(a.memberTags, b.memberTags))

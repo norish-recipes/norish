@@ -59,6 +59,7 @@ type CookbookRow = {
   id: string;
   userId: string | null;
   title: string;
+  image: string | null;
   createdAt: Date;
   updatedAt: Date;
   version: number;
@@ -68,6 +69,7 @@ const COOKBOOK_COLUMNS = {
   id: cookbooks.id,
   userId: cookbooks.userId,
   title: cookbooks.title,
+  image: cookbooks.image,
   createdAt: cookbooks.createdAt,
   updatedAt: cookbooks.updatedAt,
   version: cookbooks.version,
@@ -301,14 +303,15 @@ export async function createCookbook(input: {
   return toCookbookSummary(row, undefined);
 }
 
+/** Retitle a cookbook, and set or clear its image when `image` is given. */
 export async function updateCookbook(
   id: string,
-  title: string,
+  changes: { title: string; image?: string | null },
   version: number
 ): Promise<MutationOutcome<CookbookRow>> {
   const [row] = await db
     .update(cookbooks)
-    .set({ title, updatedAt: new Date(), version: sql`${cookbooks.version} + 1` })
+    .set({ ...changes, updatedAt: new Date(), version: sql`${cookbooks.version} + 1` })
     .where(and(eq(cookbooks.id, id), eq(cookbooks.version, version)))
     .returning(COOKBOOK_COLUMNS);
 

@@ -417,6 +417,12 @@
     "searchRecipes": "Rechercher des recettes",
     "noRecipesToAdd": "Aucune recette trouvée.",
     "addCount": "{count, plural, one {Ajouter # recette} other {Ajouter # recettes}}",
-    "everythingAlreadyIn": "Toutes les recettes sont déjà dans ce livre."
+    "everythingAlreadyIn": "Toutes les recettes sont déjà dans ce livre.",
+    "coverLabel": "Couverture",
+    "chooseImage": "Choisir une image",
+    "changeImage": "Changer l'image",
+    "removeImage": "Retirer l'image",
+    "imageUploadFailed": "L'image n'a pas pu être envoyée.",
+    "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne."
   }
 }

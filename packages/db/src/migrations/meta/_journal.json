@@ -505,6 +505,13 @@
       "when": 1791464914057,
       "tag": "0071_original_system",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1791469115788,
+      "tag": "0072_cookbook_image",
+      "breakpoints": true
     }
   ]
 }

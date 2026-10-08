@@ -10,19 +10,22 @@ import {
   withMemberSummaries,
 } from "@norish/db/repositories/cookbooks";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { saveCookbookImageBytes, sweepCookbookImages } from "@norish/shared-server/media/storage";
 import {
   CookbookCreateInputSchema,
   CookbookDeleteInputSchema,
   CookbookGetInputSchema,
   CookbookListInputSchema,
   CookbookListResultSchema,
-  CookbookUpdateInputSchema,
   CookbookSummarySchema,
+  CookbookUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
 
+import { formDataInputSchema, getFormDataString } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess } from "../recipes/helpers";
+import { extractAndValidateImage } from "../recipes/images";
 import { assertCookbookAccess, emitCookbookEvent, listContextFor } from "./helpers";
 
 const list = authedProcedure
@@ -99,7 +102,11 @@ const update = authedProcedure
   .mutation(async ({ ctx, input }) => {
     await assertCookbookAccess(ctx, input.id, "edit");
 
-    const outcome = await updateCookbook(input.id, input.title, input.version);
+    const outcome = await updateCookbook(
+      input.id,
+      { title: input.title, image: input.image },
+      input.version
+    );
 
     if (outcome.stale || !outcome.value) {
       log.info(
@@ -115,6 +122,8 @@ const update = authedProcedure
     const [cookbook] = await withMemberSummaries(listContextFor(ctx), [outcome.value]);
 
     if (!cookbook) return null;
+
+    if (input.image !== undefined) await sweepCookbookImages(cookbook.id, input.image);
 
     log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook updated");
     await emitCookbookEvent(ctx, "updated", { cookbook });
@@ -138,10 +147,33 @@ const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async (
 
   // Deleting a cookbook never touches its recipes; only the membership rows
   // go with it, through the join table's cascade.
+  await sweepCookbookImages(input.id);
   log.info({ userId: ctx.user.id, cookbookId: input.id }, "Cookbook deleted");
   await emitCookbookEvent(ctx, "deleted", { id: input.id });
 
   return { id: input.id, deleted: true };
+});
+
+/**
+ * Store a cover for a cookbook and hand back its URL. Nothing points at it
+ * until an `update` saves it, which also sweeps away uploads never saved.
+ */
+const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
+  const cookbookId = getFormDataString(input, "cookbookId");
+
+  if (!cookbookId) return { success: false as const, error: "Cookbook ID is required" };
+
+  await assertCookbookAccess(ctx, cookbookId, "edit");
+
+  const validation = await extractAndValidateImage(input);
+
+  if (!validation.success) return validation;
+
+  const url = await saveCookbookImageBytes(validation.bytes, cookbookId);
+
+  log.info({ userId: ctx.user.id, cookbookId, url }, "Cookbook image uploaded");
+
+  return { success: true as const, url };
 });
 
 export const cookbooksProcedures = router({
@@ -150,4 +182,5 @@ export const cookbooksProcedures = router({
   create,
   update,
   remove,
+  uploadImage,
 });

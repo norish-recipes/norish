@@ -14,12 +14,14 @@ import type { Page } from "@playwright/test";
 import {
   clearCookbooks,
   deleteCookbookByTitle,
+  readCookbookImage,
   readCookbookMembers,
   readCookbookTitles,
   recipeExists,
   seedRecipe,
 } from "./cookbooks-support";
 import { expect, test } from "./fixture";
+import { pictureFile } from "./ingredient-icons-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -372,6 +374,45 @@ test("the edit panel takes a recipe out of the cookbook it is editing", async ()
   }).toPass({ timeout: 10_000 });
   // Unfiling is never destructive.
   expect(await recipeExists(RECIPE_NAME)).toBe(true);
+});
+
+test("an uploaded cover replaces the mosaic until it is removed", async () => {
+  await page.goto("/");
+  await selectChip("cookbooks");
+  await cookbookCard(COOKBOOK_TITLE).click();
+  await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
+
+  await chooseCookbookOption("Edit cookbook");
+  await page.getByTestId("cookbook-image-file").setInputFiles(await pictureFile("#b4587a"));
+  // Staged like the rest of the panel: nothing is saved before Save.
+  expect(await readCookbookImage(COOKBOOK_TITLE)).toBeNull();
+  await page.getByRole("button", { name: /^save$/i }).click();
+
+  await expect(async () => {
+    expect(await readCookbookImage(COOKBOOK_TITLE)).toMatch(
+      /^\/cookbooks\/[a-f0-9-]{36}\/[a-f0-9-]+\.jpg$/
+    );
+  }).toPass({ timeout: 10_000 });
+
+  const image = (await readCookbookImage(COOKBOOK_TITLE))!;
+
+  expect((await page.request.get(image)).status()).toBe(200);
+
+  await page.goto("/");
+  await selectChip("cookbooks");
+  await expect(cookbookCard(COOKBOOK_TITLE).locator(`img[src="${image}"]`)).toBeVisible();
+
+  await cookbookCard(COOKBOOK_TITLE).click();
+  await expect(page.getByRole("heading", { name: COOKBOOK_TITLE })).toBeVisible();
+  await chooseCookbookOption("Edit cookbook");
+  await page.getByRole("button", { name: "Remove image", exact: true }).click();
+  await page.getByRole("button", { name: /^save$/i }).click();
+
+  await expect(async () => {
+    expect(await readCookbookImage(COOKBOOK_TITLE)).toBeNull();
+    // The replaced file goes with it, rather than lingering in uploads.
+    expect((await page.request.get(image)).status()).toBe(404);
+  }).toPass({ timeout: 10_000 });
 });
 
 test("renaming and deleting a cookbook leaves its recipes alone", async () => {

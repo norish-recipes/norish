@@ -417,6 +417,12 @@
     "searchRecipes": "Szukaj przepisów",
     "noRecipesToAdd": "Nie znaleziono przepisów.",
     "addCount": "{count, plural, one {Dodaj # przepis} few {Dodaj # przepisy} many {Dodaj # przepisów} other {Dodaj # przepisu}}",
-    "everythingAlreadyIn": "Wszystkie przepisy są już w tej książce kucharskiej."
+    "everythingAlreadyIn": "Wszystkie przepisy są już w tej książce kucharskiej.",
+    "coverLabel": "Okładka",
+    "chooseImage": "Wybierz obraz",
+    "changeImage": "Zmień obraz",
+    "removeImage": "Usuń obraz",
+    "imageUploadFailed": "Nie udało się przesłać obrazu.",
+    "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online."
   }
 }

@@ -3,10 +3,7 @@ import z from "zod";
 import { clientMintedId } from "./common";
 import { RecipeDashboardSchema, RecipeListInputSchema } from "./recipe";
 
-/**
- * The Cookbook title: the only thing a cookbook stores beyond its own row
- * metadata. Trimmed, because a title made of spaces is not a title.
- */
+/** The Cookbook title. Trimmed, because a title made of spaces is not a title. */
 export const CookbookTitleSchema = z.string().trim().min(1).max(120);
 
 /** How many member titles a cookbook's derived description names. */
@@ -20,10 +17,9 @@ export const COOKBOOK_DESCRIPTION_TITLE_LIMIT = 6;
  * counts for the same cookbook and what a card says always agrees with what
  * is on screen (ADR-0027).
  *
- * A cookbook still stores nothing but its title. The description and the
- * metadata a card shows are derived from its members at read time, exactly
- * as the cover is, so they can never go stale and there is nothing to
- * maintain.
+ * A cookbook stores its title and, optionally, an image of its own. The
+ * description and the metadata a card shows are derived from its members at
+ * read time, so they can never go stale and there is nothing to maintain.
  */
 export const CookbookSummarySchema = z.object({
   id: z.uuid(),
@@ -32,6 +28,8 @@ export const CookbookSummarySchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   version: z.number().int(),
+  /** An uploaded cover, shown instead of the member mosaic when set. */
+  image: z.string().nullable().default(null),
   memberCount: z.number().int().nonnegative(),
   /** Member images for the derived cover mosaic, resolved gallery-first. */
   coverImages: z.array(z.string()),
@@ -93,11 +91,20 @@ export const CookbookRecipesInputSchema = RecipeListInputSchema.extend({
     .describe("Restrict to the caller's favourites, as the Library's own list does."),
 });
 
-export const CookbookUpdateInputSchema = z.object({
-  id: z.uuid(),
-  version: z.number().int().positive(),
-  title: CookbookTitleSchema,
-});
+export const CookbookUpdateInputSchema = z
+  .object({
+    id: z.uuid(),
+    version: z.number().int().positive(),
+    title: CookbookTitleSchema,
+    /** A URL from `uploadImage` to set, null to go back to the mosaic, absent to keep. */
+    image: z.string().nullable().optional(),
+  })
+  // Only a file uploaded for this cookbook: anything else would have every
+  // reader's browser fetch whatever URL the writer chose.
+  .refine(
+    ({ id, image }) => !image || new RegExp(`^/cookbooks/${id}/[\\w-]+\\.\\w+$`).test(image),
+    { path: ["image"], message: "Not an image uploaded for this cookbook" }
+  );
 
 export const CookbookDeleteInputSchema = z.object({
   id: z.uuid(),
