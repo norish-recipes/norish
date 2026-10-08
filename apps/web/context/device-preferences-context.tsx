@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useUserCacheHelpers } from "@/hooks/user/use-user-cache";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
@@ -42,8 +43,10 @@ const DevicePreferencesContext = createContext<DevicePreferencesValue | null>(nu
  * choice made in another browser of this kind does not flash its old value.
  *
  * A change applies at once, lands on the profile query and is written to the
- * profile, through the Outbox when Offline; the profile is read again once the
- * write settles, so a refused write puts the stored choice back. Where there
+ * profile, through the Outbox when Offline. Writes go one at a time, and the
+ * profile is read again once the last one queued settles, so a refused write
+ * puts the stored choice back; reading it after an earlier one would show the
+ * server without the changes still queued. Where there
  * is no profile query (a shared recipe) the change is held for the visit,
  * and a signed-out reader's is never written.
  */
@@ -56,6 +59,7 @@ export function DevicePreferencesProvider({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { mergeUserPreferences, invalidate } = useUserCacheHelpers();
   const { isOffline } = useConnectivity();
   const [kind] = useState<DeviceKind>(
     () =>
@@ -74,7 +78,14 @@ export function DevicePreferencesProvider({
     ...trpc.user.setDevicePreferences.mutationOptions(),
     // One at a time, so two quick changes land in the order they were made.
     scope: { id: "device-preferences" },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: trpc.user.get.queryKey() }),
+    onSettled: () => {
+      // This write is still counted until it returns: one means no other queued.
+      const pending = queryClient.isMutating({
+        mutationKey: trpc.user.setDevicePreferences.mutationKey(),
+      });
+
+      if (pending === 1) invalidate();
+    },
   });
   const [changes, setChanges] = useState<DevicePreferencesUpdate>({});
 
@@ -99,22 +110,14 @@ export function DevicePreferencesProvider({
 
       // What the reader sees plus the change, so the profile query cannot
       // win with an older copy of the rest of the block.
-      const next = { ...valuesRef.current, ...update };
-
-      queryClient.setQueryData(trpc.user.get.queryKey(), (prev) =>
-        prev
-          ? {
-              ...prev,
-              user: {
-                ...prev.user,
-                preferences: { ...prev.user.preferences, [kind]: next },
-              },
-            }
-          : prev
-      );
+      mergeUserPreferences({ [kind]: { ...valuesRef.current, ...update } });
+      // A read already on its way would land with the server's older copy.
+      // Cancelled after the write: it reverts to the last value set by hand,
+      // and a profile restored from the offline copy mid-read was not one.
+      void queryClient.cancelQueries({ queryKey: trpc.user.get.queryKey() });
       mutate({ kind, preferences: update });
     },
-    [kind, mutate, queryClient, signedIn, trpc]
+    [kind, mergeUserPreferences, mutate, queryClient, signedIn, trpc]
   );
 
   const value = useMemo(() => ({ kind, values, set }), [kind, values, set]);

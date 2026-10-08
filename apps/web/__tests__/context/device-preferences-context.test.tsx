@@ -1,5 +1,6 @@
 import type { DevicePreferencesSeed } from "@/context/device-preferences-context";
 import type { QueryClient } from "@tanstack/react-query";
+import { dehydrate, hydrate } from "@tanstack/react-query";
 import { act, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -124,6 +125,28 @@ describe("DevicePreferencesProvider", () => {
     renderProvider(seed());
 
     expect(screen.getByTestId("state")).toHaveTextContent("phone:recipe:true");
+  });
+
+  it("keeps a profile restored from the offline copy while a read was on its way", () => {
+    connectivity.isOffline = true;
+    // A read that started before the offline copy was restored...
+    void queryClient.fetchQuery({ queryKey: userQueryKey, queryFn: () => new Promise(() => {}) });
+    // ...and the copy put back the way a restore does it, not by hand.
+    const saved = createTestQueryClient();
+
+    saved.setQueryData(userQueryKey, {
+      user: { id: "user-1", version: 1, preferences: UserPreferencesSchema.parse({}) },
+      apiKeys: [],
+    });
+    hydrate(queryClient, dehydrate(saved));
+    renderProvider(seed());
+
+    act(() => setView("recipe"));
+
+    expect(
+      queryClient.getQueryData<{ user: { preferences: { phone?: object } } }>(userQueryKey)?.user
+        .preferences.phone
+    ).toMatchObject({ groceryViewMode: "recipe" });
   });
 
   it("starts with no server pass from this kind's block in the profile query", () => {

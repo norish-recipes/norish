@@ -8,6 +8,8 @@ import { vi } from "vitest";
 export const userQueryKey = [["user", "get"], { type: "query" }] as const;
 export const deviceWrite = vi.fn();
 
+const writeKey = [["user", "setDevicePreferences"]];
+
 export function useTRPC() {
   return {
     user: {
@@ -15,7 +17,11 @@ export function useTRPC() {
         queryKey: () => userQueryKey,
         queryOptions: () => ({ queryKey: userQueryKey, queryFn: async () => null }),
       },
-      setDevicePreferences: { mutationOptions: () => ({ mutationFn: deviceWrite }) },
+      getAllergies: { queryKey: () => [["user", "getAllergies"], { type: "query" }] },
+      setDevicePreferences: {
+        mutationKey: () => writeKey,
+        mutationOptions: () => ({ mutationKey: writeKey, mutationFn: deviceWrite }),
+      },
     },
   };
 }
