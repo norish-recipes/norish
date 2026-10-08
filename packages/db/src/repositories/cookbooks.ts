@@ -301,7 +301,7 @@ export async function createCookbook(input: {
   return toCookbookSummary(row, undefined);
 }
 
-export async function renameCookbook(
+export async function updateCookbook(
   id: string,
   title: string,
   version: number

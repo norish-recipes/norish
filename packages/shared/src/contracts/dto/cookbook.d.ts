@@ -7,8 +7,8 @@ import type {
   CookbookListResultSchema,
   CookbookMemberIdsInputSchema,
   CookbookMembershipInputSchema,
-  CookbookRenameInputSchema,
   CookbookSummarySchema,
+  CookbookUpdateInputSchema,
   LibraryItemSchema,
   LibraryListInputSchema,
   LibraryListResultSchema,
@@ -16,7 +16,7 @@ import type {
 
 export type CookbookSummaryDTO = z.output<typeof CookbookSummarySchema>;
 export type CookbookCreateInput = z.infer<typeof CookbookCreateInputSchema>;
-export type CookbookRenameInput = z.infer<typeof CookbookRenameInputSchema>;
+export type CookbookUpdateInput = z.infer<typeof CookbookUpdateInputSchema>;
 export type CookbookDeleteInput = z.infer<typeof CookbookDeleteInputSchema>;
 export type CookbookListInput = z.input<typeof CookbookListInputSchema>;
 export type CookbookListResult = z.output<typeof CookbookListResultSchema>;

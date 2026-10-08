@@ -51,7 +51,7 @@ export type CookbooksCacheHelpers = {
 export type CookbooksMutationsResult = {
   /** Resolves with the cookbook's id — client-minted, so it is known up front. */
   createCookbook: (input: { title: string; recipeId?: string }) => Promise<string>;
-  renameCookbook: (input: { id: string; title: string; version: number }) => void;
+  updateCookbook: (input: { id: string; title: string; version: number }) => void;
   deleteCookbook: (input: { id: string; version: number }) => void;
   /** File a recipe into a cookbook, or take it out — the same call both ways. */
   setMembership: (input: {

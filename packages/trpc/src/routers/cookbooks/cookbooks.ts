@@ -6,7 +6,7 @@ import {
   deleteCookbookById,
   getCookbookForViewer,
   listCookbooks,
-  renameCookbook,
+  updateCookbook,
   withMemberSummaries,
 } from "@norish/db/repositories/cookbooks";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -16,7 +16,7 @@ import {
   CookbookGetInputSchema,
   CookbookListInputSchema,
   CookbookListResultSchema,
-  CookbookRenameInputSchema,
+  CookbookUpdateInputSchema,
   CookbookSummarySchema,
 } from "@norish/shared/contracts/zod";
 
@@ -93,30 +93,30 @@ const create = authedProcedure
     return input.recipeId ? { ...cookbook, memberCount: 1 } : cookbook;
   });
 
-const rename = authedProcedure
-  .input(CookbookRenameInputSchema)
+const update = authedProcedure
+  .input(CookbookUpdateInputSchema)
   .output(CookbookSummarySchema.nullable())
   .mutation(async ({ ctx, input }) => {
     await assertCookbookAccess(ctx, input.id, "edit");
 
-    const outcome = await renameCookbook(input.id, input.title, input.version);
+    const outcome = await updateCookbook(input.id, input.title, input.version);
 
     if (outcome.stale || !outcome.value) {
       log.info(
         { userId: ctx.user.id, cookbookId: input.id, version: input.version },
-        "Ignoring stale cookbook rename"
+        "Ignoring stale cookbook update"
       );
 
       return null;
     }
 
     // The member summaries are viewer-scoped, so the echo carries the actor's
-    // own view of the renamed cookbook rather than a bare row.
+    // own view of the updated cookbook rather than a bare row.
     const [cookbook] = await withMemberSummaries(listContextFor(ctx), [outcome.value]);
 
     if (!cookbook) return null;
 
-    log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook renamed");
+    log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook updated");
     await emitCookbookEvent(ctx, "updated", { cookbook });
 
     return cookbook;
@@ -148,6 +148,6 @@ export const cookbooksProcedures = router({
   list,
   get,
   create,
-  rename,
+  update,
   remove,
 });

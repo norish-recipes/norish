@@ -23,7 +23,7 @@ import {
   listCookbooksForRecipe,
   listEditableCookbooks,
   removeRecipeFromCookbook,
-  renameCookbook,
+  updateCookbook,
 } from "@norish/db/repositories/cookbooks";
 import { setFavorite } from "@norish/db/repositories/favorites";
 import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
@@ -205,12 +205,12 @@ describe("cookbook repository", () => {
     it("renames on a matching version and refuses a stale one", async () => {
       const cookbook = await createCookbook({ userId: ownerId, title: "Xmas" });
 
-      const applied = await renameCookbook(cookbook.id, "Christmas baking", cookbook.version);
+      const applied = await updateCookbook(cookbook.id, "Christmas baking", cookbook.version);
 
       expect(applied.applied).toBe(true);
       expect(applied.value?.title).toBe("Christmas baking");
 
-      const stale = await renameCookbook(cookbook.id, "Nope", cookbook.version);
+      const stale = await updateCookbook(cookbook.id, "Nope", cookbook.version);
 
       expect(stale.stale).toBe(true);
       expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.title).toBe(
@@ -508,7 +508,7 @@ describe("cookbook repository", () => {
     it("refuses a delete carrying a stale version", async () => {
       const cookbook = await createCookbook({ userId: ownerId, title: "Weeknights" });
 
-      await renameCookbook(cookbook.id, "Renamed", cookbook.version);
+      await updateCookbook(cookbook.id, "Renamed", cookbook.version);
 
       const stale = await deleteCookbookById(cookbook.id, cookbook.version);
 

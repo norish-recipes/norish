@@ -4,7 +4,7 @@
 import { vi } from "vitest";
 
 export const createCookbook = vi.fn();
-export const renameCookbook = vi.fn();
+export const updateCookbook = vi.fn();
 export const deleteCookbookById = vi.fn();
 export const getCookbookRow = vi.fn();
 export const getCookbookForViewer = vi.fn();
@@ -19,7 +19,7 @@ export const withMemberSummaries = vi.fn();
 export function resetCookbooksRepositoryMocks() {
   [
     createCookbook,
-    renameCookbook,
+    updateCookbook,
     deleteCookbookById,
     getCookbookRow,
     getCookbookForViewer,

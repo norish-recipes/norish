@@ -36,7 +36,7 @@ export function createUseCookbooksMutations({
     const currentUserId = useCurrentUserId?.();
 
     const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
-    const renameMutation = useMutation(trpc.cookbooks.rename.mutationOptions());
+    const updateMutation = useMutation(trpc.cookbooks.update.mutationOptions());
     const deleteMutation = useMutation(trpc.cookbooks.remove.mutationOptions());
     const membershipMutation = useMutation(trpc.cookbooks.setMembership.mutationOptions());
 
@@ -241,7 +241,7 @@ export function createUseCookbooksMutations({
       ]
     );
 
-    const renameCookbook = useCallback(
+    const updateCookbook = useCallback(
       ({ id, title, version }: { id: string; title: string; version: number }) => {
         setAllCookbooksData((prev) => {
           if (!prev) return prev;
@@ -257,7 +257,7 @@ export function createUseCookbooksMutations({
           };
         });
 
-        renameMutation.mutate(
+        updateMutation.mutate(
           { id, title, version },
           {
             onSuccess: () => invalidateCookbook(id),
@@ -265,7 +265,7 @@ export function createUseCookbooksMutations({
           }
         );
       },
-      [renameMutation, setAllCookbooksData, invalidateCookbook, invalidateUnlessQueued]
+      [updateMutation, setAllCookbooksData, invalidateCookbook, invalidateUnlessQueued]
     );
 
     const deleteCookbook = useCallback(
@@ -294,7 +294,7 @@ export function createUseCookbooksMutations({
 
     return {
       createCookbook,
-      renameCookbook,
+      updateCookbook,
       deleteCookbook,
       setMembership,
       isCreating: createMutation.isPending,

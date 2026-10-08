@@ -124,7 +124,7 @@ export function CookbookEditPanel({
   const [removed, setRemoved] = useState<string[]>([]);
   // Both staged edits commit through the same seam: routing only the rename
   // back out through a prop would give one panel two ways to write.
-  const { renameCookbook, setMembership } = useCookbooksMutations();
+  const { updateCookbook, setMembership } = useCookbooksMutations();
   const { recipes, isLoading, hasMore, loadMore, removeMember } = useCookbookRecipesQuery(
     cookbookId,
     {},
@@ -151,7 +151,7 @@ export function CookbookEditPanel({
 
   const submit = () => {
     if (trimmed.length > 0 && trimmed !== initialTitle) {
-      renameCookbook({ id: cookbookId, title: trimmed, version: cookbook.version });
+      updateCookbook({ id: cookbookId, title: trimmed, version: cookbook.version });
     }
 
     for (const recipeId of removed) {

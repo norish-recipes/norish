@@ -16,7 +16,7 @@ import {
   deleteCookbookById,
   getCookbookRow,
   listCookbooks,
-  renameCookbook,
+  updateCookbook,
   withMemberSummaries,
 } from "../mocks/cookbooks-repository";
 import { canAccessResource } from "../mocks/permissions";
@@ -112,13 +112,13 @@ describe("cookbook procedures", () => {
     });
   });
 
-  describe("rename", () => {
+  describe("update", () => {
     it("asks the policy for edit rights and renames when granted", async () => {
       const row = cookbookRow({ userId: "someone-else" });
 
       getCookbookRow.mockResolvedValue(row);
       canAccessResource.mockResolvedValue(true);
-      renameCookbook.mockResolvedValue({
+      updateCookbook.mockResolvedValue({
         applied: true,
         stale: false,
         value: { ...row, title: "Christmas baking", version: 2 },
@@ -128,7 +128,7 @@ describe("cookbook procedures", () => {
       ]);
 
       const { caller } = callerFor();
-      const result = await caller.cookbooks.rename({
+      const result = await caller.cookbooks.update({
         id: row.id,
         version: 1,
         title: "Christmas baking",
@@ -151,16 +151,16 @@ describe("cookbook procedures", () => {
       const { caller } = callerFor();
 
       await expect(
-        caller.cookbooks.rename({ id: cookbookRow().id, version: 1, title: "Mine now" })
+        caller.cookbooks.update({ id: cookbookRow().id, version: 1, title: "Mine now" })
       ).rejects.toThrow(TRPCError);
-      expect(renameCookbook).not.toHaveBeenCalled();
+      expect(updateCookbook).not.toHaveBeenCalled();
     });
 
     it("lets anyone rename an Orphaned cookbook, without consulting the policy", async () => {
       const row = cookbookRow({ userId: null });
 
       getCookbookRow.mockResolvedValue(row);
-      renameCookbook.mockResolvedValue({
+      updateCookbook.mockResolvedValue({
         applied: true,
         stale: false,
         value: { ...row, title: "Adopted", version: 2 },
@@ -172,7 +172,7 @@ describe("cookbook procedures", () => {
       const { caller } = callerFor(createMockUser({ id: "a-stranger" }));
 
       await expect(
-        caller.cookbooks.rename({ id: row.id, version: 1, title: "Adopted" })
+        caller.cookbooks.update({ id: row.id, version: 1, title: "Adopted" })
       ).resolves.toMatchObject({ title: "Adopted" });
       expect(canAccessResource).not.toHaveBeenCalled();
     });
@@ -182,12 +182,12 @@ describe("cookbook procedures", () => {
 
       getCookbookRow.mockResolvedValue(row);
       canAccessResource.mockResolvedValue(true);
-      renameCookbook.mockResolvedValue({ applied: false, stale: true });
+      updateCookbook.mockResolvedValue({ applied: false, stale: true });
 
       const { caller } = callerFor();
 
       await expect(
-        caller.cookbooks.rename({ id: row.id, version: 1, title: "Too late" })
+        caller.cookbooks.update({ id: row.id, version: 1, title: "Too late" })
       ).resolves.toBeNull();
       expect(cookbooks.publish).not.toHaveBeenCalled();
     });
