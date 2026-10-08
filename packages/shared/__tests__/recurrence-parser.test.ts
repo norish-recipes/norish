@@ -165,18 +165,33 @@ describe("recurrence/parser Ukrainian locale", () => {
     expect(result.cleanText).toBe("Йога");
   });
 
+  it("parses a weekday in the accusative", () => {
+    const result = parseRecurrence("Риба кожну п’ятницю", config);
+
+    expect(result.recurrence).toEqual({ rule: "week", interval: 1, weekday: 5 });
+    expect(result.cleanText).toBe("Риба");
+  });
+
   it("parses a weekday with an apostrophe in any spelling", () => {
     const typographic = parseRecurrence("Риба кожної п’ятниці", config);
     const ascii = parseRecurrence("Риба кожної п'ятниці", config);
+    const modifierLetter = parseRecurrence("Риба кожної пʼятниці", config);
 
     expect(typographic.recurrence).toEqual({ rule: "week", interval: 1, weekday: 5 });
     expect(ascii.recurrence).toEqual({ rule: "week", interval: 1, weekday: 5 });
+    expect(modifierLetter.recurrence).toEqual({ rule: "week", interval: 1, weekday: 5 });
   });
 
-  it("parses every other week", () => {
-    const result = parseRecurrence("Прибирання через тиждень", config);
+  it("parses once a week and every other week", () => {
+    const weekly = parseRecurrence("Прибирання раз на тиждень", config);
+    const everyOther = parseRecurrence("Прибирання раз на два тижні", config);
 
-    expect(result.recurrence).toEqual({ rule: "week", interval: 2 });
-    expect(result.cleanText).toBe("Прибирання");
+    expect(weekly.recurrence).toEqual({ rule: "week", interval: 1 });
+    expect(everyOther.recurrence).toEqual({ rule: "week", interval: 2 });
+    expect(everyOther.cleanText).toBe("Прибирання");
+  });
+
+  it("reads “через тиждень” as “in a week”, not as a repeat", () => {
+    expect(parseRecurrence("Ліки через тиждень", config).recurrence).toBeNull();
   });
 });
