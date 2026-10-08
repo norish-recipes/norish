@@ -6,7 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
-import { getUserPreferences } from "@norish/shared/lib/user-preferences";
 
 import { useUserCacheHelpers } from "./use-user-cache";
 
@@ -57,6 +56,8 @@ export function useUserMutations(): UserMutationsResult {
     setUserSettingsData,
     setAllergiesData,
     getUserSettingsData,
+    mergeUser,
+    mergeUserPreferences,
     invalidate,
   } = useUserCacheHelpers();
   const getCurrentUserVersion = () => getUserSettingsData()?.user.version ?? 1;
@@ -88,7 +89,7 @@ export function useUserMutations(): UserMutationsResult {
         });
 
         if (result.success && result.user) {
-          setUserSettingsData((prev) => (prev ? { ...prev, user: result.user! } : prev));
+          mergeUser(result.user);
         }
 
         return result;
@@ -109,7 +110,7 @@ export function useUserMutations(): UserMutationsResult {
         const result = await uploadAvatarMutation.mutateAsync(formData);
 
         if (result.success && result.user) {
-          setUserSettingsData((prev) => (prev ? { ...prev, user: result.user! } : prev));
+          mergeUser(result.user);
         }
 
         return result;
@@ -125,7 +126,7 @@ export function useUserMutations(): UserMutationsResult {
         const result = await deleteAvatarMutation.mutateAsync({ version: getCurrentUserVersion() });
 
         if (result.success && result.user) {
-          setUserSettingsData((prev) => (prev ? { ...prev, user: result.user! } : prev));
+          mergeUser(result.user);
         }
 
         return result;
@@ -247,17 +248,7 @@ export function useUserMutations(): UserMutationsResult {
 
       try {
         // Optimistic update
-        setUserSettingsData((prev) => {
-          if (!prev) return prev;
-
-          return {
-            ...prev,
-            user: {
-              ...prev.user,
-              preferences: { ...getUserPreferences(prev.user), ...preferences },
-            },
-          };
-        });
+        mergeUserPreferences(preferences);
 
         const result = await updatePreferencesMutation.mutateAsync({
           preferences,
@@ -269,18 +260,8 @@ export function useUserMutations(): UserMutationsResult {
           setUserSettingsData(() => previous);
           invalidate();
         } else {
-          setUserSettingsData((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  user: {
-                    ...prev.user,
-                    version: result.version ?? prev.user.version,
-                    preferences: { ...getUserPreferences(prev.user), ...result.preferences },
-                  },
-                }
-              : prev
-          );
+          if (result.version) mergeUser({ version: result.version });
+          mergeUserPreferences(result.preferences ?? {});
         }
 
         return result;
