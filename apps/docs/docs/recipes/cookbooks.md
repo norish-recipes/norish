@@ -35,15 +35,18 @@ Each of these items are clickable and take you to the respective cookbook.
 If you do no whish to see the cookbooks card you can hide it under: Settings => User => **Hidden
 Items**, kept per phone or desktop, on your profile.
 
-## Renaming one, and taking recipes out
+## Editing one: cover, name and recipes
 
-**Edit cookbook** — from a cookbook's card in the Library, or from the menu on
-its own page, opens the name and the list of what is in it. Rename
-it, untick anything that should go, and **Save** applies both. On the
-cookbook's page, a single recipe can also be taken out from its card: swipe
-it left (or use its three dots) and press the minus.
+**Edit cookbook**, from a cookbook's card in the Library or from the menu on
+its own page, opens its cover, its name and the list of what is in it.
+Choose an image for the cover, rename it, untick anything that should go, and
+**Save** applies it all. A cookbook without an image of its own shows the
+photos of the recipes in it; **Remove image** goes back to those. Changing the
+image needs a connection. On the cookbook's page, a single recipe can also be
+taken out from its card: swipe it left (or use its three dots) and press the
+minus.
 
-![Editing a cookbook: its name and what is in it, in one panel](/img/screenshots/cookbooks-edit.png)
+![Editing a cookbook: its cover, name and what is in it, in one panel](/img/screenshots/cookbooks-edit.png)
 
 ## Who can see and change what
 
