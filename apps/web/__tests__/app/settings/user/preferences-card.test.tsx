@@ -66,6 +66,12 @@ vi.mock("@/context/device-preferences-context", async () =>
   )
 );
 
+const permissionsMock = vi.hoisted(() => ({ isAIEnabled: false }));
+
+vi.mock("@/context/permissions-context", () => ({
+  usePermissionsContext: () => permissionsMock,
+}));
+
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
 vi.mock("@/hooks/config", () => ({
@@ -146,6 +152,7 @@ vi.mock("@heroui/react", () => ({
 describe("PreferencesCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    permissionsMock.isAIEnabled = false;
     hiddenItemsMock.hidden = [];
     mockContext.user = { preferences: {} } as any;
   });
@@ -345,6 +352,29 @@ describe("PreferencesCard", () => {
     const control = screen.getByRole("combobox", { name: /afterPlanning\.title/i });
 
     expect((control as HTMLSelectElement).value).toBe("nothing");
+  });
+
+  it("offers converting with AI only where AI is on, and stores the choice with the user", () => {
+    mockContext.user = { preferences: { measurementSystem: "usWithAI" } } as any;
+
+    const { unmount } = render(<PreferencesCard />);
+    const control = () => screen.getByRole("combobox", { name: /measurements\.title/i });
+    const values = () =>
+      (within(control()).getAllByRole("option") as HTMLOptionElement[]).map((o) => o.value);
+
+    expect(values()).toEqual(["off", "metric", "us"]);
+    expect((control() as HTMLSelectElement).value).toBe("us");
+    unmount();
+
+    permissionsMock.isAIEnabled = true;
+    render(<PreferencesCard />);
+
+    expect(values()).toEqual(["off", "metric", "us", "metricWithAI", "usWithAI"]);
+    expect((control() as HTMLSelectElement).value).toBe("usWithAI");
+
+    fireEvent.change(control(), { target: { value: "metric" } });
+
+    expect(mockContext.updatePreferences).toHaveBeenCalledWith({ measurementSystem: "metric" });
   });
 
   it("says behind the title which kind of device its display choices apply to", () => {

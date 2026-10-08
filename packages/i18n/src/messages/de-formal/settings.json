@@ -120,8 +120,8 @@
       "description": "Passen Sie Ihre Erfahrung an.",
       "deviceKind": {
         "help": "Wie Einstellungen gespeichert werden",
-        "phone": "„{language}“ und „{afterPlanning}“ gelten überall. Der Rest wird je Geräteart gespeichert: Was Sie hier wählen, gilt auf jedem Smartphone, auf dem Sie angemeldet sind, und Computer und Tablets behalten ihre eigenen Einstellungen.",
-        "desktop": "„{language}“ und „{afterPlanning}“ gelten überall. Der Rest wird je Geräteart gespeichert: Was Sie hier wählen, gilt auf jedem Computer und Tablet, auf dem Sie angemeldet sind, und Smartphones behalten ihre eigenen Einstellungen."
+        "phone": "„{language}“, „{afterPlanning}“ und „{measurements}“ gelten pro Konto. Der Rest pro Geräteart.",
+        "desktop": "„{language}“, „{afterPlanning}“ und „{measurements}“ gelten pro Konto. Der Rest pro Geräteart."
       },
       "language": {
         "title": "Sprache",
@@ -168,6 +168,17 @@
           "nothing": "Nichts",
           "openGroceries": "Einkaufsliste öffnen",
           "addGroceries": "Zutaten zur Einkaufsliste hinzufügen"
+        }
+      },
+      "measurements": {
+        "title": "Maßeinheiten",
+        "description": "Das Standard-Maßsystem für Rezepte",
+        "options": {
+          "off": "Nicht umwandeln",
+          "metric": "Metrisch",
+          "us": "US",
+          "metricWithAI": "Metrisch mit KI",
+          "usWithAI": "US mit KI"
         }
       }
     },

@@ -156,7 +156,8 @@
     "toUS": "Converteer naar US",
     "toMetricWithAI": "Converteer naar metrisch met AI",
     "toUSWithAI": "Converteer naar US met AI",
-    "converting": "Bezig met omrekenen…"
+    "converting": "Bezig met omrekenen…",
+    "original": "Origineel"
   },
   "deleteModal": {
     "title": "Recept verwijderen",

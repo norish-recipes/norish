@@ -120,8 +120,8 @@
       "description": "Personalizza la tua esperienza.",
       "deviceKind": {
         "help": "Come vengono salvate le preferenze",
-        "phone": "«{language}» e «{afterPlanning}» ti seguono ovunque. Il resto viene salvato per tipo di dispositivo: ciò che scegli qui vale su ogni telefono su cui accedi, mentre computer e tablet mantengono le proprie scelte.",
-        "desktop": "«{language}» e «{afterPlanning}» ti seguono ovunque. Il resto viene salvato per tipo di dispositivo: ciò che scegli qui vale su ogni computer e tablet su cui accedi, mentre i telefoni mantengono le proprie scelte."
+        "phone": "«{language}», «{afterPlanning}» e «{measurements}» valgono per l'account. Il resto per tipo di dispositivo.",
+        "desktop": "«{language}», «{afterPlanning}» e «{measurements}» valgono per l'account. Il resto per tipo di dispositivo."
       },
       "language": {
         "title": "Lingua",
@@ -168,6 +168,17 @@
           "nothing": "Niente",
           "openGroceries": "Apri il pannello della spesa",
           "addGroceries": "Aggiungi gli ingredienti alla spesa"
+        }
+      },
+      "measurements": {
+        "title": "Misure",
+        "description": "Il sistema di misura predefinito per le ricette",
+        "options": {
+          "off": "Non convertire",
+          "metric": "Metrico",
+          "us": "US",
+          "metricWithAI": "Metrico con IA",
+          "usWithAI": "US con IA"
         }
       }
     },

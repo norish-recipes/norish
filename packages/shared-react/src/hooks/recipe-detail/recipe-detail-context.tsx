@@ -19,6 +19,8 @@ import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 export type RecipeDetailContextValue = {
   recipe: FullRecipeDTO | null;
   isLoading: boolean;
+  /** A saved copy is shown while the server's current one is on its way. */
+  isFetching: boolean;
   error: Error | null;
   isNotFound: boolean;
   shares: RecipeShareSummaryDto[];
@@ -61,6 +63,7 @@ export type RecipeDetailAdapters = {
   useRecipeQuery: (recipeId: string) => {
     recipe: FullRecipeDTO | null;
     isLoading: boolean;
+    isFetching: boolean;
     error: unknown;
     invalidate: () => void;
   };
@@ -168,7 +171,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
   };
 
   function RecipeDetailProvider({ recipeId, children }: ProviderProps) {
-    const { recipe, isLoading, error } = adapters.useRecipeQuery(recipeId);
+    const { recipe, isLoading, isFetching, error } = adapters.useRecipeQuery(recipeId);
     const {
       shares,
       isLoading: isLoadingShares,
@@ -357,6 +360,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       () => ({
         recipe,
         isLoading,
+        isFetching,
         error: error instanceof Error ? error : error ? new Error(String(error)) : null,
         isNotFound,
         shares,
@@ -390,6 +394,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       [
         recipe,
         isLoading,
+        isFetching,
         error,
         isNotFound,
         shares,

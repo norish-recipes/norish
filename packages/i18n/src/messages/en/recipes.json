@@ -156,7 +156,8 @@
     "toUS": "Convert to US",
     "toMetricWithAI": "Convert to Metric with AI",
     "toUSWithAI": "Convert to US with AI",
-    "converting": "Converting…"
+    "converting": "Converting…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Delete Recipe",

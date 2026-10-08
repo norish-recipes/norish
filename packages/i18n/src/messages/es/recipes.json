@@ -156,7 +156,8 @@
     "toUS": "Convertir a sistema imperial",
     "toMetricWithAI": "Convertir a sistema métrico con IA",
     "toUSWithAI": "Convertir a sistema imperial con IA",
-    "converting": "Convirtiendo…"
+    "converting": "Convirtiendo…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Eliminar receta",

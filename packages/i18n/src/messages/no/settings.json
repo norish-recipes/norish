@@ -120,8 +120,8 @@
       "description": "Tilpass opplevelsen din.",
       "deviceKind": {
         "help": "Slik lagres preferanser",
-        "phone": "«{language}» og «{afterPlanning}» følger deg overalt. Resten lagres per enhetstype: det du velger her, gjelder på alle telefoner du er logget inn på, og datamaskiner og nettbrett beholder sine egne valg.",
-        "desktop": "«{language}» og «{afterPlanning}» følger deg overalt. Resten lagres per enhetstype: det du velger her, gjelder på alle datamaskiner og nettbrett du er logget inn på, og telefoner beholder sine egne valg."
+        "phone": "«{language}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype.",
+        "desktop": "«{language}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype."
       },
       "language": {
         "title": "Språk",
@@ -168,6 +168,17 @@
           "nothing": "Ingenting",
           "openGroceries": "Åpne handlepanelet",
           "addGroceries": "Legg ingrediensene til handlelisten"
+        }
+      },
+      "measurements": {
+        "title": "Måleenheter",
+        "description": "Standardmålesystemet for oppskrifter",
+        "options": {
+          "off": "Ikke konverter",
+          "metric": "Metrisk",
+          "us": "Amerikansk",
+          "metricWithAI": "Metrisk med AI",
+          "usWithAI": "Amerikansk med AI"
         }
       }
     },

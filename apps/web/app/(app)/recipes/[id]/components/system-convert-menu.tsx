@@ -57,6 +57,7 @@ export default function SystemConvertMenu({ compact = false }: SystemConvertMenu
                 <span className={`text-sm font-medium ${item.withAI ? cssAIGradientText : ""}`}>
                   <Label>{item.label}</Label>
                 </span>
+                {item.isOriginal && <span className="text-muted text-xs">{t("original")}</span>}
               </div>
             </Dropdown.Item>
           )}

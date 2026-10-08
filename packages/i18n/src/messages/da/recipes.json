@@ -156,7 +156,8 @@
     "toUS": "Konverter til amerikansk",
     "toMetricWithAI": "Konverter til metrisk med AI",
     "toUSWithAI": "Konverter til amerikansk med AI",
-    "converting": "Konverterer…"
+    "converting": "Konverterer…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Slet opskrift",

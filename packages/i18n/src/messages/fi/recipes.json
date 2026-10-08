@@ -156,7 +156,8 @@
     "toUS": "Muunna amerikkalaisiksi",
     "toMetricWithAI": "Muunna metrisiksi tekoälyllä",
     "toUSWithAI": "Muunna amerikkalaisiksi tekoälyllä",
-    "converting": "Muunnetaan…"
+    "converting": "Muunnetaan…",
+    "original": "Alkuperäinen"
   },
   "deleteModal": {
     "title": "Poista resepti",

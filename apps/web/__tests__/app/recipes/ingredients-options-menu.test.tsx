@@ -162,6 +162,8 @@ describe("IngredientsOptionsMenu", () => {
     render(<IngredientsOptionsMenu />);
 
     expect(screen.getByText("recipes.convert.toMetric")).toBeInTheDocument();
+    // The way back says it is the system the recipe was written in.
+    expect(screen.getAllByText("recipes.convert.original")).toHaveLength(1);
     expect(screen.queryByText("recipes.convert.toUS")).not.toBeInTheDocument();
     expect(screen.getByText("recipes.convert.toUSWithAI")).toBeInTheDocument();
     // AI never writes over the original, so there is no metric-with-AI.

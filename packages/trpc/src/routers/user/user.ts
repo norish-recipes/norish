@@ -94,10 +94,10 @@ const get = authedProcedure.query(async ({ ctx }) => {
   };
 });
 /**
- * Update the person's own preferences (language, after-planning). Only the
- * keys given are written, merged in the database: reading the document,
- * merging in memory and writing it back would put back a stale copy of the
- * Device Preferences a toggle wrote in between.
+ * Update the person's own preferences (language, after-planning,
+ * measurements). Only the keys given are written, merged in the database:
+ * reading the document, merging in memory and writing it back would put back a
+ * stale copy of the Device Preferences a toggle wrote in between.
  */
 const updatePreferences = authedProcedure
   .input(UpdateUserPreferencesInputSchema)
@@ -112,14 +112,14 @@ const updatePreferences = authedProcedure
         "Ignoring stale user preferences mutation"
       );
 
-      // The stored language and after-planning, so the client drops its
+      // The stored person-level choices, so the client drops its
       // optimistic copy; never the device blocks, which a toggle owns.
-      const { locale, afterPlanning } = await getUserPreferences(ctx.user.id);
+      const { locale, afterPlanning, measurementSystem } = await getUserPreferences(ctx.user.id);
 
       return {
         success: true,
         stale: true,
-        preferences: { locale, afterPlanning },
+        preferences: { locale, afterPlanning, measurementSystem },
         version: input.version,
       };
     }

@@ -120,8 +120,8 @@
       "description": "Mukauta käyttökokemustasi.",
       "deviceKind": {
         "help": "Miten asetukset tallennetaan",
-        "phone": "”{language}” ja ”{afterPlanning}” seuraavat sinua kaikkialle. Muut tallennetaan laitetyypin mukaan: tässä tekemäsi valinnat koskevat jokaista puhelinta, jolla kirjaudut sisään, ja tietokoneilla ja tableteilla on omansa.",
-        "desktop": "”{language}” ja ”{afterPlanning}” seuraavat sinua kaikkialle. Muut tallennetaan laitetyypin mukaan: tässä tekemäsi valinnat koskevat jokaista tietokonetta ja tablettia, jolla kirjaudut sisään, ja puhelimilla on omansa."
+        "phone": "”{language}”, ”{afterPlanning}” ja ”{measurements}” ovat tilikohtaisia. Muut laitetyyppikohtaisia.",
+        "desktop": "”{language}”, ”{afterPlanning}” ja ”{measurements}” ovat tilikohtaisia. Muut laitetyyppikohtaisia."
       },
       "language": {
         "title": "Kieli",
@@ -168,6 +168,17 @@
           "nothing": "Ei mitään",
           "openGroceries": "Avaa ostospaneeli",
           "addGroceries": "Lisää ainekset ostoslistaan"
+        }
+      },
+      "measurements": {
+        "title": "Mittayksiköt",
+        "description": "Reseptien oletusmittajärjestelmä",
+        "options": {
+          "off": "Älä muunna",
+          "metric": "Metrinen",
+          "us": "Amerikkalainen",
+          "metricWithAI": "Metrinen tekoälyllä",
+          "usWithAI": "Amerikkalainen tekoälyllä"
         }
       }
     },

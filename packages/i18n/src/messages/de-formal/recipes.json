@@ -156,7 +156,8 @@
     "toUS": "In US umwandeln",
     "toMetricWithAI": "Mit KI in metrisch umwandeln",
     "toUSWithAI": "Mit KI in US umwandeln",
-    "converting": "Wird umgerechnet…"
+    "converting": "Wird umgerechnet…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Rezept löschen",

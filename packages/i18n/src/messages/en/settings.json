@@ -120,8 +120,8 @@
       "description": "Customize your experience.",
       "deviceKind": {
         "help": "How preferences are saved",
-        "phone": "“{language}” and “{afterPlanning}” follow you everywhere. The rest is saved per kind of device: what you pick here applies to every phone you sign in on, and desktops and tablets keep their own.",
-        "desktop": "“{language}” and “{afterPlanning}” follow you everywhere. The rest is saved per kind of device: what you pick here applies to every desktop and tablet you sign in on, and phones keep their own."
+        "phone": "“{language}”, “{afterPlanning}” and “{measurements}” are per account. The rest per device-type.",
+        "desktop": "“{language}”, “{afterPlanning}” and “{measurements}” are per account. The rest per device-type."
       },
       "language": {
         "title": "Language",
@@ -168,6 +168,17 @@
           "nothing": "Nothing",
           "openGroceries": "Open groceries panel",
           "addGroceries": "Add ingredients to groceries"
+        }
+      },
+      "measurements": {
+        "title": "Measurements",
+        "description": "The default measurement system for recipes",
+        "options": {
+          "off": "Don't convert",
+          "metric": "Metric",
+          "us": "US",
+          "metricWithAI": "Metric with AI",
+          "usWithAI": "US with AI"
         }
       }
     },

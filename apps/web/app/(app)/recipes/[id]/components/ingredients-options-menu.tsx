@@ -72,7 +72,11 @@ export default function IngredientsOptionsMenu() {
         onPress: () => conversion.convertTo(option),
         labelClassName: option.withAI ? cssAIGradientText : "",
         iconClassName: option.withAI ? cssAIIconColor : "text-muted",
-        description: conversion.isConverting ? tConvert("converting") : undefined,
+        description: conversion.isConverting
+          ? tConvert("converting")
+          : option.isOriginal
+            ? tConvert("original")
+            : undefined,
         isDisabled: conversion.isConverting,
       });
     }

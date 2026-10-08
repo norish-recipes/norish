@@ -120,8 +120,8 @@
       "description": "Tilpas din oplevelse.",
       "deviceKind": {
         "help": "Sådan gemmes præferencer",
-        "phone": "“{language}” og “{afterPlanning}” følger dig overalt. Resten gemmes pr. enhedstype: det, du vælger her, gælder på alle telefoner, du er logget ind på, og computere og tablets beholder deres egne valg.",
-        "desktop": "“{language}” og “{afterPlanning}” følger dig overalt. Resten gemmes pr. enhedstype: det, du vælger her, gælder på alle computere og tablets, du er logget ind på, og telefoner beholder deres egne valg."
+        "phone": "“{language}”, “{afterPlanning}” og “{measurements}” gælder pr. konto. Resten pr. enhedstype.",
+        "desktop": "“{language}”, “{afterPlanning}” og “{measurements}” gælder pr. konto. Resten pr. enhedstype."
       },
       "language": {
         "title": "Sprog",
@@ -168,6 +168,17 @@
           "nothing": "Intet",
           "openGroceries": "Åbn indkøbspanelet",
           "addGroceries": "Tilføj ingredienserne til indkøb"
+        }
+      },
+      "measurements": {
+        "title": "Måleenheder",
+        "description": "Standardmålesystemet for opskrifter",
+        "options": {
+          "off": "Konverter ikke",
+          "metric": "Metrisk",
+          "us": "Amerikansk",
+          "metricWithAI": "Metrisk med AI",
+          "usWithAI": "Amerikansk med AI"
         }
       }
     },

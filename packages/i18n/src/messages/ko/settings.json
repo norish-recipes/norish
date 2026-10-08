@@ -120,8 +120,8 @@
       "description": "사용자 경험을 맞춤 설정하세요.",
       "deviceKind": {
         "help": "환경설정이 저장되는 방식",
-        "phone": "‘{language}’와 ‘{afterPlanning}’은 모든 기기에 적용됩니다. 나머지는 기기 종류별로 저장됩니다. 여기서 고른 설정은 로그인한 모든 휴대폰에 적용되고, 컴퓨터와 태블릿은 각자의 설정을 유지합니다.",
-        "desktop": "‘{language}’와 ‘{afterPlanning}’은 모든 기기에 적용됩니다. 나머지는 기기 종류별로 저장됩니다. 여기서 고른 설정은 로그인한 모든 컴퓨터와 태블릿에 적용되고, 휴대폰은 각자의 설정을 유지합니다."
+        "phone": "‘{language}’, ‘{afterPlanning}’, ‘{measurements}’ 설정은 계정별로, 나머지는 기기 종류별로 저장됩니다.",
+        "desktop": "‘{language}’, ‘{afterPlanning}’, ‘{measurements}’ 설정은 계정별로, 나머지는 기기 종류별로 저장됩니다."
       },
       "language": {
         "title": "언어",
@@ -168,6 +168,17 @@
           "nothing": "아무것도 안 함",
           "openGroceries": "장보기 패널 열기",
           "addGroceries": "재료를 장보기 목록에 추가"
+        }
+      },
+      "measurements": {
+        "title": "측정 단위",
+        "description": "레시피의 기본 단위계",
+        "options": {
+          "off": "변환 안 함",
+          "metric": "미터법",
+          "us": "미국식",
+          "metricWithAI": "AI로 미터법",
+          "usWithAI": "AI로 미국식"
         }
       }
     },

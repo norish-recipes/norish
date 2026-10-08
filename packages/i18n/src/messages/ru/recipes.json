@@ -156,7 +156,8 @@
     "toUS": "Преобразовать в US",
     "toMetricWithAI": "Преобразовать в метрическую с ИИ",
     "toUSWithAI": "Преобразовать в US с ИИ",
-    "converting": "Преобразование…"
+    "converting": "Преобразование…",
+    "original": "Оригинал"
   },
   "deleteModal": {
     "title": "Удалить рецепт",

@@ -11,7 +11,9 @@ import {
 import {
   getAfterPlanningPreference,
   getLocalePreference,
+  getMeasurementSystemPreference,
   getUserPreferences,
+  measurementSystemTarget,
 } from "@norish/shared/lib/user-preferences";
 
 /** The phone's block as the profile document reads it. */
@@ -28,6 +30,17 @@ describe("user preferences", () => {
     expect(getLocalePreference({ preferences: { locale: "de-informal" } })).toBe("de-informal");
     expect(getLocalePreference({ preferences: {} })).toBeNull();
     expect(getLocalePreference(null)).toBeNull();
+  });
+
+  it("converts no recipe unless the reader chose a system", () => {
+    expect(getMeasurementSystemPreference(null)).toBe("off");
+    expect(getMeasurementSystemPreference({ preferences: { measurementSystem: "us" } })).toBe("us");
+    expect(UserPreferencesSchema.parse({ measurementSystem: "imperial" }).measurementSystem).toBe(
+      undefined
+    );
+    expect(measurementSystemTarget("off")).toBeNull();
+    expect(measurementSystemTarget("metric")).toEqual({ system: "metric", withAI: false });
+    expect(measurementSystemTarget("usWithAI")).toEqual({ system: "us", withAI: true });
   });
 
   it("opens the groceries panel after planning unless the reader chose otherwise", () => {

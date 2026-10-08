@@ -156,7 +156,8 @@
     "toUS": "미국식으로 변환",
     "toMetricWithAI": "AI로 미터법 변환",
     "toUSWithAI": "AI로 미국식 변환",
-    "converting": "변환 중…"
+    "converting": "변환 중…",
+    "original": "원본"
   },
   "deleteModal": {
     "title": "레시피 삭제",

@@ -122,6 +122,7 @@ describe("RecipeDetailContext", () => {
       return {
         recipe,
         isLoading: false,
+        isFetching: false,
         error: null,
         setRecipeData: updateRecipeData,
         invalidate,

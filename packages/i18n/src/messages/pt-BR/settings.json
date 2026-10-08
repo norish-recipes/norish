@@ -120,8 +120,8 @@
       "description": "Personalize sua experiência.",
       "deviceKind": {
         "help": "Como as preferências são salvas",
-        "phone": "“{language}” e “{afterPlanning}” valem em todo lugar. O resto é salvo por tipo de dispositivo: o que você escolher aqui vale em todo celular em que você entrar, e computadores e tablets mantêm as próprias escolhas.",
-        "desktop": "“{language}” e “{afterPlanning}” valem em todo lugar. O resto é salvo por tipo de dispositivo: o que você escolher aqui vale em todo computador e tablet em que você entrar, e celulares mantêm as próprias escolhas."
+        "phone": "“{language}”, “{afterPlanning}” e “{measurements}” são por conta. O resto, por tipo de dispositivo.",
+        "desktop": "“{language}”, “{afterPlanning}” e “{measurements}” são por conta. O resto, por tipo de dispositivo."
       },
       "language": {
         "title": "Idioma",
@@ -168,6 +168,17 @@
           "nothing": "Nada",
           "openGroceries": "Abrir o painel de compras",
           "addGroceries": "Adicionar os ingredientes às compras"
+        }
+      },
+      "measurements": {
+        "title": "Medidas",
+        "description": "O sistema de medidas padrão para as receitas",
+        "options": {
+          "off": "Não converter",
+          "metric": "Métrico",
+          "us": "Unidades dos EUA",
+          "metricWithAI": "Métrico com IA",
+          "usWithAI": "Unidades dos EUA com IA"
         }
       }
     },

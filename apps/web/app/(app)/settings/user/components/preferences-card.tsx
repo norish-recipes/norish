@@ -6,6 +6,7 @@ import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { InfoHint } from "@/components/shared/info-hint";
 import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
+import { usePermissionsContext } from "@/context/permissions-context";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
@@ -16,10 +17,15 @@ import {
   RECIPE_PAGE_COLORS,
   TODAY_SECTION_VISIBILITIES,
 } from "@norish/shared/contracts/zod/device-preferences";
-import { AFTER_PLANNING_CHOICES } from "@norish/shared/contracts/zod/user";
+import {
+  AFTER_PLANNING_CHOICES,
+  MEASUREMENT_SYSTEM_CHOICES,
+} from "@norish/shared/contracts/zod/user";
 import {
   getAfterPlanningPreference,
   getLocalePreference,
+  getMeasurementSystemPreference,
+  measurementSystemTarget,
 } from "@norish/shared/lib/user-preferences";
 
 import { useUserSettingsContext } from "../context";
@@ -28,6 +34,7 @@ export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");
   const { user, updatePreferences, isUpdatingPreferences } = useUserSettingsContext();
   const { globalEnabled } = useTimersEnabledQuery();
+  const { isAIEnabled } = usePermissionsContext();
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
   const router = useRouter();
   const [todaySectionVisibility, setTodaySectionVisibility] =
@@ -47,6 +54,13 @@ export default function PreferencesCard() {
     () => (globalEnabled ? HIDDEN_ITEMS : HIDDEN_ITEMS.filter((item) => item !== "timers")),
     [globalEnabled]
   );
+
+  // Converting with AI is on offer only where an administrator has AI on; a
+  // choice of it made before reads as the same system without.
+  const measurementChoices = isAIEnabled
+    ? MEASUREMENT_SYSTEM_CHOICES
+    : MEASUREMENT_SYSTEM_CHOICES.filter((choice) => !choice.endsWith("WithAI"));
+  const measurementSystem = getMeasurementSystemPreference(user);
 
   const { selected: selectedHidden, carried } = partitionHiddenItems(hiddenItems, offeredHidden);
 
@@ -75,6 +89,7 @@ export default function PreferencesCard() {
           {t(`deviceKind.${deviceKind}`, {
             language: t("language.title"),
             afterPlanning: t("afterPlanning.title"),
+            measurements: t("measurements.title"),
           })}
         </InfoHint>
       }
@@ -120,6 +135,20 @@ export default function PreferencesCard() {
           options={AFTER_PLANNING_CHOICES}
           value={getAfterPlanningPreference(user)}
           onChange={(afterPlanning) => void updatePreferences({ afterPlanning })}
+        />
+      </SettingRow>
+      <SettingRow description={t("measurements.description")} title={t("measurements.title")}>
+        <ChoiceSelect
+          isDisabled={isUpdatingPreferences}
+          label={t("measurements.title")}
+          optionLabel={(option) => t(`measurements.options.${option}`)}
+          options={measurementChoices}
+          value={
+            isAIEnabled
+              ? measurementSystem
+              : (measurementSystemTarget(measurementSystem)?.system ?? "off")
+          }
+          onChange={(choice) => void updatePreferences({ measurementSystem: choice })}
         />
       </SettingRow>
       {/* The rows below are Device Preferences: they change the kind in use. */}

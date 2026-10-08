@@ -156,7 +156,8 @@
     "toUS": "Convertir en US",
     "toMetricWithAI": "Convertir en métrique avec l'AI",
     "toUSWithAI": "Convertir en US avec l'AI",
-    "converting": "Conversion en cours…"
+    "converting": "Conversion en cours…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Supprimer la recette",

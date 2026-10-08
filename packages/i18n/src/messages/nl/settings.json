@@ -120,8 +120,8 @@
       "description": "Pas je ervaring aan.",
       "deviceKind": {
         "help": "Hoe voorkeuren worden bewaard",
-        "phone": "„{language}” en „{afterPlanning}” gelden overal. De rest wordt per soort apparaat bewaard: wat je hier kiest geldt op elke telefoon waarop je inlogt, en computers en tablets houden hun eigen keuzes.",
-        "desktop": "„{language}” en „{afterPlanning}” gelden overal. De rest wordt per soort apparaat bewaard: wat je hier kiest geldt op elke computer en tablet waarop je inlogt, en telefoons houden hun eigen keuzes."
+        "phone": "„{language}”, „{afterPlanning}” en „{measurements}” gelden per account. De rest per soort apparaat.",
+        "desktop": "„{language}”, „{afterPlanning}” en „{measurements}” gelden per account. De rest per soort apparaat."
       },
       "language": {
         "title": "Taal",
@@ -168,6 +168,17 @@
           "nothing": "Niets",
           "openGroceries": "Boodschappenpaneel openen",
           "addGroceries": "Ingrediënten aan boodschappen toevoegen"
+        }
+      },
+      "measurements": {
+        "title": "Maateenheden",
+        "description": "Het standaardmaatsysteem voor recepten",
+        "options": {
+          "off": "Niet converteren",
+          "metric": "Metrisch",
+          "us": "US",
+          "metricWithAI": "Metrisch met AI",
+          "usWithAI": "US met AI"
         }
       }
     },

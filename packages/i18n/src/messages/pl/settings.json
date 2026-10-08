@@ -120,8 +120,8 @@
       "description": "Dostosuj działanie aplikacji.",
       "deviceKind": {
         "help": "Jak zapisywane są preferencje",
-        "phone": "„{language}” i „{afterPlanning}” obowiązują wszędzie. Reszta jest zapisywana osobno dla każdego rodzaju urządzenia: to, co wybierzesz tutaj, obowiązuje na każdym telefonie, na którym się zalogujesz, a komputery i tablety mają własne ustawienia.",
-        "desktop": "„{language}” i „{afterPlanning}” obowiązują wszędzie. Reszta jest zapisywana osobno dla każdego rodzaju urządzenia: to, co wybierzesz tutaj, obowiązuje na każdym komputerze i tablecie, na którym się zalogujesz, a telefony mają własne ustawienia."
+        "phone": "„{language}”, „{afterPlanning}” i „{measurements}” są przypisane do konta. Reszta do typu urządzenia.",
+        "desktop": "„{language}”, „{afterPlanning}” i „{measurements}” są przypisane do konta. Reszta do typu urządzenia."
       },
       "language": {
         "title": "Język",
@@ -168,6 +168,17 @@
           "nothing": "Nic",
           "openGroceries": "Otwórz panel zakupów",
           "addGroceries": "Dodaj składniki do zakupów"
+        }
+      },
+      "measurements": {
+        "title": "Miary",
+        "description": "Domyślny system miar dla przepisów",
+        "options": {
+          "off": "Nie przeliczaj",
+          "metric": "Metryczny",
+          "us": "Amerykański",
+          "metricWithAI": "Metryczny z AI",
+          "usWithAI": "Amerykański z AI"
         }
       }
     },

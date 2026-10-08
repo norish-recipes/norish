@@ -9,6 +9,19 @@ import { DevicePreferencesSchema } from "./device-preferences";
 export const AFTER_PLANNING_CHOICES = ["nothing", "openGroceries", "addGroceries"] as const;
 
 /**
+ * Which measurement system a recipe is converted to as it opens, by AI where
+ * the converted copy has yet to be written. Absent means off: a recipe opens
+ * as it was last shown.
+ */
+export const MEASUREMENT_SYSTEM_CHOICES = [
+  "off",
+  "metric",
+  "us",
+  "metricWithAI",
+  "usWithAI",
+] as const;
+
+/**
  * The profile's preferences document: the person's own choices, which follow
  * them to every device, plus a block of Device Preferences per Device Kind.
  * Every choice is read on its own, so one this version does not know (a
@@ -19,6 +32,7 @@ export const AFTER_PLANNING_CHOICES = ["nothing", "openGroceries", "addGroceries
 export const UserPreferencesSchema = z.object({
   locale: z.string().nullable().optional().catch(undefined),
   afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional().catch(undefined),
+  measurementSystem: z.enum(MEASUREMENT_SYSTEM_CHOICES).optional().catch(undefined),
   phone: DevicePreferencesSchema.optional().catch(undefined),
   desktop: DevicePreferencesSchema.optional().catch(undefined),
 });
@@ -49,6 +63,7 @@ export const UpdateUserPreferencesInputSchema = z.object({
   preferences: z.object({
     locale: UserPreferencesSchema.shape.locale.unwrap(),
     afterPlanning: UserPreferencesSchema.shape.afterPlanning.unwrap(),
+    measurementSystem: UserPreferencesSchema.shape.measurementSystem.unwrap(),
   }),
 });
 

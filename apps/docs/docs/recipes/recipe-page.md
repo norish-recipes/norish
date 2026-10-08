@@ -57,7 +57,13 @@ they are, and oven temperatures in the steps are converted too.
 The converted copy is kept beside the recipe as it was written, and switching
 back shows the original unchanged. On a server with AI, **Convert with AI**
 writes the converted copy with the language model instead; it never touches the
-original.
+original. The menu marks which system the recipe was written in as
+**Original**.
+
+To skip the menu, pick a system under **Measurements** in your Preferences:
+every recipe you can edit switches to it as you open it, as if you had pressed
+convert. With AI, **Metric with AI** and **US with AI** have the language model
+write a copy the recipe doesn't have yet.
 
 ![The Ingredients card options on a phone, offering Convert to US and Convert to US with AI](/img/screenshots/recipe-convert-menu.png)
 

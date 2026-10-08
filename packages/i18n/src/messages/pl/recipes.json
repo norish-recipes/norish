@@ -156,7 +156,8 @@
     "toUS": "Przelicz na amerykański",
     "toMetricWithAI": "Przelicz na metryczny z AI",
     "toUSWithAI": "Przelicz na amerykański z AI",
-    "converting": "Przeliczanie…"
+    "converting": "Przeliczanie…",
+    "original": "Oryginał"
   },
   "deleteModal": {
     "title": "Usuń przepis",
