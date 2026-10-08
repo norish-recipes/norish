@@ -1,12 +1,9 @@
 import "server-only";
 
+import type { DevicePreferencesSeed } from "@/context/device-preferences-context";
 import { cache } from "react";
 import { headers } from "next/headers";
 
-import type {
-  DeviceKind,
-  DevicePreferences,
-} from "@norish/shared/contracts/zod/device-preferences";
 import { auth } from "@norish/auth/auth";
 import { getUserPreferences } from "@norish/db/repositories/users";
 import { parseDevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
@@ -35,15 +32,6 @@ export const readRequestProfile = cache(async () => {
   return { userId, kind, preferences };
 });
 
-/** What the App Shell's provider is seeded with on a server pass. */
-export type DevicePreferencesSeed = {
-  kind: DeviceKind;
-  values: DevicePreferences;
-  signedIn: boolean;
-  /** When the server read the profile, so a fresher cached profile can win. */
-  readAt: number;
-};
-
 export async function readDevicePreferencesSeed(): Promise<DevicePreferencesSeed> {
   const { userId, kind, preferences } = await readRequestProfile();
 
@@ -51,6 +39,5 @@ export async function readDevicePreferencesSeed(): Promise<DevicePreferencesSeed
     kind,
     values: parseDevicePreferences(preferences[kind]),
     signedIn: userId !== null,
-    readAt: Date.now(),
   };
 }

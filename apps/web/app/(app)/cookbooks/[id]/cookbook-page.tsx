@@ -39,12 +39,13 @@ const COOKBOOK_HEADING_ID = "cookbook-heading";
  * A cookbook's own page: its own address, so it can be linked, bookmarked and
  * reached with the back button.
  *
- * Its members render through the Library's grid in the reader's stored view
- * mode, under their own sort, search and filters. The title carries the same
+ * Its members render through the Library's grid in the reader's grid or list
+ * (the Library's own Device Preference), under their own sort, search and
+ * filters. The title carries the same
  * Rename and Delete the card carries, so a name can be fixed without leaving
  * the thing being renamed.
  */
-function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
+export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   const router = useRouter();
   const [viewMode, setViewMode] = useRecipeDashboardViewMode();
   const t = useTranslations("recipes.cookbooks");
@@ -243,12 +244,4 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
       />
     </section>
   );
-}
-
-/**
- * Grid or list is the same Device Preference the Library uses, so a cookbook
- * looks like the rest of the app, from the server's first frame.
- */
-export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
-  return <CookbookPageContent cookbookId={cookbookId} />;
 }

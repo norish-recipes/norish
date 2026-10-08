@@ -64,21 +64,15 @@ export function parseDevicePreferences(block: unknown): DevicePreferences {
 
 const shape = DevicePreferencesSchema.shape;
 
-/** A write names any of the choices and rejects a value outside its set. */
+/** Each choice without its fallback, so a write rejects a value outside its set. */
+const strictShape = Object.fromEntries(
+  Object.entries(shape).map(([key, choice]) => [key, choice.unwrap()])
+) as { [K in keyof typeof shape]: ReturnType<(typeof shape)[K]["unwrap"]> };
+
+/** A write names any of the choices for one Device Kind. */
 export const SetDevicePreferencesInputSchema = z.object({
   kind: z.enum(DEVICE_KINDS),
-  preferences: z
-    .object({
-      groceryViewMode: shape.groceryViewMode.unwrap(),
-      groceryGroupSimilar: shape.groceryGroupSimilar.unwrap(),
-      amountDisplay: shape.amountDisplay.unwrap(),
-      hiddenItems: shape.hiddenItems.unwrap(),
-      recipePageColor: shape.recipePageColor.unwrap(),
-      todaysMeals: shape.todaysMeals.unwrap(),
-      recipeViewMode: shape.recipeViewMode.unwrap(),
-    })
-    .partial()
-    .strict(),
+  preferences: z.object(strictShape).partial().strict(),
 });
 
 export type DevicePreferencesUpdate = z.infer<

@@ -1,4 +1,4 @@
-import type { DevicePreferencesSeed } from "@/lib/request-profile";
+import type { DevicePreferencesSeed } from "@/context/device-preferences-context";
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 import { Navbar } from "@/components/navbar/navbar";

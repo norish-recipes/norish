@@ -582,6 +582,11 @@ test("a grocery view changed Offline applies at once, and is on the profile once
     .poll(async () => (await readOutbox(page)).map(({ path }) => path))
     .toEqual(["user.setDevicePreferences"]);
 
+  // A reload while the change still waits in the Outbox settles on it.
+  await page.reload();
+  await expect(page.getByRole("button", { name: "View Mode" })).toBeVisible();
+  await expect(page.locator('[data-grocery-view="recipe"]').first()).toBeAttached();
+
   await offline.transition("live");
   await expect.poll(() => readOutbox(page), { timeout: 30_000 }).toHaveLength(0);
   // The suite's browser is a desktop.

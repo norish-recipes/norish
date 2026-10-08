@@ -8,10 +8,10 @@
  *
  * Where the server draws the choice itself (the groceries view, Today's
  * meals, the library layout) the assertion reads the server's markup through
- * a JavaScript-disabled page: what shows is exactly what the server sent. A
- * recipe or cookbook page draws only its skeleton on the server, so those
- * scenarios run with JavaScript and record every frame from the start, so a
- * wrong frame fails even once it is corrected.
+ * a JavaScript-disabled page: what shows is exactly what the server sent, the
+ * skeletons included. A recipe or cookbook page draws only its skeleton on
+ * the server, so those scenarios run with JavaScript; where a wrong frame
+ * could paint and be corrected, they record every frame from the start.
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { request } from "@playwright/test";
@@ -82,15 +82,17 @@ async function openStatic(
 }
 
 /**
- * A live page as one Device Kind that records, from the very first frame,
- * every distinct value `selector`'s `attribute` takes (`present` when no
- * attribute is named), read back with {@link seen}.
+ * A live page as one Device Kind. With `watch` it records, from the very first
+ * frame, every distinct value `selector`'s `attribute` takes (`present` when
+ * no attribute is named), read back with {@link seen}.
  */
-async function openWatched(
+async function openLive(
   browser: Browser,
   kind: DeviceKind,
-  watch: { selector: string; attribute?: string },
-  { signedIn = true }: { signedIn?: boolean } = {}
+  {
+    watch,
+    signedIn = true,
+  }: { watch?: { selector: string; attribute?: string }; signedIn?: boolean } = {}
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext({
     baseURL: stack.baseURL,
@@ -98,6 +100,8 @@ async function openWatched(
     userAgent: USER_AGENTS[kind],
     serviceWorkers: "block",
   });
+
+  if (!watch) return { context, page: await context.newPage() };
 
   await context.addInitScript(({ selector, attribute }) => {
     const values: string[] = [];
@@ -378,7 +382,7 @@ test("a recipe's amounts are drawn in the format stored for the phone, only on a
     ["phone", "decimal"],
     ["desktop", "fraction"],
   ] as const) {
-    const { context, page } = await openWatched(browser, kind, { selector: "body" });
+    const { context, page } = await openLive(browser, kind);
 
     try {
       await page.goto(`/recipes/${id}`);
@@ -398,7 +402,7 @@ test("a Hidden Item stored for the phone is hidden only on a phone", async ({ br
     ["phone", 0],
     ["desktop", 1],
   ] as const) {
-    const { context, page } = await openWatched(browser, kind, { selector: "body" });
+    const { context, page } = await openLive(browser, kind);
 
     try {
       await page.goto(`/recipes/${id}`);
@@ -417,7 +421,7 @@ test("a reader who chose the theme colour on a phone never sees a tinted frame t
 
   await seed("phone", { recipePageColor: "theme" });
 
-  const phone = await openWatched(browser, "phone", { selector: "[data-dish-tint]" });
+  const phone = await openLive(browser, "phone", { watch: { selector: "[data-dish-tint]" } });
 
   try {
     await phone.page.goto(`/recipes/${id}`);
@@ -428,7 +432,7 @@ test("a reader who chose the theme colour on a phone never sees a tinted frame t
   }
 
   // Arming check: the desktop keeps the dish's colour.
-  const desktop = await openWatched(browser, "desktop", { selector: "[data-dish-tint]" });
+  const desktop = await openLive(browser, "desktop", { watch: { selector: "[data-dish-tint]" } });
 
   try {
     await desktop.page.goto(`/recipes/${id}`);
@@ -455,9 +459,8 @@ test("a cookbook opens in the list stored for the desktop, never as a grid first
     ["desktop", "list"],
     ["phone", "grid"],
   ] as const) {
-    const { context, page } = await openWatched(browser, kind, {
-      selector: '[data-slot="tabs-tab"][aria-selected="true"]',
-      attribute: "data-key",
+    const { context, page } = await openLive(browser, kind, {
+      watch: { selector: '[data-slot="tabs-tab"][aria-selected="true"]', attribute: "data-key" },
     });
 
     try {
@@ -478,7 +481,7 @@ test("a shared recipe shows a signed-in reader their own format and a signed-out
 
   await seed("phone", { amountDisplay: "decimal" });
 
-  const signedIn = await openWatched(browser, "phone", { selector: "body" });
+  const signedIn = await openLive(browser, "phone");
 
   try {
     await signedIn.page.goto(share.url);
@@ -487,7 +490,7 @@ test("a shared recipe shows a signed-in reader their own format and a signed-out
     await signedIn.context.close();
   }
 
-  const signedOut = await openWatched(browser, "phone", { selector: "body" }, { signedIn: false });
+  const signedOut = await openLive(browser, "phone", { signedIn: false });
 
   try {
     await signedOut.page.goto(share.url);

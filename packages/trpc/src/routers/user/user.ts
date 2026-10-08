@@ -27,6 +27,7 @@ import { households } from "@norish/shared-server/realtime/households";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import {
   DeleteUserAvatarInputSchema,
+  PersonPreferencesSchema,
   SetDevicePreferencesInputSchema,
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
@@ -116,9 +117,7 @@ const updatePreferences = authedProcedure
 
       // The stored language and after-planning, so the client drops its
       // optimistic copy; never the device blocks, which a toggle owns.
-      const stored = UpdateUserPreferencesInputSchema.shape.preferences.safeParse(
-        await getUserPreferences(ctx.user.id)
-      );
+      const stored = PersonPreferencesSchema.safeParse(await getUserPreferences(ctx.user.id));
 
       return {
         success: true,

@@ -2,8 +2,6 @@ import z from "zod";
 
 import { DevicePreferencesSchema } from "./device-preferences";
 
-// A stored `hidden` key from before the Device Preferences moved per kind is
-// simply ignored by this parse.
 /**
  * What happens once a recipe is planned: nothing, the groceries panel for it,
  * or its lines to buy straight onto the list. Absent means the panel.
@@ -11,7 +9,7 @@ import { DevicePreferencesSchema } from "./device-preferences";
 export const AFTER_PLANNING_CHOICES = ["nothing", "openGroceries", "addGroceries"] as const;
 
 /** What follows the person to every device. */
-const PersonPreferencesSchema = z.object({
+export const PersonPreferencesSchema = z.object({
   locale: z.string().nullable().optional(),
   afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional(),
 });
@@ -19,7 +17,8 @@ const PersonPreferencesSchema = z.object({
 /**
  * The profile's preferences document: the person's own choices plus a block
  * of Device Preferences per Device Kind. A broken block reads as absent, so
- * it can never cost the reader their language.
+ * it can never cost the reader their language, and a stored `hidden` key from
+ * before Hidden Items moved per kind is ignored.
  */
 export const UserPreferencesSchema = PersonPreferencesSchema.extend({
   phone: DevicePreferencesSchema.optional().catch(undefined),

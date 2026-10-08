@@ -1,9 +1,8 @@
-import type { DevicePreferencesSeed } from "@/lib/request-profile";
+import type { DevicePreferencesSeed } from "@/context/device-preferences-context";
 import type { QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { render } from "@testing-library/react";
-
 import { DevicePreferencesProvider } from "@/context/device-preferences-context";
+import { render } from "@testing-library/react";
 
 import type { DevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
 import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
@@ -33,7 +32,6 @@ export function renderWithDevicePreferences(
           kind: "phone",
           values: { ...DEVICE_PREFERENCE_DEFAULTS, ...values },
           signedIn: true,
-          readAt: Date.now(),
           ...seed,
         };
 

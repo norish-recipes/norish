@@ -1,6 +1,6 @@
 # Device Preferences on the profile
 
-Status: ready-for-agent
+Status: done
 
 Settled in a `/grill-with-docs` session on 2026-10-08. The vocabulary is CONTEXT.md's **Device Preference** and **Device Kind** (both added that day), with **Hidden Item**, **Dish Colour**, **Outbox**, **Warm Set** and **App Shell**. Nothing here is expensive to reverse, so it adds no ADR; the Device Kind entry carries the one surprising choice (a kind, not a particular device). Target Version: 0.25.0-beta. Tickets are in `issues/`.
 

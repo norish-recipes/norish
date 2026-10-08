@@ -1,4 +1,4 @@
-import type { DevicePreferencesSeed } from "@/lib/request-profile";
+import type { DevicePreferencesSeed } from "@/context/device-preferences-context";
 import type { QueryClient } from "@tanstack/react-query";
 import { act, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,31 +18,35 @@ import { createTestQueryClient } from "../hooks/user/test-utils";
 
 vi.mock("@/app/providers/trpc-provider", () => import("../helpers/device-preferences-trpc"));
 
+const connectivity = vi.hoisted(() => ({ isOffline: false }));
+
+vi.mock("@/app/providers/connectivity-provider", () => ({
+  useConnectivity: () => connectivity,
+}));
+
 const IPHONE =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+const AN_HOUR_AGO = Date.now() - 60 * 60_000;
 
 let queryClient: QueryClient;
 let setView!: ReturnType<typeof useDevicePreference<"groceryViewMode">>[1];
+let setGrouped!: ReturnType<typeof useDevicePreference<"groceryGroupSimilar">>[1];
 
 function Probe() {
-  const [view, setter] = useDevicePreference("groceryViewMode");
-  const [grouped] = useDevicePreference("groceryGroupSimilar");
+  const [view, viewSetter] = useDevicePreference("groceryViewMode");
+  const [grouped, groupedSetter] = useDevicePreference("groceryGroupSimilar");
 
-  setView = setter;
+  setView = viewSetter;
+  setGrouped = groupedSetter;
 
   return <span data-testid="state">{`${useDeviceKind()}:${view}:${grouped}`}</span>;
 }
 
 function seed(overrides: Partial<DevicePreferencesSeed> = {}): DevicePreferencesSeed {
-  return {
-    kind: "phone",
-    values: DEVICE_PREFERENCE_DEFAULTS,
-    signedIn: true,
-    readAt: Date.now(),
-    ...overrides,
-  };
+  return { kind: "phone", values: DEVICE_PREFERENCE_DEFAULTS, signedIn: true, ...overrides };
 }
 
+/** The profile query's answer, saved earlier (`updatedAt`) or read just now. */
 function storeProfile(preferences: object, updatedAt?: number) {
   queryClient.setQueryData(
     userQueryKey,
@@ -57,6 +61,7 @@ function renderProvider(providerSeed?: DevicePreferencesSeed) {
 
 beforeEach(() => {
   queryClient = createTestQueryClient();
+  connectivity.isOffline = false;
   write.mockReset().mockResolvedValue({ success: true });
 });
 
@@ -72,7 +77,7 @@ describe("DevicePreferencesProvider", () => {
   });
 
   it("applies a change at once, puts it on the profile query and writes it for this kind", async () => {
-    storeProfile({ locale: "nl" }, Date.now() - 60_000);
+    storeProfile({ locale: "nl" }, AN_HOUR_AGO);
     renderProvider(seed({ kind: "desktop" }));
 
     act(() => setView("recipe"));
@@ -92,38 +97,59 @@ describe("DevicePreferencesProvider", () => {
     });
   });
 
-  it("settles on a profile fresher than the page it was served with", () => {
-    // HTML the service worker cached before the last change.
-    storeProfile({ phone: { groceryViewMode: "recipe" } }, Date.now());
-    renderProvider(seed({ readAt: Date.now() - 60 * 60_000 }));
+  it("keeps the server's choice over an older saved copy of the profile", () => {
+    // Another browser of the same kind changed it since this one last looked.
+    storeProfile({ phone: { groceryViewMode: "store" } }, AN_HOUR_AGO);
+    renderProvider(seed({ values: { ...DEVICE_PREFERENCE_DEFAULTS, groceryViewMode: "recipe" } }));
 
     expect(screen.getByTestId("state")).toHaveTextContent("phone:recipe:true");
   });
 
-  it("keeps the server's choice over an older copy of the profile", () => {
-    // Another browser of the same kind changed it since this one last looked.
-    storeProfile({ phone: { groceryViewMode: "store" } }, Date.now() - 60 * 60_000);
-    renderProvider(seed({ values: { ...DEVICE_PREFERENCE_DEFAULTS, groceryViewMode: "recipe" } }));
+  it("settles on the profile read after the page loaded, even for a choice changed here", async () => {
+    renderProvider(seed());
+    act(() => setGrouped(false));
+
+    // A refetch brings a change made since on another screen of this kind.
+    act(() => storeProfile({ phone: { groceryViewMode: "recipe", groceryGroupSimilar: true } }));
+
+    await waitFor(() => expect(screen.getByTestId("state")).toHaveTextContent("phone:recipe:true"));
+  });
+
+  it("Offline, settles on the saved profile over a page the service worker saved earlier", () => {
+    connectivity.isOffline = true;
+    storeProfile({ phone: { groceryViewMode: "recipe" } }, AN_HOUR_AGO);
+    renderProvider(seed());
 
     expect(screen.getByTestId("state")).toHaveTextContent("phone:recipe:true");
   });
 
   it("starts with no server pass from this kind's block in the profile query", () => {
     vi.stubGlobal("navigator", { userAgent: IPHONE });
-    storeProfile({
-      phone: { groceryViewMode: "recipe", groceryGroupSimilar: false },
-      desktop: { groceryViewMode: "store" },
-    });
+    storeProfile(
+      {
+        phone: { groceryViewMode: "recipe", groceryGroupSimilar: false },
+        desktop: { groceryViewMode: "store" },
+      },
+      AN_HOUR_AGO
+    );
     renderProvider();
 
     expect(screen.getByTestId("state")).toHaveTextContent("phone:recipe:false");
   });
 
-  it("never shows one kind's choices on the other", () => {
-    storeProfile({ phone: { groceryViewMode: "recipe" } }, Date.now());
-    renderProvider(seed({ kind: "desktop", readAt: Date.now() - 60_000 }));
+  it("never shows one kind's choices on the other", async () => {
+    renderProvider(seed({ kind: "desktop" }));
+    act(() =>
+      storeProfile({
+        phone: { groceryViewMode: "recipe" },
+        desktop: { groceryGroupSimilar: false },
+      })
+    );
 
-    expect(screen.getByTestId("state")).toHaveTextContent("desktop:store:true");
+    // The desktop's own block arrives; the phone's view never does.
+    await waitFor(() =>
+      expect(screen.getByTestId("state")).toHaveTextContent("desktop:store:false")
+    );
   });
 
   it("lets a signed-out reader switch for the visit without writing anything", () => {

@@ -1,3 +1,4 @@
+// ponytail: never evicted, one tiny entry per recipe or cookbook opened Offline; bound it if that ever grows.
 const paramsById = new Map<string, Promise<{ id: string }>>();
 
 /**
