@@ -8,7 +8,7 @@ import LibraryView from "@/components/dashboard/library-view";
 import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
-import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { Tabs } from "@heroui/react";
 
 import { RECIPE_VIEW_MODES } from "@norish/shared/contracts/zod/device-preferences";
@@ -16,7 +16,7 @@ import { RECIPE_VIEW_MODES } from "@norish/shared/contracts/zod/device-preferenc
 const LIBRARY_HEADING_ID = "recipe-library-heading";
 
 function RecipeLibrary() {
-  const [viewMode, setViewMode] = useRecipeDashboardViewMode();
+  const [viewMode, setViewMode] = useDevicePreference("recipeViewMode");
 
   return (
     <section aria-labelledby={LIBRARY_HEADING_ID} className="flex min-h-0 flex-1 flex-col">

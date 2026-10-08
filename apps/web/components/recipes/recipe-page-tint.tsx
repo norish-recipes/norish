@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRecipePageColor } from "@/context/recipe-page-color-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { dishTintStyle } from "@/lib/dish-tint";
 
 /**
@@ -30,7 +30,7 @@ export default function RecipePageTint({
   dishColor: string | null | undefined;
   children: ReactNode;
 }) {
-  const [colorMode] = useRecipePageColor();
+  const [colorMode] = useDevicePreference("recipePageColor");
   const style = dishTintStyle(colorMode === "dish" ? dishColor : null);
 
   return (

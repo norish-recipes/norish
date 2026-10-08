@@ -22,9 +22,11 @@ vi.mock("@/context/user-context", () => ({
   useUserContext: () => ({ user: { id: "owner-1" } }),
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItems: () => [],
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: [],
+  }))
+);
 
 vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({ isAIEnabled: false }),

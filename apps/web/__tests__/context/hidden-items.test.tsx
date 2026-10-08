@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import { useHiddenItems, useHiddenItemsState } from "@/context/hidden-items-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
 
 import { renderWithDevicePreferences, deviceWrite as write } from "../helpers/device-preferences";
@@ -15,7 +15,7 @@ function renderWithHidden(hiddenItems: string[], children: React.ReactNode) {
 }
 
 function Probe() {
-  return <span data-testid="hidden">{JSON.stringify(useHiddenItems())}</span>;
+  return <span data-testid="hidden">{JSON.stringify(useDevicePreference("hiddenItems")[0])}</span>;
 }
 
 beforeEach(() => {
@@ -37,7 +37,7 @@ describe("Hidden Items", () => {
 
   it("apply a settings change at once and save the whole list, carried entries included", async () => {
     function Writer() {
-      const [, setHidden] = useHiddenItemsState();
+      const [, setHidden] = useDevicePreference("hiddenItems");
 
       return (
         <button type="button" onClick={() => setHidden(["conversion", "fromANewerVersion"])}>

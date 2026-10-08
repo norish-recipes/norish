@@ -19,7 +19,11 @@ const mocks = vi.hoisted(() => ({
   asked: [] as unknown[],
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({ useHiddenItems: () => mocks.hidden }));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: mocks.hidden,
+  }))
+);
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({

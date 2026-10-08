@@ -4,7 +4,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWakeLockContext } from "@/app/(app)/recipes/[id]/components/wake-lock-context";
 import { TimerDock } from "@/components/timer-dock";
-import { useRecipePageColor } from "@/context/recipe-page-color-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { dishTintStyle } from "@/lib/dish-tint";
 import { FireIcon } from "@heroicons/react/20/solid";
@@ -53,7 +53,7 @@ export default function CookingMode({
   // so the backdrop re-establishes it: the wash and every tinted token
   // inside cooking mode - the bottom bar's ground, the ingredient chips -
   // resolve against the same dish hue as the page under it.
-  const [recipePageColor] = useRecipePageColor();
+  const [recipePageColor] = useDevicePreference("recipePageColor");
   const tintStyle = dishTintStyle(recipePageColor === "dish" ? recipe.dishColor : null);
   const tDetail = useTranslations("recipes.detail");
   const isDesktop = useIsDesktopCookingMode();

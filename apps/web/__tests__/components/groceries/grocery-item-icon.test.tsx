@@ -14,7 +14,11 @@ import type { GroceryDto } from "@norish/shared/contracts";
 const ONION = "11111111-1111-4111-8111-111111111111";
 const ONION_ICON = "/ingredient-icons/0123456789abcdef0123456789abcdef.webp";
 
-vi.mock("@/context/hidden-items-context", () => ({ useHiddenItems: () => [] }));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: [],
+  }))
+);
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({ formatAmountUnit: () => "" }),
 }));

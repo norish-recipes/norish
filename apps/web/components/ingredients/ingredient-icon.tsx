@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { useHiddenItems } from "@/context/hidden-items-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -96,7 +96,7 @@ export function IngredientIconsProvider({
   children: ReactNode;
 }) {
   const addresses = useIngredientIcons(ids);
-  const hidden = useHiddenItems().includes("ingredientIcons");
+  const hidden = useDevicePreference("hiddenItems")[0].includes("ingredientIcons");
   const value = useMemo(() => ({ addresses, hidden }), [addresses, hidden]);
 
   return <IconsContext.Provider value={value}>{children}</IconsContext.Provider>;

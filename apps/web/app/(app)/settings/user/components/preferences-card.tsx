@@ -5,10 +5,7 @@ import { useRouter } from "next/navigation";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { Note } from "@/components/shared/note";
-import { useDeviceKind } from "@/context/device-preferences-context";
-import { useHiddenItemsState } from "@/context/hidden-items-context";
-import { useRecipePageColor } from "@/context/recipe-page-color-context";
-import { useTodaySectionVisibility } from "@/context/todays-meals-visibility-context";
+import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
@@ -33,9 +30,9 @@ export default function PreferencesCard() {
   const { globalEnabled } = useTimersEnabledQuery();
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
   const router = useRouter();
-  const [todaySectionVisibility, setTodaySectionVisibility] = useTodaySectionVisibility();
-  const [hiddenItems, setHiddenItems] = useHiddenItemsState();
-  const [recipePageColor, setRecipePageColor] = useRecipePageColor();
+  const [todaySectionVisibility, setTodaySectionVisibility] = useDevicePreference("todaysMeals");
+  const [hiddenItems, setHiddenItems] = useDevicePreference("hiddenItems");
+  const [recipePageColor, setRecipePageColor] = useDevicePreference("recipePageColor");
   const deviceKind = useDeviceKind();
 
   const currentLocale = getLocalePreference(user) ?? defaultLocale;

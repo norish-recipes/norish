@@ -59,7 +59,11 @@ vi.mock("@tanstack/react-query", () => ({
     data: queryKey[0] === "icons" ? icons : undefined,
   }),
 }));
-vi.mock("@/context/hidden-items-context", () => ({ useHiddenItems: () => [] }));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: [],
+  }))
+);
 vi.mock("@/app/providers/connectivity-provider", () => ({
   useConnectivity: () => ({ isOffline: offline }),
 }));

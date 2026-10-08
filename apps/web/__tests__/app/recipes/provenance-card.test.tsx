@@ -25,9 +25,11 @@ vi.mock("@/context/user-context", () => ({
   useUserContext: () => ({ user: { id: "owner-1" } }),
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItems: () => mocks.hidden,
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: mocks.hidden,
+  }))
+);
 
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({
   useRecipeContext: () => ({

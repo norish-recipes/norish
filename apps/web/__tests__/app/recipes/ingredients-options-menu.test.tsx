@@ -20,9 +20,11 @@ vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({ isAIEnabled: mocks.isAIEnabled }),
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItems: () => mocks.hidden,
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: mocks.hidden,
+  }))
+);
 
 vi.mock("@/hooks/use-amount-display-preference", () => ({
   useAmountDisplayPreference: () => ({

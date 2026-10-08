@@ -5,6 +5,8 @@ import "@testing-library/jest-dom";
 
 import PreferencesCard from "@/app/(app)/settings/user/components/preferences-card";
 
+import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
+
 const mockContext = vi.hoisted(() => ({
   user: { preferences: {} },
   updatePreferences: vi.fn().mockResolvedValue(undefined),
@@ -30,17 +32,9 @@ const todaysMealsMock = vi.hoisted(() => ({
   setVisibility: vi.fn(),
 }));
 
-vi.mock("@/context/todays-meals-visibility-context", () => ({
-  useTodaySectionVisibility: () => [todaysMealsMock.visibility, todaysMealsMock.setVisibility],
-}));
-
 const hiddenItemsMock = vi.hoisted(() => ({
   hidden: [] as string[],
   setHidden: vi.fn(),
-}));
-
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItemsState: () => [hiddenItemsMock.hidden, hiddenItemsMock.setHidden],
 }));
 
 const recipePageColorMock = vi.hoisted(() => ({
@@ -48,15 +42,29 @@ const recipePageColorMock = vi.hoisted(() => ({
   setMode: vi.fn(),
 }));
 
-vi.mock("@/context/recipe-page-color-context", () => ({
-  useRecipePageColor: () => [recipePageColorMock.mode, recipePageColorMock.setMode],
-}));
+const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 
-const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as "phone" | "desktop" }));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      todaysMeals: todaysMealsMock.visibility,
+      hiddenItems: hiddenItemsMock.hidden,
+      recipePageColor: recipePageColorMock.mode,
+    }),
+    {
+      kind: () => deviceKindMock.kind,
+      set: (key, next) => {
+        const setters: Record<string, (next: unknown) => void> = {
+          todaysMeals: todaysMealsMock.setVisibility,
+          hiddenItems: hiddenItemsMock.setHidden,
+          recipePageColor: recipePageColorMock.setMode,
+        };
 
-vi.mock("@/context/device-preferences-context", () => ({
-  useDeviceKind: () => deviceKindMock.kind,
-}));
+        setters[key]?.(next);
+      },
+    }
+  )
+);
 
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
 

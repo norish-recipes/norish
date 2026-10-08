@@ -1,12 +1,12 @@
 "use client";
 
 import { CalendarContextProvider } from "@/app/(app)/calendar/context";
-import { useTodaySectionVisibility } from "@/context/todays-meals-visibility-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 
 import TodaysMealsContent from "./todays-meals-content";
 
 export default function TodaysMeals() {
-  const [visibility] = useTodaySectionVisibility();
+  const [visibility] = useDevicePreference("todaysMeals");
 
   if (visibility === "hidden") return null;
 

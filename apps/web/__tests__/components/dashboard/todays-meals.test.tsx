@@ -18,9 +18,12 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/context/todays-meals-visibility-context", () => ({
-  useTodaySectionVisibility: () => [visibilityMock, setVisibilityMock],
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({ todaysMeals: visibilityMock }),
+    { set: (_key, next) => setVisibilityMock(next) }
+  )
+);
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",

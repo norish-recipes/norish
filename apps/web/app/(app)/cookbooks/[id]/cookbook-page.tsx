@@ -8,8 +8,8 @@ import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/c
 import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import { NotFoundView } from "@/components/shared/not-found-view";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { useRecipeDashboardViewMode } from "@/context/recipe-view-mode-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { useBackDestination } from "@/hooks/use-back-destination";
 import {
@@ -47,7 +47,7 @@ const COOKBOOK_HEADING_ID = "cookbook-heading";
  */
 export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   const router = useRouter();
-  const [viewMode, setViewMode] = useRecipeDashboardViewMode();
+  const [viewMode, setViewMode] = useDevicePreference("recipeViewMode");
   const t = useTranslations("recipes.cookbooks");
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
   const { deleteCookbook } = useCookbooksMutations();

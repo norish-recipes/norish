@@ -278,7 +278,11 @@ vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast: vi.fn() }));
 /** Whether the instance has AI: with it off, nothing on the page offers it. */
 const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
 
-vi.mock("@/context/hidden-items-context", () => ({ useHiddenItems: () => [] }));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: [],
+  }))
+);
 
 vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({
