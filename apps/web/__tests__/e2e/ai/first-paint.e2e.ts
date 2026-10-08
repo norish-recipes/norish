@@ -14,7 +14,6 @@
  * could paint and be corrected, they record every frame from the start.
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
-import { request } from "@playwright/test";
 
 import type { DeviceKind } from "../harness/device-preferences";
 import type { AIE2EStack } from "./fixture";
@@ -24,6 +23,7 @@ import {
   IPHONE_USER_AGENT,
   setDevicePreferences,
 } from "../harness/device-preferences";
+import { callTrpc } from "../harness/trpc";
 import { databaseUrl, withDatabase } from "./database";
 import { expect, test } from "./fixture";
 
@@ -46,24 +46,8 @@ function seed(kind: DeviceKind, preferences: Record<string, unknown>): Promise<v
 }
 
 /** One tRPC mutation as the owner, answering its result. */
-async function callApi<T>(procedure: string, input: unknown): Promise<T> {
-  const api = await request.newContext({
-    baseURL: stack.baseURL,
-    extraHTTPHeaders: {
-      origin: stack.baseURL,
-      cookie: stack.ownerCookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
-    },
-  });
-
-  try {
-    const response = await api.post(`/api/trpc/${procedure}`, { data: { json: input } });
-
-    if (!response.ok()) throw new Error(`${procedure} failed: ${response.status()}`);
-
-    return ((await response.json()) as { result: { data: { json: T } } }).result.data.json;
-  } finally {
-    await api.dispose();
-  }
+function callApi<T>(procedure: string, input: unknown): Promise<T> {
+  return callTrpc<T>(stack.baseURL, stack.ownerCookies, procedure, input);
 }
 
 /** A page that renders the server's bytes and nothing else, as one Device Kind. */

@@ -1,7 +1,6 @@
-import { request } from "@playwright/test";
-
 import type { SessionCookies } from "./auth";
 import { withDatabase } from "./database";
+import { callTrpc } from "./trpc";
 
 /** Safari on an iPhone: its `Mobi` token makes the request a phone. */
 export const IPHONE_USER_AGENT =
@@ -20,23 +19,7 @@ export async function setDevicePreferences(
   kind: DeviceKind,
   preferences: Record<string, unknown>
 ): Promise<void> {
-  const api = await request.newContext({
-    baseURL,
-    extraHTTPHeaders: {
-      origin: baseURL,
-      cookie: cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
-    },
-  });
-
-  try {
-    const response = await api.post("/api/trpc/user.setDevicePreferences", {
-      data: { json: { kind, preferences } },
-    });
-
-    if (!response.ok()) throw new Error(`setDevicePreferences failed: ${response.status()}`);
-  } finally {
-    await api.dispose();
-  }
+  await callTrpc(baseURL, cookies, "user.setDevicePreferences", { kind, preferences });
 }
 
 /** The reader's stored preferences document as the profile query returns it. */
@@ -44,27 +27,13 @@ export async function readProfilePreferences(
   baseURL: string,
   cookies: SessionCookies
 ): Promise<Record<string, unknown>> {
-  const api = await request.newContext({
+  const { user } = await callTrpc<{ user: { preferences?: Record<string, unknown> } }>(
     baseURL,
-    extraHTTPHeaders: {
-      origin: baseURL,
-      cookie: cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
-    },
-  });
+    cookies,
+    "user.get"
+  );
 
-  try {
-    const response = await api.get("/api/trpc/user.get");
-
-    if (!response.ok()) throw new Error(`user.get failed: ${response.status()}`);
-
-    const body = (await response.json()) as {
-      result: { data: { json: { user: { preferences?: Record<string, unknown> } } } };
-    };
-
-    return body.result.data.json.user.preferences ?? {};
-  } finally {
-    await api.dispose();
-  }
+  return user.preferences ?? {};
 }
 
 /** Forget every reader's Device Preferences, so a scenario starts from the defaults. */
