@@ -57,11 +57,17 @@ function suggestion(name: string): Locator {
   return page.locator(`[data-pantry-suggestion="${name}"]`);
 }
 
-/** The Pantry page, reached the way a member reaches it: from the list's switch. */
+/**
+ * The Pantry page, reached the way a member reaches it: from the list's
+ * switch. The page hydrates behind its first paint and a click before React
+ * attaches is swallowed, so the click repeats until the address follows it.
+ */
 async function openPantry(): Promise<void> {
   await page.goto("/groceries");
-  await page.getByRole("tab", { name: "Pantry" }).click();
-  await expect(page).toHaveURL(/\/groceries\/pantry$/);
+  await expect(async () => {
+    await page.getByRole("tab", { name: "Pantry" }).click();
+    await expect(page).toHaveURL(/\/groceries\/pantry$/, { timeout: 2_000 });
+  }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
 }
 
 /** The recipe's add-to-groceries panel, opened from its ingredients card. */
