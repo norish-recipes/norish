@@ -1,9 +1,8 @@
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import { render, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const toggle = vi.fn();
-const mockToast = vi.fn();
 let isSupported = false;
 let isActive = false;
 
@@ -16,43 +15,35 @@ vi.mock("@heroicons/react/20/solid", () => ({
 }));
 
 vi.mock("@heroui/react", () => {
-  const Button = ({
-    onPress,
-    onClick,
+  const ToggleButton = ({
+    onChange,
     children,
-    isDisabled,
+    isSelected,
     "aria-label": ariaLabel,
-    "aria-pressed": ariaPressed,
-    className,
-    variant,
+    "aria-disabled": ariaDisabled,
   }: {
-    onPress?: () => void;
-    onClick?: () => void;
+    onChange?: () => void;
     children?: React.ReactNode;
-    isDisabled?: boolean;
+    isSelected?: boolean;
     "aria-label"?: string;
-    "aria-pressed"?: boolean;
-    className?: string;
-    variant?: string;
+    "aria-disabled"?: boolean;
   }) => (
     <button
+      aria-disabled={ariaDisabled}
       aria-label={ariaLabel}
-      aria-pressed={ariaPressed}
-      className={className}
-      data-variant={variant}
-      disabled={isDisabled}
+      aria-pressed={isSelected}
       type="button"
-      onClick={onPress || onClick}
+      onClick={onChange}
     >
       {children}
     </button>
   );
+  const Tooltip = Object.assign(
+    ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    { Content: ({ children }: { children: React.ReactNode }) => <span>{children}</span> }
+  );
 
-  return {
-    Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    Button,
-    toast: (...args: unknown[]) => mockToast(...args),
-  };
+  return { Tooltip, ToggleButton };
 });
 
 vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-context", () => ({
@@ -68,7 +59,6 @@ describe("WakeLockToggle", () => {
     isSupported = false;
     isActive = false;
     toggle.mockClear();
-    mockToast.mockClear();
   });
 
   it("enables wake lock by default once support is detected", () => {
@@ -98,39 +88,30 @@ describe("WakeLockToggle", () => {
     expect(toggle).toHaveBeenCalledTimes(1);
   });
 
-  it("shows active toast when manually turning wake lock on", async () => {
-    isSupported = true;
-    isActive = false;
-
-    const { getByRole } = render(<WakeLockToggle autoEnable={false} />);
-    const button = getByRole("button");
-    expect(button.getAttribute("aria-label")).toBe("ariaLabel");
-    expect(button.getAttribute("aria-pressed")).toBe("false");
-    expect(button.getAttribute("data-variant")).toBe("secondary");
-
-    button.click();
-
-    expect(toggle).toHaveBeenCalledTimes(1);
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith("activeToast");
-    });
-  });
-
-  it("shows inactive toast when manually turning wake lock off", async () => {
+  it("shows whether the screen stays awake, and toggles it", () => {
     isSupported = true;
     isActive = true;
 
-    const { getByRole } = render(<WakeLockToggle autoEnable={false} />);
-    const button = getByRole("button");
-    expect(button.getAttribute("aria-label")).toBe("ariaLabel");
+    const { getByRole, getByText } = render(<WakeLockToggle autoEnable={false} />);
+    const button = getByRole("button", { name: "ariaLabel" });
+
     expect(button.getAttribute("aria-pressed")).toBe("true");
-    expect(button.getAttribute("data-variant")).toBe("primary");
+    expect(getByText("activeTooltip")).toBeTruthy();
 
     button.click();
 
     expect(toggle).toHaveBeenCalledTimes(1);
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith("inactiveToast");
-    });
+  });
+
+  it("says why it does nothing where wake lock is not supported", () => {
+    const { getByRole, getByText } = render(<WakeLockToggle autoEnable={false} />);
+    const button = getByRole("button", { name: "ariaLabel" });
+
+    expect(button.getAttribute("aria-disabled")).toBe("true");
+    expect(getByText("notSupported")).toBeTruthy();
+
+    button.click();
+
+    expect(toggle).not.toHaveBeenCalled();
   });
 });

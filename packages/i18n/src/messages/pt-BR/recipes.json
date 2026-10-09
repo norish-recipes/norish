@@ -313,9 +313,7 @@
     "notSupported": "Manter a tela acordada não é compatível com este navegador",
     "activeTooltip": "A tela permanecerá ligada enquanto você cozinha",
     "inactiveTooltip": "Mantenha a tela ligada enquanto segue as etapas",
-    "ariaLabel": "Manter tela ligada",
-    "activeToast": "A tela continuará acesa",
-    "inactiveToast": "Tempo limite da tela restaurado"
+    "ariaLabel": "Manter tela ligada"
   },
   "toasts": {
     "imported": "Receita importada",

@@ -313,9 +313,7 @@
     "notSupported": "Le maintien de l’écran allumé n’est pas pris en charge par ce navigateur",
     "activeTooltip": "L’écran restera allumé pendant la cuisson",
     "inactiveTooltip": "Garder l’écran allumé pendant les étapes",
-    "ariaLabel": "Garder l’écran éveillé",
-    "activeToast": "L'écran restera allumé",
-    "inactiveToast": "Mise en veille de l'écran restaurée"
+    "ariaLabel": "Garder l’écran éveillé"
   },
   "toasts": {
     "imported": "Recette importée",

@@ -313,9 +313,7 @@
     "notSupported": "Hold skjermen på støttes ikke i denne nettleseren",
     "activeTooltip": "Skjermen forblir på under matlaging",
     "inactiveTooltip": "Hold skjermen på mens du følger trinnene",
-    "ariaLabel": "Hold skjermen på",
-    "activeToast": "Skjermen forblir på",
-    "inactiveToast": "Skjerm-tidsavbrudd gjenopprettet"
+    "ariaLabel": "Hold skjermen på"
   },
   "toasts": {
     "imported": "Oppskrift importert",

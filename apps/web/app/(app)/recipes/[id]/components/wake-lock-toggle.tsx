@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
-import { Button, toast, Tooltip } from "@heroui/react";
+import { ToggleButton, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useWakeLockContext } from "./wake-lock-context";
@@ -28,44 +28,29 @@ export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProp
     toggle();
   }, [autoEnable, isSupported, isActive, toggle]);
 
-  if (!isSupported) {
-    return (
-      <Tooltip content={t("notSupported")}>
-        <Button
-          isIconOnly
-          aria-label={t("notSupported")}
-          className="size-10 min-w-10 rounded-full opacity-50"
-          isDisabled
-          variant="secondary"
-        >
-          <DevicePhoneMobileIcon className="size-5" />
-        </Button>
-      </Tooltip>
-    );
-  }
-
-  const handleToggle = async () => {
-    await toggle();
-    // Use the *current* isActive to determine what the state was before toggle
-    if (isActive) {
-      toast(t("inactiveToast"));
-    } else {
-      toast(t("activeToast"));
-    }
-  };
+  const tooltip = !isSupported
+    ? t("notSupported")
+    : isActive
+      ? t("activeTooltip")
+      : t("inactiveTooltip");
 
   return (
-    <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
-      <Button
+    <Tooltip delay={0}>
+      {/* Unsupported stays focusable rather than disabled, so its tooltip
+          can still say why it does nothing. */}
+      <ToggleButton
         isIconOnly
+        aria-disabled={!isSupported || undefined}
         aria-label={t("ariaLabel")}
-        aria-pressed={isActive}
-        className="size-10 min-w-10 rounded-full transition-colors"
-        variant={isActive ? "primary" : "secondary"}
-        onPress={handleToggle}
+        className={`size-10 min-w-10 rounded-full ${isSupported ? "" : "opacity-50"}`}
+        isSelected={isActive}
+        onChange={() => {
+          if (isSupported) void toggle();
+        }}
       >
         <DevicePhoneMobileIcon className="size-5" />
-      </Button>
+      </ToggleButton>
+      <Tooltip.Content placement="top">{tooltip}</Tooltip.Content>
     </Tooltip>
   );
 }

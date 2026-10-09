@@ -313,9 +313,7 @@
     "notSupported": "Keep screen awake is not supported in this browser",
     "activeTooltip": "Screen will stay awake while cooking",
     "inactiveTooltip": "Keep screen awake while following steps",
-    "ariaLabel": "Keep screen awake",
-    "activeToast": "Screen will stay awake",
-    "inactiveToast": "Screen timeout restored"
+    "ariaLabel": "Keep screen awake"
   },
   "toasts": {
     "imported": "Recipe imported",

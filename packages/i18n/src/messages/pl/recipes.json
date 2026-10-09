@@ -313,9 +313,7 @@
     "notSupported": "Utrzymywanie ekranu nie jest obsługiwane w tej przeglądarce",
     "activeTooltip": "Ekran pozostanie włączony podczas gotowania",
     "inactiveTooltip": "Utrzymaj ekran włączony podczas śledzenia kroków",
-    "ariaLabel": "Utrzymaj ekran włączony",
-    "activeToast": "Ekran pozostanie włączony",
-    "inactiveToast": "Przywrócono limit czasu ekranu"
+    "ariaLabel": "Utrzymaj ekran włączony"
   },
   "toasts": {
     "imported": "Przepis zaimportowany",
