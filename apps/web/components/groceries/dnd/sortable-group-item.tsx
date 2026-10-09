@@ -7,6 +7,7 @@ import { Bars3Icon } from "@heroicons/react/16/solid";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import type { GroupDragHandle } from "./types";
+import { ROW_CLASS_NAME } from "./sortable-grocery-item";
 
 interface SortableGroupItemProps {
   group: GroceryGroup;
@@ -50,7 +51,12 @@ export function SortableGroupItem({ group, children }: SortableGroupItemProps) {
   );
 
   return (
-    <div ref={setNodeRef} className="relative" style={style}>
+    <div
+      ref={setNodeRef}
+      className={ROW_CLASS_NAME}
+      style={style}
+      onTouchStart={listeners?.onTouchStart}
+    >
       {/* The actual grouped grocery item content */}
       {children({ dragHandle })}
     </div>

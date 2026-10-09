@@ -154,7 +154,10 @@
     "ariaLabel": "Konverter målesystem",
     "toMetric": "Konverter til metrisk",
     "toUS": "Konverter til amerikansk",
-    "converting": "Konverterer…"
+    "toMetricWithAI": "Konverter til metrisk med AI",
+    "toUSWithAI": "Konverter til amerikansk med AI",
+    "converting": "Konverterer…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Slet opskrift",
@@ -255,7 +258,20 @@
     "protein": "Protein",
     "showingPortions": "Viser værdier for {count} {count, plural, one {portion} other {portioner}}",
     "noInfo": "Ingen næringsoplysninger tilgængelige",
-    "estimateWithAI": "Estimér med AI"
+    "estimateWithAI": "Estimér med AI",
+    "estimated": "Anslået",
+    "leftOut": "{count, plural, one {# linje ikke talt med} other {# linjer ikke talt med}}",
+    "estimatedByAI": "anslået af AI",
+    "reasons": {
+      "seasoning": "krydderi",
+      "noAmount": "ingen mængde",
+      "noSize": "ingen vægt for dette mål",
+      "noNumbers": "ingen næringsværdier endnu",
+      "noSpoonWeight": "ingen skevægt endnu",
+      "noPieceWeight": "ingen stykvægt endnu"
+    },
+    "workedOutFrom": "Beregnet ud fra ingredienserne, med {sources}.",
+    "householdNumbers": "din husstands værdier"
   },
   "measurementSystem": {
     "label": "Målesystem",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Opskrift importeret",
-    "converted": "Mål konverteret",
-    "convertedDescription": "Opskrift konverteret til {system}-enheder",
     "failed": "Opskrifthandling mislykkedes",
     "failedDescription": "Noget gik galt under behandling af din opskrift. Tjek browserkonsollen for tekniske detaljer.",
     "batchImported": "Opskrifter importeret",
@@ -402,6 +416,12 @@
     "searchRecipes": "Søg opskrifter",
     "noRecipesToAdd": "Ingen opskrifter fundet.",
     "addCount": "{count, plural, one {Tilføj # opskrift} other {Tilføj # opskrifter}}",
-    "everythingAlreadyIn": "Alle opskrifter er allerede i denne kogebog."
+    "everythingAlreadyIn": "Alle opskrifter er allerede i denne kogebog.",
+    "coverLabel": "Forside",
+    "chooseImage": "Vælg billede",
+    "changeImage": "Skift billede",
+    "removeImage": "Fjern billede",
+    "imageUploadFailed": "Billedet kunne ikke uploades.",
+    "imageNeedsConnection": "Billeder kan ændres, når du er online igen."
   }
 }

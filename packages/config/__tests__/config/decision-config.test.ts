@@ -57,6 +57,7 @@ describe("DecisionConfigSchema", () => {
       "allergyDetection",
       "recipeProvenance",
       "groceryLinking",
+      "ingredientResolution",
       "validateEnrichments",
     ]);
   });

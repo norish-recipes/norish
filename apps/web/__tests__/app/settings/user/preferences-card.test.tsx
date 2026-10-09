@@ -5,6 +5,8 @@ import "@testing-library/jest-dom";
 
 import PreferencesCard from "@/app/(app)/settings/user/components/preferences-card";
 
+import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
+
 const mockContext = vi.hoisted(() => ({
   user: { preferences: {} },
   updatePreferences: vi.fn().mockResolvedValue(undefined),
@@ -30,17 +32,9 @@ const todaysMealsMock = vi.hoisted(() => ({
   setVisibility: vi.fn(),
 }));
 
-vi.mock("@/context/todays-meals-visibility-context", () => ({
-  useTodaySectionVisibility: () => [todaysMealsMock.visibility, todaysMealsMock.setVisibility],
-}));
-
 const hiddenItemsMock = vi.hoisted(() => ({
   hidden: [] as string[],
   setHidden: vi.fn(),
-}));
-
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItemsState: () => [hiddenItemsMock.hidden, hiddenItemsMock.setHidden],
 }));
 
 const recipePageColorMock = vi.hoisted(() => ({
@@ -48,8 +42,34 @@ const recipePageColorMock = vi.hoisted(() => ({
   setMode: vi.fn(),
 }));
 
-vi.mock("@/context/recipe-page-color-context", () => ({
-  useRecipePageColor: () => [recipePageColorMock.mode, recipePageColorMock.setMode],
+const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
+
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({
+      todaySectionVisibility: todaysMealsMock.visibility,
+      hiddenItems: hiddenItemsMock.hidden,
+      recipePageColor: recipePageColorMock.mode,
+    }),
+    {
+      kind: () => deviceKindMock.kind,
+      set: (key, next) => {
+        const setters: Record<string, (next: unknown) => void> = {
+          todaySectionVisibility: todaysMealsMock.setVisibility,
+          hiddenItems: hiddenItemsMock.setHidden,
+          recipePageColor: recipePageColorMock.setMode,
+        };
+
+        setters[key]?.(next);
+      },
+    }
+  )
+);
+
+const permissionsMock = vi.hoisted(() => ({ isAIEnabled: false }));
+
+vi.mock("@/context/permissions-context", () => ({
+  usePermissionsContext: () => permissionsMock,
 }));
 
 let timersMock = { timersEnabled: true, globalEnabled: true } as any;
@@ -63,6 +83,15 @@ vi.mock("@/hooks/config", () => ({
     ],
     defaultLocale: "en",
   }),
+}));
+
+// The popover itself is HeroUI's; what is pinned here is what it says.
+vi.mock("@/components/shared/info-hint", () => ({
+  InfoHint: ({ label, children }: any) => (
+    <div aria-label={label} role="note">
+      {children}
+    </div>
+  ),
 }));
 
 vi.mock("@heroui/react", () => ({
@@ -123,6 +152,7 @@ vi.mock("@heroui/react", () => ({
 describe("PreferencesCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    permissionsMock.isAIEnabled = false;
     hiddenItemsMock.hidden = [];
     mockContext.user = { preferences: {} } as any;
   });
@@ -150,6 +180,7 @@ describe("PreferencesCard", () => {
       "conversion",
       "timers",
       "cookbooks",
+      "ingredientIcons",
     ]);
   });
 
@@ -208,7 +239,7 @@ describe("PreferencesCard", () => {
 
     expect(hiddenOptions().map((option) => option.value)).not.toContain("timers");
     // The rest of the control is unaffected.
-    expect(hiddenOptions()).toHaveLength(7);
+    expect(hiddenOptions()).toHaveLength(8);
   });
 
   it("keeps a hidden timers choice through an administrator switching them off", () => {
@@ -293,5 +324,68 @@ describe("PreferencesCard", () => {
     expect(todaysMealsMock.setVisibility).toHaveBeenCalledWith("hidden");
 
     todaysMealsMock.visibility = "always";
+  });
+
+  it("opens the groceries panel after planning by default and stores a new choice with the user", () => {
+    render(<PreferencesCard />);
+
+    const control = screen.getByRole("combobox", { name: /afterPlanning\.title/i });
+    const options = within(control).getAllByRole("option") as HTMLOptionElement[];
+
+    expect(options.map((option) => option.value)).toEqual([
+      "nothing",
+      "openGroceries",
+      "addGroceries",
+    ]);
+    expect((control as HTMLSelectElement).value).toBe("openGroceries");
+
+    fireEvent.change(control, { target: { value: "addGroceries" } });
+
+    expect(mockContext.updatePreferences).toHaveBeenCalledWith({ afterPlanning: "addGroceries" });
+  });
+
+  it("reflects a stored after-planning choice", () => {
+    mockContext.user = { preferences: { afterPlanning: "nothing" } } as any;
+
+    render(<PreferencesCard />);
+
+    const control = screen.getByRole("combobox", { name: /afterPlanning\.title/i });
+
+    expect((control as HTMLSelectElement).value).toBe("nothing");
+  });
+
+  it("offers converting with AI only where AI is on, and stores the choice with the user", () => {
+    mockContext.user = { preferences: { measurementSystem: "usWithAI" } } as any;
+
+    const { unmount } = render(<PreferencesCard />);
+    const control = () => screen.getByRole("combobox", { name: /measurements\.title/i });
+    const values = () =>
+      (within(control()).getAllByRole("option") as HTMLOptionElement[]).map((o) => o.value);
+
+    expect(values()).toEqual(["off", "metric", "us"]);
+    expect((control() as HTMLSelectElement).value).toBe("us");
+    unmount();
+
+    permissionsMock.isAIEnabled = true;
+    render(<PreferencesCard />);
+
+    expect(values()).toEqual(["off", "metric", "us", "metricWithAI", "usWithAI"]);
+    expect((control() as HTMLSelectElement).value).toBe("usWithAI");
+
+    fireEvent.change(control(), { target: { value: "metric" } });
+
+    expect(mockContext.updatePreferences).toHaveBeenCalledWith({ measurementSystem: "metric" });
+  });
+
+  it("says behind the title which kind of device its display choices apply to", () => {
+    deviceKindMock.kind = "desktop";
+
+    render(<PreferencesCard />);
+
+    expect(screen.getByRole("note", { name: "deviceKind.help" })).toHaveTextContent(
+      "deviceKind.desktop"
+    );
+
+    deviceKindMock.kind = "phone";
   });
 });

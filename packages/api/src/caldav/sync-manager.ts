@@ -46,6 +46,8 @@ export function getEventTimeRange(
   const [startHour = 0, startMinute = 0] = startTime.split(":").map(Number);
   const [endHour = 0, endMinute = 0] = endTime.split(":").map(Number);
 
+  // A slot is a wall-clock time ("dinner at 18:00" wherever the household is),
+  // carried in the UTC fields and written to the calendar as a floating time.
   return {
     start: new Date(Date.UTC(year, month - 1, day, startHour, startMinute)),
     end: new Date(Date.UTC(year, month - 1, day, endHour, endMinute)),

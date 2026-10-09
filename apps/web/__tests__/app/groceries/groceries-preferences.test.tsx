@@ -1,13 +1,15 @@
-import { act, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import { GroceriesContextProvider, useGroceriesUiContext } from "@/app/(app)/groceries/context";
-import {
-  groceryGroupSimilarPreference,
-  groceryViewModePreference,
-} from "@/lib/grocery-preferences";
+
+import type { DevicePreferences } from "@norish/shared/contracts/zod/device-preferences";
+
+import { renderWithDevicePreferences } from "../../helpers/device-preferences";
+
+vi.mock("@/app/providers/trpc-provider", () => import("../../helpers/device-preferences-trpc"));
 
 vi.mock("@/hooks/groceries", () => ({
   useGroceriesQuery: () => ({
@@ -31,62 +33,34 @@ function Probe() {
   );
 }
 
-function clearCookie(name: string) {
-  document.cookie = `${name}=;path=/;max-age=0`;
+function renderGroceries(values: Partial<DevicePreferences> = {}) {
+  renderWithDevicePreferences(
+    <GroceriesContextProvider>
+      <Probe />
+    </GroceriesContextProvider>,
+    { values }
+  );
 }
 
-beforeEach(() => {
-  clearCookie(groceryViewModePreference.cookieName);
-  clearCookie(groceryGroupSimilarPreference.cookieName);
-});
-
-describe("groceries device preferences", () => {
-  it("renders the seeded view and grouping from the first frame", () => {
-    render(
-      <GroceriesContextProvider initialGroupSimilar="false" initialViewMode="recipe">
-        <Probe />
-      </GroceriesContextProvider>
-    );
+describe("groceries Device Preferences", () => {
+  it("renders the stored view and grouping from the first frame", () => {
+    renderGroceries({ groceryViewMode: "recipe", groceryGroupSimilar: false });
 
     expect(screen.getByTestId("state")).toHaveTextContent("recipe:false");
   });
 
   it("defaults to the store view with grouping on", () => {
-    render(
-      <GroceriesContextProvider>
-        <Probe />
-      </GroceriesContextProvider>
-    );
+    renderGroceries();
 
     expect(screen.getByTestId("state")).toHaveTextContent("store:true");
   });
 
-  it("reads the cookies itself when nothing was seeded", () => {
-    // The offline bootstrap mounts the screen with no server pass.
-    groceryViewModePreference.writeCookie("recipe");
-    groceryGroupSimilarPreference.writeCookie("false");
-
-    render(
-      <GroceriesContextProvider>
-        <Probe />
-      </GroceriesContextProvider>
-    );
-
-    expect(screen.getByTestId("state")).toHaveTextContent("recipe:false");
-  });
-
-  it("persists a toggled view and grouping to the cookies", () => {
-    render(
-      <GroceriesContextProvider>
-        <Probe />
-      </GroceriesContextProvider>
-    );
+  it("switches the view and grouping at once", () => {
+    renderGroceries();
 
     act(() => latestUi.setViewMode("recipe"));
     act(() => latestUi.setGroupSimilarIngredients(false));
 
     expect(screen.getByTestId("state")).toHaveTextContent("recipe:false");
-    expect(groceryViewModePreference.readCookie()).toBe("recipe");
-    expect(groceryGroupSimilarPreference.readCookie()).toBe("false");
   });
 });

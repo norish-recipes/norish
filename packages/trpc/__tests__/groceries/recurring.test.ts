@@ -32,7 +32,6 @@ import {
 const storesRepository = vi.hoisted(() => ({
   findBestIngredientStorePreference: vi.fn(),
   getStoreOwnerId: vi.fn(),
-  normalizeIngredientName: vi.fn((name: string) => name.toLowerCase()),
   upsertIngredientStorePreference: vi.fn(),
   // A household with no Store that points at a shop: pricing notices the
   // groceries, finds nothing to ask, and visits nothing.
@@ -52,6 +51,10 @@ vi.mock("@norish/shared-server/realtime/stores", () => import("../mocks/realtime
 vi.mock(
   "@norish/db/repositories/recurring-groceries",
   () => import("../mocks/recurring-groceries")
+);
+vi.mock(
+  "@norish/shared-server/ingredients/groceries",
+  () => import("../mocks/ingredient-groceries")
 );
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/groceries", () => import("../mocks/realtime/groceries"));
@@ -158,6 +161,38 @@ describe("recurring groceries procedures", () => {
 
       expect(createRecurringGrocery).toHaveBeenCalledWith(
         expect.objectContaining({ id: clientId })
+      );
+    });
+
+    it("resolves the name once, for the recurring grocery and the line it puts on the list", async () => {
+      createRecurringGrocery.mockImplementation(async (data: { name: string }) =>
+        createMockRecurringGrocery({ name: data.name })
+      );
+      createGrocery.mockResolvedValue({
+        created: createMockGrocery({ id: crypto.randomUUID() }),
+        shifted: [],
+      });
+
+      await recurringGroceriesProcedures
+        .createCaller(createMockCallerContext(ctx))
+        .createRecurring({
+          id: crypto.randomUUID(),
+          name: "Melk",
+          amount: 1,
+          unit: null,
+          recurrenceRule: "week",
+          recurrenceInterval: 1,
+          recurrenceWeekday: null,
+          nextPlannedFor: "2025-12-01",
+        });
+
+      expect(createRecurringGrocery).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "Melk", ingredientAliasId: "alias:melk" })
+      );
+      expect(createGrocery).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ name: "Melk", ingredientAliasId: "alias:melk" }),
+        ctx.userIds
       );
     });
   });
@@ -317,7 +352,13 @@ describe("recurring groceries procedures", () => {
 
       expect(result).toEqual({ success: true });
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
-        { id: "r1", version: 2, name: "Oat milk" },
+        {
+          id: "r1",
+          version: 2,
+          name: "Oat milk",
+          ingredientAliasId: "alias:oat milk",
+          ingredientId: "ingredient:oat milk",
+        },
         { id: "g1", version: 3, storeId: undefined }
       );
       expect(groceries.publish).toHaveBeenCalledWith(
@@ -352,12 +393,18 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
-        { id: "r1", version: 2, name: "Oat Milk" },
+        {
+          id: "r1",
+          version: 2,
+          name: "Oat Milk",
+          ingredientAliasId: "alias:oat milk",
+          ingredientId: "ingredient:oat milk",
+        },
         { id: "g1", version: 3, storeId }
       );
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
         ctx.user.id,
-        "oat milk",
+        "ingredient:oat milk",
         storeId
       );
     });
@@ -416,7 +463,15 @@ describe("recurring groceries procedures", () => {
       expect(detachRecurringGrocery).toHaveBeenCalledWith({
         recurringGroceryId,
         recurringVersion: 2,
-        grocery: { id: groceryId, version: 3, name: "Test", unit: "piece", amount: 1 },
+        grocery: {
+          id: groceryId,
+          version: 3,
+          name: "Test",
+          ingredientAliasId: "alias:test",
+          ingredientId: "ingredient:test",
+          unit: "piece",
+          amount: 1,
+        },
       });
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringDeleted",
@@ -461,11 +516,20 @@ describe("recurring groceries procedures", () => {
       expect(detachRecurringGrocery).toHaveBeenCalledWith({
         recurringGroceryId,
         recurringVersion: 2,
-        grocery: { id: groceryId, version: 3, name: "Test", unit: "piece", amount: 1, storeId },
+        grocery: {
+          id: groceryId,
+          version: 3,
+          name: "Test",
+          ingredientAliasId: "alias:test",
+          ingredientId: "ingredient:test",
+          unit: "piece",
+          amount: 1,
+          storeId,
+        },
       });
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
         ctx.user.id,
-        "test",
+        "ingredient:test",
         storeId
       );
     });
@@ -670,7 +734,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
   const storeId = crypto.randomUUID();
   const link = {
     storeId,
-    normalizedName: "melk",
+    ingredientId: "ingredient:melk",
     triedAt: new Date(),
     product: { id: crypto.randomUUID(), storeId, name: "Halfvolle melk 1 L", price: 1.29 },
   };
@@ -711,7 +775,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
     });
 
     expect(storeProductsRepository.resolveProductLinks).toHaveBeenCalledWith([
-      { storeId, name: "melk" },
+      { storeId, ingredientId: "ingredient:melk", name: "melk" },
     ]);
     expect(stores.publish).toHaveBeenCalledWith(
       "linkUpdated",

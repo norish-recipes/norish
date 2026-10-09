@@ -817,12 +817,13 @@
             >ADR-0031 &mdash; An Aisle is a fact about a name at a Store, not about a list line</a
           >
           <p>
-            <b>Accepted.</b> Aisles are ordered headings owned by a Store, and an Aisle Link — a
-            Store, a normalized grocery name, an Aisle — is keyed by name like a Product Link, so a
-            grocery's aisle is derived and nothing is stored on the row. Filing one "melk" files
-            every "melk" at that store and the memory outlives the line; two lines with the
-            identical name can never sit in different aisles, by design. Groups are per aisle per
-            store. Aisles travel on the Store DTO and its subscription; filing is tRPC only.
+            <b>Accepted; amended by ADR-0037</b> (keyed by Ingredient, not by name). Aisles are
+            ordered headings owned by a Store, and an Aisle Link — a Store, a normalized grocery
+            name, an Aisle — is keyed by name like a Product Link, so a grocery's aisle is derived
+            and nothing is stored on the row. Filing one "melk" files every "melk" at that store and
+            the memory outlives the line; two lines with the identical name can never sit in
+            different aisles, by design. Groups are per aisle per store. Aisles travel on the Store
+            DTO and its subscription; filing is tRPC only.
           </p>
         </li>
         <li>
@@ -883,18 +884,61 @@
         </li>
         <li>
           <a href="groceries/0036-a-pantry-ingredient-is-a-name-matched-exactly.md"
-            >ADR-0036 &mdash; A Pantry Ingredient is a name matched exactly, and nothing is stored on the
-            recipe or the grocery</a
+            >ADR-0036 &mdash; A Pantry Ingredient is a name matched exactly, and nothing is stored
+            on the recipe or the grocery</a
           >
           <p>
-            <b>Accepted.</b> A Pantry Ingredient is a household fact &mdash; an Ingredient Name the
-            household has at home, owned like a Store and read across the household, with the fold
-            on the Ingredient Name rather than on the row &mdash; and an ingredient is in the pantry
-            only on an exact match of folded names, with the Product Link's folding and no looser rule. The
-            pantry is consulted once, when a recipe is added to the groceries: stocked lines are
-            shown apart, unticked, and left off the list unless ticked. Nothing is stored on the
-            recipe ingredient or the grocery row; the Pantry has its own router and subscription and
-            no REST endpoint.
+            <b>Superseded in part by ADR-0037</b> (the Pantry matches on Ingredient). A Pantry
+            Ingredient is a household fact &mdash; an Ingredient Name the household has at home,
+            owned like a Store and read across the household, with the fold on the Ingredient Name
+            rather than on the row &mdash; and an ingredient is in the pantry only on an exact match
+            of folded names, with the Product Link's folding and no looser rule. The pantry is
+            consulted once, when a recipe is added to the groceries: stocked lines are shown apart,
+            unticked, and left off the list unless ticked. Nothing is stored on the recipe
+            ingredient or the grocery row; the Pantry has its own router and subscription and no
+            REST endpoint.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0037-ingredient-identity-is-an-alias-pointing-at-an-ingredient.md"
+            >ADR-0037 &mdash; Ingredient identity is an alias pointing at an Ingredient</a
+          >
+          <p>
+            <b>Accepted; amended by ADR-0039</b> (rung 2 strips units-map phrases, a mint is
+            parented under the alias its text ends with). An Ingredient is one food known by many Ingredient Aliases; a recipe
+            line, a Grocery, a recurring grocery and a Pantry Ingredient keep their text as written
+            and point at the alias it resolved to, and Product Links, Aisle Links and store
+            preferences are keyed by Ingredient. One resolver in
+            <code>@norish/shared-server/ingredients</code> mints, in the order exact, stripped, AI,
+            new &mdash; a mint nothing sure vouched for is flagged. Merges move aliases. Supersedes
+            ADR-0036 and amends ADR-0031.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0038-the-catalogue-is-seeded-from-open-food-facts-under-odbl.md"
+            >ADR-0038 &mdash; The ingredient catalogue is seeded from Open Food Facts under the ODbL</a
+          >
+          <p>
+            <b>Accepted; amended by ADR-0039</b> (the seed keeps nutrition codes). The Open Food Facts ingredients taxonomy, every entry and language, is
+            fetched nightly and applied as ownerless Ingredients, seeded aliases and parents. A
+            refresh never undoes a person's alias, merge or parent; a failed or malformed fetch
+            leaves the last good seed. The first seed merges existing Ingredients it is sure of,
+            once. The ODbL is accepted: the Ingredients page credits the source and offers the
+            catalogue as JSON.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0039-ingredient-nutrition-comes-from-vendored-open-datasets-corrected-per-household.md"
+            >ADR-0039 &mdash; Ingredient Nutrition comes from vendored open datasets, corrected per household</a
+          >
+          <p>
+            <b>Accepted.</b> CIQUAL, CALNUT and USDA numbers, joined through the taxonomy's codes
+            plus a reviewed name match, are committed as a table a monthly workflow rebuilds. Own
+            codes come before a parent's; Norish keeps a fix list, density fixes (USDA's spoon
+            weight for a food whose numbers come from CIQUAL, and for a few groups that share a
+            form) and a list of parents that never lend their numbers. A correction belongs to a
+            household, and a recipe's worked-out nutrition is computed on read for the reader's
+            household.
           </p>
         </li>
       </ul>

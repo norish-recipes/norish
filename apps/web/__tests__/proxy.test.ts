@@ -46,6 +46,13 @@ describe("proxy share access", () => {
     expect(config.matcher[0]).toContain("serwist/");
   });
 
+  it("leaves Ingredient Icons out of the proxy, so a shared recipe shows them signed out", () => {
+    const proxied = new RegExp(`^${config.matcher[0]}$`);
+
+    expect(proxied.test("/ingredient-icons/0123456789abcdef0123456789abcdef.webp")).toBe(false);
+    expect(proxied.test("/recipes/123e4567-e89b-12d3-a456-426614174000/cover.jpg")).toBe(true);
+  });
+
   it("redirects anonymous private recipe media requests", async () => {
     getSessionMock.mockResolvedValue(null);
 

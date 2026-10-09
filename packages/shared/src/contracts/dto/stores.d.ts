@@ -34,16 +34,16 @@ export type StoreColor = z.infer<typeof StoreColorSchema>;
 export type AisleDto = z.output<typeof AisleSelectSchema>;
 /** An aisle as the editor sends it: a client-minted id and a name; its position is its order. */
 export type AisleInput = z.infer<typeof AisleInputSchema>;
-/** An Aisle Link as stored: where a Store files one normalized grocery name. */
+/** An Aisle Link as stored: where a Store files one Ingredient. */
 export type AisleLinkDto = z.output<typeof AisleLinkSelectSchema>;
 export type AisleFilingInput = z.infer<typeof AisleFilingSchema>;
 /**
- * What a Store now files a name under, as the household hears it: an aisle, or
- * null where the name has been forgotten. Merged by store and normalized name.
+ * What a Store now files an Ingredient under, as the household hears it: an
+ * aisle, or null where it has been forgotten. Merged by store and Ingredient.
  */
 export interface AisleFiled {
   storeId: string;
-  normalizedName: string;
+  ingredientId: string;
   aisleId: string | null;
 }
 

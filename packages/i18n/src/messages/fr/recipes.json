@@ -154,7 +154,10 @@
     "ariaLabel": "Convertir le système de mesure",
     "toMetric": "Convertir en métrique",
     "toUS": "Convertir en US",
-    "converting": "Conversion en cours…"
+    "toMetricWithAI": "Convertir en métrique avec l'AI",
+    "toUSWithAI": "Convertir en US avec l'AI",
+    "converting": "Conversion en cours…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Supprimer la recette",
@@ -255,7 +258,20 @@
     "protein": "Protéines",
     "showingPortions": "Affichage des valeurs pour {count} {count, plural, one {portion} other {portions}}",
     "noInfo": "Aucune information nutritionnelle disponible",
-    "estimateWithAI": "Estimer avec l’IA"
+    "estimateWithAI": "Estimer avec l’IA",
+    "estimated": "Estimé",
+    "leftOut": "{count, plural, one {# ligne non comptée} other {# lignes non comptées}}",
+    "estimatedByAI": "estimé par l'IA",
+    "reasons": {
+      "seasoning": "assaisonnement",
+      "noAmount": "pas de quantité",
+      "noSize": "pas de poids pour cette mesure",
+      "noNumbers": "pas encore de valeurs nutritionnelles",
+      "noSpoonWeight": "pas encore de poids par cuillère",
+      "noPieceWeight": "pas encore de poids par pièce"
+    },
+    "workedOutFrom": "Calculé à partir des ingrédients, avec {sources}.",
+    "householdNumbers": "les valeurs de votre foyer"
   },
   "measurementSystem": {
     "label": "Système de mesure",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Recette importée",
-    "converted": "Mesures converties",
-    "convertedDescription": "Recette convertie en unités {system}",
     "failed": "Échec de l'opération",
     "failedDescription": "Une erreur s'est produite pendant le traitement de votre recette. Consultez la console du navigateur pour les détails techniques.",
     "batchImported": "Recettes importées",
@@ -354,7 +368,7 @@
     "cuisines": "Cuisines",
     "inferring": "Recherche de l'origine de cette recette…",
     "noInfo": "Pas encore d'informations de provenance",
-    "inferWithAI": "Déterminer avec l'IA"
+    "inferWithAI": "Déterminer avec l'AI"
   },
   "import": {
     "alreadyExists": "Vous avez déjà cette recette",
@@ -402,6 +416,12 @@
     "searchRecipes": "Rechercher des recettes",
     "noRecipesToAdd": "Aucune recette trouvée.",
     "addCount": "{count, plural, one {Ajouter # recette} other {Ajouter # recettes}}",
-    "everythingAlreadyIn": "Toutes les recettes sont déjà dans ce livre."
+    "everythingAlreadyIn": "Toutes les recettes sont déjà dans ce livre.",
+    "coverLabel": "Couverture",
+    "chooseImage": "Choisir une image",
+    "changeImage": "Changer l'image",
+    "removeImage": "Retirer l'image",
+    "imageUploadFailed": "L'image n'a pas pu être envoyée.",
+    "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne."
   }
 }

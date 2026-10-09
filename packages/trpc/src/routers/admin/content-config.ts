@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { TimerKeywordsConfig } from "@norish/config/zod/server-config";
 import {
   ContentIndicatorsSchema,
+  IngredientWordsMapSchema,
   PromptsConfigInputSchema,
   RecurrenceConfigSchema,
   ServerConfigKeys,
@@ -12,6 +13,7 @@ import {
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { getEffectivePrompts, loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
 import { pruneToOverrides } from "@norish/shared-server/ai/prompts/overrides";
+import { forgetSpellingRules } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
@@ -74,6 +76,40 @@ const updateUnits = adminProcedure.input(z.string()).mutation(async ({ input, ct
     ctx.user.id,
     false
   );
+  forgetSpellingRules();
+
+  return { success: true };
+});
+
+/**
+ * Update the ingredient words names are read by (ADR-0037). Accepts a JSON
+ * string, parsed and validated, and marks the words as the administrator's,
+ * so a release's new words no longer replace them.
+ */
+const updateIngredientWords = adminProcedure.input(z.string()).mutation(async ({ input, ctx }) => {
+  log.info({ userId: ctx.user.id }, "Updating ingredient words config");
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(input);
+  } catch {
+    return { success: false, error: "Invalid JSON format" };
+  }
+
+  const result = IngredientWordsMapSchema.safeParse(parsed);
+
+  if (!result.success) {
+    return { success: false, error: result.error.message };
+  }
+
+  await setConfig(
+    ServerConfigKeys.INGREDIENT_WORDS,
+    { words: result.data, isOverridden: true },
+    ctx.user.id,
+    false
+  );
+  forgetSpellingRules();
 
   return { success: true };
 });
@@ -169,6 +205,7 @@ const updateTimerKeywords = adminProcedure
 export const contentConfigProcedures = router({
   updateContentIndicators,
   updateUnits,
+  updateIngredientWords,
   updateRecurrenceConfig,
   getPrompts,
   updatePrompts,

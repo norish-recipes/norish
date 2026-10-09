@@ -5,17 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CookbookAddRecipesPanel } from "@/components/cookbooks/cookbook-add-recipes-panel";
 import { CookbookEditPanel, DeleteCookbookModal } from "@/components/cookbooks/cookbook-panels";
-import RecipeViewModeToggle from "@/components/dashboard/recipe-view-mode-toggle";
+import RecipeViewModeToggle, {
+  RecipeViewModeTabs,
+} from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { usePermissionsContext } from "@/context/permissions-context";
-import {
-  RecipeViewModeProvider,
-  useRecipeDashboardViewMode,
-} from "@/context/recipe-view-mode-context";
 import { useCookbookQuery, useCookbooksMutations } from "@/hooks/cookbooks";
 import { useBackDestination } from "@/hooks/use-back-destination";
-import { recipeViewModePreference } from "@/lib/recipe-view-mode";
 import {
   ArrowLeftIcon,
   EllipsisHorizontalIcon,
@@ -27,7 +24,12 @@ import { Button, Dropdown, Label, Spinner, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
-import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
+import {
+  cssButtonPill,
+  cssButtonPillDanger,
+  cssHeaderIcon,
+  cssHeaderIconControl,
+} from "@norish/web/config/css-tokens";
 
 import CookbookMembers from "./cookbook-members";
 
@@ -37,14 +39,14 @@ const COOKBOOK_HEADING_ID = "cookbook-heading";
  * A cookbook's own page: its own address, so it can be linked, bookmarked and
  * reached with the back button.
  *
- * Its members render through the Library's grid in the reader's stored view
- * mode, under their own sort, search and filters. The title carries the same
+ * Its members render through the Library's grid in the reader's grid or list
+ * (the Library's own Device Preference), under their own sort, search and
+ * filters. The title carries the same
  * Rename and Delete the card carries, so a name can be fixed without leaving
  * the thing being renamed.
  */
-function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
+export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
   const router = useRouter();
-  const [viewMode, setViewMode] = useRecipeDashboardViewMode();
   const t = useTranslations("recipes.cookbooks");
   const { cookbook, isNotFound } = useCookbookQuery(cookbookId);
   const { deleteCookbook } = useCookbooksMutations();
@@ -80,11 +82,7 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
 
   return (
     <section aria-labelledby={COOKBOOK_HEADING_ID} className="flex min-h-0 flex-1 flex-col">
-      <Tabs
-        className="min-h-0 flex-1 gap-5"
-        selectedKey={viewMode}
-        onSelectionChange={(key) => setViewMode(recipeViewModePreference.parse(String(key)))}
-      >
+      <RecipeViewModeTabs>
         <div className="flex shrink-0 flex-col gap-4">
           {/* A cookbook is reached from the Library and from a recipe that is
               in it, so the way back names wherever that was. */}
@@ -99,16 +97,18 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
           </div>
 
           <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2">
+            {/* The count under the title, as Today's date sits under Today, so a
+                long title keeps the row instead of giving way to it */}
+            <div className="min-w-0">
               <h1
-                className="text-foreground truncate text-2xl leading-8 font-semibold"
+                className="text-foreground text-2xl leading-8 font-semibold break-words"
                 id={COOKBOOK_HEADING_ID}
               >
                 {cookbook.title}
               </h1>
-              <span className="text-muted shrink-0 text-sm">
+              <p className="text-muted mt-1 text-sm">
                 {t("recipeCount", { count: cookbook.memberCount })}
-              </span>
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -118,11 +118,11 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
                   <Button
                     isIconOnly
                     aria-label={t("options")}
-                    className="transition active:scale-95"
-                    size="sm"
+                    className={`transition active:scale-95 ${cssHeaderIconControl}`}
+                    size="md"
                     variant="tertiary"
                   >
-                    <EllipsisHorizontalIcon className="text-muted h-5 w-5" />
+                    <EllipsisHorizontalIcon className={cssHeaderIcon} />
                   </Button>
                   <Dropdown.Popover className="bg-overlay z-[500]" placement="bottom end">
                     <Dropdown.Menu aria-label={t("options")}>
@@ -221,7 +221,7 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
         <Tabs.Panel className="mt-0 min-h-0 flex-1 p-0" id="list">
           <CookbookMembers cookbookId={cookbookId} variant="list" />
         </Tabs.Panel>
-      </Tabs>
+      </RecipeViewModeTabs>
 
       <CookbookEditPanel cookbook={cookbook} open={editOpen} onOpenChange={setEditOpen} />
 
@@ -234,18 +234,5 @@ function CookbookPageContent({ cookbookId }: { cookbookId: string }) {
         onConfirm={handleDelete}
       />
     </section>
-  );
-}
-
-/**
- * The stored grid-or-list preference is the same device preference the
- * Library uses, so a cookbook looks like the rest of the app rather than
- * having a view mode of its own.
- */
-export default function CookbookPage({ cookbookId }: { cookbookId: string }) {
-  return (
-    <RecipeViewModeProvider>
-      <CookbookPageContent cookbookId={cookbookId} />
-    </RecipeViewModeProvider>
   );
 }

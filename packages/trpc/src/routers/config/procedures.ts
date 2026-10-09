@@ -7,6 +7,7 @@ import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
 import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
 import {
+  getIngredientWords,
   getLocaleConfig,
   getRecipePermissionPolicy,
   getRecurrenceConfig,
@@ -153,6 +154,12 @@ const units = authedProcedure.query(async ({ ctx }) => {
 });
 
 /**
+ * The ingredient words names are read by, which the browser matches text
+ * nothing has resolved yet on, as the resolver does (ADR-0037).
+ */
+const ingredientWords = authedProcedure.query(async () => await getIngredientWords());
+
+/**
  * Get recurrence configuration for natural language parsing
  */
 const recurrenceConfig = authedProcedure.query(async ({ ctx }) => {
@@ -248,6 +255,7 @@ export const configProcedures = router({
   tags,
   cuisines,
   units,
+  ingredientWords,
   recurrenceConfig,
   uploadLimits,
   timersEnabled,

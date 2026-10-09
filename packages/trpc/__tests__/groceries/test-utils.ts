@@ -67,9 +67,13 @@ export function createMockAuthedContext(
  * Create a mock grocery item for testing (matches GroceryDto which omits userId)
  */
 export function createMockGrocery(overrides: Partial<GroceryDto> = {}): GroceryDto {
+  const name = overrides.name === undefined ? "Test Grocery" : overrides.name;
+
   return {
     id: `grocery-${crypto.randomUUID()}`,
     name: "Test Grocery",
+    // The Ingredient the name resolved to, as the resolver mock names it.
+    ingredientId: name ? `ingredient:${name.trim().toLowerCase()}` : null,
     amount: 1,
     unit: "piece",
     isDone: false,

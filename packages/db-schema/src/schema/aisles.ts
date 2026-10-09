@@ -10,6 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { ingredients } from "./ingredients";
 import { versionColumn } from "./shared";
 import { stores } from "./stores";
 
@@ -40,10 +41,10 @@ export const aisles = pgTable(
 );
 
 /**
- * An Aisle Link: where a Store has learned a grocery name is found. Keyed by
- * store and normalized name exactly as a Product Link is (ADR-0031), so filing
- * one "melk" files every "melk" at that Store and the memory outlives the list
- * line that prompted it. Deleting the aisle deletes the link, which is what
+ * An Aisle Link: where a Store has learned an Ingredient is found. Keyed by
+ * store and Ingredient exactly as a Product Link is (ADR-0031, ADR-0037), so
+ * filing one "melk" files every spelling of milk at that Store and the memory
+ * outlives the list line that prompted it. Deleting the aisle deletes the link, which is what
  * unfiling is; deleting the store takes everything with it.
  */
 export const aisleLinks = pgTable(
@@ -53,7 +54,9 @@ export const aisleLinks = pgTable(
     storeId: uuid("store_id")
       .notNull()
       .references(() => stores.id, { onDelete: "cascade" }),
-    normalizedName: text("normalized_name").notNull(),
+    ingredientId: uuid("ingredient_id").references(() => ingredients.id, { onDelete: "cascade" }),
+    /** The folded name the link was keyed by before ADR-0037; read by nothing. */
+    normalizedName: text("normalized_name"),
     aisleId: uuid("aisle_id")
       .notNull()
       .references(() => aisles.id, { onDelete: "cascade" }),
@@ -64,6 +67,6 @@ export const aisleLinks = pgTable(
   (t) => [
     index("idx_aisle_links_store_id").on(t.storeId),
     index("idx_aisle_links_aisle_id").on(t.aisleId),
-    unique("uq_aisle_links_store_name").on(t.storeId, t.normalizedName),
+    unique("uq_aisle_links_store_ingredient").on(t.storeId, t.ingredientId),
   ]
 );

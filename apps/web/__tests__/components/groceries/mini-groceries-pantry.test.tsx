@@ -9,17 +9,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 
 const createGroceriesFromData = vi.fn(async (_lines: { name: string }[]) => undefined);
 let pantry: PantryIngredientDto[] = [];
+let groceries: Array<{ id: string; name: string; ingredientId: string | null; isDone: boolean }> =
+  [];
+const addPantryIngredient = vi.fn(async () => "kept");
 let pantryLoading = false;
 let pantryUnavailable = false;
 
 const INGREDIENTS = [
   {
     id: "i-oil",
-    ingredientId: "oil",
+    ingredientId: "i-olive oil",
     ingredientName: "olive oil",
     amount: 2,
     unit: "tbsp",
@@ -28,7 +32,7 @@ const INGREDIENTS = [
   },
   {
     id: "i-chicken",
-    ingredientId: "chicken",
+    ingredientId: "i-chicken breast",
     ingredientName: "chicken breast",
     amount: 500,
     unit: "g",
@@ -37,7 +41,7 @@ const INGREDIENTS = [
   },
   {
     id: "i-salt",
-    ingredientId: "salt",
+    ingredientId: "i-salt",
     ingredientName: "Salt",
     amount: null,
     unit: null,
@@ -48,13 +52,31 @@ const INGREDIENTS = [
 
 vi.mock("@/hooks/groceries", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData }),
+  useGroceriesQuery: () => ({ groceries }),
 }));
+vi.mock("@/hooks/config", async () => {
+  const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
+  const units = (await import("@norish/config/units.default.json")).default;
+
+  return { useSpellingRules: () => spellingRules(units as UnitsMap) };
+});
 vi.mock("@/hooks/pantry", () => ({
+  usePantryMutations: () => ({ addPantryIngredient }),
   usePantryQuery: () => ({
     items: pantry,
     isLoading: pantryLoading,
     isUnavailable: pantryUnavailable,
   }),
+}));
+vi.mock("@/hooks/use-unit-formatter", () => ({
+  useUnitFormatter: () => ({
+    formatAmountUnit: (amount: number | null, unit: string | null) =>
+      [amount, unit].filter((part) => part !== null).join(" "),
+  }),
+}));
+vi.mock("@/components/ingredients/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconsProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@/hooks/recipes/use-recipe-ingredients", () => ({
   useRecipeIngredients: () => ({
@@ -114,8 +136,9 @@ function pantryIngredient(name: string, normalizedName: string): PantryIngredien
     userId: "u1",
     ingredientId: `i-${normalizedName}`,
     name,
-    normalizedName,
     version: 1,
+    ancestorIds: [],
+    localeNames: {},
   };
 }
 
@@ -129,6 +152,42 @@ describe("MiniGroceries with a Pantry", () => {
     pantry = [pantryIngredient("Olive oil", "olive oil"), pantryIngredient("salt", "salt")];
     pantryLoading = false;
     pantryUnavailable = false;
+    groceries = [];
+  });
+
+  it("keeps a line's own food with We keep this", () => {
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    // Only the line to buy offers it: a kept line has no way out from here.
+    expect(screen.getAllByRole("button", { name: "weKeepThis" })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "weKeepThis" }));
+
+    expect(addPantryIngredient).toHaveBeenCalledWith({
+      ingredientId: "i-chicken breast",
+      name: "chicken breast",
+    });
+  });
+
+  it("keeps the food of the name as edited here", () => {
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    fireEvent.click(screen.getByText("chicken breast"));
+    const field = screen.getByDisplayValue("500 g chicken breast");
+
+    fireEvent.change(field, { target: { value: "500 g chicken thighs" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    fireEvent.click(screen.getByRole("button", { name: "weKeepThis" }));
+
+    expect(addPantryIngredient).toHaveBeenCalledWith("chicken thighs");
+  });
+
+  it("marks a kept line whose food is already on the list", () => {
+    groceries = [{ id: "g1", name: "olive oil", ingredientId: "i-olive oil", isDone: false }];
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    const section = screen.getByTestId("pantry-section");
+
+    expect(within(section).getAllByTestId("on-the-list")).toHaveLength(1);
   });
 
   it("shows what the household has apart, unticked, and leaves it off the list", async () => {
@@ -137,7 +196,7 @@ describe("MiniGroceries with a Pantry", () => {
     const section = screen.getByTestId("pantry-section");
 
     expect(within(section).getByText("inPantry")).toBeInTheDocument();
-    expect(screen.getByTestId("pantry-separator")).toBeInTheDocument();
+    expect(screen.getByTestId("to-buy-section")).toBeInTheDocument();
     expect(within(section).getByRole("checkbox", { name: "olive oil" })).not.toBeChecked();
     expect(within(section).getByRole("checkbox", { name: "Salt" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "chicken breast" })).toBeChecked();
@@ -148,6 +207,15 @@ describe("MiniGroceries with a Pantry", () => {
     });
 
     expect(addedNames()).toEqual(["chicken breast"]);
+  });
+
+  it("counts a line as in the Pantry by its Ingredient, however either is spelled", () => {
+    pantry = [{ ...pantryIngredient("Chicken", "chicken"), ingredientId: "i-chicken breast" }];
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    const section = screen.getByTestId("pantry-section");
+
+    expect(within(section).getByRole("checkbox", { name: "chicken breast" })).not.toBeChecked();
   });
 
   it("unticks a line the Pantry claims while the panel is open", async () => {
@@ -265,7 +333,6 @@ describe("MiniGroceries with a Pantry", () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     expect(screen.queryByTestId("pantry-section")).toBeNull();
-    expect(screen.queryByTestId("pantry-separator")).toBeNull();
     expect(screen.getAllByRole("checkbox").every((box) => (box as HTMLInputElement).checked)).toBe(
       true
     );
@@ -281,9 +348,73 @@ describe("MiniGroceries with a Pantry", () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     expect(screen.queryByTestId("to-buy-section")).toBeNull();
-    expect(screen.queryByTestId("pantry-separator")).toBeNull();
     expect(screen.getByTestId("action-add")).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox", { name: "Salt" }));
     expect(screen.getByTestId("action-add")).toBeEnabled();
+  });
+
+  describe("adding at once, after planning", () => {
+    const addAtOnce = (onOpenChange: (open: boolean) => void) =>
+      render(<MiniGroceries addAtOnce open={false} recipeId="r1" onOpenChange={onOpenChange} />);
+
+    it("adds what is to buy without showing the panel, then closes", async () => {
+      const onOpenChange = vi.fn();
+
+      await act(async () => {
+        addAtOnce(onOpenChange);
+      });
+
+      expect(screen.queryByTestId("to-buy-section")).toBeNull();
+      expect(addedNames()).toEqual(["chicken breast"]);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(onOpenChange).not.toHaveBeenCalledWith(true);
+    });
+
+    it("waits for the Pantry before deciding what to buy", async () => {
+      pantryLoading = true;
+      const onOpenChange = vi.fn();
+      const { rerender } = addAtOnce(onOpenChange);
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+
+      pantryLoading = false;
+      await act(async () => {
+        rerender(
+          <MiniGroceries addAtOnce open={false} recipeId="r1" onOpenChange={onOpenChange} />
+        );
+      });
+
+      expect(createGroceriesFromData).toHaveBeenCalledTimes(1);
+      expect(addedNames()).toEqual(["chicken breast"]);
+    });
+
+    it("opens the panel instead when the Pantry cannot be read", async () => {
+      pantry = [];
+      pantryUnavailable = true;
+      const onOpenChange = vi.fn();
+
+      await act(async () => {
+        addAtOnce(onOpenChange);
+      });
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+    });
+
+    it("adds nothing when the Pantry holds every line", async () => {
+      pantry = [
+        pantryIngredient("olive oil", "olive oil"),
+        pantryIngredient("chicken breast", "chicken breast"),
+        pantryIngredient("salt", "salt"),
+      ];
+      const onOpenChange = vi.fn();
+
+      await act(async () => {
+        addAtOnce(onOpenChange);
+      });
+
+      expect(createGroceriesFromData).not.toHaveBeenCalled();
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
   });
 });

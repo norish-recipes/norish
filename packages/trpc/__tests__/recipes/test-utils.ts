@@ -117,6 +117,7 @@ export function createMockFullRecipe(overrides: Partial<FullRecipeDTO> = {}): Fu
     originRegion: null,
     provenanceNote: null,
     systemUsed: "metric",
+    originalSystem: null,
     createdAt: now,
     updatedAt: now,
     tags: [{ name: "dinner" }],

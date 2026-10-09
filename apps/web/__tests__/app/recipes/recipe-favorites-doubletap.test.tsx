@@ -25,9 +25,11 @@ vi.mock("@/context/user-context", () => ({
   }),
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItems: () => userPreferencesState.hidden,
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: userPreferencesState.hidden,
+  }))
+);
 
 const stubRecipe = {
   id: "r1",
@@ -51,6 +53,11 @@ vi.mock("@/components/Panel/consumers", () => ({
 
 vi.mock("@/hooks/cookbooks", () => ({
   useRecipeCookbooksQuery: () => ({ cookbooks: [], isLoading: false }),
+}));
+
+// The worked-out total reads the server; these pages are about their layout.
+vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
+  useWorkedOutNutrition: () => null,
 }));
 
 vi.mock("@/app/(app)/recipes/[id]/context", () => ({

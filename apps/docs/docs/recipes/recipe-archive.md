@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 title: Recipe Archive
 description: Export every recipe you can see as one portable .norishrecipes file, and import it back into any Norish instance. What travels with a recipe, what deliberately does not, and why an archive is portability rather than backup.
 ---
@@ -13,10 +13,10 @@ Currently this feature is limited to just recipes this is **NOT** a backup.
 
 ## Exporting your own recipes
 
-Go to **Settings => User**, find the **Export Recipe Archive** card, and press
+Go to **Settings => User**, find the **Export recipe archive** card, and press
 **Export**.
 
-![The Export Recipe Archive card in user settings](/img/screenshots/recipe-archive-user-export.png)
+![The Export recipe archive card in user settings](/img/screenshots/recipe-archive-user-export.png)
 
 The archive is limited to all recipes you have access to. Not just your own recipes.
 
@@ -34,7 +34,7 @@ with a wider scope. There is no privileged extra data behind the admin button.
 
 ## Importing an archive
 
-Drop the `.norishrecipes` file on the **Import Recipe Archive** card, the same
+Drop the `.norishrecipes` file on the **Import recipe archive** card, the same
 place you would drop a Mela or Mealie export. Progress, duplicate handling and
 per-recipe error reporting all work the way they already do for every other
 format.

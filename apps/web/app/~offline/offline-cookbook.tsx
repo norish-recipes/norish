@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import CookbookRoute from "@/app/(app)/cookbooks/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
+import { routeParams } from "@/app/~offline/route-params";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { cacheManager } from "@/lib/query-cache";
 import { Spinner } from "@heroui/react";
@@ -23,9 +24,6 @@ export function OfflineCookbook({ id }: { id: string }) {
 
   const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
 
-  // A stable promise identity so the reused route's `use(params)` settles.
-  const params = useMemo(() => Promise.resolve({ id }), [id]);
-
   if (!owner) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -40,5 +38,5 @@ export function OfflineCookbook({ id }: { id: string }) {
     return <OfflineUnavailable />;
   }
 
-  return <CookbookRoute params={params} />;
+  return <CookbookRoute params={routeParams(id)} />;
 }

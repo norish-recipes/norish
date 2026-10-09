@@ -1,9 +1,9 @@
-import type { TodaySectionVisibility } from "@/lib/todays-meals-visibility";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 const pushMock = vi.fn();
@@ -18,9 +18,12 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/context/todays-meals-visibility-context", () => ({
-  useTodaySectionVisibility: () => [visibilityMock, setVisibilityMock],
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+    () => ({ todaySectionVisibility: visibilityMock }),
+    { set: (_key, next) => setVisibilityMock(next) }
+  )
+);
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",

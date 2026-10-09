@@ -13,7 +13,7 @@ type ConvertMutationContext = {
 };
 
 export type ConvertMutationResult = {
-  convertMeasurements: (targetSystem: MeasurementSystem, version: number) => void;
+  convertMeasurements: (targetSystem: MeasurementSystem, version: number, withAI?: boolean) => void;
   error: unknown;
   reset: () => void;
   isConverting: boolean;
@@ -40,12 +40,15 @@ export function createUseConvertMutation({
 
     const mutation = useMutation(
       trpc.recipes.convertMeasurements.mutationOptions({
-        onMutate: async ({ targetSystem }) => {
+        onMutate: async ({ targetSystem, withAI }) => {
           await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
           const previousRecipe = queryClient.getQueryData<FullRecipeDTO | null>(detailQueryKey);
+          // With AI the copy is written again, so there is nothing to switch to yet.
           const didSwitchLocally =
-            previousRecipe != null && hasLocalMeasurementSystem(previousRecipe, targetSystem);
+            !withAI &&
+            previousRecipe != null &&
+            hasLocalMeasurementSystem(previousRecipe, targetSystem);
 
           if (didSwitchLocally) {
             queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, (currentRecipe) => {
@@ -81,8 +84,8 @@ export function createUseConvertMutation({
     );
 
     return {
-      convertMeasurements: (targetSystem: MeasurementSystem, version: number) => {
-        mutation.mutate({ recipeId, targetSystem, version });
+      convertMeasurements: (targetSystem: MeasurementSystem, version: number, withAI = false) => {
+        mutation.mutate({ recipeId, targetSystem, version, withAI });
       },
       error: mutation.error,
       reset: mutation.reset,

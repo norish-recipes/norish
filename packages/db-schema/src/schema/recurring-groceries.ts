@@ -1,6 +1,7 @@
 import { date, index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { ingredientAliases, ingredients } from "./ingredients";
 import { versionColumn } from "./shared";
 
 export const recurringGroceries = pgTable(
@@ -13,6 +14,10 @@ export const recurringGroceries = pgTable(
 
     // Item details
     name: text("name").notNull(),
+    /** The Ingredient Alias the name resolved to (ADR-0037). */
+    ingredientAliasId: uuid("ingredient_alias_id").references(() => ingredientAliases.id),
+    /** The alias's Ingredient, kept beside it as a Grocery keeps its own. */
+    ingredientId: uuid("ingredient_id").references(() => ingredients.id),
     unit: text("unit"),
     amount: numeric("amount", { precision: 10, scale: 3 }),
 
@@ -33,5 +38,7 @@ export const recurringGroceries = pgTable(
   (t) => [
     index("idx_recurring_groceries_user_id").on(t.userId),
     index("idx_recurring_groceries_next_date").on(t.nextPlannedFor),
+    index("idx_recurring_groceries_ingredient_alias_id").on(t.ingredientAliasId),
+    index("idx_recurring_groceries_ingredient_id").on(t.ingredientId),
   ]
 );

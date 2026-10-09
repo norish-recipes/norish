@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -6,7 +6,6 @@ import type { AisleDto, AisleFiled, AisleInput, AisleLinkDto } from "@norish/sha
 import { db } from "@norish/db/drizzle";
 import { aisleLinks, aisles } from "@norish/db/schema";
 import { AisleLinkSelectSchema, AisleSelectSchema } from "@norish/shared/contracts/zod";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 /** The connection a caller is already inside, or the shared one. */
 type Db = typeof db | DbTransaction;
@@ -125,7 +124,7 @@ export async function saveStoreAisles(
 }
 
 /**
- * Every Aisle Link of a set of Stores, in one query: one row per distinct name
+ * Every Aisle Link of a set of Stores, in one query: one row per Ingredient
  * ever filed at each Store, which is small, and the whole of what a screen
  * needs to show a list by aisle.
  */
@@ -135,11 +134,11 @@ export async function listAisleLinksByStoreIds(storeIds: string[]): Promise<Aisl
   const rows = await db
     .select({
       storeId: aisleLinks.storeId,
-      normalizedName: aisleLinks.normalizedName,
+      ingredientId: aisleLinks.ingredientId,
       aisleId: aisleLinks.aisleId,
     })
     .from(aisleLinks)
-    .where(inArray(aisleLinks.storeId, storeIds));
+    .where(and(inArray(aisleLinks.storeId, storeIds), isNotNull(aisleLinks.ingredientId)));
 
   const parsed = AisleLinksSchema.safeParse(rows);
 
@@ -149,34 +148,86 @@ export async function listAisleLinksByStoreIds(storeIds: string[]): Promise<Aisl
 }
 
 /**
- * File a name at a Store: under one of its aisles, or under none, which
- * forgets it. The name is folded here, with the Product Link's folding, so
- * "Melk" and " melk! " are one name. Last writer wins, with no version guard:
- * the last shopper to file is right. Returns what the Store now files the name
- * under, or null where the name folds to nothing and nothing was written.
+ * Where each Store files the foods on a household's list that have no Aisle
+ * Link of their own there: in the Aisle of their nearest Parent Ingredient
+ * that has one (ADR-0037). One row per Store and food, shaped like an Aisle
+ * Link, so a screen reads a grocery's aisle the same way whether the Store
+ * learned it for that food or for a food it is a kind of. Only the foods on
+ * the list (groceries and recurring groceries, done or not) are answered: a
+ * tree seeded from the catalogue has thousands of descendants a household
+ * will never buy.
  */
-export async function fileGroceryName(
+export async function listInheritedAisleLinks(
+  storeIds: string[],
+  userIds: string[]
+): Promise<AisleLinkDto[]> {
+  if (storeIds.length === 0 || userIds.length === 0) return [];
+
+  const stores = sql.join(
+    storeIds.map((id) => sql`${id}::uuid`),
+    sql`, `
+  );
+  const users = sql.join(
+    userIds.map((id) => sql`${id}`),
+    sql`, `
+  );
+  const result = await db.execute<{ storeId: string; ingredientId: string; aisleId: string }>(sql`
+    with recursive listed as (
+      select ingredient_id from groceries where user_id in (${users}) and ingredient_id is not null
+      union
+      select ingredient_id from recurring_groceries
+        where user_id in (${users}) and ingredient_id is not null
+    ),
+    up(start, ancestor, depth) as (
+      select i.id, i.parent_id, 1 from ingredients i
+        join listed l on l.ingredient_id = i.id
+        where i.parent_id is not null
+      union all
+      select up.start, p.parent_id, up.depth + 1 from up
+        join ingredients p on p.id = up.ancestor
+        where p.parent_id is not null and up.depth < 32
+    )
+    select distinct on (up.start, l.store_id)
+        l.store_id::text as "storeId", up.start::text as "ingredientId", l.aisle_id::text as "aisleId"
+      from up
+      join aisle_links l on l.ingredient_id = up.ancestor and l.store_id in (${stores})
+      where not exists (
+        select 1 from aisle_links own
+          where own.store_id = l.store_id and own.ingredient_id = up.start
+      )
+      order by up.start, l.store_id, up.depth`);
+
+  const parsed = AisleLinksSchema.safeParse(result.rows);
+
+  if (!parsed.success) throw new Error("Failed to parse inherited aisle links");
+
+  return parsed.data;
+}
+
+/**
+ * File an Ingredient at a Store: under one of its aisles, or under none,
+ * which forgets it. Filing one spelling files every spelling of the food.
+ * Last writer wins, with no version guard: the last shopper to file is right.
+ * Returns what the Store now files the Ingredient under.
+ */
+export async function fileIngredient(
   storeId: string,
-  name: string,
+  ingredientId: string,
   aisleId: string | null
-): Promise<AisleFiled | null> {
-  const normalizedName = normalizeGroceryName(name);
-
-  if (!normalizedName) return null;
-
+): Promise<AisleFiled> {
   if (aisleId === null) {
     await db
       .delete(aisleLinks)
-      .where(and(eq(aisleLinks.storeId, storeId), eq(aisleLinks.normalizedName, normalizedName)));
+      .where(and(eq(aisleLinks.storeId, storeId), eq(aisleLinks.ingredientId, ingredientId)));
   } else {
     await db
       .insert(aisleLinks)
-      .values({ storeId, normalizedName, aisleId })
+      .values({ storeId, ingredientId, aisleId })
       .onConflictDoUpdate({
-        target: [aisleLinks.storeId, aisleLinks.normalizedName],
+        target: [aisleLinks.storeId, aisleLinks.ingredientId],
         set: { aisleId, updatedAt: new Date(), version: sql`${aisleLinks.version} + 1` },
       });
   }
 
-  return { storeId, normalizedName, aisleId };
+  return { storeId, ingredientId, aisleId };
 }

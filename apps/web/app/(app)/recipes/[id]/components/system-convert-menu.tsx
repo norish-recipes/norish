@@ -46,17 +46,18 @@ export default function SystemConvertMenu({ compact = false }: SystemConvertMenu
               key={item.key}
               className="!bg-transparent py-1 data-[focus=true]:!bg-transparent data-[hovered=true]:!bg-transparent data-[selected=true]:!bg-transparent"
               textValue={item.label}
-              onPress={() => convertTo(item.key)}
+              onPress={() => convertTo(item)}
             >
               <div className={`flex w-full items-center justify-start gap-2 ${cssButtonPill}`}>
-                {item.requiresAI ? (
+                {item.withAI ? (
                   <SparklesIcon className={`size-4 ${cssAIIconColor}`} />
                 ) : (
                   <ArrowsRightLeftIcon className="text-muted size-4" />
                 )}
-                <span className={`text-sm font-medium ${item.requiresAI ? cssAIGradientText : ""}`}>
+                <span className={`text-sm font-medium ${item.withAI ? cssAIGradientText : ""}`}>
                   <Label>{item.label}</Label>
                 </span>
+                {item.isOriginal && <span className="text-muted text-xs">{t("original")}</span>}
               </div>
             </Dropdown.Item>
           )}

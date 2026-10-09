@@ -28,7 +28,7 @@ import type { PricedCandidate } from "@norish/shared/lib/currency";
 import type { PackSize } from "@norish/shared/lib/pack-size";
 import { chooseUnmistakable, distinctProducts } from "@norish/shared/lib/auto-link";
 import { currencyForUrl, isPriced } from "@norish/shared/lib/currency";
-import { nameWords } from "@norish/shared/lib/normalized-name";
+import { nameWords } from "@norish/shared/lib/fold-name";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 import { saleRegularPrice } from "@norish/shared/lib/sale";

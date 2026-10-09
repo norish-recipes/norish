@@ -7,7 +7,8 @@
     "user": "Utente",
     "household": "Nucleo familiare",
     "caldav": "CalDAV",
-    "admin": "Amministrazione"
+    "admin": "Amministrazione",
+    "ingredients": "Ingredienti"
   },
   "user": {
     "profile": {
@@ -21,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergie",
-      "description": "Aggiungi le tue allergie alimentari per ricevere avvisi quando pianifichi ricette che contengono allergeni. Queste informazioni vengono utilizzate per avvisarti quando una ricetta pianificata contiene ingredienti che corrispondono alle tue allergie.",
+      "description": "Aggiungi le tue allergie alimentari per ricevere avvisi quando pianifichi ricette che contengono allergeni.",
       "placeholder": "Digita le allergie (es. glutine, frutta a guscio, latticini)...",
       "saveButton": "Salva allergie"
     },
     "apiKeys": {
       "title": "Chiavi API",
-      "description": "Le chiavi API consentono l'accesso programmatico all'API di Norish. Usale per integrazioni, scorciatoie e automazioni.",
+      "description": "Le chiavi API servono a creare integrazioni, scorciatoie e automazioni personalizzate.",
       "docsLink": "Apri documentazione API",
       "keyNameLabel": "Nome chiave (opzionale)",
       "keyNamePlaceholder": "es. Scorciatoia iOS",
@@ -61,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Importa archivio ricette",
-      "description": "Importa ricette da esportazioni Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) o Mealie/Tandoor (.zip)"
+      "description": "Importa ricette esportate da Norish, Mela, Paprika, Mealie o Tandoor."
     },
     "archiveExport": {
       "title": "Esporta archivio ricette",
@@ -70,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Token di autenticazione siti",
-      "description": "Aggiungi header o cookie inviati durante l'importazione di ricette da siti specifici. Utile per siti che richiedono l'accesso (es. Instagram, Facebook).",
+      "description": "Header o cookie da inviare quando importi da siti che richiedono l'accesso, come Instagram o Facebook.",
       "accountsDescription": "Assegna un nome all'account quando hai più accessi per un sito. Ogni importazione usa allora uno degli account di quel sito, scelto a caso, così nessun accesso porta tutte le importazioni. Un token lasciato senza nome account viene inviato a ogni importazione per il suo dominio.",
       "domain": "Dominio",
       "domainPlaceholder": "es. instagram.com",
@@ -98,7 +99,8 @@
         "title": "Elimina token",
         "message": "Sei sicuro di voler eliminare questo token di autenticazione? Le importazioni da questo sito potrebbero smettere di funzionare.",
         "confirmButton": "Elimina token"
-      }
+      },
+      "accountsHelp": "Informazioni sugli account"
     },
     "dangerZone": {
       "title": "Zona pericolosa",
@@ -116,13 +118,18 @@
     "preferences": {
       "title": "Preferenze",
       "description": "Personalizza la tua esperienza.",
+      "deviceKind": {
+        "help": "Come vengono salvate le preferenze",
+        "phone": "«{language}», «{afterPlanning}» e «{measurements}» valgono per l'account. Il resto per tipo di dispositivo.",
+        "desktop": "«{language}», «{afterPlanning}» e «{measurements}» valgono per l'account. Il resto per tipo di dispositivo."
+      },
       "language": {
         "title": "Lingua",
         "description": "Scegli la tua lingua preferita"
       },
       "hidden": {
         "title": "Elementi nascosti",
-        "description": "Scegli cosa preferisci non vedere. Per impostazione predefinita viene mostrato tutto e questo cambia solo la tua visualizzazione.",
+        "description": "Nascondi gli elementi che non vuoi vedere",
         "placeholder": "Niente nascosto",
         "options": {
           "provenance": "Provenienza",
@@ -132,12 +139,13 @@
           "favorites": "Preferiti",
           "conversion": "Conversione ingredienti",
           "timers": "Timer delle ricette",
-          "cookbooks": "Libri di cucina"
+          "cookbooks": "Libri di cucina",
+          "ingredientIcons": "Icone degli ingredienti"
         }
       },
       "todaySection": {
         "title": "Sezione Oggi",
-        "description": "Scegli come viene mostrata la sezione Oggi nella dashboard su questo dispositivo",
+        "description": "Come si comporta la sezione Oggi della dashboard",
         "options": {
           "always": "Sempre visibile",
           "planned": "Solo pasti pianificati",
@@ -146,13 +154,33 @@
       },
       "recipePageColor": {
         "title": "Colore delle pagine delle ricette",
-        "description": "Tingi ogni pagina di ricetta con i colori della sua foto, oppure mantieni i colori del tema su questo dispositivo",
+        "description": "Tingi la pagina della ricetta in modo dinamico o segui i colori del tema",
         "options": {
           "dish": "Dalla foto del piatto",
           "theme": "Colori del tema"
         }
       },
-      "applyError": "Applicazione della preferenza non riuscita"
+      "applyError": "Applicazione della preferenza non riuscita",
+      "afterPlanning": {
+        "title": "Dopo aver pianificato una ricetta",
+        "description": "Cosa succede quando pianifichi una ricetta",
+        "options": {
+          "nothing": "Niente",
+          "openGroceries": "Apri il pannello della spesa",
+          "addGroceries": "Aggiungi gli ingredienti alla spesa"
+        }
+      },
+      "measurements": {
+        "title": "Misure",
+        "description": "Il sistema di misura predefinito per le ricette",
+        "options": {
+          "off": "Non convertire",
+          "metric": "Metrico",
+          "us": "US",
+          "metricWithAI": "Metrico con IA",
+          "usWithAI": "US con IA"
+        }
+      }
     },
     "shareLinks": {
       "title": "Link di condivisione ricette",
@@ -183,7 +211,6 @@
     }
   },
   "household": {
-    "pageTitle": "Impostazioni nucleo familiare",
     "info": {
       "yourRole": "Il tuo ruolo",
       "admin": "Amministratore",
@@ -330,6 +357,267 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingredienti",
+    "description": "Il catalogo degli ingredienti che Norish usa per determinare valori nutrizionali, icone degli ingredienti e traduzioni.",
+    "search": "Cerca ingredienti",
+    "searchMatch": "Corrispondenza",
+    "searchIn": "Cerca in",
+    "searchMatches": {
+      "contains": "Contiene",
+      "exact": "Esatto"
+    },
+    "searchFields": {
+      "name": "Nome",
+      "translations": "Traduzioni",
+      "parent": "Padre"
+    },
+    "flaggedOnly": "Solo segnalati",
+    "flagged": "Segnalato",
+    "flagReasons": {
+      "unknown": "Norish non era sicuro che fosse un ingrediente a sé.",
+      "ai-off": "L'IA è disattivata, quindi nulla ha verificato se Norish lo conosce già.",
+      "unknown-food": "Nessun ingrediente noto condivide una parola con questo nome, quindi l'IA non è stata interpellata.",
+      "ai-unsure": "All'IA è stato chiesto se è un ingrediente noto e non era sicura.",
+      "ai-unavailable": "L'IA non ha risposto in tempo quando questo nome è stato aggiunto.",
+      "food-gone": "L'IA lo ha associato a un ingrediente unito prima che il nome potesse raggiungerlo.",
+      "upgrade": "Non è stato trovato nessun ingrediente noto corrispondente.",
+      "seed-ambiguous": "Il catalogo conosce più ingredienti che potrebbero essere questo."
+    },
+    "empty": "Nessun ingrediente trovato",
+    "emptyFlagged": "Nulla è segnalato",
+    "rename": "Rinomina",
+    "delete": "Elimina",
+    "deleteTitle": "Eliminare {name}?",
+    "deleteConfirm": "Le sue traduzioni vanno con esso, e ciò che la tua famiglia ha insegnato a Norish al riguardo. Un ingrediente ancora usato da una ricetta, una spesa o la dispensa non può essere eliminato; uniscilo invece.",
+    "markDistinct": "Segna come distinto",
+    "summary": "{spellings, plural, one {# traduzione} other {# traduzioni}}{kinds, plural, =0 {} one {, # tipo} other {, # tipi}}{parent, select, none {} other {, genitore: {parent}}}",
+    "askAI": "Chiedi all'IA",
+    "askAIAll": "Chiedi all'IA degli ingredienti segnalati",
+    "askAIRound": {
+      "intro": "L'IA legge ogni nome e lo confronta con gli alimenti che Norish conosce. Non cambia nulla finché non confermi un suggerimento.",
+      "scopeLabel": "Quali ingredienti",
+      "scopes": {
+        "unsuggested": "Solo quelli senza suggerimento",
+        "flagged": "Tutti gli ingredienti segnalati"
+      },
+      "scopeSize": "{count, plural, =0 {Nessun ingrediente} one {# ingrediente · circa {tokens} token} other {# ingredienti · circa {tokens} token}}",
+      "replaces": "Sostituisce i suggerimenti già in attesa.",
+      "modelTokens": "circa {tokens} token",
+      "basisMeasured": "In base a quanto usato nell'ultimo giro.",
+      "basisPrompt": "Stimato dal prompt, quindi il numero reale sarà probabilmente più alto."
+    },
+    "roundProgress": "Richiesta all'IA · {done, number} di {total, number}",
+    "roundSection": {
+      "title": "Richiesta all'IA",
+      "progress": "{done, number} di {total, number}",
+      "waiting": "{count, plural, one {# ingrediente in attesa} other {# ingredienti in attesa}}"
+    },
+    "reviewing": "Chiedo all’IA…",
+    "aiOutcomes": {
+      "parent": "L'IA suggerisce di classificare {name} come un tipo di {of}.",
+      "distinct": "L'IA suggerisce che {name} sia un alimento a sé.",
+      "unsure": "L'IA non è ancora sicura di cosa sia {name}.",
+      "notFlagged": "{name} non è segnalato.",
+      "skippedNotFlagged": "{name} non era più segnalato.",
+      "skippedForbidden": "{name} non è tuo da modificare.",
+      "skippedNotFound": "{name} non c’era più quando l’IA è arrivata.",
+      "failed": "La domanda su {name} è fallita.",
+      "merge": "L'IA suggerisce di unire {name} a {into}."
+    },
+    "aiTrace": {
+      "readAs": "L'IA l'ha letto come “{name}”.",
+      "compared": "Confrontato con: {names}.",
+      "comparedNothing": "Non c'era alcun alimento noto con cui confrontarlo.",
+      "fromWords": "Based on name."
+    },
+    "addAlias": "Aggiungi una traduzione",
+    "removeAlias": "Rimuovi {alias}",
+    "mergeInto": "Unisci a…",
+    "merge": "Unisci",
+    "mergedToast": "{name} è ora una traduzione di {into}. Per annullare, apri {into} e sposta di nuovo fuori {name}.",
+    "mergeTitle": "{name} scompare e diventa una traduzione dell'ingrediente che scegli.",
+    "moveTo": "Sposta in",
+    "move": "Sposta",
+    "moveAlias": "Sposta {alias}",
+    "moveTitle": "Sposta {alias} in un altro ingrediente.",
+    "newIngredient": "Rendilo un ingrediente base",
+    "pickIngredient": "Cerca un ingrediente",
+    "pickerHint": "Scrivi per cercare nel catalogo",
+    "pickerSearching": "Ricerca…",
+    "pickerEmpty": "Nessun ingrediente trovato",
+    "setParent": "Scegli il genitore…",
+    "parentTitle": "Scegli l'ingrediente di cui {name} è un tipo.",
+    "clearParent": "Rimuovi il genitore",
+    "nameSection": "Nome",
+    "parentSection": "Genitore",
+    "spellingsSection": "Traduzioni",
+    "shownAs": "Mostrato a te come {name}",
+    "changeParent": "Cambia il genitore…",
+    "spellingsCount": "{count, plural, one {# traduzione} other {# traduzioni}}",
+    "dataSources": {
+      "title": "Fonti dei dati",
+      "notice": "Il catalogo degli ingredienti parte dalla tassonomia degli ingredienti di <off>Open Food Facts</off>, disponibile con la <odbl>Open Database License (ODbL)</odbl>. Il catalogo che Norish ne ricava è offerto con la stessa licenza.",
+      "nutritionNotice": "I valori nutrizionali per 100 g provengono da <ciqual>CIQUAL 2025</ciqual> e CALNUT (ANSES), <usda>USDA FoodData Central</usda> e <cofid>CoFID</cofid>, collegati tramite i codici che Open Food Facts dà a ogni ingrediente. Le correzioni di una famiglia sono valori suoi, non dei dataset.",
+      "download": "Scarica il catalogo degli ingredienti (JSON)"
+    },
+    "nutrition": {
+      "section": "Valori nutrizionali",
+      "per100g": "Per 100 g",
+      "calories": "Calorie",
+      "fat": "Grassi",
+      "carbs": "Carboidrati",
+      "protein": "Proteine",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "spoonGrams": {
+        "teaspoon": "{value} g a cucchiaino",
+        "tablespoon": "{value} g a cucchiaio",
+        "cup": "{value} g a tazza",
+        "hundredMl": "{value} g per 100 ml"
+      },
+      "none": "Norish non ha ancora valori nutrizionali per questo ingrediente. Correggilo per dargliene.",
+      "noNumbers": "Ancora nessun valore per 100 g.",
+      "borrowed": "Da {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, scelto da Norish",
+        "name": "{food} · {dataset}, trovato per nome",
+        "householdFood": "{food} · {dataset}, scelto dalla tua famiglia",
+        "household": "I valori propri della tua famiglia",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Correggi",
+      "correctTitle": "Correggi {name}",
+      "correctIntro": "Le correzioni valgono solo per la tua famiglia.",
+      "facts": {
+        "numbers": "Per 100 g",
+        "pieceWeight": "Un pezzo"
+      },
+      "useSources": "Nessuna correzione",
+      "pickFood": "Un alimento dei dataset",
+      "typeLabel": "Da un'etichetta",
+      "label": {
+        "calories": "Calorie (kcal)",
+        "fat": "Grassi (g)",
+        "carbs": "Carboidrati (g)",
+        "protein": "Proteine (g)",
+        "pieceGrams": "Un pezzo pesa (g)",
+        "spoonGrams": {
+          "teaspoon": "Un cucchiaino pesa (g)",
+          "tablespoon": "Un cucchiaio pesa (g)",
+          "cup": "Una tazza pesa (g)",
+          "hundredMl": "100 ml pesano (g)"
+        }
+      },
+      "searchFood": "Cerca nei dataset (in inglese), per esempio milk semi-skimmed",
+      "foodHint": "Scrivi qualche parola del nome",
+      "searchingFoods": "Ricerca…",
+      "noFoods": "Nessun alimento dei dataset ha tutte queste parole.",
+      "remove": "Rimuovi la nostra correzione",
+      "saved": "Correzione salvata",
+      "removed": "Di nuovo i valori dei dataset",
+      "errors": {
+        "title": "Correzione non salvata",
+        "unknown-food": "Quell'alimento non è più in Norish.",
+        "empty": "Correggi almeno uno dei tre.",
+        "not-found": "Questo ingrediente non esiste più.",
+        "unknown": "Qualcosa è andato storto. Riprova."
+      },
+      "onePieceLabel": "Un pezzo",
+      "spoon": {
+        "teaspoon": "Un cucchiaino",
+        "tablespoon": "Un cucchiaio",
+        "cup": "Una tazza",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Aggiungi il peso",
+      "summary": "{value} kcal per 100 g",
+      "summaryNone": "Ancora nessun valore nutrizionale",
+      "current": "Ora {value} · {source}",
+      "currentNone": "Norish non ha ancora nulla per questo"
+    },
+    "errors": {
+      "title": "Impossibile modificare l'ingrediente",
+      "forbidden": "Non puoi modificare questo ingrediente",
+      "not-found": "Questo ingrediente non esiste più",
+      "name-taken": "Un altro ingrediente ha già questo nome",
+      "spelling-taken": "Questa traduzione appartiene già a un altro ingrediente",
+      "last-alias": "Un ingrediente conserva almeno una traduzione",
+      "alias-in-use": "Ricette o spesa usano ancora questa traduzione",
+      "ingredient-in-use": "Ricette, spesa o dispensa usano ancora questo ingrediente",
+      "same-ingredient": "Un ingrediente non può essere unito a se stesso",
+      "cycle": "Un ingrediente non può essere un tipo di se stesso",
+      "empty": "Inserisci un nome",
+      "unknown": "Qualcosa è andato storto. Riprova."
+    },
+    "keepAlias": "Mantieni {alias}",
+    "reportOutcomes": {
+      "parent": "Sotto un genitore",
+      "distinct": "Alimento a sé",
+      "unsure": "Non sicuro",
+      "skipped": "Saltato",
+      "failed": "Fallito",
+      "merge": "Unisci"
+    },
+    "expandKinds": "Mostra i tipi di {name}",
+    "collapseKinds": "Nascondi i tipi di {name}",
+    "layoutSection": "Vista",
+    "asTree": "Vista gerarchica",
+    "showOnly": "Mostra solo",
+    "standaloneOnly": "Senza genitore né tipi",
+    "findParent": "Trova il genitore con l’IA",
+    "findParentsAll": "Trova i genitori con l’IA",
+    "suggestion": {
+      "merge": "Unisci {name} a {into}",
+      "parent": "Classifica {name} sotto {of}",
+      "distinct": "Mantieni {name} come alimento a sé",
+      "filedFromName": "{name} filed under {of}"
+    },
+    "suggestionsTitle": "Suggerimenti dell'IA",
+    "suggestionsEmpty": "Niente in attesa.",
+    "suggestionsNone": "Nessun suggerimento",
+    "suggestionsOpen": "{count, plural, =0 {Suggerimenti} one {# suggerimento} other {# suggerimenti}}",
+    "suggestionsFailed": "{count, plural, one {# suggerimento non è stato applicato} other {# suggerimenti non sono stati applicati}}: {reason}",
+    "confirmSuggestion": "Conferma",
+    "dismissSuggestion": "Ignora",
+    "confirmAll": "Conferma tutto ({count})",
+    "dismissAll": "Ignora tutto",
+    "suggestedByAI": "Suggerito dall'IA",
+    "suggestedFromName": "Based on name",
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Cambia icona",
+      "upload": "Carica un’immagine",
+      "remove": "Rimuovi icona",
+      "failed": "Non è stato possibile ricavare un’icona da questa immagine.",
+      "generate": "Genera con l’IA",
+      "generateFailed": "Non è stato possibile generare l’icona."
+    },
+    "drawIcons": {
+      "open": "Disegna icone",
+      "title": "Disegna icone",
+      "intro": "Il fornitore di immagini disegna un’icona per ogni alimento, che diventa subito la sua. Puoi dare un’altra icona a un alimento nel suo pannello.",
+      "scopeLabel": "Quali alimenti",
+      "scopes": {
+        "bare": "Solo alimenti senza alcuna icona",
+        "unowned": "Ogni alimento senza un’icona propria"
+      },
+      "scopeSize": "{count, plural, =0 {Nessuna icona} one {# icona} other {# icone}}",
+      "start": "Disegna icone",
+      "progress": "Disegno icone · {done, number} di {total, number}",
+      "drawing": "Disegno icona…"
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderazione link di condivisione ricette",
@@ -411,8 +699,10 @@
       "description": "Quando disabilitato, solo gli utenti esistenti possono accedere"
     },
     "permissions": {
-      "title": "Permessi ricette",
-      "description": "Controlla chi può visualizzare, modificare ed eliminare le ricette. Gli amministratori del server hanno sempre accesso completo.",
+      "title": "Permessi",
+      "description": "Chi può vedere e modificare ciò che altri hanno creato. Gli amministratori del server hanno sempre accesso completo.",
+      "recipes": "Ricette",
+      "ingredients": "Ingredienti",
       "viewRecipes": "Visualizza ricette",
       "viewDescription": "Chi può vedere le ricette nella dashboard",
       "editRecipes": "Modifica ricette",
@@ -427,17 +717,30 @@
         "owner": "Solo proprietario",
         "ownerDescription": "Solo il proprietario della ricetta"
       },
-      "note": "Nota: Spesa e voci del calendario seguono automaticamente le regole del nucleo familiare, i membri del nucleo possono sempre modificare/eliminare gli elementi appartenenti a chiunque nello stesso nucleo familiare."
+      "note": "Spesa e voci del calendario seguono sempre le regole del nucleo familiare: i membri possono modificare o eliminare gli elementi degli altri."
+    },
+    "ingredientPermissions": {
+      "title": "Permessi degli ingredienti",
+      "description": "Chi può rinominare gli ingredienti, segnarli come distinti o rimuoverne le traduzioni. Chiunque può aggiungere una traduzione.",
+      "editIngredients": "Modifica ingredienti",
+      "editDescription": "Chi può cambiare un ingrediente aggiunto da qualcun altro",
+      "levels": {
+        "everyone": "Tutti",
+        "everyoneDescription": "Tutti gli utenti autenticati",
+        "household": "Nucleo familiare",
+        "householdDescription": "Chi lo ha aggiunto e i membri del suo nucleo",
+        "owner": "Solo proprietario",
+        "ownerDescription": "Solo chi lo ha aggiunto"
+      },
+      "note": "Gli ingredienti del catalogo integrato possono essere modificati solo dagli amministratori del server."
     },
     "system": {
       "title": "Impostazioni di sistema",
       "cleanup": {
-        "title": "Pulizia programmata",
         "label": "Mesi di pulizia",
         "description": "Elimina i pasti pianificati più vecchi di questo numero di mesi"
       },
       "server": {
-        "title": "Gestione server",
         "restartLabel": "Riavvia server",
         "restartDescription": "Applica le modifiche alla configurazione che richiedono un riavvio",
         "restartButton": "Riavvia server"
@@ -455,7 +758,7 @@
     "authProviders": {
       "title": "Provider di autenticazione",
       "requiresRestart": "Richiede riavvio",
-      "description": "Configura i metodi di autenticazione. Le modifiche richiedono un riavvio del server per avere effetto.",
+      "description": "Configura come accedono gli utenti.",
       "passwordAuth": {
         "title": "Email e password",
         "description": "Consenti agli utenti di accedere con email e password"
@@ -476,7 +779,7 @@
         },
         "claimMapping": {
           "title": "Mappatura claim",
-          "description": "Assegna automaticamente ruoli e nuclei familiari in base ai claim OIDC. Gli utenti con il gruppo admin ottengono i privilegi di amministratore del server. Gli utenti con un gruppo nucleo familiare vengono aggiunti automaticamente a quel nucleo familiare.",
+          "description": "Assegna diritti di amministratore e nuclei familiari in base ai claim di gruppo del tuo provider.",
           "securityWarning": "Attenzione: abilitare la mappatura dei claim consente al tuo identity provider di controllare i privilegi di amministratore e l'appartenenza al nucleo familiare. Abilita questa opzione solo se ti fidi completamente del tuo provider OIDC e hai configurato correttamente i claim dei gruppi.",
           "scopes": "Scope aggiuntivi",
           "scopesPlaceholder": "groups, roles",
@@ -533,10 +836,15 @@
         "subtitle": "Definizioni delle unità di misura per l'analisi",
         "description": "Definisci le unità di misura con la loro forma abbreviata, plurale e grafie alternative. Utilizzate durante l'analisi delle quantità degli ingredienti."
       },
+      "ingredientWords": {
+        "title": "Parole degli ingredienti",
+        "subtitle": "Le parole con cui si leggono i nomi degli ingredienti, per lingua",
+        "description": "Parole che Norish ignora quando abbina i nomi degli ingredienti, come «tritato», «grande» o la «e» di «cipolle»."
+      },
       "recurrence": {
         "title": "Modelli di ricorrenza",
         "subtitle": "Modelli in linguaggio naturale per elementi ricorrenti",
-        "description": "Definisci modelli specifici per lingua per l'analisi delle regole di ricorrenza dal linguaggio naturale (es. 'ogni settimana', 'ogni giorno')."
+        "description": "Parole per lingua che rendono ricorrente un articolo della spesa, come «ogni settimana» o «a giorni alterni»."
       },
       "timerKeywords": {
         "title": "Parole chiave timer",
@@ -585,7 +893,7 @@
       "bulkEnrichment": {
         "title": "Arricchimento in blocco",
         "subtitle": "Esegui l'arricchimento abilitato su tutte le ricette",
-        "description": "Accoda, per tutte le ricette di questo server, ogni tipo di arricchimento il cui interruttore automatico è attivo. Per impostazione predefinita vengono colmate solo le lacune; la conferma propone di sovrascrivere ciò che è già presente.",
+        "description": "Accoda tutti gli arricchimenti attivi",
         "button": "Arricchisci tutte le ricette",
         "confirmTitle": "Eseguire l'arricchimento su tutte le ricette?",
         "confirmMessage": "Questo mette in coda lavoro di IA per ogni ricetta di questo server. Ogni tipo di arricchimento il cui interruttore automatico è abilitato viene eseguito dove mancano dati.",
@@ -637,7 +945,7 @@
       "testConnection": "Testa connessione",
       "vision": "visione",
       "automaticEnrichment": "Arricchimento automatico delle ricette",
-      "automaticEnrichmentDescription": "Scegli quale arricchimento AI viene eseguito automaticamente per le nuove ricette. I membri possono comunque eseguirne ciascuno manualmente quando l'AI è attiva.",
+      "automaticEnrichmentDescription": "Quali arricchimenti AI vengono eseguiti sulle nuove ricette. I membri possono comunque eseguirli a mano.",
       "automaticEnrichmentPlaceholder": "Non viene eseguito nulla automaticamente",
       "automaticEnrichmentKinds": {
         "autoTagging": "Tag automatici",
@@ -715,7 +1023,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Lascia vuoto per i server locali"
     },
     "imageGenerationConfig": {
-      "description": "La generazione di immagini usa un proprio provider, perché la maggior parte dei provider IA non sa disegnare. Le immagini vengono generate con questo provider; il provider IA sopra gestisce tutto il resto.",
+      "description": "Le immagini richiedono un proprio provider, perché la maggior parte dei provider IA non sa disegnare.",
       "provider": "Provider immagini",
       "providers": {
         "disabled": "Disattivato",
@@ -759,6 +1067,8 @@
         "recipeProvenanceDescription": "Stabilire paese e Cucine prima che la nota venga scritta",
         "groceryLinking": "Collegamento della spesa",
         "groceryLinkingDescription": "Ordinare i prodotti proposti da un negozio e collegarne uno di cui è sicuro",
+        "ingredientResolution": "Riconoscimento degli ingredienti",
+        "ingredientResolutionDescription": "Decidere se un nuovo nome di ingrediente è un alimento che Norish conosce già",
         "validateEnrichments": "Convalida arricchimenti",
         "validateEnrichmentsDescription": "Verificare le affermazioni di ogni arricchimento prima che vengano salvate"
       },
@@ -794,12 +1104,18 @@
       "ingredientLinking": "Prompt di collegamento degli ingredienti",
       "ingredientLinkingDescription": "Usato per collegare ogni passaggio alle righe di ingredienti che utilizza",
       "ingredientLinkingPlaceholder": "Prompt per collegare gli ingredienti ai passaggi...",
+      "ingredientResolution": "Prompt di riconoscimento degli ingredienti",
+      "ingredientResolutionDescription": "Usato per decidere se un nuovo nome di ingrediente è un alimento che Norish conosce già",
+      "ingredientResolutionPlaceholder": "Prompt per riconoscere i nomi degli ingredienti...",
       "imageGenerationBrief": "Prompt descrizione visiva",
       "imageGenerationBriefDescription": "Usato per trasformare una ricetta in una breve descrizione visiva prima di generare l'immagine. La ricetta viene aggiunta dopo il prompt.",
       "imageGenerationBriefPlaceholder": "Prompt per la descrizione visiva...",
       "imageGenerationStyle": "Prompt stile immagine",
       "imageGenerationStyleDescription": "Inviato al modello di immagini, con la descrizione visiva aggiunta dopo. Definisce l'aspetto condiviso da tutte le immagini generate.",
-      "imageGenerationStylePlaceholder": "Prompt per lo stile immagine..."
+      "imageGenerationStylePlaceholder": "Prompt per lo stile immagine...",
+      "ingredientIconStyle": "Prompt di stile delle icone degli ingredienti",
+      "ingredientIconStyleDescription": "Inviato al modello di immagini quando viene disegnata l'icona di un ingrediente, con il nome dell'alimento e di cosa è un tipo aggiunti dopo. Definisce l'aspetto comune a tutte le icone disegnate.",
+      "ingredientIconStylePlaceholder": "Prompt per lo stile delle icone degli ingredienti..."
     },
     "unsavedChanges": "Modifiche non salvate",
     "jsonEditor": {
@@ -850,7 +1166,9 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Disegna l’icona dell’alimento"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -865,7 +1183,9 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Generazione immagini",
-        "store-lookup": "Ricerca nel negozio"
+        "store-lookup": "Ricerca nel negozio",
+        "ingredient-review": "Chiedere all'IA sugli ingredienti",
+        "ingredient-icons": "Disegno delle icone degli ingredienti"
       },
       "summary": {
         "failed": "{count} failed"
@@ -899,9 +1219,11 @@
           "duration": "Duration",
           "attempts": "Attempts",
           "models": "Modelli",
+          "tokens": "Token",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },
+        "modelTokens": "{tokens} token",
         "attempt": "Attempt {number}",
         "stackTrace": "Stack trace"
       },
@@ -918,7 +1240,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "Quanti job completati conservare per ogni coda."
       },
       "pagination": "Page {current} of {total}"
     },

@@ -2,6 +2,7 @@
 
 import { ChangeEvent, memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { slotTranslationKeys } from "@/components/dashboard/today/todays-meals-constants";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton } from "@/components/shared/action-button";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
@@ -10,10 +11,12 @@ import { useRandomRecipe, useRecipesQuery } from "@/hooks/recipes";
 import { Input } from "@heroui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { RecipeCategory, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import { dateKey } from "@norish/shared/lib/helpers";
+
+import { useAfterPlanning } from "./after-planning";
 
 const ESTIMATED_ITEM_HEIGHT = 88; // ~80px image + 8px padding
 
@@ -170,10 +173,12 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
 function MiniRecipesContent({
   date,
   onOpenChange,
+  onPlanned,
   slot,
 }: {
   date: Date;
   onOpenChange: (open: boolean) => void;
+  onPlanned: (recipeId: string) => void;
   slot?: Slot;
 }) {
   const t = useTranslations("calendar.panel");
@@ -205,8 +210,9 @@ function MiniRecipesContent({
     (recipe: RecipeDashboardDTO, slot: Slot) => {
       planMeal(dateString, slot, recipe.id);
       close();
+      onPlanned(recipe.id);
     },
-    [dateString, close, planMeal]
+    [dateString, close, planMeal, onPlanned]
   );
   const handleRandomSelect = useCallback(async () => {
     if (!slot) return;
@@ -216,11 +222,12 @@ function MiniRecipesContent({
       if (result) {
         planMeal(dateString, slot, result.id);
         close();
+        onPlanned(result.id);
       }
     } finally {
       setIsRandomLoading(false);
     }
-  }, [slot, getRandomRecipe, planMeal, dateString, close]);
+  }, [slot, getRandomRecipe, planMeal, dateString, close, onPlanned]);
   const handlePlanNote = useCallback(
     (targetSlot: Slot) => {
       if (rawInput.trim()) {
@@ -344,6 +351,7 @@ function MiniRecipesContent({
             <ActionButton
               fullWidth
               action="random"
+              variant="secondary"
               className="max-w-full min-w-16 justify-center"
               isPending={isRandomLoading}
               size="sm"
@@ -369,16 +377,33 @@ function MiniRecipesContent({
 }
 export default function MiniRecipes({ open, onOpenChange, date, slot }: MiniRecipesProps) {
   const t = useTranslations("calendar.panel");
+  const tSlots = useTranslations("common.slots");
+  const locale = useLocale();
+  // The meal being filled, so the sheet says which one: "Dinner · Wed, Oct 7".
+  const title = slot
+    ? `${tSlots(slotTranslationKeys[slot])} · ${new Intl.DateTimeFormat(locale, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }).format(date)}`
+    : t("addRecipe");
+  const { afterPlanning, afterPlanningPanel } = useAfterPlanning();
+
   return (
-    <Panel
-      open={open}
-      panelClassName="h-[80dvh]"
-      title={t("addRecipe")}
-      onOpenChange={onOpenChange}
-    >
-      <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {open && <MiniRecipesContent date={date} slot={slot} onOpenChange={onOpenChange} />}
-      </Panel.Body>
-    </Panel>
+    <>
+      <Panel open={open} panelClassName="h-[80dvh]" title={title} onOpenChange={onOpenChange}>
+        <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {open && (
+            <MiniRecipesContent
+              date={date}
+              slot={slot}
+              onOpenChange={onOpenChange}
+              onPlanned={afterPlanning}
+            />
+          )}
+        </Panel.Body>
+      </Panel>
+      {afterPlanningPanel}
+    </>
   );
 }

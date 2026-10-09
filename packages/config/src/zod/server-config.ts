@@ -20,9 +20,12 @@ export const ServerConfigKeys = {
   SCHEDULER_CLEANUP_MONTHS: "scheduler_cleanup_months",
   JOB_RETENTION: "job_retention",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
+  INGREDIENT_PERMISSION_POLICY: "ingredient_permission_policy",
+  INGREDIENT_SEED_STATE: "ingredient_seed_state",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
   TIMER_KEYWORDS: "timer_keywords",
+  INGREDIENT_WORDS: "ingredient_words",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -141,11 +144,13 @@ export const PromptsConfigSchema = z.object({
   autoTagging: z.string().optional(),
   recipeProvenance: z.string().optional(),
   ingredientLinking: z.string().optional(),
+  ingredientResolution: z.string().optional(),
   imageExtraction: z.string().optional(),
   autoCategorization: z.string().optional(),
   allergyDetection: z.string().optional(),
   imageGenerationBrief: z.string().optional(),
   imageGenerationStyle: z.string().optional(),
+  ingredientIconStyle: z.string().optional(),
   isOverridden: z.boolean().optional(),
 });
 
@@ -198,6 +203,50 @@ export const UnitsConfigSchema = z.object({
 });
 
 export type UnitsConfig = z.infer<typeof UnitsConfigSchema>;
+
+// ============================================================================
+// Ingredient Words Schema
+// ============================================================================
+
+/**
+ * The words of one language an ingredient name is read by (ADR-0037): what
+ * the resolver's second rung strips from a name, what files a new food under
+ * a known one, and what a plural's ending stands for. Written as a cook
+ * writes them; folded when read.
+ */
+export const IngredientWordsLanguageSchema = z.object({
+  /** What is done to a food, never which food: "chopped", "fijngesneden". */
+  preparation: z.array(z.string()).default([]),
+  /** The word between two preparations: "peeled and chopped". */
+  joiners: z.array(z.string()).default([]),
+  /** The word between a leading measure and its food: "a pinch of nutmeg". */
+  connectors: z.array(z.string()).default([]),
+  /** After these comes what a food is packed or served in or with: "tuna in olive oil". */
+  servedWith: z.array(z.string()).default([]),
+  /** Words that never name a food alone, however another language spells one with them. */
+  notFoods: z.array(z.string()).default([]),
+  /** Words that say an amount is a guess: "about", "ongeveer". */
+  approximately: z.array(z.string()).default([]),
+  /** Sizes: "large", "grote". A line's unit that is one counts a piece. */
+  sizes: z.array(z.string()).default([]),
+  /** Plural and diminutive endings, each with the ending of the form it stands for. */
+  inflections: z.array(z.tuple([z.string(), z.string()])).default([]),
+});
+
+export type IngredientWordsLanguage = z.infer<typeof IngredientWordsLanguageSchema>;
+
+/** Every language's ingredient words, by locale: read together, since a recipe's language is not recorded. */
+export const IngredientWordsMapSchema = z.record(z.string(), IngredientWordsLanguageSchema);
+
+export type IngredientWordsMap = z.infer<typeof IngredientWordsMapSchema>;
+
+/** The ingredient words as stored, with whether an administrator edited them. */
+export const IngredientWordsConfigSchema = z.object({
+  words: IngredientWordsMapSchema,
+  isOverridden: z.boolean().default(false),
+});
+
+export type IngredientWordsConfig = z.infer<typeof IngredientWordsConfigSchema>;
 
 // Flat units map (for parse-ingredient library compatibility)
 export type FlatUnitsMap = Record<
@@ -631,6 +680,7 @@ export const DecisionUseSchema = z.enum([
   "allergyDetection",
   "recipeProvenance",
   "groceryLinking",
+  "ingredientResolution",
   "validateEnrichments",
 ]);
 
@@ -775,6 +825,44 @@ export const DEFAULT_RECIPE_PERMISSION_POLICY: RecipePermissionPolicy = {
   delete: "household",
 };
 
+/**
+ * Who may edit an Ingredient someone else minted: rename it, mark it
+ * distinct, remove its aliases. One level, because Ingredients are always
+ * visible — a hidden one would split the shared catalogue and leave recipes
+ * pointing at food their readers cannot see. Adding an alias is open to
+ * everyone; ownerless (seeded) rows are an administrator's alone, and an
+ * administrator bypasses the policy, as for recipes.
+ */
+export const IngredientPermissionPolicySchema = z.object({
+  edit: PermissionLevelSchema.default("household"),
+});
+
+export type IngredientPermissionPolicy = z.infer<typeof IngredientPermissionPolicySchema>;
+
+export const DEFAULT_INGREDIENT_PERMISSION_POLICY: IngredientPermissionPolicy = {
+  edit: "household",
+};
+
+/**
+ * Where the ingredient catalogue seed stands (ADR-0038): the validators of
+ * the last file applied, so the nightly fetch asks only for a newer one, and
+ * whether existing Ingredients have been merged into the seed — a pass that
+ * runs once. Written by the seed task alone.
+ */
+export const IngredientSeedStateSchema = z.object({
+  etag: z.string().nullable().default(null),
+  lastModified: z.string().nullable().default(null),
+  appliedAt: z.string().nullable().default(null),
+  entries: z.number().int().default(0),
+  mergedExisting: z.boolean().default(false),
+  /** The resolver's `RUNG_VERSION` the last pass over undecided mints ran under. */
+  rungVersion: z.number().int().default(0),
+  /** The version of Ingredient Nutrition's source table last applied (ADR-0039). */
+  nutritionVersion: z.string().nullable().default(null),
+});
+
+export type IngredientSeedState = z.infer<typeof IngredientSeedStateSchema>;
+
 // ============================================================================
 // Server Config Entry Schema (for database rows)
 // ============================================================================
@@ -885,12 +973,18 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return JobRetentionConfigSchema;
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return RecipePermissionPolicySchema;
+    case ServerConfigKeys.INGREDIENT_PERMISSION_POLICY:
+      return IngredientPermissionPolicySchema;
+    case ServerConfigKeys.INGREDIENT_SEED_STATE:
+      return IngredientSeedStateSchema;
     case ServerConfigKeys.PROMPTS:
       return PromptsConfigSchema;
     case ServerConfigKeys.LOCALE_CONFIG:
       return I18nLocaleConfigSchema;
     case ServerConfigKeys.TIMER_KEYWORDS:
       return TimerKeywordsSchema;
+    case ServerConfigKeys.INGREDIENT_WORDS:
+      return IngredientWordsConfigSchema;
     default:
       return z.any();
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Note } from "@/components/shared/note";
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -26,24 +27,17 @@ export default function RestartConfirmationModal({
           </Modal.Header>
           <Modal.Body>
             <p>{t("confirmMessage")}</p>
-            <div className="bg-warning/10 dark:bg-warning/10 border-warning/30 dark:border-warning/30 mt-2 rounded-lg border p-4">
-              <p className="text-warning dark:text-warning text-base font-medium">
-                {t("importantTitle")}
-              </p>
-              <ul className="text-warning dark:text-warning mt-2 list-inside list-disc space-y-1 text-base">
+            <Note className="mt-2" status="warning" title={t("importantTitle")}>
+              <ul className="list-inside list-disc space-y-1">
                 <li>{t("warning1")}</li>
                 <li>{t("warning2")}</li>
                 <li>
                   {t.rich("warning3", {
-                    code: (chunks) => (
-                      <code className="bg-warning/10 dark:bg-warning/20 rounded px-1">
-                        {chunks}
-                      </code>
-                    ),
+                    code: (chunks) => <code className="bg-default rounded px-1">{chunks}</code>,
                   })}
                 </li>
               </ul>
-            </div>
+            </Note>
           </Modal.Body>
           <Modal.Footer>
             <Button onPress={onClose} variant="tertiary">

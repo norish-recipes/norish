@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   hidden: [] as string[],
   isAIEnabled: false,
   systemUsed: "metric" as "metric" | "us",
+  originalSystem: null as "metric" | "us" | null,
   ingredientSystems: ["metric", "us"] as ("metric" | "us")[],
   convertingTo: null as "metric" | "us" | null,
   startConversion: vi.fn(),
@@ -20,9 +21,11 @@ vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({ isAIEnabled: mocks.isAIEnabled }),
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItems: () => mocks.hidden,
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: mocks.hidden,
+  }))
+);
 
 vi.mock("@/hooks/use-amount-display-preference", () => ({
   useAmountDisplayPreference: () => ({
@@ -38,6 +41,7 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
       id: "recipe-1",
       name: "Cacio e Pepe",
       systemUsed: mocks.systemUsed,
+      originalSystem: mocks.originalSystem,
       recipeIngredients: mocks.ingredientSystems.map((systemUsed) => ({ systemUsed })),
     },
     convertingTo: mocks.convertingTo,
@@ -81,6 +85,7 @@ beforeEach(() => {
   mocks.hidden = [];
   mocks.isAIEnabled = false;
   mocks.systemUsed = "metric";
+  mocks.originalSystem = null;
   mocks.ingredientSystems = ["metric", "us"];
   mocks.convertingTo = null;
   mocks.amountMode = "decimal";
@@ -108,7 +113,7 @@ describe("IngredientsOptionsMenu", () => {
 
     fireEvent.click(screen.getByText("recipes.convert.toUS").closest("button")!);
 
-    expect(mocks.startConversion).toHaveBeenCalledWith("us");
+    expect(mocks.startConversion).toHaveBeenCalledWith("us", false);
   });
 
   it("drops the conversion action for a reader who has hidden conversion", () => {
@@ -120,21 +125,49 @@ describe("IngredientsOptionsMenu", () => {
     expect(screen.queryByText("recipes.convert.toMetric")).not.toBeInTheDocument();
   });
 
-  it("offers nothing to convert to when only one system is reachable", () => {
+  it("converts a recipe with one system without AI", () => {
     mocks.ingredientSystems = ["metric"];
+
+    render(<IngredientsOptionsMenu />);
+
+    expect(screen.getByText("recipes.convert.toUS")).toBeInTheDocument();
+    expect(screen.queryByText("recipes.convert.toUSWithAI")).not.toBeInTheDocument();
+  });
+
+  it("offers nothing to convert for a recipe with no lines", () => {
+    mocks.ingredientSystems = [];
 
     render(<IngredientsOptionsMenu />);
 
     expect(screen.queryByText("recipes.convert.toUS")).not.toBeInTheDocument();
   });
 
-  it("reaches an unstored system through AI when AI is enabled", () => {
+  it("adds a conversion with AI when AI is enabled", () => {
     mocks.ingredientSystems = ["metric"];
     mocks.isAIEnabled = true;
 
     render(<IngredientsOptionsMenu />);
 
     expect(screen.getByText("recipes.convert.toUS")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("recipes.convert.toUSWithAI").closest("button")!);
+
+    expect(mocks.startConversion).toHaveBeenCalledWith("us", true);
+  });
+
+  it("offers the converted copy again with AI while it is showing, and the way back", () => {
+    mocks.originalSystem = "metric";
+    mocks.systemUsed = "us";
+    mocks.isAIEnabled = true;
+
+    render(<IngredientsOptionsMenu />);
+
+    expect(screen.getByText("recipes.convert.toMetric")).toBeInTheDocument();
+    // The way back says it is the system the recipe was written in.
+    expect(screen.getAllByText("recipes.convert.original")).toHaveLength(1);
+    expect(screen.queryByText("recipes.convert.toUS")).not.toBeInTheDocument();
+    expect(screen.getByText("recipes.convert.toUSWithAI")).toBeInTheDocument();
+    // AI never writes over the original, so there is no metric-with-AI.
+    expect(screen.queryByText("recipes.convert.toMetricWithAI")).not.toBeInTheDocument();
   });
 
   it("toggles the app-wide amount display", () => {

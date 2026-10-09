@@ -9,7 +9,9 @@
     "manageStores": "매장 관리",
     "storeViewOptions": "매장 보기 옵션",
     "groupIngredients": "재료 묶기",
-    "pantry": "팬트리"
+    "pantry": "팬트리",
+    "list": "목록",
+    "views": "장보기 보기"
   },
   "empty": {
     "title": "아직 장보기 목록이 비어 있어요",
@@ -85,13 +87,25 @@
     "aisleDuplicate": "이 매장에는 이미 같은 이름의 통로가 있습니다"
   },
   "pantry": {
-    "title": "팬트리",
-    "hint": "집에 이미 있는 재료입니다. 레시피를 추가할 때 팬트리에 있는 재료는 목록에서 제외됩니다.",
+    "hint": "이미 가지고 있는 재료입니다.",
     "empty": "팬트리가 비어 있습니다",
-    "namePlaceholder": "예: 올리브 오일",
+    "unavailable": "팬트리를 불러오지 못했습니다. 변경된 내용은 없습니다. 다시 온라인이 되면 시도해 주세요.",
+    "fieldLabel": "식품 찾기 또는 추가",
+    "fieldPlaceholder": "찾기 또는 추가, 예: 올리브유",
     "add": "팬트리에 추가",
-    "remove": "팬트리에서 제거",
-    "duplicate": "이미 팬트리에 있습니다"
+    "fromCatalogue": "식품 추가",
+    "addFood": "{name}을(를) 팬트리에 추가",
+    "putOnTheList": "장보기에 추가",
+    "onTheList": "목록에 있음",
+    "putOnTheListToast": "{name}이(가) 목록에 있습니다",
+    "undo": "실행 취소",
+    "keepFailed": "{name}을(를) 팬트리에 추가하지 못했습니다",
+    "fromYourRecipes": "내 레시피에서",
+    "fromYourRecipesHint": "가장 많이 쓰는 재료",
+    "inRecipes": "{count, plural, other {레시피 #개}}",
+    "showMore": "더 보기",
+    "inYourPantry": "팬트리에 있음",
+    "offlineDetails": "식품 상세 정보는 다시 온라인이 되면 열립니다."
   },
   "panel": {
     "addTitle": "장보기 추가",
@@ -132,7 +146,10 @@
     "addToGroceries": "장보기에 추가",
     "aisle": "통로",
     "noAisle": "통로 없음",
-    "inPantry": "팬트리에 있음"
+    "toBuy": "살 것",
+    "inPantry": "팬트리에 있음",
+    "weKeepThis": "늘 있어요",
+    "keepFailed": "팬트리에 추가하지 못했습니다"
   },
   "picker": {
     "unlink": "상품 연결 해제",

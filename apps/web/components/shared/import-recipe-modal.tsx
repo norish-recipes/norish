@@ -88,7 +88,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
               <Modal.CloseTrigger />
               <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
               <Modal.Body>
-                <TextField fullWidth type="url" value={importUrl} onChange={setImportUrl}>
+                <TextField fullWidth inputMode="url" value={importUrl} onChange={setImportUrl}>
                   <Label>{t("label")}</Label>
                   <Input fullWidth placeholder={t("placeholder")} variant="secondary" />
                 </TextField>

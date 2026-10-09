@@ -18,9 +18,11 @@ vi.mock("@/hooks/use-is-mobile", () => ({
 vi.mock("@/hooks/auto-hide", () => ({
   useAutoHide: () => ({ isVisible: mocks.isNavVisible }),
 }));
-vi.mock("@/context/recipe-page-color-context", () => ({
-  useRecipePageColor: () => ["theme", () => {}],
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    recipePageColor: "theme",
+  }))
+);
 vi.mock("@/components/timer-dock", () => ({
   TimerDock: () => <div data-testid="timer-dock" />,
 }));

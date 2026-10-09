@@ -45,9 +45,36 @@ describe("initializeScheduledJobs", () => {
 
     await initializeScheduledJobs(queue);
 
-    const registered = vi.mocked(queue.add).mock.calls.map(([name]) => name);
+    const registered = vi
+      .mocked(queue.add)
+      .mock.calls.filter(([, , options]) => options?.repeat)
+      .map(([name]) => name);
 
     expect(registered).toEqual([...SCHEDULED_TASKS]);
+    expect(registered).toContain("ingredient-catalogue-refresh");
+  });
+
+  it("asks for the ingredient catalogue at once, so a new instance does not wait for midnight", async () => {
+    const queue = fakeQueue([]);
+
+    await initializeScheduledJobs(queue);
+
+    const immediate = vi.mocked(queue.add).mock.calls.filter(([, , options]) => !options?.repeat);
+
+    expect(immediate).toEqual([
+      ["ingredient-catalogue-refresh", { taskType: "ingredient-catalogue-refresh" }],
+    ]);
+  });
+
+  it("asks only once: a boot with a catalogue fetch still queued adds no second one", async () => {
+    // A dev server restarts on every saved file; each boot must not queue another fetch.
+    const queue = fakeQueue([fakeJob("ingredient-catalogue-refresh")]);
+
+    await initializeScheduledJobs(queue);
+
+    const immediate = vi.mocked(queue.add).mock.calls.filter(([, , options]) => !options?.repeat);
+
+    expect(immediate).toEqual([]);
   });
 
   it("clears out a task type the code no longer has", async () => {

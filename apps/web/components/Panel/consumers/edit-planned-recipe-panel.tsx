@@ -7,11 +7,7 @@ import Link from "next/link";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { Panel, usePanelPortalContainer } from "@/components/Panel/Panel";
-import {
-  ActionButton,
-  ActionButtonGroup,
-  IconActionButton,
-} from "@/components/shared/action-button";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { Calendar, DateField, DatePicker, Label, ListBox, Select } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
@@ -100,8 +96,13 @@ export function EditPlannedRecipePanel({
         />
       </Panel.Body>
       <Panel.Footer>
-        <ActionButtonGroup>
-          <IconActionButton action="delete" label={tActions("delete")} onPress={handleDelete} />
+        <ActionButtonGroup
+          start={
+            <ActionButton action="delete" onPress={handleDelete}>
+              {tActions("delete")}
+            </ActionButton>
+          }
+        >
           <ActionButton action="duplicate" onPress={handleDuplicate}>
             {tActions("duplicate")}
           </ActionButton>

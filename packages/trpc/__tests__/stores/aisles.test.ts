@@ -1,7 +1,9 @@
 // @vitest-environment node
 /**
- * Filing a grocery name at a Store. The repository is mocked; what is pinned
- * here is who may file where, and what the household hears about it.
+ * Filing a grocery name at a Store: the name is resolved to its Ingredient,
+ * and the Ingredient is what is filed (ADR-0037). The repository and the
+ * resolver are mocked; what is pinned here is who may file where, and what
+ * the household hears about it.
  */
 import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,13 +15,15 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
+import { resolveIngredient } from "../mocks/ingredient-resolver";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { stores } from "../mocks/realtime/stores";
 
 const aislesRepository = vi.hoisted(() => ({
-  fileGroceryName: vi.fn(),
+  fileIngredient: vi.fn(),
   getAisleById: vi.fn(),
   listAisleLinksByStoreIds: vi.fn(),
+  listInheritedAisleLinks: vi.fn(),
 }));
 
 const storesRepository = vi.hoisted(() => ({
@@ -29,6 +33,7 @@ const storesRepository = vi.hoisted(() => ({
 
 vi.mock("@norish/db/repositories/aisles", () => aislesRepository);
 vi.mock("@norish/db/repositories/stores", () => storesRepository);
+vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/stores", () => import("../mocks/realtime/stores"));
 vi.mock("@norish/shared-server/logger", () => ({
@@ -49,10 +54,10 @@ describe("filing a name at a Store", () => {
     storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
     assertHouseholdAccess.mockResolvedValue(undefined);
     aislesRepository.getAisleById.mockResolvedValue({ id: ZUIVEL, storeId: STORE, name: "Zuivel" });
-    aislesRepository.fileGroceryName.mockImplementation(
-      async (storeId: string, name: string, aisleId: string | null) => ({
+    aislesRepository.fileIngredient.mockImplementation(
+      async (storeId: string, ingredientId: string, aisleId: string | null) => ({
         storeId,
-        normalizedName: name.trim().toLowerCase(),
+        ingredientId,
         aisleId,
       })
     );
@@ -61,26 +66,27 @@ describe("filing a name at a Store", () => {
   it("files the name under the aisle and tells the household where it now is", async () => {
     const filing = await caller.fileGroceryName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
 
-    expect(aislesRepository.fileGroceryName).toHaveBeenCalledWith(STORE, "Melk", ZUIVEL);
-    expect(filing).toEqual({ storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL });
+    expect(resolveIngredient).toHaveBeenCalledWith("Melk", { userId: ctx.user.id });
+    expect(aislesRepository.fileIngredient).toHaveBeenCalledWith(STORE, "ingredient:melk", ZUIVEL);
+    expect(filing).toEqual({ storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL });
     expect(stores.publish).toHaveBeenCalledWith(
       "aisleFiled",
       {
-        filing: { storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL },
+        filing: { storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL },
       },
       { householdKey: ctx.householdKey }
     );
   });
 
-  it("forgets a name filed under null, and says so in the same event", async () => {
+  it("forgets an Ingredient filed under null, and says so in the same event", async () => {
     await caller.fileGroceryName({ storeId: STORE, name: "melk", aisleId: null });
 
-    expect(aislesRepository.fileGroceryName).toHaveBeenCalledWith(STORE, "melk", null);
+    expect(aislesRepository.fileIngredient).toHaveBeenCalledWith(STORE, "ingredient:melk", null);
     expect(aislesRepository.getAisleById).not.toHaveBeenCalled();
     expect(stores.publish).toHaveBeenCalledWith(
       "aisleFiled",
       {
-        filing: { storeId: STORE, normalizedName: "melk", aisleId: null },
+        filing: { storeId: STORE, ingredientId: "ingredient:melk", aisleId: null },
       },
       { householdKey: ctx.householdKey }
     );
@@ -101,7 +107,7 @@ describe("filing a name at a Store", () => {
     await expect(
       caller.fileGroceryName({ storeId: OTHER_STORE, name: "melk", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    expect(aislesRepository.fileGroceryName).not.toHaveBeenCalled();
+    expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
     expect(stores.publish).not.toHaveBeenCalled();
   });
 
@@ -120,28 +126,59 @@ describe("filing a name at a Store", () => {
     await expect(
       caller.fileGroceryName({ storeId: STORE, name: "melk", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
-    expect(aislesRepository.fileGroceryName).not.toHaveBeenCalled();
+    expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
   });
 
-  it("writes and announces nothing for a name that folds to nothing", async () => {
-    aislesRepository.fileGroceryName.mockResolvedValue(null);
-
+  it("refuses a name that is punctuation alone, and writes and announces nothing", async () => {
     await expect(
       caller.fileGroceryName({ storeId: STORE, name: "!?", aisleId: ZUIVEL })
-    ).resolves.toBeNull();
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(resolveIngredient).not.toHaveBeenCalled();
+    expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
     expect(stores.publish).not.toHaveBeenCalled();
+  });
+
+  it("files nothing for a name that is markup alone", async () => {
+    await expect(
+      caller.fileGroceryName({ storeId: STORE, name: "<b></b>", aisleId: ZUIVEL })
+    ).resolves.toBeNull();
+    expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
+  });
+
+  it("files every spelling of a food as its one Ingredient", async () => {
+    resolveIngredient.mockResolvedValueOnce({
+      text: "Uien",
+      aliasId: "alias:uien",
+      ingredientId: "ingredient:onion",
+    });
+
+    await caller.fileGroceryName({ storeId: STORE, name: "Uien", aisleId: ZUIVEL });
+
+    expect(aislesRepository.fileIngredient).toHaveBeenCalledWith(STORE, "ingredient:onion", ZUIVEL);
   });
 
   it("reads every Aisle Link of the household's Stores in one query", async () => {
     storesRepository.listStoresByUserIds.mockResolvedValue([{ id: STORE }, { id: OTHER_STORE }]);
     aislesRepository.listAisleLinksByStoreIds.mockResolvedValue([
-      { storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL },
+      { storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL },
+    ]);
+
+    aislesRepository.listInheritedAisleLinks.mockResolvedValue([
+      { storeId: STORE, ingredientId: "ingredient:red-onion", aisleId: ZUIVEL },
     ]);
 
     const links = await caller.aisleLinks();
 
     expect(storesRepository.listStoresByUserIds).toHaveBeenCalledWith(ctx.userIds);
     expect(aislesRepository.listAisleLinksByStoreIds).toHaveBeenCalledWith([STORE, OTHER_STORE]);
-    expect(links).toEqual([{ storeId: STORE, normalizedName: "melk", aisleId: ZUIVEL }]);
+    expect(aislesRepository.listInheritedAisleLinks).toHaveBeenCalledWith(
+      [STORE, OTHER_STORE],
+      ctx.userIds
+    );
+    // A kind of a food files where its parent is filed, read the same way.
+    expect(links).toEqual([
+      { storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL },
+      { storeId: STORE, ingredientId: "ingredient:red-onion", aisleId: ZUIVEL },
+    ]);
   });
 });

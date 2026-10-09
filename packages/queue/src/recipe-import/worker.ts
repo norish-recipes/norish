@@ -8,10 +8,11 @@
 import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
-import { createRecipeWithRefs, dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
+import { dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
@@ -114,10 +115,11 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
 
   await reportStep(job, "saving");
   // The Dish Colour is taken from the image the import just stored.
-  const created = await createRecipeWithRefs(
+  const created = await createResolvedRecipe(
     recipeId,
     userId,
-    await withDishColor(parseResult.recipe)
+    await withDishColor(parseResult.recipe),
+    { userId }
   );
   const createdId = created?.recipeId;
 

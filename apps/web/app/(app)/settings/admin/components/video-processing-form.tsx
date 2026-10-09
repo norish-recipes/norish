@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableTranscriptionModelsQuery, useYtDlpVersionQuery } from "@/hooks/admin";
-import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   Button,
   ComboBox,
@@ -255,7 +255,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     }
   };
   return (
-    <div className="flex flex-col gap-4 p-2">
+    <div className="flex flex-col gap-4">
       {/* Video Processing Section */}
       <SwitchRow description={t("enableVideoDescription")} title={t("enableVideo")}>
         <SettingsSwitch
@@ -266,17 +266,9 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         />
       </SwitchRow>
 
-      {showAiDisabledWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          {t("aiDisabledWarning")}
-        </div>
-      )}
+      {showAiDisabledWarning && <Note status="warning">{t("aiDisabledWarning")}</Note>}
 
-      {showValidationWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          {t("configureWarning")}
-        </div>
-      )}
+      {showValidationWarning && <Note status="warning">{t("configureWarning")}</Note>}
 
       <TextField
         isDisabled={isVideoUiDisabled}
@@ -463,7 +455,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
           variant="primary"
           isPending={saving}
         >
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

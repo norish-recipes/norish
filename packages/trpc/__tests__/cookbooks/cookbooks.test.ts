@@ -3,7 +3,7 @@
  * The cookbook router's permission contract.
  *
  * Cookbooks reuse the recipe permission policy (ADR-0027), so what is worth
- * pinning here is that rename and delete ask it for `edit` and `delete`
+ * pinning here is that update and delete ask it for `edit` and `delete`
  * respectively, that an Orphaned cookbook does not ask at all, and that a
  * refusal is a refusal rather than a silent no-op.
  */
@@ -16,7 +16,7 @@ import {
   deleteCookbookById,
   getCookbookRow,
   listCookbooks,
-  renameCookbook,
+  updateCookbook,
   withMemberSummaries,
 } from "../mocks/cookbooks-repository";
 import { canAccessResource } from "../mocks/permissions";
@@ -27,12 +27,17 @@ vi.mock("@norish/db/repositories/cookbooks", () => import("../mocks/cookbooks-re
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/cookbooks", () => import("../mocks/realtime/cookbooks"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
+vi.mock("@norish/shared-server/media/storage", () => ({
+  saveCookbookImageBytes: vi.fn(),
+  sweepCookbookImages: vi.fn(),
+}));
 // The auth middleware resolves the household itself; the test hands it one on
 // the base context so nothing reaches the cache or Redis.
 vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
 }));
 
+const { sweepCookbookImages } = await import("@norish/shared-server/media/storage");
 const { cookbooksRouter } = await import("../../src/routers/cookbooks");
 const { router, createCallerFactory } = await import("../../src/trpc");
 
@@ -112,13 +117,13 @@ describe("cookbook procedures", () => {
     });
   });
 
-  describe("rename", () => {
+  describe("update", () => {
     it("asks the policy for edit rights and renames when granted", async () => {
       const row = cookbookRow({ userId: "someone-else" });
 
       getCookbookRow.mockResolvedValue(row);
       canAccessResource.mockResolvedValue(true);
-      renameCookbook.mockResolvedValue({
+      updateCookbook.mockResolvedValue({
         applied: true,
         stale: false,
         value: { ...row, title: "Christmas baking", version: 2 },
@@ -128,7 +133,7 @@ describe("cookbook procedures", () => {
       ]);
 
       const { caller } = callerFor();
-      const result = await caller.cookbooks.rename({
+      const result = await caller.cookbooks.update({
         id: row.id,
         version: 1,
         title: "Christmas baking",
@@ -151,16 +156,16 @@ describe("cookbook procedures", () => {
       const { caller } = callerFor();
 
       await expect(
-        caller.cookbooks.rename({ id: cookbookRow().id, version: 1, title: "Mine now" })
+        caller.cookbooks.update({ id: cookbookRow().id, version: 1, title: "Mine now" })
       ).rejects.toThrow(TRPCError);
-      expect(renameCookbook).not.toHaveBeenCalled();
+      expect(updateCookbook).not.toHaveBeenCalled();
     });
 
     it("lets anyone rename an Orphaned cookbook, without consulting the policy", async () => {
       const row = cookbookRow({ userId: null });
 
       getCookbookRow.mockResolvedValue(row);
-      renameCookbook.mockResolvedValue({
+      updateCookbook.mockResolvedValue({
         applied: true,
         stale: false,
         value: { ...row, title: "Adopted", version: 2 },
@@ -172,7 +177,7 @@ describe("cookbook procedures", () => {
       const { caller } = callerFor(createMockUser({ id: "a-stranger" }));
 
       await expect(
-        caller.cookbooks.rename({ id: row.id, version: 1, title: "Adopted" })
+        caller.cookbooks.update({ id: row.id, version: 1, title: "Adopted" })
       ).resolves.toMatchObject({ title: "Adopted" });
       expect(canAccessResource).not.toHaveBeenCalled();
     });
@@ -182,14 +187,51 @@ describe("cookbook procedures", () => {
 
       getCookbookRow.mockResolvedValue(row);
       canAccessResource.mockResolvedValue(true);
-      renameCookbook.mockResolvedValue({ applied: false, stale: true });
+      updateCookbook.mockResolvedValue({ applied: false, stale: true });
 
       const { caller } = callerFor();
 
       await expect(
-        caller.cookbooks.rename({ id: row.id, version: 1, title: "Too late" })
+        caller.cookbooks.update({ id: row.id, version: 1, title: "Too late" })
       ).resolves.toBeNull();
       expect(cookbooks.publish).not.toHaveBeenCalled();
+    });
+
+    it("saves an image uploaded for this cookbook and sweeps the rest", async () => {
+      const row = cookbookRow();
+      const image = `/cookbooks/${row.id}/cover.jpg`;
+
+      getCookbookRow.mockResolvedValue(row);
+      canAccessResource.mockResolvedValue(true);
+      updateCookbook.mockResolvedValue({
+        applied: true,
+        stale: false,
+        value: { ...row, image, version: 2 },
+      });
+      withMemberSummaries.mockResolvedValue([cookbookSummary({ image, version: 2 })]);
+
+      const { caller } = callerFor();
+
+      await caller.cookbooks.update({ id: row.id, version: 1, title: row.title, image });
+
+      expect(updateCookbook).toHaveBeenCalledWith(row.id, { title: row.title, image }, 1);
+      expect(sweepCookbookImages).toHaveBeenCalledWith(row.id, image);
+    });
+
+    it("refuses an image that was not uploaded for this cookbook", async () => {
+      const { caller } = callerFor();
+      const id = cookbookRow().id;
+
+      for (const image of [
+        "https://tracker.example/pixel.gif",
+        "/cookbooks/22222222-2222-4222-8222-222222222222/cover.jpg",
+        `/cookbooks/${id}/../../avatars/x.jpg`,
+      ]) {
+        await expect(
+          caller.cookbooks.update({ id, version: 1, title: "Weeknights", image })
+        ).rejects.toThrow(TRPCError);
+      }
+      expect(updateCookbook).not.toHaveBeenCalled();
     });
   });
 

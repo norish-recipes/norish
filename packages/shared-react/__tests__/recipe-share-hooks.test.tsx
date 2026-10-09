@@ -181,6 +181,7 @@ describe("recipe share hooks", () => {
       useRecipeQuery: () => ({
         recipe,
         isLoading: false,
+        isFetching: false,
         error: null,
         invalidate: vi.fn(),
       }),

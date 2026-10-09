@@ -306,7 +306,7 @@ test("renaming an aisle keeps what is filed under it; removing it returns the ro
   ]);
 });
 
-test("in the grouped list, kip and kip (diepvries) are two groups once filed apart", async () => {
+test("kip and kip (diepvries) are one food: filing one files both, and they stay one group", async () => {
   await addGrocery("kip");
   await addGrocery("kip (diepvries)");
 
@@ -317,30 +317,24 @@ test("in the grouped list, kip and kip (diepvries) are two groups once filed apa
   await expect(storeBlock().locator("[data-grocery-name='kip']")).toContainText("Manual Items");
   await setGrouped(false);
 
-  // Filed apart — "kip" in Groente, "kip (diepvries)" in Zuivel — they are two
-  // Aisle Links, and so two groups, though they fold to one grouping name.
+  // The bracketed text is preparation, so both lines name one Ingredient
+  // (ADR-0037): filing "kip (diepvries)" files "kip" too, and the last filing
+  // is where both are.
   await openStoreEditor();
   await page.getByTestId("aisle-name").fill("Zuivel");
   await page.getByTestId("aisle-name").press("Enter");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
   await closeStoreManager();
-  await fileFromPanel("kip", "Groente");
   await fileFromPanel("kip (diepvries)", "Zuivel");
+  await expect.poll(() => readAisleFiling(STORE, "kip")).toBe("Zuivel");
+  await fileFromPanel("kip", "Groente");
   await expect.poll(() => readAisleFiling(STORE, "kip")).toBe("Groente");
-  await expect.poll(() => readAisleFiling(STORE, "kip diepvries")).toBe("Zuivel");
 
   await setGrouped(true);
-  await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(2);
+  await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(1);
+  expect(await rowsIn("Zuivel")).toEqual([]);
   expect(await rowsIn("Groente")).toEqual(["kip"]);
-  expect(await rowsIn("Zuivel")).toEqual(["kip"]);
-  // Each is now a single manual row, with nothing more to say: no "Manual Items" line under it.
-  await expect(storeBlock().locator("[data-grocery-name='kip']").first()).not.toContainText(
-    "Manual Items"
-  );
-  await expect(storeBlock().locator("[data-grocery-name='kip']").last()).not.toContainText(
-    "Manual Items"
-  );
   await setGrouped(false);
 });
 

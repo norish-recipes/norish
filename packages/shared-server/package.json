@@ -1,6 +1,6 @@
 {
   "name": "@norish/shared-server",
-  "version": "0.24.0-beta",
+  "version": "0.25.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,6 +13,8 @@
     "./media/avatar-cleanup": "./src/media/avatar-cleanup.ts",
     "./media/dish-color": "./src/media/dish-color.ts",
     "./media/generated-image": "./src/media/generated-image.ts",
+    "./media/ingredient-icon": "./src/media/ingredient-icon.ts",
+    "./recipes/measurement-conversion": "./src/recipes/measurement-conversion.ts",
     "./recipes/randomizer": "./src/recipes/randomizer.ts",
     "./config/defaults": "./src/config/defaults.ts",
     "./archive/parser": "./src/archive/parser.ts",
@@ -29,6 +31,8 @@
     "./caldav/client": "./src/caldav/client.ts",
     "./caldav/sync": "./src/caldav/sync.ts",
     "./ai/enrichment/*": "./src/ai/enrichment/*.ts",
+    "./ai/resolution/*": "./src/ai/resolution/*.ts",
+    "./ingredients/*": "./src/ingredients/*.ts",
     "./ai/prompts/loader": "./src/ai/prompts/loader.ts",
     "./ai/prompts/overrides": "./src/ai/prompts/overrides.ts",
     "./ai/providers/listing": "./src/ai/providers/listing.ts",
@@ -47,6 +51,7 @@
     "./realtime/groceries": "./src/realtime/groceries.ts",
     "./realtime/households": "./src/realtime/households.ts",
     "./realtime/hub": "./src/realtime/hub.ts",
+    "./realtime/ingredients": "./src/realtime/ingredients.ts",
     "./realtime/pantry": "./src/realtime/pantry.ts",
     "./realtime/permissions": "./src/realtime/permissions.ts",
     "./realtime/ratings": "./src/realtime/ratings.ts",
@@ -60,7 +65,7 @@
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "test": "vitest run --config ./vitest.config.ts",
     "typecheck": "pnpm exec tsc --noEmit --noCheck",
     "clean": "git clean -xdf .cache .turbo node_modules dist"

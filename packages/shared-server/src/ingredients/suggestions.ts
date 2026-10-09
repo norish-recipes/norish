@@ -1,0 +1,185 @@
+/**
+ * What AI proposes for Ingredients, and a person's answer to it (ADR-0037).
+ * AI never edits the catalogue; it leaves a suggestion (`review.ts`), and a
+ * person confirms it — the merge, parent or "a food of its own" is then made
+ * as their own edit, under their permissions — or dismisses it, which leaves
+ * the food as it was. Either follows `edit` on the food the suggestion is
+ * about; a merge needs `edit` on its target too, as a merge by hand does.
+ * A person is only shown the suggestions they may answer.
+ *
+ * One suggestion is not AI's: the parent the resolver gave a mint from inside
+ * the words of its name (`source: "words"`, ADR-0037 as amended). That parent
+ * is already in place, so confirming keeps it as the person's choice and
+ * dismissing takes it off again.
+ */
+import type {
+  SuggestionKind,
+  SuggestionSource,
+} from "@norish/shared/contracts/ingredient-catalogue";
+import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
+import { unfileIngredient } from "@norish/db/repositories/ingredient-relocation";
+import {
+  deleteIngredientSuggestion,
+  findIngredientSuggestions,
+  listIngredientSuggestions,
+} from "@norish/db/repositories/ingredient-suggestions";
+import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+
+import type { CatalogueActor, CatalogueEdit } from "./catalogue";
+import {
+  CatalogueEditError,
+  markDistinct,
+  mayEditIngredientRow,
+  mergeIngredients,
+  setParent,
+} from "./catalogue";
+import { ingredientChanges } from "./changes";
+
+/** One suggestion as the page shows it: both foods, and how AI got there. */
+export interface IngredientSuggestionItem {
+  id: string;
+  kind: SuggestionKind;
+  ingredient: { id: string; name: string; localeNames: LocaleNames };
+  target: { id: string; name: string; localeNames: LocaleNames } | null;
+  englishName: string | null;
+  considered: string[];
+  source: SuggestionSource;
+}
+
+/**
+ * The suggestions waiting on the actor, oldest first: those about a food
+ * they may edit. One they could not answer is not theirs to see.
+ */
+export async function listSuggestions(actor: CatalogueActor): Promise<IngredientSuggestionItem[]> {
+  const [policy, all] = await Promise.all([
+    getIngredientPermissionPolicy(),
+    listIngredientSuggestions(),
+  ]);
+  const rows = all.filter((row) => mayEditIngredientRow(policy.edit, actor, row.ingredientOwnerId));
+  const names = await findLocaleNames(
+    rows.flatMap((row) => (row.target ? [row.ingredientId, row.target.id] : [row.ingredientId]))
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    kind: row.kind,
+    ingredient: {
+      id: row.ingredientId,
+      name: row.ingredientName,
+      localeNames: names.get(row.ingredientId) ?? {},
+    },
+    target: row.target ? { ...row.target, localeNames: names.get(row.target.id) ?? {} } : null,
+    englishName: row.englishName,
+    considered: row.considered,
+    source: row.source,
+  }));
+}
+
+/**
+ * The order to confirm these suggestions in, so one does not take another's
+ * food away first. A merge takes its food away, and with it every suggestion
+ * naming that food, so a merge waits for the merges into its own food: in a
+ * chain "uien" into "ui" into "onion", "uien" goes first. Parents and foods
+ * of their own take nothing away and lead. Two foods suggested into each
+ * other are merged by whichever goes first; the other's suggestion goes with
+ * it. A suggestion already gone keeps its place at the end.
+ */
+export async function inConfirmOrder(suggestionIds: readonly string[]): Promise<string[]> {
+  const suggestions = await findIngredientSuggestions(suggestionIds);
+  const mergesInto = new Map<string, string[]>();
+
+  for (const suggestion of suggestions) {
+    if (suggestion.kind !== "merge" || !suggestion.target) continue;
+    const into = mergesInto.get(suggestion.target.id) ?? [];
+
+    into.push(suggestion.ingredientId);
+    mergesInto.set(suggestion.target.id, into);
+  }
+
+  // How many merges deep the merges into this food go; a loop counts once.
+  const depths = new Map<string, number>();
+  const depthOf = (ingredientId: string, seen: ReadonlySet<string>): number => {
+    const known = depths.get(ingredientId);
+
+    if (known !== undefined) return known;
+    const into = (mergesInto.get(ingredientId) ?? []).filter((id) => !seen.has(id));
+    const depth =
+      into.length === 0
+        ? 0
+        : 1 + Math.max(...into.map((id) => depthOf(id, new Set([...seen, ingredientId]))));
+
+    depths.set(ingredientId, depth);
+
+    return depth;
+  };
+  const turn = (suggestion: (typeof suggestions)[number]) =>
+    suggestion.kind === "merge" ? 1 + depthOf(suggestion.ingredientId, new Set()) : 0;
+  const ordered = [...suggestions].sort((a, b) => turn(a) - turn(b)).map((it) => it.id);
+  const found = new Set(ordered);
+
+  return [...ordered, ...suggestionIds.filter((id) => !found.has(id))];
+}
+
+/**
+ * Confirm a suggestion: make the edit it proposes as the actor's own, which
+ * also settles the suggestion and announces what it changed.
+ */
+export async function confirmSuggestion(
+  actor: CatalogueActor,
+  suggestionId: string
+): Promise<CatalogueEdit> {
+  const [suggestion] = await findIngredientSuggestions([suggestionId]);
+
+  if (!suggestion) throw new CatalogueEditError("not-found");
+  const { ingredientId, target } = suggestion;
+
+  switch (suggestion.kind) {
+    case "merge":
+      if (!target) throw new CatalogueEditError("not-found");
+
+      return await mergeIngredients(actor, ingredientId, target.id);
+    case "parent":
+      if (!target) throw new CatalogueEditError("not-found");
+
+      return await setParent(actor, ingredientId, target.id);
+    case "distinct":
+      return await markDistinct(actor, ingredientId);
+  }
+}
+
+/**
+ * Dismiss a suggestion: the food stays as it was, and the page stops offering
+ * it. A parent the words of the name gave is taken off again, since "as it
+ * was" is before the guess.
+ */
+export async function dismissSuggestion(
+  actor: CatalogueActor,
+  suggestionId: string
+): Promise<CatalogueEdit> {
+  const [[suggestion], policy] = await Promise.all([
+    findIngredientSuggestions([suggestionId]),
+    getIngredientPermissionPolicy(),
+  ]);
+
+  if (!suggestion) throw new CatalogueEditError("not-found");
+  if (!mayEditIngredientRow(policy.edit, actor, suggestion.ingredientOwnerId)) {
+    throw new CatalogueEditError("forbidden");
+  }
+  await deleteIngredientSuggestion(suggestionId);
+
+  const changed = [suggestion.ingredientId];
+
+  if (
+    suggestion.source === "words" &&
+    suggestion.kind === "parent" &&
+    suggestion.target &&
+    (await unfileIngredient(suggestion.ingredientId, suggestion.target.id))
+  ) {
+    changed.push(suggestion.target.id);
+  }
+
+  await ingredientChanges().changed(changed);
+
+  return { changed };
+}

@@ -9,6 +9,17 @@ vi.mock("@/hooks/config", () => ({
   useUnitsQuery: () => ({ units: {} }),
 }));
 
+// The foods the typed names already name, as the catalogue would answer.
+const foods = vi.hoisted(() => new Map<string, string | null>());
+
+vi.mock("@/components/ingredients/ingredient-icon", () => ({
+  IngredientIcon: ({ ingredientId }: { ingredientId: string | null }) => (
+    <span data-food={ingredientId ?? ""} data-testid="row-icon" />
+  ),
+  IngredientIconsProvider: ({ children }: { children?: React.ReactNode }) => children,
+  useFoodsByName: () => foods,
+}));
+
 vi.mock("@/hooks/recipes", () => ({
   useRecipeAutocomplete: () => ({ suggestions: [], isLoading: false }),
 }));
@@ -68,5 +79,33 @@ describe("IngredientInput", () => {
     vi.advanceTimersByTime(300);
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.calls[0][0][0].ingredientName).toContain("pinto beans");
+  });
+
+  it("shows each row's food icon once the name names a known food, and a heading none", () => {
+    foods.set("pinto beans", "pinto-food");
+
+    render(
+      <IngredientInput
+        ingredients={[
+          { ingredientName: "# Beans", amount: null, unit: null, order: 0, systemUsed: "metric" },
+          {
+            ingredientName: "pinto beans",
+            amount: null,
+            unit: null,
+            order: 1,
+            systemUsed: "metric",
+          },
+          { ingredientName: "kohlrabi", amount: null, unit: null, order: 2, systemUsed: "metric" },
+        ]}
+        onChange={vi.fn()}
+      />
+    );
+
+    // The heading has no slot; the trailing empty row keeps its placeholder.
+    expect(screen.getAllByTestId("row-icon").map((icon) => icon.dataset.food)).toEqual([
+      "pinto-food",
+      "",
+      "",
+    ]);
   });
 });

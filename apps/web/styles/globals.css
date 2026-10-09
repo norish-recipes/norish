@@ -187,6 +187,14 @@
     top: calc(1rem + env(safe-area-inset-top, 0px));
   }
 
+  /* A toast with one action (showActionToast) carries it in its title row:
+     the title spans the toast, so the action sits at its end on every width. */
+  .toast__content:has([data-action-toast]),
+  .toast__title:has(> [data-action-toast]) {
+    align-self: stretch;
+    width: 100%;
+  }
+
   .dropdown__menu {
     padding: 0.375rem;
   }
@@ -205,10 +213,12 @@
     width: 100%;
   }
 
-  /* One radius for every field the reader types or picks in: a plain input, a
-     combo box's own input group, and a select's trigger. A shopping list with
-     three fields in a row must not show three shapes. */
+  /* One radius for every field the reader types or picks in: a plain input, an
+     input with a prefix or suffix (a secret's eye, a search's icon), a combo
+     box's own input group, and a select's trigger. A shopping list with three
+     fields in a row must not show three shapes. */
   .input,
+  .input-group,
   .combo-box__input-group,
   .number-field__group,
   .select__trigger {

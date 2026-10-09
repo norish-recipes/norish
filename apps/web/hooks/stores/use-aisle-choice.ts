@@ -12,18 +12,20 @@ import { useFileGroceryName, useStoreAisles } from "./use-store-aisles";
  * Both grocery panels hold exactly this, and both agree: the field reads what
  * the chosen Store remembers for the name, a choice is visible at once, and
  * it is written only on the panel's own Save or Add, against the name the
- * grocery is saved under, because the Aisle Link is keyed by that name
- * (ADR-0031). Swapping the Store drops the choice: an aisle of one shop is
+ * grocery is saved under, whose Ingredient the Aisle Link is keyed by
+ * (ADR-0031, ADR-0037). Swapping the Store drops the choice: an aisle of one shop is
  * nowhere in another.
  */
 export function useAisleChoice(options: {
   /** The grocery's name as it will be saved: "oude kaas" out of "2 kg oude kaas". */
   groceryName: string;
+  /** The Ingredient the name stands for, where Norish knows it yet. */
+  ingredientId: string | null;
   store: StoreDto | null;
   /** Reopened, or opened on a different grocery: the held choice is not that grocery's. */
   resetOn?: unknown;
 }) {
-  const { groceryName, store, resetOn } = options;
+  const { groceryName, ingredientId, store, resetOn } = options;
   const storeId = store?.id ?? null;
   const { aisleFor } = useStoreAisles();
   const fileGroceryName = useFileGroceryName();
@@ -47,12 +49,12 @@ export function useAisleChoice(options: {
   // What the Store remembers — an aisle it still has; one removed in the
   // editor is no answer — unless the shopper has chosen otherwise here.
   const remembered = useCallback(() => {
-    const filedUnder = aisleFor(storeId, groceryName);
+    const filedUnder = aisleFor(storeId, ingredientId);
 
     return filedUnder !== null && store?.aisles.some((aisle) => aisle.id === filedUnder)
       ? filedUnder
       : null;
-  }, [aisleFor, storeId, groceryName, store]);
+  }, [aisleFor, storeId, ingredientId, store]);
   const aisleId = current ? current.aisleId : remembered();
   const setAisleId = useCallback(
     (next: string | null) => setHeld({ storeId, resetToken: resetOn, aisleId: next }),
@@ -68,8 +70,8 @@ export function useAisleChoice(options: {
     if (!chosen || !storeId || !groceryName) return;
     // Only a choice that differs from what the Store remembered is written.
     if (chosen.aisleId === remembered()) return;
-    fileGroceryName(storeId, groceryName, chosen.aisleId);
-  }, [current, storeId, groceryName, remembered, fileGroceryName]);
+    fileGroceryName(storeId, { name: groceryName, ingredientId }, chosen.aisleId);
+  }, [current, storeId, groceryName, ingredientId, remembered, fileGroceryName]);
 
   return {
     /** The Store's aisles, when it has any; the field is shown only then. */

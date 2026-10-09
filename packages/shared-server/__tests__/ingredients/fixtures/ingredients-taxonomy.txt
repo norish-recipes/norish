@@ -1,0 +1,52 @@
+### Properties for ingredients
+
+# description:en:SOYBEAN OIL is a vegetable oil extracted from the seeds of the soybean (Glycine max).
+# wikidata:en:Q421576
+
+synonyms:en: colour, color
+
+stopwords:sv: och, eller, motsvarande 0\,016 mg fluor/tablett
+
+en: vegetable, vegetables
+fr: légume, légumes
+nl: groente, groenten
+wikidata:en: Q11004
+
+< en: vegetable
+en: onion-family vegetable
+fr: légume de la famille de l'oignon
+nl: uienfamilie groenten
+eurocode_2_group_2:en: 8.30
+
+# <en:class:en:Vegetables
+< en: onion-family vegetable
+< en: root vegetable
+en: onion, onions
+de: Zwiebel, Zwiebeln
+fr: oignon, oignons
+nl: ui, uien, ajuin
+# aeb-arab:راس بصل
+average_weight_per_unit:en: 150
+ciqual_food_code:en: 20034
+ciqual_food_name:en: Onion, raw
+usda_ndb_code:en: 11282
+usda_fdc_code:en: 170000
+ecobalyse_origins_en_european-union:en: onion-eu
+wikidata:en: Q3406628
+
+# description:en:Cebula dymka is a name for young onion meant to be pickled or consumed raw
+
+< en: onions
+pl: cebula dymka
+
+< en: onion
+en: red onion, red onions
+de: rote Zwiebel, rote Zwiebeln
+nl: rode ui, rode uien
+
+en: imazalil
+xx: imazalil
+de: Imazalil
+
+en: salt\, sea
+nl: zeezout

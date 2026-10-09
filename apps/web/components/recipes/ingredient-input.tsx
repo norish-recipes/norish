@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  IngredientIcon,
+  IngredientIconsProvider,
+  useFoodsByName,
+} from "@/components/ingredients/ingredient-icon";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import { useUnitsQuery } from "@/hooks/config";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -10,6 +15,7 @@ import { useTranslations } from "next-intl";
 
 import { MeasurementSystem } from "@norish/shared/contracts";
 import { debounce, parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 export interface ParsedIngredient {
   id?: string;
@@ -197,6 +203,14 @@ export default function IngredientInput({
     [debouncedParse]
   );
 
+  // The food each row names, read as Save will read it, for the row's icon.
+  const foodNames = items.map((item, index) => {
+    const name = parseIngredient(item, index)?.ingredientName ?? "";
+
+    return namesNoFood(name) ? "" : name;
+  });
+  const foods = useFoodsByName(foodNames);
+
   // Calculate ingredient numbers (excluding headings)
   const getIngredientNumber = (index: number): number | null => {
     let num = 0;
@@ -208,32 +222,35 @@ export default function IngredientInput({
     return isCurrentHeading ? null : num;
   };
   return (
-    <Reorder.Group
-      ref={dragConstraintsRef}
-      axis="y"
-      className="flex flex-col gap-2"
-      values={items}
-      onReorder={handleReorder}
-    >
-      {items.map((item, index) => (
-        <IngredientRow
-          key={item.id}
-          dragConstraintsRef={dragConstraintsRef}
-          index={index}
-          ingredientNumber={getIngredientNumber(index)}
-          ingredientPlaceholder={t("placeholder")}
-          isLast={index === items.length - 1}
-          item={item}
-          showRemove={items.length > 1 && !!item.text}
-          onBlur={() => handleBlur(index)}
-          onKeyDown={(e) =>
-            handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
-          }
-          onRemove={() => handleRemove(index)}
-          onValueChange={(v) => handleInputChange(index, v)}
-        />
-      ))}
-    </Reorder.Group>
+    <IngredientIconsProvider ids={[...foods.values()]}>
+      <Reorder.Group
+        ref={dragConstraintsRef}
+        axis="y"
+        className="flex flex-col gap-2"
+        values={items}
+        onReorder={handleReorder}
+      >
+        {items.map((item, index) => (
+          <IngredientRow
+            key={item.id}
+            dragConstraintsRef={dragConstraintsRef}
+            foodId={foods.get(foodNames[index]) ?? null}
+            index={index}
+            ingredientNumber={getIngredientNumber(index)}
+            ingredientPlaceholder={t("placeholder")}
+            isLast={index === items.length - 1}
+            item={item}
+            showRemove={items.length > 1 && !!item.text}
+            onBlur={() => handleBlur(index)}
+            onKeyDown={(e) =>
+              handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
+            }
+            onRemove={() => handleRemove(index)}
+            onValueChange={(v) => handleInputChange(index, v)}
+          />
+        ))}
+      </Reorder.Group>
+    </IngredientIconsProvider>
   );
 }
 function normalizeIngredientItems(next: IngredientItem[]): IngredientItem[] {
@@ -246,6 +263,8 @@ function normalizeIngredientItems(next: IngredientItem[]): IngredientItem[] {
 interface IngredientRowProps {
   item: IngredientItem;
   index: number;
+  /** The food the row's text names, for its icon; null shows the placeholder. */
+  foodId: string | null;
   ingredientNumber: number | null;
   isLast: boolean;
   showRemove: boolean;
@@ -259,6 +278,7 @@ interface IngredientRowProps {
 function IngredientRow({
   item,
   index,
+  foodId,
   ingredientNumber,
   isLast,
   showRemove,
@@ -301,6 +321,9 @@ function IngredientRow({
       <div className="text-muted flex h-10 w-6 flex-shrink-0 items-center justify-center font-medium">
         {ingredientNumber !== null ? `${ingredientNumber}.` : ""}
       </div>
+
+      {/* The food's icon; a heading names no food and gets none. */}
+      {ingredientNumber !== null ? <IngredientIcon className="mt-1" ingredientId={foodId} /> : null}
 
       {/* Input field */}
       <div className="flex-1">

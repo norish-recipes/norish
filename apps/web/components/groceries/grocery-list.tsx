@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useStoresContext } from "@/app/(app)/groceries/stores-context";
+import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
@@ -35,7 +36,21 @@ interface GroceryListProps {
   groupSimilarIngredients?: boolean;
 }
 
-export function GroceryList({
+/** The list, under one read of the icons of every food on it. */
+export function GroceryList(props: GroceryListProps) {
+  const foods = [
+    ...props.groceries.map((grocery) => grocery.ingredientId),
+    ...props.recurringGroceries.map((recurring) => recurring.ingredientId),
+  ];
+
+  return (
+    <IngredientIconsProvider ids={foods}>
+      <GroceryListContent {...props} />
+    </IngredientIconsProvider>
+  );
+}
+
+function GroceryListContent({
   groceries,
   stores,
   recurringGroceries,
@@ -105,7 +120,7 @@ export function GroceryList({
       groceries,
       getRecipeNameForGrocery ?? (() => null),
       customUnits,
-      (grocery) => aisleFor(grocery.storeId, grocery.name)
+      (grocery) => aisleFor(grocery.storeId, grocery.ingredientId)
     );
   }, [groupSimilarIngredients, groceries, getRecipeNameForGrocery, customUnits, aisleFor]);
 
@@ -120,7 +135,7 @@ export function GroceryList({
           <div className="flex flex-col items-center gap-6 p-10 text-center">
             <div className="relative">
               <div className={cssEmptyStateGlow} />
-              <div className="bg-accent-soft0/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
+              <div className="bg-accent/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
                 <ShoppingCartIcon className="h-7 w-7" />
               </div>
             </div>

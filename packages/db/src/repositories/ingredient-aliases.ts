@@ -1,0 +1,562 @@
+import { and, asc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+
+import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
+import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import { db } from "@norish/db/drizzle";
+import {
+  ingredientAliases,
+  ingredients,
+  ingredientSuggestions,
+  recipeIngredients,
+} from "@norish/db/schema";
+import { CATALOGUE_LANGUAGES, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
+
+import { isConstraintViolation } from "./constraint-violation";
+
+/**
+ * The Ingredient Alias rows the ingredient resolver reads and writes. Nothing
+ * but the resolver (in `@norish/shared-server/ingredients`) and the startup
+ * backfill calls the writers here: they are the only paths that mint
+ * Ingredients or aliases (ADR-0037). The upgrade's carry-over of rows
+ * written before aliases existed is `ingredient-backfill`.
+ */
+
+/**
+ * An alias and the Ingredient it points at: what every reference to a food —
+ * a recipe line, a Grocery, a Pantry Ingredient — stores.
+ */
+export interface IngredientRef {
+  aliasId: string;
+  ingredientId: string;
+}
+
+/** An alias as the resolver sees it: its text, its fold and its Ingredient. */
+export interface IngredientAliasRow extends IngredientRef {
+  text: string;
+  fold: string;
+}
+
+/** An Ingredient as a reader of the catalogue sees it. */
+export interface IngredientRow {
+  id: string;
+  name: string;
+  ownerId: string | null;
+  flagged: boolean;
+  flagReason: string | null;
+}
+
+const aliasColumns = {
+  aliasId: ingredientAliases.id,
+  text: ingredientAliases.text,
+  fold: ingredientAliases.fold,
+  ingredientId: ingredientAliases.ingredientId,
+};
+
+/** How many folds one lookup carries: an upgrade batch reads every plural of every line. */
+const FOLDS_PER_QUERY = 5000;
+
+export async function findIngredientAliasesByFolds(
+  folds: readonly string[]
+): Promise<IngredientAliasRow[]> {
+  const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
+  const rows: IngredientAliasRow[] = [];
+
+  for (let start = 0; start < unique.length; start += FOLDS_PER_QUERY) {
+    rows.push(
+      ...(await db
+        .select(aliasColumns)
+        .from(ingredientAliases)
+        .where(inArray(ingredientAliases.fold, unique.slice(start, start + FOLDS_PER_QUERY))))
+    );
+  }
+
+  return rows;
+}
+
+/**
+ * The spellings of seeded foods among these folds, which a new mint may be
+ * filed under by the words its text ends with: the ones the catalogue seed
+ * wrote, and the ones a seeded food gained since, by a merge or a person
+ * (an instance's own word for garlic is as good a word for it as the seed's).
+ */
+export async function findSeededFoodSpellingsByFolds(
+  folds: readonly string[]
+): Promise<IngredientAliasRow[]> {
+  const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
+
+  if (unique.length === 0) return [];
+
+  return await db
+    .select(aliasColumns)
+    .from(ingredientAliases)
+    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+    .where(and(inArray(ingredientAliases.fold, unique), isNotNull(ingredients.offId)));
+}
+
+export async function findIngredientByAliasId(aliasId: string): Promise<IngredientRow | null> {
+  const [row] = await db
+    .select({
+      id: ingredients.id,
+      name: ingredients.name,
+      ownerId: ingredients.ownerId,
+      flagged: ingredients.flagged,
+      flagReason: ingredients.flagReason,
+    })
+    .from(ingredientAliases)
+    .innerJoin(ingredients, eq(ingredientAliases.ingredientId, ingredients.id))
+    .where(eq(ingredientAliases.id, aliasId))
+    .limit(1);
+
+  return row ?? null;
+}
+
+/**
+ * Each Ingredient's best spelling in every language a Norish locale reads,
+ * for surfaces that show the Ingredient in the viewer's language.
+ */
+export async function findLocaleNames(
+  ingredientIds: readonly string[],
+  tx: Pick<typeof db, "select"> = db
+): Promise<Map<string, LocaleNames>> {
+  const unique = Array.from(new Set(ingredientIds));
+
+  if (unique.length === 0) return new Map();
+
+  const rows = await tx
+    .select({
+      ingredientId: ingredientAliases.ingredientId,
+      text: ingredientAliases.text,
+      locale: ingredientAliases.locale,
+      seeded: ingredientAliases.seeded,
+    })
+    .from(ingredientAliases)
+    .where(
+      and(
+        inArray(ingredientAliases.ingredientId, unique),
+        inArray(ingredientAliases.locale, [...CATALOGUE_LANGUAGES])
+      )
+    );
+  const byIngredient = new Map<string, typeof rows>();
+
+  for (const row of rows) {
+    byIngredient.set(row.ingredientId, [...(byIngredient.get(row.ingredientId) ?? []), row]);
+  }
+
+  return new Map(unique.map((id) => [id, chooseLocaleNames(byIngredient.get(id) ?? [])]));
+}
+
+export async function findIngredientNamesByIds(
+  ids: readonly string[]
+): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(ids));
+
+  if (unique.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .where(inArray(ingredients.id, unique));
+
+  return new Map(rows.map((row) => [row.id, row.name]));
+}
+
+export interface MintIngredientInput {
+  name: string;
+  /** The aliases to give it, the text that prompted the mint first. */
+  aliases: ReadonlyArray<{ text: string; fold: string }>;
+  ownerId: string | null;
+  locale: string | null;
+  flagged: boolean;
+  /** Why it is flagged, where it is. */
+  flagReason?: FlagReason | null;
+  /** The Parent Ingredient, where the food is a kind of a known one; none where that one is gone. */
+  parentId?: string | null;
+  /**
+   * Whether the parent is a guess from the words of the name that a person
+   * should confirm: a `words` suggestion is recorded beside the mint, in the
+   * same transaction, so the two never disagree.
+   */
+  suggestParent?: boolean;
+}
+
+/**
+ * Mint an Ingredient with its first aliases, and answer with the alias each
+ * requested fold now has.
+ *
+ * Safe against a concurrent mint of the same spelling: an alias whose fold is
+ * already taken keeps pointing where it points, and the new Ingredient is
+ * removed again with any spelling it did get joining the one that won. A name that is already an
+ * Ingredient's (regardless of case) is that Ingredient, so the aliases join it
+ * and nothing is minted or flagged; unless that one has no spelling at all,
+ * which only a row from before the upgrade lacks (ADR-0037): nobody decided
+ * on it, so the mint takes it over, flag and parent included.
+ */
+export async function mintIngredientWithAliases(
+  input: MintIngredientInput
+): Promise<IngredientAliasRow[]> {
+  try {
+    return await mintOnce(input);
+  } catch (error) {
+    // The parent was merged away between the read and the insert: mint without it.
+    if (input.parentId && isConstraintViolation(error, "23503")) {
+      return await mintOnce({ ...input, parentId: null });
+    }
+    throw error;
+  }
+}
+
+async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[]> {
+  const folds = input.aliases.map((alias) => alias.fold);
+
+  return await db.transaction(async (tx) => {
+    const [minted] = await tx
+      .insert(ingredients)
+      .values({
+        name: input.name,
+        ownerId: input.ownerId,
+        flagged: input.flagged,
+        flagReason: input.flagged ? (input.flagReason ?? null) : null,
+        parentId: input.parentId
+          ? sql`(select ${ingredients.id} from ${ingredients} where ${ingredients.id} = ${input.parentId})`
+          : null,
+      })
+      .onConflictDoNothing()
+      .returning({ id: ingredients.id });
+
+    const [holder] = minted
+      ? []
+      : await tx
+          .select({
+            id: ingredients.id,
+            spelled: sql<boolean>`exists (select 1 from ${ingredientAliases} a where a.ingredient_id = ${ingredients.id})`,
+          })
+          .from(ingredients)
+          .where(eq(sql`lower(${ingredients.name})`, sql`lower(${input.name})`))
+          .limit(1);
+    const ingredientId = minted?.id ?? holder?.id;
+
+    if (!ingredientId) throw new Error("Failed to mint or find ingredient");
+
+    const takenOver = holder !== undefined && !holder.spelled;
+
+    if (takenOver) {
+      await tx
+        .update(ingredients)
+        .set({
+          name: input.name,
+          ownerId: sql`coalesce(${ingredients.ownerId}, ${input.ownerId})`,
+          flagged: input.flagged,
+          flagReason: input.flagged ? (input.flagReason ?? null) : null,
+          parentId: input.parentId
+            ? sql`(select p.id from ${ingredients} p where p.id = ${input.parentId})`
+            : null,
+          version: sql`${ingredients.version} + 1`,
+        })
+        .where(eq(ingredients.id, ingredientId));
+    }
+
+    // Only a parent that was actually applied is put to a person; a name that
+    // joined an existing Ingredient got none.
+    if ((minted || takenOver) && input.parentId && input.suggestParent) {
+      await tx
+        .insert(ingredientSuggestions)
+        .values({
+          ingredientId,
+          kind: "parent",
+          targetId: input.parentId,
+          source: "words",
+        })
+        .onConflictDoNothing();
+    }
+
+    await tx
+      .insert(ingredientAliases)
+      .values(
+        input.aliases.map((alias) => ({
+          text: alias.text,
+          fold: alias.fold,
+          locale: input.locale,
+          ingredientId,
+          ownerId: input.ownerId,
+        }))
+      )
+      .onConflictDoNothing();
+
+    const rows = await tx
+      .select(aliasColumns)
+      .from(ingredientAliases)
+      .where(inArray(ingredientAliases.fold, folds));
+
+    if (!minted) return rows;
+
+    // Lost the race for a spelling: another request's Ingredient already holds
+    // it, so the spellings this mint did get join that one, and one food stays
+    // one Ingredient.
+    const winner = rows.find((row) => row.ingredientId !== minted.id)?.ingredientId;
+
+    if (!winner) return rows;
+
+    await tx
+      .update(ingredientAliases)
+      .set({ ingredientId: winner })
+      .where(eq(ingredientAliases.ingredientId, minted.id));
+    await tx.delete(ingredients).where(eq(ingredients.id, minted.id));
+
+    return rows.map((row) =>
+      row.ingredientId === minted.id ? { ...row, ingredientId: winner } : row
+    );
+  });
+}
+
+/**
+ * Add spellings to an Ingredient that already exists, and answer with the
+ * alias each requested fold now has. A fold another Ingredient already holds
+ * keeps pointing where it points: one spelling means one food. Null where
+ * the Ingredient is gone — merged away since it was read.
+ */
+export async function addIngredientAliases(input: {
+  ingredientId: string;
+  aliases: ReadonlyArray<{ text: string; fold: string }>;
+  ownerId: string | null;
+  locale: string | null;
+}): Promise<IngredientAliasRow[] | null> {
+  try {
+    await db
+      .insert(ingredientAliases)
+      .values(
+        input.aliases.map((alias) => ({
+          text: alias.text,
+          fold: alias.fold,
+          locale: input.locale,
+          ingredientId: input.ingredientId,
+          ownerId: input.ownerId,
+        }))
+      )
+      .onConflictDoNothing();
+  } catch (error) {
+    if (isConstraintViolation(error, "23503")) return null;
+    throw error;
+  }
+
+  return await findIngredientAliasesByFolds(input.aliases.map((alias) => alias.fold));
+}
+
+/** An Ingredient a new name might be, with some of the names it is known by. */
+export interface IngredientCandidate {
+  id: string;
+  name: string;
+  aliases: string[];
+}
+
+/** How many alias rows one candidate search reads per word start. */
+const ROWS_PER_START = 100;
+
+/**
+ * The Ingredients with an alias that has a word beginning with one of the
+ * given word starts: those sharing the most starts first, then taking turns
+ * across the starts, so a common word ("red" in "red onions") filling the
+ * catalogue cannot crowd out the one the name is about ("onio"). Each start
+ * reads its shortest spellings first, so the plain food leads its variants.
+ * The starts are the first letters of a name's words, so "onions" finds
+ * "onion" and "tomatoes" finds "tomato"; which of them the name really is, is
+ * not decided here.
+ */
+export async function findIngredientCandidates(
+  wordStarts: readonly string[],
+  limit: number,
+  /** An Ingredient never offered as a candidate: the one the question is about. */
+  excludeId: string | null = null
+): Promise<IngredientCandidate[]> {
+  const starts = Array.from(new Set(wordStarts.filter((start) => start.length > 0)));
+
+  if (starts.length === 0) return [];
+
+  const perStart = await Promise.all(
+    starts.map((start) =>
+      db
+        .select({
+          id: ingredients.id,
+          name: ingredients.name,
+          text: ingredientAliases.text,
+          fold: ingredientAliases.fold,
+        })
+        .from(ingredientAliases)
+        .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+        .where(
+          and(
+            sql`(' ' || ${ingredientAliases.fold}) like ${`% ${start}%`}`,
+            excludeId ? ne(ingredients.id, excludeId) : undefined
+          )
+        )
+        .orderBy(asc(sql`length(${ingredientAliases.fold})`), asc(ingredientAliases.id))
+        .limit(ROWS_PER_START)
+    )
+  );
+
+  const candidates = new Map<string, IngredientCandidate>();
+  const shared = new Map<string, Set<number>>();
+  const turns: string[][] = perStart.map(() => []);
+
+  perStart.forEach((rows, startIndex) => {
+    for (const row of rows) {
+      const candidate = candidates.get(row.id) ?? { id: row.id, name: row.name, aliases: [] };
+
+      if (row.text !== row.name && !candidate.aliases.includes(row.text)) {
+        candidate.aliases.push(row.text);
+      }
+      candidates.set(row.id, candidate);
+
+      const starts = shared.get(row.id) ?? new Set<number>();
+
+      if (!starts.has(startIndex)) turns[startIndex]!.push(row.id);
+      starts.add(startIndex);
+      shared.set(row.id, starts);
+    }
+  });
+
+  // Round-robin across the starts, each in its own order.
+  const order: string[] = [];
+
+  for (let turn = 0; order.length < candidates.size; turn += 1) {
+    for (const ids of turns) {
+      const id = ids[turn];
+
+      if (id && !order.includes(id)) order.push(id);
+    }
+  }
+
+  const picked = order
+    .map((id, position) => ({ id, position, shares: shared.get(id)!.size }))
+    .sort((a, b) => b.shares - a.shares || a.position - b.position)
+    .slice(0, limit)
+    .map(({ id }) => candidates.get(id)!);
+
+  return await withParents(picked, excludeId);
+}
+
+/**
+ * The candidates with every candidate's Parent Ingredient after them, so a
+ * question can be answered "a kind of X" for the X the tree already knows:
+ * "dark chocolate" offered brings "chocolate" along.
+ */
+async function withParents(
+  picked: IngredientCandidate[],
+  excludeId: string | null
+): Promise<IngredientCandidate[]> {
+  if (picked.length === 0) return picked;
+
+  const have = new Set(picked.map((candidate) => candidate.id));
+  const children = alias(ingredients, "child");
+  const parents = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(children)
+    .innerJoin(ingredients, eq(ingredients.id, children.parentId))
+    .where(inArray(children.id, [...have]));
+  const missing = parents.filter(
+    (parent, index) =>
+      !have.has(parent.id) &&
+      parent.id !== excludeId &&
+      parents.findIndex((other) => other.id === parent.id) === index
+  );
+
+  return [...picked, ...(await candidatesFor(missing))];
+}
+
+/**
+ * These Ingredients as candidates, where they still exist: the food a name's
+ * own words point at, put to the question beside what the word starts found.
+ */
+export async function findIngredientCandidatesById(
+  ids: readonly string[]
+): Promise<IngredientCandidate[]> {
+  if (ids.length === 0) return [];
+  const rows = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .where(inArray(ingredients.id, [...ids]));
+
+  return await candidatesFor(rows);
+}
+
+/** Candidate rows for known Ingredients: each with its shortest other names. */
+async function candidatesFor(
+  rows: ReadonlyArray<{ id: string; name: string }>
+): Promise<IngredientCandidate[]> {
+  if (rows.length === 0) return [];
+
+  const spellings = await db
+    .select({ ingredientId: ingredientAliases.ingredientId, text: ingredientAliases.text })
+    .from(ingredientAliases)
+    .where(
+      inArray(
+        ingredientAliases.ingredientId,
+        rows.map((row) => row.id)
+      )
+    )
+    .orderBy(asc(sql`length(${ingredientAliases.fold})`), asc(ingredientAliases.id));
+  const byId = new Map(rows.map((row) => [row.id, { ...row, aliases: [] as string[] }]));
+
+  for (const spelling of spellings) {
+    const candidate = byId.get(spelling.ingredientId);
+
+    if (
+      candidate &&
+      spelling.text !== candidate.name &&
+      !candidate.aliases.includes(spelling.text)
+    ) {
+      candidate.aliases.push(spelling.text);
+    }
+  }
+
+  return [...byId.values()];
+}
+
+/**
+ * The Ingredients named exactly by any of `folds` — as a name or a spelling —
+ * with their parents: what the language model's own reading of a name looks
+ * up ("onion" for "uien").
+ */
+export async function findIngredientsNamed(
+  folds: readonly string[],
+  excludeId: string | null = null
+): Promise<IngredientCandidate[]> {
+  const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
+
+  if (unique.length === 0) return [];
+
+  const rows = await db
+    .selectDistinct({ id: ingredients.id, name: ingredients.name })
+    .from(ingredientAliases)
+    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+    .where(
+      and(
+        inArray(ingredientAliases.fold, unique),
+        excludeId ? ne(ingredients.id, excludeId) : undefined
+      )
+    );
+
+  return await withParents(await candidatesFor(rows), excludeId);
+}
+
+/** Recipe lines' texts and the aliases they resolved to, by line id. */
+export async function findRecipeLineAliases(
+  recipeIngredientIds: readonly string[]
+): Promise<Map<string, IngredientRef & { name: string }>> {
+  const unique = Array.from(new Set(recipeIngredientIds));
+
+  if (unique.length === 0) return new Map();
+
+  const rows = await db
+    .select({
+      id: recipeIngredients.id,
+      name: recipeIngredients.name,
+      aliasId: ingredientAliases.id,
+      ingredientId: ingredientAliases.ingredientId,
+    })
+    .from(recipeIngredients)
+    .innerJoin(ingredientAliases, eq(recipeIngredients.ingredientAliasId, ingredientAliases.id))
+    .where(inArray(recipeIngredients.id, unique));
+
+  return new Map(rows.map(({ id, ...line }) => [id, line]));
+}

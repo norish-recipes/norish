@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import {
   ArrowPathIcon,
@@ -10,7 +11,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/16/solid";
 import { ServerIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Chip, useOverlayState } from "@heroui/react";
+import { Button, Chip, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
@@ -119,25 +120,9 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
   };
   return (
     <>
-      <Card>
-        <Card.Header className="flex items-start justify-between pb-2">
-          <div className="flex flex-1 items-center gap-3">
-            <ServerIcon className="text-accent h-6 w-6" />
-            <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-semibold">{t("title")}</h2>
-              <Chip color={getConnectionStatusColor()} size="sm" variant="soft">
-                {connectionStatus === "checking" ? (
-                  <ArrowPathIcon className="h-3 w-3 animate-spin" />
-                ) : connectionStatus === "connected" ? (
-                  <CheckCircleIcon className="h-3 w-3" />
-                ) : (
-                  <XCircleIcon className="h-3 w-3" />
-                )}
-                <Chip.Label>{getConnectionStatusText()}</Chip.Label>
-              </Chip>
-            </div>
-          </div>
-          <div className="flex gap-2">
+      <SettingsCard
+        actions={
+          <>
             <Button size="sm" onPress={onEditClick} variant="tertiary" className="min-w-16">
               {<PencilIcon className="h-4 w-4" />}
               {t("editButton")}
@@ -146,29 +131,41 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
               {<TrashIcon className="h-4 w-4" />}
               {t("deleteButton")}
             </Button>
+          </>
+        }
+        badges={
+          <Chip color={getConnectionStatusColor()} size="sm" variant="soft">
+            {connectionStatus === "checking" ? (
+              <ArrowPathIcon className="h-3 w-3 animate-spin" />
+            ) : connectionStatus === "connected" ? (
+              <CheckCircleIcon className="h-3 w-3" />
+            ) : (
+              <XCircleIcon className="h-3 w-3" />
+            )}
+            <Chip.Label>{getConnectionStatusText()}</Chip.Label>
+          </Chip>
+        }
+        icon={ServerIcon}
+        title={t("title")}
+      >
+        {/* Server URL and Enabled Toggle */}
+        <div className="bg-surface-secondary flex flex-col justify-between gap-4 rounded-lg p-3 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <p className="text-foreground mb-1 text-base font-medium">{t("serverUrl")}</p>
+            <p className="text-muted truncate text-xs">{config.serverUrl}</p>
           </div>
-        </Card.Header>
-
-        <Card.Content className="gap-4">
-          {/* Server URL and Enabled Toggle */}
-          <div className="bg-surface-secondary flex flex-col justify-between gap-4 rounded-lg p-3 sm:flex-row sm:items-center">
-            <div className="min-w-0 flex-1">
-              <p className="text-foreground mb-1 text-base font-medium">{t("serverUrl")}</p>
-              <p className="text-muted truncate text-xs">{config.serverUrl}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted text-base">
-                {config.enabled ? t("enabled") : t("disabled")}
-              </span>
-              <SettingsSwitch
-                isSelected={config.enabled}
-                size="sm"
-                onValueChange={handleToggleEnabled}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted text-base">
+              {config.enabled ? t("enabled") : t("disabled")}
+            </span>
+            <SettingsSwitch
+              isSelected={config.enabled}
+              size="sm"
+              onValueChange={handleToggleEnabled}
+            />
           </div>
-        </Card.Content>
-      </Card>
+        </div>
+      </SettingsCard>
 
       <DeleteCalDavModal
         isOpen={isDeleteOpen}

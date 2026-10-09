@@ -9,7 +9,9 @@
     "manageStores": "Gestisci negozi",
     "storeViewOptions": "Opzioni vista negozio",
     "groupIngredients": "Raggruppa ingredienti",
-    "pantry": "Dispensa"
+    "pantry": "Dispensa",
+    "list": "Lista",
+    "views": "Viste della spesa"
   },
   "empty": {
     "title": "La tua lista della spesa ti aspetta",
@@ -85,13 +87,25 @@
     "aisleDuplicate": "Questo negozio ha già una corsia con quel nome"
   },
   "pantry": {
-    "title": "Dispensa",
-    "hint": "Quello che hai già in casa. Gli ingredienti nella dispensa restano fuori dalla lista quando aggiungi una ricetta.",
+    "hint": "Ingredienti che hai già.",
     "empty": "Ancora niente nella dispensa",
-    "namePlaceholder": "es. Olio d'oliva",
+    "unavailable": "Impossibile leggere la dispensa. Non è cambiato nulla; riprova quando torni online.",
+    "fieldLabel": "Cerca o aggiungi un alimento",
+    "fieldPlaceholder": "Cerca o aggiungi, es. olio d'oliva",
     "add": "Aggiungi alla dispensa",
-    "remove": "Rimuovi dalla dispensa",
-    "duplicate": "È già nella tua dispensa"
+    "fromCatalogue": "Aggiungi un alimento",
+    "addFood": "Aggiungi {name} alla dispensa",
+    "putOnTheList": "Aggiungi alla spesa",
+    "onTheList": "In lista",
+    "putOnTheListToast": "{name} è in lista",
+    "undo": "Annulla",
+    "keepFailed": "Impossibile aggiungere {name} alla dispensa",
+    "fromYourRecipes": "Dalle tue ricette",
+    "fromYourRecipesHint": "Ingredienti più usati",
+    "inRecipes": "{count, plural, one {in # ricetta} other {in # ricette}}",
+    "showMore": "Mostra altri",
+    "inYourPantry": "Nella tua dispensa",
+    "offlineDetails": "I dettagli di un alimento si aprono quando torni online."
   },
   "panel": {
     "addTitle": "Aggiungi articolo",
@@ -132,7 +146,10 @@
     "addToGroceries": "Aggiungi alla spesa",
     "aisle": "Corsia",
     "noAisle": "Nessuna corsia",
-    "inPantry": "Nella tua dispensa"
+    "toBuy": "Da comprare",
+    "inPantry": "Nella tua dispensa",
+    "weKeepThis": "Lo abbiamo sempre",
+    "keepFailed": "Impossibile aggiungerlo alla dispensa"
   },
   "picker": {
     "unlink": "Scollega prodotto",

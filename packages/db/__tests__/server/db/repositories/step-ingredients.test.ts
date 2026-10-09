@@ -13,15 +13,12 @@ import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { FullRecipeDTO, User } from "@norish/shared/contracts";
-import {
-  createRecipeWithRefs,
-  getRecipeFull,
-  updateRecipeWithRefs,
-} from "@norish/db/repositories/recipes";
+import { getRecipeFull } from "@norish/db/repositories/recipes";
 import * as schema from "@norish/db/schema";
 import { deriveStepIngredientAmount } from "@norish/shared/lib/step-ingredients";
 
 import { getTestDb } from "../../../helpers/db-test-helpers";
+import { createRecipeWithRefs, updateRecipeWithRefs } from "../../../helpers/recipe-writes";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("Step Ingredients", () => {

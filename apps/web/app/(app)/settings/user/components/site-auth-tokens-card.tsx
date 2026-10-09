@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { InfoHint } from "@/components/shared/info-hint";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PlusIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
   Button,
-  Card,
   Chip,
   Input,
   Label,
@@ -112,143 +113,135 @@ export default function SiteAuthTokensCard() {
 
   return (
     <>
-      <Card>
-        <Card.Header>
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <ShieldCheckIcon className="h-5 w-5" />
-            {t("title")}
-          </h2>
-        </Card.Header>
-        <Card.Content className="gap-4">
-          <p className="text-muted text-base">{t("description")}</p>
-          <p className="text-muted text-base">{t("accountsDescription")}</p>
-
-          {/* Create form */}
-          <div className="flex flex-col gap-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_9rem] xl:items-end">
-              <TextField className="min-w-0" value={domain} onChange={setDomain}>
-                <Label>{t("domain")}</Label>
-                <Input variant="secondary" placeholder={t("domainPlaceholder")} />
-              </TextField>
-              <TextField className="min-w-0" value={account} onChange={setAccount}>
+      <SettingsCard description={t("description")} icon={ShieldCheckIcon} title={t("title")}>
+        {/* Create form */}
+        <div className="flex flex-col gap-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_9rem] xl:items-end">
+            <TextField className="min-w-0" value={domain} onChange={setDomain}>
+              <Label>{t("domain")}</Label>
+              <Input variant="secondary" placeholder={t("domainPlaceholder")} />
+            </TextField>
+            <TextField className="min-w-0" value={account} onChange={setAccount}>
+              <span className="flex h-5 items-center gap-1">
                 <Label>{t("account")}</Label>
-                <Input variant="secondary" placeholder={t("accountPlaceholder")} />
-              </TextField>
-              <TextField className="min-w-0" value={name} onChange={setName}>
-                <Label>{t("name")}</Label>
-                <Input variant="secondary" placeholder={t("namePlaceholder")} />
-              </TextField>
-              <TextField className="min-w-0" type="password" value={value} onChange={setValue}>
-                <Label>{t("value")}</Label>
-                <Input variant="secondary" placeholder={t("valuePlaceholder")} />
-              </TextField>
-              <Select
-                variant="secondary"
-                className="min-w-0"
-                placeholder={t("type")}
-                value={type}
-                onChange={(selected) => {
-                  if (selected === "header" || selected === "cookie") {
-                    setType(selected);
-                  }
-                }}
-              >
-                <Label>{t("type")}</Label>
-                <Select.Trigger className="min-h-10">
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox>
-                    <ListBox.Item id="header" textValue={t("typeHeader")}>
-                      {t("typeHeader")}
-                    </ListBox.Item>
-                    <ListBox.Item id="cookie" textValue={t("typeCookie")}>
-                      {t("typeCookie")}
-                    </ListBox.Item>
-                  </ListBox>
-                </Select.Popover>
-              </Select>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                isDisabled={!isFormValid}
-                onPress={handleCreate}
-                variant="primary"
-                isPending={isCreating}
-              >
-                {<PlusIcon className="h-4 w-4" />}
-                {t("addButton")}
-              </Button>
-            </div>
+                <InfoHint label={t("accountsHelp")}>{t("accountsDescription")}</InfoHint>
+              </span>
+              <Input variant="secondary" placeholder={t("accountPlaceholder")} />
+            </TextField>
+            <TextField className="min-w-0" value={name} onChange={setName}>
+              <Label>{t("name")}</Label>
+              <Input variant="secondary" placeholder={t("namePlaceholder")} />
+            </TextField>
+            <TextField className="min-w-0" type="password" value={value} onChange={setValue}>
+              <Label>{t("value")}</Label>
+              <Input variant="secondary" placeholder={t("valuePlaceholder")} />
+            </TextField>
+            <Select
+              variant="secondary"
+              className="min-w-0"
+              placeholder={t("type")}
+              value={type}
+              onChange={(selected) => {
+                if (selected === "header" || selected === "cookie") {
+                  setType(selected);
+                }
+              }}
+            >
+              <Label>{t("type")}</Label>
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item id="header" textValue={t("typeHeader")}>
+                    {t("typeHeader")}
+                  </ListBox.Item>
+                  <ListBox.Item id="cookie" textValue={t("typeCookie")}>
+                    {t("typeCookie")}
+                  </ListBox.Item>
+                </ListBox>
+              </Select.Popover>
+            </Select>
           </div>
+          <div className="flex justify-end">
+            <Button
+              isDisabled={!isFormValid}
+              onPress={handleCreate}
+              variant="primary"
+              isPending={isCreating}
+            >
+              {<PlusIcon className="h-4 w-4" />}
+              {t("addButton")}
+            </Button>
+          </div>
+        </div>
 
-          {/* Token list */}
-          {tokens.length > 0 && (
-            <div className="mt-4">
-              <Table>
-                <Table.ScrollContainer>
-                  <Table.Content aria-label={t("title")}>
-                    <Table.Header>
-                      <Table.Column id="domain" isRowHeader>
-                        {t("tableHeaders.domain")}
-                      </Table.Column>
-                      <Table.Column id="account">{t("tableHeaders.account")}</Table.Column>
-                      <Table.Column id="name">{t("tableHeaders.name")}</Table.Column>
-                      <Table.Column id="type">{t("tableHeaders.type")}</Table.Column>
-                      <Table.Column id="created">{t("tableHeaders.created")}</Table.Column>
-                      <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
-                    </Table.Header>
-                    <Table.Body>
-                      {orderedTokens.map((token) => (
-                        <Table.Row key={token.id} id={token.id}>
-                          <Table.Cell>
-                            <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
-                              {token.domain}
-                            </code>
-                          </Table.Cell>
-                          <Table.Cell>
-                            {token.account ?? (
-                              <span className="text-muted">{t("accountShared")}</span>
-                            )}
-                          </Table.Cell>
-                          <Table.Cell>{token.name}</Table.Cell>
-                          <Table.Cell>
-                            <Chip
-                              color={token.type === "header" ? "accent" : "warning"}
-                              size="sm"
-                              variant="soft"
-                            >
-                              {token.type === "header" ? t("typeHeader") : t("typeCookie")}
-                            </Chip>
-                          </Table.Cell>
-                          <Table.Cell>{new Date(token.createdAt).toLocaleDateString()}</Table.Cell>
-                          <Table.Cell>
-                            <Button
-                              isIconOnly
-                              size="sm"
-                              title={t("deleteModal.confirmButton")}
-                              onPress={() => {
-                                setTokenToDelete(token.id);
-                                setShowDeleteModal(true);
-                              }}
-                              variant="danger-soft"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table.Content>
-                </Table.ScrollContainer>
-              </Table>
-            </div>
-          )}
+        {/* Token list */}
+        {tokens.length > 0 && (
+          <div className="mt-4">
+            <Table>
+              <Table.ScrollContainer>
+                <Table.Content aria-label={t("title")}>
+                  <Table.Header>
+                    <Table.Column id="domain" isRowHeader>
+                      {t("tableHeaders.domain")}
+                    </Table.Column>
+                    <Table.Column id="account">{t("tableHeaders.account")}</Table.Column>
+                    <Table.Column id="name">{t("tableHeaders.name")}</Table.Column>
+                    <Table.Column id="type">{t("tableHeaders.type")}</Table.Column>
+                    <Table.Column id="created">{t("tableHeaders.created")}</Table.Column>
+                    <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
+                  </Table.Header>
+                  <Table.Body>
+                    {orderedTokens.map((token) => (
+                      <Table.Row key={token.id} id={token.id}>
+                        <Table.Cell>
+                          <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
+                            {token.domain}
+                          </code>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {token.account ?? (
+                            <span className="text-muted">{t("accountShared")}</span>
+                          )}
+                        </Table.Cell>
+                        <Table.Cell>{token.name}</Table.Cell>
+                        <Table.Cell>
+                          <Chip
+                            color={token.type === "header" ? "accent" : "warning"}
+                            size="sm"
+                            variant="soft"
+                          >
+                            {token.type === "header" ? t("typeHeader") : t("typeCookie")}
+                          </Chip>
+                        </Table.Cell>
+                        <Table.Cell>{new Date(token.createdAt).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            title={t("deleteModal.confirmButton")}
+                            onPress={() => {
+                              setTokenToDelete(token.id);
+                              setShowDeleteModal(true);
+                            }}
+                            variant="danger-soft"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Content>
+              </Table.ScrollContainer>
+            </Table>
+          </div>
+        )}
 
-          {tokens.length === 0 && <p className="text-muted py-4 text-base">{t("noTokens")}</p>}
-        </Card.Content>
-      </Card>
+        {tokens.length === 0 && <p className="text-muted py-4 text-base">{t("noTokens")}</p>}
+      </SettingsCard>
 
       {/* Delete Confirmation Modal */}
       <Modal.Backdrop

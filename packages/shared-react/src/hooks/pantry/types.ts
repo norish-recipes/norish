@@ -1,7 +1,8 @@
 import type { QueryKey } from "@tanstack/react-query";
 import type { createTRPCContext } from "@trpc/tanstack-react-query";
 
-import type { PantryIngredientDto } from "@norish/shared/contracts";
+import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
+import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import type { AppRouter } from "@norish/trpc/client";
 
 type TrpcContext = ReturnType<typeof createTRPCContext<AppRouter>>;
@@ -23,9 +24,21 @@ export type PantryQueryResult = {
   invalidate: () => void;
 };
 
+/** A food picked rather than typed: kept as picked, shown by its names until the server answers. */
+export type PickedFood = {
+  ingredientId: string;
+  name: string;
+  localeNames?: LocaleNames;
+  ancestorIds?: string[];
+};
+
+export type PantrySuggestionsResult = {
+  suggestions: PantrySuggestionDto[];
+};
+
 export type PantryMutationsResult = {
-  /** Put a name in the Pantry; resolves to the item's id. */
-  addPantryIngredient: (name: string) => Promise<string>;
+  /** Put a typed name or a picked food in the Pantry; resolves to the item's id. */
+  addPantryIngredient: (food: string | PickedFood) => Promise<string>;
   /** Take an item out of the Pantry. */
   removePantryIngredient: (id: string) => void;
   isAdding: boolean;

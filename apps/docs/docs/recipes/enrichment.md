@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 title: Recipe enrichment
 description: How Norish adds tags, allergy indications, meal categories, nutrition, provenance, step ingredients, and a picture of the dish to your recipes with AI, and how to run each one yourself.
 ---
@@ -42,7 +42,7 @@ text.
 
 Automatic enrichment runs once, when the recipe is new. Editing a recipe later
 never re-runs it, so an edit can't unexpectedly replace values you just set.
-An administrator can catch older recipes up with **Enrich All Recipes** in the
+An administrator can catch older recipes up with **Enrich all recipes** in the
 admin settings, which runs the enabled kinds across the whole library under
 these same rules — or, by turning on **Overwrite existing data** in its
 confirmation, deliberately redo them and replace what is stored, including
@@ -59,6 +59,10 @@ takes precedence:
   with only some of the four, say just calories from an imported page, is
   estimated and the whole group replaced, so the values always agree with each
   other instead of mixing a supplied figure with an estimate.
+- A recipe with **no** nutrition of its own has one
+  [worked out from its ingredients](./nutrition.md). AI then estimates only the
+  lines that couldn't be counted, given the numbers of the rest, and keeps that
+  estimate apart from the recipe. If every line counts, nothing is asked.
 - Provenance you supplied — a country, a cuisine, a note — is never replaced:
   automatic inference **fills in only the missing parts**, written to agree
   with what you already set, so a recipe imported with just a cuisine still

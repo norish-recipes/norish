@@ -66,15 +66,15 @@ export function containerFor(
 }
 
 /**
- * The container a grocery sits in: where its Store files its name. Nothing on
- * the row says which (ADR-0031).
+ * The container a grocery sits in: where its Store files its Ingredient.
+ * Nothing on the row says which (ADR-0031, ADR-0037).
  */
 export function getContainerIdForGrocery(
-  grocery: Pick<GroceryDto, "storeId" | "name">,
+  grocery: Pick<GroceryDto, "storeId" | "ingredientId">,
   stores: StoreDto[],
   aisleFor: AisleResolver
 ): ContainerId {
-  return containerFor(grocery.storeId, aisleFor(grocery.storeId, grocery.name), stores);
+  return containerFor(grocery.storeId, aisleFor(grocery.storeId, grocery.ingredientId), stores);
 }
 
 /** Converts a Store-level container ID back to storeId (UNSORTED_CONTAINER => null) */

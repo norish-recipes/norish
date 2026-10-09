@@ -20,7 +20,7 @@ export function GroupDragOverlay({ group }: GroupDragOverlayProps) {
   const aggregatedDisplay = formatAmountUnit(group.totalAmount, group.displayUnit);
   const containerClass =
     "bg-surface ring-accent/20 flex items-center gap-3 rounded-lg px-4 py-3 shadow-xl ring-2";
-  const iconWrapClass = "text-muted/60 flex h-8 w-8 items-center justify-center";
+  const iconWrapClass = "text-muted/60 flex h-8 w-8 items-center justify-center max-sm:hidden";
   const contentClass = "flex min-w-0 flex-1 flex-col items-start gap-0.5";
   const rowClass = "flex w-full items-baseline gap-1.5";
 

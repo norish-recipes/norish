@@ -13,9 +13,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/hooks/use-is-mobile", () => ({ useIsMobile: () => true }));
 vi.mock("@/hooks/auto-hide", () => ({ useAutoHide: () => ({ isVisible: true }) }));
-vi.mock("@/context/recipe-page-color-context", () => ({
-  useRecipePageColor: () => [mocks.recipePageColor, () => {}],
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    recipePageColor: mocks.recipePageColor,
+  }))
+);
 vi.mock("@/components/timer-dock", () => ({ TimerDock: () => <div /> }));
 vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-context", () => ({
   useWakeLockContext: () => ({

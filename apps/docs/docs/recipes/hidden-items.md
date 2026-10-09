@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 8
 title: Hidden Items
 description: Choose what you would rather not be shown, from Recipe Provenance and Nutrition Information to ratings, favorites and timers. Everything is shown by default, and hiding changes only your own view.
 ---
@@ -8,11 +8,11 @@ description: Choose what you would rather not be shown, from Recipe Provenance a
 
 The recipe page displays a lot of information, not every user wants to see the same settings.
 Not every device needs the same information density, for this reason a lot of elements can be hidden.
-By default everything is **enabled** disabling is on a per device basis.
+By default everything is **enabled**; what you disable is kept per phone or desktop, on your profile.
 
 ## What can be hidden
 
-Settings => User => **Hidden Items** is a single control listing everything you
+Settings => User => **Hidden items** is a single control listing everything you
 can choose not to see:
 
 - **Provenance**, the Recipe Provenance section: country, region, cuisines and
@@ -26,6 +26,9 @@ can choose not to see:
 - **Ingredient conversion**, the measurement conversion control on the recipe
   page
 - **Recipe timers**, the automatic timer detection in recipe steps.
+- **Ingredient icons**, the small picture beside each food wherever a food is
+  named: recipe lines, steps, groceries, the Pantry and the Ingredients page.
+  See [Ingredient icons](../groceries/ingredient-icons.md).
 
 ![The Hidden Items control in user settings](/img/screenshots/hidden-items-settings.png)
 
@@ -41,4 +44,5 @@ the recipe page simply make the page slimmer:
 A Hidden Item settles nothing about the recipe. What is stored, what may be
 edited and what Recipe Enrichment produces are all unchanged, and every other
 member of your household still sees everything. Someone reading a recipe
-through a share link, or signed out, sees the whole page.
+through a share link, or signed out, sees the whole page; only Ingredient
+icons you hid stay hidden on a shared recipe you open while signed in.

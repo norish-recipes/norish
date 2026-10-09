@@ -1,8 +1,9 @@
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod";
 
-import { aisleLinks, aisles, ingredientStorePreferences, stores } from "@norish/db-schema/schema";
+import { aisles, ingredientStorePreferences, stores } from "@norish/db-schema/schema";
 
+import { foldName } from "../../lib/fold-name";
 import { httpUrlSchema } from "../../lib/schema";
 import { isSearchAddress, SEARCH_ADDRESS_PLACEHOLDER } from "../../lib/search-address";
 import { clientMintedId } from "./common";
@@ -116,20 +117,26 @@ export const StoreUpdateInputSchema = z.object({
   aisles: StoreAislesInputSchema.optional(),
 });
 
-// An Aisle Link: where a Store files one normalized grocery name (ADR-0031).
-export const AisleLinkSelectSchema = createSelectSchema(aisleLinks).pick({
-  storeId: true,
-  normalizedName: true,
-  aisleId: true,
+// An Aisle Link: where a Store files one Ingredient (ADR-0031, ADR-0037).
+export const AisleLinkSelectSchema = z.object({
+  storeId: z.uuid(),
+  ingredientId: z.uuid(),
+  aisleId: z.uuid(),
 });
 
 /**
- * Filing a name: a Store, the name as typed, and one of the Store's aisles —
- * or null, which forgets the name. The server folds the name.
+ * Filing a name: a Store, the name as the list shows it, and one of the
+ * Store's aisles — or null, which forgets it. The server resolves the name to
+ * its Ingredient, which is what is filed.
  */
 export const AisleFilingSchema = z.object({
   storeId: z.uuid(),
-  name: z.string().min(1).max(300),
+  // Punctuation alone names no food, and is filed nowhere.
+  name: z
+    .string()
+    .min(1)
+    .max(300)
+    .refine((name) => foldName(name) !== ""),
   aisleId: z.uuid().nullable(),
 });
 
@@ -167,20 +174,21 @@ export const StoreReorderSchema = z.object({
 });
 
 // Ingredient store preference schemas
-export const IngredientStorePreferenceSelectSchema = createSelectSchema(
-  ingredientStorePreferences
-).omit({
-  createdAt: true,
-  updatedAt: true,
-});
+export const IngredientStorePreferenceSelectSchema = createSelectSchema(ingredientStorePreferences)
+  .omit({
+    createdAt: true,
+    updatedAt: true,
+    normalizedName: true,
+  })
+  .extend({ ingredientId: z.uuid() });
 
 export const IngredientStorePreferenceInsertSchema = z.object({
   userId: z.string(),
-  normalizedName: z.string(),
+  ingredientId: z.uuid(),
   storeId: z.uuid(),
 });
 
 export const IngredientStorePreferenceUpsertSchema = z.object({
-  normalizedName: z.string(),
+  ingredientId: z.uuid(),
   storeId: z.uuid(),
 });

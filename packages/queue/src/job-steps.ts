@@ -69,6 +69,10 @@ export const JOB_PIPELINES: Record<QueueName, string[]> = {
   [QUEUE_NAMES.CALDAV_SYNC]: [],
   [QUEUE_NAMES.SCHEDULED_TASKS]: ["running"],
   [QUEUE_NAMES.STORE_LOOKUP]: ["searching", "reading-product", "saving-link"],
+  // One step per food, "asking-ai:3/12", each carrying what came of it.
+  [QUEUE_NAMES.INGREDIENT_REVIEW]: ["asking-ai"],
+  // One step per food, "drawing-icon:3/12", each carrying what came of it.
+  [QUEUE_NAMES.INGREDIENT_ICONS]: ["drawing-icon"],
 };
 
 /**
@@ -221,6 +225,51 @@ export async function completeStep(job: Job, detail?: unknown): Promise<void> {
     } satisfies JobStepProgress);
   } catch (err) {
     log.debug({ err, jobId: job.id }, "Failed to complete job step");
+  }
+}
+
+/**
+ * Record steps that have already run, in one write. For a job with many short
+ * steps: progress is one value, rewritten whole on every write and copied into
+ * the queue's event stream each time, so a write per step stores the square
+ * of the step count. Each step is still logged on its own.
+ * Best-effort: never throws.
+ */
+export async function recordCompletedSteps(
+  job: Job,
+  steps: readonly (JobStepEvent & { endedAt: number })[]
+): Promise<void> {
+  const last = steps[steps.length - 1];
+
+  if (!last) return;
+
+  try {
+    const attempts = cloneAttempts(job);
+    const entry = currentAttemptEntry(attempts, job);
+
+    entry.timeline.push(...steps.map((step) => ({ ...step })));
+
+    const results = await Promise.allSettled([
+      job.updateProgress({
+        step: last.id,
+        updatedAt: Date.now(),
+        attempts,
+      } satisfies JobStepProgress),
+      ...steps.map((step) =>
+        job.log(
+          `${new Date(step.endedAt).toISOString()} [attempt ${entry.attempt}] ${step.id}` +
+            (step.detail === undefined ? "" : ` ${JSON.stringify(step.detail)}`)
+        )
+      ),
+    ]);
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        log.debug({ err: result.reason, jobId: job.id }, "Failed to record completed job steps");
+      }
+    }
+  } catch (err) {
+    log.debug({ err, jobId: job.id }, "Failed to record completed job steps");
   }
 }
 

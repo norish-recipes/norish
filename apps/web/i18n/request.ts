@@ -1,11 +1,10 @@
 import "server-only";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
+import { readRequestProfile } from "@/lib/request-profile";
 import { getRequestConfig } from "next-intl/server";
 
 import type { Locale } from "@norish/i18n";
-import { auth } from "@norish/auth/auth";
-import { getUserPreferences } from "@norish/db/repositories/users";
 import { DEFAULT_LOCALE, isValidLocale, loadLocaleMessages } from "@norish/i18n";
 import {
   getDefaultLocale as getConfigDefaultLocale,
@@ -30,20 +29,14 @@ async function resolveLocale(): Promise<Locale> {
   const configDefaultLocale = await getConfigDefaultLocale();
   const defaultLocale = isValidLocale(configDefaultLocale) ? configDefaultLocale : DEFAULT_LOCALE;
 
-  // 1. Check if user is authenticated and has a locale preference
+  // 1. Check if user is authenticated and has a locale preference. The
+  // profile read is shared with the request's Device Preferences.
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const userLocale = (await readRequestProfile()).preferences.locale;
 
-    if (session?.user?.id) {
-      const prefs = await getUserPreferences(session.user.id);
-      const userLocale = typeof prefs.locale === "string" ? prefs.locale : null;
-
-      // User's locale must be valid AND enabled
-      if (userLocale && isValidLocale(userLocale) && (await isValidEnabledLocale(userLocale))) {
-        return userLocale;
-      }
+    // User's locale must be valid AND enabled
+    if (userLocale && isValidLocale(userLocale) && (await isValidEnabledLocale(userLocale))) {
+      return userLocale;
     }
   } catch {
     // Auth check failed, fall through to cookie check

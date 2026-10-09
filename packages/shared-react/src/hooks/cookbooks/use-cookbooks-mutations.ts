@@ -36,9 +36,10 @@ export function createUseCookbooksMutations({
     const currentUserId = useCurrentUserId?.();
 
     const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
-    const renameMutation = useMutation(trpc.cookbooks.rename.mutationOptions());
+    const updateMutation = useMutation(trpc.cookbooks.update.mutationOptions());
     const deleteMutation = useMutation(trpc.cookbooks.remove.mutationOptions());
     const membershipMutation = useMutation(trpc.cookbooks.setMembership.mutationOptions());
+    const uploadImageMutation = useMutation(trpc.cookbooks.uploadImage.mutationOptions());
 
     const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate, preserve);
 
@@ -59,6 +60,7 @@ export function createUseCookbooksMutations({
           updatedAt: now,
           version: 1,
           memberCount: recipeId ? 1 : 0,
+          image: null,
           coverImages: [],
           // Everything a card derives from the members is left empty: the
           // echo brings the real answers, and guessing them here would put
@@ -241,8 +243,18 @@ export function createUseCookbooksMutations({
       ]
     );
 
-    const renameCookbook = useCallback(
-      ({ id, title, version }: { id: string; title: string; version: number }) => {
+    const updateCookbook = useCallback(
+      ({
+        id,
+        title,
+        image,
+        version,
+      }: {
+        id: string;
+        title: string;
+        image?: string | null;
+        version: number;
+      }) => {
         setAllCookbooksData((prev) => {
           if (!prev) return prev;
 
@@ -251,21 +263,23 @@ export function createUseCookbooksMutations({
             pages: prev.pages.map((page) => ({
               ...page,
               cookbooks: page.cookbooks.map((cookbook) =>
-                cookbook.id === id ? { ...cookbook, title } : cookbook
+                cookbook.id === id
+                  ? { ...cookbook, title, ...(image === undefined ? {} : { image }) }
+                  : cookbook
               ),
             })),
           };
         });
 
-        renameMutation.mutate(
-          { id, title, version },
+        updateMutation.mutate(
+          { id, title, image, version },
           {
             onSuccess: () => invalidateCookbook(id),
             onError: invalidateUnlessQueued,
           }
         );
       },
-      [renameMutation, setAllCookbooksData, invalidateCookbook, invalidateUnlessQueued]
+      [updateMutation, setAllCookbooksData, invalidateCookbook, invalidateUnlessQueued]
     );
 
     const deleteCookbook = useCallback(
@@ -292,9 +306,27 @@ export function createUseCookbooksMutations({
       [deleteMutation, setAllCookbooksData, invalidateUnlessQueued]
     );
 
+    /** Store a cover and resolve with the URL an `updateCookbook` can save. */
+    const uploadCookbookImage = useCallback(
+      async (cookbookId: string, file: Blob) => {
+        const formData = new FormData();
+
+        formData.append("cookbookId", cookbookId);
+        formData.append("image", file);
+
+        const result = await uploadImageMutation.mutateAsync(formData);
+
+        if (!result.success) throw new Error(result.error);
+
+        return result.url;
+      },
+      [uploadImageMutation]
+    );
+
     return {
       createCookbook,
-      renameCookbook,
+      updateCookbook,
+      uploadCookbookImage,
       deleteCookbook,
       setMembership,
       isCreating: createMutation.isPending,

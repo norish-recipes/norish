@@ -1,6 +1,6 @@
 "use client";
 
-import { BeakerIcon, CheckIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { BeakerIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -37,7 +37,6 @@ export function ProviderActions({
           {tActions("test")}
         </Button>
         <Button isDisabled={!hasChanges} onPress={onSave} variant="primary" isPending={saving}>
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

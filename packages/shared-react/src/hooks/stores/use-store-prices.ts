@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ResolvedProductLink, StoreProductDto } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { StoresRealtime } from "@norish/shared/contracts/realtime/stores";
-import { normalizeGroceryName, productLinkKey } from "@norish/shared/lib/normalized-name";
 import { isPendingLink } from "@norish/shared/lib/product-link";
+import { productLinkKey } from "@norish/shared/lib/store-link-key";
 
 import type { CreateStoresHooksOptions } from "./types";
 import { useRealtimeSubscription } from "../../realtime/use-realtime-subscription";
@@ -24,27 +24,35 @@ export type StorePricesData = ResolvedProductLink[];
  */
 export const PENDING_LINK_MAX_AGE_MS = 5 * 60 * 1000;
 
-/** What a Store knows about one grocery name; the key every merge here uses. */
-export function priceKey(storeId: string | null, name: string | null): string | null {
-  const normalized = normalizeGroceryName(name);
-
-  return storeId && normalized ? productLinkKey(storeId, normalized) : null;
+/**
+ * What a Store knows about one Ingredient; the key every merge here uses. A
+ * grocery added offline has no Ingredient until the server has resolved it,
+ * and has no price until then either.
+ */
+export function priceKey(
+  storeId: string | null,
+  ingredientId: string | null | undefined
+): string | null {
+  return storeId && ingredientId ? productLinkKey(storeId, ingredientId) : null;
 }
 
-/** The same key, for a link that already carries its normalized name. */
-function linkKey(link: Pick<ResolvedProductLink, "storeId" | "normalizedName">): string {
-  return productLinkKey(link.storeId, link.normalizedName);
+/** The same key, for a link. */
+function linkKey(link: Pick<ResolvedProductLink, "storeId" | "ingredientId">): string {
+  return productLinkKey(link.storeId, link.ingredientId);
 }
+
+/** An Ingredient a lookup is keyed by; a grocery's, or none yet. */
+type IngredientKey = string | null | undefined;
 
 export interface StorePricesResult {
-  /** The Store Product a grocery resolves to, or null where the Store knows it as a Miss or not at all. */
-  priceFor: (storeId: string | null, name: string | null) => StoreProductDto | null;
+  /** The Store Product a grocery's Ingredient resolves to, or null where the Store knows it as a Miss or not at all. */
+  priceFor: (storeId: string | null, ingredientId: IngredientKey) => StoreProductDto | null;
   /**
-   * What the Store knows about the name — a link, a Miss, or a Pending Link —
-   * or null where it knows nothing. A Pending Link this screen has watched
-   * for longer than the queue could take is null too.
+   * What the Store knows about the Ingredient — a link, a Miss, or a Pending
+   * Link — or null where it knows nothing. A Pending Link this screen has
+   * watched for longer than the queue could take is null too.
    */
-  linkFor: (storeId: string | null, name: string | null) => ResolvedProductLink | null;
+  linkFor: (storeId: string | null, ingredientId: IngredientKey) => ResolvedProductLink | null;
   isLoading: boolean;
 }
 
@@ -123,8 +131,8 @@ export function createUseStorePrices({ useTRPC }: CreateStoresHooksOptions) {
     const expired = useExpiredPendingLinks(byKey);
 
     const linkFor = useCallback(
-      (storeId: string | null, name: string | null) => {
-        const key = priceKey(storeId, name);
+      (storeId: string | null, ingredientId: IngredientKey) => {
+        const key = priceKey(storeId, ingredientId);
         const link = key ? (byKey.get(key) ?? null) : null;
 
         if (link && isPendingLink(link) && expired.has(key ?? "")) return null;
@@ -135,7 +143,8 @@ export function createUseStorePrices({ useTRPC }: CreateStoresHooksOptions) {
     );
 
     const priceFor = useCallback(
-      (storeId: string | null, name: string | null) => linkFor(storeId, name)?.product ?? null,
+      (storeId: string | null, ingredientId: IngredientKey) =>
+        linkFor(storeId, ingredientId)?.product ?? null,
       [linkFor]
     );
 
@@ -146,7 +155,7 @@ export function createUseStorePrices({ useTRPC }: CreateStoresHooksOptions) {
 /**
  * Prices land on every screen in the household, not just the one that asked.
  * Both handlers are idempotent merges by identity — a product by its id, a
- * link by its store and normalized name — so the actor's own echo is a no-op
+ * link by its store and Ingredient — so the actor's own echo is a no-op
  * and no echo suppression is needed anywhere.
  */
 export function createUseStorePricesSubscription({ useTRPC }: CreateStoresHooksOptions) {

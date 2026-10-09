@@ -17,6 +17,11 @@ import {
 } from "@norish/db/repositories/store-products";
 import { getStoreById } from "@norish/db/repositories/stores";
 import { searchStore } from "@norish/queue/store-lookup/lookup";
+import {
+  findIngredientFor,
+  resolveIngredient,
+  writeResolved,
+} from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import {
@@ -44,17 +49,19 @@ const listProducts = authedProcedure
   });
 
 /**
- * What one Store has learned one grocery name means. `groceryPrices` answers
- * only for the Store each grocery sits under, so a panel where the shopper has
- * selected another Store has nowhere else to read its link from. A single
- * indexed row: no shop is visited and no lookup is queued.
+ * What one Store has learned the Ingredient a grocery name resolves to means.
+ * `groceryPrices` answers only for the Store each grocery sits under, so a
+ * panel where the shopper has selected another Store has nowhere else to read
+ * its link from. A single indexed row: no shop is visited, no lookup is
+ * queued, and a name Norish does not know is answered with nothing.
  */
 const linkFor = authedProcedure
   .input(StoreProductLinkLookupSchema)
   .query(async ({ ctx, input }): Promise<ResolvedProductLink | null> => {
     await assertStoreAccess(ctx, input.storeId);
+    const ingredient = await findIngredientFor(input.name);
 
-    return resolveProductLink(input.storeId, input.name);
+    return ingredient ? resolveProductLink(input.storeId, ingredient.ingredientId) : null;
   });
 
 /**
@@ -120,7 +127,10 @@ const searchShop = authedProcedure
     // What the lookup's Decision said about these products, kept with the
     // Miss for this name (ADR-0035): the offered list is ordered by it, most
     // likely first. One indexed row, no request.
-    const link = await resolveProductLink(input.storeId, input.term);
+    const ingredient = await findIngredientFor(input.term);
+    const link = ingredient
+      ? await resolveProductLink(input.storeId, ingredient.ingredientId)
+      : null;
     const ranking = link?.product ? null : (link?.suggestion ?? null);
     const offered = orderBySuggestion(candidates, ranking);
 
@@ -278,8 +288,19 @@ const chooseProduct = authedProcedure
         void stores.publish("productUpdated", { product }, { householdKey: ctx.householdKey });
     }
 
-    await upsertProductLink(input.storeId, input.name, storeProductId);
-    const link = await resolveProductLink(input.storeId, input.name);
+    // The choice is about the food the grocery names, so every spelling of it
+    // at this Store is priced by it (ADR-0037).
+    const ingredient = await writeResolved(
+      () => resolveIngredient(input.name, { userId: ctx.user.id }),
+      async (resolved) => {
+        if (resolved) await upsertProductLink(input.storeId, resolved.ingredientId, storeProductId);
+
+        return resolved;
+      }
+    );
+
+    if (!ingredient) return null;
+    const link = await resolveProductLink(input.storeId, ingredient.ingredientId);
 
     if (link) void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
 

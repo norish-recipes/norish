@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * The Pantry's procedures. The repository is mocked; what is pinned here is
+ * The Pantry's procedures. The repository and the resolver are mocked; what is pinned here is
  * who may add and remove, when nothing is written, and what the household
  * hears about it.
  */
@@ -17,14 +17,20 @@ import {
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { pantry } from "../mocks/realtime/pantry";
 
+const { addToPantry, addPickedToPantry } = vi.hoisted(() => ({
+  addToPantry: vi.fn(),
+  addPickedToPantry: vi.fn(),
+}));
 const pantryRepository = vi.hoisted(() => ({
-  addPantryIngredient: vi.fn(),
   deletePantryIngredient: vi.fn(),
   getPantryIngredientOwnerId: vi.fn(),
   listPantryIngredientsByUserIds: vi.fn(),
+  listPantrySuggestions: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/pantry", () => pantryRepository);
+// Resolving the typed name is the resolver's; what is pinned here is the procedure.
+vi.mock("@norish/shared-server/ingredients/pantry", () => ({ addToPantry, addPickedToPantry }));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/pantry", () => import("../mocks/realtime/pantry"));
 vi.mock("@norish/shared-server/logger", () => ({
@@ -34,6 +40,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 const OLIVE = "11111111-1111-4111-8111-111111111111";
 const EXISTING = "22222222-2222-4222-8222-222222222222";
+const ONION = "33333333-3333-4333-8333-333333333333";
 
 describe("the Pantry", () => {
   const ctx = createMockAuthedContext(createMockUser(), createMockHousehold());
@@ -42,18 +49,15 @@ describe("the Pantry", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     assertHouseholdAccess.mockResolvedValue(undefined);
-    pantryRepository.addPantryIngredient.mockImplementation(
-      async (id: string, input: { userId: string; name: string }) => ({
-        item: {
-          id,
-          userId: input.userId,
-          name: input.name.trim(),
-          normalizedName: input.name.trim().toLowerCase(),
-          version: 1,
-        },
-        created: true,
-      })
-    );
+    addToPantry.mockImplementation(async (id: string, input: { userId: string; name: string }) => ({
+      item: {
+        id,
+        userId: input.userId,
+        name: input.name.trim(),
+        version: 1,
+      },
+      created: true,
+    }));
     pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(ctx.user.id);
     pantryRepository.deletePantryIngredient.mockResolvedValue(true);
   });
@@ -68,7 +72,7 @@ describe("the Pantry", () => {
   it("adds a name under the client's id and tells the household", async () => {
     await expect(caller.add({ id: OLIVE, name: "Olive Oil" })).resolves.toBe(OLIVE);
 
-    expect(pantryRepository.addPantryIngredient).toHaveBeenCalledWith(OLIVE, {
+    expect(addToPantry).toHaveBeenCalledWith(OLIVE, {
       userId: ctx.user.id,
       userIds: ctx.userIds,
       name: "Olive Oil",
@@ -84,11 +88,11 @@ describe("the Pantry", () => {
     const id = await caller.add({ name: "Salt" });
 
     expect(id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(pantryRepository.addPantryIngredient).toHaveBeenCalledWith(id, expect.anything());
+    expect(addToPantry).toHaveBeenCalledWith(id, expect.anything());
   });
 
   it("answers with the item the household already has, announcing nothing", async () => {
-    pantryRepository.addPantryIngredient.mockResolvedValue({
+    addToPantry.mockResolvedValue({
       item: { id: EXISTING },
       created: false,
     });
@@ -97,9 +101,53 @@ describe("the Pantry", () => {
     expect(pantry.publish).not.toHaveBeenCalled();
   });
 
+  it("adds a picked food as picked, never resolving a name, and tells the household", async () => {
+    addPickedToPantry.mockResolvedValue({
+      item: { id: OLIVE, ingredientId: ONION, name: "onion" },
+      created: true,
+    });
+
+    await expect(caller.add({ id: OLIVE, ingredientId: ONION })).resolves.toBe(OLIVE);
+
+    expect(addToPantry).not.toHaveBeenCalled();
+    expect(addPickedToPantry).toHaveBeenCalledWith(OLIVE, {
+      userId: ctx.user.id,
+      userIds: ctx.userIds,
+      ingredientId: ONION,
+    });
+    expect(pantry.publish).toHaveBeenCalledWith(
+      "added",
+      { item: expect.objectContaining({ id: OLIVE, ingredientId: ONION }) },
+      { householdKey: ctx.householdKey }
+    );
+  });
+
+  it("answers a picked food the household already keeps with its id, announcing nothing", async () => {
+    addPickedToPantry.mockResolvedValue({ item: { id: EXISTING }, created: false });
+
+    await expect(caller.add({ id: OLIVE, ingredientId: ONION })).resolves.toBe(EXISTING);
+    expect(pantry.publish).not.toHaveBeenCalled();
+  });
+
+  it("refuses a picked food that is gone", async () => {
+    addPickedToPantry.mockResolvedValue(null);
+
+    await expect(caller.add({ id: OLIVE, ingredientId: ONION })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    expect(pantry.publish).not.toHaveBeenCalled();
+  });
+
+  it("asks for the foods the household's own recipes use", async () => {
+    pantryRepository.listPantrySuggestions.mockResolvedValue([{ ingredientId: ONION }]);
+
+    await expect(caller.suggestions()).resolves.toEqual([{ ingredientId: ONION }]);
+    expect(pantryRepository.listPantrySuggestions).toHaveBeenCalledWith(ctx.userIds);
+  });
+
   it("refuses a name that folds to nothing", async () => {
     await expect(caller.add({ name: "!?" })).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    expect(pantryRepository.addPantryIngredient).not.toHaveBeenCalled();
+    expect(addToPantry).not.toHaveBeenCalled();
   });
 
   it("removes an item and tells the household which", async () => {

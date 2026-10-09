@@ -32,3 +32,47 @@ export const nutritionEstimationSchema = z
   .strict();
 
 export type NutritionEstimate = z.infer<typeof nutritionEstimationSchema>;
+
+/**
+ * Schema for the estimate of the lines a worked-out total left out
+ * (ADR-0039): one entry per numbered ingredient line, each line's own
+ * per-serving share. Every line is required once; the estimator refuses an
+ * answer that skips or doubles one, so a stored share always has a line.
+ */
+export const nutritionGapEstimationSchema = z
+  .object({
+    lines: z
+      .array(
+        z
+          .object({
+            line: z
+              .number()
+              .int()
+              .min(1)
+              .describe("The ingredient's number in the list, starting at 1."),
+            calories: z
+              .number()
+              .min(0)
+              .describe(
+                "This ingredient's calories per serving in kcal, on its own. Should equal approximately: fat * 9 + carbs * 4 + protein * 4."
+              ),
+            fat: z
+              .number()
+              .min(0)
+              .describe("This ingredient's fat per serving in grams; 0 when none."),
+            carbs: z
+              .number()
+              .min(0)
+              .describe("This ingredient's carbohydrates per serving in grams; 0 when none."),
+            protein: z
+              .number()
+              .min(0)
+              .describe("This ingredient's protein per serving in grams; 0 when none."),
+          })
+          .strict()
+      )
+      .describe("One entry per numbered ingredient, in order; none left out."),
+  })
+  .strict();
+
+export type NutritionGapEstimate = z.infer<typeof nutritionGapEstimationSchema>;

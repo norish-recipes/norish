@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableModelsQuery } from "@/hooks/admin";
-import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   Button,
   ComboBox,
@@ -97,6 +96,8 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
     provider: provider === "disabled" ? "openai" : provider,
     endpoint: endpoint || (aiProviderMatches ? aiConfig?.endpoint : undefined),
     apiKey: apiKey || undefined,
+    // Only the provider's models that can draw, where their names say so; any name may still be typed.
+    purpose: "image",
     enabled: !!canFetchModels,
   });
 
@@ -163,7 +164,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
   };
 
   return (
-    <div className="flex flex-col gap-4 p-2">
+    <div className="flex flex-col gap-4">
       <p className="text-muted text-sm">{t("description")}</p>
 
       <Select
@@ -266,7 +267,6 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
 
       <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
         <Button isDisabled={!hasChanges} onPress={handleSave} variant="primary" isPending={saving}>
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

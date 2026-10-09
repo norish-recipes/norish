@@ -7,7 +7,8 @@
     "user": "Bruker",
     "household": "Husstand",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Ingredienser"
   },
   "user": {
     "profile": {
@@ -21,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergier",
-      "description": "Legg til matallergiene dine for å motta advarsler når du planlegger oppskrifter som inneholder allergener. Denne informasjonen brukes til å advare deg når en planlagt oppskrift inneholder ingredienser som samsvarer med allergiene dine.",
+      "description": "Legg til matallergiene dine for å få advarsler når du planlegger oppskrifter med allergener.",
       "placeholder": "Skriv allergier (f.eks. gluten, nøtter, meieriprodukter)...",
       "saveButton": "Lagre allergier"
     },
     "apiKeys": {
       "title": "API-nøkler",
-      "description": "API-nøkler gir programmatisk tilgang til Norish API. Bruk dem til integrasjoner, snarveier og automatisering.",
+      "description": "API-nøkler kan brukes til å lage egne integrasjoner, snarveier og automatiseringer.",
       "docsLink": "Åpne API-dokumentasjon",
       "keyNameLabel": "Nøkkelnavn (valgfritt)",
       "keyNamePlaceholder": "f.eks. iOS-snarvei",
@@ -61,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Importer oppskriftarkiv",
-      "description": "Importer oppskrifter fra Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes) eller Mealie/Tandoor (.zip)-eksporter"
+      "description": "Importer oppskrifter eksportert fra Norish, Mela, Paprika, Mealie eller Tandoor."
     },
     "archiveExport": {
       "title": "Eksporter oppskriftsarkiv",
@@ -70,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Nettstedsautentiseringstokens",
-      "description": "Legg til headere eller informasjonskapsler som sendes ved import av oppskrifter fra bestemte nettsteder. Nyttig for nettsteder som krever innlogging (f.eks. Instagram, Facebook).",
+      "description": "Headere eller informasjonskapsler som sendes ved import fra nettsteder som krever innlogging, f.eks. Instagram eller Facebook.",
       "accountsDescription": "Gi kontoen et navn når du har mer enn én pålogging for et nettsted. Hver import bruker da en av nettstedets kontoer, valgt tilfeldig, slik at ikke én pålogging bærer alle importene. Et token uten kontonavn sendes med hver import for domenet sitt.",
       "domain": "Domene",
       "domainPlaceholder": "f.eks. instagram.com",
@@ -98,7 +99,8 @@
         "title": "Slett token",
         "message": "Er du sikker på at du vil slette dette autentiseringstokenet? Import fra dette nettstedet kan slutte å fungere.",
         "confirmButton": "Slett token"
-      }
+      },
+      "accountsHelp": "Om kontoer"
     },
     "dangerZone": {
       "title": "Faresone",
@@ -116,13 +118,18 @@
     "preferences": {
       "title": "Preferanser",
       "description": "Tilpass opplevelsen din.",
+      "deviceKind": {
+        "help": "Slik lagres preferanser",
+        "phone": "«{language}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype.",
+        "desktop": "«{language}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype."
+      },
       "language": {
         "title": "Språk",
         "description": "Velg foretrukket språk"
       },
       "hidden": {
         "title": "Skjulte elementer",
-        "description": "Velg hva du helst ikke vil se. Alt vises som standard, og dette endrer bare din egen visning.",
+        "description": "Skjul elementer du ikke vil se",
         "placeholder": "Ingenting skjult",
         "options": {
           "provenance": "Opphav",
@@ -132,12 +139,13 @@
           "favorites": "Favoritter",
           "conversion": "Ingredienskonvertering",
           "timers": "Oppskriftstimere",
-          "cookbooks": "Kokebøker"
+          "cookbooks": "Kokebøker",
+          "ingredientIcons": "Ingrediensikoner"
         }
       },
       "todaySection": {
         "title": "I dag-seksjon",
-        "description": "Velg hvordan I dag-seksjonen på dashbordet vises på denne enheten",
+        "description": "Hvordan I dag-seksjonen på dashbordet oppfører seg",
         "options": {
           "always": "Alltid synlig",
           "planned": "Kun planlagte måltider",
@@ -146,13 +154,33 @@
       },
       "recipePageColor": {
         "title": "Farge på oppskriftssider",
-        "description": "Ton hver oppskriftsside med fargene fra sitt eget foto, eller behold temaets farger på denne enheten",
+        "description": "Ton oppskriftssiden dynamisk eller følg temaets farger",
         "options": {
           "dish": "Fra rettens foto",
           "theme": "Temaets farger"
         }
       },
-      "applyError": "Kunne ikke bruke preferanse"
+      "applyError": "Kunne ikke bruke preferanse",
+      "afterPlanning": {
+        "title": "Etter planlegging av en oppskrift",
+        "description": "Hva som skjer når du planlegger en oppskrift",
+        "options": {
+          "nothing": "Ingenting",
+          "openGroceries": "Åpne handlepanelet",
+          "addGroceries": "Legg ingrediensene til handlelisten"
+        }
+      },
+      "measurements": {
+        "title": "Måleenheter",
+        "description": "Standardmålesystemet for oppskrifter",
+        "options": {
+          "off": "Ikke konverter",
+          "metric": "Metrisk",
+          "us": "Amerikansk",
+          "metricWithAI": "Metrisk med AI",
+          "usWithAI": "Amerikansk med AI"
+        }
+      }
     },
     "shareLinks": {
       "title": "Oppskriftdelelenker",
@@ -183,7 +211,6 @@
     }
   },
   "household": {
-    "pageTitle": "Husstandsinnstillinger",
     "info": {
       "yourRole": "Din rolle",
       "admin": "Administrator",
@@ -330,6 +357,267 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingredienser",
+    "description": "Ingredienskatalogen Norish bruker til å bestemme næringsinnhold, ingrediensikoner og oversettelser.",
+    "search": "Søk i ingredienser",
+    "searchMatch": "Treff",
+    "searchIn": "Søk i",
+    "searchMatches": {
+      "contains": "Inneholder",
+      "exact": "Nøyaktig"
+    },
+    "searchFields": {
+      "name": "Navn",
+      "translations": "Oversettelser",
+      "parent": "Overordnet"
+    },
+    "flaggedOnly": "Bare markerte",
+    "flagged": "Markert",
+    "flagReasons": {
+      "unknown": "Norish var ikke sikker på at dette er en egen ingrediens.",
+      "ai-off": "AI er slått av, så ingenting sjekket om Norish allerede kjenner den.",
+      "unknown-food": "Ingen kjent ingrediens deler et ord med dette navnet, så AI ble ikke spurt.",
+      "ai-unsure": "AI ble spurt om dette er en kjent ingrediens og var ikke sikker.",
+      "ai-unavailable": "AI svarte ikke i tide da dette navnet ble lagt til.",
+      "food-gone": "AI knyttet det til en ingrediens som ble slått sammen før navnet rakk å bli med.",
+      "upgrade": "Fant ingen kjent ingrediens som passet.",
+      "seed-ambiguous": "Katalogen kjenner flere ingredienser dette kan være."
+    },
+    "empty": "Fant ingen ingredienser",
+    "emptyFlagged": "Ingenting er markert",
+    "rename": "Gi nytt navn",
+    "delete": "Slett",
+    "deleteTitle": "Slette {name}?",
+    "deleteConfirm": "Oversettelsene følger med, og det husstanden din har lært Norish om den. En ingrediens som en oppskrift, en handlevare eller spiskammeret fortsatt bruker, kan ikke slettes; slå den sammen i stedet.",
+    "markDistinct": "Marker som egen",
+    "summary": "{spellings, plural, one {# oversettelse} other {# oversettelser}}{kinds, plural, =0 {} one {, # type} other {, # typer}}{parent, select, none {} other {, overordnet: {parent}}}",
+    "askAI": "Spør AI",
+    "askAIAll": "Spør AI om merkede ingredienser",
+    "askAIRound": {
+      "intro": "AI leser hvert navn og sammenligner det med matvarene Norish kjenner. Ingenting endres før du bekrefter et forslag.",
+      "scopeLabel": "Hvilke ingredienser",
+      "scopes": {
+        "unsuggested": "Bare de uten forslag",
+        "flagged": "Alle merkede ingredienser"
+      },
+      "scopeSize": "{count, plural, =0 {Ingen ingredienser} one {# ingrediens · omtrent {tokens} tokens} other {# ingredienser · omtrent {tokens} tokens}}",
+      "replaces": "Erstatter forslagene som allerede venter.",
+      "modelTokens": "omtrent {tokens} tokens",
+      "basisMeasured": "Basert på hva forrige runde brukte.",
+      "basisPrompt": "Anslått ut fra prompten, så det faktiske antallet er trolig høyere."
+    },
+    "roundProgress": "Spør AI · {done, number} av {total, number}",
+    "roundSection": {
+      "title": "Spør AI",
+      "progress": "{done, number} av {total, number}",
+      "waiting": "{count, plural, one {# ingrediens venter} other {# ingredienser venter}}"
+    },
+    "reviewing": "Spør AI…",
+    "aiOutcomes": {
+      "parent": "AI foreslår å plassere {name} som en type {of}.",
+      "distinct": "AI foreslår at {name} er en egen matvare.",
+      "unsure": "AI er fortsatt ikke sikker på hva {name} er.",
+      "notFlagged": "{name} er ikke merket.",
+      "skippedNotFlagged": "{name} var ikke lenger merket.",
+      "skippedForbidden": "{name} kan du ikke endre.",
+      "skippedNotFound": "{name} var borte da AI kom dit.",
+      "failed": "Spørsmålet om {name} mislyktes.",
+      "merge": "AI foreslår å slå sammen {name} med {into}."
+    },
+    "aiTrace": {
+      "readAs": "AI leste det som «{name}».",
+      "compared": "Sammenlignet med: {names}.",
+      "comparedNothing": "Det var ingen kjent matvare å sammenligne med.",
+      "fromWords": "Based on name."
+    },
+    "addAlias": "Legg til en oversettelse",
+    "removeAlias": "Fjern {alias}",
+    "mergeInto": "Slå sammen med…",
+    "merge": "Slå sammen",
+    "mergedToast": "{name} er nå en oversettelse av {into}. Angre ved å åpne {into} og flytte {name} ut igjen.",
+    "mergeTitle": "{name} forsvinner og blir en oversettelse av ingrediensen du velger.",
+    "moveTo": "Flytt til",
+    "move": "Flytt",
+    "moveAlias": "Flytt {alias}",
+    "moveTitle": "Flytt {alias} til en annen ingrediens.",
+    "newIngredient": "Gjør den til en basisingrediens",
+    "pickIngredient": "Søk etter en ingrediens",
+    "pickerHint": "Skriv for å søke i katalogen",
+    "pickerSearching": "Søker…",
+    "pickerEmpty": "Ingen ingrediens funnet",
+    "setParent": "Velg overordnet…",
+    "parentTitle": "Velg ingrediensen {name} er en type av.",
+    "clearParent": "Fjern overordnet",
+    "nameSection": "Navn",
+    "parentSection": "Overordnet",
+    "spellingsSection": "Oversettelser",
+    "shownAs": "Vises for deg som {name}",
+    "changeParent": "Bytt overordnet…",
+    "spellingsCount": "{count, plural, one {# oversettelse} other {# oversettelser}}",
+    "dataSources": {
+      "title": "Datakilder",
+      "notice": "Ingredienskatalogen bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgjengelig under <odbl>Open Database License (ODbL)</odbl>. Katalogen Norish bygger ut fra den, tilbys under samme lisens.",
+      "nutritionNotice": "Næringsinnholdet per 100 g kommer fra <ciqual>CIQUAL 2025</ciqual> og CALNUT (ANSES), <usda>USDA FoodData Central</usda> og <cofid>CoFID</cofid>, koblet via kodene Open Food Facts gir hver ingrediens. En husstands rettelser er dens egne verdier, ikke datasettenes.",
+      "download": "Last ned ingredienskatalogen (JSON)"
+    },
+    "nutrition": {
+      "section": "Næringsinnhold",
+      "per100g": "Per 100 g",
+      "calories": "Kalorier",
+      "fat": "Fett",
+      "carbs": "Karbohydrater",
+      "protein": "Protein",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "spoonGrams": {
+        "teaspoon": "{value} g per teskje",
+        "tablespoon": "{value} g per spiseskje",
+        "cup": "{value} g per kopp",
+        "hundredMl": "{value} g per 100 ml"
+      },
+      "none": "Norish har ennå ikke næringsinnhold for denne ingrediensen. Rett den for å gi den noe.",
+      "noNumbers": "Ennå ingen verdier per 100 g.",
+      "borrowed": "Fra {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, valgt av Norish",
+        "name": "{food} · {dataset}, funnet på navnet",
+        "householdFood": "{food} · {dataset}, valgt av husstanden din",
+        "household": "Husstandens egne verdier",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Rett",
+      "correctTitle": "Rett {name}",
+      "correctIntro": "Rettelser gjelder bare for din husstand.",
+      "facts": {
+        "numbers": "Per 100 g",
+        "pieceWeight": "Én bit"
+      },
+      "useSources": "Ingen rettelse",
+      "pickFood": "En matvare fra datasettene",
+      "typeLabel": "Fra en etikett",
+      "label": {
+        "calories": "Kalorier (kcal)",
+        "fat": "Fett (g)",
+        "carbs": "Karbohydrater (g)",
+        "protein": "Protein (g)",
+        "pieceGrams": "Én bit veier (g)",
+        "spoonGrams": {
+          "teaspoon": "En teskje veier (g)",
+          "tablespoon": "En spiseskje veier (g)",
+          "cup": "En kopp veier (g)",
+          "hundredMl": "100 ml veier (g)"
+        }
+      },
+      "searchFood": "Søk i datasettene (på engelsk), for eksempel milk semi-skimmed",
+      "foodHint": "Skriv noen ord av navnet",
+      "searchingFoods": "Søker…",
+      "noFoods": "Ingen matvare i datasettene har alle de ordene.",
+      "remove": "Fjern rettelsen vår",
+      "saved": "Rettelse lagret",
+      "removed": "Tilbake til datasettenes verdier",
+      "errors": {
+        "title": "Rettelsen ble ikke lagret",
+        "unknown-food": "Den matvaren finnes ikke lenger i Norish.",
+        "empty": "Rett minst én av de tre.",
+        "not-found": "Denne ingrediensen finnes ikke lenger.",
+        "unknown": "Noe gikk galt. Prøv igjen."
+      },
+      "onePieceLabel": "Én bit",
+      "spoon": {
+        "teaspoon": "En teskje",
+        "tablespoon": "En spiseskje",
+        "cup": "En kopp",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Legg til vekt",
+      "summary": "{value} kcal per 100 g",
+      "summaryNone": "Ingen næringsinnhold enda",
+      "current": "Nå {value} · {source}",
+      "currentNone": "Norish har ingenting for dette enda"
+    },
+    "errors": {
+      "title": "Kunne ikke endre ingrediensen",
+      "forbidden": "Du kan ikke redigere denne ingrediensen",
+      "not-found": "Denne ingrediensen finnes ikke lenger",
+      "name-taken": "En annen ingrediens har allerede dette navnet",
+      "spelling-taken": "Denne oversettelsen tilhører allerede en annen ingrediens",
+      "last-alias": "En ingrediens beholder minst én oversettelse",
+      "alias-in-use": "Oppskrifter eller innkjøp bruker fortsatt denne oversettelsen",
+      "ingredient-in-use": "Oppskrifter, handlelister eller spiskammeret bruker fortsatt denne ingrediensen",
+      "same-ingredient": "En ingrediens kan ikke slås sammen med seg selv",
+      "cycle": "En ingrediens kan ikke være en type av seg selv",
+      "empty": "Skriv inn et navn",
+      "unknown": "Noe gikk galt. Prøv igjen."
+    },
+    "keepAlias": "Behold {alias}",
+    "reportOutcomes": {
+      "parent": "Under en forelder",
+      "distinct": "Egen matvare",
+      "unsure": "Ikke sikker",
+      "skipped": "Hoppet over",
+      "failed": "Mislyktes",
+      "merge": "Slå sammen"
+    },
+    "expandKinds": "Vis typer av {name}",
+    "collapseKinds": "Skjul typer av {name}",
+    "layoutSection": "Visning",
+    "asTree": "Hierarkisk visning",
+    "showOnly": "Vis bare",
+    "standaloneOnly": "Uten forelder eller typer",
+    "findParent": "Finn forelder med AI",
+    "findParentsAll": "Finn foreldre med AI",
+    "suggestion": {
+      "merge": "Slå sammen {name} med {into}",
+      "parent": "Plasser {name} under {of}",
+      "distinct": "Behold {name} som egen matvare",
+      "filedFromName": "{name} filed under {of}"
+    },
+    "suggestionsTitle": "AI-forslag",
+    "suggestionsEmpty": "Ingenting venter på deg.",
+    "suggestionsNone": "Ingen forslag",
+    "suggestionsOpen": "{count, plural, =0 {Forslag} one {# forslag} other {# forslag}}",
+    "suggestionsFailed": "{count, plural, one {# forslag} other {# forslag}} kunne ikke brukes: {reason}",
+    "confirmSuggestion": "Bekreft",
+    "dismissSuggestion": "Avvis",
+    "confirmAll": "Bekreft alle ({count})",
+    "dismissAll": "Avvis alle",
+    "suggestedByAI": "Foreslått av AI",
+    "suggestedFromName": "Based on name",
+    "proposal": {
+      "merge": "Merge into {into}",
+      "parent": "File under {of}",
+      "distinct": "Food of its own"
+    },
+    "skippedReasons": {
+      "notFlagged": "No longer flagged",
+      "forbidden": "Not yours to edit",
+      "notFound": "No longer exists"
+    },
+    "icon": {
+      "change": "Endre ikonet",
+      "upload": "Last opp et bilde",
+      "remove": "Fjern ikonet",
+      "failed": "Bildet kunne ikke gjøres om til et ikon.",
+      "generate": "Generer med AI",
+      "generateFailed": "Ikonet kunne ikke genereres."
+    },
+    "drawIcons": {
+      "open": "Tegn ikoner",
+      "title": "Tegn ikoner",
+      "intro": "Bildeleverandøren tegner et ikon for hver matvare, og det blir straks matvarens eget. Du kan gi en matvare et annet ikon i panelet dens.",
+      "scopeLabel": "Hvilke matvarer",
+      "scopes": {
+        "bare": "Bare matvarer helt uten ikon",
+        "unowned": "Alle matvarer uten eget ikon"
+      },
+      "scopeSize": "{count, plural, =0 {Ingen ikoner} one {# ikon} other {# ikoner}}",
+      "start": "Tegn ikoner",
+      "progress": "Tegner ikoner · {done, number} av {total, number}",
+      "drawing": "Tegner ikon…"
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderering av oppskriftdeling",
@@ -411,8 +699,10 @@
       "description": "Når deaktivert, kan bare eksisterende brukere logge inn"
     },
     "permissions": {
-      "title": "Oppskrifttillatelser",
-      "description": "Kontroller hvem som kan se, redigere og slette oppskrifter. Serveradministratorer har alltid full tilgang.",
+      "title": "Tillatelser",
+      "description": "Hvem som kan se og endre det andre har laget. Serveradministratorer har alltid full tilgang.",
+      "recipes": "Oppskrifter",
+      "ingredients": "Ingredienser",
       "viewRecipes": "Se oppskrifter",
       "viewDescription": "Hvem kan se oppskrifter i oversikten",
       "editRecipes": "Rediger oppskrifter",
@@ -427,17 +717,30 @@
         "owner": "Bare eieren",
         "ownerDescription": "Bare oppskriftens eier"
       },
-      "note": "Merk: Handlelister og kalenderhendelser følger husstandsregler automatisk; husstandsmedlemmer kan alltid redigere/slette elementer som tilhører hvem som helst i samme husstand."
+      "note": "Handlelister og kalenderelementer følger alltid husstandens regler: husstandsmedlemmer kan redigere eller slette hverandres elementer."
+    },
+    "ingredientPermissions": {
+      "title": "Ingredienstillatelser",
+      "description": "Hvem som kan gi ingredienser nytt navn, markere dem som egne eller fjerne oversettelsene deres. Alle kan legge til en oversettelse.",
+      "editIngredients": "Rediger ingredienser",
+      "editDescription": "Hvem som kan endre en ingrediens noen andre har lagt til",
+      "levels": {
+        "everyone": "Alle",
+        "everyoneDescription": "Alle innloggede brukere",
+        "household": "Husstand",
+        "householdDescription": "Den som la den til og medlemmene i husstanden",
+        "owner": "Bare eier",
+        "ownerDescription": "Bare den som la den til"
+      },
+      "note": "Ingredienser fra den innebygde katalogen kan bare redigeres av serveradministratorer."
     },
     "system": {
       "title": "Systeminnstillinger",
       "cleanup": {
-        "title": "Oppryddingsplanlegger",
         "label": "Oppryddingsmåneder",
         "description": "Slett planlagte måltider som er eldre enn dette antallet måneder"
       },
       "server": {
-        "title": "Serveradministrasjon",
         "restartLabel": "Start server på nytt",
         "restartDescription": "Bruk konfigurasjonsendringer som krever en omstart",
         "restartButton": "Start server på nytt"
@@ -455,7 +758,7 @@
     "authProviders": {
       "title": "Autentiseringsleverandører",
       "requiresRestart": "Krever omstart",
-      "description": "Konfigurer autentiseringsmetoder. Endringer krever en serveromstart for å tre i kraft.",
+      "description": "Konfigurer hvordan folk logger inn.",
       "passwordAuth": {
         "title": "E-post og passord",
         "description": "Tillat brukere å logge inn med e-post og passord"
@@ -476,7 +779,7 @@
         },
         "claimMapping": {
           "title": "Krav-mapping",
-          "description": "Tildel automatisk roller og husstander basert på OIDC-krav. Brukere med administratorgruppen får serveradministratorrettigheter. Brukere med en husstandsgruppe meldes automatisk inn i den husstanden.",
+          "description": "Tildel administratorrettigheter og husstander ut fra leverandørens gruppekrav.",
           "securityWarning": "Advarsel: Aktivering av krav-mapping gir identitetsleverandøren din kontroll over administratorrettigheter og husstandsmedlemskap. Aktiver dette bare hvis du fullt ut stoler på OIDC-leverandøren din og har konfigurert gruppekravene riktig.",
           "scopes": "Ytterligere scopes",
           "scopesPlaceholder": "groups, roles",
@@ -533,10 +836,15 @@
         "subtitle": "Definisjoner av måleenheter for analyse",
         "description": "Definer måleenheter med kortform, flertall og alternative stavemåter. Brukes ved analyse av ingrediensmengder."
       },
+      "ingredientWords": {
+        "title": "Ingrediensord",
+        "subtitle": "Ord ingrediensnavn leses etter, per språk",
+        "description": "Ord Norish hopper over når det matcher ingrediensnavn, f.eks. «hakket», «stor» eller «er» i «tomater»."
+      },
       "recurrence": {
         "title": "Gjentakelsesmønstre",
         "subtitle": "Mønstre i naturlig språk for tilbakevendende elementer",
-        "description": "Definer språkspesifikke mønstre for analyse av gjentakelsesregler fra naturlig språk (f.eks. 'hver uke', 'hver dag')."
+        "description": "Ord per språk som får en vare til å gjenta seg, f.eks. «hver uke» eller «annenhver dag»."
       },
       "timerKeywords": {
         "title": "Timer-nøkkelord",
@@ -585,7 +893,7 @@
       "bulkEnrichment": {
         "title": "Masseberikelse",
         "subtitle": "Kjør aktivert berikelse på alle oppskrifter",
-        "description": "Legg hver berikelsestype som har automatisk bryter på, i kø for alle oppskrifter på denne serveren. Som standard fylles bare hull; bekreftelsen tilbyr å overskrive det som allerede finnes.",
+        "description": "Legg alle aktiverte berikelser i kø",
         "button": "Berik alle oppskrifter",
         "confirmTitle": "Kjøre berikelse på alle oppskrifter?",
         "confirmMessage": "Dette setter AI-arbeid i kø for hver oppskrift på denne serveren. Hver berikelsestype med automatisk bryter slått på kjøres der data mangler.",
@@ -637,7 +945,7 @@
       "testConnection": "Test tilkobling",
       "vision": "visjon",
       "automaticEnrichment": "Automatisk oppskriftsberikelse",
-      "automaticEnrichmentDescription": "Velg hvilken AI-berikelse som kjøres automatisk for nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt når AI er på.",
+      "automaticEnrichmentDescription": "Hvilke AI-berikelser som kjøres på nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt.",
       "automaticEnrichmentPlaceholder": "Ingenting kjører automatisk",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatiske tagger",
@@ -715,7 +1023,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "La stå tomt for lokale servere"
     },
     "imageGenerationConfig": {
-      "description": "Bildegenerering bruker sin egen leverandør, fordi de fleste AI-leverandører ikke kan tegne. Bilder genereres med denne leverandøren; AI-leverandøren ovenfor håndterer alt annet.",
+      "description": "Bilder trenger sin egen leverandør, siden de fleste AI-leverandører ikke kan tegne.",
       "provider": "Bildeleverandør",
       "providers": {
         "disabled": "Deaktivert",
@@ -759,6 +1067,8 @@
         "recipeProvenanceDescription": "Fastsett land og Kjøkken før notatet skrives",
         "groceryLinking": "Kobling av varer",
         "groceryLinkingDescription": "Sorter en butikks tilbudte produkter og koble ett den er sikker på",
+        "ingredientResolution": "Gjenkjenning av ingredienser",
+        "ingredientResolutionDescription": "Avgjør om et nytt ingrediensnavn er en matvare Norish allerede kjenner",
         "validateEnrichments": "Valider berikelser",
         "validateEnrichmentsDescription": "Kontroller hver berikelseskjørings egne påstander før de lagres"
       },
@@ -794,12 +1104,18 @@
       "ingredientLinking": "Prompt for ingredienskobling",
       "ingredientLinkingDescription": "Brukes når hvert trinn kobles til ingredienslinjene det bruker",
       "ingredientLinkingPlaceholder": "Prompt for å koble ingredienser til trinn...",
+      "ingredientResolution": "Prompt for gjenkjenning av ingredienser",
+      "ingredientResolutionDescription": "Brukes til å avgjøre om et nytt ingrediensnavn er en matvare Norish allerede kjenner",
+      "ingredientResolutionPlaceholder": "Prompt for å gjenkjenne ingrediensnavn...",
       "imageGenerationBrief": "Bildebeskrivelse-prompt",
       "imageGenerationBriefDescription": "Brukes til å gjøre en oppskrift om til en kort visuell beskrivelse før bildet genereres. Oppskriften legges til etter prompten.",
       "imageGenerationBriefPlaceholder": "Prompt for den visuelle beskrivelsen...",
       "imageGenerationStyle": "Bildestil-prompt",
       "imageGenerationStyleDescription": "Sendes til bildemodellen med den visuelle beskrivelsen lagt til etter. Bestemmer uttrykket alle genererte bilder deler.",
-      "imageGenerationStylePlaceholder": "Prompt for bildestilen..."
+      "imageGenerationStylePlaceholder": "Prompt for bildestilen...",
+      "ingredientIconStyle": "Prompt for stil på ingrediensikoner",
+      "ingredientIconStyleDescription": "Sendes til bildemodellen når en ingrediens får tegnet et ikon, med matvarens navn og hva den er en slags av lagt til etterpå. Bestemmer utseendet alle tegnede ikoner deler.",
+      "ingredientIconStylePlaceholder": "Prompt for stilen på ingrediensikoner..."
     },
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {
@@ -850,7 +1166,9 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Tegn matvarens ikon"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -865,7 +1183,9 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Bildegenerering",
-        "store-lookup": "Butikkoppslag"
+        "store-lookup": "Butikkoppslag",
+        "ingredient-review": "Spør AI om ingredienser",
+        "ingredient-icons": "Tegn ingrediensikoner"
       },
       "summary": {
         "failed": "{count} failed"
@@ -899,9 +1219,11 @@
           "duration": "Duration",
           "attempts": "Attempts",
           "models": "Modeller",
+          "tokens": "Tokens",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },
+        "modelTokens": "{tokens} tokens",
         "attempt": "Attempt {number}",
         "stackTrace": "Stack trace"
       },
@@ -918,7 +1240,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "Hvor mange fullførte jobber som beholdes per kø."
       },
       "pagination": "Page {current} of {total}"
     },

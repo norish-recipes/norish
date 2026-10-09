@@ -8,6 +8,7 @@ import {
 } from "@norish/config/zod/server-config";
 import { setConfig } from "@norish/db/repositories/server-config";
 import { getDefaultConfigValue } from "@norish/shared-server/config/defaults";
+import { forgetSpellingRules } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
@@ -43,6 +44,10 @@ const restoreDefault = adminProcedure
     const isSensitive = SENSITIVE_CONFIG_KEYS.includes(input as ServerConfigKey);
 
     await setConfig(input as ServerConfigKey, defaultValue, ctx.user.id, isSensitive);
+    // Names are read by these two: the next one reads the restored words.
+    if (input === ServerConfigKeys.UNITS || input === ServerConfigKeys.INGREDIENT_WORDS) {
+      forgetSpellingRules();
+    }
 
     return { success: true };
   });

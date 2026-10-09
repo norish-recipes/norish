@@ -25,8 +25,10 @@ const DEFAULTS: PromptValues = {
   allergyDetection: "Detect the allergens.",
   recipeProvenance: "Infer the provenance.",
   ingredientLinking: "Link the ingredients.",
+  ingredientResolution: "Recognise the ingredient.",
   imageGenerationBrief: "Write the visual brief.",
   imageGenerationStyle: "Draw the dish.",
+  ingredientIconStyle: "Draw the food.",
 };
 
 describe("isSamePromptText", () => {

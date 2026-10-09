@@ -11,6 +11,7 @@ import {
   getUserAllergies,
   getUserById,
   getUserPreferences,
+  setUserDevicePreferences,
   updateUserAllergies,
   updateUserAvatar,
   updateUserName,
@@ -26,9 +27,9 @@ import { households } from "@norish/shared-server/realtime/households";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import {
   DeleteUserAvatarInputSchema,
+  SetDevicePreferencesInputSchema,
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
-  UserPreferencesSchema,
 } from "@norish/shared/contracts/zod";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared/lib/helpers";
@@ -70,7 +71,6 @@ const get = authedProcedure.query(async ({ ctx }) => {
   const freshUser = await getUserById(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
   const preferences = await getUserPreferences(ctx.user.id);
-  const parsedPreferences = UserPreferencesSchema.safeParse(preferences);
 
   // completed DB reads
 
@@ -81,7 +81,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
       name: freshUser?.name ?? ctx.user.name,
       image: freshUser?.image ?? ctx.user.image,
       version: freshUser?.version ?? 1,
-      preferences: parsedPreferences.success ? parsedPreferences.data : {},
+      preferences,
     },
     apiKeys: apiKeys.map((k) => ({
       id: k.id,
@@ -94,18 +94,17 @@ const get = authedProcedure.query(async ({ ctx }) => {
   };
 });
 /**
- * Update user preferences
+ * Update the person's own preferences (language, after-planning,
+ * measurements). Only the keys given are written, merged in the database:
+ * reading the document, merging in memory and writing it back would put back a
+ * stale copy of the Device Preferences a toggle wrote in between.
  */
-
 const updatePreferences = authedProcedure
   .input(UpdateUserPreferencesInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, updates: input.preferences }, "Updating user preferences");
 
-    const current = await getUserPreferences(ctx.user.id);
-    const merged = { ...(current ?? {}), ...(input.preferences ?? {}) };
-
-    const result = await updateUserPreferences(ctx.user.id, merged, input.version);
+    const result = await updateUserPreferences(ctx.user.id, input.preferences, input.version);
 
     if (result.stale) {
       log.info(
@@ -113,10 +112,14 @@ const updatePreferences = authedProcedure
         "Ignoring stale user preferences mutation"
       );
 
+      // The stored person-level choices, so the client drops its
+      // optimistic copy; never the device blocks, which a toggle owns.
+      const { locale, afterPlanning, measurementSystem } = await getUserPreferences(ctx.user.id);
+
       return {
         success: true,
         stale: true,
-        preferences: current ?? {},
+        preferences: { locale, afterPlanning, measurementSystem },
         version: input.version,
       };
     }
@@ -125,9 +128,27 @@ const updatePreferences = authedProcedure
 
     return {
       success: true,
-      preferences: merged,
+      preferences: input.preferences,
       version: updatedUser?.version ?? input.version,
     };
+  });
+
+/**
+ * Set Device Preferences for the named Device Kind. The kind travels in the
+ * input so an Outbox Replay lands on the kind the change was made on; the
+ * last writer wins, outside the profile's version.
+ */
+const setDevicePreferences = authedProcedure
+  .input(SetDevicePreferencesInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    log.debug(
+      { userId: ctx.user.id, kind: input.kind, updates: input.preferences },
+      "Setting device preferences"
+    );
+
+    await setUserDevicePreferences(ctx.user.id, input.kind, input.preferences);
+
+    return { success: true };
   });
 
 /**
@@ -394,4 +415,5 @@ export const userProcedures = router({
   getAllergies,
   setAllergies,
   updatePreferences,
+  setDevicePreferences,
 });

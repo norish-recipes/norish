@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
+import { Button, Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -30,76 +31,64 @@ export default function NoHouseholdView() {
   };
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-2xl font-bold">{t("pageTitle")}</h1>
-
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Create Household */}
-        <Card>
-          <Card.Header>
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <HomeIcon className="h-5 w-5" />
-              {t("create.title")}
-            </h2>
-          </Card.Header>
-          <Card.Content>
-            <form className="flex flex-col gap-4" onSubmit={handleCreateHousehold}>
-              <p className="text-muted text-base">{t("create.description")}</p>
-              <TextField isRequired value={householdName} onChange={setHouseholdName}>
-                <Label>{t("create.nameLabel")}</Label>
-                <Input variant="secondary" placeholder={t("create.namePlaceholder")} />
-              </TextField>
-              <div className="flex justify-end">
-                <Button type="submit" variant="primary" isPending={isCreating}>
-                  {t("create.submitButton")}
-                </Button>
-              </div>
-            </form>
-          </Card.Content>
-        </Card>
+        <SettingsCard
+          description={t("create.description")}
+          icon={HomeIcon}
+          title={t("create.title")}
+        >
+          <form className="flex flex-col gap-4" onSubmit={handleCreateHousehold}>
+            <TextField isRequired value={householdName} onChange={setHouseholdName}>
+              <Label>{t("create.nameLabel")}</Label>
+              <Input variant="secondary" placeholder={t("create.namePlaceholder")} />
+            </TextField>
+            <div className="flex justify-end">
+              <Button type="submit" variant="primary" isPending={isCreating}>
+                {t("create.submitButton")}
+              </Button>
+            </div>
+          </form>
+        </SettingsCard>
 
         {/* Join Household */}
-        <Card>
-          <Card.Header>
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <UserGroupIcon className="h-5 w-5" />
-              {t("join.title")}
-            </h2>
-          </Card.Header>
-          <Card.Content>
-            <form className="flex flex-col gap-4" onSubmit={handleJoinHousehold}>
-              <p className="text-muted text-base">{t("join.description")}</p>
-              <div className="flex flex-col gap-2">
-                <Label>{t("join.codeLabel")}</Label>
-                <InputOTP
-                  maxLength={6}
-                  pattern={REGEXP_ONLY_DIGITS}
-                  placeholder={t("join.codePlaceholder")}
-                  value={joinCode}
-                  onChange={setJoinCode}
-                >
-                  <InputOTP.Group className="justify-start gap-2">
-                    {/* The secondary-input treatment every other field on
+        <SettingsCard
+          description={t("join.description")}
+          icon={UserGroupIcon}
+          title={t("join.title")}
+        >
+          <form className="flex flex-col gap-4" onSubmit={handleJoinHousehold}>
+            <div className="flex flex-col gap-2">
+              <Label>{t("join.codeLabel")}</Label>
+              <InputOTP
+                maxLength={6}
+                pattern={REGEXP_ONLY_DIGITS}
+                placeholder={t("join.codePlaceholder")}
+                value={joinCode}
+                onChange={setJoinCode}
+              >
+                <InputOTP.Group className="justify-start gap-2">
+                  {/* The secondary-input treatment every other field on
                         these cards carries: the soft warm fill, no shadow —
                         the plain field fill is pure white and would vanish
                         against the white card. */}
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <InputOTP.Slot
-                        key={index}
-                        className="border-field-border bg-default text-foreground hover:bg-default data-[active=true]:bg-default data-[filled=true]:bg-default h-12 w-10 flex-none shadow-none"
-                        index={index}
-                      />
-                    ))}
-                  </InputOTP.Group>
-                </InputOTP>
-              </div>
-              <div className="flex justify-end">
-                <Button type="submit" variant="primary" isPending={isJoining}>
-                  {t("join.submitButton")}
-                </Button>
-              </div>
-            </form>
-          </Card.Content>
-        </Card>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <InputOTP.Slot
+                      key={index}
+                      className="border-field-border bg-default text-foreground hover:bg-default data-[active=true]:bg-default data-[filled=true]:bg-default h-12 w-10 flex-none shadow-none"
+                      index={index}
+                    />
+                  ))}
+                </InputOTP.Group>
+              </InputOTP>
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" variant="primary" isPending={isJoining}>
+                {t("join.submitButton")}
+              </Button>
+            </div>
+          </form>
+        </SettingsCard>
       </div>
     </div>
   );

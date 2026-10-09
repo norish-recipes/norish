@@ -25,7 +25,6 @@ function isSameItem(a: PantryIngredientDto, b: PantryIngredientDto): boolean {
     a.userId === b.userId &&
     a.ingredientId === b.ingredientId &&
     a.name === b.name &&
-    a.normalizedName === b.normalizedName &&
     a.version === b.version
   );
 }

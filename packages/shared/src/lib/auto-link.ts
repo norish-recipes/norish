@@ -1,7 +1,7 @@
 import type { IFuseOptions } from "fuse.js";
 import Fuse from "fuse.js";
 
-import { normalizeGroceryName } from "./normalized-name";
+import { foldName } from "./fold-name";
 
 /** What a shopper has to tell two products apart by: the name, the price, the size. */
 export interface DistinguishableProduct {
@@ -13,10 +13,10 @@ export interface DistinguishableProduct {
 
 function sameness(product: DistinguishableProduct): string {
   return [
-    normalizeGroceryName(product.name),
+    foldName(product.name),
     product.price ?? "",
     product.currency ?? "",
-    normalizeGroceryName(product.size),
+    foldName(product.size),
   ].join("|");
 }
 
@@ -121,13 +121,13 @@ export function chooseUnmistakable<T extends DistinguishableProduct>(
   products: T[],
   groceryName: string
 ): T | null {
-  const wanted = normalizeGroceryName(groceryName);
+  const wanted = foldName(groceryName);
 
   if (!wanted || products.length === 0) return null;
 
   // One product listed twice is one product; see `distinctProducts`.
   const distinct = distinctProducts(products);
-  const equal = distinct.find((product) => normalizeGroceryName(product.name) === wanted);
+  const equal = distinct.find((product) => foldName(product.name) === wanted);
 
   if (equal) return equal;
 
@@ -138,7 +138,7 @@ export function chooseUnmistakable<T extends DistinguishableProduct>(
   let nearest: { product: T; name: string; apart: number }[] = [];
 
   for (const product of distinct) {
-    const name = normalizeGroceryName(product.name);
+    const name = foldName(product.name);
 
     if (Math.abs(name.length - wanted.length) > LENGTH_SLACK) continue;
     const apart = slipsApart(wanted, name);

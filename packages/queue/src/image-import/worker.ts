@@ -9,14 +9,10 @@
 import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
-import {
-  addRecipeImages,
-  createRecipeWithRefs,
-  dashboardRecipe,
-  updateRecipeDishColor,
-} from "@norish/db";
+import { addRecipeImages, dashboardRecipe, updateRecipeDishColor } from "@norish/db";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
@@ -58,7 +54,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   // Save the recipe
   await reportStep(job, "saving");
-  const created = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
+  const created = await createResolvedRecipe(recipeId, userId, parsedRecipe, { userId });
   const createdId = created?.recipeId;
 
   if (!createdId) {

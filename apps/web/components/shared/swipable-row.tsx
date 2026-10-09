@@ -39,11 +39,36 @@ function calculateButtonSize(rowHeight?: number): number {
 }
 
 // Calculate total width needed for action buttons
-function calculateActionsWidth(actionCount: number, buttonSize: number): number {
+function calculateActionsWidth(actionCount: number, buttonSize: number, stacked: boolean): number {
   // Add small buffer to ensure buttons are fully visible
   const buffer = 4;
+  const across = stacked ? 1 : actionCount;
 
-  return actionCount * buttonSize + (actionCount - 1) * BUTTON_GAP + CONTAINER_PADDING * 2 + buffer;
+  return across * buttonSize + (across - 1) * BUTTON_GAP + CONTAINER_PADDING * 2 + buffer;
+}
+
+/**
+ * How the actions fit a row of this size. A row taller than it is wide (a
+ * grid card) stacks them down its right edge, and a button is never wider
+ * than a quarter of the row: three abreast need 200px, more than a phone's
+ * two-column card has.
+ */
+export function fitActions(
+  actionCount: number,
+  width: number,
+  height: number,
+  rowHeight?: number
+): { buttonSize: number; actionsWidth: number; stacked: boolean } {
+  const stacked = height > width;
+  const buttonSize = Math.round(
+    Math.max(MIN_BUTTON_SIZE, Math.min(calculateButtonSize(rowHeight), width / 4))
+  );
+
+  return {
+    buttonSize,
+    actionsWidth: calculateActionsWidth(actionCount, buttonSize, stacked),
+    stacked,
+  };
 }
 
 // Color mapping for semantic colors to theme
@@ -112,6 +137,21 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
     const buttonSize = useRef(calculateButtonSize(rowHeight));
     const dragControls = useDragControls();
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
+    const [stacked, setStacked] = useState(false);
+
+    // Size the actions to the row as it is now: on mount, and again before opening.
+    const fitToRow = useCallback(() => {
+      const rect = swipeItemRef.current?.getBoundingClientRect();
+
+      if (!rect?.width) return;
+
+      const fit = fitActions(actions.length, rect.width, rect.height, rowHeight);
+
+      swipeItemWidth.current = rect.width;
+      buttonSize.current = fit.buttonSize;
+      actionsWidthPx.current = fit.actionsWidth;
+      setStacked(fit.stacked);
+    }, [actions.length, rowHeight]);
 
     // Row translate
     const swipeAmount = useMotionValue(0);
@@ -170,8 +210,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
       () => ({
         openRow: () => {
           // Recalculate in case it wasn't ready
-          buttonSize.current = calculateButtonSize(rowHeight);
-          actionsWidthPx.current = calculateActionsWidth(actions.length, buttonSize.current);
+          fitToRow();
           // Faster duration for fewer actions (shorter distance)
           // 1 action: 0.15s, 2 actions: 0.175s, 3 actions: 0.2s
           const duration = 0.125 + actions.length * 0.025;
@@ -195,7 +234,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
           }
         },
       }),
-      [isOpen, actions, rowHeight, swipeAmount, commitDelete]
+      [isOpen, actions, swipeAmount, commitDelete, fitToRow]
     );
 
     // Open flag + callback
@@ -214,19 +253,12 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
 
       if (!el) return;
 
-      const measure = () => {
-        const w = el.getBoundingClientRect().width;
+      fitToRow();
 
-        if (w) {
-          swipeItemWidth.current = w;
-          buttonSize.current = calculateButtonSize(rowHeight);
-          actionsWidthPx.current = calculateActionsWidth(actions.length, buttonSize.current);
-          setDragConstraints((prev) => (prev.left === -w ? prev : { left: -w, right: 0 }));
-        }
-      };
+      const w = swipeItemWidth.current;
 
-      measure();
-    }, [actions.length, rowHeight]);
+      if (w) setDragConstraints((prev) => (prev.left === -w ? prev : { left: -w, right: 0 }));
+    }, [fitToRow]);
 
     // Close on outside click / any scroll
     useEffect(() => {
@@ -266,8 +298,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
           setFocusedActionIndex(-1);
         } else {
           // Recalculate before opening
-          buttonSize.current = calculateButtonSize(rowHeight);
-          actionsWidthPx.current = calculateActionsWidth(actions.length, buttonSize.current);
+          fitToRow();
           animate(swipeAmount, -actionsWidthPx.current, { duration: 0.3, ease: "easeOut" });
           setFocusedActionIndex(0); // Focus first action
         }
@@ -411,6 +442,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
             commitDelete={commitDelete}
             focusedIndex={focusedActionIndex}
             isOpen={isOpen}
+            stacked={stacked}
             swipeAmount={swipeAmount}
             swipeProgress={swipeProgress}
           />
@@ -460,6 +492,7 @@ const ActionsGroup = ({
   focusedIndex,
   isOpen,
   buttonSize,
+  stacked,
 }: {
   swipeAmount: MotionValue<number>;
   actions: SwipeAction[];
@@ -470,9 +503,14 @@ const ActionsGroup = ({
   focusedIndex: number;
   isOpen: boolean;
   buttonSize: number;
+  stacked: boolean;
 }) => (
   <motion.div
-    className="flex h-full items-center justify-end gap-2 pr-3"
+    className={
+      stacked
+        ? "flex h-full flex-col items-center justify-center gap-2"
+        : "flex h-full items-center justify-end gap-2 pr-3"
+    }
     style={{
       position: "absolute",
       height: "100%",

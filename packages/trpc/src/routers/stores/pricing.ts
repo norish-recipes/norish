@@ -1,9 +1,10 @@
 /**
  * Pricing a shopping list. A Grocery is priced through the Store it sits
- * under: `(store, normalized name)` resolves to a Product Link, and the link
- * to a Store Product with a Shelf Price. A name the Store already knows costs
- * nothing — no shop is visited — and a name it does not goes to the always-on
- * lookup queue, so adding a grocery never waits on a supermarket.
+ * under: `(store, Ingredient)` resolves to a Product Link, and the link to a
+ * Store Product with a Shelf Price (ADR-0037). An Ingredient the Store already
+ * knows costs nothing — no shop is visited — and one it does not goes to the
+ * always-on lookup queue under the grocery's own name, so adding a grocery
+ * never waits on a supermarket.
  */
 import type { GroceryDto, ResolvedProductLink } from "@norish/shared/contracts";
 import { listGroceriesByUsers } from "@norish/db/repositories/groceries";
@@ -22,8 +23,8 @@ import {
 } from "@norish/queue/store-lookup/producer";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
-import { normalizeGroceryName, productLinkKey } from "@norish/shared/lib/normalized-name";
 import { isPendingLink, pendingLink } from "@norish/shared/lib/product-link";
+import { productLinkKey } from "@norish/shared/lib/store-link-key";
 
 /**
  * How many stale prices one page view is allowed to send to the shops. A list
@@ -31,27 +32,33 @@ import { isPendingLink, pendingLink } from "@norish/shared/lib/product-link";
  */
 const MAX_REFRESHED_PER_VIEW = 10;
 
-type PriceableGrocery = Pick<GroceryDto, "name" | "storeId">;
+type PriceableGrocery = Pick<GroceryDto, "name" | "storeId" | "ingredientId">;
+
+/** What a Store is asked about: an Ingredient, under the name the list gives it. */
+interface PriceablePair {
+  storeId: string;
+  ingredientId: string;
+  name: string;
+}
 
 interface PricingContext {
   userIds: string[];
   householdKey: string;
 }
 
-function priceablePairs(groceries: PriceableGrocery[]): { storeId: string; name: string }[] {
+function priceablePairs(groceries: PriceableGrocery[]): PriceablePair[] {
   const seen = new Set<string>();
 
   return groceries.flatMap((grocery) => {
     const name = grocery.name?.trim();
-    const normalized = normalizeGroceryName(name);
 
-    if (!grocery.storeId || !name || !normalized) return [];
-    const key = productLinkKey(grocery.storeId, normalized);
+    if (!grocery.storeId || !name || !grocery.ingredientId) return [];
+    const key = productLinkKey(grocery.storeId, grocery.ingredientId);
 
     if (seen.has(key)) return [];
     seen.add(key);
 
-    return [{ storeId: grocery.storeId, name }];
+    return [{ storeId: grocery.storeId, ingredientId: grocery.ingredientId, name }];
   });
 }
 
@@ -63,22 +70,23 @@ function priceablePairs(groceries: PriceableGrocery[]): { storeId: string; name:
  */
 async function askStore(
   ctx: PricingContext,
-  pair: { storeId: string; name: string }
+  pair: PriceablePair
 ): Promise<ResolvedProductLink | null> {
   const askedBefore = new Date(Date.now() - MATCH_RETRY_WINDOW_MS);
-  const asked = await markLinkPending(pair.storeId, pair.name, askedBefore);
+  const asked = await markLinkPending(pair.storeId, pair.ingredientId, askedBefore);
 
   if (!asked) return null;
   await addStoreMatchJob(getQueues().storeLookup, {
     kind: "match",
     storeId: pair.storeId,
+    ingredientId: pair.ingredientId,
     name: pair.name,
     householdKey: ctx.householdKey,
   }).catch((err: unknown) => {
     log.error({ err, storeId: pair.storeId }, "Failed to enqueue a store lookup");
   });
 
-  return pendingLink(pair.storeId, pair.name);
+  return pendingLink(pair.storeId, pair.ingredientId);
 }
 
 /**
@@ -110,11 +118,11 @@ async function resolveAndQueue(
     stores.filter((store) => store.searchAddress).map((store) => store.id)
   );
   const known = new Map(
-    links.map((link) => [productLinkKey(link.storeId, link.normalizedName), link] as const)
+    links.map((link) => [productLinkKey(link.storeId, link.ingredientId), link] as const)
   );
   const unanswered = ownPairs.filter((pair) => {
     if (!searchable.has(pair.storeId)) return false;
-    const link = known.get(productLinkKey(pair.storeId, normalizeGroceryName(pair.name)));
+    const link = known.get(productLinkKey(pair.storeId, pair.ingredientId));
 
     return !link || isPendingLink(link);
   });
@@ -123,7 +131,7 @@ async function resolveAndQueue(
   // and one every screen in the household should see being asked.
   const fresh = asked.filter(
     (link): link is ResolvedProductLink =>
-      link !== null && !known.has(productLinkKey(link.storeId, link.normalizedName))
+      link !== null && !known.has(productLinkKey(link.storeId, link.ingredientId))
   );
 
   return { known: links, fresh };

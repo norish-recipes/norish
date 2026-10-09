@@ -7,7 +7,8 @@
     "user": "Gebruiker",
     "household": "Huishouden",
     "caldav": "CalDAV",
-    "admin": "Admin"
+    "admin": "Admin",
+    "ingredients": "Ingrediënten"
   },
   "user": {
     "profile": {
@@ -21,13 +22,13 @@
     },
     "allergies": {
       "title": "Allergieën",
-      "description": "Voeg je voedselallergieën toe om waarschuwingen te ontvangen bij het plannen van recepten die allergenen bevatten. Wordt gebruikt om je te waarschuwen wanneer een gepland recept ingrediënten bevat die overeenkomen met je allergieën.",
+      "description": "Voeg je voedselallergieën toe om gewaarschuwd te worden bij het plannen van recepten met allergenen.",
       "placeholder": "Typ allergieën (bijv. gluten, noten, zuivel)...",
       "saveButton": "Allergieën opslaan"
     },
     "apiKeys": {
       "title": "API-sleutels",
-      "description": "API-sleutels bieden toegang tot de Norish API. Gebruik ze voor integraties, snelkoppelingen en automatisering.",
+      "description": "Met API-sleutels bouw je eigen integraties, snelkoppelingen en automatiseringen.",
       "docsLink": "API-documentatie openen",
       "keyNameLabel": "Sleutelnaam (optioneel)",
       "keyNamePlaceholder": "bijv. iOS Snelkoppeling",
@@ -61,7 +62,7 @@
     },
     "archiveImport": {
       "title": "Archief importeren",
-      "description": "Importeer recepten van Norish (.norishrecipes), Mela (.melarecipes), Paprika (.paprikarecipes), of Mealie/Tandoor (.zip) exports"
+      "description": "Importeer recepten die zijn geëxporteerd uit Norish, Mela, Paprika, Mealie of Tandoor."
     },
     "archiveExport": {
       "title": "Archief exporteren",
@@ -70,7 +71,7 @@
     },
     "siteAuthTokens": {
       "title": "Site-authenticatietokens",
-      "description": "Voeg headers of cookies toe die worden meegestuurd bij het importeren van recepten van specifieke sites. Handig voor sites die inloggen vereisen (bijv. Instagram, Facebook).",
+      "description": "Headers of cookies om mee te sturen bij het importeren van sites waarvoor je moet inloggen, zoals Instagram of Facebook.",
       "accountsDescription": "Geef een account een naam als je meerdere logins voor een site hebt. Elke import gebruikt dan één van de accounts van die site, willekeurig gekozen, zodat niet één login alle imports draagt. Een token zonder accountnaam wordt bij elke import voor dat domein meegestuurd.",
       "domain": "Domein",
       "domainPlaceholder": "bijv. instagram.com",
@@ -98,7 +99,8 @@
         "title": "Token verwijderen",
         "message": "Weet je zeker dat je dit authenticatietoken wilt verwijderen? Imports van deze site werken mogelijk niet meer.",
         "confirmButton": "Token verwijderen"
-      }
+      },
+      "accountsHelp": "Over accounts"
     },
     "dangerZone": {
       "title": "Gevaarlijke Zone",
@@ -116,6 +118,11 @@
     "preferences": {
       "title": "Voorkeuren",
       "description": "Pas je ervaring aan.",
+      "deviceKind": {
+        "help": "Hoe voorkeuren worden bewaard",
+        "phone": "„{language}”, „{afterPlanning}” en „{measurements}” gelden per account. De rest per soort apparaat.",
+        "desktop": "„{language}”, „{afterPlanning}” en „{measurements}” gelden per account. De rest per soort apparaat."
+      },
       "language": {
         "title": "Taal",
         "description": "Kies je voorkeurstaal"
@@ -123,7 +130,7 @@
       "applyError": "Instelling kon niet worden toegepast",
       "hidden": {
         "title": "Verborgen onderdelen",
-        "description": "Kies wat je liever niet ziet. Standaard wordt alles getoond en dit verandert alleen jouw eigen weergave.",
+        "description": "Verberg onderdelen die je niet wilt zien",
         "placeholder": "Niets verborgen",
         "options": {
           "provenance": "Herkomst",
@@ -133,12 +140,13 @@
           "favorites": "Favorieten",
           "conversion": "Ingrediëntconversie",
           "timers": "Recepttimers",
-          "cookbooks": "Kookboeken"
+          "cookbooks": "Kookboeken",
+          "ingredientIcons": "Ingrediënticonen"
         }
       },
       "todaySection": {
         "title": "Vandaag-sectie",
-        "description": "Kies hoe de Vandaag-sectie op het dashboard op dit apparaat wordt weergegeven",
+        "description": "Hoe de Vandaag-sectie op het dashboard werkt",
         "options": {
           "always": "Altijd zichtbaar",
           "planned": "Alleen geplande maaltijden",
@@ -147,10 +155,30 @@
       },
       "recipePageColor": {
         "title": "Kleur van receptpagina's",
-        "description": "Geef elke receptpagina een tint uit de eigen foto, of houd op dit apparaat de gewone themakleuren",
+        "description": "Kleur de receptpagina dynamisch of volg de themakleuren",
         "options": {
           "dish": "Uit de foto van het gerecht",
           "theme": "Gewone themakleuren"
+        }
+      },
+      "afterPlanning": {
+        "title": "Na het plannen van een recept",
+        "description": "Wat er gebeurt als je een recept plant",
+        "options": {
+          "nothing": "Niets",
+          "openGroceries": "Boodschappenpaneel openen",
+          "addGroceries": "Ingrediënten aan boodschappen toevoegen"
+        }
+      },
+      "measurements": {
+        "title": "Maateenheden",
+        "description": "Het standaardmaatsysteem voor recepten",
+        "options": {
+          "off": "Niet converteren",
+          "metric": "Metrisch",
+          "us": "US",
+          "metricWithAI": "Metrisch met AI",
+          "usWithAI": "US met AI"
         }
       }
     },
@@ -183,7 +211,6 @@
     }
   },
   "household": {
-    "pageTitle": "Instellingen huishouden",
     "info": {
       "yourRole": "Jouw rol",
       "admin": "Beheerder",
@@ -330,6 +357,267 @@
       "pagination": "Page {current} of {total}"
     }
   },
+  "ingredients": {
+    "title": "Ingrediënten",
+    "description": "De ingrediëntencatalogus waarmee Norish voedingswaarden, ingrediënticonen en vertalingen bepaalt.",
+    "search": "Ingrediënten zoeken",
+    "searchMatch": "Overeenkomst",
+    "searchIn": "Zoek in",
+    "searchMatches": {
+      "contains": "Bevat",
+      "exact": "Exact"
+    },
+    "searchFields": {
+      "name": "Naam",
+      "translations": "Vertalingen",
+      "parent": "Bovenliggend"
+    },
+    "flaggedOnly": "Alleen gemarkeerd",
+    "flagged": "Gemarkeerd",
+    "flagReasons": {
+      "unknown": "Norish wist niet zeker of dit een eigen ingrediënt is.",
+      "ai-off": "AI staat uit, dus niets heeft gecontroleerd of Norish dit al kent.",
+      "unknown-food": "Geen bekend ingrediënt deelt een woord met deze naam, dus AI is niet gevraagd.",
+      "ai-unsure": "AI is gevraagd of dit een bekend ingrediënt is en wist het niet zeker.",
+      "ai-unavailable": "AI antwoordde niet op tijd toen deze naam werd toegevoegd.",
+      "food-gone": "AI koppelde dit aan een ingrediënt dat werd samengevoegd voordat de naam erbij kon.",
+      "upgrade": "Er kon geen bekend ingrediënt aan worden gekoppeld.",
+      "seed-ambiguous": "De catalogus kent meerdere ingrediënten die dit kunnen zijn."
+    },
+    "empty": "Geen ingrediënten gevonden",
+    "emptyFlagged": "Niets is gemarkeerd",
+    "rename": "Hernoemen",
+    "delete": "Verwijderen",
+    "deleteTitle": "{name} verwijderen?",
+    "deleteConfirm": "De vertalingen gaan mee, en wat je huishouden Norish erover leerde. Een ingrediënt dat een recept, boodschap of voorraaditem nog gebruikt kan niet weg; voeg het dan samen.",
+    "markDistinct": "Markeer als apart",
+    "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
+    "askAI": "Vraag AI",
+    "askAIAll": "Vraag AI over gemarkeerde ingrediënten",
+    "askAIRound": {
+      "intro": "AI leest elke naam en vergelijkt die met de voedingsmiddelen die Norish kent. Er verandert niets tot je een voorstel bevestigt.",
+      "scopeLabel": "Welke ingrediënten",
+      "scopes": {
+        "unsuggested": "Alleen die zonder voorstel",
+        "flagged": "Alle gemarkeerde ingrediënten"
+      },
+      "scopeSize": "{count, plural, =0 {Geen ingrediënten} one {# ingrediënt · ongeveer {tokens} tokens} other {# ingrediënten · ongeveer {tokens} tokens}}",
+      "replaces": "Vervangt de voorstellen die al klaarstaan.",
+      "modelTokens": "ongeveer {tokens} tokens",
+      "basisMeasured": "Op basis van wat de vorige ronde gebruikte.",
+      "basisPrompt": "Geschat op basis van de prompt, dus in werkelijkheid waarschijnlijk meer."
+    },
+    "roundProgress": "AI wordt gevraagd · {done, number} van {total, number}",
+    "roundSection": {
+      "title": "AI wordt gevraagd",
+      "progress": "{done, number} van {total, number}",
+      "waiting": "{count, plural, one {# ingrediënt wacht} other {# ingrediënten wachten}}"
+    },
+    "reviewing": "AI wordt gevraagd…",
+    "aiOutcomes": {
+      "parent": "AI stelt voor {name} te plaatsen als een soort {of}.",
+      "distinct": "AI stelt voor dat {name} een eigen ingrediënt is.",
+      "unsure": "AI weet nog steeds niet zeker wat {name} is.",
+      "notFlagged": "{name} is niet gemarkeerd.",
+      "skippedNotFlagged": "{name} was niet meer gemarkeerd.",
+      "skippedForbidden": "{name} mag je niet wijzigen.",
+      "skippedNotFound": "{name} was al weg toen AI eraan toekwam.",
+      "failed": "Vragen naar {name} is mislukt.",
+      "merge": "AI stelt voor {name} samen te voegen met {into}."
+    },
+    "aiTrace": {
+      "readAs": "AI las het als “{name}”.",
+      "compared": "Vergeleken met: {names}.",
+      "comparedNothing": "Er was geen bekend ingrediënt om het mee te vergelijken.",
+      "fromWords": "Op basis van de naam."
+    },
+    "addAlias": "Vertaling toevoegen",
+    "removeAlias": "{alias} verwijderen",
+    "mergeInto": "Samenvoegen met…",
+    "merge": "Samenvoegen",
+    "mergedToast": "{name} is nu een vertaling van {into}. Om dit ongedaan te maken, open {into} en verplaats {name} er weer uit.",
+    "mergeTitle": "{name} verdwijnt en wordt een vertaling van het ingrediënt dat je kiest.",
+    "moveTo": "Verplaatsen naar",
+    "move": "Verplaatsen",
+    "moveAlias": "{alias} verplaatsen",
+    "moveTitle": "Verplaats {alias} naar een ander ingrediënt.",
+    "newIngredient": "Maak er een basisingrediënt van",
+    "pickIngredient": "Zoek een ingrediënt",
+    "pickerHint": "Typ om de catalogus te doorzoeken",
+    "pickerSearching": "Zoeken…",
+    "pickerEmpty": "Geen ingrediënt gevonden",
+    "setParent": "Bovenliggend kiezen…",
+    "parentTitle": "Kies het ingrediënt waarvan {name} een soort is.",
+    "clearParent": "Bovenliggend verwijderen",
+    "nameSection": "Naam",
+    "parentSection": "Hoofdingrediënt",
+    "spellingsSection": "Vertalingen",
+    "shownAs": "Voor jou getoond als {name}",
+    "changeParent": "Ander hoofdingrediënt…",
+    "spellingsCount": "{count, plural, one {# vertaling} other {# vertalingen}}",
+    "dataSources": {
+      "title": "Gegevensbronnen",
+      "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",
+      "nutritionNotice": "De voedingswaarde per 100 g komt uit <ciqual>CIQUAL 2025</ciqual> en CALNUT (ANSES), <usda>USDA FoodData Central</usda> en <cofid>CoFID</cofid>, gekoppeld via de codes die Open Food Facts elk ingrediënt geeft. De correcties van een huishouden zijn diens eigen waarden, niet die van de datasets.",
+      "download": "Ingrediëntencatalogus downloaden (JSON)"
+    },
+    "nutrition": {
+      "section": "Voedingswaarde",
+      "per100g": "Per 100 g",
+      "calories": "Calorieën",
+      "fat": "Vet",
+      "carbs": "Koolhydraten",
+      "protein": "Eiwit",
+      "kcal": "{value} kcal",
+      "grams": "{value} g",
+      "spoonGrams": {
+        "teaspoon": "{value} g per theelepel",
+        "tablespoon": "{value} g per eetlepel",
+        "cup": "{value} g per kop",
+        "hundredMl": "{value} g per 100 ml"
+      },
+      "none": "Norish heeft nog geen voedingswaarde voor dit ingrediënt. Corrigeer het om er een te geven.",
+      "noNumbers": "Nog geen waarden per 100 g.",
+      "borrowed": "Van {name}: {source}",
+      "source": {
+        "code": "{food} · {dataset}",
+        "fix": "{food} · {dataset}, gekozen door Norish",
+        "name": "{food} · {dataset}, gevonden op naam",
+        "householdFood": "{food} · {dataset}, gekozen door je huishouden",
+        "household": "De eigen waarden van je huishouden",
+        "taxonomy": "Open Food Facts"
+      },
+      "correct": "Corrigeren",
+      "correctTitle": "{name} corrigeren",
+      "correctIntro": "Correcties gelden alleen voor je huishouden.",
+      "facts": {
+        "numbers": "Per 100 g",
+        "pieceWeight": "Eén stuk"
+      },
+      "useSources": "Geen correctie",
+      "pickFood": "Een voedingsmiddel uit de datasets",
+      "typeLabel": "Van een etiket",
+      "label": {
+        "calories": "Calorieën (kcal)",
+        "fat": "Vet (g)",
+        "carbs": "Koolhydraten (g)",
+        "protein": "Eiwit (g)",
+        "pieceGrams": "Eén stuk weegt (g)",
+        "spoonGrams": {
+          "teaspoon": "Een theelepel weegt (g)",
+          "tablespoon": "Een eetlepel weegt (g)",
+          "cup": "Een kop weegt (g)",
+          "hundredMl": "100 ml weegt (g)"
+        }
+      },
+      "searchFood": "Zoek in de datasets (Engels), zoals milk semi-skimmed",
+      "foodHint": "Typ een paar woorden van de naam",
+      "searchingFoods": "Zoeken…",
+      "noFoods": "Geen voedingsmiddel in de datasets heeft al die woorden.",
+      "remove": "Onze correctie verwijderen",
+      "saved": "Correctie opgeslagen",
+      "removed": "Terug naar de waarden uit de datasets",
+      "errors": {
+        "title": "Correctie niet opgeslagen",
+        "unknown-food": "Dat voedingsmiddel staat niet meer in Norish.",
+        "empty": "Corrigeer er minstens één van de drie.",
+        "not-found": "Dit ingrediënt bestaat niet meer.",
+        "unknown": "Er ging iets mis. Probeer het opnieuw."
+      },
+      "onePieceLabel": "Eén stuk",
+      "spoon": {
+        "teaspoon": "Een theelepel",
+        "tablespoon": "Een eetlepel",
+        "cup": "Een kop",
+        "hundredMl": "100 ml"
+      },
+      "spoonAsk": "Gewicht invullen",
+      "summary": "{value} kcal per 100 g",
+      "summaryNone": "Nog geen voedingswaarde",
+      "current": "Nu {value} · {source}",
+      "currentNone": "Norish heeft hier nog niets voor"
+    },
+    "errors": {
+      "title": "Kon het ingrediënt niet wijzigen",
+      "forbidden": "Je mag dit ingrediënt niet bewerken",
+      "not-found": "Dit ingrediënt bestaat niet meer",
+      "name-taken": "Een ander ingrediënt heeft deze naam al",
+      "spelling-taken": "Deze vertaling hoort al bij een ander ingrediënt",
+      "last-alias": "Een ingrediënt houdt minstens één vertaling",
+      "alias-in-use": "Recepten of boodschappen gebruiken deze vertaling nog",
+      "ingredient-in-use": "Recepten, boodschappen of de voorraad gebruiken dit ingrediënt nog",
+      "same-ingredient": "Een ingrediënt kan niet met zichzelf worden samengevoegd",
+      "cycle": "Een ingrediënt kan geen soort van zichzelf zijn",
+      "empty": "Voer een naam in",
+      "unknown": "Er ging iets mis. Probeer het opnieuw."
+    },
+    "keepAlias": "{alias} behouden",
+    "reportOutcomes": {
+      "parent": "Onder een ouder geplaatst",
+      "distinct": "Eigen ingrediënt",
+      "unsure": "Niet zeker",
+      "skipped": "Overgeslagen",
+      "failed": "Mislukt",
+      "merge": "Samenvoegen"
+    },
+    "expandKinds": "Toon de soorten {name}",
+    "collapseKinds": "Verberg de soorten {name}",
+    "layoutSection": "Weergave",
+    "asTree": "Hiërarchische weergave",
+    "showOnly": "Toon alleen",
+    "standaloneOnly": "Zonder ouder of soorten",
+    "findParent": "Ouder zoeken met AI",
+    "findParentsAll": "Ouders zoeken met AI",
+    "suggestion": {
+      "merge": "{name} samenvoegen met {into}",
+      "parent": "{name} plaatsen onder {of}",
+      "distinct": "{name} houden als eigen ingrediënt",
+      "filedFromName": "{name} geplaatst onder {of}"
+    },
+    "suggestionsTitle": "Voorstellen",
+    "suggestionsEmpty": "Er wacht niets op je.",
+    "suggestionsNone": "Geen voorstel",
+    "suggestionsOpen": "{count, plural, =0 {Voorstellen} one {# voorstel} other {# voorstellen}}",
+    "suggestionsFailed": "{count, plural, one {# voorstel kon} other {# voorstellen konden}} niet worden toegepast: {reason}",
+    "confirmSuggestion": "Bevestigen",
+    "dismissSuggestion": "Negeren",
+    "confirmAll": "Alles bevestigen ({count})",
+    "dismissAll": "Alles negeren",
+    "suggestedByAI": "Voorgesteld door AI",
+    "suggestedFromName": "Op basis van de naam",
+    "proposal": {
+      "merge": "Samenvoegen met {into}",
+      "parent": "Plaatsen onder {of}",
+      "distinct": "Eigen ingrediënt"
+    },
+    "skippedReasons": {
+      "notFlagged": "Niet meer gemarkeerd",
+      "forbidden": "Niet van jou om te bewerken",
+      "notFound": "Bestaat niet meer"
+    },
+    "icon": {
+      "change": "Icoon wijzigen",
+      "upload": "Afbeelding uploaden",
+      "remove": "Icoon verwijderen",
+      "failed": "Van deze afbeelding kon geen icoon worden gemaakt.",
+      "generate": "Genereren met AI",
+      "generateFailed": "Het icoon kon niet worden gegenereerd."
+    },
+    "drawIcons": {
+      "open": "Iconen tekenen",
+      "title": "Iconen tekenen",
+      "intro": "De afbeeldingsprovider tekent voor elk voedingsmiddel een icoon, dat meteen het eigen icoon wordt. Een voedingsmiddel kun je in zijn paneel een ander icoon geven.",
+      "scopeLabel": "Welke voedingsmiddelen",
+      "scopes": {
+        "bare": "Alleen voedingsmiddelen zonder enig icoon",
+        "unowned": "Elk voedingsmiddel zonder eigen icoon"
+      },
+      "scopeSize": "{count, plural, =0 {Geen iconen} one {# icoon} other {# iconen}}",
+      "start": "Iconen tekenen",
+      "progress": "Iconen tekenen · {done, number} van {total, number}",
+      "drawing": "Icoon tekenen…"
+    }
+  },
   "admin": {
     "shareLinks": {
       "title": "Moderatie van receptdeling",
@@ -411,8 +699,10 @@
       "description": "Wanneer uitgeschakeld, kunnen alleen bestaande gebruikers inloggen"
     },
     "permissions": {
-      "title": "Receptmachtigingen",
-      "description": "Beheer wie recepten kan bekijken, bewerken en verwijderen. Serverbeheerders hebben altijd volledige toegang.",
+      "title": "Rechten",
+      "description": "Wie mag zien en wijzigen wat anderen hebben gemaakt. Serverbeheerders hebben altijd volledige toegang.",
+      "recipes": "Recepten",
+      "ingredients": "Ingrediënten",
       "viewRecipes": "Recepten bekijken",
       "viewDescription": "Wie recepten kan zien in het dashboard",
       "editRecipes": "Recepten bewerken",
@@ -427,17 +717,30 @@
         "owner": "Alleen eigenaar",
         "ownerDescription": "Alleen de eigenaar van het recept"
       },
-      "note": "Opmerking: Boodschappen en agenda-items volgen automatisch de huishoudregels, huishoudleden kunnen altijd items bewerken/verwijderen die behoren tot iemand in hetzelfde huishouden."
+      "note": "Boodschappen en agenda-items volgen altijd de huishoudregels: huishoudleden kunnen elkaars items bewerken of verwijderen."
+    },
+    "ingredientPermissions": {
+      "title": "Ingrediëntrechten",
+      "description": "Wie ingrediënten mag hernoemen, als apart mag markeren of hun vertalingen mag verwijderen. Iedereen mag een vertaling toevoegen.",
+      "editIngredients": "Ingrediënten bewerken",
+      "editDescription": "Wie een ingrediënt mag wijzigen dat iemand anders heeft toegevoegd",
+      "levels": {
+        "everyone": "Iedereen",
+        "everyoneDescription": "Alle ingelogde gebruikers",
+        "household": "Huishouden",
+        "householdDescription": "Wie het heeft toegevoegd en de leden van diens huishouden",
+        "owner": "Alleen eigenaar",
+        "ownerDescription": "Alleen wie het heeft toegevoegd"
+      },
+      "note": "Ingrediënten uit de ingebouwde catalogus kunnen alleen door serverbeheerders worden bewerkt."
     },
     "system": {
       "title": "Systeeminstellingen",
       "cleanup": {
-        "title": "Opruimplanner",
         "label": "Opruimmaanden",
         "description": "Verwijder geplande maaltijden ouder dan dit aantal maanden"
       },
       "server": {
-        "title": "Server beheer",
         "restartLabel": "Server herstarten",
         "restartDescription": "Pas configuratiewijzigingen toe die een herstart vereisen",
         "restartButton": "Server herstarten"
@@ -455,7 +758,7 @@
     "authProviders": {
       "title": "Authenticatieproviders",
       "requiresRestart": "Herstart vereist",
-      "description": "Configureer authenticatiemethoden. Wijzigingen vereisen een herstart van de server.",
+      "description": "Stel in hoe mensen inloggen.",
       "passwordAuth": {
         "title": "E-mail & Wachtwoord",
         "description": "Sta gebruikers toe zich aan te melden met e-mail en wachtwoord"
@@ -476,7 +779,7 @@
         },
         "claimMapping": {
           "title": "Claim-toewijzing",
-          "description": "Wijs automatisch rollen en huishoudens toe op basis van OIDC claims. Gebruikers met de admin-groep krijgen serverbeheerdersrechten. Gebruikers met een huishoudgroep worden automatisch aan dat huishouden toegevoegd.",
+          "description": "Wijs beheerdersrechten en huishoudens toe op basis van de groepsclaims van je provider.",
           "securityWarning": "Let op: Het inschakelen van claim mapping geeft je identity provider controle over adminrechten en huishoudens. Schakel dit alleen in als je je OIDC provider volledig vertrouwt en correct hebt geconfigureerd.",
           "scopes": "Extra Scopes",
           "scopesPlaceholder": "groups, roles",
@@ -533,10 +836,15 @@
         "subtitle": "Definities van meeteenheden voor parsing",
         "description": "Definieer meeteenheden met hun korte vorm, meervoud en alternatieve schrijfwijzen. Wordt gebruikt bij het parseren van ingrediënthoeveelheden."
       },
+      "ingredientWords": {
+        "title": "Ingrediëntwoorden",
+        "subtitle": "Woorden waarmee ingrediëntnamen gelezen worden, per taal",
+        "description": "Woorden die Norish overslaat bij het koppelen van ingrediëntnamen, zoals “gesneden”, “grote” of de “en” in “uien”."
+      },
       "recurrence": {
         "title": "Herhalingspatronen",
         "subtitle": "Natuurlijke taalpatronen voor terugkerende items",
-        "description": "Definieer locale-specifieke patronen voor het parsen van herhalingsregels uit natuurlijke taal (bijv. 'elke week', 'om de dag')."
+        "description": "Woorden per taal waardoor een boodschap terugkeert, zoals “elke week” of “om de dag”."
       },
       "timerKeywords": {
         "title": "Timer trefwoorden",
@@ -585,7 +893,7 @@
       "bulkEnrichment": {
         "title": "Bulkverrijking",
         "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
-        "description": "Zet voor alle recepten op deze server elke verrijkingssoort in de wachtrij waarvan de automatische schakelaar aanstaat. Standaard worden alleen ontbrekende gegevens aangevuld; in de bevestiging kun je kiezen om bestaande gegevens te overschrijven.",
+        "description": "Zet alle ingeschakelde verrijkingen in de wachtrij",
         "button": "Alle recepten verrijken",
         "confirmTitle": "Verrijking op alle recepten uitvoeren?",
         "confirmMessage": "Dit zet AI-werk in de wachtrij voor elk recept op deze server. Elke verrijkingssoort waarvan de automatische schakelaar aanstaat draait waar gegevens ontbreken.",
@@ -637,7 +945,7 @@
       "testConnection": "Test verbinding",
       "vision": "vision",
       "automaticEnrichment": "Automatische receptverrijking",
-      "automaticEnrichmentDescription": "Kies welke AI-verrijking automatisch draait voor nieuwe recepten. Leden kunnen elke verrijking handmatig blijven starten zolang AI aanstaat.",
+      "automaticEnrichmentDescription": "Welke AI-verrijkingen op nieuwe recepten draaien. Leden kunnen elke verrijking nog steeds handmatig starten.",
       "automaticEnrichmentPlaceholder": "Niets draait automatisch",
       "automaticEnrichmentKinds": {
         "autoTagging": "Automatisch taggen",
@@ -715,7 +1023,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Laat leeg voor lokale servers"
     },
     "imageGenerationConfig": {
-      "description": "Afbeeldingen genereren gebruikt een eigen provider, omdat de meeste AI-providers niet kunnen tekenen. Afbeeldingen worden met deze provider gemaakt; de AI-provider hierboven doet al het andere.",
+      "description": "Afbeeldingen hebben een eigen provider nodig, omdat de meeste AI-providers niet kunnen tekenen.",
       "provider": "Afbeeldingsprovider",
       "providers": {
         "disabled": "Uitgeschakeld",
@@ -759,6 +1067,8 @@
         "recipeProvenanceDescription": "Leg het land en de Keukens vast voordat de notitie wordt geschreven",
         "groceryLinking": "Boodschappen koppelen",
         "groceryLinkingDescription": "Rangschik de aangeboden producten van een winkel en koppel er een waar het zeker van is",
+        "ingredientResolution": "Ingrediëntherkenning",
+        "ingredientResolutionDescription": "Beslis of een nieuwe ingrediëntnaam een voedingsmiddel is dat Norish al kent",
         "validateEnrichments": "Verrijkingen valideren",
         "validateEnrichmentsDescription": "Controleer de eigen claims van elke verrijkingsrun voordat ze worden opgeslagen"
       },
@@ -794,12 +1104,18 @@
       "ingredientLinking": "Prompt voor ingrediëntkoppeling",
       "ingredientLinkingDescription": "Gebruikt bij het koppelen van elke stap aan de ingrediëntregels die hij gebruikt",
       "ingredientLinkingPlaceholder": "Prompt voor het koppelen van ingrediënten aan stappen...",
+      "ingredientResolution": "Prompt voor ingrediëntherkenning",
+      "ingredientResolutionDescription": "Gebruikt om te beslissen of een nieuwe ingrediëntnaam een voedingsmiddel is dat Norish al kent",
+      "ingredientResolutionPlaceholder": "Prompt voor het herkennen van ingrediëntnamen...",
       "imageGenerationBrief": "Afbeeldingsomschrijving Prompt",
       "imageGenerationBriefDescription": "Gebruikt om een recept om te zetten in een korte visuele omschrijving voordat de afbeelding wordt gegenereerd. Het recept wordt na de prompt toegevoegd.",
       "imageGenerationBriefPlaceholder": "Prompt voor de visuele omschrijving...",
       "imageGenerationStyle": "Afbeeldingsstijl Prompt",
       "imageGenerationStyleDescription": "Wordt naar het afbeeldingsmodel gestuurd, met de visuele omschrijving erachter. Bepaalt de stijl die elke gegenereerde afbeelding deelt.",
-      "imageGenerationStylePlaceholder": "Prompt voor de afbeeldingsstijl..."
+      "imageGenerationStylePlaceholder": "Prompt voor de afbeeldingsstijl...",
+      "ingredientIconStyle": "Ingrediënticoonstijl Prompt",
+      "ingredientIconStyleDescription": "Wordt naar het afbeeldingsmodel gestuurd als een ingrediënt een icoon krijgt, met de naam van het voedingsmiddel en waar het een soort van is erachter. Bepaalt de stijl die elk getekend icoon deelt.",
+      "ingredientIconStylePlaceholder": "Prompt voor de stijl van ingrediënticonen..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {
@@ -850,7 +1166,9 @@
         "running": "Run task",
         "searching": "Search the shop",
         "reading-product": "Read the product page",
-        "saving-link": "Save the link"
+        "saving-link": "Save the link",
+        "asking-ai": "Ask AI about the food",
+        "drawing-icon": "Het icoon van het voedingsmiddel tekenen"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -865,7 +1183,9 @@
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks",
         "image-generation": "Afbeeldingen genereren",
-        "store-lookup": "Winkelopzoeking"
+        "store-lookup": "Winkelopzoeking",
+        "ingredient-review": "AI vragen over ingrediënten",
+        "ingredient-icons": "Ingrediënticonen tekenen"
       },
       "summary": {
         "failed": "{count} failed"
@@ -899,9 +1219,11 @@
           "duration": "Duration",
           "attempts": "Attempts",
           "models": "Modellen",
+          "tokens": "Tokens",
           "runsAt": "Runs at",
           "nextRun": "Next run"
         },
+        "modelTokens": "{tokens} tokens",
         "attempt": "Attempt {number}",
         "stackTrace": "Stack trace"
       },
@@ -918,7 +1240,7 @@
         "keepCompleted": "Keep completed jobs",
         "keepFailed": "Keep failed jobs",
         "maxAgeDays": "Max age (days)",
-        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+        "description": "Hoeveel afgeronde jobs per wachtrij bewaard blijven."
       },
       "pagination": "Page {current} of {total}"
     },

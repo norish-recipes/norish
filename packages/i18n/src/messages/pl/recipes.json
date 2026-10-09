@@ -154,7 +154,10 @@
     "ariaLabel": "Przelicz system miar",
     "toMetric": "Przelicz na metryczny",
     "toUS": "Przelicz na amerykański",
-    "converting": "Przeliczanie…"
+    "toMetricWithAI": "Przelicz na metryczny z AI",
+    "toUSWithAI": "Przelicz na amerykański z AI",
+    "converting": "Przeliczanie…",
+    "original": "Oryginał"
   },
   "deleteModal": {
     "title": "Usuń przepis",
@@ -255,7 +258,20 @@
     "protein": "Białko",
     "showingPortions": "Wartości dla {count} {count, plural, one {porcji} other {porcji}}",
     "noInfo": "Brak informacji o wartościach odżywczych",
-    "estimateWithAI": "Oszacuj z AI"
+    "estimateWithAI": "Oszacuj z AI",
+    "estimated": "Szacunkowo",
+    "leftOut": "{count, plural, one {# niewliczony wiersz} few {# niewliczone wiersze} many {# niewliczonych wierszy} other {# niewliczonego wiersza}}",
+    "estimatedByAI": "oszacowane przez AI",
+    "reasons": {
+      "seasoning": "przyprawa",
+      "noAmount": "brak ilości",
+      "noSize": "brak wagi dla tej miary",
+      "noNumbers": "jeszcze brak wartości odżywczych",
+      "noSpoonWeight": "jeszcze brak wagi łyżki",
+      "noPieceWeight": "jeszcze brak wagi sztuki"
+    },
+    "workedOutFrom": "Obliczone ze składników, na podstawie {sources}.",
+    "householdNumbers": "wartości twojego gospodarstwa"
   },
   "measurementSystem": {
     "label": "System miar",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Przepis zaimportowany",
-    "converted": "Miary przeliczone",
-    "convertedDescription": "Przepis przeliczony na jednostki {system}",
     "failed": "Operacja na przepisie nie powiodła się",
     "failedDescription": "Coś poszło nie tak. Sprawdź konsolę przeglądarki.",
     "batchImported": "Przepisy zaimportowane",
@@ -402,6 +416,12 @@
     "searchRecipes": "Szukaj przepisów",
     "noRecipesToAdd": "Nie znaleziono przepisów.",
     "addCount": "{count, plural, one {Dodaj # przepis} few {Dodaj # przepisy} many {Dodaj # przepisów} other {Dodaj # przepisu}}",
-    "everythingAlreadyIn": "Wszystkie przepisy są już w tej książce kucharskiej."
+    "everythingAlreadyIn": "Wszystkie przepisy są już w tej książce kucharskiej.",
+    "coverLabel": "Okładka",
+    "chooseImage": "Wybierz obraz",
+    "changeImage": "Zmień obraz",
+    "removeImage": "Usuń obraz",
+    "imageUploadFailed": "Nie udało się przesłać obrazu.",
+    "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online."
   }
 }

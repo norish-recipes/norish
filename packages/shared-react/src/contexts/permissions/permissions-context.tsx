@@ -15,6 +15,8 @@ export interface PermissionsContextValue {
   recipePolicy: RecipePermissionPolicy | null;
   /** Whether AI features are enabled */
   isAIEnabled: boolean;
+  /** Whether AI is on and an image provider can draw: Generate and Draw icons show only then */
+  canDrawImages: boolean;
   /** Household member user IDs (null if not in a household) */
   householdUserIds: string[] | null;
   /** Whether the current user is a server admin */
@@ -78,6 +80,7 @@ export function createPermissionsContext({
       () => ({
         recipePolicy: data?.recipePolicy ?? null,
         isAIEnabled: data?.isAIEnabled ?? false,
+        canDrawImages: data?.canDrawImages ?? false,
         householdUserIds: data?.householdUserIds ?? null,
         isServerAdmin: data?.isServerAdmin ?? false,
         isLoading: isLoadingPermissions,

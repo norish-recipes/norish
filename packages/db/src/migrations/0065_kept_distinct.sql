@@ -1,0 +1,1 @@
+ALTER TABLE "ingredients" ADD COLUMN "kept_distinct" boolean DEFAULT false NOT NULL;

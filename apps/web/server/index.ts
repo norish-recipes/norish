@@ -1,13 +1,16 @@
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { initRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
+import { applyNutritionSourcesOnBoot } from "@norish/api/startup/apply-nutrition-sources";
 import { backfillDishColors } from "@norish/api/startup/backfill-dish-color";
-import { backfillIngredientNormalizedNames } from "@norish/api/startup/backfill-ingredient-names";
+import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
 import { createServer } from "@norish/api/startup/http-server";
 import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
 import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
 import { runMigrations } from "@norish/api/startup/migrations";
+import { recheckUndecidedMintsOnBoot } from "@norish/api/startup/recheck-undecided-mints";
 import { registerApiHandlersForQueue } from "@norish/api/startup/register-queue-api-handlers";
 import { seedServerConfig } from "@norish/api/startup/seed-config";
+import { seedIngredientCatalogueOnFirstBoot } from "@norish/api/startup/seed-ingredient-catalogue";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
 import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -44,9 +47,22 @@ async function main() {
   await backfillDishColors();
   log.info("-".repeat(50));
 
-  // Fold the names stored before names were folded, so the Pantry can match
-  // them (ADR-0036).
-  await backfillIngredientNormalizedNames();
+  // A first boot seeds the catalogue before traffic; later boots leave it to
+  // the refresh job, so an unchanged file never holds the server up.
+  await seedIngredientCatalogueOnFirstBoot();
+  log.info("-".repeat(50));
+
+  // After the seed, so every existing reference is resolved against the
+  // catalogue's foods, as a new import would be (ADR-0037).
+  await backfillIngredientAliases();
+  log.info("-".repeat(50));
+
+  // Old flagged mints, looked at again whenever the resolver's rules change.
+  await recheckUndecidedMintsOnBoot();
+  log.info("-".repeat(50));
+
+  // Ingredient Nutrition's source numbers, when this release carries new ones.
+  await applyNutritionSourcesOnBoot();
   log.info("-".repeat(50));
 
   await initializeVideoProcessing();

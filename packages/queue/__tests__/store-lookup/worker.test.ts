@@ -41,9 +41,18 @@ vi.mock("bullmq", async (importOriginal) => {
 vi.mock("@norish/db/repositories/store-products", () => ({ clearPendingLink }));
 vi.mock("@norish/queue/redis/bullmq", () => ({ getBullClient: vi.fn() }));
 vi.mock("@norish/queue/store-lookup/lookup", () => lookup);
+const findIngredientFor = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/shared-server/ingredients/resolver", () => ({ findIngredientFor }));
 
 const STORE = "11111111-1111-4111-8111-111111111111";
-const match = { kind: "match" as const, storeId: STORE, name: "kaas", householdKey: "h" };
+const match = {
+  kind: "match" as const,
+  storeId: STORE,
+  ingredientId: "ingredient-kaas",
+  name: "kaas",
+  householdKey: "h",
+};
 
 /** A job as the processor sees it, keeping whatever progress it writes. */
 function fakeJob(data: unknown) {
@@ -69,7 +78,7 @@ describe("forgetFailedLookup", () => {
   it("clears the Pending Link of a match job that has spent its attempts", async () => {
     await forgetFailedLookup({ data: match, attemptsMade: 2, opts: { attempts: 2 } });
 
-    expect(clearPendingLink).toHaveBeenCalledExactlyOnceWith(STORE, "kaas");
+    expect(clearPendingLink).toHaveBeenCalledExactlyOnceWith(STORE, "ingredient-kaas");
   });
 
   it("leaves the Pending Link while an attempt is still to come", async () => {
@@ -115,6 +124,23 @@ describe("startStoreLookupWorker", () => {
     expect(readStepProgress(job.progress)?.attempts[0]?.models).toEqual([
       { provider: "typesafe", model: "jev-2026-09-01", outcome: "completed" },
     ]);
+  });
+
+  it("answers a question queued before questions named their Ingredient, by its name", async () => {
+    const { ingredientId: _none, ...queuedBeforeTheUpgrade } = match;
+
+    findIngredientFor.mockResolvedValueOnce({
+      aliasId: "alias-kaas",
+      ingredientId: "ingredient-kaas",
+    });
+    lookup.matchGroceryName.mockResolvedValueOnce({ matched: true });
+
+    await captured.processor!(fakeJob(queuedBeforeTheUpgrade));
+
+    expect(findIngredientFor).toHaveBeenCalledWith("kaas");
+    expect(lookup.matchGroceryName).toHaveBeenCalledWith(
+      expect.objectContaining({ storeId: STORE, ingredientId: "ingredient-kaas", name: "kaas" })
+    );
   });
 
   it("reports what a match was told beside its steps", async () => {

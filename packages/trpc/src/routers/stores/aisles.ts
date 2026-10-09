@@ -2,11 +2,13 @@ import { TRPCError } from "@trpc/server";
 
 import type { AisleFiled, AisleLinkDto } from "@norish/shared/contracts";
 import {
-  fileGroceryName as fileGroceryNameAtStore,
+  fileIngredient,
   getAisleById,
   listAisleLinksByStoreIds,
+  listInheritedAisleLinks,
 } from "@norish/db/repositories/aisles";
 import { listStoresByUserIds } from "@norish/db/repositories/stores";
+import { resolveIngredient, writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { AisleFilingSchema } from "@norish/shared/contracts/zod";
@@ -16,23 +18,30 @@ import { router } from "../../trpc";
 import { assertStoreAccess } from "./stores-helpers";
 
 /**
- * Every Aisle Link of the household's Stores, in one round trip, the way the
- * whole list is priced at once. The set is small — one row per distinct name
- * ever filed per Store — and it is the whole of what a screen needs to show
- * the list by aisle; the grocery row carries no aisle of its own (ADR-0031).
+ * Where the household's Stores file its food, in one round trip, the way the
+ * whole list is priced at once: every Aisle Link, and for each food on the
+ * list with no link of its own at a Store, its nearest Parent Ingredient's
+ * (ADR-0037). The set is small and it is the whole of what a screen needs to
+ * show the list by aisle; the grocery row carries no aisle of its own
+ * (ADR-0031), and the screen never walks the tree.
  */
 const aisleLinks = authedProcedure.query(async ({ ctx }): Promise<AisleLinkDto[]> => {
-  const stores = await listStoresByUserIds(ctx.userIds);
+  const storeIds = (await listStoresByUserIds(ctx.userIds)).map((store) => store.id);
+  const [own, inherited] = await Promise.all([
+    listAisleLinksByStoreIds(storeIds),
+    listInheritedAisleLinks(storeIds, ctx.userIds),
+  ]);
 
-  return listAisleLinksByStoreIds(stores.map((store) => store.id));
+  return [...own, ...inherited];
 });
 
 /**
  * File a name at a Store: under one of the Store's own aisles, or under none,
- * which forgets it. Filing one "melk" files every "melk" at that Store, on
- * every household screen, because the link is keyed by name. Last writer
+ * which forgets it. The name is resolved to its Ingredient, and filing one
+ * "melk" files every spelling of milk at that Store, on every household
+ * screen, because the link is keyed by Ingredient (ADR-0037). Last writer
  * wins — the last shopper to file is right — and the event that follows is
- * merged by store and normalized name, so a repeat is a no-op everywhere.
+ * merged by store and Ingredient, so a repeat is a no-op everywhere.
  */
 const fileGroceryName = authedProcedure
   .input(AisleFilingSchema)
@@ -48,7 +57,14 @@ const fileGroceryName = authedProcedure
       }
     }
 
-    const filing = await fileGroceryNameAtStore(input.storeId, input.name, input.aisleId);
+    // Markup alone names no food, and is filed nowhere.
+    const filing = await writeResolved(
+      () => resolveIngredient(input.name, { userId: ctx.user.id }),
+      async (ingredient) =>
+        ingredient
+          ? await fileIngredient(input.storeId, ingredient.ingredientId, input.aisleId)
+          : null
+    );
 
     if (!filing) return null;
 

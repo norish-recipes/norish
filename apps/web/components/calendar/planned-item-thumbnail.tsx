@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
+import { PencilSquareIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 type Size = "sm" | "md";
@@ -25,8 +26,8 @@ type PlannedItemThumbnailProps = {
  * Thumbnail for a planned calendar item.
  *
  * - Recipe with image  => shows the image
- * - Recipe without image => placeholder with "Recipe" text
- * - Note                => placeholder with "Note" text
+ * - Recipe without image => placeholder with a photo icon
+ * - Note                => placeholder with a pencil icon
  */
 export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
   itemType,
@@ -53,11 +54,15 @@ export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
     );
   }
 
+  const Icon = isRecipe ? PhotoIcon : PencilSquareIcon;
+
   return (
     <div
+      aria-label={isRecipe ? t("recipe") : t("note")}
       className={`bg-surface-secondary text-muted flex ${dim} shrink-0 items-center justify-center rounded-lg`}
+      role="img"
     >
-      <span className="text-xs font-medium">{isRecipe ? t("recipe") : t("note")}</span>
+      <Icon aria-hidden className="h-5 w-5" />
     </div>
   );
 });

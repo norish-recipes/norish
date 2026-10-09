@@ -1,56 +1,5 @@
-import { HIDDEN_ITEMS, hiddenItemsPreference, partitionHiddenItems } from "@/lib/hidden-items";
-import { beforeEach, describe, expect, it } from "vitest";
-
-function clearCookie(name: string) {
-  document.cookie = `${name}=;path=/;max-age=0`;
-}
-
-beforeEach(() => {
-  clearCookie(hiddenItemsPreference.cookieName);
-});
-
-describe("the hidden items cookie", () => {
-  it("parses an absent or empty value as nothing hidden", () => {
-    expect(hiddenItemsPreference.parse(undefined)).toEqual([]);
-    expect(hiddenItemsPreference.parse(null)).toEqual([]);
-    expect(hiddenItemsPreference.parse("")).toEqual([]);
-  });
-
-  it("keeps an entry it does not recognise rather than dropping it", () => {
-    // The settings control's carry rule depends on unknown entries surviving
-    // storage: a name from a newer version must ride along untouched.
-    expect(hiddenItemsPreference.parse("rating,something-newer")).toEqual([
-      "rating",
-      "something-newer",
-    ]);
-  });
-
-  it("reads back what it wrote", () => {
-    hiddenItemsPreference.writeCookie(["rating", "timers"]);
-
-    expect(hiddenItemsPreference.readCookie()).toEqual(["rating", "timers"]);
-  });
-
-  it("reads null when this browser has never written a list", () => {
-    expect(hiddenItemsPreference.readCookie()).toBeNull();
-  });
-
-  it("reads an explicitly emptied list as empty, not as never-chosen", () => {
-    hiddenItemsPreference.writeCookie([]);
-
-    expect(hiddenItemsPreference.readCookie()).toEqual([]);
-  });
-
-  it("reads the stored list out of a request's cookies", () => {
-    const cookieStore = { get: () => ({ value: "nutrition,notes" }) };
-
-    expect(hiddenItemsPreference.readFrom(cookieStore)).toEqual(["nutrition", "notes"]);
-  });
-
-  it("drops duplicates and empty entries from a hand-edited value", () => {
-    expect(hiddenItemsPreference.parse(",rating,,rating, notes ,")).toEqual(["rating", "notes"]);
-  });
-});
+import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
+import { describe, expect, it } from "vitest";
 
 describe("partitionHiddenItems", () => {
   it("splits a stored list into what a control can offer and what it must carry", () => {

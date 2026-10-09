@@ -213,11 +213,15 @@ export default function SmartTextInput({
 
   return (
     <div ref={containerRef} className="relative w-full">
+      {/* The field grows with its text, as HeroUI v2's Textarea did: v3's keeps
+          its rows, so a line that wraps on a phone was cut off under the next
+          field. A browser without field-sizing keeps the rows and scrolls. */}
       <TextArea
         ref={setTextareaRef}
-        className="border-border dark:border-border-tertiary w-full text-base"
+        className="border-border dark:border-border-tertiary field-sizing-content w-full text-base"
         placeholder={placeholder}
         rows={minRows}
+        style={minRows > 1 ? { minHeight: `calc(${minRows}lh + 1rem)` } : undefined}
         value={value}
         onBlur={handleBlur}
         onChange={(event) => handleChange(event.target.value)}

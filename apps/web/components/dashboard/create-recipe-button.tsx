@@ -19,6 +19,8 @@ import {
 import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { cssHeaderControl, cssHeaderIcon } from "@norish/web/config/css-tokens";
+
 /**
  * The Library's Add button, which makes whichever kind of thing is on screen.
  *
@@ -134,13 +136,13 @@ export default function CreateRecipeButton() {
       <>
         <Button
           aria-label={tCookbooks("addCookbook")}
-          className="min-w-10 rounded-full font-medium md:min-w-20"
+          className={`rounded-full font-medium max-md:px-0 md:px-3 ${cssHeaderControl}`}
           data-testid="add-cookbook-button"
           size="md"
           variant="primary"
           onPress={() => setShowCookbookPanel(true)}
         >
-          <PlusIcon className="h-5 w-5" />
+          <PlusIcon className={cssHeaderIcon} />
           <span className="hidden md:inline">{tCookbooks("singular")}</span>
         </Button>
 
@@ -158,12 +160,12 @@ export default function CreateRecipeButton() {
       <Dropdown isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <Button
           aria-label={addLabel}
-          className="min-w-10 rounded-full font-medium md:min-w-20"
+          className={`rounded-full font-medium max-md:px-0 md:px-3 ${cssHeaderControl}`}
           data-testid="add-library-button"
           size="md"
           variant="primary"
         >
-          <PlusIcon className="h-5 w-5" />
+          <PlusIcon className={cssHeaderIcon} />
           <span className="hidden md:inline">{addLabel}</span>
         </Button>
         <Dropdown.Popover className="bg-overlay" placement="bottom end">

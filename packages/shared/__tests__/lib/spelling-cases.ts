@@ -1,0 +1,65 @@
+/**
+ * Whether a Pantry Ingredient covers a line by spelling alone, as the
+ * resolver's first two rungs decide it online: [the Pantry's text, the
+ * line's text, covered]. Checked offline by `spelling-keys.test.ts` and
+ * online, against the real resolver, by shared-server's `spelling-keys.test.ts`,
+ * so the two can never disagree about these. Both read the default units
+ * map, whose phrases rung 2 strips from either end of a text.
+ */
+export const SPELLING_CASES: ReadonlyArray<readonly [string, string, boolean]> = [
+  ["onions", "onions", true],
+  ["onions", "Onions!", true],
+  ["onions", "onions, diced", true],
+  ["onions", "onions (red)", true],
+  ["onions", "onions [2]", true],
+  ["onions, diced", "onions", true],
+  ["onions, diced", "onions, sliced", true],
+  ["onions (red)", "onions, sliced", true],
+  ["Crème fraîche", "creme fraiche", true],
+  ["onion", "onions", true],
+  ["onions", "onion", true],
+  ["salt", "salted butter", false],
+  ["red onion", "onion", false],
+  ["!!!", "!!!", true],
+  ["!!!", "???", false],
+  ["salt", "salt to taste", true],
+  ["salt", "Salt, to taste", true],
+  ["nutmeg", "a pinch of nutmeg", true],
+  ["zout", "naar smaak zout", true],
+  ["sweet chilli sauce", "sweet chilli sauce to serve", true],
+  ["parsley", "parsley for garnish", true],
+  ["chilli flakes", "chilli flakes (optional)", true],
+  ["chilli flakes", "chilli flakes optional", true],
+  ["salt", "salt and pepper to taste", false],
+  ["cream", "cream to taste with sugar", false],
+  ["garlic cloves", "garlic cloves crushed", true],
+  ["onion", "onion finely chopped", true],
+  ["onion", "finely chopped onion", true],
+  ["ginger", "piece of ginger peeled and finely chopped", true],
+  ["chickpeas", "can of chickpeas drained and rinsed", true],
+  ["chickpeas", "can chickpeas drained", true],
+  ["coriander", "pack coriander roughly chopped", true],
+  ["cherry tomatoes", "cherry tomatoes 5 chopped", true],
+  ["ui", "ui gesnipperd", true],
+  ["knoflook", "fijngehakte knoflook", true],
+  ["beef", "ground beef", false],
+  ["apricots", "dried apricots", false],
+  ["onion", "onion pieces", false],
+  ["chickpeas", "chickpeas, 1 can", true],
+  // Plurals and diminutives, by the ingredient words of every language.
+  ["bosui", "bosuien", true],
+  ["bosui", "bosuitjes", true],
+  ["tomato", "tomatoes", true],
+  ["cherry", "cherries", true],
+  ["Zwiebel", "Zwiebeln", true],
+  ["cebolla", "cebollas", true],
+  ["avocado", "avocado's", true],
+  // A quantity an import left at the start, and sizes.
+  ["bosui", "ongeveer 4 el fijngesneden bosui", true],
+  ["ui", "grote ui", true],
+  ["chickpeas", "400g can chickpeas", true],
+  // A weight or a volume an import left at the start without its number.
+  ["cherrytomaten", "GR CHERRYTOMATEN", true],
+  ["buttermilk", "Cup (250ml) - Buttermilk", true],
+  ["honing", "tl. honing", true],
+];

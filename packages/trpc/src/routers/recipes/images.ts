@@ -33,7 +33,9 @@ type ImageValidationResult =
  * Extract and validate image file from FormData.
  * Consolidates all the repetitive validation logic.
  */
-async function extractAndValidateImage(formData: FormDataInput): Promise<ImageValidationResult> {
+export async function extractAndValidateImage(
+  formData: FormDataInput
+): Promise<ImageValidationResult> {
   const file = getUploadedFile(formData, "image");
 
   if (!file) {

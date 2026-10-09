@@ -54,6 +54,7 @@ import {
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { PromptName } from "../prompts/loader";
+import type { ImageTier } from "./providers";
 import { fillPrompt, loadPrompt } from "../prompts/loader";
 import {
   AIConfigurationError,
@@ -62,8 +63,15 @@ import {
   AIResponseError,
   isCredentialRejection,
   isRequestShapeRejection,
+  rateLimitWaitMs,
   toAIError,
 } from "./errors";
+import {
+  imageModelKey,
+  refusedImageParameter,
+  refusedImageParameters,
+  rememberRefusedImageParameter,
+} from "./image-parameter-fallback";
 import { recordModelUse } from "./model-use-ledger";
 import {
   canDegradeToJsonMode,
@@ -80,12 +88,15 @@ import {
 // ============================================================================
 
 /**
- * Prompts that start a structured-generation request. The image style prompt
- * is the one exception: it is sent to an image model, which takes a single
- * prompt and no system turn, so it can never be the base of a structured
- * request and needs no system message.
+ * Prompts that start a structured-generation request. The image style
+ * prompts are the exception: they are sent to an image model, which takes a
+ * single prompt and no system turn, so they can never be the base of a
+ * structured request and need no system message.
  */
-export type StructuredPromptName = Exclude<PromptName, "image-generation-style">;
+export type StructuredPromptName = Exclude<PromptName, ImagePromptName>;
+
+/** The prompts that start an image request: a dish's picture's style, and an Ingredient Icon's. */
+export type ImagePromptName = "image-generation-style" | "ingredient-icon-style";
 
 /**
  * System messages are not configuration. They encode invariants the code
@@ -113,6 +124,8 @@ const SYSTEM_MESSAGES: Record<StructuredPromptName, string> = {
     "You are a culinary historian who places dishes in their country and region of origin.",
   "ingredient-linking":
     "You are a careful recipe reader who says which ingredient lines each step uses, and only what the text supports.",
+  "ingredient-resolution":
+    "You keep a catalogue of foods and say whether a name is a food already in it, a kind of one, or a food of its own.",
   // English by instruction, not by system message alone: the brief is a model
   // instruction rather than recipe content, so ADR-0018's language care does
   // not apply to it.
@@ -175,6 +188,26 @@ async function jsonModeInstruction<T>(schema: z.ZodType<T>): Promise<string> {
   ].join("\n");
 }
 
+/** A request's answer, with the tokens it took for the model-use ledger. */
+interface Answered<T> {
+  output: T;
+  tokens: number | undefined;
+}
+
+/**
+ * Input and output together, as the provider reported them. Undefined where
+ * it reported none, which the SDK hands on as zero: no request costs nothing.
+ */
+function reportedTokens(usage: {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+}): number | undefined {
+  const tokens = usage.totalTokens ?? (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
+
+  return tokens > 0 ? tokens : undefined;
+}
+
 interface ObjectRequest<T> {
   config: AIConfig;
   promptName: StructuredPromptName;
@@ -196,7 +229,7 @@ async function requestObject<T>({
   schema,
   images,
   jsonMode,
-}: ObjectRequest<T>): Promise<T> {
+}: ObjectRequest<T>): Promise<Answered<T>> {
   const { model, visionModel, providerName } = createModelsFromConfig(config, {
     structuredOutputs: !jsonMode,
   });
@@ -257,7 +290,7 @@ async function requestObject<T>({
     "AI request completed"
   );
 
-  return result.output;
+  return { output: result.output, tokens: result.usage ? reportedTokens(result.usage) : undefined };
 }
 
 /** Log a failed request once, as the typed error the caller will see. */
@@ -298,9 +331,7 @@ export async function generateStructured<T>(options: GenerateOptions<T>): Promis
     throw new AIDisabledError();
   }
 
-  const basePrompt = await loadPrompt(promptName);
-  const filled = fill ? fillPrompt(basePrompt, fill) : basePrompt;
-  const prompt = [filled, ...sections].join("\n\n");
+  const prompt = await assemblePrompt(promptName, sections, fill);
   const use = { provider: config.provider, model: selectedModelId(config, images.length > 0) };
 
   // A configuration that cannot build a client is refused here, before the
@@ -310,15 +341,71 @@ export async function generateStructured<T>(options: GenerateOptions<T>): Promis
   // One ledger entry per request a feature made, whichever request shape
   // ended up answering it.
   try {
-    const output = await requestStructured({ config, promptName, prompt, schema, images });
+    const { output, tokens } = await requestStructured({
+      config,
+      promptName,
+      prompt,
+      schema,
+      images,
+    });
 
-    recordModelUse({ ...use, outcome: "completed" });
+    recordModelUse({ ...use, outcome: "completed", ...(tokens === undefined ? {} : { tokens }) });
 
     return output;
   } catch (error) {
     recordModelUse({ ...use, outcome: "failed" });
     throw error;
   }
+}
+
+/** The administrator's prompt as it stands, filled, with the feature's sections after it. */
+async function assemblePrompt(
+  promptName: StructuredPromptName,
+  sections: readonly string[],
+  fill: Record<string, string> | undefined
+): Promise<string> {
+  const basePrompt = await loadPrompt(promptName);
+  const filled = fill ? fillPrompt(basePrompt, fill) : basePrompt;
+
+  return [filled, ...sections].join("\n\n");
+}
+
+/**
+ * Characters to a token: the rule of thumb for English across the common
+ * tokenizers. Only an estimate reads it; nothing sent depends on it.
+ */
+const CHARS_PER_TOKEN = 4;
+
+/** About how many tokens a request would send, and the model it would go to. */
+export interface TokenEstimate {
+  provider: string;
+  model: string;
+  tokens: number;
+}
+
+/**
+ * About how many tokens one structured request would send before its answer:
+ * the system message, the administrator's prompt as it stands, the sections,
+ * and the answer's schema, which a strict request carries beside the prompt
+ * and a plain-JSON one inside it. Nothing is asked. For a feature that says
+ * what a batch of requests costs before anyone starts it; once asked, the
+ * provider's own count is in the model-use ledger.
+ */
+export async function estimateStructuredInputTokens<T>(
+  options: Pick<GenerateOptions<T>, "prompt" | "schema" | "sections" | "fill">
+): Promise<TokenEstimate> {
+  const { prompt: promptName, schema, sections = [], fill } = options;
+  const [config, prompt] = await Promise.all([
+    getAIConfig(true),
+    assemblePrompt(promptName, sections, fill),
+  ]);
+  const instructions = `${SYSTEM_MESSAGES[promptName]}\n\n${await jsonModeInstruction(schema)}`;
+
+  return {
+    provider: config?.provider ?? "",
+    model: config ? selectedModelId(config, false) : "",
+    tokens: Math.ceil((instructions.length + prompt.length) / CHARS_PER_TOKEN),
+  };
 }
 
 /** The model a structured request runs on: the vision model when images ride along. */
@@ -333,7 +420,7 @@ async function requestStructured<T>(request: {
   prompt: string;
   schema: z.ZodType<T>;
   images: readonly AIImage[];
-}): Promise<T> {
+}): Promise<Answered<T>> {
   const { config, promptName } = request;
 
   try {
@@ -534,9 +621,18 @@ async function transcribeWithProvider(
 
 export interface GenerateImageOptions {
   /** The administrator-editable prompt the request starts from. */
-  prompt: "image-generation-style";
+  prompt: ImagePromptName;
   /** Input blocks appended after the prompt, blank-line separated (ADR-0016). */
   sections?: readonly string[];
+  /** The picture's shape: a dish's widest landscape (the default), or an icon's square. */
+  shape?: "landscape" | "square";
+  /**
+   * The quality tier asked for where the provider has tiers; omitted leaves
+   * the provider's default, as a dish's picture does.
+   */
+  tier?: ImageTier;
+  /** Ask for a transparent background where the provider can draw one: an icon's. */
+  transparent?: boolean;
 }
 
 export interface GeneratedImageBytes {
@@ -550,7 +646,8 @@ export interface GeneratedImageBytes {
  * Reads the Image Generation block rather than the server's AI provider
  * (ADR-0024), with endpoint and key falling back to the AI configuration when
  * the provider matches. The provider is asked for its widest supported
- * landscape; cropping to the stored size is the save path's job. There is no
+ * landscape, or a square, and a tier where it has them; cropping to the
+ * stored size is the save path's job. There is no
  * image timeout: the request runs under the existing AI timeout on the shared
  * transport (ADR-0015).
  *
@@ -559,7 +656,7 @@ export interface GeneratedImageBytes {
  * and provider failures follow the SDK's own retryability.
  */
 export async function generateImage(options: GenerateImageOptions): Promise<GeneratedImageBytes> {
-  const { prompt: promptName, sections = [] } = options;
+  const { prompt: promptName, sections = [], shape = "landscape", tier, transparent } = options;
 
   const [aiConfig, imageConfig] = await Promise.all([
     getAIConfig(true),
@@ -603,15 +700,39 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
       "Sending image generation request"
     );
 
-    const result = await generateImageWithModel({
-      model: imageModel.model,
-      prompt,
-      ...imageModel.landscape,
-      // Image calls are billed per request, so the SDK's silent in-call
-      // retries are disabled: the queue's attempts are the one retry budget.
-      maxRetries: 0,
-      abortSignal: AbortSignal.timeout(aiConfig.timeoutMs),
-    });
+    const providerOptions =
+      tier || transparent ? imageModel.preferences?.({ tier, transparent }) : undefined;
+    const draw = () =>
+      generateImageWithModel({
+        model: imageModel.model,
+        prompt,
+        ...imageModel[shape],
+        ...(providerOptions ? { providerOptions } : {}),
+        // Image calls are billed per request, so the SDK's silent in-call
+        // retries are disabled: the queue's attempts are the one retry budget.
+        maxRetries: 0,
+        abortSignal: AbortSignal.timeout(aiConfig.timeoutMs),
+      });
+    const key = imageModelKey(provider, model);
+    let result: Awaited<ReturnType<typeof draw>> | undefined;
+
+    // A model that refuses a parameter it may go without is asked again
+    // without it, once per parameter, and remembers it (ADR-0014). A refused
+    // request is not billed.
+    while (!result) {
+      try {
+        result = await draw();
+      } catch (error) {
+        const refused = refusedImageParameter(error);
+
+        if (!refused || refusedImageParameters(key).has(refused)) throw error;
+        aiLogger.warn(
+          { feature: promptName, provider, model, parameter: refused },
+          "Image model refused a parameter; asking again without it"
+        );
+        rememberRefusedImageParameter(key, refused);
+      }
+    }
 
     const bytes = Buffer.from(result.image.uint8Array);
 
@@ -625,6 +746,8 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
         provider: imageModel.providerName,
         model,
         imageBytes: bytes.length,
+        // What the provider billed, where it reports it: the way to price a large run.
+        usage: result.usage,
       },
       "Image generation completed"
     );
@@ -633,11 +756,20 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
     return { bytes, mediaType: result.image.mediaType };
   } catch (error) {
     const aiError = toAIError(error);
+    const waitMs = rateLimitWaitMs(error);
 
-    aiLogger.error(
-      { err: error, feature: promptName, provider, model, retryable: aiError.retryable },
-      "Image generation failed"
-    );
+    // A rate limit is waited out by the caller, not a failure worth a stack.
+    if (waitMs !== null) {
+      aiLogger.warn(
+        { feature: promptName, provider, model, waitMs },
+        "Image provider's rate limit"
+      );
+    } else {
+      aiLogger.error(
+        { err: error, feature: promptName, provider, model, retryable: aiError.retryable },
+        "Image generation failed"
+      );
+    }
     recordModelUse({ provider, model, outcome: "failed" });
 
     throw aiError;
@@ -784,7 +916,7 @@ async function requestDecision<Q extends DecisionQuestions>({
   questions,
   settings,
   timeoutMs,
-}: DecisionRequest<Q>): Promise<DecisionResult<Q>> {
+}: DecisionRequest<Q>): Promise<Answered<DecisionResult<Q>>> {
   const decisionModel = createDecisionModelFromConfig({ ...settings, timeoutMs });
   const asked: DecisionQuestions = questions;
 
@@ -861,10 +993,13 @@ async function requestDecision<Q extends DecisionQuestions>({
   );
 
   return {
-    // Built one question at a time above; the mapped type is what that loop
-    // guarantees, keyed exactly as the questions were.
-    answers: answers as DecisionResult<Q>["answers"],
-    model: result.response.modelId,
+    output: {
+      // Built one question at a time above; the mapped type is what that loop
+      // guarantees, keyed exactly as the questions were.
+      answers: answers as DecisionResult<Q>["answers"],
+      model: result.response.modelId,
+    },
+    tokens: reportedTokens(result.usage),
   };
 }
 
@@ -909,7 +1044,7 @@ export async function decide<const Q extends DecisionQuestions>(
   };
 
   try {
-    const result = await requestDecision({
+    const { output: result, tokens } = await requestDecision({
       feature,
       state,
       questions,
@@ -918,7 +1053,12 @@ export async function decide<const Q extends DecisionQuestions>(
     });
 
     // The resolved id, so the job monitor shows the release behind jev-latest.
-    recordModelUse({ provider: settings.provider, model: result.model, outcome: "completed" });
+    recordModelUse({
+      provider: settings.provider,
+      model: result.model,
+      outcome: "completed",
+      ...(tokens === undefined ? {} : { tokens }),
+    });
 
     return result;
   } catch (error) {
@@ -941,6 +1081,28 @@ export async function decide<const Q extends DecisionQuestions>(
 
     throw aiError;
   }
+}
+
+/**
+ * About how many tokens one Decision would send: its state and questions as
+ * JSON, to the Decision Model as configured. That model wraps them in
+ * instructions of its own, which come on top and are not Norish's to count.
+ * Nothing is asked.
+ */
+export async function estimateDecisionInputTokens({
+  state,
+  questions,
+}: Pick<DecideOptions<DecisionQuestions>, "state" | "questions">): Promise<TokenEstimate> {
+  const decisionConfig = await getDecisionConfig(true);
+  const settings = isDecisionConfigValid(decisionConfig)
+    ? resolveDecisionSettings(decisionConfig)
+    : null;
+
+  return {
+    provider: decisionConfig?.provider ?? "",
+    model: settings?.model ?? "",
+    tokens: Math.ceil(JSON.stringify({ state, questions }).length / CHARS_PER_TOKEN),
+  };
 }
 
 /** How long the admin's Test button waits, whatever the AI timeout is tuned to. */

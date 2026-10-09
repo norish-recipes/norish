@@ -39,6 +39,7 @@ export const AuthorSchema = z
 
 export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   systemUsed: true,
+  originalSystem: true,
   fat: true,
   carbs: true,
   protein: true,
@@ -101,6 +102,24 @@ export function patchDashboardRecipeFromFull(
   return patched as z.output<typeof RecipeDashboardSchema>;
 }
 
+/**
+ * The language model's per-serving estimate of the lines a worked-out total
+ * could not count, one share per line under its key (ADR-0039). Derived, not
+ * supplied: a reader's worked-out total adds the share of each line still
+ * left out for them, and it never travels in an archive.
+ */
+export const RecipeNutritionEstimateSchema = z.object({
+  lines: z.array(
+    z.object({
+      key: z.string(),
+      calories: z.number(),
+      fat: z.number(),
+      carbs: z.number(),
+      protein: z.number(),
+    })
+  ),
+});
+
 export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),
   steps: z.array(StepOutputSchema).default([]),
@@ -112,6 +131,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),
   videos: RecipeVideosArraySchema.default([]),
+  nutritionEstimate: RecipeNutritionEstimateSchema.nullable().optional(),
 });
 
 export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
@@ -198,13 +218,23 @@ export const RecipeDeleteInputSchema = z.object({
 });
 
 export const RecipeImportInputSchema = z.object({
-  url: z.url(),
+  // "www.site.com/recipe" names a page as well as a full link does, so a
+  // missing scheme is filled in rather than refused.
+  url: z
+    .string()
+    .trim()
+    .transform((url) => (/^[a-z][a-z\d+.-]*:\/\//i.test(url) ? url : `https://${url}`))
+    .pipe(z.url()),
 });
 
 export const RecipeConvertInputSchema = z.object({
   recipeId: z.uuid(),
   targetSystem: z.enum(["metric", "us"]),
   version: z.number().int().positive(),
+  // With AI, the copy in the target system is written again by the language
+  // model; without, an existing copy is switched to and a missing one worked
+  // out from the unit table and the ingredient catalogue.
+  withAI: z.boolean().default(false),
 });
 
 export const RecipeUpdateInputSchema = z.object({

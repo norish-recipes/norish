@@ -26,6 +26,11 @@ export interface ModelUse {
   provider: string;
   model: string;
   outcome: ModelUseOutcome;
+  /**
+   * Input and output tokens together, reasoning included, as the provider
+   * reported them. Absent where it reported none, and on a failed request.
+   */
+  tokens?: number;
 }
 
 export interface ModelUseLedger {

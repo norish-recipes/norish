@@ -38,10 +38,34 @@ Two of the cards draw a chart:
   split wins and the headline becomes their sum.
 - **Nutrition** draws the three macros as a ring, sized by what each
   contributes in calories, with the recipe's stored calorie figure in the
-  centre. The centre is always the number the recipe actually stores — Norish
-  never presents a computed calorie figure as the recipe's own.
+  centre. The centre is always the number the recipe actually stores, and
+  Norish never presents a computed calorie figure as the recipe's own. A
+  recipe that stores no nutrition shows one worked out from its ingredients
+  instead, marked as such, see [Nutrition](./nutrition.md).
 
 ![The Cooking time card with an Other Time segment, above the Nutrition ring](/img/screenshots/recipe-page-cards.png)
+
+## Metric and US measurements
+
+The Ingredients card's options convert a recipe between metric and US
+measurements, no AI needed. Cups become millilitres and ounces
+grams, and back. Where the ingredient catalogue knows what a cup of a food
+weighs, a cup of something you don't pour, like flour or butter, becomes grams,
+and a spoonful's weight becomes spoons again. Teaspoons and tablespoons stay as
+they are, and oven temperatures in the steps are converted too.
+
+The converted copy is kept beside the recipe as it was written, and switching
+back shows the original unchanged. On a server with AI, **Convert with AI**
+writes the converted copy with the language model instead; it never touches the
+original. The menu marks which system the recipe was written in as
+**Original**.
+
+To skip the menu, pick a system under **Measurements** in your Preferences:
+every recipe you can edit switches to it as you open it, as if you had pressed
+convert. With AI, **Metric with AI** and **US with AI** have the language model
+write a copy the recipe doesn't have yet.
+
+![The Ingredients card options on a phone, offering Convert to US and Convert to US with AI](/img/screenshots/recipe-convert-menu.png)
 
 ## The Cook button
 
@@ -81,15 +105,16 @@ a dark photo can never produce an unreadable page. A recipe with no photo
 simply keeps the plain theme colours.
 
 If you would rather read every recipe on the plain theme background, that is
-yours to choose: **Settings => User => Recipe page color**, per device, with
-`From the dish photo` as the default and `Plain theme colors` as the
-alternative. The colour is still stored either way, so switching back is
-instant.
+yours to choose: **Settings => User => Recipe page color**, per phone or
+desktop, on your profile, with `From the dish photo` as the default and
+`Plain theme colors` as the alternative. The colour is still stored either
+way, so switching back is instant.
 
 ## The share page
 
 A shared recipe link gets the same phone layout — header, Glance Bar and the
 cards through Source — so a recipe you send someone looks like Norish. What
 needs an account stays out: no favourites, rating, provenance or cooking
-mode, and since Hidden Items belong to a signed-in reader's own devices, a
-share link always shows everything the recipe stores.
+mode, and since Hidden Items are a signed-in reader's own, a share link shows
+everything the recipe stores; only Ingredient icons you hid stay hidden on a
+shared recipe you open while signed in.

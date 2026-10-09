@@ -17,12 +17,10 @@ import {
   reorderGroceriesInStore,
   updateGroceries,
 } from "@norish/db";
-import {
-  getStoreOwnerId,
-  normalizeIngredientName,
-  upsertIngredientStorePreference,
-} from "@norish/db/repositories/stores";
+import { getStoreOwnerId } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { resolveGroceryName } from "@norish/shared-server/ingredients/groceries";
+import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import {
@@ -42,6 +40,7 @@ import {
   createGroceriesData,
   deleteGroceriesData,
   listGroceriesData,
+  rememberStorePreference,
   toggleGroceriesData,
 } from "./groceries-helpers";
 import {
@@ -109,31 +108,48 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         });
       }
 
-      const updateData: GroceryUpdateDto = {
-        id: groceryId,
-        version,
-        name: parsedIngredient.description,
-        amount: parsedIngredient.quantity,
-        purchaseAmount,
-        unit: parsedIngredient.unitOfMeasure,
-      };
+      // A grocery from a recipe line keeps the line's food while its text
+      // still says what the line says; an amount or Store edit re-points nothing.
+      const [current] = await getGroceriesByIds([groceryId]);
+      const updatedGroceries = await writeResolved(
+        () =>
+          resolveGroceryName(
+            {
+              name: parsedIngredient.description,
+              recipeIngredientId: current?.recipeIngredientId ?? null,
+            },
+            { userId: ctx.user.id }
+          ),
+        async (ingredient) => {
+          const updateData: GroceryUpdateDto = {
+            id: groceryId,
+            version,
+            name: parsedIngredient.description,
+            ingredientAliasId: ingredient.ingredientAliasId,
+            ingredientId: ingredient.ingredientId,
+            amount: parsedIngredient.quantity,
+            purchaseAmount,
+            unit: parsedIngredient.unitOfMeasure,
+          };
 
-      // When storeId is explicitly provided, include it in the update
-      // (null means "unsorted", undefined means "don't change")
-      if (storeId !== undefined) {
-        updateData.storeId = storeId;
-      }
+          // When storeId is explicitly provided, include it in the update
+          // (null means "unsorted", undefined means "don't change")
+          if (storeId !== undefined) {
+            updateData.storeId = storeId;
+          }
 
-      const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
+          const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
 
-      if (!parsed.success) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid grocery data",
-        });
-      }
+          if (!parsed.success) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid grocery data",
+            });
+          }
 
-      const updatedGroceries = await updateGroceries([parsed.data as GroceryUpdateDto]);
+          return await updateGroceries([parsed.data as GroceryUpdateDto]);
+        }
+      );
 
       if (updatedGroceries.length === 0) {
         log.info(
@@ -153,11 +169,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
       // Editing the store through the panel implies "remember this store for
       // this ingredient", matching the previous assignToStore behaviour.
-      if (storeId && updatedGroceries[0]?.name) {
-        const normalized = normalizeIngredientName(updatedGroceries[0].name);
-
-        await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
-      }
+      await rememberStorePreference(ctx.user.id, updatedGroceries[0]?.ingredientId, storeId);
 
       // A rename asks a new question rather than carrying the old answer to a
       // name it was never about.
@@ -574,15 +586,7 @@ const reorderInStore = authedProcedure
             for (const grocery of groceriesForPreference) {
               const update = itemsWithStoreChange.find((u) => u.id === grocery.id);
 
-              if (update?.storeId && grocery.name) {
-                const normalized = normalizeIngredientName(grocery.name);
-
-                await upsertIngredientStorePreference(ctx.user.id, normalized, update.storeId);
-                log.debug(
-                  { userId: ctx.user.id, normalized, storeId: update.storeId },
-                  "Saved ingredient store preference"
-                );
-              }
+              await rememberStorePreference(ctx.user.id, grocery.ingredientId, update?.storeId);
             }
           }
         }

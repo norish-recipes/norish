@@ -11,8 +11,9 @@ type AmountDisplayToggleProps = {
 /**
  * Toggle button to switch between decimal and fraction display modes.
  * Shows "½" when in fraction mode, "0.5" when in decimal mode. The stored
- * mode rides a cookie into the first render, so there is no hydration
- * stand-in — the toggle reflects the reader's choice from the first paint.
+ * mode is a Device Preference the server already applies, so there is no
+ * hydration stand-in: the toggle reflects the reader's choice from the first
+ * paint.
  */
 export default function AmountDisplayToggle({ compact = false }: AmountDisplayToggleProps) {
   const { mode, toggleMode } = useAmountDisplayPreference();

@@ -1,9 +1,15 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 import type { AdminUserRowDTO, User } from "@norish/shared/contracts";
+import type {
+  DeviceKind,
+  DevicePreferencesUpdate,
+} from "@norish/shared/contracts/zod/device-preferences";
+import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { decrypt, encrypt, hmacIndex } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
 import { authLogger } from "@norish/db/logger";
+import { UserPreferencesSchema } from "@norish/shared/contracts/zod/user";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { accounts, users } from "../schema/auth";
@@ -541,16 +547,19 @@ export async function countUsers(): Promise<number> {
 }
 
 /**
- * Get user preferences (JSONB). If missing (pre-migration), return {} and warn.
+ * The user's preferences document, each choice parsed on its own so one this
+ * version does not know reads as absent. If the column is missing
+ * (pre-migration), return {} and warn.
  */
-export async function getUserPreferences(userId: string): Promise<Record<string, unknown>> {
+export async function getUserPreferences(userId: string): Promise<UserPreferencesDto> {
   try {
     const user = await db.query.users.findFirst({
       where: eq(users.id, userId),
       columns: { preferences: true },
     });
+    const parsed = UserPreferencesSchema.safeParse(user?.preferences ?? {});
 
-    return (user?.preferences as Record<string, unknown>) ?? {};
+    return parsed.success ? parsed.data : {};
   } catch (error) {
     // Migration/column may be missing: warn and return empty preferences
     try {
@@ -564,6 +573,28 @@ export async function getUserPreferences(userId: string): Promise<Record<string,
 
     return {};
   }
+}
+
+/**
+ * Merge Device Preferences into one Device Kind's block, per choice, in one
+ * statement: the rest of the document is never read back and rewritten. The
+ * last writer wins and the profile's version is left alone, so a toggle never
+ * goes stale and never makes a pending profile edit stale.
+ */
+export async function setUserDevicePreferences(
+  userId: string,
+  kind: DeviceKind,
+  updates: DevicePreferencesUpdate
+): Promise<void> {
+  const block = sql`case when jsonb_typeof(${users.preferences} -> ${kind}::text) = 'object'
+    then ${users.preferences} -> ${kind}::text else '{}'::jsonb end`;
+
+  await db
+    .update(users)
+    .set({
+      preferences: sql`jsonb_set(coalesce(${users.preferences}, '{}'::jsonb), array[${kind}::text], ${block} || ${JSON.stringify(updates)}::jsonb)`,
+    })
+    .where(eq(users.id, userId));
 }
 
 /** Update user preferences by atomically merging provided JSONB updates. */

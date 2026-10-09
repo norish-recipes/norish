@@ -1,36 +1,18 @@
 "use client";
 
 import HeartButton from "@/components/shared/heart-button";
-import {
-  ClockIcon,
-  EllipsisHorizontalIcon,
-  StarIcon,
-  UserGroupIcon,
-} from "@heroicons/react/20/solid";
-import { Button, Chip } from "@heroui/react";
-
-// Over an arbitrary photo a chip carries its own contrast: an opaque surface
-// fill plus a shadow, never a tinted window onto the picture (ADR-0020).
-// Exported so a cookbook's cover — an arbitrary photo by the same argument —
-// states its own metadata in exactly the same voice.
-export const photoChipClassName =
-  "bg-surface text-foreground rounded-full px-2 text-[11px] shadow-md";
+import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid";
+import { Button } from "@heroui/react";
 
 interface RecipeMetadataProps {
-  timeLabel?: string | null;
-  servings?: number | null;
   onOptionsPress?: () => void;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
-  averageRating?: number | null;
 }
 export default function RecipeMetadata({
-  timeLabel,
-  servings,
   onOptionsPress,
   isFavorite = false,
   onToggleFavorite,
-  averageRating,
 }: RecipeMetadataProps) {
   return (
     <>
@@ -47,29 +29,8 @@ export default function RecipeMetadata({
         </div>
       )}
 
-      {/* Right side metadata */}
+      {/* Right side: the options button, from tablet width up */}
       <div className="pointer-events-auto absolute top-2 right-2 z-20 flex items-center gap-2">
-        {typeof averageRating === "number" && averageRating > 0 && (
-          <Chip className={photoChipClassName} size="sm" variant="soft">
-            <StarIcon className="text-warning h-4 w-4" />
-            <Chip.Label>{Math.round(averageRating)}</Chip.Label>
-          </Chip>
-        )}
-
-        {timeLabel && (
-          <Chip className={photoChipClassName} size="sm" variant="soft">
-            <ClockIcon className="h-4 w-4" />
-            <Chip.Label>{timeLabel}</Chip.Label>
-          </Chip>
-        )}
-
-        {typeof servings === "number" && servings > 0 && (
-          <Chip className={photoChipClassName} size="sm" variant="soft">
-            <UserGroupIcon className="h-4 w-4" />
-            <Chip.Label>{servings}</Chip.Label>
-          </Chip>
-        )}
-
         {onOptionsPress && (
           <Button
             isIconOnly

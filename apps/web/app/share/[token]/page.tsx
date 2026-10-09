@@ -28,7 +28,8 @@ function SharedRecipePageContent({ token }: { token: string }) {
     window.scrollTo(0, 0);
   }, []);
   if (isLoading) {
-    return <RecipeSkeleton />;
+    // A shared recipe shows its nutrition whatever the reader hid, and no rating.
+    return <RecipeSkeleton nutrition rating={false} />;
   }
   if (!recipe || (error instanceof TRPCClientError && error.data?.code === "NOT_FOUND")) {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;

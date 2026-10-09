@@ -10,14 +10,11 @@ import {
   replaceRecipeProvenance,
   writeInferredStepIngredients,
 } from "@norish/db/repositories/recipe-enrichment";
-import {
-  createRecipeWithRefs,
-  getRecipeFull,
-  updateRecipeWithRefs,
-} from "@norish/db/repositories/recipes";
+import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { appendRecipeTags, getRecipeTagNames } from "@norish/db/repositories/tags";
 
 import { createTestRecipe } from "../../../helpers/db-test-helpers";
+import { createRecipeWithRefs, updateRecipeWithRefs } from "../../../helpers/recipe-writes";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("test_recipe_enrichment");

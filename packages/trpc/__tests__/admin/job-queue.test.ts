@@ -253,7 +253,48 @@ describe("admin job queue procedures", () => {
         jobId: "job-1",
       });
 
-      expect(detail.models).toEqual([{ ...jev, outcome: "failed" }, jev, gpt]);
+      // No provider here reported tokens.
+      expect(detail.models).toEqual([
+        { ...jev, outcome: "failed", tokens: null },
+        { ...jev, tokens: null },
+        { ...gpt, tokens: null },
+      ]);
+    });
+
+    it("adds up the tokens each model's requests took, where the provider reported them", async () => {
+      const gpt = { provider: "openai", model: "gpt-5.6-luna", outcome: "completed" };
+      const jev = { provider: "typesafe", model: "jev-1.13.0", outcome: "completed" };
+      const job = createMockJob({
+        progress: {
+          step: "asking-ai:2/2",
+          updatedAt: 3_000,
+          attempts: [
+            {
+              attempt: 1,
+              timeline: [{ id: "asking-ai:1/2", startedAt: 1_000 }],
+              models: [
+                { ...gpt, tokens: 913 },
+                { ...jev, tokens: 1712 },
+                { ...gpt, tokens: 1137 },
+                { ...gpt, outcome: "failed" },
+              ],
+            },
+          ],
+        },
+      });
+
+      registryMock.queues.set(QUEUE_NAMES.INGREDIENT_REVIEW, createMockQueue([job]));
+
+      const detail = await createCaller().detail({
+        queue: QUEUE_NAMES.INGREDIENT_REVIEW,
+        jobId: "job-1",
+      });
+
+      expect(detail.models).toEqual([
+        { ...gpt, tokens: 2050 },
+        { ...jev, tokens: 1712 },
+        { ...gpt, outcome: "failed", tokens: null },
+      ]);
     });
 
     it("falls back to the last attempt that asked a model while a retry is still running", async () => {
@@ -279,7 +320,7 @@ describe("admin job queue procedures", () => {
         jobId: "job-1",
       });
 
-      expect(detail.models).toEqual([gpt]);
+      expect(detail.models).toEqual([{ ...gpt, tokens: null }]);
     });
 
     it("has no models for a job that never asked one", async () => {
@@ -373,6 +414,7 @@ describe("admin job queue procedures", () => {
       const first = detail.attempts[0]!;
 
       expect(first.attempt).toBe(1);
+      expect(first.outcome).toBe("failed");
       expect(first.message).toBe("Error: Cannot fetch recipe page.");
       expect(first.steps.map((s) => [s.id, s.status])).toEqual([
         ["dedupe-check", "done"],
@@ -387,6 +429,7 @@ describe("admin job queue procedures", () => {
       const second = detail.attempts[1]!;
 
       expect(second.attempt).toBe(2);
+      expect(second.outcome).toBe("running");
       expect(second.message).toBeNull();
       expect(second.steps.map((s) => [s.id, s.status])).toEqual([
         ["dedupe-check", "running"],

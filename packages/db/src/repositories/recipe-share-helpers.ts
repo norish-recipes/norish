@@ -89,9 +89,15 @@ export function toSharedMediaUrl(
   return url;
 }
 
+/**
+ * A recipe as a signed-out reader sees it through a share link: no ids, its
+ * media at the share's own addresses, and each line's Ingredient Icon by
+ * address (`icons`, by Ingredient id), since there is no id to look one up by.
+ */
 export function mapRecipeToPublicRecipeView(
   recipe: FullRecipeDTO,
-  shareToken: string
+  shareToken: string,
+  icons: ReadonlyMap<string, string | null>
 ): PublicRecipeViewDTO {
   return PublicRecipeViewSchema.parse({
     name: recipe.name,
@@ -119,6 +125,7 @@ export function mapRecipeToPublicRecipeView(
       unit: ingredient.unit ?? null,
       systemUsed: ingredient.systemUsed,
       order: ingredient.order,
+      icon: ingredient.ingredientId ? (icons.get(ingredient.ingredientId) ?? null) : null,
     })),
     steps: (recipe.steps ?? []).map((step) => ({
       step: step.step,

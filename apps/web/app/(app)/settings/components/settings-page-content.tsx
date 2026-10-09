@@ -6,12 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import SettingsPageSkeleton from "@/components/skeleton/settings-page-skeleton";
 import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 import {
+  BookOpenIcon as BookOpenIconSolid,
   HomeIcon as HomeIconSolid,
   ServerIcon as ServerIconSolid,
   ShieldCheckIcon as ShieldCheckIconSolid,
   UserCircleIcon as UserCircleIconSolid,
 } from "@heroicons/react/20/solid";
 import {
+  BookOpenIcon as BookOpenIconOutline,
   HomeIcon as HomeIconOutline,
   ServerIcon as ServerIconOutline,
   ShieldCheckIcon as ShieldCheckIconOutline,
@@ -35,6 +37,13 @@ const CalDavSettingsTab = dynamic(() => import("../caldav/components/caldav-sett
   loading: () => <SettingsSkeleton />,
 });
 
+const IngredientsSettingsTab = dynamic(
+  () => import("../ingredients/components/ingredients-settings-content"),
+  {
+    loading: () => <SettingsSkeleton />,
+  }
+);
+
 const AdminSettingsTab = dynamic(() => import("../admin/components/admin-settings-content"), {
   loading: () => <SettingsSkeleton />,
 });
@@ -48,6 +57,7 @@ function SettingsContent({ showAdminTab }: { showAdminTab: boolean }) {
     requestedTab === "user" ||
     requestedTab === "household" ||
     requestedTab === "caldav" ||
+    requestedTab === "ingredients" ||
     (requestedTab === "admin" && showAdminTab)
       ? requestedTab
       : "user";
@@ -69,6 +79,12 @@ function SettingsContent({ showAdminTab }: { showAdminTab: boolean }) {
       label: t("tabs.caldav"),
       activeIcon: ServerIconSolid,
       inactiveIcon: ServerIconOutline,
+    },
+    {
+      id: "ingredients",
+      label: t("tabs.ingredients"),
+      activeIcon: BookOpenIconSolid,
+      inactiveIcon: BookOpenIconOutline,
     },
     ...(showAdminTab
       ? [
@@ -103,7 +119,7 @@ function SettingsContent({ showAdminTab }: { showAdminTab: boolean }) {
               const Icon = isCurrent ? tab.activeIcon : tab.inactiveIcon;
 
               return (
-                // Four labelled tabs are wider than a phone, which left the
+                // Four or five labelled tabs are wider than a phone, which left the
                 // last one — Admin, for the readers who have it — scrolled off
                 // the end of a strip that gives no sign it scrolls. Below `sm`
                 // only the tab you are on says its name; `aria-label` keeps the
@@ -120,20 +136,24 @@ function SettingsContent({ showAdminTab }: { showAdminTab: boolean }) {
           </Tabs.List>
         </Tabs.ListContainer>
 
-        <Tabs.Panel id="user" className="py-4">
+        <Tabs.Panel id="user" className="px-0 py-4">
           <UserSettingsTab />
         </Tabs.Panel>
 
-        <Tabs.Panel id="household" className="py-4">
+        <Tabs.Panel id="household" className="px-0 py-4">
           <HouseholdSettingsTab />
         </Tabs.Panel>
 
-        <Tabs.Panel id="caldav" className="py-4">
+        <Tabs.Panel id="caldav" className="px-0 py-4">
           <CalDavSettingsTab />
         </Tabs.Panel>
 
+        <Tabs.Panel id="ingredients" className="px-0 py-4">
+          <IngredientsSettingsTab />
+        </Tabs.Panel>
+
         {showAdminTab ? (
-          <Tabs.Panel id="admin" className="py-4">
+          <Tabs.Panel id="admin" className="px-0 py-4">
             <AdminSettingsTab />
           </Tabs.Panel>
         ) : null}

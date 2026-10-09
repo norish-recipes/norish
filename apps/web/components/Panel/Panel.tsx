@@ -19,6 +19,8 @@ export interface PanelProps {
   panelClassName?: string;
   backdropVariant?: "opaque" | "transparent";
   title?: string;
+  /** Beside the title, outside it: a status chip, say. The dialog's name stays the title. */
+  titleAddon?: ReactNode;
   children: ReactNode;
   trigger?: ReactElement;
   open?: boolean;
@@ -105,6 +107,7 @@ const PanelRoot: React.FC<PanelProps> = ({
   panelClassName = "",
   backdropVariant = "opaque",
   title = "",
+  titleAddon,
   nested = false,
   children,
   trigger,
@@ -233,12 +236,15 @@ const PanelRoot: React.FC<PanelProps> = ({
                 />
 
                 <header className="flex shrink-0 flex-col gap-1 px-5 pb-2" data-slot="panel-header">
-                  <Drawer.Title
-                    className={title ? "text-lg font-semibold" : "sr-only"}
-                    data-slot="panel-heading"
-                  >
-                    {title || "Panel"}
-                  </Drawer.Title>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 pr-8">
+                    <Drawer.Title
+                      className={title ? "text-lg font-semibold" : "sr-only"}
+                      data-slot="panel-heading"
+                    >
+                      {title || "Panel"}
+                    </Drawer.Title>
+                    {titleAddon}
+                  </div>
                 </header>
 
                 <div

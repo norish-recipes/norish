@@ -7,7 +7,7 @@
  */
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
@@ -84,10 +84,11 @@ export async function cleanDatabase() {
   await db.delete(schema.cookbookRecipes);
   await db.delete(schema.cookbooks);
   await db.delete(schema.recipes);
-  await db.delete(schema.ingredients);
-  await db.delete(schema.plannedItems);
+  // Groceries point at Ingredient Aliases, which go with their Ingredients.
   await db.delete(schema.groceries);
   await db.delete(schema.recurringGroceries);
+  await db.delete(schema.ingredients);
+  await db.delete(schema.plannedItems);
   await db.delete(schema.householdUsers);
   await db.delete(schema.households);
   await db.delete(schema.users);
@@ -153,6 +154,13 @@ export async function createTestIngredient(
       createdAt: overrides.createdAt ?? new Date(),
     })
     .returning();
+
+  // Its own name as its first alias, as every Ingredient has.
+  await db.insert(schema.ingredientAliases).values({
+    text: ingredient!.name,
+    fold: ingredient!.name.toLowerCase(),
+    ingredientId: ingredient!.id,
+  });
 
   return ingredient;
 }
@@ -225,12 +233,18 @@ export async function createTestRecipeIngredients(
   overrides: Partial<typeof schema.recipeIngredients.$inferInsert> = {}
 ) {
   const db = getTestDb();
+  const [alias] = await db
+    .select({ id: schema.ingredientAliases.id })
+    .from(schema.ingredientAliases)
+    .where(eq(schema.ingredientAliases.ingredientId, ingredientId))
+    .limit(1);
 
   const [recipeIngredient] = await db
     .insert(schema.recipeIngredients)
     .values({
       recipeId,
-      ingredientId,
+      ingredientAliasId: alias?.id ?? null,
+      name: overrides.name ?? "Test ingredient",
       amount: overrides.amount ?? "1",
       unit: overrides.unit ?? "cup",
       order: overrides.order ?? "0",
@@ -274,10 +288,20 @@ export async function createTestRecipeStep(
 export async function getRecipeIngredients(recipeId: string) {
   const db = getTestDb();
 
-  return await db
-    .select()
+  // A line reaches its Ingredient through its alias.
+  const rows = await db
+    .select({
+      line: schema.recipeIngredients,
+      ingredientId: schema.ingredientAliases.ingredientId,
+    })
     .from(schema.recipeIngredients)
+    .leftJoin(
+      schema.ingredientAliases,
+      eq(schema.ingredientAliases.id, schema.recipeIngredients.ingredientAliasId)
+    )
     .where(sql`${schema.recipeIngredients.recipeId} = ${recipeId}`);
+
+  return rows.map(({ line, ingredientId }) => ({ ...line, ingredientId }));
 }
 
 /**

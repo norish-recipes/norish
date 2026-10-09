@@ -12,6 +12,15 @@ export function formatDateUTC(d: Date): string {
   return `${yyyy}${mm}${dd}T${hh}${mi}${ss}Z`;
 }
 
+/**
+ * Format date as a floating time per RFC5545 (YYYYMMDDTHHMMSS, no zone): the
+ * date's UTC fields read as wall-clock time, shown at that hour in whatever
+ * timezone the calendar is viewed in.
+ */
+export function formatDateFloating(d: Date): string {
+  return formatDateUTC(d).slice(0, -1);
+}
+
 /** Escape text per RFC5545 (comma, semicolon, backslash, newline) */
 export function escapeText(value: string | undefined): string | undefined {
   if (!value) return value;
@@ -36,8 +45,8 @@ export function buildIcs(
     "BEGIN:VEVENT",
     `UID:${data.uid}`,
     `DTSTAMP:${formatDateUTC(now)}`,
-    `DTSTART:${formatDateUTC(data.start)}`,
-    `DTEND:${formatDateUTC(data.end)}`,
+    `DTSTART:${formatDateFloating(data.start)}`,
+    `DTEND:${formatDateFloating(data.end)}`,
     `SUMMARY:${escapeText(data.summary)}`,
   ];
 

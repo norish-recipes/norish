@@ -13,7 +13,6 @@ type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, 
 
 export type RecipesSubscriptionCallbacks = {
   onImported?: (payload: Payload<"imported">) => void;
-  onConverted?: (payload: Payload<"converted">) => void;
   onFailed?: (payload: Payload<"failed">) => void;
 };
 
@@ -156,7 +155,6 @@ export function createUseRecipesSubscription(
         void queryClient.invalidateQueries({
           queryKey: trpc.recipes.get.queryKey({ id: payload.recipe.id }),
         });
-        callbacks.onConverted?.(payload);
       },
     });
 

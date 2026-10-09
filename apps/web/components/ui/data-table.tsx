@@ -36,6 +36,8 @@ interface DataTableProps<Row> {
   onRowAction?: (row: Row) => void;
   /** Rendered inside the table body when there are no rows */
   emptyState?: ReactNode;
+  /** Extra `data-*` attributes for a row, for tests and styling hooks. */
+  rowProps?: (row: Row) => Record<`data-${string}`, string | undefined>;
 }
 
 const ALIGNMENT = { start: null, center: "text-center", end: "text-right" } as const;
@@ -52,6 +54,7 @@ export default function DataTable<Row>({
   rowKey,
   onRowAction,
   emptyState,
+  rowProps,
 }: DataTableProps<Row>) {
   // Hidden by media query rather than by dropping the column, so the table
   // does not rebuild itself around a breakpoint the server cannot know.
@@ -92,6 +95,7 @@ export default function DataTable<Row>({
                 className={onRowAction ? "cursor-pointer" : undefined}
                 id={rowKey(row)}
                 onAction={onRowAction ? () => onRowAction(row) : undefined}
+                {...rowProps?.(row)}
               >
                 {columns.map((column) => (
                   <Table.Cell key={column.key} className={columnClass(column)}>

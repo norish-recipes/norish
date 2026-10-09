@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableModelsQuery } from "@/hooks/admin";
 import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -330,16 +331,12 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     }
   };
   return (
-    <div className="flex flex-col gap-4 p-2">
+    <div className="flex flex-col gap-4">
       <SwitchRow description={t("enableAIDescription")} title={t("enableAI")}>
         <SettingsSwitch color="success" isSelected={enabled} onValueChange={setEnabled} />
       </SwitchRow>
 
-      {showValidationWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          {t("configureWarning")}
-        </div>
-      )}
+      {showValidationWarning && <Note status="warning">{t("configureWarning")}</Note>}
 
       <Select
         variant="secondary"
@@ -531,7 +528,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       >
         <Select
           aria-label={t("automaticEnrichment")}
-          className="w-full sm:w-80"
+          className="w-full"
           isDisabled={!enabled}
           placeholder={t("automaticEnrichmentPlaceholder")}
           selectionMode="multiple"
@@ -675,7 +672,6 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           variant="primary"
           isPending={saving}
         >
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

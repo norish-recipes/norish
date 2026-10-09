@@ -27,6 +27,7 @@ const revokeRecipeShareMock = vi.hoisted(() => vi.fn());
 const updateRecipeShareMock = vi.hoisted(() => vi.fn());
 const getCachedHouseholdForUserMock = vi.hoisted(() => vi.fn());
 const isUserServerAdminMock = vi.hoisted(() => vi.fn());
+const ingredientIconAddressesMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../src/routers/recipes/helpers", () => ({
   assertRecipeAccess: assertRecipeAccessMock,
@@ -55,6 +56,10 @@ vi.mock("@norish/db/repositories/recipe-shares", () => ({
 
 vi.mock("@norish/db/repositories/recipes", () => ({
   getRecipeFull: getRecipeFullMock,
+}));
+
+vi.mock("@norish/shared-server/ingredients/icons", () => ({
+  ingredientIconAddresses: ingredientIconAddressesMock,
 }));
 
 vi.mock("@norish/db", () => ({
@@ -194,8 +199,15 @@ describe("recipe share procedures", () => {
       touchLastAccessedAt: true,
     });
     expect(getRecipeFullMock).toHaveBeenCalledWith(recipeId);
-    expect(getPublicRecipeViewMock).toHaveBeenCalledWith(recipeId, "valid-token");
+    expect(getPublicRecipeViewMock).toHaveBeenCalledWith(
+      recipeId,
+      "valid-token",
+      expect.any(Function)
+    );
     expect(result.image).toBe("/share/valid-token/media/cover.jpg");
+
+    // The lines' icons are read by address, the way every surface reads them.
+    expect(getPublicRecipeViewMock.mock.calls[0]![2]).toBe(ingredientIconAddressesMock);
   });
 
   it("returns the public share config for a valid share token", async () => {
@@ -435,5 +447,34 @@ describe("recipe share procedures", () => {
       },
       { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
     );
+  });
+});
+
+describe("the public view of a shared recipe", () => {
+  it("carries each line's Ingredient Icon by address, and no ids", async () => {
+    const { mapRecipeToPublicRecipeView } =
+      await import("@norish/db/repositories/recipe-share-helpers");
+    const recipe = createMockFullRecipe();
+    const ingredientId = recipe.recipeIngredients[0]!.ingredientId!;
+
+    const view = mapRecipeToPublicRecipeView(
+      recipe,
+      "public-token",
+      new Map([[ingredientId, "/ingredient-icons/0123456789abcdef0123456789abcdef.webp"]])
+    );
+
+    expect(view.recipeIngredients[0]).toMatchObject({
+      icon: "/ingredient-icons/0123456789abcdef0123456789abcdef.webp",
+    });
+    expect(view.recipeIngredients[0]).not.toHaveProperty("ingredientId");
+    expect(view.recipeIngredients[0]).not.toHaveProperty("id");
+  });
+
+  it("gives a line with no icon, or no food, the placeholder", async () => {
+    const { mapRecipeToPublicRecipeView } =
+      await import("@norish/db/repositories/recipe-share-helpers");
+    const view = mapRecipeToPublicRecipeView(createMockFullRecipe(), "public-token", new Map());
+
+    expect(view.recipeIngredients.every((line) => line.icon === null)).toBe(true);
   });
 });

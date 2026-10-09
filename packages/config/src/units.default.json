@@ -56,6 +56,10 @@
       {
         "locale": "fi",
         "name": "cl"
+      },
+      {
+        "locale": "uk",
+        "name": "сл"
       }
     ],
     "plural": [
@@ -114,6 +118,10 @@
       {
         "locale": "fi",
         "name": "senttilitraa"
+      },
+      {
+        "locale": "uk",
+        "name": "сл"
       }
     ],
     "alternates": [
@@ -136,7 +144,11 @@
       "centylitr",
       "сантилитър",
       "senttilitra",
-      "senttilitraa"
+      "senttilitraa",
+      "сантилітр",
+      "сантилітри",
+      "сантилітра",
+      "сантилітрів"
     ]
   },
   "deciliter": {
@@ -196,6 +208,10 @@
       {
         "locale": "fi",
         "name": "dl"
+      },
+      {
+        "locale": "uk",
+        "name": "дл"
       }
     ],
     "plural": [
@@ -254,6 +270,10 @@
       {
         "locale": "fi",
         "name": "desilitraa"
+      },
+      {
+        "locale": "uk",
+        "name": "дл"
       }
     ],
     "alternates": [
@@ -277,7 +297,11 @@
       "desiliter",
       "децилитър",
       "desilitra",
-      "desilitraa"
+      "desilitraa",
+      "децилітр",
+      "децилітри",
+      "децилітра",
+      "децилітрів"
     ]
   },
   "gram": {
@@ -337,6 +361,10 @@
       {
         "locale": "fi",
         "name": "g"
+      },
+      {
+        "locale": "uk",
+        "name": "г"
       }
     ],
     "plural": [
@@ -395,6 +423,10 @@
       {
         "locale": "fi",
         "name": "grammaa"
+      },
+      {
+        "locale": "uk",
+        "name": "г"
       }
     ],
     "alternates": [
@@ -426,7 +458,9 @@
       "грама",
       "грам",
       "gramma",
-      "grammaa"
+      "grammaa",
+      "грами",
+      "грамів"
     ]
   },
   "teaspoon": {
@@ -486,6 +520,10 @@
       {
         "locale": "fi",
         "name": "tl"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л."
       }
     ],
     "plural": [
@@ -544,6 +582,10 @@
       {
         "locale": "fi",
         "name": "teelusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л."
       }
     ],
     "alternates": [
@@ -554,6 +596,8 @@
       "teelöff",
       "theelepel",
       "theelepels",
+      "theel",
+      "theel.",
       "tl",
       "tl.",
       "작은술",
@@ -596,7 +640,12 @@
       "teelusikka",
       "teelusikkaa",
       "teelusikallinen",
-      "teelusikallista"
+      "teelusikallista",
+      "чайна ложка",
+      "чайні ложки",
+      "чайних ложок",
+      "чайної ложки",
+      "чайну ложку"
     ]
   },
   "tablespoon": {
@@ -656,6 +705,10 @@
       {
         "locale": "fi",
         "name": "rkl"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л."
       }
     ],
     "plural": [
@@ -714,11 +767,17 @@
       {
         "locale": "fi",
         "name": "ruokalusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л."
       }
     ],
     "alternates": [
       "eetlepel",
       "eetlepels",
+      "eetl",
+      "eetl.",
       "el",
       "el.",
       "essl",
@@ -768,7 +827,12 @@
       "ruokalusikka",
       "ruokalusikkaa",
       "ruokalusikallinen",
-      "ruokalusikallista"
+      "ruokalusikallista",
+      "столова ложка",
+      "столові ложки",
+      "столових ложок",
+      "столової ложки",
+      "столову ложку"
     ]
   },
   "knife_tip": {
@@ -828,6 +892,10 @@
       {
         "locale": "fi",
         "name": "veitsenkärki"
+      },
+      {
+        "locale": "uk",
+        "name": "на кінчику ножа"
       }
     ],
     "plural": [
@@ -886,6 +954,10 @@
       {
         "locale": "fi",
         "name": "veitsenkärkeä"
+      },
+      {
+        "locale": "uk",
+        "name": "на кінчику ножа"
       }
     ],
     "alternates": [
@@ -917,7 +989,9 @@
       "pointes de couteau",
       "veitsenkärki",
       "veitsenkärkeä",
-      "veitsenkärjellistä"
+      "veitsenkärjellistä",
+      "на кінчику ножа",
+      "кінчик ножа"
     ]
   },
   "pinch": {
@@ -977,6 +1051,10 @@
       {
         "locale": "fi",
         "name": "ripaus"
+      },
+      {
+        "locale": "uk",
+        "name": "щіпка"
       }
     ],
     "plural": [
@@ -1035,13 +1113,16 @@
       {
         "locale": "fi",
         "name": "ripausta"
+      },
+      {
+        "locale": "uk",
+        "name": "щіпки"
       }
     ],
     "alternates": [
       "prise(n)",
       "prise/n",
       "a pinch",
-      "dash",
       "pinch",
       "pinches",
       "pr",
@@ -1050,7 +1131,6 @@
       "snufjes",
       "한꼬집",
       "꼬집",
-      "약간",
       "et nip",
       "drys",
       "pizzico",
@@ -1073,7 +1153,15 @@
       "ripaus",
       "ripausta",
       "hyppysellinen",
-      "hyppysellistä"
+      "hyppysellistä",
+      "щіпка",
+      "щіпки",
+      "щіпок",
+      "щіпку",
+      "дрібка",
+      "дрібки",
+      "дрібок",
+      "дрібку"
     ]
   },
   "piece": {
@@ -1133,6 +1221,10 @@
       {
         "locale": "fi",
         "name": "kpl"
+      },
+      {
+        "locale": "uk",
+        "name": "шт."
       }
     ],
     "plural": [
@@ -1191,6 +1283,10 @@
       {
         "locale": "fi",
         "name": "kappaletta"
+      },
+      {
+        "locale": "uk",
+        "name": "шт."
       }
     ],
     "alternates": [
@@ -1210,9 +1306,7 @@
       "stuks",
       "stückchen",
       "개",
-      "장",
       "모",
-      "토막",
       "styk",
       "styks",
       "pezzo",
@@ -1312,6 +1406,10 @@
       {
         "locale": "fi",
         "name": "kynsi"
+      },
+      {
+        "locale": "uk",
+        "name": "зубчик"
       }
     ],
     "plural": [
@@ -1370,6 +1468,10 @@
       {
         "locale": "fi",
         "name": "kynttä"
+      },
+      {
+        "locale": "uk",
+        "name": "зубчики"
       }
     ],
     "alternates": [
@@ -1402,7 +1504,8 @@
       "kynsi",
       "kynttä",
       "valkosipulinkynsi",
-      "valkosipulinkynttä"
+      "valkosipulinkynttä",
+      "зубчиків"
     ]
   },
   "leaf": {
@@ -1462,6 +1565,10 @@
       {
         "locale": "fi",
         "name": "lehti"
+      },
+      {
+        "locale": "uk",
+        "name": "листок"
       }
     ],
     "plural": [
@@ -1520,6 +1627,10 @@
       {
         "locale": "fi",
         "name": "lehteä"
+      },
+      {
+        "locale": "uk",
+        "name": "листки"
       }
     ],
     "alternates": [
@@ -1530,7 +1641,6 @@
       "leaf",
       "leaves",
       "잎",
-      "장",
       "foglia",
       "foglie",
       "foglietta",
@@ -1551,7 +1661,11 @@
       "folha",
       "folhas",
       "lehti",
-      "lehteä"
+      "lehteä",
+      "листок",
+      "листки",
+      "листка",
+      "листків"
     ]
   },
   "sprig": {
@@ -1611,6 +1725,10 @@
       {
         "locale": "fi",
         "name": "oksa"
+      },
+      {
+        "locale": "uk",
+        "name": "гілочка"
       }
     ],
     "plural": [
@@ -1669,16 +1787,18 @@
       {
         "locale": "fi",
         "name": "oksaa"
+      },
+      {
+        "locale": "uk",
+        "name": "гілочки"
       }
     ],
     "alternates": [
       "sprig",
       "sprigs",
       "sprigs of",
-      "stengel",
       "stiel",
       "stiele",
-      "stängel",
       "stängelchen",
       "tak",
       "takje",
@@ -1687,8 +1807,6 @@
       "zweiglein",
       "줄기",
       "가지",
-      "stilk",
-      "stilke",
       "rametto",
       "rametti",
       "ramita",
@@ -1708,7 +1826,11 @@
       "brin",
       "brins",
       "oksa",
-      "oksaa"
+      "oksaa",
+      "гілочка",
+      "гілочки",
+      "гілочок",
+      "гілочку"
     ]
   },
   "bunch": {
@@ -1768,6 +1890,10 @@
       {
         "locale": "fi",
         "name": "nippu"
+      },
+      {
+        "locale": "uk",
+        "name": "пучок"
       }
     ],
     "plural": [
@@ -1826,6 +1952,10 @@
       {
         "locale": "fi",
         "name": "nippua"
+      },
+      {
+        "locale": "uk",
+        "name": "пучки"
       }
     ],
     "alternates": [
@@ -1866,7 +1996,8 @@
       "nippu",
       "nippua",
       "kimppu",
-      "kimppua"
+      "kimppua",
+      "пучків"
     ]
   },
   "stalk": {
@@ -1926,6 +2057,10 @@
       {
         "locale": "fi",
         "name": "varsi"
+      },
+      {
+        "locale": "uk",
+        "name": "стебло"
       }
     ],
     "plural": [
@@ -1984,13 +2119,16 @@
       {
         "locale": "fi",
         "name": "vartta"
+      },
+      {
+        "locale": "uk",
+        "name": "стебла"
       }
     ],
     "alternates": [
       "stengel",
       "stengels",
       "대",
-      "줄기",
       "stilk",
       "stilke",
       "gambo",
@@ -2010,7 +2148,10 @@
       "tige",
       "tiges",
       "varsi",
-      "vartta"
+      "vartta",
+      "стебло",
+      "стебла",
+      "стебел"
     ]
   },
   "pack": {
@@ -2070,6 +2211,10 @@
       {
         "locale": "fi",
         "name": "pkt"
+      },
+      {
+        "locale": "uk",
+        "name": "упаковка"
       }
     ],
     "plural": [
@@ -2128,6 +2273,10 @@
       {
         "locale": "fi",
         "name": "pakettia"
+      },
+      {
+        "locale": "uk",
+        "name": "упаковки"
       }
     ],
     "alternates": [
@@ -2149,7 +2298,6 @@
       "päckchen",
       "팩",
       "봉",
-      "봉지",
       "포",
       "pk.",
       "confezione",
@@ -2173,7 +2321,12 @@
       "pkt",
       "pkt.",
       "paketti",
-      "pakettia"
+      "pakettia",
+      "упаковок",
+      "пачка",
+      "пачки",
+      "пачок",
+      "пачку"
     ]
   },
   "can": {
@@ -2233,6 +2386,10 @@
       {
         "locale": "fi",
         "name": "tlk"
+      },
+      {
+        "locale": "uk",
+        "name": "банка"
       }
     ],
     "plural": [
@@ -2291,6 +2448,10 @@
       {
         "locale": "fi",
         "name": "tölkkiä"
+      },
+      {
+        "locale": "uk",
+        "name": "банки"
       }
     ],
     "alternates": [
@@ -2313,11 +2474,8 @@
       "kleine dosen",
       "tin",
       "캔",
-      "통",
       "lattina",
       "lattine",
-      "barattolo",
-      "barattoli",
       "lata",
       "latas",
       "банка",
@@ -2333,7 +2491,11 @@
       "tlk",
       "tlk.",
       "tölkki",
-      "tölkkiä"
+      "tölkkiä",
+      "банок",
+      "бляшанка",
+      "бляшанки",
+      "бляшанок"
     ]
   },
   "jar": {
@@ -2344,19 +2506,19 @@
       },
       {
         "locale": "de",
-        "name": "Glas"
+        "name": "Gl."
       },
       {
         "locale": "nl",
-        "name": "pot"
+        "name": "potje"
       },
       {
         "locale": "ko",
-        "name": "병"
+        "name": "유리병"
       },
       {
         "locale": "da",
-        "name": "glas"
+        "name": "krukke"
       },
       {
         "locale": "it",
@@ -2393,6 +2555,10 @@
       {
         "locale": "fi",
         "name": "purkki"
+      },
+      {
+        "locale": "uk",
+        "name": "слоїк"
       }
     ],
     "plural": [
@@ -2402,19 +2568,19 @@
       },
       {
         "locale": "de",
-        "name": "Gläser"
+        "name": "Gl."
       },
       {
         "locale": "nl",
-        "name": "potten"
+        "name": "potjes"
       },
       {
         "locale": "ko",
-        "name": "병"
+        "name": "유리병"
       },
       {
         "locale": "da",
-        "name": "glas"
+        "name": "krukker"
       },
       {
         "locale": "it",
@@ -2451,6 +2617,10 @@
       {
         "locale": "fi",
         "name": "purkkia"
+      },
+      {
+        "locale": "uk",
+        "name": "слоїки"
       }
     ],
     "alternates": [
@@ -2461,9 +2631,6 @@
       "jar",
       "jars",
       "mason jar",
-      "pot",
-      "potten",
-      "병",
       "유리병",
       "vasetto",
       "vasetti",
@@ -2489,7 +2656,12 @@
       "bocal",
       "bocaux",
       "purkki",
-      "purkkia"
+      "purkkia",
+      "слоїк",
+      "слоїки",
+      "слоїка",
+      "слоїків",
+      "баночок"
     ]
   },
   "bottle": {
@@ -2549,6 +2721,10 @@
       {
         "locale": "fi",
         "name": "plo"
+      },
+      {
+        "locale": "uk",
+        "name": "пляшка"
       }
     ],
     "plural": [
@@ -2607,6 +2783,10 @@
       {
         "locale": "fi",
         "name": "pulloa"
+      },
+      {
+        "locale": "uk",
+        "name": "пляшки"
       }
     ],
     "alternates": [
@@ -2614,7 +2794,6 @@
       "flaschen",
       "bottle",
       "bottles",
-      "btl",
       "btls",
       "fl",
       "fl.",
@@ -2642,7 +2821,10 @@
       "бутилки",
       "plo",
       "pullo",
-      "pulloa"
+      "pulloa",
+      "пляшка",
+      "пляшки",
+      "пляшок"
     ]
   },
   "bag": {
@@ -2702,6 +2884,10 @@
       {
         "locale": "fi",
         "name": "pussi"
+      },
+      {
+        "locale": "uk",
+        "name": "пакет"
       }
     ],
     "plural": [
@@ -2760,6 +2946,10 @@
       {
         "locale": "fi",
         "name": "pussia"
+      },
+      {
+        "locale": "uk",
+        "name": "пакети"
       }
     ],
     "alternates": [
@@ -2767,14 +2957,11 @@
       "bags",
       "btl",
       "btl.",
-      "beutel",
       "sack",
       "tütchen",
       "tüte",
       "tüten",
       "zak",
-      "zakje",
-      "zakjes",
       "zakken",
       "봉지",
       "자루",
@@ -2798,7 +2985,9 @@
       "sac",
       "sacs",
       "pussi",
-      "pussia"
+      "pussia",
+      "пакети",
+      "пакетів"
     ]
   },
   "box": {
@@ -2813,7 +3002,7 @@
       },
       {
         "locale": "nl",
-        "name": "doos"
+        "name": "doosje"
       },
       {
         "locale": "ko",
@@ -2858,6 +3047,10 @@
       {
         "locale": "fi",
         "name": "laatikko"
+      },
+      {
+        "locale": "uk",
+        "name": "коробка"
       }
     ],
     "plural": [
@@ -2871,7 +3064,7 @@
       },
       {
         "locale": "nl",
-        "name": "dozen"
+        "name": "doosjes"
       },
       {
         "locale": "ko",
@@ -2916,6 +3109,10 @@
       {
         "locale": "fi",
         "name": "laatikkoa"
+      },
+      {
+        "locale": "uk",
+        "name": "коробки"
       }
     ],
     "alternates": [
@@ -2925,7 +3122,6 @@
       "bx.",
       "doosje",
       "doosjes",
-      "dozen",
       "박스",
       "상자",
       "scatola",
@@ -2945,7 +3141,9 @@
       "кутия",
       "кутии",
       "laatikko",
-      "laatikkoa"
+      "laatikkoa",
+      "doos",
+      "коробок"
     ]
   },
   "handful": {
@@ -3005,6 +3203,10 @@
       {
         "locale": "fi",
         "name": "kourallinen"
+      },
+      {
+        "locale": "uk",
+        "name": "жменя"
       }
     ],
     "plural": [
@@ -3063,6 +3265,10 @@
       {
         "locale": "fi",
         "name": "kourallista"
+      },
+      {
+        "locale": "uk",
+        "name": "жмені"
       }
     ],
     "alternates": [
@@ -3097,7 +3303,11 @@
       "poignée",
       "poignées",
       "kourallinen",
-      "kourallista"
+      "kourallista",
+      "жменя",
+      "жмені",
+      "жмень",
+      "жменю"
     ]
   },
   "splash": {
@@ -3116,7 +3326,7 @@
       },
       {
         "locale": "ko",
-        "name": "약간"
+        "name": "조금"
       },
       {
         "locale": "da",
@@ -3157,6 +3367,10 @@
       {
         "locale": "fi",
         "name": "loraus"
+      },
+      {
+        "locale": "uk",
+        "name": "ковток"
       }
     ],
     "plural": [
@@ -3174,7 +3388,7 @@
       },
       {
         "locale": "ko",
-        "name": "약간"
+        "name": "조금"
       },
       {
         "locale": "da",
@@ -3215,6 +3429,10 @@
       {
         "locale": "fi",
         "name": "lorausta"
+      },
+      {
+        "locale": "uk",
+        "name": "ковтки"
       }
     ],
     "alternates": [
@@ -3226,7 +3444,6 @@
       "schuß",
       "splash",
       "splashes",
-      "약간",
       "조금",
       "et skvæt",
       "slat",
@@ -3249,7 +3466,10 @@
       "giclée",
       "giclées",
       "loraus",
-      "lorausta"
+      "lorausta",
+      "ковток",
+      "ковтки",
+      "ковтків"
     ]
   },
   "cup": {
@@ -3309,6 +3529,10 @@
       {
         "locale": "fi",
         "name": "kuppi"
+      },
+      {
+        "locale": "uk",
+        "name": "склянка"
       }
     ],
     "plural": [
@@ -3367,6 +3591,10 @@
       {
         "locale": "fi",
         "name": "kupillista"
+      },
+      {
+        "locale": "uk",
+        "name": "склянки"
       }
     ],
     "alternates": [
@@ -3388,7 +3616,6 @@
       "tass.",
       "tässchen",
       "컵",
-      "공기",
       "pægl",
       "tazza",
       "tazze",
@@ -3414,7 +3641,11 @@
       "kuppi",
       "kuppia",
       "kupillinen",
-      "kupillista"
+      "kupillista",
+      "склянка",
+      "склянки",
+      "склянок",
+      "склянку"
     ]
   },
   "glass": {
@@ -3474,6 +3705,10 @@
       {
         "locale": "fi",
         "name": "lasi"
+      },
+      {
+        "locale": "uk",
+        "name": "келих"
       }
     ],
     "plural": [
@@ -3532,6 +3767,10 @@
       {
         "locale": "fi",
         "name": "lasillista"
+      },
+      {
+        "locale": "uk",
+        "name": "келихи"
       }
     ],
     "alternates": [
@@ -3544,7 +3783,6 @@
       "kleines glas",
       "shotglas",
       "잔",
-      "컵",
       "bicchiere",
       "bicchieri",
       "verre",
@@ -3564,7 +3802,11 @@
       "lasi",
       "lasia",
       "lasillinen",
-      "lasillista"
+      "lasillista",
+      "келих",
+      "келихи",
+      "келиха",
+      "келихів"
     ]
   },
   "slice": {
@@ -3624,6 +3866,10 @@
       {
         "locale": "fi",
         "name": "viipale"
+      },
+      {
+        "locale": "uk",
+        "name": "скибочка"
       }
     ],
     "plural": [
@@ -3682,6 +3928,10 @@
       {
         "locale": "fi",
         "name": "viipaletta"
+      },
+      {
+        "locale": "uk",
+        "name": "скибочки"
       }
     ],
     "alternates": [
@@ -3719,7 +3969,13 @@
       "viipale",
       "viipaletta",
       "siivu",
-      "siivua"
+      "siivua",
+      "скибочка",
+      "скибочки",
+      "скибочок",
+      "скибка",
+      "скибки",
+      "скибок"
     ]
   },
   "strip": {
@@ -3779,6 +4035,10 @@
       {
         "locale": "fi",
         "name": "suikale"
+      },
+      {
+        "locale": "uk",
+        "name": "смужка"
       }
     ],
     "plural": [
@@ -3837,12 +4097,15 @@
       {
         "locale": "fi",
         "name": "suikaletta"
+      },
+      {
+        "locale": "uk",
+        "name": "смужки"
       }
     ],
     "alternates": [
       "reepje",
       "reepjes",
-      "repen",
       "strip",
       "strips",
       "채",
@@ -3864,7 +4127,10 @@
       "lanière",
       "lanières",
       "suikale",
-      "suikaletta"
+      "suikaletta",
+      "смужка",
+      "смужки",
+      "смужок"
     ]
   },
   "sheet": {
@@ -3875,7 +4141,7 @@
       },
       {
         "locale": "de",
-        "name": "Blatt"
+        "name": "Platte"
       },
       {
         "locale": "nl",
@@ -3895,7 +4161,7 @@
       },
       {
         "locale": "fr",
-        "name": "feuille"
+        "name": "plaque"
       },
       {
         "locale": "es",
@@ -3924,6 +4190,10 @@
       {
         "locale": "fi",
         "name": "levy"
+      },
+      {
+        "locale": "uk",
+        "name": "аркуш"
       }
     ],
     "plural": [
@@ -3933,7 +4203,7 @@
       },
       {
         "locale": "de",
-        "name": "Blätter"
+        "name": "Platten"
       },
       {
         "locale": "nl",
@@ -3953,7 +4223,7 @@
       },
       {
         "locale": "fr",
-        "name": "feuilles"
+        "name": "plaques"
       },
       {
         "locale": "es",
@@ -3982,6 +4252,10 @@
       {
         "locale": "fi",
         "name": "levyä"
+      },
+      {
+        "locale": "uk",
+        "name": "аркуші"
       }
     ],
     "alternates": [
@@ -3992,8 +4266,6 @@
       "장",
       "foglio",
       "fogli",
-      "feuille",
-      "feuilles",
       "lámina",
       "láminas",
       "пластина",
@@ -4007,7 +4279,13 @@
       "кора",
       "кори",
       "levy",
-      "levyä"
+      "levyä",
+      "аркуш",
+      "аркуші",
+      "аркуша",
+      "аркушів",
+      "пластини",
+      "пластин"
     ]
   },
   "serving": {
@@ -4067,6 +4345,10 @@
       {
         "locale": "fi",
         "name": "annos"
+      },
+      {
+        "locale": "uk",
+        "name": "порція"
       }
     ],
     "plural": [
@@ -4125,6 +4407,10 @@
       {
         "locale": "fi",
         "name": "annosta"
+      },
+      {
+        "locale": "uk",
+        "name": "порції"
       }
     ],
     "alternates": [
@@ -4152,7 +4438,10 @@
       "porção",
       "porções",
       "annos",
-      "annosta"
+      "annosta",
+      "порція",
+      "порції",
+      "порцій"
     ]
   },
   "round_slice": {
@@ -4163,7 +4452,7 @@
       },
       {
         "locale": "de",
-        "name": "Scheibe"
+        "name": "Rädchen"
       },
       {
         "locale": "nl",
@@ -4175,7 +4464,7 @@
       },
       {
         "locale": "da",
-        "name": "skive"
+        "name": "rund skive"
       },
       {
         "locale": "it",
@@ -4212,6 +4501,10 @@
       {
         "locale": "fi",
         "name": "kiekko"
+      },
+      {
+        "locale": "uk",
+        "name": "кружечок"
       }
     ],
     "plural": [
@@ -4221,7 +4514,7 @@
       },
       {
         "locale": "de",
-        "name": "Scheiben"
+        "name": "Rädchen"
       },
       {
         "locale": "nl",
@@ -4233,7 +4526,7 @@
       },
       {
         "locale": "da",
-        "name": "skiver"
+        "name": "runde skiver"
       },
       {
         "locale": "it",
@@ -4270,6 +4563,10 @@
       {
         "locale": "fi",
         "name": "kiekkoa"
+      },
+      {
+        "locale": "uk",
+        "name": "кружечки"
       }
     ],
     "alternates": [
@@ -4297,7 +4594,11 @@
       "кръгчета",
       "rondelles",
       "kiekko",
-      "kiekkoa"
+      "kiekkoa",
+      "кружечок",
+      "кружечки",
+      "кружечків",
+      "кружків"
     ]
   },
   "ring": {
@@ -4357,6 +4658,10 @@
       {
         "locale": "fi",
         "name": "rengas"
+      },
+      {
+        "locale": "uk",
+        "name": "кільце"
       }
     ],
     "plural": [
@@ -4415,6 +4720,10 @@
       {
         "locale": "fi",
         "name": "rengasta"
+      },
+      {
+        "locale": "uk",
+        "name": "кільця"
       }
     ],
     "alternates": [
@@ -4442,7 +4751,10 @@
       "anneau",
       "anneaux",
       "rengas",
-      "rengasta"
+      "rengasta",
+      "кільце",
+      "кільця",
+      "кілець"
     ]
   },
   "ball": {
@@ -4502,6 +4814,10 @@
       {
         "locale": "fi",
         "name": "pallo"
+      },
+      {
+        "locale": "uk",
+        "name": "кулька"
       }
     ],
     "plural": [
@@ -4560,13 +4876,15 @@
       {
         "locale": "fi",
         "name": "palloa"
+      },
+      {
+        "locale": "uk",
+        "name": "кульки"
       }
     ],
     "alternates": [
       "bol",
       "bollen",
-      "bolletje",
-      "bolletjes",
       "kügelchen",
       "알",
       "경단",
@@ -4587,7 +4905,10 @@
       "boule",
       "boules",
       "pallo",
-      "palloa"
+      "palloa",
+      "кулька",
+      "кульки",
+      "кульок"
     ]
   },
   "dash": {
@@ -4602,7 +4923,7 @@
       },
       {
         "locale": "nl",
-        "name": "scheutje"
+        "name": "spatje"
       },
       {
         "locale": "ko",
@@ -4647,6 +4968,10 @@
       {
         "locale": "fi",
         "name": "tilkka"
+      },
+      {
+        "locale": "uk",
+        "name": "крапелька"
       }
     ],
     "plural": [
@@ -4660,7 +4985,7 @@
       },
       {
         "locale": "nl",
-        "name": "scheutjes"
+        "name": "spatjes"
       },
       {
         "locale": "ko",
@@ -4705,6 +5030,10 @@
       {
         "locale": "fi",
         "name": "tilkkaa"
+      },
+      {
+        "locale": "uk",
+        "name": "крапельки"
       }
     ],
     "alternates": [
@@ -4712,7 +5041,6 @@
       "dash",
       "dashes",
       "약간",
-      "소량",
       "et stænk",
       "goccio",
       "gocci",
@@ -4732,7 +5060,10 @@
       "soupçon",
       "soupçons",
       "tilkka",
-      "tilkkaa"
+      "tilkkaa",
+      "крапелька",
+      "крапельки",
+      "крапельок"
     ]
   },
   "drizzle": {
@@ -4743,11 +5074,11 @@
       },
       {
         "locale": "de",
-        "name": "Spritzer"
+        "name": "Spritzerchen"
       },
       {
         "locale": "nl",
-        "name": "scheutje"
+        "name": "straaltje"
       },
       {
         "locale": "ko",
@@ -4792,6 +5123,10 @@
       {
         "locale": "fi",
         "name": "pirskaus"
+      },
+      {
+        "locale": "uk",
+        "name": "цівка"
       }
     ],
     "plural": [
@@ -4801,11 +5136,11 @@
       },
       {
         "locale": "de",
-        "name": "Spritzer"
+        "name": "Spritzerchen"
       },
       {
         "locale": "nl",
-        "name": "scheutjes"
+        "name": "straaltjes"
       },
       {
         "locale": "ko",
@@ -4850,6 +5185,10 @@
       {
         "locale": "fi",
         "name": "pirskausta"
+      },
+      {
+        "locale": "uk",
+        "name": "цівки"
       }
     ],
     "alternates": [
@@ -4876,7 +5215,10 @@
       "traits",
       "pirskaus",
       "pirskausta",
-      "pirskahdus"
+      "pirskahdus",
+      "цівка",
+      "цівки",
+      "цівок"
     ]
   },
   "scoop": {
@@ -4887,7 +5229,7 @@
       },
       {
         "locale": "de",
-        "name": "Kugel"
+        "name": "Kelle"
       },
       {
         "locale": "nl",
@@ -4899,11 +5241,11 @@
       },
       {
         "locale": "da",
-        "name": "kugle"
+        "name": "øse"
       },
       {
         "locale": "it",
-        "name": "pallina"
+        "name": "mestolo"
       },
       {
         "locale": "es",
@@ -4936,6 +5278,10 @@
       {
         "locale": "fi",
         "name": "kauhallinen"
+      },
+      {
+        "locale": "uk",
+        "name": "черпак"
       }
     ],
     "plural": [
@@ -4945,7 +5291,7 @@
       },
       {
         "locale": "de",
-        "name": "Kugeln"
+        "name": "Kellen"
       },
       {
         "locale": "nl",
@@ -4957,11 +5303,11 @@
       },
       {
         "locale": "da",
-        "name": "kugler"
+        "name": "øser"
       },
       {
         "locale": "it",
-        "name": "palline"
+        "name": "mestoli"
       },
       {
         "locale": "es",
@@ -4994,6 +5340,10 @@
       {
         "locale": "fi",
         "name": "kauhallista"
+      },
+      {
+        "locale": "uk",
+        "name": "черпаки"
       }
     ],
     "alternates": [
@@ -5001,8 +5351,6 @@
       "scoops",
       "스쿱",
       "국자",
-      "pallina",
-      "palline",
       "cazo",
       "cazos",
       "cucharón",
@@ -5019,7 +5367,11 @@
       "louche",
       "louches",
       "kauhallinen",
-      "kauhallista"
+      "kauhallista",
+      "черпаків",
+      "ополоник",
+      "ополоники",
+      "ополоників"
     ]
   },
   "stick": {
@@ -5079,6 +5431,10 @@
       {
         "locale": "fi",
         "name": "tanko"
+      },
+      {
+        "locale": "uk",
+        "name": "паличка"
       }
     ],
     "plural": [
@@ -5137,6 +5493,10 @@
       {
         "locale": "fi",
         "name": "tankoa"
+      },
+      {
+        "locale": "uk",
+        "name": "палички"
       }
     ],
     "alternates": [
@@ -5163,7 +5523,10 @@
       "bâton",
       "bâtons",
       "tanko",
-      "tankoa"
+      "tankoa",
+      "паличка",
+      "палички",
+      "паличок"
     ]
   },
   "tub": {
@@ -5182,7 +5545,7 @@
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "용기"
       },
       {
         "locale": "da",
@@ -5223,6 +5586,10 @@
       {
         "locale": "fi",
         "name": "rasia"
+      },
+      {
+        "locale": "uk",
+        "name": "контейнер"
       }
     ],
     "plural": [
@@ -5240,7 +5607,7 @@
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "용기"
       },
       {
         "locale": "da",
@@ -5281,13 +5648,16 @@
       {
         "locale": "fi",
         "name": "rasiaa"
+      },
+      {
+        "locale": "uk",
+        "name": "контейнери"
       }
     ],
     "alternates": [
       "container",
       "tub",
       "tubs",
-      "통",
       "용기",
       "vaschetta",
       "vaschette",
@@ -5308,7 +5678,9 @@
       "barquette",
       "barquettes",
       "rasia",
-      "rasiaa"
+      "rasiaa",
+      "контейнери",
+      "контейнерів"
     ]
   },
   "capful": {
@@ -5368,6 +5740,10 @@
       {
         "locale": "fi",
         "name": "korkillinen"
+      },
+      {
+        "locale": "uk",
+        "name": "ковпачок"
       }
     ],
     "plural": [
@@ -5426,6 +5802,10 @@
       {
         "locale": "fi",
         "name": "korkillista"
+      },
+      {
+        "locale": "uk",
+        "name": "ковпачки"
       }
     ],
     "alternates": [
@@ -5452,7 +5832,10 @@
       "bouchon",
       "bouchons",
       "korkillinen",
-      "korkillista"
+      "korkillista",
+      "ковпачок",
+      "ковпачки",
+      "ковпачків"
     ]
   },
   "pouch": {
@@ -5475,7 +5858,7 @@
       },
       {
         "locale": "da",
-        "name": "pose"
+        "name": "brev"
       },
       {
         "locale": "it",
@@ -5512,6 +5895,10 @@
       {
         "locale": "fi",
         "name": "pussukka"
+      },
+      {
+        "locale": "uk",
+        "name": "пакетик"
       }
     ],
     "plural": [
@@ -5533,7 +5920,7 @@
       },
       {
         "locale": "da",
-        "name": "poser"
+        "name": "breve"
       },
       {
         "locale": "it",
@@ -5570,6 +5957,10 @@
       {
         "locale": "fi",
         "name": "pussukkaa"
+      },
+      {
+        "locale": "uk",
+        "name": "пакетики"
       }
     ],
     "alternates": [
@@ -5598,7 +5989,9 @@
       "pussukka",
       "pussukkaa",
       "annospussi",
-      "annospussia"
+      "annospussia",
+      "пакетиків",
+      "саше"
     ]
   },
   "sleeve": {
@@ -5609,7 +6002,7 @@
       },
       {
         "locale": "de",
-        "name": "Packung"
+        "name": "Tube"
       },
       {
         "locale": "nl",
@@ -5617,7 +6010,7 @@
       },
       {
         "locale": "ko",
-        "name": "봉지"
+        "name": "묶음"
       },
       {
         "locale": "da",
@@ -5625,7 +6018,7 @@
       },
       {
         "locale": "it",
-        "name": "confezione"
+        "name": "tubo"
       },
       {
         "locale": "es",
@@ -5658,6 +6051,10 @@
       {
         "locale": "fi",
         "name": "pakkaus"
+      },
+      {
+        "locale": "uk",
+        "name": "тюбик"
       }
     ],
     "plural": [
@@ -5667,7 +6064,7 @@
       },
       {
         "locale": "de",
-        "name": "Packungen"
+        "name": "Tuben"
       },
       {
         "locale": "nl",
@@ -5675,7 +6072,7 @@
       },
       {
         "locale": "ko",
-        "name": "봉지"
+        "name": "묶음"
       },
       {
         "locale": "da",
@@ -5683,7 +6080,7 @@
       },
       {
         "locale": "it",
-        "name": "confezioni"
+        "name": "tubi"
       },
       {
         "locale": "es",
@@ -5716,15 +6113,16 @@
       {
         "locale": "fi",
         "name": "pakkausta"
+      },
+      {
+        "locale": "uk",
+        "name": "тюбики"
       }
     ],
     "alternates": [
       "sleeve",
       "sleeves",
-      "봉지",
       "묶음",
-      "confezione",
-      "confezioni",
       "funda",
       "fundas",
       "туба",
@@ -5739,7 +6137,10 @@
       "étui",
       "étuis",
       "pakkaus",
-      "pakkausta"
+      "pakkausta",
+      "тюбик",
+      "тюбики",
+      "тюбиків"
     ]
   },
   "roll": {
@@ -5799,6 +6200,10 @@
       {
         "locale": "fi",
         "name": "rulla"
+      },
+      {
+        "locale": "uk",
+        "name": "рулон"
       }
     ],
     "plural": [
@@ -5857,6 +6262,10 @@
       {
         "locale": "fi",
         "name": "rullaa"
+      },
+      {
+        "locale": "uk",
+        "name": "рулони"
       }
     ],
     "alternates": [
@@ -5885,7 +6294,9 @@
       "rouleau",
       "rouleaux",
       "rulla",
-      "rullaa"
+      "rullaa",
+      "рулони",
+      "рулонів"
     ]
   },
   "ear": {
@@ -5904,7 +6315,7 @@
       },
       {
         "locale": "ko",
-        "name": "개"
+        "name": "이삭"
       },
       {
         "locale": "da",
@@ -5945,6 +6356,10 @@
       {
         "locale": "fi",
         "name": "tähkä"
+      },
+      {
+        "locale": "uk",
+        "name": "качан"
       }
     ],
     "plural": [
@@ -5962,7 +6377,7 @@
       },
       {
         "locale": "ko",
-        "name": "개"
+        "name": "이삭"
       },
       {
         "locale": "da",
@@ -6003,6 +6418,10 @@
       {
         "locale": "fi",
         "name": "tähkää"
+      },
+      {
+        "locale": "uk",
+        "name": "качани"
       }
     ],
     "alternates": [
@@ -6010,7 +6429,6 @@
       "ear of corn",
       "ears",
       "ears of corn",
-      "개",
       "이삭",
       "majskolbe",
       "pannocchia",
@@ -6030,7 +6448,11 @@
       "épi",
       "épis",
       "tähkä",
-      "tähkää"
+      "tähkää",
+      "качан",
+      "качани",
+      "качана",
+      "качанів"
     ]
   },
   "wedge": {
@@ -6049,7 +6471,7 @@
       },
       {
         "locale": "ko",
-        "name": "쪽"
+        "name": "웨지"
       },
       {
         "locale": "da",
@@ -6057,7 +6479,7 @@
       },
       {
         "locale": "it",
-        "name": "spicchio"
+        "name": "fettina"
       },
       {
         "locale": "es",
@@ -6090,6 +6512,10 @@
       {
         "locale": "fi",
         "name": "lohko"
+      },
+      {
+        "locale": "uk",
+        "name": "часточка"
       }
     ],
     "plural": [
@@ -6107,7 +6533,7 @@
       },
       {
         "locale": "ko",
-        "name": "쪽"
+        "name": "웨지"
       },
       {
         "locale": "da",
@@ -6115,7 +6541,7 @@
       },
       {
         "locale": "it",
-        "name": "spicchi"
+        "name": "fettine"
       },
       {
         "locale": "es",
@@ -6148,6 +6574,10 @@
       {
         "locale": "fi",
         "name": "lohkoa"
+      },
+      {
+        "locale": "uk",
+        "name": "часточки"
       }
     ],
     "alternates": [
@@ -6155,9 +6585,6 @@
       "keil",
       "wedge",
       "wedges",
-      "쪽",
-      "spicchio",
-      "spicchi",
       "gajo",
       "gajos",
       "долька",
@@ -6173,7 +6600,10 @@
       "quartier",
       "quartiers",
       "lohko",
-      "lohkoa"
+      "lohkoa",
+      "часточка",
+      "часточки",
+      "часточок"
     ]
   },
   "chunk": {
@@ -6184,11 +6614,11 @@
       },
       {
         "locale": "de",
-        "name": "Stück"
+        "name": "Brocken"
       },
       {
         "locale": "nl",
-        "name": "stuk"
+        "name": "brok"
       },
       {
         "locale": "ko",
@@ -6200,7 +6630,7 @@
       },
       {
         "locale": "it",
-        "name": "pezzo"
+        "name": "tocco"
       },
       {
         "locale": "es",
@@ -6233,6 +6663,10 @@
       {
         "locale": "fi",
         "name": "pala"
+      },
+      {
+        "locale": "uk",
+        "name": "шматок"
       }
     ],
     "plural": [
@@ -6242,11 +6676,11 @@
       },
       {
         "locale": "de",
-        "name": "Stücke"
+        "name": "Brocken"
       },
       {
         "locale": "nl",
-        "name": "stukken"
+        "name": "brokken"
       },
       {
         "locale": "ko",
@@ -6258,7 +6692,7 @@
       },
       {
         "locale": "it",
-        "name": "pezzi"
+        "name": "tocchi"
       },
       {
         "locale": "es",
@@ -6291,15 +6725,16 @@
       {
         "locale": "fi",
         "name": "palaa"
+      },
+      {
+        "locale": "uk",
+        "name": "шматки"
       }
     ],
     "alternates": [
       "chunk",
       "chunks",
       "덩어리",
-      "토막",
-      "pezzo",
-      "pezzi",
       "tocco",
       "tocchi",
       "trozo",
@@ -6318,7 +6753,14 @@
       "morceau",
       "morceaux",
       "pala",
-      "palaa"
+      "palaa",
+      "stukken",
+      "шматок",
+      "шматки",
+      "шматків",
+      "шматочок",
+      "шматочки",
+      "шматочків"
     ]
   },
   "cube": {
@@ -6378,6 +6820,10 @@
       {
         "locale": "fi",
         "name": "kuutio"
+      },
+      {
+        "locale": "uk",
+        "name": "кубик"
       }
     ],
     "plural": [
@@ -6436,6 +6882,10 @@
       {
         "locale": "fi",
         "name": "kuutiota"
+      },
+      {
+        "locale": "uk",
+        "name": "кубики"
       }
     ],
     "alternates": [
@@ -6463,7 +6913,8 @@
       "dé",
       "dés",
       "kuutio",
-      "kuutiota"
+      "kuutiota",
+      "кубиків"
     ]
   },
   "fillet": {
@@ -6523,6 +6974,10 @@
       {
         "locale": "fi",
         "name": "filee"
+      },
+      {
+        "locale": "uk",
+        "name": "філе"
       }
     ],
     "plural": [
@@ -6581,6 +7036,10 @@
       {
         "locale": "fi",
         "name": "fileetä"
+      },
+      {
+        "locale": "uk",
+        "name": "філе"
       }
     ],
     "alternates": [
@@ -6602,7 +7061,8 @@
       "filés",
       "филета",
       "filee",
-      "fileetä"
+      "fileetä",
+      "філе"
     ]
   },
   "heaping_tablespoon": {
@@ -6662,6 +7122,10 @@
       {
         "locale": "fi",
         "name": "kukkurainen rkl"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. з гіркою"
       }
     ],
     "plural": [
@@ -6720,6 +7184,10 @@
       {
         "locale": "fi",
         "name": "kukkuraista ruokalusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. з гіркою"
       }
     ],
     "alternates": [
@@ -6771,7 +7239,16 @@
       "kukkurainen rkl",
       "kukkurainen ruokalusikka",
       "kukkurainen ruokalusikallinen",
-      "kukkuraista ruokalusikallista"
+      "kukkuraista ruokalusikallista",
+      "heaped tbsp",
+      "heaped tablespoon",
+      "heaped tablespoons",
+      "ст. л. з гіркою",
+      "ст.л. з гіркою",
+      "столова ложка з гіркою",
+      "столові ложки з гіркою",
+      "столових ложок з гіркою",
+      "столової ложки з гіркою"
     ]
   },
   "scant_tablespoon": {
@@ -6831,6 +7308,10 @@
       {
         "locale": "fi",
         "name": "niukka rkl"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. без гірки"
       }
     ],
     "plural": [
@@ -6889,6 +7370,10 @@
       {
         "locale": "fi",
         "name": "niukkaa ruokalusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. без гірки"
       }
     ],
     "alternates": [
@@ -6933,7 +7418,13 @@
       "cuillères à soupe rases",
       "cuillère à soupe rase",
       "niukka rkl",
-      "niukka ruokalusikallinen"
+      "niukka ruokalusikallinen",
+      "ст. л. без гірки",
+      "ст.л. без гірки",
+      "столова ложка без гірки",
+      "столові ложки без гірки",
+      "столових ложок без гірки",
+      "столової ложки без гірки"
     ]
   },
   "generous_pinch": {
@@ -6993,6 +7484,10 @@
       {
         "locale": "fi",
         "name": "reilu ripaus"
+      },
+      {
+        "locale": "uk",
+        "name": "велика щіпка"
       }
     ],
     "plural": [
@@ -7051,6 +7546,10 @@
       {
         "locale": "fi",
         "name": "reilua ripausta"
+      },
+      {
+        "locale": "uk",
+        "name": "великі щіпки"
       }
     ],
     "alternates": [
@@ -7083,7 +7582,11 @@
       "grosse pincée",
       "grosses pincées",
       "reilu ripaus",
-      "reilua ripausta"
+      "reilua ripausta",
+      "велика щіпка",
+      "великі щіпки",
+      "великих щіпок",
+      "велику щіпку"
     ]
   },
   "large_splash": {
@@ -7143,6 +7646,10 @@
       {
         "locale": "fi",
         "name": "iso loraus"
+      },
+      {
+        "locale": "uk",
+        "name": "великий ковток"
       }
     ],
     "plural": [
@@ -7201,6 +7708,10 @@
       {
         "locale": "fi",
         "name": "isoa lorausta"
+      },
+      {
+        "locale": "uk",
+        "name": "великі ковтки"
       }
     ],
     "alternates": [
@@ -7228,7 +7739,10 @@
       "grande giclée",
       "grandes giclées",
       "iso loraus",
-      "isoa lorausta"
+      "isoa lorausta",
+      "великий ковток",
+      "великі ковтки",
+      "великих ковтків"
     ]
   },
   "dozen": {
@@ -7288,6 +7802,10 @@
       {
         "locale": "fi",
         "name": "tusina"
+      },
+      {
+        "locale": "uk",
+        "name": "дюжина"
       }
     ],
     "plural": [
@@ -7346,6 +7864,10 @@
       {
         "locale": "fi",
         "name": "tusinaa"
+      },
+      {
+        "locale": "uk",
+        "name": "дюжини"
       }
     ],
     "alternates": [
@@ -7370,7 +7892,9 @@
       "douzaine",
       "douzaines",
       "tusina",
-      "tusinaa"
+      "tusinaa",
+      "дюжини",
+      "дюжин"
     ]
   },
   "small_splash": {
@@ -7389,7 +7913,7 @@
       },
       {
         "locale": "ko",
-        "name": "조금"
+        "name": "소량"
       },
       {
         "locale": "da",
@@ -7430,6 +7954,10 @@
       {
         "locale": "fi",
         "name": "pieni loraus"
+      },
+      {
+        "locale": "uk",
+        "name": "невеликий ковток"
       }
     ],
     "plural": [
@@ -7447,7 +7975,7 @@
       },
       {
         "locale": "ko",
-        "name": "조금"
+        "name": "소량"
       },
       {
         "locale": "da",
@@ -7488,12 +8016,15 @@
       {
         "locale": "fi",
         "name": "pientä lorausta"
+      },
+      {
+        "locale": "uk",
+        "name": "невеликі ковтки"
       }
     ],
     "alternates": [
       "kleiner schuß",
       "winziger schuss",
-      "조금",
       "소량",
       "en smule",
       "spruzzino",
@@ -7514,7 +8045,11 @@
       "petite giclée",
       "petites giclées",
       "pieni loraus",
-      "pientä lorausta"
+      "pientä lorausta",
+      "невеликий ковток",
+      "невеликі ковтки",
+      "невеликих ковтків",
+      "маленький ковток"
     ]
   },
   "bulb": {
@@ -7529,15 +8064,15 @@
       },
       {
         "locale": "nl",
-        "name": "bol"
+        "name": "knol"
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "뿌리"
       },
       {
         "locale": "da",
-        "name": "hoved"
+        "name": "knold"
       },
       {
         "locale": "it",
@@ -7574,6 +8109,10 @@
       {
         "locale": "fi",
         "name": "sipuli"
+      },
+      {
+        "locale": "uk",
+        "name": "головка"
       }
     ],
     "plural": [
@@ -7587,15 +8126,15 @@
       },
       {
         "locale": "nl",
-        "name": "bollen"
+        "name": "knollen"
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "뿌리"
       },
       {
         "locale": "da",
-        "name": "hoveder"
+        "name": "knolde"
       },
       {
         "locale": "it",
@@ -7632,11 +8171,14 @@
       {
         "locale": "fi",
         "name": "sipulia"
+      },
+      {
+        "locale": "uk",
+        "name": "головки"
       }
     ],
     "alternates": [
       "knöllchen",
-      "통",
       "뿌리",
       "bulbo",
       "bulbi",
@@ -7652,7 +8194,8 @@
       "bulbe",
       "bulbes",
       "sipuli",
-      "sipulia"
+      "sipulia",
+      "головок"
     ]
   },
   "head": {
@@ -7712,6 +8255,10 @@
       {
         "locale": "fi",
         "name": "kerä"
+      },
+      {
+        "locale": "uk",
+        "name": "голівка"
       }
     ],
     "plural": [
@@ -7770,6 +8317,10 @@
       {
         "locale": "fi",
         "name": "kerää"
+      },
+      {
+        "locale": "uk",
+        "name": "голівки"
       }
     ],
     "alternates": [
@@ -7795,7 +8346,10 @@
       "tête",
       "têtes",
       "kerä",
-      "kerää"
+      "kerää",
+      "голівка",
+      "голівки",
+      "голівок"
     ]
   },
   "to_taste": {
@@ -7855,6 +8409,10 @@
       {
         "locale": "fi",
         "name": "maun mukaan"
+      },
+      {
+        "locale": "uk",
+        "name": "до смаку"
       }
     ],
     "plural": [
@@ -7913,6 +8471,10 @@
       {
         "locale": "fi",
         "name": "maun mukaan"
+      },
+      {
+        "locale": "uk",
+        "name": "до смаку"
       }
     ],
     "alternates": [
@@ -7937,7 +8499,9 @@
       "selon le goût",
       "à volonté",
       "maun mukaan",
-      "oman maun mukaan"
+      "oman maun mukaan",
+      "до смаку",
+      "за смаком"
     ]
   },
   "pound": {
@@ -7997,6 +8561,10 @@
       {
         "locale": "fi",
         "name": "lb"
+      },
+      {
+        "locale": "uk",
+        "name": "фунт"
       }
     ],
     "plural": [
@@ -8055,6 +8623,10 @@
       {
         "locale": "fi",
         "name": "naulaa"
+      },
+      {
+        "locale": "uk",
+        "name": "фунти"
       }
     ],
     "alternates": [
@@ -8075,7 +8647,9 @@
       "livres",
       "livre",
       "naula",
-      "naulaa"
+      "naulaa",
+      "фунти",
+      "фунтів"
     ]
   },
   "bar": {
@@ -8135,6 +8709,10 @@
       {
         "locale": "fi",
         "name": "patukka"
+      },
+      {
+        "locale": "uk",
+        "name": "плитка"
       }
     ],
     "plural": [
@@ -8193,6 +8771,10 @@
       {
         "locale": "fi",
         "name": "patukkaa"
+      },
+      {
+        "locale": "uk",
+        "name": "плитки"
       }
     ],
     "alternates": [
@@ -8219,7 +8801,8 @@
       "tablette",
       "tablettes",
       "patukka",
-      "patukkaa"
+      "patukkaa",
+      "плиток"
     ]
   },
   "bowl": {
@@ -8250,7 +8833,7 @@
       },
       {
         "locale": "es",
-        "name": "bol"
+        "name": "cuenco"
       },
       {
         "locale": "ru",
@@ -8274,11 +8857,15 @@
       },
       {
         "locale": "fr",
-        "name": "bol"
+        "name": "bolée"
       },
       {
         "locale": "fi",
         "name": "kulho"
+      },
+      {
+        "locale": "uk",
+        "name": "миска"
       }
     ],
     "plural": [
@@ -8308,7 +8895,7 @@
       },
       {
         "locale": "es",
-        "name": "boles"
+        "name": "cuencos"
       },
       {
         "locale": "ru",
@@ -8332,11 +8919,15 @@
       },
       {
         "locale": "fr",
-        "name": "bols"
+        "name": "bolées"
       },
       {
         "locale": "fi",
         "name": "kulhoa"
+      },
+      {
+        "locale": "uk",
+        "name": "миски"
       }
     ],
     "alternates": [
@@ -8347,7 +8938,6 @@
       "ciotole",
       "scodella",
       "scodelle",
-      "bol",
       "boles",
       "cuenco",
       "cuencos",
@@ -8364,7 +8954,8 @@
       "bols",
       "kulho",
       "kulhoa",
-      "kulhollinen"
+      "kulhollinen",
+      "мисок"
     ]
   },
   "heaping_teaspoon": {
@@ -8424,6 +9015,10 @@
       {
         "locale": "fi",
         "name": "kukkurainen tl"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. з гіркою"
       }
     ],
     "plural": [
@@ -8482,6 +9077,10 @@
       {
         "locale": "fi",
         "name": "kukkuraista teelusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. з гіркою"
       }
     ],
     "alternates": [
@@ -8531,7 +9130,16 @@
       "kukkurallinen teelusikka",
       "kukkurainen teelusikka",
       "kukkurainen teelusikallinen",
-      "kukkuraista teelusikallista"
+      "kukkuraista teelusikallista",
+      "heaped tsp",
+      "heaped teaspoon",
+      "heaped teaspoons",
+      "ч. л. з гіркою",
+      "ч.л. з гіркою",
+      "чайна ложка з гіркою",
+      "чайні ложки з гіркою",
+      "чайних ложок з гіркою",
+      "чайної ложки з гіркою"
     ]
   },
   "scant_teaspoon": {
@@ -8591,6 +9199,10 @@
       {
         "locale": "fi",
         "name": "niukka tl"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. без гірки"
       }
     ],
     "plural": [
@@ -8649,6 +9261,10 @@
       {
         "locale": "fi",
         "name": "niukkaa teelusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. без гірки"
       }
     ],
     "alternates": [
@@ -8691,7 +9307,13 @@
       "cuillères à café rases",
       "cuillère à café rase",
       "niukka tl",
-      "niukka teelusikallinen"
+      "niukka teelusikallinen",
+      "ч. л. без гірки",
+      "ч.л. без гірки",
+      "чайна ложка без гірки",
+      "чайні ложки без гірки",
+      "чайних ложок без гірки",
+      "чайної ложки без гірки"
     ]
   },
   "pot": {
@@ -8751,6 +9373,10 @@
       {
         "locale": "fi",
         "name": "pata"
+      },
+      {
+        "locale": "uk",
+        "name": "каструля"
       }
     ],
     "plural": [
@@ -8809,6 +9435,10 @@
       {
         "locale": "fi",
         "name": "pataa"
+      },
+      {
+        "locale": "uk",
+        "name": "каструлі"
       }
     ],
     "alternates": [
@@ -8831,7 +9461,10 @@
       "casserole",
       "casseroles",
       "pata",
-      "pataa"
+      "pataa",
+      "каструля",
+      "каструлі",
+      "каструль"
     ]
   },
   "drop": {
@@ -8891,6 +9524,10 @@
       {
         "locale": "fi",
         "name": "tippa"
+      },
+      {
+        "locale": "uk",
+        "name": "крапля"
       }
     ],
     "plural": [
@@ -8949,6 +9586,10 @@
       {
         "locale": "fi",
         "name": "tippaa"
+      },
+      {
+        "locale": "uk",
+        "name": "краплі"
       }
     ],
     "alternates": [
@@ -8981,7 +9622,11 @@
       "tippa",
       "tippaa",
       "pisara",
-      "pisaraa"
+      "pisaraa",
+      "крапля",
+      "краплі",
+      "крапель",
+      "краплю"
     ]
   },
   "ounce": {
@@ -9041,6 +9686,10 @@
       {
         "locale": "fi",
         "name": "oz"
+      },
+      {
+        "locale": "uk",
+        "name": "унц."
       }
     ],
     "plural": [
@@ -9099,6 +9748,10 @@
       {
         "locale": "fi",
         "name": "unssia"
+      },
+      {
+        "locale": "uk",
+        "name": "унц."
       }
     ],
     "alternates": [
@@ -9119,7 +9772,11 @@
       "onça",
       "onces",
       "unssi",
-      "unssia"
+      "unssia",
+      "унц.",
+      "унція",
+      "унції",
+      "унцій"
     ]
   },
   "milliliter": {
@@ -9179,6 +9836,10 @@
       {
         "locale": "fi",
         "name": "ml"
+      },
+      {
+        "locale": "uk",
+        "name": "мл"
       }
     ],
     "plural": [
@@ -9237,6 +9898,10 @@
       {
         "locale": "fi",
         "name": "millilitraa"
+      },
+      {
+        "locale": "uk",
+        "name": "мл"
       }
     ],
     "alternates": [
@@ -9261,7 +9926,11 @@
       "милилитра",
       "милилитър",
       "millilitra",
-      "millilitraa"
+      "millilitraa",
+      "мілілітр",
+      "мілілітри",
+      "мілілітра",
+      "мілілітрів"
     ]
   },
   "liter": {
@@ -9321,6 +9990,10 @@
       {
         "locale": "fi",
         "name": "l"
+      },
+      {
+        "locale": "uk",
+        "name": "л"
       }
     ],
     "plural": [
@@ -9379,6 +10052,10 @@
       {
         "locale": "fi",
         "name": "litraa"
+      },
+      {
+        "locale": "uk",
+        "name": "л"
       }
     ],
     "alternates": [
@@ -9401,7 +10078,11 @@
       "litr",
       "литър",
       "litra",
-      "litraa"
+      "litraa",
+      "літр",
+      "літри",
+      "літра",
+      "літрів"
     ]
   },
   "centimeter": {
@@ -9461,6 +10142,10 @@
       {
         "locale": "fi",
         "name": "cm"
+      },
+      {
+        "locale": "uk",
+        "name": "см"
       }
     ],
     "plural": [
@@ -9519,6 +10204,10 @@
       {
         "locale": "fi",
         "name": "senttimetriä"
+      },
+      {
+        "locale": "uk",
+        "name": "см"
       }
     ],
     "alternates": [
@@ -9543,7 +10232,443 @@
       "centymetr",
       "сантиметър",
       "senttimetri",
-      "senttimetriä"
+      "senttimetriä",
+      "сантиметри",
+      "сантиметрів"
+    ]
+  },
+  "to_serve": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "to serve"
+      },
+      {
+        "locale": "de",
+        "name": "zum Servieren"
+      },
+      {
+        "locale": "nl",
+        "name": "om te serveren"
+      },
+      {
+        "locale": "ko",
+        "name": "곁들임용"
+      },
+      {
+        "locale": "da",
+        "name": "til servering"
+      },
+      {
+        "locale": "it",
+        "name": "per servire"
+      },
+      {
+        "locale": "es",
+        "name": "para servir"
+      },
+      {
+        "locale": "ru",
+        "name": "для подачи"
+      },
+      {
+        "locale": "pl",
+        "name": "do podania"
+      },
+      {
+        "locale": "no",
+        "name": "til servering"
+      },
+      {
+        "locale": "pt",
+        "name": "para servir"
+      },
+      {
+        "locale": "bg",
+        "name": "за сервиране"
+      },
+      {
+        "locale": "fr",
+        "name": "pour servir"
+      },
+      {
+        "locale": "fi",
+        "name": "tarjoiluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для подачі"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "to serve"
+      },
+      {
+        "locale": "de",
+        "name": "zum Servieren"
+      },
+      {
+        "locale": "nl",
+        "name": "om te serveren"
+      },
+      {
+        "locale": "ko",
+        "name": "곁들임용"
+      },
+      {
+        "locale": "da",
+        "name": "til servering"
+      },
+      {
+        "locale": "it",
+        "name": "per servire"
+      },
+      {
+        "locale": "es",
+        "name": "para servir"
+      },
+      {
+        "locale": "ru",
+        "name": "для подачи"
+      },
+      {
+        "locale": "pl",
+        "name": "do podania"
+      },
+      {
+        "locale": "no",
+        "name": "til servering"
+      },
+      {
+        "locale": "pt",
+        "name": "para servir"
+      },
+      {
+        "locale": "bg",
+        "name": "за сервиране"
+      },
+      {
+        "locale": "fr",
+        "name": "pour servir"
+      },
+      {
+        "locale": "fi",
+        "name": "tarjoiluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для подачі"
+      }
+    ],
+    "alternates": [
+      "for serving",
+      "to serve with",
+      "zum Servieren",
+      "om te serveren",
+      "ter serving",
+      "bij het serveren",
+      "til servering",
+      "per servire",
+      "para servir",
+      "для подачи",
+      "do podania",
+      "за сервиране",
+      "pour servir",
+      "tarjoiluun",
+      "для подачі",
+      "для сервірування"
+    ]
+  },
+  "for_garnish": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "for garnish"
+      },
+      {
+        "locale": "de",
+        "name": "zum Garnieren"
+      },
+      {
+        "locale": "nl",
+        "name": "ter garnering"
+      },
+      {
+        "locale": "ko",
+        "name": "장식용"
+      },
+      {
+        "locale": "da",
+        "name": "til pynt"
+      },
+      {
+        "locale": "it",
+        "name": "per guarnire"
+      },
+      {
+        "locale": "es",
+        "name": "para decorar"
+      },
+      {
+        "locale": "ru",
+        "name": "для украшения"
+      },
+      {
+        "locale": "pl",
+        "name": "do dekoracji"
+      },
+      {
+        "locale": "no",
+        "name": "til pynt"
+      },
+      {
+        "locale": "pt",
+        "name": "para decorar"
+      },
+      {
+        "locale": "bg",
+        "name": "за украса"
+      },
+      {
+        "locale": "fr",
+        "name": "pour décorer"
+      },
+      {
+        "locale": "fi",
+        "name": "koristeluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для прикраси"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "for garnish"
+      },
+      {
+        "locale": "de",
+        "name": "zum Garnieren"
+      },
+      {
+        "locale": "nl",
+        "name": "ter garnering"
+      },
+      {
+        "locale": "ko",
+        "name": "장식용"
+      },
+      {
+        "locale": "da",
+        "name": "til pynt"
+      },
+      {
+        "locale": "it",
+        "name": "per guarnire"
+      },
+      {
+        "locale": "es",
+        "name": "para decorar"
+      },
+      {
+        "locale": "ru",
+        "name": "для украшения"
+      },
+      {
+        "locale": "pl",
+        "name": "do dekoracji"
+      },
+      {
+        "locale": "no",
+        "name": "til pynt"
+      },
+      {
+        "locale": "pt",
+        "name": "para decorar"
+      },
+      {
+        "locale": "bg",
+        "name": "за украса"
+      },
+      {
+        "locale": "fr",
+        "name": "pour décorer"
+      },
+      {
+        "locale": "fi",
+        "name": "koristeluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для прикраси"
+      }
+    ],
+    "alternates": [
+      "to garnish",
+      "for garnishing",
+      "for decoration",
+      "zur Garnitur",
+      "zum Dekorieren",
+      "ter decoratie",
+      "om te garneren",
+      "til pynt",
+      "per decorare",
+      "para adornar",
+      "для украшения",
+      "do dekoracji",
+      "para enfeitar",
+      "за украса",
+      "pour la décoration",
+      "koristeluun",
+      "для прикраси",
+      "для декору"
+    ]
+  },
+  "optional": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "optional"
+      },
+      {
+        "locale": "de",
+        "name": "optional"
+      },
+      {
+        "locale": "nl",
+        "name": "optioneel"
+      },
+      {
+        "locale": "ko",
+        "name": "선택"
+      },
+      {
+        "locale": "da",
+        "name": "valgfri"
+      },
+      {
+        "locale": "it",
+        "name": "facoltativo"
+      },
+      {
+        "locale": "es",
+        "name": "opcional"
+      },
+      {
+        "locale": "ru",
+        "name": "по желанию"
+      },
+      {
+        "locale": "pl",
+        "name": "opcjonalnie"
+      },
+      {
+        "locale": "no",
+        "name": "valgfritt"
+      },
+      {
+        "locale": "pt",
+        "name": "opcional"
+      },
+      {
+        "locale": "bg",
+        "name": "по желание"
+      },
+      {
+        "locale": "fr",
+        "name": "facultatif"
+      },
+      {
+        "locale": "fi",
+        "name": "valinnainen"
+      },
+      {
+        "locale": "uk",
+        "name": "за бажанням"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "optional"
+      },
+      {
+        "locale": "de",
+        "name": "optional"
+      },
+      {
+        "locale": "nl",
+        "name": "optioneel"
+      },
+      {
+        "locale": "ko",
+        "name": "선택"
+      },
+      {
+        "locale": "da",
+        "name": "valgfri"
+      },
+      {
+        "locale": "it",
+        "name": "facoltativo"
+      },
+      {
+        "locale": "es",
+        "name": "opcional"
+      },
+      {
+        "locale": "ru",
+        "name": "по желанию"
+      },
+      {
+        "locale": "pl",
+        "name": "opcjonalnie"
+      },
+      {
+        "locale": "no",
+        "name": "valgfritt"
+      },
+      {
+        "locale": "pt",
+        "name": "opcional"
+      },
+      {
+        "locale": "bg",
+        "name": "по желание"
+      },
+      {
+        "locale": "fr",
+        "name": "facultatif"
+      },
+      {
+        "locale": "fi",
+        "name": "valinnainen"
+      },
+      {
+        "locale": "uk",
+        "name": "за бажанням"
+      }
+    ],
+    "alternates": [
+      "optionally",
+      "if desired",
+      "if you like",
+      "nach Wunsch",
+      "naar wens",
+      "indien gewenst",
+      "valgfrit",
+      "si se desea",
+      "по желанию",
+      "opcjonalnie",
+      "valgfritt",
+      "se desejar",
+      "по желание",
+      "au choix",
+      "halutessa",
+      "за бажанням"
     ]
   }
 }

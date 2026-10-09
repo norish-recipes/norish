@@ -64,8 +64,10 @@ describe("Locale-aware unit parsing integration", () => {
     it("parses Korean cup", () => {
       const parsed = parseIngredientWithDefaults("1 컵 우유", units);
 
+      // 컵 is the cup's own Korean name; it was a glass's alternate too, and
+      // the later of two claims won, until every word got one owner.
       expect(parsed[0].quantity).toBe(1);
-      expect(parsed[0].unitOfMeasureID).toBe("glass");
+      expect(parsed[0].unitOfMeasureID).toBe("cup");
     });
   });
 });

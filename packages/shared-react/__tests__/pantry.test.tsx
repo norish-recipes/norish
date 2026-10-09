@@ -20,16 +20,18 @@ const OLIVE: PantryIngredientDto = {
   userId: "u1",
   ingredientId: "i-olive",
   name: "Olive Oil",
-  normalizedName: "olive oil",
   version: 1,
+  ancestorIds: [],
+  localeNames: {},
 };
 const SALT: PantryIngredientDto = {
   id: "salt",
   userId: "u1",
   ingredientId: "i-salt",
   name: "Salt",
-  normalizedName: "salt",
   version: 1,
+  ancestorIds: [],
+  localeNames: {},
 };
 
 type UseTRPC = Parameters<typeof createUsePantryQuery>[0]["useTRPC"];
@@ -57,7 +59,7 @@ function Probe({
 
   return (
     <span data-testid="pantry">
-      {pantryIngredientFor(items, name)?.name ?? "not in the pantry"}
+      {pantryIngredientFor(items, { ingredientName: name })?.name ?? "not in the pantry"}
     </span>
   );
 }

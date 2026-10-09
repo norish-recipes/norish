@@ -50,6 +50,8 @@ export interface AdminJobRowDTO {
 export interface AdminJobAttemptDTO {
   /** 1-based attempt number */
   attempt: number;
+  /** How the attempt ended; the latest one follows the job's state */
+  outcome: "done" | "failed" | "running" | "pending";
   /** Error message for this attempt, if it failed */
   message: string | null;
   /** Full stack trace for this attempt, if it failed */
@@ -65,6 +67,8 @@ export interface AdminJobModelDTO {
   provider: string;
   model: string;
   outcome: "completed" | "failed";
+  /** The tokens this model's requests took, added up, as the provider reported them; null for none. */
+  tokens: number | null;
 }
 
 export interface AdminJobDetailDTO extends AdminJobRowDTO {

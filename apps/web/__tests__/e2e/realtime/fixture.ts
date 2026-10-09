@@ -4,6 +4,7 @@ import { test as base, expect } from "@playwright/test";
 import type { SessionCookies } from "../harness/auth";
 import { signIn } from "../harness/auth";
 import { withDatabase } from "../harness/database";
+import { hydratingBrowser } from "../harness/hydration";
 import { ProductionStack } from "../harness/production-stack";
 
 export const USER_A = {
@@ -178,6 +179,7 @@ async function cleanup(open: Set<BrowserContext>, stack: ProductionStack): Promi
 }
 
 export const test = base.extend<NoTestFixtures, RealtimeWorkerFixtures>({
+  browser: [async ({ browser }, use) => use(hydratingBrowser(browser)), { scope: "worker" }],
   realtimeStack: [
     async ({ browser }, use) => {
       const stack = new ProductionStack({

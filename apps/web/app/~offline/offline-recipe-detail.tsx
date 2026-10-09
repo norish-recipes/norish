@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import RecipeDetailPage from "@/app/(app)/recipes/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
+import { routeParams } from "@/app/~offline/route-params";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { cacheManager } from "@/lib/query-cache";
@@ -22,9 +23,6 @@ export function OfflineRecipeDetail({ id }: { id: string }) {
 
   const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
 
-  // A stable promise identity so the reused page's `use(params)` settles.
-  const params = useMemo(() => Promise.resolve({ id }), [id]);
-
   if (!owner) {
     return <RecipeSkeleton />;
   }
@@ -35,5 +33,5 @@ export function OfflineRecipeDetail({ id }: { id: string }) {
     return <OfflineUnavailable />;
   }
 
-  return <RecipeDetailPage params={params} />;
+  return <RecipeDetailPage params={routeParams(id)} />;
 }

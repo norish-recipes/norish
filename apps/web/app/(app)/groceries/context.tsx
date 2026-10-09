@@ -1,19 +1,15 @@
 "use client";
 
-import type { GroceryGroupSimilar, GroceryViewMode } from "@/lib/grocery-preferences";
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import { useDevicePreferenceState } from "@/context/device-preference-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import {
   useGroceriesMutations,
   useGroceriesQuery,
   useGroceriesSubscription,
 } from "@/hooks/groceries";
-import {
-  groceryGroupSimilarPreference,
-  groceryViewModePreference,
-} from "@/lib/grocery-preferences";
 
 import type { GroceryDto } from "@norish/shared/contracts";
+import type { GroceryViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { createGroceriesContext } from "@norish/shared-react/contexts";
 
 // =============================================================================
@@ -29,7 +25,7 @@ const sharedGroceriesContext = createGroceriesContext({
 export const GroceriesProvider = sharedGroceriesContext.GroceriesProvider;
 export const useGroceriesContext = sharedGroceriesContext.useGroceriesContext;
 
-export type { GroceryViewMode } from "@/lib/grocery-preferences";
+export type { GroceryViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 // =============================================================================
 // Web-only UI Context
@@ -56,41 +52,19 @@ const GroceriesUiCtx = createContext<GroceriesUiContextValue | null>(null);
 
 type GroceriesUiProviderProps = {
   children: ReactNode;
-  /** The cookies as the server read them; absent on the offline bootstrap. */
-  initialViewMode?: GroceryViewMode;
-  initialGroupSimilar?: GroceryGroupSimilar;
 };
 
-function GroceriesUiProvider({
-  children,
-  initialViewMode,
-  initialGroupSimilar,
-}: GroceriesUiProviderProps) {
+function GroceriesUiProvider({ children }: GroceriesUiProviderProps) {
   // UI State
   const [recurrencePanelOpen, setRecurrencePanelOpen] = useState(false);
   const [recurrencePanelGroceryId, setRecurrencePanelGroceryId] = useState<string | null>(null);
   const [addGroceryPanelOpen, setAddGroceryPanelOpen] = useState(false);
   const [editingGrocery, setEditingGrocery] = useState<GroceryDto | null>(null);
 
-  // Both device preferences ride cookies so the server renders the page the
-  // way the reader left it; the shared state covers the seeded, self-read
-  // and stale-HTML reconcile paths.
-  const [viewMode, setViewMode] = useDevicePreferenceState(
-    groceryViewModePreference,
-    initialViewMode
-  );
-
-  const [groupSimilarValue, setGroupSimilarValue] = useDevicePreferenceState(
-    groceryGroupSimilarPreference,
-    initialGroupSimilar
-  );
-
-  const groupSimilarIngredients = groupSimilarValue === "true";
-
-  const setGroupSimilarIngredients = useCallback(
-    (enabled: boolean) => setGroupSimilarValue(enabled ? "true" : "false"),
-    [setGroupSimilarValue]
-  );
+  // Device Preferences: the server renders the page the way the reader left it.
+  const [viewMode, setViewMode] = useDevicePreference("groceryViewMode");
+  const [groupSimilarIngredients, setGroupSimilarIngredients] =
+    useDevicePreference("groceryGroupSimilar");
 
   const openRecurrencePanel = useCallback((groceryId: string) => {
     setRecurrencePanelGroceryId(groceryId);
@@ -148,19 +122,10 @@ export function useGroceriesUiContext() {
 // Combined Provider
 // =============================================================================
 
-export function GroceriesContextProvider({
-  children,
-  initialViewMode,
-  initialGroupSimilar,
-}: GroceriesUiProviderProps) {
+export function GroceriesContextProvider({ children }: GroceriesUiProviderProps) {
   return (
     <GroceriesProvider>
-      <GroceriesUiProvider
-        initialGroupSimilar={initialGroupSimilar}
-        initialViewMode={initialViewMode}
-      >
-        {children}
-      </GroceriesUiProvider>
+      <GroceriesUiProvider>{children}</GroceriesUiProvider>
     </GroceriesProvider>
   );
 }

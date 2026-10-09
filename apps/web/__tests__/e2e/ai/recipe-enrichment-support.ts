@@ -1,9 +1,8 @@
 import type { Page } from "@playwright/test";
-import { request } from "@playwright/test";
 import { Client } from "pg";
 
 import type { SessionCookies } from "./fixture";
-import { submitMutation } from "../harness/trpc";
+import { callTrpc, submitMutation } from "../harness/trpc";
 import { databaseUrl } from "./database";
 
 /**
@@ -89,28 +88,7 @@ export async function supplyUserAllergies(
   cookies: SessionCookies,
   allergies: string[]
 ): Promise<void> {
-  const api = await request.newContext({
-    baseURL,
-    extraHTTPHeaders: {
-      origin: baseURL,
-      cookie: cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
-    },
-  });
+  const { version } = await callTrpc<{ version: number }>(baseURL, cookies, "user.getAllergies");
 
-  try {
-    const current = await api.get("/api/trpc/user.getAllergies");
-
-    if (!current.ok()) throw new Error(`getAllergies failed: ${current.status()}`);
-
-    const body = (await current.json()) as {
-      result: { data: { json: { version: number } } };
-    };
-    const response = await api.post("/api/trpc/user.setAllergies", {
-      data: { json: { allergies, version: body.result.data.json.version } },
-    });
-
-    if (!response.ok()) throw new Error(`setAllergies failed: ${response.status()}`);
-  } finally {
-    await api.dispose();
-  }
+  await callTrpc(baseURL, cookies, "user.setAllergies", { allergies, version });
 }

@@ -154,7 +154,10 @@
     "ariaLabel": "Muunna mittajärjestelmä",
     "toMetric": "Muunna metrisiksi",
     "toUS": "Muunna amerikkalaisiksi",
-    "converting": "Muunnetaan…"
+    "toMetricWithAI": "Muunna metrisiksi tekoälyllä",
+    "toUSWithAI": "Muunna amerikkalaisiksi tekoälyllä",
+    "converting": "Muunnetaan…",
+    "original": "Alkuperäinen"
   },
   "deleteModal": {
     "title": "Poista resepti",
@@ -255,7 +258,20 @@
     "protein": "Proteiini",
     "showingPortions": "Näytetään arvot {count} {count, plural, one {annokselle} other {annokselle}}",
     "noInfo": "Ravintosisältötietoja ei ole saatavilla",
-    "estimateWithAI": "Arvioi tekoälyllä"
+    "estimateWithAI": "Arvioi tekoälyllä",
+    "estimated": "Arvioitu",
+    "leftOut": "{count, plural, one {# rivi jäi laskematta} other {# riviä jäi laskematta}}",
+    "estimatedByAI": "tekoälyn arvioima",
+    "reasons": {
+      "seasoning": "mauste",
+      "noAmount": "ei määrää",
+      "noSize": "tälle mitalle ei ole painoa",
+      "noNumbers": "ei vielä ravintoarvoja",
+      "noSpoonWeight": "ei vielä lusikallisen painoa",
+      "noPieceWeight": "ei vielä kappaleen painoa"
+    },
+    "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
+    "householdNumbers": "kotitaloutesi arvot"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Resepti tuotu",
-    "converted": "Mitat muunnettu",
-    "convertedDescription": "Resepti muunnettiin {system}-yksiköihin",
     "failed": "Reseptitoiminto epäonnistui",
     "failedDescription": "Reseptin käsittelyssä meni jokin pieleen. Tekniset tiedot löytyvät selaimen konsolista.",
     "batchImported": "Reseptit tuotu",
@@ -402,6 +416,12 @@
     "searchRecipes": "Hae reseptejä",
     "noRecipesToAdd": "Reseptejä ei löytynyt.",
     "addCount": "{count, plural, one {Lisää # resepti} other {Lisää # reseptiä}}",
-    "everythingAlreadyIn": "Jokainen resepti on jo tässä keittokirjassa."
+    "everythingAlreadyIn": "Jokainen resepti on jo tässä keittokirjassa.",
+    "coverLabel": "Kansikuva",
+    "chooseImage": "Valitse kuva",
+    "changeImage": "Vaihda kuva",
+    "removeImage": "Poista kuva",
+    "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
+    "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
   }
 }

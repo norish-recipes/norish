@@ -13,9 +13,9 @@ import { mutableRowColumns } from "./shared";
  * destroying them, and an orphaned row is visible to everyone under every
  * policy exactly as an orphaned recipe is.
  *
- * There is deliberately no cover column and no description. The cover is
- * derived at read time from the members' own images, so it can never go
- * stale and there is nothing to upload.
+ * The cover is derived at read time from the members' own images unless
+ * someone has uploaded an `image` for the cookbook itself, which then shows
+ * instead. There is deliberately no description.
  */
 export const cookbooks = pgTable(
   "cookbooks",
@@ -25,6 +25,7 @@ export const cookbooks = pgTable(
       onDelete: "set null",
     }),
     title: text("title").notNull(),
+    image: text("image"),
     ...mutableRowColumns,
   },
   (t) => [

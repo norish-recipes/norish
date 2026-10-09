@@ -9,7 +9,9 @@
     "manageStores": "Administrer butikker",
     "storeViewOptions": "Butikvisningsindstillinger",
     "groupIngredients": "Gruppér ingredienser",
-    "pantry": "Spisekammer"
+    "pantry": "Spisekammer",
+    "list": "Liste",
+    "views": "Indkøbsvisninger"
   },
   "empty": {
     "title": "Din indkøbsliste venter",
@@ -85,13 +87,25 @@
     "aisleDuplicate": "Denne butik har allerede en gang med det navn"
   },
   "pantry": {
-    "title": "Spisekammer",
-    "hint": "Det, du allerede har derhjemme. Ingredienser i dit spisekammer holdes ude af listen, når du tilføjer en opskrift.",
+    "hint": "Ingredienser, du allerede har.",
     "empty": "Intet i dit spisekammer endnu",
-    "namePlaceholder": "f.eks. Olivenolie",
+    "unavailable": "Spisekammeret kunne ikke læses. Intet er ændret; prøv igen, når du er online.",
+    "fieldLabel": "Find eller tilføj en madvare",
+    "fieldPlaceholder": "Find eller tilføj, f.eks. olivenolie",
     "add": "Tilføj til spisekammer",
-    "remove": "Fjern fra spisekammer",
-    "duplicate": "Det er allerede i dit spisekammer"
+    "fromCatalogue": "Tilføj en madvare",
+    "addFood": "Tilføj {name} til spisekammeret",
+    "putOnTheList": "Tilføj til indkøbsliste",
+    "onTheList": "På listen",
+    "putOnTheListToast": "{name} er på listen",
+    "undo": "Fortryd",
+    "keepFailed": "{name} kunne ikke tilføjes til spisekammeret",
+    "fromYourRecipes": "Fra dine opskrifter",
+    "fromYourRecipesHint": "Mest brugte ingredienser",
+    "inRecipes": "{count, plural, one {i # opskrift} other {i # opskrifter}}",
+    "showMore": "Vis flere",
+    "inYourPantry": "I dit spisekammer",
+    "offlineDetails": "En madvares detaljer åbner, når du er online igen."
   },
   "panel": {
     "addTitle": "Tilføj indkøbsvare",
@@ -132,7 +146,10 @@
     "addToGroceries": "Tilføj til indkøbsliste",
     "aisle": "Gang",
     "noAisle": "Ingen gang",
-    "inPantry": "I dit spisekammer"
+    "toBuy": "Skal købes",
+    "inPantry": "I dit spisekammer",
+    "weKeepThis": "Har vi altid",
+    "keepFailed": "Det kunne ikke tilføjes til spisekammeret"
   },
   "picker": {
     "unlink": "Fjern kobling til produkt",

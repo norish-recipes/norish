@@ -76,6 +76,7 @@ function cookbook(overrides: Partial<CookbookSummaryDTO> = {}): CookbookSummaryD
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     version: 1,
+    image: null,
     memberCount: 3,
     coverImages: [],
     memberTitles: ["Soup", "Cake", "Stew"],
@@ -107,10 +108,8 @@ describe("CookbookCard", () => {
   it("adds the members' cooking times up and names the smallest serving", () => {
     renderCard();
 
-    const chips = screen.getAllByTestId("chip").map((chip) => chip.textContent);
-
-    expect(chips).toContain("1:45h");
-    expect(chips).toContain("2");
+    expect(screen.getByText("1:45h")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
   });
 
   it("names the reader's own allergens and no other member tag", () => {
@@ -140,7 +139,10 @@ describe("CookbookCard", () => {
     );
 
     expect(screen.getByText("Weeknights")).toBeInTheDocument();
-    expect(screen.getAllByTestId("chip").map((chip) => chip.textContent)).toEqual([
+    expect(screen.getByText('recipeCount:{"count":3}')).toBeInTheDocument();
+    expect(screen.queryByText(/h$|m$/)).toBeNull();
+    // The count is the one chip left: no time, no servings, no allergens.
+    expect(screen.queryAllByTestId("chip").map((chip) => chip.textContent)).toEqual([
       'recipeCount:{"count":3}',
     ]);
   });
@@ -148,8 +150,6 @@ describe("CookbookCard", () => {
   it("says nothing about time when no member states one", () => {
     renderCard({ totalMinutes: null });
 
-    const chips = screen.getAllByTestId("chip").map((chip) => chip.textContent);
-
-    expect(chips).not.toContain("0m");
+    expect(screen.queryByText("0m")).toBeNull();
   });
 });

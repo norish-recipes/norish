@@ -1,11 +1,13 @@
 "use client";
 
 import { use, useEffect } from "react";
+import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { useTranslations } from "next-intl";
 
+import { useAutoConversion } from "./components/use-system-conversion";
 import { WakeLockProvider } from "./components/wake-lock-context";
 import { RecipeContextProvider, useRecipeContext } from "./context";
 import RecipePageDesktop from "./recipe-page-desktop";
@@ -18,6 +20,8 @@ type Props = {
 function RecipePageContent() {
   const { recipe, isNotFound, isLoading } = useRecipeContext();
   const t = useTranslations("recipes.detail");
+
+  useAutoConversion();
 
   // Scroll to top when recipe page mounts
   useEffect(() => {
@@ -39,20 +43,23 @@ function RecipePageContent() {
   }
 
   return (
-    <RecipePageTint dishColor={recipe.dishColor}>
-      {/* Desktop layout - smooth fade in */}
-      <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
-        <RecipePageDesktop />
-      </div>
+    // Every surface of the page names the recipe's foods: its lines, cooking mode, the steps' chips.
+    <IngredientIconsProvider ids={recipe.recipeIngredients.map((line) => line.ingredientId)}>
+      <RecipePageTint dishColor={recipe.dishColor}>
+        {/* Desktop layout - smooth fade in */}
+        <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
+          <RecipePageDesktop />
+        </div>
 
-      {/* Mobile layout - full width, smooth fade in */}
-      <div
-        key={`${recipe?.id}-mobile`}
-        className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
-      >
-        <RecipePageMobile />
-      </div>
-    </RecipePageTint>
+        {/* Mobile layout - full width, smooth fade in */}
+        <div
+          key={`${recipe?.id}-mobile`}
+          className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
+        >
+          <RecipePageMobile />
+        </div>
+      </RecipePageTint>
+    </IngredientIconsProvider>
   );
 }
 

@@ -195,7 +195,15 @@ test("expanding shows the whole frame with its sound, and hands the crop back on
 
   await expandControl().click();
 
-  await expect.poll(async () => (await videoState()).inFullscreen).toBe(true);
+  // The document enters fullscreen before the player's `fullscreenchange`
+  // handler re-renders it, so wait for what the player shows, not the document.
+  await expect
+    .poll(async () => {
+      const { inFullscreen, objectFit } = await videoState();
+
+      return { inFullscreen, objectFit };
+    })
+    .toEqual({ inFullscreen: true, objectFit: "contain" });
 
   const expanded = await videoState();
 
@@ -207,7 +215,13 @@ test("expanding shows the whole frame with its sound, and hands the crop back on
   expect(expanded.currentTime).toBeGreaterThanOrEqual(cropped.currentTime);
 
   await page.evaluate(() => document.exitFullscreen());
-  await expect.poll(async () => (await videoState()).inFullscreen).toBe(false);
+  await expect
+    .poll(async () => {
+      const { inFullscreen, objectFit } = await videoState();
+
+      return { inFullscreen, objectFit };
+    })
+    .toEqual({ inFullscreen: false, objectFit: "cover" });
 
   const restored = await videoState();
 

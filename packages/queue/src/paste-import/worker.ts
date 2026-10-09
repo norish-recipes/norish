@@ -14,13 +14,14 @@ import type {
   StructuredPasteImportRecipe,
 } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { createRecipeWithRefs, dashboardRecipe } from "@norish/db";
+import { dashboardRecipe } from "@norish/db";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import {
   getRecipePermissionPolicy,
   isAIEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
@@ -123,10 +124,11 @@ async function createStructuredRecipe(
     return null;
   }
 
-  const created = await createRecipeWithRefs(
+  const created = await createResolvedRecipe(
     structuredRecipe.recipeId,
     userId,
-    await withDishColor(parsed.data)
+    await withDishColor(parsed.data),
+    { userId }
   );
 
   if (!created) {
@@ -195,10 +197,11 @@ export async function processPasteImportJob(
     const parseResult = await parseFromPastedText(text, recipeId, forceAI);
 
     await reportStep(job, "saving");
-    const textResult = await createRecipeWithRefs(
+    const textResult = await createResolvedRecipe(
       recipeId,
       userId,
-      await withDishColor(parseResult.recipe)
+      await withDishColor(parseResult.recipe),
+      { userId }
     );
 
     if (!textResult) {

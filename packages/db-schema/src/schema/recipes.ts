@@ -41,6 +41,11 @@ export const recipes = pgTable(
     totalMinutes: integer("total_minutes"),
     notes: text("notes"),
     systemUsed: measurementSystemEnum("system_used").notNull().default("metric"),
+    // The system the recipe was written in, recorded when a conversion first
+    // writes a copy in the other one; null for a recipe never converted, whose
+    // only system is `systemUsed`. A conversion with AI may write over the
+    // converted copy, never over this one.
+    originalSystem: measurementSystemEnum("original_system"),
     calories: integer("calories"),
     fat: numeric("fat", { precision: 6, scale: 2 }),
     carbs: numeric("carbs", { precision: 6, scale: 2 }),

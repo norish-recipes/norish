@@ -121,6 +121,27 @@ export function isCredentialRejection(error: unknown): boolean {
 }
 
 /**
+ * How long the provider asked to be left alone before trying again, when it
+ * refused a request for its rate limit (429), from its `retry-after-ms` or
+ * `retry-after` header; null for any other failure. A provider that gives no
+ * header gets a guess of fifteen seconds.
+ */
+export function rateLimitWaitMs(error: unknown): number | null {
+  const cause = error instanceof AIError ? error.cause : error;
+
+  if (!APICallError.isInstance(cause) || cause.statusCode !== 429) return null;
+
+  const headers = cause.responseHeaders ?? {};
+  const ms = Number(headers["retry-after-ms"]);
+  const seconds = Number(headers["retry-after"]);
+
+  if (Number.isFinite(ms) && ms > 0) return ms;
+  if (Number.isFinite(seconds) && seconds > 0) return seconds * 1000;
+
+  return 15_000;
+}
+
+/**
  * Turn whatever a model call threw into a typed AI error, carrying the
  * original as `cause`.
  */

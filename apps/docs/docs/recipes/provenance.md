@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Recipe provenance
 description: Where a recipe comes from, its country, region, cuisines, and a short explanation, how Norish works that out, and how to curate the cuisine list.
 ---
@@ -46,7 +46,7 @@ the ingredients, and is never translated.
 Unlike tags, which anyone can invent, cuisines come from a curated list that
 your instance's administrator maintains. Norish ships with a starting list, and
 your administrator can add to it, rename entries, or remove them under
-**Settings => Admin => AI & Processing => Cuisines**.
+**Settings => Admin => AI & processing => Cuisines**.
 
 ![Managing the Cuisine vocabulary in admin settings](/img/screenshots/admin-cuisines.png)
 
@@ -98,5 +98,5 @@ empty region is an answer, not a gap.
 :::note
 Emptying provenance does not re-arm automatic inference, automatic enrichment is
 enrolled once, when a recipe is new. Empty it, then ask for a run, or an
-administrator's **Enrich All Recipes** will fill the gaps on its next pass.
+administrator's **Enrich all recipes** will fill the gaps on its next pass.
 :::

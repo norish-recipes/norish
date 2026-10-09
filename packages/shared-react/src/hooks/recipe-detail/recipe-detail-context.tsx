@@ -19,6 +19,8 @@ import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 export type RecipeDetailContextValue = {
   recipe: FullRecipeDTO | null;
   isLoading: boolean;
+  /** A saved copy is shown while the server's current one is on its way. */
+  isFetching: boolean;
   error: Error | null;
   isNotFound: boolean;
   shares: RecipeShareSummaryDto[];
@@ -41,7 +43,8 @@ export type RecipeDetailContextValue = {
   adjustedIngredients: RecipeIngredientsDto[];
   currentServings: number;
   setIngredientAmounts: (servings: number) => void;
-  startConversion: (target: MeasurementSystem) => void;
+  /** Convert to `target`; with AI, the copy in it is written again even where one exists. */
+  startConversion: (target: MeasurementSystem, withAI?: boolean) => void;
   reset: () => void;
   /** Recipe Enrichment: one lifecycle state per kind, and one way to request a run. */
   enrichment: RecipeEnrichmentResult;
@@ -60,6 +63,7 @@ export type RecipeDetailAdapters = {
   useRecipeQuery: (recipeId: string) => {
     recipe: FullRecipeDTO | null;
     isLoading: boolean;
+    isFetching: boolean;
     error: unknown;
     invalidate: () => void;
   };
@@ -88,7 +92,11 @@ export type RecipeDetailAdapters = {
   useRecipeEnrichment: (recipeId: string) => RecipeEnrichmentResult;
   useActiveAllergies: () => { allergies: string[]; allergySet: Set<string> };
   useConvertMutation: (recipeId: string) => {
-    convertMeasurements: (targetSystem: MeasurementSystem, version: number) => void;
+    convertMeasurements: (
+      targetSystem: MeasurementSystem,
+      version: number,
+      withAI?: boolean
+    ) => void;
     error: unknown;
     reset: () => void;
   };
@@ -163,7 +171,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
   };
 
   function RecipeDetailProvider({ recipeId, children }: ProviderProps) {
-    const { recipe, isLoading, error } = adapters.useRecipeQuery(recipeId);
+    const { recipe, isLoading, isFetching, error } = adapters.useRecipeQuery(recipeId);
     const {
       shares,
       isLoading: isLoadingShares,
@@ -183,7 +191,12 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       isDeleting: isDeletingShare,
     } = useRecipeShareMutations(recipeId);
     const [_servings, setServings] = useState<number | null>(null);
-    const [convertingTo, setConvertingTo] = useState<MeasurementSystem | null>(null);
+    const [conversion, setConversion] = useState<{
+      target: MeasurementSystem;
+      withAI: boolean;
+      version: number;
+    } | null>(null);
+    const convertingTo = conversion?.target ?? null;
     const [adjustedIngredients, setAdjustedIngredients] = useState<RecipeIngredientsDto[]>([]);
 
     const lastRecipeIdRef = React.useRef<string | null>(null);
@@ -266,20 +279,25 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       }
     }, [recipe?.recipeIngredients, recipe?.servings, _servings]);
 
-    // Clear converting state when recipe system matches target
+    // Clear converting state when recipe system matches target; a conversion
+    // with AI may write again the copy already shown, so it waits for the
+    // recipe that copy is part of to change.
     useEffect(() => {
-      if (!recipe || !convertingTo) return;
+      if (!recipe || !conversion) return;
 
-      if (recipe.systemUsed === convertingTo) {
-        setConvertingTo(null);
+      if (
+        recipe.systemUsed === conversion.target &&
+        (!conversion.withAI || recipe.version !== conversion.version)
+      ) {
+        setConversion(null);
         setAdjustedIngredients(recipe.recipeIngredients);
       }
-    }, [recipe, convertingTo]);
+    }, [recipe, conversion]);
 
     const reset = useCallback(() => {
       if (!recipe) return;
 
-      setConvertingTo(null);
+      setConversion(null);
       setServings(recipe.servings);
       setAdjustedIngredients(recipe.recipeIngredients);
     }, [recipe]);
@@ -297,14 +315,14 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     }, [convertError, convertingTo, reset, resetConvertMutation]);
 
     const startConversion = useCallback(
-      (target: MeasurementSystem) => {
+      (target: MeasurementSystem, withAI = false) => {
         if (!recipe) {
           return;
         }
 
-        setConvertingTo(target);
+        setConversion({ target, withAI, version: recipe.version });
 
-        convertMeasurements(target, recipe.version);
+        convertMeasurements(target, recipe.version, withAI);
       },
       [convertMeasurements, recipe]
     );
@@ -342,6 +360,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       () => ({
         recipe,
         isLoading,
+        isFetching,
         error: error instanceof Error ? error : error ? new Error(String(error)) : null,
         isNotFound,
         shares,
@@ -375,6 +394,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       [
         recipe,
         isLoading,
+        isFetching,
         error,
         isNotFound,
         shares,

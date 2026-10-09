@@ -47,10 +47,10 @@ function oldestRetiredDefault(field: string): string {
 }
 
 const FIELD_LABELS = {
-  recipeExtraction: "Recipe Extraction Prompt",
-  unitConversion: "Unit Conversion Prompt",
-  nutritionEstimation: "Nutrition Estimation Prompt",
-  autoTagging: "Auto-Tagging Prompt",
+  recipeExtraction: "Recipe extraction prompt",
+  unitConversion: "Unit conversion prompt",
+  nutritionEstimation: "Nutrition estimation prompt",
+  autoTagging: "Auto-tagging prompt",
 } as const;
 
 /** Extraction output for imports driven through the fake provider. */

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowPathIcon,
   ClipboardDocumentIcon as ClipboardDocumentIconSolid,
 } from "@heroicons/react/16/solid";
 import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicons/react/24/outline";
-import { Button, Card, Input, toast } from "@heroui/react";
+import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
@@ -89,55 +90,47 @@ export default function JoinCodeCard() {
     await regenerateJoinCode(household.id);
   };
   return (
-    <Card>
-      <Card.Header>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <ClipboardDocumentIconOutline className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </Card.Header>
-      <Card.Content className="gap-4">
-        {adminHousehold.joinCode && !joinCodeExpired ? (
-          <>
-            <p className="text-muted text-base">{t("shareDescription")}</p>
-            <div className="flex gap-2">
-              <Input
-                variant="secondary"
-                isReadOnly
-                className="font-mono text-lg tracking-wider"
-                value={adminHousehold.joinCode || ""}
-              />
-              <Button isIconOnly onPress={handleCopyJoinCode}>
-                <ClipboardDocumentIconSolid className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-base">
-                {t("expiresIn")} <span className="text-warning font-medium">{timeRemaining}</span>
-              </span>
-              <Button
-                size="sm"
-                onPress={handleRegenerateCode}
-                variant="tertiary"
-                className="min-w-16"
-              >
-                {<ArrowPathIcon className="h-4 w-4" />}
-                {t("regenerateButton")}
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="text-muted text-base">{t("noCodeDescription")}</p>
-            <div className="flex justify-end">
-              <Button onPress={handleRegenerateCode} variant="primary">
-                {<ArrowPathIcon className="h-4 w-4" />}
-                {t("generateButton")}
-              </Button>
-            </div>
-          </>
-        )}
-      </Card.Content>
-    </Card>
+    <SettingsCard icon={ClipboardDocumentIconOutline} title={t("title")}>
+      {adminHousehold.joinCode && !joinCodeExpired ? (
+        <>
+          <p className="text-muted text-base">{t("shareDescription")}</p>
+          <div className="flex gap-2">
+            <Input
+              variant="secondary"
+              isReadOnly
+              className="font-mono text-lg tracking-wider"
+              value={adminHousehold.joinCode || ""}
+            />
+            <Button isIconOnly onPress={handleCopyJoinCode}>
+              <ClipboardDocumentIconSolid className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted text-base">
+              {t("expiresIn")} <span className="text-warning font-medium">{timeRemaining}</span>
+            </span>
+            <Button
+              size="sm"
+              onPress={handleRegenerateCode}
+              variant="tertiary"
+              className="min-w-16"
+            >
+              {<ArrowPathIcon className="h-4 w-4" />}
+              {t("regenerateButton")}
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-muted text-base">{t("noCodeDescription")}</p>
+          <div className="flex justify-end">
+            <Button onPress={handleRegenerateCode} variant="primary">
+              {<ArrowPathIcon className="h-4 w-4" />}
+              {t("generateButton")}
+            </Button>
+          </div>
+        </>
+      )}
+    </SettingsCard>
   );
 }

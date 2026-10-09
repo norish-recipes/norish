@@ -1,20 +1,21 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import type { RecipeDashboardViewMode } from "@/lib/recipe-view-mode";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useScrollRestoration } from "@norish/shared-react/hooks";
 
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
 
 // Estimated row height (card height + gap). Both kinds of card match these,
 // or the estimate degrades for every row on a mixed page (ADR-0026).
-const ESTIMATED_GRID_ROW_HEIGHT = 356;
+const ESTIMATED_GRID_ROW_HEIGHT = 394;
+const ESTIMATED_PHONE_GRID_ROW_HEIGHT = 302;
 const ESTIMATED_LIST_ROW_HEIGHT = 144;
 const GRID_ROW_OVERSCAN = 3;
 const LIST_ROW_OVERSCAN = 12;
@@ -22,7 +23,7 @@ const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
 const LIST_LOAD_MORE_ROW_THRESHOLD = 6;
 
 type LibraryGridProps = {
-  variant: RecipeDashboardViewMode;
+  variant: RecipeViewMode;
   items: LibraryGridItem[];
   isLoading: boolean;
   isFetchingMore: boolean;
@@ -74,7 +75,9 @@ export default function LibraryGrid({
     viewMode === "list" ? LIST_LOAD_MORE_ROW_THRESHOLD : GRID_LOAD_MORE_ROW_THRESHOLD;
 
   // Track window size to recalculate scrollMargin on resize
-  const { height: _windowHeight } = useWindowSize();
+  const { height: _windowHeight, width: windowWidth = 1024 } = useWindowSize();
+  const gridRowHeight =
+    windowWidth < 640 ? ESTIMATED_PHONE_GRID_ROW_HEIGHT : ESTIMATED_GRID_ROW_HEIGHT;
 
   // Calculate scrollMargin from container position
   const scrollMargin = useMemo(() => {
@@ -95,8 +98,7 @@ export default function LibraryGrid({
 
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
-    estimateSize: () =>
-      viewMode === "list" ? ESTIMATED_LIST_ROW_HEIGHT : ESTIMATED_GRID_ROW_HEIGHT,
+    estimateSize: () => (viewMode === "list" ? ESTIMATED_LIST_ROW_HEIGHT : gridRowHeight),
     overscan: rowOverscan,
     scrollMargin,
     initialOffset: savedState?.scrollOffset,

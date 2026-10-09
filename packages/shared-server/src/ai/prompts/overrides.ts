@@ -23,8 +23,10 @@ export const PROMPT_CONFIG_FIELDS = [
   "allergyDetection",
   "recipeProvenance",
   "ingredientLinking",
+  "ingredientResolution",
   "imageGenerationBrief",
   "imageGenerationStyle",
+  "ingredientIconStyle",
 ] as const satisfies readonly (keyof PromptsConfigInput)[];
 
 export type PromptConfigField = (typeof PROMPT_CONFIG_FIELDS)[number];

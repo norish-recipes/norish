@@ -299,5 +299,57 @@ describe("useUserMutations", () => {
 
       expect(after.user.preferences).toEqual(serverPreferences);
     });
+
+    it("keeps the cached preferences when a rename answers with the user", async () => {
+      vi.resetModules();
+
+      vi.doMock("@/app/providers/trpc-provider", () => ({
+        useTRPC: () => ({
+          user: {
+            get: { queryKey: () => mockUserQueryKey },
+            getAllergies: { queryKey: () => mockAllergiesQueryKey },
+            // The server's answer carries no preferences.
+            updateName: {
+              mutationOptions: () => ({
+                mutationFn: async () => ({
+                  success: true,
+                  user: { id: "user-1", email: "a@b.c", name: "Renamed", image: null, version: 5 },
+                }),
+              }),
+            },
+            uploadAvatar: { mutationOptions: vi.fn() },
+            deleteAvatar: { mutationOptions: vi.fn() },
+            deleteAccount: { mutationOptions: vi.fn() },
+            updatePreferences: { mutationOptions: vi.fn() },
+            apiKeys: {
+              create: { mutationOptions: vi.fn() },
+              delete: { mutationOptions: vi.fn() },
+              toggle: { mutationOptions: vi.fn() },
+            },
+            setAllergies: { mutationOptions: vi.fn() },
+          },
+        }),
+      }));
+
+      const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
+      const preferences = { locale: "nl", desktop: { hiddenItems: ["rating"] } };
+
+      queryClient.setQueryData(
+        mockUserQueryKey,
+        createMockUserSettingsData(createMockUser({ id: "user-1", preferences } as never), [])
+      );
+
+      const { result } = renderHook(() => useUserMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await result.current.updateName("Renamed");
+
+      const after = queryClient.getQueryData(mockUserQueryKey) as any;
+
+      expect(after.user.name).toBe("Renamed");
+      expect(after.user.version).toBe(5);
+      expect(after.user.preferences).toEqual(preferences);
+    });
   });
 });

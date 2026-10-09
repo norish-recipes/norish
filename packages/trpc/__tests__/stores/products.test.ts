@@ -1,6 +1,8 @@
 // @vitest-environment node
 /**
- * What the picker's choice becomes on the server. The repository is mocked;
+ * What the picker's choice becomes on the server: a choice is about the
+ * Ingredient the grocery's name resolves to (ADR-0037). The repository and
+ * the resolver are mocked;
  * what is pinned here is which repository call each kind of choice turns into,
  * and that a by-hand price typed over one the shopper made earlier corrects
  * that product rather than adding a second.
@@ -14,6 +16,7 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
+import { findIngredientFor, resolveIngredient } from "../mocks/ingredient-resolver";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { stores } from "../mocks/realtime/stores";
 
@@ -35,6 +38,7 @@ const storesRepository = vi.hoisted(() => ({
 
 vi.mock("@norish/db/repositories/store-products", () => storeProductsRepository);
 vi.mock("@norish/db/repositories/stores", () => storesRepository);
+vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/stores", () => import("../mocks/realtime/stores"));
 vi.mock("@norish/trpc/routers/stores/pricing", () => ({ priceTheList: vi.fn(async () => []) }));
@@ -74,11 +78,39 @@ describe("chooseProduct", () => {
 
     expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
       STORE,
-      "oude kaas",
+      "ingredient:oude kaas",
       null
     );
     expect(storeProductsRepository.createManualProduct).not.toHaveBeenCalled();
     expect(storeProductsRepository.upsertReadProduct).not.toHaveBeenCalled();
+  });
+
+  it("links the Ingredient the grocery's name resolves to, so every spelling is priced by it", async () => {
+    resolveIngredient.mockResolvedValueOnce({
+      text: "Uien",
+      aliasId: "alias:uien",
+      ingredientId: "ingredient:onion",
+    });
+
+    await caller.chooseProduct({ storeId: STORE, name: "Uien", choice: { kind: "none" } });
+
+    expect(resolveIngredient).toHaveBeenCalledWith("Uien", { userId: ctx.user.id });
+    expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
+      STORE,
+      "ingredient:onion",
+      null
+    );
+    expect(storeProductsRepository.resolveProductLink).toHaveBeenCalledWith(
+      STORE,
+      "ingredient:onion"
+    );
+  });
+
+  it("links nothing for a name that is markup alone", async () => {
+    await expect(
+      caller.chooseProduct({ storeId: STORE, name: "<b></b>", choice: { kind: "none" } })
+    ).resolves.toBeNull();
+    expect(storeProductsRepository.upsertProductLink).not.toHaveBeenCalled();
   });
 
   it("writes the page a shopper gives a by-hand product", async () => {
@@ -116,7 +148,7 @@ describe("chooseProduct", () => {
     expect(storeProductsRepository.updateManualProduct).not.toHaveBeenCalled();
     expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
       STORE,
-      "oude kaas",
+      "ingredient:oude kaas",
       MANUAL_ID
     );
   });
@@ -221,7 +253,7 @@ describe("chooseProduct", () => {
     );
     expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
       STORE,
-      "oude kaas",
+      "ingredient:oude kaas",
       PRODUCT
     );
   });
@@ -388,13 +420,17 @@ describe("searchShop", () => {
     const result = await caller.searchShop({ storeId: STORE, term: "oude kaas" });
 
     expect(result).toEqual({ candidates: offered, answered: true });
-    expect(storeProductsRepository.resolveProductLink).toHaveBeenCalledWith(STORE, "oude kaas");
+    expect(findIngredientFor).toHaveBeenCalledWith("oude kaas");
+    expect(storeProductsRepository.resolveProductLink).toHaveBeenCalledWith(
+      STORE,
+      "ingredient:oude kaas"
+    );
   });
 
   it("orders the offered products by the Decision kept with the Miss, most likely first", async () => {
     storeProductsRepository.resolveProductLink.mockResolvedValue({
       storeId: STORE,
-      normalizedName: "oude kaas",
+      ingredientId: "ingredient:oude kaas",
       triedAt: new Date(),
       product: null,
       suggestion: {
@@ -415,10 +451,10 @@ describe("searchShop", () => {
     expect(result.answered).toBe(true);
   });
 
-  it("ignores a suggestion once the name is linked: the question it ranked answers for is closed", async () => {
+  it("ignores a suggestion once the Ingredient is linked: the question it ranked answers for is closed", async () => {
     storeProductsRepository.resolveProductLink.mockResolvedValue({
       storeId: STORE,
-      normalizedName: "oude kaas",
+      ingredientId: "ingredient:oude kaas",
       triedAt: new Date(),
       product: { id: "product-1" },
       suggestion: {

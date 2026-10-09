@@ -80,6 +80,11 @@ const mocks = vi.hoisted(() => ({
   currentServings: 2,
 }));
 
+// The worked-out total reads the server; these pages are about their layout.
+vi.mock("@/hooks/recipes/use-worked-out-nutrition", () => ({
+  useWorkedOutNutrition: () => null,
+}));
+
 vi.mock("@/app/(app)/recipes/[id]/context", () => {
   const context = () => ({
     recipe: mocks.recipe,
@@ -179,9 +184,11 @@ vi.mock("@/context/user-context", () => ({
   useUserContext: () => ({ user: { id: "owner-1" } }),
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItems: () => mocks.hidden,
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: mocks.hidden,
+  }))
+);
 // The way back reads the reader's lens and the page they came from, neither
 // of which these tests set up — the cards under test are what they are about.
 vi.mock("@/hooks/use-back-destination", () => ({

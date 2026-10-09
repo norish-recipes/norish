@@ -49,7 +49,7 @@ const config: Config = {
           // version (don't hand-edit the label — let the script do it).
           lastVersion: "current",
           versions: {
-            current: { label: "0.24.0-beta" },
+            current: { label: "0.25.0-beta" },
           },
         },
         blog: false,

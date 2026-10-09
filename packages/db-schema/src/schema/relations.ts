@@ -6,7 +6,7 @@ import { cuisines } from "./cuisines";
 import { groceries } from "./groceries";
 import { householdUsers } from "./household-users";
 import { households } from "./households";
-import { ingredients } from "./ingredients";
+import { ingredientAliases, ingredients } from "./ingredients";
 import { recipeCuisines } from "./recipe-cuisines";
 import { recipeImages } from "./recipe-images";
 import { recipeIngredients } from "./recipe-ingredients";
@@ -92,7 +92,14 @@ export const cuisinesRelations = relations(cuisines, ({ many }) => ({
 }));
 
 export const ingredientsRelations = relations(ingredients, ({ many }) => ({
-  recipeIngredients: many(recipeIngredients),
+  aliases: many(ingredientAliases),
+}));
+
+export const ingredientAliasesRelations = relations(ingredientAliases, ({ one }) => ({
+  ingredient: one(ingredients, {
+    fields: [ingredientAliases.ingredientId],
+    references: [ingredients.id],
+  }),
 }));
 
 export const recipeCuisinesRelations = relations(recipeCuisines, ({ one }) => ({
@@ -122,9 +129,9 @@ export const recipeIngredientsRelations = relations(recipeIngredients, ({ one })
     fields: [recipeIngredients.recipeId],
     references: [recipes.id],
   }),
-  ingredient: one(ingredients, {
-    fields: [recipeIngredients.ingredientId],
-    references: [ingredients.id],
+  alias: one(ingredientAliases, {
+    fields: [recipeIngredients.ingredientAliasId],
+    references: [ingredientAliases.id],
   }),
 }));
 

@@ -5,12 +5,15 @@ import { groupLineCost } from "@norish/shared/lib/line-cost";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 
 /**
- * One row of a list, as it is priced: the Store and name its Product Link
- * is keyed by, and the amounts the row stands for — one for a plain grocery,
- * one per source for a group, which is priced as one purchase.
+ * One row of a list, as it is priced: the Store and Ingredient its Product
+ * Link is keyed by (ADR-0037), its name, and the amounts the row stands for —
+ * one for a plain grocery, one per source for a group, which is priced as one
+ * purchase.
  */
 export interface PricedLine {
   storeId: string | null;
+  /** None yet on a line added offline, which is unpriced until it is resolved. */
+  ingredientId?: string | null;
   name: string | null;
   isDone: boolean;
   amounts: LineAmount[];
@@ -19,6 +22,7 @@ export interface PricedLine {
 export function lineOf(grocery: GroceryDto): PricedLine {
   return {
     storeId: grocery.storeId ?? null,
+    ingredientId: grocery.ingredientId ?? null,
     name: grocery.name,
     isDone: grocery.isDone,
     amounts: [
@@ -39,6 +43,7 @@ export function lineOfGroup(group: GroceryGroup): PricedLine {
 
   return {
     storeId: group.storeId,
+    ingredientId: first.grocery.ingredientId ?? null,
     name: first.grocery.name,
     isDone: group.allDone,
     amounts: group.sources.map((source) => ({
@@ -49,14 +54,17 @@ export function lineOfGroup(group: GroceryGroup): PricedLine {
   };
 }
 
-export type PriceFor = (storeId: string | null, name: string | null) => StoreProductDto | null;
+export type PriceFor = (
+  storeId: string | null,
+  ingredientId: string | null | undefined
+) => StoreProductDto | null;
 
 /** What a row costs at its Store, and the product that prices it; null where the Store cannot price it. */
 export function priceLine(
   line: PricedLine,
   priceFor: PriceFor
 ): (LineCost & { product: StoreProductDto }) | null {
-  const product = priceFor(line.storeId, line.name);
+  const product = priceFor(line.storeId, line.ingredientId);
 
   if (!product) return null;
 

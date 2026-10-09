@@ -3,11 +3,10 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { RecipeListContext } from "@norish/db";
+import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
-  addStepsAndIngredientsToRecipeByInput,
-  createRecipeWithRefs,
   dashboardRecipe,
   deleteRecipeById,
   FullRecipeInsertSchema,
@@ -24,7 +23,7 @@ import {
   searchRecipesByName,
   setActiveSystemForRecipe,
   updateRecipeCategories,
-  updateRecipeWithRefs,
+  writeConvertedCopy,
 } from "@norish/db";
 import {
   addImageImportJob,
@@ -40,10 +39,17 @@ import {
   getRecipePermissionPolicy,
   isVideoParsingEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import {
+  createResolvedRecipe,
+  updateResolvedRecipe,
+  withResolvedIngredients,
+} from "@norish/shared-server/ingredients/recipe-lines";
+import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
@@ -207,7 +213,7 @@ export const createRecipeProcedure = authedProcedure
     // The Dish Colour rides the payload from here: derived from the image
     // the recipe is being stored with, overwriting anything the client sent.
     withDishColor(input)
-      .then((dto) => createRecipeWithRefs(recipeId, ctx.user.id, dto))
+      .then((dto) => createResolvedRecipe(recipeId, ctx.user.id, dto, { userId: ctx.user.id }))
       .then(async (created) => {
         if (!created) {
           throw new TRPCError({
@@ -253,8 +259,13 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
     .then(async () => {
       // An edit that touches the media recomputes the Dish Colour from what
       // the recipe now shows; one that does not leaves the colour alone.
-      const dto = await withDishColorForUpdate(data);
-      const result = await updateRecipeWithRefs(id, ctx.user.id, dto, version);
+      const result = await updateResolvedRecipe(
+        id,
+        ctx.user.id,
+        await withDishColorForUpdate(data),
+        { userId: ctx.user.id },
+        version
+      );
 
       if (result.stale) {
         log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
@@ -427,11 +438,24 @@ export const importFromUrlProcedure = authedProcedure
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)
   .mutation(({ ctx, input }) => {
-    const { recipeId, targetSystem, version } = input;
+    const { recipeId, targetSystem, version, withAI } = input;
 
-    log.info({ userId: ctx.user.id, recipeId, targetSystem }, "Converting recipe measurements");
+    log.info(
+      { userId: ctx.user.id, recipeId, targetSystem, withAI },
+      "Converting recipe measurements"
+    );
 
-    checkAIEnabled()
+    const publishConverted = async (recipe: FullRecipeDTO) => {
+      const policy = await getRecipePermissionPolicy();
+
+      void recipes.publish(
+        "converted",
+        { recipe: { ...recipe, systemUsed: targetSystem } },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+      );
+    };
+
+    (withAI ? checkAIEnabled() : Promise.resolve(true))
       .then((aiEnabled) => {
         if (!aiEnabled) {
           throw new TRPCError({
@@ -479,54 +503,59 @@ const convertMeasurements = authedProcedure
           return recipe;
         });
       })
-      .then((recipe) => {
-        // Check if already converted (has ingredients with target system)
-        if (recipe.recipeIngredients.some((ri) => ri.systemUsed === targetSystem)) {
-          return setActiveSystemForRecipe(recipe.id, targetSystem, version).then(async (result) => {
-            if (result.stale) {
-              log.info(
-                { userId: ctx.user.id, recipeId, version },
-                "Ignoring stale recipe conversion"
-              );
+      .then(async (recipe) => {
+        const original = recipe.originalSystem ?? recipe.systemUsed;
+        const hasCopy = recipe.recipeIngredients.some((ri) => ri.systemUsed === targetSystem);
 
-              return null;
-            }
+        // The original is only ever switched back to, and without AI a copy
+        // already there is kept as it is.
+        if (targetSystem === original || (hasCopy && !withAI)) {
+          const result = await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
-            const policy = await getRecipePermissionPolicy();
-
-            void recipes.publish(
-              "converted",
-              { recipe: { ...recipe, systemUsed: targetSystem } },
-              { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+          if (result.stale) {
+            log.info(
+              { userId: ctx.user.id, recipeId, version },
+              "Ignoring stale recipe conversion"
             );
 
-            return null; // Signal to stop chain
+            return;
+          }
+
+          await publishConverted(recipe);
+
+          return;
+        }
+
+        // Every conversion starts from the original, never from a copy of it.
+        const source = {
+          ...recipe,
+          systemUsed: original,
+          recipeIngredients: recipe.recipeIngredients.filter((ri) => ri.systemUsed === original),
+          steps: recipe.steps.filter((s) => s.systemUsed === original),
+        };
+
+        // Lines stored under another system than the recipe says would leave
+        // nothing to convert, and writing nothing would delete them.
+        if (source.recipeIngredients.length === 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Recipe has no ingredients in its original system",
           });
         }
 
-        return recipe;
-      })
-      .then((recipe) => {
-        if (recipe === null) return null;
-
-        // Convert with AI; the runtime throws typed errors on failure.
-        return import("@norish/shared-server/ai/enrichment/unit-converter")
-          .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
-          .then(
-            (converted) => ({ recipe, converted }),
-            (error: unknown) => {
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message:
-                  error instanceof Error ? error.message : "Conversion failed, please try again.",
-              });
-            }
-          );
-      })
-      .then((result) => {
-        if (result === null) return;
-
-        const { recipe, converted } = result;
+        const converted = await (
+          withAI
+            ? import("@norish/shared-server/ai/enrichment/unit-converter").then(
+                ({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(source, targetSystem)
+              )
+            : convertRecipeMeasurements(source, targetSystem, { householdUserIds: ctx.userIds })
+        ).catch((error: unknown) => {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              error instanceof Error ? error.message : "Conversion failed, please try again.",
+          });
+        });
 
         const steps = converted.steps.map((s) => ({
           ...s,
@@ -540,21 +569,26 @@ const convertMeasurements = authedProcedure
           systemUsed: targetSystem,
         }));
 
-        return addStepsAndIngredientsToRecipeByInput(steps, ingredients)
-          .then(() => setActiveSystemForRecipe(recipe.id, targetSystem, version))
-          .then(() => getRecipeFull(recipe.id))
-          .then(async (updatedRecipe) => {
-            if (updatedRecipe) {
-              log.info({ userId: ctx.user.id, recipeId }, "Recipe measurements converted");
-              const policy = await getRecipePermissionPolicy();
+        await writeResolved(
+          () =>
+            withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id }),
+          (resolved) =>
+            writeConvertedCopy(
+              recipe.id,
+              { from: original, to: targetSystem },
+              steps,
+              resolved.recipeIngredients,
+              resolved.ingredientResolutions
+            )
+        );
+        await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
-              void recipes.publish(
-                "converted",
-                { recipe: { ...updatedRecipe, systemUsed: targetSystem } },
-                { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-              );
-            }
-          });
+        const updatedRecipe = await getRecipeFull(recipe.id);
+
+        if (updatedRecipe) {
+          log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
+          await publishConverted(updatedRecipe);
+        }
       })
       .catch((err) => handleRecipeError(ctx, err, "convert recipe measurements", { recipeId }));
 

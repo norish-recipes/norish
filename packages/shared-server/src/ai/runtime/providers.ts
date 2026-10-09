@@ -36,6 +36,7 @@ import {
   normalizeOllamaEndpoint,
   normalizeOpenAICompatibleEndpoint,
 } from "./endpoints";
+import { imageModelKey, withoutRefusedImageParameters } from "./image-parameter-fallback";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
 
@@ -258,13 +259,40 @@ function createProviderModels(
 // Image models — beside the language models they belong with (ADR-0024)
 // ============================================================================
 
-/** An image model plus how to ask it for the widest landscape it supports. */
+/** A picture's shape: providers differ in whether they take a size or an aspect ratio. */
+export type ImageShape = { size?: `${number}x${number}`; aspectRatio?: `${number}:${number}` };
+
+/**
+ * A quality tier asked of an image model: the cheapest it has, or the one
+ * above. An Ingredient Icon is shown at 32px, so it never needs a full
+ * illustration's.
+ */
+export type ImageTier = "low" | "medium";
+
+/** The provider options a request carries, by provider. */
+export type ImageProviderOptions = Record<string, Record<string, string>>;
+
+/** What a request may ask of an image model beyond its shape, where the provider has a way to. */
+export interface ImageRequestPreferences {
+  tier?: ImageTier;
+  /** The picture standing on nothing, so no background has to be cut away. */
+  transparent?: boolean;
+}
+
+/** An image model plus how to ask it for each shape, and for a tier or transparency where it has them. */
 export interface ImageModelConfig {
   model: ImageModel;
   providerName: string;
-  /** Providers differ in whether they take a size or an aspect ratio. */
-  landscape: { size?: `${number}x${number}`; aspectRatio?: `${number}:${number}` };
+  /** The widest landscape it supports, for a Generated Image. */
+  landscape: ImageShape;
+  /** A square, for an Ingredient Icon: 1024×1024, or the provider's square aspect. */
+  square: ImageShape;
+  /** The options asking for a tier and transparency; absent where the provider has neither, which leaves it unchanged. */
+  preferences?: (asked: ImageRequestPreferences) => ImageProviderOptions;
 }
+
+/** The square every provider that takes a size accepts. */
+const SQUARE: ImageShape = { size: "1024x1024" };
 
 /**
  * The widest landscape OpenAI's image models accept. The DALL·E family tops
@@ -275,6 +303,19 @@ export interface ImageModelConfig {
 function openAILandscapeSize(model: string): `${number}x${number}` {
   return model.startsWith("dall-e") ? "1792x1024" : "1536x1024";
 }
+
+/**
+ * OpenAI's quality tiers and transparent background, asked of every model:
+ * a model that refuses one (DALL·E only knows `standard` and `hd`, and draws
+ * no transparency) is asked again without it, drawing at its default, which
+ * is its cheapest, or on a background that is then cut away (ADR-0014).
+ */
+const openAIPreferences: ImageModelConfig["preferences"] = ({ tier, transparent }) => ({
+  openai: {
+    ...(tier ? { quality: tier } : {}),
+    ...(transparent ? { background: "transparent" } : {}),
+  },
+});
 
 /**
  * Build an image model from the Image Generation block. Only the providers
@@ -289,7 +330,11 @@ export function createImageModelFromConfig(config: {
   timeoutMs?: number;
 }): ImageModelConfig {
   const { provider, model, endpoint, apiKey, timeoutMs } = config;
-  const customFetch = createFetchWithTimeout(timeoutMs as number);
+  // A parameter this model refused before stays out of the request (ADR-0014).
+  const customFetch = withoutRefusedImageParameters(
+    createFetchWithTimeout(timeoutMs as number),
+    imageModelKey(provider, model)
+  );
 
   switch (provider) {
     case "openai": {
@@ -299,6 +344,8 @@ export function createImageModelFromConfig(config: {
         model: createOpenAI({ apiKey, fetch: customFetch }).image(model),
         providerName: "OpenAI",
         landscape: { size: openAILandscapeSize(model) },
+        square: SQUARE,
+        preferences: openAIPreferences,
       };
     }
 
@@ -309,6 +356,7 @@ export function createImageModelFromConfig(config: {
         model: createGoogle({ apiKey, fetch: customFetch }).image(model),
         providerName: "Google AI",
         landscape: { aspectRatio: "16:9" },
+        square: { aspectRatio: "1:1" },
       };
     }
 
@@ -323,6 +371,9 @@ export function createImageModelFromConfig(config: {
         model: azure.image(model),
         providerName: "Azure OpenAI",
         landscape: { size: openAILandscapeSize(model) },
+        square: SQUARE,
+        // Azure's image model is OpenAI's, reading the same `openai` options.
+        preferences: openAIPreferences,
       };
     }
 
@@ -339,6 +390,7 @@ export function createImageModelFromConfig(config: {
         // provider turns a size into exactly that — so, as for the other
         // self-hosted route, ask for the stored shape itself.
         landscape: { size: "1280x720" },
+        square: SQUARE,
       };
     }
 
@@ -359,6 +411,7 @@ export function createImageModelFromConfig(config: {
         // No published size list to lean on, so ask for exactly the stored
         // shape: self-hosted image servers generally accept arbitrary sizes.
         landscape: { size: "1280x720" },
+        square: SQUARE,
       };
     }
   }

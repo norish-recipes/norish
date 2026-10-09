@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
+import { ArrowPathIcon } from "@heroicons/react/16/solid";
 import { Button, Description, Label, Spinner, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -25,8 +25,10 @@ const PROMPT_FIELDS = [
   { key: "allergyDetection", rows: 6 },
   { key: "recipeProvenance", rows: 6 },
   { key: "ingredientLinking", rows: 6 },
+  { key: "ingredientResolution", rows: 6 },
   { key: "imageGenerationBrief", rows: 6 },
   { key: "imageGenerationStyle", rows: 4 },
+  { key: "ingredientIconStyle", rows: 4 },
 ] as const satisfies readonly { key: keyof PromptsConfigInput; rows: number }[];
 
 type PromptKey = (typeof PROMPT_FIELDS)[number]["key"];
@@ -93,7 +95,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-2">
+    <div className="flex flex-col gap-6">
       {PROMPT_FIELDS.map(({ key, rows }) => (
         <div key={key} className="flex flex-col gap-2">
           <TextField
@@ -113,7 +115,6 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
           {tActions("restoreDefaults")}
         </Button>
         <Button isDisabled={!hasChanges} isPending={saving} variant="primary" onPress={handleSave}>
-          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

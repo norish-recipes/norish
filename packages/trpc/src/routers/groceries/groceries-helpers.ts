@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { GroceryDto, GroceryUpdateDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
@@ -21,15 +22,31 @@ import { listRecurringGroceriesByUsers } from "@norish/db/repositories/recurring
 import {
   findBestIngredientStorePreference,
   getStoreOwnerId,
-  normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
+import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
+import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
 
 import { noticeGroceries } from "../stores/pricing";
 import { assertStoreAccess } from "../stores/stores-helpers";
+
+/**
+ * Remember the Store a member sent a grocery's Ingredient to, so the next
+ * line of that food goes there too. A line with no Ingredient yet (added
+ * offline, or nameless), or sent to no Store, teaches nothing.
+ */
+export async function rememberStorePreference(
+  userId: string,
+  ingredientId: string | null | undefined,
+  storeId: string | null | undefined
+): Promise<void> {
+  if (!ingredientId || !storeId) return;
+  await upsertIngredientStorePreference(userId, ingredientId, storeId);
+  log.debug({ userId, ingredientId, storeId }, "Saved ingredient store preference");
+}
 
 export type GroceryProcedureContext = {
   user: { id: string };
@@ -113,6 +130,8 @@ export async function createGroceriesData(
     groceries: {
       userId: string;
       name: string | null;
+      ingredientAliasId?: string | null;
+      ingredientId?: string | null;
       unit: string | null;
       amount: number | null;
       purchaseAmount?: number | null;
@@ -168,13 +187,7 @@ export async function createGroceriesData(
     }
 
     const id = grocery.id ?? crypto.randomUUID();
-    let storeId: string | null = grocery.storeId ?? null;
-
-    if (!storeId && grocery.name) {
-      const match = await findBestIngredientStorePreference(ctx.user.id, ctx.userIds, grocery.name);
-
-      storeId = match?.preference.storeId ?? null;
-    }
+    const storeId: string | null = grocery.storeId ?? null;
 
     groceriesToCreate.push({
       id,
@@ -208,6 +221,27 @@ export async function createGroceriesData(
     }
   }
 
+  // Each new line's name is resolved to an Ingredient Alias, the way the
+  // household's recipe lines are (ADR-0037). A merged line keeps its own.
+  const fileNewLines = async (aliases: Array<IngredientRef | null>) => {
+    for (const [index, { groceries: grocery }] of groceriesToCreate.entries()) {
+      const alias = aliases[index];
+
+      grocery.ingredientAliasId = alias?.aliasId ?? null;
+      grocery.ingredientId = alias?.ingredientId ?? null;
+
+      // A line added without a Store goes where the household sends its food.
+      if (!grocery.storeId && alias && grocery.name) {
+        const match = await findBestIngredientStorePreference(ctx.user.id, ctx.userIds, {
+          id: alias.ingredientId,
+          name: grocery.name,
+        });
+
+        grocery.storeId = match?.preference.storeId ?? null;
+      }
+    }
+  };
+
   let updatedGroceries: GroceryDto[] = [];
 
   if (groceriesToUpdate.length > 0) {
@@ -228,7 +262,18 @@ export async function createGroceriesData(
   let createdGroceries: GroceryDto[] = [];
 
   if (groceriesToCreate.length > 0) {
-    const made = await createGroceries(groceriesToCreate, ctx.userIds);
+    const made = await writeResolved(
+      () =>
+        resolveGroceryNames(
+          groceriesToCreate.map(({ groceries: grocery }) => grocery),
+          { userId: ctx.user.id }
+        ),
+      async (aliases) => {
+        await fileNewLines(aliases);
+
+        return await createGroceries(groceriesToCreate, ctx.userIds);
+      }
+    );
 
     createdGroceries = made.created;
     log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");
@@ -467,12 +512,7 @@ export async function assignGroceryToStoreData(
   // Store's answer was never about this one.
   await noticeGroceries(ctx, [updated]);
 
-  if (savePreference && storeId && grocery.name) {
-    const normalized = normalizeIngredientName(grocery.name);
-
-    await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
-    log.debug({ userId: ctx.user.id, normalized, storeId }, "Saved ingredient store preference");
-  }
+  if (savePreference) await rememberStorePreference(ctx.user.id, grocery.ingredientId, storeId);
 
   void groceries.publish(
     "updated",

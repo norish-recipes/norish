@@ -154,7 +154,10 @@
     "ariaLabel": "측정 단위 전환",
     "toMetric": "미터법으로 변환",
     "toUS": "미국식으로 변환",
-    "converting": "변환 중…"
+    "toMetricWithAI": "AI로 미터법 변환",
+    "toUSWithAI": "AI로 미국식 변환",
+    "converting": "변환 중…",
+    "original": "원본"
   },
   "deleteModal": {
     "title": "레시피 삭제",
@@ -255,7 +258,20 @@
     "protein": "단백질",
     "showingPortions": "{count, plural, one {#인분} other {#인분}} 기준 영양 정보",
     "noInfo": "영양정보가 없습니다.",
-    "estimateWithAI": "AI로 추정"
+    "estimateWithAI": "AI로 추정",
+    "estimated": "추정치",
+    "leftOut": "{count, plural, other {계산되지 않은 줄 #개}}",
+    "estimatedByAI": "AI 추정",
+    "reasons": {
+      "seasoning": "양념",
+      "noAmount": "양 없음",
+      "noSize": "이 단위의 무게 없음",
+      "noNumbers": "영양 정보 아직 없음",
+      "noSpoonWeight": "스푼 무게 아직 없음",
+      "noPieceWeight": "개당 무게 아직 없음"
+    },
+    "workedOutFrom": "재료로 계산했습니다. 출처: {sources}.",
+    "householdNumbers": "우리 가구의 값"
   },
   "measurementSystem": {
     "label": "측정 시스템",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "레시피 가져오기 완료",
-    "converted": "측정 단위 변환 완료",
-    "convertedDescription": "레시피를 {system} 단위로 변환했습니다",
     "failed": "레시피 작업이 실패했습니다.",
     "failedDescription": "레시피를 처리하는 중 문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요.",
     "batchImported": "레시피 가져오기 완료",
@@ -402,6 +416,12 @@
     "searchRecipes": "레시피 검색",
     "noRecipesToAdd": "레시피를 찾을 수 없습니다.",
     "addCount": "{count, plural, other {레시피 #개 추가}}",
-    "everythingAlreadyIn": "모든 레시피가 이미 이 요리책에 있습니다."
+    "everythingAlreadyIn": "모든 레시피가 이미 이 요리책에 있습니다.",
+    "coverLabel": "표지",
+    "chooseImage": "이미지 선택",
+    "changeImage": "이미지 변경",
+    "removeImage": "이미지 삭제",
+    "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
+    "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
   }
 }

@@ -11,7 +11,8 @@ import type { TodayMealSlotCardProps } from "./todays-meals-types";
 import { buildPlannedItemSubtitle, getPlannedItemTitle } from "./todays-meals-helpers";
 import TodaysMealsSlotChip from "./todays-meals-slot-chip";
 
-const cardClassName = "h-[184px] w-[144px] shrink-0 overflow-hidden rounded-2xl p-0 sm:w-[152px]";
+const cardClassName =
+  "h-[184px] w-[144px] shrink-0 snap-start overflow-hidden rounded-2xl p-0 sm:w-[152px]";
 const triggerClassName =
   "group relative grid h-full min-h-0 w-full min-w-0 cursor-[var(--cursor-interactive)] grid-rows-[132px_52px] overflow-hidden rounded-2xl border-0 bg-transparent p-0 text-left focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
 const mediaClassName = "bg-surface-secondary relative h-[132px] w-full overflow-hidden";
@@ -62,7 +63,11 @@ export default function TodayMealSlotCard({
   };
 
   return (
-    <Card className={cardClassName} variant={isPlanned ? "default" : "secondary"}>
+    <Card
+      className={cardClassName}
+      data-slot-card={slot}
+      variant={isPlanned ? "default" : "secondary"}
+    >
       <button
         aria-label={isPlanned ? title : `${tCalendarPanel("addRecipe")} ${slotLabel}`}
         className={triggerClassName}

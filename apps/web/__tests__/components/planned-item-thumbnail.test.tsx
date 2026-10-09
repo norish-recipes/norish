@@ -16,13 +16,13 @@ describe("PlannedItemThumbnail", () => {
   it("renders note placeholder for note items", () => {
     render(<PlannedItemThumbnail itemType="note" />);
 
-    expect(screen.getByText("note")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "note" })).toBeInTheDocument();
   });
 
   it("renders recipe placeholder when recipe has no image", () => {
     render(<PlannedItemThumbnail itemType="recipe" />);
 
-    expect(screen.getByText("recipe")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "recipe" })).toBeInTheDocument();
   });
 
   it("falls back to recipe placeholder when image fails to load", () => {
@@ -32,6 +32,6 @@ describe("PlannedItemThumbnail", () => {
 
     fireEvent.error(image);
 
-    expect(screen.getByText("recipe")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "recipe" })).toBeInTheDocument();
   });
 });

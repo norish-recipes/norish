@@ -11,6 +11,7 @@ import type {
   StoreProductReadingInput,
 } from "@norish/shared/contracts";
 import type { PricedCandidate } from "@norish/shared/lib/currency";
+import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
 import {
   clearPendingLink,
   linkIfUnanswered,
@@ -59,8 +60,12 @@ export type LookupStepDetail =
     }
   | { written: boolean };
 
-async function announceLink(householdKey: string, storeId: string, name: string): Promise<void> {
-  const link = await resolveProductLink(storeId, name);
+async function announceLink(
+  householdKey: string,
+  storeId: string,
+  ingredientId: string
+): Promise<void> {
+  const link = await resolveProductLink(storeId, ingredientId);
 
   if (link) void stores.publish("linkUpdated", { link }, { householdKey });
 }
@@ -152,17 +157,20 @@ export async function searchStore(
  */
 export async function matchGroceryName(input: {
   storeId: string;
+  /** The Ingredient asked about; what the answer is filed under. */
+  ingredientId: string;
+  /** The grocery's name: what the shop is searched for. */
   name: string;
   householdKey: string;
   onStep?: (step: string) => Promise<void>;
   onStepDone?: (detail: LookupStepDetail) => Promise<void>;
 }): Promise<{ matched: boolean }> {
-  const { storeId, name, householdKey } = input;
+  const { storeId, ingredientId, name, householdKey } = input;
   const store = await getStoreById(storeId);
   // Nothing was learned: the Pending Link the producer wrote goes, so the
   // name is unknown again rather than "being asked" for ever.
   const gaveUp = async (): Promise<{ matched: boolean }> => {
-    await clearPendingLink(storeId, name);
+    await clearPendingLink(storeId, ingredientId);
 
     return { matched: false };
   };
@@ -174,7 +182,7 @@ export async function matchGroceryName(input: {
   // grocery panel, or from a housemate's screen — and a shopper's answer is
   // the answer. Asking the shop anyway would cost two visits and end by
   // pointing the grocery at something nobody chose.
-  const answered = await resolveProductLink(storeId, name);
+  const answered = await resolveProductLink(storeId, ingredientId);
 
   if (answered?.product) {
     log.debug(
@@ -226,15 +234,12 @@ export async function matchGroceryName(input: {
       "No unmistakable match; a Miss"
     );
     await input.onStep?.("saving-link");
-    const written = await linkIfUnanswered(
-      storeId,
-      name,
-      null,
-      decided?.asked ? decided.suggestion : null
+    const written = await linkUnlessGone(() =>
+      linkIfUnanswered(storeId, ingredientId, null, decided?.asked ? decided.suggestion : null)
     );
 
     await input.onStepDone?.({ written });
-    await announceLink(householdKey, storeId, name);
+    await announceLink(householdKey, storeId, ingredientId);
 
     return { matched: false };
   }
@@ -253,11 +258,11 @@ export async function matchGroceryName(input: {
 
   await input.onStep?.("saving-link");
   const product = await upsertReadProduct(reading);
-  const linked = await linkIfUnanswered(storeId, name, product.id);
+  const linked = await linkUnlessGone(() => linkIfUnanswered(storeId, ingredientId, product.id));
 
   await input.onStepDone?.({ written: linked });
   announceProduct(householdKey, product);
-  await announceLink(householdKey, storeId, name);
+  await announceLink(householdKey, storeId, ingredientId);
   if (linked) {
     log.info(
       {
@@ -276,6 +281,23 @@ export async function matchGroceryName(input: {
   }
 
   return { matched: linked };
+}
+
+/**
+ * Write a link, unless the Ingredient it was for was merged away or deleted
+ * while the shop was being read: then there is nothing to link, and the
+ * food the merge left already carries what the household taught it, so the
+ * job ends as a Miss rather than a retry against an id that is gone.
+ */
+async function linkUnlessGone(write: () => Promise<boolean>): Promise<boolean> {
+  try {
+    return await write();
+  } catch (error) {
+    if (!isStaleIngredientReference(error)) throw error;
+    log.info({ err: error }, "The Ingredient went away while the shop was being read");
+
+    return false;
+  }
 }
 
 /**

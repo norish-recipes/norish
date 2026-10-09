@@ -9,7 +9,9 @@
     "manageStores": "Gestionar tiendas",
     "storeViewOptions": "Opciones de vista de tienda",
     "groupIngredients": "Agrupar ingredientes",
-    "pantry": "Despensa"
+    "pantry": "Despensa",
+    "list": "Lista",
+    "views": "Vistas de la compra"
   },
   "empty": {
     "title": "Tu lista de la compra te espera",
@@ -85,13 +87,25 @@
     "aisleDuplicate": "Esta tienda ya tiene un pasillo con ese nombre"
   },
   "pantry": {
-    "title": "Despensa",
-    "hint": "Lo que ya tienes en casa. Los ingredientes de tu despensa no se añaden a la lista al añadir una receta.",
+    "hint": "Ingredientes que ya tienes.",
     "empty": "Aún no hay nada en tu despensa",
-    "namePlaceholder": "p. ej. Aceite de oliva",
+    "unavailable": "No se pudo leer tu despensa. No ha cambiado nada; inténtalo de nuevo cuando vuelvas a estar en línea.",
+    "fieldLabel": "Buscar o añadir un alimento",
+    "fieldPlaceholder": "Buscar o añadir, p. ej. aceite de oliva",
     "add": "Añadir a la despensa",
-    "remove": "Quitar de la despensa",
-    "duplicate": "Eso ya está en tu despensa"
+    "fromCatalogue": "Añadir un alimento",
+    "addFood": "Añadir {name} a la despensa",
+    "putOnTheList": "Añadir a la lista de la compra",
+    "onTheList": "En la lista",
+    "putOnTheListToast": "{name} está en la lista",
+    "undo": "Deshacer",
+    "keepFailed": "No se pudo añadir {name} a la despensa",
+    "fromYourRecipes": "De tus recetas",
+    "fromYourRecipesHint": "Ingredientes más usados",
+    "inRecipes": "{count, plural, one {en # receta} other {en # recetas}}",
+    "showMore": "Mostrar más",
+    "inYourPantry": "En tu despensa",
+    "offlineDetails": "Los detalles de un alimento se abren cuando vuelvas a estar en línea."
   },
   "panel": {
     "addTitle": "Añadir producto",
@@ -132,7 +146,10 @@
     "addToGroceries": "Añadir a la lista de la compra",
     "aisle": "Pasillo",
     "noAisle": "Sin pasillo",
-    "inPantry": "En tu despensa"
+    "toBuy": "Por comprar",
+    "inPantry": "En tu despensa",
+    "weKeepThis": "Siempre lo tenemos",
+    "keepFailed": "No se pudo añadir a la despensa"
   },
   "picker": {
     "unlink": "Desvincular producto",

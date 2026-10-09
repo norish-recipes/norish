@@ -25,6 +25,7 @@ import {
   getUnits,
   isTimersEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { ingredientIconAddresses } from "@norish/shared-server/ingredients/icons";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import {
@@ -240,7 +241,9 @@ const remove = authedProcedure
 const getShared = sharedRecipeProcedure.output(PublicRecipeViewSchema).query(async ({ ctx }) => {
   const publicRecipe = await getPublicRecipeView(
     ctx.sharedRecipe.share.recipeId,
-    ctx.sharedRecipe.token
+    ctx.sharedRecipe.token,
+    // Each line's icon by address: the public view carries no ids to look one up by.
+    ingredientIconAddresses
   );
 
   if (!publicRecipe) {

@@ -1,6 +1,4 @@
-export interface UserPreferences {
-  locale?: string | null;
-}
+import type { UserPreferencesDto } from "../zod/user";
 
 export interface User {
   id: string;
@@ -9,5 +7,5 @@ export interface User {
   image?: string | null;
   version: number;
   isServerAdmin?: boolean;
-  preferences?: UserPreferences;
+  preferences?: UserPreferencesDto;
 }

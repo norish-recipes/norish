@@ -7,8 +7,10 @@ import { clientMintedId } from "./common";
 
 export const PurchaseAmountSchema = z.number().positive().max(9999999).nullable().optional();
 
+// A line's alias stays on the server: clients read and write its text.
 export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   .omit({
+    ingredientAliasId: true,
     userId: true,
     recurringGroceryId: true,
     storeId: true,
@@ -22,6 +24,12 @@ export const GrocerySelectBaseSchema = createSelectSchema(groceries)
     recurringGroceryId: z.uuid().nullable(),
     storeId: z.uuid().nullable(),
     sortOrder: z.number().int(),
+    /**
+     * The Ingredient the line's name resolved to, which a price, an aisle and
+     * a store preference are looked up by. Absent on a line added offline
+     * until the server has resolved it.
+     */
+    ingredientId: z.uuid().nullable().optional(),
   });
 
 // Insert schema with explicit fields to avoid drizzle-zod type inference issues
@@ -29,6 +37,10 @@ export const GroceryInsertBaseSchema = z.object({
   purchaseAmount: PurchaseAmountSchema,
   userId: z.string(),
   name: z.string().nullable(),
+  /** The alias the name resolved to; set by the server, never taken from a client. */
+  ingredientAliasId: z.uuid().nullable().optional(),
+  /** The alias's Ingredient, written with it. */
+  ingredientId: z.uuid().nullable().optional(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
   isDone: z.boolean().default(false),
@@ -44,6 +56,10 @@ export const GroceryUpdateBaseSchema = z.object({
   id: z.uuid(),
   version: z.number().int().positive().optional(),
   name: z.string().nullable().optional(),
+  /** The alias a new name resolved to; set by the server, never taken from a client. */
+  ingredientAliasId: z.uuid().nullable().optional(),
+  /** The alias's Ingredient, written with it. */
+  ingredientId: z.uuid().nullable().optional(),
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),
   isDone: z.boolean().optional(),

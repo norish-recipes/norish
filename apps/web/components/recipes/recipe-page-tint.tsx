@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRecipePageColor } from "@/context/recipe-page-color-context";
+import { useDevicePreference } from "@/context/device-preferences-context";
 import { dishTintStyle } from "@/lib/dish-tint";
 
 /**
@@ -19,9 +19,9 @@ import { dishTintStyle } from "@/lib/dish-tint";
  * recipe page colour preference is `theme` — no attribute, no variables
  * and no underlay are emitted: both resolve through the same
  * `dishTintStyle(null)` and the untinted page is the plain theme rendering
- * itself, not a tint at zero strength. The preference context is seeded
- * server-side (and self-reads its cookie offline), so an opted-out reader
- * never renders a tinted frame on any load path.
+ * itself, not a tint at zero strength. The preference is seeded server-side
+ * (and read from the restored profile Offline), so an opted-out reader never
+ * renders a tinted frame on any load path.
  */
 export default function RecipePageTint({
   dishColor,
@@ -30,7 +30,7 @@ export default function RecipePageTint({
   dishColor: string | null | undefined;
   children: ReactNode;
 }) {
-  const [colorMode] = useRecipePageColor();
+  const [colorMode] = useDevicePreference("recipePageColor");
   const style = dishTintStyle(colorMode === "dish" ? dishColor : null);
 
   return (

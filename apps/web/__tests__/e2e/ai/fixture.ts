@@ -5,6 +5,7 @@ import type { FakeAIProvider } from "../harness/ai-provider";
 import type { SessionCookies } from "../harness/auth";
 import { createFakeAIProvider } from "../harness/ai-provider";
 import { signIn } from "../harness/auth";
+import { hydratingBrowser } from "../harness/hydration";
 import { ProductionStack } from "../harness/production-stack";
 import { configureDatabase } from "./database";
 
@@ -48,6 +49,7 @@ async function cleanup(ai: FakeAIProvider, stack: ProductionStack): Promise<void
 }
 
 export const test = base.extend<AITestFixtures, AIWorkerFixtures>({
+  browser: [async ({ browser }, use) => use(hydratingBrowser(browser)), { scope: "worker" }],
   aiStack: [
     async ({}, use) => {
       const ai = createFakeAIProvider();

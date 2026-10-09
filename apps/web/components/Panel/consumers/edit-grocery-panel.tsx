@@ -90,10 +90,12 @@ export default function EditGroceryPanel({
     stores,
     selectedStoreId,
     resetOn: grocery.id,
+    grocery,
   });
   // Where the chosen Store files this name, re-read when the Store is swapped.
   const aisle = useAisleChoice({
     groceryName: price.groceryName,
+    ingredientId: price.ingredientId,
     store: price.store,
     resetOn: grocery.id,
   });
@@ -204,10 +206,13 @@ export default function EditGroceryPanel({
           </div>
         </Panel.Body>
         <Panel.Footer>
-          <ActionButtonGroup>
-            <ActionButton action="delete" onPress={onDelete}>
-              {tActions("delete")}
-            </ActionButton>
+          <ActionButtonGroup
+            start={
+              <ActionButton action="delete" onPress={onDelete}>
+                {tActions("delete")}
+              </ActionButton>
+            }
+          >
             <ActionButton
               action="save"
               isDisabled={!itemName.trim() || !productValid}

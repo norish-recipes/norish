@@ -107,7 +107,7 @@ export const MobileNav = () => {
                       aria-label={label}
                       className={`flex items-center justify-center rounded-full p-2.5 transition-colors ${
                         isActive
-                          ? "bg-accent-soft text-accent"
+                          ? "bg-accent text-accent-foreground"
                           : "text-chrome-muted hover:text-chrome-foreground hover:bg-chrome-hover"
                       }`}
                       href={item.href}
@@ -130,7 +130,7 @@ export const MobileNav = () => {
                   aria-label={tMenu("settings.title")}
                   className={`flex items-center justify-center rounded-full p-2.5 transition-colors ${
                     pathname?.startsWith("/settings")
-                      ? "bg-accent-soft text-accent"
+                      ? "bg-accent text-accent-foreground"
                       : "text-chrome-muted hover:text-chrome-foreground hover:bg-chrome-hover"
                   }`}
                   href="/settings?tab=user"

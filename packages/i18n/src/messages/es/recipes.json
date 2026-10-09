@@ -154,7 +154,10 @@
     "ariaLabel": "Cambiar sistema de medidas",
     "toMetric": "Convertir a sistema métrico",
     "toUS": "Convertir a sistema imperial",
-    "converting": "Convirtiendo…"
+    "toMetricWithAI": "Convertir a sistema métrico con IA",
+    "toUSWithAI": "Convertir a sistema imperial con IA",
+    "converting": "Convirtiendo…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Eliminar receta",
@@ -255,7 +258,20 @@
     "protein": "Proteínas",
     "showingPortions": "Mostrando valores para {count} {count, plural, one {porción} other {porciones}}",
     "noInfo": "No hay información nutricional disponible",
-    "estimateWithAI": "Estimar con IA"
+    "estimateWithAI": "Estimar con IA",
+    "estimated": "Estimado",
+    "leftOut": "{count, plural, one {# línea sin contar} other {# líneas sin contar}}",
+    "estimatedByAI": "estimado por IA",
+    "reasons": {
+      "seasoning": "condimento",
+      "noAmount": "sin cantidad",
+      "noSize": "sin peso para esta medida",
+      "noNumbers": "aún sin valores nutricionales",
+      "noSpoonWeight": "aún sin peso por cucharada",
+      "noPieceWeight": "aún sin peso por pieza"
+    },
+    "workedOutFrom": "Calculado a partir de los ingredientes, con {sources}.",
+    "householdNumbers": "los valores de tu hogar"
   },
   "measurementSystem": {
     "label": "Sistema de medidas",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Receta importada",
-    "converted": "Medidas convertidas",
-    "convertedDescription": "Receta convertida a unidades {system}",
     "failed": "Operación de receta fallida",
     "failedDescription": "Algo ha salido mal al procesar tu receta. Comprueba la consola del navegador para obtener detalles técnicos.",
     "batchImported": "Recetas importadas",
@@ -402,6 +416,12 @@
     "searchRecipes": "Buscar recetas",
     "noRecipesToAdd": "No se han encontrado recetas.",
     "addCount": "{count, plural, one {Añadir # receta} other {Añadir # recetas}}",
-    "everythingAlreadyIn": "Todas las recetas ya están en este libro de cocina."
+    "everythingAlreadyIn": "Todas las recetas ya están en este libro de cocina.",
+    "coverLabel": "Portada",
+    "chooseImage": "Elegir imagen",
+    "changeImage": "Cambiar imagen",
+    "removeImage": "Quitar imagen",
+    "imageUploadFailed": "No se pudo subir la imagen.",
+    "imageNeedsConnection": "Podrás cambiar las imágenes cuando vuelvas a estar en línea."
   }
 }

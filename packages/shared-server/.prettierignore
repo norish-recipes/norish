@@ -1,0 +1,5 @@
+# Written one food per line by tooling/nutrition, so a rebuild diffs as what changed.
+src/ingredients/nutrition/source-table.json
+
+# Written by tooling/ingredient-icons.
+src/ingredients/icon-set/manifest.json

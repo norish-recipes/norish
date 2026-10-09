@@ -22,6 +22,7 @@ import { useWindowSize } from "usehooks-ts";
 import type { Slot } from "@norish/shared/contracts";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
+import { landOnDay, settleLanding } from "../land-on-day";
 import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
 import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopDragOverlay } from "./desktop-drag-overlay";
@@ -100,9 +101,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     () => rows.map((row, index) => (row[0] ? dateKey(row[0]) : `row-${index}`)),
     [rows]
   );
-  const { captureAnchor, restoreAnchor, shouldAdjustScrollForSizeChange } = usePrependAnchorRestore(
-    { keys: rowKeys }
-  );
+  const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys: rowKeys });
 
   // Date formatters
   const weekdayFormatter = useMemo(
@@ -142,11 +141,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     overscan: 2,
     scrollMargin,
-    shouldAdjustScrollPositionOnItemSizeChange: (item, _delta, instance) => {
-      const scrollOffset = instance.scrollOffset ?? 0;
-
-      return shouldAdjustScrollForSizeChange(item.start, scrollOffset, scrollMargin);
-    },
+    onChange: settleLanding,
   });
 
   // Track if we've scrolled to today and if we've triggered expand
@@ -159,7 +154,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     if (hasScrolledRef.current || isLoading || todayRowIndex < 0) return;
 
     requestAnimationFrame(() => {
-      virtualizer.scrollToIndex(todayRowIndex, { align: "start" });
+      landOnDay(virtualizer, todayRowIndex);
       hasScrolledRef.current = true;
     });
   }, [isLoading, todayRowIndex, virtualizer]);

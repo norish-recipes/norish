@@ -8,7 +8,6 @@ import type {
   StoreDto,
   StoreSearchAddressResult,
 } from "@norish/shared/contracts";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type {
@@ -213,22 +212,36 @@ export function createUseStoresMutations({
       });
 
     /**
-     * File a grocery name at a Store: what the Store remembers changes on this
+     * File a grocery's Ingredient at a Store: what the Store remembers changes on this
      * screen at once, by the same merge every housemate's screen will run when
      * the event lands, and the write goes the way every grocery mutation goes —
      * optimistic here, through the Outbox when the backend is out of reach
      * (ADR-0004), last writer winning. Nothing lives on the grocery row, so
      * there is no row to roll back: a refusal simply re-reads what is filed.
      */
-    const fileGroceryName = (storeId: string, name: string, aisleId: string | null) => {
-      const normalizedName = normalizeGroceryName(name);
+    const fileGroceryName = (
+      storeId: string,
+      grocery: { name: string | null; ingredientId?: string | null },
+      aisleId: string | null
+    ) => {
+      const name = grocery.name?.trim();
 
-      if (!normalizedName) return;
+      if (!name) return;
       const aisleLinksKey = trpc.stores.aisleLinks.queryKey();
 
-      queryClient.setQueryData<StoreAislesData>(aisleLinksKey, (prev) =>
-        mergeAisleFiling(prev ?? [], { storeId, normalizedName, aisleId })
-      );
+      // What is filed is the grocery's Ingredient. A grocery added offline has
+      // none yet; the server resolves its name, and the filing lands with the
+      // echo instead.
+      if (grocery.ingredientId) {
+        const ingredientId = grocery.ingredientId;
+
+        // A read already under way answers for the Store as it was; it must
+        // not land over this filing. The echo reads the links again.
+        void queryClient.cancelQueries({ queryKey: aisleLinksKey });
+        queryClient.setQueryData<StoreAislesData>(aisleLinksKey, (prev) =>
+          mergeAisleFiling(prev ?? [], { storeId, ingredientId, aisleId })
+        );
+      }
       fileMutation.mutate(
         { storeId, name, aisleId },
         {

@@ -1,23 +1,16 @@
 "use client";
 
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import ArchiveImporter from "@/components/navbar/archive-importer";
-import { Card } from "@heroui/react";
+import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 export default function ArchiveImportCard() {
   const t = useTranslations("settings.user.archiveImport");
 
   return (
-    <Card>
-      <Card.Header>
-        <div>
-          <h2 className="text-lg font-semibold">{t("title")}</h2>
-          <p className="text-muted mt-1 text-base">{t("description")}</p>
-        </div>
-      </Card.Header>
-      <Card.Content>
-        <ArchiveImporter />
-      </Card.Content>
-    </Card>
+    <SettingsCard description={t("description")} icon={ArrowUpTrayIcon} title={t("title")}>
+      <ArchiveImporter />
+    </SettingsCard>
   );
 }

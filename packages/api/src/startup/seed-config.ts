@@ -10,6 +10,7 @@ import type {
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
@@ -21,8 +22,11 @@ import {
   setConfig,
 } from "@norish/db/repositories/server-config";
 import {
+  DEFAULT_INGREDIENT_PERMISSION_POLICY,
   DEFAULT_JOB_RETENTION,
   DEFAULT_RECIPE_PERMISSION_POLICY,
+  IngredientWordsConfigSchema,
+  IngredientWordsMapSchema,
   ServerConfigKeys,
   UnitsConfigSchema,
   UnitsMapSchema,
@@ -147,6 +151,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     description: "Recipe permission policy (default: household)",
   },
   {
+    key: ServerConfigKeys.INGREDIENT_PERMISSION_POLICY,
+    getDefaultValue: () => DEFAULT_INGREDIENT_PERMISSION_POLICY,
+    sensitive: false,
+    description: "Ingredient permission policy (default: household)",
+  },
+  {
     key: ServerConfigKeys.PROMPTS,
     // Overrides only: defaults live in the shipped prompt files and are
     // merged at read time, so new releases' prompts arrive without a write.
@@ -188,6 +198,7 @@ export async function seedServerConfig(): Promise<void> {
   await syncPrompts();
   await syncLocales();
   await syncTimerKeywords();
+  await syncIngredientWords();
 
   if (seededCount === 0) {
     serverLogger.info("All server configuration keys present");
@@ -550,6 +561,50 @@ async function syncTimerKeywords(): Promise<void> {
     await setConfig(ServerConfigKeys.TIMER_KEYWORDS, fileDefaults, null, false);
     serverLogger.info("Updated timer keywords from default file (content changed)");
   }
+}
+
+/** A value as JSON with every object's keys sorted: jsonb keeps no key order, so a stored row compares by content. */
+function sortedJson(value: unknown): string {
+  return JSON.stringify(value, (_, inner: unknown) =>
+    inner && typeof inner === "object" && !Array.isArray(inner)
+      ? Object.fromEntries(
+          Object.entries(inner as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1))
+        )
+      : inner
+  );
+}
+
+/**
+ * Seed the ingredient words (ADR-0037), and carry the words Norish ships into
+ * a row the administrator has not edited, as the units and timer keywords
+ * are; an edited row is left alone.
+ */
+async function syncIngredientWords(): Promise<void> {
+  const stored = IngredientWordsConfigSchema.safeParse(
+    await getConfig<unknown>(ServerConfigKeys.INGREDIENT_WORDS)
+  );
+
+  if (stored.success && stored.data.isOverridden) {
+    serverLogger.debug("Ingredient words are overridden by admin, skipping file sync");
+
+    return;
+  }
+
+  const shipped = IngredientWordsMapSchema.parse(defaultIngredientWords);
+
+  if (stored.success && sortedJson(stored.data.words) === sortedJson(shipped)) return;
+
+  await setConfig(
+    ServerConfigKeys.INGREDIENT_WORDS,
+    { words: shipped, isOverridden: false },
+    null,
+    false
+  );
+  serverLogger.info(
+    stored.success
+      ? "Updated ingredient words from default file (content changed)"
+      : "Seeded ingredient words from default config file"
+  );
 }
 
 /**

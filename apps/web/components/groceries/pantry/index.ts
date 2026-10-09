@@ -1,1 +1,1 @@
-export { PantryPanel } from "./pantry-panel";
+export { PantryView } from "./pantry-view";

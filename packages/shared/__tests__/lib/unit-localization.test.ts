@@ -12,9 +12,80 @@ import { describe, expect, it } from "vitest";
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import defaultUnits from "@norish/config/units.default.json";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-import { flattenForLibrary, formatUnit, normalizeUnit } from "@norish/shared/lib/unit-localization";
+import {
+  flattenForLibrary,
+  foldUnitWord,
+  formatUnit,
+  normalizeUnit,
+} from "@norish/shared/lib/unit-localization";
 
 const unitsConfig = defaultUnits as UnitsMap;
+
+/**
+ * The map as a server reads it back from its jsonb column, which stores an
+ * object's keys shortest first and then byte by byte: "box" before "dozen",
+ * "chunk" before "piece", "teaspoon" before "tablespoon".
+ */
+const storedMap = Object.fromEntries(
+  Object.entries(unitsConfig).sort(
+    ([a], [b]) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0)
+  )
+) as UnitsMap;
+
+describe("every word of the default units map names one unit", () => {
+  it("has no word two units claim, as an id, a short form, a plural or an alternate", () => {
+    const claims = new Map<string, Set<string>>();
+
+    for (const [unitId, unit] of Object.entries(unitsConfig)) {
+      const words = [
+        unitId,
+        ...unit.short.map((form) => form.name),
+        ...unit.plural.map((form) => form.name),
+        ...unit.alternates,
+      ];
+
+      for (const word of words) {
+        const owners = claims.get(foldUnitWord(word)) ?? new Set<string>();
+
+        owners.add(unitId);
+        claims.set(foldUnitWord(word), owners);
+      }
+    }
+
+    const shared = [...claims].filter(([, owners]) => owners.size > 1);
+
+    expect(Object.fromEntries(shared.map(([word, owners]) => [word, [...owners]]))).toEqual({});
+  });
+
+  it.each([
+    ["T", "tablespoon"],
+    ["t", "teaspoon"],
+    ["stuk", "piece"],
+    ["stuks", "piece"],
+    ["Stück", "piece"],
+    ["Stücke", "piece"],
+    ["pezzo", "piece"],
+    ["pezzi", "piece"],
+    ["scheutje", "splash"],
+    ["scheutjes", "splash"],
+    ["dozen", "dozen"],
+  ])("reads %s as a %s, whatever order a server reads the map in", (word, unitId) => {
+    expect(normalizeUnit(word, unitsConfig)).toBe(unitId);
+    expect(normalizeUnit(word, storedMap)).toBe(unitId);
+  });
+
+  it.each([
+    ["1 T olive oil", "tablespoon", "olive oil"],
+    ["1 t salt", "teaspoon", "salt"],
+    ["2 heaped tsp cumin seeds", "heaping_teaspoon", "cumin seeds"],
+    ["4 heaped tbsp Greek-style yogurt", "heaping_tablespoon", "Greek-style yogurt"],
+  ])("stores %s in a %s", (line, unitId, description) => {
+    const [parsed] = parseIngredientWithDefaults(line, storedMap);
+
+    expect(normalizeUnit(parsed?.unitOfMeasure ?? "", storedMap)).toBe(unitId);
+    expect(parsed?.description).toBe(description);
+  });
+});
 
 describe("Unit Localization", () => {
   describe("normalizeUnit - input => canonical ID", () => {

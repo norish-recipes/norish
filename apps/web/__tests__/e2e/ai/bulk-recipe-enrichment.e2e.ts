@@ -117,7 +117,7 @@ async function importRecipe(name: string, extraction: unknown): Promise<void> {
 async function openBulkPanel(): Promise<Locator> {
   await page.goto("/settings?tab=admin");
 
-  const trigger = page.getByRole("button", { name: /^Bulk Enrichment/ }).first();
+  const trigger = page.getByRole("button", { name: /^Bulk enrichment/ }).first();
 
   await trigger.scrollIntoViewIfNeeded();
   await trigger.click();
@@ -155,9 +155,9 @@ test("with AI disabled the action refuses before queueing anything", async () =>
 
   const panel = await openBulkPanel();
 
-  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
+  await panel.getByRole("button", { name: "Enrich all recipes" }).click();
   await expect(page.getByText("Run enrichment on all recipes?")).toBeVisible();
-  await page.getByRole("button", { name: "Run on All Recipes" }).click();
+  await page.getByRole("button", { name: "Run on all recipes" }).click();
 
   await expect(page.getByText("AI is disabled on this server. Enable AI first.")).toBeVisible({
     timeout: 15_000,
@@ -175,7 +175,7 @@ test("cancelling the confirmation runs nothing", async () => {
 
   const panel = await openBulkPanel();
 
-  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
+  await panel.getByRole("button", { name: "Enrich all recipes" }).click();
   await expect(page.getByText("Run enrichment on all recipes?")).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
 
@@ -196,8 +196,8 @@ test("a confirmed run fills gaps through enabled kinds and defers to supplied da
 
   const panel = await openBulkPanel();
 
-  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
-  await page.getByRole("button", { name: "Run on All Recipes" }).click();
+  await panel.getByRole("button", { name: "Enrich all recipes" }).click();
+  await page.getByRole("button", { name: "Run on all recipes" }).click();
 
   // The mutation reports what the coordinator decided: of two recipes, only
   // the one with a category gap enrolled the one enabled kind.
@@ -232,12 +232,12 @@ test("overwriting redoes the supplied recipe instead of deferring to it", async 
 
   const panel = await openBulkPanel();
 
-  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
+  await panel.getByRole("button", { name: "Enrich all recipes" }).click();
   // Keyboard, as the grocery checkbox does: the control span sits over the
   // input, so a click never reaches its hit target.
   await page.getByRole("switch", { name: "Overwrite existing data" }).press("Space");
   await expect(page.getByText("This cannot be undone.", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "Overwrite All Recipes" }).click();
+  await page.getByRole("button", { name: "Overwrite all recipes" }).click();
 
   // Both recipes enrolled this time: having a category no longer suppresses it.
   await expect(panel.getByText("2 runs queued across 2 recipes")).toBeVisible({
@@ -265,7 +265,7 @@ test("the overwrite choice is not remembered by the next confirmation", async ()
   const panel = await openBulkPanel();
   const replaceSwitch = page.getByRole("switch", { name: "Overwrite existing data" });
 
-  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
+  await panel.getByRole("button", { name: "Enrich all recipes" }).click();
   await replaceSwitch.press("Space");
   await expect(replaceSwitch).toBeChecked();
   await page.getByRole("button", { name: "Cancel" }).click();
@@ -273,9 +273,9 @@ test("the overwrite choice is not remembered by the next confirmation", async ()
 
   // Reopening starts from gap-filling, so a later sweep cannot inherit a
   // destructive choice nobody made this time.
-  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
+  await panel.getByRole("button", { name: "Enrich all recipes" }).click();
   await expect(replaceSwitch).not.toBeChecked();
-  await expect(page.getByRole("button", { name: "Run on All Recipes" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run on all recipes" })).toBeVisible();
 });
 
 test("a provenance run fills the gaps around a supplied Cuisine and skips a complete group", async () => {
@@ -307,8 +307,8 @@ test("a provenance run fills the gaps around a supplied Cuisine and skips a comp
 
   const panel = await openBulkPanel();
 
-  await panel.getByRole("button", { name: "Enrich All Recipes" }).click();
-  await page.getByRole("button", { name: "Run on All Recipes" }).click();
+  await panel.getByRole("button", { name: "Enrich all recipes" }).click();
+  await page.getByRole("button", { name: "Run on all recipes" }).click();
 
   // Of two recipes, only the one with gaps enrolled the one enabled kind.
   await expect(panel.getByText("1 run queued across 2 recipes")).toBeVisible({

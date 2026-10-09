@@ -37,7 +37,7 @@ export const cssMediaControlBare = [
 // The soft accent halo behind an empty-state icon, drawn as a radial
 // gradient rather than blur compositing (ADR-0020 removed blur outright).
 export const cssEmptyStateGlow =
-  "from-accent-soft0/20 dark:from-accent/15 absolute -inset-12 bg-radial from-40% to-transparent";
+  "from-accent/20 dark:from-accent/15 absolute -inset-12 bg-radial-[closest-side] from-40% to-transparent";
 
 export const cssInputNoHover =
   "hover:!bg-white/70 dark:hover:!bg-black/70 data-[hovered=true]:!bg-white/70 dark:data-[hovered=true]:!bg-black/70 focus:!bg-white/70 dark:focus:!bg-black/70 data-[focus=true]:!bg-white/70 dark:data-[focus=true]:!bg-black/70 active:!bg-white/70 dark:active:!bg-black/70 data-[pressed=true]:!bg-white/70 dark:data-[pressed=true]:!bg-black/70 hover:!opacity-100 data-[hovered=true]:!opacity-100 transition-none";
@@ -50,6 +50,14 @@ export const cssButtonPill =
 
 export const cssButtonPillDanger =
   "rounded-full text-danger data-[hovered=true]:bg-danger/10 data-[pressed=true]:bg-danger/15";
+
+// A page header's controls: a view switch and the buttons beside it are one
+// height, 28px on a phone and 32px from `sm`, with 16px icons at both.
+// A switch's tab is its height less the list's 2px rim on either side.
+export const cssHeaderControl = "h-7 min-w-7 text-xs sm:h-8 sm:min-w-8 sm:text-sm";
+export const cssHeaderIconControl = "size-7 min-w-7 sm:size-8 sm:min-w-8";
+export const cssHeaderTab = "h-6 px-2 text-xs sm:h-7 sm:min-w-16 sm:px-2.5";
+export const cssHeaderIcon = "size-4 shrink-0";
 
 // Dropdown/Menu item pill styling to unify hover/pressed across menus
 // Uses important overrides to beat component defaults and keeps base transparent

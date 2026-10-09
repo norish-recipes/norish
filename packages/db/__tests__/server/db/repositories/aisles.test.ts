@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  fileGroceryName,
+  fileIngredient,
   getAisleById,
   listAisleLinksByStoreIds,
   listAislesByStoreIds,
@@ -19,6 +19,7 @@ import {
 } from "@norish/db/repositories/stores";
 import { aisleLinks, aisles, stores } from "@norish/db/schema";
 
+import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
 import { getTestDb } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -251,7 +252,7 @@ describe("aisles and aisle links", () => {
     });
   });
 
-  describe("an Aisle Link: where a Store files a name", () => {
+  describe("an Aisle Link: where a Store files an Ingredient", () => {
     beforeEach(async () => {
       await updateStore({
         id: storeId,
@@ -262,44 +263,51 @@ describe("aisles and aisle links", () => {
       });
     });
 
-    it("keeps one link per Store and name, last writer winning, folding the name", async () => {
-      await expect(fileGroceryName(storeId, "Melk", ZUIVEL)).resolves.toEqual({
+    /** The Ingredient a grocery name resolves to, as the filing procedure resolves it. */
+    async function ingredient(name: string) {
+      const [resolved] = await resolveIngredients([name], { userId });
+
+      return resolved!.ingredientId;
+    }
+
+    it("keeps one link per Store and Ingredient, last writer winning, whichever spelling filed it", async () => {
+      const melk = await ingredient("Melk");
+
+      await expect(fileIngredient(storeId, melk, ZUIVEL)).resolves.toEqual({
         storeId,
-        normalizedName: "melk",
+        ingredientId: melk,
         aisleId: ZUIVEL,
       });
-      await fileGroceryName(storeId, "  MELK!  ", BROOD);
+      await fileIngredient(storeId, await ingredient("  MELK!  "), BROOD);
 
-      const links = await getTestDb().select().from(aisleLinks);
-
-      expect(links).toHaveLength(1);
-      expect(links[0]).toMatchObject({ storeId, normalizedName: "melk", aisleId: BROOD });
+      await expect(listAisleLinksByStoreIds([storeId])).resolves.toEqual([
+        { storeId, ingredientId: melk, aisleId: BROOD },
+      ]);
     });
 
-    it("forgets a name filed under null, and says so", async () => {
-      await fileGroceryName(storeId, "melk", ZUIVEL);
+    it("forgets an Ingredient filed under null, and says so", async () => {
+      const melk = await ingredient("melk");
 
-      await expect(fileGroceryName(storeId, "Melk", null)).resolves.toEqual({
+      await fileIngredient(storeId, melk, ZUIVEL);
+
+      await expect(fileIngredient(storeId, melk, null)).resolves.toEqual({
         storeId,
-        normalizedName: "melk",
+        ingredientId: melk,
         aisleId: null,
       });
       await expect(getTestDb().select().from(aisleLinks)).resolves.toEqual([]);
     });
 
-    it("files nothing for a name that folds to nothing", async () => {
-      await expect(fileGroceryName(storeId, " !? ", ZUIVEL)).resolves.toBeNull();
-      await expect(getTestDb().select().from(aisleLinks)).resolves.toEqual([]);
-    });
-
     it("forgets the links of an aisle that is removed", async () => {
-      await fileGroceryName(storeId, "melk", ZUIVEL);
-      await fileGroceryName(storeId, "brood", BROOD);
+      const brood = await ingredient("brood");
+
+      await fileIngredient(storeId, await ingredient("melk"), ZUIVEL);
+      await fileIngredient(storeId, brood, BROOD);
 
       await updateStore({ id: storeId, aisles: [{ id: BROOD, name: "Brood" }] });
 
       await expect(listAisleLinksByStoreIds([storeId])).resolves.toEqual([
-        { storeId, normalizedName: "brood", aisleId: BROOD },
+        { storeId, ingredientId: brood, aisleId: BROOD },
       ]);
     });
 
@@ -309,23 +317,25 @@ describe("aisles and aisle links", () => {
         name: "Jumbo",
         aisles: [{ id: GROENTE, name: "Groente" }],
       });
+      const melk = await ingredient("melk");
+      const appels = await ingredient("appels");
 
-      await fileGroceryName(storeId, "melk", ZUIVEL);
-      await fileGroceryName(other.id, "appels", GROENTE);
+      await fileIngredient(storeId, melk, ZUIVEL);
+      await fileIngredient(other.id, appels, GROENTE);
 
       const links = await listAisleLinksByStoreIds([storeId, other.id]);
 
-      expect(links.map((link) => [link.storeId, link.normalizedName, link.aisleId]).sort()).toEqual(
+      expect(links.map((link) => [link.storeId, link.ingredientId, link.aisleId]).sort()).toEqual(
         [
-          [other.id, "appels", GROENTE],
-          [storeId, "melk", ZUIVEL],
+          [other.id, appels, GROENTE],
+          [storeId, melk, ZUIVEL],
         ].sort()
       );
       await expect(listAisleLinksByStoreIds([])).resolves.toEqual([]);
     });
 
     it("goes with the Store, aisles and all", async () => {
-      await fileGroceryName(storeId, "melk", ZUIVEL);
+      await fileIngredient(storeId, await ingredient("melk"), ZUIVEL);
       const [store] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
       await deleteStore(storeId, store!.version, false, []);

@@ -130,14 +130,33 @@ export async function serveRecipeMedia(
   filename: string,
   cacheControl: string
 ) {
+  return serveUploadedMedia(req, ["recipes", recipeId], filename, cacheControl);
+}
+
+/** A cookbook's uploaded cover, from uploads/cookbooks/{cookbookId}. */
+export async function serveCookbookMedia(
+  req: Request,
+  cookbookId: string,
+  filename: string,
+  cacheControl: string
+) {
+  return serveUploadedMedia(req, ["cookbooks", cookbookId], filename, cacheControl);
+}
+
+async function serveUploadedMedia(
+  req: Request,
+  directory: string[],
+  filename: string,
+  cacheControl: string
+) {
   const invalidFilename = validateFilename(filename);
 
   if (invalidFilename) {
     return invalidFilename;
   }
 
-  const recipeDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes", recipeId);
-  const filePath = resolveSafeFilePath(recipeDir, filename);
+  const mediaDir = path.join(SERVER_CONFIG.UPLOADS_DIR, ...directory);
+  const filePath = resolveSafeFilePath(mediaDir, filename);
 
   if (!filePath) {
     return NextResponse.json({ error: "Invalid path" }, { status: 400 });

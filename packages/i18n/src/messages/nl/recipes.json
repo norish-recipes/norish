@@ -154,7 +154,10 @@
     "ariaLabel": "Converteer meetsysteem",
     "toMetric": "Converteer naar metrisch",
     "toUS": "Converteer naar US",
-    "converting": "Bezig met omrekenen…"
+    "toMetricWithAI": "Converteer naar metrisch met AI",
+    "toUSWithAI": "Converteer naar US met AI",
+    "converting": "Bezig met omrekenen…",
+    "original": "Origineel"
   },
   "deleteModal": {
     "title": "Recept verwijderen",
@@ -255,7 +258,20 @@
     "protein": "Eiwitten",
     "showingPortions": "Waardes voor {count} {count, plural, one {portie} other {porties}}",
     "noInfo": "Geen voedingsinformatie beschikbaar",
-    "estimateWithAI": "Schatten met AI"
+    "estimateWithAI": "Schatten met AI",
+    "estimated": "Geschat",
+    "leftOut": "{count, plural, one {# regel niet meegeteld} other {# regels niet meegeteld}}",
+    "estimatedByAI": "geschat door AI",
+    "reasons": {
+      "seasoning": "smaakmaker",
+      "noAmount": "geen hoeveelheid",
+      "noSize": "geen gewicht voor deze maat",
+      "noNumbers": "nog geen voedingswaarden",
+      "noSpoonWeight": "nog geen lepelgewicht",
+      "noPieceWeight": "nog geen stukgewicht"
+    },
+    "workedOutFrom": "Berekend uit de ingrediënten, met {sources}.",
+    "householdNumbers": "de waarden van je huishouden"
   },
   "measurementSystem": {
     "label": "Meetsysteem",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Recept geïmporteerd",
-    "converted": "Maateenheden omgezet",
-    "convertedDescription": "Recept omgezet naar {system} eenheden",
     "failed": "Receptbewerking mislukt",
     "failedDescription": "Er ging iets mis tijdens het verwerken van je recept. Bekijk de browserconsole voor technische details.",
     "batchImported": "Recepten geïmporteerd",
@@ -402,6 +416,12 @@
     "searchRecipes": "Recepten zoeken",
     "noRecipesToAdd": "Geen recepten gevonden.",
     "addCount": "{count, plural, one {# recept toevoegen} other {# recepten toevoegen}}",
-    "everythingAlreadyIn": "Alle recepten staan al in dit kookboek."
+    "everythingAlreadyIn": "Alle recepten staan al in dit kookboek.",
+    "coverLabel": "Omslag",
+    "chooseImage": "Afbeelding kiezen",
+    "changeImage": "Afbeelding wijzigen",
+    "removeImage": "Afbeelding verwijderen",
+    "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
+    "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
   }
 }

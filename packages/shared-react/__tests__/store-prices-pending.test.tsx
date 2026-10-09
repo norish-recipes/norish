@@ -13,8 +13,8 @@ import { createUseStorePrices, PENDING_LINK_MAX_AGE_MS } from "@norish/shared-re
 
 const STORE = "store-a";
 
-function pending(name: string): ResolvedProductLink {
-  return { storeId: STORE, normalizedName: name, triedAt: null, product: null };
+function pending(ingredientId: string): ResolvedProductLink {
+  return { storeId: STORE, ingredientId, triedAt: null, product: null, suggestion: null };
 }
 
 type UseTRPC = Parameters<typeof createUseStorePrices>[0]["useTRPC"];
@@ -37,13 +37,13 @@ function fakeTrpc(links: () => ResolvedProductLink[]): ReturnType<UseTRPC> {
 
 function Probe({
   useStorePrices,
-  name,
+  ingredientId,
 }: {
   useStorePrices: ReturnType<typeof createUseStorePrices>;
-  name: string;
+  ingredientId: string;
 }) {
   const { linkFor } = useStorePrices();
-  const link = linkFor(STORE, name);
+  const link = linkFor(STORE, ingredientId);
 
   return (
     <span data-testid="state">
@@ -65,12 +65,12 @@ describe("a Pending Link on the screen", () => {
     client.clear();
   });
 
-  async function mount(name: string, links: () => ResolvedProductLink[]) {
+  async function mount(ingredientId: string, links: () => ResolvedProductLink[]) {
     const useStorePrices = createUseStorePrices({ useTRPC: () => fakeTrpc(links) });
 
     render(
       <QueryClientProvider client={client}>
-        <Probe name={name} useStorePrices={useStorePrices} />
+        <Probe ingredientId={ingredientId} useStorePrices={useStorePrices} />
       </QueryClientProvider>
     );
     // The first render has nothing yet; the query answers on the next tick.
@@ -105,7 +105,15 @@ describe("a Pending Link on the screen", () => {
     act(() => {
       client.setQueryData(
         ["stores", "groceryPrices"],
-        [{ storeId: STORE, normalizedName: "kaas", triedAt: new Date(), product: null }]
+        [
+          {
+            storeId: STORE,
+            ingredientId: "kaas",
+            triedAt: new Date(),
+            product: null,
+            suggestion: null,
+          },
+        ]
       );
     });
     await act(async () => {

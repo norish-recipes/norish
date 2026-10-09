@@ -15,7 +15,8 @@ AI enables:
 - **Video import** from YouTube Shorts, Instagram Reels, TikTok, Pinterest,
   and more
 - **Recipe Enrichment**: tags, allergy indications, meal categories, nutrition values, ingredient to step linking, and a generated picture of the dish.
-- **Unit conversion** between metric and US units
+- **Unit conversion** between metric and US units, as an alternative to the
+  conversion Norish does without AI
 
 Optionally a user can also set a [Decision Model](#decision-model), this model
 answers the closed questions faster and cheaper, and validates the AI provider's
@@ -85,9 +86,9 @@ every newly created recipe, manual entry and every import path alike.
 | **Allergy detection**    | Adds allergy tags for your household's configured allergies                               | On      | Answers, one question per household allergen               |
 | **Auto-categorization**  | Sets meal categories on recipes that have none                                            | Off     | Answers, one question per category                         |
 | **Nutrition estimation** | Estimates calories, fat, carbs, and protein when the recipe doesn't already have all four | Off     | Checks the estimate, logged only for now                   |
-| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note                                 | Off     | Answers the country and Cuisines; checks every new Cuisine |
-| **Ingredient Linking**   | Links ingredient lines to the steps that have none                                        | Off     | Checks every new link                                      |
-| **Image Generation**     | Draws a picture of the dish for new recipes that have no image at all                     | Off     | Not used                                                   |
+| **Recipe provenance**    | Works out the country, region, cuisines, and a short note                                 | Off     | Answers the country and Cuisines; checks every new Cuisine |
+| **Ingredient linking**   | Links ingredient lines to the steps that have none                                        | Off     | Checks every new link                                      |
+| **Image generation**     | Draws a picture of the dish for new recipes that have no image at all                     | Off     | Not used                                                   |
 
 The Decision Model helps in two ways:
 
@@ -159,7 +160,7 @@ automatically:
 Under both strategies the AI's answers are matched against the existing list
 first, so a slight misspelling lands on the entry that already exists rather than
 creating a near-duplicate. The list itself is managed under
-**Settings => Admin => AI & Processing => Cuisines**; see
+**Settings => Admin => AI & processing => Cuisines**; see
 [Recipe provenance](../recipes/provenance.md).
 
 ### Image generation
@@ -170,28 +171,46 @@ Image generation needs its own provider, because most AI providers cannot draw:
 Anthropic, Mistral, DeepSeek, Groq and Perplexity expose no image model at all.
 So a self-hoster running a local text model can still point image generation
 somewhere else, or at an Ollama server running one of its image models.
-Configure it under **Settings => Admin => AI & Processing => Image Generation**:
+Configure it under **Settings => Admin => AI & processing => Image generation**:
 
 | Field              | Notes                                                                                                                                                     |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Image Provider** | OpenAI, Google AI, Azure OpenAI, Ollama, LM Studio, or a generic OpenAI-compatible endpoint, only providers that can actually generate images are offered |
+| **Image provider** | OpenAI, Google AI, Azure OpenAI, Ollama, LM Studio, or a generic OpenAI-compatible endpoint, only providers that can actually generate images are offered |
 | **Endpoint URL**   | For Ollama, LM Studio and generic endpoints; optional custom resource URL for Azure                                                                       |
-| **API Key**        | For the cloud providers                                                                                                                                   |
-| **Image Model**    | Must be an image model, e.g. `gpt-image-1`, `imagen-4.0-generate-001` or Ollama's `x/z-image-turbo`, not a text model                                     |
+| **API key**        | For the cloud providers                                                                                                                                   |
+| **Image model**    | Must be an image model, e.g. `gpt-image-1-mini`, `gemini-2.5-flash-image` or Ollama's `x/z-image-turbo`, not a text model                                 |
 
 When the image provider is the **same** provider as your AI configuration, the
 endpoint and API key fall back to it, so you don't type a key twice.
 
+For OpenAI and Google the model list suggests only the provider's image models,
+the ones whose names say they draw (`gpt-image-…`, `dall-e-…`, Gemini's
+`…-image` models). A text model such as `gpt-6-luna` can read pictures but not
+draw them, so it isn't offered. You can still type any model name, for a new
+image model the list doesn't know yet. Google's Imagen models are no longer
+supported for drawing; use a Gemini image model.
+
 All prompts for the image generation feature are editable under **Prompts**.
+
+The same image provider draws [ingredient icons](../groceries/ingredient-icons.md)
+when someone uses **Generate with AI** in an ingredient's panel or **Draw icons**
+on the Ingredients page. An icon is shown small, so it is asked for as a square at
+the provider's cheapest quality, `low` from OpenAI and Azure OpenAI models, and
+on a transparent background where the model can draw one, so nothing has to be cut
+away. A model
+that doesn't take that tier, such as DALL·E, draws at its default, and other
+providers draw at their default. The look every icon shares is
+the **Ingredient icon style prompt** under **Prompts**; the food's name and what
+it is a kind of are added after it.
 
 How pictures reach recipes:
 
-- **Automatically**, when the **Image Generation** switch above is on: newly
+- **Automatically**, when the **Image generation** switch above is on: newly
   created recipes that have **no image at all** are made.
 - **On request**, from a recipe's actions menu (**Generate Picture**)
   This does replace the recipes original image and is **destructive**.
   [Recipe enrichment](../recipes/enrichment.md#running-one-yourself).
-- **In bulk**, through **Enrich All Recipes** below.
+- **In bulk**, through **Enrich all recipes** below.
 
 ### Decision Model
 
@@ -203,14 +222,14 @@ increase accuracy/validate output of the LLM provider. These models are
 cheaper than regular LLM's and can replace the need for an LLM in various
 cases such as categorisation.
 
-Configure it under **Settings => Admin => AI & Processing => Decision Model**:
+Configure it under **Settings => Admin => AI & processing => Decision model**:
 
 | Field                          | Notes                                                                                                                                                                                                                                                                                                  |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Provider**                   | _Disabled_ or _TypeSafe AI_                                                                                                                                                                                                                                                                            |
-| **API Key**                    | From your TypeSafe AI account.                                                                                                                                                                                                                                                                         |
+| **API key**                    | From your TypeSafe AI account.                                                                                                                                                                                                                                                                         |
 | **Model**                      | Defaults to `jev-latest` release                                                                                                                                                                                                                                                                       |
-| **Use the Decision Model for** | One multi-select: _Auto-categorization_, _Auto-tagging_, _Allergy detection_, _Recipe Provenance_, _Grocery linking_, _Validate enrichments_. **Everything is selected** the moment a Decision Model is configured; deselect what it should leave to the AI provider. Import triage is not in the list |
+| **Use the decision model for** | One multi-select: _Auto-categorization_, _Auto-tagging_, _Allergy detection_, _Recipe Provenance_, _Grocery linking_, _Validate enrichments_. **Everything is selected** the moment a Decision Model is configured; deselect what it should leave to the AI provider. Import triage is not in the list |
 
 What it does:
 
@@ -265,8 +284,8 @@ flowchart TD
 
 Automatic enrichment only runs when a recipe is created, so recipes imported
 before you enabled a switch, or before an enrichment kind existed, never
-catch up on their own. **Settings => Admin => AI & Processing => Bulk Enrichment
-=> Enrich All Recipes** queues every enrichment whose
+catch up on their own. **Settings => Admin => AI & processing => Bulk enrichment
+=> Enrich all recipes** queues every enrichment whose
 automatic switch is enabled, for every recipe on the server.
 
 **This action can be expensive.**

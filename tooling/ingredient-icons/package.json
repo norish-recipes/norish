@@ -1,0 +1,31 @@
+{
+  "name": "@norish/ingredient-icons-tool",
+  "version": "0.25.0-beta",
+  "private": true,
+  "type": "module",
+  "description": "Draws the Ingredient Icons Norish ships for its seeded foods, through an instance's image provider.",
+  "scripts": {
+    "draw-icons": "tsx src/draw-icons.ts",
+    "draw-sample-icons": "tsx src/draw-sample-icons.ts",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "pnpm exec tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules"
+  },
+  "dependencies": {
+    "@norish/db": "workspace:*",
+    "@norish/shared-server": "workspace:*",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsx": "4.23.12",
+    "typescript": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

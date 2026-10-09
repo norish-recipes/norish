@@ -154,7 +154,10 @@
     "ariaLabel": "Maßeinheit umwandeln",
     "toMetric": "In metrisch umwandeln",
     "toUS": "In US umwandeln",
-    "converting": "Wird umgerechnet…"
+    "toMetricWithAI": "Mit KI in metrisch umwandeln",
+    "toUSWithAI": "Mit KI in US umwandeln",
+    "converting": "Wird umgerechnet…",
+    "original": "Original"
   },
   "deleteModal": {
     "title": "Rezept löschen",
@@ -255,7 +258,20 @@
     "protein": "Protein",
     "showingPortions": "Zeige Werte für {count} {count, plural, one {Portion} other {Portionen}}",
     "noInfo": "Keine Nährwertinformationen verfügbar",
-    "estimateWithAI": "Mit KI schätzen"
+    "estimateWithAI": "Mit KI schätzen",
+    "estimated": "Geschätzt",
+    "leftOut": "{count, plural, one {# Zeile nicht mitgezählt} other {# Zeilen nicht mitgezählt}}",
+    "estimatedByAI": "von KI geschätzt",
+    "reasons": {
+      "seasoning": "Gewürz",
+      "noAmount": "keine Menge",
+      "noSize": "kein Gewicht für dieses Maß",
+      "noNumbers": "noch keine Nährwerte",
+      "noSpoonWeight": "noch kein Löffelgewicht",
+      "noPieceWeight": "noch kein Stückgewicht"
+    },
+    "workedOutFrom": "Aus den Zutaten berechnet, mit {sources}.",
+    "householdNumbers": "den Werten deines Haushalts"
   },
   "measurementSystem": {
     "label": "Maßeinheit-System",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Rezept importiert",
-    "converted": "Maße umgerechnet",
-    "convertedDescription": "Rezept in {system}-Einheiten umgerechnet",
     "failed": "Rezept-Operation fehlgeschlagen",
     "failedDescription": "Beim Verarbeiten deines Rezepts ist ein Fehler aufgetreten. Schau in die Browser-Konsole für technische Details.",
     "batchImported": "Rezepte importiert",
@@ -402,6 +416,12 @@
     "searchRecipes": "Rezepte suchen",
     "noRecipesToAdd": "Keine Rezepte gefunden.",
     "addCount": "{count, plural, one {# Rezept hinzufügen} other {# Rezepte hinzufügen}}",
-    "everythingAlreadyIn": "Alle Rezepte sind bereits in diesem Kochbuch."
+    "everythingAlreadyIn": "Alle Rezepte sind bereits in diesem Kochbuch.",
+    "coverLabel": "Titelbild",
+    "chooseImage": "Bild auswählen",
+    "changeImage": "Bild ändern",
+    "removeImage": "Bild entfernen",
+    "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
+    "imageNeedsConnection": "Bilder kannst du ändern, sobald du wieder online bist."
   }
 }

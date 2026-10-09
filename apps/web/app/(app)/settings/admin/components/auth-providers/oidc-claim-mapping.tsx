@@ -2,7 +2,8 @@
 
 import { SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
-import { ExclamationTriangleIcon, UserGroupIcon } from "@heroicons/react/16/solid";
+import { Note } from "@/components/shared/note";
+import { UserGroupIcon } from "@heroicons/react/16/solid";
 import { Description, Input, Label, Separator, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -58,12 +59,7 @@ export function OIDCClaimMapping({ values, onChange, isDirty = false }: OIDCClai
         />
       </SwitchRow>
 
-      {values.enabled && (
-        <div className="bg-warning/10 border-warning/30 text-warning flex items-start gap-2 rounded-lg border p-3">
-          <ExclamationTriangleIcon className="mt-0.5 h-4 w-4 flex-shrink-0" />
-          <p className="text-sm">{tClaimMapping("securityWarning")}</p>
-        </div>
-      )}
+      {values.enabled && <Note status="warning">{tClaimMapping("securityWarning")}</Note>}
 
       <TextField
         isDisabled={!values.enabled}

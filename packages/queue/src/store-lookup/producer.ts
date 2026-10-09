@@ -1,7 +1,6 @@
 import type { Queue } from "bullmq";
 
 import type { StoreLookupJobData } from "@norish/queue/contracts/job-types";
-import { normalizeGroceryName } from "@norish/shared/lib/normalized-name";
 
 import { SHELF_PRICE_MAX_AGE_MS } from "./lookup";
 
@@ -49,14 +48,14 @@ export async function addStoreMatchJob(
   now: number = Date.now()
 ): Promise<void> {
   await queue.add("match", data, {
-    // One question per store and name, however many groceries asked it — and
-    // one per hour, so a shop that did not answer is asked again later
-    // rather than never.
+    // One question per store and Ingredient, however many groceries asked
+    // it — and one per hour, so a shop that did not answer is asked again
+    // later rather than never.
     jobId: jobId(
       "match",
       data.storeId,
       String(windowOf(now, MATCH_RETRY_WINDOW_MS)),
-      normalizeGroceryName(data.name)
+      data.ingredientId
     ),
     priority: MATCH_PRIORITY,
   });

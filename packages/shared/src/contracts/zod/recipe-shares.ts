@@ -122,6 +122,9 @@ export const PublicRecipeIngredientSchema = z.object({
   unit: z.string().nullable(),
   systemUsed: z.enum(measurementSystems),
   order: z.coerce.number(),
+  // The line's Ingredient Icon by address, resolved on the server, since the
+  // public view exposes no ids to look one up by; null shows the placeholder.
+  icon: z.string().nullable().default(null),
 });
 
 export const PublicRecipeImageSchema = z.object({

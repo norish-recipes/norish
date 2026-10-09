@@ -87,3 +87,16 @@ After the first user signs in, registration is disabled automatically. See
 | Variable                   | Description                        | Default |
 | -------------------------- | ---------------------------------- | ------- |
 | `SCHEDULER_CLEANUP_MONTHS` | Cleanup retention period in months | `3`     |
+
+## Ingredient catalogue
+
+| Variable                        | Description                                                                                                                                                             | Default                                  |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `INGREDIENT_CATALOGUE_URL`      | Where the ingredient catalogue seed is fetched from, nightly and at startup. Empty turns the fetch off                                                                  | The Open Food Facts ingredients taxonomy |
+| `INGREDIENT_REVIEW_CONCURRENCY` | How many ingredients a round of **Ask AI** on the Ingredients page asks about at once, from 1 to 50. Lower it when a self-hosted model struggles with parallel requests | `10`                                     |
+
+Norish seeds its catalogue of ingredients from the [Open Food Facts](https://world.openfoodfacts.org) ingredients taxonomy, so a new instance already knows that "ui", "oignon" and "onion" are one food. A new instance fetches and applies the file before it starts serving, so its first import already knows the catalogue; after that the file is fetched at every startup and every night at midnight, and only when it changed. A failed or malformed fetch keeps the last good seed and shows as a failed job in the job monitor.
+
+On a server without internet, serve a copy of `ingredients.txt` from a local mirror and point `INGREDIENT_CATALOGUE_URL` at it, or set it empty: Norish works without a seed, it only recognises fewer spellings of a food on its own.
+
+The taxonomy is available under the [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/). Every signed-in user can download the catalogue Norish builds from it under **Settings → Ingredients → Data sources**.

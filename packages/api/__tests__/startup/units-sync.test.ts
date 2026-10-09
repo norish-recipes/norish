@@ -210,3 +210,60 @@ describe("a fresh install", () => {
     expect(storedUnits().units).toEqual(SHIPPED);
   });
 });
+
+describe("the ingredient words", () => {
+  async function shipped() {
+    const { IngredientWordsMapSchema } = await import("@norish/config/zod/server-config");
+    const words = (await import("@norish/config/ingredient-words.default.json")).default;
+
+    return IngredientWordsMapSchema.parse(words);
+  }
+
+  function storedWords() {
+    return mockStore.get(ServerConfigKeys.INGREDIENT_WORDS) as {
+      words: Record<string, unknown>;
+      isOverridden: boolean;
+    };
+  }
+
+  it("are seeded on a fresh install", async () => {
+    await bootOnce();
+
+    expect(storedWords()).toEqual({ words: await shipped(), isOverridden: false });
+  });
+
+  it("follow the shipped words on a deployment that never edited them", async () => {
+    mockStore.set(ServerConfigKeys.INGREDIENT_WORDS, {
+      words: { en: { preparation: ["chopped"] } },
+      isOverridden: false,
+    });
+
+    await bootOnce();
+
+    expect(storedWords().words).toEqual(await shipped());
+  });
+
+  it("are not rewritten where only the order of their keys differs, as jsonb returns them", async () => {
+    const reordered = Object.fromEntries(Object.entries(await shipped()).reverse());
+
+    mockStore.set(ServerConfigKeys.INGREDIENT_WORDS, { words: reordered, isOverridden: false });
+
+    await bootOnce();
+
+    expect(
+      mockSetConfig.mock.calls.some(([key]) => key === ServerConfigKeys.INGREDIENT_WORDS),
+      "rewrote ingredient words that already match the file"
+    ).toBe(false);
+  });
+
+  it("stay as an administrator edited them", async () => {
+    const edited = { nl: { preparation: ["gesnipperd"], inflections: [["tjes", ""]] } };
+
+    mockStore.set(ServerConfigKeys.INGREDIENT_WORDS, { words: edited, isOverridden: true });
+
+    await bootOnce();
+
+    expect(storedWords().isOverridden).toBe(true);
+    expect(storedWords().words.nl).toMatchObject({ preparation: ["gesnipperd"] });
+  });
+});

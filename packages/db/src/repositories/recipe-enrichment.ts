@@ -11,6 +11,7 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 
+import type { EstimatedLineRow } from "@norish/db/schema";
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type {
   NutritionGroupInput,
@@ -19,10 +20,10 @@ import type {
 } from "@norish/shared/lib/recipe-enrichment";
 import { db } from "@norish/db/drizzle";
 import {
-  ingredients,
   recipeCuisines,
   recipeImages,
   recipeIngredients,
+  recipeNutritionEstimates,
   recipes,
   stepIngredients,
   steps,
@@ -138,6 +139,44 @@ export async function replaceRecipeNutrition(
     .returning({ id: recipes.id });
 
   return updated.length > 0;
+}
+
+/**
+ * Store the language model's estimate of the lines a recipe's worked-out
+ * nutrition leaves out (ADR-0039): one per-serving share per line, under
+ * the line's key, replacing any earlier estimate. Never the recipe's own
+ * Nutrition Information. False where the recipe is gone.
+ */
+export async function saveRecipeNutritionEstimate(
+  recipeId: string,
+  estimate: { lines: EstimatedLineRow[] }
+): Promise<boolean> {
+  const [recipe] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(eq(recipes.id, recipeId));
+
+  if (!recipe) return false;
+
+  await db
+    .insert(recipeNutritionEstimates)
+    .values({ recipeId, ...estimate, createdAt: new Date() })
+    .onConflictDoUpdate({
+      target: recipeNutritionEstimates.recipeId,
+      set: { ...estimate, createdAt: new Date() },
+    });
+
+  return true;
+}
+
+/** Drop a recipe's stored estimate: every line counts now. Whether there was one. */
+export async function clearRecipeNutritionEstimate(recipeId: string): Promise<boolean> {
+  const removed = await db
+    .delete(recipeNutritionEstimates)
+    .where(eq(recipeNutritionEstimates.recipeId, recipeId))
+    .returning({ recipeId: recipeNutritionEstimates.recipeId });
+
+  return removed.length > 0;
 }
 
 /** What the Generated Image replacement did, and which files it orphaned. */
@@ -304,10 +343,9 @@ export async function writeInferredStepIngredients(
         id: recipeIngredients.id,
         order: recipeIngredients.order,
         systemUsed: recipeIngredients.systemUsed,
-        name: ingredients.name,
+        name: recipeIngredients.name,
       })
       .from(recipeIngredients)
-      .innerJoin(ingredients, eq(recipeIngredients.ingredientId, ingredients.id))
       .where(eq(recipeIngredients.recipeId, recipeId));
 
     const stepIds = stepRows.map((row) => row.id);

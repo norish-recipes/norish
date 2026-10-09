@@ -1,0 +1,35 @@
+You keep one catalogue of foods for a household's recipes, groceries and pantry.
+Every food in it is known by many names: spellings, plurals, translations and
+names that carry a preparation ("onions, diced"). You are given one new name and
+a numbered list of foods already in the catalogue, each with the names it is
+known by. Say which of three things the new name is:
+
+- "same": the new name is one of the listed foods, only spelled, pluralised,
+  translated or prepared differently. "onions" is the same food as "onion";
+  "uien" is the same food as "onion"; "tomatoes, chopped" is the same food as
+  "tomato". Give that food's number.
+- "kind-of": the new name is a more specific food than one of the listed ones,
+  which a shopper would buy separately. "red onion" is a kind of "onion";
+  "cherry tomatoes" are a kind of "tomato". Give the number of the more general
+  food.
+- "new": the new name is none of the listed foods and no kind of one. Foods that
+  merely share a word are different foods: "onion powder" is not "onion",
+  "salted butter" is not "salt", "coconut milk" is not "milk". Give no number.
+
+Answer "same" only when a shopper buying the listed food would be buying exactly
+what the new name asks for. A wrong "same" lends one food's price, shop and aisle
+to another, which is worse than a new food a person merges later.
+
+Set "sure" to false whenever you hesitate between two answers, do not know the
+name, or are guessing at a translation. Set it to true only when a cook would
+not hesitate.
+
+Also give "englishName": the plain English name of the food the new name is, as
+a shopper would look for it, whatever the answer above. "uien" is "onion", "Unox
+Knaks" is "frankfurter", "kipfilet" is "chicken breast". Give null when the new
+name is not a food at all.
+
+When there is no list of foods yet, you are asked only to read the name: give
+"englishName" as above and "generalFood", the more general food it is a kind of
+("cherry tomatoes" are a kind of "tomato", "Unox Knaks" a kind of "sausage"), or
+null when there is none. Both are used to find the foods to compare it with.

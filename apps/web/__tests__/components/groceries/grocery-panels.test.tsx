@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import AddGroceryPanel from "@/components/Panel/consumers/add-grocery-panel";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
@@ -15,6 +15,10 @@ import type { GroceryDto, StoreDto, StoreProductDto } from "@norish/shared/contr
 
 vi.mock("@/hooks/config/use-units-query", () => ({
   useUnitsQuery: () => ({ units: {} }),
+}));
+
+vi.mock("@/hooks/config/use-ingredient-words-query", () => ({
+  useIngredientWordsQuery: () => ({ words: undefined }),
 }));
 
 const chooseProduct = vi.fn();
@@ -37,10 +41,45 @@ function product(id: string, storeId: string, name: string, price: number): Stor
 const COLA_AT_A = product("prod-a", "store-a", "Coca-Cola 1 L", 1.99);
 const COLA_AT_B = product("prod-b", "store-b", "Cola B 1 L", 1.49);
 
-/** What each Store has learned "cola" means, as the database holds it. */
+/** The Ingredient a name resolves to, as the catalogue answers `ingredients.find`. */
+const ingredientOf = (name: string) => `i-${name.trim().toLowerCase()}`;
+
+/**
+ * `ingredients.find`: every name these tests type is one Norish knows. The
+ * query runs synchronously here; the hook's own debounce is what a test waits
+ * out, with fake timers, before a typed name has an Ingredient.
+ */
+vi.mock("@/app/providers/trpc-provider", () => ({
+  useTRPC: () => ({
+    ingredients: {
+      find: {
+        queryOptions: (input: { name: string }, opts: { enabled?: boolean }) => ({
+          ...opts,
+          queryKey: ["ingredients.find", input.name],
+          data: { ingredientId: ingredientOf(input.name) },
+        }),
+      },
+    },
+  }),
+}));
+vi.mock("@tanstack/react-query", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-query")>()),
+  useQuery: (options: { enabled?: boolean; data?: unknown }) => ({
+    data: options.enabled === false ? undefined : options.data,
+  }),
+}));
+
+/** Let the name typed settle, so the panel has asked for its Ingredient. */
+function settle() {
+  act(() => {
+    vi.advanceTimersByTime(500);
+  });
+}
+
+/** What each Store has learned cola (the Ingredient) means, as the database holds it. */
 const LINKS: Record<string, StoreProductDto> = {
-  "store-a|cola": COLA_AT_A,
-  "store-b|cola": COLA_AT_B,
+  "store-a|i-cola": COLA_AT_A,
+  "store-b|i-cola": COLA_AT_B,
 };
 
 /**
@@ -48,28 +87,34 @@ const LINKS: Record<string, StoreProductDto> = {
  * grocery sits under and for no other, so a Store the shopper has only
  * selected is not in it.
  */
-const ON_THE_LIST = new Set(["store-a|cola"]);
-/** Names the list's Store has been asked about and has not answered: a Pending Link. */
+const ON_THE_LIST = new Set(["store-a|i-cola"]);
+/** Ingredients the list's Store has been asked about and has not answered: a Pending Link. */
 const ASKED_ON_THE_LIST = new Set<string>();
 
 vi.mock("@/hooks/stores/use-store-prices", () => ({
   useStorePrices: () => {
-    const linkFor = (storeId: string | null, name: string | null) => {
-      const normalized = (name ?? "").toLowerCase();
-      const key = `${storeId}|${normalized}`;
+    const linkFor = (storeId: string | null, ingredientId: string | null | undefined) => {
+      const key = `${storeId}|${ingredientId}`;
 
+      if (!ingredientId) return null;
       if (ASKED_ON_THE_LIST.has(key)) {
-        return { storeId, normalizedName: normalized, triedAt: null, product: null };
+        return { storeId, ingredientId, triedAt: null, product: null, suggestion: null };
       }
 
       return ON_THE_LIST.has(key)
-        ? { storeId, normalizedName: normalized, triedAt: new Date(), product: LINKS[key] ?? null }
+        ? {
+            storeId,
+            ingredientId,
+            triedAt: new Date(),
+            product: LINKS[key] ?? null,
+            suggestion: null,
+          }
         : null;
     };
 
     return {
-      priceFor: (storeId: string | null, name: string | null) =>
-        linkFor(storeId, name)?.product ?? null,
+      priceFor: (storeId: string | null, ingredientId: string | null | undefined) =>
+        linkFor(storeId, ingredientId)?.product ?? null,
       linkFor,
       isLoading: false,
     };
@@ -80,14 +125,14 @@ vi.mock("@/hooks/stores/use-parsed-grocery-name", () => ({
   useParsedGroceryName: (raw: string) => raw.trim(),
 }));
 
-/** Where each Store files each name, as the database holds it. */
-const AISLE_LINKS: Record<string, string> = { "store-c|cola": "aisle-frisdrank" };
+/** Where each Store files each Ingredient, as the database holds it. */
+const AISLE_LINKS: Record<string, string> = { "store-c|i-cola": "aisle-frisdrank" };
 const fileGroceryName = vi.fn();
 
 vi.mock("@/hooks/stores/use-store-aisles", () => ({
   useStoreAisles: () => ({
-    aisleFor: (storeId: string | null, name: string | null) =>
-      AISLE_LINKS[`${storeId}|${(name ?? "").toLowerCase()}`] ?? null,
+    aisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
+      AISLE_LINKS[`${storeId}|${ingredientId}`] ?? null,
     isLoading: false,
   }),
   useFileGroceryName: () => fileGroceryName,
@@ -128,13 +173,12 @@ vi.mock("@/hooks/stores/use-store-products-query", () => ({
     isFetching: false,
   }),
   useProductLink: (storeId: string | null, name: string) => {
-    const key = `${storeId}|${name.trim().toLowerCase()}`;
-    const product = LINKS[key];
+    // The server resolves the name to its Ingredient and reads that link.
+    const ingredientId = ingredientOf(name);
+    const product = LINKS[`${storeId}|${ingredientId}`];
 
     return {
-      data: product
-        ? { storeId, normalizedName: name.trim().toLowerCase(), product, lastTriedAt: null }
-        : null,
+      data: product ? { storeId, ingredientId, product, triedAt: null, suggestion: null } : null,
       isPending: false,
     };
   },
@@ -174,7 +218,12 @@ vi.mock("@/components/shared/action-button", () => ({
       {children}
     </button>
   ),
-  ActionButtonGroup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  ActionButtonGroup: ({ children, start }: { children: ReactNode; start?: ReactNode }) => (
+    <div>
+      {start}
+      {children}
+    </div>
+  ),
 }));
 
 // The Store picker itself is not what these are about; a plain select drives
@@ -226,6 +275,7 @@ const STORES = [store("store-a", "Store A"), store("store-b", "Store B"), WITH_A
 const GROCERY = {
   id: "grocery-1",
   name: "cola",
+  ingredientId: "i-cola",
   amount: null,
   unit: null,
   storeId: "store-a",
@@ -234,9 +284,14 @@ const GROCERY = {
 } as unknown as GroceryDto;
 
 beforeEach(() => {
+  vi.useFakeTimers();
   chooseProduct.mockClear();
   fileGroceryName.mockClear();
   ASKED_ON_THE_LIST.clear();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("the Aisle field, in both panels", () => {
@@ -282,7 +337,7 @@ describe("the Aisle field, in both panels", () => {
     expect(aisleField()).not.toBeInTheDocument();
   });
 
-  it("shows what the Store remembers for the name, and swaps with the Store", () => {
+  it("shows what the Store remembers for a grocery's own Ingredient, and swaps with the Store", () => {
     render(
       <EditGroceryPanel
         grocery={{ ...GROCERY, storeId: "store-c" } as GroceryDto}
@@ -304,6 +359,26 @@ describe("the Aisle field, in both panels", () => {
 
     // Back again, the field reads what the Store remembers, not a stale choice.
     fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    expect(aisleField()).toHaveValue("aisle-frisdrank");
+  });
+
+  it("shows what the Store remembers for a name being typed, once its Ingredient is known", () => {
+    render(
+      <AddGroceryPanel
+        open={true}
+        stores={STORES}
+        onCreate={() => undefined}
+        onCreateRecurring={() => undefined}
+        onOpenChange={() => undefined}
+      />
+    );
+
+    fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "Cola" } });
+    // Still being typed: nothing is known about it yet.
+    expect(aisleField()).toHaveValue("none");
+
+    settle();
     expect(aisleField()).toHaveValue("aisle-frisdrank");
   });
 
@@ -329,7 +404,11 @@ describe("the Aisle field, in both panels", () => {
     fireEvent.click(screen.getByTestId("action-save"));
 
     expect(onSave).toHaveBeenCalled();
-    expect(fileGroceryName).toHaveBeenCalledExactlyOnceWith("store-c", "cola", "aisle-zuivel");
+    expect(fileGroceryName).toHaveBeenCalledExactlyOnceWith(
+      "store-c",
+      { name: "cola", ingredientId: "i-cola" },
+      "aisle-zuivel"
+    );
   });
 
   it("leaves a name the shopper did not re-file exactly as the Store remembered it", () => {
@@ -427,29 +506,40 @@ describe("the Aisle field, in both panels", () => {
 
     fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "melk" } });
     fireEvent.change(screen.getByTestId("store-selector"), { target: { value: "store-c" } });
+    settle();
     expect(aisleField()).toHaveValue("none");
 
     fireEvent.change(aisleField()!, { target: { value: "aisle-zuivel" } });
     fireEvent.click(screen.getByRole("button", { name: "add" }));
 
-    expect(fileGroceryName).toHaveBeenCalledExactlyOnceWith("store-c", "melk", "aisle-zuivel");
+    expect(fileGroceryName).toHaveBeenCalledExactlyOnceWith(
+      "store-c",
+      { name: "melk", ingredientId: "i-melk" },
+      "aisle-zuivel"
+    );
 
-    // The next grocery, a name the Store files already: "No aisle" forgets it.
+    // The next grocery, a name the Store files already — its Ingredient asked
+    // for once the typing stops: "No aisle" forgets it.
     fireEvent.change(screen.getByPlaceholderText("placeholder"), { target: { value: "cola" } });
+    settle();
     expect(aisleField()).toHaveValue("aisle-frisdrank");
     fireEvent.change(aisleField()!, { target: { value: "none" } });
     fireEvent.click(screen.getByRole("button", { name: "add" }));
 
-    expect(fileGroceryName).toHaveBeenLastCalledWith("store-c", "cola", null);
+    expect(fileGroceryName).toHaveBeenLastCalledWith(
+      "store-c",
+      { name: "cola", ingredientId: "i-cola" },
+      null
+    );
   });
 });
 
 describe("EditGroceryPanel, on a grocery the Store is still being asked about", () => {
   it("waits on the Pending Link rather than asking the shop itself", () => {
-    ASKED_ON_THE_LIST.add("store-a|beleg");
+    ASKED_ON_THE_LIST.add("store-a|i-beleg");
     render(
       <EditGroceryPanel
-        grocery={{ ...GROCERY, name: "beleg" } as GroceryDto}
+        grocery={{ ...GROCERY, name: "beleg", ingredientId: "i-beleg" } as GroceryDto}
         open={true}
         recurringGrocery={null}
         stores={STORES}

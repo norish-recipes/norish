@@ -74,9 +74,11 @@ vi.mock("@/context/user-context", () => ({
   }),
 }));
 
-vi.mock("@/context/hidden-items-context", () => ({
-  useHiddenItems: () => userPreferencesState.hidden,
-}));
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: userPreferencesState.hidden,
+  }))
+);
 
 vi.mock("@/hooks/config", () => ({
   useTagsQuery: () => ({

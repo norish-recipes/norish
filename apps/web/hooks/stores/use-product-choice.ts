@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { StoreDto, StoreProductChoice } from "@norish/shared/contracts";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 
+import { useIngredientFor } from "./use-ingredient-for";
 import { useParsedGroceryName } from "./use-parsed-grocery-name";
 import { useStorePrices } from "./use-store-prices";
 import { useChooseProduct } from "./use-store-products-mutations";
@@ -19,7 +20,7 @@ const LOOKUP_DEBOUNCE_MS = 400;
  * Both grocery panels hold exactly this, and both must agree: the field reads
  * whatever the grocery is linked to now, a selection is visible immediately,
  * and it is written only on the panel's own Save or Add, against the name the
- * grocery is saved under, because the Product Link is keyed by that name.
+ * grocery is saved under, whose Ingredient the Product Link is keyed by.
  */
 export function useProductChoice(options: {
   /** The raw text of the panel's own field: "2 kg oude kaas". */
@@ -28,6 +29,8 @@ export function useProductChoice(options: {
   selectedStoreId: string | null;
   /** Reopened, or opened on a different grocery: the held choice is not that grocery's. */
   resetOn?: unknown;
+  /** The grocery the panel edits, as it is saved; none for a new one. */
+  grocery?: { name: string | null; ingredientId?: string | null } | null;
 }) {
   const { itemName, stores, selectedStoreId, resetOn } = options;
   // What is held is held for one Store and one grocery. Reading it back
@@ -56,8 +59,9 @@ export function useProductChoice(options: {
   const chooseProduct = useChooseProduct();
   const { linkFor } = useStorePrices();
   const groceryName = useParsedGroceryName(itemName);
+  const ingredientId = useIngredientFor(groceryName, options.grocery);
   const store = stores.find((candidate) => candidate.id === selectedStoreId) ?? null;
-  const listLink = linkFor(selectedStoreId, groceryName);
+  const listLink = linkFor(selectedStoreId, ingredientId);
   const onTheList = listLink?.product ?? null;
   // The Store has been asked about this very name and has not answered: the
   // field waits for that answer rather than asking the shop a second time.
@@ -118,6 +122,8 @@ export function useProductChoice(options: {
     choice,
     setChoice,
     groceryName,
+    /** The Ingredient the name stands for, where Norish knows it yet. */
+    ingredientId,
     store,
     /** What this grocery is linked to now, if anything. */
     linkedProduct: linked,

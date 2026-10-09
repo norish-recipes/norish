@@ -6,24 +6,17 @@ import { getBullClient } from "@norish/queue/redis/bullmq";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
+import { sweepIngredientIcons } from "@norish/shared-server/ingredients/icon-drafts";
+import { refreshIngredientCatalogue } from "@norish/shared-server/ingredients/seed/catalogue-seed";
+import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredients/seed/recheck-mints";
 import { createLogger } from "@norish/shared-server/logger";
 
+import type { ScheduledTaskJobData } from "./queue";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { instrumentProcessor } from "../instrumented-processor";
 import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:scheduled-tasks");
-
-type ScheduledTaskType =
-  | "recurring-grocery-check"
-  | "media-cleanup"
-  | "calendar-cleanup"
-  | "groceries-cleanup"
-  | "video-temp-cleanup";
-
-interface ScheduledTaskJobData {
-  taskType: ScheduledTaskType;
-}
 
 // Read on every access, never copied into a module-local — see the note on
 // `globalForRegistry` in ../registry.ts for why this module is evaluated more
@@ -55,13 +48,16 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       const recipeResult = await cleanupOrphanedImages();
       const avatarResult = await cleanupOrphanedAvatars();
       const stepResult = await cleanupOrphanedStepImages();
+      // Ingredient Icons no food points at: a draft nobody saved, an icon removed or replaced.
+      const iconResult = await sweepIngredientIcons();
 
       log.info(
         {
           mediaDeleted: recipeResult.deleted,
           avatarsDeleted: avatarResult.deleted,
           stepImagesDeleted: stepResult.deleted,
-          errors: recipeResult.errors + avatarResult.errors + stepResult.errors,
+          ingredientIconsDeleted: iconResult.deleted,
+          errors: recipeResult.errors + avatarResult.errors + stepResult.errors + iconResult.errors,
         },
         "Media cleanup completed"
       );
@@ -90,6 +86,19 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
     case "video-temp-cleanup": {
       await cleanupOldTempFiles();
       log.info("Video temp cleanup completed");
+      break;
+    }
+
+    case "ingredient-catalogue-refresh": {
+      // A failed fetch or a malformed file throws before anything is
+      // applied: the last good seed stays, and the job monitor shows why.
+      const result = await refreshIngredientCatalogue();
+
+      log.info({ result }, "Ingredient catalogue refresh completed");
+
+      // A first seed that arrived after the upgrade (an offline first boot):
+      // what was minted without it is looked at again against it.
+      if (result === "applied") await recheckUndecidedMintsOnRungChange();
       break;
     }
 

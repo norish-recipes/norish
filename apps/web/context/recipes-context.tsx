@@ -8,6 +8,7 @@ import { useLibraryRecipesQuery } from "@/hooks/library";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
+import { showActionToast } from "@/lib/ui/action-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -62,18 +63,18 @@ const sharedRecipesContext = createRecipesContext({
     return {
       show: ({ severity, title, description, actionLabel, onActionPress }) => {
         const variant = severity === "primary" || severity === "secondary" ? "accent" : severity;
-        const actionProps = actionLabel
-          ? {
-              children: actionLabel,
-              onPress: onActionPress,
-            }
-          : undefined;
 
-        toast(title, {
-          description,
-          variant,
-          ...(actionProps ? { actionProps } : {}),
-        });
+        if (actionLabel) {
+          showActionToast(title, {
+            description,
+            variant,
+            action: { label: actionLabel, onPress: () => onActionPress?.() },
+          });
+
+          return;
+        }
+
+        toast(title, { description, variant });
       },
       translate: createScopedMessageTranslator({
         common: (messageKey) => tCommon(messageKey as Parameters<typeof tCommon>[0]),

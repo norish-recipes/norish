@@ -26,8 +26,10 @@ const NEW_DEFAULTS = {
   allergyDetection: "NEW allergy detection instructions",
   recipeProvenance: "NEW recipe provenance instructions",
   ingredientLinking: "NEW ingredient linking instructions",
+  ingredientResolution: "NEW ingredient resolution instructions",
   imageGenerationBrief: "NEW image generation brief instructions",
   imageGenerationStyle: "NEW image generation style instructions",
+  ingredientIconStyle: "NEW ingredient icon style instructions",
 };
 
 /** What older releases shipped (and seeded into deployments' databases). */

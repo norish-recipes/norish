@@ -31,6 +31,27 @@ vi.mock("@norish/db", () => ({
   dashboardRecipe: mockDashboardRecipe,
 }));
 
+vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
+  withResolvedIngredients: vi.fn(async (payload: object) => ({
+    ...payload,
+    ingredientResolutions: new Map(),
+  })),
+  createResolvedRecipe: vi.fn(async (id: string, userId: unknown, payload: object) =>
+    mockCreateRecipeWithRefs(id, userId, { ...payload, ingredientResolutions: new Map() })
+  ),
+  updateResolvedRecipe: vi.fn(
+    async (id: string, userId: unknown, payload: object, _actor: unknown, version?: number) =>
+      version === undefined
+        ? mockUpdateRecipeWithRefs(id, userId, { ...payload, ingredientResolutions: new Map() })
+        : mockUpdateRecipeWithRefs(
+            id,
+            userId,
+            { ...payload, ingredientResolutions: new Map() },
+            version
+          )
+  ),
+}));
+
 vi.mock("@norish/db/repositories/ratings", () => ({
   rateRecipe: mockRateRecipe,
 }));

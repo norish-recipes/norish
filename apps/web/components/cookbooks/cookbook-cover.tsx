@@ -4,28 +4,33 @@ import { useState } from "react";
 import { CookbookIconOutline } from "@/components/cookbooks/cookbook-icon";
 
 /**
- * The derived cover: a mosaic of the first few members' primary images.
+ * The cover: the cookbook's uploaded image when it has one, otherwise a
+ * mosaic of the first few members' primary images.
  *
- * Nothing is stored — the tiles come from the members themselves, so a cover
- * can never go stale and there is nothing to upload. Fewer members than tiles
+ * The mosaic stores nothing — the tiles come from the members themselves, so
+ * it can never go stale. An uploaded image that fails to load falls back to
+ * it rather than to an empty tile. Fewer members than tiles
  * fills what exists; none falls back to exactly the treatment a recipe with
  * no picture gets, with the cookbook's own mark in place of the photo one, so
  * an empty cookbook reads as the same kind of "nothing here yet" rather than
  * as a different component.
  */
 export default function CookbookCover({
+  image,
   images,
   title,
   className = "",
   emptyIconClassName = "h-12 w-12",
 }: {
+  image?: string | null;
   images: readonly string[];
   title: string;
   className?: string;
   emptyIconClassName?: string;
 }) {
   const [failed, setFailed] = useState<string[]>([]);
-  const usable = images.filter((image) => !failed.includes(image)).slice(0, 4);
+  const tiles = image && !failed.includes(image) ? [image] : images;
+  const usable = tiles.filter((tile) => !failed.includes(tile)).slice(0, 4);
 
   if (usable.length === 0) {
     return (
@@ -49,15 +54,15 @@ export default function CookbookCover({
 
   return (
     <div className={`grid h-full w-full gap-0.5 ${layout} ${className}`}>
-      {usable.map((image, index) => (
+      {usable.map((tile, index) => (
         <img
-          key={image}
+          key={tile}
           alt=""
           className={`h-full w-full object-cover ${usable.length === 3 && index === 0 ? "row-span-2" : ""}`}
           loading="lazy"
-          src={image}
+          src={tile}
           title={title}
-          onError={() => setFailed((previous) => [...previous, image])}
+          onError={() => setFailed((previous) => [...previous, tile])}
         />
       ))}
     </div>

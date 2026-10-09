@@ -1,18 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import {
-  GroceryList,
-  GroceryListByRecipe,
-  PantryPanel,
-  StoreManagerPanel,
-} from "@/components/groceries";
+import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
 import { AddGroceryPanel } from "@/components/Panel/consumers";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
 import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 import {
-  ArchiveBoxIcon,
   BookOpenIcon,
   BuildingStorefrontIcon,
   CheckIcon,
@@ -24,11 +17,15 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import { cssFloatingDockContentClearance } from "@norish/web/config/css-tokens";
+import {
+  cssFloatingDockContentClearance,
+  cssHeaderControl,
+  cssHeaderIcon,
+  cssHeaderIconControl,
+} from "@norish/web/config/css-tokens";
 
 import { useGroceriesContext, useGroceriesUiContext } from "../context";
 import { useStoresContext } from "../stores-context";
-import AddGroceryButton from "./add-grocery-button";
 
 export function GroceriesPage() {
   const {
@@ -56,14 +53,8 @@ export function GroceriesPage() {
     editingGrocery,
     setEditingGrocery,
     viewMode,
-    setViewMode,
     groupSimilarIngredients,
-    setGroupSimilarIngredients,
   } = useGroceriesUiContext();
-  const t = useTranslations("groceries.page");
-  // The Pantry is a panel of the groceries page, opened from the same menu as
-  // the store manager; nothing else on the page needs to know it is open.
-  const [pantryOpen, setPantryOpen] = useState(false);
   const handleToggle = (id: string, isDone: boolean) => {
     toggleGroceries([id], isDone);
   };
@@ -145,97 +136,6 @@ export function GroceriesPage() {
         data-grocery-grouping={groceryGrouping}
         data-grocery-view={viewMode}
       >
-        {/* Header */}
-        <div className="mb-6 flex min-h-10 shrink-0 items-center justify-between">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <div className="flex items-center gap-2">
-            {/* Desktop add button: Full text with icon */}
-            <Button
-              className="hidden rounded-full font-medium md:flex"
-              size="md"
-              variant="primary"
-              onPress={() => setAddGroceryPanelOpen(true)}
-            >
-              {<PlusIcon className="h-5 w-5" />}
-              {t("addItem")}
-            </Button>
-            {/* Settings dropdown with view mode and store management */}
-            <Dropdown>
-              <Button isIconOnly aria-label={t("viewMode")} size="sm" variant="tertiary">
-                <Cog6ToothIcon className="h-5 w-5" />
-              </Button>
-              <Dropdown.Popover className="bg-overlay">
-                <Dropdown.Menu aria-label={t("viewMode")}>
-                  <Dropdown.Section>
-                    <Header>{t("viewMode")}</Header>
-                    <Dropdown.Item
-                      key="view-store"
-                      id="view-store"
-                      textValue={t("viewByStore")}
-                      onPress={() => setViewMode("store")}
-                    >
-                      {<BuildingStorefrontIcon className="h-4 w-4" />}
-                      <Label>{t("viewByStore")}</Label>
-                      {viewMode === "store" ? <CheckIcon className="text-accent h-4 w-4" /> : null}
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      key="view-recipe"
-                      id="view-recipe"
-                      textValue={t("viewByRecipe")}
-                      onPress={() => setViewMode("recipe")}
-                    >
-                      {<BookOpenIcon className="h-4 w-4" />}
-                      <Label>{t("viewByRecipe")}</Label>
-                      {viewMode === "recipe" ? <CheckIcon className="text-accent h-4 w-4" /> : null}
-                    </Dropdown.Item>
-                  </Dropdown.Section>
-                  <Separator />
-                  <Dropdown.Section className={viewMode !== "store" ? "hidden" : undefined}>
-                    <Header>{t("storeViewOptions")}</Header>
-                    <Dropdown.Item
-                      key="group-similar"
-                      id="group-similar"
-                      textValue={t("groupIngredients")}
-                      onPress={() => setGroupSimilarIngredients(!groupSimilarIngredients)}
-                    >
-                      <Label>{t("groupIngredients")}</Label>
-                      {
-                        <UiSwitch
-                          aria-label={t("groupIngredients")}
-                          isSelected={groupSimilarIngredients}
-                          size="sm"
-                          onValueChange={setGroupSimilarIngredients}
-                        />
-                      }
-                    </Dropdown.Item>
-                  </Dropdown.Section>
-                  {viewMode === "store" ? <Separator /> : null}
-                  <Dropdown.Section>
-                    <Dropdown.Item
-                      key="manage-stores"
-                      id="manage-stores"
-                      textValue={t("manageStores")}
-                      onPress={() => setStoreManagerOpen(true)}
-                    >
-                      {<Cog6ToothIcon className="h-4 w-4" />}
-                      <Label>{t("manageStores")}</Label>
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      key="pantry"
-                      id="pantry"
-                      textValue={t("pantry")}
-                      onPress={() => setPantryOpen(true)}
-                    >
-                      {<ArchiveBoxIcon className="h-4 w-4" />}
-                      <Label>{t("pantry")}</Label>
-                    </Dropdown.Item>
-                  </Dropdown.Section>
-                </Dropdown.Menu>
-              </Dropdown.Popover>
-            </Dropdown>
-          </div>
-        </div>
-
         {/* Grocery list */}
         <div className="flex-1 overflow-y-auto">
           {viewMode === "store" ? (
@@ -276,9 +176,6 @@ export function GroceriesPage() {
           className="shrink-0 md:hidden"
           style={{ height: cssFloatingDockContentClearance }}
         />
-
-        {/* Mobile: Floating add button that syncs with nav auto-hide */}
-        <AddGroceryButton />
       </div>
 
       {/* Panels */}
@@ -296,8 +193,6 @@ export function GroceriesPage() {
         onOpenChange={setStoreManagerOpen}
       />
 
-      <PantryPanel open={pantryOpen} onOpenChange={setPantryOpen} />
-
       {editingGrocery && (
         <EditGroceryPanel
           grocery={editingGrocery}
@@ -309,6 +204,108 @@ export function GroceriesPage() {
           onSave={handleEditSave}
         />
       )}
+    </>
+  );
+}
+
+/**
+ * The list view's own controls, on the right of the Groceries header: the
+ * desktop add button and the menu with the view mode, grouping and stores.
+ */
+export function GroceriesListActions() {
+  const { setStoreManagerOpen } = useStoresContext();
+  const {
+    setAddGroceryPanelOpen,
+    viewMode,
+    setViewMode,
+    groupSimilarIngredients,
+    setGroupSimilarIngredients,
+  } = useGroceriesUiContext();
+  const t = useTranslations("groceries.page");
+
+  return (
+    <>
+      {/* Desktop add button: Full text with icon */}
+      <Button
+        className={`hidden rounded-full px-3 font-medium md:flex ${cssHeaderControl}`}
+        size="md"
+        variant="primary"
+        onPress={() => setAddGroceryPanelOpen(true)}
+      >
+        {<PlusIcon className={cssHeaderIcon} />}
+        {t("addItem")}
+      </Button>
+      {/* Settings dropdown with view mode and store management */}
+      <Dropdown>
+        <Button
+          isIconOnly
+          aria-label={t("viewMode")}
+          className={cssHeaderIconControl}
+          size="md"
+          variant="tertiary"
+        >
+          <Cog6ToothIcon className={cssHeaderIcon} />
+        </Button>
+        <Dropdown.Popover className="bg-overlay">
+          <Dropdown.Menu aria-label={t("viewMode")}>
+            <Dropdown.Section>
+              <Header>{t("viewMode")}</Header>
+              <Dropdown.Item
+                key="view-store"
+                id="view-store"
+                textValue={t("viewByStore")}
+                onPress={() => setViewMode("store")}
+              >
+                {<BuildingStorefrontIcon className="h-4 w-4" />}
+                <Label>{t("viewByStore")}</Label>
+                {viewMode === "store" ? <CheckIcon className="text-accent h-4 w-4" /> : null}
+              </Dropdown.Item>
+              <Dropdown.Item
+                key="view-recipe"
+                id="view-recipe"
+                textValue={t("viewByRecipe")}
+                onPress={() => setViewMode("recipe")}
+              >
+                {<BookOpenIcon className="h-4 w-4" />}
+                <Label>{t("viewByRecipe")}</Label>
+                {viewMode === "recipe" ? <CheckIcon className="text-accent h-4 w-4" /> : null}
+              </Dropdown.Item>
+            </Dropdown.Section>
+            <Separator />
+            <Dropdown.Section className={viewMode !== "store" ? "hidden" : undefined}>
+              <Header>{t("storeViewOptions")}</Header>
+              <Dropdown.Item
+                key="group-similar"
+                id="group-similar"
+                textValue={t("groupIngredients")}
+                onPress={() => setGroupSimilarIngredients(!groupSimilarIngredients)}
+              >
+                <Label>{t("groupIngredients")}</Label>
+                {
+                  <UiSwitch
+                    aria-label={t("groupIngredients")}
+                    isSelected={groupSimilarIngredients}
+                    size="sm"
+                    onValueChange={setGroupSimilarIngredients}
+                  />
+                }
+              </Dropdown.Item>
+            </Dropdown.Section>
+            {viewMode === "store" ? <Separator /> : null}
+            <Dropdown.Section>
+              <Dropdown.Item
+                key="manage-stores"
+                id="manage-stores"
+                textValue={t("manageStores")}
+                onPress={() => setStoreManagerOpen(true)}
+              >
+                {<Cog6ToothIcon className="h-4 w-4" />}
+                <Label>{t("manageStores")}</Label>
+              </Dropdown.Item>
+            </Dropdown.Section>
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown>
     </>
   );
 }

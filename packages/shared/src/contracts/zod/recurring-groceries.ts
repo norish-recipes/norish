@@ -3,14 +3,21 @@ import z from "zod";
 
 import { recurringGroceries } from "@norish/db-schema/schema";
 
+// A recurring grocery's alias stays on the server: clients read and write its text.
 export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroceries)
   .omit({
+    ingredientAliasId: true,
     userId: true,
     createdAt: true,
     updatedAt: true,
   })
   .extend({
     amount: z.coerce.number().nullable(),
+    /**
+     * The Ingredient its name resolved to, whose icon it shows. Absent on one
+     * added offline until the server has resolved it.
+     */
+    ingredientId: z.uuid().nullable().optional(),
   });
 
 export const RecurringGroceryInsertBaseSchema = createInsertSchema(recurringGroceries)
@@ -24,6 +31,10 @@ export const RecurringGroceryUpdateBaseSchema = z.object({
   id: z.uuid(),
   version: z.number().int().positive().optional(),
   name: z.string().optional(),
+  /** The alias a new name resolved to; set by the server, never taken from a client. */
+  ingredientAliasId: z.uuid().nullable().optional(),
+  /** The alias's Ingredient, written with it. */
+  ingredientId: z.uuid().nullable().optional(),
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),
   recurrenceRule: z.enum(["day", "week", "month"]).optional(),

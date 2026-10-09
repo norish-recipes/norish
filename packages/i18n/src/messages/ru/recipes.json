@@ -154,7 +154,10 @@
     "ariaLabel": "Преобразовать систему мер",
     "toMetric": "Преобразовать в метрическую",
     "toUS": "Преобразовать в US",
-    "converting": "Преобразование…"
+    "toMetricWithAI": "Преобразовать в метрическую с ИИ",
+    "toUSWithAI": "Преобразовать в US с ИИ",
+    "converting": "Преобразование…",
+    "original": "Оригинал"
   },
   "deleteModal": {
     "title": "Удалить рецепт",
@@ -255,7 +258,20 @@
     "protein": "Белки",
     "showingPortions": "Показаны значения для {count} {count, plural, one {порции} few {порций} many {порций} other {порции}}",
     "noInfo": "Нет данных о пищевой ценности",
-    "estimateWithAI": "Оценить с помощью ИИ"
+    "estimateWithAI": "Оценить с помощью ИИ",
+    "estimated": "Приблизительно",
+    "leftOut": "{count, plural, one {# строка не учтена} few {# строки не учтены} many {# строк не учтено} other {# строки не учтено}}",
+    "estimatedByAI": "оценено ИИ",
+    "reasons": {
+      "seasoning": "приправа",
+      "noAmount": "нет количества",
+      "noSize": "у этой меры нет веса",
+      "noNumbers": "пока нет пищевой ценности",
+      "noSpoonWeight": "пока нет веса ложки",
+      "noPieceWeight": "пока нет веса штуки"
+    },
+    "workedOutFrom": "Рассчитано по ингредиентам, по данным {sources}.",
+    "householdNumbers": "значений вашей семьи"
   },
   "measurementSystem": {
     "label": "Система мер",
@@ -301,8 +317,6 @@
   },
   "toasts": {
     "imported": "Рецепт импортирован",
-    "converted": "Единицы измерения преобразованы",
-    "convertedDescription": "Рецепт преобразован в систему {system}",
     "failed": "Операция с рецептом не выполнена",
     "failedDescription": "Что-то пошло не так при обработке вашего рецепта. Проверьте консоль браузера для получения технических подробностей.",
     "batchImported": "Рецепты импортированы",
@@ -402,6 +416,12 @@
     "searchRecipes": "Поиск рецептов",
     "noRecipesToAdd": "Рецепты не найдены.",
     "addCount": "{count, plural, one {Добавить # рецепт} few {Добавить # рецепта} many {Добавить # рецептов} other {Добавить # рецепта}}",
-    "everythingAlreadyIn": "Все рецепты уже в этой книге."
+    "everythingAlreadyIn": "Все рецепты уже в этой книге.",
+    "coverLabel": "Обложка",
+    "chooseImage": "Выбрать изображение",
+    "changeImage": "Заменить изображение",
+    "removeImage": "Убрать изображение",
+    "imageUploadFailed": "Не удалось загрузить изображение.",
+    "imageNeedsConnection": "Изображения можно будет изменить, когда вы снова будете в сети."
   }
 }

@@ -56,23 +56,27 @@ export default function IngredientsOptionsMenu() {
   ];
 
   // The system the recipe is already in is not somewhere to convert to, so
-  // only the reachable ones are drawn.
+  // only the reachable ones are drawn; with AI it is, since AI writes it again.
   if (conversion.isAvailable) {
     for (const option of conversion.options) {
-      if (option.key === conversion.currentSystem) continue;
+      if (!option.withAI && option.system === conversion.currentSystem) continue;
 
       items.push({
         key: `convert-${option.key}`,
         label: option.label,
-        icon: option.requiresAI ? (
+        icon: option.withAI ? (
           <SparklesIcon className="size-5" />
         ) : (
           <ArrowsRightLeftIcon className="size-5" />
         ),
-        onPress: () => conversion.convertTo(option.key),
-        labelClassName: option.requiresAI ? cssAIGradientText : "",
-        iconClassName: option.requiresAI ? cssAIIconColor : "text-muted",
-        description: conversion.isConverting ? tConvert("converting") : undefined,
+        onPress: () => conversion.convertTo(option),
+        labelClassName: option.withAI ? cssAIGradientText : "",
+        iconClassName: option.withAI ? cssAIIconColor : "text-muted",
+        description: conversion.isConverting
+          ? tConvert("converting")
+          : option.isOriginal
+            ? tConvert("original")
+            : undefined,
         isDisabled: conversion.isConverting,
       });
     }

@@ -30,7 +30,11 @@ export async function createPlainStore(name: string): Promise<string> {
   }
 }
 
-/** The aisle a Store files a grocery name under, as the database has it, or null. */
+/**
+ * The aisle a Store files a grocery name's Ingredient under, as the database
+ * has it, or null. The name is read as an Ingredient Alias's fold, which is
+ * the name folded; the scenario's names are plain words.
+ */
 export async function readAisleFiling(storeName: string, name: string): Promise<string | null> {
   const database = new Client({ connectionString: databaseUrl() });
 
@@ -42,7 +46,8 @@ export async function readAisleFiling(storeName: string, name: string): Promise<
          from aisle_links l
          join aisles a on a.id = l.aisle_id
          join stores s on s.id = l.store_id
-        where s.name = $1 and l.normalized_name = $2`,
+         join ingredient_aliases ia on ia.ingredient_id = l.ingredient_id
+        where s.name = $1 and ia.fold = $2`,
       [storeName, name]
     );
 

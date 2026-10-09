@@ -1,8 +1,13 @@
-"use client";
-
 import { Skeleton } from "@heroui/react";
 
-export default function RecipeSkeletonMobile() {
+/** The page's shape while it loads; {@link RecipeSkeleton} decides which parts. */
+export default function RecipeSkeletonMobile({
+  showRatings,
+  showNutrition,
+}: {
+  showRatings: boolean;
+  showNutrition: boolean;
+}) {
   return (
     <div className="flex w-full flex-col">
       {/* Hero Image */}
@@ -81,34 +86,43 @@ export default function RecipeSkeletonMobile() {
             </div>
 
             {/* Rating Section */}
-            <div className="bg-surface-secondary -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
-              <Skeleton className="h-5 w-48 rounded-md" />
-              <div className="flex gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-8 rounded-md" />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Separator */}
-          <div className="bg-surface-tertiary h-px w-full" />
-
-          {/* Nutrition Section */}
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-24 rounded-lg" />
-            <div className="space-y-1">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-4 w-16 rounded-md" />
-                  </div>
-                  <Skeleton className="h-4 w-12 rounded-md" />
+            {showRatings && (
+              <div
+                className="bg-surface-secondary -mx-1 flex flex-col items-center gap-4 rounded-xl py-6"
+                data-skeleton-part="rating"
+              >
+                <Skeleton className="h-5 w-48 rounded-md" />
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-8 rounded-md" />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
+
+          {/* Separator and Nutrition Section */}
+          {showNutrition && (
+            <>
+              <div className="bg-surface-tertiary h-px w-full" />
+
+              {/* Nutrition Section */}
+              <div className="space-y-2" data-skeleton-part="nutrition">
+                <Skeleton className="h-6 w-24 rounded-lg" />
+                <div className="space-y-1">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-4 w-16 rounded-md" />
+                      </div>
+                      <Skeleton className="h-4 w-12 rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
