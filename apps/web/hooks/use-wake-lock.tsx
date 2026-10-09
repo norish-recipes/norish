@@ -33,8 +33,17 @@ export function useWakeLock(): UseWakeLockReturn {
     }
 
     try {
-      // Request wake lock
-      wakeLockRef.current = await navigator.wakeLock.request("screen");
+      const sentinel = await navigator.wakeLock.request("screen");
+
+      // A second tap while the first request was on its way: keep one lock,
+      // or turning it off would leave the other holding the screen awake.
+      if (wakeLockRef.current) {
+        void sentinel.release();
+
+        return;
+      }
+
+      wakeLockRef.current = sentinel;
       setIsActive(true);
       logger.info("Wake lock activated");
 

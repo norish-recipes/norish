@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import UiSwitch from "@/components/shared/ui-switch";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
-import { Tooltip } from "@heroui/react";
+import { ToggleButton, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useWakeLockContext } from "./wake-lock-context";
@@ -29,29 +28,29 @@ export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProp
     toggle();
   }, [autoEnable, isSupported, isActive, toggle]);
 
-  if (!isSupported) {
-    return (
-      <Tooltip content={t("notSupported")}>
-        <div className="flex items-center gap-2 opacity-50">
-          <DevicePhoneMobileIcon className="h-5 w-5" />
-          <span className="text-sm">{t("keepScreenOn")}</span>
-        </div>
-      </Tooltip>
-    );
-  }
+  const tooltip = !isSupported
+    ? t("notSupported")
+    : isActive
+      ? t("activeTooltip")
+      : t("inactiveTooltip");
 
   return (
-    <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
-      <div className="flex items-center gap-2">
-        <DevicePhoneMobileIcon className="h-5 w-5" />
-        <UiSwitch
-          aria-label={t("ariaLabel")}
-          color="success"
-          isSelected={isActive}
-          size="sm"
-          onValueChange={toggle}
-        />
-      </div>
+    <Tooltip delay={0}>
+      {/* Unsupported stays focusable rather than disabled, so its tooltip
+          can still say why it does nothing. */}
+      <ToggleButton
+        isIconOnly
+        aria-disabled={!isSupported || undefined}
+        aria-label={t("ariaLabel")}
+        className={`size-10 min-w-10 rounded-full ${isSupported ? "" : "opacity-50"}`}
+        isSelected={isActive}
+        onChange={() => {
+          if (isSupported) void toggle();
+        }}
+      >
+        <DevicePhoneMobileIcon className="size-5" />
+      </ToggleButton>
+      <Tooltip.Content placement="top">{tooltip}</Tooltip.Content>
     </Tooltip>
   );
 }
