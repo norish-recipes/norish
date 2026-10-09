@@ -277,6 +277,12 @@ test("cooking mode pages its steps, keeps both swipes, and projects Ready At onl
   await expect(dialog.getByText(/Ready around/)).toBeVisible();
   await expect(dialog.getByText("1 / 3")).toBeVisible();
 
+  // The bottom bar fits a phone: keep-screen-on sits clear of Next step.
+  const awakeBox = await dialog.getByRole("button", { name: "Keep screen awake" }).boundingBox();
+  const nextBox = await dialog.getByRole("button", { name: "Next step" }).boundingBox();
+
+  expect(boxesOverlap(awakeBox!, nextBox!)).toBe(false);
+
   // The vertical swipe pages forward.
   await swipe(0, -120);
   await expect(dialog.getByText("2 / 3")).toBeVisible();
