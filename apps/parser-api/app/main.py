@@ -276,6 +276,29 @@ def _build_parser_metadata(scraper: Any, mode: Literal["supported", "wild"]) -> 
     )
 
 
+def _fill_missing_instructions(scraper: Any, recipe: dict[str, Any]) -> None:
+    """Read the page's schema.org steps when the site's own scraper finds none.
+
+    A site scraper reads steps from the page's markup, and when that markup
+    changes it returns an empty string rather than failing, so the schema.org
+    fallback never runs: lecker.de's scraper missed six well-formed HowToSteps.
+    A page with no steps anywhere stays without them.
+    """
+    if _trimmed(recipe.get("instructions")):
+        return
+
+    try:
+        instructions = _trimmed(scraper.schema.instructions())
+    except Exception:
+        return
+
+    if not instructions:
+        return
+
+    recipe["instructions"] = instructions
+    recipe["instructions_list"] = [line for line in instructions.split("\n") if line]
+
+
 def _map_failure_code(error: Exception) -> FailureCode:
     if isinstance(error, WebsiteNotImplementedError):
         return "WebsiteNotImplementedError"
@@ -309,6 +332,7 @@ def parse_recipe(request: ParseRequest) -> ParseResponse:
         scraper, mode = _run_scraper(request.html, request_url)
         parser = _build_parser_metadata(scraper, mode)
         recipe = scraper.to_json()
+        _fill_missing_instructions(scraper, recipe)
 
         logger.info(
             "parser scrape success url=%s scraper=%s mode=%s",
