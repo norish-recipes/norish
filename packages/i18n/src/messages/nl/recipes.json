@@ -313,7 +313,9 @@
     "notSupported": "Scherm wakker houden wordt niet ondersteund in deze browser",
     "activeTooltip": "Scherm blijft aan tijdens het koken",
     "inactiveTooltip": "Houd het scherm aan tijdens het volgen van stappen",
-    "ariaLabel": "Scherm wakker houden"
+    "ariaLabel": "Scherm wakker houden",
+    "activeToast": "Scherm blijft aan",
+    "inactiveToast": "Scherm time-out hersteld"
   },
   "toasts": {
     "imported": "Recept geïmporteerd",

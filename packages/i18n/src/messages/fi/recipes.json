@@ -313,7 +313,9 @@
     "notSupported": "Näytön pitäminen hereillä ei ole tuettu tässä selaimessa",
     "activeTooltip": "Näyttö pysyy hereillä kokkauksen ajan",
     "inactiveTooltip": "Pidä näyttö hereillä ohjeita seuratessa",
-    "ariaLabel": "Pidä näyttö hereillä"
+    "ariaLabel": "Pidä näyttö hereillä",
+    "activeToast": "Näyttö pysyy päällä",
+    "inactiveToast": "Näytön aikakatkaisu palautettu"
   },
   "toasts": {
     "imported": "Resepti tuotu",

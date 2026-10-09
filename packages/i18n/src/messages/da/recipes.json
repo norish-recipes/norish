@@ -313,7 +313,9 @@
     "notSupported": "Hold skærm tændt understøttes ikke i denne browser",
     "activeTooltip": "Skærmen forbliver tændt under madlavning",
     "inactiveTooltip": "Hold skærm tændt mens du følger trinnene",
-    "ariaLabel": "Hold skærm tændt"
+    "ariaLabel": "Hold skærm tændt",
+    "activeToast": "Skærmen forbliver tændt",
+    "inactiveToast": "Skærm-timeout gendannet"
   },
   "toasts": {
     "imported": "Opskrift importeret",

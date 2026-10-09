@@ -313,7 +313,9 @@
     "notSupported": "Bildschirm aktiv halten wird in diesem Browser nicht unterstützt",
     "activeTooltip": "Der Bildschirm bleibt beim Kochen aktiv",
     "inactiveTooltip": "Halte den Bildschirm beim Befolgen der Schritte aktiv",
-    "ariaLabel": "Bildschirm aktiv halten"
+    "ariaLabel": "Bildschirm aktiv halten",
+    "activeToast": "Bildschirm bleibt an",
+    "inactiveToast": "Bildschirm-Timeout wieder aktiv"
   },
   "toasts": {
     "imported": "Rezept importiert",

@@ -313,7 +313,9 @@
     "notSupported": "Mantenere lo schermo acceso non è supportato in questo browser",
     "activeTooltip": "Lo schermo rimarrà acceso durante la cottura",
     "inactiveTooltip": "Mantieni lo schermo acceso mentre segui i passaggi",
-    "ariaLabel": "Mantieni schermo acceso"
+    "ariaLabel": "Mantieni schermo acceso",
+    "activeToast": "Lo schermo rimarrà acceso",
+    "inactiveToast": "Timeout dello schermo ripristinato"
   },
   "toasts": {
     "imported": "Ricetta importata",

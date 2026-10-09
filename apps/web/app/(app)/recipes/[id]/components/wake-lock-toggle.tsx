@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import UiSwitch from "@/components/shared/ui-switch";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
-import { Tooltip } from "@heroui/react";
+import { Button, toast, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useWakeLockContext } from "./wake-lock-context";
@@ -32,26 +31,41 @@ export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProp
   if (!isSupported) {
     return (
       <Tooltip content={t("notSupported")}>
-        <div className="flex items-center gap-2 opacity-50">
-          <DevicePhoneMobileIcon className="h-5 w-5" />
-          <span className="text-sm">{t("keepScreenOn")}</span>
-        </div>
+        <Button
+          isIconOnly
+          aria-label={t("notSupported")}
+          className="size-10 min-w-10 rounded-full opacity-50"
+          isDisabled
+          variant="secondary"
+        >
+          <DevicePhoneMobileIcon className="size-5" />
+        </Button>
       </Tooltip>
     );
   }
 
+  const handleToggle = async () => {
+    await toggle();
+    // Use the *current* isActive to determine what the state was before toggle
+    if (isActive) {
+      toast(t("inactiveToast"));
+    } else {
+      toast(t("activeToast"));
+    }
+  };
+
   return (
     <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
-      <div className="flex items-center gap-2">
-        <DevicePhoneMobileIcon className="h-5 w-5" />
-        <UiSwitch
-          aria-label={t("ariaLabel")}
-          color="success"
-          isSelected={isActive}
-          size="sm"
-          onValueChange={toggle}
-        />
-      </div>
+      <Button
+        isIconOnly
+        aria-label={t("ariaLabel")}
+        aria-pressed={isActive}
+        className="size-10 min-w-10 rounded-full transition-colors"
+        variant={isActive ? "primary" : "secondary"}
+        onPress={handleToggle}
+      >
+        <DevicePhoneMobileIcon className="size-5" />
+      </Button>
     </Tooltip>
   );
 }
