@@ -82,17 +82,11 @@ test.afterAll(async () => {
   await page?.context().close();
 });
 
-/**
- * The Pantry page, reached from the groceries page's switch. The page
- * hydrates behind its first paint and a click before React attaches is
- * swallowed, so the click repeats until the address follows it.
- */
+/** The Pantry page, reached from the groceries page's switch. */
 async function openPantry(): Promise<Locator> {
   await page.goto("/groceries");
-  await expect(async () => {
-    await page.getByRole("tab", { name: "Pantry" }).click();
-    await expect(page).toHaveURL(/\/groceries\/pantry$/, { timeout: 2_000 });
-  }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
+  await page.getByRole("tab", { name: "Pantry" }).click();
+  await expect(page).toHaveURL(/\/groceries\/pantry$/);
 
   return page.locator("main");
 }
