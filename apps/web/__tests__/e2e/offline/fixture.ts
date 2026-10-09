@@ -7,6 +7,7 @@ import { Client } from "pg";
 
 import type { SessionCookies } from "../harness/auth";
 import { signIn } from "../harness/auth";
+import { hydratingBrowser } from "../harness/hydration";
 import { ProductionStack } from "../harness/production-stack";
 
 export const USER_A = {
@@ -178,7 +179,8 @@ async function cleanup(
   }
 }
 
-export const test = base.extend<Record<string, never>, OfflineWorkerFixtures>({
+export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
+  browser: [async ({ browser }, use) => use(hydratingBrowser(browser)), { scope: "worker" }],
   offlineHarness: [
     async ({ browser }, use) => {
       const stack = new ProductionStack({
