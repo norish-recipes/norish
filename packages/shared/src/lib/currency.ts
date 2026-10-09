@@ -31,6 +31,7 @@ const TLD_CURRENCIES: Record<string, string> = {
   ro: "RON",
   bg: "BGN",
   ru: "RUB",
+  ua: "UAH",
   kr: "KRW",
   jp: "JPY",
   ca: "CAD",

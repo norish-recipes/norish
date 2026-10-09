@@ -1,0 +1,63 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Новий рецепт",
+      "description": "Напишіть власний рецепт"
+    },
+    "importUrl": {
+      "title": "Імпорт за URL",
+      "description": "Вставте посилання на рецепт"
+    },
+    "settings": {
+      "title": "Налаштування",
+      "description": "Керування обліковим записом"
+    },
+    "logout": "Вийти",
+    "signOutConfirm": {
+      "title": "Відкинути несинхронізовані зміни?",
+      "description": "{count, plural, one {# зміна, зроблена офлайн, ще не потрапила на сервер.} few {# зміни, зроблені офлайн, ще не потрапили на сервер.} many {# змін, зроблених офлайн, ще не потрапили на сервер.} other {# зміни, зроблені офлайн, ще не потрапили на сервер.}} Вихід остаточно відкине ці зміни з черги й видалить офлайн-дані вашого облікового запису з цього пристрою."
+    },
+    "version": {
+      "updateAvailable": "Доступна версія v{version}"
+    }
+  },
+  "theme": {
+    "title": "Тема",
+    "loading": "Завантаження…",
+    "light": "Світла тема",
+    "dark": "Темна тема",
+    "system": "Як у системі"
+  },
+  "nav": {
+    "home": "Рецепти",
+    "calendar": "Календар",
+    "groceries": "Покупки"
+  },
+  "mobile": {
+    "searchPlaceholder": "Шукати рецепти...",
+    "toggleSearch": "Показати або сховати пошук",
+    "goBack": "Назад"
+  },
+  "archiveImporter": {
+    "uploading": "Завантаження…",
+    "uploadFile": "Завантажити файл",
+    "dragDrop": "або перетягнути сюди",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "dropzoneLabel": "Завантажити файл архіву рецептів",
+    "uploadingFile": "Завантаження файлу…",
+    "processing": "Обробка: {details}",
+    "complete": "Завершено: {details}",
+    "imported": "Імпортовано: {count}",
+    "errors": "{count, plural, one {# помилка} few {# помилки} many {# помилок} other {# помилки}}",
+    "ofTotal": "{current} з {total}",
+    "progressLabel": "Перебіг імпорту",
+    "showNotes": "Показати {count, plural, one {# нотатку імпорту} few {# нотатки імпорту} many {# нотаток імпорту} other {# нотатки імпорту}}",
+    "hideNotes": "Сховати {count, plural, one {# нотатку імпорту} few {# нотатки імпорту} many {# нотаток імпорту} other {# нотатки імпорту}}",
+    "toasts": {
+      "startTitle": "Імпорт рецептів розпочато",
+      "startDescription": "{count, plural, one {Імпорт # рецепта…} few {Імпорт # рецептів…} many {Імпорт # рецептів…} other {Імпорт # рецепта…}}",
+      "completeTitle": "Імпорт рецептів завершено",
+      "completeDescription": "{imported, plural, one {Імпортовано # рецепт} few {Імпортовано # рецепти} many {Імпортовано # рецептів} other {Імпортовано # рецепта}}{notes, plural, =0 {} one {, # із нотаткою} few {, # із нотатками} many {, # із нотатками} other {, # із нотатками}}{errors, plural, =0 {} one {, # помилка} few {, # помилки} many {, # помилок} other {, # помилки}}"
+    }
+  }
+}
