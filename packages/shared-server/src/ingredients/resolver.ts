@@ -20,6 +20,7 @@ import { inflectedReadings, spellingKeys, spellingRules } from "@norish/shared/l
 
 import type { AIResolution } from "../ai/resolution/ingredient-resolution";
 import { askWhatFoodThisIs, flaggedNew } from "../ai/resolution/ingredient-resolution";
+import { announceMinted } from "./minted";
 
 /**
  * The ingredient resolver: the one module that mints Ingredients and
@@ -208,6 +209,7 @@ export async function resolveIngredients(
     options
   );
   const resolved: ResolvedIngredient[] = [];
+  const minted = new Set<string>();
 
   for (const spelling of spellings) {
     const match = matchKnown(spelling, known);
@@ -245,6 +247,7 @@ export async function resolveIngredients(
             }));
 
       for (const row of rows) known.set(row.fold, row);
+      if (!joined) for (const row of rows) minted.add(row.ingredientId);
     }
 
     const alias = match ?? known.get(spelling.fold)!;
@@ -255,6 +258,9 @@ export async function resolveIngredients(
       ingredientId: alias.ingredientId,
     });
   }
+
+  // What the administrator turned on for new foods follows someone's action, never the upgrade's.
+  if (options.ai !== false) await announceMinted([...minted]);
 
   return resolved;
 }

@@ -28,6 +28,7 @@ import { aiLogger } from "@norish/shared-server/logger";
 import { foldName } from "@norish/shared/lib/fold-name";
 
 import type { TokenEstimate } from "../runtime/runtime";
+import { isCredentialRejection } from "../runtime/errors";
 import {
   decide,
   estimateDecisionInputTokens,
@@ -66,6 +67,11 @@ export type AIResolution =
 /** A food of its own that nothing sure vouched for: rung 4's flagged mint, and why. */
 export function flaggedNew(reason: FlagReason, kindOf: string | null = null): AIResolution {
   return { kind: "new", kindOf, flagged: true, reason };
+}
+
+/** The flagged mint for a failed request: a refused key says so, so the cause is not a guess. */
+function failedNew(error: unknown): AIResolution {
+  return flaggedNew(isCredentialRejection(error) ? "ai-key-rejected" : "ai-unavailable");
 }
 
 /**
@@ -189,8 +195,10 @@ async function readThenCompare(
   excludeId: string | null,
   trace: AskTrace
 ): Promise<Answered> {
+  let readingError: unknown;
   const reading = await readName(text).catch((error: unknown) => {
     aiLogger.warn({ err: error, feature: "ingredient-resolution", text }, "Reading a name failed");
+    readingError = error;
 
     return null;
   });
@@ -209,7 +217,7 @@ async function readThenCompare(
 
   trace.considered.push(...candidates.map((candidate) => candidate.name));
   if (candidates.length > 0) return await askAbout(text, candidates);
-  if (!reading) return { answer: flaggedNew("ai-unavailable"), from: "language-model" };
+  if (!reading) return { answer: failedNew(readingError), from: "language-model" };
 
   return {
     answer: reading.sure
@@ -385,7 +393,7 @@ async function askAbout(
       "Ingredient resolution failed, minting a flagged Ingredient"
     );
 
-    return flaggedNew("ai-unavailable");
+    return failedNew(error);
   });
 
   return { answer, from: "language-model" };

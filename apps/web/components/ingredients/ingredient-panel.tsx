@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { OnTheListMark } from "@/components/groceries/pantry/put-on-the-list";
 import Panel from "@/components/Panel/Panel";
@@ -16,6 +17,7 @@ import { usePermissionsContext } from "@/context/permissions-context";
 import { useSpellingRules } from "@/hooks/config";
 import { useGroceriesQuery } from "@/hooks/groceries";
 import { usePantryMutations, usePantryQuery } from "@/hooks/pantry";
+import { showActionToast } from "@/lib/ui/action-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowUturnLeftIcon,
@@ -23,7 +25,7 @@ import {
   PencilSquareIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { Button, Chip, Input, TextField, toast } from "@heroui/react";
+import { Button, Chip, Input, Skeleton, TextField, toast } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -116,6 +118,10 @@ export function IngredientPanel({
     enabled: open && ownId !== null && item === null,
   });
   const current: IngredientItem | null = item ?? own.data ?? null;
+  // Where a food is still used opens from the toast of a refused delete,
+  // which has closed the food's panel by then: so beside it, not in it.
+  const [usesOf, setUsesOf] = useState<{ id: string; name: string } | null>(null);
+  const [usesOpen, setUsesOpen] = useState(false);
 
   useEffect(() => {
     if (current) setShown(current);
@@ -125,16 +131,31 @@ export function IngredientPanel({
   if (!shown || (open && id !== null && shown.id !== id && !current)) return null;
 
   return (
-    <IngredientPanelContent
-      // Another food is another panel: its fields start from that food.
-      key={shown.id}
-      item={shown}
-      nested={nested}
-      open={open}
-      reviewing={reviewing}
-      onChanged={onChanged}
-      onClose={onClose}
-    />
+    <>
+      <IngredientPanelContent
+        // Another food is another panel: its fields start from that food.
+        key={shown.id}
+        item={shown}
+        nested={nested}
+        open={open}
+        reviewing={reviewing}
+        onChanged={onChanged}
+        onClose={onClose}
+        onShowUses={(food) => {
+          setUsesOf(food);
+          setUsesOpen(true);
+        }}
+      />
+      {usesOf ? (
+        <IngredientUsesPanel
+          ingredientId={usesOf.id}
+          name={usesOf.name}
+          nested={nested}
+          open={usesOpen}
+          onClose={() => setUsesOpen(false)}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -145,6 +166,7 @@ function IngredientPanelContent({
   reviewing,
   onClose,
   onChanged,
+  onShowUses,
 }: {
   item: IngredientItem;
   open: boolean;
@@ -152,6 +174,8 @@ function IngredientPanelContent({
   reviewing: boolean;
   onClose: () => void;
   onChanged?: () => void;
+  /** Something still uses the food: open where. */
+  onShowUses: (food: { id: string; name: string }) => void;
 }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
@@ -244,6 +268,19 @@ function IngredientPanelContent({
       void cache.rollback();
       const refusal = refusalOf(error);
 
+      // Something still uses the food: the toast opens where.
+      if (refusal === "alias-in-use" || refusal === "ingredient-in-use") {
+        showActionToast(t("errors.title"), {
+          description: t(`errors.${refusal}`),
+          variant: "danger",
+          action: {
+            label: t("uses.show"),
+            onPress: () => onShowUses({ id: item.id, name: displayName }),
+          },
+        });
+
+        return false;
+      }
       showSafeErrorToast({
         title: t("errors.title"),
         description: refusal ? t(`errors.${refusal}`) : t("errors.unknown"),
@@ -477,7 +514,7 @@ function IngredientPanelContent({
         ) : (
           spelling.text
         )}
-        {spelling.canRemove ? (
+        {spelling.canRemove && !spelling.inUse ? (
           <button
             aria-label={
               pendingRemoval
@@ -876,6 +913,102 @@ function PantryRow({
       </UiSwitch>
       {kept && keeping && groceryOnTheList(groceries, kept, rules) ? <OnTheListMark /> : null}
     </div>
+  );
+}
+
+/**
+ * What still uses a food, as far as the viewer may see: the recipes they can
+ * open, the household's groceries and Pantry, and a count of everything else.
+ */
+function IngredientUsesPanel({
+  ingredientId,
+  name,
+  nested,
+  open,
+  onClose,
+}: {
+  ingredientId: string;
+  name: string;
+  nested: boolean;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const t = useTranslations("settings.ingredients.uses");
+  const tActions = useTranslations("common.actions");
+  const trpc = useTRPC();
+  const { data } = useQuery({
+    ...trpc.ingredients.uses.queryOptions({ ingredientId }),
+    enabled: open,
+  });
+  const unused =
+    data &&
+    data.recipes.length === 0 &&
+    data.groceries.length === 0 &&
+    !data.pantry &&
+    data.elsewhere === 0;
+
+  return (
+    <Panel
+      className={nested ? "contents" : undefined}
+      nested={nested}
+      open={open}
+      title={t("title", { name })}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+    >
+      <Panel.Body>
+        <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-uses">
+          {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
+          {data && data.recipes.length > 0 ? (
+            <Section title={t("recipes")}>
+              <ul className="flex flex-col gap-1 text-sm">
+                {data.recipes.map((recipe) => (
+                  <li key={recipe.id}>
+                    <Link
+                      className="text-accent hover:underline"
+                      href={`/recipes/${recipe.id}`}
+                      onClick={onClose}
+                    >
+                      {recipe.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          ) : null}
+          {data && data.groceries.length > 0 ? (
+            <Section title={t("groceries")}>
+              <ul className="flex flex-col gap-1 text-sm">
+                {data.groceries.map((grocery, index) => (
+                  <li key={index}>
+                    {grocery.name}
+                    {grocery.done || grocery.recurring ? (
+                      <span className="text-muted">
+                        {" · "}
+                        {grocery.recurring ? t("repeats") : t("done")}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          ) : null}
+          {data?.pantry ? <p className="text-sm">{t("pantry")}</p> : null}
+          {data && data.elsewhere > 0 ? (
+            <p className="text-muted text-sm">{t("elsewhere", { count: data.elsewhere })}</p>
+          ) : null}
+          {unused ? <p className="text-muted text-sm">{t("none")}</p> : null}
+        </div>
+      </Panel.Body>
+      <Panel.Footer>
+        <ActionButtonGroup>
+          <ActionButton action="done" onPress={onClose}>
+            {tActions("done")}
+          </ActionButton>
+        </ActionButtonGroup>
+      </Panel.Footer>
+    </Panel>
   );
 }
 

@@ -2,11 +2,21 @@
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { listCatalogueIngredients } from "@norish/db/repositories/ingredient-catalogue";
+import {
+  listCatalogueAliasesOf,
+  listCatalogueIngredients,
+  listIngredientUses,
+} from "@norish/db/repositories/ingredient-catalogue";
 import * as schema from "@norish/db/schema";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  createTestIngredient,
+  createTestRecipe,
+  createTestRecipeIngredients,
+  createTestUser,
+  getTestDb,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 /**
@@ -73,5 +83,85 @@ describe("listCatalogueIngredients search", () => {
 
   it("lists everything without a search", async () => {
     expect(await names(null)).toEqual(["Chocolate", "Onion", "Red onion"]);
+  });
+});
+
+/**
+ * What still uses a food: the spellings something points at, and the uses
+ * one viewer may see, the rest counted.
+ */
+describe("ingredient uses", () => {
+  const testBase = new RepositoryTestBase("test_ingredient_uses");
+  let me: { id: string };
+  let chickenId: string;
+  let recipeId: string;
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    await testBase.beforeEachTest();
+
+    const db = getTestDb();
+    const neighbour = await createTestUser();
+    const chicken = await createTestIngredient({ name: "kipfilet" });
+    const [hand] = await db
+      .insert(schema.ingredientAliases)
+      .values({
+        text: "kipfilet met de hand",
+        fold: "kipfilet met de hand",
+        ingredientId: chicken!.id,
+      })
+      .returning();
+
+    me = (await createTestUser())!;
+    chickenId = chicken!.id;
+    recipeId = (await createTestRecipe(me.id, { name: "Saté" })).id;
+    // Two lines of one recipe, through the food's own name.
+    await createTestRecipeIngredients(recipeId, chickenId, "metric");
+    await createTestRecipeIngredients(recipeId, chickenId, "metric", { order: "1" });
+    await db.insert(schema.groceries).values([
+      { userId: me.id, name: "kipfilet met de hand", ingredientAliasId: hand!.id, isDone: true },
+      { userId: neighbour!.id, name: "kipfilet", ingredientId: chickenId },
+    ]);
+    await db.insert(schema.pantryIngredients).values({ userId: me.id, ingredientId: chickenId });
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("marks a spelling something points at as in use", async () => {
+    const [row] = await listCatalogueIngredients({
+      search: null,
+      flaggedOnly: false,
+      limit: 10,
+      offset: 0,
+    });
+
+    expect(row!.aliases.map(({ text, inUse }) => [text, inUse])).toEqual([
+      ["kipfilet", true],
+      ["kipfilet met de hand", true],
+    ]);
+    await getTestDb().delete(schema.recipeIngredients);
+    expect((await listCatalogueAliasesOf(chickenId)).map(({ inUse }) => inUse)).toEqual([
+      false,
+      true,
+    ]);
+  });
+
+  it("lists the uses the viewer may see, a recipe once, and counts the rest", async () => {
+    expect(
+      await listIngredientUses(
+        { userId: me.id, userIds: [me.id], householdUserIds: null, isServerAdmin: false },
+        chickenId
+      )
+    ).toEqual({
+      recipes: [{ id: recipeId, name: "Saté" }],
+      groceries: [{ name: "kipfilet met de hand", done: true, recurring: false }],
+      pantry: true,
+      elsewhere: 1,
+    });
   });
 });

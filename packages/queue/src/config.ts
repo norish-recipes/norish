@@ -60,6 +60,7 @@ export const STALLED_INTERVAL = {
   [QUEUE_NAMES.STORE_LOOKUP]: 60_000, // 1 min - always-on, one visit at a time
   [QUEUE_NAMES.INGREDIENT_REVIEW]: 60_000, // 1 min - a person asked, but is not waiting
   [QUEUE_NAMES.INGREDIENT_ICONS]: 60_000, // 1 min - a person asked, but is not waiting
+  [QUEUE_NAMES.NEW_INGREDIENTS]: 60_000, // 1 min - background upkeep
 } as const;
 
 /**
@@ -91,6 +92,9 @@ export const WORKER_CONCURRENCY = {
   // One round at a time, drawing one food after another: image calls are
   // billed per request and rate-limited hard, as for Generated Images.
   [QUEUE_NAMES.INGREDIENT_ICONS]: 1,
+  // One save's new foods after another: an icon is an image call, billed per
+  // request and rate-limited hard, as for Draw icons.
+  [QUEUE_NAMES.NEW_INGREDIENTS]: 1,
 } as const;
 
 /**
@@ -147,6 +151,8 @@ export const HANGING_THRESHOLD_MS: Record<QueueName, number> = {
   [QUEUE_NAMES.INGREDIENT_REVIEW]: 4 * 60 * 60_000,
   // A round may draw thousands of icons, one at a time.
   [QUEUE_NAMES.INGREDIENT_ICONS]: 24 * 60 * 60_000,
+  // A save's few new foods, each a name and an icon that may wait out a rate limit.
+  [QUEUE_NAMES.NEW_INGREDIENTS]: 15 * 60_000,
 };
 
 export type QueueRemovalOptions = Pick<DefaultJobOptions, "removeOnComplete" | "removeOnFail">;
@@ -359,6 +365,13 @@ export const ingredientReviewJobOptions: DefaultJobOptions = {
  * is safe: a food the first attempt drew has an icon of its own and is
  * skipped, so the retry only finishes what the crash left.
  */
+/** Upkeep of new foods is best-effort: a food it misses is still the Clean names and Draw icons rounds'. */
+export const newIngredientsJobOptions: DefaultJobOptions = {
+  attempts: 1,
+  removeOnComplete: { age: 3600, count: 500 },
+  removeOnFail: FALLBACK_REMOVAL,
+};
+
 export const ingredientIconsJobOptions: DefaultJobOptions = {
   attempts: 2,
   backoff: { type: "exponential", delay: 5_000 },

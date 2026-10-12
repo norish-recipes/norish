@@ -5,6 +5,7 @@
  * `decide`, the one AI seam, and the language-model fallback at the runtime's
  * `generateStructured`; the configuration says whether either may be asked.
  */
+import { APICallError } from "ai";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
@@ -24,6 +25,7 @@ import {
   RESOLUTION_BUDGET_MS,
   RESOLUTION_THRESHOLD,
 } from "@norish/shared-server/ai/resolution/ingredient-resolution";
+import { AIProviderError } from "@norish/shared-server/ai/runtime/errors";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
@@ -317,6 +319,29 @@ describe("ingredient resolver, rung 3", () => {
     const cloves = await resolveOne("garlic cloves");
 
     await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({ flagged: true });
+  });
+
+  it("says the key was refused when the provider refused it", async () => {
+    await known("garlic");
+
+    const refused = new AIProviderError("The AI provider rejected the configured API key.", {
+      retryable: false,
+      cause: new APICallError({
+        message: "Incorrect API key provided",
+        url: "https://api.openai.com/v1/chat/completions",
+        requestBodyValues: {},
+        statusCode: 401,
+      }),
+    });
+
+    vi.mocked(decide).mockRejectedValueOnce(refused);
+    vi.mocked(generateStructured).mockRejectedValueOnce(refused);
+    const cloves = await resolveOne("garlic cloves");
+
+    await expect(ingredientFor(cloves.aliasId)).resolves.toMatchObject({
+      flagged: true,
+      flagReason: "ai-key-rejected",
+    });
   });
 
   it("asks nothing without AI, and flags what it mints", async () => {

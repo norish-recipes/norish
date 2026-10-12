@@ -292,5 +292,10 @@
     "title": "Kan niet starten",
     "description": "Norish kon de beveiligde opslag niet lezen en weet daardoor niet bij welke server deze app hoort. Er is niets gewijzigd. Probeer het opnieuw of herstart de app.",
     "detailsLabel": "Technische details"
+  },
+  "aiKeyRejected": {
+    "title": "Een AI-sleutel werkt niet meer",
+    "description": "De provider weigert de API-sleutel voor {blocks} sinds {since}. Sla een nieuwe sleutel op om die AI-functies weer te laten werken.",
+    "openSettings": "Instellingen openen"
   }
 }

@@ -19,12 +19,10 @@ export default function manifest(): MetadataRoute.Manifest {
         form_factor: "wide",
       },
     ],
+    // No SVG here: Firefox for Android tries a "sizes: any" icon before every PNG,
+    // and iOS picks no icon at all once the manifest lists one (WebKit bug 256429),
+    // so either installs Norish with a default icon (#611).
     icons: [
-      {
-        src: "/favicon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-      },
       {
         src: "/android-chrome-192x192.png",
         sizes: "192x192",

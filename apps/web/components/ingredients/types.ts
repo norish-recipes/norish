@@ -8,6 +8,8 @@ export interface Spelling {
   locale?: string | null;
   seeded?: boolean;
   canRemove: boolean;
+  /** Something points at it: it may be moved, not removed. */
+  inUse?: boolean;
 }
 
 export interface IngredientItem {

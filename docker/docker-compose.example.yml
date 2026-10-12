@@ -5,9 +5,6 @@ services:
     restart: always # Required for server restart functionality from Admin UI
     ports:
       - "3000:3000"
-    user: "1000:1000"
-    # user: "1000:1000"  # Match your host user's UID:GID (run `id` to check), only needed with bind mounts
-    # The example uses named volume 'norish_data' which handles permissions automatically
     volumes:
       - norish_data:/app/uploads
     environment:

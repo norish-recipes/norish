@@ -1,9 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { IngredientReviewJobData } from "@norish/queue/contracts/job-types";
 import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
 import type {
+  FixPart,
   IconScopeSummary,
+  NameScopeSummary,
   ReviewReport,
   ReviewScopeSummary,
 } from "@norish/shared/contracts/ingredient-catalogue";
@@ -14,12 +17,16 @@ import type {
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { assertAIEnabled } from "@norish/auth/permissions";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { findCatalogueIngredientNames } from "@norish/db/repositories/ingredient-catalogue";
+import {
+  findCatalogueIngredientNames,
+  listIngredientUses,
+} from "@norish/db/repositories/ingredient-catalogue";
 import { addIngredientIconsJob } from "@norish/queue/ingredient-icons/producer";
 import { findRunningIconRound } from "@norish/queue/ingredient-icons/progress";
 import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
 import {
   findRunningReviewRound,
+  readLatestReviewReport,
   readReviewReport,
   readRoundTokens,
 } from "@norish/queue/ingredient-review/progress";
@@ -54,12 +61,17 @@ import {
 } from "@norish/shared-server/ingredients/nutrition/corrections";
 import { resolveIngredientNutrition } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import { spoonMeasureFor } from "@norish/shared-server/ingredients/nutrition/spoon-measure";
+import {
+  estimateCleanTokens,
+  listNameableIngredients,
+} from "@norish/shared-server/ingredients/plain-names";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import {
   estimateReviewTokens,
   findParentWithAI,
   listReviewableIngredients,
   reviewFlaggedWithAI,
+  withoutSettled,
 } from "@norish/shared-server/ingredients/review";
 import {
   confirmSuggestion,
@@ -70,7 +82,7 @@ import {
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ICON_FILE_PATTERN } from "@norish/shared-server/media/ingredient-icon";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
-import { ICON_SCOPES, REVIEW_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
+import { FIX_PARTS, ICON_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   INGREDIENT_SEARCH_FIELDS,
   INGREDIENT_SEARCH_MATCHES,
@@ -212,6 +224,13 @@ const spellings = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(({ ctx, input }) => listSpellings(actorOf(ctx), input.ingredientId));
 
+/** Where an Ingredient is still used, for the panel a refused delete opens. */
+const uses = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .query(({ ctx, input }) =>
+    listIngredientUses({ ...actorOf(ctx), userIds: ctx.userIds }, input.ingredientId)
+  );
+
 const addAlias = authedProcedure
   .input(z.object({ ingredientId: z.uuid(), text: ingredientName }))
   .mutation(({ ctx, input }) => {
@@ -293,6 +312,25 @@ const findParentWithAI_ = authedProcedure
     });
   });
 
+/** The foods each part of Fix catalogue holds for the actor, flagged ones first, with the question each is asked. */
+async function fixFoods(
+  actor: CatalogueActor,
+  parts: readonly FixPart[]
+): Promise<IngredientReviewJobData["ingredients"]> {
+  const flagged =
+    parts.includes("unsuggested") || parts.includes("suggested")
+      ? await listReviewableIngredients(actor)
+      : [];
+  const names = parts.includes("name") ? await listNameableIngredients(actor) : [];
+
+  return [
+    ...flagged
+      .filter((food) => parts.includes(food.suggested ? "suggested" : "unsuggested"))
+      .map(({ id, name }) => ({ id, name, mode: "review" as const })),
+    ...names.map(({ id, name }) => ({ id, name, mode: "name" as const })),
+  ];
+}
+
 /** These Ingredients by id and by name, so the job monitor's input reads as foods, not ids. */
 async function namedFoods(ids: readonly string[]): Promise<{ id: string; name: string }[]> {
   const names = await findCatalogueIngredientNames(ids);
@@ -301,11 +339,14 @@ async function namedFoods(ids: readonly string[]): Promise<{ id: string; name: s
 }
 
 /**
- * Ask AI about the flagged Ingredients the asker may edit, every one or only
- * those no suggestion waits on (`scope`), which the server picks, however
- * many there are; or what food each Ingredient on the page is a kind of
- * (`mode: "parent"`). One job, a step per food, that keeps going after the
- * tab is closed. Each food's edit follows `edit` on that food, checked again
+ * Fix catalogue (`mode: "fix"`): ask AI about the parts of the catalogue the
+ * asker picked, any of them together, which the server fills however many
+ * foods they hold: the flagged Ingredients the asker may edit that no
+ * suggestion waits on, those that have one, asked again, and the Plain Name
+ * of every unflagged food whose name is not settled. Or what food each
+ * Ingredient on the page is a kind of (`mode: "parent"`). No food is in two
+ * parts; a flagged food AI calls its own is asked its Plain Name next. One job, a step per food, that keeps
+ * going after the tab is closed. Each food's edit follows `edit` on that food, checked again
  * by the round as it reaches it, so a food the asker may no longer edit is
  * passed over rather than refused here. Answers the job the page watches the
  * round by, over `onReview`, and the foods it waits on.
@@ -313,7 +354,7 @@ async function namedFoods(ids: readonly string[]): Promise<{ id: string; name: s
 const reviewAllWithAI = authedProcedure
   .input(
     z.discriminatedUnion("mode", [
-      z.object({ mode: z.literal("review"), scope: z.enum(REVIEW_SCOPES) }),
+      z.object({ mode: z.literal("fix"), parts: z.array(z.enum(FIX_PARTS)).min(1) }),
       z.object({ mode: z.literal("parent"), ingredientIds: z.array(z.uuid()).min(1) }),
     ])
   )
@@ -321,19 +362,19 @@ const reviewAllWithAI = authedProcedure
     await assertAIEnabled();
 
     const foods =
-      input.mode === "review"
-        ? (await listReviewableIngredients(actorOf(ctx), input.scope)).map(({ id, name }) => ({
-            id,
-            name,
-          }))
-        : await namedFoods(input.ingredientIds);
+      input.mode === "fix"
+        ? await fixFoods(actorOf(ctx), input.parts)
+        : (await namedFoods(input.ingredientIds)).map((food) => ({
+            ...food,
+            mode: "parent" as const,
+          }));
 
     log.info(
       {
         userId: ctx.user.id,
         count: foods.length,
         mode: input.mode,
-        ...(input.mode === "review" ? { scope: input.scope } : {}),
+        ...(input.mode === "fix" ? { parts: input.parts } : {}),
       },
       "Starting a round of Ask AI over Ingredients"
     );
@@ -343,7 +384,6 @@ const reviewAllWithAI = authedProcedure
 
     const jobId = await addIngredientReviewJob(getQueues().ingredientReview, {
       ingredients: foods,
-      mode: input.mode,
       actor: {
         userId: ctx.user.id,
         householdUserIds: ctx.householdUserIds ? [...ctx.householdUserIds] : null,
@@ -355,8 +395,8 @@ const reviewAllWithAI = authedProcedure
   });
 
 /**
- * What a round of Ask AI over the flagged Ingredients would ask about, for
- * the asker: how many each scope holds, and about how many tokens a food's
+ * What a round of Fix catalogue would ask about the flagged Ingredients, for
+ * the asker: how many each part holds, and about how many tokens a food's
  * question takes. Measured over the latest finished round where the queue
  * still holds one that recorded its tokens; counted from the prompt
  * otherwise.
@@ -367,12 +407,33 @@ const reviewScope = authedProcedure.query(async ({ ctx }): Promise<ReviewScopeSu
   const foods = await listReviewableIngredients(actorOf(ctx));
   const measured = await readRoundTokens(getQueues().ingredientReview);
 
+  const suggested = foods.filter((food) => food.suggested).length;
+
   return {
-    flagged: foods.length,
-    unsuggested: foods.filter((food) => !food.suggested).length,
+    unsuggested: foods.length - suggested,
+    suggested,
     tokens: measured
       ? { basis: "measured", ...measured }
       : { basis: "prompt", models: await estimateReviewTokens(foods.map((food) => food.name)) },
+  };
+});
+
+/**
+ * What a round of Clean names would ask about, for the asker: how many foods
+ * whose names are not settled they may edit, and about how many tokens a
+ * food's question takes, measured or counted from the prompt as for Ask AI.
+ */
+const nameScope = authedProcedure.query(async ({ ctx }): Promise<NameScopeSummary> => {
+  await assertAIEnabled();
+
+  const foods = await listNameableIngredients(actorOf(ctx));
+  const measured = await readRoundTokens(getQueues().ingredientReview, "name");
+
+  return {
+    foods: foods.length,
+    tokens: measured
+      ? { basis: "measured", ...measured }
+      : { basis: "prompt", models: await estimateCleanTokens(foods.map((food) => food.name)) },
   };
 });
 
@@ -383,14 +444,21 @@ const reviewRound = authedProcedure.query(() =>
 
 /**
  * A round of Ask AI read back: what it did to each food and how, for the
- * summary the page offers once the round is over. Null once the queue has
- * let the job go.
+ * summary the page offers once the round is over. Without a job, the latest
+ * round to have ended, so the page finds what it could not suggest after a
+ * reload. A food it got no suggestion for and that has been settled since
+ * drops out. Null once the queue has let the job go.
  */
 const reviewReport = authedProcedure
-  .input(z.object({ jobId: z.string().min(1).max(100) }))
-  .query(({ input }): Promise<ReviewReport | null> =>
-    readReviewReport(getQueues().ingredientReview, input.jobId)
-  );
+  .input(z.object({ jobId: z.string().min(1).max(100).optional() }))
+  .query(async ({ input }): Promise<ReviewReport | null> => {
+    const queue = getQueues().ingredientReview;
+    const report = input.jobId
+      ? await readReviewReport(queue, input.jobId)
+      : await readLatestReviewReport(queue);
+
+    return report ? await withoutSettled(report) : null;
+  });
 
 /** The suggestions waiting on the viewer: only those about foods they may edit. */
 const suggestions = authedProcedure.query(({ ctx }) => listSuggestions(actorOf(ctx)));
@@ -743,6 +811,7 @@ export const ingredientsRouter = router({
   kinds,
   get,
   spellings,
+  uses,
   addAlias,
   rename,
   markDistinct,
@@ -759,6 +828,7 @@ export const ingredientsRouter = router({
   findParentWithAI: findParentWithAI_,
   reviewAllWithAI,
   reviewScope,
+  nameScope,
   reviewRound,
   reviewReport,
   suggestions,

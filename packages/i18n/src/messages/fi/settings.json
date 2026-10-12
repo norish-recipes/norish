@@ -380,6 +380,7 @@
       "unknown-food": "Mikään tunnettu ainesosa ei jaa sanaa tämän nimen kanssa, joten tekoälyltä ei kysytty.",
       "ai-unsure": "Tekoälyltä kysyttiin, onko tämä tunnettu ainesosa, eikä se ollut varma.",
       "ai-unavailable": "Tekoäly ei vastannut ajoissa, kun tämä nimi lisättiin.",
+      "ai-key-rejected": "Tekoälypalvelu hylkäsi API-avaimen, joten tekoäly ei voinut tarkistaa tätä nimeä.",
       "food-gone": "Tekoäly yhdisti tämän ainesosaan, joka yhdistettiin ennen kuin nimi ehti mukaan.",
       "upgrade": "Vastaavaa tunnettua ainesosaa ei löytynyt.",
       "seed-ambiguous": "Luettelo tuntee useita ainesosia, joita tämä voisi olla."
@@ -393,19 +394,23 @@
     "markDistinct": "Merkitse erilliseksi",
     "summary": "{spellings, plural, one {# käännös} other {# käännöstä}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
     "askAI": "Kysy tekoälyltä",
-    "askAIAll": "Kysy tekoälyltä merkityistä ainesosista",
+    "fixCatalogue": "Korjaa luettelo",
     "askAIRound": {
-      "intro": "Tekoäly lukee jokaisen nimen ja vertaa sitä Norishin tuntemiin elintarvikkeisiin. Mikään ei muutu ennen kuin vahvistat ehdotuksen.",
-      "scopeLabel": "Mitkä ainesosat",
+      "intro": "Tekoäly selvittää, minne merkityt ainesosat kuuluvat, ja korjaa epäyhtenäiset nimet. Mikään ei muutu ennen kuin vahvistat ehdotuksen.",
+      "scopeLabel": "Mitä korjataan",
       "scopes": {
-        "unsuggested": "Vain ne, joilla ei ole ehdotusta",
-        "flagged": "Kaikki merkityt ainesosat"
+        "unsuggested": "Tarkista merkityt ainesosat",
+        "suggested": "Tarkista ehdotukset uudelleen",
+        "name": "Siivoa nimet"
+      },
+      "hints": {
+        "unsuggested": "Etsii kaksoiskappaleita, ala-ainesosia tai ainutlaatuisia.",
+        "suggested": "Tarkistaa merkityt ainesosat uudelleen.",
+        "name": "Siistii ainesosien nimet pelkäksi ainesosaksi. Merkityt ainesosat ovat mukana, jos yllä oleva valintaruutu on valittuna."
       },
       "scopeSize": "{count, plural, =0 {Ei ainesosia} one {# ainesosa · noin {tokens} tokenia} other {# ainesosaa · noin {tokens} tokenia}}",
-      "replaces": "Korvaa jo odottavat ehdotukset.",
       "modelTokens": "noin {tokens} tokenia",
-      "basisMeasured": "Edellisen kierroksen käytön mukaan.",
-      "basisPrompt": "Arvioitu kehotteen perusteella, joten todellinen määrä on todennäköisesti suurempi."
+      "basisMeasured": "Edellisen kierroksen käytön mukaan."
     },
     "roundProgress": "Kysytään tekoälyltä · {done, number}/{total, number}",
     "roundSection": {
@@ -429,7 +434,8 @@
       "readAs": "Tekoäly luki sen nimellä ”{name}”.",
       "compared": "Verrattiin: {names}.",
       "comparedNothing": "Ei ollut tunnettua ruoka-ainetta, johon verrata.",
-      "fromWords": "Based on name."
+      "fromWords": "Based on name.",
+      "noFood": "Tekoäly ei löytänyt tästä nimestä ruoka-ainetta."
     },
     "addAlias": "Lisää käännös",
     "removeAlias": "Poista {alias}",
@@ -551,6 +557,17 @@
       "empty": "Anna nimi",
       "unknown": "Jokin meni vikaan. Yritä uudelleen."
     },
+    "uses": {
+      "show": "Näytä missä",
+      "title": "Missä {name} on käytössä",
+      "recipes": "Reseptit",
+      "groceries": "Ostokset",
+      "done": "tehty",
+      "repeats": "toistuu",
+      "pantry": "Ruokavarastossa",
+      "elsewhere": "{count, plural, one {# käyttö lisää} other {# käyttöä lisää}} resepteissä tai listoissa, joita et voi avata",
+      "none": "Mikään ei enää käytä sitä"
+    },
     "keepAlias": "Säilytä {alias}",
     "reportOutcomes": {
       "parent": "Yläkäsitteen alle",
@@ -572,7 +589,8 @@
       "merge": "Yhdistä {name} kohteeseen {into}",
       "parent": "Luokittele {name} kohteen {of} alle",
       "distinct": "Pidä {name} omana ainesosanaan",
-      "filedFromName": "{name} filed under {of}"
+      "filedFromName": "{name} filed under {of}",
+      "rename": "Nimeä {name} uudelleen: {to}"
     },
     "suggestionsTitle": "Tekoälyn ehdotukset",
     "suggestionsEmpty": "Mikään ei odota sinua.",
@@ -588,12 +606,14 @@
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
-      "distinct": "Food of its own"
+      "distinct": "Food of its own",
+      "rename": "Nimeä uudelleen: {to}"
     },
     "skippedReasons": {
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
-      "notFound": "No longer exists"
+      "notFound": "No longer exists",
+      "settled": "Nimi on jo vahvistettu, tai ehdotus odottaa"
     },
     "icon": {
       "change": "Vaihda kuvake",
@@ -963,6 +983,14 @@
         "imageGeneration": "Kuvien luonti",
         "imageGenerationDescription": "Piirrä kuva ruoasta uusille resepteille, joilla ei ole lainkaan kuvaa"
       },
+      "automaticIngredients": "Automaattisesti uusille ainesosille",
+      "automaticIngredientsDescription": "Mitä tapahtuu, kun luetteloon lisätään uusia ainesosia.",
+      "automaticIngredientsKinds": {
+        "plainName": "Siivoa nimi",
+        "plainNameDescription": "Poista se, mikä ei ole ruoka-ainetta, kuten määrät ja pakkauskoodit",
+        "icon": "Piirrä kuvake",
+        "iconDescription": "Vain ruoka-aineelle, jolla ei ole kuvaketta, ei edes yläkäsitteensä"
+      },
       "tagStrategy": "Sallitut tunnisteet",
       "tagStrategyDescription": "Mitä tunnisteita tunnisteiden luonti saa käyttää, ajetaanpa se automaattisesti tai käsin",
       "tagStrategies": {
@@ -1115,7 +1143,10 @@
       "imageGenerationStylePlaceholder": "Kehote kuvan tyylille...",
       "ingredientIconStyle": "Ainesosakuvakkeiden tyylikehote",
       "ingredientIconStyleDescription": "Lähetetään kuvamallille, kun ainesosalle piirretään kuvake, ja sen perään liitetään ruoan nimi ja se, minkä lajia se on. Määrää ilmeen, joka on yhteinen kaikille piirretyille kuvakkeille.",
-      "ingredientIconStylePlaceholder": "Kehote ainesosakuvakkeiden tyylille..."
+      "ingredientIconStylePlaceholder": "Kehote ainesosakuvakkeiden tyylille...",
+      "ingredientPlainName": "Ainesosien nimien siivouskehote",
+      "ingredientPlainNameDescription": "Lähetetään kielimallille, kun tekoäly siivoaa ainesosan nimen, ja nimi sekä sen muut kirjoitusasut lisätään perään. Kertoo, mitä nimestä poistetaan ja mitä jätetään.",
+      "ingredientPlainNamePlaceholder": "Kehote ainesosien nimien siivoamiseen..."
     },
     "unsavedChanges": "Tallentamattomia muutoksia",
     "jsonEditor": {
@@ -1168,7 +1199,8 @@
         "reading-product": "Lue tuotesivu",
         "saving-link": "Tallenna linkki",
         "asking-ai": "Ask AI about the food",
-        "drawing-icon": "Piirrä ruoan kuvake"
+        "drawing-icon": "Piirrä ruoan kuvake",
+        "naming": "Siivoa ruoka-aineen nimi"
       },
       "queues": {
         "recipe-import": "Reseptien tuonti",
@@ -1185,7 +1217,8 @@
         "image-generation": "Kuvien luonti",
         "store-lookup": "Kaupan haku",
         "ingredient-review": "Kysy tekoälyltä ainesosista",
-        "ingredient-icons": "Ainesosien kuvakkeiden piirto"
+        "ingredient-icons": "Ainesosien kuvakkeiden piirto",
+        "new-ingredients": "Uudet ainesosat"
       },
       "summary": {
         "failed": "{count} epäonnistui"

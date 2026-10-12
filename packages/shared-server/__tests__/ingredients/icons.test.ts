@@ -11,7 +11,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import sharp from "sharp";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import type { IconSet } from "@norish/shared-server/ingredients/icons";
@@ -28,11 +29,17 @@ import {
   DRAFT_ICON_GRACE_MS,
   sweepIngredientIcons,
 } from "@norish/shared-server/ingredients/icon-drafts";
+import { drawNewIngredientIcon } from "@norish/shared-server/ingredients/icon-rounds";
 import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
+
+// The image provider, drawing a plain square: the cut-out and the store are real.
+const drawer = vi.hoisted(() => ({ drawIngredientIcon: vi.fn() }));
+
+vi.mock("@norish/shared-server/ai/enrichment/ingredient-icon-drawer", () => drawer);
 
 const SHIPPED_ONION = "0123456789abcdef0123456789abcdef.webp";
 const SHIPPED_PEPPER = "fedcba9876543210fedcba9876543210.webp";
@@ -222,5 +229,38 @@ describe("Ingredient Icons", () => {
 
     await expect(setDrawnIcon(actor, kohlrabi, OTHER_OWN)).resolves.toBe(true);
     expect(await shown(kohlrabi)).toBe(address(OTHER_OWN));
+  });
+
+  it("draws a new food an icon only where it would show none at all", async () => {
+    // A food on a flat background, as the provider draws one.
+    const square = await sharp(
+      Buffer.from(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#fff"/><circle cx="128" cy="128" r="80" fill="#a0c040"/></svg>'
+      )
+    )
+      .png()
+      .toBuffer();
+
+    drawer.drawIngredientIcon.mockReset().mockResolvedValue({ bytes: square });
+    const kohlrabi = await food("kohlrabi");
+    const onion = await food("onion", { offId: "en:onion" });
+    const red = await food("red onion");
+
+    await getTestDb().update(ingredients).set({ parentId: onion }).where(eq(ingredients.id, red));
+
+    // A red onion keeps showing the onion: nothing is drawn.
+    await expect(drawNewIngredientIcon(red, SET)).resolves.toBe(false);
+    expect(drawer.drawIngredientIcon).not.toHaveBeenCalled();
+
+    await expect(drawNewIngredientIcon(kohlrabi, SET)).resolves.toBe(true);
+    expect(drawer.drawIngredientIcon).toHaveBeenCalledWith({ name: "kohlrabi", kindOf: [] });
+    await expect(ingredientIcons([kohlrabi], SET)).resolves.toEqual(
+      new Map([
+        [
+          kohlrabi,
+          { address: expect.stringMatching(/^\/ingredient-icons\/[0-9a-f]{32}\.webp$/), own: true },
+        ],
+      ])
+    );
   });
 });

@@ -16,7 +16,8 @@ export interface FoodToDraw {
 /**
  * What every icon is asked to be, whatever style the administrator's prompt
  * sets: the cut-out that makes a picture an icon depends on one food on a
- * flat background, so this is the code's to say, never the prompt's.
+ * flat background, and an icon may never carry a brand, for copyright as much
+ * as for looks, so this is the code's to say, never the prompt's.
  */
 const COMPOSITION = [
   "Show exactly one food, whole or as one natural portion, centred and filling most of the square.",
@@ -24,6 +25,7 @@ const COMPOSITION = [
   "Where the background cannot be transparent, make it plain, flat, evenly lit and of one solid colour that the food itself does not contain.",
   "No shadow beneath it, no reflection, and no plate, board, cutlery, garnish or other props.",
   "A food with no shape of its own sits in the plainest vessel that holds it: milk in a glass, oil in a bottle, flour in a small bowl.",
+  "A food that is a product is drawn as it is sold, in the shape of its pack, with nothing of its brand: no logo, no text, no brand colours and no trademark shape.",
 ].join(" ");
 
 /**

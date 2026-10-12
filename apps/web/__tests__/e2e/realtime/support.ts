@@ -35,7 +35,11 @@ export interface HouseholdRow {
   joinCode: string;
 }
 
-/** The household a user belongs to, once the asynchronous create/join has landed. */
+/**
+ * The household a user belongs to, once the asynchronous create/join has
+ * landed. Create inserts the household with a code and then replaces it
+ * (version 2), so a household is read only once its code is the one that stays.
+ */
 export async function readHousehold(
   stack: RealtimeStack,
   userId: string
@@ -45,7 +49,8 @@ export async function readHousehold(
       `select h.id, h.join_code
          from households h
          join household_users hu on hu.household_id = h.id
-        where hu.user_id = $1`,
+        where hu.user_id = $1
+          and h.version > 1`,
       [userId]
     );
     const row = rows.rows[0];

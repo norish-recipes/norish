@@ -120,6 +120,8 @@ export interface IngredientSpelling {
   locale: string | null;
   seeded: boolean;
   canRemove: boolean;
+  /** Something points at it, so it may be moved but not removed. */
+  inUse: boolean;
 }
 
 /** One Ingredient as the page shows it: what it is, and what the viewer may do to it. */
@@ -232,6 +234,7 @@ function spelling(
     locale: alias.locale ?? null,
     seeded: alias.seeded ?? false,
     canRemove: may(alias.ownerId),
+    inUse: alias.inUse ?? false,
   };
 }
 
@@ -405,6 +408,8 @@ async function renameIngredientIn(
   );
 
   if (!renamed) throw new CatalogueEditError("not-found");
+  // A person's own name settles it: a rename AI proposed is moot.
+  await deleteSuggestionFor(ingredientId, tx, "rename");
   await insertCatalogueAlias(tx, {
     ingredientId,
     text: cleaned,

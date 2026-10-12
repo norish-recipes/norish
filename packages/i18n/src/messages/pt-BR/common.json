@@ -292,5 +292,10 @@
     "title": "Não foi possível iniciar",
     "description": "O Norish não conseguiu ler o armazenamento seguro e não sabe a qual servidor este aplicativo pertence. Nada foi alterado. Tente novamente ou reinicie o aplicativo.",
     "detailsLabel": "Detalhes técnicos"
+  },
+  "aiKeyRejected": {
+    "title": "Uma chave de IA parou de funcionar",
+    "description": "O provedor está recusando a chave de API de {blocks} desde {since}. Salve uma nova chave para que esses recursos de IA voltem a funcionar.",
+    "openSettings": "Abrir configurações"
   }
 }

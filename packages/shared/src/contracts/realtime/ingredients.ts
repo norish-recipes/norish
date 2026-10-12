@@ -13,7 +13,8 @@ import { defineRealtimeCatalogue } from "./catalogue";
 /**
  * How far a round of Ask AI over Flagged Ingredients has come: the job it
  * runs as, how many foods it has settled of how many, and what came of each:
- * a suggestion of each kind waiting on a person, or AI not sure.
+ * a suggestion of each kind waiting on a person, a name already plain, or
+ * AI not sure.
  * `skipped` counts foods no longer flagged by the time the round reached
  * them, or that the person who asked may not edit; `failed` the foods whose
  * question or edit broke, each recorded on its own step. `pending` names the
@@ -32,6 +33,8 @@ export const ReviewRoundSchema = z.object({
     parent: z.number().int().nonnegative(),
     distinct: z.number().int().nonnegative(),
     unsure: z.number().int().nonnegative(),
+    rename: z.number().int().nonnegative(),
+    plain: z.number().int().nonnegative(),
     skipped: z.number().int().nonnegative(),
     failed: z.number().int().nonnegative(),
   }),

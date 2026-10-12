@@ -2,6 +2,7 @@ import type { DevicePreferencesSeed } from "@/context/device-preferences-context
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 import { Navbar } from "@/components/navbar/navbar";
+import AIKeyRejectionPrompt from "@/components/shared/ai-key-rejection-prompt";
 import ClipboardImportPrompt from "@/components/shared/clipboard-import-prompt";
 import { TimerDock } from "@/components/timer-dock";
 import { ArchiveImportProvider } from "@/context/archive-import-context";
@@ -76,6 +77,7 @@ export function AppShell({
                           </div>
                           <TimerDock />
                           <ClipboardImportPrompt />
+                          <AIKeyRejectionPrompt />
                           <IngredientsRealtime />
                         </PantryRealtimeProvider>
                       </CookbooksRealtimeProvider>

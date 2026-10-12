@@ -30,6 +30,7 @@ const NEW_DEFAULTS = {
   imageGenerationBrief: "NEW image generation brief instructions",
   imageGenerationStyle: "NEW image generation style instructions",
   ingredientIconStyle: "NEW ingredient icon style instructions",
+  ingredientPlainName: "NEW ingredient plain name instructions",
 };
 
 /** What older releases shipped (and seeded into deployments' databases). */

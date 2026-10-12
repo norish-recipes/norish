@@ -10,7 +10,9 @@
  * One suggestion is not AI's: the parent the resolver gave a mint from inside
  * the words of its name (`source: "words"`, ADR-0037 as amended). That parent
  * is already in place, so confirming keeps it as the person's choice and
- * dismissing takes it off again.
+ * dismissing takes it off again. A suggestion that came from asking for the
+ * food's Plain Name (a rename, or a merge into the food that already spells
+ * it) settles the food's name either way.
  */
 import type {
   SuggestionKind,
@@ -18,6 +20,7 @@ import type {
 } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
+import { settleIngredientName } from "@norish/db/repositories/ingredient-catalogue";
 import { unfileIngredient } from "@norish/db/repositories/ingredient-relocation";
 import {
   deleteIngredientSuggestion,
@@ -32,9 +35,11 @@ import {
   markDistinct,
   mayEditIngredientRow,
   mergeIngredients,
+  renameIngredient,
   setParent,
 } from "./catalogue";
 import { ingredientChanges } from "./changes";
+import { proposeMergeForTakenName } from "./plain-names";
 
 /** One suggestion as the page shows it: both foods, and how AI got there. */
 export interface IngredientSuggestionItem {
@@ -45,6 +50,8 @@ export interface IngredientSuggestionItem {
   englishName: string | null;
   considered: string[];
   source: SuggestionSource;
+  /** The Plain Name AI read the name as: what a rename proposes. */
+  proposedName: string | null;
 }
 
 /**
@@ -73,6 +80,7 @@ export async function listSuggestions(actor: CatalogueActor): Promise<Ingredient
     englishName: row.englishName,
     considered: row.considered,
     source: row.source,
+    proposedName: row.proposedName,
   }));
 }
 
@@ -145,6 +153,19 @@ export async function confirmSuggestion(
       return await setParent(actor, ingredientId, target.id);
     case "distinct":
       return await markDistinct(actor, ingredientId);
+    case "rename":
+      if (!suggestion.proposedName) throw new CatalogueEditError("not-found");
+
+      try {
+        // A person taking the name is their own rename: the flag goes and the name is settled.
+        return await renameIngredient(actor, ingredientId, suggestion.proposedName);
+      } catch (error) {
+        // Taken since it was proposed: the refusal still says so, and a merge waits instead.
+        if (error instanceof CatalogueEditError && error.refusal === "name-taken") {
+          await proposeMergeForTakenName(ingredientId, suggestion.proposedName);
+        }
+        throw error;
+      }
   }
 }
 
@@ -167,6 +188,8 @@ export async function dismissSuggestion(
     throw new CatalogueEditError("forbidden");
   }
   await deleteIngredientSuggestion(suggestionId);
+  // Turning down a name AI read is a person's word on the name.
+  if (suggestion.proposedName) await settleIngredientName(suggestion.ingredientId);
 
   const changed = [suggestion.ingredientId];
 

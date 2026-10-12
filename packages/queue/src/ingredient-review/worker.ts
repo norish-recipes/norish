@@ -4,7 +4,10 @@
  * A round of Ask AI over Flagged Ingredients (ADR-0037), one job for however
  * many foods a person asked about, one step per food. Each food is asked the
  * question the Ingredients page's own Ask AI asks, a few at once, and a sure
- * answer is left as a suggestion for a person to confirm. The round's count
+ * answer is left as a suggestion for a person to confirm. Clean names asks a
+ * food for its Plain Name instead, and leaves a rename; one round may ask
+ * both, and a flagged food AI calls a food of its own is asked its Plain Name
+ * next. The round's count
  * follows over the socket as answers come, and the changes are announced
  * together once every food is answered, so the suggestions arrive as one. The round outlives the tab that started it. A food no
  * longer flagged, or one the asker may not edit, is passed over, and a food
@@ -18,9 +21,17 @@
 import type { Job } from "bullmq";
 
 import type { IngredientReviewJobData } from "@norish/queue/contracts/job-types";
+import type { ModelUse } from "@norish/shared-server/ai/runtime/model-use-ledger";
+import type { PlainNameOutcome } from "@norish/shared-server/ingredients/plain-names";
 import type { ReviewOutcome } from "@norish/shared-server/ingredients/review";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import {
+  createModelUseLedger,
+  recordModelUse,
+  runWithModelUseLedger,
+} from "@norish/shared-server/ai/runtime/model-use-ledger";
 import { CatalogueEditError } from "@norish/shared-server/ingredients/catalogue";
+import { cleanNameWithAI } from "@norish/shared-server/ingredients/plain-names";
 import { findParentWithAI, reviewFlaggedWithAI } from "@norish/shared-server/ingredients/review";
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients } from "@norish/shared-server/realtime/ingredients";
@@ -42,22 +53,50 @@ function describe(error: unknown): string {
 }
 
 /**
+ * A flagged food AI called a food of its own is asked its Plain Name next, so
+ * one round cleans it too: the rename or merge it comes to, which replaced
+ * the "distinct" waiting on it, or null where the "distinct" stays. A name
+ * question that broke leaves the review's answer standing.
+ */
+async function nameAfterReview(
+  job: Job<IngredientReviewJobData>,
+  ingredientId: string
+): Promise<Extract<PlainNameOutcome, { outcome: "rename" | "merge" }> | null> {
+  try {
+    const named = await cleanNameWithAI(job.data.actor, ingredientId, { afterReview: true });
+
+    return named.outcome === "rename" || named.outcome === "merge" ? named : null;
+  } catch (error) {
+    log.warn({ err: error, jobId: job.id, ingredientId }, "Cleaning a reviewed food's name failed");
+
+    return null;
+  }
+}
+
+/**
  * The question, asked of one food. Nothing here ends the round: a refusal is
  * the food's, and an error — the model, the database — is recorded on the
  * food's step for the monitor and counted, so the other foods still get asked.
  */
 async function ask(
   job: Job<IngredientReviewJobData>,
-  ingredientId: string
+  { id: ingredientId, mode }: IngredientReviewJobData["ingredients"][number]
 ): Promise<ReviewStepDetail> {
   try {
+    if (mode === "name") {
+      return { ingredientId, ...(await cleanNameWithAI(job.data.actor, ingredientId)) };
+    }
+
     const outcome: ReviewOutcome =
-      job.data.mode === "parent"
+      mode === "parent"
         ? await findParentWithAI(job.data.actor, ingredientId)
         : await reviewFlaggedWithAI(job.data.actor, ingredientId);
 
     if (outcome.outcome === "not-flagged") {
       return { ingredientId, outcome: "skipped", reason: "not-flagged" };
+    }
+    if (mode === "review" && outcome.outcome === "distinct") {
+      return { ingredientId, ...((await nameAfterReview(job, ingredientId)) ?? outcome) };
     }
 
     return { ingredientId, ...outcome };
@@ -116,9 +155,10 @@ export async function processIngredientReviewJob(job: Job<IngredientReviewJobDat
   log.info({ jobId: job.id, count: foods.length }, "Asking AI about flagged Ingredients");
 
   const record = (
-    food: { id: string; name: string },
+    food: IngredientReviewJobData["ingredients"][number],
     startedAt: number,
-    detail: ReviewStepDetail
+    detail: ReviewStepDetail,
+    models: ModelUse[]
   ) => {
     const { ingredientId, ...outcome } = detail;
 
@@ -127,7 +167,8 @@ export async function processIngredientReviewJob(job: Job<IngredientReviewJobDat
       id: `${REVIEW_STEP}:${settled}/${foods.length}`,
       startedAt,
       endedAt: Date.now(),
-      detail: { ingredientId, name: food.name, ...outcome },
+      detail: { ingredientId, name: food.name, mode: food.mode, ...outcome },
+      models,
     });
     // A suggestion recorded, or a flag's reason brought up to date, is worth announcing.
     if (detail.outcome !== "skipped" && detail.outcome !== "failed") changed.push(food.id);
@@ -150,8 +191,13 @@ export async function processIngredientReviewJob(job: Job<IngredientReviewJobDat
     while (next < foods.length) {
       const food = foods[next++]!;
       const startedAt = Date.now();
+      // The food's own requests, so a round that asks two questions still says
+      // what each took; the attempt's ledger gets them too, for the job monitor.
+      const own = createModelUseLedger();
+      const detail = await runWithModelUseLedger(own, () => ask(job, food));
 
-      await record(food, startedAt, await ask(job, food.id));
+      for (const use of own.uses) recordModelUse(use);
+      await record(food, startedAt, detail, own.uses);
     }
   };
 

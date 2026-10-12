@@ -151,6 +151,7 @@ export const PromptsConfigSchema = z.object({
   imageGenerationBrief: z.string().optional(),
   imageGenerationStyle: z.string().optional(),
   ingredientIconStyle: z.string().optional(),
+  ingredientPlainName: z.string().optional(),
   isOverridden: z.boolean().optional(),
 });
 
@@ -369,6 +370,24 @@ export const DEFAULT_AUTOMATIC_ENRICHMENT: AutomaticEnrichmentConfig = {
   imageGeneration: false,
 };
 
+/**
+ * What runs on a food just minted by someone's action (ADR-0037, amended
+ * 2026-10-10): AI gives it its Plain Name, and the image provider draws it an
+ * icon where it would show none. Both cost a request per food, so both are
+ * off until an administrator opts in.
+ */
+export const AutomaticIngredientsSchema = z.object({
+  plainName: z.boolean(),
+  icon: z.boolean(),
+});
+
+export type AutomaticIngredientsConfig = z.infer<typeof AutomaticIngredientsSchema>;
+
+export const DEFAULT_AUTOMATIC_INGREDIENTS: AutomaticIngredientsConfig = {
+  plainName: false,
+  icon: false,
+};
+
 export const DEFAULT_TAG_STRATEGY: TagStrategy = "predefined";
 
 /** Restrictive by default: an administrator opts in to letting AI mint Cuisines. */
@@ -388,6 +407,7 @@ export const AIConfigInputSchema = z.object({
   tagStrategy: TagStrategySchema.optional(),
   cuisineStrategy: CuisineStrategySchema.optional(),
   automaticEnrichment: AutomaticEnrichmentSchema.partial().optional(),
+  automaticIngredients: AutomaticIngredientsSchema.partial().optional(),
   /** @deprecated Migrated into `automaticEnrichment.autoTagging` + `tagStrategy`. */
   autoTaggingMode: AutoTaggingModeSchema.optional(),
   /** @deprecated Migrated into `automaticEnrichment.allergyDetection`. */
@@ -406,6 +426,7 @@ export const AIConfigSchema = AIConfigInputSchema.transform(
     tagStrategy,
     cuisineStrategy,
     automaticEnrichment,
+    automaticIngredients,
     ...rest
   }) => {
     const legacyAutoTaggingOn =
@@ -439,6 +460,7 @@ export const AIConfigSchema = AIConfigInputSchema.transform(
         imageGeneration:
           automaticEnrichment?.imageGeneration ?? DEFAULT_AUTOMATIC_ENRICHMENT.imageGeneration,
       },
+      automaticIngredients: { ...DEFAULT_AUTOMATIC_INGREDIENTS, ...automaticIngredients },
     };
   }
 );

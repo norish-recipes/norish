@@ -16,6 +16,7 @@ import type {
   ImageImportJobData,
   IngredientIconsJobData,
   IngredientReviewJobData,
+  NewIngredientsJobData,
   PasteImportJobData,
   RecipeEnrichmentJobData,
   RecipeImportJobData,
@@ -37,6 +38,7 @@ import { createImageImportQueue } from "./image-import/queue";
 import { createIngredientIconsQueue } from "./ingredient-icons/queue";
 import { createIngredientLinkingQueue } from "./ingredient-linking/queue";
 import { createIngredientReviewQueue } from "./ingredient-review/queue";
+import { createNewIngredientsQueue } from "./new-ingredients/queue";
 import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 import { createPasteImportQueue } from "./paste-import/queue";
 import { createRecipeImportQueue } from "./recipe-import/queue";
@@ -78,6 +80,7 @@ interface QueueRegistry {
   storeLookup: Queue<StoreLookupJobData>;
   ingredientReview: Queue<IngredientReviewJobData>;
   ingredientIcons: Queue<IngredientIconsJobData>;
+  newIngredients: Queue<NewIngredientsJobData>;
 }
 
 async function loadJobRetention(): Promise<JobRetentionConfig> {
@@ -138,6 +141,7 @@ export async function initializeQueues(): Promise<QueueRegistry> {
       storeLookup: createStoreLookupQueue(removalOptions),
       ingredientReview: createIngredientReviewQueue(removalOptions),
       ingredientIcons: createIngredientIconsQueue(removalOptions),
+      newIngredients: createNewIngredientsQueue(removalOptions),
     };
 
     globalForRegistry.queueRegistry = created;
@@ -190,6 +194,7 @@ export function getQueueByName(name: QueueName): Queue {
     [QUEUE_NAMES.STORE_LOOKUP]: getQueues().storeLookup,
     [QUEUE_NAMES.INGREDIENT_REVIEW]: getQueues().ingredientReview,
     [QUEUE_NAMES.INGREDIENT_ICONS]: getQueues().ingredientIcons,
+    [QUEUE_NAMES.NEW_INGREDIENTS]: getQueues().newIngredients,
   };
 
   return byName[name];
@@ -235,6 +240,7 @@ export async function closeAllQueues(): Promise<void> {
     registry.storeLookup.close(),
     registry.ingredientReview.close(),
     registry.ingredientIcons.close(),
+    registry.newIngredients.close(),
   ]);
 
   globalForRegistry.queueRegistry = null;

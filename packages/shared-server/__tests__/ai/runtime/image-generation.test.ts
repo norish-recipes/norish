@@ -304,7 +304,11 @@ describe("generateImage", () => {
       expect(prompt).toMatch(/^A small icon of one food/);
       expect(prompt).toMatch(/The food: pepper, a kind of spice\.\n\n/);
       expect(prompt).toMatch(/one solid colour that the food itself does not contain/);
-      expect(prompt).toMatch(/flour in a small bowl\.$/);
+      expect(prompt).toMatch(/flour in a small bowl\./);
+      // No brand, whatever the administrator's style says: a product is drawn as sold, blank.
+      expect(prompt).toMatch(
+        /nothing of its brand: no logo, no text, no brand colours and no trademark shape\.$/
+      );
     });
 
     it("leaves quality alone where the provider has no tiers", async () => {

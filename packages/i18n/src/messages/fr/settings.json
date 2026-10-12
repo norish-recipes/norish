@@ -380,6 +380,7 @@
       "unknown-food": "Aucun ingrédient connu ne partage un mot avec ce nom, l'IA n'a donc pas été sollicitée.",
       "ai-unsure": "L'IA a été interrogée sur cet ingrédient et n'était pas sûre.",
       "ai-unavailable": "L'IA n'a pas répondu à temps lors de l'ajout de ce nom.",
+      "ai-key-rejected": "Le fournisseur d'IA a refusé la clé API, l'IA n'a donc pas pu vérifier ce nom.",
       "food-gone": "L'IA l'a associé à un ingrédient fusionné avant que le nom ne puisse le rejoindre.",
       "upgrade": "Aucun ingrédient connu n'a pu être associé.",
       "seed-ambiguous": "Le catalogue connaît plusieurs ingrédients que cela pourrait être."
@@ -393,19 +394,23 @@
     "markDistinct": "Marquer comme distinct",
     "summary": "{spellings, plural, one {# traduction} other {# traductions}}{kinds, plural, =0 {} one {, # sorte} other {, # sortes}}{parent, select, none {} other {, parent: {parent}}}",
     "askAI": "Demander à l'IA",
-    "askAIAll": "Demander à l'IA pour les ingrédients signalés",
+    "fixCatalogue": "Corriger le catalogue",
     "askAIRound": {
-      "intro": "L'IA lit chaque nom et le compare aux aliments que Norish connaît. Rien ne change tant que vous n'avez pas confirmé une suggestion.",
-      "scopeLabel": "Quels ingrédients",
+      "intro": "L'IA vérifie où vont les ingrédients signalés et corrige les noms incohérents. Rien ne change tant que vous n'avez pas confirmé une suggestion.",
+      "scopeLabel": "Que corriger",
       "scopes": {
-        "unsuggested": "Seulement ceux sans suggestion",
-        "flagged": "Tous les ingrédients signalés"
+        "unsuggested": "Vérifier les ingrédients signalés",
+        "suggested": "Revérifier les suggestions",
+        "name": "Nettoyer les noms"
+      },
+      "hints": {
+        "unsuggested": "Cherche les doublons, les ingrédients enfants ou uniques.",
+        "suggested": "Revérifie les ingrédients signalés.",
+        "name": "Réduit les noms d'ingrédients à l'ingrédient seul. Les ingrédients signalés sont inclus si la case ci-dessus est cochée."
       },
       "scopeSize": "{count, plural, =0 {Aucun ingrédient} one {# ingrédient · environ {tokens} tokens} other {# ingrédients · environ {tokens} tokens}}",
-      "replaces": "Remplace les suggestions déjà en attente.",
       "modelTokens": "environ {tokens} tokens",
-      "basisMeasured": "D'après la consommation de la dernière série.",
-      "basisPrompt": "Estimé d'après le prompt, le nombre réel sera donc probablement plus élevé."
+      "basisMeasured": "D'après la consommation de la dernière série."
     },
     "roundProgress": "Interrogation de l'IA · {done, number} sur {total, number}",
     "roundSection": {
@@ -429,7 +434,8 @@
       "readAs": "L'IA l'a lu comme « {name} ».",
       "compared": "Comparé avec : {names}.",
       "comparedNothing": "Aucun aliment connu avec lequel le comparer.",
-      "fromWords": "Based on name."
+      "fromWords": "Based on name.",
+      "noFood": "L’IA n’a trouvé aucun aliment dans ce nom."
     },
     "addAlias": "Ajouter une traduction",
     "removeAlias": "Supprimer {alias}",
@@ -551,6 +557,17 @@
       "empty": "Saisissez un nom",
       "unknown": "Une erreur s'est produite. Réessayez."
     },
+    "uses": {
+      "show": "Voir où",
+      "title": "Où {name} est utilisé",
+      "recipes": "Recettes",
+      "groceries": "Courses",
+      "done": "fait",
+      "repeats": "se répète",
+      "pantry": "Dans le garde-manger",
+      "elsewhere": "{count, plural, one {# autre utilisation} other {# autres utilisations}} dans des recettes ou listes que vous ne pouvez pas ouvrir",
+      "none": "Plus rien ne l'utilise"
+    },
     "keepAlias": "Garder {alias}",
     "reportOutcomes": {
       "parent": "Rangé sous un parent",
@@ -572,7 +589,8 @@
       "merge": "Fusionner {name} avec {into}",
       "parent": "Classer {name} sous {of}",
       "distinct": "Garder {name} comme aliment à part entière",
-      "filedFromName": "{name} filed under {of}"
+      "filedFromName": "{name} filed under {of}",
+      "rename": "Renommer {name} en {to}"
     },
     "suggestionsTitle": "Suggestions de l'IA",
     "suggestionsEmpty": "Rien ne vous attend.",
@@ -588,12 +606,14 @@
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
-      "distinct": "Food of its own"
+      "distinct": "Food of its own",
+      "rename": "Renommer en {to}"
     },
     "skippedReasons": {
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
-      "notFound": "No longer exists"
+      "notFound": "No longer exists",
+      "settled": "Nom déjà fixé, ou une suggestion attend"
     },
     "icon": {
       "change": "Changer l’icône",
@@ -963,6 +983,14 @@
         "imageGeneration": "Génération d'images",
         "imageGenerationDescription": "Dessine une photo du plat pour les nouvelles recettes qui n'ont aucune image"
       },
+      "automaticIngredients": "Automatique pour les nouveaux ingrédients",
+      "automaticIngredientsDescription": "Ce qui se passe quand de nouveaux ingrédients sont ajoutés au catalogue.",
+      "automaticIngredientsKinds": {
+        "plainName": "Nettoyer le nom",
+        "plainNameDescription": "Retirer ce qui n’est pas l’aliment, comme les quantités et les codes d’emballage",
+        "icon": "Dessiner une icône",
+        "iconDescription": "Seulement pour un aliment sans icône, pas même celle de son parent"
+      },
       "tagStrategy": "Stratégie d'étiquetage",
       "tagStrategyDescription": "Quelles étiquettes l'étiquetage automatique peut utiliser, qu'il soit automatique ou manuel",
       "tagStrategies": {
@@ -1115,7 +1143,10 @@
       "imageGenerationStylePlaceholder": "Prompt pour le style d'image...",
       "ingredientIconStyle": "Prompt de style des icônes d'ingrédients",
       "ingredientIconStyleDescription": "Envoyé au modèle d'image quand l'icône d'un ingrédient est dessinée, avec le nom de l'aliment et ce dont il est une sorte ajoutés après. Définit le rendu partagé par toutes les icônes dessinées.",
-      "ingredientIconStylePlaceholder": "Prompt pour le style des icônes d'ingrédients..."
+      "ingredientIconStylePlaceholder": "Prompt pour le style des icônes d'ingrédients...",
+      "ingredientPlainName": "Prompt de nettoyage des noms d’ingrédients",
+      "ingredientPlainNameDescription": "Envoyé au modèle de langage quand l’IA nettoie le nom d’un ingrédient, avec le nom et ses autres graphies ajoutés à la suite. Indique ce qu’il faut retirer d’un nom et ce qu’il faut garder.",
+      "ingredientPlainNamePlaceholder": "Prompt de nettoyage des noms d’ingrédients..."
     },
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {
@@ -1168,7 +1199,8 @@
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
         "asking-ai": "Ask AI about the food",
-        "drawing-icon": "Dessiner l’icône de l’aliment"
+        "drawing-icon": "Dessiner l’icône de l’aliment",
+        "naming": "Nettoyer le nom de l’aliment"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1185,7 +1217,8 @@
         "image-generation": "Génération d'images",
         "store-lookup": "Recherche en boutique",
         "ingredient-review": "Demander à l'IA sur les ingrédients",
-        "ingredient-icons": "Dessin des icônes d’ingrédients"
+        "ingredient-icons": "Dessin des icônes d’ingrédients",
+        "new-ingredients": "Nouveaux ingrédients"
       },
       "summary": {
         "failed": "{count} failed"

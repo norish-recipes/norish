@@ -5,4 +5,4 @@ with soft gradients, lit softly from the upper left, a little glossy where the
 food is shiny. Natural, appetising colours, slightly brighter than life.
 Simple and clean, so the food is recognisable at a glance when shown very
 small: no fine detail that turns to noise, no outlines. No text, labels,
-logos, brand packaging, people or hands.
+logos, people or hands.

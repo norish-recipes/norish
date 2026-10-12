@@ -76,6 +76,13 @@ const reviewer = vi.hoisted(() => ({
   findParentWithAI: vi.fn(),
   listReviewableIngredients: vi.fn(async (): Promise<unknown[]> => []),
   estimateReviewTokens: vi.fn(async (): Promise<unknown[]> => []),
+  // What has been settled since is the service's to drop; here every food is still open.
+  withoutSettled: vi.fn(async (report: unknown) => report),
+}));
+
+const plainNames = vi.hoisted(() => ({
+  listNameableIngredients: vi.fn(async (): Promise<unknown[]> => []),
+  estimateCleanTokens: vi.fn(async (): Promise<unknown[]> => []),
 }));
 
 const reviewQueue = vi.hoisted(() => ({
@@ -113,6 +120,7 @@ vi.mock("@norish/shared-server/media/ingredient-icon", async (original) => ({
 }));
 vi.mock("@norish/db/repositories/ingredient-suggestions", () => suggestionsRepo);
 vi.mock("@norish/shared-server/ingredients/review", () => reviewer);
+vi.mock("@norish/shared-server/ingredients/plain-names", () => plainNames);
 vi.mock("@norish/shared-server/ai/enrichment/ingredient-icon-drawer", () => drawer);
 vi.mock("@norish/shared-server/config/server-config-loader", () => policy);
 vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
@@ -128,6 +136,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 const ONION = "11111111-1111-4111-8111-111111111111";
 const ALIAS = "22222222-2222-4222-8222-222222222222";
 const UIEN = "33333333-3333-4333-8333-333333333333";
+const TONIJN = "66666666-6666-4666-8666-666666666666";
 const ME = "test-user-id";
 const HOUSEMATE = "household-member-id";
 const STRANGER = "someone-elsewhere";
@@ -444,27 +453,29 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     reviewer.estimateReviewTokens.mockReset().mockResolvedValue([]);
   });
 
-  it("queues one job over the flagged foods the server picks for the scope, and answers the job to watch", async () => {
+  it("queues one job over the parts picked, each food asked its own question, and answers the job to watch", async () => {
     reviewer.listReviewableIngredients.mockResolvedValue([
       { id: UIEN, name: "uien", ownerId: ME, suggested: false },
-      { id: ONION, name: "onion", ownerId: HOUSEMATE, suggested: false },
+      { id: ONION, name: "onion", ownerId: HOUSEMATE, suggested: true },
     ]);
+    plainNames.listNameableIngredients.mockResolvedValueOnce([{ id: TONIJN, name: "GR TONIJN" }]);
 
     await expect(
-      callerFor().reviewAllWithAI({ mode: "review", scope: "unsuggested" })
-    ).resolves.toEqual({ jobId: "round-1", total: 2, pending: [UIEN, ONION] });
+      callerFor().reviewAllWithAI({ mode: "fix", parts: ["unsuggested", "name"] })
+    ).resolves.toEqual({ jobId: "round-1", total: 2, pending: [UIEN, TONIJN] });
 
     // The foods are the whole catalogue's the asker may edit, not a page's.
-    expect(reviewer.listReviewableIngredients).toHaveBeenCalledExactlyOnceWith(
-      { userId: ME, householdUserIds: [ME, HOUSEMATE], isServerAdmin: false },
-      "unsuggested"
-    );
+    expect(reviewer.listReviewableIngredients).toHaveBeenCalledExactlyOnceWith({
+      userId: ME,
+      householdUserIds: [ME, HOUSEMATE],
+      isServerAdmin: false,
+    });
+    // The flagged food with a suggestion is left alone: its part was not picked.
     expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith("review", {
       ingredients: [
-        { id: UIEN, name: "uien" },
-        { id: ONION, name: "onion" },
+        { id: UIEN, name: "uien", mode: "review" },
+        { id: TONIJN, name: "GR TONIJN", mode: "name" },
       ],
-      mode: "review",
       actor: { userId: ME, householdUserIds: [ME, HOUSEMATE], isServerAdmin: false },
     });
     // Nothing is asked here: the round asks, and announces, from the worker.
@@ -483,17 +494,16 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith(
       "review",
       expect.objectContaining({
-        mode: "parent",
         ingredients: [
-          { id: UIEN, name: "uien" },
-          { id: ONION, name: ONION },
+          { id: UIEN, name: "uien", mode: "parent" },
+          { id: ONION, name: ONION, mode: "parent" },
         ],
       })
     );
     expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
   });
 
-  it("says how many foods each scope holds, and the tokens a food took in the last round", async () => {
+  it("says how many foods each flagged part holds, and the tokens a food took in the last round", async () => {
     reviewer.listReviewableIngredients.mockResolvedValue([
       { id: UIEN, name: "uien", ownerId: ME, suggested: false },
       { id: ONION, name: "onion", ownerId: ME, suggested: true },
@@ -503,7 +513,7 @@ describe("a round of Ask AI over flagged Ingredients", () => {
         ? [
             {
               id: "round-0",
-              data: { ingredients: [{ id: UIEN, name: "uien" }] },
+              data: { ingredients: [{ id: UIEN, name: "uien", mode: "review" }] },
               progress: {
                 step: "asking-ai:1/1",
                 updatedAt: 1,
@@ -515,12 +525,17 @@ describe("a round of Ask AI over flagged Ingredients", () => {
                         id: "asking-ai:1/1",
                         startedAt: 1,
                         endedAt: 2,
-                        detail: { ingredientId: UIEN, outcome: "distinct" },
+                        detail: { ingredientId: UIEN, mode: "review", outcome: "distinct" },
+                        models: [
+                          { provider: "openai", model: "gpt", outcome: "completed", tokens: 1864 },
+                          {
+                            provider: "typesafe",
+                            model: "jev",
+                            outcome: "completed",
+                            tokens: 1689,
+                          },
+                        ],
                       },
-                    ],
-                    models: [
-                      { provider: "openai", model: "gpt", outcome: "completed", tokens: 1864 },
-                      { provider: "typesafe", model: "jev", outcome: "completed", tokens: 1689 },
                     ],
                   },
                 ],
@@ -530,8 +545,8 @@ describe("a round of Ask AI over flagged Ingredients", () => {
         : []) as never);
 
     await expect(callerFor().reviewScope()).resolves.toEqual({
-      flagged: 2,
       unsuggested: 1,
+      suggested: 1,
       tokens: {
         basis: "measured",
         foods: 1,
@@ -553,8 +568,8 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     reviewer.estimateReviewTokens.mockResolvedValue(models);
 
     await expect(callerFor().reviewScope()).resolves.toEqual({
-      flagged: 1,
       unsuggested: 1,
+      suggested: 0,
       tokens: { basis: "prompt", models },
     });
     expect(reviewer.estimateReviewTokens).toHaveBeenCalledWith(["uien"]);
@@ -569,9 +584,9 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     await expect(callerFor().findParentWithAI({ ingredientId: UIEN })).rejects.toThrow(
       "AI features are disabled"
     );
-    await expect(callerFor().reviewAllWithAI({ mode: "review", scope: "flagged" })).rejects.toThrow(
-      "AI features are disabled"
-    );
+    await expect(
+      callerFor().reviewAllWithAI({ mode: "fix", parts: ["suggested"] })
+    ).rejects.toThrow("AI features are disabled");
     await expect(callerFor().reviewScope()).rejects.toThrow("AI features are disabled");
     expect(reviewer.reviewFlaggedWithAI).not.toHaveBeenCalled();
     expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
@@ -595,13 +610,47 @@ describe("a round of Ask AI over flagged Ingredients", () => {
     expect(ingredientsRealtime.published).toHaveLength(1);
   });
 
+  it("cleans the names of the foods the server picks, as a round of its own", async () => {
+    plainNames.listNameableIngredients.mockResolvedValueOnce([{ id: UIEN, name: "GR UIEN" }]);
+
+    await expect(callerFor().reviewAllWithAI({ mode: "fix", parts: ["name"] })).resolves.toEqual({
+      jobId: "round-1",
+      total: 1,
+      pending: [UIEN],
+    });
+    expect(reviewQueue.add).toHaveBeenCalledExactlyOnceWith(
+      "review",
+      expect.objectContaining({ ingredients: [{ id: UIEN, name: "GR UIEN", mode: "name" }] })
+    );
+    expect(reviewer.listReviewableIngredients).not.toHaveBeenCalled();
+  });
+
+  it("says how many names a round of Clean names would ask about, and what a food takes", async () => {
+    plainNames.listNameableIngredients.mockResolvedValueOnce([
+      { id: UIEN, name: "GR UIEN" },
+      { id: ONION, name: "onion" },
+    ]);
+    plainNames.estimateCleanTokens.mockResolvedValueOnce([
+      { provider: "openai", model: "gpt-5.6-luna", perFood: 200 },
+    ]);
+
+    await expect(callerFor().nameScope()).resolves.toEqual({
+      foods: 2,
+      tokens: {
+        basis: "prompt",
+        models: [{ provider: "openai", model: "gpt-5.6-luna", perFood: 200 }],
+      },
+    });
+    expect(plainNames.estimateCleanTokens).toHaveBeenCalledWith(["GR UIEN", "onion"]);
+  });
+
   it("asks about nothing without a food", async () => {
     await expect(
       callerFor().reviewAllWithAI({ mode: "parent", ingredientIds: [] })
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    // Nothing left in the scope by the time the round would start.
+    // Nothing left in the parts picked by the time the round would start.
     await expect(
-      callerFor().reviewAllWithAI({ mode: "review", scope: "unsuggested" })
+      callerFor().reviewAllWithAI({ mode: "fix", parts: ["unsuggested"] })
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     expect(reviewQueue.add).not.toHaveBeenCalled();
   });
@@ -624,7 +673,16 @@ describe("a round of Ask AI over flagged Ingredients", () => {
       jobId: "round-1",
       done: 0,
       total: 2,
-      counts: { merge: 0, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 },
+      counts: {
+        merge: 0,
+        parent: 0,
+        distinct: 0,
+        unsure: 0,
+        rename: 0,
+        plain: 0,
+        skipped: 0,
+        failed: 0,
+      },
       pending: [UIEN, ONION],
       finished: false,
     });
@@ -681,6 +739,12 @@ describe("a round of Ask AI over flagged Ingredients", () => {
       waiting: [],
     });
     expect(reviewQueue.getJob).toHaveBeenCalledWith("round-1");
+
+    expect(reviewer.withoutSettled).toHaveBeenCalled();
+
+    // Without a job, the round to have ended last.
+    reviewQueue.getJobs.mockResolvedValueOnce([{ id: "round-1", finishedOn: 2 }] as never);
+    await expect(callerFor().reviewReport({})).resolves.toMatchObject({ jobId: "round-1" });
 
     reviewQueue.getJob.mockResolvedValue(null);
     await expect(callerFor().reviewReport({ jobId: "gone" })).resolves.toBeNull();
@@ -1020,7 +1084,16 @@ describe("the list", () => {
           ownIcon: false,
           canEdit: false,
           // An English viewer sees the household's own spelling; the Dutch one is counted.
-          aliases: [{ id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true }],
+          aliases: [
+            {
+              id: ALIAS,
+              text: "onions",
+              locale: null,
+              seeded: false,
+              canRemove: true,
+              inUse: false,
+            },
+          ],
           hiddenSpellings: 1,
         },
       ],
@@ -1031,13 +1104,21 @@ describe("the list", () => {
   it("lists every spelling of one Ingredient on request", async () => {
     withPolicy("household");
     catalogue.listCatalogueAliasesOf.mockResolvedValue([
-      { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
+      { id: ALIAS, text: "onions", ownerId: HOUSEMATE, inUse: true },
       { id: "seeded-alias", text: "ui", ownerId: null, locale: "nl", seeded: true },
     ]);
 
+    // A spelling something points at keeps canRemove, which moving it needs, and says it is in use.
     await expect(callerFor().spellings({ ingredientId: ONION })).resolves.toEqual([
-      { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true },
-      { id: "seeded-alias", text: "ui", locale: "nl", seeded: true, canRemove: false },
+      { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true, inUse: true },
+      {
+        id: "seeded-alias",
+        text: "ui",
+        locale: "nl",
+        seeded: true,
+        canRemove: false,
+        inUse: false,
+      },
     ]);
   });
 });

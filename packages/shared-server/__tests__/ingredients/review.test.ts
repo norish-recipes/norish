@@ -34,6 +34,7 @@ import {
   findParentWithAI,
   listReviewableIngredients,
   reviewFlaggedWithAI,
+  withoutSettled,
 } from "@norish/shared-server/ingredients/review";
 import {
   confirmSuggestion,
@@ -295,6 +296,25 @@ describe("asking AI about a flagged Ingredient", () => {
     expect(await suggestionFor(uitjes.ingredientId)).toBeNull();
   });
 
+  it("keeps a waiting suggestion when asking again gets no answer", async () => {
+    await flagged("onion");
+    const red = await flagged("red onion");
+
+    decides("Is a kind of onion", 0.95);
+    await reviewFlaggedWithAI(actor, red.ingredientId);
+    vi.mocked(decide).mockRejectedValue(new Error("Decision Model unreachable"));
+    vi.mocked(generateStructured).mockRejectedValue(new Error("model unreachable"));
+
+    await expect(reviewFlaggedWithAI(actor, red.ingredientId)).resolves.toMatchObject({
+      outcome: "unsure",
+      reason: "ai-unavailable",
+    });
+    expect(await suggestionFor(red.ingredientId)).toMatchObject({
+      kind: "parent",
+      target: "onion",
+    });
+  });
+
   it("asks AI about a name no known food shares a word with, and follows the food it names", async () => {
     // "ui" shares no letters with "onion": rung 3 asked nothing and minted it flagged.
     const onion = await flagged("onion");
@@ -480,11 +500,6 @@ describe("what a round of Ask AI picks from", () => {
       { id: uien, name: "uien", suggested: true },
       { id: knaks, name: "Unox Knaks", suggested: false },
     ]);
-    // Only those no suggestion waits on, for a round over the gap.
-    expect((await listReviewableIngredients(actor, "unsuggested")).map((food) => food.id)).toEqual([
-      bulbs,
-      knaks,
-    ]);
     // A server admin may edit every food, the ones nobody owns included.
     expect(
       (await listReviewableIngredients({ ...actor, isServerAdmin: true })).map((food) => food.id)
@@ -545,6 +560,45 @@ describe("what a round of Ask AI picks from", () => {
 
   it("estimates nothing for a round with no foods", async () => {
     await expect(estimateReviewTokens([])).resolves.toEqual([]);
+  });
+
+  it("lists in a finished round's report only the foods still open since", async () => {
+    const knaks = await flaggedAs("Unox Knaks");
+    const settled = await flaggedAs("shallot");
+    const gone = crypto.randomUUID();
+    const unsure = (ingredientId: string) => ({
+      ingredientId,
+      outcome: "unsure" as const,
+      reason: "ai-unsure",
+      considered: [],
+      englishName: null,
+    });
+    const merged = {
+      ingredientId: settled,
+      outcome: "merge" as const,
+      into: "onion",
+      considered: [],
+      englishName: null,
+    };
+    const report = {
+      jobId: "round-1",
+      finished: true,
+      entries: [unsure(knaks), unsure(settled), unsure(gone), merged],
+      waiting: [],
+    };
+
+    await markDistinct(actor, settled);
+
+    // Still flagged stays; kept distinct since, or gone, drops; a suggestion's entry is not the filter's.
+    expect((await withoutSettled(report)).entries).toEqual([unsure(knaks), merged]);
+    // A round still running is shown as it is.
+    expect((await withoutSettled({ ...report, finished: false })).entries).toHaveLength(4);
+    // Asked what it is a kind of, a food is open while it has no parent, flagged or not.
+    const parents = report.entries.map((entry) => ({ ...entry, mode: "parent" as const }));
+
+    expect(
+      (await withoutSettled({ ...report, entries: parents })).entries.map((it) => it.ingredientId)
+    ).toEqual([knaks, settled, settled]);
   });
 });
 

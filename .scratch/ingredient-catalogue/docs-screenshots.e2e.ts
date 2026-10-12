@@ -18,6 +18,7 @@ import type { Locator, Page } from "@playwright/test";
 
 import { withDatabase } from "./database";
 import { expect, test } from "./fixture";
+import { configureImageGeneration } from "./image-generation-support";
 import { resetCatalogueScenario, seedCatalogue } from "./ingredient-catalogue-support";
 
 test.describe.configure({ mode: "serial" });
@@ -170,4 +171,65 @@ test("captures asking AI about the flagged ingredients", async () => {
   await expect(dialog.getByTestId("ingredients-ask-ai-models")).toContainText("jev-1.13.0");
   await snap(dialog, "ask-ai", "ingredients-ask-ai.png");
   await page.unroute("**/api/trpc/**");
+});
+
+/** Answer one tRPC procedure with `json`, inside whatever batch the page sends it in. */
+async function stage(procedure: string, json: unknown): Promise<void> {
+  await page.route("**/api/trpc/**", async (route) => {
+    const procedures = new URL(route.request().url()).pathname.split("/api/trpc/")[1]?.split(",");
+    const at = procedures?.indexOf(procedure) ?? -1;
+
+    if (at < 0) return route.continue();
+    const response = await route.fetch();
+    const body = (await response.json()) as unknown[];
+
+    body[at] = { result: { data: { json } } };
+    await route.fulfill({ response, json: body });
+  });
+}
+
+test("captures cleaning names with AI", async () => {
+  // A long-running instance's numbers: the scenario's own names are few and were never measured.
+  await stage("ingredients.nameScope", {
+    foods: 412,
+    tokens: {
+      basis: "measured",
+      foods: 412,
+      models: [{ provider: "openai", model: "gpt-5.6-luna", perFood: 310 }],
+    },
+  });
+  await page.goto("/settings?tab=ingredients");
+  await page.getByTestId("ingredients-clean-names").click();
+  const dialog = page.getByTestId("ingredients-clean-names-dialog");
+
+  await expect(dialog.getByTestId("ingredients-clean-names-models")).toContainText("gpt-5.6-luna");
+  await snap(dialog, "clean-names", "ingredients-clean-names.png");
+  await page.unroute("**/api/trpc/**");
+});
+
+test("captures the automatic settings for new ingredients", async ({ aiStack }) => {
+  // Drawing an icon is offered only where an image provider is configured.
+  await configureImageGeneration(aiStack.ai.url);
+  await page.goto("/settings?tab=admin");
+  const trigger = page.getByRole("button", { name: /^AI configuration/ }).first();
+
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.click();
+  const picker = page.getByTestId("ai-automatic-ingredients");
+
+  await picker.scrollIntoViewIfNeeded();
+  await picker.getByRole("button").first().click();
+  await page.getByRole("option", { name: /Clean the name/ }).click();
+  await page.getByRole("option", { name: /Draw an icon/ }).click();
+  await page.keyboard.press("Escape");
+  await expect(picker).toContainText("Clean the name, Draw an icon");
+  // The whole setting: its title and description beside the picker, never saved. Centred, so
+  // the fixed navbar does not cover it.
+  await picker.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await snap(
+    picker.locator("xpath=../.."),
+    "automatic-ingredients",
+    "admin-automatic-ingredients.png"
+  );
+  await configureImageGeneration(null);
 });

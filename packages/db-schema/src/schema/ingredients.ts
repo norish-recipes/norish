@@ -62,6 +62,10 @@ export interface NutritionCodes {
  * generated: the file name of a 128px transparent WebP under the uploads
  * directory, named for its content. Null shows the icon Norish ships for
  * `offId`, else the nearest Parent Ingredient's.
+ *
+ * `nameSettled` says the name is its Plain Name for good: AI gave it, or a
+ * person named the food, took a proposed name or turned one down. AI
+ * proposes no other, and the recheck never renames it from the words.
  */
 export const ingredients = pgTable(
   "ingredients",
@@ -79,6 +83,7 @@ export const ingredients = pgTable(
     offId: text("off_id"),
     nutritionCodes: jsonb("nutrition_codes").$type<NutritionCodes>(),
     icon: text("icon"),
+    nameSettled: boolean("name_settled").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
   },
@@ -125,14 +130,17 @@ export const ingredientAliases = pgTable(
  * a person confirms it (the edit is made as if they had made it) or
  * dismisses it (the row goes, the food stays as it was). One per Ingredient:
  * asking again replaces it. `kind` is `merge` (the food is `targetId`),
- * `parent` (the food is a kind of `targetId`) or `distinct` (a food of its
- * own, no target). Many foods may name the same target, so one general food
+ * `parent` (the food is a kind of `targetId`), `distinct` (a food of its
+ * own, no target) or `rename` (to `proposedName`, no target). Many foods may name the same target, so one general food
  * can gather many proposed kinds. Either food going away takes the
  * suggestion with it. `englishName` and `considered` are how AI got there,
  * shown beside the proposal. `source` says who proposed it: `ai`, or `words`
  * for a parent the resolver gave a mint from inside the words of its name
  * ("garlic cloves" under garlic), already filed and waiting to be confirmed
  * or dismissed — dismissing one of those takes the parent off again.
+ * `proposedName` is the Plain Name AI read the food's name as: the new name
+ * a `rename` proposes, or the name another food already spells that a
+ * `merge` came from. Either answer settles the food's name.
  */
 export const ingredientSuggestions = pgTable(
   "ingredient_suggestions",
@@ -146,6 +154,7 @@ export const ingredientSuggestions = pgTable(
     englishName: text("english_name"),
     considered: jsonb("considered").$type<string[]>().notNull().default([]),
     source: text("source").notNull().default("ai"),
+    proposedName: text("proposed_name"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

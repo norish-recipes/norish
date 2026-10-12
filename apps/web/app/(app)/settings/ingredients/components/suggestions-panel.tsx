@@ -26,7 +26,7 @@ import type { ReviewRound } from "@norish/shared/contracts/realtime/ingredients"
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** The foods a round asked about that got no suggestion, and so are worth a word. */
-const UNSUGGESTED: ReadonlySet<ReviewReportEntry["outcome"]> = new Set([
+export const UNSUGGESTED: ReadonlySet<ReviewReportEntry["outcome"]> = new Set([
   "unsure",
   "skipped",
   "failed",
@@ -157,9 +157,10 @@ function VirtualRows({
  * Confirming makes the edit as the viewer's own.
  * Opened on its own when a round of Ask AI the viewer started ends, and from the page while
  * anything is waiting. While a round runs, it leads with how far the round
- * has come and, folded, the foods it has still to ask about. Where this tab
- * saw a round, the foods it got no suggestion for follow, with why: AI was
- * not sure, the food was passed over, or its question broke. A food's name
+ * has come and, folded, the foods it has still to ask about. The latest
+ * round's foods it got no suggestion for follow, with why: AI was not sure,
+ * the food was passed over, or its question broke; one settled since is
+ * left out by the server. A food's name
  * opens its own panel over this one, to look at it whole before answering;
  * closing that comes back here.
  */
@@ -189,11 +190,11 @@ export function SuggestionsPanel({
   const [openId, setOpenId] = useState<string | null>(null);
   // Whether the round's waiting foods are folded out.
   const [waitingOpen, setWaitingOpen] = useState(false);
-  // The round running now, else the last one this tab saw end.
+  // The round running now, else the last one this tab saw end, else the instance's latest.
   const reportJobId = round?.jobId ?? jobId;
   const report = useQuery({
-    ...trpc.ingredients.reviewReport.queryOptions({ jobId: reportJobId ?? "" }),
-    enabled: open && reportJobId !== null,
+    ...trpc.ingredients.reviewReport.queryOptions(reportJobId ? { jobId: reportJobId } : {}),
+    enabled: open,
   });
   const reportData = report.data;
   const reportLoading = report.isFetching && !reportData;
@@ -383,7 +384,9 @@ export function SuggestionsPanel({
                 ? skippedReason(t, entry.reason)
                 : entry.outcome === "failed"
                   ? entry.error
-                  : reviewTrace(t, entry)}
+                  : entry.reason === "no-food"
+                    ? t("aiTrace.noFood")
+                    : reviewTrace(t, entry)}
             </p>
           </div>
         );

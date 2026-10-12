@@ -380,6 +380,7 @@
       "unknown-food": "Geen bekend ingrediënt deelt een woord met deze naam, dus AI is niet gevraagd.",
       "ai-unsure": "AI is gevraagd of dit een bekend ingrediënt is en wist het niet zeker.",
       "ai-unavailable": "AI antwoordde niet op tijd toen deze naam werd toegevoegd.",
+      "ai-key-rejected": "De AI-provider heeft de API-sleutel geweigerd, dus AI kon deze naam niet controleren.",
       "food-gone": "AI koppelde dit aan een ingrediënt dat werd samengevoegd voordat de naam erbij kon.",
       "upgrade": "Er kon geen bekend ingrediënt aan worden gekoppeld.",
       "seed-ambiguous": "De catalogus kent meerdere ingrediënten die dit kunnen zijn."
@@ -393,19 +394,23 @@
     "markDistinct": "Markeer als apart",
     "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
     "askAI": "Vraag AI",
-    "askAIAll": "Vraag AI over gemarkeerde ingrediënten",
+    "fixCatalogue": "Catalogus verbeteren",
     "askAIRound": {
-      "intro": "AI leest elke naam en vergelijkt die met de voedingsmiddelen die Norish kent. Er verandert niets tot je een voorstel bevestigt.",
-      "scopeLabel": "Welke ingrediënten",
+      "intro": "AI zoekt uit waar gemarkeerde ingrediënten horen en verbetert inconsistente namen. Er verandert niets tot je een voorstel bevestigt.",
+      "scopeLabel": "Wat verbeteren",
       "scopes": {
-        "unsuggested": "Alleen die zonder voorstel",
-        "flagged": "Alle gemarkeerde ingrediënten"
+        "unsuggested": "Gemarkeerde ingrediënten nakijken",
+        "suggested": "Voorstellen opnieuw nakijken",
+        "name": "Namen opschonen"
+      },
+      "hints": {
+        "unsuggested": "Zoekt naar dubbelen, subingrediënten of unieke ingrediënten.",
+        "suggested": "Kijkt gemarkeerde ingrediënten opnieuw na.",
+        "name": "Schoont ingrediëntnamen op tot alleen het ingrediënt. Gemarkeerde ingrediënten doen mee als het vakje hierboven is aangevinkt."
       },
       "scopeSize": "{count, plural, =0 {Geen ingrediënten} one {# ingrediënt · ongeveer {tokens} tokens} other {# ingrediënten · ongeveer {tokens} tokens}}",
-      "replaces": "Vervangt de voorstellen die al klaarstaan.",
       "modelTokens": "ongeveer {tokens} tokens",
-      "basisMeasured": "Op basis van wat de vorige ronde gebruikte.",
-      "basisPrompt": "Geschat op basis van de prompt, dus in werkelijkheid waarschijnlijk meer."
+      "basisMeasured": "Op basis van wat de vorige ronde gebruikte."
     },
     "roundProgress": "AI wordt gevraagd · {done, number} van {total, number}",
     "roundSection": {
@@ -429,7 +434,8 @@
       "readAs": "AI las het als “{name}”.",
       "compared": "Vergeleken met: {names}.",
       "comparedNothing": "Er was geen bekend ingrediënt om het mee te vergelijken.",
-      "fromWords": "Op basis van de naam."
+      "fromWords": "Op basis van de naam.",
+      "noFood": "AI vond geen ingrediënt in deze naam."
     },
     "addAlias": "Vertaling toevoegen",
     "removeAlias": "{alias} verwijderen",
@@ -551,6 +557,17 @@
       "empty": "Voer een naam in",
       "unknown": "Er ging iets mis. Probeer het opnieuw."
     },
+    "uses": {
+      "show": "Toon waar",
+      "title": "Waar {name} gebruikt wordt",
+      "recipes": "Recepten",
+      "groceries": "Boodschappen",
+      "done": "afgevinkt",
+      "repeats": "herhaalt",
+      "pantry": "In de voorraadkast",
+      "elsewhere": "{count, plural, one {Nog # keer} other {Nog # keer}} in recepten of lijsten die je niet kunt openen",
+      "none": "Niets gebruikt het meer"
+    },
     "keepAlias": "{alias} behouden",
     "reportOutcomes": {
       "parent": "Onder een ouder geplaatst",
@@ -572,7 +589,8 @@
       "merge": "{name} samenvoegen met {into}",
       "parent": "{name} plaatsen onder {of}",
       "distinct": "{name} houden als eigen ingrediënt",
-      "filedFromName": "{name} geplaatst onder {of}"
+      "filedFromName": "{name} geplaatst onder {of}",
+      "rename": "{name} hernoemen naar {to}"
     },
     "suggestionsTitle": "Voorstellen",
     "suggestionsEmpty": "Er wacht niets op je.",
@@ -588,12 +606,14 @@
     "proposal": {
       "merge": "Samenvoegen met {into}",
       "parent": "Plaatsen onder {of}",
-      "distinct": "Eigen ingrediënt"
+      "distinct": "Eigen ingrediënt",
+      "rename": "Hernoemen naar {to}"
     },
     "skippedReasons": {
       "notFlagged": "Niet meer gemarkeerd",
       "forbidden": "Niet van jou om te bewerken",
-      "notFound": "Bestaat niet meer"
+      "notFound": "Bestaat niet meer",
+      "settled": "Naam staat al vast, of er wacht een suggestie"
     },
     "icon": {
       "change": "Icoon wijzigen",
@@ -963,6 +983,14 @@
         "imageGeneration": "Afbeeldingen Genereren",
         "imageGenerationDescription": "Teken een foto van het gerecht voor nieuwe recepten die helemaal geen afbeelding hebben"
       },
+      "automaticIngredients": "Automatisch voor nieuwe ingrediënten",
+      "automaticIngredientsDescription": "Wat er gebeurt als er nieuwe ingrediënten aan de catalogus worden toegevoegd.",
+      "automaticIngredientsKinds": {
+        "plainName": "Naam opschonen",
+        "plainNameDescription": "Haal weg wat niet het ingrediënt is, zoals hoeveelheden en verpakkingscodes",
+        "icon": "Icoon tekenen",
+        "iconDescription": "Alleen voor een ingrediënt zonder icoon, ook niet dat van zijn ouder"
+      },
       "tagStrategy": "Tagstrategie",
       "tagStrategyDescription": "Welke tags automatisch taggen mag gebruiken, of het nu automatisch of handmatig draait",
       "tagStrategies": {
@@ -1115,7 +1143,10 @@
       "imageGenerationStylePlaceholder": "Prompt voor de afbeeldingsstijl...",
       "ingredientIconStyle": "Ingrediënticoonstijl Prompt",
       "ingredientIconStyleDescription": "Wordt naar het afbeeldingsmodel gestuurd als een ingrediënt een icoon krijgt, met de naam van het voedingsmiddel en waar het een soort van is erachter. Bepaalt de stijl die elk getekend icoon deelt.",
-      "ingredientIconStylePlaceholder": "Prompt voor de stijl van ingrediënticonen..."
+      "ingredientIconStylePlaceholder": "Prompt voor de stijl van ingrediënticonen...",
+      "ingredientPlainName": "Prompt voor het opschonen van ingrediëntnamen",
+      "ingredientPlainNameDescription": "Wordt naar het taalmodel gestuurd als AI de naam van een ingrediënt opschoont, met de naam en de andere schrijfwijzen erachter. Zegt wat er van een naam af moet en wat blijft.",
+      "ingredientPlainNamePlaceholder": "Prompt voor het opschonen van ingrediëntnamen..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {
@@ -1168,7 +1199,8 @@
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
         "asking-ai": "Ask AI about the food",
-        "drawing-icon": "Het icoon van het voedingsmiddel tekenen"
+        "drawing-icon": "Het icoon van het voedingsmiddel tekenen",
+        "naming": "Naam van het ingrediënt opschonen"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1185,7 +1217,8 @@
         "image-generation": "Afbeeldingen genereren",
         "store-lookup": "Winkelopzoeking",
         "ingredient-review": "AI vragen over ingrediënten",
-        "ingredient-icons": "Ingrediënticonen tekenen"
+        "ingredient-icons": "Ingrediënticonen tekenen",
+        "new-ingredients": "Nieuwe ingrediënten"
       },
       "summary": {
         "failed": "{count} failed"

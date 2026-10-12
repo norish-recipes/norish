@@ -170,6 +170,7 @@ describe("admin procedures", () => {
           ingredientLinking: false,
           imageGeneration: false,
         },
+        automaticIngredients: { plainName: false, icon: false },
       };
 
       // Current config has enabled: false

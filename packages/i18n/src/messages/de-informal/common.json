@@ -292,5 +292,10 @@
     "title": "Start nicht möglich",
     "description": "Norish konnte den sicheren Speicher nicht lesen und weiß daher nicht, zu welchem Server diese App gehört. Es wurde nichts geändert. Versuch es erneut oder starte die App neu.",
     "detailsLabel": "Technische Details"
+  },
+  "aiKeyRejected": {
+    "title": "Ein KI-Schlüssel funktioniert nicht mehr",
+    "description": "Der Anbieter lehnt den API-Schlüssel für {blocks} seit {since} ab. Speichere einen neuen Schlüssel, damit diese KI-Funktionen wieder laufen.",
+    "openSettings": "Einstellungen öffnen"
   }
 }

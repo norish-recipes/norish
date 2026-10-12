@@ -22,14 +22,14 @@ import {
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { ReviewScope } from "@norish/shared/contracts/ingredient-catalogue";
+import type { FixPart } from "@norish/shared/contracts/ingredient-catalogue";
 import type { ReviewRound } from "@norish/shared/contracts/realtime/ingredients";
 import { useRealtimeSubscription } from "@norish/shared-react/realtime";
 
 import type { IngredientFilters } from "./ingredient-filters-panel";
-import { AskAIRoundModal } from "./ask-ai-round-modal";
 import DataSourcesCard from "./data-sources-card";
 import { DrawIconsControl, useIconRound } from "./draw-icons-control";
+import { FixCatalogueModal } from "./fix-catalogue-modal";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
@@ -37,7 +37,7 @@ import {
 } from "./ingredient-filters-panel";
 import { IngredientList } from "./ingredient-list";
 import { IngredientSearch } from "./ingredient-search";
-import { SuggestionsPanel } from "./suggestions-panel";
+import { SuggestionsPanel, UNSUGGESTED } from "./suggestions-panel";
 import { useIngredientTree } from "./use-ingredient-tree";
 
 /**
@@ -126,14 +126,18 @@ export default function IngredientsSettingsContent() {
   const roundQuery = useQuery(trpc.ingredients.reviewRound.queryOptions());
   const [round, setRound] = useState<ReviewRound | null>(null);
   const [startedJobId, setStartedJobId] = useState<string | null>(null);
-  const [askOpen, setAskOpen] = useState(false);
-  // The last round this tab saw end: what it got no suggestion for rides along with the suggestions.
+  const [fixOpen, setFixOpen] = useState(false);
+  // The last round this tab saw end; before one ends, the instance's latest, which the server finds.
   const [reportJobId, setReportJobId] = useState<string | null>(null);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const { suggestions } = useIngredientSuggestions();
+  // What that round got no suggestion for, and is still open, rides along with the suggestions.
+  const report = useQuery(
+    trpc.ingredients.reviewReport.queryOptions(reportJobId ? { jobId: reportJobId } : {})
+  );
+  const hasUnsuggested =
+    report.data?.entries.some((entry) => UNSUGGESTED.has(entry.outcome)) ?? false;
   const running = round?.finished ? null : (round ?? roundQuery.data ?? null);
-  // The dialog is offered while the list holds a flagged food the viewer may edit.
-  const hasFlagged = shown.some((item) => item.flagged && item.canEdit);
   // Under the standalone filter, the round asks what each food is a kind of instead.
   const standaloneIds = filters.standaloneOnly
     ? shown.filter((item) => !item.parent && item.canEdit).map((item) => item.id)
@@ -155,10 +159,10 @@ export default function IngredientsSettingsContent() {
       void refresh();
       if (!payload.finished) return;
       void queryClient.invalidateQueries({ queryKey: trpc.ingredients.reviewRound.queryKey() });
+      setReportJobId(payload.jobId);
       // What AI suggests opens for whoever asked; everyone else sees the count in the header.
       if (payload.jobId !== startedJobId) return;
       setStartedJobId(null);
-      setReportJobId(payload.jobId);
       setSuggestionsOpen(true);
     },
   });
@@ -173,7 +177,16 @@ export default function IngredientsSettingsContent() {
         jobId: started.jobId,
         done: 0,
         total: started.total,
-        counts: { merge: 0, parent: 0, distinct: 0, unsure: 0, skipped: 0, failed: 0 },
+        counts: {
+          merge: 0,
+          parent: 0,
+          distinct: 0,
+          unsure: 0,
+          rename: 0,
+          plain: 0,
+          skipped: 0,
+          failed: 0,
+        },
         pending: started.pending,
         finished: false,
       });
@@ -191,9 +204,9 @@ export default function IngredientsSettingsContent() {
     }
   };
 
-  // The server picks the foods for the scope, however many: the dialog closes once the round is on.
-  const askAIAboutFlagged = async (scope: ReviewScope) => {
-    if (await startAndWatch({ mode: "review", scope })) setAskOpen(false);
+  // The server picks the foods for the parts, however many: the dialog closes once the round is on.
+  const fixCatalogue = async (parts: FixPart[]) => {
+    if (await startAndWatch({ mode: "fix", parts })) setFixOpen(false);
   };
 
   return (
@@ -203,7 +216,7 @@ export default function IngredientsSettingsContent() {
         <SettingsCard
           actions={
             <>
-              {suggestions.length > 0 || reportJobId ? (
+              {suggestions.length > 0 || hasUnsuggested ? (
                 <Button
                   data-testid="ingredients-suggestions-open"
                   size="sm"
@@ -242,15 +255,15 @@ export default function IngredientsSettingsContent() {
                 </AIButton>
               ) : null}
               <DrawIconsControl round={iconRound} />
-              {isAIEnabled && hasFlagged && !running ? (
+              {isAIEnabled && !running ? (
                 <AIButton
-                  data-testid="ingredients-ask-ai-all"
+                  data-testid="ingredients-fix-catalogue"
                   isDisabled={startRound.isPending}
                   size="sm"
                   variant="tertiary"
-                  onPress={() => setAskOpen(true)}
+                  onPress={() => setFixOpen(true)}
                 >
-                  {t("askAIAll")}
+                  {t("fixCatalogue")}
                 </AIButton>
               ) : null}
             </>
@@ -315,17 +328,17 @@ export default function IngredientsSettingsContent() {
           onChanged={refresh}
           onClose={() => setOpenId(null)}
         />
-        <AskAIRoundModal
-          isOpen={askOpen}
+        <FixCatalogueModal
+          isOpen={fixOpen}
           isStarting={startRound.isPending}
-          onClose={() => setAskOpen(false)}
-          onStart={(scope) => void askAIAboutFlagged(scope)}
+          onClose={() => setFixOpen(false)}
+          onStart={(parts) => void fixCatalogue(parts)}
         />
         <SuggestionsPanel
           jobId={reportJobId}
-          round={running}
           open={suggestionsOpen}
           reviewing={reviewing}
+          round={running}
           onChanged={refresh}
           onClose={() => setSuggestionsOpen(false)}
         />

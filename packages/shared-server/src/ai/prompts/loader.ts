@@ -27,6 +27,7 @@ const PROMPT_FIELDS = {
   "image-generation-brief": "imageGenerationBrief",
   "image-generation-style": "imageGenerationStyle",
   "ingredient-icon-style": "ingredientIconStyle",
+  "ingredient-plain-name": "ingredientPlainName",
 } as const satisfies Record<string, PromptConfigField>;
 
 export type PromptName = keyof typeof PROMPT_FIELDS;
@@ -54,6 +55,7 @@ export function loadDefaultPrompts(): PromptValues {
     imageGenerationBrief: readDefaultPrompt("image-generation-brief"),
     imageGenerationStyle: readDefaultPrompt("image-generation-style"),
     ingredientIconStyle: readDefaultPrompt("ingredient-icon-style"),
+    ingredientPlainName: readDefaultPrompt("ingredient-plain-name"),
   };
 }
 

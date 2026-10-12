@@ -23,11 +23,13 @@ import { useTranslations } from "next-intl";
 import type {
   AIConfig,
   AutomaticEnrichmentConfig,
+  AutomaticIngredientsConfig,
   CuisineStrategy,
   TagStrategy,
 } from "@norish/config/zod/server-config";
 import {
   DEFAULT_AUTOMATIC_ENRICHMENT,
+  DEFAULT_AUTOMATIC_INGREDIENTS,
   DEFAULT_CUISINE_STRATEGY,
   DEFAULT_TAG_STRATEGY,
   ServerConfigKeys,
@@ -73,10 +75,19 @@ const AUTOMATIC_ENRICHMENT_KEYS = [
   "ingredientLinking",
   "imageGeneration",
 ] as const satisfies readonly (keyof AutomaticEnrichmentConfig)[];
+
+/** What may run on a new food: its Plain Name, then its icon. */
+const AUTOMATIC_INGREDIENT_KEYS = [
+  "plainName",
+  "icon",
+] as const satisfies readonly (keyof AutomaticIngredientsConfig)[];
 export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");
   const tActions = useTranslations("common.actions");
-  const { aiConfig, updateAIConfig, testAIEndpoint, fetchConfigSecret } = useAdminSettingsContext();
+  const { aiConfig, imageGenerationConfig, updateAIConfig, testAIEndpoint, fetchConfigSecret } =
+    useAdminSettingsContext();
+  // An icon is drawn by the image provider: without one, it is not offered.
+  const canDrawIcons = (imageGenerationConfig?.provider ?? "disabled") !== "disabled";
   const [enabled, setEnabled] = useState(aiConfig?.enabled ?? false);
   const [provider, setProvider] = useState(aiConfig?.provider ?? "openai");
   const [endpoint, setEndpoint] = useState(aiConfig?.endpoint ?? "");
@@ -95,6 +106,9 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   );
   const [automaticEnrichment, setAutomaticEnrichment] = useState<AutomaticEnrichmentConfig>(
     aiConfig?.automaticEnrichment ?? DEFAULT_AUTOMATIC_ENRICHMENT
+  );
+  const [automaticIngredients, setAutomaticIngredients] = useState<AutomaticIngredientsConfig>(
+    aiConfig?.automaticIngredients ?? DEFAULT_AUTOMATIC_INGREDIENTS
   );
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
@@ -191,6 +205,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       setTagStrategy(aiConfig.tagStrategy ?? DEFAULT_TAG_STRATEGY);
       setCuisineStrategy(aiConfig.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY);
       setAutomaticEnrichment(aiConfig.automaticEnrichment ?? DEFAULT_AUTOMATIC_ENRICHMENT);
+      setAutomaticIngredients(aiConfig.automaticIngredients ?? DEFAULT_AUTOMATIC_INGREDIENTS);
     }
   }, [aiConfig]);
 
@@ -220,6 +235,11 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           automaticEnrichment[key] !==
           (aiConfig.automaticEnrichment?.[key] ?? DEFAULT_AUTOMATIC_ENRICHMENT[key])
       ) ||
+      AUTOMATIC_INGREDIENT_KEYS.some(
+        (key) =>
+          automaticIngredients[key] !==
+          (aiConfig.automaticIngredients?.[key] ?? DEFAULT_AUTOMATIC_INGREDIENTS[key])
+      ) ||
       apiKey.trim() !== ""
     );
   }, [
@@ -236,6 +256,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     tagStrategy,
     cuisineStrategy,
     automaticEnrichment,
+    automaticIngredients,
     apiKey,
   ]);
   useEffect(() => {
@@ -265,6 +286,21 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       ) as AutomaticEnrichmentConfig
     );
   }, []);
+
+  // The same picker for new foods; an icon left on while the image provider is
+  // off stays as stored, and simply is not offered.
+  const offeredIngredientKinds = AUTOMATIC_INGREDIENT_KEYS.filter(
+    (key) => key !== "icon" || canDrawIcons
+  );
+  const selectedIngredientKinds = offeredIngredientKinds.filter((key) => automaticIngredients[key]);
+  const handleIngredientKindsChange = (chosen: string[]) => {
+    const selected = new Set(chosen);
+
+    setAutomaticIngredients((current) => ({
+      plainName: selected.has("plainName"),
+      icon: canDrawIcons ? selected.has("icon") : current.icon,
+    }));
+  };
 
   // Clear model fields when provider changes to avoid invalid model selection
   const handleProviderChange = (newProvider: AIConfig["provider"]) => {
@@ -322,6 +358,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         tagStrategy,
         cuisineStrategy,
         automaticEnrichment,
+        automaticIngredients,
       });
       // Saved keys live on the server, not in the form: a key left in state
       // reads as an unsaved change on every later render.
@@ -566,6 +603,56 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
                     <span>{t(`automaticEnrichmentKinds.${key}`)}</span>
                     <span className="text-muted text-xs">
                       {t(`automaticEnrichmentKinds.${key}Description`)}
+                    </span>
+                  </div>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
+
+      <SettingRow
+        description={t("automaticIngredientsDescription")}
+        title={t("automaticIngredients")}
+      >
+        <Select
+          aria-label={t("automaticIngredients")}
+          className="w-full"
+          data-testid="ai-automatic-ingredients"
+          isDisabled={!enabled}
+          placeholder={t("automaticEnrichmentPlaceholder")}
+          selectionMode="multiple"
+          value={selectedIngredientKinds}
+          variant="secondary"
+          onChange={(selected) => handleIngredientKindsChange(selected.map(String))}
+        >
+          <Label className="sr-only">{t("automaticIngredients")}</Label>
+          <Select.Trigger>
+            <Select.Value className="min-w-0">
+              {({ defaultChildren, isPlaceholder }) =>
+                isPlaceholder ? (
+                  defaultChildren
+                ) : (
+                  <span className="block truncate">
+                    {selectedIngredientKinds
+                      .map((key) => t(`automaticIngredientsKinds.${key}`))
+                      .join(", ")}
+                  </span>
+                )
+              }
+            </Select.Value>
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox selectionMode="multiple">
+              {offeredIngredientKinds.map((key) => (
+                <ListBox.Item key={key} id={key} textValue={t(`automaticIngredientsKinds.${key}`)}>
+                  <div className="flex flex-col">
+                    <span>{t(`automaticIngredientsKinds.${key}`)}</span>
+                    <span className="text-muted text-xs">
+                      {t(`automaticIngredientsKinds.${key}Description`)}
                     </span>
                   </div>
                   <ListBox.ItemIndicator />

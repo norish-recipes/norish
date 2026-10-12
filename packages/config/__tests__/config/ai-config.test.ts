@@ -94,6 +94,19 @@ describe("AIConfigSchema automatic enrichment", () => {
   });
 });
 
+describe("AIConfigSchema automatic ingredients", () => {
+  it("leaves new foods alone until an administrator opts in", () => {
+    expect(parse({}).automaticIngredients).toEqual({ plainName: false, icon: false });
+  });
+
+  it("keeps what was chosen, filling in what was not", () => {
+    expect(parse({ automaticIngredients: { plainName: true } }).automaticIngredients).toEqual({
+      plainName: true,
+      icon: false,
+    });
+  });
+});
+
 describe("AIConfigSchema legacy migration", () => {
   it("migrates a disabled tagging mode to automation off with predefined retained", () => {
     const config = parse({ autoTaggingMode: "disabled" });

@@ -19,6 +19,7 @@ import {
   seedStoreFiling,
   seedSuggestion,
   setParent,
+  settleNamesExcept,
 } from "./ingredient-catalogue-support";
 import { readGroceryNames, readPantryNames, seedRecipeWithIngredients } from "./pantry-support";
 
@@ -224,9 +225,9 @@ test("a food Norish was not sure about is marked on the Ingredients page", async
   await expect(ingredientRow("uitjes").getByTestId("ingredient-flag-reason")).toBeVisible();
   await expect(ingredientRow("onion")).toHaveCount(0);
 
-  // The page offers to ask AI about every flagged food at once; a food's own
-  // panel says why it is flagged and offers to ask about it alone.
-  await expect(page.getByTestId("ingredients-ask-ai-all")).toBeVisible();
+  // The page offers to fix the catalogue at once; a food's own panel says why
+  // it is flagged and offers to ask about it alone.
+  await expect(page.getByTestId("ingredients-fix-catalogue")).toBeVisible();
   await ingredientRow("uitjes").getByTestId("ingredient-toggle").click();
   const opened = ingredientPanel("uitjes");
 
@@ -281,32 +282,39 @@ test("asking AI about the flagged foods without a suggestion runs as one round o
   // An earlier question left a suggestion waiting on "uitjes", so it is the one flagged food
   // with an answer already: a round over the rest leaves it be, and it stays for the merge below.
   await seedSuggestion(ids.uitjes!, "merge", ids.onion!);
+  // Every name settled, so the round asks about the flags alone, the model's answers in turn.
+  await settleNamesExcept([]);
   await page.goto("/settings?tab=ingredients");
   await page.getByTestId("ingredients-search").fill("knoflook");
   await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-flagged")).toBeVisible();
   await expect(ingredientRow("uitjes")).toHaveCount(0);
 
   // The button asks first, about the whole catalogue's flagged foods rather than the screen's,
-  // and says what the round costs: estimated from the prompt, since no round was measured yet.
-  await page.getByTestId("ingredients-ask-ai-all").click();
-  const dialog = page.getByTestId("ingredients-ask-ai-dialog");
-  const unsuggested = dialog.getByRole("radio", { name: "Only those without a suggestion" });
+  // and says about what the round costs.
+  await page.getByTestId("ingredients-fix-catalogue").click();
+  const dialog = page.getByTestId("ingredients-fix-catalogue-dialog");
 
-  await expect(unsuggested).toBeChecked();
-  await expect(dialog).toContainText(/1 ingredient · about [\d.,]+K? tokens/);
-  await expect(dialog).toContainText(/2 ingredients · about [\d.,]+K? tokens/);
-  await expect(dialog).toContainText("Replaces the suggestions already waiting.");
+  await expect(dialog.getByRole("checkbox", { name: "Check flagged ingredients" })).toBeChecked();
+  await expect(dialog.getByRole("checkbox", { name: "Recheck suggestions" })).not.toBeChecked();
+  await expect(dialog.getByRole("checkbox", { name: "Clean names" })).toBeDisabled();
+  // "knoflookteentjes" without a suggestion, "uitjes" with one.
+  await expect(dialog.getByTestId("ingredients-fix-catalogue-scope-unsuggested")).toContainText(
+    /1 ingredient · about [\d.,]+K? tokens/
+  );
+  await expect(dialog.getByTestId("ingredients-fix-catalogue-scope-suggested")).toContainText(
+    /1 ingredient · about [\d.,]+K? tokens/
+  );
+  await expect(dialog).toContainText("Rechecks flagged ingredients.");
   // The tokens split by the model each request goes to: here the one language model.
-  await expect(dialog.getByTestId("ingredients-ask-ai-models")).toContainText(
+  await expect(dialog.getByTestId("ingredients-fix-catalogue-models")).toContainText(
     "generic-openai · test-model"
   );
-  await expect(dialog.getByTestId("ingredients-ask-ai-tokens")).toContainText(
-    "Estimated from the prompt"
-  );
+  // No round was measured yet, so nothing says the numbers come from one.
+  await expect(dialog.getByTestId("ingredients-fix-catalogue-tokens")).toHaveCount(0);
   // One round over them; the page follows it over the socket. The model's answers are held
   // until the row has shown its turn: a round of one is otherwise over before anyone looks.
   ai.control.hold();
-  await dialog.getByTestId("ingredients-ask-ai-start").click();
+  await dialog.getByTestId("ingredients-fix-catalogue-start").click();
   await expect(dialog).toBeHidden();
   await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-reviewing")).toBeVisible();
   // The header says how far the round has come, where the button that started it was.
@@ -353,7 +361,7 @@ test("asking AI about the flagged foods without a suggestion runs as one round o
   await panel.getByRole("button", { name: "Close panel" }).click();
   await expect(panel).toBeHidden();
   await expect(ingredientRow("knoflookteentjes").getByTestId("ingredient-flagged")).toHaveCount(0);
-  await expect(page.getByTestId("ingredients-ask-ai-all")).toHaveCount(0);
+  await expect(page.getByTestId("ingredients-fix-catalogue")).toBeVisible();
 });
 
 /** The panel a row opens: a dialog named after the food. */
@@ -420,4 +428,66 @@ test("a food nothing uses can be deleted, and one a grocery uses cannot", async 
     page.getByText("Recipes, groceries or the pantry still use this ingredient")
   ).toBeVisible();
   await expect(ingredientRow("red onion")).toHaveCount(1);
+});
+
+test("cleaning names with AI proposes each food's plain name, which confirmed renames it", async ({
+  ai,
+}) => {
+  const tonijn = await seedCatalogue([
+    {
+      name: "GR TONIJN UIT BLIK",
+      aliases: [{ text: "GR TONIJN UIT BLIK", locale: null }],
+      flagged: false,
+    },
+  ]);
+
+  await settleNamesExcept([tonijn["GR TONIJN UIT BLIK"]!]);
+  ai.control.enqueue({
+    kind: "success",
+    content: JSON.stringify({ plainName: "tonijn uit blik" }),
+  });
+  await page.goto("/settings?tab=ingredients");
+  await page.getByTestId("ingredients-search").fill("tonijn");
+  await expect(ingredientRow("GR TONIJN UIT BLIK")).toBeVisible();
+
+  // Fix catalogue asks first, saying how many names and about what cleaning them costs.
+  await page.getByTestId("ingredients-fix-catalogue").click();
+  const dialog = page.getByTestId("ingredients-fix-catalogue-dialog");
+  const names = dialog.getByTestId("ingredients-fix-catalogue-scope-name");
+
+  const flagged = dialog.getByRole("checkbox", { name: "Check flagged ingredients" });
+
+  await expect(names).toContainText(/1 ingredient · about [\d.,]+K? tokens/);
+  await expect(names.getByRole("checkbox", { name: "Clean names" })).toBeChecked();
+  // Only the names, so the model's one answer goes to the one question; whatever earlier tests
+  // left flagged waits. A HeroUI checkbox toggles from its label, not its hidden input.
+  if (await flagged.isChecked()) {
+    await dialog.getByText("Check flagged ingredients", { exact: true }).click();
+  }
+  await expect(flagged).not.toBeChecked();
+  await expect(dialog.getByTestId("ingredients-fix-catalogue-models")).toContainText(
+    "generic-openai · test-model"
+  );
+  ai.control.hold();
+  await dialog.getByTestId("ingredients-fix-catalogue-start").click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByTestId("ingredients-round-progress")).toContainText("Asking AI · 0 of 1");
+  ai.control.release();
+
+  // Nothing is renamed until a person confirms: the round ends on its suggestion.
+  const panel = page.getByRole("dialog", { name: "Suggestions" });
+
+  await expect(panel).toBeVisible({ timeout: 30_000 });
+  const suggestion = panel.getByTestId("ingredient-suggestion");
+
+  await expect(suggestion).toHaveAttribute("data-kind", "rename");
+  await expect(suggestion).toContainText("Rename to tonijn uit blik");
+  await expect(suggestion).toContainText("AI read it as “tonijn uit blik”.");
+  await expect(ingredientRow("GR TONIJN UIT BLIK")).toBeVisible();
+
+  await suggestion.getByTestId("ingredient-suggestion-confirm").click();
+  await expect(panel.getByText("Nothing is waiting on you.")).toBeVisible();
+  await panel.getByRole("button", { name: "Close panel" }).click();
+  await expect(ingredientRow("tonijn uit blik")).toBeVisible();
+  await expect(readIngredientOf("GR TONIJN UIT BLIK")).resolves.toBe("tonijn uit blik");
 });

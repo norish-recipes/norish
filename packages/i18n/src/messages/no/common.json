@@ -292,5 +292,10 @@
     "title": "Kunne ikke starte",
     "description": "Norish klarte ikke å lese det sikre lageret og vet derfor ikke hvilken server appen hører til. Ingenting er endret. Prøv igjen, eller start appen på nytt.",
     "detailsLabel": "Tekniske detaljer"
+  },
+  "aiKeyRejected": {
+    "title": "En AI-nøkkel har sluttet å virke",
+    "description": "Leverandøren har avvist API-nøkkelen for {blocks} siden {since}. Lagre en ny nøkkel for å få disse AI-funksjonene til å virke igjen.",
+    "openSettings": "Åpne innstillinger"
   }
 }

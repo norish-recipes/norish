@@ -43,6 +43,8 @@ const { estimateStructuredInputTokens, generateStructured } =
 const { AIProviderError } = await import("@norish/shared-server/ai/runtime/errors");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
+const { forgetKeyRejection, listKeyRejections } =
+  await import("@norish/shared-server/ai/runtime/key-rejections");
 
 interface CapturedRequest {
   body: Record<string, unknown>;
@@ -301,6 +303,41 @@ describe("the job's model ledger", () => {
     await runWithModelUseLedger(ledger, () => generate().catch(() => undefined));
 
     expect(ledger.uses).toEqual([{ ...use, outcome: "failed" }]);
+  });
+});
+
+describe("a key the provider refuses", () => {
+  const refused = () => ({
+    status: 401,
+    body: { error: { message: "Incorrect API key provided" } },
+  });
+
+  beforeEach(() => forgetKeyRejection("ai_config"));
+
+  it("is remembered from the first refusal, which a later refusal does not move", async () => {
+    replies = [refused];
+    await generate().catch(() => undefined);
+    const [first] = listKeyRejections();
+
+    await generate().catch(() => undefined);
+
+    expect(first).toMatchObject({ block: "ai_config" });
+    expect(listKeyRejections()).toEqual([first]);
+  });
+
+  it("is forgotten once a request with it answers", async () => {
+    replies = [refused, () => tagged()];
+    await generate().catch(() => undefined);
+    await generate();
+
+    expect(listKeyRejections()).toEqual([]);
+  });
+
+  it("is not what any other failure is taken for", async () => {
+    replies = [noEndpoints];
+    await generate().catch(() => undefined);
+
+    expect(listKeyRejections()).toEqual([]);
   });
 });
 

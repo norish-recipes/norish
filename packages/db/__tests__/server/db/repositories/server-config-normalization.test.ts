@@ -114,6 +114,7 @@ describe("server config normalization", () => {
         ingredientLinking: false,
         imageGeneration: false,
       },
+      automaticIngredients: { plainName: false, icon: false },
     });
 
     const persisted = await db.query.serverConfig.findFirst({
@@ -140,6 +141,7 @@ describe("server config normalization", () => {
         ingredientLinking: false,
         imageGeneration: false,
       },
+      automaticIngredients: { plainName: false, icon: false },
     });
     expect(JSON.parse(decrypt(persisted!.valueEnc!))).toEqual(result);
   });

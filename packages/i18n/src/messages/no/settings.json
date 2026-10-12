@@ -380,6 +380,7 @@
       "unknown-food": "Ingen kjent ingrediens deler et ord med dette navnet, så AI ble ikke spurt.",
       "ai-unsure": "AI ble spurt om dette er en kjent ingrediens og var ikke sikker.",
       "ai-unavailable": "AI svarte ikke i tide da dette navnet ble lagt til.",
+      "ai-key-rejected": "AI-leverandøren avviste API-nøkkelen, så AI kunne ikke sjekke dette navnet.",
       "food-gone": "AI knyttet det til en ingrediens som ble slått sammen før navnet rakk å bli med.",
       "upgrade": "Fant ingen kjent ingrediens som passet.",
       "seed-ambiguous": "Katalogen kjenner flere ingredienser dette kan være."
@@ -393,19 +394,23 @@
     "markDistinct": "Marker som egen",
     "summary": "{spellings, plural, one {# oversettelse} other {# oversettelser}}{kinds, plural, =0 {} one {, # type} other {, # typer}}{parent, select, none {} other {, overordnet: {parent}}}",
     "askAI": "Spør AI",
-    "askAIAll": "Spør AI om merkede ingredienser",
+    "fixCatalogue": "Rett opp katalogen",
     "askAIRound": {
-      "intro": "AI leser hvert navn og sammenligner det med matvarene Norish kjenner. Ingenting endres før du bekrefter et forslag.",
-      "scopeLabel": "Hvilke ingredienser",
+      "intro": "AI finner ut hvor merkede ingredienser hører hjemme, og retter opp uensartede navn. Ingenting endres før du bekrefter et forslag.",
+      "scopeLabel": "Hva som skal rettes",
       "scopes": {
-        "unsuggested": "Bare de uten forslag",
-        "flagged": "Alle merkede ingredienser"
+        "unsuggested": "Sjekk merkede ingredienser",
+        "suggested": "Sjekk forslag på nytt",
+        "name": "Rydd opp i navn"
+      },
+      "hints": {
+        "unsuggested": "Ser etter duplikater, underingredienser eller unike.",
+        "suggested": "Sjekker merkede ingredienser på nytt.",
+        "name": "Renser ingrediensnavn til bare ingrediensen. Merkede ingredienser er med hvis avkrysningsboksen over er huket av."
       },
       "scopeSize": "{count, plural, =0 {Ingen ingredienser} one {# ingrediens · omtrent {tokens} tokens} other {# ingredienser · omtrent {tokens} tokens}}",
-      "replaces": "Erstatter forslagene som allerede venter.",
       "modelTokens": "omtrent {tokens} tokens",
-      "basisMeasured": "Basert på hva forrige runde brukte.",
-      "basisPrompt": "Anslått ut fra prompten, så det faktiske antallet er trolig høyere."
+      "basisMeasured": "Basert på hva forrige runde brukte."
     },
     "roundProgress": "Spør AI · {done, number} av {total, number}",
     "roundSection": {
@@ -429,7 +434,8 @@
       "readAs": "AI leste det som «{name}».",
       "compared": "Sammenlignet med: {names}.",
       "comparedNothing": "Det var ingen kjent matvare å sammenligne med.",
-      "fromWords": "Based on name."
+      "fromWords": "Based on name.",
+      "noFood": "AI fant ingen matvare i dette navnet."
     },
     "addAlias": "Legg til en oversettelse",
     "removeAlias": "Fjern {alias}",
@@ -551,6 +557,17 @@
       "empty": "Skriv inn et navn",
       "unknown": "Noe gikk galt. Prøv igjen."
     },
+    "uses": {
+      "show": "Vis hvor",
+      "title": "Hvor {name} brukes",
+      "recipes": "Oppskrifter",
+      "groceries": "Handleliste",
+      "done": "kjøpt",
+      "repeats": "gjentas",
+      "pantry": "I spiskammeret",
+      "elsewhere": "{count, plural, one {# bruk til} other {# bruk til}} i oppskrifter eller lister du ikke kan åpne",
+      "none": "Ingenting bruker den lenger"
+    },
     "keepAlias": "Behold {alias}",
     "reportOutcomes": {
       "parent": "Under en forelder",
@@ -572,7 +589,8 @@
       "merge": "Slå sammen {name} med {into}",
       "parent": "Plasser {name} under {of}",
       "distinct": "Behold {name} som egen matvare",
-      "filedFromName": "{name} filed under {of}"
+      "filedFromName": "{name} filed under {of}",
+      "rename": "Endre navn på {name} til {to}"
     },
     "suggestionsTitle": "AI-forslag",
     "suggestionsEmpty": "Ingenting venter på deg.",
@@ -588,12 +606,14 @@
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
-      "distinct": "Food of its own"
+      "distinct": "Food of its own",
+      "rename": "Endre navn til {to}"
     },
     "skippedReasons": {
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
-      "notFound": "No longer exists"
+      "notFound": "No longer exists",
+      "settled": "Navnet er allerede fastsatt, eller et forslag venter"
     },
     "icon": {
       "change": "Endre ikonet",
@@ -963,6 +983,14 @@
         "imageGeneration": "Bildegenerering",
         "imageGenerationDescription": "Tegn et bilde av retten for nye oppskrifter som ikke har noe bilde"
       },
+      "automaticIngredients": "Automatisk for nye ingredienser",
+      "automaticIngredientsDescription": "Hva som skjer når nye ingredienser legges til i katalogen.",
+      "automaticIngredientsKinds": {
+        "plainName": "Rydd opp i navnet",
+        "plainNameDescription": "Fjern det som ikke er matvaren, som mengder og pakningskoder",
+        "icon": "Tegn et ikon",
+        "iconDescription": "Bare for en matvare uten ikon, heller ikke forelderens"
+      },
       "tagStrategy": "Taggstrategi",
       "tagStrategyDescription": "Hvilke tagger automatisk tagging kan bruke, enten den kjører automatisk eller manuelt",
       "tagStrategies": {
@@ -1115,7 +1143,10 @@
       "imageGenerationStylePlaceholder": "Prompt for bildestilen...",
       "ingredientIconStyle": "Prompt for stil på ingrediensikoner",
       "ingredientIconStyleDescription": "Sendes til bildemodellen når en ingrediens får tegnet et ikon, med matvarens navn og hva den er en slags av lagt til etterpå. Bestemmer utseendet alle tegnede ikoner deler.",
-      "ingredientIconStylePlaceholder": "Prompt for stilen på ingrediensikoner..."
+      "ingredientIconStylePlaceholder": "Prompt for stilen på ingrediensikoner...",
+      "ingredientPlainName": "Prompt for opprydding i ingrediensnavn",
+      "ingredientPlainNameDescription": "Sendes til språkmodellen når AI rydder opp i navnet på en ingrediens, med navnet og de andre skrivemåtene lagt til etter. Sier hva som skal fjernes fra et navn og hva som skal bli.",
+      "ingredientPlainNamePlaceholder": "Prompt for opprydding i ingrediensnavn..."
     },
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {
@@ -1168,7 +1199,8 @@
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
         "asking-ai": "Ask AI about the food",
-        "drawing-icon": "Tegn matvarens ikon"
+        "drawing-icon": "Tegn matvarens ikon",
+        "naming": "Rydd opp i matvarens navn"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1185,7 +1217,8 @@
         "image-generation": "Bildegenerering",
         "store-lookup": "Butikkoppslag",
         "ingredient-review": "Spør AI om ingredienser",
-        "ingredient-icons": "Tegn ingrediensikoner"
+        "ingredient-icons": "Tegn ingrediensikoner",
+        "new-ingredients": "Nye ingredienser"
       },
       "summary": {
         "failed": "{count} failed"

@@ -36,6 +36,8 @@ export const FLAG_REASONS = [
   "ai-unsure",
   /** AI did not answer in time, or failed. */
   "ai-unavailable",
+  /** The AI provider rejected the configured API key. */
+  "ai-key-rejected",
   /** AI named a food that was merged away before the name could join it. */
   "food-gone",
   /** Minted by the upgrade to the catalogue, which asks no AI. */
@@ -52,11 +54,12 @@ export function isFlagReason(value: unknown): value is FlagReason {
 
 /**
  * What AI may propose for an Ingredient (ADR-0037): that it is another food
- * (`merge`), a kind of another food (`parent`), or a food of its own
- * (`distinct`). AI never makes the edit itself; a person confirms or
- * dismisses the suggestion.
+ * (`merge`), a kind of another food (`parent`), a food of its own
+ * (`distinct`), or that its name is better as its Plain Name (`rename`). AI
+ * never makes the edit itself; a person confirms or dismisses the
+ * suggestion.
  */
-export const SUGGESTION_KINDS = ["merge", "parent", "distinct"] as const;
+export const SUGGESTION_KINDS = ["merge", "parent", "distinct", "rename"] as const;
 
 export type SuggestionKind = (typeof SUGGESTION_KINDS)[number];
 
@@ -94,19 +97,28 @@ export interface ReviewTrace {
 
 /**
  * What a round of Ask AI came to for one food, as the round's report reads
- * it back: the suggestion and the food it names with what was asked
- * (`ReviewTrace`); or why the food was passed over; or what broke. The
- * worker records one per step, and the Ingredients page lists the foods
- * that got no suggestion beside the ones waiting to be confirmed.
+ * it back: the question the food was asked (`mode`), and the suggestion and
+ * the food it names with what was asked (`ReviewTrace`); or why the food was
+ * passed over; or what broke. The worker records one per step, and the
+ * Ingredients page lists the foods that got no suggestion beside the ones
+ * waiting to be confirmed.
  */
-export type ReviewReportEntry = { ingredientId: string; name?: string } & (
+export type ReviewReportEntry = { ingredientId: string; name?: string; mode?: ReviewMode } & (
   | ({ outcome: "merge"; into: string } & ReviewTrace)
   | ({ outcome: "parent"; of: string } & ReviewTrace)
   | ({ outcome: "distinct" } & ReviewTrace)
   | ({ outcome: "unsure"; reason: string } & ReviewTrace)
-  | { outcome: "skipped"; reason: "not-flagged" | "forbidden" | "not-found" }
+  | PlainNameEntry
+  | { outcome: "skipped"; reason: "not-flagged" | "forbidden" | "not-found" | "settled" }
   | { outcome: "failed"; error: string }
 );
+
+/**
+ * What a round of Clean names came to for one food, beyond a merge: a
+ * rename to its Plain Name waiting on a person, or its name already plain,
+ * which settles it.
+ */
+export type PlainNameEntry = { outcome: "rename"; to: string } | { outcome: "plain" };
 
 /**
  * A round of Ask AI read back: what it came to for each food, in the order it
@@ -119,14 +131,18 @@ export interface ReviewReport {
   waiting: Array<{ ingredientId: string; name: string }>;
 }
 
-/**
- * Which flagged foods a round of Ask AI asks about: every one the asker may
- * edit, or only those no suggestion waits on. Asking about a food again
- * replaces the suggestion it had.
- */
-export const REVIEW_SCOPES = ["flagged", "unsuggested"] as const;
+/** What a round of Ask AI asks of each food: what it is, what it is a kind of, or its Plain Name. */
+export type ReviewMode = "review" | "parent" | "name";
 
-export type ReviewScope = (typeof REVIEW_SCOPES)[number];
+/**
+ * What a round of Fix catalogue asks about, any of them together, each a set
+ * of the foods the asker may edit that no other part holds: the flagged foods
+ * no suggestion waits on, the flagged foods asked again about, which replaces
+ * the suggestion they had, and the unflagged foods whose names are not settled.
+ */
+export const FIX_PARTS = ["unsuggested", "suggested", "name"] as const;
+
+export type FixPart = (typeof FIX_PARTS)[number];
 
 /** About how many tokens one food's question takes on one model. */
 export interface ModelTokenEstimate {
@@ -146,12 +162,13 @@ export type ReviewTokenEstimate =
   | { basis: "prompt"; models: ModelTokenEstimate[] };
 
 /**
- * What a round of Ask AI would ask about, for the asker: how many foods each
- * scope holds, and the tokens a food takes.
+ * What a round of Fix catalogue would ask about the flagged foods, for the
+ * asker: how many no suggestion waits on, how many have one, and the tokens a
+ * food takes.
  */
 export interface ReviewScopeSummary {
-  flagged: number;
   unsuggested: number;
+  suggested: number;
   tokens: ReviewTokenEstimate;
 }
 
@@ -167,3 +184,12 @@ export type IconScope = (typeof ICON_SCOPES)[number];
 
 /** How many icons each scope of a Draw icons round would draw, for the asker. */
 export type IconScopeSummary = Record<IconScope, number>;
+
+/**
+ * What a round of Clean names would ask about, for the asker: how many
+ * unflagged foods whose names are not settled, and the tokens a food takes.
+ */
+export interface NameScopeSummary {
+  foods: number;
+  tokens: ReviewTokenEstimate;
+}

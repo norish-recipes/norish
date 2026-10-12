@@ -1,119 +1,59 @@
 ---
 sidebar_position: 5
 title: Recipe enrichment
-description: How Norish adds tags, allergy indications, meal categories, nutrition, provenance, step ingredients, and a picture of the dish to your recipes with AI, and how to run each one yourself.
+description: Auto tagging, allergy indicators, Nutrition estimates, image generation.
 ---
 
 # Recipe enrichment
 
-When your Norish instance has AI enabled, it can fill in seven things about a
-recipe:
+When your the instance has AI enabled, it can automatically do the following actions:
 
-- **Tags**: descriptive keywords such as _quick_, _one-pot_, _vegetarian_
-- **Allergy indications**: tags for the allergies your household has configured
+- **Tagging**:
+- **Allergy indications**: These are tags that match allergies you or you household members have set
 - **Meal categories**: Breakfast, Lunch, Dinner, Snack
 - **Nutrition**: calories, fat, carbs, and protein per serving
 - **[Provenance](./provenance.md)**: where the recipe comes from: its country,
   region, cuisines, and a short written explanation
 - **[Step ingredients](./step-ingredients.md)**: which ingredient lines each
-  step uses, for the steps you haven't linked yourself
-- **Image generation**: an AI-generated photo for recipes that have no
-  image at all, so an imported recipe still fills its page. It needs its own
-  [image provider](../configuration/ai-provider.md#image-generation), because
-  most AI providers cannot draw
+  step uses.
+- **Image generation**: an generated photo for recipes that have no
+  image at all. and [image provider](../configuration/ai-provider.md#image-generation) is needed.
 
-This is called _enrichment_, and it always happens **after** your recipe is
-saved. Importing or creating a recipe never waits for it, and never fails
-because of it. If AI is unavailable or an enrichment doesn't work out, you still
-have your recipe, and every enrichment can be run manually later.
+Enrichtments always run after a recipe has been imported.
 
-Your administrator may add a
-[Decision Model](../configuration/ai-provider.md#decision-model) that answers
-some of these questions faster; nothing on your recipe changes depending on
-which model decided. When one is configured some enrichments are checked
-against the decision model before writing.
+### Supplied data
 
-## Automatic enrichment
+Information you entered yourself, or that the source stated explicitly, outranks automatic enrichment.
+The following rules apply:
 
-Your administrator chooses which of the seven run automatically for newly
-created recipes. Whatever they choose applies the same way to every recipe you create,
-whether you typed it in yourself or imported it from a link, a photo, or pasted
-text.
+- **Catorization**: Any meal detecxted category stops automatic categorization.
+- **Nutrition estimation** When the source has a complete list of macros no estimation is run.
+  On an incomplete list the estimation is run regardless. When the source matches nothing and Norish
+  has more tan 80% of the database itself the macros are calculated without AI. With less than 80%,
+  the facts Norish does have are sent to the provider to estimate the rest.
+- **Recipe provenance** If the source states anything about this the run is skipped.
+- **Ingredient linking** Ingredient linking is done per step line. Any lines you did yourself are ignored.
+  [Step ingredients](../recipes/step-ingredients.md#letting-ai-fill-the-gaps).
+- **Image generation** For most sources this will be skipped, if anything is present that will be used.
+- **Tags and allergy indications** Are different: for these they append but
+  never remove what is present.
 
-Automatic enrichment runs once, when the recipe is new. Editing a recipe later
-never re-runs it, so an edit can't unexpectedly replace values you just set.
-An administrator can catch older recipes up with **Enrich all recipes** in the
-admin settings, which runs the enabled kinds across the whole library under
-these same rules — or, by turning on **Overwrite existing data** in its
-confirmation, deliberately redo them and replace what is stored, including
-values you entered yourself.
+## Individual enrichments
 
-### Your own data comes first
-
-Anything you entered or that the source you imported from stated explicitly
-takes precedence:
-
-- If the recipe already has a meal category, automatic categorization is skipped.
-- If it has **complete** nutrition — calories, fat, carbs, and protein all
-  present (zeros count) — automatic nutrition estimation is skipped. A recipe
-  with only some of the four, say just calories from an imported page, is
-  estimated and the whole group replaced, so the values always agree with each
-  other instead of mixing a supplied figure with an estimate.
-- A recipe with **no** nutrition of its own has one
-  [worked out from its ingredients](./nutrition.md). AI then estimates only the
-  lines that couldn't be counted, given the numbers of the rest, and keeps that
-  estimate apart from the recipe. If every line counts, nothing is asked.
-- Provenance you supplied — a country, a cuisine, a note — is never replaced:
-  automatic inference **fills in only the missing parts**, written to agree
-  with what you already set, so a recipe imported with just a cuisine still
-  gets its country and its explanation. Once the group is complete — country,
-  note, and at least one cuisine — the recipe is skipped entirely.
-- Tags and allergy indications are only ever **added**. Enrichment never removes
-  a tag you added.
-- Step ingredients are filled **per step**: a step you linked yourself is never
-  touched, whoever asks see [Step ingredients](./step-ingredients.md).
-- A recipe holding **any image at all** is never touched by automatic image
-  generation. Only a recipe with no picture whatsoever gets one drawn.
-
-## Running one yourself
-
-Open a recipe and use the actions menu (**⋯**). While AI is enabled and you can
-edit the recipe, you'll find one action per kind:
+Each of the enrichments can also be run manually under the quick actions menu of a recipe (**⋯**).
 
 - **Auto-tag**
-- **Detect allergies** — shown when your household has allergies configured
+- **Detect allergies** shown when your household has allergies configured
 - **Auto-categorize**
 - **Estimate nutrition**
 - **Work out provenance**
 - **Link ingredients to steps**
-- **Generate Picture** — needs an
+- **Generate Picture** needs an
   [image provider](../configuration/ai-provider.md#image-generation) configured
 
-These stay available even when your administrator has turned the matching
-automatic switch off, the switch controls background work, not what you can ask
-for. Each action is separate on purpose: asking for categories doesn't also
-spend an AI request on tags.
+These options remain available even when automatic enrichments is off. All that needs to be configured
+is an AI provider.
 
 :::warning
-**Generate Picture replaces the recipe's primary image**, even when that image
-is a photograph you uploaded, and the replaced image is **not recoverable** —
-Norish has no trash. Run it deliberately; a second run replaces the previous
-generated picture rather than adding to the gallery. Your other gallery images
-keep their place.
-:::
-
-## States
-
-Each kind reports its own state, independently of the others:
-
-| State          | Meaning                                                 |
-| -------------- | ------------------------------------------------------- |
-| **Queued**     | Accepted and waiting for a worker                       |
-| **Processing** | A worker is running it now                              |
-| **Succeeded**  | Finished; the recipe on screen already shows the result |
-| **Failed**     | Gave up after retrying                                  |
-
-:::note
-Enrichment history follows your instance's job retention settings. Once a
-finished or failed job ages out, that kind simply shows no state again.
+**Generate Picture replaces the recipe's primary image**
 :::

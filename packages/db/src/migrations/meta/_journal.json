@@ -512,6 +512,13 @@
       "when": 1791469115788,
       "tag": "0072_cookbook_image",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1791620600687,
+      "tag": "0073_ingredient_plain_name",
+      "breakpoints": true
     }
   ]
 }

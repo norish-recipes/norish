@@ -199,7 +199,7 @@ FROM base AS runtime
 LABEL org.opencontainers.image.source="https://github.com/norish-recipes/norish"
 
 # Install runtime-only system deps (base already ran apk upgrade)
-RUN apk add --no-cache libpq ffmpeg vips && \
+RUN apk add --no-cache libpq ffmpeg vips su-exec && \
   # Clean up npm (not needed, we use node directly)
   rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack && \
   rm -rf /var/cache/apk/* /tmp/* /root/.npm
@@ -261,7 +261,12 @@ RUN mkdir -p /app/uploads /app/bin && \
 # Copy pre-downloaded yt-dlp binary from dedicated build stage
 COPY --from=ytdlp --chown=${UID}:${GID} /ytdlp/yt-dlp /app/bin/yt-dlp
 
-USER ${UID}
+# The container starts as root only so the entrypoint can hand the uploads
+# folder to this user; the server itself runs as it.
+ENV NORISH_UID=${UID} \
+  NORISH_GID=${GID}
+
+COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/norish-entrypoint
 
 EXPOSE 3000
 
@@ -269,6 +274,8 @@ VOLUME ["/app/uploads"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/v1/health', r => process.exit(r.statusCode===200?0:1))" || exit 1
+
+ENTRYPOINT ["norish-entrypoint"]
 
 # Run directly with node; the custom server starts the embedded parser API when needed
 CMD ["node", "/app/dist-server/index.mjs"]

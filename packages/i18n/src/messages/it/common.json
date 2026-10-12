@@ -292,5 +292,10 @@
     "title": "Avvio non riuscito",
     "description": "Norish non è riuscita a leggere l'archivio sicuro e non sa a quale server appartiene questa app. Non è stato modificato nulla. Riprova o riavvia l'app.",
     "detailsLabel": "Dettagli tecnici"
+  },
+  "aiKeyRejected": {
+    "title": "Una chiave IA ha smesso di funzionare",
+    "description": "Il fornitore rifiuta la chiave API per {blocks} dal {since}. Salva una nuova chiave per far funzionare di nuovo queste funzioni IA.",
+    "openSettings": "Apri impostazioni"
   }
 }

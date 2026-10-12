@@ -9,13 +9,19 @@
  * per food.
  */
 import type { IconScope } from "@norish/shared/contracts/ingredient-catalogue";
-import { findIconLineage, listIconCatalogue } from "@norish/db/repositories/ingredient-icons";
+import { withTransaction } from "@norish/db/drizzle";
+import {
+  findIconLineage,
+  listIconCatalogue,
+  setIngredientIcon,
+} from "@norish/db/repositories/ingredient-icons";
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 
 import type { CatalogueActor } from "./catalogue";
 import type { IconSet } from "./icons";
 import { CatalogueEditError, mayEditIngredientRow, setDrawnIcon } from "./catalogue";
-import { generateIngredientIcon } from "./icon-drafts";
+import { ingredientChanges } from "./changes";
+import { drawDraftIcon, generateIngredientIcon } from "./icon-drafts";
 import { chooseIcon, shippedIconSet } from "./icons";
 
 /** A food a round draws, by id and by name, so the job monitor reads "uien" rather than an id. */
@@ -81,4 +87,31 @@ export async function drawRoundIcon(
     }
     throw error;
   }
+}
+
+/**
+ * Draw a food just minted by someone's action an icon of its own, where it
+ * would show none at all: no icon of its own, none shipped, none to borrow
+ * from a Parent Ingredient. A red onion under onion keeps showing the onion.
+ * Set with no review, as a Draw icons round sets one, unless a person gave
+ * it one meanwhile. Whether one was set. Throws whatever drawing throws.
+ */
+export async function drawNewIngredientIcon(
+  ingredientId: string,
+  set: IconSet = shippedIconSet()
+): Promise<boolean> {
+  const lineage = await findIconLineage([ingredientId]);
+
+  if (!lineage.has(ingredientId) || chooseIcon(ingredientId, lineage, set)) return false;
+
+  const drawn = await drawDraftIcon(ingredientId);
+
+  const own = await withTransaction((tx) =>
+    setIngredientIcon(tx, ingredientId, drawn.file, { unlessSet: true })
+  );
+
+  if (!own) return false;
+  await ingredientChanges().changed([ingredientId]);
+
+  return true;
 }

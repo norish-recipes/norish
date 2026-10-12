@@ -13,8 +13,12 @@ import {
   ingredientSuggestions,
   pantryIngredients,
   recipeIngredients,
+  recipes,
   recurringGroceries,
 } from "@norish/db/schema";
+
+import type { RecipeListContext } from "./recipes";
+import { buildOwnerPolicyCondition } from "./recipes";
 
 /**
  * The catalogue of Ingredients as the Ingredients page reads and edits it
@@ -46,7 +50,21 @@ export interface CatalogueAlias {
   ownerId: string | null;
   locale?: string | null;
   seeded?: boolean;
+  /** Whether a recipe line, grocery, recurring grocery or Pantry Ingredient points at it. */
+  inUse?: boolean;
 }
+
+/**
+ * Whether anything points at the spelling a read of `ingredient_aliases`
+ * is on. Qualified by hand: a single-table select renders its columns bare,
+ * and a bare `id` inside the subquery would be the referencing row's own.
+ */
+const aliasInUse = sql<boolean>`(${or(
+  ...[recipeIngredients, groceries, recurringGroceries, pantryIngredients].map(
+    (table) =>
+      sql`exists (select 1 from ${table} where ${table.ingredientAliasId} = ${ingredientAliases}.${sql.identifier("id")})`
+  )
+)})`;
 
 /** Who owns a row of the catalogue, which is what the edit policy is asked about. */
 export interface CatalogueOwner {
@@ -152,6 +170,7 @@ export async function listCatalogueIngredients(query: {
       ownerId: ingredientAliases.ownerId,
       locale: ingredientAliases.locale,
       seeded: ingredientAliases.seeded,
+      inUse: aliasInUse,
       ingredientId: ingredientAliases.ingredientId,
     })
     .from(ingredientAliases)
@@ -181,6 +200,7 @@ export async function listCatalogueAliasesOf(ingredientId: string): Promise<Cata
       ownerId: ingredientAliases.ownerId,
       locale: ingredientAliases.locale,
       seeded: ingredientAliases.seeded,
+      inUse: aliasInUse,
     })
     .from(ingredientAliases)
     .where(eq(ingredientAliases.ingredientId, ingredientId))
@@ -228,6 +248,40 @@ export async function findCatalogueIngredientNames(
   }
 
   return names;
+}
+
+/** Where an Ingredient stands now, as a finished round's report reads it: flagged, filed under a parent, named for good. */
+export interface CatalogueIngredientState {
+  flagged: boolean;
+  parentId: string | null;
+  nameSettled: boolean;
+}
+
+/**
+ * Where these Ingredients stand now, by id, any number at once, a thousand
+ * to a query; an id the catalogue no longer holds is left out.
+ */
+export async function findCatalogueIngredientStates(
+  ids: readonly string[]
+): Promise<Map<string, CatalogueIngredientState>> {
+  const unique = Array.from(new Set(ids));
+  const states = new Map<string, CatalogueIngredientState>();
+
+  for (let start = 0; start < unique.length; start += CHUNK) {
+    const rows = await db
+      .select({
+        id: ingredients.id,
+        flagged: ingredients.flagged,
+        parentId: ingredients.parentId,
+        nameSettled: ingredients.nameSettled,
+      })
+      .from(ingredients)
+      .where(inArray(ingredients.id, unique.slice(start, start + CHUNK)));
+
+    for (const { id, ...state } of rows) states.set(id, state);
+  }
+
+  return states;
 }
 
 /**
@@ -309,7 +363,13 @@ export async function renameCatalogueIngredient(
 ): Promise<{ id: string } | null> {
   const [row] = await tx
     .update(ingredients)
-    .set({ name, flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
+    .set({
+      name,
+      flagged: false,
+      flagReason: null,
+      nameSettled: true,
+      version: sql`${ingredients.version} + 1`,
+    })
     .where(eq(ingredients.id, id))
     .returning({ id: ingredients.id });
 
@@ -423,6 +483,81 @@ export async function isIngredientInUse(tx: DbTransaction, id: string): Promise<
   return [...references, ...byIngredient].some((rows) => rows.length > 0);
 }
 
+/** Where an Ingredient is used, as one viewer may see it. */
+export interface IngredientUses {
+  /** The recipes the viewer may open with a line naming it. */
+  recipes: Array<{ id: string; name: string }>;
+  /** The household's groceries and recurring groceries naming it. */
+  groceries: Array<{ name: string | null; done: boolean; recurring: boolean }>;
+  /** Whether the household keeps it in the Pantry. */
+  pantry: boolean;
+  /** The uses the viewer may not see: other households' lists, recipes they cannot open. */
+  elsewhere: number;
+}
+
+/**
+ * Everything `isIngredientInUse` counts, listed for a viewer: recipes under
+ * the recipe view policy, groceries and the Pantry for their household, and
+ * how many uses are someone else's.
+ */
+export async function listIngredientUses(
+  viewer: RecipeListContext & { userIds: readonly string[] },
+  ingredientId: string
+): Promise<IngredientUses> {
+  const spellings = db
+    .select({ id: ingredientAliases.id })
+    .from(ingredientAliases)
+    .where(eq(ingredientAliases.ingredientId, ingredientId));
+  const ours = (table: typeof groceries | typeof recurringGroceries | typeof pantryIngredients) =>
+    or(inArray(table.ingredientAliasId, spellings), eq(table.ingredientId, ingredientId));
+  const household = (userId: AnyPgColumn) => sql<boolean>`${inArray(userId, [...viewer.userIds])}`;
+  const openable = (await buildOwnerPolicyCondition(viewer, recipes.userId, "view")) ?? sql`true`;
+
+  const [lines, groceryRows, recurringRows, pantryRows] = await Promise.all([
+    db
+      .select({ id: recipes.id, name: recipes.name, visible: sql<boolean>`${openable}` })
+      .from(recipeIngredients)
+      .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+      .where(inArray(recipeIngredients.ingredientAliasId, spellings))
+      .orderBy(asc(sql`lower(${recipes.name})`)),
+    db
+      .select({
+        name: groceries.name,
+        done: groceries.isDone,
+        visible: household(groceries.userId),
+      })
+      .from(groceries)
+      .where(ours(groceries))
+      .orderBy(asc(groceries.isDone), asc(sql`lower(${groceries.name})`)),
+    db
+      .select({ name: recurringGroceries.name, visible: household(recurringGroceries.userId) })
+      .from(recurringGroceries)
+      .where(ours(recurringGroceries)),
+    db
+      .select({ visible: household(pantryIngredients.userId) })
+      .from(pantryIngredients)
+      .where(ours(pantryIngredients)),
+  ]);
+  // A recipe naming the food on several lines is listed once.
+  const openRecipes = new Map(lines.filter((line) => line.visible).map((line) => [line.id, line]));
+
+  return {
+    recipes: [...openRecipes.values()].map(({ id, name }) => ({ id, name })),
+    groceries: [
+      ...groceryRows
+        .filter((row) => row.visible)
+        .map(({ name, done }) => ({ name, done, recurring: false })),
+      ...recurringRows
+        .filter((row) => row.visible)
+        .map(({ name }) => ({ name, done: false, recurring: true })),
+    ],
+    pantry: pantryRows.some((row) => row.visible),
+    elsewhere: [...lines, ...groceryRows, ...recurringRows, ...pantryRows].filter(
+      (row) => !row.visible
+    ).length,
+  };
+}
+
 /**
  * Delete an Ingredient, with every spelling it was known by and what the
  * household taught Norish about it (Product Links, Aisle Links, store
@@ -433,4 +568,115 @@ export async function isIngredientInUse(tx: DbTransaction, id: string): Promise<
  */
 export async function deleteCatalogueIngredient(tx: DbTransaction, id: string): Promise<void> {
   await tx.delete(ingredients).where(eq(ingredients.id, id));
+}
+
+/**
+ * The foods a round of Clean names may ask about: none from the seed, whose
+ * names are the catalogue's own, none whose name is settled, none a
+ * suggestion waits on, and none flagged, whose name the flag's own question
+ * asks for once it finds a food of its own. Nothing here decides which the
+ * asker may edit.
+ */
+export async function listUnsettledNameIngredients(): Promise<
+  Array<CatalogueOwner & { id: string; name: string }>
+> {
+  return db
+    .select({ id: ingredients.id, name: ingredients.name, ownerId: ingredients.ownerId })
+    .from(ingredients)
+    .leftJoin(ingredientSuggestions, eq(ingredientSuggestions.ingredientId, ingredients.id))
+    .where(
+      and(
+        isNull(ingredients.offId),
+        eq(ingredients.nameSettled, false),
+        eq(ingredients.flagged, false),
+        isNull(ingredientSuggestions.id)
+      )
+    )
+    .orderBy(asc(sql`lower(${ingredients.name})`), asc(ingredients.id));
+}
+
+/** One Ingredient as a Plain Name question reads it: its name, whose it is, and whether the name is settled. */
+export async function findIngredientNaming(
+  id: string
+): Promise<(CatalogueOwner & { name: string; nameSettled: boolean; suggested: boolean }) | null> {
+  const [row] = await db
+    .select({
+      name: ingredients.name,
+      ownerId: ingredients.ownerId,
+      nameSettled: ingredients.nameSettled,
+      suggested: sql<boolean>`${ingredientSuggestions.id} is not null`,
+    })
+    .from(ingredients)
+    .leftJoin(ingredientSuggestions, eq(ingredientSuggestions.ingredientId, ingredients.id))
+    .where(eq(ingredients.id, id))
+    .limit(1);
+
+  return row ?? null;
+}
+
+/**
+ * The Ingredient a name already belongs to, other than `exceptId`: one of
+ * its spellings folds the same, or it is named so.
+ */
+export async function findIngredientHolding(
+  text: string,
+  fold: string,
+  exceptId: string
+): Promise<{ id: string; name: string } | null> {
+  const [row] = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .leftJoin(
+      ingredientAliases,
+      and(eq(ingredientAliases.ingredientId, ingredients.id), eq(ingredientAliases.fold, fold))
+    )
+    .where(
+      and(
+        sql`${ingredients.id} <> ${exceptId}`,
+        or(
+          sql`${ingredientAliases.id} is not null`,
+          sql`lower(${ingredients.name}) = lower(${text})`
+        )
+      )
+    )
+    .limit(1);
+
+  return row ?? null;
+}
+
+/**
+ * Settle an Ingredient's name, under `plain` where one is given: the name
+ * becomes a spelling too, as a person's rename's does, while the flag stays
+ * as it was, since a tidier name says nothing about whether the food is a
+ * duplicate. Only while the name is not settled yet, so a person's rename in
+ * the meantime is the last word; a name another Ingredient took meanwhile
+ * leaves it as it was. Whether it was settled.
+ */
+export async function settleIngredientName(
+  id: string,
+  plain?: { text: string; fold: string }
+): Promise<boolean> {
+  return await db.transaction(async (tx) => {
+    const free = sql`not exists (select 1 from ${ingredients} o where o.id <> ${id} and lower(o.name) = lower(${plain?.text ?? ""}))`;
+    const [row] = await tx
+      .update(ingredients)
+      .set({
+        nameSettled: true,
+        ...(plain ? { name: plain.text } : {}),
+        version: sql`${ingredients.version} + 1`,
+      })
+      .where(
+        and(eq(ingredients.id, id), eq(ingredients.nameSettled, false), ...(plain ? [free] : []))
+      )
+      .returning({ id: ingredients.id });
+
+    if (row && plain) {
+      await tx
+        .insert(ingredientAliases)
+        .values({ text: plain.text, fold: plain.fold, ingredientId: id, ownerId: null })
+        .onConflictDoNothing();
+    }
+
+    return row !== undefined;
+  });
 }

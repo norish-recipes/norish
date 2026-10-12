@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -27,6 +27,8 @@ export interface StoredIngredientSuggestion {
   englishName: string | null;
   considered: string[];
   source: SuggestionSource;
+  /** The Plain Name AI read the name as, for a suggestion that came from asking it. */
+  proposedName: string | null;
 }
 
 /** Record what AI proposes for an Ingredient, replacing what was proposed before, by AI or its words. */
@@ -36,6 +38,7 @@ export async function upsertIngredientSuggestion(input: {
   targetId: string | null;
   englishName: string | null;
   considered: string[];
+  proposedName?: string | null;
 }): Promise<void> {
   const values = {
     kind: input.kind,
@@ -43,6 +46,7 @@ export async function upsertIngredientSuggestion(input: {
     englishName: input.englishName,
     considered: input.considered,
     source: "ai" as const,
+    proposedName: input.proposedName ?? null,
   };
 
   await db
@@ -69,6 +73,7 @@ function selectSuggestions() {
       englishName: ingredientSuggestions.englishName,
       considered: ingredientSuggestions.considered,
       source: ingredientSuggestions.source,
+      proposedName: ingredientSuggestions.proposedName,
     })
     .from(ingredientSuggestions)
     .innerJoin(ingredients, eq(ingredients.id, ingredientSuggestions.ingredientId))
@@ -88,6 +93,7 @@ function stored(row: SuggestionRow): StoredIngredientSuggestion {
     englishName: row.englishName,
     considered: row.considered,
     source: row.source as SuggestionSource,
+    proposedName: row.proposedName,
   };
 }
 
@@ -130,12 +136,18 @@ export async function deleteIngredientSuggestion(id: string): Promise<void> {
   await db.delete(ingredientSuggestions).where(eq(ingredientSuggestions.id, id));
 }
 
-/** Drop whatever AI proposed for an Ingredient: a person has settled it. */
+/** Drop whatever AI proposed for an Ingredient, or only a proposal of `kind`: a person has settled it. */
 export async function deleteSuggestionFor(
   ingredientId: string,
-  tx: typeof db | DbTransaction = db
+  tx: typeof db | DbTransaction = db,
+  kind?: SuggestionKind
 ): Promise<void> {
   await tx
     .delete(ingredientSuggestions)
-    .where(eq(ingredientSuggestions.ingredientId, ingredientId));
+    .where(
+      and(
+        eq(ingredientSuggestions.ingredientId, ingredientId),
+        kind ? eq(ingredientSuggestions.kind, kind) : undefined
+      )
+    );
 }

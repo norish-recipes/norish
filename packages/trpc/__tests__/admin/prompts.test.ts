@@ -43,6 +43,7 @@ const DEFAULTS: PromptValues = {
   imageGenerationBrief: "Default image generation brief prompt",
   imageGenerationStyle: "Default image generation style prompt",
   ingredientIconStyle: "Default ingredient icon style prompt",
+  ingredientPlainName: "Default ingredient plain name prompt",
 };
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

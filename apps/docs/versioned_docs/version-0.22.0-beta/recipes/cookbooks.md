@@ -1,21 +1,19 @@
 ---
 sidebar_position: 7
 title: Cookbooks
-description: Group recipes into titled sets, file a recipe from its own page, and browse the Library as recipes and cookbooks together under three chips.
+description: A group of recipes
 ---
 
 # Cookbooks
 
 A **Cookbook** are a set of recipes contained by a title.
 
-## Making one
+## Creating a cookbook
 
-With the **Cookbooks** chip lit, the Add button becomes **+ Cookbook**. This opens a panel where you can set the title.
+When you filter on **Cookbooks**, the Add button becomes **+ Cookbook**. This opens a panel where you can set the title for your cookbook.
+Under **All** the menu offers a cookbook beside the ways of adding a recipe.
 
-Under **All** the list holds both kinds (recipes + cookbooks). Its menu offers a cookbook beside the ways of adding a recipe. Under
-**Recipes** it makes recipes only, because that is all that list can show.
-
-![Creating a cookbook from the Library](/img/screenshots/cookbooks-create.png)
+![Creating a cookbook](/img/screenshots/cookbooks-create.png)
 
 ## Adding a recipe
 
@@ -27,25 +25,16 @@ The other way is to swipe left (or using the three dots) on a cookbook and click
 
 ![Adding several recipes to a cookbook at once](/img/screenshots/cookbooks-add-recipes.png)
 
-At the end if a recipe page there is a card showing all cookbooks the recipe is placed into.
-Each of these items are clickable and take you to the respective cookbook.
+At the end of a recipe page there is a card showing all cookbooks the recipe is in.
 
 ![The cookbooks card at the end of a recipe page](/img/screenshots/cookbooks-recipe-card.png)
 
 If you do no whish to see the cookbooks card you can hide it under: Settings => User => **Hidden
 Items**, this is a per device setting.
 
-## Renaming one, and taking recipes out
+## Permissions
 
-**Edit cookbook** — from a cookbook's card in the Library, or from the menu on
-its own page, opens the name and the list of what is in it. Rename
-it, untick anything that should go, and **Save** applies both.
-
-![Editing a cookbook: its name and what is in it, in one panel](/img/screenshots/cookbooks-edit.png)
-
-## Who can see and change what
-
-Cookbooks obey the recipe permission policy your administrator already set.
+Cookbooks follow the recipe permission policy.
 
 Nothing about cookbooks is destructive:
 
@@ -55,5 +44,5 @@ Nothing about cookbooks is destructive:
 
 ## Offline
 
-Every cookbook you can see, and what is in it, is part of the guaranteed
-**Warm Set**.
+Every cookbook you can see, and its contents are part of the guaranteed
+**offline/warm Set**.

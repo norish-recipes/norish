@@ -72,6 +72,7 @@ import {
   refusedImageParameters,
   rememberRefusedImageParameter,
 } from "./image-parameter-fallback";
+import { forgetKeyRejection, noteKeyRejection } from "./key-rejections";
 import { recordModelUse } from "./model-use-ledger";
 import {
   canDegradeToJsonMode,
@@ -126,6 +127,8 @@ const SYSTEM_MESSAGES: Record<StructuredPromptName, string> = {
     "You are a careful recipe reader who says which ingredient lines each step uses, and only what the text supports.",
   "ingredient-resolution":
     "You keep a catalogue of foods and say whether a name is a food already in it, a kind of one, or a food of its own.",
+  "ingredient-plain-name":
+    "You keep a catalogue of foods tidy, and give a name back with only the food left in it, in its own language.",
   // English by instruction, not by system message alone: the brief is a model
   // instruction rather than recipe content, so ADR-0018's language care does
   // not apply to it.
@@ -350,10 +353,12 @@ export async function generateStructured<T>(options: GenerateOptions<T>): Promis
     });
 
     recordModelUse({ ...use, outcome: "completed", ...(tokens === undefined ? {} : { tokens }) });
+    forgetKeyRejection("ai_config");
 
     return output;
   } catch (error) {
     recordModelUse({ ...use, outcome: "failed" });
+    noteKeyRejection("ai_config", error);
     throw error;
   }
 }
@@ -532,6 +537,7 @@ export async function transcribe(audioPath: string): Promise<string> {
       "Transcription completed"
     );
     recordModelUse({ provider, model, outcome: "completed" });
+    forgetKeyRejection("video_config");
 
     return transcript;
   } catch (error) {
@@ -539,6 +545,7 @@ export async function transcribe(audioPath: string): Promise<string> {
 
     aiLogger.error({ err: error, provider, retryable: aiError.retryable }, "Transcription failed");
     recordModelUse({ provider, model, outcome: "failed" });
+    noteKeyRejection("video_config", error);
 
     throw aiError;
   }
@@ -752,6 +759,7 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
       "Image generation completed"
     );
     recordModelUse({ provider, model, outcome: "completed" });
+    forgetKeyRejection("image_generation_config");
 
     return { bytes, mediaType: result.image.mediaType };
   } catch (error) {
@@ -771,6 +779,7 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
       );
     }
     recordModelUse({ provider, model, outcome: "failed" });
+    noteKeyRejection("image_generation_config", error);
 
     throw aiError;
   }
@@ -1059,6 +1068,7 @@ export async function decide<const Q extends DecisionQuestions>(
       outcome: "completed",
       ...(tokens === undefined ? {} : { tokens }),
     });
+    forgetKeyRejection("decision_config");
 
     return result;
   } catch (error) {
@@ -1078,6 +1088,7 @@ export async function decide<const Q extends DecisionQuestions>(
       "Decision failed"
     );
     recordModelUse({ provider: settings.provider, model: settings.model, outcome: "failed" });
+    noteKeyRejection("decision_config", error);
 
     throw aiError;
   }

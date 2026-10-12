@@ -499,8 +499,9 @@ export async function listUndecidedMints(): Promise<
  * Give an undecided mint the plain name the resolver would mint it under
  * today: the name as a spelling, so later lines that strip to it land here
  * and a sibling mint that strips to it merges here, and as its name where
- * the mint still carries the text it was minted for and no other Ingredient
- * holds the plain name. A spelling another Ingredient holds is left there.
+ * the mint still carries the text it was minted for, no other Ingredient
+ * holds the plain name, and its name is not settled (AI or a person named
+ * it). A spelling another Ingredient holds is left there.
  */
 export async function adoptPlainName(
   id: string,
@@ -519,6 +520,7 @@ export async function adoptPlainName(
           eq(ingredients.id, id),
           eq(ingredients.flagged, true),
           eq(ingredients.parentChosen, false),
+          eq(ingredients.nameSettled, false),
           sql`not exists (select 1 from ${ingredients} o where o.id <> ${id} and lower(o.name) = lower(${plain.text}))`
         )
       );
@@ -564,7 +566,13 @@ export async function fileUndecidedMint(
         .values({ ingredientId: id, ...values })
         .onConflictDoUpdate({
           target: ingredientSuggestions.ingredientId,
-          set: { ...values, englishName: null, considered: [], createdAt: new Date() },
+          set: {
+            ...values,
+            englishName: null,
+            considered: [],
+            proposedName: null,
+            createdAt: new Date(),
+          },
         });
     }
 

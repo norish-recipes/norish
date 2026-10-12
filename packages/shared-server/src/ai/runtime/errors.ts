@@ -112,12 +112,14 @@ export function isRequestShapeRejection(error: unknown): boolean {
 /**
  * Whether the provider refused the credential itself, as opposed to the
  * request or its own health — the one failure an administrator can only fix
- * by typing a different key.
+ * by typing a different key. Reads through a typed AI error to its cause.
  */
 export function isCredentialRejection(error: unknown): boolean {
-  if (!APICallError.isInstance(error)) return false;
+  const cause = error instanceof AIError ? error.cause : error;
 
-  return error.statusCode === 401 || error.statusCode === 403;
+  if (!APICallError.isInstance(cause)) return false;
+
+  return cause.statusCode === 401 || cause.statusCode === 403;
 }
 
 /**

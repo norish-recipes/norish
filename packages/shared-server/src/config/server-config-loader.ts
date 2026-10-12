@@ -13,6 +13,7 @@
 import type {
   AIConfig,
   AutomaticEnrichmentConfig,
+  AutomaticIngredientsConfig,
   ContentIndicatorsConfig,
   CuisineStrategy,
   DecisionConfig,
@@ -38,6 +39,7 @@ import defaultUnits from "@norish/config/units.default.json";
 import {
   AIConfigSchema,
   DecisionConfigSchema,
+  DEFAULT_AUTOMATIC_INGREDIENTS,
   DEFAULT_CUISINE_STRATEGY,
   DEFAULT_INGREDIENT_PERMISSION_POLICY,
   DEFAULT_RECIPE_PERMISSION_POLICY,
@@ -404,6 +406,20 @@ export async function getAutomaticEnrichmentConfig(): Promise<AutomaticEnrichmen
   }
 
   return aiConfig.automaticEnrichment;
+}
+
+/**
+ * What runs on a food just minted by someone's action: its Plain Name, its
+ * icon. Both off while AI is off; the icon also needs an image provider.
+ */
+export async function getAutomaticIngredientsConfig(): Promise<AutomaticIngredientsConfig> {
+  const aiConfig = await getAIConfig();
+
+  if (!aiConfig?.enabled) return DEFAULT_AUTOMATIC_INGREDIENTS;
+
+  const { plainName, icon } = aiConfig.automaticIngredients;
+
+  return { plainName, icon: icon && (await isImageGenerationConfigured()) };
 }
 
 // ============================================================================

@@ -26,12 +26,14 @@ export type IngredientSuggestion = {
   englishName: string | null;
   considered: string[];
   source: SuggestionSource;
+  /** The Plain Name AI read the name as: what a rename proposes. */
+  proposedName: string | null;
 };
 
 /**
  * What a confirmed suggestion does to the food's row, as the server will do
  * it: a merge takes the row away, a parent AI proposed files it, a food of
- * its own loses its flag. A parent the words of the name gave is already in
+ * its own loses its flag, a rename names it. A parent the words of the name gave is already in
  * place, so confirming it changes nothing on the row.
  */
 function confirmed(suggestion: IngredientSuggestion): (item: IngredientItem) => IngredientItem {
@@ -43,6 +45,14 @@ function confirmed(suggestion: IngredientSuggestion): (item: IngredientItem) => 
           : { ...item, flagged: false, flagReason: null };
     case "distinct":
       return (item) => ({ ...item, flagged: false, flagReason: null });
+    case "rename":
+      // Taking the name is the person's own rename: the flag goes with it.
+      return (item) => ({
+        ...item,
+        name: suggestion.proposedName ?? item.name,
+        flagged: false,
+        flagReason: null,
+      });
     default:
       return (item) => item;
   }

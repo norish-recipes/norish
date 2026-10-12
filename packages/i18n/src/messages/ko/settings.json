@@ -380,6 +380,7 @@
       "unknown-food": "이 이름과 단어를 공유하는 알려진 재료가 없어 AI에 묻지 않았습니다.",
       "ai-unsure": "AI에 알려진 재료인지 물었지만 확신하지 못했습니다.",
       "ai-unavailable": "이 이름을 추가할 때 AI가 제때 응답하지 않았습니다.",
+      "ai-key-rejected": "AI 제공업체가 API 키를 거부해서 AI가 이 이름을 확인하지 못했습니다.",
       "food-gone": "AI가 연결한 재료가 이름이 합류하기 전에 병합되어 사라졌습니다.",
       "upgrade": "일치하는 알려진 재료를 찾지 못했습니다.",
       "seed-ambiguous": "카탈로그에 이것일 수 있는 재료가 여럿 있습니다."
@@ -393,19 +394,23 @@
     "markDistinct": "별개로 표시",
     "summary": "번역 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
     "askAI": "AI에게 묻기",
-    "askAIAll": "플래그된 재료에 대해 AI에게 묻기",
+    "fixCatalogue": "카탈로그 고치기",
     "askAIRound": {
-      "intro": "AI가 각 이름을 읽고 Norish가 알고 있는 식품과 비교합니다. 제안을 확인하기 전까지는 아무것도 바뀌지 않습니다.",
-      "scopeLabel": "어떤 재료",
+      "intro": "AI가 표시된 재료가 어디에 속하는지 확인하고 일관되지 않은 이름을 고칩니다. 제안을 확인하기 전까지는 아무것도 바뀌지 않습니다.",
+      "scopeLabel": "고칠 대상",
       "scopes": {
-        "unsuggested": "제안이 없는 재료만",
-        "flagged": "표시된 모든 재료"
+        "unsuggested": "표시된 재료 확인",
+        "suggested": "제안 다시 확인",
+        "name": "이름 정리"
+      },
+      "hints": {
+        "unsuggested": "중복, 하위 재료 또는 고유한 재료를 찾습니다.",
+        "suggested": "표시된 재료를 다시 확인합니다.",
+        "name": "재료 이름을 재료만 남도록 정리합니다. 위 체크박스를 선택하면 표시된 재료도 포함됩니다."
       },
       "scopeSize": "{count, plural, =0 {재료 없음} other {재료 #개 · 약 {tokens} 토큰}}",
-      "replaces": "이미 대기 중인 제안을 대체합니다.",
       "modelTokens": "약 {tokens} 토큰",
-      "basisMeasured": "지난 라운드 사용량 기준.",
-      "basisPrompt": "프롬프트 기준 추정치이므로 실제로는 더 많을 수 있습니다."
+      "basisMeasured": "지난 라운드 사용량 기준."
     },
     "roundProgress": "AI에게 묻는 중 · {total, number}개 중 {done, number}개",
     "roundSection": {
@@ -429,7 +434,8 @@
       "readAs": "AI가 “{name}”(으)로 읽었습니다.",
       "compared": "비교 대상: {names}.",
       "comparedNothing": "비교할 알려진 식품이 없었습니다.",
-      "fromWords": "Based on name."
+      "fromWords": "Based on name.",
+      "noFood": "AI가 이 이름에서 식품을 찾지 못했습니다."
     },
     "addAlias": "번역 추가",
     "removeAlias": "{alias} 제거",
@@ -551,6 +557,17 @@
       "empty": "이름을 입력하세요",
       "unknown": "문제가 발생했습니다. 다시 시도하세요."
     },
+    "uses": {
+      "show": "사용처 보기",
+      "title": "{name}이(가) 사용되는 곳",
+      "recipes": "레시피",
+      "groceries": "장보기",
+      "done": "완료",
+      "repeats": "반복",
+      "pantry": "팬트리에 보관 중",
+      "elsewhere": "열 수 없는 레시피나 목록에서 {count, plural, other {#회 더 사용}}",
+      "none": "더 이상 사용하는 곳이 없습니다"
+    },
     "keepAlias": "{alias} 유지",
     "reportOutcomes": {
       "parent": "상위 항목 아래",
@@ -572,7 +589,8 @@
       "merge": "{name}을(를) {into}에 병합",
       "parent": "{name}을(를) {of} 아래로 분류",
       "distinct": "{name}을(를) 별개의 식재료로 유지",
-      "filedFromName": "{name} filed under {of}"
+      "filedFromName": "{name} filed under {of}",
+      "rename": "{name}의 이름을 {to}(으)로 변경"
     },
     "suggestionsTitle": "AI 제안",
     "suggestionsEmpty": "대기 중인 항목이 없습니다.",
@@ -588,12 +606,14 @@
     "proposal": {
       "merge": "Merge into {into}",
       "parent": "File under {of}",
-      "distinct": "Food of its own"
+      "distinct": "Food of its own",
+      "rename": "{to}(으)로 이름 변경"
     },
     "skippedReasons": {
       "notFlagged": "No longer flagged",
       "forbidden": "Not yours to edit",
-      "notFound": "No longer exists"
+      "notFound": "No longer exists",
+      "settled": "이름이 이미 확정되었거나 제안이 대기 중입니다"
     },
     "icon": {
       "change": "아이콘 변경",
@@ -963,6 +983,14 @@
         "imageGeneration": "이미지 생성",
         "imageGenerationDescription": "이미지가 전혀 없는 새 레시피에 요리 사진을 그려줍니다"
       },
+      "automaticIngredients": "새 재료에 자동 적용",
+      "automaticIngredientsDescription": "카탈로그에 새 재료가 추가될 때 일어나는 일입니다.",
+      "automaticIngredientsKinds": {
+        "plainName": "이름 정리",
+        "plainNameDescription": "분량, 포장 코드처럼 식품이 아닌 부분을 지웁니다",
+        "icon": "아이콘 그리기",
+        "iconDescription": "상위 항목의 아이콘도 없는 식품에만 그립니다"
+      },
       "tagStrategy": "태그 전략",
       "tagStrategyDescription": "자동 또는 수동 실행 여부와 관계없이 자동 태그 지정이 사용할 수 있는 태그",
       "tagStrategies": {
@@ -1115,7 +1143,10 @@
       "imageGenerationStylePlaceholder": "이미지 스타일을 위한 프롬프트...",
       "ingredientIconStyle": "재료 아이콘 스타일 프롬프트",
       "ingredientIconStyleDescription": "재료 아이콘을 그릴 때 이미지 모델로 전송되며, 그 뒤에 식품 이름과 그것이 어떤 종류인지가 덧붙여집니다. 그려지는 모든 아이콘이 공유하는 스타일을 정합니다.",
-      "ingredientIconStylePlaceholder": "재료 아이콘 스타일을 위한 프롬프트..."
+      "ingredientIconStylePlaceholder": "재료 아이콘 스타일을 위한 프롬프트...",
+      "ingredientPlainName": "재료 이름 정리 프롬프트",
+      "ingredientPlainNameDescription": "AI가 재료 이름을 정리할 때 언어 모델에 보내며, 그 뒤에 이름과 다른 표기가 붙습니다. 이름에서 무엇을 지우고 무엇을 남길지 정합니다.",
+      "ingredientPlainNamePlaceholder": "재료 이름 정리 프롬프트..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {
@@ -1168,7 +1199,8 @@
         "reading-product": "Read the product page",
         "saving-link": "Save the link",
         "asking-ai": "Ask AI about the food",
-        "drawing-icon": "식품 아이콘 그리기"
+        "drawing-icon": "식품 아이콘 그리기",
+        "naming": "식품 이름 정리"
       },
       "queues": {
         "recipe-import": "Recipe import",
@@ -1185,7 +1217,8 @@
         "image-generation": "이미지 생성",
         "store-lookup": "매장 조회",
         "ingredient-review": "AI에게 재료 묻기",
-        "ingredient-icons": "재료 아이콘 그리기"
+        "ingredient-icons": "재료 아이콘 그리기",
+        "new-ingredients": "새 재료"
       },
       "summary": {
         "failed": "{count} failed"

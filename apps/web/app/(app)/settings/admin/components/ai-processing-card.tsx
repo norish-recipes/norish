@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { SettingsAccordion, SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { Note } from "@/components/shared/note";
+import { useAIKeyRejections } from "@/hooks/admin/use-ai-key-rejections";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { Accordion } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -17,6 +19,7 @@ import VideoProcessingForm from "./video-processing-form";
 
 export default function AIProcessingCard() {
   const t = useTranslations("settings.admin.aiProcessing");
+  const keyRejections = useAIKeyRejections();
   const [dirtySections, setDirtySections] = useState({
     ai: false,
     video: false,
@@ -36,6 +39,11 @@ export default function AIProcessingCard() {
 
   return (
     <SettingsCard description={t("description")} icon={SparklesIcon} title={t("title")}>
+      {keyRejections && (
+        <Note status="danger" title={keyRejections.title}>
+          {keyRejections.description}
+        </Note>
+      )}
       <SettingsAccordion>
         <Accordion.Item id="ai">
           <Accordion.Heading>

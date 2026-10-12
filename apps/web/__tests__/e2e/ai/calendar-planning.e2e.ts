@@ -20,6 +20,40 @@ test.describe.configure({ mode: "serial" });
 
 const NAME = `Planned Stew ${Date.now()}`;
 
+/** Whether the persisted query cache in IndexedDB holds `text` yet. */
+function persistedCacheHolds(page: Page, text: string): Promise<boolean> {
+  return page.evaluate(
+    (wanted) =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open("norish-offline");
+
+        open.onerror = () => resolve(false);
+        open.onsuccess = () => {
+          const database = open.result;
+
+          if (!database.objectStoreNames.contains("keyval")) {
+            database.close();
+            resolve(false);
+
+            return;
+          }
+
+          const all = database.transaction("keyval").objectStore("keyval").getAll();
+
+          all.onsuccess = () => {
+            database.close();
+            resolve(JSON.stringify(all.result).includes(wanted));
+          };
+          all.onerror = () => {
+            database.close();
+            resolve(false);
+          };
+        };
+      }),
+    text
+  );
+}
+
 async function visitCalendar(page: Page): Promise<void> {
   await page.getByRole("link", { name: "Calendar" }).click();
   await page.waitForURL(/\/calendar/);
@@ -86,7 +120,10 @@ test("a recipe planned on the dashboard shows on the calendar page from the cach
   await expect(page.getByText(NAME).first()).toBeVisible();
   expect(refetches).toBeGreaterThan(0);
 
-  // A reload restores the persisted cache: the plan is still there.
+  // A reload restores the persisted cache: the plan is still there. The copy
+  // in IndexedDB is written after the cache changes, and by this point in the
+  // project it is large, so the reload waits until it holds the plan.
+  await expect.poll(() => persistedCacheHolds(page, NAME)).toBe(true);
   await page.reload();
   await expect(page.getByText(NAME).first()).toBeVisible();
 

@@ -12,14 +12,16 @@
  */
 import type { FlaggedCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import type {
+  FlagReason,
   ModelTokenEstimate,
   ReviewOutcome,
-  ReviewScope,
+  ReviewReport,
   ReviewVerdict,
   SuggestionKind,
 } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   findCatalogueIngredient,
+  findCatalogueIngredientStates,
   listFlaggedCatalogueIngredients,
   setIngredientFlagReason,
 } from "@norish/db/repositories/ingredient-catalogue";
@@ -44,6 +46,9 @@ export const REVIEW_BUDGET_MS = 30_000;
 export type { ReviewOutcome };
 
 type Answer = Awaited<ReturnType<typeof askWhatFoodThisIs>>;
+
+/** Why a question got no answer at all: AI off, failing, or its key refused. */
+const NO_ANSWER: readonly FlagReason[] = ["ai-off", "ai-unavailable", "ai-key-rejected"];
 
 /** The food, if the actor may edit it; refused otherwise. */
 async function editableRow(actor: CatalogueActor, ingredientId: string) {
@@ -71,27 +76,28 @@ async function ask(ingredientId: string, name: string, trace: AskTrace): Promise
 
 /**
  * The Flagged Ingredients the actor may edit, by name, each saying whether a
- * suggestion waits on it: what a round of Ask AI over `scope` asks about,
- * every one or only those no suggestion waits on.
+ * suggestion waits on it: what a round of Fix catalogue asks about.
  */
 export async function listReviewableIngredients(
-  actor: CatalogueActor,
-  scope: ReviewScope = "flagged"
+  actor: CatalogueActor
 ): Promise<FlaggedCatalogueIngredient[]> {
   const [rows, policy] = await Promise.all([
     listFlaggedCatalogueIngredients(),
     getIngredientPermissionPolicy(),
   ]);
 
-  return rows.filter(
-    (row) =>
-      mayEditIngredientRow(policy.edit, actor, row.ownerId) &&
-      (scope === "flagged" || !row.suggested)
-  );
+  return rows.filter((row) => mayEditIngredientRow(policy.edit, actor, row.ownerId));
 }
 
 /** How many of a round's foods the estimate reads, spread over them: enough to even out their names. */
 const ESTIMATE_SAMPLE = 5;
+
+/** A few of a round's names, spread over them, for an estimate to read. */
+export function estimateSample(names: readonly string[]): string[] {
+  const every = Math.max(1, Math.floor(names.length / ESTIMATE_SAMPLE));
+
+  return names.filter((_, index) => index % every === 0).slice(0, ESTIMATE_SAMPLE);
+}
 
 /**
  * About how many tokens one food's question takes on each model it asks,
@@ -101,10 +107,9 @@ const ESTIMATE_SAMPLE = 5;
 export async function estimateReviewTokens(
   names: readonly string[]
 ): Promise<ModelTokenEstimate[]> {
-  const every = Math.max(1, Math.floor(names.length / ESTIMATE_SAMPLE));
-  const sample = names.filter((_, index) => index % every === 0).slice(0, ESTIMATE_SAMPLE);
-
-  return estimateQuestionTokens(sample.map((text) => ({ text, bare: stripPreparation(text) })));
+  return estimateQuestionTokens(
+    estimateSample(names).map((text) => ({ text, bare: stripPreparation(text) }))
+  );
 }
 
 /** Ask AI about a Flagged Ingredient, and record what it proposes. */
@@ -186,7 +191,8 @@ async function suggest(
   }
   if (answer.kind === "same") return { outcome: "unsure", reason: "food-gone" };
   if (answer.flagged) {
-    await deleteSuggestionFor(ingredientId);
+    // An unsure answer replaces what AI proposed before; no answer leaves it waiting.
+    if (!NO_ANSWER.includes(answer.reason)) await deleteSuggestionFor(ingredientId);
 
     return { outcome: "unsure", reason: answer.reason };
   }
@@ -194,4 +200,42 @@ async function suggest(
   else await deleteSuggestionFor(ingredientId);
 
   return { outcome: "distinct" };
+}
+
+/** The outcomes a round leaves no suggestion behind for, which its report lists. */
+const UNSUGGESTED: ReadonlySet<string> = new Set(["unsure", "skipped", "failed"]);
+
+/**
+ * A finished round's report as it stands now. A food it got no suggestion
+ * for is listed while the question it was asked is still open: still flagged
+ * after a review, still without a parent after a round of Find parents, its
+ * name still unsettled after Clean names. One settled since, or gone, drops
+ * out. A round still running is as it was.
+ */
+export async function withoutSettled(report: ReviewReport): Promise<ReviewReport> {
+  if (!report.finished) return report;
+
+  const unsuggested = report.entries.filter((entry) => UNSUGGESTED.has(entry.outcome));
+  const states = await findCatalogueIngredientStates(
+    unsuggested.map((entry) => entry.ingredientId)
+  );
+  const open = ({ ingredientId, mode }: ReviewReport["entries"][number]) => {
+    const state = states.get(ingredientId);
+
+    if (!state) return false;
+
+    switch (mode) {
+      case "parent":
+        return !state.parentId;
+      case "name":
+        return !state.nameSettled;
+      default:
+        return state.flagged;
+    }
+  };
+
+  return {
+    ...report,
+    entries: report.entries.filter((entry) => !UNSUGGESTED.has(entry.outcome) || open(entry)),
+  };
 }

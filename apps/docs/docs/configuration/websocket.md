@@ -6,7 +6,7 @@ description: The realtime socket, what a reverse proxy must pass through, the Or
 
 # WebSocket & realtime
 
-Norish pushes changes to open browsers over a WebSocket. If the socket cannot
+Changes are pushed to an open browsers over a WebSocket. If the socket cannot
 connect the app still works, but updates won't be retrieved.
 
 ## The endpoint

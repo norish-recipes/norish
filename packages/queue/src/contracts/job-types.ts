@@ -1,5 +1,6 @@
 import type { Job } from "bullmq";
 
+import type { ReviewMode } from "@norish/shared/contracts/ingredient-catalogue";
 import type {
   RecipeEnrichmentKind,
   RecipeEnrichmentOrigin,
@@ -143,6 +144,14 @@ export interface IngredientIconsJobData {
 }
 
 /**
+ * Foods one resolution just minted for someone's action, for what the
+ * administrator turned on for new foods: their Plain Name, their icon.
+ */
+export interface NewIngredientsJobData {
+  ingredientIds: string[];
+}
+
+/**
  * One round of Ask AI over Flagged Ingredients (ADR-0037): the foods a person
  * asked about, in the order the page listed them, and who asked, since each
  * food's edit follows the ingredient permission policy for that person. A
@@ -150,10 +159,13 @@ export interface IngredientIconsJobData {
  * a session.
  */
 export interface IngredientReviewJobData {
-  /** The foods, by id and by name, so the job monitor reads "uitjes" rather than an id. */
-  ingredients: Array<{ id: string; name: string }>;
-  /** What is asked: what each flagged food is (the default), or what food each is a kind of. */
-  mode?: "review" | "parent";
+  /**
+   * The foods, by id and by name, so the job monitor reads "uitjes" rather
+   * than an id, and what is asked of each: what a flagged food is, what food
+   * it is a kind of, or its Plain Name. One round may ask a food's flag and
+   * another food's name.
+   */
+  ingredients: Array<{ id: string; name: string; mode: ReviewMode }>;
   actor: {
     userId: string;
     householdUserIds: string[] | null;

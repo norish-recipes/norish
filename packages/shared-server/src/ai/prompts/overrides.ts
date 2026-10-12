@@ -27,6 +27,7 @@ export const PROMPT_CONFIG_FIELDS = [
   "imageGenerationBrief",
   "imageGenerationStyle",
   "ingredientIconStyle",
+  "ingredientPlainName",
 ] as const satisfies readonly (keyof PromptsConfigInput)[];
 
 export type PromptConfigField = (typeof PROMPT_CONFIG_FIELDS)[number];

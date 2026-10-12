@@ -14,6 +14,7 @@ import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-al
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import { addPantryIngredient } from "@norish/db/repositories/pantry";
 import { setConfig } from "@norish/db/repositories/server-config";
+import { onIngredientsMinted } from "@norish/shared-server/ingredients/minted";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import {
   findIngredientFor,
@@ -64,6 +65,27 @@ describe("ingredient resolver", () => {
       flagged: true,
       ownerId: userId,
     });
+  });
+
+  it("hands on the foods someone's action mints, never a spelling it knew nor the upgrade's", async () => {
+    const minted: string[][] = [];
+
+    onIngredientsMinted(async (ids) => void minted.push(ids));
+    try {
+      const [first, again] = await resolveIngredients(["paprikapoeder", "paprikapoeder"], {
+        userId,
+      });
+
+      // One food minted, handed on once.
+      expect(minted).toEqual([[first!.ingredientId]]);
+      expect(again!.ingredientId).toBe(first!.ingredientId);
+
+      await resolveOne("paprikapoeder");
+      await resolveIngredients(["kerriepoeder"], { userId }, { ai: false });
+      expect(minted).toHaveLength(1);
+    } finally {
+      onIngredientsMinted(undefined);
+    }
   });
 
   it("resolves a spelling Norish knows to the Ingredient it already has", async () => {

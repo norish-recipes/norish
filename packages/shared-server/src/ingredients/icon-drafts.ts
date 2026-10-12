@@ -76,6 +76,12 @@ export async function generateIngredientIcon(
   ingredientId: string
 ): Promise<DraftIcon> {
   await assertMayEditFood(actor, ingredientId);
+
+  return await drawDraftIcon(ingredientId);
+}
+
+/** A food's icon drawn and stored, attached to nothing yet; whose it is to draw is the caller's to check. */
+export async function drawDraftIcon(ingredientId: string): Promise<DraftIcon> {
   const food = await foodToDraw(ingredientId);
 
   if (!food) throw new CatalogueEditError("not-found");

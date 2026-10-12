@@ -292,5 +292,10 @@
     "title": "Käynnistys epäonnistui",
     "description": "Norish ei pystynyt lukemaan suojattua tallennustilaansa, joten se ei tiedä mille palvelimelle se kuuluu. Mitään ei ole muutettu. Yritä uudelleen tai käynnistä sovellus uudestaan.",
     "detailsLabel": "Tekniset tiedot"
+  },
+  "aiKeyRejected": {
+    "title": "Tekoälyavain lakkasi toimimasta",
+    "description": "Palvelu on hylännyt kohteen {blocks} API-avaimen {since} alkaen. Tallenna uusi avain, jotta nämä tekoälytoiminnot toimivat taas.",
+    "openSettings": "Avaa asetukset"
   }
 }
