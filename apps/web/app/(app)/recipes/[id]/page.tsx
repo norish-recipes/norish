@@ -1,12 +1,13 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { useTranslations } from "next-intl";
 
+import RecipePrint from "./components/recipe-print";
 import { useAutoConversion } from "./components/use-system-conversion";
 import { WakeLockProvider } from "./components/wake-lock-context";
 import { RecipeContextProvider, useRecipeContext } from "./context";
@@ -16,6 +17,7 @@ import RecipePageMobile from "./recipe-page-mobile";
 function RecipePageContent() {
   const { recipe, isNotFound, isLoading } = useRecipeContext();
   const t = useTranslations("recipes.detail");
+  const [printOpen, setPrintOpen] = useState(false);
 
   useAutoConversion();
 
@@ -39,7 +41,7 @@ function RecipePageContent() {
       <RecipePageTint dishColor={recipe.dishColor}>
         {/* Desktop layout - smooth fade in */}
         <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
-          <RecipePageDesktop />
+          <RecipePageDesktop onPrint={() => setPrintOpen(true)} />
         </div>
 
         {/* Mobile layout - full width, smooth fade in */}
@@ -47,8 +49,9 @@ function RecipePageContent() {
           key={`${recipe?.id}-mobile`}
           className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
         >
-          <RecipePageMobile />
+          <RecipePageMobile onPrint={() => setPrintOpen(true)} />
         </div>
+        <RecipePrint open={printOpen} onOpenChange={setPrintOpen} />
       </RecipePageTint>
     </IngredientIconsProvider>
   );

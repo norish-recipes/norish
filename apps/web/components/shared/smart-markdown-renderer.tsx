@@ -28,6 +28,7 @@ export interface SmartMarkdownRendererProps {
   disableLinks?: boolean;
   linkMode?: SmartMarkdownLinkMode;
   timerConfig?: SmartMarkdownTimerConfig;
+  timerDisplay?: "interactive" | "static";
 }
 
 /**
@@ -46,6 +47,7 @@ export default function SmartMarkdownRenderer({
   disableLinks = false,
   linkMode,
   timerConfig,
+  timerDisplay = "interactive",
 }: SmartMarkdownRendererProps) {
   const resolvedLinkMode: SmartMarkdownLinkMode = disableLinks
     ? "disabled"
@@ -67,7 +69,6 @@ export default function SmartMarkdownRenderer({
   return (
     <span className={className}>
       <ReactMarkdown
-        urlTransform={transformMarkdownUrl}
         components={{
           // Style headings distinctly (matching card headers)
           h1: ({ children }) => (
@@ -83,6 +84,10 @@ export default function SmartMarkdownRenderer({
           a: ({ href, children }) => {
             if (href?.startsWith(TIMER_HREF_PREFIX)) {
               const timer = timerByHrefKey.get(href.slice(TIMER_HREF_PREFIX.length));
+
+              if (timer && timerDisplay === "static") {
+                return <strong data-timer-duration>{timer.originalText}</strong>;
+              }
 
               if (!timer || resolvedLinkMode === "disabled" || !timerConfig) {
                 return (
@@ -147,6 +152,7 @@ export default function SmartMarkdownRenderer({
 
           p: ({ children }) => <span>{children}</span>,
         }}
+        urlTransform={transformMarkdownUrl}
       >
         {processedText}
       </ReactMarkdown>
@@ -197,6 +203,7 @@ function parseTimerMatches(
     return parseTimerDurations(text, timerConfig.keywords);
   } catch (error) {
     logger.warn({ error }, "Timer parsing failed");
+
     return [];
   }
 }

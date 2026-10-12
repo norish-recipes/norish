@@ -274,7 +274,7 @@ function cardCount(): number {
  */
 describe("RecipePageMobile card body", () => {
   it("orders the cards ingredients → steps → notes → cooking time → nutrition → provenance → source → cookbooks → rating", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(cardTitlesInOrder()).toEqual([
       CARD_TITLES.ingredients,
@@ -294,7 +294,7 @@ describe("RecipePageMobile card body", () => {
     // and filing is in the quick actions whether or not it is in one already.
     recipeCookbooks.current = [];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(cardTitlesInOrder()).not.toContain(CARD_TITLES.cookbooks);
 
@@ -302,13 +302,13 @@ describe("RecipePageMobile card body", () => {
   });
 
   it("draws no rules between the sections", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.queryAllByRole("separator")).toHaveLength(0);
   });
 
   it("renders the rating outside the steps card", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     const stepsCard = screen.getByText(CARD_TITLES.steps).closest("[data-testid='section-card']");
 
@@ -319,7 +319,7 @@ describe("RecipePageMobile card body", () => {
   it("keeps ingredients and steps for a recipe that stores nothing else", () => {
     mocks.recipe = bareRecipe();
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(cardTitlesInOrder()).toEqual([
       CARD_TITLES.ingredients,
@@ -336,14 +336,14 @@ describe("RecipePageMobile card body", () => {
     mocks.recipe = bareRecipe();
     mocks.busyKinds = new Set(["recipe-provenance"]);
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.getByText("recipes.provenance.title")).toBeInTheDocument();
     expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
   });
 
   it("keeps provenance after the cooking, not before the ingredients", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     const ingredients = screen.getByText(CARD_TITLES.ingredients);
     const provenance = screen.getByRole("heading", { name: /Italia/ });
@@ -354,7 +354,7 @@ describe("RecipePageMobile card body", () => {
   });
 
   it("floats the cook control outside every card", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     const cook = screen.getByTestId("cooking-mode");
 
@@ -363,7 +363,7 @@ describe("RecipePageMobile card body", () => {
   });
 
   it("gives the ingredients card a servings row", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     const ingredientsCard = screen
       .getByText(CARD_TITLES.ingredients)
@@ -375,7 +375,7 @@ describe("RecipePageMobile card body", () => {
 
 describe("RecipePageMobile hidden items", () => {
   it("shows the rating card to a reader who has hidden nothing", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.getByText(CARD_TITLES.rating)).toBeInTheDocument();
   });
@@ -383,7 +383,7 @@ describe("RecipePageMobile hidden items", () => {
   it("drops the rating card for a reader who has hidden ratings", () => {
     mocks.hidden = ["rating"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.queryByText(CARD_TITLES.rating)).not.toBeInTheDocument();
   });
@@ -391,7 +391,7 @@ describe("RecipePageMobile hidden items", () => {
   it("ignores a stored name it does not recognise", () => {
     mocks.hidden = ["something-newer"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(cardTitlesInOrder()).toHaveLength(9);
   });
@@ -399,7 +399,7 @@ describe("RecipePageMobile hidden items", () => {
   it("drops the provenance card but keeps the origin flag beside the title", () => {
     mocks.hidden = ["provenance"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.queryByRole("heading", { name: /Italia/ })).not.toBeInTheDocument();
     // The flag beside the recipe title is chrome, not Recipe Provenance.
@@ -410,7 +410,7 @@ describe("RecipePageMobile hidden items", () => {
     mocks.hidden = ["provenance"];
     mocks.busyKinds = new Set(["recipe-provenance"]);
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.queryByText("recipes.provenance.title")).not.toBeInTheDocument();
   });
@@ -418,7 +418,7 @@ describe("RecipePageMobile hidden items", () => {
   it("takes the calories out of the Glance Bar with the nutrition card", () => {
     mocks.hidden = ["nutrition"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     // The card and its Glance Bar entry leave together — a bar restating a
     // hidden fact is exactly the bug a restating bar invites.
@@ -432,7 +432,7 @@ describe("RecipePageMobile hidden items", () => {
   it("reads the Glance Bar's servings off the scaled figure, not the stored one", () => {
     mocks.currentServings = 5;
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     // The bar restates what the sections below render, so it cannot disagree
     // with the stepper an inch under it. Read off the bar's own entry, since
@@ -445,14 +445,14 @@ describe("RecipePageMobile hidden items", () => {
   it("drops the notes card for a reader who has hidden notes", () => {
     mocks.hidden = ["notes"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.queryByText(CARD_TITLES.notes)).not.toBeInTheDocument();
     expect(screen.queryByTestId("recipe-notes")).not.toBeInTheDocument();
   });
 
   it("shows the heart to a reader who has hidden nothing", () => {
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.getByTestId("heart-button")).toBeInTheDocument();
   });
@@ -460,7 +460,7 @@ describe("RecipePageMobile hidden items", () => {
   it("drops the heart for a reader who has hidden favourites", () => {
     mocks.hidden = ["favorites"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.queryByTestId("heart-button")).not.toBeInTheDocument();
   });

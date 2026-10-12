@@ -164,7 +164,7 @@ describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on desktop when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    render(<RecipePageDesktop />);
+    render(<RecipePageDesktop onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(
@@ -176,7 +176,7 @@ describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on mobile when favorites are hidden", () => {
     userPreferencesState.hidden = ["favorites"];
 
-    render(<RecipePageMobile />);
+    render(<RecipePageMobile onPrint={() => {}} />);
 
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute("data-disabled", "false");
     expect(screen.getByTestId("double-tap-container")).toHaveAttribute(

@@ -423,5 +423,13 @@
     "removeImage": "Usuń obraz",
     "imageUploadFailed": "Nie udało się przesłać obrazu.",
     "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online."
+  },
+  "print": {
+    "title": "Drukuj przepis",
+    "includePhoto": "Dołącz zdjęcie",
+    "textSize": "Rozmiar tekstu",
+    "print": "Drukuj / Zapisz PDF",
+    "continued": "ciąg dalszy",
+    "perServing": "Na porcję"
   }
 }

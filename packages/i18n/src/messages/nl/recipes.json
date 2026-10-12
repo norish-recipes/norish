@@ -423,5 +423,13 @@
     "removeImage": "Afbeelding verwijderen",
     "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
     "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
+  },
+  "print": {
+    "title": "Recept afdrukken",
+    "includePhoto": "Foto opnemen",
+    "textSize": "Tekstgrootte",
+    "print": "Afdrukken / Opslaan als PDF",
+    "continued": "vervolg",
+    "perServing": "Per portie"
   }
 }

@@ -423,5 +423,13 @@
     "removeImage": "Remove image",
     "imageUploadFailed": "The image could not be uploaded.",
     "imageNeedsConnection": "Images can be changed once you are back online."
+  },
+  "print": {
+    "title": "Print recipe",
+    "includePhoto": "Include photo",
+    "textSize": "Text size",
+    "print": "Print / Save PDF",
+    "continued": "continued",
+    "perServing": "Per serving"
   }
 }
