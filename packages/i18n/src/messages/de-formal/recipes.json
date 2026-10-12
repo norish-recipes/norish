@@ -423,5 +423,13 @@
     "removeImage": "Bild entfernen",
     "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
     "imageNeedsConnection": "Bilder können Sie ändern, sobald Sie wieder online sind."
+  },
+  "print": {
+    "title": "Rezept drucken",
+    "includePhoto": "Foto mitdrucken",
+    "textSize": "Textgröße",
+    "print": "Drucken / Als PDF speichern",
+    "continued": "Fortsetzung",
+    "perServing": "Pro Portion"
   }
 }

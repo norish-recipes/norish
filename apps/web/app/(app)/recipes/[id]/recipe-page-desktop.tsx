@@ -32,7 +32,7 @@ import StarRating from "@norish/ui/star-rating";
 import ServingsControl from "./components/servings-control";
 import { useRecipeContextRequired } from "./context";
 
-export default function RecipePageDesktop() {
+export default function RecipePageDesktop({ onPrint }: { onPrint: () => void }) {
   const {
     recipe,
     currentServings: _currentServings,
@@ -72,7 +72,7 @@ export default function RecipePageDesktop() {
           <Card className="rounded-2xl">
             <Card.Content className="space-y-5 p-6">
               <ReadonlyRecipeSummary
-                actions={<ActionsMenu id={recipe.id} />}
+                actions={<ActionsMenu id={recipe.id} onPrint={onPrint} />}
                 allergies={allergies}
                 allergySet={allergySet}
                 recipe={recipe}

@@ -423,5 +423,13 @@
     "removeImage": "Poista kuva",
     "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
     "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
+  },
+  "print": {
+    "title": "Tulosta resepti",
+    "includePhoto": "Sisällytä kuva",
+    "textSize": "Tekstin koko",
+    "print": "Tulosta / Tallenna PDF",
+    "continued": "jatkuu",
+    "perServing": "Annosta kohden"
   }
 }

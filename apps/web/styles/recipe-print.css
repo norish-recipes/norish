@@ -1,0 +1,265 @@
+[data-recipe-print] {
+  color: #171717;
+  font-family: "Inter Variable", sans-serif;
+}
+
+.recipe-print-dialog {
+  width: min(100vw - 2rem, 230mm);
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 1rem;
+  background: #ededed;
+  color: #171717;
+  overflow: auto;
+}
+
+.recipe-print-toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.recipe-print-toolbar h2 {
+  font-weight: 600;
+}
+
+.recipe-print-document {
+  display: none;
+}
+
+.recipe-print-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 210mm;
+  margin: 1rem auto;
+  padding: 18mm 14mm 16mm;
+  background: white;
+  color: #171717;
+  font-size: var(--recipe-print-size, 12pt);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.recipe-print-card .text-foreground {
+  color: inherit;
+}
+
+.recipe-print-card h1 {
+  margin-bottom: 4mm;
+  font-size: 27pt;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.recipe-print-card h2 {
+  margin: 0 0 4mm;
+  padding-bottom: 2mm;
+  border-bottom: 1pt solid #171717;
+  font-size: 14pt;
+  font-weight: 700;
+  break-after: avoid;
+}
+
+.recipe-print-card h3 {
+  margin: 4mm 0 2mm;
+  font-weight: 700;
+  break-after: avoid;
+}
+
+.recipe-print-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8mm;
+  margin-bottom: 8mm;
+  break-inside: avoid;
+}
+
+.recipe-print-photo {
+  flex-shrink: 0;
+  width: 48mm;
+  height: 48mm;
+  object-fit: cover;
+}
+
+.recipe-print-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2mm 5mm;
+  margin-top: 4mm;
+  list-style: none;
+}
+
+.recipe-print-columns {
+  display: grid;
+  grid-template-columns: 29% 64%;
+  gap: 7%;
+}
+
+.recipe-print-ingredients,
+.recipe-print-steps,
+.recipe-print-step-ingredients {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recipe-print-ingredients > li {
+  margin-bottom: 3mm;
+  break-inside: avoid;
+}
+
+.recipe-print-step {
+  display: grid;
+  grid-template-columns: 6mm 1fr;
+  gap: 3mm;
+  margin-bottom: 6mm;
+  break-inside: avoid;
+}
+
+.recipe-print-step-number {
+  font-weight: 700;
+}
+
+.recipe-print-step-ingredients {
+  margin-top: 3mm;
+  padding-left: 3mm;
+  border-left: 2pt solid #171717;
+}
+
+.recipe-print-step-ingredients li + li {
+  margin-top: 1mm;
+}
+
+.recipe-print-card [data-timer-duration] {
+  padding: 0 1mm;
+  border: 0.75pt solid #171717;
+  border-radius: 1mm;
+  white-space: nowrap;
+}
+
+.recipe-print-nutrition {
+  margin-top: 8mm;
+  break-inside: avoid;
+}
+
+.recipe-print-nutrition p {
+  margin-bottom: 3mm;
+  font-size: 11pt;
+}
+
+.recipe-print-nutrition dl > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1mm 3mm;
+  padding: 2mm 0;
+  border-bottom: 0.5pt solid #aaa;
+}
+
+.recipe-print-notes {
+  margin-top: 8mm;
+}
+
+.recipe-print-source {
+  margin-top: 8mm;
+  padding-top: 3mm;
+  border-top: 0.5pt solid #aaa;
+  font-size: 10pt;
+}
+
+.recipe-print-heading {
+  break-after: avoid;
+}
+
+@media screen and (max-width: 600px) {
+  .recipe-print-card {
+    padding: 6mm;
+  }
+
+  .recipe-print-columns {
+    grid-template-columns: 1fr;
+    gap: 8mm;
+  }
+
+  .recipe-print-photo {
+    width: 25mm;
+    height: 25mm;
+  }
+}
+
+@media print {
+  @page recipe {
+    size: A4;
+    margin: 18mm 14mm 16mm;
+
+    @top-left {
+      font-size: 9pt;
+      color: #444;
+    }
+
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-size: 9pt;
+    }
+  }
+
+  body:has([data-recipe-print]) {
+    page: recipe;
+    margin: 0;
+    background: white;
+    color: #171717;
+  }
+
+  body:has([data-recipe-print]) > :not([data-recipe-print]),
+  .recipe-print-dialog {
+    display: none !important;
+  }
+
+  .recipe-print-document {
+    display: block;
+  }
+
+  .recipe-print-card {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Firefox cannot paginate a grid row containing the entire recipe reliably. */
+  .recipe-print-columns {
+    display: block;
+  }
+
+  .recipe-print-columns > div {
+    float: left;
+    width: 29%;
+  }
+
+  .recipe-print-columns > section {
+    margin-left: 36%;
+  }
+
+  .recipe-print-columns::after {
+    display: block;
+    clear: both;
+    content: "";
+  }
+
+  .recipe-print-step {
+    position: relative;
+    display: block;
+    padding-left: 9mm;
+  }
+
+  .recipe-print-step-number {
+    position: absolute;
+    left: 0;
+  }
+}

@@ -423,5 +423,13 @@
     "removeImage": "이미지 삭제",
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
     "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
+  },
+  "print": {
+    "title": "레시피 인쇄",
+    "includePhoto": "사진 포함",
+    "textSize": "글자 크기",
+    "print": "인쇄 / PDF 저장",
+    "continued": "계속",
+    "perServing": "1인분당"
   }
 }

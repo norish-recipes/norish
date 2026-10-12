@@ -48,7 +48,7 @@ import { useRecipeContextRequired } from "./context";
  * frames the recipe. On a phone the page follows the job instead, and
  * reference material comes after the cooking.
  */
-export default function RecipePageMobile() {
+export default function RecipePageMobile({ onPrint }: { onPrint: () => void }) {
   const { recipe, currentServings, allergies, allergySet } = useRecipeContextRequired();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
@@ -116,7 +116,11 @@ export default function RecipePageMobile() {
                     onToggle={handleToggleFavorite}
                   />
                 )}
-                <ActionsMenu buttonClassName={RECIPE_HERO_CHROME_BUTTON_CLASS} id={recipe.id} />
+                <ActionsMenu
+                  buttonClassName={RECIPE_HERO_CHROME_BUTTON_CLASS}
+                  id={recipe.id}
+                  onPrint={onPrint}
+                />
               </>
             }
           />
