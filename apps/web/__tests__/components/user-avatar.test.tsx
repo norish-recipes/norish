@@ -6,16 +6,6 @@ import "@testing-library/jest-dom";
 import UserAvatar, { getUserInitials } from "@/components/shared/user-avatar";
 
 describe("UserAvatar", () => {
-  it("renders initials underneath the image while it loads", () => {
-    render(<UserAvatar image="/avatars/user-1-100.png" name="Alice Smith" userId="user-1" />);
-
-    const avatar = screen.getByRole("img", { name: "Alice Smith" });
-
-    // Both layers present: the image on top, initials underneath
-    expect(avatar.querySelector("img")).toHaveAttribute("src", "/avatars/user-1-100.png");
-    expect(avatar).toHaveTextContent("AS");
-  });
-
   it("keeps showing initials when the image 404s", () => {
     render(<UserAvatar image="/avatars/old-url.png" name="Alice Smith" userId="user-1" />);
 
@@ -42,29 +32,28 @@ describe("UserAvatar", () => {
     expect(avatar.querySelector("img")).toHaveAttribute("src", "/avatars/user-1-200.png");
   });
 
-  it("puts a loaded picture on the plain surface, not on the identity pastel", () => {
+  it("gives a picture no background of its own, from the first paint", () => {
     // A transparent PNG shows whatever is behind it. The identity pastel stands
     // in for a missing picture; behind a real one it became a green disc the
-    // person never chose, ignoring the light or dark theme around it (#536).
+    // person never chose, ignoring the light or dark theme around it (#536),
+    // and flashed at every start while the picture loaded (#630).
     render(<UserAvatar image="/avatars/user-1-100.png" name="Alice Smith" userId="user-1" />);
 
     const avatar = screen.getByRole("img", { name: "Alice Smith" });
 
-    fireEvent.load(avatar.querySelector("img")!);
-
+    expect(avatar.querySelector("img")).toHaveAttribute("src", "/avatars/user-1-100.png");
     expect(avatar.style.backgroundColor).toBe("");
-    expect(avatar.className).toContain("bg-surface");
+    expect(avatar.className).not.toContain("bg-");
     expect(avatar).not.toHaveTextContent("AS");
   });
 
-  it("falls back to the pastel disc again when a loaded picture is replaced by one that 404s", () => {
+  it("falls back to the pastel disc again when a picture is replaced by one that 404s", () => {
     const { rerender } = render(
       <UserAvatar image="/avatars/user-1-100.png" name="Alice Smith" userId="user-1" />
     );
 
     const avatar = screen.getByRole("img", { name: "Alice Smith" });
 
-    fireEvent.load(avatar.querySelector("img")!);
     rerender(<UserAvatar image="/avatars/user-1-200.png" name="Alice Smith" userId="user-1" />);
     fireEvent.error(avatar.querySelector("img")!);
 
