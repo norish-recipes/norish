@@ -56,6 +56,6 @@ export const config = {
   // Each directory is skipped with what is under it and each file exactly, so a
   // future /login-history or /icons-admin still goes through the proxy.
   matcher: [
-    "/((?!(?:api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons|brand|images/splash|login|signup|auth-error|~offline|serwist|sounds)(?:/|$)|(?:manifest\\.webmanifest|sw\\.js|logo\\.svg|404\\.jpg|nora\\.jpg|mockup-norish\\.png|robots\\.txt)$).*)",
+    "/((?!(?:api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons|brand|login|signup|auth-error|~offline|serwist|sounds)(?:/|$)|(?:manifest\\.webmanifest|sw\\.js|logo\\.svg|404\\.jpg|nora\\.jpg|mockup-norish\\.png|robots\\.txt)$).*)",
   ],
 };

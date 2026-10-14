@@ -7,11 +7,12 @@
  * sold iPhone/iPad shape plus the SE/Plus legacy shapes still in the wild.
  *
  * MAINTENANCE (September, every year): after Apple's fall hardware event,
- * check the new devices' point sizes and add any new shape here. Devices that
+ * check the new devices' point sizes and add any new shape here, then render
+ * its images with `pnpm --filter @norish/web generate:splash`. Devices that
  * reuse an existing points x DPR pair need no entry (only a label update).
  *
  * RETESTING: iOS freezes the splash per install at add-to-home-screen time.
- * Any change here (or to the /images/splash route) is invisible to an
+ * Any change here (or to the splash images) is invisible to an
  * existing installation — remove the PWA from the home screen and re-add it
  * before judging a splash change.
  */
@@ -84,7 +85,14 @@ export const mediaQuery = (specification: IOSSplashSpec, orientation: Orientatio
     `(orientation: ${orientation})`,
   ].join(" and ");
 
-export const generateAppleWebAppSplashScreenConfigs = (): AppleWebAppStartupImage[] => {
+export type IOSSplashImage = AppleWebAppStartupImage & {
+  scheme: ColorScheme;
+  width: number;
+  height: number;
+};
+
+/** Every startup image, with the size and scheme its file is rendered at. */
+export const iosSplashImages = (): IOSSplashImage[] => {
   return iosSplashSchema.flatMap((specification) => {
     const orientations: Orientation[] = ["portrait", "landscape"];
     // Startup images are static link tags, so the OS scheme is the only theme
@@ -100,9 +108,15 @@ export const generateAppleWebAppSplashScreenConfigs = (): AppleWebAppStartupImag
       const height = isPortrait ? specification.px.height : specification.px.width;
 
       return schemes.map((scheme) => ({
+        scheme,
+        width,
+        height,
         media: `screen and (prefers-color-scheme: ${scheme}) and ${mediaQuery(specification, orientation)}`,
-        url: `/images/splash?width=${width}&height=${height}&scheme=${scheme}`,
+        url: `/brand/splash/${scheme}-${width}x${height}.png`,
       }));
     });
   });
 };
+
+export const generateAppleWebAppSplashScreenConfigs = (): AppleWebAppStartupImage[] =>
+  iosSplashImages().map(({ media, url }) => ({ media, url }));

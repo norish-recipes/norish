@@ -62,7 +62,7 @@ describe("iosSplashSchema device matrix", () => {
       expect(config.media).toContain("(device-height: ");
       expect(config.media).toContain("(-webkit-device-pixel-ratio: ");
       expect(config.media).toMatch(/\(orientation: (portrait|landscape)\)$/);
-      expect(config.url).toMatch(/^\/images\/splash\?width=\d+&height=\d+&scheme=(light|dark)$/);
+      expect(config.url).toMatch(/^\/brand\/splash\/(light|dark)-\d+x\d+\.png$/);
     }
   });
 });
