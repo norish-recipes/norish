@@ -6,6 +6,7 @@ import { Bars3Icon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryCheckbox } from "../grocery-checkbox";
 
@@ -46,11 +47,11 @@ export function GroceryDragOverlay({
 
       <div className={contentClass}>
         <div className={rowClass}>
-          {(grocery.amount || grocery.unit) && (
+          {(shownAmount(grocery) || grocery.unit) && (
             <span
               className={`shrink-0 font-medium ${grocery.isDone ? "text-muted" : "text-accent"}`}
             >
-              {formatAmountUnit(grocery.amount, grocery.unit)}
+              {formatAmountUnit(shownAmount(grocery), grocery.unit)}
             </span>
           )}
           <span

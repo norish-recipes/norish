@@ -7,6 +7,7 @@ import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryCheckbox } from "./grocery-checkbox";
 import { GroceryPrice } from "./grocery-price";
@@ -40,7 +41,7 @@ function GroceryItemComponent({
   const t = useTranslations("groceries.item");
   const { formatAmountUnit } = useUnitFormatter();
 
-  const amountDisplay = formatAmountUnit(grocery.amount, grocery.unit);
+  const amountDisplay = formatAmountUnit(shownAmount(grocery), grocery.unit);
 
   return (
     <div

@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
+import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryCheckbox } from "./grocery-checkbox";
 import { GroceryPrice } from "./grocery-price";
@@ -30,7 +31,7 @@ export function formatInlineSourceBreakdown(
   const named = (name: string, amounts: string[]) =>
     amounts.length > 0 ? `${name} (${amounts.join(", ")})` : name;
   const amountOf = (source: GroupedGrocerySource) =>
-    formatFn(source.grocery.amount, source.grocery.unit);
+    formatFn(shownAmount(source.grocery), source.grocery.unit);
   const manual = sources.filter((source) => !source.recipeName);
   const entries = sources.flatMap((source) =>
     source.recipeName ? [named(source.recipeName, [amountOf(source)].filter(Boolean))] : []
@@ -38,7 +39,7 @@ export function formatInlineSourceBreakdown(
 
   if (manual.length > 0) {
     const amounts = manual.map((source) =>
-      formatFn(source.grocery.amount ?? 1, source.grocery.unit)
+      formatFn(shownAmount(source.grocery) ?? 1, source.grocery.unit)
     );
 
     entries.push(named(manualLabel, amounts.filter(Boolean)));
@@ -243,7 +244,7 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
     ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
     : null;
 
-  const amountDisplay = formatAmountUnit(grocery.amount, grocery.unit);
+  const amountDisplay = formatAmountUnit(shownAmount(grocery), grocery.unit);
 
   return (
     <div className="flex min-h-11 items-center gap-3 px-4 py-2.5">

@@ -48,6 +48,18 @@ export function normalizeUnitForGrouping(unit: string | null, customUnits?: Unit
   return trimmed.toLowerCase();
 }
 
+/**
+ * The amount a row shows for a grocery. A line that states no unit is a count
+ * of things to buy, so the Purchase Amount the shopper chose is that count
+ * (ADR-0030); a measure stays the requirement, and its purchase shows beside
+ * the price.
+ */
+export function shownAmount(
+  grocery: Pick<GroceryDto, "amount" | "unit" | "purchaseAmount">
+): number | null | undefined {
+  return grocery.unit ? grocery.amount : (grocery.purchaseAmount ?? grocery.amount);
+}
+
 export interface GroupedGrocerySource {
   grocery: GroceryDto;
   recipeName: string | null;
@@ -137,7 +149,7 @@ export function groupGroceriesByIngredient(
 
       // One unit, so one total; a line that states no amount stands for one of
       // whatever its group counts.
-      const totalAmount = sortedItems.reduce((sum, g) => sum + (g.amount ?? 1), 0);
+      const totalAmount = sortedItems.reduce((sum, g) => sum + (shownAmount(g) ?? 1), 0);
       const displayUnit = normalizedUnit || null;
 
       const sources: GroupedGrocerySource[] = sortedItems.map((grocery) => ({

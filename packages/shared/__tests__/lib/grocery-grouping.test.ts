@@ -88,6 +88,20 @@ describe("groupGroceriesByIngredient", () => {
     ]);
   });
 
+  it("counts the Purchase Amount chosen for a line that states no unit, but never for a measure (#603)", () => {
+    const chosen = (line: GroceryDto, purchaseAmount: number) => ({ ...line, purchaseAmount });
+    const groups = groupsOf([
+      chosen(grocery("ui"), 4),
+      chosen(grocery("ui", 2), 3),
+      chosen(grocery("kip", 300, "g"), 2),
+    ]);
+
+    expect(shapeOf(groups)).toEqual([
+      { name: "ui", totalAmount: 7, displayUnit: null, sources: 2 },
+      { name: "kip", totalAmount: 300, displayUnit: "gram", sources: 1 },
+    ]);
+  });
+
   it("folds a qualifier into the name it qualifies, when both are measured the same", () => {
     const groups = groupsOf([grocery("kip", 500, "g"), grocery("kip (diepvries)", 300, "g")]);
 
