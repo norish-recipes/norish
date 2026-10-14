@@ -2,6 +2,13 @@ import type { MetadataRoute } from "next";
 
 import { siteConfig } from "@norish/web/config/site";
 
+const SCREENSHOTS = [
+  { name: "dashboard", label: "Recipe library" },
+  { name: "recipe", label: "A recipe" },
+  { name: "groceries", label: "Groceries" },
+  { name: "calendar", label: "Meal calendar" },
+];
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: siteConfig.name,
@@ -10,14 +17,23 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     display: "standalone",
     background_color: "#F8F3E7",
+    // Shown by the richer install sheet: "wide" on desktop, "narrow" on phones.
+    // Each form factor keeps one aspect ratio, or Chrome drops the set.
     screenshots: [
-      {
-        src: "/mockup-norish.png",
-        sizes: "1280x720",
-        type: "image/png",
-        label: "Norish app desktop and mobile",
-        form_factor: "wide",
-      },
+      ...SCREENSHOTS.map(({ name, label }) => ({
+        src: `/brand/screenshots/${name}-wide.jpg`,
+        sizes: "1200x900",
+        type: "image/jpeg",
+        form_factor: "wide" as const,
+        label,
+      })),
+      ...SCREENSHOTS.map(({ name, label }) => ({
+        src: `/brand/screenshots/${name}-narrow.jpg`,
+        sizes: "780x1546",
+        type: "image/jpeg",
+        form_factor: "narrow" as const,
+        label,
+      })),
     ],
     // The PNGs are listed twice: "any" for launchers that show the icon as is,
     // "maskable" for Android to crop to its own shape (#611).
