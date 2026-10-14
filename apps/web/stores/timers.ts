@@ -27,7 +27,7 @@ function showTimerNotification(timer: { label: string; recipeName?: string }) {
 
         registration.showNotification(title, {
           body: "Timer complete!",
-          icon: "/android-chrome-192x192.png",
+          icon: "/brand/icon-192.png",
           tag: "timer-complete",
           renotify: true,
           requireInteraction: true,

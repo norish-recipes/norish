@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: siteConfig.description,
     start_url: "/",
     display: "standalone",
-    background_color: "#FFFEF7",
+    background_color: "#F8F3E7",
     screenshots: [
       {
         src: "/mockup-norish.png",
@@ -19,45 +19,14 @@ export default function manifest(): MetadataRoute.Manifest {
         form_factor: "wide",
       },
     ],
-    // No SVG here: Firefox for Android tries a "sizes: any" icon before every PNG,
-    // and iOS picks no icon at all once the manifest lists one (WebKit bug 256429),
-    // so either installs Norish with a default icon (#611).
+    // The PNGs are listed twice: "any" for launchers that show the icon as is,
+    // "maskable" for Android to crop to its own shape (#611).
     icons: [
-      {
-        src: "/android-chrome-192x192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        src: "/android-chrome-512x512.png",
-        sizes: "512x512",
-        type: "image/png",
-      },
-      {
-        src: "/apple-touch-icon.png",
-        sizes: "180x180",
-        type: "image/png",
-      },
-      {
-        src: "/favicon-96x96.png",
-        sizes: "96x96",
-        type: "image/png",
-      },
-      {
-        src: "/favicon-32x32.png",
-        sizes: "32x32",
-        type: "image/png",
-      },
-      {
-        src: "/favicon-16x16.png",
-        sizes: "16x16",
-        type: "image/png",
-      },
-      {
-        src: "/favicon.ico",
-        sizes: "48x48",
-        type: "image/x-icon",
-      },
+      { src: "/brand/favicon.svg", sizes: "any", type: "image/svg+xml" },
+      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

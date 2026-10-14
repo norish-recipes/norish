@@ -27,7 +27,7 @@ test.describe.configure({ mode: "serial" });
 const WEB_DIR = path.resolve(import.meta.dirname, "../../..");
 
 /** A real image, unlike the import helper's single pixel: media has to reach disk here. */
-const RECIPE_PHOTO = path.join(WEB_DIR, "public/favicon-96x96.png");
+const RECIPE_PHOTO = path.join(WEB_DIR, "public/brand/icon-192.png");
 
 // A deterministic recipe the fake provider returns for the vision call. The
 // distinctive name is how the round-trip finds its own recipe again.

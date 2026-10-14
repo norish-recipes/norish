@@ -19,6 +19,10 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     // The native binary rather than esbuild-wasm; @serwist/turbopack only
     // defaults to native on Windows, and the wasm build is markedly slower.
     useNativeEsbuild: true,
+    // public/** is precached by default; public/brand holds the icons, splash
+    // screens and install screenshots, which only the browser's install flow
+    // fetches, so every client would download megabytes it never uses.
+    globIgnores: ["**/node_modules/**/*", "public/brand/**/*"],
     // Precache the offline navigation-fallback document so the SW's
     // `fallbacks` can serve it (ADR-0006). The revision is per-build: the
     // page's HTML references content-hashed chunks, so a stale copy would
