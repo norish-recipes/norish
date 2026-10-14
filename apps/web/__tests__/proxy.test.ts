@@ -58,6 +58,7 @@ describe("proxy share access", () => {
     "/login/",
     "/icons/x.png",
     "/brand/apple-touch-icon.png",
+    "/logo-small.svg",
     "/sw.js",
     "/serwist/sw.js",
     "/api/auth/session",

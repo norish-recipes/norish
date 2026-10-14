@@ -62,8 +62,13 @@ export function OfflineBootstrap() {
     // The precached shell: exactly what the static prerender emitted.
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center p-6">
-        {/* eslint-disable-next-line @next/next/no-img-element -- the raw /logo.svg ships in the precached public/ scan; next/image needs a runtime endpoint. */}
-        <img aria-hidden alt="" className="size-12 animate-pulse opacity-80" src="/logo.svg" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- the raw /logo-small.svg ships in the precached public/ scan; next/image needs a runtime endpoint. */}
+        <img
+          aria-hidden
+          alt=""
+          className="size-12 animate-pulse opacity-80"
+          src="/logo-small.svg"
+        />
       </main>
     );
   }
