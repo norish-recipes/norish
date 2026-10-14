@@ -32,7 +32,28 @@ function norishTheme(): Plugin {
 const config: Config = {
   title: "Norish",
   tagline: "Any recipe any source",
-  favicon: "img/favicon.svg",
+  favicon: "brand/favicon.svg",
+  // The rest of the set the app and landing link; `favicon` takes one file.
+  headTags: [
+    {
+      tagName: "link",
+      attributes: {
+        rel: "icon",
+        href: "/brand/favicon-96x96.png",
+        sizes: "96x96",
+        type: "image/png",
+      },
+    },
+    { tagName: "link", attributes: { rel: "icon", href: "/brand/favicon.ico", sizes: "48x48" } },
+    {
+      tagName: "link",
+      attributes: {
+        rel: "apple-touch-icon",
+        href: "/brand/apple-touch-icon.png",
+        sizes: "180x180",
+      },
+    },
+  ],
 
   url: "https://docs.norish.dev",
   baseUrl: "/",
