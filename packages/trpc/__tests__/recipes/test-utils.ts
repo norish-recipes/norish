@@ -81,11 +81,17 @@ export function createMockRecipeDashboard(
     cookMinutes: 30,
     totalMinutes: 45,
     calories: null,
+    notes: null,
+    originCountry: null,
+    version: 1,
     createdAt: now,
     updatedAt: now,
-    tags: [{ name: "dinner" }, { name: "easy" }],
+    tags: [
+      { name: "dinner", version: 1 },
+      { name: "easy", version: 1 },
+    ],
     categories: ["Dinner"],
-    author: { id: "test-user-id", name: "Test User", image: null },
+    author: { id: "test-user-id", name: "Test User", image: null, version: 1 },
     ...overrides,
   };
 }

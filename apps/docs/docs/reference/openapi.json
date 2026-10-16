@@ -1959,6 +1959,10 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "statusUrl": {
+                      "description": "Relative URL to check the status of this import job",
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -1996,6 +2000,345 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/error.PRECONDITION_FAILED"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recipes/import/status/{recipeId}": {
+      "get": {
+        "operationId": "recipeImportStatus",
+        "summary": "Get status of a queued recipe import",
+        "tags": [
+          "Recipe Imports"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recipeId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The recipe ID assigned to the import job"
+            },
+            "required": true,
+            "description": "The recipe ID assigned to the import job"
+          },
+          {
+            "in": "query",
+            "name": "wait",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipeId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "description": "The recipe ID assigned to the import"
+                    },
+                    "url": {
+                      "description": "Source URL of the recipe being imported",
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "waiting",
+                        "active",
+                        "completed",
+                        "failed",
+                        "not_found"
+                      ],
+                      "description": "Current processing status of the import job"
+                    },
+                    "step": {
+                      "description": "Current step being executed (e.g. dedupe-check, parsing, saving)",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "error": {
+                      "description": "Error message if the import failed",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "recipe": {
+                      "description": "Recipe data if import completed",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "userId": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "url": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "servings": {
+                              "type": "integer",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            "prepMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "cookMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "totalMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "notes": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "calories": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "originCountry": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "Breakfast",
+                                  "Lunch",
+                                  "Dinner",
+                                  "Snack"
+                                ]
+                              }
+                            },
+                            "version": {
+                              "type": "integer",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            "image": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "tags": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "version": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "version"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "author": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "image": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "version": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "version"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "averageRating": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "ratingCount": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "userId",
+                            "name",
+                            "description",
+                            "url",
+                            "servings",
+                            "prepMinutes",
+                            "cookMinutes",
+                            "totalMinutes",
+                            "notes",
+                            "calories",
+                            "originCountry",
+                            "createdAt",
+                            "updatedAt",
+                            "categories",
+                            "version",
+                            "image",
+                            "tags"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "recipeId",
+                    "status"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this import job",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipe not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
                 }
               }
             }
@@ -4219,6 +4562,50 @@
         "example": {
           "code": "PRECONDITION_FAILED",
           "message": "The URL is a video and AI or video parsing is not enabled",
+          "issues": []
+        }
+      },
+      "error.FORBIDDEN": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The error message",
+            "example": "You do not have access to this import job"
+          },
+          "code": {
+            "type": "string",
+            "description": "The error code",
+            "example": "FORBIDDEN"
+          },
+          "issues": {
+            "description": "An array of issues that were responsible for the error",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "message",
+          "code"
+        ],
+        "additionalProperties": false,
+        "title": "You do not have access to this import job error (403)",
+        "description": "The error information",
+        "example": {
+          "code": "FORBIDDEN",
+          "message": "You do not have access to this import job",
           "issues": []
         }
       }

@@ -7,6 +7,8 @@ import type {
   FullRecipeUpdateSchema,
   measurementSystems,
   RecipeDashboardSchema,
+  RecipeImportJobStateSchema,
+  RecipeImportStatusSchema,
 } from "@norish/shared/contracts/zod";
 
 export type MeasurementSystem = (typeof measurementSystems)[number];
@@ -16,3 +18,5 @@ export type FullRecipeDTO = z.output<typeof FullRecipeSchema>;
 export type AuthorDTO = z.output<typeof AuthorSchema>;
 export type FullRecipeInsertDTO = z.input<typeof FullRecipeInsertSchema>;
 export type FullRecipeUpdateDTO = z.input<typeof FullRecipeUpdateSchema>;
+export type RecipeImportJobState = z.infer<typeof RecipeImportJobStateSchema>;
+export type RecipeImportStatusDTO = z.infer<typeof RecipeImportStatusSchema>;
