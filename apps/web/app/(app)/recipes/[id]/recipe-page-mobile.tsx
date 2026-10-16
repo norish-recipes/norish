@@ -61,7 +61,7 @@ export default function RecipePageMobile() {
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
-  const handleRateRecipe = (rating: number) => rateRecipe(recipe.id, rating);
+  const handleRateRecipe = (rating: number | null) => rateRecipe(recipe.id, rating);
 
   return (
     <div
@@ -206,6 +206,7 @@ export default function RecipePageMobile() {
             <Card.Content className="flex flex-col items-center gap-4 p-5">
               <p className="text-muted font-medium">{t("ratingPrompt")}</p>
               <StarRating
+                allowClear={userRating !== null}
                 isLoading={isRating || isRatingLoading}
                 value={userRating ?? averageRating}
                 onChange={handleRateRecipe}

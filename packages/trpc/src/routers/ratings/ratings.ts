@@ -42,7 +42,10 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
       const stats = await getAverageRating(recipeId);
       const policy = await getRecipePermissionPolicy();
 
-      log.info({ userId: ctx.user.id, recipeId, rating, isNew: result.isNew }, "Recipe rated");
+      log.info(
+        { userId: ctx.user.id, recipeId, rating, isNew: result.isNew },
+        rating === null ? "Recipe rating removed" : "Recipe rated"
+      );
 
       void ratings.publish(
         "ratingUpdated",
