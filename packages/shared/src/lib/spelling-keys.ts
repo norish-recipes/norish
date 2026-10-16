@@ -50,8 +50,9 @@ export function stripPreparation(text: string): string {
  * "for garnish", "optional"). A piece is left alone, because those words name
  * foods too: "onion rings" are not onion, and "glass noodles" are not
  * noodles. A weight or a volume goes only at the start (`MEASURE_MAP_IDS`).
+ * Also the only units a line names without a number ("q.b. sale").
  */
-const STRIPPED_UNITS = new Set([
+export const VAGUE_UNITS: ReadonlySet<string> = new Set([
   "to_taste",
   "to_serve",
   "for_garnish",
@@ -140,7 +141,7 @@ export function spellingRules(
       ...(unit?.plural ?? []).map((form) => form?.name),
       ...(unit?.alternates ?? []),
     ];
-    const into = STRIPPED_UNITS.has(id)
+    const into = VAGUE_UNITS.has(id)
       ? either
       : CONTAINER_UNITS.has(id) || MEASURE_MAP_IDS.has(id)
         ? leading
@@ -214,7 +215,8 @@ function isGluedQuantity(word: string, rules: SpellingRules): boolean {
  * Which words of a folded text name the food: the range left once a
  * quantity at the start (an approximation, a number, its unit and the word
  * joining it, as an import that never parsed the line left them: "ongeveer
- * 4 el bosui", "400g can chickpeas"), the units-map phrases at either end, a
+ * 4 el bosui", "400g can chickpeas"), a joining word left at the start ("di
+ * farina"), the units-map phrases at either end, a
  * container, weight or volume at the start, and the preparation and size
  * words at either end are taken off, whole words only. A phrase inside the name stays, and a
  * text is never stripped to nothing: where it would be, the whole text
@@ -262,6 +264,12 @@ function foodWordRange(words: readonly string[], rules: SpellingRules): [number,
     if (leading) {
       start += leading.length;
       if (end - start > 1 && rules.connectors.has(words[start]!)) start += 1;
+      stripped = true;
+    }
+
+    // "di farina": the parser took "200 g" off and left the word joining it to the food.
+    if (end - start > 1 && rules.connectors.has(words[start]!)) {
+      start += 1;
       stripped = true;
     }
 

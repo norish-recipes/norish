@@ -156,6 +156,16 @@ describe("spelling keys", () => {
     expect(foodKey("a pinch of salt to taste", phrases)).toBe("salt");
   });
 
+  it("strips a joining word the parser left at the start, never one inside the name", () => {
+    // "200 g di farina": the amount and unit are the line's, "di farina" its name.
+    expect(foodKey("di farina", phrases)).toBe("farina");
+    expect(foodKey("d'aglio", phrases)).toBe("aglio");
+    expect(foodKey("de miel", phrases)).toBe("miel");
+    expect(spellingKeys("di Grana Padano DOP", phrases).plain).toBe("Grana Padano DOP");
+    expect(foodKey("farina di semola", phrases)).toBe("farina di semola");
+    expect(foodKey("di", phrases)).toBe("di");
+  });
+
   it("keeps a phrase inside the name, and never strips a text to nothing", () => {
     expect(foodKey("cream to taste with sugar", phrases)).toBe("cream to taste with sugar");
     expect(foodKey("to taste", phrases)).toBe("to taste");

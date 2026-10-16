@@ -3,7 +3,7 @@ import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { parseIngredientWithDefaults, withoutListMarkers } from "@norish/shared/lib/helpers";
 
 /**
  * Parse human-readable duration strings like "30 min", "1 hr 15 min", "1h30m", "1 hour", "1:30", "1:00h"
@@ -227,8 +227,8 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
 
   // Parse ingredients - split by newlines first, then parse each line
   const units = await getUnits();
-  const ingredientArray = splitNonEmptyLines(input.ingredientsText).flatMap((text) =>
-    parseIngredientWithDefaults(text, units).map((line) => ({ ...line, text }))
+  const ingredientArray = withoutListMarkers(splitNonEmptyLines(input.ingredientsText)).flatMap(
+    (text) => parseIngredientWithDefaults(text, units).map((line) => ({ ...line, text }))
   );
   const systemUsed = inferSystemUsedFromParsed(ingredientArray);
   const normalizedIngredients = ingredientArray
@@ -242,10 +242,10 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
     })
     .filter((line) => line.description.length > 0);
 
-  // Parse steps
-  const stepLines = splitNonEmptyLines(input.instructionsText).map(
-    (step) => (step.length <= MAX_HEADING_STEP_LENGTH && headingOf(step)) || step
-  );
+  // Parse steps; a separator line ("-", "•") says nothing and is no step.
+  const stepLines = splitNonEmptyLines(input.instructionsText)
+    .filter((step) => /[\p{L}\p{N}]/u.test(step))
+    .map((step) => (step.length <= MAX_HEADING_STEP_LENGTH && headingOf(step)) || step);
 
   // Parse tags from categories
   const tags = (input.categories || [])

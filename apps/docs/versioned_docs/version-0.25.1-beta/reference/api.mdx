@@ -1,0 +1,17 @@
+---
+sidebar_position: 1
+title: API reference
+description: The Norish public HTTP API under /api/v1.
+---
+
+import ApiReference, { apiToc } from "@site/src/components/ApiReference";
+
+import spec from "./openapi.json";
+
+export const toc = apiToc(spec);
+
+# API reference
+
+Create an API key under **Settings => User => API keys** and send it as an `x-api-key` header or as `Authorization: Bearer <key>`. Replace `https://norish.example.com` in the examples with the address of your own server.
+
+<ApiReference spec={spec} />

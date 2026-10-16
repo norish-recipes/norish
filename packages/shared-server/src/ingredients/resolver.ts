@@ -64,8 +64,9 @@ import { announceMinted } from "./minted";
  * words of every language, plurals and diminutives at rung 2, and a
  * quantity left at a name's start. 4: a social media mention names no food.
  * 5: a weight or a volume at a name's start, with or without its number.
+ * 6: a joining word left at a name's start ("di farina").
  */
-export const RUNG_VERSION = 5;
+export const RUNG_VERSION = 6;
 
 /** Who the resolution is for: the owner of anything it mints. */
 export interface ResolveActor {
