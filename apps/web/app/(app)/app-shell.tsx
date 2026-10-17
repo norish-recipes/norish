@@ -27,6 +27,20 @@ import {
   APP_MAIN_HORIZONTAL_PADDING_CLASS,
 } from "@norish/web/config/css-tokens";
 
+/** What the layout read for the providers' first render; the offline bootstrap has none. */
+export type AppSeed = {
+  /** The profile's Device Preferences for the request's Device Kind. */
+  devicePreferences: DevicePreferencesSeed;
+  /** Drawn until the session answers; the Offline Cache restores this reader's at hydration. */
+  reader: User;
+  /** The reader's date in their time zone. */
+  readerToday: string;
+  /** The Library filters from the browser's cookie; absent without one. */
+  recipeFilters?: PersistedRecipeFilters;
+  /** The providers' reads, on a full load only. */
+  queries?: DehydratedState;
+};
+
 /**
  * The full authenticated app chrome: every provider plus navbar and main
  * container. One composition serves both the `(app)` layout and the offline
@@ -34,39 +48,19 @@ import {
  * boots the same providers client-side, so the Warm Set renders under the
  * exact tree the Live app uses.
  */
-export function AppShell({
-  children,
-  devicePreferences,
-  reader,
-  readerToday,
-  recipeFilters,
-  seed,
-}: {
-  children: React.ReactNode;
-  /** The profile's Device Preferences as the layout's server pass read them; absent offline. */
-  devicePreferences?: DevicePreferencesSeed;
-  /** The reader the layout verified: drawn until the session answers, and the Offline Cache
-   * restores theirs at hydration. Absent offline. */
-  reader?: User;
-  /** The reader's date in their time zone, as the layout read it; absent offline. */
-  readerToday?: string;
-  /** The Library filters from the browser's cookie; absent offline or without one. */
-  recipeFilters?: PersistedRecipeFilters;
-  /** What the shell's providers read, sent with a full load; absent offline. */
-  seed?: DehydratedState;
-}) {
+export function AppShell({ children, seed }: { children: React.ReactNode; seed?: AppSeed }) {
   return (
-    <ReaderTodayProvider value={readerToday}>
+    <ReaderTodayProvider value={seed?.readerToday}>
       <AuthProviders>
-        {/* Above the providers that read it, so its queries are new to the cache and fill in render. */}
-        <QuerySeedBoundary state={seed}>
+        {/* Above the providers reading these queries, so their first render has them. */}
+        <QuerySeedBoundary state={seed?.queries}>
           <ArchiveImportProvider>
-            <UserProvider reader={reader}>
-              <OfflineCacheController seededUserId={reader?.id}>
-                <DevicePreferencesProvider seed={devicePreferences}>
+            <UserProvider reader={seed?.reader}>
+              <OfflineCacheController seededUserId={seed?.reader.id}>
+                <DevicePreferencesProvider seed={seed?.devicePreferences}>
                   <HouseholdProvider>
                     <PermissionsProvider>
-                      <RecipesFiltersProvider initialFilters={recipeFilters}>
+                      <RecipesFiltersProvider initialFilters={seed?.recipeFilters}>
                         <RecipesContextProvider>
                           <CookbooksRealtimeProvider>
                             <PantryRealtimeProvider>

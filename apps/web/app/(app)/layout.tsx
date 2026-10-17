@@ -19,9 +19,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect(loginPath((await headers()).get(DESTINATION_HEADER)));
   }
 
-  // What the shell's first render needs, read once; the offline bootstrap mounts it unseeded. Not
-  // `user.get`: its API-key metadata would sit in every document the worker keeps.
-  const [devicePreferences, readerToday, recipeFilters, seed] = await Promise.all([
+  // What the providers' first render needs, read once. Not `user.get`: its API-key metadata would
+  // sit in every document the worker keeps.
+  const [devicePreferences, readerToday, recipeFilters, queries] = await Promise.all([
     readDevicePreferencesSeed(),
     readReaderToday(),
     readRecipeFilters(),
@@ -37,11 +37,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
-      devicePreferences={devicePreferences}
-      reader={{ id, email, name, image, version }}
-      readerToday={readerToday}
-      recipeFilters={recipeFilters}
-      seed={seed}
+      seed={{
+        devicePreferences,
+        reader: { id, email, name, image, version },
+        readerToday,
+        recipeFilters,
+        queries,
+      }}
     >
       {children}
     </AppShell>
