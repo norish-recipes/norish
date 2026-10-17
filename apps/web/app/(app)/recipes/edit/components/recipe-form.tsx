@@ -502,10 +502,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-muted mb-3 flex items-center gap-1 text-base">
+            <div className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("ingredientsHelp")}
               <SmartInputHelp />
-            </p>
+            </div>
             <IngredientInput
               ingredients={ingredients}
               systemUsed={systemUsed}
@@ -527,10 +527,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-muted mb-3 flex items-center gap-1 text-base">
+            <div className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("instructionsHelp")}
               <SmartInputHelp showIngredientMention />
-            </p>
+            </div>
             <StepInput
               ingredients={ingredients}
               recipeId={recipeId ?? undefined}
