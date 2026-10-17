@@ -7,7 +7,7 @@ import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip
 import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { LinkIcon, PauseIcon, PlayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Button, Modal, Table } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import type {
   AdminRecipeShareInventoryDto,
@@ -26,9 +26,15 @@ type Props = {
   showOwner?: boolean;
 };
 type ColumnKey = "recipe" | "owner" | "status" | "created" | "expires" | "actions";
-function formatDate(date: Date | null) {
-  return date ? new Date(date).toLocaleString() : "-";
-}
+/** toLocaleString's fields, in the locale and zone next-intl gives server and browser alike. */
+const DATE_AND_TIME = {
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  second: "2-digit",
+} as const;
 function hasOwnerFields(share: ShareRow): share is AdminRecipeShareInventoryDto {
   return "ownerId" in share;
 }
@@ -41,6 +47,9 @@ export default function ShareLinksTableCard({
   const t = useTranslations(namespace);
   const tCommon = useTranslations("common");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
+  const formatDate = (date: Date | null) =>
+    date ? format.dateTime(new Date(date), DATE_AND_TIME) : "-";
   const { revokeShare, reactivateShare, deleteShare, isRevoking, isReactivating, isDeleting } =
     sharedRecipeShareHooks.useRecipeShareMutations(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);

@@ -1010,6 +1010,39 @@ test("a full load of the user settings tab draws the reader's name in its field"
   }
 });
 
+test("the user settings tab draws a date the way the server sent it, in any browser language and zone", async ({
+  browser,
+}) => {
+  const id = await createRecipe("Dated Share Recipe");
+
+  await callApi("recipes.shareCreate", { recipeId: id });
+  // CSS, not roles: without JavaScript the streamed tab stays in a hidden container.
+  const created = (page: Page) =>
+    page.locator("tr", { hasText: "Dated Share Recipe" }).locator('td[data-key$=":created"]');
+  const served = await openStatic(browser, "phone");
+  const live = await browser.newContext({
+    baseURL: stack.baseURL,
+    storageState: { cookies: stack.ownerCookies, origins: [] },
+    userAgent: USER_AGENTS.phone,
+    serviceWorkers: "block",
+    // Neither the server's language nor its zone: a date the browser formats itself would differ.
+    locale: "nl-NL",
+    timezoneId: "Pacific/Kiritimati",
+  });
+
+  try {
+    await served.page.goto("/settings?tab=user");
+    const page = await live.newPage();
+
+    await page.goto("/settings?tab=user");
+    // A production build reports no mismatch; a hydrated date that differs from the served one is it.
+    await expect(created(page)).toHaveText((await created(served.page).textContent()) ?? "");
+  } finally {
+    await served.context.close();
+    await live.close();
+  }
+});
+
 test("a page the installed app's worker fetches itself still carries its recipe", async ({
   browser,
 }) => {

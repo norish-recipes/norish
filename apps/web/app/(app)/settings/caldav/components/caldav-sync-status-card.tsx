@@ -11,7 +11,9 @@ import {
 } from "@heroicons/react/16/solid";
 import { Button, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+
+import { useHydrated } from "@norish/shared-react/hooks";
 
 import { useCalDavSettingsContext } from "../context";
 
@@ -28,6 +30,8 @@ export default function CalDavSyncStatusCard() {
     triggerManualSync,
     isTriggeringSync: syncing,
   } = useCalDavSettingsContext();
+  const format = useFormatter();
+  const hydrated = useHydrated();
   const handleFilterClick = (status: "pending" | "synced" | "failed" | "removed") => {
     if (syncStatusFilter === status) {
       // Click same badge again to clear filter
@@ -54,6 +58,9 @@ export default function CalDavSyncStatusCard() {
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "—";
     try {
+      // "3 minutes ago" only once hydrated: the server's clock is not the browser's.
+      if (!hydrated) return format.dateTime(new Date(dateString));
+
       return formatDistanceToNow(new Date(dateString), {
         addSuffix: true,
       });

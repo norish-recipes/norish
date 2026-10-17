@@ -13,7 +13,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Button, Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import NewFeatureChip from "../../components/new-feature-chip";
 import { useUserSettingsContext } from "../context";
@@ -21,6 +21,7 @@ import { useUserSettingsContext } from "../context";
 export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
   const { apiKeys, generateApiKey, deleteApiKey, toggleApiKey } = useUserSettingsContext();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
@@ -106,7 +107,7 @@ export default function ApiKeyCard() {
                             {key.start || "***"}...
                           </code>
                         </Table.Cell>
-                        <Table.Cell>{new Date(key.createdAt).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>{format.dateTime(new Date(key.createdAt))}</Table.Cell>
                         <Table.Cell>
                           <Chip color={key.enabled ? "success" : "danger"} size="sm" variant="soft">
                             {key.enabled ? t("active") : t("disabled")}

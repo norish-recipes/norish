@@ -8,6 +8,11 @@ export function dateInTimeZone(now: Date, timeZone: string | undefined): string 
   return formatterFor(timeZone)?.format(now) ?? dateKey(now);
 }
 
+/** `timeZone` when this runtime knows it; undefined when it is missing or unknown. */
+export function knownTimeZone(timeZone: string | undefined): string | undefined {
+  return formatterFor(timeZone) ? timeZone : undefined;
+}
+
 function formatterFor(timeZone: string | undefined): Intl.DateTimeFormat | null {
   if (!timeZone) return null;
 

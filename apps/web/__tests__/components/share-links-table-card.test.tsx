@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { RecipeShareInventoryDto } from "@norish/shared/contracts/dto/recipe-shares";
 
 vi.mock("next-intl", () => ({
+  useFormatter: () => ({ dateTime: (date: Date) => date.toISOString() }),
   useTranslations: (namespace?: string) => {
     const translations: Record<string, string> = {
       "common.actions.cancel": "Cancel",

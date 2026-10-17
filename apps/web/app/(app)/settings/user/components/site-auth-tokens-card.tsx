@@ -18,12 +18,13 @@ import {
   TextField,
 } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -219,7 +220,7 @@ export default function SiteAuthTokensCard() {
                             {token.type === "header" ? t("typeHeader") : t("typeCookie")}
                           </Chip>
                         </Table.Cell>
-                        <Table.Cell>{new Date(token.createdAt).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>{format.dateTime(new Date(token.createdAt))}</Table.Cell>
                         <Table.Cell>
                           <Button
                             isIconOnly
