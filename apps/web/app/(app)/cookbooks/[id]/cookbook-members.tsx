@@ -37,8 +37,8 @@ export default function CookbookMembers({
   const { setMembership } = useCookbooksMutations();
 
   const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
-  // Until the stored filters are read, the defaults are a guess: asking under them shows members
-  // the reader filtered away, then asks again. Wait, as the Library does.
+  // Wait for the stored filters, as the Library does: asking under the defaults first shows members
+  // the reader filters out, then asks again.
   const { recipes, isLoading, isValidating, loadMore, removeMember } = useCookbookRecipesQuery(
     cookbookId,
     queryFilters,

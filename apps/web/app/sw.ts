@@ -76,7 +76,7 @@ class ReachabilityDeadlineDocuments extends Strategy {
 
       if (preloaded) return preloaded;
 
-      // Marked, so the server still seeds it as a full load.
+      // The browser sends this fetch as `Sec-Fetch-Dest: empty`; the header gets it seeded anyway.
       const headers = new Headers(request.headers);
 
       headers.set(WORKER_DOCUMENT_HEADER, "1");

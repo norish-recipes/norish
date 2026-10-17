@@ -118,8 +118,8 @@ export default function LibraryGrid({
   // A revisit lays out its remembered rows at the remembered scroll, before the first paint.
   const savedRows = rememberedListRows(scrollKey);
 
-  // The server has no window: it and the hydrating render draw the rows the Device Kind's window
-  // would show, and the browser measures its own after.
+  // The server has no window: it and the hydrating render lay out rows for the Device Kind's usual
+  // window (initialRect), and the browser measures the real one after.
   const kind = useDeviceKind();
   const hydrated = useHydrated();
 
@@ -209,7 +209,8 @@ export default function LibraryGrid({
         <>
           <div
             style={{
-              // Until hydrated, only as tall as the server's rows, so an early scroll ends on one.
+              // Until hydrated, only as tall as the rows the server drew, so an early scroll
+              // never reaches blank space.
               height: `${hydrated ? virtualizer.getTotalSize() : (virtualRows.at(-1)?.end ?? 0)}px`,
               width: "100%",
               position: "relative",
