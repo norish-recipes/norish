@@ -1,5 +1,6 @@
 import type { PersistedRecipeFilters } from "@norish/shared-react/filter-contract";
 import {
+  changedRecipeFilters,
   DEFAULT_PERSISTED_RECIPE_FILTERS,
   normalizePersistedRecipeFilters,
 } from "@norish/shared-react/filter-contract";
@@ -9,13 +10,9 @@ export const RECIPE_FILTERS_COOKIE = "norish-recipe-filters";
 
 /** Only what differs from the defaults, since every request carries it. */
 export function recipeFiltersCookieValue(filters: PersistedRecipeFilters): string {
-  const changed = Object.entries(filters).filter(
-    ([key, value]) =>
-      JSON.stringify(value) !==
-      JSON.stringify(DEFAULT_PERSISTED_RECIPE_FILTERS[key as keyof PersistedRecipeFilters])
+  return encodeURIComponent(
+    JSON.stringify(changedRecipeFilters(filters, DEFAULT_PERSISTED_RECIPE_FILTERS))
   );
-
-  return encodeURIComponent(JSON.stringify(Object.fromEntries(changed)));
 }
 
 /** The cookie's filters; a malformed one reads as the defaults. */

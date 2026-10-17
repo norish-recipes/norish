@@ -59,6 +59,24 @@ export const DEFAULT_RECIPE_FILTERS: CanonicalRecipeFilters = {
   ...DEFAULT_PERSISTED_RECIPE_FILTERS,
 };
 
+/** Stored filters as the Library holds them, with nothing typed in the search. */
+export function canonicalRecipeFilters(filters: PersistedRecipeFilters): CanonicalRecipeFilters {
+  return { ...DEFAULT_RECIPE_FILTERS, ...filters };
+}
+
+/** The stored fields where `filters` differs from `base`. */
+export function changedRecipeFilters(
+  filters: PersistedRecipeFilters,
+  base: PersistedRecipeFilters
+): Partial<PersistedRecipeFilters> {
+  return Object.fromEntries(
+    Object.entries(filters).filter(
+      ([key, value]) =>
+        JSON.stringify(value) !== JSON.stringify(base[key as keyof PersistedRecipeFilters])
+    )
+  );
+}
+
 export const RECIPE_COOKING_TIME_OPTIONS: Array<{ label: string; value: number }> = [
   { label: "< 15 min", value: 15 },
   { label: "< 30 min", value: 30 },

@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { RECIPE_FILTERS_COOKIE, recipeFiltersFromCookie } from "@/lib/recipe-filters-cookie";
 
 import {
-  DEFAULT_RECIPE_FILTERS,
+  canonicalRecipeFilters,
   toRecipesQueryFilters,
 } from "@norish/shared-react/filter-contract";
 
@@ -23,5 +23,5 @@ export const readRecipeFilters = cache(async () => {
 export async function readRecipeQueryFilters() {
   const filters = await readRecipeFilters();
 
-  return filters && toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, ...filters });
+  return filters && toRecipesQueryFilters(canonicalRecipeFilters(filters));
 }
