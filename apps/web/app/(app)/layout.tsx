@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/app/(app)/app-shell";
+import { readQuerySeed } from "@/components/query-seed";
 import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
 import { readReaderToday } from "@/lib/reader-today-server";
 import { readDevicePreferencesSeed, readRequestProfile } from "@/lib/request-profile";
@@ -11,20 +12,33 @@ import { readDevicePreferencesSeed, readRequestProfile } from "@/lib/request-pro
  * per request, and a reader without one is sent to sign in and back.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = await readRequestProfile();
+  const { identity } = await readRequestProfile();
 
-  if (!userId) {
+  if (!identity) {
     redirect(loginPath((await headers()).get(DESTINATION_HEADER)));
   }
 
-  // The reader's id and Device Preferences for this request's Device Kind,
-  // read once, so the shell seeds the very first render. The offline bootstrap
-  // mounts the same shell unseeded and reads the restored profile instead.
+  // What the shell's first render needs, read once; the offline bootstrap mounts it unseeded. Not
+  // `user.get`: its API-key metadata would sit in every document the worker keeps.
+  const [devicePreferences, readerToday, seed] = await Promise.all([
+    readDevicePreferencesSeed(),
+    readReaderToday(),
+    readQuerySeed((trpc, client) => [
+      client.query(trpc.permissions.get.queryOptions()),
+      client.query(trpc.households.get.queryOptions()),
+      client.query(trpc.favorites.list.queryOptions()),
+      client.query(trpc.user.getAllergies.queryOptions()),
+      client.query(trpc.recipes.getPending.queryOptions()),
+    ]),
+  ]);
+  const { id, email, name, image, version } = identity;
+
   return (
     <AppShell
-      devicePreferences={await readDevicePreferencesSeed()}
-      readerToday={await readReaderToday()}
-      userId={userId}
+      devicePreferences={devicePreferences}
+      reader={{ id, email, name, image, version }}
+      readerToday={readerToday}
+      seed={seed}
     >
       {children}
     </AppShell>

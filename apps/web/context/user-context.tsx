@@ -6,8 +6,10 @@ import { clearOfflineStateForSignOut } from "@/lib/offline/sign-out";
 import { useQuery } from "@tanstack/react-query";
 
 import type { UserContextValue } from "@norish/shared-react/contexts";
+import type { User } from "@norish/shared/contracts";
 import { createUserContext } from "@norish/shared-react/contexts";
 import { useUser } from "@norish/shared-react/hooks";
+import { ReaderSeedContext } from "@norish/shared-react/hooks/use-user";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 
 // Create the shared base context
@@ -55,11 +57,14 @@ type WebUserContextType = UserContextValue;
 
 const WebUserContext = createContext<WebUserContextType | null>(null);
 
-export function UserProvider({ children }: { children: ReactNode }) {
+/** `reader`: who the server verified for this document, until the session answers. */
+export function UserProvider({ children, reader }: { children: ReactNode; reader?: User }) {
   return (
-    <shared.UserProvider>
-      <WebUserProviderInner>{children}</WebUserProviderInner>
-    </shared.UserProvider>
+    <ReaderSeedContext value={reader ?? null}>
+      <shared.UserProvider>
+        <WebUserProviderInner>{children}</WebUserProviderInner>
+      </shared.UserProvider>
+    </ReaderSeedContext>
   );
 }
 

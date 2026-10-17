@@ -28,7 +28,7 @@ import {
 } from "../harness/device-preferences";
 import { callTrpc } from "../harness/trpc";
 import { databaseUrl, withDatabase } from "./database";
-import { expect, test } from "./fixture";
+import { expect, OWNER, test } from "./fixture";
 
 test.describe.configure({ mode: "serial" });
 
@@ -681,5 +681,59 @@ test("a shared recipe shows a signed-in reader their own format and a signed-out
     expect(await amountFormatShown(signedOut.page)).toBe("fraction");
   } finally {
     await signedOut.context.close();
+  }
+});
+
+// =============================================================================
+// The reader, the pages' extras and the Library, in the server's markup
+// =============================================================================
+
+// Specs in a worker share one database; what these scenarios make goes when they are done, so
+// a spec that counts recipes or prices a list after them sees only its own.
+const created = { recipes: [] as string[], cookbooks: [] as string[], stores: [] as string[] };
+
+test.afterAll(async () => {
+  await withDatabase(async (database) => {
+    await database.query("delete from groceries where store_id = any($1)", [created.stores]);
+    await database.query("delete from stores where id = any($1)", [created.stores]);
+    await database.query("delete from cookbooks where id = any($1)", [created.cookbooks]);
+    await database.query("delete from recipes where id = any($1)", [created.recipes]);
+  });
+});
+
+test("a full load carries the reader, so the navbar avatar is in the server's markup", async ({
+  browser,
+}) => {
+  const { context, page } = await openStatic(browser, "phone");
+
+  try {
+    await page.goto("/");
+    await expect(
+      page.locator(`button[aria-label="Open user menu"] [role="img"][aria-label="${OWNER.name}"]`)
+    ).not.toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a recipe's actions offer editing before the session or the permissions answer", async ({
+  browser,
+}) => {
+  const id = await ensureRecipe();
+  const { context, page } = await openLive(browser, "phone");
+
+  try {
+    // Never answered: only what the document carried can make the reader an editor.
+    await page.route(
+      (url) =>
+        url.pathname.startsWith("/api/auth/get-session") ||
+        url.pathname.includes("permissions.get"),
+      () => {}
+    );
+    await page.goto(`/recipes/${id}`);
+    await page.locator('button[aria-label="Actions"]:visible').first().click();
+    await expect(page.getByRole("menuitem", { name: "Edit", exact: true })).toBeVisible();
+  } finally {
+    await context.close();
   }
 });
