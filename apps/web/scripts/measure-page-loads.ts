@@ -5,6 +5,8 @@ import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { chromium, devices } from "@playwright/test";
 
+import { RECIPE_FILTERS_COOKIE } from "../lib/recipe-filters-cookie";
+
 const { values: args } = parseArgs({
   options: {
     base: { type: "string", default: "http://localhost:3400" },
@@ -124,7 +126,7 @@ const cookies = signIn.headers.getSetCookie().map((header) => {
 });
 
 // A returning reader's browser has told the server its Library filters, here the defaults.
-cookies.push({ name: "norish-recipe-filters", value: encodeURIComponent("{}"), url: base });
+cookies.push({ name: RECIPE_FILTERS_COOKIE, value: encodeURIComponent("{}"), url: base });
 const cookieHeader = cookies.map(({ name, value }) => `${name}=${value}`).join("; ");
 
 async function query<T>(procedure: string, input: unknown): Promise<T> {
@@ -209,22 +211,34 @@ const PAGES: Array<{ name: string; url: string | undefined; marks: Marks }> = [
   },
 ];
 
-/** Runs in the page from before its first byte: the frame each mark is first drawn in. */
-function watchMarks(marks: Marks) {
+/**
+ * Runs in the page: the frame each mark is first drawn in. With `tap`, only on a recipe page,
+ * since the Library matches a recipe's marks too, and the time of the first press is kept.
+ */
+function watchMarks({ marks, tap }: { marks: Marks; tap: boolean }) {
   const found: Record<string, number> = {};
+  const target = window as unknown as { __marks: typeof found; __tap: number };
   const drawn = (element: Element) =>
     element.checkVisibility({ opacityProperty: true, visibilityProperty: true }) &&
     element.getBoundingClientRect().height > 0;
   const tick = (frame: number) => {
-    for (const [name, selector] of Object.entries(marks)) {
-      if (!(name in found) && [...document.querySelectorAll(selector)].some(drawn)) {
-        found[name] = frame;
+    if (!tap || location.pathname.startsWith("/recipes/")) {
+      for (const [name, selector] of Object.entries(marks)) {
+        if (!(name in found) && [...document.querySelectorAll(selector)].some(drawn)) {
+          found[name] = frame;
+        }
       }
     }
     if (Object.keys(found).length < Object.keys(marks).length) requestAnimationFrame(tick);
   };
 
-  (window as unknown as { __marks: typeof found }).__marks = found;
+  target.__marks = found;
+  if (tap) {
+    addEventListener("pointerdown", () => (target.__tap = performance.now()), {
+      capture: true,
+      once: true,
+    });
+  }
   requestAnimationFrame(tick);
 }
 
@@ -281,7 +295,7 @@ async function load(browser: Browser, url: string, marks: Marks): Promise<Sample
       }
     }
 
-    await context.addInitScript(watchMarks, marks);
+    await context.addInitScript(watchMarks, { marks, tap: false });
     const cdp = await context.newCDPSession(page);
 
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
@@ -329,7 +343,7 @@ async function tap(browser: Browser): Promise<Sample> {
     await page.locator(`${CARD}:visible`).first().waitFor();
     await page.waitForTimeout(5_000);
     await page.unroute(held);
-    await page.evaluate(watchTap, RECIPE_MARKS);
+    await page.evaluate(watchMarks, { marks: RECIPE_MARKS, tap: true });
     await page.locator(`${CARD}:visible`).first().click();
     const found = await readMarks(page, RECIPE_MARKS);
     const tappedAt = await page.evaluate(() => (window as unknown as { __tap: number }).__tap);
@@ -343,32 +357,6 @@ async function tap(browser: Browser): Promise<Sample> {
   } finally {
     await context.close();
   }
-}
-
-/** watchMarks from the tap on, which the recipe page's own marks would otherwise match early. */
-function watchTap(marks: Marks) {
-  const found: Record<string, number> = {};
-  const target = window as unknown as { __marks: typeof found; __tap: number };
-  const drawn = (element: Element) =>
-    element.checkVisibility({ opacityProperty: true, visibilityProperty: true }) &&
-    element.getBoundingClientRect().height > 0;
-  const tick = (frame: number) => {
-    if (location.pathname.startsWith("/recipes/")) {
-      for (const [name, selector] of Object.entries(marks)) {
-        if (!(name in found) && [...document.querySelectorAll(selector)].some(drawn)) {
-          found[name] = frame;
-        }
-      }
-    }
-    if (Object.keys(found).length < Object.keys(marks).length) requestAnimationFrame(tick);
-  };
-
-  target.__marks = found;
-  addEventListener("pointerdown", () => (target.__tap = performance.now()), {
-    capture: true,
-    once: true,
-  });
-  requestAnimationFrame(tick);
 }
 
 /** The document a full load of `url` answers, gzipped. */
@@ -401,6 +389,23 @@ function summary(values: number[]): string {
   }`;
 }
 
+/** Each mark's summary across the samples. */
+function marksSummary(marks: Marks, samples: Sample[]): string {
+  return Object.keys(marks)
+    .map((mark) => `${mark} ${summary(samples.map((sample) => sample.marks[mark] ?? Number.NaN))}`)
+    .join("; ");
+}
+
+/** One run to warm up, off the record, then the measured ones. */
+async function sampled(run: () => Promise<Sample>): Promise<Sample[]> {
+  const samples: Sample[] = [];
+
+  await run();
+  for (let index = 0; index < RUNS; index++) samples.push(await run());
+
+  return samples;
+}
+
 const browser = await chromium.launch();
 const only = args.only?.split(",");
 const lines = [
@@ -413,35 +418,19 @@ const lines = [
 try {
   for (const { name, url, marks } of PAGES) {
     if (!url || (only && !only.includes(name))) continue;
-    await load(browser, url, marks);
-    const samples: Sample[] = [];
-
-    for (let run = 0; run < RUNS; run++) samples.push(await load(browser, url, marks));
-    const content = Object.keys(marks)
-      .map(
-        (mark) => `${mark} ${summary(samples.map((sample) => sample.marks[mark] ?? Number.NaN))}`
-      )
-      .join("; ");
+    const samples = await sampled(() => load(browser, url, marks));
     const size = ((await documentSize(url)) / 1024).toFixed(1);
 
     lines.push(
-      `| ${name} | ${summary(samples.map((sample) => sample.firstPaint))} | ${content} | ${size} |`
+      `| ${name} | ${summary(samples.map((sample) => sample.firstPaint))} | ${marksSummary(marks, samples)} | ${size} |`
     );
     process.stdout.write(`${lines.at(-1)}\n`);
   }
 
   if (!only || only.includes("tap")) {
-    await tap(browser);
-    const samples: Sample[] = [];
+    const samples = await sampled(() => tap(browser));
 
-    for (let run = 0; run < RUNS; run++) samples.push(await tap(browser));
-    lines.push(
-      `| tap to a recipe | — | ${Object.keys(RECIPE_MARKS)
-        .map(
-          (mark) => `${mark} ${summary(samples.map((sample) => sample.marks[mark] ?? Number.NaN))}`
-        )
-        .join("; ")} | — |`
-    );
+    lines.push(`| tap to a recipe | — | ${marksSummary(RECIPE_MARKS, samples)} | — |`);
   }
 } finally {
   await browser.close();

@@ -20,6 +20,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 
 import type { DeviceKind } from "../harness/device-preferences";
 import type { AIE2EStack } from "./fixture";
+import { RECIPE_FILTERS_COOKIE } from "../../../lib/recipe-filters-cookie";
 import {
   clearDevicePreferences,
   DESKTOP_USER_AGENT,
@@ -700,8 +701,6 @@ test.afterAll(async () => {
     await database.query("delete from recipes where id = any($1)", [created.recipes]);
   });
 });
-
-const RECIPE_FILTERS_COOKIE = "norish-recipe-filters";
 
 /** The Library filters cookie a browser writes, set before a full load. */
 async function storeFiltersCookie(context: BrowserContext, filters: Record<string, unknown>) {
