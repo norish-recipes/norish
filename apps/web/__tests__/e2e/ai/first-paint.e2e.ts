@@ -217,8 +217,12 @@ function todayIn(timeZone: string): string {
 test("a full load of the dashboard draws Today's meals for the reader's day, from their time zone", async ({
   browser,
 }) => {
-  // UTC+14, so its date is often not the server's: the cookie must decide the day.
-  const timeZone = "Pacific/Kiritimati";
+  // A zone on another date than the server's, so only the cookie can name the day, and no other
+  // scenario's plans for the server's today share it. UTC+14 and UTC-11 are never on one date.
+  const serverToday = new Date().toLocaleDateString("en-CA");
+  const timeZone = ["Pacific/Kiritimati", "Pacific/Pago_Pago"].find(
+    (zone) => todayIn(zone) !== serverToday
+  )!;
   const today = todayIn(timeZone);
 
   await seed("desktop", { todaySectionVisibility: "planned" });
@@ -227,7 +231,7 @@ test("a full load of the dashboard draws Today's meals for the reader's day, fro
     date: today,
     slot: "Dinner",
     itemType: "note",
-    title: "Served Kiritimati note",
+    title: "Served time-zone note",
   });
   const { context, page } = await openStatic(browser, "desktop");
 
@@ -235,7 +239,7 @@ test("a full load of the dashboard draws Today's meals for the reader's day, fro
     await context.addCookies([{ name: "norish-tz", value: timeZone, url: stack.baseURL }]);
     await page.goto("/");
     // Planned, so drawn at all only because the server knew what was planned that day.
-    await expect(page.getByText("Served Kiritimati note").first()).toBeAttached();
+    await expect(page.getByText("Served time-zone note").first()).toBeAttached();
     await expect(page.locator('section[aria-labelledby="today-meals-heading"]')).toContainText(
       new Intl.DateTimeFormat("en", {
         weekday: "long",
