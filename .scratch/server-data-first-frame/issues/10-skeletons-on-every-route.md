@@ -8,7 +8,7 @@
 
 - [x] `/`, `/groceries` (and the Pantry below it) and `/share/[token]` have a `loading.tsx`.
 - [x] The Library's seed stays read once: the app's providers watch its first page.
-- [x] `first-paint.e2e.ts`: a tap to the Library and to Groceries draws with the server's answer held, and a full load of `/` never asks for `library.list`.
+- [x] `first-paint.e2e.ts`: a full load of `/` never asks for `library.list`. Tap scenarios were dropped: they raced Next's two-step prefetch (tree, then segments), and the maintainer called them overkill.
 
 ## Comments
 

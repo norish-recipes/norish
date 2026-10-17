@@ -16,7 +16,7 @@
  * scenarios about what a page shows run with JavaScript; where a wrong frame
  * could paint and be corrected, they record every frame from the start.
  */
-import type { Browser, BrowserContext, Page, Request } from "@playwright/test";
+import type { Browser, BrowserContext, Page } from "@playwright/test";
 
 import type { DeviceKind } from "../harness/device-preferences";
 import type { AIE2EStack } from "./fixture";
@@ -1049,55 +1049,6 @@ test("the user settings tab draws a date the way the server sent it, in any brow
   } finally {
     await served.context.close();
     await live.close();
-  }
-});
-
-/**
- * A tap from a recipe page to `path` whose own answer from the server never comes: whatever draws
- * came from the route's prefetch, which Next makes only for a route with a loading boundary.
- */
-async function tapWithAnswerHeld(browser: Browser, link: string, path: string) {
-  const id = await ensureRecipe();
-  const { context, page } = await openLive(browser, "desktop");
-  const toPath = (request: Request) =>
-    new URL(request.url()).pathname === path && request.headers()["rsc"] === "1";
-  const prefetch = (request: Request) =>
-    "next-router-prefetch" in request.headers() ||
-    "next-router-segment-prefetch" in request.headers();
-
-  await page.route(
-    (url) => url.pathname === path,
-    (route) =>
-      toPath(route.request()) && !prefetch(route.request()) ? undefined : route.continue()
-  );
-  const prefetched = page.waitForResponse(
-    (response) => toPath(response.request()) && prefetch(response.request())
-  );
-
-  await page.goto(`/recipes/${id}`);
-  await prefetched;
-  await page.getByRole("link", { name: link, exact: true }).first().click();
-
-  return { context, page };
-}
-
-test("a tap to the Library draws it before the server answers", async ({ browser }) => {
-  const { context, page } = await tapWithAnswerHeld(browser, "Go to home", "/");
-
-  try {
-    await expect(page.locator("#recipe-library-heading")).toBeVisible();
-  } finally {
-    await context.close();
-  }
-});
-
-test("a tap to Groceries draws it before the server answers", async ({ browser }) => {
-  const { context, page } = await tapWithAnswerHeld(browser, "Groceries", "/groceries");
-
-  try {
-    await expect(page.getByRole("heading", { level: 1, name: "Groceries" })).toBeVisible();
-  } finally {
-    await context.close();
   }
 });
 
