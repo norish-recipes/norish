@@ -9,7 +9,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { usePathname } from "next/navigation";
 import { useDeviceKind } from "@/context/device-preferences-context";
@@ -21,6 +20,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import { useHydrated } from "@norish/shared-react/hooks";
 
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
 
@@ -33,8 +33,6 @@ const GRID_ROW_OVERSCAN = 3;
 const LIST_ROW_OVERSCAN = 12;
 const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
 const LIST_LOAD_MORE_ROW_THRESHOLD = 6;
-
-const noSubscription = () => () => {};
 
 type LibraryGridProps = {
   variant: RecipeViewMode;
@@ -123,11 +121,7 @@ export default function LibraryGrid({
   // The server has no window: it and the hydrating render draw the rows the Device Kind's window
   // would show, and the browser measures its own after.
   const kind = useDeviceKind();
-  const hydrated = useSyncExternalStore(
-    noSubscription,
-    () => true,
-    () => false
-  );
+  const hydrated = useHydrated();
 
   const virtualizer = useWindowVirtualizer({
     count: rowCount,

@@ -1,9 +1,9 @@
-import { createContext, use, useState, useSyncExternalStore } from "react";
+import { createContext, use, useState } from "react";
 
 import type { User } from "@norish/shared/contracts";
 import { useSession } from "@norish/shared/lib/auth/client";
 
-const noSubscription = () => () => {};
+import { useHydrated } from "./use-hydrated";
 
 /** The reader the server verified for this document, where a server rendered it (web). */
 export const ReaderSeedContext = createContext<User | null>(null);
@@ -14,11 +14,7 @@ export function useUser() {
   // The server renders without the session. One that lands before this
   // component hydrates (a slow device) waits for the render after, or the
   // HTML no longer matches and React throws the page away mid-tap.
-  const hydrated = useSyncExternalStore(
-    noSubscription,
-    () => true,
-    () => false
-  );
+  const hydrated = useHydrated();
   const session = hydrated ? data : null;
 
   const sessionUser: User | null = session?.user

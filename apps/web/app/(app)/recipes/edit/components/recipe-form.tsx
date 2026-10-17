@@ -3,7 +3,7 @@
 import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
 import type { Step } from "@/components/recipes/step-input";
-import React, { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import IngredientInput from "@/components/recipes/ingredient-input";
 import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
@@ -23,6 +23,7 @@ import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+import { useHydrated } from "@norish/shared-react/hooks";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -34,7 +35,6 @@ import { buildInitialMedia, useRecipeFormDirtyState } from "./use-recipe-form-di
 
 const log = createClientLogger("RecipeForm");
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
-const subscribeToNothing = () => () => {};
 export interface RecipeFormProps {
   mode: "create" | "edit";
   initialData?: FullRecipeDTO;
@@ -76,11 +76,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [initializedRecipeId, setInitializedRecipeId] = useState<string | null>(null);
   // False on the server and while hydrating, so the browser's first render matches
   // the server's form, which never has the lines filled in.
-  const isHydrated = useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false
-  );
+  const isHydrated = useHydrated();
   const [detectedFor, setDetectedFor] = useState({
     ingredients,
     manuallySetSystem,

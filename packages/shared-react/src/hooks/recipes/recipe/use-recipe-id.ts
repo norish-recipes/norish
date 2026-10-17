@@ -1,10 +1,11 @@
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
+import { useHydrated } from "../../use-hydrated";
+
 const log = createClientLogger("useRecipeId");
-const noSubscription = () => () => {};
 
 export type RecipeIdResult = {
   recipeId: string | null;
@@ -29,11 +30,7 @@ export function createUseRecipeId() {
 
       return id;
     });
-    const isHydrated = useSyncExternalStore(
-      noSubscription,
-      () => true,
-      () => false
-    );
+    const isHydrated = useHydrated();
     const recipeId = existingId ?? (isHydrated ? mintedId : null);
 
     return {

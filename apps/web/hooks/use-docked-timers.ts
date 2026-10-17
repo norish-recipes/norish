@@ -1,12 +1,12 @@
 "use client";
 
 import type { Timer } from "@/stores/timers";
-import { useSyncExternalStore } from "react";
 import { useTimersEnabledQuery } from "@/hooks/config";
 import { useTimerStore } from "@/stores/timers";
 
+import { useHydrated } from "@norish/shared-react/hooks";
+
 const NO_TIMERS: Timer[] = [];
-const noSubscription = () => () => {};
 
 /**
  * The timers the timer dock is currently showing — which is also the answer to
@@ -21,12 +21,7 @@ const noSubscription = () => () => {};
 export function useDockedTimers(): Timer[] {
   const { timersEnabled } = useTimersEnabledQuery();
   const timers = useTimerStore((state) => state.timers);
-  // False on the server and while hydrating, like the markup the server sent.
-  const isHydrated = useSyncExternalStore(
-    noSubscription,
-    () => true,
-    () => false
-  );
+  const isHydrated = useHydrated();
 
   if (!isHydrated || !timersEnabled || timers.length === 0) return NO_TIMERS;
 
