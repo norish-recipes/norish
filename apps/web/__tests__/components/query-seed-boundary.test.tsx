@@ -1,9 +1,13 @@
+import { act } from "react";
 import { QuerySeedBoundary } from "@/components/query-seed-boundary";
 import { dehydrate, QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { createRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/query-cache", () => ({ markServerCopies: () => {} }));
+const markServerCopies = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/query-cache", () => ({ markServerCopies }));
 
 const KEY = ["library"];
 
@@ -50,5 +54,31 @@ describe("QuerySeedBoundary", () => {
     );
 
     expect(html).toContain("below: restored");
+  });
+
+  it("applies a seed once, so a cache cleared since (an account switch) stays empty", async () => {
+    markServerCopies.mockClear();
+    const client = new QueryClient();
+    const state = seeded();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    const render = () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <QuerySeedBoundary state={state}>
+            <Read label="below" />
+          </QuerySeedBoundary>
+        </QueryClientProvider>
+      );
+
+    await act(async () => render());
+    expect(client.getQueryData(KEY)).toBe("served");
+
+    client.clear();
+    await act(async () => render());
+
+    expect(client.getQueryData(KEY)).toBeUndefined();
+    expect(markServerCopies).toHaveBeenCalledTimes(1);
+    await act(async () => root.unmount());
   });
 });
