@@ -997,6 +997,19 @@ test("a full load of a cookbook draws its members in the server's markup", async
   }
 });
 
+test("a full load of the user settings tab draws the reader's name in its field", async ({
+  browser,
+}) => {
+  const { context, page } = await openStatic(browser, "phone");
+
+  try {
+    await page.goto("/settings?tab=user");
+    await expect(page.locator(`input[value="${OWNER.name}"]`).first()).toBeAttached();
+  } finally {
+    await context.close();
+  }
+});
+
 test("a page the installed app's worker fetches itself still carries its recipe", async ({
   browser,
 }) => {
