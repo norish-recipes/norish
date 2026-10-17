@@ -10,10 +10,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
 import {
-  cookbookRecipesInput,
   DEFAULT_RECIPE_FILTERS,
   toRecipesQueryFilters,
 } from "@norish/shared-react/filter-contract";
+import { cookbookRecipesInput } from "@norish/shared-react/list-queries";
 
 const expirationMetadata = vi.hoisted(() => ({
   updateTimestamp: vi.fn(async (_url: string) => {}),

@@ -6,7 +6,7 @@ import type { LibraryItemDTO, LibraryTypeFilter } from "@norish/shared/contracts
 
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateRecipeHooksOptions } from "../recipes/types";
-import { libraryListInput } from "../../contexts/recipes/filter-contract";
+import { byNextCursor, libraryListInput } from "../../contexts/recipes/list-queries";
 
 export type LibraryFilters = RecipeFilters & {
   type?: LibraryTypeFilter;
@@ -41,9 +41,10 @@ export function createUseLibraryQuery({ useTRPC }: CreateRecipeHooksOptions) {
 
     const trpc = useTRPC();
     const queryClient = useQueryClient();
-    const infiniteQueryOptions = trpc.library.list.infiniteQueryOptions(libraryListInput(filters), {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    });
+    const infiniteQueryOptions = trpc.library.list.infiniteQueryOptions(
+      libraryListInput(filters),
+      byNextCursor
+    );
     const queryKey = infiniteQueryOptions.queryKey;
 
     const { data, error, isLoading, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({

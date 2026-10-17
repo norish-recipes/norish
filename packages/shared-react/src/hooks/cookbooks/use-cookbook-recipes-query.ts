@@ -5,7 +5,7 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateCookbookHooksOptions } from "./types";
-import { cookbookRecipesInput } from "../../contexts/recipes/filter-contract";
+import { byNextCursor, cookbookRecipesInput } from "../../contexts/recipes/list-queries";
 
 type InfiniteMemberPages = {
   pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];
@@ -58,7 +58,7 @@ export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOp
     const queryClient = useQueryClient();
     const infiniteQueryOptions = trpc.cookbooks.recipes.infiniteQueryOptions(
       cookbookRecipesInput(cookbookId, filters),
-      { getNextPageParam: (lastPage) => lastPage.nextCursor }
+      byNextCursor
     );
     const queryKey = infiniteQueryOptions.queryKey;
     const memberListPath = useMemo(

@@ -12,7 +12,12 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@norish/trpc/client";
 import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
 
-type Reads = (trpc: TRPCOptionsProxy<AppRouter>, queryClient: QueryClient) => Promise<unknown>[];
+/** Each read a page seeds; `false` or `undefined` for one it leaves out. */
+type Seeds = (Promise<unknown> | false | undefined)[];
+type Reads = (
+  trpc: TRPCOptionsProxy<AppRouter>,
+  queryClient: QueryClient
+) => Seeds | Promise<Seeds>;
 
 /**
  * On a full load, the reads a first frame needs, ready for the browser's query cache; a failed
@@ -21,15 +26,15 @@ type Reads = (trpc: TRPCOptionsProxy<AppRouter>, queryClient: QueryClient) => Pr
 export async function readQuerySeed(reads: Reads): Promise<DehydratedState | undefined> {
   const requestHeaders = await headers();
 
-  // Next hides its RSC headers from headers(); the browser's own say a document load from the
-  // fetch behind a navigation or prefetch. Without them, nothing is sent, as before.
+  // Next hides its RSC headers from headers(), so Sec-Fetch-Dest (or the worker's own header)
+  // tells a full load from an in-app navigation or prefetch, which gets no seed.
   if (!isDocumentRequest(requestHeaders)) return undefined;
 
   const queryClient = new QueryClient();
   const ctx = await createHttpContextFromHeaders(new Headers(requestHeaders), null);
 
   await Promise.allSettled(
-    reads(createTRPCOptionsProxy({ router: appRouter, ctx, queryClient }), queryClient)
+    await reads(createTRPCOptionsProxy({ router: appRouter, ctx, queryClient }), queryClient)
   );
 
   return dehydrate(queryClient);

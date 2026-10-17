@@ -15,11 +15,14 @@ import { CacheExpiration } from "serwist";
 
 import type { AppRouter } from "@norish/trpc/client";
 import {
-  cookbookRecipesInput,
   DEFAULT_RECIPE_FILTERS,
-  libraryListInput,
   toRecipesQueryFilters,
 } from "@norish/shared-react/filter-contract";
+import {
+  byNextCursor,
+  cookbookRecipesInput,
+  libraryListInput,
+} from "@norish/shared-react/list-queries";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 const WARM_RECIPE_LIST_LIMIT = 100;
@@ -146,9 +149,7 @@ async function warmLibrary(trpc: WarmSetTRPC, queryClient: QueryClient): Promise
         ...toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS),
         limit: WARM_RECIPE_LIST_LIMIT,
       }),
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-      }
+      byNextCursor
     )
   );
   const data = await queryClient.infiniteQuery(listOptions).catch(() => null);
@@ -188,7 +189,7 @@ async function warmLibrary(trpc: WarmSetTRPC, queryClient: QueryClient): Promise
           withWarmGcTime(
             trpc.cookbooks.recipes.infiniteQueryOptions(
               cookbookRecipesInput(id, toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS)),
-              { getNextPageParam: (lastPage) => lastPage.nextCursor }
+              byNextCursor
             )
           )
         ),

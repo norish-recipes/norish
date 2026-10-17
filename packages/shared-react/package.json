@@ -16,6 +16,7 @@
     "./hooks/use-user": "./src/hooks/use-user.ts",
     "./contexts": "./src/contexts/index.ts",
     "./filter-contract": "./src/contexts/recipes/filter-contract.ts",
+    "./list-queries": "./src/contexts/recipes/list-queries.ts",
     "./providers": "./src/providers/index.ts",
     "./realtime": "./src/realtime/index.ts"
   },

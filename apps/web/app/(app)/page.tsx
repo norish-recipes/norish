@@ -4,7 +4,7 @@ import { QuerySeed } from "@/components/query-seed";
 import { readReaderToday } from "@/lib/reader-today-server";
 import { readRecipeQueryFilters } from "@/lib/recipe-filters-server";
 
-import { libraryListInput } from "@norish/shared-react/filter-contract";
+import { byNextCursor, libraryListInput } from "@norish/shared-react/list-queries";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 // Signed in by now. A full load carries the week Today's meals reads, in the reader's time zone,
@@ -19,15 +19,10 @@ export default async function Home() {
         client.query(
           trpc.calendar.listItems.queryOptions({ startISO: dateKey(start), endISO: dateKey(end) })
         ),
-        ...(filters
-          ? [
-              client.infiniteQuery(
-                trpc.library.list.infiniteQueryOptions(libraryListInput(filters), {
-                  getNextPageParam: (lastPage) => lastPage.nextCursor,
-                })
-              ),
-            ]
-          : []),
+        filters &&
+          client.infiniteQuery(
+            trpc.library.list.infiniteQueryOptions(libraryListInput(filters), byNextCursor)
+          ),
       ]}
     >
       <Dashboard />
