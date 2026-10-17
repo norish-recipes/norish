@@ -6,7 +6,7 @@ import { readRequestProfile } from "@/lib/request-profile";
 import { getCaldavConfigByUserId } from "@norish/db/repositories/caldav-config";
 import { getHouseholdForUser } from "@norish/db/repositories/households";
 
-import type { SettingsShape } from "./components/settings-tabs";
+import type { SettingsShape } from "./settings-tab";
 
 /**
  * Which tabs and cards the reader's settings show, so the route's skeleton and the page draw the

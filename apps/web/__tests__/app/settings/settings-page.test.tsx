@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom";
 
 import SettingsPageContent from "@/app/(app)/settings/components/settings-page-content";
+import { openSettingsTab } from "@/app/(app)/settings/settings-tab";
 
 beforeAll(() => {
   // HeroUI's Tabs list measures its overflow; jsdom has no ResizeObserver.
@@ -78,5 +79,17 @@ describe("settings tab list", () => {
       "aria-selected",
       "true"
     );
+  });
+});
+
+describe("the tab an address opens", () => {
+  it.each([
+    ["caldav", false, "caldav"],
+    ["admin", true, "admin"],
+    ["admin", false, "user"],
+    ["sideways", false, "user"],
+    [null, false, "user"],
+  ] as const)("?tab=%s with admin %s opens %s", (param, admin, open) => {
+    expect(openSettingsTab(param, { ...shape, showAdminTab: admin })).toBe(open);
   });
 });

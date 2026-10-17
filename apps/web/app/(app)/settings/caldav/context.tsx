@@ -21,6 +21,8 @@ import type {
 } from "@norish/shared/contracts";
 import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
 
+import { FIRST_SYNC_STATUS_PAGE } from "./first-sync-status-page";
+
 type SaveCaldavConfigInput = {
   serverUrl: string;
   calendarUrl?: string | null;
@@ -84,14 +86,16 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   // Queries
   const { config, isLoading: isLoadingConfig, setConfig: _setConfig } = useCaldavConfigQuery();
   const { password: storedPassword, isLoading: _isLoadingPassword } = useCaldavPasswordQuery();
-  const [syncStatusPage, setSyncStatusPage] = useState(1);
-  const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>("pending");
+  const [syncStatusPage, setSyncStatusPage] = useState<number>(FIRST_SYNC_STATUS_PAGE.page);
+  const [syncStatusFilter, setSyncStatusFilter] = useState<CaldavSyncStatus | undefined>(
+    FIRST_SYNC_STATUS_PAGE.statusFilter
+  );
 
   const {
     statuses: syncStatuses,
     total: syncStatusTotal,
     isLoading: isLoadingSyncStatus,
-  } = useCaldavSyncStatusQuery(syncStatusPage, 20, syncStatusFilter);
+  } = useCaldavSyncStatusQuery(syncStatusPage, FIRST_SYNC_STATUS_PAGE.pageSize, syncStatusFilter);
 
   const { summary: syncStatusSummary } = useCaldavSummaryQuery();
 

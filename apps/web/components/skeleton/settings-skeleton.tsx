@@ -1,6 +1,6 @@
 "use client";
 
-import type { SettingsShape, SettingsTab } from "@/app/(app)/settings/components/settings-tabs";
+import type { SettingsShape, SettingsTab } from "@/app/(app)/settings/settings-tab";
 import type { ComponentType, SVGProps } from "react";
 import { use } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";

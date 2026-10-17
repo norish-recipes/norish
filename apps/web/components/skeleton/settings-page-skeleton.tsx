@@ -1,6 +1,6 @@
 "use client";
 
-import type { SettingsShape } from "@/app/(app)/settings/components/settings-tabs";
+import type { SettingsShape } from "@/app/(app)/settings/settings-tab";
 import { SettingsTabs } from "@/app/(app)/settings/components/settings-tabs";
 import { SettingsTabSkeleton } from "@/components/skeleton/settings-skeleton";
 

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { SettingsTabSkeleton } from "@/components/skeleton/settings-skeleton";
 
-import type { SettingsShape } from "./settings-tabs";
+import type { SettingsShape } from "../settings-tab";
 import { SettingsTabs } from "./settings-tabs";
 
 const UserSettingsTab = dynamic(() => import("../user/components/user-settings-content"), {

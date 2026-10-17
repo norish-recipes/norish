@@ -16,6 +16,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useHydrated } from "@norish/shared-react/hooks";
 
 import { useCalDavSettingsContext } from "../context";
+import { FIRST_SYNC_STATUS_PAGE } from "../first-sync-status-page";
 
 export default function CalDavSyncStatusCard() {
   const t = useTranslations("settings.caldav.syncStatus");
@@ -68,7 +69,7 @@ export default function CalDavSyncStatusCard() {
       return "—";
     }
   };
-  const pageSize = 20;
+  const { pageSize } = FIRST_SYNC_STATUS_PAGE;
   const totalPages = Math.ceil(syncStatusTotal / pageSize);
   const startIndex = (syncStatusPage - 1) * pageSize + 1;
   const endIndex = Math.min(syncStatusPage * pageSize, syncStatusTotal);

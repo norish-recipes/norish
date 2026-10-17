@@ -20,14 +20,8 @@ import {
 import { Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-export type SettingsTab = "user" | "household" | "caldav" | "ingredients" | "admin";
-
-/** What the server knows about the reader that decides which tabs and cards they get. */
-export type SettingsShape = {
-  showAdminTab: boolean;
-  household: "none" | "member" | "admin";
-  caldav: "none" | "disabled" | "enabled";
-};
+import type { SettingsShape, SettingsTab } from "../settings-tab";
+import { openSettingsTab } from "../settings-tab";
 
 export const SettingsShapeContext = createContext<SettingsShape>({
   showAdminTab: false,
@@ -91,8 +85,7 @@ export function SettingsTabs({
       : []),
   ];
 
-  // Only an offered tab can be open: Admin is in the list only for an admin.
-  const currentTab = tabs.find((tab) => tab.id === searchParams.get("tab"))?.id ?? "user";
+  const currentTab = openSettingsTab(searchParams.get("tab"), shape);
 
   const handleTabChange = (key: React.Key) => {
     router.push(`/settings?tab=${String(key)}`);
