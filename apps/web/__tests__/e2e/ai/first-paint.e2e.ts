@@ -865,6 +865,52 @@ test("the Library arrives under the filters the browser stored, and hydrates wit
   }
 });
 
+test("a full load of the Library draws its cards in the server's markup", async ({ browser }) => {
+  await createRecipe("Served Library Soup");
+  const { context, page } = await openStatic(browser, "phone");
+
+  try {
+    await storeFiltersCookie(context, {});
+    await page.goto("/");
+    await expect(
+      page.locator('[data-recipe-card][role="button"]').filter({ hasText: "Served Library Soup" })
+    ).not.toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a reader who scrolls the Library before it hydrates meets no blank rows", async ({
+  browser,
+}) => {
+  for (let index = 0; index < 12; index++) await createRecipe(`Scrolled Early ${index}`);
+  const { context, page } = await openLive(browser, "phone", {
+    viewport: { width: 390, height: 844 },
+  });
+
+  try {
+    await storeFiltersCookie(context, {});
+    // No app script ever runs: the page stays as the server drew it, its streamed parts swapped in.
+    await page.route(
+      (url) => url.pathname.startsWith("/_next/static/") && url.pathname.endsWith(".js"),
+      (route) => route.abort()
+    );
+    await page.goto("/", { waitUntil: "commit" });
+    await page.locator('[data-recipe-card][role="button"]').first().waitFor();
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const gap = await page.evaluate(() => {
+      const list = document.querySelector('[data-index="0"]')!.parentElement!;
+      const rows = [...list.children].map((row) => row.getBoundingClientRect().bottom);
+
+      return list.getBoundingClientRect().bottom - Math.max(...rows);
+    });
+
+    expect(gap).toBeLessThanOrEqual(1);
+  } finally {
+    await context.close();
+  }
+});
+
 test("a cookbook opened under stored filters asks for its members once and never shows one they leave out", async ({
   browser,
 }) => {

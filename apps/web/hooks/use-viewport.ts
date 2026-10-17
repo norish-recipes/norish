@@ -3,8 +3,11 @@
 import { useSyncExternalStore } from "react";
 import { useDeviceKind } from "@/context/device-preferences-context";
 
-/** The window width the server and the hydrating render assume for each Device Kind. */
-const DEVICE_KIND_WIDTH = { phone: 390, desktop: 1024 } as const;
+/** The window the server and the hydrating render assume for each Device Kind. */
+export const DEVICE_KIND_WINDOW = {
+  phone: { width: 390, height: 844 },
+  desktop: { width: 1024, height: 768 },
+} as const;
 
 function subscribe(onChange: () => void): () => void {
   window.addEventListener("resize", onChange);
@@ -22,6 +25,6 @@ export function useViewport<T extends boolean | number>(read: (width: number) =>
   return useSyncExternalStore(
     subscribe,
     () => read(window.innerWidth),
-    () => read(DEVICE_KIND_WIDTH[kind])
+    () => read(DEVICE_KIND_WINDOW[kind].width)
   );
 }

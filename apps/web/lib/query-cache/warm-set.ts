@@ -14,8 +14,12 @@ import { CACHE_MAX_AGE_MS, cacheManager } from "@/lib/query-cache/persisted-quer
 import { CacheExpiration } from "serwist";
 
 import type { AppRouter } from "@norish/trpc/client";
-import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-react/contexts";
-import { cookbookRecipesInput } from "@norish/shared-react/hooks/cookbooks";
+import {
+  cookbookRecipesInput,
+  DEFAULT_RECIPE_FILTERS,
+  libraryListInput,
+  toRecipesQueryFilters,
+} from "@norish/shared-react/filter-contract";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 const WARM_RECIPE_LIST_LIMIT = 100;
@@ -106,18 +110,6 @@ export function createWarmSet({
   };
 }
 
-/**
- * The Library's own first page, under the reader's default filters — the same
- * input the dashboard asks for, so the guaranteed floor and the reader's first
- * paint are one cache entry (ADR-0009).
- */
-function libraryListInput() {
-  return {
-    limit: WARM_RECIPE_LIST_LIMIT,
-    ...toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS),
-  };
-}
-
 function calendarRange(mode: "desktop" | "mobile"): CalendarRange {
   const { start, end } = getInitialDateRange(mode);
 
@@ -147,9 +139,17 @@ function withWarmGcTime<T extends object>(options: T): T {
  */
 async function warmLibrary(trpc: WarmSetTRPC, queryClient: QueryClient): Promise<boolean> {
   const listOptions = withWarmGcTime(
-    trpc.library.list.infiniteQueryOptions(libraryListInput(), {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    })
+    // The Library's first page under the default filters, as the dashboard asks for it, so the
+    // guaranteed floor and the reader's first paint are one cache entry (ADR-0009).
+    trpc.library.list.infiniteQueryOptions(
+      libraryListInput({
+        ...toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS),
+        limit: WARM_RECIPE_LIST_LIMIT,
+      }),
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      }
+    )
   );
   const data = await queryClient.infiniteQuery(listOptions).catch(() => null);
 

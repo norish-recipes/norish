@@ -96,9 +96,11 @@ const STALE_TIME_MS = 1000 * 60 * 5;
  * current. Every other copy refetches on mount: a restored one may predate a change made elsewhere.
  */
 const refetchOnMount = (query: Query) =>
-  serverCopies.has(query.queryHash) &&
-  serverCopies.get(query.queryHash) === query.state.data &&
-  !query.isStaleByTime(STALE_TIME_MS)
+  // The server never fetches; rendered as fetching, it would draw what hydration doesn't.
+  typeof window === "undefined" ||
+  (serverCopies.has(query.queryHash) &&
+    serverCopies.get(query.queryHash) === query.state.data &&
+    !query.isStaleByTime(STALE_TIME_MS))
     ? false
     : ("always" as const);
 

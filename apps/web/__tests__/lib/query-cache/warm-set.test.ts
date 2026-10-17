@@ -9,8 +9,11 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
-import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-react/contexts";
-import { cookbookRecipesInput } from "@norish/shared-react/hooks/cookbooks";
+import {
+  cookbookRecipesInput,
+  DEFAULT_RECIPE_FILTERS,
+  toRecipesQueryFilters,
+} from "@norish/shared-react/filter-contract";
 
 const expirationMetadata = vi.hoisted(() => ({
   updateTimestamp: vi.fn(async (_url: string) => {}),

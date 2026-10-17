@@ -9,10 +9,12 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { usePathname } from "next/navigation";
+import { useDeviceKind } from "@/context/device-preferences-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
-import { useViewport } from "@/hooks/use-viewport";
+import { DEVICE_KIND_WINDOW, useViewport } from "@/hooks/use-viewport";
 import { lastScrollTop, rememberedListRows, rememberListRows } from "@/lib/scroll-memory";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -31,6 +33,8 @@ const GRID_ROW_OVERSCAN = 3;
 const LIST_ROW_OVERSCAN = 12;
 const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
 const LIST_LOAD_MORE_ROW_THRESHOLD = 6;
+
+const noSubscription = () => () => {};
 
 type LibraryGridProps = {
   variant: RecipeViewMode;
@@ -116,8 +120,18 @@ export default function LibraryGrid({
   // A revisit lays out its remembered rows at the remembered scroll, before the first paint.
   const savedRows = rememberedListRows(scrollKey);
 
+  // The server has no window: it and the hydrating render draw the rows the Device Kind's window
+  // would show, and the browser measures its own after.
+  const kind = useDeviceKind();
+  const hydrated = useSyncExternalStore(
+    noSubscription,
+    () => true,
+    () => false
+  );
+
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
+    initialRect: DEVICE_KIND_WINDOW[kind],
     estimateSize: () => (viewMode === "list" ? ESTIMATED_LIST_ROW_HEIGHT : gridRowHeight),
     overscan: rowOverscan,
     scrollMargin,
@@ -201,7 +215,8 @@ export default function LibraryGrid({
         <>
           <div
             style={{
-              height: `${virtualizer.getTotalSize()}px`,
+              // Until hydrated, only as tall as the server's rows, so an early scroll ends on one.
+              height: `${hydrated ? virtualizer.getTotalSize() : (virtualRows.at(-1)?.end ?? 0)}px`,
               width: "100%",
               position: "relative",
             }}
