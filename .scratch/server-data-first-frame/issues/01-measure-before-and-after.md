@@ -10,11 +10,11 @@
 
 **Blocked by:** none.
 
-**Status:** done; the calendar before and after waits on the maintainer (a worktree build of `08dd753cb`)
+**Status:** done
 
 - [x] The harness committed, with a one-paragraph README of how to run it.
 - [x] The baseline for every page above, recorded here, both service-worker modes.
-- [ ] The calendar and Today's meals change of 2026-10-16 (`0afe47d90`, `02c61dbf6`): its before, from a build of `08dd753cb` in a separate worktree (ask the maintainer first), and its after.
+- [x] The calendar and Today's meals change of 2026-10-16 (`0afe47d90`, `02c61dbf6`): its before, from a build of `08dd753cb` in a separate worktree (ask the maintainer first), and its after.
 
 ## Comments
 
@@ -52,3 +52,14 @@
     | tap to a recipe    | —             | title, ingredient 1,476 (1,309–1,659)                                      |
 
     The script and stylesheets come from the worker's precache, so first paint is the document's own time; what still waits is whatever needs a request after hydration.
+
+- 2026-10-17, **the calendar and Today's meals change, measured.** Before: a build of `08dd753cb` from a detached worktree (removed after), served on :3400 against the same measurement database; there are no migrations between it and HEAD. After: the current build. Both on the same morning, with a planned recipe and a note for that day (median and spread of 15, ms; service worker blocked):
+
+  | Mark                    | `08dd753cb`          | After               |
+  | ----------------------- | -------------------- | ------------------- |
+  | `/` first paint         | 568 (544–580)        | 636 (628–648)       |
+  | Today's meals           | 6,410 (6,385–6,442)  | 636 (628–648)       |
+  | `/calendar` first paint | 856 (724–904)        | 812 (676–832)       |
+  | a day with a plan       | 5,946 (5,824–5,996)  | 5,749 (5,648–5,847) |
+
+  Today's meals is in the first frame, and already was at `fcb77a997` (608 ms, the baseline above), so the change of 2026-10-16 is what moved it, not this folder's work. The calendar's days barely move: both timelines keep their skeleton until the window virtualiser has measured, which takes the app's script, as 08 of the earlier folder said. Drawing those rows on the server is out of this spec's scope (the page lands on today, so rows drawn from the top would jump).
