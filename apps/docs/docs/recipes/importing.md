@@ -40,3 +40,12 @@ Without one, the Image option is hidden.
 
 Exports from Mela, Paprika, Mealie, Tandoor and Recipe Keeper import as a
 whole, see [Recipe Archive](./recipe-archive.md#importing-an-archive).
+
+## Through the API
+
+To import recipes from scripts or external tools, queue the
+import with `POST /api/v1/recipes/import/url` and monitor its progress with
+`GET /api/v1/recipes/import/status/{recipeId}`. The status endpoint supports
+long-polling (`?wait=30`) to receive the completed recipe or failure reason in
+a single request without tight polling loops. See the
+[API reference](../reference/api.mdx).
