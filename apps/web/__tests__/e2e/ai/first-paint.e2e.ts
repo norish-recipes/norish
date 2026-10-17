@@ -738,6 +738,69 @@ test("a recipe's actions offer editing before the session or the permissions ans
   }
 });
 
+test("a full load of a recipe carries its rating in the server's markup", async ({ browser }) => {
+  const id = await ensureRecipe();
+
+  await callApi("ratings.rate", { recipeId: id, rating: 4 });
+  const { context, page } = await openStatic(browser, "phone");
+
+  try {
+    await page.goto(`/recipes/${id}`);
+    // The fourth star filled and the fifth not: the reader's own rating, not a placeholder.
+    await expect(
+      page.locator('button[aria-label="Rate 4 out of 5"]:not([disabled]) .text-warning').first()
+    ).toBeAttached();
+    await expect(page.locator('button[aria-label="Rate 5 out of 5"] .text-warning')).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a full load of groceries carries a grocery's price and its aisle in the server's markup", async ({
+  browser,
+}) => {
+  const storeId = crypto.randomUUID();
+  const aisleId = crypto.randomUUID();
+  const name = "fennel";
+
+  created.stores.push(storeId);
+
+  await callApi("stores.create", {
+    id: storeId,
+    name: "First Paint Market",
+    color: "primary",
+    aisles: [{ id: aisleId, name: "First Paint Produce" }],
+  });
+  await callApi("groceries.create", [
+    { id: crypto.randomUUID(), name, unit: null, amount: null, storeId },
+  ]);
+  await callApi("stores.chooseProduct", {
+    storeId,
+    name,
+    choice: {
+      kind: "manual",
+      id: crypto.randomUUID(),
+      name: "Fresh fennel",
+      price: 1.79,
+      currency: "EUR",
+    },
+  });
+  await callApi("stores.fileGroceryName", { storeId, name, aisleId });
+  const { context, page } = await openStatic(browser, "phone");
+
+  try {
+    await page.goto("/groceries");
+    await expect(
+      page.locator(`[data-grocery-name="${name}"] [data-testid="grocery-price"]`).first()
+    ).toContainText("1.79");
+    await expect(
+      page.locator('[data-aisle-name="First Paint Produce"][data-aisle-empty="false"]').first()
+    ).toBeAttached();
+  } finally {
+    await context.close();
+  }
+});
+
 test("a page the installed app's worker fetches itself still carries its recipe", async ({
   browser,
 }) => {

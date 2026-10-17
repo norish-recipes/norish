@@ -10,12 +10,16 @@ import { GroceriesScreen } from "./groceries-screen";
  */
 export default function GroceriesLayout() {
   return (
-    // What either view's first frame draws: the list, its stores, and the Pantry.
+    // What either view's first frame draws: the list, its stores, prices and aisles, and the
+    // Pantry with what it suggests.
     <QuerySeed
       reads={(trpc, client) => [
         client.query(trpc.groceries.list.queryOptions()),
         client.query(trpc.stores.list.queryOptions()),
+        client.query(trpc.stores.groceryPrices.queryOptions()),
+        client.query(trpc.stores.aisleLinks.queryOptions()),
         client.query(trpc.pantry.list.queryOptions()),
+        client.query(trpc.pantry.suggestions.queryOptions()),
       ]}
     >
       <GroceriesScreen />
