@@ -166,6 +166,45 @@ describe("useRatingsMutation", () => {
 
       expect(mockMutate).toHaveBeenCalledWith({ recipeId: testRecipeId, rating: 4, version: 9 });
     });
+
+    it("optimistically updates user rating to null when rating is removed", async () => {
+      queryClient.setQueryData(userRatingQueryKey, createMockUserRatingData(testRecipeId, 4, 3));
+
+      const { renderHook, act } = require("@testing-library/react");
+      const { result: _result } = renderHook(() => useRatingsMutation(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const mutationOpts = mockMutationOptions.mock.calls[0]![0];
+
+      await act(async () => {
+        await mutationOpts.onMutate({ recipeId: testRecipeId, rating: null });
+      });
+
+      const cachedData = queryClient.getQueryData<{
+        recipeId: string;
+        userRating: number | null;
+        version?: number | null;
+      }>(userRatingQueryKey);
+
+      expect(cachedData?.userRating).toBeNull();
+      expect(cachedData?.version).toBe(4);
+    });
+
+    it("sends null rating when rateRecipe is called with null", async () => {
+      queryClient.setQueryData(userRatingQueryKey, createMockUserRatingData(testRecipeId, 4, 3));
+
+      const { renderHook, act } = require("@testing-library/react");
+      const { result } = renderHook(() => useRatingsMutation(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.rateRecipe(testRecipeId, null);
+      });
+
+      expect(mockMutate).toHaveBeenCalledWith({ recipeId: testRecipeId, rating: null, version: 3 });
+    });
   });
 
   describe("isRating", () => {

@@ -79,7 +79,7 @@ export function createUseRatingsMutation({
     const { mutate: mutateRate } = rateMutation;
 
     return {
-      rateRecipe: (recipeId: string, rating: number) => {
+      rateRecipe: (recipeId: string, rating: number | null) => {
         const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
         const previousUserRating = queryClient.getQueryData<UserRatingData>(userRatingQueryKey);
 

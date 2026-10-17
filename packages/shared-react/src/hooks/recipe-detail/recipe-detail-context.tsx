@@ -53,7 +53,7 @@ export type RecipeDetailContextValue = {
   allergySet: Set<string>;
   // Rating
   userRating: number | null;
-  rateRecipe: (rating: number) => void;
+  rateRecipe: (rating: number | null) => void;
   // Favorite
   liked: boolean;
   toggleLiked: () => void;
@@ -100,7 +100,9 @@ export type RecipeDetailAdapters = {
     ) => void;
   };
   useRatingQuery: (recipeId: string) => { userRating: number | null };
-  useRatingsMutation: () => { rateRecipe: (recipeId: string, rating: number) => void };
+  useRatingsMutation: () => {
+    rateRecipe: (recipeId: string, rating: number | null) => void;
+  };
   useFavoriteIds: () => string[] | undefined;
   useFavoritesMutation: () => { toggleFavorite: (recipeId: string) => void };
   isNotFoundError: (error: unknown) => boolean;
@@ -263,7 +265,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     const { userRating } = adapters.useRatingQuery(recipeId);
     const { rateRecipe: rateRecipeRaw } = adapters.useRatingsMutation();
     const rateRecipe = useCallback(
-      (rating: number) => rateRecipeRaw(recipeId, rating),
+      (rating: number | null) => rateRecipeRaw(recipeId, rating),
       [recipeId, rateRecipeRaw]
     );
 

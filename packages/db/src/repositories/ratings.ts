@@ -12,9 +12,31 @@ export interface RatingStats {
 export async function rateRecipe(
   userId: string,
   recipeId: string,
-  rating: number,
+  rating: number | null,
   version?: number
-): Promise<{ rating: number; isNew: boolean; stale?: boolean }> {
+): Promise<{ rating: number | null; isNew: boolean; stale?: boolean }> {
+  if (rating === null) {
+    const whereConditions = [
+      eq(recipeRatings.userId, userId),
+      eq(recipeRatings.recipeId, recipeId),
+    ];
+
+    if (version) {
+      whereConditions.push(eq(recipeRatings.version, version));
+    }
+
+    const deleted = await db
+      .delete(recipeRatings)
+      .where(and(...whereConditions))
+      .returning({ id: recipeRatings.id });
+
+    if (deleted.length === 0 && version) {
+      return { rating: null, isNew: false, stale: true };
+    }
+
+    return { rating: null, isNew: false };
+  }
+
   const existing = await db
     .select({ id: recipeRatings.id })
     .from(recipeRatings)
