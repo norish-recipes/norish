@@ -843,22 +843,29 @@ test("the Library arrives under the filters the browser stored, and hydrates wit
 }) => {
   await createRecipe("Aardvark First Paint Stew");
   const { context, page } = await openLive(browser, "phone");
-  const errors: string[] = [];
-
-  page.on("pageerror", (error) => errors.push(error.message));
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
-  });
 
   try {
     // Title order puts the scenario's recipe first; the default, newest first, would not.
     await storeFiltersCookie(context, { sortMode: "titleAsc" });
     await createRecipe("Zebra First Paint Pie");
+    // The first card the server sent. Hydration keeps the server's elements; a mismatch, which a
+    // production build doesn't report, makes React draw new ones.
+    await context.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        const card = document.querySelector('[data-recipe-card][role="button"]');
+
+        if (!card) return;
+        (window as unknown as { __served: Element }).__served = card;
+        observer.disconnect();
+      }).observe(document, { subtree: true, childList: true });
+    });
     await page.goto("/");
     const first = page.locator('[data-recipe-card][role="button"]:visible').first();
 
     await expect(first).toContainText("Aardvark First Paint Stew");
-    expect(errors.filter((error) => /hydrat|#418|#425/i.test(error))).toEqual([]);
+    expect(
+      await page.evaluate(() => (window as unknown as { __served?: Element }).__served?.isConnected)
+    ).toBe(true);
   } finally {
     await context.close();
   }
