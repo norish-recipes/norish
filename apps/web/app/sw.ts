@@ -1,5 +1,6 @@
 import type { PrecacheEntry, SerwistGlobalConfig, StrategyHandler } from "serwist";
 import { REACHABILITY_DEADLINE_MS } from "@/lib/connectivity/reachability";
+import { WORKER_DOCUMENT_HEADER } from "@/lib/document-request";
 import { SW_ARCHIVE_DOWNLOAD_PATH } from "@/lib/export/archive-download-protocol";
 import {
   acceptArchiveDownload,
@@ -75,7 +76,12 @@ class ReachabilityDeadlineDocuments extends Strategy {
 
       if (preloaded) return preloaded;
 
-      return fetch(request, { signal: controller.signal });
+      // Marked, so the server still seeds it as a full load.
+      const headers = new Headers(request.headers);
+
+      headers.set(WORKER_DOCUMENT_HEADER, "1");
+
+      return fetch(request, { signal: controller.signal, headers });
     })();
 
     const outcome = await Promise.race([

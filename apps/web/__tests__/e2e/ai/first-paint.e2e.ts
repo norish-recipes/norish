@@ -737,3 +737,37 @@ test("a recipe's actions offer editing before the session or the permissions ans
     await context.close();
   }
 });
+
+test("a page the installed app's worker fetches itself still carries its recipe", async ({
+  browser,
+}) => {
+  const id = await ensureRecipe();
+  const context = await browser.newContext({
+    baseURL: stack.baseURL,
+    storageState: { cookies: stack.ownerCookies, origins: [] },
+    userAgent: USER_AGENTS.phone,
+    serviceWorkers: "allow",
+  });
+
+  try {
+    const page = await context.newPage();
+
+    await page.goto(`/recipes/${id}`);
+    // Without navigation preload the worker fetches the document itself, which the browser sends
+    // as `Sec-Fetch-Dest: empty`.
+    await page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.ready;
+
+      while (!navigator.serviceWorker.controller) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      await registration.navigationPreload.disable();
+    });
+    const response = await page.reload();
+
+    expect(response?.fromServiceWorker()).toBe(true);
+    expect(await response!.text()).toContain(RECIPE.name);
+  } finally {
+    await context.close();
+  }
+});

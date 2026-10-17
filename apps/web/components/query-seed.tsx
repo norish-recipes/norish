@@ -5,6 +5,7 @@ import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { QuerySeedBoundary } from "@/components/query-seed-boundary";
+import { isDocumentRequest } from "@/lib/document-request";
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
@@ -20,9 +21,9 @@ type Reads = (trpc: TRPCOptionsProxy<AppRouter>, queryClient: QueryClient) => Pr
 export async function readQuerySeed(reads: Reads): Promise<DehydratedState | undefined> {
   const requestHeaders = await headers();
 
-  // Next hides its RSC headers from headers(); the browser's own says a document load from the
-  // fetch behind a navigation or prefetch. Without it, nothing is sent, as before.
-  if (requestHeaders.get("sec-fetch-dest") !== "document") return undefined;
+  // Next hides its RSC headers from headers(); the browser's own say a document load from the
+  // fetch behind a navigation or prefetch. Without them, nothing is sent, as before.
+  if (!isDocumentRequest(requestHeaders)) return undefined;
 
   const queryClient = new QueryClient();
   const ctx = await createHttpContextFromHeaders(new Headers(requestHeaders), null);
