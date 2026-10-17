@@ -16,7 +16,8 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "next typegen && pnpm exec tsc --noEmit && pnpm exec tsc -p tsconfig.sw.json",
     "clean": "git clean -xdf .cache .next .turbo node_modules dist",
-    "generate:splash": "tsx scripts/generate-splash.tsx"
+    "generate:splash": "tsx scripts/generate-splash.tsx",
+    "measure:page-loads": "tsx scripts/measure-page-loads.ts"
   },
   "dependencies": {
     "@better-auth/api-key": "catalog:",
