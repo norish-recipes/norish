@@ -7,8 +7,10 @@
 
 **Blocked by:** none.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] E2E: with stored filters, opening a cookbook makes one `cookbooks.recipes` request and never shows a member the filters leave out.
+- [x] E2E: with stored filters, opening a cookbook makes one `cookbooks.recipes` request and never shows a member the filters leave out.
 
 ## Comments
+
+- 2026-10-16, **done.** `cookbook-members.tsx` reads `isHydrated` and asks with `enabled: isHydrated`, drawing the skeleton until then, as `LibraryView` does. `first-paint.e2e.ts` stores Dinner-only filters in localStorage (no cookie, so the page has to read them after mount), opens a cookbook holding a Dinner and a Breakfast recipe, and checks that no card ever shows the Breakfast one and that exactly one `cookbooks.recipes` request goes out, under the stored filters. `library.list` is held for the scenario: the Cache Warmer reads the Library before any cookbook's members, so it never asks for them and every members request left is the page's own.

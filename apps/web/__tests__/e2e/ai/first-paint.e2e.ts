@@ -865,6 +865,68 @@ test("the Library arrives under the filters the browser stored, and hydrates wit
   }
 });
 
+test("a cookbook opened under stored filters asks for its members once and never shows one they leave out", async ({
+  browser,
+}) => {
+  const dinner = await createRecipe("Filtered Dinner Member", "Dinner");
+  const breakfast = await createRecipe("Filtered Breakfast Member", "Breakfast");
+  const cookbook = await callApi<{ id: string }>("cookbooks.create", {
+    id: crypto.randomUUID(),
+    title: "Filtered Cookbook",
+    recipeId: dinner,
+  });
+
+  created.cookbooks.push(cookbook.id);
+
+  await callApi("cookbooks.setMembership", {
+    cookbookId: cookbook.id,
+    recipeId: breakfast,
+    isMember: true,
+  });
+  const { context, page } = await openLive(browser, "phone");
+  const asked: string[] = [];
+
+  page.on("request", (request) => {
+    const url = decodeURIComponent(request.url());
+
+    if (url.includes("cookbooks.recipes") && url.includes(cookbook.id)) asked.push(url);
+  });
+
+  try {
+    // Stored the way the browser keeps them without the cookie: localStorage only, read after
+    // mount, so the page has to wait for them.
+    await context.addInitScript(() => {
+      // The Cache Warmer runs only in the tab holding the leader lock; held here, it never asks
+      // for the members, so every request left is the page's own.
+      void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
+      localStorage.setItem(
+        "norish:recipe-filters",
+        JSON.stringify({ sortMode: "dateDesc", filterMode: "AND", categories: ["Dinner"] })
+      );
+      const seen = { breakfast: false };
+
+      (window as unknown as { __seen: typeof seen }).__seen = seen;
+      // Cards only: the page's data scripts name every member.
+      new MutationObserver(() => {
+        const cards = document.querySelectorAll('[data-recipe-card][role="button"]');
+
+        if ([...cards].some((card) => card.textContent?.includes("Filtered Breakfast Member"))) {
+          seen.breakfast = true;
+        }
+      }).observe(document, { subtree: true, childList: true, characterData: true });
+    });
+    await page.goto(`/cookbooks/${cookbook.id}`);
+    await expect(page.getByText("Filtered Dinner Member").first()).toBeVisible();
+    expect(
+      await page.evaluate(() => (window as unknown as { __seen: { breakfast: boolean } }).__seen)
+    ).toEqual({ breakfast: false });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toContain('"categories":["Dinner"]');
+  } finally {
+    await context.close();
+  }
+});
+
 test("a page the installed app's worker fetches itself still carries its recipe", async ({
   browser,
 }) => {
