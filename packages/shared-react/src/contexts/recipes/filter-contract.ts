@@ -171,6 +171,75 @@ export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
   };
 }
 
+/** Filters as the list queries take them: toRecipesQueryFilters' answer, or any part of it. */
+export type ListQueryFilters = Partial<ReturnType<typeof toRecipesQueryFilters>> & {
+  limit?: number;
+};
+
+/** The Library query's input, as the Library asks for it; the server seeds the same one. */
+export function libraryListInput(filters: ListQueryFilters = {}) {
+  const {
+    // The same default the recipe list uses, so the Warm Set's guaranteed
+    // floor and the reader's own first page are one cache entry rather than
+    // two (ADR-0009).
+    limit = 100,
+    search,
+    searchFields,
+    tags,
+    categories,
+    filterMode = "AND",
+    sortMode = "dateDesc",
+    minRating,
+    maxCookingTime,
+    favoritesOnly = false,
+    type = "all",
+  } = filters;
+
+  return {
+    limit,
+    search,
+    searchFields,
+    tags,
+    categories,
+    filterMode,
+    sortMode,
+    minRating,
+    maxCookingTime,
+    favoritesOnly,
+    type,
+  };
+}
+
+/** The members query's input, as the cookbook page asks; the Warm Set and the server use it too. */
+export function cookbookRecipesInput(cookbookId: string, filters: ListQueryFilters = {}) {
+  const {
+    limit = 50,
+    search,
+    searchFields,
+    tags,
+    categories,
+    filterMode = "AND",
+    sortMode = "dateDesc",
+    minRating,
+    maxCookingTime,
+    favoritesOnly = false,
+  } = filters;
+
+  return {
+    cookbookId,
+    limit,
+    search,
+    searchFields,
+    tags,
+    categories,
+    filterMode,
+    sortMode,
+    minRating,
+    maxCookingTime,
+    favoritesOnly,
+  };
+}
+
 export function serializeRecipeFilters(filters: CanonicalRecipeFilters) {
   const queryFilters = toRecipesQueryFilters(filters);
 

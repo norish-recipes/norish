@@ -4,6 +4,7 @@ import { AppShell } from "@/app/(app)/app-shell";
 import { readQuerySeed } from "@/components/query-seed";
 import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
 import { readReaderToday } from "@/lib/reader-today-server";
+import { readRecipeFilters } from "@/lib/recipe-filters-server";
 import { readDevicePreferencesSeed, readRequestProfile } from "@/lib/request-profile";
 
 /**
@@ -20,9 +21,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // What the shell's first render needs, read once; the offline bootstrap mounts it unseeded. Not
   // `user.get`: its API-key metadata would sit in every document the worker keeps.
-  const [devicePreferences, readerToday, seed] = await Promise.all([
+  const [devicePreferences, readerToday, recipeFilters, seed] = await Promise.all([
     readDevicePreferencesSeed(),
     readReaderToday(),
+    readRecipeFilters(),
     readQuerySeed((trpc, client) => [
       client.query(trpc.permissions.get.queryOptions()),
       client.query(trpc.households.get.queryOptions()),
@@ -38,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       devicePreferences={devicePreferences}
       reader={{ id, email, name, image, version }}
       readerToday={readerToday}
+      recipeFilters={recipeFilters}
       seed={seed}
     >
       {children}

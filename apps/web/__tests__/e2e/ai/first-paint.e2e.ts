@@ -701,6 +701,44 @@ test.afterAll(async () => {
   });
 });
 
+const RECIPE_FILTERS_COOKIE = "norish-recipe-filters";
+
+/** The Library filters cookie a browser writes, set before a full load. */
+async function storeFiltersCookie(context: BrowserContext, filters: Record<string, unknown>) {
+  await context.addCookies([
+    {
+      name: RECIPE_FILTERS_COOKIE,
+      value: encodeURIComponent(JSON.stringify(filters)),
+      url: stack.baseURL,
+    },
+  ]);
+}
+
+/** A recipe made for one scenario, so its name is the spec's own. */
+async function createRecipe(name: string, category = "Breakfast"): Promise<string> {
+  const id = await callApi<string>("recipes.create", {
+    ...RECIPE,
+    name,
+    url: `https://example.com/${encodeURIComponent(name)}`,
+    categories: [category],
+  });
+
+  // The mutation answers before the transaction lands; wait for the row.
+  await expect
+    .poll(
+      () =>
+        withDatabase(
+          async (database) =>
+            (await database.query("select 1 from recipes where id = $1", [id])).rowCount
+        ),
+      { timeout: 30_000 }
+    )
+    .toBe(1);
+  created.recipes.push(id);
+
+  return id;
+}
+
 test("a full load carries the reader, so the navbar avatar is in the server's markup", async ({
   browser,
 }) => {
@@ -796,6 +834,32 @@ test("a full load of groceries carries a grocery's price and its aisle in the se
     await expect(
       page.locator('[data-aisle-name="First Paint Produce"][data-aisle-empty="false"]').first()
     ).toBeAttached();
+  } finally {
+    await context.close();
+  }
+});
+
+test("the Library arrives under the filters the browser stored, and hydrates without a mismatch", async ({
+  browser,
+}) => {
+  await createRecipe("Aardvark First Paint Stew");
+  const { context, page } = await openLive(browser, "phone");
+  const errors: string[] = [];
+
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+
+  try {
+    // Title order puts the scenario's recipe first; the default, newest first, would not.
+    await storeFiltersCookie(context, { sortMode: "titleAsc" });
+    await createRecipe("Zebra First Paint Pie");
+    await page.goto("/");
+    const first = page.locator('[data-recipe-card][role="button"]:visible').first();
+
+    await expect(first).toContainText("Aardvark First Paint Stew");
+    expect(errors.filter((error) => /hydrat|#418|#425/i.test(error))).toEqual([]);
   } finally {
     await context.close();
   }

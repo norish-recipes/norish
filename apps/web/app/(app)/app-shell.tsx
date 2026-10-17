@@ -20,6 +20,7 @@ import { RecipesContextProvider } from "@/context/recipes-context";
 import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
 import { UserProvider } from "@/context/user-context";
 
+import type { PersistedRecipeFilters } from "@norish/shared-react/filter-contract";
 import type { User } from "@norish/shared/contracts";
 import {
   APP_MAIN_BOTTOM_PADDING_CLASS,
@@ -38,6 +39,7 @@ export function AppShell({
   devicePreferences,
   reader,
   readerToday,
+  recipeFilters,
   seed,
 }: {
   children: React.ReactNode;
@@ -48,6 +50,8 @@ export function AppShell({
   reader?: User;
   /** The reader's date in their time zone, as the layout read it; absent offline. */
   readerToday?: string;
+  /** The Library filters from the browser's cookie; absent offline or without one. */
+  recipeFilters?: PersistedRecipeFilters;
   /** What the shell's providers read, sent with a full load; absent offline. */
   seed?: DehydratedState;
 }) {
@@ -62,7 +66,7 @@ export function AppShell({
                 <DevicePreferencesProvider seed={devicePreferences}>
                   <HouseholdProvider>
                     <PermissionsProvider>
-                      <RecipesFiltersProvider>
+                      <RecipesFiltersProvider initialFilters={recipeFilters}>
                         <RecipesContextProvider>
                           <CookbooksRealtimeProvider>
                             <PantryRealtimeProvider>

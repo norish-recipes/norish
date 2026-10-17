@@ -3,7 +3,7 @@ import { createContext, use, useCallback, useEffect, useMemo, useState } from "r
 import { SearchField } from "@norish/shared/contracts";
 
 import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
-import type { CanonicalRecipeFilters } from "./filter-contract";
+import type { CanonicalRecipeFilters, PersistedRecipeFilters } from "./filter-contract";
 import {
   DEFAULT_RECIPE_FILTERS,
   normalizePersistedRecipeFilters,
@@ -31,14 +31,28 @@ export function createRecipeFiltersContext({
 }: CreateRecipeFiltersContextOptions = {}) {
   const RecipeFiltersContext = createContext<RecipeFiltersContextValue | null>(null);
 
-  function RecipeFiltersProvider({ children }: { children: React.ReactNode }) {
+  /**
+   * `initialFilters`: the stored filters as the server already read them (web, from a cookie), so
+   * the first render is under them and storage is not read. Absent, storage is read after mount.
+   */
+  function RecipeFiltersProvider({
+    children,
+    initialFilters,
+  }: {
+    children: React.ReactNode;
+    initialFilters?: PersistedRecipeFilters;
+  }) {
     "use memo";
 
-    const [filterState, setFilterState] = useState(DEFAULT_RECIPE_FILTERS);
-    const [isHydrated, setIsHydrated] = useState(storageAdapter === undefined);
+    const [filterState, setFilterState] = useState(() =>
+      initialFilters ? { ...DEFAULT_RECIPE_FILTERS, ...initialFilters } : DEFAULT_RECIPE_FILTERS
+    );
+    const [isHydrated, setIsHydrated] = useState(
+      storageAdapter === undefined || initialFilters !== undefined
+    );
 
     useEffect(() => {
-      if (!storageAdapter) return;
+      if (!storageAdapter || isHydrated) return;
 
       let mounted = true;
 
@@ -62,7 +76,7 @@ export function createRecipeFiltersContext({
       return () => {
         mounted = false;
       };
-    }, []);
+    }, [isHydrated]);
 
     useEffect(() => {
       if (!storageAdapter || !isHydrated) return;

@@ -15,6 +15,7 @@
     "./hooks/recipes/recipe": "./src/hooks/recipes/recipe/index.ts",
     "./hooks/use-user": "./src/hooks/use-user.ts",
     "./contexts": "./src/contexts/index.ts",
+    "./filter-contract": "./src/contexts/recipes/filter-contract.ts",
     "./providers": "./src/providers/index.ts",
     "./realtime": "./src/realtime/index.ts"
   },
