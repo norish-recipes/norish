@@ -9,7 +9,7 @@ import type { UserContextValue } from "@norish/shared-react/contexts";
 import type { User } from "@norish/shared/contracts";
 import { createUserContext } from "@norish/shared-react/contexts";
 import { useUser } from "@norish/shared-react/hooks";
-import { ReaderSeedContext } from "@norish/shared-react/hooks/use-user";
+import { ReaderSeedProvider } from "@norish/shared-react/hooks/use-user";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 
 // Create the shared base context
@@ -60,11 +60,11 @@ const WebUserContext = createContext<WebUserContextType | null>(null);
 /** `reader`: who the server verified for this document, until the session answers. */
 export function UserProvider({ children, reader }: { children: ReactNode; reader?: User }) {
   return (
-    <ReaderSeedContext value={reader ?? null}>
+    <ReaderSeedProvider reader={reader ?? null}>
       <shared.UserProvider>
         <WebUserProviderInner>{children}</WebUserProviderInner>
       </shared.UserProvider>
-    </ReaderSeedContext>
+    </ReaderSeedProvider>
   );
 }
 

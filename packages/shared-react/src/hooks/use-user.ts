@@ -1,4 +1,5 @@
-import { createContext, use, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, createElement, use, useState } from "react";
 
 import type { User } from "@norish/shared/contracts";
 import { useSession } from "@norish/shared/lib/auth/client";
@@ -6,7 +7,27 @@ import { useSession } from "@norish/shared/lib/auth/client";
 import { useHydrated } from "./use-hydrated";
 
 /** The reader the server verified for this document, where a server rendered it (web). */
-export const ReaderSeedContext = createContext<User | null>(null);
+const ReaderSeedContext = createContext<User | null>(null);
+
+/**
+ * Hands `reader` to every useUser until the session first answers. One answer for all of them:
+ * better-auth reports pending again on every refetch while signed out.
+ */
+export function ReaderSeedProvider({
+  reader,
+  children,
+}: {
+  reader: User | null;
+  children: ReactNode;
+}) {
+  const { isPending } = useSession();
+  const hydrated = useHydrated();
+  const [answered, setAnswered] = useState(false);
+
+  if (hydrated && !isPending && !answered) setAnswered(true);
+
+  return createElement(ReaderSeedContext, { value: answered ? null : reader }, children);
+}
 
 export function useUser() {
   const seed = use(ReaderSeedContext);
@@ -26,12 +47,7 @@ export function useUser() {
         version: 1,
       }
     : null;
-  // The server's reader is used on both sides of hydration and until the session first answers;
-  // better-auth reports pending again on every refetch while signed out, so the answer is kept.
-  const [answered, setAnswered] = useState(false);
-
-  if (hydrated && !isPending && !answered) setAnswered(true);
-  const user = sessionUser ?? (answered ? null : seed);
+  const user = sessionUser ?? seed;
 
   return {
     user,
