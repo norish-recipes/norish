@@ -26,7 +26,6 @@ export type {
 export type { CookbookMemberIdsQueryResult } from "./use-cookbook-member-ids-query";
 export type { CookbookQueryResult } from "./use-cookbook-query";
 export type { CookbookRecipesQueryResult } from "./use-cookbook-recipes-query";
-export { cookbookRecipesInput } from "./use-cookbook-recipes-query";
 
 export {
   createUseCookbookMemberIdsQuery,

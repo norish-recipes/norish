@@ -5,6 +5,7 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import type { RecipeFilters } from "../recipes/dashboard";
 import type { CreateCookbookHooksOptions } from "./types";
+import { cookbookRecipesInput } from "../../contexts/recipes/filter-contract";
 
 type InfiniteMemberPages = {
   pages: { recipes: RecipeDashboardDTO[]; total: number; nextCursor: number | null }[];
@@ -45,39 +46,6 @@ export type CookbookRecipesQueryResult = {
  * honours the reader's stored sort, search and filters and pages the same way
  * the Library does.
  */
-/** The members query's input, as the cookbook page asks for it; the Warm Set warms the same one. */
-export function cookbookRecipesInput(
-  cookbookId: string,
-  filters: RecipeFilters & { favoritesOnly?: boolean } = {}
-) {
-  const {
-    limit = 50,
-    search,
-    searchFields,
-    tags,
-    categories,
-    filterMode = "AND",
-    sortMode = "dateDesc",
-    minRating,
-    maxCookingTime,
-    favoritesOnly = false,
-  } = filters;
-
-  return {
-    cookbookId,
-    limit,
-    search,
-    searchFields,
-    tags,
-    categories,
-    filterMode,
-    sortMode,
-    minRating,
-    maxCookingTime,
-    favoritesOnly,
-  };
-}
-
 export function createUseCookbookRecipesQuery({ useTRPC }: CreateCookbookHooksOptions) {
   return function useCookbookRecipesQuery(
     cookbookId: string,

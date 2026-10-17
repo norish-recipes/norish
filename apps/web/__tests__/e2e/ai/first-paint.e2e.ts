@@ -973,6 +973,30 @@ test("a cookbook opened under stored filters asks for its members once and never
   }
 });
 
+test("a full load of a cookbook draws its members in the server's markup", async ({ browser }) => {
+  const id = await createRecipe("Served Cookbook Member");
+  const cookbook = await callApi<{ id: string }>("cookbooks.create", {
+    id: crypto.randomUUID(),
+    title: "Served Members",
+    recipeId: id,
+  });
+
+  created.cookbooks.push(cookbook.id);
+  const { context, page } = await openStatic(browser, "phone");
+
+  try {
+    await storeFiltersCookie(context, {});
+    await page.goto(`/cookbooks/${cookbook.id}`);
+    await expect(
+      page
+        .locator('[data-recipe-card][role="button"]')
+        .filter({ hasText: "Served Cookbook Member" })
+    ).not.toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
 test("a page the installed app's worker fetches itself still carries its recipe", async ({
   browser,
 }) => {
