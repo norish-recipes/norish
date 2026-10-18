@@ -7,7 +7,7 @@ import { Button, FieldError, InputGroup, Label, Link, TextField } from "@heroui/
 import { useTranslations } from "next-intl";
 
 import { signIn } from "@norish/shared/lib/auth/client";
-import { APP_ROOT } from "@norish/shared/lib/base-path";
+import { APP_ROOT, stripBasePath } from "@norish/shared/lib/base-path";
 
 import { AuthAlert } from "../../components/auth-alert";
 
@@ -39,7 +39,9 @@ export function EmailPasswordForm({
       if (result.error) {
         setError(result.error.message || t("errors.invalidCredentials"));
       } else {
-        router.push(callbackUrl);
+        // The callback already carries the instance prefix; the router adds
+        // the base path itself, so hand it the bare path (ADR-0040).
+        router.push(stripBasePath(callbackUrl));
       }
     } catch {
       setError(t("errors.generic"));

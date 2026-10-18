@@ -189,10 +189,15 @@ test("keeps the offline home action under the prefix", async () => {
   }
 });
 
-test("signs out to the prefixed login page", async () => {
+test("signs out and back in at the prefix", async () => {
   await page.goto(BASE_PATH);
   await page.waitForLoadState("networkidle");
   await page.getByRole("button", { name: "Open user menu" }).click();
   await page.getByRole("menuitem", { name: "Logout" }).click();
   await expect(page).toHaveURL(new RegExp(`^${stack.baseURL}/login\\?logout=true$`));
+
+  await page.locator('input[type="email"]').fill(OWNER.email);
+  await page.locator('input[type="password"]').fill(OWNER.password);
+  await page.locator('button[type="submit"]').click();
+  await expect(page).toHaveURL(new RegExp(`^${stack.baseURL}/?$`));
 });
