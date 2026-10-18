@@ -231,10 +231,8 @@ RUN if [ "${UID}" != "1000" ] || [ "${GID}" != "1000" ]; then \
 
 # --- Minimal Next.js runtime files for the custom server ---
 # We run our own bundled server from dist-server, so we only need the built
-# `.next` output plus the small config files Next reads at startup.
+# `.next` output: it reads Next's config from .next/required-server-files.json.
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/.next/standalone/apps/web/.next/ ./apps/web/.next/
-COPY --from=build --chown=${UID}:${GID} /app/apps/web/next.config.js ./apps/web/next.config.js
-COPY --from=build --chown=${UID}:${GID} /app/apps/web/config/next-intl-request-config-path.js ./apps/web/config/next-intl-request-config-path.js
 
 # --- Production node_modules from pnpm deploy (complete runtime deps) ---
 COPY --from=build --chown=${UID}:${GID} /app/deploy/node_modules/ ./node_modules/

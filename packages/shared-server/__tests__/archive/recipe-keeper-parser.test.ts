@@ -270,6 +270,23 @@ describe("Recipe Keeper import", () => {
     ]);
   });
 
+  it("keeps every word of a pasted list, and no separator as a step (#635)", async () => {
+    const { dtos } = await importBlocks([
+      recipeBlock({
+        ingredients: ["• 2 uova", "•", "Burro 20 g", "Scorsa di 1 limone", ".80 g di Pecorino"],
+        directions: ["-", "Montate le uova.", "-"],
+      }),
+    ]);
+
+    expect(
+      dtos[0].recipeIngredients.map(
+        (line: { amount: number | null; ingredientName: string }) =>
+          `${line.amount ?? ""} ${line.ingredientName}`
+      )
+    ).toEqual(["2 uova", "20 Burro", "1 Scorsa di limone", "80 di Pecorino"]);
+    expect(dtos[0].steps.map((step: { step: string }) => step.step)).toEqual(["Montate le uova."]);
+  });
+
   it("keeps calories alone when they are the only nutrition supplied", async () => {
     const { dtos } = await importBlocks([
       recipeBlock({
