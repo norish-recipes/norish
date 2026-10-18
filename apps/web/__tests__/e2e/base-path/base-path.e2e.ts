@@ -189,6 +189,54 @@ test("keeps the offline home action under the prefix", async () => {
   }
 });
 
+test("classifies a warmed surface under the prefix while Offline", async () => {
+  await page.goto(`${BASE_PATH}/groceries`);
+  await page.waitForLoadState("networkidle");
+  await page.goto(`${BASE_PATH}/calendar`);
+  await page.waitForLoadState("networkidle");
+  await page.goto(BASE_PATH);
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+
+  await page.evaluate(async () => {
+    const names = await caches.keys();
+
+    await Promise.all(
+      names.filter((name) => name.includes("pages")).map((name) => caches.delete(name))
+    );
+  });
+
+  await context.setOffline(true);
+
+  try {
+    await page.goto(`${BASE_PATH}/groceries`);
+    await expect(page.getByTestId("offline-surface")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("offline-unavailable")).toHaveCount(0);
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
+test("keeps the archive export under the prefix", async () => {
+  const exportRequests: string[] = [];
+
+  page.on("request", (request) => {
+    if (request.url().includes("/export/recipes")) {
+      exportRequests.push(request.url());
+    }
+  });
+
+  await page.goto(`${BASE_PATH}/settings?tab=user`);
+  await page.waitForLoadState("networkidle");
+  await page
+    .getByRole("button", { name: /export/i })
+    .first()
+    .click();
+  await expect.poll(() => exportRequests.length).toBeGreaterThan(0);
+  expect(
+    exportRequests.every((url) => new URL(url).pathname.startsWith(`${BASE_PATH}/export/recipes`))
+  ).toBe(true);
+});
+
 test("signs out and back in at the prefix", async () => {
   await page.goto(BASE_PATH);
   await page.waitForLoadState("networkidle");

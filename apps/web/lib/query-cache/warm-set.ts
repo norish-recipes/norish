@@ -13,6 +13,7 @@ import { CACHE_MAX_AGE_MS, cacheManager } from "@/lib/query-cache/persisted-quer
 import { CacheExpiration } from "serwist";
 
 import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-react/contexts";
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 const WARM_RECIPE_LIST_LIMIT = 100;
@@ -400,7 +401,7 @@ function sameOriginImageUrl(image: string | null | undefined): string | null {
   }
 
   try {
-    const url = new URL(image, location.href);
+    const url = new URL(addBasePathToUrl(image), location.href);
 
     return url.origin === location.origin ? url.toString() : null;
   } catch {

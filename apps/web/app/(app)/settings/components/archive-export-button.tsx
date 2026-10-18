@@ -6,6 +6,8 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 /**
  * `viewer` exports everything the pressing user can see under the view
  * policy; `instance` exports every recipe on the server. Both go through the
@@ -73,7 +75,7 @@ export default function ArchiveExportButton({ label, scope = "viewer" }: Archive
     setBytes(0);
 
     const outcome = await startArchiveDownload({
-      url: exportUrl(scope),
+      url: addBasePath(exportUrl(scope)),
       fallbackFileName: FALLBACK_FILE_NAME,
       onProgress: (transferred) => {
         if (mounted.current) setBytes(transferred);

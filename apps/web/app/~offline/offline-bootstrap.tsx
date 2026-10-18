@@ -10,7 +10,7 @@ import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { cacheManager } from "@/lib/query-cache";
 
-import { addBasePath } from "@norish/shared/lib/base-path";
+import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -57,7 +57,7 @@ export function OfflineBootstrap() {
   useEffect(() => {
     void cacheManager
       .reconcileIdentity({ sessionUserId: null, isOffline: true })
-      .then(() => setPathname(window.location.pathname));
+      .then(() => setPathname(stripBasePath(window.location.pathname)));
   }, []);
 
   if (pathname === null) {
@@ -75,5 +75,11 @@ export function OfflineBootstrap() {
     );
   }
 
-  return <AppShell>{offlineSurface(pathname)}</AppShell>;
+  return (
+    <AppShell>
+      <div className="contents" data-testid="offline-surface">
+        {offlineSurface(pathname)}
+      </div>
+    </AppShell>
+  );
 }
