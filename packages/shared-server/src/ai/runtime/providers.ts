@@ -294,6 +294,12 @@ export interface ImageModelConfig {
 /** The square every provider that takes a size accepts. */
 const SQUARE: ImageShape = { size: "1024x1024" };
 
+const GEMINI_IMAGE_MODEL_PREFIX = "google/gemini-";
+
+function genericLandscapeSize(model: string): ImageShape {
+  return model.startsWith(GEMINI_IMAGE_MODEL_PREFIX) ? SQUARE : { size: "1280x720" };
+}
+
 /**
  * The widest landscape OpenAI's image models accept. The DALL·E family tops
  * out at 1792×1024, the gpt-image family at 1536×1024; a model this guess is
@@ -408,9 +414,7 @@ export function createImageModelFromConfig(config: {
       return {
         model: compatible.imageModel(model),
         providerName: provider === "lm-studio" ? "LM Studio" : "Generic OpenAI",
-        // No published size list to lean on, so ask for exactly the stored
-        // shape: self-hosted image servers generally accept arbitrary sizes.
-        landscape: { size: "1280x720" },
+        landscape: genericLandscapeSize(model),
         square: SQUARE,
       };
     }
