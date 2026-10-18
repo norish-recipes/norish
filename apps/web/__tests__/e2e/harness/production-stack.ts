@@ -24,9 +24,11 @@ export interface HarnessUser {
 }
 
 interface ProductionStackOptions {
-  project: "offline" | "ai" | "realtime";
+  project: "offline" | "ai" | "realtime" | "base-path";
   port: number;
   databaseName: string;
+  /** The URL prefix the server and the browser share, empty at the root. */
+  basePath?: string;
   users: readonly [HarnessUser, HarnessUser];
   /**
    * Extra variables layered over the server's own environment. Deliberately a
@@ -146,7 +148,7 @@ export class ProductionStack {
     const worker = Number(process.env.TEST_PARALLEL_INDEX ?? 0);
 
     this.port = options.port + worker;
-    this.baseURL = `http://localhost:${this.port}`;
+    this.baseURL = `http://localhost:${this.port}${options.basePath ?? ""}`;
     this.runtimeDir = path.join(E2E_RUNTIME_DIR, `${options.project}-${worker}`);
     this.uploadsDir = path.join(this.runtimeDir, "uploads");
   }
@@ -434,7 +436,8 @@ export class ProductionStack {
       DATABASE_URL: this.databaseUrl,
       REDIS_URL: this.redisConnectionUrl!,
       AUTH_URL: this.baseURL,
-      TRUSTED_ORIGINS: this.baseURL,
+      TRUSTED_ORIGINS: `http://localhost:${this.port}`,
+      NEXT_PUBLIC_BASE_PATH: this.options.basePath ?? "",
       MASTER_KEY: "X4fjLgB8egCPwlOQW8iC3JGXAtUIMUOGmk/y29n+YSw=",
       UPLOADS_DIR: this.uploadsDir,
       LOG_LEVEL: "error",

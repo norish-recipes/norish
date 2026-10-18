@@ -129,3 +129,47 @@ jobs:
           # Everything lives under dot-directories, which the action skips
           # by default — without this the upload silently finds nothing.
           include-hidden-files: true
+
+  # The base path is inlined into the client bundles, the service worker and
+  # the manifest at build time, so this gate needs its own build (ADR-0040).
+  # It runs a focused project: the shell, the assets, the manifest, the worker
+  # scope, tRPC, the login redirect and one Offline reload.
+  base-path:
+    name: Browser E2E (base path)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
+
+      - name: Build for the base path
+        env:
+          NEXT_PUBLIC_BASE_PATH: /norish
+        run: pnpm run build --filter=@norish/web...
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @norish/web exec playwright install --with-deps chromium
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+
+      - name: Install the embedded parser runtime
+        run: pnpm --filter @norish/parser-api run install:deps
+
+      - name: Browser E2E
+        env:
+          NEXT_PUBLIC_BASE_PATH: /norish
+        run: pnpm --filter @norish/web run test:e2e --project=base-path
+
+      - name: Upload traces and results on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results-base-path
+          path: apps/web/__tests__/e2e/.results
+          retention-days: 7
+          if-no-files-found: ignore
+          include-hidden-files: true
