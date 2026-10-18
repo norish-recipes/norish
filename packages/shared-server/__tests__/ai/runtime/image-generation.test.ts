@@ -162,6 +162,16 @@ describe("generateImage", () => {
     expect(width).toBeGreaterThan(height ?? Number.NaN);
   });
 
+  it("uses the square a Gemini image model accepts", async () => {
+    mockGetImageGenerationConfig.mockResolvedValue(
+      imageConfig({ model: "google/gemini-3.1-flash-lite-image" })
+    );
+
+    await generateImage({ prompt: "image-generation-style", sections: [] });
+
+    expect(captured[0]!.body.size).toBe("1024x1024");
+  });
+
   it("draws through Ollama's native generate route with a landscape width and height", async () => {
     // ai-sdk-ollama gained an image model on the AI SDK 7 line, so Ollama
     // joined the providers that can draw; it answers `images` rather than
