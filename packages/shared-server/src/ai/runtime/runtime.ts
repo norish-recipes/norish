@@ -107,9 +107,10 @@ export type ImagePromptName = "image-generation-style" | "ingredient-icon-style"
  * already expressible in the prompt, which follows the system message.
  */
 const SYSTEM_MESSAGES: Record<StructuredPromptName, string> = {
-  "recipe-extraction": "You extract recipe data as JSON-LD with both metric and US measurements.",
+  "recipe-extraction":
+    "You extract recipe data as JSON-LD. Give ingredient measurements in both metric and US. Return the method once, as short single-action steps.",
   "image-extraction":
-    "You extract recipe data from images as JSON-LD with both metric and US measurements.",
+    "You extract recipe data from images as JSON-LD. Give ingredient measurements in both metric and US. Return the method once, as short single-action steps.",
   "unit-conversion": "Convert recipe measurements between metric and US systems.",
   "nutrition-estimation":
     "Estimate nutritional values for this recipe based on the ingredients. Return accurate per-serving values.",
