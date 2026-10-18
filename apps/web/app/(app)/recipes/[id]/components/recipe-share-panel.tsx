@@ -19,6 +19,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 import { useRecipeContextRequired } from "../context";
 
@@ -69,7 +70,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
         invalidateMyRecipeShares();
         invalidateAdminRecipeShares();
         invalidateRecipeShare(data.id);
-        setLatestCreatedUrl(new URL(data.url, window.location.origin).toString());
+        setLatestCreatedUrl(new URL(addBasePath(data.url), window.location.origin).toString());
         toast(t("createSuccess"), {
           variant: "success",
         });

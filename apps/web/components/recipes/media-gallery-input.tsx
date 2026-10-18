@@ -34,6 +34,7 @@ import { useTranslations } from "next-intl";
 
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod/recipe-videos";
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("MediaGalleryInput");
@@ -145,7 +146,7 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
               unoptimized
               alt={`Video ${index + 1}`}
               className="object-cover"
-              src={item.thumbnail}
+              src={addBasePathToUrl(item.thumbnail)}
             />
           ) : (
             <div className="bg-surface-tertiary flex h-full w-full items-center justify-center">
@@ -171,7 +172,7 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
           unoptimized
           alt={`Image ${index + 1}`}
           className="object-cover"
-          src={item.src}
+          src={addBasePathToUrl(item.src)}
         />
       )}
 

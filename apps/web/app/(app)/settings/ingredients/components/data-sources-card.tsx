@@ -5,6 +5,8 @@ import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { ArrowDownTrayIcon, CircleStackIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 const OPEN_FOOD_FACTS_URL = "https://world.openfoodfacts.org";
 const ODBL_URL = "https://opendatacommons.org/licenses/odbl/1-0/";
 const CIQUAL_URL = "https://ciqual.anses.fr";
@@ -54,7 +56,7 @@ export default function DataSourcesCard() {
         download
         className="text-accent inline-flex items-center gap-2 self-start text-sm font-medium hover:underline"
         data-testid="catalogue-export"
-        href="/export/ingredients"
+        href={addBasePath("/export/ingredients")}
       >
         <ArrowDownTrayIcon aria-hidden className="h-4 w-4" />
         {t("download")}

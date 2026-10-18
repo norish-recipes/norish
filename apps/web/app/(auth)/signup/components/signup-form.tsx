@@ -7,13 +7,14 @@ import { Button, Description, FieldError, InputGroup, Label, Link, TextField } f
 import { useTranslations } from "next-intl";
 
 import { signUp } from "@norish/shared/lib/auth/client";
+import { APP_ROOT } from "@norish/shared/lib/base-path";
 
 import { AuthAlert } from "../../components/auth-alert";
 
 interface SignupFormProps {
   callbackUrl?: string;
 }
-export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
+export function SignupForm({ callbackUrl = APP_ROOT }: SignupFormProps) {
   const t = useTranslations("auth.signup");
   const router = useRouter();
   const [name, setName] = useState("");

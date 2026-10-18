@@ -1,5 +1,6 @@
 import { getAvailableProviders } from "@norish/auth/providers";
 import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
+import { APP_ROOT } from "@norish/shared/lib/base-path";
 
 import { LoginClient } from "./components/login-client";
 
@@ -16,7 +17,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     isRegistrationEnabled(),
   ]);
 
-  const { callbackUrl = "/", logout } = await searchParams;
+  const { callbackUrl = APP_ROOT, logout } = await searchParams;
   const justLoggedOut = logout === "true";
 
   // Only auto-redirect for single OAuth provider

@@ -8,6 +8,7 @@ import VideoPlayer from "@/components/shared/video-player";
 import { Carousel, useCarousel } from "@/components/ui/carousel";
 import { useTranslations } from "next-intl";
 
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
 import { cssMediaControlBare } from "@norish/web/config/css-tokens";
 
 export interface MediaItem {
@@ -149,8 +150,8 @@ function MediaCarouselSlides({
               <VideoPlayer
                 className="h-full w-full"
                 duration={item.duration}
-                poster={item.thumbnail || undefined}
-                src={item.src}
+                poster={item.thumbnail ? addBasePathToUrl(item.thumbnail) : undefined}
+                src={addBasePathToUrl(item.src)}
                 onControlsVisibilityChange={
                   index === safeIndex ? onActiveVideoControlsVisibilityChange : undefined
                 }
@@ -179,7 +180,7 @@ function MediaCarouselSlides({
                   alt={`Recipe media ${index + 1}`}
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   sizes="(min-width: 1024px) 60vw, (min-width: 768px) 50vw, 100vw"
-                  src={item.src}
+                  src={addBasePathToUrl(item.src)}
                   onError={() => handleImageError(item.src)}
                 />
               </div>
@@ -299,8 +300,8 @@ export default function MediaCarousel({
             <VideoPlayer
               className="h-full w-full"
               duration={item.duration}
-              poster={item.thumbnail || undefined}
-              src={item.src}
+              poster={item.thumbnail ? addBasePathToUrl(item.thumbnail) : undefined}
+              src={addBasePathToUrl(item.src)}
               onControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
               onFullscreenAvailabilityChange={onActiveVideoFullscreenChange}
             />
@@ -325,7 +326,7 @@ export default function MediaCarousel({
                 alt="Recipe image"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(min-width: 1024px) 60vw, (min-width: 768px) 50vw, 100vw"
-                src={item.src}
+                src={addBasePathToUrl(item.src)}
                 onError={() => handleImageError(item.src)}
               />
             </div>

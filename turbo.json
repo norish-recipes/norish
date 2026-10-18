@@ -6,6 +6,7 @@
     "CI",
     "npm_lifecycle_event",
     "SKIP_ENV_VALIDATION",
+    "NEXT_PUBLIC_BASE_PATH",
     "DATABASE_URL",
     "MASTER_KEY",
     "AUTH_URL",

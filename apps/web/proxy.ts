@@ -3,6 +3,7 @@ import { shouldBypassAuthProxy } from "@/lib/recipe-share-access";
 
 import { getVerifiedSession } from "@norish/auth/session";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 export async function proxy(request: NextRequest) {
   // WebSocket upgrade requests should not be redirected - they'll be handled at the app level
@@ -30,12 +31,15 @@ export async function proxy(request: NextRequest) {
   let loginUrl: URL;
 
   if (forwardedOrigin && SERVER_CONFIG.TRUSTED_ORIGINS.includes(forwardedOrigin)) {
-    loginUrl = new URL("/login", forwardedOrigin);
+    loginUrl = new URL(addBasePath("/login"), forwardedOrigin);
   } else {
-    loginUrl = new URL("/login", SERVER_CONFIG.AUTH_URL);
+    loginUrl = new URL(addBasePath("/login"), SERVER_CONFIG.AUTH_URL);
   }
 
-  loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname + request.nextUrl.search);
+  loginUrl.searchParams.set(
+    "callbackUrl",
+    addBasePath(request.nextUrl.pathname + request.nextUrl.search)
+  );
 
   return NextResponse.redirect(loginUrl, 307);
 }

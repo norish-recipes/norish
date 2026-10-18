@@ -7,6 +7,7 @@ import mime from "mime";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
 import { serverLogger } from "@norish/shared-server/logger";
+import { stripBasePath } from "@norish/shared/lib/base-path";
 
 const STATIC_EXCLUDED_PATHS = ["/", "/manifest.webmanifest", "/_next", "/api"];
 
@@ -16,7 +17,7 @@ const STATIC_PUBLIC_DIR = resolveExistingWorkspacePath(join("apps", "web", "publ
 export function serveStaticFile(req: IncomingMessage, res: ServerResponse): boolean {
   try {
     const url = new URL(req.url!, SERVER_CONFIG.AUTH_URL);
-    const pathname = url.pathname;
+    const pathname = stripBasePath(url.pathname);
 
     // Skip Next.js and API routes
     if (STATIC_EXCLUDED_PATHS.some((path) => pathname === path || pathname.startsWith(path))) {

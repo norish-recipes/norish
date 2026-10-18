@@ -22,6 +22,8 @@ import {
 import { observable } from "@trpc/server/observable";
 import superjson from "superjson";
 
+import { BASE_PATH } from "@norish/shared/lib/base-path";
+
 import { createOperationIdLink } from "./operation-id-link";
 import { createBatchRequestHeadersResolver, createRequestHeadersResolver } from "./request-headers";
 
@@ -213,20 +215,20 @@ function createHttpTransportLink(
 
 export const defaultGetBaseUrl = () => {
   if (typeof window !== "undefined") {
-    return "";
+    return BASE_PATH;
   }
 
-  return `http://localhost:${process.env.PORT ?? 3000}`;
+  return `http://localhost:${process.env.PORT ?? 3000}${BASE_PATH}`;
 };
 
 export const defaultGetWsUrl = () => {
   if (typeof window !== "undefined") {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
-    return `${protocol}//${window.location.host}/trpc`;
+    return `${protocol}//${window.location.host}${BASE_PATH}/trpc`;
   }
 
-  return `ws://localhost:${process.env.PORT ?? 3000}/trpc`;
+  return `ws://localhost:${process.env.PORT ?? 3000}${BASE_PATH}/trpc`;
 };
 
 export const defaultGetHeaders = (): HTTPHeaders => ({});
