@@ -196,6 +196,7 @@ describe("useTimerStore", () => {
       "Test Timer",
       expect.objectContaining({
         body: "Timer complete!",
+        icon: "/brand/icon-192.png",
         tag: "timer-complete",
         renotify: true,
         requireInteraction: true,
