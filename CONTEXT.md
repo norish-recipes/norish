@@ -386,3 +386,9 @@ The HTTP surface an API key reaches, under `/api/v1`: a deliberately small subse
 
 **API Reference**:
 The docs page that describes the Public API. It is generated from the code, never written by hand, and frozen with each docs version so a release's docs show that release's API.
+
+### Deployment
+
+**Base Path**:
+The URL prefix an instance is served under, set at build time with `NEXT_PUBLIC_BASE_PATH`; empty at the domain root. Every absolute URL the app emits carries it: routes, assets, the manifest, the service-worker scope, the tRPC socket and the healthcheck. It is a property of the image, not a per-request rewrite.
+_Avoid_: Subpath (ambiguous with a route), Mount point (a proxy's word, not the app's)

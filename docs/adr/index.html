@@ -941,6 +941,17 @@
             household.
           </p>
         </li>
+        <li>
+          <a href="deployment/0040-web-app-can-run-under-a-url-base-path.md"
+            >ADR-0040 &mdash; The web app can run under a URL base path</a
+          >
+          <p>
+            <b>Accepted.</b> <code>NEXT_PUBLIC_BASE_PATH</code> is baked into the image, and every
+            absolute URL the app emits carries it: routes, assets, the tRPC endpoint and socket,
+            the manifest, the service-worker scope and the healthcheck. The published image stays
+            at the root; a prefixed deployment builds its own.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>
