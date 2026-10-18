@@ -23,7 +23,10 @@ export function normalizeAzureEndpoint(endpoint: string): string {
 }
 
 /**
- * OpenAI-compatible endpoints are addressed under /v1.
+ * OpenAI-compatible endpoints are addressed under a version segment.
+ *
+ * `/v1` is added when the endpoint carries no version segment. A segment the
+ * operator already wrote (`/v1`, `/v4`, …) is kept as written.
  *
  * Both conventions people write are accepted and mean the same thing:
  * `https://openrouter.ai/api` and `https://openrouter.ai/api/v1` both address
@@ -32,7 +35,7 @@ export function normalizeAzureEndpoint(endpoint: string): string {
 export function normalizeOpenAICompatibleEndpoint(endpoint: string): string {
   const baseUrl = endpoint.replace(/\/+$/, "");
 
-  return baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
+  return /\/v\d+$/.test(baseUrl) ? baseUrl : `${baseUrl}/v1`;
 }
 
 /** Ollama is addressed at its host root, without a trailing slash or /api. */
