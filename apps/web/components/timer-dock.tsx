@@ -21,6 +21,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import useSound from "use-sound";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { cssFloatingDockPill } from "@norish/web/config/css-tokens";
@@ -98,7 +99,7 @@ export function TimerDock({
   }, [timersEnabled, timers.length, clearAll]);
 
   // Audio Logic
-  const [play, { stop }] = useSound("/sounds/timer-done.mp3", {
+  const [play, { stop }] = useSound(addBasePath("/sounds/timer-done.mp3"), {
     volume: 1.0,
     loop: true,
     interrupt: false,

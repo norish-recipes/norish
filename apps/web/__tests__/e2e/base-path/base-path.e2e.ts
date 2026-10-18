@@ -171,3 +171,28 @@ test("reloads a visited page while Offline", async () => {
     await context.setOffline(false);
   }
 });
+
+test("keeps the offline home action under the prefix", async () => {
+  await page.goto(BASE_PATH);
+  await page.waitForLoadState("networkidle");
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+
+  await context.setOffline(true);
+
+  try {
+    await page.goto(`${BASE_PATH}/this-route-was-never-visited`);
+    await expect(page.getByTestId("offline-unavailable")).toBeVisible({ timeout: 30_000 });
+    await page.getByTestId("offline-unavailable").getByRole("button").nth(1).click();
+    await expect(page).toHaveURL(new RegExp(`^${stack.baseURL}/?$`));
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
+test("signs out to the prefixed login page", async () => {
+  await page.goto(BASE_PATH);
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "Open user menu" }).click();
+  await page.getByRole("menuitem", { name: "Logout" }).click();
+  await expect(page).toHaveURL(new RegExp(`^${stack.baseURL}/login\\?logout=true$`));
+});
