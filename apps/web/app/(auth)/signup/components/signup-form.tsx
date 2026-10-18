@@ -7,7 +7,7 @@ import { Button, Description, FieldError, InputGroup, Label, Link, TextField } f
 import { useTranslations } from "next-intl";
 
 import { signUp } from "@norish/shared/lib/auth/client";
-import { APP_ROOT } from "@norish/shared/lib/base-path";
+import { APP_ROOT, stripBasePath } from "@norish/shared/lib/base-path";
 
 import { AuthAlert } from "../../components/auth-alert";
 
@@ -50,7 +50,7 @@ export function SignupForm({ callbackUrl = APP_ROOT }: SignupFormProps) {
       if (result.error) {
         setError(result.error.message || t("errors.createFailed"));
       } else {
-        router.push(callbackUrl);
+        router.push(stripBasePath(callbackUrl));
       }
     } catch {
       setError(t("errors.generic"));
