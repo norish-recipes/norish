@@ -28,7 +28,7 @@ A recipe gallery can have several images. Two parts are not complete.
   migration.
 - The cap applies to Source Images. Thus a full gallery still accepts the AI
   image and can have 11 rows.
-- The cap is atomic. Two uploads at nine Source Images cannot both pass.
+- The cap is atomic. Two new images at nine Source Images cannot both pass.
 - Tests that do not need PostgreSQL run in each unit step. The repository tests
   run in CI.
 

@@ -9,7 +9,7 @@ Status: ready-for-human
 - A Source Image stays after Image Generation. A previous
   Generated Image can change. The write does not remove a file that a row uses.
 - Schema limits for ten Source Images and one Generated Image, and an atomic
-  upload cap.
+  cap.
 
 ## Done when
 
@@ -23,7 +23,7 @@ Status: ready-for-human
 - [x] The write does not remove a file that a remaining row or the new image
       uses.
 - [x] The schemas reject 11 Source Images and two Generated Images.
-- [x] Two uploads at nine Source Images cannot both pass.
+- [x] Two new images at nine Source Images cannot both pass.
 - [x] `pnpm i18n:check` passes with the new key in each locale.
 - [x] ADR-0040, the release notes, and the recipe view agree with this change.
 

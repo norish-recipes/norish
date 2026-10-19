@@ -57,5 +57,5 @@ The first image in the gallery is the recipe thumbnail. It shows at the top of
 the recipe view.
 
 To use a different image, select the thumbnail control on that image. It is
-then at the front of the gallery. The other images keep their position. The
+then at the front of the gallery. The other images keep their order. The
 change is in the recipe after you write it.
