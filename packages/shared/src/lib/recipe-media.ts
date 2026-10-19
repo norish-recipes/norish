@@ -13,7 +13,7 @@ export type PrimaryImageCarrier = {
   images?: readonly GalleryImageLike[] | null;
 };
 
-function galleryOrder(galleryImage: GalleryImageLike): number {
+export function galleryOrder(galleryImage: { order?: unknown }): number {
   const order = Number(galleryImage.order ?? 0);
 
   return Number.isFinite(order) ? order : 0;

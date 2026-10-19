@@ -1,9 +1,6 @@
 const locks = new Map<string, Promise<void>>();
 
-export async function withRecipeMediaLock<T>(
-  recipeId: string,
-  run: () => Promise<T>
-): Promise<T> {
+export async function withRecipeMediaLock<T>(recipeId: string, run: () => Promise<T>): Promise<T> {
   const previous = locks.get(recipeId) ?? Promise.resolve();
   let release: () => void = () => {};
   const current = new Promise<void>((resolve) => {

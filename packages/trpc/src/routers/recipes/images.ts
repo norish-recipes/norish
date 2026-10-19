@@ -194,11 +194,6 @@ const deleteStepImage = authedProcedure
     }
   });
 
-/**
- * Remove a file this procedure just wrote, unless a row or a scalar still
- * names it. Storage is content-addressed, so the URL can belong to a file that
- * another upload already stored.
- */
 const RECIPE_MEDIA_URL_PATTERN = /^\/recipes\/([a-f0-9-]{36})\//i;
 
 function recipeIdFromMediaUrl(url: string): string | null {
@@ -284,8 +279,6 @@ const uploadGalleryImage = authedProcedure
         }
 
         if (added.status === "recipe-missing") {
-          // New recipe form: the recipe does not exist yet. The image is linked
-          // when createRecipeWithRefs stores the form.
           log.info(
             { userId: ctx.user.id, recipeId, url },
             "Gallery image uploaded for pending recipe"

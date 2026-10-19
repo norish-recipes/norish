@@ -1642,12 +1642,19 @@ export async function updateRecipeWithRefs(
       .where(eq(recipes.id, recipeId));
 
     const storedScalar = (stored?.image ?? "").trim();
+    const payloadScalar = typeof payload.image === "string" ? payload.image.trim() : "";
+    const scalarCandidate =
+      payload.images !== undefined
+        ? payload.image !== undefined
+          ? payloadScalar
+          : storedScalar
+        : "";
     const scalarRetention =
-      payload.images !== undefined && payload.image === undefined
-        ? planScalarRetention(payload.images, storedScalar, MAX_RECIPE_IMAGES)
+      scalarCandidate !== ""
+        ? planScalarRetention(payload.images ?? [], scalarCandidate, MAX_RECIPE_IMAGES)
         : { append: false, kept: null };
-    const preservedScalar = scalarRetention.append ? storedScalar : null;
-    const keepStoredScalar = scalarRetention.kept !== null;
+    const preservedScalar = scalarRetention.append ? scalarCandidate : null;
+    const keepScalar = scalarRetention.kept !== null;
 
     // Update recipe base fields
     const updateData: any = {};
@@ -1658,7 +1665,7 @@ export async function updateRecipeWithRefs(
     if (payload.notes !== undefined) updateData.notes = payload.notes;
     if (payload.url !== undefined) updateData.url = payload.url;
     if (payload.image !== undefined || payload.images !== undefined)
-      updateData.image = keepStoredScalar ? storedScalar : null;
+      updateData.image = keepScalar ? scalarCandidate : null;
     if (payload.dishColor !== undefined) updateData.dishColor = payload.dishColor;
     if (payload.servings !== undefined) updateData.servings = payload.servings;
     if (payload.prepMinutes !== undefined) updateData.prepMinutes = payload.prepMinutes;
@@ -2087,6 +2094,10 @@ export async function replaceRecipeImages(
   recipeId: string,
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
+  if (images.length > MAX_RECIPE_IMAGES) {
+    throw new Error(`A recipe holds at most ${MAX_RECIPE_IMAGES} Source Images`);
+  }
+
   return db.transaction(async (tx) => {
     // Delete existing images
     await tx.delete(recipeImages).where(eq(recipeImages.recipeId, recipeId));

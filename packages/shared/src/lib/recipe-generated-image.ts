@@ -1,4 +1,4 @@
-import { MAX_RECIPE_IMAGES, planScalarRetention } from "./recipe-media";
+import { galleryOrder, MAX_RECIPE_IMAGES, planScalarRetention } from "./recipe-media";
 
 export interface GalleryImageRecord {
   id: string;
@@ -14,12 +14,6 @@ export interface GalleryImagePlacement {
   sourceFromScalar: { image: string; order: number } | null;
   keepScalar: boolean;
   replacedImageUrls: string[];
-}
-
-function galleryOrder(image: GalleryImageRecord): number {
-  const order = Number(image.order ?? 0);
-
-  return Number.isFinite(order) ? order : 0;
 }
 
 function createdTime(image: GalleryImageRecord): number {

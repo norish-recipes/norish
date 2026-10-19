@@ -319,7 +319,7 @@ describe("the write side retires the scalar", () => {
     ]);
   });
 
-  it("clears a legacy scalar when an update replaces the gallery", async () => {
+  it("moves a legacy scalar into the gallery when an update replaces it", async () => {
     const recipeId = crypto.randomUUID();
 
     await createRecipeWithRefs(recipeId, userId, { ...BASE_RECIPE, name: "Gallery Update" });
@@ -329,9 +329,11 @@ describe("the write side retires the scalar", () => {
       images: [{ image: `/recipes/${recipeId}/uploaded.jpg`, order: 0 }],
     });
 
-    // A stale fallback must not linger behind the gallery: deleting the
-    // gallery later would resurrect an image the editor replaced.
     expect(await rawScalar(recipeId)).toBeNull();
+    expect((await getRecipeFull(recipeId))?.images.map((image) => image.image)).toEqual([
+      `/recipes/${recipeId}/uploaded.jpg`,
+      `/recipes/${recipeId}/legacy.jpg`,
+    ]);
     expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/uploaded\.jpg$/);
   });
 
@@ -359,6 +361,33 @@ describe("the write side retires the scalar", () => {
     expect(full?.images).toHaveLength(11);
     expect(full?.images.filter((image) => image.generated === false)).toHaveLength(10);
     expect(full?.image).toBe(scalar);
+    expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/drawn\.jpg$/);
+  });
+
+  it("keeps a distinct scalar from an overwrite import without a twelfth row", async () => {
+    const recipeId = crypto.randomUUID();
+    const scalar = `/recipes/${recipeId}/archive-scalar.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, { ...BASE_RECIPE, name: "Overwrite Import" });
+
+    await updateRecipeWithRefs(recipeId, userId, {
+      image: scalar,
+      images: [
+        { image: `/recipes/${recipeId}/drawn.jpg`, order: 0, generated: true },
+        ...Array.from({ length: 10 }, (_, index) => ({
+          image: `/recipes/${recipeId}/source-${index}.jpg`,
+          order: index + 1,
+        })),
+      ],
+    });
+
+    const full = await getRecipeFull(recipeId);
+
+    expect(full?.image).toBe(scalar);
+    expect(full?.images).toHaveLength(11);
+    expect(full?.images.filter((image) => image.generated === false)).toHaveLength(10);
+    expect(full?.images.some((image) => image.image === scalar)).toBe(false);
+    expect(await isImageUrlReferenced(scalar)).toBe(true);
     expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/drawn\.jpg$/);
   });
 
