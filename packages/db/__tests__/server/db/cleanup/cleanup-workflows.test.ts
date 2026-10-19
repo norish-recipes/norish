@@ -197,6 +197,24 @@ describe("cleanup workflows", () => {
     expect(await fileExists(path.join(recipeDir, orphanRoot))).toBe(false);
   });
 
+  it("keeps a scalar with surrounding spaces during cleanup", async () => {
+    const recipeDir = path.join(uploadsDir, "recipes", recipeId);
+    const filename = "space-scalar.jpg";
+
+    await createTestFile(path.join(recipeDir, filename));
+
+    await db
+      .update(recipes)
+      .set({ image: `  /recipes/${recipeId}/${filename}  ` })
+      .where(eq(recipes.id, recipeId));
+
+    const mediaResult = await cleanupOrphanedImages();
+
+    expect(mediaResult.errors).toBe(0);
+    expect(mediaResult.deleted).toBe(0);
+    expect(await fileExists(path.join(recipeDir, filename))).toBe(true);
+  });
+
   it("deletes old calendar planned items using SCHEDULER_CLEANUP_MONTHS cutoff", async () => {
     await db.insert(plannedItems).values([
       {
