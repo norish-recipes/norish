@@ -333,8 +333,8 @@ const uploadGalleryImage = authedProcedure
   });
 
 /**
- * Delete a gallery image by ID
- * Removes from database and filesystem
+ * Delete a gallery image by ID.
+ * Removes the row, and the file when no row uses it.
  */
 const deleteGalleryImage = authedProcedure
   .input(DeleteRecipeImageInputSchema)
