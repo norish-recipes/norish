@@ -68,6 +68,10 @@ vi.mock("@/hooks/config", () => ({
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
 }));
 
+vi.mock("@/hooks/user/use-user-query", () => ({
+  useUserSettingsQuery: () => ({ user: null, isLoading: false }),
+}));
+
 vi.mock("@/hooks/recipes", () => ({
   useRecipeId: () => ({
     recipeId: "11111111-1111-4111-8111-111111111111",
