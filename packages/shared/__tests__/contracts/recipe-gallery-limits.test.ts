@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  FullRecipeInsertObjectSchema,
   FullRecipeInsertSchema,
   FullRecipeUpdateSchema,
 } from "@norish/shared/contracts/zod/recipe";
@@ -45,6 +46,15 @@ describe("recipe gallery limits", () => {
     );
     expect(FullRecipeUpdateSchema.safeParse({ images: gallery(10, 1) }).success).toBe(true);
     expect(RecipeImagesArraySchema.safeParse(outputGallery(10, 1)).success).toBe(true);
+  });
+
+  it("keeps the insert object schema derivable for the archive", () => {
+    expect(FullRecipeInsertObjectSchema.pick({ categories: true }).parse({}).categories).toEqual(
+      []
+    );
+    expect(
+      FullRecipeInsertObjectSchema.omit({ id: true, cuisines: true }).parse({ name: "Stew" }).name
+    ).toBe("Stew");
   });
 
   it("accepts a gallery with no Generated Image", () => {
