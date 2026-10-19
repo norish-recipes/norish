@@ -2,6 +2,17 @@ import { serverLogger as log } from "@norish/shared-server/logger";
 
 import { deleteImageByUrl, saveGeneratedImageBytes } from "./storage";
 
+async function removeGeneratedFileIfUnreferenced(imageUrl: string, recipeId: string) {
+  const { isImageUrlReferenced } = await import("@norish/db/repositories/recipes");
+  const referenced = await isImageUrlReferenced(imageUrl).catch(() => true);
+
+  if (referenced) return;
+
+  await deleteImageByUrl(imageUrl).catch((err) => {
+    log.warn({ err, recipeId, imageUrl }, "Could not remove an unreferenced Generated Image file");
+  });
+}
+
 export async function storeGeneratedRecipeImage(recipeId: string, bytes: Buffer): Promise<string> {
   // Loaded lazily for the same reason dish-color.ts loads its repository
   // lazily: the rest of this module is pure media work, and a static import
@@ -16,24 +27,13 @@ export async function storeGeneratedRecipeImage(recipeId: string, bytes: Buffer)
   try {
     replacement = await replaceRecipePrimaryImageWithGenerated(recipeId, imageUrl);
   } catch (error) {
-    const { isImageUrlReferenced } = await import("@norish/db/repositories/recipes");
-    const referenced = await isImageUrlReferenced(imageUrl).catch(() => true);
-
-    if (!referenced) {
-      await deleteImageByUrl(imageUrl).catch((err) => {
-        log.warn({ err, recipeId, imageUrl }, "Could not remove a Generated Image after a failure");
-      });
-    }
+    await removeGeneratedFileIfUnreferenced(imageUrl, recipeId);
 
     throw error;
   }
 
   if (!replacement) {
-    // The recipe vanished between the worker's read and this write. Nothing
-    // references the saved file, so remove it rather than orphan it.
-    await deleteImageByUrl(imageUrl).catch((err) => {
-      log.warn({ err, recipeId, imageUrl }, "Could not remove unreferenced Generated Image file");
-    });
+    await removeGeneratedFileIfUnreferenced(imageUrl, recipeId);
     throw new Error(`Recipe not found for Generated Image write: ${recipeId}`);
   }
 

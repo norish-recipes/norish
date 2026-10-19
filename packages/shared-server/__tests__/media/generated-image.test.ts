@@ -33,6 +33,10 @@ const repository = vi.hoisted(() => ({
 
 vi.mock("@norish/db/repositories/recipe-enrichment", () => repository);
 
+vi.mock("@norish/db/repositories/recipes", () => ({
+  isImageUrlReferenced: vi.fn(async () => false),
+}));
+
 vi.mock("@norish/shared-server/logger", () => {
   const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
