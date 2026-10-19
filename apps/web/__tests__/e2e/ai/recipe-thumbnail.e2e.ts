@@ -26,6 +26,13 @@ test("choosing the second image as the thumbnail survives save and reload", asyn
 
   await page.getByPlaceholder("e.g., Chocolate Chip Cookies").fill(RECIPE_NAME);
 
+  const ingredient = page.getByPlaceholder("e.g., 2 cups flour");
+
+  await ingredient.fill("2 cups flour");
+  await ingredient.press("Tab");
+
+  await page.getByPlaceholder("Step 1: Describe the step...").fill("Mix the flour with water.");
+
   const fileInput = page.locator('input[type="file"]').first();
 
   await fileInput.setInputFiles(FIRST_IMAGE);
@@ -42,6 +49,7 @@ test("choosing the second image as the thumbnail survives save and reload", asyn
 
   await page.getByRole("button", { name: "Create Recipe" }).click();
   await expect(page).toHaveURL(/\/recipes\/[0-9a-f-]{36}/, { timeout: 30_000 });
+  await expect(page.getByText(RECIPE_NAME).first()).toBeVisible({ timeout: 30_000 });
 
   const hero = page.locator('img[alt="Recipe image"], img[alt^="Recipe media"]').first();
 
