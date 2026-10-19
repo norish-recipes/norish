@@ -21,6 +21,6 @@ The other part of the change is the thumbnail. The gallery has one position for 
 - Eligibility does not change. An automatic run and the usual sweep still do not touch a recipe that has an image. Only a manual action or a full sweep can write to a recipe with an image.
 - A second run removes its previous image. Duplicate rows with the same URL keep that file while a remaining row names it.
 - The recipe color follows the Generated Image, because the new image is the first image.
-- A Recipe Archive now has 12 images when a recipe has a Generated Image and a scalar image. The other Norish has all of them.
+- A Recipe Archive carries 12 image files when the gallery is full. The full gallery has ten Source Images, one Generated Image, and a scalar image. Otherwise the archive carries the gallery and the primary. The other Norish has all of them.
 - A write can remove a Generated Image, and no action can put it back. No run removes a Source Image.
 - To change this decision, write a new ADR.

@@ -19,7 +19,7 @@ Status: ready-for-human
 - [x] A Generated Image write removes a previous `generated = true` row and its
       file.
 - [x] An image that only the `recipes.image` value has becomes a Source Image
-      row.
+      row when a slot is free; at the cap the value stays in the column.
 - [x] The write does not remove a file that a remaining row or the new image
       uses.
 - [x] The schemas reject 11 Source Images and two Generated Images.
