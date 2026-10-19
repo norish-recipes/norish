@@ -11,8 +11,7 @@ A recipe gallery can have several images. Two parts are not complete.
    changes it, but no action has the name "set as thumbnail".
 2. **AI Image Generation removes the source image.** `storeGeneratedRecipeImage`
    put another image in the main position and did not keep the row and file in that position. An
-   image from a person or a source is the record of the dish. No run must remove
-   it.
+   image from a person or a source is the record. No run must remove it.
 
 ## Requirements
 
