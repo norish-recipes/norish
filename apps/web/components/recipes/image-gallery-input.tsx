@@ -26,6 +26,7 @@ import { Bars2Icon, PhotoIcon, StarIcon, XMarkIcon } from "@heroicons/react/16/s
 import { useTranslations } from "next-intl";
 
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("ImageGalleryInput");
@@ -110,7 +111,7 @@ function SortableImageItem({ item, index, onDelete }: SortableImageItemProps) {
         unoptimized
         alt={`Gallery image ${index + 1}`}
         className="object-cover"
-        src={item.image}
+        src={addBasePathToUrl(item.image)}
       />
 
       {/* Order badge */}

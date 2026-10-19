@@ -5,6 +5,8 @@ import { useRecipeAutocomplete } from "@/hooks/recipes";
 import { Avatar, ListBox, Spinner, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
+
 export interface SmartTextInputIngredientSuggestion {
   key: string;
   label: string;
@@ -253,7 +255,11 @@ export default function SmartTextInput({
                   <div className="flex min-w-0 items-center gap-3">
                     <Avatar className="size-8 rounded-md">
                       {recipe.image ? (
-                        <Avatar.Image alt="" className="object-cover" src={recipe.image} />
+                        <Avatar.Image
+                          alt=""
+                          className="object-cover"
+                          src={addBasePathToUrl(recipe.image)}
+                        />
                       ) : null}
                       <Avatar.Fallback className="text-muted text-xs">R</Avatar.Fallback>
                     </Avatar>

@@ -7,6 +7,8 @@ import { useDevicePreference } from "@/context/device-preferences-context";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
 
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
+
 /**
  * The sizes an Ingredient Icon is shown at: beside a step's chip, a line or
  * a row (smaller on a phone, where every pixel beside a line wraps it), and
@@ -159,7 +161,7 @@ export function IngredientIcon({
       data-testid="ingredient-icon"
       decoding="async"
       loading="lazy"
-      src={address}
+      src={addBasePathToUrl(address)}
     />
   );
 }

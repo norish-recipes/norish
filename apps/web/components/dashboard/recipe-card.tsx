@@ -29,6 +29,7 @@ import { useTranslations } from "next-intl";
 
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
 import {
   formatMinutesHM,
   isAllergenTag,
@@ -287,7 +288,7 @@ function RecipeCardComponent({
         alt={recipe.name}
         className={`pointer-events-none h-full w-full object-cover transition-transform duration-300 ease-in-out ${open ? "scale-100" : hoverScaleClass} `}
         loading="lazy"
-        src={thumbnailImage}
+        src={addBasePathToUrl(thumbnailImage)}
         onError={() => setFailedImage(thumbnailImage)}
       />
     ) : (

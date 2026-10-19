@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { IngredientIcon, IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ONION = "11111111-1111-4111-8111-111111111111";
 const KOHLRABI = "22222222-2222-4222-8222-222222222222";
@@ -59,6 +59,11 @@ beforeEach(() => {
   mocks.asked = [];
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.resetModules();
+});
+
 describe("IngredientIcon", () => {
   it("shows each food's icon from one read for the whole surface, nothing where it has none", async () => {
     const { container } = onSurface(
@@ -74,6 +79,17 @@ describe("IngredientIcon", () => {
     expect((await screen.findByTestId("ingredient-icon")).getAttribute("src")).toBe(ONION_ICON);
     await waitFor(() => expect(container.childElementCount).toBe(1));
     expect(mocks.asked).toEqual([{ ids: [ONION, KOHLRABI].sort() }]);
+  });
+
+  it("prefixes its address when the app is served under a base path", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/norish");
+    vi.resetModules();
+    const { IngredientIcon: BasedIngredientIcon } =
+      await import("@/components/ingredients/ingredient-icon");
+
+    render(<BasedIngredientIcon src={ONION_ICON} />);
+
+    expect(screen.getByTestId("ingredient-icon")).toHaveAttribute("src", `/norish${ONION_ICON}`);
   });
 
   it("holds an empty slot while the read is on its way, so the line does not jump", async () => {

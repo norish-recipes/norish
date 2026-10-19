@@ -12,6 +12,7 @@ import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { MeasurementSystem } from "@norish/shared/contracts";
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
 import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 
 export interface StepImage {
@@ -561,7 +562,7 @@ function StepRow({
                   <img
                     alt={`Step ${index + 1}, attachment ${imgIndex + 1}`}
                     className="h-14 w-14 rounded-lg object-cover md:h-16 md:w-16"
-                    src={img.image}
+                    src={addBasePathToUrl(img.image)}
                   />
                   <button
                     className="bg-danger hover:bg-danger/90 absolute top-0 right-0 z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-colors"

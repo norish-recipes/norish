@@ -12,6 +12,7 @@ import { Button, Input, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { addBasePathToUrl } from "@norish/shared/lib/base-path";
 
 /** Tall enough that the list is the panel rather than a strip under a field. */
 const PANEL_HEIGHT = "h-[75dvh]";
@@ -134,7 +135,7 @@ export function CookbookAddRecipesPanel({
                           alt=""
                           className="h-full w-full object-cover"
                           loading="lazy"
-                          src={recipe.image}
+                          src={addBasePathToUrl(recipe.image)}
                         />
                       ) : (
                         <PhotoIcon aria-hidden className="h-5 w-5 opacity-70" />
