@@ -3,8 +3,9 @@ export const MAX_RECIPE_IMAGES = 10;
 /**
  * The gallery is the source of truth: the first image by order is the primary,
  * and the legacy `recipes.image` scalar is only a fallback for rows that
- * predate the gallery. The repository translates a payload scalar into the
- * gallery, or keeps it in the column when the gallery is full.
+ * predate the gallery. A write that carries `images` moves a distinct scalar
+ * into the gallery, or keeps it in the column when the gallery is full. A
+ * scalar-only write fills an empty gallery and clears the column otherwise.
  */
 type GalleryImageLike = { image: string; order?: unknown };
 

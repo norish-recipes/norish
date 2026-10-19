@@ -15,7 +15,7 @@ export const RecipeImageOutputSchema = z.object({
   id: z.uuid(),
   image: z.string(),
   order: z.coerce.number().default(0),
-  /** A Generated Image, drawn by AI (ADR-0025). Carried for archive export; never rendered. */
+  /** A Generated Image, drawn by AI (ADR-0025). It can lead the gallery; the archive export carries the marking. */
   generated: z.boolean().default(false),
   version: z.number(),
 });

@@ -187,8 +187,8 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
           busyLabel: t("linkingIngredients"),
         },
         {
-          // Unguarded and destructive by decision (ADR-0025): it runs on a
-          // recipe that already has a photograph and replaces the primary.
+          // Unguarded by decision (ADR-0025): it runs on a recipe that
+          // already has a photograph and replaces a Generated Image.
           kind: "image-generation",
           key: "generate-image",
           idleLabel: t("generateImage"),

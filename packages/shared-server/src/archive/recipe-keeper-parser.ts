@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { parseIsoDuration } from "@norish/shared/lib/helpers";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/lib/recipe-media";
 
 import {
   buildRecipeDTO,
@@ -25,8 +26,7 @@ const RECIPE_KEEPER_HTML = "recipes.html";
 /** A photo the page points at: a file in the export's own `images/` folder. */
 const PHOTO_PATH = /^images\/[^/\\]+$/;
 
-/** The gallery's limit (FullRecipeInsertSchema). */
-const MAX_PHOTOS = 10;
+const MAX_PHOTOS = MAX_RECIPE_IMAGES;
 
 export type RecipeKeeperRecipe = {
   name: string;

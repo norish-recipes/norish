@@ -212,8 +212,8 @@ export interface GeneratedImageReplacement {
  * Eligibility still keeps automatic runs off recipes that hold any image; by
  * the time this runs, the coordinator has decided to generate one.
  *
- * @returns what was written and what was released, or null when the recipe
- *   does not exist.
+ * @returns what was written and the candidate URLs it may release, or null
+ *   when the recipe does not exist.
  */
 export async function replaceRecipePrimaryImageWithGenerated(
   recipeId: string,

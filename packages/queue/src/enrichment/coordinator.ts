@@ -253,8 +253,8 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
       // The strictest gap-filler in the product: any stored image at all —
       // a gallery row or the legacy scalar — suppresses an ordinary
       // automatic run, so background work never destroys a photograph
-      // (ADR-0025). A manual request and an administrator's refresh are the
-      // two deliberate destructive paths, and they run regardless.
+      // (ADR-0040). Manual requests and an administrator's refresh replace
+      // only a Generated Image, and they run regardless.
       return defersToSuppliedData && hasAnyImage(recipe)
         ? ineligible("supplied-data-present")
         : ELIGIBLE;
