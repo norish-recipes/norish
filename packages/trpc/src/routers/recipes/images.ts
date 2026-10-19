@@ -7,7 +7,6 @@ import {
   getRecipeImageById,
   isImageUrlReferenced,
 } from "@norish/db/repositories/recipes";
-import { isStepImageUrlReferenced } from "@norish/db/repositories/steps";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-color";
 import { withRecipeMediaLock } from "@norish/shared-server/media/media-lock";
@@ -201,11 +200,8 @@ function recipeIdFromMediaUrl(url: string): string | null {
 }
 
 async function removeStepFileIfUnreferenced(imageUrl: string, context: Record<string, unknown>) {
-  const referenced = await isStepImageUrlReferenced(imageUrl).catch((error) => {
-    log.warn(
-      { ...context, imageUrl, error },
-      "Could not check step image references; keeping the file"
-    );
+  const referenced = await isImageUrlReferenced(imageUrl).catch((error) => {
+    log.warn({ ...context, imageUrl, error }, "Could not check image references; keeping the file");
 
     return true;
   });

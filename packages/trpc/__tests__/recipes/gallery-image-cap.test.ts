@@ -16,7 +16,6 @@ const mocks = vi.hoisted(() => ({
   saveImageBytes: vi.fn(async () => "/recipes/recipe-id/uploaded.jpg"),
   deleteImageByUrl: vi.fn(async () => undefined),
   isImageUrlReferenced: vi.fn(async () => false),
-  isStepImageUrlReferenced: vi.fn(async () => false),
   getRecipeImageById: vi.fn(),
   deleteRecipeImageById: vi.fn(),
   deleteStepImageByUrl: vi.fn(async () => undefined),
@@ -28,10 +27,6 @@ vi.mock("@norish/db/repositories/recipes", () => ({
   deleteRecipeImageById: mocks.deleteRecipeImageById,
   getRecipeImageById: mocks.getRecipeImageById,
   isImageUrlReferenced: mocks.isImageUrlReferenced,
-}));
-
-vi.mock("@norish/db/repositories/steps", () => ({
-  isStepImageUrlReferenced: mocks.isStepImageUrlReferenced,
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({
@@ -161,15 +156,20 @@ describe("legacy image delete by URL", () => {
 });
 
 describe("step image delete by URL", () => {
-  it("keeps a URL that a step row still uses", async () => {
-    mocks.isStepImageUrlReferenced.mockResolvedValue(true);
+  const STEP_URL = "/recipes/11111111-1111-4111-8111-111111111111/steps/shared.jpg";
 
-    expect(
-      await caller().deleteStepImage({
-        url: "/recipes/11111111-1111-4111-8111-111111111111/steps/shared.jpg",
-      })
-    ).toEqual({ success: true });
+  it("keeps a step URL that a gallery row or video thumbnail still names", async () => {
+    mocks.isImageUrlReferenced.mockResolvedValue(true);
+
+    expect(await caller().deleteStepImage({ url: STEP_URL })).toEqual({ success: true });
     expect(mocks.deleteStepImageByUrl).not.toHaveBeenCalled();
+  });
+
+  it("removes a step URL that no row uses", async () => {
+    mocks.isImageUrlReferenced.mockResolvedValue(false);
+
+    expect(await caller().deleteStepImage({ url: STEP_URL })).toEqual({ success: true });
+    expect(mocks.deleteStepImageByUrl).toHaveBeenCalledWith(STEP_URL);
   });
 });
 

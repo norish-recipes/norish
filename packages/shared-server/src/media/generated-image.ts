@@ -4,7 +4,11 @@ import { deleteImageByUrl, saveGeneratedImageBytes } from "./storage";
 
 async function removeGeneratedFileIfUnreferenced(imageUrl: string, recipeId: string) {
   const { isImageUrlReferenced } = await import("@norish/db/repositories/recipes");
-  const referenced = await isImageUrlReferenced(imageUrl).catch(() => true);
+  const referenced = await isImageUrlReferenced(imageUrl).catch((error) => {
+    log.warn({ error, recipeId, imageUrl }, "Could not check image references; keeping the file");
+
+    return true;
+  });
 
   if (referenced) return;
 

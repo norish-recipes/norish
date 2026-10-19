@@ -24,7 +24,7 @@ import {
   listRecipes,
   searchRecipesByName,
 } from "@norish/db/repositories/recipes";
-import { recipes as recipesTable } from "@norish/db/schema";
+import { recipes as recipesTable, stepImages } from "@norish/db/schema";
 
 import { createTestUser } from "../helpers/db-test-helpers";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "../helpers/recipe-writes";
@@ -431,6 +431,38 @@ describe("the write side retires the scalar", () => {
     expect((await getRecipeFull(recipeId))?.images.some((image) => image.image === shared)).toBe(
       false
     );
+    expect(await isImageUrlReferenced(shared)).toBe(true);
+  });
+
+  it("keeps a shared image that a gallery row and a video thumbnail still name after the step row goes", async () => {
+    const recipeId = crypto.randomUUID();
+    const shared = `/recipes/${recipeId}/shared-step.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Shared Step Image",
+      images: [{ image: shared, order: 0 }],
+      videos: [
+        {
+          video: `/recipes/${recipeId}/video.mp4`,
+          thumbnail: shared,
+          duration: 12,
+          order: 0,
+        },
+      ],
+      steps: [
+        {
+          step: "Mix",
+          systemUsed: "metric",
+          order: 0,
+          images: [{ image: shared, order: 0 }],
+          stepIngredients: [],
+        },
+      ],
+    });
+
+    await db.delete(stepImages).where(eq(stepImages.image, shared));
+
     expect(await isImageUrlReferenced(shared)).toBe(true);
   });
 

@@ -14,8 +14,8 @@ export const recipeImages = pgTable(
     order: numeric("order").default("0"),
     /**
      * A Generated Image: drawn by AI rather than photographed or supplied.
-     * Read only by archive export, so a receiving instance is told what it
-     * received; no interface surface renders it (ADR-0025).
+     * The archive export carries it, and the editor reads it to keep the
+     * Generated Image out of the Source Image cap (ADR-0040).
      */
     generated: boolean("generated").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

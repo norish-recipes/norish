@@ -185,10 +185,10 @@ export interface GeneratedImageReplacement {
   /** The stored URL of the Generated Image just written, at order 0. */
   imageUrl: string;
   /**
-   * URLs this recipe no longer references anywhere — not by a surviving
-   * gallery row, not by a recovered Source Image, and not as the image just
-   * written. The repository holds no filesystem, so removing the files is
-   * the caller's job.
+   * Candidate URLs this recipe no longer references by a surviving gallery
+   * row, a recovered Source Image, or the image just written. The planner
+   * does not know about video thumbnails or step images; the caller must
+   * check those references before it unlinks a file.
    */
   replacedImageUrls: string[];
 }

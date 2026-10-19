@@ -192,7 +192,7 @@ test("the manual action replaces the primary image and the page re-tints", async
     "src",
     new RegExp(generated!.image.replaceAll("/", "\\/"))
   );
-  await expect(page.locator(`img[src*="supplied-photo"]`)).toHaveCount(1);
+  await expect(page.locator('img[src*="supplied-photo"]:visible')).toHaveCount(1);
 
   expect(await readStoredDishColor(name)).not.toBe(SUPPLIED_PHOTO_DISH_COLOR);
   expect(stack.ai.control.imageRequestCount).toBe(1);
