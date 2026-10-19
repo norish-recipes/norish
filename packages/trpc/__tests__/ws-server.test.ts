@@ -47,7 +47,7 @@ vi.mock("../src/router", () => {
 });
 
 const { createWsContext } = await import("../src/context");
-const { initTrpcWebSocket, isTrustedWebSocketOrigin, stopTrpcWebSocket } =
+const { initTrpcWebSocket, isTrustedWebSocketOrigin, stopTrpcWebSocket, WS_MAX_PAYLOAD_BYTES } =
   await import("../src/ws-server");
 
 const identity = {
@@ -227,6 +227,15 @@ describe("upgrade", () => {
       expect.objectContaining({ userId: "user-1" }),
       "Failed to unregister WebSocket connection"
     );
+  });
+
+  it("closes a client that sends a message over the payload limit", async () => {
+    const ws = await connectAuthenticated();
+    const close = closed(ws);
+
+    ws.send("x".repeat(WS_MAX_PAYLOAD_BYTES + 1));
+
+    await expect(close).resolves.toMatchObject({ code: 1009 });
   });
 
   it("registers no close handler on the HTTP server", () => {

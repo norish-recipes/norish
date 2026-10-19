@@ -47,6 +47,8 @@ export interface ImageImportJobData {
   householdKey: string;
   householdUserIds: string[] | null;
   files: ImageImportFile[];
+  batchId?: string;
+  batchItemId?: string;
 }
 
 export type AddImageImportJobResult =

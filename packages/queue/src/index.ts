@@ -46,6 +46,14 @@ export { createNewIngredientsQueue } from "./new-ingredients/queue";
 // Producers
 export { addImportJob } from "./recipe-import/producer";
 export { addImageImportJob } from "./image-import/producer";
+export {
+  createImageImportBatch,
+  getImageImportBatchForUser,
+  ImageImportBatchLimitError,
+  ImageImportBatchPayloadTooLargeError,
+  retryImageImportBatchItems,
+  toImageImportBatchDTO,
+} from "./image-import/batch";
 export { addPasteImportJob } from "./paste-import/producer";
 export { MAX_STRUCTURED_PASTE_RECIPES, preparePasteImport } from "./paste-import/parser";
 export { addEnrichmentJob } from "./enrichment/producer";

@@ -136,7 +136,7 @@
       "failed": "Importeren mislukt"
     },
     "image": {
-      "title": "Importeren vanuit afbeelding",
+      "title": "Eén recept uit foto's",
       "dropzone": "Sleep afbeeldingen hierheen of klik om te bladeren",
       "paste": "om te plakken",
       "formats": "Ondersteunt JPG, PNG, WebP. Maximaal 10MB per bestand.",
@@ -153,7 +153,10 @@
       "library": "Bibliotheek",
       "takePhoto": "Foto maken",
       "counter": "{count} / {max} foto's",
-      "importFromCount": "Importeren van {count, plural, one {# foto} other {# foto's}}"
+      "importFromCount": "Importeren van {count, plural, one {# foto} other {# foto's}}",
+      "description": "De foto's worden samengevoegd tot één recept.",
+      "bulkPrompt": "Meerdere recepten?",
+      "bulkLink": "Gebruik Bulk images — één recept per afbeelding"
     },
     "menu": {
       "description": "Importeer via een URL, scan een foto of begin vanaf nul."

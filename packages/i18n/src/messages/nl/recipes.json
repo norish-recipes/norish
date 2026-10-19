@@ -27,7 +27,8 @@
       "all": "Alles",
       "recipes": "Recepten",
       "cookbooks": "Kookboeken"
-    }
+    },
+    "bulkImageImport": "Meerdere afbeeldingen"
   },
   "back": {
     "all": "Terug naar bibliotheek",
@@ -423,5 +424,46 @@
     "removeImage": "Afbeelding verwijderen",
     "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
     "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
+  },
+  "bulkImport": {
+    "title": "Meerdere recepten uit foto's importeren",
+    "description": "Kies één afbeelding per recept. Norish leest elke afbeelding apart en maakt een recept voor elke afbeelding waarin er een staat.",
+    "dropzone": "Sleep afbeeldingen hierheen of kies ze uit je bibliotheek",
+    "formats": "JPG, PNG of WebP. Maximaal {max} afbeeldingen, {size} MB per stuk, {total} MB in totaal.",
+    "choose": "Afbeeldingen kiezen",
+    "selectedCount": "{count, plural, one {# afbeelding geselecteerd} other {# afbeeldingen geselecteerd}}",
+    "remove": "{name} verwijderen",
+    "clear": "Wissen",
+    "importButton": "{count, plural, one {# recept importeren} other {# recepten importeren}}",
+    "submitFailed": "Importeren starten mislukt",
+    "retryFailed": "Opnieuw proberen mislukt",
+    "invalidTypeDetail": "{name} is geen JPG-, PNG- of WebP-afbeelding.",
+    "tooLargeDetail": "{name} is groter dan {size} MB.",
+    "duplicateDetail": "{name} staat al in de batch.",
+    "limitDetail": "Een batch bevat maximaal {max} afbeeldingen.",
+    "dismiss": "Sluiten",
+    "progressTitle": "Voortgang van importeren",
+    "progressCount": "{done} van {total} recepten klaar",
+    "progressFailed": "{count, plural, one {# afbeelding mislukt} other {# afbeeldingen mislukt}}",
+    "status": {
+      "queued": "In wachtrij",
+      "processing": "Afbeelding lezen",
+      "done": "Recept gemaakt",
+      "failed": "Mislukt"
+    },
+    "error": {
+      "unsupported-type": "Dit afbeeldingstype wordt niet ondersteund.",
+      "too-large": "Deze afbeelding is te groot.",
+      "empty-file": "Deze afbeelding is leeg.",
+      "extraction-failed": "Norish kon geen recept uit deze afbeelding lezen.",
+      "queue-failed": "Het importeren kon niet starten. Probeer het opnieuw."
+    },
+    "openRecipe": "Recept openen",
+    "retry": "Opnieuw proberen",
+    "retryAll": "Mislukte afbeeldingen opnieuw proberen",
+    "allDone": "Alle afbeeldingen zijn geïmporteerd.",
+    "aiDisabled": "Afbeeldingen importeren vereist een AI-provider. Vraag een beheerder om er een in te schakelen.",
+    "backToRecipes": "Terug naar recepten",
+    "totalTooLargeDetail": "De afbeeldingen zijn samen groter dan {size} MB. Verwijder een afbeelding of kies kleinere."
   }
 }

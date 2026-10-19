@@ -27,7 +27,8 @@
       "all": "Wszystko",
       "recipes": "Przepisy",
       "cookbooks": "Książki kucharskie"
-    }
+    },
+    "bulkImageImport": "Wiele zdjęć"
   },
   "back": {
     "all": "Wróć do biblioteki",
@@ -423,5 +424,46 @@
     "removeImage": "Usuń obraz",
     "imageUploadFailed": "Nie udało się przesłać obrazu.",
     "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online."
+  },
+  "bulkImport": {
+    "title": "Importuj wiele przepisów ze zdjęć",
+    "description": "Wybierz jedno zdjęcie na przepis. Norish odczytuje każde zdjęcie osobno i tworzy przepis dla każdego zdjęcia, które go zawiera.",
+    "dropzone": "Upuść zdjęcia tutaj lub wybierz je z biblioteki",
+    "formats": "JPG, PNG lub WebP. Do {max} zdjęć, {size} MB każde, łącznie {total} MB.",
+    "choose": "Wybierz zdjęcia",
+    "selectedCount": "{count, plural, one {# zdjęcie wybrane} few {# zdjęcia wybrane} many {# zdjęć wybranych} other {# zdjęcia wybrane}}",
+    "remove": "Usuń {name}",
+    "clear": "Wyczyść",
+    "importButton": "{count, plural, one {Importuj # przepis} few {Importuj # przepisy} many {Importuj # przepisów} other {Importuj # przepisu}}",
+    "submitFailed": "Nie udało się rozpocząć importu",
+    "retryFailed": "Nie udało się ponowić importu",
+    "invalidTypeDetail": "{name} nie jest zdjęciem JPG, PNG ani WebP.",
+    "tooLargeDetail": "{name} jest większe niż {size} MB.",
+    "duplicateDetail": "{name} jest już w partii.",
+    "limitDetail": "Partia zawiera najwyżej {max} zdjęć.",
+    "dismiss": "Zamknij",
+    "progressTitle": "Postęp importu",
+    "progressCount": "{done} z {total} przepisów gotowych",
+    "progressFailed": "{count, plural, one {# zdjęcie nie powiodło się} few {# zdjęcia nie powiodły się} many {# zdjęć nie powiodło się} other {# zdjęcia nie powiodły się}}",
+    "status": {
+      "queued": "W kolejce",
+      "processing": "Odczyt zdjęcia",
+      "done": "Przepis utworzony",
+      "failed": "Niepowodzenie"
+    },
+    "error": {
+      "unsupported-type": "Ten typ zdjęcia nie jest obsługiwany.",
+      "too-large": "To zdjęcie jest za duże.",
+      "empty-file": "To zdjęcie jest puste.",
+      "extraction-failed": "Norish nie mógł odczytać przepisu z tego zdjęcia.",
+      "queue-failed": "Import nie mógł się rozpocząć. Spróbuj ponownie."
+    },
+    "openRecipe": "Otwórz przepis",
+    "retry": "Ponów",
+    "retryAll": "Ponów nieudane zdjęcia",
+    "allDone": "Wszystkie zdjęcia zostały zaimportowane.",
+    "aiDisabled": "Import zdjęć wymaga dostawcy AI. Poproś administratora o włączenie go.",
+    "backToRecipes": "Wróć do przepisów",
+    "totalTooLargeDetail": "Zdjęcia mają łącznie więcej niż {size} MB. Usuń zdjęcie lub wybierz mniejsze."
   }
 }

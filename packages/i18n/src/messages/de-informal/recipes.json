@@ -27,7 +27,8 @@
       "all": "Alle",
       "recipes": "Rezepte",
       "cookbooks": "Kochbücher"
-    }
+    },
+    "bulkImageImport": "Mehrere Bilder"
   },
   "back": {
     "all": "Zurück zur Bibliothek",
@@ -423,5 +424,46 @@
     "removeImage": "Bild entfernen",
     "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
     "imageNeedsConnection": "Bilder kannst du ändern, sobald du wieder online bist."
+  },
+  "bulkImport": {
+    "title": "Mehrere Rezepte aus Fotos importieren",
+    "description": "Wähle ein Bild pro Rezept. Norish liest jedes Bild einzeln und erstellt für jedes Bild mit einem Rezept ein Rezept.",
+    "dropzone": "Bilder hier ablegen oder aus deiner Bibliothek wählen",
+    "formats": "JPG, PNG oder WebP. Bis zu {max} Bilder, je {size} MB, insgesamt {total} MB.",
+    "choose": "Bilder wählen",
+    "selectedCount": "{count, plural, one {# Bild ausgewählt} other {# Bilder ausgewählt}}",
+    "remove": "{name} entfernen",
+    "clear": "Leeren",
+    "importButton": "{count, plural, one {# Rezept importieren} other {# Rezepte importieren}}",
+    "submitFailed": "Import konnte nicht gestartet werden",
+    "retryFailed": "Wiederholen fehlgeschlagen",
+    "invalidTypeDetail": "{name} ist kein JPG-, PNG- oder WebP-Bild.",
+    "tooLargeDetail": "{name} ist größer als {size} MB.",
+    "duplicateDetail": "{name} ist bereits im Stapel.",
+    "limitDetail": "Ein Stapel enthält höchstens {max} Bilder.",
+    "dismiss": "Schließen",
+    "progressTitle": "Importfortschritt",
+    "progressCount": "{done} von {total} Rezepten fertig",
+    "progressFailed": "{count, plural, one {# Bild fehlgeschlagen} other {# Bilder fehlgeschlagen}}",
+    "status": {
+      "queued": "In Warteschlange",
+      "processing": "Bild wird gelesen",
+      "done": "Rezept erstellt",
+      "failed": "Fehlgeschlagen"
+    },
+    "error": {
+      "unsupported-type": "Dieser Bildtyp wird nicht unterstützt.",
+      "too-large": "Dieses Bild ist zu groß.",
+      "empty-file": "Dieses Bild ist leer.",
+      "extraction-failed": "Norish konnte aus diesem Bild kein Rezept lesen.",
+      "queue-failed": "Der Import konnte nicht gestartet werden. Versuche es erneut."
+    },
+    "openRecipe": "Rezept öffnen",
+    "retry": "Wiederholen",
+    "retryAll": "Fehlgeschlagene Bilder wiederholen",
+    "allDone": "Alle Bilder sind importiert.",
+    "aiDisabled": "Bildimport benötigt einen AI-Anbieter. Bitte einen Administrator, einen zu aktivieren.",
+    "backToRecipes": "Zurück zu den Rezepten",
+    "totalTooLargeDetail": "Die Bilder sind zusammen größer als {size} MB. Entferne ein Bild, oder wähle kleinere."
   }
 }

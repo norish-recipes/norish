@@ -27,7 +27,8 @@
       "all": "All",
       "recipes": "Recipes",
       "cookbooks": "Cookbooks"
-    }
+    },
+    "bulkImageImport": "Bulk images"
   },
   "back": {
     "all": "Back to library",
@@ -423,5 +424,46 @@
     "removeImage": "Remove image",
     "imageUploadFailed": "The image could not be uploaded.",
     "imageNeedsConnection": "Images can be changed once you are back online."
+  },
+  "bulkImport": {
+    "title": "Import several recipes from photos",
+    "description": "Choose one image per recipe. Norish reads each image on its own and creates a recipe for every image that holds one.",
+    "dropzone": "Drop images here or choose them from your library",
+    "formats": "JPG, PNG or WebP. Up to {max} images, {size} MB each, {total} MB in total.",
+    "choose": "Choose images",
+    "selectedCount": "{count, plural, one {# image selected} other {# images selected}}",
+    "remove": "Remove {name}",
+    "clear": "Clear",
+    "importButton": "{count, plural, one {Import # recipe} other {Import # recipes}}",
+    "submitFailed": "Could not start the import",
+    "retryFailed": "Could not retry the import",
+    "invalidTypeDetail": "{name} is not a JPG, PNG or WebP image.",
+    "tooLargeDetail": "{name} is larger than {size} MB.",
+    "duplicateDetail": "{name} is already in the batch.",
+    "limitDetail": "A batch holds at most {max} images.",
+    "dismiss": "Dismiss",
+    "progressTitle": "Import progress",
+    "progressCount": "{done} of {total} recipes ready",
+    "progressFailed": "{count, plural, one {# image failed} other {# images failed}}",
+    "status": {
+      "queued": "Queued",
+      "processing": "Reading image",
+      "done": "Recipe created",
+      "failed": "Failed"
+    },
+    "error": {
+      "unsupported-type": "This image type is not supported.",
+      "too-large": "This image is too large.",
+      "empty-file": "This image is empty.",
+      "extraction-failed": "Norish could not read a recipe from this image.",
+      "queue-failed": "The import could not start. Try again."
+    },
+    "openRecipe": "Open recipe",
+    "retry": "Retry",
+    "retryAll": "Retry failed images",
+    "allDone": "All images are imported.",
+    "aiDisabled": "Image import needs an AI provider. Ask an administrator to enable one.",
+    "backToRecipes": "Back to recipes",
+    "totalTooLargeDetail": "The images are larger than {size} MB in total. Remove an image or choose smaller ones."
   }
 }

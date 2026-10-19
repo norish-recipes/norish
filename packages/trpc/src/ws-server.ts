@@ -28,6 +28,8 @@ import {
 import { createWsContext } from "./context";
 import { appRouter } from "./router";
 
+export const WS_MAX_PAYLOAD_BYTES = 1_048_576;
+
 /** Close codes this server sends; the client acts on the code alone, never on the reason. */
 export const WS_CLOSE_UNAUTHORIZED = 4401;
 export const WS_CLOSE_SERVICE_RESTART = 1012;
@@ -130,7 +132,7 @@ export function initTrpcWebSocket(server: Server) {
     return;
   }
 
-  const wss = new WsServer({ noServer: true });
+  const wss = new WsServer({ noServer: true, maxPayload: WS_MAX_PAYLOAD_BYTES });
 
   trpcWss = wss;
   globalForWs.trpcWss = wss;

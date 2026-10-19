@@ -136,7 +136,7 @@
       "failed": "Import nie powiódł się"
     },
     "image": {
-      "title": "Importuj z obrazu",
+      "title": "Jeden przepis ze zdjęć",
       "dropzone": "Upuść obrazy tutaj lub kliknij",
       "paste": "aby wkleić",
       "formats": "Obsługuje JPG, PNG, WebP. Max 10MB.",
@@ -153,7 +153,10 @@
       "library": "Biblioteka",
       "takePhoto": "Zrób zdjęcie",
       "counter": "{count} / {max} zdjęć",
-      "importFromCount": "Importuj z {count, plural, one {# zdjęcia} other {# zdjęć}}"
+      "importFromCount": "Importuj z {count, plural, one {# zdjęcia} other {# zdjęć}}",
+      "description": "Zdjęcia są łączone w jeden przepis.",
+      "bulkPrompt": "Wiele przepisów?",
+      "bulkLink": "Użyj Bulk images — jeden przepis na zdjęcie"
     },
     "menu": {
       "description": "Importuj z URL, zeskanuj zdjęcie lub zacznij od zera."

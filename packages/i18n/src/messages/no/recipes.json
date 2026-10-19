@@ -27,7 +27,8 @@
       "all": "Alt",
       "recipes": "Oppskrifter",
       "cookbooks": "Kokebøker"
-    }
+    },
+    "bulkImageImport": "Flere bilder"
   },
   "back": {
     "all": "Tilbake til biblioteket",
@@ -423,5 +424,46 @@
     "removeImage": "Fjern bilde",
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
     "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
+  },
+  "bulkImport": {
+    "title": "Importer flere oppskrifter fra bilder",
+    "description": "Velg ett bilde per oppskrift. Norish leser hvert bilde for seg og lager en oppskrift for hvert bilde som inneholder en.",
+    "dropzone": "Slipp bilder her eller velg dem fra biblioteket ditt",
+    "formats": "JPG, PNG eller WebP. Opptil {max} bilder, {size} MB hver, {total} MB totalt.",
+    "choose": "Velg bilder",
+    "selectedCount": "{count, plural, one {# bilde valgt} other {# bilder valgt}}",
+    "remove": "Fjern {name}",
+    "clear": "Tøm",
+    "importButton": "{count, plural, one {Importer # oppskrift} other {Importer # oppskrifter}}",
+    "submitFailed": "Importen kunne ikke startes",
+    "retryFailed": "Ny forsøk mislyktes",
+    "invalidTypeDetail": "{name} er ikke et JPG-, PNG- eller WebP-bilde.",
+    "tooLargeDetail": "{name} er større enn {size} MB.",
+    "duplicateDetail": "{name} er allerede i batchen.",
+    "limitDetail": "En batch inneholder maks {max} bilder.",
+    "dismiss": "Lukk",
+    "progressTitle": "Importfremdrift",
+    "progressCount": "{done} av {total} oppskrifter klare",
+    "progressFailed": "{count, plural, one {# bilde mislyktes} other {# bilder mislyktes}}",
+    "status": {
+      "queued": "I kø",
+      "processing": "Leser bilde",
+      "done": "Oppskrift opprettet",
+      "failed": "Mislyktes"
+    },
+    "error": {
+      "unsupported-type": "Denne bildetypen støttes ikke.",
+      "too-large": "Dette bildet er for stort.",
+      "empty-file": "Dette bildet er tomt.",
+      "extraction-failed": "Norish kunne ikke lese en oppskrift fra dette bildet.",
+      "queue-failed": "Importen kunne ikke starte. Prøv igjen."
+    },
+    "openRecipe": "Åpne oppskrift",
+    "retry": "Prøv igjen",
+    "retryAll": "Prøv mislykkede bilder igjen",
+    "allDone": "Alle bilder er importert.",
+    "aiDisabled": "Bildeimport krever en AI-leverandør. Be en administrator om å aktivere en.",
+    "backToRecipes": "Tilbake til oppskrifter",
+    "totalTooLargeDetail": "Bildene er til sammen større enn {size} MB. Fjern et bilde, eller velg mindre."
   }
 }

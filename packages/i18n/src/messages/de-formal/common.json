@@ -136,7 +136,7 @@
       "failed": "Import fehlgeschlagen"
     },
     "image": {
-      "title": "Aus Bild importieren",
+      "title": "Ein Rezept aus Fotos",
       "dropzone": "Bilder hier ablegen oder klicken zum Durchsuchen",
       "paste": "zum Einfügen",
       "formats": "Unterstützt JPG, PNG, WebP. Max 10 MB pro Datei.",
@@ -153,7 +153,10 @@
       "library": "Mediathek",
       "takePhoto": "Foto aufnehmen",
       "counter": "{count} / {max} Fotos",
-      "importFromCount": "Importieren von {count, plural, one {# Foto} other {# Fotos}}"
+      "importFromCount": "Importieren von {count, plural, one {# Foto} other {# Fotos}}",
+      "description": "Die Fotos werden zu einem Rezept zusammengefasst.",
+      "bulkPrompt": "Mehrere Rezepte?",
+      "bulkLink": "Bulk images verwenden — ein Rezept pro Bild"
     },
     "menu": {
       "description": "Importieren Sie per URL, scannen Sie ein Foto oder beginnen Sie von Grund auf."

@@ -3,6 +3,7 @@
 import type { DropZoneAreaProps } from "@/components/ui/drop-zone";
 import { useCallback, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DropZone } from "@/components/ui/drop-zone";
 import { useUploadLimitsQuery } from "@/hooks/config";
@@ -201,8 +202,22 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
           {() => (
             <>
               <Modal.CloseTrigger />
-              <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
+              <Modal.Header className="flex flex-col gap-1">
+                <span>{t("title")}</span>
+                <span className="text-muted text-sm font-normal">{t("description")}</span>
+              </Modal.Header>
               <Modal.Body>
+                <div className="bg-surface-secondary mb-4 flex flex-col gap-1 rounded-lg p-3">
+                  <p className="text-muted text-sm">{t("bulkPrompt")}</p>
+                  <Link
+                    className="text-accent text-sm font-medium underline underline-offset-2"
+                    href="/recipes/import"
+                    onClick={() => handleOpenChange(false)}
+                  >
+                    {t("bulkLink")}
+                  </Link>
+                </div>
+
                 <DropZone className="w-full">
                   <DropZone.Area getDropOperation={getDropOperation} onDrop={handleDrop}>
                     <DropZone.Icon>

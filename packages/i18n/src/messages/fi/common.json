@@ -136,7 +136,7 @@
       "failed": "Tuonti epäonnistui"
     },
     "image": {
-      "title": "Tuo kuvasta",
+      "title": "Yksi resepti kuvista",
       "dropzone": "Pudota kuvat tähän tai selaa napsauttamalla",
       "paste": "liittääksesi",
       "formats": "Tukee JPG-, PNG- ja WebP-muotoja. Enintään 10 Mt tiedostoa kohden.",
@@ -153,7 +153,10 @@
       "library": "Kirjasto",
       "takePhoto": "Ota kuva",
       "counter": "{count} / {max} kuvaa",
-      "importFromCount": "Tuo {count, plural, one {# kuvasta} other {# kuvasta}}"
+      "importFromCount": "Tuo {count, plural, one {# kuvasta} other {# kuvasta}}",
+      "description": "Kuvat yhdistetään yhdeksi reseptiksi.",
+      "bulkPrompt": "Useita reseptejä?",
+      "bulkLink": "Käytä Bulk images -toimintoa — yksi resepti kuvaa kohden"
     },
     "menu": {
       "description": "Tuo osoitteesta, skannaa kuva tai aloita tyhjästä."

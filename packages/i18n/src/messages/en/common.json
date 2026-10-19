@@ -136,7 +136,7 @@
       "failed": "Import failed"
     },
     "image": {
-      "title": "Import from Image",
+      "title": "One recipe from photos",
       "dropzone": "Drop images here or click to browse",
       "paste": "to paste",
       "formats": "Supports JPG, PNG, WebP. Max 10MB per file.",
@@ -153,7 +153,10 @@
       "library": "Library",
       "takePhoto": "Take Photo",
       "counter": "{count} / {max} photos",
-      "importFromCount": "Import from {count, plural, one {# Photo} other {# Photos}}"
+      "importFromCount": "Import from {count, plural, one {# Photo} other {# Photos}}",
+      "description": "The photos are combined into one recipe.",
+      "bulkPrompt": "Several recipes?",
+      "bulkLink": "Use Bulk images — one recipe per image"
     },
     "menu": {
       "description": "Import from a URL, scan a photo, or start from scratch."

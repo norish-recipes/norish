@@ -136,7 +136,7 @@
       "failed": "Falha na importação"
     },
     "image": {
-      "title": "Importar de imagem",
+      "title": "Uma receita a partir de fotos",
       "dropzone": "Solte imagens aqui ou clique para procurar",
       "paste": "para colar",
       "formats": "Compatível com JPG, PNG, WebP. Máx. 10 MB por arquivo.",
@@ -153,7 +153,10 @@
       "library": "Biblioteca",
       "takePhoto": "Tirar foto",
       "counter": "{count} / {max} fotos",
-      "importFromCount": "Importar de {count, plural, one {# foto} other {# fotos}}"
+      "importFromCount": "Importar de {count, plural, one {# foto} other {# fotos}}",
+      "description": "As fotos são combinadas em uma receita.",
+      "bulkPrompt": "Várias receitas?",
+      "bulkLink": "Use Bulk images — uma receita por imagem"
     },
     "menu": {
       "description": "Importe de uma URL, escaneie uma foto ou comece do zero."

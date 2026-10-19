@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import LibraryHeading from "@/components/dashboard/library-heading";
@@ -10,9 +11,36 @@ import RecipeViewModeToggle, {
 } from "@/components/dashboard/recipe-view-mode-toggle";
 import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
-import { Tabs } from "@heroui/react";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { PhotoIcon } from "@heroicons/react/16/solid";
+import { Button, Tabs } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import { cssHeaderControl, cssHeaderIcon } from "@norish/web/config/css-tokens";
 
 const LIBRARY_HEADING_ID = "recipe-library-heading";
+
+function BulkImageImportButton() {
+  const router = useRouter();
+  const t = useTranslations("recipes.dashboard");
+  const { isAIEnabled } = usePermissionsContext();
+
+  if (!isAIEnabled) return null;
+
+  return (
+    <Button
+      aria-label={t("bulkImageImport")}
+      className={`rounded-full font-medium max-md:px-0 md:px-3 ${cssHeaderControl}`}
+      data-testid="bulk-image-import-button"
+      size="md"
+      variant="secondary"
+      onPress={() => router.push("/recipes/import")}
+    >
+      <PhotoIcon className={cssHeaderIcon} />
+      <span className="hidden md:inline">{t("bulkImageImport")}</span>
+    </Button>
+  );
+}
 
 function RecipeLibrary() {
   return (
@@ -23,6 +51,7 @@ function RecipeLibrary() {
             <LibraryHeading id={LIBRARY_HEADING_ID} />
             <div className="flex items-center gap-2">
               <RecipeViewModeToggle />
+              <BulkImageImportButton />
               <CreateRecipeButton />
             </div>
           </div>

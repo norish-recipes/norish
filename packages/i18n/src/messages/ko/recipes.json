@@ -27,7 +27,8 @@
       "all": "전체",
       "recipes": "레시피",
       "cookbooks": "요리책"
-    }
+    },
+    "bulkImageImport": "여러 이미지"
   },
   "back": {
     "all": "라이브러리로 돌아가기",
@@ -423,5 +424,46 @@
     "removeImage": "이미지 삭제",
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
     "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
+  },
+  "bulkImport": {
+    "title": "사진에서 여러 레시피 가져오기",
+    "description": "레시피마다 이미지 하나를 선택하세요. Norish는 각 이미지를 따로 읽고, 레시피가 담긴 이미지마다 레시피를 만듭니다.",
+    "dropzone": "이미지를 여기에 놓거나 라이브러리에서 선택하세요",
+    "formats": "JPG, PNG 또는 WebP. 최대 {max}장, 장당 {size}MB, 총 {total}MB.",
+    "choose": "이미지 선택",
+    "selectedCount": "{count, plural, other {#장 선택됨}}",
+    "remove": "{name} 제거",
+    "clear": "지우기",
+    "importButton": "{count, plural, other {레시피 #개 가져오기}}",
+    "submitFailed": "가져오기를 시작하지 못했습니다",
+    "retryFailed": "다시 시도하지 못했습니다",
+    "invalidTypeDetail": "{name}은(는) JPG, PNG 또는 WebP 이미지가 아닙니다.",
+    "tooLargeDetail": "{name}은(는) {size}MB보다 큽니다.",
+    "duplicateDetail": "{name}은(는) 이미 목록에 있습니다.",
+    "limitDetail": "한 번에 최대 {max}장까지 가능합니다.",
+    "dismiss": "닫기",
+    "progressTitle": "가져오기 진행 상황",
+    "progressCount": "{total}개 중 {done}개 레시피 완료",
+    "progressFailed": "{count, plural, other {#장 실패}}",
+    "status": {
+      "queued": "대기 중",
+      "processing": "이미지 읽는 중",
+      "done": "레시피 생성됨",
+      "failed": "실패"
+    },
+    "error": {
+      "unsupported-type": "지원하지 않는 이미지 형식입니다.",
+      "too-large": "이미지가 너무 큽니다.",
+      "empty-file": "이미지가 비어 있습니다.",
+      "extraction-failed": "이 이미지에서 레시피를 읽지 못했습니다.",
+      "queue-failed": "가져오기를 시작하지 못했습니다. 다시 시도하세요."
+    },
+    "openRecipe": "레시피 열기",
+    "retry": "다시 시도",
+    "retryAll": "실패한 이미지 다시 시도",
+    "allDone": "모든 이미지를 가져왔습니다.",
+    "aiDisabled": "이미지 가져오기에는 AI 제공자가 필요합니다. 관리자에게 활성화를 요청하세요.",
+    "backToRecipes": "레시피로 돌아가기",
+    "totalTooLargeDetail": "이미지가 총 {size}MB를 넘습니다. 이미지를 제거하거나 더 작은 이미지를 선택하세요."
   }
 }

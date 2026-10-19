@@ -27,7 +27,8 @@
       "all": "Tudo",
       "recipes": "Receitas",
       "cookbooks": "Livros de receitas"
-    }
+    },
+    "bulkImageImport": "Imagens em lote"
   },
   "back": {
     "all": "Voltar à biblioteca",
@@ -423,5 +424,46 @@
     "removeImage": "Remover imagem",
     "imageUploadFailed": "Não foi possível enviar a imagem.",
     "imageNeedsConnection": "Você pode trocar imagens quando estiver online de novo."
+  },
+  "bulkImport": {
+    "title": "Importar várias receitas de fotos",
+    "description": "Escolha uma imagem por receita. O Norish lê cada imagem separadamente e cria uma receita para cada imagem que contenha uma.",
+    "dropzone": "Solte imagens aqui ou escolha-as na sua biblioteca",
+    "formats": "JPG, PNG ou WebP. Até {max} imagens, {size} MB cada, {total} MB no total.",
+    "choose": "Escolher imagens",
+    "selectedCount": "{count, plural, one {# imagem selecionada} other {# imagens selecionadas}}",
+    "remove": "Remover {name}",
+    "clear": "Limpar",
+    "importButton": "{count, plural, one {Importar # receita} other {Importar # receitas}}",
+    "submitFailed": "Não foi possível iniciar a importação",
+    "retryFailed": "Não foi possível tentar a importação novamente",
+    "invalidTypeDetail": "{name} não é uma imagem JPG, PNG ou WebP.",
+    "tooLargeDetail": "{name} é maior que {size} MB.",
+    "duplicateDetail": "{name} já está no lote.",
+    "limitDetail": "Um lote contém no máximo {max} imagens.",
+    "dismiss": "Fechar",
+    "progressTitle": "Progresso da importação",
+    "progressCount": "{done} de {total} receitas prontas",
+    "progressFailed": "{count, plural, one {# imagem falhou} other {# imagens falharam}}",
+    "status": {
+      "queued": "Na fila",
+      "processing": "Lendo imagem",
+      "done": "Receita criada",
+      "failed": "Falhou"
+    },
+    "error": {
+      "unsupported-type": "Este tipo de imagem não é compatível.",
+      "too-large": "Esta imagem é grande demais.",
+      "empty-file": "Esta imagem está vazia.",
+      "extraction-failed": "O Norish não conseguiu ler uma receita desta imagem.",
+      "queue-failed": "A importação não pôde começar. Tente novamente."
+    },
+    "openRecipe": "Abrir receita",
+    "retry": "Tentar novamente",
+    "retryAll": "Tentar novamente as imagens que falharam",
+    "allDone": "Todas as imagens foram importadas.",
+    "aiDisabled": "A importação de imagens precisa de um provedor de IA. Peça a um administrador para ativar um.",
+    "backToRecipes": "Voltar às receitas",
+    "totalTooLargeDetail": "As imagens passam de {size} MB no total. Remova uma imagem ou escolha imagens menores."
   }
 }

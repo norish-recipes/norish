@@ -136,7 +136,7 @@
       "failed": "Import mislyktes"
     },
     "image": {
-      "title": "Importer fra bilde",
+      "title": "Én oppskrift fra bilder",
       "dropzone": "Slipp bilder her eller klikk for å bla",
       "paste": "for å lime inn",
       "formats": "Støtter JPG, PNG, WebP. Maks. 10 MB per fil.",
@@ -153,7 +153,10 @@
       "library": "Bibliotek",
       "takePhoto": "Ta bilde",
       "counter": "{count} / {max} bilder",
-      "importFromCount": "Importer fra {count, plural, one {# bilde} other {# bilder}}"
+      "importFromCount": "Importer fra {count, plural, one {# bilde} other {# bilder}}",
+      "description": "Bildene kombineres til én oppskrift.",
+      "bulkPrompt": "Flere oppskrifter?",
+      "bulkLink": "Bruk Bulk images — én oppskrift per bilde"
     },
     "menu": {
       "description": "Importer fra en URL, skann et bilde eller start fra bunnen av."
