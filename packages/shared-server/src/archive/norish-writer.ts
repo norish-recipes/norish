@@ -3,11 +3,7 @@ import type { Archiver } from "archiver";
 import archiver from "archiver";
 
 import { FullRecipeDTO } from "@norish/shared/contracts";
-import {
-  countSourceImages,
-  MAX_RECIPE_IMAGES,
-  primaryRecipeImage,
-} from "@norish/shared/lib/recipe-media";
+import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import {
   EXTERNAL_MEDIA_URL,
@@ -110,6 +106,20 @@ function keptScalarImage(recipe: FullRecipeDTO): string | null {
   return scalar;
 }
 
+function scalarArchiveBasename(value: string, recipeId: string): string | null {
+  const root = localMediaBasename(value, recipeId);
+
+  if (root) return root;
+
+  for (const subDirectory of ["steps/", "gallery/"]) {
+    const nested = localMediaBasename(value, recipeId, subDirectory);
+
+    if (nested) return nested;
+  }
+
+  return null;
+}
+
 export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMediaRef[] {
   const refs: NorishArchiveMediaRef[] = [];
   const seen = new Set<string>();
@@ -126,7 +136,7 @@ export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMedi
   add(hero, heroBasename && `${NORISH_ARCHIVE_MEDIA_DIRS.images}/${heroBasename}`);
 
   const keptScalar = keptScalarImage(recipe);
-  const scalarBasename = localMediaBasename(keptScalar, recipe.id);
+  const scalarBasename = keptScalar ? scalarArchiveBasename(keptScalar, recipe.id) : null;
 
   add(keptScalar, scalarBasename && `${NORISH_ARCHIVE_MEDIA_DIRS.images}/${scalarBasename}`);
 
@@ -189,8 +199,7 @@ function buildArchiveRecipe(record: NorishArchiveRecord): NorishArchiveRecipe {
     return archivePathByWebPath.get(value) ?? null;
   };
   const keptScalar = keptScalarImage(recipe);
-  const scalarForImage =
-    keptScalar && archivePathByWebPath.has(keptScalar) ? keptScalar : primaryRecipeImage(recipe);
+  const scalarForImage = keptScalar ?? primaryRecipeImage(recipe);
 
   return {
     name: recipe.name,

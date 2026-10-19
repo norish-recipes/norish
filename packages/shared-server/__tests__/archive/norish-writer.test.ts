@@ -284,11 +284,10 @@ describe("norish archive writer", () => {
     expect(recipeJson.image).toBe("https://example.com/external-hero.jpg");
   });
 
-  it("drops references whose files did not make the archive, hero included", async () => {
+  it("drops local references whose files did not make the archive", async () => {
     const recipe = buildFullRecipe({
-      // Shadowed by the gallery: the resolved primary is the local file, and
-      // when that file is missing the hero is dropped rather than falling
-      // back to an image the source recipe never displays.
+      // The external scalar travels unchanged; the missing local gallery
+      // file is dropped rather than exported as a dead reference.
       image: "https://example.com/external-hero.jpg",
       images: [
         {
@@ -305,7 +304,7 @@ describe("norish archive writer", () => {
 
     const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
 
-    expect(recipeJson.image).toBeNull();
+    expect(recipeJson.image).toBe("https://example.com/external-hero.jpg");
     expect(recipeJson.images).toEqual([]);
   });
 
