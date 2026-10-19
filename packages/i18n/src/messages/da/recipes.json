@@ -230,6 +230,7 @@
     "uploading": "Uploader...",
     "uploadFailed": "Upload mislykkedes",
     "dragToReorder": "Træk for at omarrangere",
+    "setAsThumbnail": "Angiv som miniature",
     "maxImagesReached": "Maksimalt {max} billeder er tilladt",
     "maxVideosReached": "Maksimalt {max} videoer er tilladt",
     "invalidFileType": "Ugyldig filtype"

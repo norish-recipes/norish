@@ -3,11 +3,11 @@
  * provider's two routes: the brief request on chat completions, the drawing
  * on the image route.
  *
- * What is asserted is what a reader sees and what is stored: the primary
- * image is replaced, the page re-tints from the new Dish Colour, the
- * previous image is gone from the gallery — and the bulk sweep names its
- * image count, fills gaps only by default, and reaches every recipe with
- * overwrite on.
+ * What is asserted is what a reader sees and what is stored: the Generated
+ * Image takes the primary slot, the page re-tints from the new Dish Colour,
+ * the supplied photograph stays in the gallery as a Source Image — and the
+ * bulk sweep names its image count, fills gaps only by default, and reaches
+ * every recipe with overwrite on.
  */
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -160,14 +160,17 @@ test("the manual action replaces the primary image and the page re-tints", async
   await requestEnrichment(page, "Generate Picture");
   await page.keyboard.press("Escape");
 
-  // The stored outcome: exactly one gallery row, marked, and it is not the
-  // photograph. The photograph's row is gone.
+  // The stored outcome: the Generated Image leads at order 0, and the
+  // supplied photograph keeps its row behind it as a Source Image.
   await expect
     .poll(async () => readStoredGalleryImages(name), {
       timeout: 60_000,
       intervals: [1_000, 2_000, 5_000],
     })
-    .toEqual([{ image: expect.not.stringContaining("supplied-photo"), generated: true }]);
+    .toEqual([
+      { image: expect.not.stringContaining("supplied-photo"), generated: true },
+      { image: expect.stringContaining("supplied-photo"), generated: false },
+    ]);
 
   const [generated] = await readStoredGalleryImages(name);
 
@@ -182,22 +185,21 @@ test("the manual action replaces the primary image and the page re-tints", async
     timeout: 30_000,
   });
 
-  // The previous image is gone from the gallery: after a fresh load, the
-  // drawing is what renders and no element anywhere shows the photograph.
+  // The photograph stays in the gallery: after a fresh load, the drawing is
+  // the hero and the photograph is the second carousel item.
   await page.reload();
   await expect(heroImage).toHaveAttribute(
     "src",
     new RegExp(generated!.image.replaceAll("/", "\\/"))
   );
-  await expect(page.locator(`img[src*="supplied-photo"]`)).toHaveCount(0);
+  await expect(page.locator(`img[src*="supplied-photo"]`)).toHaveCount(1);
 
   expect(await readStoredDishColor(name)).not.toBe(SUPPLIED_PHOTO_DISH_COLOR);
   expect(stack.ai.control.imageRequestCount).toBe(1);
 
-  // The library follows too: the dashboard card reads the legacy thumbnail
-  // scalar, which the replacement keeps in sync — and the drawing is a file
-  // that actually serves, while the replaced photograph is gone rather than
-  // lingering as a cached 404.
+  // The library follows too: the dashboard card reads the resolved primary
+  // image, and both the drawing and the supplied photograph are files that
+  // actually serve.
   await page.goto("/");
 
   const card = page.locator(`img[alt="${name}"]`).first();
@@ -208,9 +210,9 @@ test("the manual action replaces the primary image and the page re-tints", async
 
   expect(drawnResponse.status()).toBe(200);
 
-  const replacedResponse = await page.request.get(photoUrl);
+  const suppliedResponse = await page.request.get(photoUrl);
 
-  expect(replacedResponse.ok()).toBe(false);
+  expect(suppliedResponse.status()).toBe(200);
 });
 
 test.describe("the bulk sweep", () => {
@@ -296,7 +298,10 @@ test.describe("the bulk sweep", () => {
         timeout: 60_000,
         intervals: [1_000, 2_000, 5_000],
       })
-      .toEqual([{ image: expect.not.stringContaining("supplied-photo"), generated: true }]);
+      .toEqual([
+        { image: expect.not.stringContaining("supplied-photo"), generated: true },
+        { image: expect.stringContaining("supplied-photo"), generated: false },
+      ]);
 
     await expect
       .poll(async () => readStoredGalleryImages(GAP_RECIPE), {

@@ -54,6 +54,7 @@ function buildInitialMedia(initialData?: FullRecipeDTO): RecipeGalleryMedia[] {
         src: img.image,
         order: img.order,
         version: img.version,
+        generated: img.generated,
       });
     });
   } else if (initialData?.image) {

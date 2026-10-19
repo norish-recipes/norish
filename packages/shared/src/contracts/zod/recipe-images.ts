@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { recipeImages } from "@norish/db-schema/schema";
 
+import { MAX_RECIPE_IMAGES } from "../../lib/recipe-media";
+
 export const RecipeImageSelectSchema = createSelectSchema(recipeImages);
 export const RecipeImageInsertSchema = createInsertSchema(recipeImages).omit({
   id: true,
@@ -40,8 +42,42 @@ export const DeleteRecipeImageInputSchema = z.object({
   version: z.number().int().positive(),
 });
 
-// Max 10 images per recipe
-export const MAX_RECIPE_IMAGES = 10;
+export { MAX_RECIPE_IMAGES };
 
-export const RecipeImagesArraySchema = z.array(RecipeImageOutputSchema).max(MAX_RECIPE_IMAGES);
+/** The most rows a gallery can hold: the Source Image cap plus one Generated Image. */
+export const MAX_RECIPE_GALLERY_IMAGES = MAX_RECIPE_IMAGES + 1;
+
+/**
+ * Reject a gallery that holds more than the Source Image cap or more than one
+ * Generated Image. Both limits exist in the database shape, so every payload
+ * and every read applies them together (ADR-0040).
+ */
+export function refineRecipeGallery(
+  images: readonly { generated?: boolean }[],
+  ctx: z.RefinementCtx
+): void {
+  const sourceImages = images.filter((image) => image.generated !== true).length;
+  const generatedImages = images.length - sourceImages;
+
+  if (sourceImages > MAX_RECIPE_IMAGES) {
+    ctx.addIssue({
+      code: "custom",
+      message: `A recipe can hold at most ${MAX_RECIPE_IMAGES} Source Images`,
+      path: ["images"],
+    });
+  }
+
+  if (generatedImages > 1) {
+    ctx.addIssue({
+      code: "custom",
+      message: "A recipe can hold at most one Generated Image",
+      path: ["images"],
+    });
+  }
+}
+
+export const RecipeImagesArraySchema = z
+  .array(RecipeImageOutputSchema)
+  .max(MAX_RECIPE_GALLERY_IMAGES)
+  .superRefine(refineRecipeGallery);
 export const RecipeImagesInputArraySchema = z.array(RecipeImageInputSchema).max(MAX_RECIPE_IMAGES);

@@ -111,12 +111,14 @@ const baseRecipe: FullRecipeDTO = {
       id: "image-1",
       image: "/recipes/cake-primary.jpg",
       order: 0,
+      generated: false,
       version: 1,
     },
     {
       id: "image-2",
       image: "/recipes/cake-slice.jpg",
       order: 1,
+      generated: false,
       version: 1,
     },
   ],
@@ -173,6 +175,7 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
         src: "/recipes/cake-primary.jpg",
         order: 0,
         version: 1,
+        generated: false,
       },
       {
         id: "image-2",
@@ -180,6 +183,7 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
         src: "/recipes/cake-slice.jpg",
         order: 1,
         version: 1,
+        generated: false,
       },
       {
         id: "video-1",

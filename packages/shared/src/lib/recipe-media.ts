@@ -1,4 +1,10 @@
 /**
+ * The most Source Images a recipe may hold. A Generated Image is not a
+ * person's upload and does not count against this cap (ADR-0040).
+ */
+export const MAX_RECIPE_IMAGES = 10;
+
+/**
  * The image a recipe leads with — one definition, everywhere.
  *
  * The gallery (`recipe_images`) is the source of truth: the first image by
@@ -40,4 +46,29 @@ export function primaryRecipeImage(carrier: PrimaryImageCarrier): string | null 
   const gallery = [...(carrier.images ?? [])].sort((a, b) => galleryOrder(a) - galleryOrder(b));
 
   return gallery[0]?.image ?? carrier.image ?? null;
+}
+
+/**
+ * The "set as thumbnail" reorder: the chosen image leads the gallery.
+ *
+ * The gallery has one ordering and no second flag, so choosing a thumbnail is
+ * choosing which image comes first. Every item is renumbered to its array
+ * position, which keeps the primary rule (lowest order wins) and the carousel
+ * agreeing. An index already at the front, or one outside the array, is a
+ * no-op that returns a copy.
+ */
+export function promoteImageToThumbnail<T extends { order: number }>(
+  media: readonly T[],
+  index: number
+): T[] {
+  if (index <= 0 || index >= media.length) return [...media];
+
+  const next = [...media];
+  const [chosen] = next.splice(index, 1);
+
+  if (chosen === undefined) return [...media];
+
+  next.unshift(chosen);
+
+  return next.map((item, position) => ({ ...item, order: position }));
 }

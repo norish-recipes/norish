@@ -230,6 +230,7 @@
     "uploading": "Enviando...",
     "uploadFailed": "Falha no envio",
     "dragToReorder": "Arraste para reordenar",
+    "setAsThumbnail": "Definir como miniatura",
     "maxImagesReached": "Máximo de {max} imagens permitido",
     "maxVideosReached": "Máximo de {max} vídeos permitido",
     "invalidFileType": "Tipo de arquivo inválido"

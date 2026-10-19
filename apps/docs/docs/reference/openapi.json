@@ -664,7 +664,7 @@
                     },
                     "images": {
                       "default": [],
-                      "maxItems": 10,
+                      "maxItems": 11,
                       "type": "array",
                       "items": {
                         "type": "object",
@@ -1699,7 +1699,7 @@
                   },
                   "images": {
                     "default": [],
-                    "maxItems": 10,
+                    "maxItems": 11,
                     "type": "array",
                     "items": {
                       "type": "object",

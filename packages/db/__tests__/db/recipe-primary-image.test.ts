@@ -19,6 +19,7 @@ import {
   dashboardRecipe,
   getRandomRecipeCandidates,
   getRecipeFull,
+  isImageUrlReferenced,
   listRecipes,
   searchRecipesByName,
 } from "@norish/db/repositories/recipes";
@@ -189,6 +190,63 @@ describe("planned items resolve their recipe thumbnail the same way", () => {
   });
 });
 
+describe("choosing the thumbnail", () => {
+  it("changes what every reader resolves as primary when the gallery is reordered", async () => {
+    const recipeId = crypto.randomUUID();
+    const first = `/recipes/${recipeId}/first.jpg`;
+    const second = `/recipes/${recipeId}/second.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Reorder Me",
+      images: [
+        { image: first, order: 0 },
+        { image: second, order: 1 },
+      ],
+    });
+
+    expect((await dashboardRecipe(recipeId))?.image).toBe(first);
+
+    const stored = (await getRecipeFull(recipeId))?.images ?? [];
+    const firstRow = stored.find((image) => image.image === first);
+    const secondRow = stored.find((image) => image.image === second);
+
+    if (!firstRow || !secondRow) throw new Error("seeded gallery rows are missing");
+
+    await updateRecipeWithRefs(recipeId, userId, {
+      images: [
+        { id: secondRow.id, image: secondRow.image, order: 0 },
+        { id: firstRow.id, image: firstRow.image, order: 1 },
+      ],
+    });
+
+    expect((await dashboardRecipe(recipeId))?.image).toBe(second);
+    expect((await getRecipeFull(recipeId))?.images.map((image) => image.image)).toEqual([
+      second,
+      first,
+    ]);
+  });
+});
+
+describe("image URL references", () => {
+  it("sees a gallery row and a scalar, and ignores an unused URL", async () => {
+    const recipeId = crypto.randomUUID();
+    const gallery = `/recipes/${recipeId}/gallery.jpg`;
+    const scalar = `/recipes/${recipeId}/scalar.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Reference Check",
+      images: [{ image: gallery, order: 0 }],
+    });
+    await plantLegacyScalar(recipeId, scalar);
+
+    expect(await isImageUrlReferenced(gallery)).toBe(true);
+    expect(await isImageUrlReferenced(scalar)).toBe(true);
+    expect(await isImageUrlReferenced(`/recipes/${recipeId}/unused.jpg`)).toBe(false);
+  });
+});
+
 /** The raw column, bypassing every resolving reader. */
 async function rawScalar(recipeId: string): Promise<string | null> {
   const [row] = await db
@@ -275,6 +333,33 @@ describe("the write side retires the scalar", () => {
     // gallery later would resurrect an image the editor replaced.
     expect(await rawScalar(recipeId)).toBeNull();
     expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/uploaded\.jpg$/);
+  });
+
+  it("keeps a distinct scalar when a create gallery already holds ten Source Images", async () => {
+    // The payload is a valid ten-source gallery plus its Generated Image. The
+    // scalar cannot become a twelfth row, so the column keeps it.
+    const recipeId = crypto.randomUUID();
+    const scalar = `/recipes/${recipeId}/scalar.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Full Gallery With Scalar",
+      image: scalar,
+      images: [
+        ...Array.from({ length: 10 }, (_, index) => ({
+          image: `/recipes/${recipeId}/source-${index}.jpg`,
+          order: index,
+        })),
+        { image: `/recipes/${recipeId}/drawn.jpg`, order: 10, generated: true },
+      ],
+    });
+
+    const full = await getRecipeFull(recipeId);
+
+    expect(full?.images).toHaveLength(11);
+    expect(full?.images.filter((image) => image.generated === false)).toHaveLength(10);
+    expect(full?.image).toBe(scalar);
+    expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/drawn\.jpg$/);
   });
 
   it("translates a scalar-only update into the gallery when the gallery is empty", async () => {

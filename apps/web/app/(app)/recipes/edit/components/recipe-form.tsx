@@ -90,6 +90,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           src: img.image,
           order: img.order,
           version: img.version,
+          generated: img.generated,
         });
       });
     } else if (initialData?.image) {
@@ -324,6 +325,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           image: img.src,
           order: img.order,
           version: img.version,
+          generated: img.generated,
         }));
 
       // Extract videos from unified media state, preserving their order

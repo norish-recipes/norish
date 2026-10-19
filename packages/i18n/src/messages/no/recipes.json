@@ -230,6 +230,7 @@
     "uploading": "Laster opp...",
     "uploadFailed": "Opplasting mislyktes",
     "dragToReorder": "Dra for å omorganisere",
+    "setAsThumbnail": "Angi som miniatyrbilde",
     "maxImagesReached": "Maks. {max} bilder er tillatt",
     "maxVideosReached": "Maks. {max} videoer er tillatt",
     "invalidFileType": "Ugyldig filtype"

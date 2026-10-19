@@ -230,6 +230,7 @@
     "uploading": "Lähetetään...",
     "uploadFailed": "Lähetys epäonnistui",
     "dragToReorder": "Raahaa järjestääksesi",
+    "setAsThumbnail": "Aseta pikkukuvaksi",
     "maxImagesReached": "Enintään {max} kuvaa sallittu",
     "maxVideosReached": "Enintään {max} videota sallittu",
     "invalidFileType": "Virheellinen tiedostotyyppi"

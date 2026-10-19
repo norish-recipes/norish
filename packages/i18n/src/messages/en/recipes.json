@@ -230,6 +230,7 @@
     "uploading": "Uploading...",
     "uploadFailed": "Upload failed",
     "dragToReorder": "Drag to reorder",
+    "setAsThumbnail": "Set as thumbnail",
     "maxImagesReached": "Maximum {max} images allowed",
     "maxVideosReached": "Maximum {max} videos allowed",
     "invalidFileType": "Invalid file type"

@@ -2,11 +2,10 @@ import { z } from "zod";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
-  addRecipeImages,
-  countRecipeImages,
+  addGalleryImageWithinCap,
   deleteRecipeImageById,
   getRecipeImageById,
-  getRecipeOwnerId,
+  isImageUrlReferenced,
 } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-color";
@@ -179,6 +178,25 @@ const deleteStepImage = authedProcedure
     }
   });
 
+/**
+ * Remove a file this procedure just wrote, unless a row or a scalar still
+ * names it. Storage is content-addressed, so the URL can belong to a file that
+ * another upload already stored.
+ */
+async function removeIfUnreferenced(imageUrl: string, context: Record<string, unknown>) {
+  const referenced = await isImageUrlReferenced(imageUrl).catch((error) => {
+    log.warn({ ...context, imageUrl, error }, "Could not check image references; keeping the file");
+
+    return true;
+  });
+
+  if (referenced) return;
+
+  await deleteImageByUrl(imageUrl).catch((error) => {
+    log.warn({ ...context, imageUrl, error }, "Could not remove an unreferenced image file");
+  });
+}
+
 // --- Gallery Image Procedures ---
 
 /**
@@ -198,71 +216,73 @@ const uploadGalleryImage = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
-    // Check max images limit
-    const currentCount = await countRecipeImages(recipeId);
-
-    if (currentCount >= MAX_RECIPE_IMAGES) {
-      return {
-        success: false,
-        error: `Maximum ${MAX_RECIPE_IMAGES} images allowed per recipe`,
-      };
-    }
-
     const validation = await extractAndValidateImage(input);
 
     if (!validation.success) {
       return validation;
     }
 
+    let savedUrl: string | null = null;
+
     try {
       // Gallery images go to uploads/recipes/{recipeId}/{hash}.jpg
       const url = await saveImageBytes(validation.bytes, recipeId);
 
-      // Parse order, default to current count (append to end)
-      const order = orderStr ? parseInt(orderStr, 10) : currentCount;
+      savedUrl = url;
 
-      // Check if recipe exists in database before inserting into recipe_images
-      // For new recipes (created via form), the recipe doesn't exist yet - images will be
-      // linked when the recipe is saved via createRecipeWithRefs
-      const recipeOwner = await getRecipeOwnerId(recipeId);
+      // The order is optional; the repository appends under the same lock that
+      // enforces the Source Image cap.
+      const requestedOrder = orderStr ? parseInt(orderStr, 10) : undefined;
+      const added = await addGalleryImageWithinCap(recipeId, url, requestedOrder);
 
-      if (recipeOwner !== null) {
-        // Recipe exists, add to database
-        const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]);
+      if (added.status === "cap-reached") {
+        await removeIfUnreferenced(url, { userId: ctx.user.id, recipeId });
 
-        if (!imageRecord) {
-          return { success: false, error: "Failed to create image record" };
-        }
-
-        const versionedImageRecord = imageRecord as typeof imageRecord & { version: number };
-
-        // A gallery upload on a stored recipe can change what the page leads
-        // with; the Dish Colour follows the new hero (ADR-0023).
-        await refreshDishColorForRecipe(recipeId);
-
-        log.info(
-          { userId: ctx.user.id, recipeId, url, imageId: imageRecord.id },
-          "Gallery image uploaded"
-        );
+        savedUrl = null;
 
         return {
-          success: true,
-          url,
-          id: imageRecord.id,
-          order: imageRecord.order,
-          version: versionedImageRecord.version,
+          success: false,
+          error: `Maximum ${MAX_RECIPE_IMAGES} images allowed per recipe`,
         };
-      } else {
-        // Recipe doesn't exist yet (new recipe form), just return the URL
-        // The image will be linked when the recipe is created
+      }
+
+      if (added.status === "recipe-missing") {
+        // New recipe form: the recipe does not exist yet. The image is linked
+        // when createRecipeWithRefs stores the form.
         log.info(
           { userId: ctx.user.id, recipeId, url },
           "Gallery image uploaded for pending recipe"
         );
 
-        return { success: true, url, order };
+        savedUrl = null;
+
+        return { success: true, url, order: requestedOrder ?? 0 };
       }
+
+      // The row now references the file, so a later failure must not unlink it.
+      savedUrl = null;
+
+      // A gallery upload on a stored recipe can change what the page leads
+      // with; the Dish Colour follows the new hero (ADR-0023).
+      await refreshDishColorForRecipe(recipeId);
+
+      log.info(
+        { userId: ctx.user.id, recipeId, url, imageId: added.image.id },
+        "Gallery image uploaded"
+      );
+
+      return {
+        success: true,
+        url,
+        id: added.image.id,
+        order: added.image.order,
+        version: added.image.version,
+      };
     } catch (error) {
+      if (savedUrl) {
+        await removeIfUnreferenced(savedUrl, { userId: ctx.user.id, recipeId });
+      }
+
       const message = error instanceof Error ? error.message : "Failed to upload gallery image";
 
       log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload gallery image");

@@ -230,6 +230,7 @@
     "uploading": "Загрузка...",
     "uploadFailed": "Не удалось загрузить",
     "dragToReorder": "Перетащите для изменения порядка",
+    "setAsThumbnail": "Сделать миниатюрой",
     "maxImagesReached": "Максимум {max} изображений",
     "maxVideosReached": "Максимум {max} видео",
     "invalidFileType": "Недопустимый тип файла"

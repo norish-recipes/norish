@@ -3,15 +3,18 @@ import { serverLogger as log } from "@norish/shared-server/logger";
 import { deleteImageByUrl, saveGeneratedImageBytes } from "./storage";
 
 /**
- * Store a Generated Image as a recipe's primary image (ADR-0025).
+ * Store a Generated Image as a recipe's primary image (ADR-0025, ADR-0040).
  *
  * The one operation the worker calls: the bytes are cover-cropped to exactly
  * 1280×720 and saved, the repository writes them into the primary slot in one
- * transaction — deleting the row that held it — and the displaced files are
- * removed afterwards. File removal is best-effort, as it is for a gallery
- * delete: a missing file must not fail a write that already committed.
+ * transaction, and the files the write released are removed afterwards. A
+ * Source Image — a photograph a person supplied or an import carried — is
+ * never among them: the repository keeps its row, so the file stays in the
+ * gallery as a record. Only a previous Generated Image is replaced. File
+ * removal is best-effort, as it is for a gallery delete: a missing file must
+ * not fail a write that already committed.
  *
- * A displaced URL equal to the one just written is never deleted: storage is
+ * A released URL equal to the one just written is never deleted: storage is
  * content-hashed, so a re-run over identical bytes replaces its predecessor's
  * row while landing on the very same file.
  *

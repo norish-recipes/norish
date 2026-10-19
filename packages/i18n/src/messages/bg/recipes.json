@@ -230,6 +230,7 @@
     "uploading": "Качване...",
     "uploadFailed": "Качването не бе успешно",
     "dragToReorder": "Плъзни, за да пренаредиш",
+    "setAsThumbnail": "Задай като миниатюра",
     "maxImagesReached": "Разрешени са максимум {max} изображения",
     "maxVideosReached": "Разрешени са максимум {max} видеоклипа",
     "invalidFileType": "Невалиден тип файл"

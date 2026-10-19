@@ -230,6 +230,7 @@
     "uploading": "Caricamento...",
     "uploadFailed": "Caricamento non riuscito",
     "dragToReorder": "Trascina per riordinare",
+    "setAsThumbnail": "Imposta come miniatura",
     "maxImagesReached": "Massimo {max} immagini consentite",
     "maxVideosReached": "Massimo {max} video consentiti",
     "invalidFileType": "Tipo di file non valido"

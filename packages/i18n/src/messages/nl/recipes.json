@@ -230,6 +230,7 @@
     "uploading": "Bezig met uploaden...",
     "uploadFailed": "Upload mislukt",
     "dragToReorder": "Sleep afbeeldingen om te herordenen",
+    "setAsThumbnail": "Als miniatuurafbeelding instellen",
     "maxImagesReached": "Maximaal {max} afbeeldingen toegestaan",
     "maxVideosReached": "Maximaal {max} video's toegestaan",
     "invalidFileType": "Ongeldig bestandstype"

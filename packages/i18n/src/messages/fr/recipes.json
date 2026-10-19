@@ -230,6 +230,7 @@
     "uploading": "Téléversement...",
     "uploadFailed": "Échec du téléversement",
     "dragToReorder": "Glissez les images pour réorganiser",
+    "setAsThumbnail": "Définir comme miniature",
     "maxImagesReached": "Maximum {max} images autorisées",
     "maxVideosReached": "Maximum {max} vidéos autorisées",
     "invalidFileType": "Type de fichier invalide"

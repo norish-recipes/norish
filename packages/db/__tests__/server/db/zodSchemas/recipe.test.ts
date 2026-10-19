@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  FullRecipeInsertSchema,
+  FullRecipeInsertObjectSchema,
   FullRecipeSchema,
   recipeCategorySchema,
   RecipeDashboardSchema,
@@ -54,7 +54,7 @@ describe("recipe schemas", () => {
   });
 
   it("parses categories on full recipe insert schema", () => {
-    const parsed = FullRecipeInsertSchema.pick({ categories: true }).parse({});
+    const parsed = FullRecipeInsertObjectSchema.pick({ categories: true }).parse({});
 
     expect(parsed.categories).toEqual([]);
   });

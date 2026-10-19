@@ -13,6 +13,8 @@ import path from "node:path";
 import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { planGeneratedImageReplacement } from "@norish/shared/lib/recipe-generated-image";
+
 const uploadsDir = mkdtempSync(path.join(os.tmpdir(), "generated-image-test-"));
 
 vi.mock("@norish/config/env-config-server", () => ({
@@ -104,7 +106,7 @@ describe("saveGeneratedImageBytes", () => {
 });
 
 describe("storeGeneratedRecipeImage", () => {
-  it("saves, replaces the primary row, and removes the displaced file", async () => {
+  it("saves, replaces a previous Generated Image, and removes its file", async () => {
     const displacedUrl = `/recipes/${RECIPE_ID}/displaced.jpg`;
 
     await fs.mkdir(path.join(uploadsDir, "recipes", RECIPE_ID), { recursive: true });
@@ -124,6 +126,45 @@ describe("storeGeneratedRecipeImage", () => {
     expect(repository.replaceRecipePrimaryImageWithGenerated).toHaveBeenCalledWith(RECIPE_ID, url);
     expect(await fileExists(url)).toBe(true);
     expect(await fileExists(displacedUrl)).toBe(false);
+  });
+
+  it("keeps a Source Image file and deletes only the previous Generated Image", async () => {
+    // The real planner decides what is retained. The media layer must unlink
+    // only the URLs the plan releases, so the Source Image file stays.
+    const sourceUrl = `/recipes/${RECIPE_ID}/photo.jpg`;
+    const previousGeneratedUrl = `/recipes/${RECIPE_ID}/old-drawn.jpg`;
+
+    await fs.mkdir(path.join(uploadsDir, "recipes", RECIPE_ID), { recursive: true });
+    await fs.writeFile(
+      path.join(uploadsDir, "recipes", RECIPE_ID, "photo.jpg"),
+      await jpeg(64, 64)
+    );
+    await fs.writeFile(
+      path.join(uploadsDir, "recipes", RECIPE_ID, "old-drawn.jpg"),
+      await jpeg(64, 64)
+    );
+
+    repository.replaceRecipePrimaryImageWithGenerated.mockImplementation(
+      async (_recipeId: string, imageUrl: string) => {
+        const plan = planGeneratedImageReplacement(
+          [
+            { id: "previous", image: previousGeneratedUrl, order: 0, generated: true },
+            { id: "photo", image: sourceUrl, order: 1, generated: false },
+          ],
+          imageUrl
+        );
+
+        expect(plan.replacedImageUrls).toEqual([previousGeneratedUrl]);
+
+        return { imageUrl, replacedImageUrls: plan.replacedImageUrls };
+      }
+    );
+
+    const url = await storeGeneratedRecipeImage(RECIPE_ID, await jpeg(1600, 900));
+
+    expect(await fileExists(url)).toBe(true);
+    expect(await fileExists(sourceUrl)).toBe(true);
+    expect(await fileExists(previousGeneratedUrl)).toBe(false);
   });
 
   it("never deletes the file it just wrote, even when the replaced row held the same URL", async () => {
