@@ -158,6 +158,45 @@ describe("cleanup workflows", () => {
     expect(await fileExists(missingRecipeDir)).toBe(false);
   });
 
+  it("keeps a video thumbnail and a gallery-named step file during cleanup", async () => {
+    const recipeDir = path.join(uploadsDir, "recipes", recipeId);
+    const stepsDir = path.join(recipeDir, "steps");
+    const thumbnail = "video-thumb.jpg";
+    const sharedStep = "shared-step.jpg";
+    const orphanStep = "orphan-step.jpg";
+    const orphanRoot = "orphan-root.jpg";
+
+    await createTestFile(path.join(recipeDir, thumbnail));
+    await createTestFile(path.join(stepsDir, sharedStep));
+    await createTestFile(path.join(stepsDir, orphanStep));
+    await createTestFile(path.join(recipeDir, orphanRoot));
+
+    await db.insert(recipeVideos).values({
+      recipeId,
+      video: `/recipes/${recipeId}/video.mp4`,
+      thumbnail: `/recipes/${recipeId}/${thumbnail}`,
+      order: "0",
+    });
+
+    await db.insert(recipeImages).values({
+      recipeId,
+      image: `/recipes/${recipeId}/steps/${sharedStep}`,
+      order: "0",
+    });
+
+    const mediaResult = await cleanupOrphanedImages();
+    const stepResult = await cleanupOrphanedStepImages();
+
+    expect(mediaResult.errors).toBe(0);
+    expect(stepResult.errors).toBe(0);
+    expect(mediaResult.deleted).toBe(1);
+    expect(stepResult.deleted).toBe(1);
+    expect(await fileExists(path.join(recipeDir, thumbnail))).toBe(true);
+    expect(await fileExists(path.join(stepsDir, sharedStep))).toBe(true);
+    expect(await fileExists(path.join(stepsDir, orphanStep))).toBe(false);
+    expect(await fileExists(path.join(recipeDir, orphanRoot))).toBe(false);
+  });
+
   it("deletes old calendar planned items using SCHEDULER_CLEANUP_MONTHS cutoff", async () => {
     await db.insert(plannedItems).values([
       {

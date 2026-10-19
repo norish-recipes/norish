@@ -5,7 +5,6 @@ import type { Dirent } from "node:fs";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getAllUserAvatars } from "@norish/db/repositories";
 import { listAllRecipeMediaReferences } from "@norish/db/repositories/recipes";
-import { listAllStepImageUrls } from "@norish/db/repositories/steps";
 import { schedulerLogger } from "@norish/shared-server/logger";
 import { isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
@@ -131,6 +130,14 @@ export async function cleanupOrphanedImages(): Promise<{ deleted: number; errors
 
     for (const videoUrl of mediaReferences.videoUrls) {
       registerRootMediaReference(referencedRootFiles, videoUrl);
+    }
+
+    for (const thumbnailUrl of mediaReferences.videoThumbnailUrls) {
+      registerRootMediaReference(referencedRootFiles, thumbnailUrl);
+    }
+
+    for (const stepImageUrl of mediaReferences.stepImageUrls) {
+      registerRootMediaReference(referencedRootFiles, stepImageUrl);
     }
 
     let deletedRecipeDirs = 0;
@@ -364,11 +371,23 @@ export async function cleanupOrphanedStepImages(): Promise<{ deleted: number; er
       return { deleted: 0, errors: 0 };
     }
 
-    const allStepImageUrls = await listAllStepImageUrls();
+    const mediaReferences = await listAllRecipeMediaReferences();
     const referencedStepFiles = new Map<string, Set<string>>();
 
-    for (const imageUrl of allStepImageUrls) {
+    for (const imageUrl of mediaReferences.stepImageUrls) {
       registerStepImageReference(referencedStepFiles, imageUrl);
+    }
+
+    for (const recipe of mediaReferences.recipes) {
+      registerStepImageReference(referencedStepFiles, recipe.image);
+    }
+
+    for (const imageUrl of mediaReferences.galleryImageUrls) {
+      registerStepImageReference(referencedStepFiles, imageUrl);
+    }
+
+    for (const thumbnailUrl of mediaReferences.videoThumbnailUrls) {
+      registerStepImageReference(referencedStepFiles, thumbnailUrl);
     }
 
     for (const dir of recipeDirs) {

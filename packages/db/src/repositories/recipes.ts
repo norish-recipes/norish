@@ -2426,24 +2426,29 @@ export async function replaceRecipeVideos(
 
 /**
  * List all media references stored in the database (recipe cover images,
- * gallery images, and videos). Used by startup media cleanup to detect
- * orphaned files on disk.
+ * gallery images, videos, video thumbnails, and step images). Used by
+ * startup media cleanup to detect orphaned files on disk.
  */
 export async function listAllRecipeMediaReferences(): Promise<{
   recipes: { id: string; image: string | null }[];
   galleryImageUrls: string[];
   videoUrls: string[];
+  videoThumbnailUrls: string[];
+  stepImageUrls: string[];
 }> {
-  const [allRecipes, galleryImages, videos] = await Promise.all([
+  const [allRecipes, galleryImages, videos, stepImagesRows] = await Promise.all([
     db.select({ id: recipes.id, image: recipes.image }).from(recipes),
     db.select({ image: recipeImages.image }).from(recipeImages),
-    db.select({ video: recipeVideos.video }).from(recipeVideos),
+    db.select({ video: recipeVideos.video, thumbnail: recipeVideos.thumbnail }).from(recipeVideos),
+    db.select({ image: stepImages.image }).from(stepImages),
   ]);
 
   return {
     recipes: allRecipes,
     galleryImageUrls: galleryImages.map((row) => row.image),
     videoUrls: videos.map((row) => row.video),
+    videoThumbnailUrls: videos.flatMap((row) => (row.thumbnail ? [row.thumbnail] : [])),
+    stepImageUrls: stepImagesRows.map((row) => row.image),
   };
 }
 
