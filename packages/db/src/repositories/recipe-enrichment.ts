@@ -267,7 +267,7 @@ export async function replaceRecipePrimaryImageWithGenerated(
     await tx
       .update(recipes)
       .set({
-        image: placement.keepScalar ? recipe.image : null,
+        image: placement.keepScalar ? (recipe.image?.trim() ?? null) : null,
         updatedAt: new Date(),
         version: sql`${recipes.version} + 1`,
       })

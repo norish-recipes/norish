@@ -20,15 +20,17 @@ const ROOT_RECIPE_MEDIA_URL_PATTERN = /^\/recipes\/([a-f0-9-]{36})\/([^/]+)$/i;
 const STEP_IMAGE_URL_PATTERN = /^\/recipes\/([a-f0-9-]{36})\/steps\/([^/]+)$/i;
 
 function normalizeMediaUrl(mediaUrl: string): string {
-  if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
+  const value = mediaUrl.trim();
+
+  if (value.startsWith("http://") || value.startsWith("https://")) {
     try {
-      return new URL(mediaUrl).pathname;
+      return new URL(value).pathname;
     } catch {
-      return mediaUrl;
+      return value;
     }
   }
 
-  return mediaUrl;
+  return value;
 }
 
 function getReferenceSet(references: Map<string, Set<string>>, recipeId: string): Set<string> {
