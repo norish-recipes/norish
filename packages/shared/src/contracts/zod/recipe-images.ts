@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { recipeImages } from "@norish/db-schema/schema";
 
-import { MAX_RECIPE_IMAGES } from "../../lib/recipe-media";
+import { countSourceImages, MAX_RECIPE_IMAGES } from "../../lib/recipe-media";
 
 export const RecipeImageSelectSchema = createSelectSchema(recipeImages);
 export const RecipeImageInsertSchema = createInsertSchema(recipeImages).omit({
@@ -56,7 +56,7 @@ export function refineRecipeGallery(
   images: readonly { generated?: boolean }[],
   ctx: z.RefinementCtx
 ): void {
-  const sourceImages = images.filter((image) => image.generated !== true).length;
+  const sourceImages = countSourceImages(images);
   const generatedImages = images.length - sourceImages;
 
   if (sourceImages > MAX_RECIPE_IMAGES) {
