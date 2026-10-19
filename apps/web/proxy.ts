@@ -54,6 +54,6 @@ function getPublicOrigin(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons/|brand/|login|signup|auth-error|~offline|serwist/|manifest\\.webmanifest|sw\\.js|logo\\.svg|logo-small\\.svg|404\\.jpg|nora\\.jpg|robots|sounds/).*)",
+    "/((?!api/auth|api/trpc|api/v1|api/mcp|trpc|_next|icons|ingredient-icons/|brand/|login|signup|auth-error|~offline|serwist/|manifest\\.webmanifest|sw\\.js|logo\\.svg|logo-small\\.svg|404\\.jpg|nora\\.jpg|robots|sounds/).*)",
   ],
 };

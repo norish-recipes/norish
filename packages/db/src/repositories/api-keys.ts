@@ -58,10 +58,16 @@ export async function createApiKey(
   };
 }
 
-/**
- * Verify an API key and return the user ID if valid
- */
-export async function verifyApiKey(key: string): Promise<string | null> {
+export type ApiKeyVerification =
+  | { status: "valid"; userId: string }
+  | { status: "rate_limited"; retryAfterSeconds: number }
+  | { status: "invalid" };
+
+export function isApiKeyAuthServiceConfigured(): boolean {
+  return apiKeyAuthService !== null;
+}
+
+export async function verifyApiKeyForRequest(key: string): Promise<ApiKeyVerification> {
   try {
     const authService = requireApiKeyAuthService();
     const result = await authService.verifyApiKey({
@@ -69,13 +75,28 @@ export async function verifyApiKey(key: string): Promise<string | null> {
     });
 
     if (result.valid && result.key) {
-      return result.key.referenceId;
+      return { status: "valid", userId: result.key.referenceId };
     }
 
-    return null;
+    if (result.error?.code === "RATE_LIMITED") {
+      const retryAfterMs = result.error.details?.tryAgainIn ?? 60_000;
+
+      return {
+        status: "rate_limited",
+        retryAfterSeconds: Math.max(1, Math.ceil(retryAfterMs / 1000)),
+      };
+    }
+
+    return { status: "invalid" };
   } catch {
-    return null;
+    return { status: "invalid" };
   }
+}
+
+export async function verifyApiKey(key: string): Promise<string | null> {
+  const result = await verifyApiKeyForRequest(key);
+
+  return result.status === "valid" ? result.userId : null;
 }
 
 /**

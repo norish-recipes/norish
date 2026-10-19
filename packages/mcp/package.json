@@ -1,0 +1,37 @@
+{
+  "name": "@norish/mcp",
+  "version": "0.25.1-beta",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "pnpm exec tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules dist",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "catalog:",
+    "@norish/auth": "workspace:*",
+    "@norish/config": "workspace:*",
+    "@norish/db": "workspace:*",
+    "@norish/queue": "workspace:*",
+    "@norish/shared": "workspace:*",
+    "@norish/shared-server": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "vitest": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

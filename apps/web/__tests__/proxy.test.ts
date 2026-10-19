@@ -46,6 +46,13 @@ describe("proxy share access", () => {
     expect(config.matcher[0]).toContain("serwist/");
   });
 
+  it("leaves the MCP endpoint out of the proxy, so an anonymous MCP POST is not redirected", () => {
+    const proxied = new RegExp("^" + config.matcher[0] + "$");
+
+    expect(proxied.test("/api/mcp")).toBe(false);
+    expect(proxied.test("/api/mcp/")).toBe(false);
+  });
+
   it("leaves the brand icons and the N mark out of the proxy, so installs fetch them signed out", () => {
     const proxied = new RegExp(`^${config.matcher[0]}$`);
 

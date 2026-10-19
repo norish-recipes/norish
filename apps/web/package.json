@@ -39,6 +39,7 @@
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
     "@norish/i18n": "workspace:*",
+    "@norish/mcp": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
     "@norish/shared-react": "workspace:*",

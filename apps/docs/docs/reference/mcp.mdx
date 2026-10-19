@@ -1,0 +1,130 @@
+---
+sidebar_position: 2
+title: MCP server
+description: Connect an external AI agent to Norish with the Model Context Protocol.
+---
+
+# MCP server
+
+Norish has an MCP server at `/api/mcp`. An external AI agent can search recipes, read a
+recipe, create, change, or delete a recipe, list groceries, and add a meal to a plan.
+
+The server speaks Streamable HTTP and returns JSON. It uses one API key for each
+caller. Every tool runs as the user who holds the key and uses the same permission checks
+as the app.
+
+## Create an API key
+
+1. Open **Settings => User => API keys**.
+2. Enter a name for the key.
+3. Select **Create key**.
+4. Copy the key. Norish shows it one time only.
+
+The key has the permissions of your user. If you are a server admin, the key can read and
+change every recipe that a server admin can read and change. Keep the key secret. Revoke a
+key in the same view when you do not need it.
+
+## Connect a client
+
+Point the client at the MCP endpoint and send the key in the `x-api-key` header:
+
+```json
+{
+  "mcpServers": {
+    "norish": {
+      "type": "http",
+      "url": "https://norish.example.com/api/mcp",
+      "headers": {
+        "x-api-key": "<your-api-key>"
+      }
+    }
+  }
+}
+```
+
+The client must support Streamable HTTP. Use the `Authorization: Bearer <key>` header when
+the client cannot send an extra header:
+
+```json
+{
+  "mcpServers": {
+    "norish": {
+      "type": "http",
+      "url": "https://norish.example.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-api-key>"
+      }
+    }
+  }
+}
+```
+
+Replace `https://norish.example.com` with the URL of your server. When Norish
+runs under a base path, add that path before `/api/mcp`.
+
+The endpoint accepts `POST` only. It does not keep a session between requests, so every
+request must carry the key.
+
+## Tools
+
+| Tool             | Input                                                          | Result                                                |
+| ---------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
+| `search_recipes` | Optional search value, tags, categories, filters, and a cursor | Recipe results, the total number, and the next cursor |
+| `get_recipe`     | Recipe id                                                      | The full recipe with ingredients and steps            |
+| `create_recipe`  | Recipe fields, ingredient lines, steps, tags, and categories   | The new recipe id                                     |
+| `update_recipe`  | Recipe id, the `version`, and the fields to change             | `{ "success": true }`                                 |
+| `delete_recipe`  | Recipe id and the `version`                                    | `{ "success": true }`                                 |
+| `list_groceries` | Whether to include done items                                  | Groceries and recurring groceries for the household   |
+| `plan_meal`      | Recipe id, date (`YYYY-MM-DD`), and meal slot                  | The planned item id                                   |
+
+The meal slots are `Breakfast`, `Lunch`, `Dinner`, and `Snack`. The MCP tools do not accept recipe images. Add images in the app.
+
+`update_recipe` and `delete_recipe` use the recipe `version` for optimistic concurrency. When
+the `version` is stale, the tool returns an error and does not write. Read the recipe again,
+then retry with the new `version`.
+
+## Permission matrix
+
+**Settings => Admin => [Permissions](../configuration/admin-settings.md#permissions)** sets
+the recipe policy for the whole server: `view`, `edit`, and `delete`, each set to
+`everyone`, `household`, or `owner`. The MCP server uses that policy without a change.
+
+| Tool             | Permission check           | Owner                       | Household member                                   | Other user                          | No view access      |
+| ---------------- | -------------------------- | --------------------------- | -------------------------------------------------- | ----------------------------------- | ------------------- |
+| `search_recipes` | View policy                | Yes                         | Yes when `view` is `household` or `everyone`       | Yes when `view` is `everyone`       | No                  |
+| `get_recipe`     | View policy                | Allowed                     | Allowed when `view` is `household` or `everyone`   | Allowed when `view` is `everyone`   | `Recipe not found.` |
+| `create_recipe`  | Authenticated user         | Allowed                     | Allowed                                            | Allowed                             | Not applicable      |
+| `update_recipe`  | View, then edit policy     | Allowed                     | Allowed when `edit` is `household` or `everyone`   | Allowed when `edit` is `everyone`   | `Recipe not found.` |
+| `delete_recipe`  | View, then delete policy   | Allowed                     | Allowed when `delete` is `household` or `everyone` | Allowed when `delete` is `everyone` | `Recipe not found.` |
+| `list_groceries` | Household scope            | Own and household groceries | Own and household groceries                        | Own and household groceries         | Not applicable      |
+| `plan_meal`      | View policy, then the plan | Allowed                     | Allowed when `view` is `household` or `everyone`   | Allowed when `view` is `everyone`   | `Recipe not found.` |
+
+A user who can view a recipe but cannot edit it can still plan it. Planning writes to the
+caller's meal plan, so it does not need edit or delete rights on the recipe.
+
+A recipe that the caller cannot view returns `Recipe not found.` from every tool that takes a
+recipe id. `search_recipes` does not list it. The response does not show whether the recipe
+exists.
+
+The tool set has no admin tools, no server-configuration tools, and no user-management
+tools.
+
+## Limits and errors
+
+| Limit                    | Value                                                 |
+| ------------------------ | ----------------------------------------------------- |
+| Requests for one user    | 120 each minute                                       |
+| Requests for one API key | 500 each hour, through the Better Auth API key plugin |
+| Request body             | 256 KiB                                               |
+
+| Status | Meaning                                                         |
+| ------ | --------------------------------------------------------------- |
+| `401`  | The key is missing, invalid, disabled, or expired               |
+| `405`  | The request method is not `POST`                                |
+| `413`  | The request body is too large                                   |
+| `429`  | Too many requests from the user. Read the `Retry-After` header. |
+
+A tool that fails returns an MCP tool error with a short message. Norish does not return
+stack traces, SQL, or recipe details in an error.
+
+The server does not fetch a URL from tool input. It does not send the API key to a log.

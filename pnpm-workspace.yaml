@@ -14,6 +14,7 @@ catalog:
   "@heroicons/react": 2.2.0
   "@heroui/react": 3.2.4
   "@heroui/styles": 3.2.4
+  "@modelcontextprotocol/sdk": ^1.32.1
   "@tailwindcss/postcss": ^4.3.3
   "@tanstack/react-query": ^5.101.4
   "@testcontainers/postgresql": ^12.1.0
@@ -71,4 +72,3 @@ onlyBuiltDependencies:
   - ffmpeg-static
   - sharp
   - unrs-resolver
-
