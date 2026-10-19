@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 
-import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   createPlannedItem,
@@ -11,6 +10,7 @@ import {
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { PlannedItemDeleteInputSchema } from "@norish/shared/contracts/zod";
+import { buildPlannedItemPayload } from "@norish/shared/lib/planned-items";
 
 import type { CreateItemInput, PlannedRecipeListItem } from "./planned-items-openapi-types";
 import { publishCalendarItemEvent } from "./publish";
@@ -24,41 +24,6 @@ export type CalendarProcedureContext = {
 type PlannedItemWithRecipeRow = Awaited<
   ReturnType<typeof listPlannedItemsByUserAndDateRange>
 >[number];
-
-export function buildPlannedItemPayload(
-  item: Pick<
-    PlannedItemWithRecipePayload,
-    | "id"
-    | "date"
-    | "slot"
-    | "sortOrder"
-    | "itemType"
-    | "recipeId"
-    | "title"
-    | "userId"
-    | "version"
-    | "recipeName"
-    | "recipeImage"
-    | "servings"
-    | "calories"
-  >
-): PlannedItemWithRecipePayload {
-  return {
-    id: item.id,
-    date: item.date,
-    slot: item.slot,
-    sortOrder: item.sortOrder,
-    itemType: item.itemType,
-    recipeId: item.recipeId,
-    title: item.title,
-    userId: item.userId,
-    version: item.version,
-    recipeName: item.recipeName,
-    recipeImage: item.recipeImage,
-    servings: item.servings,
-    calories: item.calories,
-  };
-}
 
 export function toPlannedRecipeListItem(
   item: PlannedItemWithRecipeRow

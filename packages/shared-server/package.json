@@ -45,6 +45,7 @@
     "./realtime/archive": "./src/realtime/archive.ts",
     "./realtime/caldav": "./src/realtime/caldav.ts",
     "./realtime/calendar": "./src/realtime/calendar.ts",
+    "./realtime/calendar-events": "./src/realtime/calendar-events.ts",
     "./realtime/channel": "./src/realtime/channel.ts",
     "./realtime/connection": "./src/realtime/connection.ts",
     "./realtime/cookbooks": "./src/realtime/cookbooks.ts",

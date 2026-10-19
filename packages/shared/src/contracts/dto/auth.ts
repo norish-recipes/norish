@@ -38,6 +38,13 @@ export type ApiKeyVerifyResult = {
   key?: {
     referenceId: string;
   } | null;
+  error?: {
+    code?: string;
+    message?: string;
+    details?: {
+      tryAgainIn?: number;
+    } | null;
+  } | null;
 };
 
 export type ApiKeyAuthService = {
