@@ -738,12 +738,12 @@
             >ADR-0025 &mdash; A Generated Image takes the recipe's primary slot</a
           >
           <p>
-            <b>Proposed.</b> A Generated Image is always order 0, and writing one deletes the row
-            and file that held that slot; a recipe holds at most one. Eligibility is the
+            <b>Proposed; the destructive write is superseded by ADR-0040.</b> A Generated Image is
+            always order 0, and a recipe holds at most one. Eligibility is the
             counterweight &mdash; automatic runs and default sweeps skip any recipe that already has
             an image, so only a manual action or an explicit overwrite sweep can reach stored media.
-            Rejects demoting instead of deleting, sparing supplied photographs, and a confirmation
-            on the manual action.
+            It rejected demoting instead of deleting, sparing supplied photographs, and a
+            confirmation on the manual action; ADR-0040 reverses the first two.
           </p>
         </li>
         <li>
@@ -939,6 +939,20 @@
             form) and a list of parents that never lend their numbers. A correction belongs to a
             household, and a recipe's worked-out nutrition is computed on read for the reader's
             household.
+          </p>
+        </li>
+        <li>
+          <a href="recipes/0040-a-generated-image-keeps-the-source-photo.md"
+            >ADR-0040 &mdash; A Generated Image keeps the source photo</a
+          >
+          <p>
+            <b>Accepted; supersedes the destructive write of ADR-0025.</b> A Generated Image takes
+            order 0 and every Source Image (a row with <code>generated = false</code>, or a
+            deprecated <code>recipes.image</code> value) keeps its row, its file and its relative
+            order behind it. A previous Generated Image is still replaced. The upload cap counts
+            Source Images only, so the AI picture does not consume a person's ten slots. Rejects
+            keeping the deletion, a second image store, an explicit primary flag, and refusing
+            generation on a full gallery.
           </p>
         </li>
       </ul>

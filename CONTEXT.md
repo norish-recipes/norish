@@ -95,8 +95,14 @@ The Recipe Enrichment kind that draws a recipe a picture of its dish. It is the 
 _Avoid_: Auto Image (names the automatic path only), Image Inference (nothing is inferred; the picture is invented)
 
 **Generated Image**:
-A picture of a dish that AI drew rather than a camera captured, stored in the recipe's gallery like any other image and recorded as generated. A recipe holds at most one, always as its primary image, and producing a new one destroys whatever held that slot before (ADR-0025). The marking is for the record and never for the reader — no surface distinguishes it from a photograph — but it is stored content rather than derivation, so unlike the Dish Colour it travels in a Recipe Archive with its marking intact and a receiving instance is told what it received.
+An image of a dish from AI. It is in the recipe gallery and its `generated` value is true. A recipe has one at most. The new image is first. A person can put a different image first (ADR-0025, ADR-0040). A Recipe Archive has the value.
 _Avoid_: AI Photo (it is a photograph of nothing), Placeholder Image (it is the recipe's real primary image, not a stand-in for one)
+
+**Source Image**:
+A recipe image from a person or a source, with `generated = false`. A Generated Image write keeps it in the gallery. It does not remove its file (ADR-0040). The `recipes.image` value is a Source Image too. The write can put it in the gallery. If the gallery is full, the value is in the column.
+
+**Thumbnail**:
+The image at the front of the recipe gallery. It is the first gallery image by position. To select a thumbnail, move the image to the front. The gallery has a new position for each image (ADR-0040).
 
 **Hidden Item**:
 Something a reader has chosen not to be shown: Recipe Provenance, Nutrition Information, a recipe's notes, its rating, favourites, the cookbooks it is in, the measurement conversion control, recipe timers, or Ingredient Icons. Hiding belongs to that reader alone and is a Device Preference — a cramped phone can hide what a desktop keeps. It suppresses the item everywhere it would appear for them, so hiding the rating takes the recipe page's stars, the Library chip and the rating filter together, while the items that exist only on the recipe page simply make it slimmer. It settles nothing about the recipe: what is stored, what may be edited and what Recipe Enrichment produces are all unchanged, and a recipe read by someone signed out shows everything. An origin flag beside a recipe's title is chrome rather than Recipe Provenance, so it stays when Recipe Provenance is hidden.
