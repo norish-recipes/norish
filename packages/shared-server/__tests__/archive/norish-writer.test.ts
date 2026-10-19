@@ -271,6 +271,52 @@ describe("norish archive writer", () => {
     ]);
   });
 
+  it("falls back to the gallery primary when a local scalar file is missing", async () => {
+    const { Readable } = await import("node:stream");
+    const recipe = buildFullRecipe({
+      image: "/recipes/11111111-1111-4111-8111-111111111111/missing-scalar.jpg",
+      images: [
+        {
+          id: "88888888-8888-4888-8888-888888888884",
+          image: "/recipes/11111111-1111-4111-8111-111111111111/present-gallery.jpg",
+          order: 0,
+          version: 1,
+        },
+      ],
+    });
+
+    const { collectRecipeMediaRefs } = await import("@norish/shared-server/archive/norish-writer");
+    const galleryRef = collectRecipeMediaRefs(recipe).find(
+      (ref) => ref.archivePath === "images/present-gallery.jpg"
+    );
+
+    if (!galleryRef) throw new Error("The gallery ref was not collected");
+
+    const zip = await writeArchive({
+      records: [
+        {
+          recipe,
+          media: [
+            {
+              ...galleryRef,
+              source: () => Readable.from(Buffer.from("gallery-bytes")),
+            },
+          ],
+        },
+      ],
+      exporter,
+      exportedAt,
+    });
+
+    const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
+    const galleryFile = zip.file(`${recipe.id}/images/present-gallery.jpg`);
+
+    expect(recipeJson.image).toBe("images/present-gallery.jpg");
+    expect(recipeJson.images).toEqual([{ image: "images/present-gallery.jpg", order: 0 }]);
+    expect(galleryFile).toBeTruthy();
+    expect(await galleryFile!.async("string")).toBe("gallery-bytes");
+  });
+
   it("keeps an external primary URL unchanged", async () => {
     const recipe = buildFullRecipe({
       image: "https://example.com/external-hero.jpg",

@@ -199,7 +199,12 @@ function buildArchiveRecipe(record: NorishArchiveRecord): NorishArchiveRecipe {
     return archivePathByWebPath.get(value) ?? null;
   };
   const keptScalar = keptScalarImage(recipe);
-  const scalarForImage = keptScalar ?? primaryRecipeImage(recipe);
+  const scalarForImage =
+    keptScalar && EXTERNAL_MEDIA_URL.test(keptScalar)
+      ? keptScalar
+      : keptScalar && archivePathByWebPath.has(keptScalar)
+        ? keptScalar
+        : primaryRecipeImage(recipe);
 
   return {
     name: recipe.name,
