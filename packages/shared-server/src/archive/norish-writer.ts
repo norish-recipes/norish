@@ -3,7 +3,11 @@ import type { Archiver } from "archiver";
 import archiver from "archiver";
 
 import { FullRecipeDTO } from "@norish/shared/contracts";
-import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
+import {
+  countSourceImages,
+  MAX_RECIPE_IMAGES,
+  primaryRecipeImage,
+} from "@norish/shared/lib/recipe-media";
 
 import {
   EXTERNAL_MEDIA_URL,
@@ -98,6 +102,14 @@ function localMediaBasename(
  * under `videos/`. The export's load step uses this to find files on disk;
  * the writer uses it to rewrite references.
  */
+function keptScalarImage(recipe: FullRecipeDTO): string | null {
+  const scalar = (recipe.image ?? "").trim();
+
+  if (scalar === "" || recipe.images.some((image) => image.image === scalar)) return null;
+
+  return countSourceImages(recipe.images) >= MAX_RECIPE_IMAGES ? scalar : null;
+}
+
 export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMediaRef[] {
   const refs: NorishArchiveMediaRef[] = [];
   const seen = new Set<string>();
@@ -108,13 +120,15 @@ export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMedi
     refs.push({ webPath, archivePath });
   };
 
-  // The hero is the resolved primary, not the deprecated scalar: new rows
-  // no longer carry the scalar at all, and a receiving instance on an older
-  // release reads the hero for its dashboard thumbnail.
   const hero = primaryRecipeImage(recipe);
   const heroBasename = localMediaBasename(hero, recipe.id);
 
   add(hero, heroBasename && `${NORISH_ARCHIVE_MEDIA_DIRS.images}/${heroBasename}`);
+
+  const keptScalar = keptScalarImage(recipe);
+  const scalarBasename = localMediaBasename(keptScalar, recipe.id);
+
+  add(keptScalar, scalarBasename && `${NORISH_ARCHIVE_MEDIA_DIRS.images}/${scalarBasename}`);
 
   for (const galleryImage of recipe.images) {
     const basename = localMediaBasename(galleryImage.image, recipe.id);
@@ -174,6 +188,9 @@ function buildArchiveRecipe(record: NorishArchiveRecord): NorishArchiveRecipe {
 
     return archivePathByWebPath.get(value) ?? null;
   };
+  const keptScalar = keptScalarImage(recipe);
+  const scalarForImage =
+    keptScalar && archivePathByWebPath.has(keptScalar) ? keptScalar : primaryRecipeImage(recipe);
 
   return {
     name: recipe.name,
@@ -221,7 +238,7 @@ function buildArchiveRecipe(record: NorishArchiveRecord): NorishArchiveRecipe {
         order: stepIngredient.order,
       })),
     })),
-    image: rewriteMedia(primaryRecipeImage(recipe)),
+    image: rewriteMedia(scalarForImage),
     images: recipe.images.flatMap((galleryImage) => {
       const image = rewriteMedia(galleryImage.image);
 

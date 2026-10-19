@@ -346,11 +346,11 @@ describe("the write side retires the scalar", () => {
       name: "Full Gallery With Scalar",
       image: scalar,
       images: [
+        { image: `/recipes/${recipeId}/drawn.jpg`, order: 0, generated: true },
         ...Array.from({ length: 10 }, (_, index) => ({
           image: `/recipes/${recipeId}/source-${index}.jpg`,
-          order: index,
+          order: index + 1,
         })),
-        { image: `/recipes/${recipeId}/drawn.jpg`, order: 10, generated: true },
       ],
     });
 

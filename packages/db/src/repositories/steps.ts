@@ -11,6 +11,16 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
 const StepArraySchema = z.array(StepSelectBaseSchema);
 
+export async function isStepImageUrlReferenced(imageUrl: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: stepImages.id })
+    .from(stepImages)
+    .where(eq(stepImages.image, imageUrl))
+    .limit(1);
+
+  return Boolean(row);
+}
+
 export type StepInsertWithImages = StepInsertDto & {
   images?: { image: string; order: number }[];
   stepIngredients?: StepIngredientInputDto[];

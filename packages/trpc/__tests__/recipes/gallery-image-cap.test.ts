@@ -16,21 +16,29 @@ const mocks = vi.hoisted(() => ({
   saveImageBytes: vi.fn(async () => "/recipes/recipe-id/uploaded.jpg"),
   deleteImageByUrl: vi.fn(async () => undefined),
   isImageUrlReferenced: vi.fn(async () => false),
+  isStepImageUrlReferenced: vi.fn(async () => false),
+  getRecipeImageById: vi.fn(),
+  deleteRecipeImageById: vi.fn(),
+  deleteStepImageByUrl: vi.fn(async () => undefined),
   refreshDishColorForRecipe: vi.fn(async () => undefined),
 }));
 
 vi.mock("@norish/db/repositories/recipes", () => ({
   addGalleryImageWithinCap: mocks.addGalleryImageWithinCap,
-  deleteRecipeImageById: vi.fn(),
-  getRecipeImageById: vi.fn(),
+  deleteRecipeImageById: mocks.deleteRecipeImageById,
+  getRecipeImageById: mocks.getRecipeImageById,
   isImageUrlReferenced: mocks.isImageUrlReferenced,
+}));
+
+vi.mock("@norish/db/repositories/steps", () => ({
+  isStepImageUrlReferenced: mocks.isStepImageUrlReferenced,
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({
   saveImageBytes: mocks.saveImageBytes,
   deleteImageByUrl: mocks.deleteImageByUrl,
   saveStepImageBytes: vi.fn(),
-  deleteStepImageByUrl: vi.fn(),
+  deleteStepImageByUrl: mocks.deleteStepImageByUrl,
 }));
 
 vi.mock("@norish/shared-server/media/dish-color", () => ({
@@ -71,6 +79,98 @@ function caller() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+const IMAGE_ID = "22222222-2222-4222-8222-222222222222";
+const SHARED_URL = "/recipes/11111111-1111-4111-8111-111111111111/shared.jpg";
+
+describe("gallery image delete", () => {
+  it("deletes the row first and keeps a file another row uses", async () => {
+    mocks.getRecipeImageById.mockResolvedValue({
+      id: IMAGE_ID,
+      recipeId: RECIPE_ID,
+      image: SHARED_URL,
+    });
+    mocks.deleteRecipeImageById.mockResolvedValue({
+      applied: true,
+      stale: false,
+      value: undefined,
+    });
+    mocks.isImageUrlReferenced.mockResolvedValue(true);
+
+    expect(await caller().deleteGalleryImage({ imageId: IMAGE_ID, version: 1 })).toEqual({
+      success: true,
+      stale: false,
+    });
+    expect(mocks.deleteRecipeImageById).toHaveBeenCalledWith(IMAGE_ID, 1);
+    expect(mocks.isImageUrlReferenced).toHaveBeenCalledWith(SHARED_URL);
+    expect(mocks.deleteImageByUrl).not.toHaveBeenCalled();
+  });
+
+  it("returns stale without a reference check or an unlink", async () => {
+    mocks.getRecipeImageById.mockResolvedValue({
+      id: IMAGE_ID,
+      recipeId: RECIPE_ID,
+      image: SHARED_URL,
+    });
+    mocks.deleteRecipeImageById.mockResolvedValue({ applied: false, stale: true });
+
+    expect(await caller().deleteGalleryImage({ imageId: IMAGE_ID, version: 1 })).toEqual({
+      success: true,
+      stale: true,
+    });
+    expect(mocks.isImageUrlReferenced).not.toHaveBeenCalled();
+    expect(mocks.deleteImageByUrl).not.toHaveBeenCalled();
+  });
+
+  it("removes the file when no row uses it", async () => {
+    mocks.getRecipeImageById.mockResolvedValue({
+      id: IMAGE_ID,
+      recipeId: RECIPE_ID,
+      image: SHARED_URL,
+    });
+    mocks.deleteRecipeImageById.mockResolvedValue({
+      applied: true,
+      stale: false,
+      value: undefined,
+    });
+    mocks.isImageUrlReferenced.mockResolvedValue(false);
+
+    expect(await caller().deleteGalleryImage({ imageId: IMAGE_ID, version: 1 })).toEqual({
+      success: true,
+      stale: false,
+    });
+    expect(mocks.deleteImageByUrl).toHaveBeenCalledWith(SHARED_URL);
+  });
+});
+
+describe("legacy image delete by URL", () => {
+  it("keeps a URL that a row still uses", async () => {
+    mocks.isImageUrlReferenced.mockResolvedValue(true);
+
+    expect(await caller().deleteImage({ url: SHARED_URL })).toEqual({ success: true });
+    expect(mocks.deleteImageByUrl).not.toHaveBeenCalled();
+  });
+
+  it("removes a URL that no row uses", async () => {
+    mocks.isImageUrlReferenced.mockResolvedValue(false);
+
+    expect(await caller().deleteImage({ url: SHARED_URL })).toEqual({ success: true });
+    expect(mocks.deleteImageByUrl).toHaveBeenCalledWith(SHARED_URL);
+  });
+});
+
+describe("step image delete by URL", () => {
+  it("keeps a URL that a step row still uses", async () => {
+    mocks.isStepImageUrlReferenced.mockResolvedValue(true);
+
+    expect(
+      await caller().deleteStepImage({
+        url: "/recipes/11111111-1111-4111-8111-111111111111/steps/shared.jpg",
+      })
+    ).toEqual({ success: true });
+    expect(mocks.deleteStepImageByUrl).not.toHaveBeenCalled();
+  });
 });
 
 describe("uploadGalleryImage under the Source Image cap", () => {

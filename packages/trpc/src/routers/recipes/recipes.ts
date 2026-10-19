@@ -46,7 +46,11 @@ import {
 } from "@norish/shared-server/ingredients/recipe-lines";
 import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
+import {
+  refreshDishColorForRecipe,
+  withDishColor,
+  withDishColorForUpdate,
+} from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
@@ -271,6 +275,10 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
         log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
 
         return;
+      }
+
+      if (data.image !== undefined || data.images !== undefined) {
+        await refreshDishColorForRecipe(id);
       }
 
       const updatedRecipe = await getRecipeFull(id);

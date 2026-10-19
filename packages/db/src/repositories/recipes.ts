@@ -2,6 +2,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   and,
   asc,
+  count,
   desc,
   eq,
   ilike,
@@ -39,6 +40,7 @@ import { dbLogger } from "@norish/db/logger";
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
+import { planScalarRetention } from "@norish/shared/lib/recipe-media";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions } from "./ingredients";
@@ -856,25 +858,21 @@ export async function createRecipeWithRefs(
   const payload = parsed.data;
 
   const galleryImages = [...(payload.images ?? [])];
-  const legacyScalar = (payload.image ?? "").trim();
-  const scalarInGallery =
-    legacyScalar !== "" && galleryImages.some((image) => image.image === legacyScalar);
-  const sourceImageCount = galleryImages.filter((image) => image.generated !== true).length;
-  const scalarFits =
-    legacyScalar !== "" && !scalarInGallery && sourceImageCount < MAX_RECIPE_IMAGES;
+  const scalarRetention = planScalarRetention(galleryImages, payload.image, MAX_RECIPE_IMAGES);
 
-  if (scalarFits) {
+  if (scalarRetention.append) {
     const maxOrder = galleryImages.reduce(
       (max, image) => Math.max(max, Number(image.order ?? 0)),
       -1
     );
 
-    galleryImages.push({ image: legacyScalar, order: maxOrder + 1 });
+    galleryImages.push({
+      image: (payload.image ?? "").trim(),
+      order: maxOrder + 1,
+    });
   }
 
-  // A distinct scalar with no free Source Image slot stays in the deprecated
-  // column, so the write never makes a twelfth gallery row (ADR-0040).
-  const keptScalar = legacyScalar !== "" && !scalarFits && !scalarInGallery ? legacyScalar : null;
+  const keptScalar = scalarRetention.kept;
 
   const toInsert = {
     id: recipeId,
@@ -883,8 +881,6 @@ export async function createRecipeWithRefs(
     description: payload.description ? stripHtmlTags(payload.description) : null,
     notes: payload.notes ?? null,
     url: payload.url ?? null,
-    // The deprecated scalar holds a distinct image only when the gallery is
-    // full; otherwise the payload image lands in the gallery below.
     image: keptScalar,
     dishColor: payload.dishColor ?? null,
     servings: payload.servings ?? 1,
@@ -964,9 +960,6 @@ export async function createRecipeWithRefs(
       );
     }
 
-    // The gallery is the source of truth for a recipe's pictures; a legacy
-    // scalar in the payload (foreign archive imports, the public API) was
-    // translated into it above, or kept in the column when the gallery is full.
     if (galleryImages.length > 0) {
       await tx.insert(recipeImages).values(
         galleryImages.map((img) => ({
@@ -1649,22 +1642,12 @@ export async function updateRecipeWithRefs(
       .where(eq(recipes.id, recipeId));
 
     const storedScalar = (stored?.image ?? "").trim();
-    let preservedScalar: string | null = null;
-    let keepStoredScalar = false;
-
-    // A media-touching save must not release a kept scalar. Give it a gallery
-    // row when a Source Image slot is free, or keep the column when the
-    // gallery is full (ADR-0040).
-    if (payload.images !== undefined && payload.image === undefined && storedScalar !== "") {
-      const represented = payload.images.some((image) => image.image === storedScalar);
-
-      if (!represented) {
-        const sourceImageCount = payload.images.filter((image) => image.generated !== true).length;
-
-        if (sourceImageCount < MAX_RECIPE_IMAGES) preservedScalar = storedScalar;
-        else keepStoredScalar = true;
-      }
-    }
+    const scalarRetention =
+      payload.images !== undefined && payload.image === undefined
+        ? planScalarRetention(payload.images, storedScalar, MAX_RECIPE_IMAGES)
+        : { append: false, kept: null };
+    const preservedScalar = scalarRetention.append ? storedScalar : null;
+    const keepStoredScalar = scalarRetention.kept !== null;
 
     // Update recipe base fields
     const updateData: any = {};
@@ -1674,11 +1657,6 @@ export async function updateRecipeWithRefs(
       updateData.description = payload.description ? stripHtmlTags(payload.description) : null;
     if (payload.notes !== undefined) updateData.notes = payload.notes;
     if (payload.url !== undefined) updateData.url = payload.url;
-    // A media-touching update clears the scalar only when the value moves to
-    // a gallery row. A distinct scalar with no free Source Image slot stays in
-    // the column (ADR-0040). An update that says nothing about media leaves
-    // legacy rows alone — stripping their only image is the migration's job,
-    // not a rename's.
     if (payload.image !== undefined || payload.images !== undefined)
       updateData.image = keepStoredScalar ? storedScalar : null;
     if (payload.dishColor !== undefined) updateData.dishColor = payload.dishColor;
@@ -1980,29 +1958,51 @@ export async function addRecipeImages(
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
   if (!images.length) return [];
+  if (images.length > MAX_RECIPE_IMAGES) {
+    throw new Error(`A recipe holds at most ${MAX_RECIPE_IMAGES} Source Images`);
+  }
 
-  const inserted = await db
-    .insert(recipeImages)
-    .values(
-      images.map((img) => ({
-        recipeId,
-        image: img.image,
-        order: String(img.order),
-      }))
-    )
-    .returning({
-      id: recipeImages.id,
-      image: recipeImages.image,
-      order: recipeImages.order,
-      version: recipeImages.version,
-    });
+  return db.transaction(async (tx) => {
+    const [recipe] = await tx
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId))
+      .for("update");
 
-  return inserted.map((row) => ({
-    id: row.id,
-    image: row.image,
-    order: Number(row.order) || 0,
-    version: row.version,
-  }));
+    if (!recipe) throw new Error(`Recipe not found: ${recipeId}`);
+
+    const [counted] = await tx
+      .select({ count: count() })
+      .from(recipeImages)
+      .where(and(eq(recipeImages.recipeId, recipeId), eq(recipeImages.generated, false)));
+
+    if (Number(counted?.count ?? 0) + images.length > MAX_RECIPE_IMAGES) {
+      throw new Error(`A recipe holds at most ${MAX_RECIPE_IMAGES} Source Images`);
+    }
+
+    const inserted = await tx
+      .insert(recipeImages)
+      .values(
+        images.map((img) => ({
+          recipeId,
+          image: img.image,
+          order: String(img.order),
+        }))
+      )
+      .returning({
+        id: recipeImages.id,
+        image: recipeImages.image,
+        order: recipeImages.order,
+        version: recipeImages.version,
+      });
+
+    return inserted.map((row) => ({
+      id: row.id,
+      image: row.image,
+      order: Number(row.order) || 0,
+      version: row.version,
+    }));
+  });
 }
 
 /**
@@ -2119,12 +2119,6 @@ export async function replaceRecipeImages(
   });
 }
 
-/**
- * Whether a stored image URL is still referenced by a gallery row or by the
- * deprecated scalar, on any recipe. Storage is content-addressed, so two
- * uploads can land on the same file; a cleanup must not unlink a file that a
- * row still uses.
- */
 export async function isImageUrlReferenced(imageUrl: string): Promise<boolean> {
   const [gallery] = await db
     .select({ id: recipeImages.id })
@@ -2143,20 +2137,11 @@ export async function isImageUrlReferenced(imageUrl: string): Promise<boolean> {
   return Boolean(scalar);
 }
 
-/** What an upload did to the gallery. */
 export type GalleryImageAddOutcome =
   | { status: "added"; image: { id: string; image: string; order: number; version: number } }
   | { status: "cap-reached" }
   | { status: "recipe-missing" };
 
-/**
- * Add one gallery image under the Source Image cap, atomically (ADR-0040).
- *
- * The recipe row is locked first, so two uploads for one recipe cannot read
- * the same count and both pass the cap. The append order comes from the stored
- * rows under the same lock. A Generated Image is not a Source Image and does
- * not count against the cap.
- */
 export async function addGalleryImageWithinCap(
   recipeId: string,
   image: string,

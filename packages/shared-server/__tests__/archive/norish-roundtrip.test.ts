@@ -221,9 +221,7 @@ describe("norish archive round-trip", () => {
       "videos/thumb-1.jpg": "thumb-bytes",
     });
 
-    // The exact bytes written on export are what the importer re-saves. The
-    // hero is the resolved primary — the first gallery image — so no
-    // separate hero file travels.
+    // The exact bytes written on export are what the importer re-saves.
     expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("gallery-bytes"), MINTED_ID);
     expect(mockSaveStepImageBytes).toHaveBeenCalledWith(Buffer.from("step-bytes"), MINTED_ID);
     expect(mockSaveVideoBytes).toHaveBeenCalledWith(
@@ -249,6 +247,51 @@ describe("norish archive round-trip", () => {
         order: 0,
       },
     ]);
+  });
+
+  it("carries a kept scalar source image through the archive", async () => {
+    const recipeId = "11111111-1111-4111-8111-111111111111";
+    const scalar = `/recipes/${recipeId}/scalar.jpg`;
+    const images = [
+      {
+        id: "88888888-8888-4888-8888-888888888880",
+        image: `/recipes/${recipeId}/drawn.jpg`,
+        order: 0,
+        generated: true,
+        version: 1,
+      },
+      ...Array.from({ length: 10 }, (_, index) => ({
+        id: crypto.randomUUID(),
+        image: `/recipes/${recipeId}/source-${index}.jpg`,
+        order: index + 1,
+        generated: false,
+        version: 1,
+      })),
+    ];
+    const recipe = buildFullRecipe({ image: scalar, images });
+
+    expect(collectRecipeMediaRefs(recipe)).toContainEqual({
+      webPath: scalar,
+      archivePath: "images/scalar.jpg",
+    });
+
+    let saved = 0;
+
+    mockSaveImageBytes.mockImplementation(async () => `/recipes/${MINTED_ID}/saved-${saved++}.jpg`);
+
+    const mediaBytes: Record<string, string> = { "images/scalar.jpg": "scalar-bytes" };
+
+    for (const image of images) {
+      mediaBytes[`images/${image.image.split("/").pop()}`] = image.image;
+    }
+
+    const { entry, parsed } = await roundTrip(recipe, mediaBytes);
+
+    expect(entry.json.image).toBe("images/scalar.jpg");
+    expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("scalar-bytes"), MINTED_ID);
+    expect(parsed.dto.image).toBe(`/recipes/${MINTED_ID}/saved-0.jpg`);
+    expect(parsed.dto.images).toHaveLength(11);
+    expect(parsed.dto.images?.[0]?.generated).toBe(true);
   });
 
   it("round-trips a recipe with no media at all", async () => {

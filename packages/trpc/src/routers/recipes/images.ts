@@ -7,8 +7,10 @@ import {
   getRecipeImageById,
   isImageUrlReferenced,
 } from "@norish/db/repositories/recipes";
+import { isStepImageUrlReferenced } from "@norish/db/repositories/steps";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-color";
+import { withRecipeMediaLock } from "@norish/shared-server/media/media-lock";
 import {
   deleteImageByUrl,
   deleteStepImageByUrl,
@@ -108,7 +110,13 @@ const deleteImage = authedProcedure
     }
 
     try {
-      await deleteImageByUrl(input.url);
+      const recipeId = recipeIdFromMediaUrl(input.url);
+      const remove = async () => {
+        await removeIfUnreferenced(input.url, { userId: ctx.user.id });
+      };
+
+      if (recipeId) await withRecipeMediaLock(recipeId, remove);
+      else await remove();
 
       log.info({ userId: ctx.user.id, url: input.url }, "Recipe image deleted");
 
@@ -144,7 +152,9 @@ const uploadStepImage = authedProcedure
     }
 
     try {
-      const url = await saveStepImageBytes(validation.bytes, recipeId);
+      const url = await withRecipeMediaLock(recipeId, () =>
+        saveStepImageBytes(validation.bytes, recipeId)
+      );
 
       log.info({ userId: ctx.user.id, recipeId, url }, "Step image uploaded");
 
@@ -164,7 +174,13 @@ const deleteStepImage = authedProcedure
     log.debug({ userId: ctx.user.id, url: input.url }, "Deleting step image");
 
     try {
-      await deleteStepImageByUrl(input.url);
+      const recipeId = recipeIdFromMediaUrl(input.url);
+      const remove = async () => {
+        await removeStepFileIfUnreferenced(input.url, { userId: ctx.user.id });
+      };
+
+      if (recipeId) await withRecipeMediaLock(recipeId, remove);
+      else await remove();
 
       log.info({ userId: ctx.user.id, url: input.url }, "Step image deleted");
 
@@ -183,6 +199,29 @@ const deleteStepImage = authedProcedure
  * names it. Storage is content-addressed, so the URL can belong to a file that
  * another upload already stored.
  */
+const RECIPE_MEDIA_URL_PATTERN = /^\/recipes\/([a-f0-9-]{36})\//i;
+
+function recipeIdFromMediaUrl(url: string): string | null {
+  return url.match(RECIPE_MEDIA_URL_PATTERN)?.[1] ?? null;
+}
+
+async function removeStepFileIfUnreferenced(imageUrl: string, context: Record<string, unknown>) {
+  const referenced = await isStepImageUrlReferenced(imageUrl).catch((error) => {
+    log.warn(
+      { ...context, imageUrl, error },
+      "Could not check step image references; keeping the file"
+    );
+
+    return true;
+  });
+
+  if (referenced) return;
+
+  await deleteStepImageByUrl(imageUrl).catch((error) => {
+    log.warn({ ...context, imageUrl, error }, "Could not remove an unreferenced step image file");
+  });
+}
+
 async function removeIfUnreferenced(imageUrl: string, context: Record<string, unknown>) {
   const referenced = await isImageUrlReferenced(imageUrl).catch((error) => {
     log.warn({ ...context, imageUrl, error }, "Could not check image references; keeping the file");
@@ -225,62 +264,64 @@ const uploadGalleryImage = authedProcedure
     let savedUrl: string | null = null;
 
     try {
-      // Gallery images go to uploads/recipes/{recipeId}/{hash}.jpg
-      const url = await saveImageBytes(validation.bytes, recipeId);
+      return await withRecipeMediaLock(recipeId, async () => {
+        const url = await saveImageBytes(validation.bytes, recipeId);
 
-      savedUrl = url;
+        savedUrl = url;
 
-      // The order is optional; the repository appends under the same lock that
-      // enforces the Source Image cap.
-      const requestedOrder = orderStr ? parseInt(orderStr, 10) : undefined;
-      const added = await addGalleryImageWithinCap(recipeId, url, requestedOrder);
+        const requestedOrder = orderStr ? parseInt(orderStr, 10) : undefined;
+        const added = await addGalleryImageWithinCap(recipeId, url, requestedOrder);
 
-      if (added.status === "cap-reached") {
-        await removeIfUnreferenced(url, { userId: ctx.user.id, recipeId });
+        if (added.status === "cap-reached") {
+          await removeIfUnreferenced(url, { userId: ctx.user.id, recipeId });
+
+          savedUrl = null;
+
+          return {
+            success: false,
+            error: `Maximum ${MAX_RECIPE_IMAGES} images allowed per recipe`,
+          };
+        }
+
+        if (added.status === "recipe-missing") {
+          // New recipe form: the recipe does not exist yet. The image is linked
+          // when createRecipeWithRefs stores the form.
+          log.info(
+            { userId: ctx.user.id, recipeId, url },
+            "Gallery image uploaded for pending recipe"
+          );
+
+          savedUrl = null;
+
+          return { success: true, url, order: requestedOrder ?? 0 };
+        }
 
         savedUrl = null;
 
-        return {
-          success: false,
-          error: `Maximum ${MAX_RECIPE_IMAGES} images allowed per recipe`,
-        };
-      }
+        // A gallery upload on a stored recipe can change what the page leads
+        // with; the Dish Colour follows the new hero (ADR-0023).
+        await refreshDishColorForRecipe(recipeId);
 
-      if (added.status === "recipe-missing") {
-        // New recipe form: the recipe does not exist yet. The image is linked
-        // when createRecipeWithRefs stores the form.
         log.info(
-          { userId: ctx.user.id, recipeId, url },
-          "Gallery image uploaded for pending recipe"
+          { userId: ctx.user.id, recipeId, url, imageId: added.image.id },
+          "Gallery image uploaded"
         );
 
-        savedUrl = null;
-
-        return { success: true, url, order: requestedOrder ?? 0 };
-      }
-
-      // The row now references the file, so a later failure must not unlink it.
-      savedUrl = null;
-
-      // A gallery upload on a stored recipe can change what the page leads
-      // with; the Dish Colour follows the new hero (ADR-0023).
-      await refreshDishColorForRecipe(recipeId);
-
-      log.info(
-        { userId: ctx.user.id, recipeId, url, imageId: added.image.id },
-        "Gallery image uploaded"
-      );
-
-      return {
-        success: true,
-        url,
-        id: added.image.id,
-        order: added.image.order,
-        version: added.image.version,
-      };
+        return {
+          success: true,
+          url,
+          id: added.image.id,
+          order: added.image.order,
+          version: added.image.version,
+        };
+      });
     } catch (error) {
-      if (savedUrl) {
-        await removeIfUnreferenced(savedUrl, { userId: ctx.user.id, recipeId });
+      const urlToRemove = savedUrl;
+
+      if (urlToRemove) {
+        await withRecipeMediaLock(recipeId, () =>
+          removeIfUnreferenced(urlToRemove, { userId: ctx.user.id, recipeId })
+        );
       }
 
       const message = error instanceof Error ? error.message : "Failed to upload gallery image";
@@ -301,46 +342,37 @@ const deleteGalleryImage = authedProcedure
     log.debug({ userId: ctx.user.id, imageId: input.imageId }, "Deleting gallery image");
 
     try {
-      // Get image record to get the URL
       const imageRecord = await getRecipeImageById(input.imageId);
 
       if (!imageRecord) {
         return { success: false, error: "Image not found" };
       }
 
-      // Delete from filesystem
-      try {
-        await deleteImageByUrl(imageRecord.image);
-      } catch (fsError) {
-        // Log but don't fail - file might already be deleted
-        log.warn(
-          { userId: ctx.user.id, imageId: input.imageId, error: fsError },
-          "Could not delete gallery image file"
-        );
-      }
+      return await withRecipeMediaLock(imageRecord.recipeId, async () => {
+        const result = await deleteRecipeImageById(input.imageId, input.version);
 
-      // Delete from database
-      const result = await deleteRecipeImageById(input.imageId, input.version);
+        if (result.stale) {
+          log.info(
+            { userId: ctx.user.id, imageId: input.imageId, version: input.version },
+            "Ignoring stale gallery image delete"
+          );
 
-      if (result.stale) {
+          return { success: true, stale: true };
+        }
+
+        await removeIfUnreferenced(imageRecord.image, {
+          userId: ctx.user.id,
+          imageId: input.imageId,
+        });
+        await refreshDishColorForRecipe(imageRecord.recipeId);
+
         log.info(
-          { userId: ctx.user.id, imageId: input.imageId, version: input.version },
-          "Ignoring stale gallery image delete"
+          { userId: ctx.user.id, imageId: input.imageId, url: imageRecord.image },
+          "Gallery image deleted"
         );
 
-        return { success: true, stale: true };
-      }
-
-      // Deleting the hero image changes what the page leads with; the Dish
-      // Colour follows what is left (ADR-0023).
-      await refreshDishColorForRecipe(imageRecord.recipeId);
-
-      log.info(
-        { userId: ctx.user.id, imageId: input.imageId, url: imageRecord.image },
-        "Gallery image deleted"
-      );
-
-      return { success: true, stale: false };
+        return { success: true, stale: false };
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to delete gallery image";
 
