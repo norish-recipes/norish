@@ -203,6 +203,7 @@ describe("norish archive writer", () => {
     });
 
     const mediaBytes: Record<string, string> = {
+      "images/hero.jpg": "hero-bytes",
       "images/gallery-1.jpg": "gallery-bytes",
       "steps/step-1.jpg": "step-bytes",
       "videos/video-1.mp4": "video-bytes",
@@ -212,12 +213,15 @@ describe("norish archive writer", () => {
     const { collectRecipeMediaRefs } = await import("@norish/shared-server/archive/norish-writer");
     const refs = collectRecipeMediaRefs(recipe);
 
-    // The hero is the resolved primary — the gallery's first image — so the
-    // legacy scalar's shadowed file is not packed at all.
+    // The scalar is distinct from the gallery, so it travels as a source.
     expect(refs).toEqual([
       {
         webPath: "/recipes/11111111-1111-4111-8111-111111111111/gallery-1.jpg",
         archivePath: "images/gallery-1.jpg",
+      },
+      {
+        webPath: "/recipes/11111111-1111-4111-8111-111111111111/hero.jpg",
+        archivePath: "images/hero.jpg",
       },
       {
         webPath: "/recipes/11111111-1111-4111-8111-111111111111/steps/step-1.jpg",
@@ -256,7 +260,7 @@ describe("norish archive writer", () => {
 
     const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
 
-    expect(recipeJson.image).toBe("images/gallery-1.jpg");
+    expect(recipeJson.image).toBe("images/hero.jpg");
     // The marking travels; a supplied image would carry no field at all.
     expect(recipeJson.images).toEqual([
       { image: "images/gallery-1.jpg", order: 0, generated: true },

@@ -294,6 +294,52 @@ describe("norish archive round-trip", () => {
     expect(parsed.dto.images?.[0]?.generated).toBe(true);
   });
 
+  it("carries a distinct scalar with nine Source Images through the archive", async () => {
+    const recipeId = "11111111-1111-4111-8111-111111111111";
+    const scalar = `/recipes/${recipeId}/scalar-nine.jpg`;
+    const images = [
+      {
+        id: "88888888-8888-4888-8888-888888888881",
+        image: `/recipes/${recipeId}/drawn-nine.jpg`,
+        order: 0,
+        generated: true,
+        version: 1,
+      },
+      ...Array.from({ length: 9 }, (_, index) => ({
+        id: crypto.randomUUID(),
+        image: `/recipes/${recipeId}/nine-source-${index}.jpg`,
+        order: index + 1,
+        generated: false,
+        version: 1,
+      })),
+    ];
+    const recipe = buildFullRecipe({ image: scalar, images });
+
+    expect(collectRecipeMediaRefs(recipe)).toContainEqual({
+      webPath: scalar,
+      archivePath: "images/scalar-nine.jpg",
+    });
+
+    let saved = 0;
+
+    mockSaveImageBytes.mockImplementation(async () => `/recipes/${MINTED_ID}/saved-${saved++}.jpg`);
+
+    const mediaBytes: Record<string, string> = { "images/scalar-nine.jpg": "scalar-nine-bytes" };
+
+    for (const image of images) {
+      mediaBytes[`images/${image.image.split("/").pop()}`] = image.image;
+    }
+
+    const { entry, parsed } = await roundTrip(recipe, mediaBytes);
+
+    expect(entry.json.image).toBe("images/scalar-nine.jpg");
+    expect(mockSaveImageBytes).toHaveBeenCalledTimes(11);
+    expect(parsed.dto.image).toBe(`/recipes/${MINTED_ID}/saved-0.jpg`);
+    expect(parsed.dto.images).toHaveLength(10);
+    expect(parsed.dto.images?.[0]?.generated).toBe(true);
+    expect(FullRecipeInsertSchema.safeParse(parsed.dto).success).toBe(true);
+  });
+
   it("round-trips a recipe with no media at all", async () => {
     const { parsed } = await roundTrip(buildFullRecipe({ image: null, images: [], videos: [] }));
 

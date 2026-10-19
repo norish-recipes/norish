@@ -107,7 +107,7 @@ function keptScalarImage(recipe: FullRecipeDTO): string | null {
 
   if (scalar === "" || recipe.images.some((image) => image.image === scalar)) return null;
 
-  return countSourceImages(recipe.images) >= MAX_RECIPE_IMAGES ? scalar : null;
+  return scalar;
 }
 
 export function collectRecipeMediaRefs(recipe: FullRecipeDTO): NorishArchiveMediaRef[] {
