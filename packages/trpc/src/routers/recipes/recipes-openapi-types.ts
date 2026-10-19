@@ -18,7 +18,7 @@ export const recipeImportPasteInputSchema = z.object({
       [
         "Pasted recipe text.",
         "Supports plain text, JSON-LD recipe objects/arrays/@graph payloads, and YAML recipe mappings/arrays.",
-        `Each recipe is limited to ${MAX_RECIPE_PASTE_CHARS.toLocaleString()} characters.`,
+        `Each recipe is limited to ${MAX_RECIPE_PASTE_CHARS.toLocaleString("en-US")} characters.`,
         "When forcing AI only one recipe will be parsed.",
         'JSON-LD single example: {"@type":"Recipe","name":"Toast","recipeIngredient":["2 slices bread"],"recipeInstructions":["Toast bread"]}',
         'JSON-LD multi example: [{"@type":"Recipe",...},{"@type":"Recipe",...}]',
