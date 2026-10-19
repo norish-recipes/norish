@@ -6,6 +6,7 @@ import { userProcedures } from "@norish/trpc/routers/user/user";
 import type { Context } from "../../src/context";
 
 const mockDb = vi.hoisted(() => ({
+  getApiKeysForUser: vi.fn(),
   getUserById: vi.fn(),
   getUserPreferences: vi.fn(),
   updateUserPreferences: vi.fn(),
@@ -13,7 +14,7 @@ const mockDb = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/db", () => ({
-  getApiKeysForUser: vi.fn(),
+  getApiKeysForUser: mockDb.getApiKeysForUser,
   getUserById: mockDb.getUserById,
   getUserPreferences: mockDb.getUserPreferences,
   updateUserPreferences: mockDb.updateUserPreferences,
@@ -73,8 +74,10 @@ describe("user preference procedures", () => {
     vi.clearAllMocks();
     mockDb.getUserPreferences.mockResolvedValue({
       locale: "en",
+      autoEnrichOnAdd: false,
       phone: { groceryViewMode: "recipe" },
     });
+    mockDb.getApiKeysForUser.mockResolvedValue([]);
     mockDb.getUserById.mockResolvedValue({ id: "user-1", version: 4 });
     mockDb.updateUserPreferences.mockResolvedValue({ stale: false });
     mockDb.setUserDevicePreferences.mockResolvedValue(undefined);
@@ -91,6 +94,24 @@ describe("user preference procedures", () => {
       expect(result).toEqual({ success: true, preferences: { locale: "nl" }, version: 4 });
     });
 
+    it("writes the automatic enrichment default", async () => {
+      const result = await createCaller().updatePreferences({
+        version: 3,
+        preferences: { autoEnrichOnAdd: false },
+      });
+
+      expect(mockDb.updateUserPreferences).toHaveBeenCalledWith(
+        "user-1",
+        { autoEnrichOnAdd: false },
+        3
+      );
+      expect(result).toEqual({
+        success: true,
+        preferences: { autoEnrichOnAdd: false },
+        version: 4,
+      });
+    });
+
     it("answers a stale version with the stored language, never a device block", async () => {
       mockDb.updateUserPreferences.mockResolvedValue({ stale: true });
 
@@ -102,8 +123,20 @@ describe("user preference procedures", () => {
       expect(result).toEqual({
         success: true,
         stale: true,
-        preferences: { locale: "en" },
+        preferences: { locale: "en", autoEnrichOnAdd: false },
         version: 2,
+      });
+    });
+  });
+
+  describe("get", () => {
+    it("exposes the stored automatic enrichment default", async () => {
+      const result = await createCaller().get();
+
+      expect(result.user.preferences).toEqual({
+        locale: "en",
+        autoEnrichOnAdd: false,
+        phone: { groceryViewMode: "recipe" },
       });
     });
   });

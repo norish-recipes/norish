@@ -33,6 +33,7 @@ export const UserPreferencesSchema = z.object({
   locale: z.string().nullable().optional().catch(undefined),
   afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional().catch(undefined),
   measurementSystem: z.enum(MEASUREMENT_SYSTEM_CHOICES).optional().catch(undefined),
+  autoEnrichOnAdd: z.boolean().optional().catch(undefined),
   phone: DevicePreferencesSchema.optional().catch(undefined),
   desktop: DevicePreferencesSchema.optional().catch(undefined),
 });
@@ -64,6 +65,7 @@ export const UpdateUserPreferencesInputSchema = z.object({
     locale: UserPreferencesSchema.shape.locale.unwrap(),
     afterPlanning: UserPreferencesSchema.shape.afterPlanning.unwrap(),
     measurementSystem: UserPreferencesSchema.shape.measurementSystem.unwrap(),
+    autoEnrichOnAdd: UserPreferencesSchema.shape.autoEnrichOnAdd.unwrap(),
   }),
 });
 

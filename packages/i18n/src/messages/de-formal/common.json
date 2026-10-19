@@ -297,5 +297,9 @@
     "title": "Ein KI-Schlüssel funktioniert nicht mehr",
     "description": "Der Anbieter lehnt den API-Schlüssel für {blocks} seit {since} ab. Speichern Sie einen neuen Schlüssel, damit diese KI-Funktionen wieder laufen.",
     "openSettings": "Einstellungen öffnen"
+  },
+  "autoEnrich": {
+    "title": "Enhanced",
+    "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved."
   }
 }

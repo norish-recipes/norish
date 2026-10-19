@@ -297,5 +297,9 @@
     "title": "En AI-nøgle virker ikke længere",
     "description": "Udbyderen har afvist API-nøglen til {blocks} siden {since}. Gem en ny nøgle for at få de AI-funktioner til at virke igen.",
     "openSettings": "Åbn indstillinger"
+  },
+  "autoEnrich": {
+    "title": "Enhanced",
+    "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved."
   }
 }

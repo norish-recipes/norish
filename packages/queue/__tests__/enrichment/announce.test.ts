@@ -94,6 +94,19 @@ describe("announceUsableRecipe", () => {
     );
   });
 
+  it("carries an add's decline through to the listener", async () => {
+    await announceUsableRecipe(
+      { status: "inserted", recipeId: "recipe-1" },
+      { ...context, autoEnrich: false }
+    );
+
+    expect(mocks.publishEnrichment).toHaveBeenCalledWith(
+      "recipeBecameUsable",
+      { recipeId: "recipe-1", ...context, autoEnrich: false },
+      undefined
+    );
+  });
+
   it("stays quiet for an import that resolved to an existing recipe", async () => {
     await announceUsableRecipe({ status: "existing", recipeId: "recipe-1" }, context);
     await announceUsableRecipe(null, context);

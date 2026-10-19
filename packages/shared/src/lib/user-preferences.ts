@@ -40,6 +40,12 @@ export function getMeasurementSystemPreference(
   return getUserPreferences(user).measurementSystem ?? "off";
 }
 
+export function getAutoEnrichOnAddPreference(
+  user: Pick<User, "preferences"> | null | undefined
+): boolean {
+  return getUserPreferences(user).autoEnrichOnAdd ?? true;
+}
+
 /** The conversion a choice asks for, or null when off. */
 export function measurementSystemTarget(
   choice: MeasurementSystemChoice

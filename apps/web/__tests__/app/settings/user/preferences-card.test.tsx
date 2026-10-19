@@ -8,7 +8,7 @@ import PreferencesCard from "@/app/(app)/settings/user/components/preferences-ca
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 
 const mockContext = vi.hoisted(() => ({
-  user: { preferences: {} },
+  user: { preferences: {} as Record<string, unknown> },
   updatePreferences: vi.fn().mockResolvedValue(undefined),
   isUpdatingPreferences: false,
 }));
@@ -100,8 +100,16 @@ vi.mock("@heroui/react", () => ({
     Content: ({ children }: any) => <div>{children}</div>,
   }),
   Switch: Object.assign(
-    ({ isSelected, isDisabled, onChange, onValueChange, children }: any) => (
+    ({
+      isSelected,
+      isDisabled,
+      onChange,
+      onValueChange,
+      children,
+      "aria-label": ariaLabel,
+    }: any) => (
       <button
+        aria-label={ariaLabel}
         aria-pressed={isSelected}
         disabled={isDisabled}
         type="button"
@@ -375,6 +383,29 @@ describe("PreferencesCard", () => {
     fireEvent.change(control(), { target: { value: "metric" } });
 
     expect(mockContext.updatePreferences).toHaveBeenCalledWith({ measurementSystem: "metric" });
+  });
+
+  it("runs the automatic AI work on an add by default and stores turning it off", () => {
+    render(<PreferencesCard />);
+
+    const control = screen.getByRole("button", { name: /autoEnrich\.title/i });
+
+    expect(control).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(control);
+
+    expect(mockContext.updatePreferences).toHaveBeenCalledWith({ autoEnrichOnAdd: false });
+  });
+
+  it("reflects a stored choice to skip automatic AI", () => {
+    mockContext.user = { preferences: { autoEnrichOnAdd: false } };
+
+    render(<PreferencesCard />);
+
+    expect(screen.getByRole("button", { name: /autoEnrich\.title/i })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
   });
 
   it("says behind the title which kind of device its display choices apply to", () => {

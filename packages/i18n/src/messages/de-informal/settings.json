@@ -120,8 +120,8 @@
       "description": "Passe deine Erfahrung an.",
       "deviceKind": {
         "help": "Wie Einstellungen gespeichert werden",
-        "phone": "„{language}“, „{afterPlanning}“ und „{measurements}“ gelten pro Konto. Der Rest pro Geräteart.",
-        "desktop": "„{language}“, „{afterPlanning}“ und „{measurements}“ gelten pro Konto. Der Rest pro Geräteart."
+        "phone": "„{language}“, „{autoEnrich}“, „{afterPlanning}“ und „{measurements}“ gelten pro Konto. Der Rest pro Geräteart.",
+        "desktop": "„{language}“, „{autoEnrich}“, „{afterPlanning}“ und „{measurements}“ gelten pro Konto. Der Rest pro Geräteart."
       },
       "language": {
         "title": "Sprache",
@@ -180,6 +180,10 @@
           "metricWithAI": "Metrisch mit KI",
           "usWithAI": "US mit KI"
         }
+      },
+      "autoEnrich": {
+        "title": "Enhanced",
+        "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved. Turn it off for one recipe in the Add Recipe flow."
       }
     },
     "shareLinks": {

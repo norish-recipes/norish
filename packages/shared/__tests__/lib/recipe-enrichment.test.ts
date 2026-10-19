@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ENHANCED_ENRICHMENT_KINDS,
   ENRICHMENT_KINDS,
   enrichmentWriteMode,
   fillProvenanceGaps,
@@ -27,6 +28,27 @@ describe("ENRICHMENT_KINDS", () => {
       "ingredient-linking",
       "image-generation",
     ]);
+  });
+});
+
+describe("ENHANCED_ENRICHMENT_KINDS", () => {
+  it("names the six kinds Enhanced runs, without allergy detection", () => {
+    expect([...ENHANCED_ENRICHMENT_KINDS]).toEqual([
+      "auto-tagging",
+      "auto-categorization",
+      "nutrition-estimation",
+      "recipe-provenance",
+      "ingredient-linking",
+      "image-generation",
+    ]);
+    expect(ENHANCED_ENRICHMENT_KINDS).not.toContain("allergy-detection");
+    expect(new Set(ENHANCED_ENRICHMENT_KINDS).size).toBe(6);
+  });
+
+  it("is a subset of every enrichment kind", () => {
+    for (const kind of ENHANCED_ENRICHMENT_KINDS) {
+      expect(ENRICHMENT_KINDS).toContain(kind);
+    }
   });
 });
 

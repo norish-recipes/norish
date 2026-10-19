@@ -27,6 +27,12 @@ export const recipeImportPasteInputSchema = z.object({
       ].join(" ")
     ),
   forceAI: z.boolean().optional(),
+  autoEnrich: z
+    .boolean()
+    .optional()
+    .describe(
+      "Run automatic AI enrichment for the new recipes. Defaults to the caller's auto-enrich setting."
+    ),
 });
 
 export const recipeImportPasteOutputSchema = z.object({

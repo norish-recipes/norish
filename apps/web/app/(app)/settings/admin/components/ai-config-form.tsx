@@ -76,6 +76,10 @@ const AUTOMATIC_ENRICHMENT_KEYS = [
   "imageGeneration",
 ] as const satisfies readonly (keyof AutomaticEnrichmentConfig)[];
 
+const OFFERED_AUTOMATIC_ENRICHMENT_KEYS = AUTOMATIC_ENRICHMENT_KEYS.filter(
+  (key) => key !== "allergyDetection"
+);
+
 /** What may run on a new food: its Plain Name, then its icon. */
 const AUTOMATIC_INGREDIENT_KEYS = [
   "plainName",
@@ -274,17 +278,18 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
    * toggled, because the picker rebuilds the whole record from this list.
    */
   const selectedEnrichmentKinds = useMemo(
-    () => AUTOMATIC_ENRICHMENT_KEYS.filter((key) => automaticEnrichment[key]),
+    () => OFFERED_AUTOMATIC_ENRICHMENT_KEYS.filter((key) => automaticEnrichment[key]),
     [automaticEnrichment]
   );
   const handleEnrichmentKindsChange = useCallback((chosen: string[]) => {
     const selected = new Set(chosen);
 
-    setAutomaticEnrichment(
-      Object.fromEntries(
-        AUTOMATIC_ENRICHMENT_KEYS.map((key) => [key, selected.has(key)])
-      ) as AutomaticEnrichmentConfig
-    );
+    setAutomaticEnrichment((current) => ({
+      ...current,
+      ...(Object.fromEntries(
+        OFFERED_AUTOMATIC_ENRICHMENT_KEYS.map((key) => [key, selected.has(key)])
+      ) as Pick<AutomaticEnrichmentConfig, (typeof OFFERED_AUTOMATIC_ENRICHMENT_KEYS)[number]>),
+    }));
   }, []);
 
   // The same picker for new foods; an icon left on while the image provider is
@@ -597,7 +602,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           </Select.Trigger>
           <Select.Popover>
             <ListBox selectionMode="multiple">
-              {AUTOMATIC_ENRICHMENT_KEYS.map((key) => (
+              {OFFERED_AUTOMATIC_ENRICHMENT_KEYS.map((key) => (
                 <ListBox.Item key={key} id={key} textValue={t(`automaticEnrichmentKinds.${key}`)}>
                   <div className="flex flex-col">
                     <span>{t(`automaticEnrichmentKinds.${key}`)}</span>

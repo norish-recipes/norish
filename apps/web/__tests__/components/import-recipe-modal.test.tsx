@@ -8,12 +8,44 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("@/context/recipes-context", () => ({
-  useRecipesContext: () => ({
-    importRecipe: vi.fn(),
-    importRecipeWithAI: vi.fn(),
-  }),
+const recipesMock = vi.hoisted(() => ({
+  importRecipe: vi.fn(),
+  importRecipeWithAI: vi.fn(),
 }));
+
+const userSettingsMock = vi.hoisted(() => ({
+  user: { preferences: {} } as { preferences: Record<string, unknown> } | null,
+  isLoading: false,
+}));
+
+vi.mock("@/context/recipes-context", () => ({
+  useRecipesContext: () => recipesMock,
+}));
+
+vi.mock("@/hooks/user/use-user-query", () => ({
+  useUserSettingsQuery: () => userSettingsMock,
+}));
+
+vi.mock("@/components/shared/auto-enrich-toggle", async () => {
+  const actual = await vi.importActual<typeof import("@/components/shared/auto-enrich-toggle")>(
+    "@/components/shared/auto-enrich-toggle"
+  );
+
+  return {
+    ...actual,
+    default: ({
+      isSelected,
+      onValueChange,
+    }: {
+      isSelected: boolean;
+      onValueChange: (isSelected: boolean) => void;
+    }) => (
+      <button aria-pressed={isSelected} type="button" onClick={() => onValueChange(!isSelected)}>
+        auto-enrich
+      </button>
+    ),
+  };
+});
 
 vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({
@@ -73,6 +105,103 @@ vi.mock("@heroui/react", () => ({
 describe("ImportRecipeModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    userSettingsMock.user = { preferences: {} };
+    userSettingsMock.isLoading = false;
+  });
+
+  it("offers automatic AI on by default and passes the per-add override", async () => {
+    render(<ImportRecipeModal isOpen onOpenChange={vi.fn()} />);
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "https://example.com/recipe" },
+    });
+
+    const toggle = screen.getByRole("button", { name: "auto-enrich" });
+
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(toggle);
+
+    fireEvent.click(screen.getByRole("button", { name: "import" }));
+
+    await waitFor(() => {
+      expect(recipesMock.importRecipe).toHaveBeenCalledWith("https://example.com/recipe", {
+        autoEnrich: false,
+      });
+    });
+  });
+
+  it("starts off and passes off when the profile turned automatic AI off", async () => {
+    userSettingsMock.user = { preferences: { autoEnrichOnAdd: false } };
+
+    render(<ImportRecipeModal isOpen onOpenChange={vi.fn()} />);
+
+    expect(screen.getByRole("button", { name: "auto-enrich" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "https://example.com/recipe" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "import" }));
+
+    await waitFor(() => {
+      expect(recipesMock.importRecipe).toHaveBeenCalledWith("https://example.com/recipe", {
+        autoEnrich: false,
+      });
+    });
+  });
+
+  it("passes an on choice when the profile is resolved on", async () => {
+    userSettingsMock.user = { preferences: { autoEnrichOnAdd: true } };
+
+    render(<ImportRecipeModal isOpen onOpenChange={vi.fn()} />);
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "https://example.com/recipe" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "import" }));
+
+    await waitFor(() => {
+      expect(recipesMock.importRecipe).toHaveBeenCalledWith("https://example.com/recipe", {
+        autoEnrich: true,
+      });
+    });
+  });
+
+  it("passes no choice while the profile is loading", async () => {
+    userSettingsMock.user = { preferences: { autoEnrichOnAdd: false } };
+    userSettingsMock.isLoading = true;
+
+    render(<ImportRecipeModal isOpen onOpenChange={vi.fn()} />);
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "https://example.com/recipe" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "import" }));
+
+    await waitFor(() => {
+      expect(recipesMock.importRecipe).toHaveBeenCalledWith("https://example.com/recipe", {
+        autoEnrich: undefined,
+      });
+    });
+  });
+
+  it("passes no choice when the profile query has no user", async () => {
+    userSettingsMock.user = null;
+
+    render(<ImportRecipeModal isOpen onOpenChange={vi.fn()} />);
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "https://example.com/recipe" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "import" }));
+
+    await waitFor(() => {
+      expect(recipesMock.importRecipe).toHaveBeenCalledWith("https://example.com/recipe", {
+        autoEnrich: undefined,
+      });
+    });
   });
 
   it("renders above desktop menu and overlay stacks", () => {

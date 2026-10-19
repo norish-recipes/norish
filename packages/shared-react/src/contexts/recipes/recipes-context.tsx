@@ -6,6 +6,7 @@ import type {
   FavoritesMutationResult,
   FavoritesQueryResult,
   RatingsSubscriptionCallbacks,
+  RecipeAddOptions,
   RecipeFilters,
   RecipesMutationsResult,
   RecipesQueryResult,
@@ -40,9 +41,9 @@ export type SharedRecipesContextValue = {
   clearFilters: () => void;
   filterKey: string;
   loadMore: () => void;
-  importRecipe: (url: string) => void;
-  importRecipeWithAI: (url: string) => void;
-  createRecipe: (input: FullRecipeInsertDTO) => void;
+  importRecipe: (url: string, options?: RecipeAddOptions) => void;
+  importRecipeWithAI: (url: string, options?: RecipeAddOptions) => void;
+  createRecipe: (input: FullRecipeInsertDTO, options?: RecipeAddOptions) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
   deleteRecipe: (id: string, version: number) => void;
   invalidate: () => void;
@@ -152,26 +153,26 @@ export function createRecipesContext({
     );
 
     const importRecipe = useCallback(
-      (url: string) => {
+      (url: string, options?: RecipeAddOptions) => {
         importToasts.showImportRecipePending();
-        importRecipeMutation(url);
+        importRecipeMutation(url, options);
         navigation.toHome();
       },
       [importRecipeMutation, importToasts, navigation]
     );
 
     const importRecipeWithAI = useCallback(
-      (url: string) => {
+      (url: string, options?: RecipeAddOptions) => {
         importToasts.showImportRecipeWithAIPending();
-        importRecipeWithAIMutation(url);
+        importRecipeWithAIMutation(url, options);
         navigation.toHome();
       },
       [importRecipeWithAIMutation, importToasts, navigation]
     );
 
     const wrappedCreateRecipe = useCallback(
-      (input: FullRecipeInsertDTO) => {
-        createRecipe(input);
+      (input: FullRecipeInsertDTO, options?: RecipeAddOptions) => {
+        createRecipe(input, options);
         input.id ? navigation.toRecipe(input.id) : navigation.toHome();
       },
       [createRecipe, navigation]

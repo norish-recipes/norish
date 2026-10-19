@@ -18,6 +18,7 @@ export type {
 } from "./use-recipes-query";
 export type { RandomRecipeResult } from "./use-random-recipe";
 export type {
+  RecipeAddOptions,
   RecipeCreatedAdapter,
   RecipesMutationsResult,
   RecipesMutationErrorHandler,

@@ -11,6 +11,7 @@ const getAllergiesForUsers = vi.fn();
 const addRecipeImages = vi.fn();
 const updateRecipeDishColor = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
+const publishRecipeBecameUsable = vi.fn(async () => undefined);
 const extractRecipeFromImages = vi.fn();
 const saveImageBytes = vi.fn();
 const dishColorForImageUrl = vi.fn();
@@ -45,6 +46,10 @@ vi.mock("@norish/queue/api-handlers", () => ({
 
 vi.mock("@norish/shared-server/realtime/recipes", () => ({
   recipes: { publish: publishRecipe },
+}));
+
+vi.mock("@norish/shared-server/realtime/recipe-enrichment", () => ({
+  recipeEnrichment: { publish: publishRecipeBecameUsable },
 }));
 
 // Resolution reads the catalogue; these tests are about the worker, not it.
@@ -167,5 +172,62 @@ describe("processImageImportJob", () => {
 
     expect(dishColorForImageUrl).toHaveBeenCalledWith("/recipes/recipe-123/uploaded.jpg");
     expect(updateRecipeDishColor).toHaveBeenCalledWith("recipe-123", "#5a3c21");
+  });
+
+  it("sends the add auto-enrich choice on the announcement", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob({
+      id: "job-3",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        recipeId: "recipe-123",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+        autoEnrich: false,
+        files: [
+          {
+            data: Buffer.from("img").toString("base64"),
+            mimeType: "image/jpeg",
+            filename: "recipe.jpg",
+          },
+        ],
+      },
+    } as unknown as Job<ImageImportJobData>);
+
+    expect(publishRecipeBecameUsable).toHaveBeenCalledWith(
+      "recipeBecameUsable",
+      expect.objectContaining({ recipeId: "recipe-123", autoEnrich: false }),
+      undefined
+    );
+  });
+
+  it("leaves the choice off the announcement when the job has none", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob({
+      id: "job-4",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        recipeId: "recipe-123",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+        files: [
+          {
+            data: Buffer.from("img").toString("base64"),
+            mimeType: "image/jpeg",
+            filename: "recipe.jpg",
+          },
+        ],
+      },
+    } as unknown as Job<ImageImportJobData>);
+
+    const payload = publishRecipeBecameUsable.mock.calls[0]?.[1] as { autoEnrich?: boolean };
+
+    expect(payload.autoEnrich).toBeUndefined();
   });
 });

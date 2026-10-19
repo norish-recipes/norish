@@ -297,5 +297,9 @@
     "title": "Tekoälyavain lakkasi toimimasta",
     "description": "Palvelu on hylännyt kohteen {blocks} API-avaimen {since} alkaen. Tallenna uusi avain, jotta nämä tekoälytoiminnot toimivat taas.",
     "openSettings": "Avaa asetukset"
+  },
+  "autoEnrich": {
+    "title": "Enhanced",
+    "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved."
   }
 }

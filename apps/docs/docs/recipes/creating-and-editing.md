@@ -9,6 +9,11 @@ description: The recipe form, with headings (#), recipe links (/) and step ingre
 **Add Recipe** opens the recipe form. Editing a recipe from its actions menu
 opens the same form.
 
+The recipe form has a **Run AI on this recipe** switch above **Create
+Recipe**. It starts from your profile choice. Turn it off for the recipe that
+you create. See
+[Recipe enrichment](./enrichment.md#choosing-what-a-new-recipe-gets).
+
 - **Ingredients** are free text, one per line, like `200 g spaghetti`. Norish
   reads the amount and unit as you type.
 - **Steps** go one per row. Drag a row to reorder it.

@@ -143,8 +143,16 @@ async function createStructuredRecipe(
 export async function processPasteImportJob(
   job: Job<PasteImportJobData>
 ): Promise<PasteImportJobResult> {
-  const { recipeIds, structuredRecipes, userId, householdKey, householdUserIds, text, forceAI } =
-    job.data;
+  const {
+    recipeIds,
+    structuredRecipes,
+    userId,
+    householdKey,
+    householdUserIds,
+    text,
+    forceAI,
+    autoEnrich,
+  } = job.data;
 
   log.info(
     { jobId: job.id, recipeIds, attempt: job.attemptsMade + 1 },
@@ -234,7 +242,12 @@ export async function processPasteImportJob(
       { viewPolicy: viewPolicy, ...ctx }
     );
 
-    await announceUsableRecipe(result, { userId, householdKey, householdUserIds });
+    await announceUsableRecipe(result, {
+      userId,
+      householdKey,
+      householdUserIds,
+      autoEnrich,
+    });
   }
 
   return { recipeIds: created.map((result) => result.recipeId) };

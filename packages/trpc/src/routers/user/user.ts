@@ -114,12 +114,13 @@ const updatePreferences = authedProcedure
 
       // The stored person-level choices, so the client drops its
       // optimistic copy; never the device blocks, which a toggle owns.
-      const { locale, afterPlanning, measurementSystem } = await getUserPreferences(ctx.user.id);
+      const { locale, afterPlanning, measurementSystem, autoEnrichOnAdd } =
+        await getUserPreferences(ctx.user.id);
 
       return {
         success: true,
         stale: true,
-        preferences: { locale, afterPlanning, measurementSystem },
+        preferences: { locale, afterPlanning, measurementSystem, autoEnrichOnAdd },
         version: input.version,
       };
     }

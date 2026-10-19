@@ -26,6 +26,13 @@ import {
   createMockUser,
 } from "./test-utils";
 
+const getUserPreferencesMock = vi.hoisted(() => vi.fn().mockResolvedValue({}));
+const announceUsableRecipeMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/queue/enrichment/announce", () => ({
+  announceUsableRecipe: announceUsableRecipeMock,
+}));
+
 // Setup mocks before any imports that use them
 vi.mock("@norish/db", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@norish/db")>();
@@ -41,6 +48,7 @@ vi.mock("@norish/db", async (importOriginal) => {
     getRecipeByUrl: recipes.getRecipeByUrl,
     getRecipeFull: recipes.getRecipeFull,
     getRecipeOwnerId: recipes.getRecipeOwnerId,
+    getUserPreferences: getUserPreferencesMock,
     getRecipesByUrlsForPolicy: vi.fn(),
     listRecipes: recipes.listRecipes,
     recipeExistsByUrlForPolicy: vi.fn(),
@@ -73,6 +81,46 @@ vi.mock("@norish/shared-server/media/dish-color", () => ({
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
   transformer: superjson,
+});
+
+describe("create auto-enrich", () => {
+  function createCaller() {
+    return recipesRouter.createCaller({
+      ...createMockAuthedContext(createMockUser(), createMockHousehold()),
+      connectionId: null,
+      operationId: null,
+    });
+  }
+
+  it("passes the stored off setting on the create announcement", async () => {
+    createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-id" });
+    dashboardRecipe.mockResolvedValue(null);
+    getUserPreferencesMock.mockResolvedValue({ autoEnrichOnAdd: false });
+
+    await createCaller().create({ name: "No AI" });
+
+    await vi.waitFor(() =>
+      expect(announceUsableRecipeMock).toHaveBeenCalledWith(
+        { status: "inserted", recipeId: "new-id" },
+        expect.objectContaining({ autoEnrich: false })
+      )
+    );
+  });
+
+  it("lets the create input override the stored setting", async () => {
+    createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-id" });
+    dashboardRecipe.mockResolvedValue(null);
+    getUserPreferencesMock.mockResolvedValue({ autoEnrichOnAdd: true });
+
+    await createCaller().create({ name: "No AI", autoEnrich: false });
+
+    await vi.waitFor(() =>
+      expect(announceUsableRecipeMock).toHaveBeenCalledWith(
+        { status: "inserted", recipeId: "new-id" },
+        expect.objectContaining({ autoEnrich: false })
+      )
+    );
+  });
 });
 
 describe("recipes procedures", () => {

@@ -168,10 +168,10 @@ describe("useRecipesMutations", () => {
       });
 
       // Verify function signatures (they take arguments but return void)
-      expect(result.current.importRecipe.length).toBe(1); // Takes url
-      expect(result.current.importRecipeFromPaste.length).toBe(1); // Takes text
-      expect(result.current.importRecipeFromPasteWithAI.length).toBe(1); // Takes text
-      expect(result.current.createRecipe.length).toBe(1); // Takes input
+      expect(result.current.importRecipe.length).toBe(2);
+      expect(result.current.importRecipeFromPaste.length).toBe(2);
+      expect(result.current.importRecipeFromPasteWithAI.length).toBe(2);
+      expect(result.current.createRecipe.length).toBe(2);
       expect(result.current.updateRecipe.length).toBe(2); // Takes id, input
       expect(result.current.deleteRecipe.length).toBe(2); // Takes id, version
       expect(result.current.convertMeasurements.length).toBe(3); // Takes recipeId, system, version
@@ -179,6 +179,25 @@ describe("useRecipesMutations", () => {
   });
 
   describe("importRecipe", () => {
+    it("passes the add's auto-enrich choice to the import mutation", async () => {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData(["recipes", "pending"], []);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+      const { result } = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.importRecipe("https://example.com/recipe", { autoEnrich: false });
+      });
+
+      expect(mockMutate).toHaveBeenCalledWith({
+        url: "https://example.com/recipe",
+        autoEnrich: false,
+      });
+    });
+
     it("is a function that accepts a URL", async () => {
       queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
       queryClient.setQueryData(["recipes", "pending"], []);
@@ -691,6 +710,42 @@ describe("useRecipesMutations", () => {
           variant: "default",
         })
       );
+    });
+  });
+
+  describe("importRecipeFromImages", () => {
+    it("omits the auto-enrich key when the add gives no choice", async () => {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData(["recipes", "pending"], []);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+      const { result } = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      const file = new File(["image"], "page.jpg", { type: "image/jpeg" });
+
+      act(() => result.current.importRecipeFromImages([file]));
+
+      const formData = mockMutate.mock.calls[0]?.[0] as FormData;
+
+      expect(formData.get("autoEnrich")).toBeNull();
+    });
+
+    it("writes the per-add choice when it is given", async () => {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData(["recipes", "pending"], []);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+      const { result } = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      const file = new File(["image"], "page.jpg", { type: "image/jpeg" });
+
+      act(() => result.current.importRecipeFromImages([file], { autoEnrich: false }));
+
+      const formData = mockMutate.mock.calls[0]?.[0] as FormData;
+
+      expect(formData.get("autoEnrich")).toBe("false");
     });
   });
 });
