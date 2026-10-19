@@ -14,7 +14,7 @@ test.beforeEach(async () => {
 test("the settings switch saves the choice for new adds", async ({ aiStack, page }) => {
   await page.goto("/settings?tab=user");
 
-  const control = page.getByRole("switch", { name: "Run AI on new recipes" });
+  const control = page.getByRole("main").getByRole("switch", { name: "Enhanced" });
 
   await expect(control).toBeChecked();
 
@@ -45,7 +45,7 @@ test("the add dialog starts from the choice and sends its own", async ({ aiStack
   await page.getByTestId("add-library-button").click();
   await page.getByRole("menuitem", { name: "Paste" }).click();
 
-  const toggle = page.getByRole("switch", { name: "Run AI on this recipe" });
+  const toggle = page.getByRole("dialog").getByRole("switch", { name: "Enhanced" });
 
   await expect(toggle).not.toBeChecked();
   await toggle.click();

@@ -17,7 +17,11 @@ import type { AIE2EStack, SessionCookies } from "./fixture";
 import { expect, test } from "./fixture";
 import { submitImageImport, submitPasteImport } from "./import-support";
 import { editPrompts, writePromptsRow } from "./prompt-support";
-import { setAutomaticEnrichment, supplyUserAllergies } from "./recipe-enrichment-support";
+import {
+  requestEnrichment,
+  setAutomaticEnrichment,
+  supplyUserAllergies,
+} from "./recipe-enrichment-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -102,19 +106,33 @@ test("an edited allergy-detection prompt reaches the model, with the household's
   const SENTINEL = "TREAT CROSS-CONTAMINATION AS PRESENCE (allergy sentinel).";
   const ai = stack!.ai;
 
+  const name = "Checked By Edited Prompt";
+
   await supplyUserAllergies(stack!.baseURL, cookies!, ["peanut"]);
   await editPrompts(page, { "Allergy detection prompt": SENTINEL });
-  await setAutomaticEnrichment({ allergyDetection: true });
 
   ai.control.reset();
   ai.control.enqueue(
-    { kind: "success", content: JSON.stringify(bareRecipe("Checked By Edited Prompt")) },
+    { kind: "success", content: JSON.stringify(bareRecipe(name)) },
     { kind: "success", content: JSON.stringify({ detectedAllergens: [] }) }
   );
   ai.control.setDefault(null);
 
   await page.goto("/");
   await submitPasteImport(page, "Import another recipe — the harness supplies the result.");
+
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByRole("heading", { name, exact: true, level: 3 })).toBeVisible({
+      timeout: 3_000,
+    });
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+
+  await page.getByRole("heading", { name, exact: true, level: 3 }).click();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
+
+  // Allergy detection is a manual action, so ask for it from the recipe menu.
+  await requestEnrichment(page, "Detect Allergies");
 
   await expect(async () => {
     expect(capturedTexts().some((text) => text.includes("allergy sentinel"))).toBe(true);

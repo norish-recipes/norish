@@ -39,6 +39,13 @@ function settingsAutoEnrich(settings: Record<string, unknown>): {
   return user.preferences.autoEnrich;
 }
 
+function expectActionsInOrder(description: string, locale: string): void {
+  const positions = SIX_ACTIONS.map((action) => description.indexOf(action));
+
+  expect(positions, locale).not.toContain(-1);
+  expect(positions, locale).toEqual([...positions].sort((a, b) => a - b));
+}
+
 describe("Enhanced labels", () => {
   it("has the Enhanced title and all six actions in every locale", () => {
     expect(locales).toHaveLength(16);
@@ -50,10 +57,8 @@ describe("Enhanced labels", () => {
       expect(common.title, locale).toBe("Enhanced");
       expect(settings.title, locale).toBe("Enhanced");
 
-      for (const action of SIX_ACTIONS) {
-        expect(common.description, `${locale}: ${action}`).toContain(action);
-        expect(settings.description, `${locale}: ${action}`).toContain(action);
-      }
+      expectActionsInOrder(common.description, locale);
+      expectActionsInOrder(settings.description, locale);
 
       expect(settings.description, locale).toContain("Turn it off for one recipe");
     }
