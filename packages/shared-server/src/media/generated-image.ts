@@ -9,7 +9,7 @@ async function removeGeneratedFileIfUnreferenced(imageUrl: string, recipeId: str
   if (referenced) return;
 
   await deleteImageByUrl(imageUrl).catch((err) => {
-    log.warn({ err, recipeId, imageUrl }, "Could not remove an unreferenced Generated Image file");
+    log.warn({ err, recipeId, imageUrl }, "Could not remove an unreferenced image file");
   });
 }
 
@@ -40,12 +40,7 @@ export async function storeGeneratedRecipeImage(recipeId: string, bytes: Buffer)
   for (const replacedUrl of replacement.replacedImageUrls) {
     if (replacedUrl === imageUrl) continue;
 
-    await deleteImageByUrl(replacedUrl).catch((err) => {
-      log.warn(
-        { err, recipeId, replacedUrl },
-        "Could not delete the file of a replaced primary image"
-      );
-    });
+    await removeGeneratedFileIfUnreferenced(replacedUrl, recipeId);
   }
 
   return imageUrl;

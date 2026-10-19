@@ -352,9 +352,9 @@ describe("replaceRecipePrimaryImageWithGenerated", () => {
     expect(await replaceRecipePrimaryImageWithGenerated(missing, url(missing, "drawn"))).toBeNull();
   });
 
-  // The deprecated scalar is never written with a value; the replacement
-  // clears any legacy one so a stale fallback cannot linger behind the
-  // gallery, and releases its file when the recipe no longer references it.
+  // The replacement clears a scalar the gallery now carries, keeps a distinct
+  // scalar when the Source Image cap is full, and releases only a file the
+  // recipe no longer references.
   describe("the legacy thumbnail scalar", () => {
     it("is cleared while the photograph it names keeps its gallery row", async () => {
       // The URL-import-era shape: the same file once recorded in both. The

@@ -44,14 +44,8 @@ export const DeleteRecipeImageInputSchema = z.object({
 
 export { MAX_RECIPE_IMAGES };
 
-/** The most rows a gallery can hold: the Source Image cap plus one Generated Image. */
 export const MAX_RECIPE_GALLERY_IMAGES = MAX_RECIPE_IMAGES + 1;
 
-/**
- * Reject a gallery that holds more than the Source Image cap or more than one
- * Generated Image. Both limits exist in the database shape, so every payload
- * and every read applies them together (ADR-0040).
- */
 export function refineRecipeGallery(
   images: readonly { generated?: boolean }[],
   ctx: z.RefinementCtx

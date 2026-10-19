@@ -129,7 +129,6 @@ function SortableMediaItem({
         <Bars2Icon className="h-3.5 w-3.5" />
       </button>
 
-      {/* The first image wears the thumbnail badge; every other image can take it */}
       {item.type === "image" &&
         (isFirstImage ? (
           <div className="bg-warning absolute top-2 left-10 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white shadow">
@@ -221,11 +220,9 @@ export default function MediaGalleryInput({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // The Source Image cap governs uploads; a Generated Image does not count.
   const sourceImageCount = media.filter((m) => m.type === "image" && m.generated !== true).length;
   const videoCount = media.filter((m) => m.type === "video").length;
 
-  // Find index of first image for primary badge
   const firstImageIndex = media.findIndex((m) => m.type === "image");
 
   // Configure sensors

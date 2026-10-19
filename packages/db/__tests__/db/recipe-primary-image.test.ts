@@ -17,6 +17,7 @@ import {
 } from "@norish/db/repositories/planned-items";
 import {
   dashboardRecipe,
+  deleteRecipeImageById,
   getRandomRecipeCandidates,
   getRecipeFull,
   isImageUrlReferenced,
@@ -389,6 +390,48 @@ describe("the write side retires the scalar", () => {
     expect(full?.images.some((image) => image.image === scalar)).toBe(false);
     expect(await isImageUrlReferenced(scalar)).toBe(true);
     expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/drawn\.jpg$/);
+  });
+
+  it("keeps a shared image that a video thumbnail and a step image still name", async () => {
+    const recipeId = crypto.randomUUID();
+    const shared = `/recipes/${recipeId}/shared.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Shared Video Image",
+      images: [{ image: shared, order: 0 }],
+      videos: [
+        {
+          video: `/recipes/${recipeId}/video.mp4`,
+          thumbnail: shared,
+          duration: 12,
+          order: 0,
+        },
+      ],
+      steps: [
+        {
+          step: "Mix",
+          systemUsed: "metric",
+          order: 0,
+          images: [{ image: shared, order: 0 }],
+          stepIngredients: [],
+        },
+      ],
+    });
+
+    const full = await getRecipeFull(recipeId);
+    const galleryRow = full?.images.find((image) => image.image === shared);
+
+    if (!galleryRow) throw new Error("The gallery row was not stored");
+
+    expect(await isImageUrlReferenced(shared)).toBe(true);
+
+    await deleteRecipeImageById(galleryRow.id);
+
+    expect((await getRecipeFull(recipeId))?.images.some((image) => image.image === shared)).toBe(
+      false
+    );
+    expect(await isImageUrlReferenced(shared)).toBe(true);
   });
 
   it("translates a scalar-only update into the gallery when the gallery is empty", async () => {

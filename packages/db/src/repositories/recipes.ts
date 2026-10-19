@@ -1808,11 +1808,6 @@ export async function updateRecipeWithRefs(
       });
     }
 
-    // The legacy alias: a payload scalar lands in the gallery whenever the
-    // gallery ends up empty — a scalar-only PATCH, or an overwrite-import of
-    // a gallery-less archive whose hero travels beside `images: []`. With a
-    // gallery present it is dropped: no reader has consulted the scalar past
-    // a gallery row since the thumbnails went gallery-first.
     const updateScalar = typeof payload.image === "string" ? payload.image.trim() : "";
 
     if (updateScalar !== "") {
@@ -2145,7 +2140,23 @@ export async function isImageUrlReferenced(imageUrl: string): Promise<boolean> {
     .where(eq(recipes.image, imageUrl))
     .limit(1);
 
-  return Boolean(scalar);
+  if (scalar) return true;
+
+  const [video] = await db
+    .select({ id: recipeVideos.id })
+    .from(recipeVideos)
+    .where(eq(recipeVideos.thumbnail, imageUrl))
+    .limit(1);
+
+  if (video) return true;
+
+  const [stepImage] = await db
+    .select({ id: stepImages.id })
+    .from(stepImages)
+    .where(eq(stepImages.image, imageUrl))
+    .limit(1);
+
+  return Boolean(stepImage);
 }
 
 export type GalleryImageAddOutcome =

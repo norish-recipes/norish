@@ -33,9 +33,11 @@ const repository = vi.hoisted(() => ({
 
 vi.mock("@norish/db/repositories/recipe-enrichment", () => repository);
 
-vi.mock("@norish/db/repositories/recipes", () => ({
+const referenceCheck = vi.hoisted(() => ({
   isImageUrlReferenced: vi.fn(async () => false),
 }));
+
+vi.mock("@norish/db/repositories/recipes", () => referenceCheck);
 
 vi.mock("@norish/shared-server/logger", () => {
   const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -71,6 +73,7 @@ async function fileExists(url: string): Promise<boolean> {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  referenceCheck.isImageUrlReferenced.mockResolvedValue(false);
 });
 
 afterEach(async () => {
@@ -169,6 +172,30 @@ describe("storeGeneratedRecipeImage", () => {
     expect(await fileExists(url)).toBe(true);
     expect(await fileExists(sourceUrl)).toBe(true);
     expect(await fileExists(previousGeneratedUrl)).toBe(false);
+  });
+
+  it("keeps a replaced file that a video thumbnail still names", async () => {
+    const previousGeneratedUrl = `/recipes/${RECIPE_ID}/old-drawn.jpg`;
+
+    await fs.mkdir(path.join(uploadsDir, "recipes", RECIPE_ID), { recursive: true });
+    await fs.writeFile(
+      path.join(uploadsDir, "recipes", RECIPE_ID, "old-drawn.jpg"),
+      await jpeg(64, 64)
+    );
+
+    repository.replaceRecipePrimaryImageWithGenerated.mockResolvedValue({
+      imageUrl: "ignored",
+      replacedImageUrls: [previousGeneratedUrl],
+    });
+    referenceCheck.isImageUrlReferenced.mockImplementation(
+      async (url) => url === previousGeneratedUrl
+    );
+
+    const url = await storeGeneratedRecipeImage(RECIPE_ID, await jpeg(1600, 900));
+
+    expect(await fileExists(url)).toBe(true);
+    expect(await fileExists(previousGeneratedUrl)).toBe(true);
+    expect(referenceCheck.isImageUrlReferenced).toHaveBeenCalledWith(previousGeneratedUrl);
   });
 
   it("never deletes the file it just wrote, even when the replaced row held the same URL", async () => {
