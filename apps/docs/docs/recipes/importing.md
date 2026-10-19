@@ -6,10 +6,10 @@ description: Import a recipe from a link, text, photos or another app.
 
 # Importing recipes
 
-The URL, Paste and Image options have a **Run AI on this recipe** switch.
-It starts from the **Run AI on new recipes** choice in
-**Settings => User => Preferences**. This choice is on at the start. Turn the
-switch off for one import. The choice does not change. See
+The URL, Paste and Image options have an **Enhanced** switch. It starts from
+the **Enhanced** setting in **Settings => User => Preferences**. This setting
+is on at the start. Turn the switch off for one import. The setting does not
+change. See
 [Recipe enrichment](./enrichment.md#choosing-what-a-new-recipe-gets).
 
 ## From a link

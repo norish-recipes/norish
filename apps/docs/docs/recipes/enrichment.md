@@ -17,20 +17,25 @@ With AI set up, Norish can fill in a recipe for you:
 - **Image**: a generated photo for recipes without one, which needs an
   [image provider](../configuration/ai-provider.md#image-generation)
 
-The automatic controls choose which of them run on every new recipe, see
+The automatic controls choose which of the six Enhanced actions run on every
+new recipe: **Auto-tag**, **Auto Categorize**, **Estimate Nutrition**,
+**Work Out Provenance**, **Link Ingredients to Steps** and **Generate
+Picture**. See
 [Automatic enrichment](../configuration/ai-provider.md#automatic-enrichment).
-Use **Detect Allergies** in the recipe actions list when you need it.
+**Detect Allergies** is not one of them. Use it in the recipe actions list
+when you need it.
 
 ## Choosing what a new recipe gets
 
-The **Run AI on new recipes** switch is in **Settings => User => Preferences**.
-It sets the start value for the Add Recipe options. It is on at the start. Then an add from these options starts
-the automatic enrichment that the person who controls the system set.
+The **Enhanced** switch is in **Settings => User => Preferences**. It sets the
+start value for the Add Recipe options. It is on at the start. Then an add from
+these options starts the automatic enrichment that the person who controls the
+system set.
 
-The URL, Paste and Image options and the recipe form have a
-**Run AI on this recipe** switch. Use it to change the choice for one add. The
-profile choice does not change. The automatic controls that the person who
-controls the system set still apply.
+The URL, Paste and Image options and the recipe form have an **Enhanced**
+switch. Use it to change the choice for one add. The profile choice does not
+change. The automatic controls that the person who controls the system set
+still apply.
 
 The recipe file import does not have the switch.
 

@@ -271,11 +271,11 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   }, [fetchConfigSecret]);
 
   /**
-   * The stored record read as the list the picker selects over. A column of
-   * switches read as separate decisions; which kinds are allowed to run unasked
-   * is one. Every kind belongs here — one left out of the list is not merely
-   * unreachable, it is rewritten to its default the moment any other kind is
-   * toggled, because the picker rebuilds the whole record from this list.
+   * The stored record read as the list the picker selects over. The picker sets
+   * automatic enrollment for the Enhanced kinds; allergy detection is absent
+   * on purpose because it runs only when a person asks for it. The handler
+   * below spreads the current record, so a stored allergyDetection value
+   * survives every change to the other kinds.
    */
   const selectedEnrichmentKinds = useMemo(
     () => OFFERED_AUTOMATIC_ENRICHMENT_KEYS.filter((key) => automaticEnrichment[key]),
