@@ -10,6 +10,8 @@ import { useTranslations } from "next-intl";
 import type { DecisionProvider, DecisionUse } from "@norish/config/zod/server-config";
 import {
   DECISION_USES,
+  decisionProviderDefaults,
+  decisionProviderNeedsEndpoint,
   DEFAULT_DECISION_ENDPOINT,
   DEFAULT_DECISION_MODEL,
   selectedDecisionUses,
@@ -22,8 +24,13 @@ interface DecisionModelFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
 
-/** One real provider on purpose (ADR-0035); the gateway is a second member when wanted. */
-const PROVIDER_OPTIONS: DecisionProvider[] = ["disabled", "typesafe"];
+const PROVIDER_OPTIONS: DecisionProvider[] = ["disabled", "typesafe", "generic-openai"];
+
+const PROVIDER_LABEL_KEYS: Record<DecisionProvider, string> = {
+  disabled: "disabled",
+  typesafe: "typesafe",
+  "generic-openai": "genericOpenai",
+};
 
 /** Two selections are the same selection whatever order they were clicked in. */
 function sameUses(a: readonly DecisionUse[], b: readonly DecisionUse[]): boolean {
@@ -40,17 +47,13 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
     testDecisionEndpoint,
     fetchConfigSecret,
   } = useAdminSettingsContext();
+  const initialDefaults = decisionProviderDefaults(decisionConfig?.provider ?? "disabled");
   const [provider, setProvider] = useState<DecisionProvider>(
     decisionConfig?.provider ?? "disabled"
   );
-  // The model is prefilled rather than defaulted behind a placeholder: the one
-  // sensible value is on screen, and clearing it still resolves to the same.
-  const [model, setModel] = useState(decisionConfig?.model ?? DEFAULT_DECISION_MODEL);
-  const [endpoint, setEndpoint] = useState(decisionConfig?.endpoint ?? "");
+  const [model, setModel] = useState(decisionConfig?.model ?? initialDefaults.model);
+  const [endpoint, setEndpoint] = useState(decisionConfig?.endpoint ?? initialDefaults.endpoint);
   const [apiKey, setApiKey] = useState("");
-  // A stored block without a list means every use, which is also what a
-  // fresh block starts with: enabling the Decision Model enables everything
-  // it can do, and an administrator deselects what they do not want.
   const [uses, setUses] = useState<DecisionUse[]>(decisionConfig?.uses ?? [...DECISION_USES]);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
@@ -58,26 +61,31 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
 
   useEffect(() => {
     if (decisionConfig) {
+      const defaults = decisionProviderDefaults(decisionConfig.provider);
+
       setProvider(decisionConfig.provider);
-      setModel(decisionConfig.model ?? DEFAULT_DECISION_MODEL);
-      setEndpoint(decisionConfig.endpoint ?? "");
+      setModel(decisionConfig.model ?? defaults.model);
+      setEndpoint(decisionConfig.endpoint ?? defaults.endpoint);
       setUses(decisionConfig.uses ?? [...DECISION_USES]);
     }
   }, [decisionConfig]);
 
   const enabled = provider !== "disabled";
   const aiEnabled = aiConfig?.enabled ?? false;
-  // This block never borrows the AI configuration's key — the provider never
-  // matches — so a stored key is only ever its own.
+  const needsEndpoint = decisionProviderNeedsEndpoint(provider);
   const hasStoredApiKey = !!decisionConfig?.apiKey && decisionConfig.provider === provider;
+  const hasApiKey = hasStoredApiKey || apiKey.trim() !== "";
+  const hasConnection =
+    !needsEndpoint || (model.trim() !== "" && endpoint.trim() !== "" && hasApiKey);
 
   const hasChanges = useMemo(() => {
     const stored = decisionConfig;
+    const storedDefaults = decisionProviderDefaults(stored?.provider ?? "disabled");
 
     return (
       provider !== (stored?.provider ?? "disabled") ||
-      model !== (stored?.model ?? DEFAULT_DECISION_MODEL) ||
-      endpoint !== (stored?.endpoint ?? "") ||
+      model !== (stored?.model ?? storedDefaults.model) ||
+      endpoint !== (stored?.endpoint ?? storedDefaults.endpoint) ||
       apiKey.trim() !== "" ||
       !sameUses(uses, stored?.uses ?? DECISION_USES)
     );
@@ -94,8 +102,12 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
 
   const handleProviderChange = (newProvider: DecisionProvider) => {
     if (newProvider === provider) return;
+
+    const defaults = decisionProviderDefaults(newProvider);
+
     setProvider(newProvider);
-    // A key is issued by a provider and only that provider accepts it.
+    setModel(defaults.model);
+    setEndpoint(defaults.endpoint);
     setApiKey("");
     setTestResult(null);
   };
@@ -122,6 +134,8 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
   };
 
   const handleSave = async () => {
+    if (!hasConnection) return;
+
     setSaving(true);
     try {
       await updateDecisionConfig({
@@ -160,8 +174,12 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
         <Select.Popover>
           <ListBox>
             {PROVIDER_OPTIONS.map((option) => (
-              <ListBox.Item key={option} id={option} textValue={t(`providers.${option}`)}>
-                {t(`providers.${option}`)}
+              <ListBox.Item
+                key={option}
+                id={option}
+                textValue={t(`providers.${PROVIDER_LABEL_KEYS[option]}`)}
+              >
+                {t(`providers.${PROVIDER_LABEL_KEYS[option]}`)}
               </ListBox.Item>
             ))}
           </ListBox>
@@ -171,8 +189,9 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
       {enabled && (
         <>
           <SecretInput
-            description={t("apiKeyDescription")}
+            description={needsEndpoint ? t("apiKeyDescriptionGeneric") : t("apiKeyDescription")}
             isConfigured={hasStoredApiKey}
+            isRequired={needsEndpoint}
             label={t("apiKey")}
             placeholder={t("apiKeyPlaceholder")}
             value={apiKey}
@@ -182,13 +201,23 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
 
           <TextField value={model} onChange={setModel}>
             <Label>{t("model")}</Label>
-            <Input variant="secondary" placeholder={DEFAULT_DECISION_MODEL} />
+            <Input
+              variant="secondary"
+              placeholder={needsEndpoint ? t("modelPlaceholderGeneric") : DEFAULT_DECISION_MODEL}
+            />
           </TextField>
 
           <TextField value={endpoint} onChange={setEndpoint}>
             <Label>{t("endpoint")}</Label>
-            <Input placeholder={DEFAULT_DECISION_ENDPOINT} variant="secondary" />
-            <Description>{t("endpointDescription")}</Description>
+            <Input
+              placeholder={
+                needsEndpoint ? t("endpointPlaceholderGeneric") : DEFAULT_DECISION_ENDPOINT
+              }
+              variant="secondary"
+            />
+            <Description>
+              {needsEndpoint ? t("endpointDescriptionGeneric") : t("endpointDescription")}
+            </Description>
           </TextField>
         </>
       )}
@@ -257,7 +286,7 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
 
       <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
         <Button
-          isDisabled={!enabled || !aiEnabled}
+          isDisabled={!enabled || !aiEnabled || !hasConnection}
           onPress={handleTest}
           variant="tertiary"
           isPending={testing}
@@ -265,7 +294,12 @@ export default function DecisionModelForm({ onDirtyChange }: DecisionModelFormPr
           {<BeakerIcon className="h-5 w-5" />}
           {t("testConnection")}
         </Button>
-        <Button isDisabled={!hasChanges} onPress={handleSave} variant="primary" isPending={saving}>
+        <Button
+          isDisabled={!hasChanges || !hasConnection}
+          onPress={handleSave}
+          variant="primary"
+          isPending={saving}
+        >
           {tActions("save")}
         </Button>
       </div>

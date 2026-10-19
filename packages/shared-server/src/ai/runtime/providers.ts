@@ -31,6 +31,7 @@ import type { DecisionProvider, ImageGenerationProvider } from "@norish/config/z
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, ModelConfig } from "./types";
+import { createOpenAICompatibleEvaluationModel } from "./decision-model";
 import {
   normalizeAzureEndpoint,
   normalizeOllamaEndpoint,
@@ -39,24 +40,6 @@ import {
 import { imageModelKey, withoutRefusedImageParameters } from "./image-parameter-fallback";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
-
-/**
- * Providers reached through a base URL an operator typed, rather than a service
- * whose capabilities the SDK knows. What such an endpoint can actually serve is
- * decided by whatever sits behind it — an aggregator resolves a model to one of
- * several upstream providers — so it is the only place where asking for a
- * strict JSON schema may be refused by something that answers everything else
- * (#538).
- */
-const OPENAI_COMPATIBLE_PROVIDERS: ReadonlySet<AIProvider> = new Set([
-  "generic-openai",
-  "lm-studio",
-]);
-
-/** Whether a plain-JSON retry is available for this provider (#538). */
-export function canDegradeToJsonMode(provider: AIProvider): boolean {
-  return OPENAI_COMPATIBLE_PROVIDERS.has(provider);
-}
 
 export interface ModelBuildOptions {
   /**
@@ -428,11 +411,11 @@ export interface DecisionModelConfig {
 }
 
 /**
- * Build the evaluation model from the Decision block. Only `typesafe` is
- * constructible: the config enum keeps `disabled` out, and Vercel's AI
- * Gateway is a second case here and a base URL when it is wanted. The
- * provider's default key comes from an environment variable Norish never
- * sets, so the stored key is passed explicitly and a missing one is refused
+ * Build the evaluation model from the Decision block. TypeSafe serves Jev
+ * natively; `generic-openai` answers the same evaluation contract through a
+ * chat model so any OpenAI-compatible endpoint can make a Decision. The
+ * config enum keeps `disabled` out. A provider key comes from the stored
+ * block, never a default in the environment, so a missing one is refused
  * here rather than discovered as a 401.
  */
 export function createDecisionModelFromConfig(config: {
@@ -455,6 +438,36 @@ export function createDecisionModelFromConfig(config: {
           fetch: createFetchWithTimeout(timeoutMs),
         }).evaluationModel(model),
         providerName: "TypeSafe AI",
+      };
+    }
+    case "generic-openai": {
+      if (!apiKey) {
+        throw new Error("API Key is required for the generic OpenAI-compatible Decision provider");
+      }
+
+      if (!endpoint) {
+        throw new Error("Endpoint is required for the generic OpenAI-compatible Decision provider");
+      }
+
+      if (!model.trim()) {
+        throw new Error("Model is required for the generic OpenAI-compatible Decision provider");
+      }
+
+      const createModel = (structuredOutputs: boolean) =>
+        createOpenAICompatible({
+          name: "generic-openai",
+          baseURL: normalizeOpenAICompatibleEndpoint(endpoint),
+          headers: { Authorization: `Bearer ${apiKey}` },
+          supportsStructuredOutputs: structuredOutputs,
+          fetch: createFetchWithTimeout(timeoutMs),
+        })(model);
+
+      return {
+        model: createOpenAICompatibleEvaluationModel({
+          model: createModel(true),
+          jsonModeModel: createModel(false),
+        }),
+        providerName: "Generic OpenAI",
       };
     }
   }

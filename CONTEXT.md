@@ -232,6 +232,8 @@ _Avoid_: Model Capability (claims foreknowledge Norish does not have), Generatio
 The optional second AI provider that answers closed questions and generates nothing: TypeSafe's Jev today. Given a state and named questions it returns, for every question, a pick and a probability for every option — much faster and cheaper than a language model for the same decision, and honest about how sure it is. Configured on its own with its own key, beside the Image Generation block it structurally resembles; it follows the global AI switch and is never required by any feature, which keeps its language-model or heuristic path and takes it whenever the Decision Model is unconfigured, switched off for that use, or fails (ADR-0035).
 _Avoid_: Decision provider (names the settings block, not the thing), Classifier (it also scores and ranks), Jev (a product name; the glossary names the role)
 
+ADR-0041 adds an OpenAI-compatible endpoint to the Decision Model. A generic endpoint gives estimated probabilities. Jev is the first choice.
+
 **Decision**:
 One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the four categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
 _Avoid_: Evaluation (the SDK's word; it reads as judging quality), Classification (only one of the three question shapes)

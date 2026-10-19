@@ -101,8 +101,9 @@ function ownerApi() {
 
 /** Save the Decision block through the admin mutation, as the form does. */
 async function configureDecisionModel(config: {
-  provider: "typesafe" | "disabled";
+  provider: "typesafe" | "generic-openai" | "disabled";
   apiKey?: string;
+  model?: string;
   endpoint?: string;
 }): Promise<void> {
   const api = await ownerApi();
@@ -221,6 +222,46 @@ function chatRequestCount(): number {
 
   return control.requestCount - control.decisionRequestCount - control.imageRequestCount;
 }
+
+test("a generic Decision Model tests its endpoint over loopback", async () => {
+  await configureDecisionModel({
+    provider: "generic-openai",
+    apiKey: "generic-e2e-key",
+    model: "harness-model",
+    endpoint: `${stack.ai.url}/api/v4`,
+  });
+  stack.ai.control.reset();
+  stack.ai.control.enqueue({
+    kind: "success",
+    content: JSON.stringify({ isTest: { probability: 0.9 } }),
+  });
+
+  const api = await ownerApi();
+
+  try {
+    const response = await api.post("/api/trpc/admin.testDecisionEndpoint", {
+      data: {
+        json: {
+          provider: "generic-openai",
+          apiKey: "generic-e2e-key",
+          model: "harness-model",
+          endpoint: `${stack.ai.url}/api/v4`,
+        },
+      },
+    });
+
+    expect(response.ok()).toBe(true);
+    const body = (await response.json()) as { result: { data: { json: { success: boolean } } } };
+
+    expect(body.result.data.json).toEqual({ success: true });
+  } finally {
+    await api.dispose();
+  }
+
+  expect(
+    stack.ai.control.requests.some((request) => request.path === "/api/v4/chat/completions")
+  ).toBe(true);
+});
 
 test("a Decision settles automatic categorization, and the AI provider is never asked for it", async () => {
   await decisionModelAtHarness();

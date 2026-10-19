@@ -1076,7 +1076,8 @@
       "provider": "Decision provider",
       "providers": {
         "disabled": "Disabled",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Generic OpenAI-compatible"
       },
       "apiKey": "API key",
       "apiKeyPlaceholder": "Enter API key...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Test connection",
       "connectionSuccess": "Connection successful",
-      "aiDisabledHint": "AI is disabled on this server. Enable it in the AI Configuration to test and use the Decision Model."
+      "aiDisabledHint": "AI is disabled on this server. Enable it in the AI Configuration to test and use the Decision Model.",
+      "apiKeyDescriptionGeneric": "The key your endpoint issued. Required for a generic OpenAI-compatible endpoint.",
+      "modelPlaceholderGeneric": "e.g. your-model-name",
+      "endpointPlaceholderGeneric": "https://your-provider.example/api",
+      "endpointDescriptionGeneric": "Required. Include the API version path your provider uses, for example /v1 or /api/v4. Norish adds /v1 when the path has no version."
     },
     "promptsConfig": {
       "recipeExtraction": "Recipe extraction prompt",

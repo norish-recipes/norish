@@ -1076,7 +1076,8 @@
       "provider": "Beslisprovider",
       "providers": {
         "disabled": "Uitgeschakeld",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Generieke OpenAI-compatibel"
       },
       "apiKey": "API-sleutel",
       "apiKeyPlaceholder": "Voer API-sleutel in...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Test verbinding",
       "connectionSuccess": "Verbinding succesvol",
-      "aiDisabledHint": "AI is uitgeschakeld op deze server. Schakel het in bij AI-configuratie om het Beslismodel te testen en te gebruiken."
+      "aiDisabledHint": "AI is uitgeschakeld op deze server. Schakel het in bij AI-configuratie om het Beslismodel te testen en te gebruiken.",
+      "apiKeyDescriptionGeneric": "De sleutel die je endpoint heeft uitgegeven. Verplicht voor een generieke OpenAI-compatibele endpoint.",
+      "modelPlaceholderGeneric": "bijv. jouw-modelnaam",
+      "endpointPlaceholderGeneric": "https://jouw-provider.example/api",
+      "endpointDescriptionGeneric": "Verplicht. Neem het API-versiepad op dat je provider gebruikt, bijvoorbeeld /v1 of /api/v4. Norish voegt /v1 toe als het pad geen versie heeft."
     },
     "promptsConfig": {
       "recipeExtraction": "Receptextractie Prompt",

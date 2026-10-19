@@ -129,20 +129,34 @@ The image provider also draws [ingredient icons](../groceries/ingredient-icons.m
 
 ![Decision Model settings](/img/screenshots/admin-decision-model.png)
 
-A Decision Model is a model trained to answer closed questions fast and
-cheaply. Norish uses it to spot recipes on imported pages, to make some
-enrichment decisions, and to check what the AI provider adds. Only models
-that adhere to TypeSafe's API are supported.
+A Decision Model handles closed questions fast. Norish uses it to spot
+recipes on a URL before import, to make some enrichment decisions, and to check
+what the AI provider adds. You can use TypeSafe AI's Jev, or any
+OpenAI-compatible endpoint that gives a probability distribution for each
+question.
 
 Set it up under **Settings => Admin => AI & processing => Decision model**:
 
-| Field                          | Notes                                                                                                                                             |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Provider**                   | _Disabled_ or _TypeSafe AI_                                                                                                                       |
-| **API key**                    | From your TypeSafe AI account                                                                                                                     |
-| **Model**                      | Defaults to `jev-latest`                                                                                                                          |
-| **Endpoint URL**               | Optional. A proxy, gateway or self-hosted server that speaks TypeSafe's API. Empty uses `https://api.typesafe.ai/v1`                              |
-| **Use the decision model for** | _Auto-categorization_, _Auto-tagging_, _Allergy detection_, _Recipe Provenance_, _Grocery linking_, _Validate enrichments_. All are on by default |
+| Field                          | Notes                                                                                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Provider**                   | _Disabled_, _TypeSafe AI_, or _Generic OpenAI-compatible_                                                                                             |
+| **API key**                    | Required.                                                                                                                                             |
+| **Model**                      | `jev-latest` for TypeSafe AI. Write the model name for a generic endpoint.                                                                            |
+| **Endpoint URL**               | Optional for TypeSafe AI. Required for a generic endpoint. See the notes below.                                                                       |
+| **Use the decision model for** | **Auto-categorization**, **Auto-tagging**, **Allergy detection**, **Recipe Provenance**, **Grocery linking**, **Validate enrichments**. All start on. |
+
+The endpoint keeps the `/v1`, `/v4` or `/api/v4` part that you write. If the
+URL has none, Norish adds `/v1`. **Test connection** uses the same URL as a real
+Decision. A successful test shows that real requests reach the same URL.
+
+A generic endpoint must give a structured-output response: one JSON object with
+a probability distribution for each question. Norish sends a JSON schema with
+`strict: true` first. If the endpoint rejects the schema, Norish sends the
+request again with `json_object` mode. This is the same fallback as the AI
+provider. The endpoint must support one of the two. A generic language model
+estimates the probabilities. TypeSafe AI's Jev reports the probabilities from
+the model. Norish acts on a result only when it clears the threshold for that
+use.
 
 What each use does:
 

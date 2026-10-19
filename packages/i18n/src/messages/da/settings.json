@@ -1076,7 +1076,8 @@
       "provider": "Beslutningsudbyder",
       "providers": {
         "disabled": "Deaktiveret",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Generisk OpenAI-kompatibel"
       },
       "apiKey": "API-nøgle",
       "apiKeyPlaceholder": "Indtast API-nøgle...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Test forbindelse",
       "connectionSuccess": "Forbindelse lykkedes",
-      "aiDisabledHint": "AI er deaktiveret på denne server. Slå det til under AI-konfiguration for at teste og bruge beslutningsmodellen."
+      "aiDisabledHint": "AI er deaktiveret på denne server. Slå det til under AI-konfiguration for at teste og bruge beslutningsmodellen.",
+      "apiKeyDescriptionGeneric": "Nøglen, som din endpoint udstedte. Påkrævet for et generisk OpenAI-kompatibelt endpoint.",
+      "modelPlaceholderGeneric": "f.eks. dit-modelnavn",
+      "endpointPlaceholderGeneric": "https://din-udbyder.example/api",
+      "endpointDescriptionGeneric": "Påkrævet. Angiv den API-versionssti, din udbyder bruger, for eksempel /v1 eller /api/v4. Norish tilføjer /v1, hvis stien ikke har en version."
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt til opskriftudtrækning",

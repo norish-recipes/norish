@@ -1076,7 +1076,8 @@
       "provider": "Провайдер рішень",
       "providers": {
         "disabled": "Вимкнено",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Універсальний, сумісний з OpenAI"
       },
       "apiKey": "Ключ API",
       "apiKeyPlaceholder": "Введіть ключ API...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Перевірити з’єднання",
       "connectionSuccess": "З’єднання успішне",
-      "aiDisabledHint": "ШІ вимкнено на цьому сервері. Увімкніть його в конфігурації ШІ, щоб перевіряти й використовувати модель рішень."
+      "aiDisabledHint": "ШІ вимкнено на цьому сервері. Увімкніть його в конфігурації ШІ, щоб перевіряти й використовувати модель рішень.",
+      "apiKeyDescriptionGeneric": "Ключ, виданий вашою кінцевою точкою. Обов'язковий для загальної кінцевої точки, сумісної з OpenAI.",
+      "modelPlaceholderGeneric": "наприклад назва-вашої-моделі",
+      "endpointPlaceholderGeneric": "https://vash-postachalnyk.example/api",
+      "endpointDescriptionGeneric": "Обов'язково. Вкажіть шлях версії API, який використовує ваш постачальник, наприклад /v1 або /api/v4. Norish додає /v1, якщо шлях не має версії."
     },
     "promptsConfig": {
       "recipeExtraction": "Промпт вилучення рецептів",

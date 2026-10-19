@@ -1076,7 +1076,8 @@
       "provider": "Päätösmallin palveluntarjoaja",
       "providers": {
         "disabled": "Pois käytöstä",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Yleinen OpenAI-yhteensopiva"
       },
       "apiKey": "API-avain",
       "apiKeyPlaceholder": "Syötä API-avain...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Testaa yhteys",
       "connectionSuccess": "Yhteys onnistui",
-      "aiDisabledHint": "Tekoäly on poistettu käytöstä tällä palvelimella. Ota se käyttöön tekoälyasetuksissa, jotta voit testata ja käyttää päätösmallia."
+      "aiDisabledHint": "Tekoäly on poistettu käytöstä tällä palvelimella. Ota se käyttöön tekoälyasetuksissa, jotta voit testata ja käyttää päätösmallia.",
+      "apiKeyDescriptionGeneric": "Päätepisteesi myöntämä avain. Pakollinen yleiselle OpenAI-yhteensopivalle päätepisteelle.",
+      "modelPlaceholderGeneric": "esim. mallisi-nimi",
+      "endpointPlaceholderGeneric": "https://tarjoajasi.example/api",
+      "endpointDescriptionGeneric": "Pakollinen. Anna tarjoajasi käyttämä API-versiopolku, esimerkiksi /v1 tai /api/v4. Norish lisää /v1, jos polussa ei ole versiota."
     },
     "promptsConfig": {
       "recipeExtraction": "Reseptin poiminnan kehote",
