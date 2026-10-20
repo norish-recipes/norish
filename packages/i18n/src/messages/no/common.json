@@ -155,8 +155,13 @@
       "counter": "{count} / {max} bilder",
       "importFromCount": "Importer fra {count, plural, one {# bilde} other {# bilder}}",
       "description": "Bildene kombineres til én oppskrift.",
-      "bulkPrompt": "Flere oppskrifter?",
-      "bulkLink": "Bruk Bulk images — én oppskrift per bilde"
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "Importer fra en URL, skann et bilde eller start fra bunnen av."

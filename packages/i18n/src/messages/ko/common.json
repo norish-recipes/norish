@@ -155,8 +155,13 @@
       "counter": "{count} / {max} 사진",
       "importFromCount": "{count, plural, one {#장 사진에서 가져오기} other {#장 사진에서 가져오기}}",
       "description": "사진은 하나의 레시피로 합쳐집니다.",
-      "bulkPrompt": "여러 레시피인가요?",
-      "bulkLink": "Bulk images 사용 — 이미지마다 하나의 레시피"
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "URL에서 가져오거나 사진을 스캔하거나 처음부터 시작하세요."

@@ -10,8 +10,6 @@
     "importFromUrl": "URL",
     "importFromPaste": "Indsæt",
     "importFromImage": "Billede",
-    "images": "Images",
-    "oneRecipeFromPhotos": "One recipe from photos",
     "searchFields": {
       "title": "Titel",
       "description": "Beskrivelse",
@@ -30,7 +28,6 @@
       "recipes": "Opskrifter",
       "cookbooks": "Kogebøger"
     },
-    "bulkImageImport": "Flere billeder",
     "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {

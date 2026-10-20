@@ -67,8 +67,6 @@ vi.mock("@heroui/react", () => {
         {children}
       </div>
     ),
-    SubmenuTrigger: ({ children }: Props) => <div>{children}</div>,
-    SubmenuIndicator: () => <span data-testid="submenu-indicator" />,
   });
 
   return { Button, Dropdown, Label };
@@ -80,39 +78,28 @@ beforeEach(() => {
 });
 
 describe("CreateRecipeButton image menu", () => {
-  it("puts both image flows under an Images submenu", () => {
+  it("opens the one-recipe photo dialog from a single Image item", () => {
     render(<CreateRecipeButton />);
 
-    expect(screen.getByText("recipes.dashboard.images")).toBeInTheDocument();
-    expect(screen.getByText("recipes.dashboard.oneRecipeFromPhotos")).toBeInTheDocument();
-    expect(screen.getByText("recipes.dashboard.bulkImageImport")).toBeInTheDocument();
-    expect(screen.getByTestId("submenu-indicator")).toBeInTheDocument();
-    expect(screen.queryByText("recipes.dashboard.importFromImage")).not.toBeInTheDocument();
-  });
+    expect(screen.getByText("recipes.dashboard.importFromImage")).toBeInTheDocument();
 
-  it("opens the one-recipe image dialog from the submenu", () => {
-    render(<CreateRecipeButton />);
-
-    fireEvent.click(screen.getByText("recipes.dashboard.oneRecipeFromPhotos"));
+    fireEvent.click(screen.getByText("recipes.dashboard.importFromImage"));
 
     expect(screen.getByTestId("image-modal")).toBeInTheDocument();
   });
 
-  it("navigates to the bulk image page from the submenu", () => {
+  it("does not offer a separate bulk item", () => {
     render(<CreateRecipeButton />);
 
-    fireEvent.click(screen.getByText("recipes.dashboard.bulkImageImport"));
-
-    expect(mocks.push).toHaveBeenCalledWith("/recipes/import");
+    expect(screen.queryByText("recipes.dashboard.bulkImageImport")).not.toBeInTheDocument();
+    expect(screen.queryByText("recipes.dashboard.images")).not.toBeInTheDocument();
   });
 
-  it("hides the Images submenu when AI is off", () => {
+  it("hides the Image item when AI is off", () => {
     mocks.isAIEnabled = false;
 
     render(<CreateRecipeButton />);
 
-    expect(screen.queryByText("recipes.dashboard.images")).not.toBeInTheDocument();
-    expect(screen.queryByText("recipes.dashboard.oneRecipeFromPhotos")).not.toBeInTheDocument();
-    expect(screen.queryByText("recipes.dashboard.bulkImageImport")).not.toBeInTheDocument();
+    expect(screen.queryByText("recipes.dashboard.importFromImage")).not.toBeInTheDocument();
   });
 });

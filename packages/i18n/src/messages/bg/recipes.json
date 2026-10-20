@@ -10,8 +10,6 @@
     "importFromUrl": "URL",
     "importFromPaste": "Поставяне",
     "importFromImage": "Изображение",
-    "images": "Images",
-    "oneRecipeFromPhotos": "One recipe from photos",
     "searchFields": {
       "title": "Заглавие",
       "description": "Описание",
@@ -30,7 +28,6 @@
       "recipes": "Рецепти",
       "cookbooks": "Готварски книги"
     },
-    "bulkImageImport": "Групови изображения",
     "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {

@@ -51,10 +51,7 @@ test.beforeEach(async ({ aiStack, page: fixturePage }) => {
 });
 
 async function openBulkImport(): Promise<void> {
-  await page.goto("/");
-  await page.getByTestId("add-library-button").click();
-  await page.getByRole("menuitem", { name: "Images" }).click();
-  await page.getByRole("menuitem", { name: "Bulk images" }).click();
+  await page.goto("/recipes/import");
   await expect(page).toHaveURL(/\/recipes\/import$/);
 }
 
@@ -70,6 +67,24 @@ async function submitBatch(images: { name: string; mimeType: string; buffer: Buf
 function statusChip(label: string) {
   return page.getByText(label, { exact: true });
 }
+
+test("the image dialog offers one recipe and bulk modes", async () => {
+  await page.goto("/");
+  await page.getByTestId("add-library-button").click();
+  await page.getByRole("menuitem", { name: "Image" }).click({ timeout: 2_000 });
+
+  const single = page.getByRole("button", { name: "One recipe from photos" });
+  const bulk = page.getByRole("button", { name: "Bulk images" });
+
+  await expect(single).toHaveAttribute("aria-pressed", "true");
+  await expect(bulk).toHaveAttribute("aria-pressed", "false");
+
+  await bulk.click();
+
+  await expect(bulk).toHaveAttribute("aria-pressed", "true");
+  await expect(single).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByText("Each image becomes its own recipe.")).toBeVisible();
+});
 
 test("each image becomes its own recipe, and a failed one retries from the batch", async () => {
   const ai: FakeAIProvider = stack.ai;

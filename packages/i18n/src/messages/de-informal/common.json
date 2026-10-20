@@ -155,8 +155,13 @@
       "counter": "{count} / {max} Fotos",
       "importFromCount": "Importieren von {count, plural, one {# Foto} other {# Fotos}}",
       "description": "Die Fotos werden zu einem Rezept zusammengefasst.",
-      "bulkPrompt": "Mehrere Rezepte?",
-      "bulkLink": "Bulk images verwenden — ein Rezept pro Bild"
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "Importiere per URL, scanne ein Foto oder starte von Grund auf."

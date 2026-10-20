@@ -10,8 +10,6 @@
     "importFromUrl": "URL",
     "importFromPaste": "Lim inn",
     "importFromImage": "Bilde",
-    "images": "Images",
-    "oneRecipeFromPhotos": "One recipe from photos",
     "searchFields": {
       "title": "Tittel",
       "description": "Beskrivelse",
@@ -30,7 +28,6 @@
       "recipes": "Oppskrifter",
       "cookbooks": "Kokebøker"
     },
-    "bulkImageImport": "Flere bilder",
     "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {

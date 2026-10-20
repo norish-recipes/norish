@@ -1,17 +1,20 @@
 "use client";
 
 import type { DropZoneAreaProps } from "@/components/ui/drop-zone";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import AutoEnrichToggle, { useAutoEnrichOnAdd } from "@/components/shared/auto-enrich-toggle";
 import { DropZone } from "@/components/ui/drop-zone";
+import { useBulkImport } from "@/context/bulk-import-context";
 import { useUploadLimitsQuery } from "@/hooks/config";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PhotoIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Kbd, Modal, toast } from "@heroui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import {
@@ -29,6 +32,8 @@ interface FilePreview {
   file: File;
   preview: string;
 }
+type ImportMode = "single" | "bulk";
+const IMPORT_MODES: readonly ImportMode[] = ["single", "bulk"];
 const OCR_IMAGE_ACCEPT = ALLOWED_OCR_MIME_TYPES.join(",");
 
 export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFromImageModalProps) {
@@ -36,10 +41,20 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
   const router = useRouter();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { trackBatch } = useBulkImport();
   const { importRecipeFromImages } = useRecipesMutations();
   const { limits } = useUploadLimitsQuery();
   const [files, setFiles] = useState<FilePreview[]>([]);
+  const [mode, setMode] = useState<ImportMode>("single");
+  const [autoEnrich, setAutoEnrich] = useAutoEnrichOnAdd(isOpen);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setMode("single");
+  }, [isOpen]);
+
   const handleAddFiles = useCallback(
     (selectedFiles: File[] | FileList | null) => {
       if (!selectedFiles) return;
@@ -56,7 +71,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       for (let i = 0; i < fileArray.length; i++) {
         const file = fileArray[i]!;
 
-        // Validate file type
         if (!ALLOWED_OCR_MIME_SET.has(file.type)) {
           toast(t("invalidType"), {
             description: t("notSupported", {
@@ -67,7 +81,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
           continue;
         }
 
-        // Validate file size
         if (file.size > limits.maxImageSize) {
           toast(t("tooLarge"), {
             description: t("exceeds", {
@@ -78,7 +91,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
           continue;
         }
 
-        // Create preview
         newFiles.push({
           id: `${Date.now()}-${i}-${file.name}`,
           file,
@@ -152,25 +164,73 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     (types) => (ALLOWED_OCR_MIME_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"),
     []
   );
+  const closeAndClear = useCallback(() => {
+    files.forEach((file) => URL.revokeObjectURL(file.preview));
+    setFiles([]);
+    setIsSubmitting(false);
+    setMode("single");
+    onOpenChange(false);
+  }, [files, onOpenChange]);
+  const bulkMutation = useMutation(
+    trpc.recipes.importFromImagesBatch.mutationOptions({
+      onSuccess: (batch) => {
+        queryClient.setQueryData(
+          trpc.recipes.imageImportBatchStatus.queryKey({ batchId: batch.batchId }),
+          batch
+        );
+        trackBatch(
+          batch.batchId,
+          files.map((file) => file.file)
+        );
+        closeAndClear();
+      },
+      onError: (error) => {
+        setIsSubmitting(false);
+        showSafeErrorToast({
+          title: t("failed"),
+          description: tErrors("technicalDetails"),
+          color: "danger",
+          error,
+          context: "import-from-image-modal:bulk",
+        });
+      },
+    })
+  );
   const handleImport = useCallback(() => {
-    if (files.length === 0) return;
+    if (files.length === 0 || isSubmitting || bulkMutation.isPending) return;
+
     setIsSubmitting(true);
+
+    if (mode === "bulk") {
+      const formData = new FormData();
+
+      files.forEach((file, index) => {
+        formData.append(`file${index}`, file.file);
+      });
+
+      if (autoEnrich !== undefined) {
+        formData.append("autoEnrich", String(autoEnrich));
+      }
+
+      bulkMutation.mutate(formData);
+
+      return;
+    }
+
     try {
-      // Pass raw File objects - FormData conversion happens in mutation
-      importRecipeFromImages(files.map((f) => f.file));
+      importRecipeFromImages(
+        files.map((file) => file.file),
+        { autoEnrich }
+      );
       toast(t("importing"), {
         description: t("analyzing"),
         variant: "default",
       });
 
-      // Clean up and close
-      files.forEach((f) => {
-        URL.revokeObjectURL(f.preview);
-      });
-      setFiles([]);
-      onOpenChange(false);
+      closeAndClear();
       router.push("/");
     } catch (error) {
+      setIsSubmitting(false);
       showSafeErrorToast({
         title: t("failed"),
         description: tErrors("technicalDetails"),
@@ -178,17 +238,27 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
         error,
         context: "import-from-image-modal:import",
       });
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [files, importRecipeFromImages, onOpenChange, router, t, tErrors]);
+  }, [
+    autoEnrich,
+    bulkMutation,
+    closeAndClear,
+    files,
+    importRecipeFromImages,
+    isSubmitting,
+    mode,
+    router,
+    t,
+    tErrors,
+  ]);
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        files.forEach((f) => {
-          URL.revokeObjectURL(f.preview);
+        files.forEach((file) => {
+          URL.revokeObjectURL(file.preview);
         });
         setFiles([]);
+        setIsSubmitting(false);
       }
       onOpenChange(open);
     },
@@ -203,19 +273,29 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
             <>
               <Modal.CloseTrigger />
               <Modal.Header className="flex flex-col gap-1">
-                <span>{t("title")}</span>
-                <span className="text-muted text-sm font-normal">{t("description")}</span>
+                <span>{mode === "bulk" ? t("mode.bulk") : t("title")}</span>
+                <span className="text-muted text-sm font-normal">
+                  {mode === "bulk" ? t("bulkDescription") : t("description")}
+                </span>
               </Modal.Header>
               <Modal.Body>
-                <div className="bg-surface-secondary mb-4 flex flex-col gap-1 rounded-lg p-3">
-                  <p className="text-muted text-sm">{t("bulkPrompt")}</p>
-                  <Link
-                    className="text-accent text-sm font-medium underline underline-offset-2"
-                    href="/recipes/import"
-                    onClick={() => handleOpenChange(false)}
-                  >
-                    {t("bulkLink")}
-                  </Link>
+                <div
+                  aria-label={t("mode.label")}
+                  className="bg-surface-secondary mb-4 flex gap-1 rounded-lg p-1"
+                  role="group"
+                >
+                  {IMPORT_MODES.map((option) => (
+                    <Button
+                      key={option}
+                      aria-pressed={mode === option}
+                      className="flex-1"
+                      size="sm"
+                      variant={mode === option ? "primary" : "tertiary"}
+                      onPress={() => setMode(option)}
+                    >
+                      {t(`mode.${option}`)}
+                    </Button>
+                  ))}
                 </div>
 
                 <DropZone className="w-full">
@@ -233,7 +313,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                   <DropZone.Input multiple accept={OCR_IMAGE_ACCEPT} onSelect={handleAddFiles} />
                 </DropZone>
 
-                {/* File previews */}
                 {files.length > 0 && (
                   <div className="mt-4 grid grid-cols-4 gap-2">
                     {files.map(({ id, file, preview }) => (
@@ -264,20 +343,22 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
 
                 {files.length > 1 && (
                   <p className="text-muted mt-2 text-center text-xs">
-                    {t("selectedCount", {
-                      count: files.length,
-                    })}
+                    {mode === "bulk"
+                      ? t("bulkSelectedCount", { count: files.length })
+                      : t("selectedCount", { count: files.length })}
                   </p>
                 )}
+
+                <AutoEnrichToggle isSelected={autoEnrich} onValueChange={setAutoEnrich} />
               </Modal.Body>
               <Modal.Footer>
                 <Button
-                  isDisabled={files.length === 0}
-                  isPending={isSubmitting}
+                  isDisabled={files.length === 0 || isSubmitting || bulkMutation.isPending}
+                  isPending={isSubmitting || bulkMutation.isPending}
                   variant="primary"
                   onPress={handleImport}
                 >
-                  {!isSubmitting && <SparklesIcon className="h-4 w-4" />}
+                  {!isSubmitting && !bulkMutation.isPending && <SparklesIcon className="h-4 w-4" />}
                   {tActions("importWithAI")}
                 </Button>
               </Modal.Footer>

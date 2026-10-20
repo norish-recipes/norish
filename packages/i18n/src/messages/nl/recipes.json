@@ -10,8 +10,6 @@
     "importFromUrl": "URL",
     "importFromPaste": "Plakken",
     "importFromImage": "Afbeelding",
-    "images": "Images",
-    "oneRecipeFromPhotos": "One recipe from photos",
     "searchFields": {
       "title": "Titel",
       "description": "Omschrijving",
@@ -30,7 +28,6 @@
       "recipes": "Recepten",
       "cookbooks": "Kookboeken"
     },
-    "bulkImageImport": "Meerdere afbeeldingen",
     "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {

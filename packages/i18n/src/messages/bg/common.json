@@ -155,8 +155,13 @@
       "counter": "{count} / {max} снимки",
       "importFromCount": "Импортирай от {count, plural, one {# снимка} other {# снимки}}",
       "description": "Снимките се обединяват в една рецепта.",
-      "bulkPrompt": "Няколко рецепти?",
-      "bulkLink": "Използвайте Bulk images — една рецепта за всяко изображение"
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "Импортирай от URL адрес, сканирай снимка или започни от нулата."

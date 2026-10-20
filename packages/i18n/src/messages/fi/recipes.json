@@ -10,8 +10,6 @@
     "importFromUrl": "Osoite",
     "importFromPaste": "Liitä",
     "importFromImage": "Kuva",
-    "images": "Images",
-    "oneRecipeFromPhotos": "One recipe from photos",
     "searchFields": {
       "title": "Nimi",
       "description": "Kuvaus",
@@ -30,7 +28,6 @@
       "recipes": "Reseptit",
       "cookbooks": "Keittokirjat"
     },
-    "bulkImageImport": "Useita kuvia",
     "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
