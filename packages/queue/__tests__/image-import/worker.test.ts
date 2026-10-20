@@ -228,7 +228,7 @@ describe("processImageImportJob", () => {
     );
   });
 
-  it("announces a bulk recipe without automatic enrichment", async () => {
+  it("announces the job auto-enrich choice", async () => {
     const { processImageImportJob } = await import("../../src/image-import/worker");
 
     await processImageImportJob(batchJobOf({ autoEnrich: false }));
