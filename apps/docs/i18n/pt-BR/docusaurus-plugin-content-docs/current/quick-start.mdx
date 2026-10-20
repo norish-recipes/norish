@@ -1,0 +1,68 @@
+---
+id: quick-start
+title: Início rápido
+slug: /quick-start
+sidebar_position: 2
+description: Rode o Norish com Docker Compose.
+---
+
+import { DocLinkCard, LinkCardGrid } from "@site/src/components/LinkCard";
+import QuickStartCompose from "@site/src/components/QuickStartCompose";
+
+# Início rápido
+
+Salve o arquivo abaixo como `docker-compose.yml` e execute:
+
+```bash
+docker compose up -d
+```
+
+Depois abra [http://localhost:3000](http://localhost:3000). O primeiro usuário
+a entrar se torna o dono do servidor; veja [Primeira execução](#first-run).
+
+<QuickStartCompose />
+
+:::info Gerando os segredos
+O compose acima tem um `MASTER_KEY` e um `OBSCURA_CDP_TOKEN` aleatórios, gerados
+no seu navegador quando você carregou esta página. Para gerar os seus, execute:
+
+```bash
+openssl rand -base64 32 # MASTER_KEY
+openssl rand -hex 32    # OBSCURA_CDP_TOKEN, o mesmo valor nos dois serviços
+```
+
+Mantenha-os em segredo. O Norish deriva suas chaves de criptografia do
+`MASTER_KEY`, então alterá-lo torna ilegíveis os dados criptografados antes.
+:::
+
+:::tip Modelo para produção
+O repositório tem um modelo mais longo e comentado em
+[`docker-compose.example.yml`](https://github.com/norish-recipes/Norish/blob/main/docker/docker-compose.example.yml).
+:::
+
+## O que tem na stack {#whats-in-the-stack}
+
+| Serviço   | O que faz                                                   |
+| --------- | ----------------------------------------------------------- |
+| `norish`  | O servidor do app Norish.                                   |
+| `db`      | Banco de dados PostgreSQL.                                  |
+| `redis`   | Eventos em tempo real e trabalhos em segundo plano.         |
+| `obscura` | Navegador headless que carrega as páginas para importações. |
+
+## Primeira execução {#first-run}
+
+O primeiro usuário a entrar se torna o dono e administrador do servidor. Em
+seguida o cadastro é desativado, e as configurações do servidor ficam em
+**Configurações => Admin**.
+
+O login com e-mail e senha funciona de imediato. Você pode adicionar OIDC, GitHub
+ou Google; veja [Autenticação](/configuration/authentication).
+
+## Próximos passos {#next-steps}
+
+<LinkCardGrid>
+  <DocLinkCard doc="configuration/authentication" />
+  <DocLinkCard doc="configuration/ai-provider" />
+  <DocLinkCard doc="configuration/server-runtime" />
+  <DocLinkCard doc="configuration/admin-settings" />
+</LinkCardGrid>

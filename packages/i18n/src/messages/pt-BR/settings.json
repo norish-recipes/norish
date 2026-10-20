@@ -145,12 +145,12 @@
       },
       "applyError": "Falha ao aplicar preferência",
       "todaySection": {
-        "title": "Today Section",
+        "title": "Seção Hoje",
         "description": "Como a seção Hoje do painel se comporta",
         "options": {
-          "always": "Always visible",
-          "planned": "Only planned meals",
-          "hidden": "Hidden"
+          "always": "Sempre visível",
+          "planned": "Somente refeições planejadas",
+          "hidden": "Oculta"
         }
       },
       "recipePageColor": {
@@ -354,7 +354,7 @@
       "emptyFiltered": "Nenhum item com status {status} encontrado",
       "emptyDefault": "Nenhum registro de sincronização encontrado",
       "errorDetails": "Detalhes do erro",
-      "pagination": "Page {current} of {total}"
+      "pagination": "Página {current} de {total}"
     }
   },
   "ingredients": {
@@ -434,7 +434,7 @@
       "readAs": "A IA leu como “{name}”.",
       "compared": "Comparado com: {names}.",
       "comparedNothing": "Não havia alimento conhecido para comparar.",
-      "fromWords": "Based on name.",
+      "fromWords": "Com base no nome.",
       "noFood": "A IA não encontrou nenhum alimento neste nome."
     },
     "addAlias": "Adicionar uma tradução",
@@ -589,7 +589,7 @@
       "merge": "Mesclar {name} com {into}",
       "parent": "Classificar {name} em {of}",
       "distinct": "Manter {name} como alimento próprio",
-      "filedFromName": "{name} filed under {of}",
+      "filedFromName": "{name} classificado em {of}",
       "rename": "Renomear {name} para {to}"
     },
     "suggestionsTitle": "Sugestões da IA",
@@ -602,17 +602,17 @@
     "confirmAll": "Confirmar tudo ({count})",
     "dismissAll": "Descartar tudo",
     "suggestedByAI": "Sugerido pela IA",
-    "suggestedFromName": "Based on name",
+    "suggestedFromName": "Com base no nome",
     "proposal": {
-      "merge": "Merge into {into}",
-      "parent": "File under {of}",
-      "distinct": "Food of its own",
+      "merge": "Mesclar com {into}",
+      "parent": "Classificar em {of}",
+      "distinct": "Alimento próprio",
       "rename": "Renomear para {to}"
     },
     "skippedReasons": {
-      "notFlagged": "No longer flagged",
-      "forbidden": "Not yours to edit",
-      "notFound": "No longer exists",
+      "notFlagged": "Não está mais sinalizado",
+      "forbidden": "Você não tem permissão para editar",
+      "notFound": "Não existe mais",
       "settled": "Nome já definido, ou há uma sugestão esperando"
     },
     "icon": {
@@ -1158,64 +1158,64 @@
       "failedToRestore": "Falha ao restaurar padrões"
     },
     "jobQueue": {
-      "title": "Job Queues",
-      "description": "Monitor background jobs across all queues: status, current step, duration, and failures.",
-      "empty": "No jobs found",
+      "title": "Filas de trabalhos",
+      "description": "Monitore os trabalhos em segundo plano de todas as filas: status, etapa atual, duração e falhas.",
+      "empty": "Nenhum trabalho encontrado",
       "filters": {
-        "queue": "Queue",
-        "allQueues": "All queues"
+        "queue": "Fila",
+        "allQueues": "Todas as filas"
       },
       "status": {
-        "waiting": "Waiting",
-        "active": "Active",
-        "delayed": "Delayed",
-        "completed": "Completed",
-        "failed": "Failed",
-        "paused": "Paused",
-        "prioritized": "Prioritized",
-        "unknown": "Unknown",
-        "hanging": "Hanging"
+        "waiting": "Aguardando",
+        "active": "Ativo",
+        "delayed": "Adiado",
+        "completed": "Concluído",
+        "failed": "Falhou",
+        "paused": "Pausado",
+        "prioritized": "Priorizado",
+        "unknown": "Desconhecido",
+        "hanging": "Travado"
       },
       "stepStatus": {
-        "done": "Done",
-        "failed": "Failed",
-        "running": "Running",
-        "skipped": "Skipped",
-        "pending": "Pending"
+        "done": "Concluída",
+        "failed": "Falhou",
+        "running": "Em execução",
+        "skipped": "Ignorada",
+        "pending": "Pendente"
       },
       "steps": {
-        "dedupe-check": "Check existing",
-        "fetch-allergies": "Fetch allergies",
-        "parsing": "Parse recipe",
-        "saving": "Save recipe",
-        "post-processing": "Post processing",
-        "preparing-images": "Prepare images",
-        "ai-extraction": "AI extraction",
-        "parsing-text": "Parse pasted text",
-        "creating-recipes": "Create recipes",
-        "ai-request": "AI request",
-        "syncing-event": "Sync calendar event",
-        "deleting-event": "Delete calendar event",
-        "running": "Run task",
-        "searching": "Search the shop",
-        "reading-product": "Read the product page",
-        "saving-link": "Save the link",
-        "asking-ai": "Ask AI about the food",
+        "dedupe-check": "Verificar existentes",
+        "fetch-allergies": "Buscar alergias",
+        "parsing": "Analisar receita",
+        "saving": "Salvar receita",
+        "post-processing": "Pós-processamento",
+        "preparing-images": "Preparar imagens",
+        "ai-extraction": "Extração por IA",
+        "parsing-text": "Analisar texto colado",
+        "creating-recipes": "Criar receitas",
+        "ai-request": "Requisição à IA",
+        "syncing-event": "Sincronizar evento do calendário",
+        "deleting-event": "Excluir evento do calendário",
+        "running": "Executar tarefa",
+        "searching": "Buscar na loja",
+        "reading-product": "Ler a página do produto",
+        "saving-link": "Salvar o link",
+        "asking-ai": "Perguntar à IA sobre o alimento",
         "drawing-icon": "Desenhar o ícone do alimento",
         "naming": "Limpar o nome do alimento"
       },
       "queues": {
-        "recipe-import": "Recipe import",
-        "image-recipe-import": "Image import",
-        "paste-recipe-import": "Paste import",
-        "nutrition-estimation": "Nutrition estimation",
-        "auto-tagging": "Auto-tagging",
-        "auto-categorization": "Auto-categorization",
-        "allergy-detection": "Allergy detection",
+        "recipe-import": "Importação de receitas",
+        "image-recipe-import": "Importação por imagem",
+        "paste-recipe-import": "Importação por texto colado",
+        "nutrition-estimation": "Estimativa nutricional",
+        "auto-tagging": "Tags automáticas",
+        "auto-categorization": "Categorização automática",
+        "allergy-detection": "Detecção de alergias",
         "recipe-provenance": "Procedência da receita",
         "ingredient-linking": "Vinculação de ingredientes",
-        "caldav-sync": "CalDAV sync",
-        "scheduled-tasks": "Scheduled tasks",
+        "caldav-sync": "Sincronização CalDAV",
+        "scheduled-tasks": "Tarefas agendadas",
         "image-generation": "Geração de imagens",
         "store-lookup": "Consulta de loja",
         "ingredient-review": "Perguntar à IA sobre ingredientes",
@@ -1223,61 +1223,61 @@
         "new-ingredients": "Ingredientes novos"
       },
       "summary": {
-        "failed": "{count} failed"
+        "failed": "{count} com falha"
       },
       "table": {
-        "job": "Job",
+        "job": "Trabalho",
         "status": "Status",
-        "step": "Step",
-        "duration": "Duration",
-        "created": "Created",
-        "runsAt": "Runs {time}"
+        "step": "Etapa",
+        "duration": "Duração",
+        "created": "Criado",
+        "runsAt": "Executa {time}"
       },
       "detail": {
-        "title": "Job Details",
-        "notFound": "Job not found. It may have been cleaned up.",
+        "title": "Detalhes do trabalho",
+        "notFound": "Trabalho não encontrado. Ele pode ter sido removido na limpeza.",
         "sections": {
-          "error": "Error",
-          "pipelineSteps": "Pipeline Steps",
-          "input": "Input",
+          "error": "Erro",
+          "pipelineSteps": "Etapas do pipeline",
+          "input": "Entrada",
           "logs": "Logs",
-          "errors": "Errors"
+          "errors": "Erros"
         },
         "fields": {
-          "queue": "Queue",
-          "jobId": "Job ID",
-          "description": "Description",
-          "recipe": "Recipe",
-          "created": "Created",
-          "started": "Started",
-          "finished": "Finished",
-          "duration": "Duration",
-          "attempts": "Attempts",
+          "queue": "Fila",
+          "jobId": "ID do trabalho",
+          "description": "Descrição",
+          "recipe": "Receita",
+          "created": "Criado",
+          "started": "Iniciado",
+          "finished": "Finalizado",
+          "duration": "Duração",
+          "attempts": "Tentativas",
           "models": "Modelos",
           "tokens": "Tokens",
-          "runsAt": "Runs at",
-          "nextRun": "Next run"
+          "runsAt": "Executa em",
+          "nextRun": "Próxima execução"
         },
         "modelTokens": "{tokens} tokens",
-        "attempt": "Attempt {number}",
+        "attempt": "Tentativa {number}",
         "stackTrace": "Stack trace"
       },
       "actions": {
-        "retry": "Retry",
-        "remove": "Remove"
+        "retry": "Tentar novamente",
+        "remove": "Remover"
       },
       "removeModal": {
-        "message": "Permanently remove this job?",
-        "confirm": "Remove job"
+        "message": "Remover este trabalho permanentemente?",
+        "confirm": "Remover trabalho"
       },
       "retention": {
-        "title": "Job Retention",
-        "keepCompleted": "Keep completed jobs",
-        "keepFailed": "Keep failed jobs",
-        "maxAgeDays": "Max age (days)",
+        "title": "Retenção de trabalhos",
+        "keepCompleted": "Manter trabalhos concluídos",
+        "keepFailed": "Manter trabalhos com falha",
+        "maxAgeDays": "Idade máxima (dias)",
         "description": "Quantos trabalhos concluídos manter por fila."
       },
-      "pagination": "Page {current} of {total}"
+      "pagination": "Página {current} de {total}"
     },
     "cuisineVocabulary": {
       "description": "Culinárias são um vocabulário curado que você controla. Os nomes aparecem exatamente como escritos aqui, em todos os idiomas.",

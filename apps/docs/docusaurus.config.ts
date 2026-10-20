@@ -29,6 +29,13 @@ function norishTheme(): Plugin {
 
 // Norish documentation site — https://docs.norish.dev
 // Hosted on Cloudflare Pages, isolated from the monorepo workspace.
+// Only English is built by default, so the docs deploy stays fast. Set
+// DOCS_LOCALES=en,pt-BR to also build the Brazilian Portuguese site.
+const DOCS_LOCALES = (process.env.DOCS_LOCALES ?? "en")
+  .split(",")
+  .map((locale) => locale.trim())
+  .filter(Boolean);
+
 const config: Config = {
   title: "Norish",
   tagline: "Any recipe any source",
@@ -78,7 +85,10 @@ const config: Config = {
 
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: DOCS_LOCALES,
+    localeConfigs: {
+      "pt-BR": { label: "Português (Brasil)", htmlLang: "pt-BR" },
+    },
   },
 
   presets: [
