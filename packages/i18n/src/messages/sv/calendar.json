@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Kalender"
+  },
+  "mobile": {
+    "today": "Idag",
+    "scrollToToday": "Gå till idag"
+  },
+  "editNote": {
+    "title": "Redigera anteckning",
+    "noteLabel": "Anteckning",
+    "notePlaceholder": "Skriv en anteckning...",
+    "date": "Datum",
+    "slot": "Måltid"
+  },
+  "navigation": {
+    "previousMonth": "Föregående månad",
+    "nextMonth": "Nästa månad",
+    "prev": "Föregående",
+    "next": "Nästa"
+  },
+  "weekdays": {
+    "mon": "mån",
+    "tue": "tis",
+    "wed": "ons",
+    "thu": "tor",
+    "fri": "fre",
+    "sat": "lör",
+    "sun": "sön"
+  },
+  "timeline": {
+    "noItems": "Inget planerat",
+    "goToRecipe": "Gå till recept",
+    "addItem": "Lägg till",
+    "untitled": "Utan titel",
+    "serving": "portion",
+    "servings": "portioner",
+    "noImage": "Ingen bild",
+    "recipe": "Recept",
+    "note": "Anteckning"
+  },
+  "editPlannedRecipe": {
+    "title": "Redigera planerat recept",
+    "date": "Datum",
+    "slot": "Måltid"
+  },
+  "panel": {
+    "addToCalendar": "Lägg till i kalendern",
+    "addRecipe": "Lägg till recept",
+    "noDaysAvailable": "Inga dagar tillgängliga.",
+    "searchPlaceholder": "Sök efter recept eller lägg till anteckningar...",
+    "addNote": "Lägg till anteckning: {input}",
+    "randomRecipe": "Slumpa recept",
+    "noRecipesFound": "Inga recept hittades.",
+    "failedToLoadRecipes": "Det gick inte att hämta recepten."
+  }
+}

@@ -173,7 +173,6 @@ describe("Unit Localization", () => {
         // Spanish stood here until it became a language the vocabulary knows
         // (#504); the fallback is for languages Norish is not translated into.
         expect(formatUnit("tablespoon", "ja", unitsConfig)).toBe("tbsp");
-        expect(formatUnit("tablespoon", "sv", unitsConfig)).toBe("tbsp");
       });
 
       it("returns unitId for unknown units", () => {
@@ -235,6 +234,27 @@ describe("Unit Localization", () => {
     it("keeps a locale's abbreviation for a single item and spells it out beyond one", () => {
       expect(formatUnit("liter", "es", unitsConfig, 1)).toBe("l");
       expect(formatUnit("liter", "es", unitsConfig, 2)).toBe("litros");
+    });
+  });
+
+  describe("Swedish units", () => {
+    it("uses Swedish abbreviations and plural forms", () => {
+      expect(formatUnit("teaspoon", "sv", unitsConfig, 1)).toBe("tsk");
+      expect(formatUnit("tablespoon", "sv", unitsConfig, 2)).toBe("matskedar");
+      expect(formatUnit("gram", "sv", unitsConfig, 500)).toBe("gram");
+    });
+
+    it.each([
+      ["2 tsk salt", 2, "teaspoon", "salt"],
+      ["2 matskedar olja", 2, "tablespoon", "olja"],
+      ["2 dl mjöl", 2, "deciliter", "mjöl"],
+      ["3 klyftor vitlök", 3, "clove", "vitlök"],
+    ])("parses %s", (line, quantity, unitId, description) => {
+      const parsed = parseIngredientWithDefaults(line, unitsConfig)[0];
+
+      expect(parsed.quantity).toBe(quantity);
+      expect(parsed.unitOfMeasureID).toBe(unitId);
+      expect(parsed.description).toBe(description);
     });
   });
 
