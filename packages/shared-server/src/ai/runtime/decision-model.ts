@@ -11,7 +11,7 @@ import type {
   Experimental_EvaluationModelV4Result as EvaluationResult,
   LanguageModelV4,
 } from "@ai-sdk/provider";
-import { generateText, Output } from "ai";
+import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
 
 import { aiLogger } from "@norish/shared-server/logger";
@@ -158,13 +158,18 @@ async function evaluateQuestions(
   try {
     return await ask({ model, instructions: DECISION_INSTRUCTIONS, schema, options });
   } catch (error) {
-    if (!canDegradeToJsonMode(DECISION_PROVIDER) || !isRequestShapeRejection(error)) {
+    const unstructured = NoObjectGeneratedError.isInstance(error);
+
+    if (
+      !canDegradeToJsonMode(DECISION_PROVIDER) ||
+      (!unstructured && !isRequestShapeRejection(error))
+    ) {
       throw error;
     }
 
     aiLogger.warn(
-      { provider: DECISION_PROVIDER, model: model.modelId },
-      "Decision endpoint refused a JSON-schema request, retrying in plain JSON mode"
+      { provider: DECISION_PROVIDER, model: model.modelId, unstructured },
+      "Decision endpoint did not honour a JSON-schema request, retrying in plain JSON mode"
     );
 
     return ask({

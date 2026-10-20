@@ -219,6 +219,43 @@ describe("generic OpenAI-compatible Decision endpoints", () => {
     ).toEqual(["json_schema", "json_object"]);
     expect(JSON.stringify(captured[1]!.body.messages)).toContain("JSON Schema");
   });
+
+  it("retries in plain JSON mode when a schema request answers with prose", async () => {
+    reply = (body) => {
+      const responseFormat = body.response_format as { type: string };
+
+      return responseFormat.type === "json_schema"
+        ? {
+            status: 200,
+            body: completion("The dish is most likely busy, with a fair chance of being calm."),
+          }
+        : {
+            status: 200,
+            body: completion(JSON.stringify({ mood: { probabilities: { calm: 0.2, busy: 0.6 } } })),
+          };
+    };
+
+    const result = await decide({
+      feature: "provider-test",
+      state: { title: "Lentil stew" },
+      questions: {
+        mood: {
+          type: "choice",
+          instructions: "How busy is the dish?",
+          criteria: { calm: null, busy: null },
+        },
+      },
+    });
+
+    expect(result.answers.mood).toEqual({
+      type: "choice",
+      choice: "busy",
+      probabilities: { calm: 0.25, busy: expect.closeTo(0.75, 10) },
+    });
+    expect(
+      captured.map((request) => (request.body.response_format as { type: string }).type)
+    ).toEqual(["json_schema", "json_object"]);
+  });
 });
 
 describe("testDecisionModel against a generic endpoint", () => {
