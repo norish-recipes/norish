@@ -146,6 +146,7 @@ export function mapRecipeToPublicRecipeView(
     images: (recipe.images ?? []).map((image) => ({
       image: toSharedMediaUrl(image.image, shareToken),
       order: image.order,
+      generated: image.generated === true,
     })),
     videos: (recipe.videos ?? []).map((video) => ({
       video: toSharedMediaUrl(video.video, shareToken),

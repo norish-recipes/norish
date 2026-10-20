@@ -477,4 +477,34 @@ describe("the public view of a shared recipe", () => {
 
     expect(view.recipeIngredients.every((line) => line.icon === null)).toBe(true);
   });
+
+  it("keeps the Generated Image marker on a gallery image", async () => {
+    const { mapRecipeToPublicRecipeView } =
+      await import("@norish/db/repositories/recipe-share-helpers");
+    const recipe = createMockFullRecipe({
+      images: [
+        {
+          id: "123e4567-e89b-12d3-a456-426614174010",
+          image: "/recipes/images/generated.jpg",
+          order: 0,
+          generated: true,
+          version: 1,
+        },
+        {
+          id: "123e4567-e89b-12d3-a456-426614174011",
+          image: "/recipes/images/source.jpg",
+          order: 1,
+          generated: false,
+          version: 1,
+        },
+      ],
+    });
+
+    const view = mapRecipeToPublicRecipeView(recipe, "public-token", new Map());
+
+    expect(view.images).toEqual([
+      { image: "/share/public-token/media/generated.jpg", order: 0, generated: true },
+      { image: "/share/public-token/media/source.jpg", order: 1, generated: false },
+    ]);
+  });
 });
