@@ -136,7 +136,7 @@
       "failed": "Импортирането не бе успешно"
     },
     "image": {
-      "title": "Импортиране от изображение",
+      "title": "Една рецепта от снимки",
       "dropzone": "Пусни изображения тук или щракни, за да прегледаш",
       "paste": "за поставяне",
       "formats": "Поддържа JPG, PNG, WebP. Макс. 10MB на файл.",
@@ -153,7 +153,15 @@
       "library": "Библиотека",
       "takePhoto": "Направи снимка",
       "counter": "{count} / {max} снимки",
-      "importFromCount": "Импортирай от {count, plural, one {# снимка} other {# снимки}}"
+      "importFromCount": "Импортирай от {count, plural, one {# снимка} other {# снимки}}",
+      "description": "Снимките се обединяват в една рецепта.",
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "Импортирай от URL адрес, сканирай снимка или започни от нулата."

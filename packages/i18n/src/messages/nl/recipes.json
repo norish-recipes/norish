@@ -27,7 +27,8 @@
       "all": "Alles",
       "recipes": "Recepten",
       "cookbooks": "Kookboeken"
-    }
+    },
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "Terug naar bibliotheek",
@@ -423,5 +424,34 @@
     "removeImage": "Afbeelding verwijderen",
     "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
     "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
+  },
+  "bulkImport": {
+    "title": "Meerdere recepten uit foto's importeren",
+    "clear": "Wissen",
+    "retryFailed": "Opnieuw proberen mislukt",
+    "progressTitle": "Voortgang van importeren",
+    "progressCount": "{done} van {total} recepten klaar",
+    "progressFailed": "{count, plural, one {# afbeelding mislukt} other {# afbeeldingen mislukt}}",
+    "status": {
+      "queued": "In wachtrij",
+      "processing": "Afbeelding lezen",
+      "done": "Recept gemaakt",
+      "failed": "Mislukt"
+    },
+    "error": {
+      "unsupported-type": "Dit afbeeldingstype wordt niet ondersteund.",
+      "too-large": "Deze afbeelding is te groot.",
+      "empty-file": "Deze afbeelding is leeg.",
+      "extraction-failed": "Norish kon geen recept uit deze afbeelding lezen.",
+      "queue-failed": "Het importeren kon niet starten. Probeer het opnieuw."
+    },
+    "openRecipe": "Recept openen",
+    "retry": "Opnieuw proberen",
+    "aiDisabled": "Afbeeldingen importeren vereist een AI-provider. Vraag een beheerder om er een in te schakelen.",
+    "backToRecipes": "Terug naar recepten",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results."
   }
 }

@@ -8,6 +8,8 @@ import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspac
 import { serverLogger } from "@norish/shared-server/logger";
 import { initTrpcWebSocket } from "@norish/trpc/server";
 
+import { writeClientError } from "./client-errors";
+import { rejectBulkImageImportLimit } from "./request-limits";
 import { serveStaticFile } from "./static-files";
 
 const WEB_APP_DIR = resolveExistingWorkspacePath(join("apps", "web"));
@@ -24,6 +26,8 @@ export async function createServer() {
 
   const server = http.createServer(async (req, res) => {
     try {
+      if (rejectBulkImageImportLimit(req, res)) return;
+
       // Serve static files from uploads directory
       if (serveStaticFile(req, res)) return;
 
@@ -37,6 +41,8 @@ export async function createServer() {
       res.end("Internal server error");
     }
   });
+
+  server.on("clientError", (error, socket) => writeClientError(error, socket));
 
   // Initialize tRPC WebSocket - handles upgrade for /trpc path
   initTrpcWebSocket(server);

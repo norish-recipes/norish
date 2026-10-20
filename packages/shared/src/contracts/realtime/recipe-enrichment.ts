@@ -23,6 +23,7 @@ export const RecipeBecameUsablePayloadSchema = z.object({
   userId: z.string(),
   householdKey: z.string(),
   householdUserIds: z.array(z.string()).nullable(),
+  autoEnrich: z.boolean().optional(),
 });
 
 export type RecipeBecameUsablePayload = z.infer<typeof RecipeBecameUsablePayloadSchema>;

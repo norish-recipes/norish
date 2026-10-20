@@ -136,7 +136,7 @@
       "failed": "가져오기 실패"
     },
     "image": {
-      "title": "이미지에서 가져오기",
+      "title": "사진으로 만드는 하나의 레시피",
       "dropzone": "여기에 이미지를 놓거나 클릭하여 찾아보세요.",
       "paste": "붙여넣기",
       "formats": "파일 당 최대 10MB 용량의 JPG, PNG, WebP를 지원합니다.",
@@ -153,7 +153,15 @@
       "library": "라이브러리",
       "takePhoto": "사진 촬영",
       "counter": "{count} / {max} 사진",
-      "importFromCount": "{count, plural, one {#장 사진에서 가져오기} other {#장 사진에서 가져오기}}"
+      "importFromCount": "{count, plural, one {#장 사진에서 가져오기} other {#장 사진에서 가져오기}}",
+      "description": "사진은 하나의 레시피로 합쳐집니다.",
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "URL에서 가져오거나 사진을 스캔하거나 처음부터 시작하세요."

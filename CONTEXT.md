@@ -212,6 +212,20 @@ _Avoid_: Staple (a judgement about the food, not a fact about the household), St
 The portable file a Norish instance writes so recipes can leave it: every recipe the exporter can see, complete with its media, the author's display name as attribution, and the exporter's own rating and favourite mark. It carries recipe content rather than the exporter's Library, but each recipe names the cookbooks it is in, by title, from every cookbook the exporter can see; the importer receives them as cookbooks of their own, the one already bearing that title or a new one, while a cookbook's cover and any cookbook holding none of the exported recipes stay behind. It is an exchange of recipe content, never a backup — whoever imports it owns what that creates, and no accounts, emails, or instance state travel inside, so an archive is safe to hand around. Cuisine names travel as words and attach only where the receiving instance's curated vocabulary already knows them; an archive never extends a vocabulary its administrator owns. Norish reads foreign archives (Mela, Paprika, Mealie, Tandoor, Recipe Keeper) through the same import door as its own, and a foreign app's collections arrive the way a Norish archive's cookbooks do.
 _Avoid_: Export (the act, not the artifact), Backup (promises restoration an archive refuses to make), Instance export (suggests instance state is inside)
 
+**Bulk Image Import**:
+One image import that treats each image as a recipe.
+A person selects up to ten images, 40 MB in total.
+Norish queues one image-import job for each image, and the screen shows the result of each one.
+It uses the one-image import.
+Thus an image with no recipe or a provider failure marks only its item failed, and the other items continue.
+A failed item that the person can try again keeps its bytes for 24 hours.
+The source image of a done item stays the recipe's image.
+The server does not accept an image with a type or size that it does not allow.
+One person can keep at most three batches open.
+It needs an AI provider and an authenticated person.
+Only the person who starts the batch can see it or retry it.
+_Avoid_: Batch OCR (names the reading), Multi-image recipe (one recipe from many images), Job storm (the concurrency limit).
+
 **AI Runtime**:
 The single seam through which Norish issues a model request — structured generation, transcription, image generation, and a Decision, all on one shared transport. A feature never constructs a provider client, never reads Generation Preferences, and never calls the SDK: it hands the runtime its Prompt's name and its Prompt Sections, plus a schema where there is something to validate — or, for a Decision, a state and typed questions — and gets a result or a typed error that says whether retrying is worth it (ADR-0015, ADR-0024, ADR-0035). It owns all AI egress but no longer reads one configuration: structured generation follows the server's AI provider, transcription, image generation and Decisions each follow their own block.
 _Avoid_: AI executor (names the deleted prototype that had no callers), AI client (suggests a per-provider object, which is what the runtime hides)

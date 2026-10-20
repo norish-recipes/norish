@@ -27,7 +27,8 @@
       "all": "전체",
       "recipes": "레시피",
       "cookbooks": "요리책"
-    }
+    },
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "라이브러리로 돌아가기",
@@ -423,5 +424,34 @@
     "removeImage": "이미지 삭제",
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
     "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
+  },
+  "bulkImport": {
+    "title": "사진에서 여러 레시피 가져오기",
+    "clear": "지우기",
+    "retryFailed": "다시 시도하지 못했습니다",
+    "progressTitle": "가져오기 진행 상황",
+    "progressCount": "{total}개 중 {done}개 레시피 완료",
+    "progressFailed": "{count, plural, other {#장 실패}}",
+    "status": {
+      "queued": "대기 중",
+      "processing": "이미지 읽는 중",
+      "done": "레시피 생성됨",
+      "failed": "실패"
+    },
+    "error": {
+      "unsupported-type": "지원하지 않는 이미지 형식입니다.",
+      "too-large": "이미지가 너무 큽니다.",
+      "empty-file": "이미지가 비어 있습니다.",
+      "extraction-failed": "이 이미지에서 레시피를 읽지 못했습니다.",
+      "queue-failed": "가져오기를 시작하지 못했습니다. 다시 시도하세요."
+    },
+    "openRecipe": "레시피 열기",
+    "retry": "다시 시도",
+    "aiDisabled": "이미지 가져오기에는 AI 제공자가 필요합니다. 관리자에게 활성화를 요청하세요.",
+    "backToRecipes": "레시피로 돌아가기",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results."
   }
 }

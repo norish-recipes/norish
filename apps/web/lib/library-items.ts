@@ -1,3 +1,5 @@
+import type { BulkImportTrackerItem } from "@/context/bulk-import-state";
+
 import type { CookbookSummaryDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 
 /**
@@ -10,4 +12,5 @@ import type { CookbookSummaryDTO, RecipeDashboardDTO } from "@norish/shared/cont
 export type LibraryGridItem =
   | { kind: "pending"; id: string }
   | { kind: "recipe"; id: string; recipe: RecipeDashboardDTO }
-  | { kind: "cookbook"; id: string; cookbook: CookbookSummaryDTO };
+  | { kind: "cookbook"; id: string; cookbook: CookbookSummaryDTO }
+  | { kind: "importing"; id: string; item: BulkImportTrackerItem };

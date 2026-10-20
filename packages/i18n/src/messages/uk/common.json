@@ -136,7 +136,7 @@
       "failed": "Помилка імпорту"
     },
     "image": {
-      "title": "Імпорт із зображення",
+      "title": "Один рецепт із фотографій",
       "dropzone": "Перетягніть зображення сюди або натисніть, щоб вибрати",
       "paste": "щоб вставити",
       "formats": "Підтримуються JPG, PNG, WebP. До 10 МБ на файл.",
@@ -153,7 +153,15 @@
       "library": "Галерея",
       "takePhoto": "Зробити фото",
       "counter": "Фото: {count} / {max}",
-      "importFromCount": "Імпортувати з {count, plural, one {# фото} few {# фото} many {# фото} other {# фото}}"
+      "importFromCount": "Імпортувати з {count, plural, one {# фото} few {# фото} many {# фото} other {# фото}}",
+      "description": "Фотографії об'єднуються в один рецепт.",
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "Імпортуйте за URL, скануйте фото або почніть з нуля."

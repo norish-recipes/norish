@@ -27,7 +27,8 @@
       "all": "Kaikki",
       "recipes": "Reseptit",
       "cookbooks": "Keittokirjat"
-    }
+    },
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "Takaisin kirjastoon",
@@ -423,5 +424,34 @@
     "removeImage": "Poista kuva",
     "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
     "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
+  },
+  "bulkImport": {
+    "title": "Tuo useita reseptejä kuvista",
+    "clear": "Tyhjennä",
+    "retryFailed": "Uudelleenyritys epäonnistui",
+    "progressTitle": "Tuonnin edistyminen",
+    "progressCount": "{done}/{total} reseptiä valmiina",
+    "progressFailed": "{count, plural, one {# kuva epäonnistui} other {# kuvaa epäonnistui}}",
+    "status": {
+      "queued": "Jonossa",
+      "processing": "Luetaan kuvaa",
+      "done": "Resepti luotu",
+      "failed": "Epäonnistui"
+    },
+    "error": {
+      "unsupported-type": "Tätä kuvatyyppiä ei tueta.",
+      "too-large": "Tämä kuva on liian suuri.",
+      "empty-file": "Tämä kuva on tyhjä.",
+      "extraction-failed": "Norish ei voinut lukea reseptiä tästä kuvasta.",
+      "queue-failed": "Tuonti ei voinut alkaa. Yritä uudelleen."
+    },
+    "openRecipe": "Avaa resepti",
+    "retry": "Yritä uudelleen",
+    "aiDisabled": "Kuvien tuonti vaatii AI-palveluntarjoajan. Pyydä ylläpitäjää ottamaan sellainen käyttöön.",
+    "backToRecipes": "Takaisin resepteihin",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results."
   }
 }

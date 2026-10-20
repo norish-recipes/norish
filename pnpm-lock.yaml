@@ -986,6 +986,9 @@ importers:
       '@norish/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@testcontainers/redis':
+        specifier: 'catalog:'
+        version: 12.1.0
       eslint:
         specifier: 'catalog:'
         version: 9.39.5(jiti@2.7.0)

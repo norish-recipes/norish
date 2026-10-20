@@ -1,5 +1,6 @@
 "use client";
 
+import BulkImportIndicator from "@/components/dashboard/bulk-import-indicator";
 import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import LibraryHeading from "@/components/dashboard/library-heading";
@@ -23,7 +24,10 @@ function RecipeLibrary() {
             <LibraryHeading id={LIBRARY_HEADING_ID} />
             <div className="flex items-center gap-2">
               <RecipeViewModeToggle />
-              <CreateRecipeButton />
+              <div className="relative">
+                <BulkImportIndicator />
+                <CreateRecipeButton />
+              </div>
             </div>
           </div>
 

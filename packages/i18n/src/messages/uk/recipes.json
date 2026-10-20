@@ -27,7 +27,8 @@
       "all": "Усе",
       "recipes": "Рецепти",
       "cookbooks": "Кулінарні книги"
-    }
+    },
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "Назад до бібліотеки",
@@ -423,5 +424,34 @@
     "removeImage": "Прибрати зображення",
     "imageUploadFailed": "Не вдалося завантажити зображення.",
     "imageNeedsConnection": "Зображення можна буде змінити, коли ви знову будете онлайн."
+  },
+  "bulkImport": {
+    "title": "Імпорт кількох рецептів із фотографій",
+    "clear": "Очистити",
+    "retryFailed": "Не вдалося повторити імпорт",
+    "progressTitle": "Перебіг імпорту",
+    "progressCount": "Готово {done} з {total} рецептів",
+    "progressFailed": "{count, plural, one {# зображення не вдалося} few {# зображення не вдалося} many {# зображень не вдалося} other {# зображення не вдалося}}",
+    "status": {
+      "queued": "У черзі",
+      "processing": "Читання зображення",
+      "done": "Рецепт створено",
+      "failed": "Помилка"
+    },
+    "error": {
+      "unsupported-type": "Цей тип зображення не підтримується.",
+      "too-large": "Це зображення завелике.",
+      "empty-file": "Це зображення порожнє.",
+      "extraction-failed": "Norish не зміг прочитати рецепт із цього зображення.",
+      "queue-failed": "Імпорт не вдалося почати. Спробуйте ще раз."
+    },
+    "openRecipe": "Відкрити рецепт",
+    "retry": "Повторити",
+    "aiDisabled": "Для імпорту зображень потрібен постачальник AI. Попросіть адміністратора ввімкнути його.",
+    "backToRecipes": "Назад до рецептів",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results."
   }
 }

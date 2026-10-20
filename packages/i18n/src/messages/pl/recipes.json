@@ -27,7 +27,8 @@
       "all": "Wszystko",
       "recipes": "Przepisy",
       "cookbooks": "Książki kucharskie"
-    }
+    },
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "Wróć do biblioteki",
@@ -423,5 +424,34 @@
     "removeImage": "Usuń obraz",
     "imageUploadFailed": "Nie udało się przesłać obrazu.",
     "imageNeedsConnection": "Obrazy możesz zmienić, gdy znów będziesz online."
+  },
+  "bulkImport": {
+    "title": "Importuj wiele przepisów ze zdjęć",
+    "clear": "Wyczyść",
+    "retryFailed": "Nie udało się ponowić importu",
+    "progressTitle": "Postęp importu",
+    "progressCount": "{done} z {total} przepisów gotowych",
+    "progressFailed": "{count, plural, one {# zdjęcie nie powiodło się} few {# zdjęcia nie powiodły się} many {# zdjęć nie powiodło się} other {# zdjęcia nie powiodły się}}",
+    "status": {
+      "queued": "W kolejce",
+      "processing": "Odczyt zdjęcia",
+      "done": "Przepis utworzony",
+      "failed": "Niepowodzenie"
+    },
+    "error": {
+      "unsupported-type": "Ten typ zdjęcia nie jest obsługiwany.",
+      "too-large": "To zdjęcie jest za duże.",
+      "empty-file": "To zdjęcie jest puste.",
+      "extraction-failed": "Norish nie mógł odczytać przepisu z tego zdjęcia.",
+      "queue-failed": "Import nie mógł się rozpocząć. Spróbuj ponownie."
+    },
+    "openRecipe": "Otwórz przepis",
+    "retry": "Ponów",
+    "aiDisabled": "Import zdjęć wymaga dostawcy AI. Poproś administratora o włączenie go.",
+    "backToRecipes": "Wróć do przepisów",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results."
   }
 }

@@ -27,6 +27,7 @@ export type * from "./dto/recipe-shares";
 export type * from "./dto/cookbook";
 export * from "./optimistic";
 export * from "./uploads";
+export * from "./image-import-batch";
 export * from "./store-types";
 export * from "./recurrence";
 export * from "./constants/caldav";

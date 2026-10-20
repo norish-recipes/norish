@@ -27,7 +27,8 @@
       "all": "Tutto",
       "recipes": "Ricette",
       "cookbooks": "Libri di cucina"
-    }
+    },
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "Torna alla libreria",
@@ -423,5 +424,34 @@
     "removeImage": "Rimuovi immagine",
     "imageUploadFailed": "Impossibile caricare l'immagine.",
     "imageNeedsConnection": "Potrai cambiare le immagini quando sarai di nuovo online."
+  },
+  "bulkImport": {
+    "title": "Importa più ricette dalle foto",
+    "clear": "Svuota",
+    "retryFailed": "Impossibile riprovare l'importazione",
+    "progressTitle": "Avanzamento dell'importazione",
+    "progressCount": "{done} ricette su {total} pronte",
+    "progressFailed": "{count, plural, one {# immagine non riuscita} other {# immagini non riuscite}}",
+    "status": {
+      "queued": "In coda",
+      "processing": "Lettura immagine",
+      "done": "Ricetta creata",
+      "failed": "Non riuscita"
+    },
+    "error": {
+      "unsupported-type": "Questo tipo di immagine non è supportato.",
+      "too-large": "Questa immagine è troppo grande.",
+      "empty-file": "Questa immagine è vuota.",
+      "extraction-failed": "Norish non è riuscito a leggere una ricetta da questa immagine.",
+      "queue-failed": "L'importazione non è potuta partire. Riprova."
+    },
+    "openRecipe": "Apri ricetta",
+    "retry": "Riprova",
+    "aiDisabled": "L'importazione di immagini richiede un provider AI. Chiedi a un amministratore di attivarne uno.",
+    "backToRecipes": "Torna alle ricette",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results."
   }
 }

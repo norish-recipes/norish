@@ -102,6 +102,7 @@ export default function CreateRecipeButton() {
             <Label>{t("importFromImage")}</Label>
           </Dropdown.Item>
         ) : null}
+
         <Dropdown.Item
           key="create"
           id="create"

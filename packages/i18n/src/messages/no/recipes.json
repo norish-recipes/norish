@@ -27,7 +27,8 @@
       "all": "Alt",
       "recipes": "Oppskrifter",
       "cookbooks": "Kokebøker"
-    }
+    },
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "Tilbake til biblioteket",
@@ -423,5 +424,34 @@
     "removeImage": "Fjern bilde",
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
     "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
+  },
+  "bulkImport": {
+    "title": "Importer flere oppskrifter fra bilder",
+    "clear": "Tøm",
+    "retryFailed": "Ny forsøk mislyktes",
+    "progressTitle": "Importfremdrift",
+    "progressCount": "{done} av {total} oppskrifter klare",
+    "progressFailed": "{count, plural, one {# bilde mislyktes} other {# bilder mislyktes}}",
+    "status": {
+      "queued": "I kø",
+      "processing": "Leser bilde",
+      "done": "Oppskrift opprettet",
+      "failed": "Mislyktes"
+    },
+    "error": {
+      "unsupported-type": "Denne bildetypen støttes ikke.",
+      "too-large": "Dette bildet er for stort.",
+      "empty-file": "Dette bildet er tomt.",
+      "extraction-failed": "Norish kunne ikke lese en oppskrift fra dette bildet.",
+      "queue-failed": "Importen kunne ikke starte. Prøv igjen."
+    },
+    "openRecipe": "Åpne oppskrift",
+    "retry": "Prøv igjen",
+    "aiDisabled": "Bildeimport krever en AI-leverandør. Be en administrator om å aktivere en.",
+    "backToRecipes": "Tilbake til oppskrifter",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results."
   }
 }

@@ -136,7 +136,7 @@
       "failed": "Tuonti epäonnistui"
     },
     "image": {
-      "title": "Tuo kuvasta",
+      "title": "Yksi resepti kuvista",
       "dropzone": "Pudota kuvat tähän tai selaa napsauttamalla",
       "paste": "liittääksesi",
       "formats": "Tukee JPG-, PNG- ja WebP-muotoja. Enintään 10 Mt tiedostoa kohden.",
@@ -153,7 +153,15 @@
       "library": "Kirjasto",
       "takePhoto": "Ota kuva",
       "counter": "{count} / {max} kuvaa",
-      "importFromCount": "Tuo {count, plural, one {# kuvasta} other {# kuvasta}}"
+      "importFromCount": "Tuo {count, plural, one {# kuvasta} other {# kuvasta}}",
+      "description": "Kuvat yhdistetään yhdeksi reseptiksi.",
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "Tuo osoitteesta, skannaa kuva tai aloita tyhjästä."

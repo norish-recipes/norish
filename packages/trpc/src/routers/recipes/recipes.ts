@@ -6,6 +6,7 @@ import type { RecipeListContext } from "@norish/db";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   dashboardRecipe,
   deleteRecipeById,
@@ -29,8 +30,14 @@ import {
   addImageImportJob,
   addImportJob,
   addPasteImportJob,
+  createImageImportBatch,
   enrichRecipe,
+  getImageImportBatchForUser,
+  ImageImportBatchLimitError,
+  ImageImportBatchPayloadTooLargeError,
   preparePasteImport,
+  retryImageImportBatchItems,
+  toImageImportBatchDTO,
 } from "@norish/queue";
 import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
 import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
@@ -51,15 +58,28 @@ import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
-import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
+import {
+  ALLOWED_OCR_MIME_SET,
+  FilterMode,
+  MAX_BULK_IMAGE_BATCH_BYTES,
+  MAX_OCR_FILES,
+  RecipeCategory,
+  SortOrder,
+} from "@norish/shared/contracts";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
 import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
+import type { UploadedFile } from "../../form-data";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  assertRecipeAccess,
+  findRecipeForViewer,
+  handleRecipeError,
+  resolveAutoEnrichOnAdd,
+} from "./helpers";
 import {
   randomRecipeInputSchema,
   recipeAutocompleteInputSchema,
@@ -696,6 +716,161 @@ const importFromImagesProcedure = authedProcedure
     return recipeId;
   });
 
+export const importFromImagesBatchProcedure = authedProcedure
+  .input(formDataInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    if (!(await checkAIEnabled())) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "AI features are disabled",
+      });
+    }
+
+    const autoEnrichEntry = input.get("autoEnrich");
+    const requestedAutoEnrich =
+      autoEnrichEntry === "true" ? true : autoEnrichEntry === "false" ? false : undefined;
+
+    const uploads: Array<{ index: number; file: UploadedFile }> = [];
+
+    input.forEach((value, key) => {
+      if (!key.startsWith("file") || !isUploadedFile(value)) {
+        return;
+      }
+
+      const index = Number.parseInt(key.slice("file".length), 10);
+
+      if (!Number.isInteger(index) || index < 0) {
+        return;
+      }
+
+      uploads.push({ index, file: value });
+    });
+
+    uploads.sort((left, right) => left.index - right.index);
+
+    if (uploads.length === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "No files provided",
+      });
+    }
+
+    if (uploads.length > MAX_OCR_FILES) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `At most ${MAX_OCR_FILES} images can be imported at once`,
+      });
+    }
+
+    const oversized = uploads.find(({ file }) => file.size > SERVER_CONFIG.MAX_IMAGE_FILE_SIZE);
+
+    if (oversized) {
+      throw new TRPCError({
+        code: "PAYLOAD_TOO_LARGE",
+        message: `${oversized.file.name} is larger than the image size limit`,
+      });
+    }
+
+    const unsupported = uploads.find(({ file }) => !ALLOWED_OCR_MIME_SET.has(file.type));
+
+    if (unsupported) {
+      throw new TRPCError({
+        code: "UNSUPPORTED_MEDIA_TYPE",
+        message: `${unsupported.file.name} is not a supported image`,
+      });
+    }
+
+    const totalBytes = uploads.reduce((sum, { file }) => sum + file.size, 0);
+
+    if (totalBytes > MAX_BULK_IMAGE_BATCH_BYTES) {
+      const maxMegabytes = Math.round(MAX_BULK_IMAGE_BATCH_BYTES / (1024 * 1024));
+
+      throw new TRPCError({
+        code: "PAYLOAD_TOO_LARGE",
+        message: `The images are larger than the ${maxMegabytes} MB batch limit`,
+      });
+    }
+
+    const files = await Promise.all(
+      uploads.map(async ({ file }) => {
+        const buffer = Buffer.from(await file.arrayBuffer());
+
+        return {
+          data: buffer.toString("base64"),
+          mimeType: file.type,
+          filename: file.name,
+        };
+      })
+    );
+    const batchId = randomUUID();
+
+    log.info(
+      { userId: ctx.user.id, fileCount: files.length, batchId },
+      "Processing bulk image import request"
+    );
+
+    try {
+      const batch = await createImageImportBatch(getQueues().imageImport, {
+        batchId,
+        userId: ctx.user.id,
+        householdKey: ctx.householdKey,
+        householdUserIds: ctx.householdUserIds,
+        autoEnrich: await resolveAutoEnrichOnAdd(ctx.user.id, requestedAutoEnrich),
+        files,
+      });
+
+      return toImageImportBatchDTO(batch);
+    } catch (error) {
+      if (error instanceof ImageImportBatchLimitError) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: error.message,
+        });
+      }
+
+      if (error instanceof ImageImportBatchPayloadTooLargeError) {
+        throw new TRPCError({
+          code: "PAYLOAD_TOO_LARGE",
+          message: error.message,
+        });
+      }
+
+      throw error;
+    }
+  });
+
+export const imageImportBatchStatusProcedure = authedProcedure
+  .input(z.object({ batchId: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    const batch = await getImageImportBatchForUser(input.batchId, ctx.user.id);
+
+    return batch ? toImageImportBatchDTO(batch) : null;
+  });
+
+export const retryImageBatchItemsProcedure = authedProcedure
+  .input(
+    z.object({
+      batchId: z.uuid(),
+      itemIds: z.array(z.uuid()).min(1).max(MAX_OCR_FILES),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const batch = await retryImageImportBatchItems(getQueues().imageImport, {
+      batchId: input.batchId,
+      itemIds: input.itemIds,
+      userId: ctx.user.id,
+    });
+
+    if (!batch) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Import batch not found",
+      });
+    }
+
+    return toImageImportBatchDTO(batch);
+  });
+
 export const importFromPasteProcedure = authedProcedure
   .meta({
     openapi: {
@@ -837,6 +1012,9 @@ export const recipesProcedures = router({
   delete: deleteProcedure,
   importFromUrl: importFromUrlProcedure,
   importFromImages: importFromImagesProcedure,
+  importFromImagesBatch: importFromImagesBatchProcedure,
+  imageImportBatchStatus: imageImportBatchStatusProcedure,
+  retryImageBatchItems: retryImageBatchItemsProcedure,
   importFromPaste: importFromPasteProcedure,
   convertMeasurements,
   requestEnrichment,

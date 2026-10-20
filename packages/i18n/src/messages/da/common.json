@@ -136,7 +136,7 @@
       "failed": "Importering mislykkedes"
     },
     "image": {
-      "title": "Importer fra billede",
+      "title": "Én opskrift fra billeder",
       "dropzone": "Slip billeder her eller klik for at gennemse",
       "paste": "for at indsætte",
       "formats": "Understøtter JPG, PNG, WebP. Maks. 10 MB pr. fil.",
@@ -153,7 +153,15 @@
       "library": "Bibliotek",
       "takePhoto": "Tag billede",
       "counter": "{count} / {max} billeder",
-      "importFromCount": "Importer fra {count, plural, one {# billede} other {# billeder}}"
+      "importFromCount": "Importer fra {count, plural, one {# billede} other {# billeder}}",
+      "description": "Billederne kombineres til én opskrift.",
+      "bulkDescription": "Each image becomes its own recipe.",
+      "bulkSelectedCount": "{count, plural, one {# image selected, one recipe} other {# images selected, one recipe each}}",
+      "mode": {
+        "label": "Import mode",
+        "single": "One recipe from photos",
+        "bulk": "Bulk images"
+      }
     },
     "menu": {
       "description": "Importer fra en URL, scan et billede eller start fra bunden."

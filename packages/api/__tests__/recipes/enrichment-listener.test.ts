@@ -127,6 +127,13 @@ describe("recipe became usable", () => {
     expect(enrichRecipe).toHaveBeenCalledWith(payload, { origin: "automatic" });
   });
 
+  it("declines automatic enrichment when the add turned it off", async () => {
+    deliver({ ...payload, autoEnrich: false });
+    await settle();
+
+    expect(enrichRecipe).not.toHaveBeenCalled();
+  });
+
   it("enrolls again on duplicate delivery, which job identity makes harmless", async () => {
     deliver();
     deliver();
