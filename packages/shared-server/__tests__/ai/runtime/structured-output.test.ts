@@ -76,6 +76,30 @@ function tagged(
   };
 }
 
+/** A 200 answered in prose, as an endpoint that declines to use the schema does. */
+function prose(): { status: number; body: unknown } {
+  return {
+    status: 200,
+    body: {
+      id: "chatcmpl-test",
+      object: "chat.completion",
+      created: 0,
+      model: "test-model",
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: "Here are the tags:\n\n| Tag |\n| --- |\n| Italian |",
+          },
+          finish_reason: "stop",
+        },
+      ],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    },
+  };
+}
+
 /** OpenRouter's answer when no permitted upstream can serve the request. */
 function noEndpoints(): { status: number; body: unknown } {
   return {
@@ -202,6 +226,19 @@ describe("an endpoint that cannot serve structured output", () => {
     // Nothing an operator can wait out, so the queue must stop trying.
     expect((failure as InstanceType<typeof AIProviderError>).retryable).toBe(false);
     expect(captured).toHaveLength(2);
+  });
+});
+
+describe("an endpoint that answers a JSON-schema request in prose", () => {
+  it("is retried in plain JSON mode, and the object it returns is used", async () => {
+    replies = [prose, () => tagged()];
+
+    await expect(generate()).resolves.toEqual({ tags: ["Italian"] });
+
+    expect(responseFormats()).toEqual([
+      expect.objectContaining({ type: "json_schema" }),
+      { type: "json_object" },
+    ]);
   });
 });
 

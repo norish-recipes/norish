@@ -28,6 +28,7 @@ import {
   experimental_evaluate as evaluate,
   generateImage as generateImageWithModel,
   generateText,
+  NoObjectGeneratedError,
   Output,
   transcribe as transcribeWithModel,
 } from "ai";
@@ -323,6 +324,10 @@ function reportFailure(promptName: StructuredPromptName, error: unknown): never 
  * mode with the schema in the prompt, which most models handle, and only a
  * second refusal is reported — naming the missing capability rather than the
  * aggregator's guess, and not worth another queue attempt (#538).
+ *
+ * A 200 answered in prose is that same missing capability in another costume:
+ * GLM-5.3 behind Z.ai accepts a `json_schema` request and writes a table
+ * instead, so its answer is asked again in plain JSON mode too.
  */
 export async function generateStructured<T>(options: GenerateOptions<T>): Promise<T> {
   const { prompt: promptName, schema, sections = [], fill, images = [] } = options;
@@ -431,13 +436,16 @@ async function requestStructured<T>(request: {
   try {
     return await requestObject({ ...request, jsonMode: false });
   } catch (error) {
-    if (!canDegradeToJsonMode(config.provider) || !isRequestShapeRejection(error)) {
+    if (
+      !canDegradeToJsonMode(config.provider) ||
+      !(isRequestShapeRejection(error) || NoObjectGeneratedError.isInstance(error))
+    ) {
       reportFailure(promptName, error);
     }
 
     aiLogger.warn(
       { err: error, feature: promptName, provider: config.provider },
-      "Endpoint refused a JSON-schema request, retrying in plain JSON mode"
+      "Endpoint did not serve the JSON-schema request, retrying in plain JSON mode"
     );
 
     try {
