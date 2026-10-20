@@ -464,6 +464,10 @@
     "allDone": "Alle bilder er importert.",
     "aiDisabled": "Bildeimport krever en AI-leverandør. Be en administrator om å aktivere en.",
     "backToRecipes": "Tilbake til oppskrifter",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results.",
     "totalTooLargeDetail": "Bildene er til sammen større enn {size} MB. Fjern et bilde, eller velg mindre."
   }
 }

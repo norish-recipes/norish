@@ -464,6 +464,10 @@
     "allDone": "Усі зображення імпортовано.",
     "aiDisabled": "Для імпорту зображень потрібен постачальник AI. Попросіть адміністратора ввімкнути його.",
     "backToRecipes": "Назад до рецептів",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results.",
     "totalTooLargeDetail": "Зображення разом більші за {size} МБ. Видаліть зображення або виберіть менші."
   }
 }

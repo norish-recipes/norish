@@ -464,6 +464,10 @@
     "allDone": "Все изображения импортированы.",
     "aiDisabled": "Для импорта изображений нужен поставщик AI. Попросите администратора включить его.",
     "backToRecipes": "Назад к рецептам",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results.",
     "totalTooLargeDetail": "Изображения вместе больше {size} МБ. Удалите изображение или выберите меньшие."
   }
 }

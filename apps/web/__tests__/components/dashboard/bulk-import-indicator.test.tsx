@@ -25,15 +25,23 @@ vi.mock("@heroui/react", () => ({
   Button: ({
     children,
     onPress,
+    className,
     "aria-label": ariaLabel,
     "data-testid": testId,
   }: {
     children?: ReactNode;
     onPress?: () => void;
+    className?: string;
     "aria-label"?: string;
     "data-testid"?: string;
   }) => (
-    <button aria-label={ariaLabel} data-testid={testId} type="button" onClick={onPress}>
+    <button
+      aria-label={ariaLabel}
+      className={className}
+      data-testid={testId}
+      type="button"
+      onClick={onPress}
+    >
       {children}
     </button>
   ),
@@ -58,6 +66,30 @@ describe("BulkImportIndicator", () => {
     fireEvent.click(bubble);
 
     expect(mocks.push).toHaveBeenCalledWith("/recipes/import");
+  });
+
+  it("draws a single digit as a 20px circle", () => {
+    mocks.activeCount = 1;
+
+    render(<BulkImportIndicator />);
+
+    const bubble = screen.getByTestId("bulk-import-count");
+
+    expect(bubble).toHaveClass("w-5", "px-0");
+    expect(bubble).not.toHaveClass("min-w-5");
+    expect(bubble).not.toHaveClass("px-1");
+  });
+
+  it("lets two digits grow with a minimum width", () => {
+    mocks.activeCount = 10;
+
+    render(<BulkImportIndicator />);
+
+    const bubble = screen.getByTestId("bulk-import-count");
+
+    expect(bubble).toHaveClass("min-w-5", "px-1");
+    expect(bubble).not.toHaveClass("w-5");
+    expect(bubble).not.toHaveClass("px-0");
   });
 
   it("draws nothing when no image is in flight", () => {

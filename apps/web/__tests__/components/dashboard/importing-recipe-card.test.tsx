@@ -73,12 +73,19 @@ describe("ImportingRecipeCard", () => {
     expect(screen.getByText("Queued")).toBeInTheDocument();
   });
 
-  it("shows that the image is being read", () => {
+  it("pulses the preview while a grid item is queued", () => {
+    render(<ImportingRecipeCard item={item()} variant="grid" onRetry={vi.fn()} />);
+
+    expect(screen.getByTestId("importing-recipe-preview")).toHaveClass("animate-pulse");
+  });
+
+  it("pulses the preview while a list item is being read", () => {
     render(
       <ImportingRecipeCard item={item({ status: "processing" })} variant="list" onRetry={vi.fn()} />
     );
 
     expect(screen.getByText("Reading image")).toBeInTheDocument();
+    expect(screen.getByTestId("importing-recipe-preview")).toHaveClass("animate-pulse");
   });
 
   it("draws a placeholder after a reload dropped the preview", () => {
@@ -96,6 +103,7 @@ describe("ImportingRecipeCard", () => {
     render(<ImportingRecipeCard item={failed} variant="grid" onRetry={onRetry} />);
 
     expect(screen.getByText("Norish could not read a recipe from this image.")).toBeInTheDocument();
+    expect(screen.getByTestId("importing-recipe-preview")).not.toHaveClass("animate-pulse");
 
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 

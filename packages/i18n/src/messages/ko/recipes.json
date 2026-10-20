@@ -464,6 +464,10 @@
     "allDone": "모든 이미지를 가져왔습니다.",
     "aiDisabled": "이미지 가져오기에는 AI 제공자가 필요합니다. 관리자에게 활성화를 요청하세요.",
     "backToRecipes": "레시피로 돌아가기",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results.",
     "totalTooLargeDetail": "이미지가 총 {size}MB를 넘습니다. 이미지를 제거하거나 더 작은 이미지를 선택하세요."
   }
 }

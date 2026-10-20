@@ -18,6 +18,8 @@ type ImportingRecipeCardProps = {
 export default function ImportingRecipeCard({ item, variant, onRetry }: ImportingRecipeCardProps) {
   const t = useTranslations("recipes.bulkImport");
   const isFailed = item.status === "failed";
+  const isActive = item.status === "queued" || item.status === "processing";
+  const previewFrameClassName = isActive ? "animate-pulse" : "";
   const statusText = isFailed
     ? t(`error.${item.errorCode ?? "extraction-failed"}`)
     : t(`status.${item.status}`);
@@ -54,7 +56,12 @@ export default function ImportingRecipeCard({ item, variant, onRetry }: Importin
         data-testid="importing-recipe-card"
       >
         <div className="flex h-full min-w-0 items-stretch">
-          <div className="relative h-full w-[112px] shrink-0 overflow-hidden">{preview}</div>
+          <div
+            className={`relative h-full w-[112px] shrink-0 overflow-hidden ${previewFrameClassName}`}
+            data-testid="importing-recipe-preview"
+          >
+            {preview}
+          </div>
           <Card.Content className="flex min-w-0 flex-1 flex-col justify-center px-4 py-3">
             <p className="truncate text-sm font-semibold" title={item.filename}>
               {item.filename}
@@ -82,7 +89,12 @@ export default function ImportingRecipeCard({ item, variant, onRetry }: Importin
       className="h-[286px] w-full gap-0 overflow-hidden rounded-3xl p-0 sm:h-[378px]"
       data-testid="importing-recipe-card"
     >
-      <div className="relative h-40 w-full overflow-hidden sm:h-[236px]">{preview}</div>
+      <div
+        className={`relative h-40 w-full overflow-hidden sm:h-[236px] ${previewFrameClassName}`}
+        data-testid="importing-recipe-preview"
+      >
+        {preview}
+      </div>
       <Card.Content className="h-[124px] px-3 pt-2.5 pb-3 sm:h-[140px] sm:px-4 sm:pt-3">
         <p className="truncate text-sm font-semibold" title={item.filename}>
           {item.filename}

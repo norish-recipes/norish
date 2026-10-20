@@ -464,6 +464,10 @@
     "allDone": "Alle afbeeldingen zijn geïmporteerd.",
     "aiDisabled": "Afbeeldingen importeren vereist een AI-provider. Vraag een beheerder om er een in te schakelen.",
     "backToRecipes": "Terug naar recepten",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results.",
     "totalTooLargeDetail": "De afbeeldingen zijn samen groter dan {size} MB. Verwijder een afbeelding of kies kleinere."
   }
 }

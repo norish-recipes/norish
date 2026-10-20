@@ -1,46 +1,21 @@
+import type { BulkImportTrackerItem } from "@/context/bulk-import-state";
 import type { ReactNode } from "react";
 import BulkImageImport from "@/components/import/bulk-image-import";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  mutate: vi.fn(),
-  setQueryData: vi.fn(),
-}));
-
-vi.mock("@/app/providers/trpc-provider", () => ({
-  useTRPC: () => ({
-    recipes: {
-      imageImportBatchStatus: {
-        queryOptions: () => ({ queryKey: ["status"], queryFn: vi.fn() }),
-        queryKey: () => ["status"],
-      },
-      importFromImagesBatch: { mutationOptions: (options: unknown) => options },
-      retryImageBatchItems: { mutationOptions: (options: unknown) => options },
-    },
-  }),
-}));
-
-vi.mock("@tanstack/react-query", () => ({
-  useMutation: () => ({ mutate: mocks.mutate, isPending: false }),
-  useQuery: () => ({ data: undefined }),
-  useQueryClient: () => ({ setQueryData: mocks.setQueryData }),
+  items: [] as BulkImportTrackerItem[],
+  retry: vi.fn(),
+  isAIEnabled: true,
 }));
 
 vi.mock("@/context/bulk-import-context", () => ({
-  useBulkImport: () => ({ trackBatch: vi.fn() }),
+  useBulkImport: () => ({ items: mocks.items, retry: mocks.retry }),
 }));
 
 vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({ isAIEnabled: true }),
-}));
-
-vi.mock("@/hooks/config", () => ({
-  useUploadLimitsQuery: () => ({ limits: { maxImageSize: 10 * 1024 * 1024 } }),
-}));
-
-vi.mock("@/lib/ui/safe-error-toast", () => ({
-  showSafeErrorToast: vi.fn(),
+  usePermissionsContext: () => ({ isAIEnabled: mocks.isAIEnabled }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -56,117 +31,92 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt: string } & Record<string, unknown>) => (
-    <img src={src} alt={alt} />
+vi.mock("@/components/dashboard/importing-recipe-card", () => ({
+  default: ({
+    item,
+    variant,
+    onRetry,
+  }: {
+    item: BulkImportTrackerItem;
+    variant: string;
+    onRetry: (items: readonly BulkImportTrackerItem[]) => void;
+  }) => (
+    <div data-testid="importing-card" data-variant={variant}>
+      <span>{item.filename}</span>
+      {item.status === "failed" ? (
+        <button type="button" onClick={() => onRetry([item])}>
+          Retry
+        </button>
+      ) : null}
+    </div>
   ),
 }));
 
-vi.mock("@heroicons/react/16/solid", () => ({
-  ArrowPathIcon: () => <span />,
-  CheckCircleIcon: () => <span />,
-  ClockIcon: () => <span />,
-  ExclamationCircleIcon: () => <span />,
-  PhotoIcon: () => <span />,
-  XMarkIcon: () => <span />,
-}));
-
-vi.mock("@heroui/react", () => {
-  type Props = {
-    children?: ReactNode;
-    onPress?: () => void;
-    isDisabled?: boolean;
-  } & Record<string, unknown>;
-
-  const Button = ({ children, onPress, isDisabled }: Props) => (
-    <button disabled={isDisabled} onClick={onPress}>
-      {children}
-    </button>
-  );
-  const Chip = Object.assign(({ children }: Props) => <span>{children}</span>, {
-    Label: ({ children }: Props) => <span>{children}</span>,
-  });
-  const ProgressBar = () => <div role="progressbar" />;
-
-  return { Button, Chip, ProgressBar };
-});
-
-vi.mock("@/components/ui/drop-zone", () => {
-  type Props = { children?: ReactNode } & Record<string, unknown>;
-
-  const Frame = ({ children }: Props) => <div>{children}</div>;
-  const Area = ({ children }: Props) => <div>{children}</div>;
-  const Icon = ({ children }: Props) => <div>{children}</div>;
-  const Label = ({ children }: Props) => <div>{children}</div>;
-  const Description = ({ children }: Props) => <div>{children}</div>;
-  const Trigger = ({ children }: Props) => <div>{children}</div>;
-  const Input = ({
-    onSelect,
-  }: { onSelect: (files: FileList | null) => void } & Record<string, unknown>) => (
-    <input
-      data-testid="bulk-image-input"
-      type="file"
-      onChange={(event) => onSelect(event.target.files)}
-    />
-  );
-
+function item(overrides: Partial<BulkImportTrackerItem> = {}): BulkImportTrackerItem {
   return {
-    DropZone: Object.assign(Frame, {
-      Area,
-      Icon,
-      Label,
-      Description,
-      Trigger,
-      Input,
-    }),
+    itemId: "item-1",
+    position: 0,
+    filename: "page.png",
+    status: "processing",
+    recipeId: null,
+    errorCode: null,
+    previewUrl: null,
+    ...overrides,
   };
+}
+
+beforeEach(() => {
+  mocks.items = [];
+  mocks.retry.mockReset();
+  mocks.isAIEnabled = true;
 });
 
 describe("BulkImageImport", () => {
-  beforeEach(() => {
-    mocks.mutate.mockClear();
-    Object.defineProperty(URL, "createObjectURL", {
-      configurable: true,
-      value: vi.fn(() => "blob:preview"),
+  it("draws the shared tracker items through the list card", () => {
+    const failed = item({
+      itemId: "item-2",
+      position: 1,
+      filename: "failed.png",
+      status: "failed",
+      errorCode: "extraction-failed",
     });
-    Object.defineProperty(URL, "revokeObjectURL", {
-      configurable: true,
-      value: vi.fn(),
-    });
-  });
 
-  it("sends every selected image to the batch", () => {
+    mocks.items = [item(), failed];
+
     render(<BulkImageImport />);
 
-    const files = ["one.png", "two.png", "three.png"].map(
-      (name) => new File([new Uint8Array(4)], name, { type: "image/png" })
-    );
+    expect(screen.getByText("page.png")).toBeInTheDocument();
+    expect(screen.getByText("failed.png")).toBeInTheDocument();
+    expect(screen.getAllByTestId("importing-card")).toHaveLength(2);
+    expect(screen.getAllByTestId("importing-card")[0]).toHaveAttribute("data-variant", "list");
 
-    fireEvent.change(screen.getByTestId("bulk-image-input"), { target: { files } });
-    fireEvent.click(screen.getByRole("button", { name: "importButton" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
-    const formData = mocks.mutate.mock.calls[0]?.[0];
-
-    expect(formData).toBeInstanceOf(FormData);
-    expect([...(formData as FormData).keys()]).toEqual(["file0", "file1", "file2"]);
-    expect((formData as FormData).getAll("file0")).toHaveLength(1);
-    expect((formData as FormData).get("file2")).toBe(files[2]);
+    expect(mocks.retry).toHaveBeenCalledWith([failed]);
   });
 
-  it("starts one upload for two same-tick import presses", () => {
+  it("shows an empty state that points back to the dashboard", () => {
     render(<BulkImageImport />);
 
-    const file = new File([new Uint8Array(4)], "one.png", { type: "image/png" });
+    expect(screen.getByText("emptyTitle")).toBeInTheDocument();
+    expect(screen.getByText("emptyHint")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "emptyAction" })).toHaveAttribute("href", "/");
+    expect(screen.queryByTestId("importing-card")).not.toBeInTheDocument();
+  });
 
-    fireEvent.change(screen.getByTestId("bulk-image-input"), { target: { files: [file] } });
+  it("does not draw a local drop zone", () => {
+    render(<BulkImageImport />);
 
-    const button = screen.getByRole("button", { name: "importButton" });
+    expect(screen.queryByTestId("bulk-image-input")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "importButton" })).not.toBeInTheDocument();
+  });
 
-    act(() => {
-      button.click();
-      button.click();
-    });
+  it("keeps the AI-disabled message and the back link", () => {
+    mocks.isAIEnabled = false;
 
-    expect(mocks.mutate).toHaveBeenCalledTimes(1);
+    render(<BulkImageImport />);
+
+    expect(screen.getByText("aiDisabled")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "backToRecipes" })).toHaveAttribute("href", "/");
   });
 });

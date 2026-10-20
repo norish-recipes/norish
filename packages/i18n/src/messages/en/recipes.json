@@ -464,6 +464,10 @@
     "allDone": "All images are imported.",
     "aiDisabled": "Image import needs an AI provider. Ask an administrator to enable one.",
     "backToRecipes": "Back to recipes",
+    "emptyTitle": "No image import is active",
+    "emptyHint": "Start one from the Images dialog in the Add menu.",
+    "emptyAction": "Back to the dashboard",
+    "pageDescription": "Active image imports and their results.",
     "totalTooLargeDetail": "The images are larger than {size} MB in total. Remove an image or choose smaller ones."
   }
 }
