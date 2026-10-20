@@ -6,6 +6,7 @@ import AIKeyRejectionPrompt from "@/components/shared/ai-key-rejection-prompt";
 import ClipboardImportPrompt from "@/components/shared/clipboard-import-prompt";
 import { TimerDock } from "@/components/timer-dock";
 import { ArchiveImportProvider } from "@/context/archive-import-context";
+import { BulkImportProvider } from "@/context/bulk-import-context";
 import { CookbooksRealtimeProvider } from "@/context/cookbooks-realtime-context";
 import { DevicePreferencesProvider } from "@/context/device-preferences-context";
 import { HouseholdProvider } from "@/context/household-context";
@@ -72,7 +73,7 @@ export function AppShell({
                                 paddingTop: "calc(1.5rem + env(safe-area-inset-top))",
                               }}
                             >
-                              {children}
+                              <BulkImportProvider>{children}</BulkImportProvider>
                             </main>
                           </div>
                           <TimerDock />

@@ -27,6 +27,10 @@ vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ setQueryData: mocks.setQueryData }),
 }));
 
+vi.mock("@/context/bulk-import-context", () => ({
+  useBulkImport: () => ({ trackBatch: vi.fn() }),
+}));
+
 vi.mock("@/context/permissions-context", () => ({
   usePermissionsContext: () => ({ isAIEnabled: true }),
 }));

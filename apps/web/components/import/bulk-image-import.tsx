@@ -16,6 +16,7 @@ import {
   selectBulkImportFiles,
 } from "@/components/import/bulk-image-import-state";
 import { DropZone } from "@/components/ui/drop-zone";
+import { useBulkImport } from "@/context/bulk-import-context";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useUploadLimitsQuery } from "@/hooks/config";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -73,6 +74,7 @@ export default function BulkImageImport() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { isAIEnabled } = usePermissionsContext();
+  const { trackBatch } = useBulkImport();
   const { limits } = useUploadLimitsQuery();
   const [state, dispatch] = useReducer(bulkImageImportReducer, initialBulkImportState);
   const previewsRef = useRef<string[]>([]);
@@ -113,6 +115,11 @@ export default function BulkImageImport() {
     trpc.recipes.importFromImagesBatch.mutationOptions({
       onSuccess: (batch) => {
         submittingRef.current = false;
+
+        trackBatch(
+          batch.batchId,
+          state.files.map((file) => file.file)
+        );
 
         for (const file of state.files) {
           URL.revokeObjectURL(file.previewUrl);

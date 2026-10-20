@@ -3,12 +3,14 @@
 import type { LibraryGridItem } from "@/lib/library-items";
 import { useCallback, useMemo } from "react";
 import CookbookCard from "@/components/cookbooks/cookbook-card";
+import ImportingRecipeCard from "@/components/dashboard/importing-recipe-card";
 import LibraryGrid from "@/components/dashboard/library-grid";
 import NoCookbooksText from "@/components/dashboard/no-cookbooks-text";
 import NoRecipeResults from "@/components/dashboard/no-recipe-results";
 import NoRecipesText from "@/components/dashboard/no-recipes-text";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import RecipeCardSkeleton from "@/components/skeleton/recipe-card-skeleton";
+import { useBulkImport } from "@/context/bulk-import-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useCookbooksMutations } from "@/hooks/cookbooks";
@@ -39,6 +41,7 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     allergies,
   } = useRecipesContext();
   const { deleteCookbook } = useCookbooksMutations();
+  const { items: importingItems, retry: retryImport } = useBulkImport();
 
   // The same filters the context passes, so both share one cache entry and
   // one request.
@@ -53,6 +56,11 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
 
   const gridItems = useMemo<LibraryGridItem[]>(
     () => [
+      ...importingItems.map((item) => ({
+        kind: "importing" as const,
+        id: item.itemId,
+        item,
+      })),
       ...Array.from(pendingRecipeIds).map((id) => ({ kind: "pending" as const, id })),
       ...items.map((item) =>
         item.kind === "recipe"
@@ -60,11 +68,15 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
           : { kind: "cookbook" as const, id: item.cookbook.id, cookbook: item.cookbook }
       ),
     ],
-    [pendingRecipeIds, items]
+    [importingItems, pendingRecipeIds, items]
   );
 
   const renderItem = useCallback(
     (item: LibraryGridItem) => {
+      if (item.kind === "importing") {
+        return <ImportingRecipeCard item={item.item} variant={variant} onRetry={retryImport} />;
+      }
+
       if (item.kind === "pending") {
         return <RecipeCardSkeleton variant={variant} />;
       }
@@ -91,7 +103,7 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
         />
       );
     },
-    [variant, allergies, isFavorite, deleteRecipe, toggleFavorite, deleteCookbook]
+    [variant, allergies, isFavorite, deleteRecipe, toggleFavorite, deleteCookbook, retryImport]
   );
 
   const emptyState =
