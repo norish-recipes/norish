@@ -17,6 +17,7 @@ export interface MediaItem {
   duration?: number | null;
   order: number;
   id?: string;
+  generated?: boolean;
 }
 
 /** Recipe media data shape for buildMediaItems */
@@ -32,6 +33,7 @@ interface RecipeMedia {
     id?: string;
     image: string;
     order?: number;
+    generated?: boolean;
   }>;
   image?: string | null;
 }
@@ -65,6 +67,7 @@ export function buildMediaItems(recipe: RecipeMedia): MediaItem[] {
         src: img.image,
         order: img.order ?? 0,
         id: img.id,
+        generated: img.generated === true,
       });
     }
   }
@@ -75,6 +78,7 @@ export function buildMediaItems(recipe: RecipeMedia): MediaItem[] {
       type: "image" as const,
       src: recipe.image,
       order: 999,
+      generated: false,
     });
   }
 
@@ -95,6 +99,31 @@ export interface MediaCarouselProps {
   className?: string;
   aspectRatio?: "video" | "square" | "4/3";
   rounded?: boolean;
+}
+
+function MediaImageBadges({
+  generated,
+  position,
+  total,
+}: {
+  generated?: boolean;
+  position: number;
+  total: number;
+}) {
+  const t = useTranslations("recipes.carousel");
+
+  return (
+    <div className="pointer-events-none absolute top-[calc(1rem+env(safe-area-inset-top))] left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
+      <span className="rounded-full bg-neutral-900/70 px-2 py-0.5 text-xs font-medium text-white">
+        {generated === true ? t("generated") : t("sourcePhoto")}
+      </span>
+      {total > 1 && (
+        <span className="rounded-full bg-neutral-900/70 px-2 py-0.5 text-xs font-medium text-white tabular-nums">
+          {t("imagePosition", { current: position, total })}
+        </span>
+      )}
+    </div>
+  );
 }
 
 type MediaCarouselSlidesProps = {
@@ -183,6 +212,13 @@ function MediaCarouselSlides({
                   onError={() => handleImageError(item.src)}
                 />
               </div>
+            )}
+            {item.type === "image" && (
+              <MediaImageBadges
+                generated={item.generated}
+                position={index + 1}
+                total={sortedItems.length}
+              />
             )}
           </div>
         </Carousel.Item>
@@ -330,6 +366,9 @@ export default function MediaCarousel({
               />
             </div>
           )}
+          {item.type === "image" && (
+            <MediaImageBadges generated={item.generated} position={1} total={1} />
+          )}
         </div>
         <ImageLightbox
           images={lightboxImages}
@@ -355,10 +394,7 @@ export default function MediaCarousel({
           onActiveVideoFullscreenChange={onActiveVideoFullscreenChange}
           onImageClick={openLightboxForItem}
         />
-        {/* Arrows only. The dots pill counted the media at the exact height the
-            recipe title occupies below the photo, so it read as a badge on the
-            title rather than a control on the picture — and a hero carousel
-            does not need to state how many pictures it holds. */}
+        {/* Arrows only: the slide counter lives on the picture itself. */}
         <Carousel.Previous className={cssMediaControlBare} />
         <Carousel.Next className={cssMediaControlBare} />
       </Carousel>

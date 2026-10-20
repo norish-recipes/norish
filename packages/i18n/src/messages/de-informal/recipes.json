@@ -236,6 +236,9 @@
     "invalidFileType": "Ungültiger Dateityp"
   },
   "carousel": {
+    "generated": "Generiert",
+    "sourcePhoto": "Quellfoto",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Kein Bild verfügbar",
     "noMediaAvailable": "Keine Medien verfügbar",
     "videoPlayer": {

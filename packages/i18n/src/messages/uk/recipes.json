@@ -236,6 +236,9 @@
     "invalidFileType": "Непідтримуваний тип файлу"
   },
   "carousel": {
+    "generated": "Згенеровано",
+    "sourcePhoto": "Вихідне фото",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Зображення немає",
     "noMediaAvailable": "Медіа немає",
     "videoPlayer": {

@@ -236,6 +236,9 @@
     "invalidFileType": "잘못된 파일 형식"
   },
   "carousel": {
+    "generated": "생성됨",
+    "sourcePhoto": "원본 사진",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "이미지가 없습니다.",
     "noMediaAvailable": "미디어가 없습니다.",
     "videoPlayer": {

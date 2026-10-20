@@ -236,6 +236,9 @@
     "invalidFileType": "Невалиден тип файл"
   },
   "carousel": {
+    "generated": "Генерирано",
+    "sourcePhoto": "Изходна снимка",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Няма налично изображение",
     "noMediaAvailable": "Няма налично медийно съдържание",
     "videoPlayer": {

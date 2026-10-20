@@ -236,6 +236,9 @@
     "invalidFileType": "Ugyldig filtype"
   },
   "carousel": {
+    "generated": "Genereret",
+    "sourcePhoto": "Kildefoto",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Intet billede tilgængeligt",
     "noMediaAvailable": "Intet medie tilgængeligt",
     "videoPlayer": {

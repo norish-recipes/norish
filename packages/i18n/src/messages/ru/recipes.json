@@ -236,6 +236,9 @@
     "invalidFileType": "Недопустимый тип файла"
   },
   "carousel": {
+    "generated": "Сгенерировано",
+    "sourcePhoto": "Исходное фото",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Изображение недоступно",
     "noMediaAvailable": "Медиа недоступны",
     "videoPlayer": {

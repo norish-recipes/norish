@@ -236,6 +236,9 @@
     "invalidFileType": "Tipo de archivo no válido"
   },
   "carousel": {
+    "generated": "Generada",
+    "sourcePhoto": "Foto original",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "No hay imagen disponible",
     "noMediaAvailable": "No hay medios disponibles",
     "videoPlayer": {

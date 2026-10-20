@@ -236,6 +236,9 @@
     "invalidFileType": "Ongeldig bestandstype"
   },
   "carousel": {
+    "generated": "Gegenereerd",
+    "sourcePhoto": "Bronfoto",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Geen afbeelding beschikbaar",
     "noMediaAvailable": "Geen media beschikbaar",
     "videoPlayer": {

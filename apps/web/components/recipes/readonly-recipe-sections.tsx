@@ -30,7 +30,7 @@ type RecipeTagLike = { name: string };
 
 type RecipeMediaLike = {
   image?: string | null;
-  images?: Array<{ image: string; order?: number }>;
+  images?: Array<{ image: string; order?: number; generated?: boolean }>;
   videos?: Array<{
     video: string;
     thumbnail?: string | null;
