@@ -44,15 +44,17 @@ beforeAll(() => {
   });
 });
 beforeAll(() => {
+  class MockIntersectionObserver {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+    takeRecords = vi.fn(() => []);
+  }
+
   Object.defineProperty(window, "IntersectionObserver", {
     configurable: true,
     writable: true,
-    value: vi.fn(() => ({
-      observe: vi.fn(),
-      unobserve: vi.fn(),
-      disconnect: vi.fn(),
-      takeRecords: vi.fn(() => []),
-    })),
+    value: MockIntersectionObserver,
   });
 });
 

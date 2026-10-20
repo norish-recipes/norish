@@ -74,7 +74,7 @@ vi.mock("@heroui/react", () => {
     Trigger: Box,
     Value: Empty,
   });
-  const ListBox = Object.assign(Box, { Item: Box });
+  const ListBox = Object.assign(Box, { Item: Box, ItemIndicator: Empty });
 
   return { Calendar, DateField, DatePicker, Label: Box, ListBox, Select };
 });
