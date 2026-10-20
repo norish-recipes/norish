@@ -29,7 +29,7 @@ const log = createLogger("worker:image-import");
  */
 export async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
   const extractRecipeFromImages = requireQueueApiHandler("extractRecipeFromImages");
-  const { recipeId, userId, householdKey, householdUserIds, files } = job.data;
+  const { recipeId, userId, householdKey, householdUserIds, files, autoEnrich } = job.data;
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
@@ -104,7 +104,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   // Vision parsing is a reader, not an inference step: an image import enters
   // the same enrichment flow as every other creation path.
-  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+  await announceUsableRecipe(created, { userId, householdKey, householdUserIds, autoEnrich });
 }
 
 /**

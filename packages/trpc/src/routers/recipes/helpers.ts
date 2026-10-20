@@ -3,10 +3,20 @@ import { TRPCError } from "@trpc/server";
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { canAccessResource } from "@norish/auth/permissions";
-import { getRecipeFull, getRecipeOwnerId } from "@norish/db";
+import { getRecipeFull, getRecipeOwnerId, getUserPreferences } from "@norish/db";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { getAutoEnrichOnAddPreference } from "@norish/shared/lib/user-preferences";
+
+export async function resolveAutoEnrichOnAdd(
+  userId: string,
+  requested: boolean | undefined
+): Promise<boolean> {
+  if (requested !== undefined) return requested;
+
+  return getAutoEnrichOnAddPreference({ preferences: await getUserPreferences(userId) });
+}
 
 export type RecipeUserContext = {
   user: { id: string };

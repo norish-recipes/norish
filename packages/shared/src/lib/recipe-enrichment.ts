@@ -19,6 +19,15 @@ export const ENRICHMENT_KINDS = [
 
 export type RecipeEnrichmentKind = (typeof ENRICHMENT_KINDS)[number];
 
+export const ENHANCED_ENRICHMENT_KINDS = [
+  "auto-tagging",
+  "auto-categorization",
+  "nutrition-estimation",
+  "recipe-provenance",
+  "ingredient-linking",
+  "image-generation",
+] as const satisfies readonly RecipeEnrichmentKind[];
+
 export const ENRICHMENT_LIFECYCLE_STATES = [
   "idle",
   "queued",

@@ -16,6 +16,8 @@ _Avoid_: Post-Import Enrichment (excludes manual creation and manual runs)
 
 **Automatic Recipe Enrichment**:
 Recipe Enrichment enrolled once for every newly usable recipe, whether created manually or through any import path, according to deployment settings and safely supplied recipe data. Later recipe edits do not enroll it again. It is quiet background work: failure neither changes recipe creation or import success nor presents an operational error to the user.
+
+The URL, Paste and Image options and the recipe form can turn it off for that recipe. The recipe file import does not have this choice.
 _Avoid_: Auto-enhancement
 
 **Automatic Enrichment Enrollment**:

@@ -4,6 +4,7 @@ import type { DropZoneAreaProps } from "@/components/ui/drop-zone";
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import AutoEnrichToggle, { useAutoEnrichOnAdd } from "@/components/shared/auto-enrich-toggle";
 import { DropZone } from "@/components/ui/drop-zone";
 import { useUploadLimitsQuery } from "@/hooks/config";
 import { useRecipesMutations } from "@/hooks/recipes";
@@ -38,6 +39,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
   const { importRecipeFromImages } = useRecipesMutations();
   const { limits } = useUploadLimitsQuery();
   const [files, setFiles] = useState<FilePreview[]>([]);
+  const [autoEnrich, setAutoEnrich] = useAutoEnrichOnAdd(isOpen);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handleAddFiles = useCallback(
     (selectedFiles: File[] | FileList | null) => {
@@ -156,7 +158,10 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     setIsSubmitting(true);
     try {
       // Pass raw File objects - FormData conversion happens in mutation
-      importRecipeFromImages(files.map((f) => f.file));
+      importRecipeFromImages(
+        files.map((f) => f.file),
+        { autoEnrich }
+      );
       toast(t("importing"), {
         description: t("analyzing"),
         variant: "default",
@@ -180,7 +185,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     } finally {
       setIsSubmitting(false);
     }
-  }, [files, importRecipeFromImages, onOpenChange, router, t, tErrors]);
+  }, [autoEnrich, files, importRecipeFromImages, onOpenChange, router, t, tErrors]);
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
@@ -254,6 +259,8 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                     })}
                   </p>
                 )}
+
+                <AutoEnrichToggle isSelected={autoEnrich} onValueChange={setAutoEnrich} />
               </Modal.Body>
               <Modal.Footer>
                 <Button

@@ -262,13 +262,17 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
   };
 }
 
+export type RecipeAddOptions = {
+  autoEnrich?: boolean;
+};
+
 export type RecipesMutationsResult = {
-  importRecipe: (url: string) => void;
-  importRecipeWithAI: (url: string) => void;
-  importRecipeFromImages: (files: File[]) => void;
-  importRecipeFromPaste: (text: string) => void;
-  importRecipeFromPasteWithAI: (text: string) => void;
-  createRecipe: (input: FullRecipeInsertDTO) => void;
+  importRecipe: (url: string, options?: RecipeAddOptions) => void;
+  importRecipeWithAI: (url: string, options?: RecipeAddOptions) => void;
+  importRecipeFromImages: (files: File[], options?: RecipeAddOptions) => void;
+  importRecipeFromPaste: (text: string, options?: RecipeAddOptions) => void;
+  importRecipeFromPasteWithAI: (text: string, options?: RecipeAddOptions) => void;
+  createRecipe: (input: FullRecipeInsertDTO, options?: RecipeAddOptions) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
   deleteRecipe: (id: string, version: number) => void;
   convertMeasurements: (recipeId: string, system: MeasurementSystem, version: number) => void;
@@ -546,35 +550,41 @@ export function createUseRecipesMutations(
       invalidate();
     };
 
-    const importRecipe = (url: string): void => {
-      importMutation.mutate({ url });
+    const importRecipe = (url: string, options?: RecipeAddOptions): void => {
+      importMutation.mutate({ url, autoEnrich: options?.autoEnrich });
     };
 
-    const importRecipeWithAI = (url: string): void => {
-      importMutation.mutate({ url, forceAI: true });
+    const importRecipeWithAI = (url: string, options?: RecipeAddOptions): void => {
+      importMutation.mutate({ url, forceAI: true, autoEnrich: options?.autoEnrich });
     };
 
-    const createRecipe = (input: FullRecipeInsertDTO): void => {
-      createMutation.mutate(input, {
-        onError: (error, _variables, context) => {
-          onError?.(error, "create");
+    const createRecipe = (input: FullRecipeInsertDTO, options?: RecipeAddOptions): void => {
+      createMutation.mutate(
+        { ...input, autoEnrich: options?.autoEnrich },
+        {
+          onError: (error, _variables, context) => {
+            onError?.(error, "create");
 
-          if (!shouldPreserve(error)) {
-            const createContext = context as CreateMutationContext | undefined;
+            if (!shouldPreserve(error)) {
+              const createContext = context as CreateMutationContext | undefined;
 
-            if (createContext?.detailQueryKey) {
-              queryClient.setQueryData(createContext.detailQueryKey, createContext.previousDetail);
-              queryClient.invalidateQueries({ queryKey: createContext.detailQueryKey });
+              if (createContext?.detailQueryKey) {
+                queryClient.setQueryData(
+                  createContext.detailQueryKey,
+                  createContext.previousDetail
+                );
+                queryClient.invalidateQueries({ queryKey: createContext.detailQueryKey });
+              }
+
+              if (createContext?.previousRecipeLists) {
+                restoreRecipeLists(queryClient, createContext.previousRecipeLists);
+              }
+
+              invalidate();
             }
-
-            if (createContext?.previousRecipeLists) {
-              restoreRecipeLists(queryClient, createContext.previousRecipeLists);
-            }
-
-            invalidate();
-          }
-        },
-      });
+          },
+        }
+      );
     };
 
     const updateRecipe = (id: string, input: FullRecipeUpdateDTO): void => {
@@ -624,24 +634,28 @@ export function createUseRecipesMutations(
       );
     };
 
-    const importRecipeFromImages = (files: File[]): void => {
+    const importRecipeFromImages = (files: File[], options?: RecipeAddOptions): void => {
       const formData = new FormData();
 
       files.forEach((file, index) => {
         formData.append(`file${index}`, file);
       });
 
+      if (options?.autoEnrich !== undefined) {
+        formData.append("autoEnrich", String(options.autoEnrich));
+      }
+
       const imageInput = formData as Parameters<typeof imageImportMutation.mutate>[0];
 
       imageImportMutation.mutate(imageInput);
     };
 
-    const importRecipeFromPaste = (text: string): void => {
-      pasteImportMutation.mutate({ text });
+    const importRecipeFromPaste = (text: string, options?: RecipeAddOptions): void => {
+      pasteImportMutation.mutate({ text, autoEnrich: options?.autoEnrich });
     };
 
-    const importRecipeFromPasteWithAI = (text: string): void => {
-      pasteImportMutation.mutate({ text, forceAI: true });
+    const importRecipeFromPasteWithAI = (text: string, options?: RecipeAddOptions): void => {
+      pasteImportMutation.mutate({ text, forceAI: true, autoEnrich: options?.autoEnrich });
     };
 
     return {

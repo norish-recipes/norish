@@ -297,5 +297,9 @@
     "title": "Una clave de IA ha dejado de funcionar",
     "description": "El proveedor rechaza la clave API de {blocks} desde {since}. Guarda una clave nueva para que esas funciones de IA vuelvan a funcionar.",
     "openSettings": "Abrir ajustes"
+  },
+  "autoEnrich": {
+    "title": "Enhanced",
+    "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved."
   }
 }

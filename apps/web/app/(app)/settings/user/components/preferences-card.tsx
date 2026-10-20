@@ -2,8 +2,9 @@
 
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingRow, SwitchRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { InfoHint } from "@/components/shared/info-hint";
 import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
 import { usePermissionsContext } from "@/context/permissions-context";
@@ -23,6 +24,7 @@ import {
 } from "@norish/shared/contracts/zod/user";
 import {
   getAfterPlanningPreference,
+  getAutoEnrichOnAddPreference,
   getLocalePreference,
   getMeasurementSystemPreference,
   measurementSystemTarget,
@@ -88,6 +90,7 @@ export default function PreferencesCard() {
         <InfoHint label={t("deviceKind.help")}>
           {t(`deviceKind.${deviceKind}`, {
             language: t("language.title"),
+            autoEnrich: t("autoEnrich.title"),
             afterPlanning: t("afterPlanning.title"),
             measurements: t("measurements.title"),
           })}
@@ -127,6 +130,15 @@ export default function PreferencesCard() {
       </SettingRow>
 
       {/* Stored with the user, on every device: it is about how they plan. */}
+      <SwitchRow description={t("autoEnrich.description")} title={t("autoEnrich.title")}>
+        <SettingsSwitch
+          aria-label={t("autoEnrich.title")}
+          color="success"
+          isDisabled={isUpdatingPreferences}
+          isSelected={getAutoEnrichOnAddPreference(user)}
+          onValueChange={(autoEnrichOnAdd) => void updatePreferences({ autoEnrichOnAdd })}
+        />
+      </SwitchRow>
       <SettingRow description={t("afterPlanning.description")} title={t("afterPlanning.title")}>
         <ChoiceSelect
           isDisabled={isUpdatingPreferences}

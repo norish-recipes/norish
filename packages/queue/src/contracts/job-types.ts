@@ -13,6 +13,7 @@ export interface RecipeImportJobData {
   householdKey: string;
   householdUserIds: string[] | null;
   forceAI?: boolean;
+  autoEnrich?: boolean;
 }
 
 export type AddImportJobResult =
@@ -47,6 +48,7 @@ export interface ImageImportJobData {
   householdKey: string;
   householdUserIds: string[] | null;
   files: ImageImportFile[];
+  autoEnrich?: boolean;
 }
 
 export type AddImageImportJobResult =
@@ -62,6 +64,7 @@ export interface PasteImportJobData {
   text: string;
   forceAI?: boolean;
   structuredRecipes?: StructuredPasteImportRecipe[];
+  autoEnrich?: boolean;
 }
 
 export interface StructuredPasteImportRecipe {

@@ -1778,6 +1778,10 @@
                         "video"
                       ]
                     }
+                  },
+                  "autoEnrich": {
+                    "description": "Run automatic AI enrichment for the new recipe. Defaults to the caller's auto-enrich setting.",
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -1840,6 +1844,10 @@
                     "type": "string"
                   },
                   "forceAI": {
+                    "type": "boolean"
+                  },
+                  "autoEnrich": {
+                    "description": "Run automatic AI enrichment for the imported recipe. Defaults to the caller's auto-enrich setting.",
                     "type": "boolean"
                   }
                 },
@@ -2191,6 +2199,10 @@
                     "description": "Pasted recipe text. Supports plain text, JSON-LD recipe objects/arrays/@graph payloads, and YAML recipe mappings/arrays. Each recipe is limited to 100,000 characters. When forcing AI only one recipe will be parsed. JSON-LD single example: {\"@type\":\"Recipe\",\"name\":\"Toast\",\"recipeIngredient\":[\"2 slices bread\"],\"recipeInstructions\":[\"Toast bread\"]} JSON-LD multi example: [{\"@type\":\"Recipe\",...},{\"@type\":\"Recipe\",...}] YAML single example: title: Toast\\ningredients:\\n  - 2 slices bread\\nsteps:\\n  - Toast bread YAML multi example: - title: Toast\\n  ingredients:\\n    - 2 slices bread\\n  steps:\\n    - Toast bread"
                   },
                   "forceAI": {
+                    "type": "boolean"
+                  },
+                  "autoEnrich": {
+                    "description": "Run automatic AI enrichment for the new recipes. Defaults to the caller's auto-enrich setting.",
                     "type": "boolean"
                   }
                 },

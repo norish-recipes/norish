@@ -33,7 +33,7 @@ const log = createLogger("worker:recipe-import");
  */
 async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
-  const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
+  const { url, recipeId, userId, householdKey, householdUserIds, autoEnrich } = job.data;
 
   log.info(
     { jobId: job.id, url, recipeId, attempt: job.attemptsMade + 1 },
@@ -148,7 +148,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     );
   }
 
-  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+  await announceUsableRecipe(created, { userId, householdKey, householdUserIds, autoEnrich });
 }
 
 /**

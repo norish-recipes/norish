@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import AutoEnrichToggle, { useAutoEnrichOnAdd } from "@/components/shared/auto-enrich-toggle";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { readClipboardUrl } from "@/lib/clipboard-url";
@@ -20,6 +21,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   const { importRecipe, importRecipeWithAI } = useRecipesContext();
   const { isAIEnabled } = usePermissionsContext();
   const [importUrl, setImportUrl] = useState("");
+  const [autoEnrich, setAutoEnrich] = useAutoEnrichOnAdd(isOpen);
 
   function handleOpenChange(open: boolean) {
     if (!open) {
@@ -45,7 +47,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   async function handleImportFromUrl() {
     if (importUrl.trim() === "") return;
     try {
-      await importRecipe(importUrl);
+      await importRecipe(importUrl, { autoEnrich });
       onOpenChange(false);
       setImportUrl("");
     } catch (e) {
@@ -63,7 +65,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   async function handleAIImport() {
     if (importUrl.trim() === "") return;
     try {
-      await importRecipeWithAI(importUrl);
+      await importRecipeWithAI(importUrl, { autoEnrich });
       onOpenChange(false);
       setImportUrl("");
     } catch (e) {
@@ -92,6 +94,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
                   <Label>{t("label")}</Label>
                   <Input fullWidth placeholder={t("placeholder")} variant="secondary" />
                 </TextField>
+                <AutoEnrichToggle isSelected={autoEnrich} onValueChange={setAutoEnrich} />
               </Modal.Body>
               <Modal.Footer>
                 {isAIEnabled && (

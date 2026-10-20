@@ -48,7 +48,7 @@ const ALL_ON = {
   imageGeneration: true,
 };
 
-const KIND_COUNT = 7;
+const KIND_COUNT = 6;
 
 function recipe(id: string, overrides: Record<string, unknown> = {}) {
   return {

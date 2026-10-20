@@ -120,8 +120,8 @@
       "description": "사용자 경험을 맞춤 설정하세요.",
       "deviceKind": {
         "help": "환경설정이 저장되는 방식",
-        "phone": "‘{language}’, ‘{afterPlanning}’, ‘{measurements}’ 설정은 계정별로, 나머지는 기기 종류별로 저장됩니다.",
-        "desktop": "‘{language}’, ‘{afterPlanning}’, ‘{measurements}’ 설정은 계정별로, 나머지는 기기 종류별로 저장됩니다."
+        "phone": "‘{language}’, ‘{autoEnrich}’, ‘{afterPlanning}’, ‘{measurements}’ 설정은 계정별로, 나머지는 기기 종류별로 저장됩니다.",
+        "desktop": "‘{language}’, ‘{autoEnrich}’, ‘{afterPlanning}’, ‘{measurements}’ 설정은 계정별로, 나머지는 기기 종류별로 저장됩니다."
       },
       "language": {
         "title": "언어",
@@ -180,6 +180,10 @@
           "metricWithAI": "AI로 미터법",
           "usWithAI": "AI로 미국식"
         }
+      },
+      "autoEnrich": {
+        "title": "Enhanced",
+        "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved. Turn it off for one recipe in the Add Recipe flow."
       }
     },
     "shareLinks": {

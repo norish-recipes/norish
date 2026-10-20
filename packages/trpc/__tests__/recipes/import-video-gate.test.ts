@@ -31,6 +31,12 @@ vi.mock("@norish/queue/registry", () => ({
   getQueues: vi.fn(() => ({ recipeImport: {} })),
 }));
 
+vi.mock("@norish/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@norish/db")>();
+
+  return { ...actual, getUserPreferences: vi.fn().mockResolvedValue({}) };
+});
+
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));

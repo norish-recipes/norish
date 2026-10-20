@@ -127,6 +127,28 @@ describe("recipe became usable", () => {
     expect(enrichRecipe).toHaveBeenCalledWith(payload, { origin: "automatic" });
   });
 
+  it("enrolls when the add says automatic enrichment is on", async () => {
+    deliver({ ...payload, autoEnrich: true });
+    await settle();
+
+    expect(enrichRecipe).toHaveBeenCalledTimes(1);
+    expect(enrichRecipe).toHaveBeenCalledWith(payload, { origin: "automatic" });
+  });
+
+  it("skips automatic enrichment when this add turned it off", async () => {
+    deliver({ ...payload, autoEnrich: false });
+    await settle();
+
+    expect(enrichRecipe).not.toHaveBeenCalled();
+  });
+
+  it("still enrolls for an event published before the flag existed", async () => {
+    deliver();
+    await settle();
+
+    expect(enrichRecipe).toHaveBeenCalledTimes(1);
+  });
+
   it("enrolls again on duplicate delivery, which job identity makes harmless", async () => {
     deliver();
     deliver();

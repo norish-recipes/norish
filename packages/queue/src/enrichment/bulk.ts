@@ -12,8 +12,9 @@
  * provided. `replaceExisting` is the administrator asking for the opposite:
  * every eligible kind reruns and overwrites what is stored. Categories,
  * Nutrition Information, Recipe Provenance and Step Ingredients are rewritten;
- * tags and allergy indications are appends and are unaffected either way,
- * because nothing records which of them AI wrote.
+ * tags are appends and are unaffected either way, because nothing records
+ * which tags AI wrote. Allergy detection is not part of the automatic set, so
+ * this sweep never runs it.
  */
 
 import { getAllRecipesForEnrichment } from "@norish/db/repositories/recipes";
@@ -53,8 +54,7 @@ export async function enrollEnrichmentForAllRecipes(
 
   for (const target of targets) {
     // A recipe whose owner was deleted falls back to the requesting
-    // administrator's context: lifecycle events still reach a household, and
-    // allergy detection resolves against the administrator's.
+    // administrator's context so the run still has a household.
     const context: RecipeEnrichmentContext = {
       recipeId: target.recipeId,
       userId: target.userId ?? requester.userId,

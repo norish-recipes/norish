@@ -204,6 +204,72 @@ describe("processPasteImportJob", () => {
     );
   });
 
+  it("carries the add's auto-enrich choice on the announcement", async () => {
+    const { processPasteImportJob } = await import("../../src/paste-import/worker");
+
+    createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "recipe-1" });
+    dashboardRecipe.mockResolvedValue({ id: "recipe-1", name: "Only" });
+    getAverageRating.mockResolvedValue({ averageRating: null, ratingCount: 0 });
+
+    await processPasteImportJob({
+      id: "job-choice",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        batchId: "batch-choice",
+        recipeIds: ["recipe-1"],
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+        text: "structured",
+        autoEnrich: false,
+        structuredRecipes: [
+          {
+            recipeId: "recipe-1",
+            importedRating: null,
+            recipe: {
+              name: "Only",
+              description: null,
+              notes: null,
+              url: null,
+              image: null,
+              servings: 1,
+              prepMinutes: null,
+              cookMinutes: null,
+              totalMinutes: null,
+              calories: null,
+              fat: null,
+              carbs: null,
+              protein: null,
+              systemUsed: "metric",
+              recipeIngredients: [
+                {
+                  ingredientId: null,
+                  ingredientName: "Egg",
+                  amount: 1,
+                  unit: null,
+                  systemUsed: "metric",
+                  order: 0,
+                },
+              ],
+              steps: [{ step: "Mix", order: 1, systemUsed: "metric" }],
+              tags: [],
+              categories: [],
+              images: [],
+              videos: [],
+            },
+          },
+        ],
+      },
+    } as unknown as Parameters<typeof processPasteImportJob>[0]);
+
+    expect(publishRecipeBecameUsable).toHaveBeenCalledWith(
+      "recipeBecameUsable",
+      expect.objectContaining({ recipeId: "recipe-1", autoEnrich: false }),
+      undefined
+    );
+  });
+
   it("fails when no valid structured items remain", async () => {
     const { processPasteImportJob } = await import("../../src/paste-import/worker");
 

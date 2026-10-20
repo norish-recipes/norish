@@ -61,12 +61,14 @@ leaves alone is listed under
 | Switch                   | What it does                                                          | Default |
 | ------------------------ | --------------------------------------------------------------------- | ------- |
 | **Auto-tagging**         | Adds tags, never removes any                                          | Off     |
-| **Allergy detection**    | Adds allergy tags for your household's allergies                      | On      |
 | **Auto-categorization**  | Sets meal categories on recipes without any                           | Off     |
 | **Nutrition estimation** | Fills in calories, fat, carbs and protein when one of them is missing | Off     |
 | **Recipe provenance**    | Works out the country, region, cuisines and a short note              | Off     |
 | **Ingredient linking**   | Links ingredients to steps that have none                             | Off     |
 | **Image generation**     | Draws a picture for new recipes without any image                     | Off     |
+
+**Detect Allergies** is not part of Enhanced. Run it from a recipe's actions
+menu.
 
 ### New ingredients
 
@@ -174,8 +176,8 @@ recipes**. It runs every enabled enrichment on every recipe, which may cost a lo
 
 The dialog also has **Overwrite existing data**. It redoes categories, nutrition,
 provenance and step ingredients even where a recipe already has them, and that
-can't be undone. Tags and allergies are only ever added to. On a large library
-this costs a lot more.
+can't be undone. Tags are only ever added to. On a large library this costs a
+lot more. This sweep does not run **Detect Allergies**.
 
 ## Prompts
 

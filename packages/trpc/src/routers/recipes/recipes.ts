@@ -59,7 +59,12 @@ import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  assertRecipeAccess,
+  findRecipeForViewer,
+  handleRecipeError,
+  resolveAutoEnrichOnAdd,
+} from "./helpers";
 import {
   randomRecipeInputSchema,
   recipeAutocompleteInputSchema,
@@ -195,24 +200,39 @@ export const createRecipeProcedure = authedProcedure
       },
     },
   })
-  .input(FullRecipeInsertSchema)
+  .input(
+    FullRecipeInsertSchema.extend({
+      autoEnrich: z
+        .boolean()
+        .optional()
+        .describe(
+          "Run automatic AI enrichment for the new recipe. Defaults to the caller's auto-enrich setting."
+        ),
+    })
+  )
   .output(z.uuid())
   .mutation(({ ctx, input }) => {
-    const recipeId = input.id ?? randomUUID();
+    const { autoEnrich: requestedAutoEnrich, ...recipeInput } = input;
+    const recipeId = recipeInput.id ?? randomUUID();
 
     log.info(
-      { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
+      {
+        userId: ctx.user.id,
+        recipeName: recipeInput.name,
+        recipeId,
+        providedId: recipeInput.id,
+      },
       "Creating recipe"
     );
-    log.debug({ recipe: input }, "Full recipe data");
+    log.debug({ recipe: recipeInput }, "Full recipe data");
 
-    if (input.id && input.id !== recipeId) {
-      log.error({ inputId: input.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
+    if (recipeInput.id && recipeInput.id !== recipeId) {
+      log.error({ inputId: recipeInput.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
     }
 
     // The Dish Colour rides the payload from here: derived from the image
     // the recipe is being stored with, overwriting anything the client sent.
-    withDishColor(input)
+    withDishColor(recipeInput)
       .then((dto) => createResolvedRecipe(recipeId, ctx.user.id, dto, { userId: ctx.user.id }))
       .then(async (created) => {
         if (!created) {
@@ -242,6 +262,7 @@ export const createRecipeProcedure = authedProcedure
           userId: ctx.user.id,
           householdKey: ctx.householdKey,
           householdUserIds: ctx.householdUserIds,
+          autoEnrich: await resolveAutoEnrichOnAdd(ctx.user.id, requestedAutoEnrich),
         });
       })
       .catch((err) => handleRecipeError(ctx, err, "create recipe", { recipeId }));
@@ -379,10 +400,20 @@ export const importFromUrlProcedure = authedProcedure
       },
     },
   })
-  .input(RecipeImportInputSchema.extend({ forceAI: z.boolean().optional() }))
+  .input(
+    RecipeImportInputSchema.extend({
+      forceAI: z.boolean().optional(),
+      autoEnrich: z
+        .boolean()
+        .optional()
+        .describe(
+          "Run automatic AI enrichment for the imported recipe. Defaults to the caller's auto-enrich setting."
+        ),
+    })
+  )
   .output(RecipeImportResultSchema)
   .mutation(async ({ ctx, input }) => {
-    const { url, forceAI } = input;
+    const { url, forceAI, autoEnrich } = input;
     const recipeId = randomUUID();
 
     // A video recipe can only be extracted with AI, and the video pipeline
@@ -415,6 +446,7 @@ export const importFromUrlProcedure = authedProcedure
       householdKey: ctx.householdKey,
       householdUserIds: ctx.householdUserIds,
       forceAI,
+      autoEnrich: await resolveAutoEnrichOnAdd(ctx.user.id, autoEnrich),
     });
 
     // Already holding the recipe is an answer, not a failure: return the one
@@ -639,6 +671,9 @@ const importFromImagesProcedure = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
     const files: Array<{ data: string; mimeType: string; filename: string }> = [];
+    const autoEnrichEntry = input.get("autoEnrich");
+    const requestedAutoEnrich =
+      autoEnrichEntry === "true" ? true : autoEnrichEntry === "false" ? false : undefined;
 
     // Process files from FormData
     const filePromises: Promise<void>[] = [];
@@ -684,6 +719,7 @@ const importFromImagesProcedure = authedProcedure
       householdKey: ctx.householdKey,
       householdUserIds: ctx.householdUserIds,
       files,
+      autoEnrich: await resolveAutoEnrichOnAdd(ctx.user.id, requestedAutoEnrich),
     });
 
     if (result.status === "duplicate") {
@@ -726,6 +762,7 @@ export const importFromPasteProcedure = authedProcedure
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
       householdUserIds: ctx.householdUserIds,
+      autoEnrich: await resolveAutoEnrichOnAdd(ctx.user.id, input.autoEnrich),
     });
 
     if (result.status === "duplicate") {

@@ -69,6 +69,12 @@ async function handleRecipeBecameUsable(envelope: RealtimeEventEnvelope): Promis
 
   const payload = parsed.data;
 
+  if (payload.autoEnrich === false) {
+    log.debug({ recipeId: payload.recipeId }, "Automatic enrichment declined for this add");
+
+    return;
+  }
+
   try {
     const results = await enrichRecipe(
       {

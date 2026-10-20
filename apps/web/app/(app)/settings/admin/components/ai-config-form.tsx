@@ -76,6 +76,10 @@ const AUTOMATIC_ENRICHMENT_KEYS = [
   "imageGeneration",
 ] as const satisfies readonly (keyof AutomaticEnrichmentConfig)[];
 
+const OFFERED_AUTOMATIC_ENRICHMENT_KEYS = AUTOMATIC_ENRICHMENT_KEYS.filter(
+  (key) => key !== "allergyDetection"
+);
+
 /** What may run on a new food: its Plain Name, then its icon. */
 const AUTOMATIC_INGREDIENT_KEYS = [
   "plainName",
@@ -267,24 +271,25 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   }, [fetchConfigSecret]);
 
   /**
-   * The stored record read as the list the picker selects over. A column of
-   * switches read as separate decisions; which kinds are allowed to run unasked
-   * is one. Every kind belongs here — one left out of the list is not merely
-   * unreachable, it is rewritten to its default the moment any other kind is
-   * toggled, because the picker rebuilds the whole record from this list.
+   * The stored record read as the list the picker selects over. The picker sets
+   * automatic enrollment for the Enhanced kinds; allergy detection is absent
+   * on purpose because it runs only when a person asks for it. The handler
+   * below spreads the current record, so a stored allergyDetection value
+   * survives every change to the other kinds.
    */
   const selectedEnrichmentKinds = useMemo(
-    () => AUTOMATIC_ENRICHMENT_KEYS.filter((key) => automaticEnrichment[key]),
+    () => OFFERED_AUTOMATIC_ENRICHMENT_KEYS.filter((key) => automaticEnrichment[key]),
     [automaticEnrichment]
   );
   const handleEnrichmentKindsChange = useCallback((chosen: string[]) => {
     const selected = new Set(chosen);
 
-    setAutomaticEnrichment(
-      Object.fromEntries(
-        AUTOMATIC_ENRICHMENT_KEYS.map((key) => [key, selected.has(key)])
-      ) as AutomaticEnrichmentConfig
-    );
+    setAutomaticEnrichment((current) => ({
+      ...current,
+      ...(Object.fromEntries(
+        OFFERED_AUTOMATIC_ENRICHMENT_KEYS.map((key) => [key, selected.has(key)])
+      ) as Pick<AutomaticEnrichmentConfig, (typeof OFFERED_AUTOMATIC_ENRICHMENT_KEYS)[number]>),
+    }));
   }, []);
 
   // The same picker for new foods; an icon left on while the image provider is
@@ -597,7 +602,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           </Select.Trigger>
           <Select.Popover>
             <ListBox selectionMode="multiple">
-              {AUTOMATIC_ENRICHMENT_KEYS.map((key) => (
+              {OFFERED_AUTOMATIC_ENRICHMENT_KEYS.map((key) => (
                 <ListBox.Item key={key} id={key} textValue={t(`automaticEnrichmentKinds.${key}`)}>
                   <div className="flex flex-col">
                     <span>{t(`automaticEnrichmentKinds.${key}`)}</span>

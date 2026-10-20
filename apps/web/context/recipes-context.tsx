@@ -12,6 +12,7 @@ import { showActionToast } from "@/lib/ui/action-toast";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { RecipeAddOptions } from "@norish/shared-react/hooks/recipes/dashboard";
 import type {
   FullRecipeInsertDTO,
   FullRecipeUpdateDTO,
@@ -35,9 +36,9 @@ type Ctx = {
   clearFilters: () => void;
   filterKey: string;
   loadMore: () => void;
-  importRecipe: (url: string) => void;
-  importRecipeWithAI: (url: string) => void;
-  createRecipe: (input: FullRecipeInsertDTO) => void;
+  importRecipe: (url: string, options?: RecipeAddOptions) => void;
+  importRecipeWithAI: (url: string, options?: RecipeAddOptions) => void;
+  createRecipe: (input: FullRecipeInsertDTO, options?: RecipeAddOptions) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
   deleteRecipe: (id: string, version: number) => void;
   invalidate: () => void;

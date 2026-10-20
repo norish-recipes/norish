@@ -18,6 +18,7 @@ const dashboardRecipe = vi.fn();
 const recipeExistsByUrlForPolicy = vi.fn();
 const getDecryptedTokensByUserId = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
+const publishRecipeBecameUsable = vi.fn(async () => undefined);
 const parseRecipeFromUrl = vi.fn();
 const withDishColor = vi.fn();
 
@@ -41,6 +42,10 @@ vi.mock("@norish/queue/api-handlers", () => ({
 
 vi.mock("@norish/shared-server/realtime/recipes", () => ({
   recipes: { publish: publishRecipe },
+}));
+
+vi.mock("@norish/shared-server/realtime/recipe-enrichment", () => ({
+  recipeEnrichment: { publish: publishRecipeBecameUsable },
 }));
 
 // Resolution reads the catalogue; these tests are about the worker, not it.
@@ -111,6 +116,30 @@ describe("processImportJob", () => {
       "recipe-77",
       "user-1",
       expect.objectContaining({ name: "Imported Stew", dishColor: "#7c4a1e" })
+    );
+  });
+
+  it("sends the add auto-enrich choice on the announcement", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    await processRecipeImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        url: "https://example.com/stew",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdKey: "household-1",
+        householdUserIds: null,
+        autoEnrich: false,
+      },
+    } as unknown as Job<RecipeImportJobData>);
+
+    expect(publishRecipeBecameUsable).toHaveBeenCalledWith(
+      "recipeBecameUsable",
+      expect.objectContaining({ recipeId: "recipe-77", autoEnrich: false }),
+      undefined
     );
   });
 

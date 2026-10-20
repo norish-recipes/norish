@@ -27,7 +27,7 @@ import {
 } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import {
-  ENRICHMENT_KINDS,
+  ENHANCED_ENRICHMENT_KINDS,
   hasCompleteProvenance,
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
@@ -69,16 +69,16 @@ function ineligible(reason: RecipeEnrichmentSkipReason): Eligibility {
 /**
  * Enroll Recipe Enrichment for one recipe.
  *
- * Automatic enrollment evaluates every kind; a manual request evaluates
- * exactly the one asked for. Every eligible kind is attempted independently, so
- * one producer failure cannot short-circuit its siblings — and for automatic
- * enrollment, cannot affect the creation that triggered it.
+ * Automatic enrollment evaluates the six Enhanced kinds; a manual request
+ * evaluates exactly the one asked for. Every eligible kind is attempted
+ * independently, so one producer failure cannot short-circuit its siblings —
+ * and for automatic enrollment, cannot affect the creation that triggered it.
  */
 export async function enrichRecipe(
   context: RecipeEnrichmentContext,
   request: RecipeEnrichmentRequest
 ): Promise<RecipeEnrichmentEnrollment[]> {
-  const kinds = request.origin === "automatic" ? [...ENRICHMENT_KINDS] : [request.kind];
+  const kinds = request.origin === "automatic" ? [...ENHANCED_ENRICHMENT_KINDS] : [request.kind];
 
   if (!(await isAIEnabled())) {
     return kinds.map((kind) => ({ kind, status: "skipped", reason: "ai-disabled" }));

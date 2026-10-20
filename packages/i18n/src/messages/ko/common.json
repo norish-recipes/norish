@@ -297,5 +297,9 @@
     "title": "AI 키가 작동하지 않습니다",
     "description": "제공업체가 {since}부터 {blocks}의 API 키를 거부하고 있습니다. 새 키를 저장하면 해당 AI 기능이 다시 작동합니다.",
     "openSettings": "설정 열기"
+  },
+  "autoEnrich": {
+    "title": "Enhanced",
+    "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved."
   }
 }

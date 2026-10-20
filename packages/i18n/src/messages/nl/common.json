@@ -297,5 +297,9 @@
     "title": "Een AI-sleutel werkt niet meer",
     "description": "De provider weigert de API-sleutel voor {blocks} sinds {since}. Sla een nieuwe sleutel op om die AI-functies weer te laten werken.",
     "openSettings": "Instellingen openen"
+  },
+  "autoEnrich": {
+    "title": "Enhanced",
+    "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved."
   }
 }

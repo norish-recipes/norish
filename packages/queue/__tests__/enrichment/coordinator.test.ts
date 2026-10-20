@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
+import { ENHANCED_ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 const getRecipeFull = vi.fn();
 const getHouseholdMemberIds = vi.fn();
@@ -51,7 +52,7 @@ const ALL_ON = {
   imageGeneration: true,
 };
 
-const KIND_COUNT = 7;
+const KIND_COUNT = ENHANCED_ENRICHMENT_KINDS.length;
 
 function recipe(overrides: Record<string, unknown> = {}) {
   return {
@@ -94,10 +95,12 @@ beforeEach(() => {
 });
 
 describe("automatic enrollment", () => {
-  it("enrolls every eligible kind independently", async () => {
+  it("enrolls exactly the six Enhanced kinds, never allergy detection", async () => {
     const results = await enrichRecipe(context, { origin: "automatic" });
 
-    expect(results).toHaveLength(KIND_COUNT);
+    expect(results.map((result) => result.kind)).toEqual([...ENHANCED_ENRICHMENT_KINDS]);
+    expect(results).toHaveLength(6);
+    expect(outcome(results, "allergy-detection")).toBeUndefined();
     expect(results.every((result) => result.status === "queued")).toBe(true);
     expect(addEnrichmentJob).toHaveBeenCalledTimes(KIND_COUNT);
   });
@@ -123,10 +126,10 @@ describe("automatic enrollment", () => {
 
   it.each([
     ["autoTagging", "auto-tagging"],
-    ["allergyDetection", "allergy-detection"],
     ["autoCategorization", "auto-categorization"],
     ["nutritionEstimation", "nutrition-estimation"],
     ["recipeProvenance", "recipe-provenance"],
+    ["ingredientLinking", "ingredient-linking"],
     ["imageGeneration", "image-generation"],
   ] as const)("skips %s when its automatic switch is off", async (setting, kind) => {
     getAutomaticEnrichmentConfig.mockResolvedValue({ ...ALL_ON, [setting]: false });
@@ -174,16 +177,12 @@ describe("automatic enrollment", () => {
     expect(outcome(results, "ingredient-linking")?.status).toBe("queued");
   });
 
-  it("skips allergy detection when the household has no configured allergies", async () => {
+  it("never enrolls allergy detection automatically", async () => {
     getAllergiesForUsers.mockResolvedValue([]);
 
     const results = await enrichRecipe(context, { origin: "automatic" });
 
-    expect(outcome(results, "allergy-detection")).toEqual({
-      kind: "allergy-detection",
-      status: "skipped",
-      reason: "no-household-allergies",
-    });
+    expect(outcome(results, "allergy-detection")).toBeUndefined();
     expect(outcome(results, "auto-tagging")?.status).toBe("queued");
   });
 
@@ -322,7 +321,6 @@ describe("automatic enrollment", () => {
     const results = await enrichRecipe(context, { origin: "automatic" });
 
     expect(outcome(results, "auto-tagging")?.status).toBe("queued");
-    expect(outcome(results, "allergy-detection")?.status).toBe("queued");
   });
 
   it("reports a duplicate without failing the other kinds", async () => {
@@ -353,21 +351,6 @@ describe("automatic enrollment", () => {
       error: "redis is down",
     });
     expect(results.filter((r) => r.status === "queued")).toHaveLength(KIND_COUNT - 1);
-  });
-
-  it("keeps enrolling siblings when allergy lookup throws", async () => {
-    getAllergiesForUsers.mockRejectedValue(new Error("allergy database is down"));
-
-    const results = await enrichRecipe(context, { origin: "automatic" });
-
-    expect(outcome(results, "allergy-detection")).toEqual({
-      kind: "allergy-detection",
-      status: "failed-to-queue",
-      error: "allergy database is down",
-    });
-    expect(outcome(results, "auto-tagging")?.status).toBe("queued");
-    expect(outcome(results, "auto-categorization")?.status).toBe("queued");
-    expect(outcome(results, "nutrition-estimation")?.status).toBe("queued");
   });
 
   it("skips everything when the recipe can no longer be loaded", async () => {
@@ -615,6 +598,20 @@ describe("manual enrollment", () => {
 
     expect(results).toEqual([
       { kind: "auto-tagging", status: "skipped", reason: "insufficient-input" },
+    ]);
+  });
+
+  it("reports a failed allergy lookup on a manual allergy request", async () => {
+    getAllergiesForUsers.mockRejectedValue(new Error("allergy database is down"));
+
+    const results = await enrichRecipe(context, { origin: "manual", kind: "allergy-detection" });
+
+    expect(results).toEqual([
+      {
+        kind: "allergy-detection",
+        status: "failed-to-queue",
+        error: "allergy database is down",
+      },
     ]);
   });
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import AutoEnrichToggle, { useAutoEnrichOnAdd } from "@/components/shared/auto-enrich-toggle";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
@@ -23,6 +24,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
   const { isAIEnabled } = usePermissionsContext();
   const { importRecipeFromPaste, importRecipeFromPasteWithAI } = useRecipesMutations();
   const [text, setText] = useState("");
+  const [autoEnrich, setAutoEnrich] = useAutoEnrichOnAdd(isOpen);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handleImport = useCallback(() => {
     const trimmed = text.trim();
@@ -30,7 +32,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     if (!trimmed) return;
     setIsSubmitting(true);
     try {
-      importRecipeFromPaste(trimmed);
+      importRecipeFromPaste(trimmed, { autoEnrich });
       toast(t("importing"), {
         description: t("inProgress"),
         variant: "default",
@@ -49,7 +51,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     } finally {
       setIsSubmitting(false);
     }
-  }, [importRecipeFromPaste, onOpenChange, router, t, tErrors, text]);
+  }, [autoEnrich, importRecipeFromPaste, onOpenChange, router, t, tErrors, text]);
   const handleAIImport = useCallback(() => {
     const trimmed = text.trim();
 
@@ -66,7 +68,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     }
     setIsSubmitting(true);
     try {
-      importRecipeFromPasteWithAI(trimmed);
+      importRecipeFromPasteWithAI(trimmed, { autoEnrich });
       toast(t("importingWithAI"), {
         description: t("inProgress"),
         variant: "default",
@@ -85,7 +87,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     } finally {
       setIsSubmitting(false);
     }
-  }, [importRecipeFromPasteWithAI, onOpenChange, router, t, tErrors, text]);
+  }, [autoEnrich, importRecipeFromPasteWithAI, onOpenChange, router, t, tErrors, text]);
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
@@ -114,6 +116,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
                     max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
                   })}
                 </p>
+                <AutoEnrichToggle isSelected={autoEnrich} onValueChange={setAutoEnrich} />
               </Modal.Body>
               <Modal.Footer>
                 {isAIEnabled && (

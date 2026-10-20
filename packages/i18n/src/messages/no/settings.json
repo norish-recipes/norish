@@ -120,8 +120,8 @@
       "description": "Tilpass opplevelsen din.",
       "deviceKind": {
         "help": "Slik lagres preferanser",
-        "phone": "«{language}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype.",
-        "desktop": "«{language}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype."
+        "phone": "«{language}», «{autoEnrich}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype.",
+        "desktop": "«{language}», «{autoEnrich}», «{afterPlanning}» og «{measurements}» gjelder per konto. Resten per enhetstype."
       },
       "language": {
         "title": "Språk",
@@ -180,6 +180,10 @@
           "metricWithAI": "Metrisk med AI",
           "usWithAI": "Amerikansk med AI"
         }
+      },
+      "autoEnrich": {
+        "title": "Enhanced",
+        "description": "Run Auto-tag, Auto Categorize, Estimate Nutrition, Work Out Provenance, Link Ingredients to Steps, and Generate Picture after the recipe is saved. Turn it off for one recipe in the Add Recipe flow."
       }
     },
     "shareLinks": {

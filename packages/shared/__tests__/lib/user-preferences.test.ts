@@ -10,6 +10,7 @@ import {
 } from "@norish/shared/contracts/zod/user";
 import {
   getAfterPlanningPreference,
+  getAutoEnrichOnAddPreference,
   getLocalePreference,
   getMeasurementSystemPreference,
   getUserPreferences,
@@ -55,6 +56,29 @@ describe("user preferences", () => {
     expect(UserPreferencesSchema.parse({ afterPlanning: "somethingElse" }).afterPlanning).toBe(
       undefined
     );
+  });
+
+  it("runs the automatic AI work on an add unless the reader turned it off", () => {
+    expect(getAutoEnrichOnAddPreference(null)).toBe(true);
+    expect(getAutoEnrichOnAddPreference({ preferences: {} })).toBe(true);
+    expect(getAutoEnrichOnAddPreference({ preferences: { autoEnrichOnAdd: true } })).toBe(true);
+    expect(getAutoEnrichOnAddPreference({ preferences: { autoEnrichOnAdd: false } })).toBe(false);
+    expect(UserPreferencesSchema.parse({ autoEnrichOnAdd: "no" }).autoEnrichOnAdd).toBe(undefined);
+  });
+
+  it("writes the auto-enrich default with the profile and rejects a value that is not a boolean", () => {
+    const parsed = UpdateUserPreferencesInputSchema.parse({
+      version: 1,
+      preferences: { autoEnrichOnAdd: false },
+    });
+
+    expect(parsed.preferences).toEqual({ autoEnrichOnAdd: false });
+    expect(
+      UpdateUserPreferencesInputSchema.safeParse({
+        version: 1,
+        preferences: { autoEnrichOnAdd: "off" },
+      }).success
+    ).toBe(false);
   });
 
   it("ignores a stored hidden key from before the device-preference move", () => {

@@ -10,6 +10,7 @@ import MeasurementSystemSelector from "@/components/recipes/measurement-system-s
 import MediaGalleryInput from "@/components/recipes/media-gallery-input";
 import StepInput from "@/components/recipes/step-input";
 import TimeInputs from "@/components/recipes/time-inputs";
+import AutoEnrichToggle, { useAutoEnrichOnAdd } from "@/components/shared/auto-enrich-toggle";
 import SmartInputHelp from "@/components/shared/smart-input-help";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import TagInput from "@/components/shared/tag-input";
@@ -43,6 +44,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const locale = useLocale();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [autoEnrich, setAutoEnrich] = useAutoEnrichOnAdd();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const t = useTranslations("recipes.form");
   const tValidation = useTranslations("recipes.validation");
@@ -386,10 +388,13 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       if (mode === "create") {
         try {
           allowNavigation();
-          await createRecipe({
-            ...recipeData,
-            id: recipeId!,
-          });
+          await createRecipe(
+            {
+              ...recipeData,
+              id: recipeId!,
+            },
+            { autoEnrich }
+          );
         } catch (err) {
           disallowNavigation();
           log.error(
@@ -443,6 +448,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     notes,
     allowNavigation,
     disallowNavigation,
+    autoEnrich,
   ]);
   const handleTimeChange = useCallback(
     (field: "prepMinutes" | "cookMinutes" | "totalMinutes", value: number | null) => {
@@ -780,6 +786,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             </div>
           </div>
         </section>
+
+        {mode === "create" ? (
+          <AutoEnrichToggle isSelected={autoEnrich} onValueChange={setAutoEnrich} />
+        ) : null}
 
         {/* Submit */}
         <div className="flex justify-end gap-3 border-t pt-6">
