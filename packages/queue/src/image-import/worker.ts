@@ -53,7 +53,7 @@ async function settleBatchItem(
  */
 export async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
   const extractRecipeFromImages = requireQueueApiHandler("extractRecipeFromImages");
-  const { recipeId, userId, householdKey, householdUserIds, files, batchId } = job.data;
+  const { recipeId, userId, householdKey, householdUserIds, files, batchId, autoEnrich } = job.data;
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
@@ -160,7 +160,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   await settleBatchItem(job, { recipeId: createdId });
 
-  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+  await announceUsableRecipe(created, { userId, householdKey, householdUserIds, autoEnrich });
 }
 
 /**

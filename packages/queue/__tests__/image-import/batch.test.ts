@@ -166,11 +166,13 @@ describe("createImageImportBatch", () => {
         batchId: "batch-1",
         batchItemId: batch.items[0]!.itemId,
         files: [expect.objectContaining({ filename: "one.png" })],
+        autoEnrich: false,
       }),
       expect.objectContaining({
         batchId: "batch-1",
         batchItemId: batch.items[1]!.itemId,
         files: [expect.objectContaining({ filename: "two.png" })],
+        autoEnrich: false,
       }),
     ]);
   });
@@ -476,7 +478,7 @@ describe("retryImageImportBatchItems", () => {
     expect(retried!.items[0]).toMatchObject({ status: "processing", errorCode: null });
     expect(fake.add).toHaveBeenCalledTimes(3);
     expect(fake.add.mock.calls[2]![1]).toEqual(
-      expect.objectContaining({ recipeId: batch.items[0]!.recipeId })
+      expect.objectContaining({ recipeId: batch.items[0]!.recipeId, autoEnrich: false })
     );
   });
 

@@ -199,6 +199,7 @@ export async function pumpImageImportBatch(
         householdKey: batch.householdKey,
         householdUserIds: batch.householdUserIds,
         files: [item.file],
+        autoEnrich: false,
         batchId,
         batchItemId: item.itemId,
       });

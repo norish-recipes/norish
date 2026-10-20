@@ -13,6 +13,7 @@ const getRecipeOwnerId = vi.fn();
 const addRecipeImages = vi.fn();
 const updateRecipeDishColor = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
+const publishRecipeBecameUsable = vi.fn(async () => undefined);
 const extractRecipeFromImages = vi.fn();
 const saveImageBytes = vi.fn();
 const deleteRecipeImagesDir = vi.fn();
@@ -52,6 +53,10 @@ vi.mock("@norish/queue/api-handlers", () => ({
 
 vi.mock("@norish/shared-server/realtime/recipes", () => ({
   recipes: { publish: publishRecipe },
+}));
+
+vi.mock("@norish/shared-server/realtime/recipe-enrichment", () => ({
+  recipeEnrichment: { publish: publishRecipeBecameUsable },
 }));
 
 // Resolution reads the catalogue; these tests are about the worker, not it.
@@ -221,6 +226,28 @@ describe("processImageImportJob", () => {
       "user-1",
       expect.objectContaining({ url: "https://same.example/recipe" })
     );
+  });
+
+  it("announces a bulk recipe without automatic enrichment", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob(batchJobOf({ autoEnrich: false }));
+
+    expect(publishRecipeBecameUsable).toHaveBeenCalledWith(
+      "recipeBecameUsable",
+      expect.objectContaining({ recipeId: "recipe-123", autoEnrich: false }),
+      undefined
+    );
+  });
+
+  it("leaves the auto-enrich choice off a single import announcement", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob(jobOf());
+
+    const payload = publishRecipeBecameUsable.mock.calls[0]?.[1] as { autoEnrich?: boolean };
+
+    expect(payload.autoEnrich).toBeUndefined();
   });
 
   it("fails a batch item that would reuse an existing recipe", async () => {
