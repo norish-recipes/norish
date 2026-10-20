@@ -24,7 +24,6 @@ import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import type { z } from "zod";
 import {
-  asSchema,
   experimental_evaluate as evaluate,
   generateImage as generateImageWithModel,
   generateText,
@@ -39,6 +38,7 @@ import type {
   TranscriptionProvider,
 } from "@norish/config/zod/server-config";
 import {
+  decisionProviderNeedsEndpoint,
   isCloudTranscriptionProvider,
   isDecisionConfigValid,
   isImageGenerationConfigValid,
@@ -75,7 +75,6 @@ import {
 import { forgetKeyRejection, noteKeyRejection } from "./key-rejections";
 import { recordModelUse } from "./model-use-ledger";
 import {
-  canDegradeToJsonMode,
   createDecisionModelFromConfig,
   createGenericTranscriptionClient,
   createImageModelFromConfig,
@@ -83,6 +82,7 @@ import {
   createTranscriptionModel,
   requestOllamaTranscription,
 } from "./providers";
+import { canDegradeToJsonMode, jsonModeInstruction } from "./structured-output";
 
 // ============================================================================
 // System messages — code-owned, keyed by the prompt they accompany
@@ -170,25 +170,6 @@ export interface GenerateOptions<T> {
   fill?: Record<string, string>;
   /** Images to read. Their presence is what selects the vision model. */
   images?: readonly AIImage[];
-}
-
-/**
- * What a plain-JSON request has to carry that a schema-constrained one does
- * not: the shape itself. `json_object` mode only promises valid JSON, so
- * without this the model answers something parseable and wrong.
- *
- * Code-owned like the system messages, and appended to one rather than to the
- * administrator's prompt: it is an invariant of the transport, not an
- * instruction anyone should be able to edit away.
- */
-async function jsonModeInstruction<T>(schema: z.ZodType<T>): Promise<string> {
-  const jsonSchema = await asSchema(schema).jsonSchema;
-
-  return [
-    "Answer with a single JSON object and nothing else: no prose, no code fence.",
-    "It must validate against this JSON Schema:",
-    JSON.stringify(jsonSchema),
-  ].join("\n");
 }
 
 /** A request's answer, with the tokens it took for the model-use ledger. */
@@ -1139,7 +1120,24 @@ export async function testDecisionModel(
   }
 
   if (!config.apiKey) {
-    return { success: false, error: "An API key is required for TypeSafe AI." };
+    return {
+      success: false,
+      error: "An API key is required for the Decision Model provider.",
+    };
+  }
+
+  if (decisionProviderNeedsEndpoint(config.provider) && !config.model?.trim()) {
+    return {
+      success: false,
+      error: "A model is required for the generic OpenAI-compatible Decision provider.",
+    };
+  }
+
+  if (decisionProviderNeedsEndpoint(config.provider) && !config.endpoint?.trim()) {
+    return {
+      success: false,
+      error: "An endpoint is required for the generic OpenAI-compatible Decision provider.",
+    };
   }
 
   const settings = { ...resolveDecisionSettings(config), provider: config.provider };

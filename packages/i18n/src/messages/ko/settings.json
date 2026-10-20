@@ -1076,7 +1076,8 @@
       "provider": "결정 제공자",
       "providers": {
         "disabled": "사용 안 함",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "일반 OpenAI 호환"
       },
       "apiKey": "API 키",
       "apiKeyPlaceholder": "API 키 입력...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "연결 테스트",
       "connectionSuccess": "연결 성공",
-      "aiDisabledHint": "이 서버에서는 AI가 비활성화되어 있습니다. 결정 모델을 테스트하고 사용하려면 AI 설정에서 활성화하세요."
+      "aiDisabledHint": "이 서버에서는 AI가 비활성화되어 있습니다. 결정 모델을 테스트하고 사용하려면 AI 설정에서 활성화하세요.",
+      "apiKeyDescriptionGeneric": "엔드포인트에서 발급한 키입니다. 범용 OpenAI 호환 엔드포인트에는 필수입니다.",
+      "modelPlaceholderGeneric": "예: 사용할-모델-이름",
+      "endpointPlaceholderGeneric": "https://your-provider.example/api",
+      "endpointDescriptionGeneric": "필수입니다. 공급자가 사용하는 API 버전 경로를 포함하세요. 예: /v1 또는 /api/v4. 경로에 버전이 없으면 Norish가 /v1을 추가합니다."
     },
     "promptsConfig": {
       "recipeExtraction": "레시피 추출 프롬프트",

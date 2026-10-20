@@ -9,6 +9,8 @@ import type { DecisionConfig } from "@norish/config/zod/server-config";
 import {
   DECISION_USES,
   DecisionConfigSchema,
+  decisionProviderDefaults,
+  decisionProviderNeedsEndpoint,
   DEFAULT_DECISION_ENDPOINT,
   DEFAULT_DECISION_MODEL,
   isDecisionConfigValid,
@@ -28,10 +30,24 @@ function decisionConfig(overrides: Partial<DecisionConfig> = {}): DecisionConfig
 }
 
 describe("DecisionConfigSchema", () => {
-  it("accepts TypeSafe and disabled, and nothing else", () => {
+  it("accepts TypeSafe, a generic OpenAI-compatible endpoint and disabled, and nothing else", () => {
     expect(decisionConfig().provider).toBe("typesafe");
+    expect(DecisionConfigSchema.parse({ provider: "generic-openai" }).provider).toBe(
+      "generic-openai"
+    );
     expect(DecisionConfigSchema.parse({ provider: "disabled" }).provider).toBe("disabled");
     expect(() => DecisionConfigSchema.parse({ provider: "openai" })).toThrow();
+  });
+
+  it("knows which providers need an endpoint and which have defaults", () => {
+    expect(decisionProviderNeedsEndpoint("generic-openai")).toBe(true);
+    expect(decisionProviderNeedsEndpoint("typesafe")).toBe(false);
+    expect(decisionProviderNeedsEndpoint("disabled")).toBe(false);
+    expect(decisionProviderDefaults("typesafe")).toEqual({
+      model: DEFAULT_DECISION_MODEL,
+      endpoint: DEFAULT_DECISION_ENDPOINT,
+    });
+    expect(decisionProviderDefaults("generic-openai")).toEqual({ model: "", endpoint: "" });
   });
 
   it("is a sensitive key, so the stored key rides the shared merge and mask", () => {
@@ -90,6 +106,15 @@ describe("resolveDecisionSettings", () => {
     expect(settings.model).toBe("jev-2026-09-01");
     expect(settings.endpoint).toBe("https://gateway.example/v1");
   });
+
+  it("never lends TypeSafe's defaults to a generic endpoint", () => {
+    const settings = resolveDecisionSettings(
+      decisionConfig({ provider: "generic-openai", apiKey: "key" })
+    );
+
+    expect(settings.model).toBe("");
+    expect(settings.endpoint).toBe("");
+  });
 });
 
 describe("isDecisionConfigValid", () => {
@@ -102,6 +127,27 @@ describe("isDecisionConfigValid", () => {
     expect(isDecisionConfigValid(decisionConfig({ provider: "disabled" }))).toBe(false);
     expect(isDecisionConfigValid(decisionConfig({ apiKey: undefined }))).toBe(false);
     expect(isDecisionConfigValid(decisionConfig({ apiKey: "" }))).toBe(false);
+  });
+
+  it("needs a model and an endpoint for a generic endpoint", () => {
+    expect(
+      isDecisionConfigValid(decisionConfig({ provider: "generic-openai", apiKey: "key" }))
+    ).toBe(false);
+    expect(
+      isDecisionConfigValid(
+        decisionConfig({ provider: "generic-openai", apiKey: "key", model: "my-model" })
+      )
+    ).toBe(false);
+    expect(
+      isDecisionConfigValid(
+        decisionConfig({
+          provider: "generic-openai",
+          apiKey: "key",
+          model: "my-model",
+          endpoint: "https://provider.example/api/v4",
+        })
+      )
+    ).toBe(true);
   });
 
   it("takes the block's own key and no other: there is no fallback to the AI key", () => {

@@ -869,7 +869,7 @@
             provider</a
           >
           <p>
-            <b>Proposed.</b> The AI Runtime gains <code>decide</code> beside
+            <b>Proposed; amended by ADR-0041</b> (a language-model provider can make a Decision with estimated probabilities). The AI Runtime gains <code>decide</code> beside
             <code>generateStructured</code>, <code>transcribe</code> and <code>generateImage</code>:
             typed Choice, Score and Boolean questions in, a pick and a probability distribution
             back, from a Decision Model (TypeSafe's Jev) configured in its own block with its own
@@ -939,6 +939,19 @@
             form) and a list of parents that never lend their numbers. A correction belongs to a
             household, and a recipe's worked-out nutrition is computed on read for the reader's
             household.
+          </p>
+        </li>
+        <li>
+          <a href="ai/0041-a-language-model-can-make-a-decision.md"
+            >ADR-0041 &mdash; A language model can make a Decision with estimated probabilities</a
+          >
+          <p>
+            <b>Accepted.</b> Amends ADR-0035: the Decision Model gains a generic OpenAI-compatible
+            provider. A chat model answers the evaluation contract through an adapter that requests
+            one JSON object, reuses the strict-schema and plain-JSON fallback, normalizes each
+            distribution, and calculates a choice or a weighted score. Jev is the first
+            choice; a generic Decision carries estimated probabilities, not calibrated outputs,
+            and each feature keeps its own threshold.
           </p>
         </li>
       </ul>

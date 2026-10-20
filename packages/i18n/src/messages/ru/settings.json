@@ -1076,7 +1076,8 @@
       "provider": "Провайдер решений",
       "providers": {
         "disabled": "Отключено",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Совместимый с OpenAI"
       },
       "apiKey": "API-ключ",
       "apiKeyPlaceholder": "Введите API-ключ...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Проверить подключение",
       "connectionSuccess": "Подключение успешно",
-      "aiDisabledHint": "AI отключён на этом сервере. Включите его в конфигурации AI, чтобы проверять и использовать модель решений."
+      "aiDisabledHint": "AI отключён на этом сервере. Включите его в конфигурации AI, чтобы проверять и использовать модель решений.",
+      "apiKeyDescriptionGeneric": "Ключ, выданный вашей конечной точкой. Обязателен для универсальной конечной точки, совместимой с OpenAI.",
+      "modelPlaceholderGeneric": "например имя-вашей-модели",
+      "endpointPlaceholderGeneric": "https://vash-provayder.example/api",
+      "endpointDescriptionGeneric": "Обязательно. Укажите путь версии API, который использует ваш провайдер, например /v1 или /api/v4. Norish добавит /v1, если в пути нет версии."
     },
     "promptsConfig": {
       "recipeExtraction": "Промпт извлечения рецепта",

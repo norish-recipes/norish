@@ -1076,7 +1076,8 @@
       "provider": "Entscheidungsanbieter",
       "providers": {
         "disabled": "Deaktiviert",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Generisch OpenAI-kompatibel"
       },
       "apiKey": "API-Schlüssel",
       "apiKeyPlaceholder": "API-Schlüssel eingeben...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Verbindung testen",
       "connectionSuccess": "Verbindung erfolgreich",
-      "aiDisabledHint": "KI ist auf diesem Server deaktiviert. Aktivieren Sie sie in der KI-Konfiguration, um das Entscheidungsmodell zu testen und zu nutzen."
+      "aiDisabledHint": "KI ist auf diesem Server deaktiviert. Aktivieren Sie sie in der KI-Konfiguration, um das Entscheidungsmodell zu testen und zu nutzen.",
+      "apiKeyDescriptionGeneric": "Der Schlüssel, den Ihr Endpunkt ausgegeben hat. Für einen generischen OpenAI-kompatiblen Endpunkt erforderlich.",
+      "modelPlaceholderGeneric": "z. B. ihr-modellname",
+      "endpointPlaceholderGeneric": "https://ihr-anbieter.example/api",
+      "endpointDescriptionGeneric": "Erforderlich. Geben Sie den API-Versionspfad Ihres Anbieters an, zum Beispiel /v1 oder /api/v4. Norish ergänzt /v1, wenn der Pfad keine Version enthält."
     },
     "promptsConfig": {
       "recipeExtraction": "Rezept-Extraktions-Prompt",

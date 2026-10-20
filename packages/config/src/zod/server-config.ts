@@ -681,15 +681,24 @@ export function isImageGenerationConfigValid(
 // ============================================================================
 
 /**
- * The providers that can answer a Decision, plus `disabled`. One real member
- * on purpose: Vercel's AI Gateway also serves Jev, and when that is wanted it
- * is a second member and a base URL, not a redesign. The enum exists so the
+ * The providers that can answer a Decision, plus `disabled`. TypeSafe serves
+ * Jev natively; `generic-openai` reaches any OpenAI-compatible endpoint that
+ * returns a probability distribution per question. The enum exists so the
  * admin form reads like its two sibling blocks and so `disabled` is a stored
  * fact rather than an absent key.
  */
-export const DecisionProviderSchema = z.enum(["typesafe", "disabled"]);
+export const DecisionProviderSchema = z.enum(["typesafe", "generic-openai", "disabled"]);
 
 export type DecisionProvider = z.infer<typeof DecisionProviderSchema>;
+
+/** Providers addressed at an endpoint and model the operator types. */
+export const DECISION_PROVIDERS_NEED_ENDPOINT = [
+  "generic-openai",
+] as const satisfies readonly DecisionProvider[];
+
+export function decisionProviderNeedsEndpoint(provider: DecisionProvider): boolean {
+  return (DECISION_PROVIDERS_NEED_ENDPOINT as readonly string[]).includes(provider);
+}
 
 /**
  * What the Decision Model does for a household, each an administrator's
@@ -740,23 +749,40 @@ export const DecisionConfigSchema = z.object({
 export type DecisionConfig = z.infer<typeof DecisionConfigSchema>;
 
 /**
+ * The model and endpoint a provider starts with. TypeSafe has both defaults;
+ * a generic endpoint has neither, because its operator names the server and
+ * the model. The admin form and the resolver read this one rule.
+ */
+export function decisionProviderDefaults(provider: DecisionProvider): {
+  model: string;
+  endpoint: string;
+} {
+  return provider === "typesafe"
+    ? { model: DEFAULT_DECISION_MODEL, endpoint: DEFAULT_DECISION_ENDPOINT }
+    : { model: "", endpoint: "" };
+}
+
+/**
  * The settings one Decision runs with: the stored values with the model and
  * endpoint defaults filled in. Blank strings count as unset.
  */
 export function resolveDecisionSettings(
   config: Pick<DecisionConfig, "provider" | "apiKey" | "model" | "endpoint">
 ): { provider: DecisionProvider; apiKey?: string; model: string; endpoint: string } {
+  const defaults = decisionProviderDefaults(config.provider);
+
   return {
     provider: config.provider,
     apiKey: config.apiKey || undefined,
-    model: config.model?.trim() || DEFAULT_DECISION_MODEL,
-    endpoint: config.endpoint?.trim() || DEFAULT_DECISION_ENDPOINT,
+    model: config.model?.trim() || defaults.model,
+    endpoint: config.endpoint?.trim() || defaults.endpoint,
   };
 }
 
 /**
  * Whether the stored Decision block can serve a request at all: a provider is
- * selected and the key it needs is present. One definition, shared by the
+ * selected, the key it needs is present, and a provider that addresses an
+ * endpoint also has its model and endpoint. One definition, shared by the
  * loader's one-question getters, the runtime's configuration error and the
  * admin form.
  */
@@ -765,7 +791,13 @@ export function isDecisionConfigValid(
 ): config is ConfiguredDecisionConfig {
   if (!config || config.provider === "disabled") return false;
 
-  return !!config.apiKey;
+  if (!config.apiKey) return false;
+
+  if (decisionProviderNeedsEndpoint(config.provider)) {
+    return !!config.model?.trim() && !!config.endpoint?.trim();
+  }
+
+  return true;
 }
 
 /** A Decision block that can serve a request: a real provider and its key. */

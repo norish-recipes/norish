@@ -1076,7 +1076,8 @@
       "provider": "Доставчик на решения",
       "providers": {
         "disabled": "Изключено",
-        "typesafe": "TypeSafe AI"
+        "typesafe": "TypeSafe AI",
+        "genericOpenai": "Общ OpenAI-съвместим"
       },
       "apiKey": "API ключ",
       "apiKeyPlaceholder": "Въведете API ключ...",
@@ -1104,7 +1105,11 @@
       },
       "testConnection": "Тествай връзката",
       "connectionSuccess": "Връзката е успешна",
-      "aiDisabledHint": "AI е изключен на този сървър. Включете го в AI конфигурацията, за да тествате и използвате модела за решения."
+      "aiDisabledHint": "AI е изключен на този сървър. Включете го в AI конфигурацията, за да тествате и използвате модела за решения.",
+      "apiKeyDescriptionGeneric": "Ключът, издаден от вашата крайна точка. Задължителен за обща крайна точка, съвместима с OpenAI.",
+      "modelPlaceholderGeneric": "напр. име-на-вашия-модел",
+      "endpointPlaceholderGeneric": "https://vash-dostavchik.example/api",
+      "endpointDescriptionGeneric": "Задължително. Включете пътя до версията на API, която използва доставчикът ви, например /v1 или /api/v4. Norish добавя /v1, ако пътят няма версия."
     },
     "promptsConfig": {
       "recipeExtraction": "Промпт за извличане на рецепта",
