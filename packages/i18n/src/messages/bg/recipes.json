@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Импортиране на няколко рецепти от снимки",
-    "description": "Изберете едно изображение за всяка рецепта. Norish прочита всяко изображение отделно и създава рецепта за всяко изображение, което съдържа такава.",
-    "dropzone": "Пуснете изображения тук или ги изберете от библиотеката си",
-    "formats": "JPG, PNG или WebP. До {max} изображения, по {size} MB, общо {total} MB.",
-    "choose": "Избор на изображения",
-    "selectedCount": "{count, plural, one {# избрано изображение} other {# избрани изображения}}",
-    "remove": "Премахване на {name}",
     "clear": "Изчистване",
-    "importButton": "{count, plural, one {Импортиране на # рецепта} other {Импортиране на # рецепти}}",
-    "submitFailed": "Импортирането не можа да започне",
     "retryFailed": "Повторният опит не успя",
-    "invalidTypeDetail": "{name} не е JPG, PNG или WebP изображение.",
-    "tooLargeDetail": "{name} е по-голямо от {size} MB.",
-    "duplicateDetail": "{name} вече е в партидата.",
-    "limitDetail": "Една партида съдържа най-много {max} изображения.",
-    "dismiss": "Затваряне",
     "progressTitle": "Напредък на импортирането",
     "progressCount": "{done} от {total} рецепти са готови",
     "progressFailed": "{count, plural, one {# изображение се провали} other {# изображения се провалиха}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Отваряне на рецептата",
     "retry": "Опитайте отново",
-    "retryAll": "Повторен опит за неуспешните изображения",
-    "allDone": "Всички изображения са импортирани.",
     "aiDisabled": "Импортирането на изображения изисква AI доставчик. Помолете администратор да активира такъв.",
     "backToRecipes": "Обратно към рецептите",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Изображенията са по-големи от {size} MB общо. Премахнете изображение или изберете по-малки."
+    "pageDescription": "Active image imports and their results."
   }
 }

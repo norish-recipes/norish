@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Mehrere Rezepte aus Fotos importieren",
-    "description": "Wählen Sie ein Bild pro Rezept. Norish liest jedes Bild einzeln und erstellt für jedes Bild mit einem Rezept ein Rezept.",
-    "dropzone": "Bilder hier ablegen oder aus Ihrer Bibliothek wählen",
-    "formats": "JPG, PNG oder WebP. Bis zu {max} Bilder, je {size} MB, insgesamt {total} MB.",
-    "choose": "Bilder wählen",
-    "selectedCount": "{count, plural, one {# Bild ausgewählt} other {# Bilder ausgewählt}}",
-    "remove": "{name} entfernen",
     "clear": "Leeren",
-    "importButton": "{count, plural, one {# Rezept importieren} other {# Rezepte importieren}}",
-    "submitFailed": "Import konnte nicht gestartet werden",
     "retryFailed": "Wiederholen fehlgeschlagen",
-    "invalidTypeDetail": "{name} ist kein JPG-, PNG- oder WebP-Bild.",
-    "tooLargeDetail": "{name} ist größer als {size} MB.",
-    "duplicateDetail": "{name} ist bereits im Stapel.",
-    "limitDetail": "Ein Stapel enthält höchstens {max} Bilder.",
-    "dismiss": "Schließen",
     "progressTitle": "Importfortschritt",
     "progressCount": "{done} von {total} Rezepten fertig",
     "progressFailed": "{count, plural, one {# Bild fehlgeschlagen} other {# Bilder fehlgeschlagen}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Rezept öffnen",
     "retry": "Wiederholen",
-    "retryAll": "Fehlgeschlagene Bilder wiederholen",
-    "allDone": "Alle Bilder sind importiert.",
     "aiDisabled": "Bildimport benötigt einen AI-Anbieter. Bitten Sie einen Administrator, einen zu aktivieren.",
     "backToRecipes": "Zurück zu den Rezepten",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Die Bilder sind zusammen größer als {size} MB. Entfernen Sie ein Bild, oder wählen Sie kleinere."
+    "pageDescription": "Active image imports and their results."
   }
 }

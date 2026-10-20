@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Імпорт кількох рецептів із фотографій",
-    "description": "Виберіть одне зображення на рецепт. Norish читає кожне зображення окремо й створює рецепт для кожного зображення, що містить рецепт.",
-    "dropzone": "Перетягніть зображення сюди або виберіть їх у своїй бібліотеці",
-    "formats": "JPG, PNG або WebP. До {max} зображень, по {size} МБ кожне, загалом {total} МБ.",
-    "choose": "Вибрати зображення",
-    "selectedCount": "{count, plural, one {# зображення вибрано} few {# зображення вибрано} many {# зображень вибрано} other {# зображення вибрано}}",
-    "remove": "Видалити {name}",
     "clear": "Очистити",
-    "importButton": "{count, plural, one {Імпортувати # рецепт} few {Імпортувати # рецепти} many {Імпортувати # рецептів} other {Імпортувати # рецепту}}",
-    "submitFailed": "Не вдалося почати імпорт",
     "retryFailed": "Не вдалося повторити імпорт",
-    "invalidTypeDetail": "{name} не є зображенням JPG, PNG або WebP.",
-    "tooLargeDetail": "{name} більше {size} МБ.",
-    "duplicateDetail": "{name} уже в пакеті.",
-    "limitDetail": "У пакеті не більше {max} зображень.",
-    "dismiss": "Закрити",
     "progressTitle": "Перебіг імпорту",
     "progressCount": "Готово {done} з {total} рецептів",
     "progressFailed": "{count, plural, one {# зображення не вдалося} few {# зображення не вдалося} many {# зображень не вдалося} other {# зображення не вдалося}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Відкрити рецепт",
     "retry": "Повторити",
-    "retryAll": "Повторити невдалі зображення",
-    "allDone": "Усі зображення імпортовано.",
     "aiDisabled": "Для імпорту зображень потрібен постачальник AI. Попросіть адміністратора ввімкнути його.",
     "backToRecipes": "Назад до рецептів",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Зображення разом більші за {size} МБ. Видаліть зображення або виберіть менші."
+    "pageDescription": "Active image imports and their results."
   }
 }

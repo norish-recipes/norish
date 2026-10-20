@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Meerdere recepten uit foto's importeren",
-    "description": "Kies één afbeelding per recept. Norish leest elke afbeelding apart en maakt een recept voor elke afbeelding waarin er een staat.",
-    "dropzone": "Sleep afbeeldingen hierheen of kies ze uit je bibliotheek",
-    "formats": "JPG, PNG of WebP. Maximaal {max} afbeeldingen, {size} MB per stuk, {total} MB in totaal.",
-    "choose": "Afbeeldingen kiezen",
-    "selectedCount": "{count, plural, one {# afbeelding geselecteerd} other {# afbeeldingen geselecteerd}}",
-    "remove": "{name} verwijderen",
     "clear": "Wissen",
-    "importButton": "{count, plural, one {# recept importeren} other {# recepten importeren}}",
-    "submitFailed": "Importeren starten mislukt",
     "retryFailed": "Opnieuw proberen mislukt",
-    "invalidTypeDetail": "{name} is geen JPG-, PNG- of WebP-afbeelding.",
-    "tooLargeDetail": "{name} is groter dan {size} MB.",
-    "duplicateDetail": "{name} staat al in de batch.",
-    "limitDetail": "Een batch bevat maximaal {max} afbeeldingen.",
-    "dismiss": "Sluiten",
     "progressTitle": "Voortgang van importeren",
     "progressCount": "{done} van {total} recepten klaar",
     "progressFailed": "{count, plural, one {# afbeelding mislukt} other {# afbeeldingen mislukt}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Recept openen",
     "retry": "Opnieuw proberen",
-    "retryAll": "Mislukte afbeeldingen opnieuw proberen",
-    "allDone": "Alle afbeeldingen zijn geïmporteerd.",
     "aiDisabled": "Afbeeldingen importeren vereist een AI-provider. Vraag een beheerder om er een in te schakelen.",
     "backToRecipes": "Terug naar recepten",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "De afbeeldingen zijn samen groter dan {size} MB. Verwijder een afbeelding of kies kleinere."
+    "pageDescription": "Active image imports and their results."
   }
 }

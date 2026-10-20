@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Importar varias recetas desde fotos",
-    "description": "Elige una imagen por receta. Norish lee cada imagen por separado y crea una receta por cada imagen que contenga una.",
-    "dropzone": "Suelta imágenes aquí o elígelas de tu biblioteca",
-    "formats": "JPG, PNG o WebP. Hasta {max} imágenes, {size} MB cada una, {total} MB en total.",
-    "choose": "Elegir imágenes",
-    "selectedCount": "{count, plural, one {# imagen seleccionada} other {# imágenes seleccionadas}}",
-    "remove": "Quitar {name}",
     "clear": "Borrar",
-    "importButton": "{count, plural, one {Importar # receta} other {Importar # recetas}}",
-    "submitFailed": "No se pudo iniciar la importación",
     "retryFailed": "No se pudo reintentar la importación",
-    "invalidTypeDetail": "{name} no es una imagen JPG, PNG o WebP.",
-    "tooLargeDetail": "{name} supera los {size} MB.",
-    "duplicateDetail": "{name} ya está en el lote.",
-    "limitDetail": "Un lote contiene como máximo {max} imágenes.",
-    "dismiss": "Cerrar",
     "progressTitle": "Progreso de la importación",
     "progressCount": "{done} de {total} recetas listas",
     "progressFailed": "{count, plural, one {# imagen falló} other {# imágenes fallaron}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Abrir receta",
     "retry": "Reintentar",
-    "retryAll": "Reintentar imágenes fallidas",
-    "allDone": "Todas las imágenes se han importado.",
     "aiDisabled": "La importación de imágenes necesita un proveedor de IA. Pide a un administrador que active uno.",
     "backToRecipes": "Volver a las recetas",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Las imágenes superan los {size} MB en total. Quita una imagen o elige otras más pequeñas."
+    "pageDescription": "Active image imports and their results."
   }
 }

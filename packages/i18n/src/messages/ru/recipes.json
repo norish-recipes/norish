@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Импорт нескольких рецептов из фотографий",
-    "description": "Выберите одно изображение на рецепт. Norish читает каждое изображение отдельно и создаёт рецепт для каждого изображения, содержащего рецепт.",
-    "dropzone": "Перетащите изображения сюда или выберите их в своей библиотеке",
-    "formats": "JPG, PNG или WebP. До {max} изображений, по {size} МБ каждое, всего {total} МБ.",
-    "choose": "Выбрать изображения",
-    "selectedCount": "{count, plural, one {# изображение выбрано} few {# изображения выбрано} many {# изображений выбрано} other {# изображения выбрано}}",
-    "remove": "Удалить {name}",
     "clear": "Очистить",
-    "importButton": "{count, plural, one {Импортировать # рецепт} few {Импортировать # рецепта} many {Импортировать # рецептов} other {Импортировать # рецепта}}",
-    "submitFailed": "Не удалось начать импорт",
     "retryFailed": "Не удалось повторить импорт",
-    "invalidTypeDetail": "{name} не является изображением JPG, PNG или WebP.",
-    "tooLargeDetail": "{name} больше {size} МБ.",
-    "duplicateDetail": "{name} уже в пакете.",
-    "limitDetail": "В пакете не более {max} изображений.",
-    "dismiss": "Закрыть",
     "progressTitle": "Ход импорта",
     "progressCount": "Готово {done} из {total} рецептов",
     "progressFailed": "{count, plural, one {# изображение не удалось} few {# изображения не удалось} many {# изображений не удалось} other {# изображения не удалось}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Открыть рецепт",
     "retry": "Повторить",
-    "retryAll": "Повторить неудачные изображения",
-    "allDone": "Все изображения импортированы.",
     "aiDisabled": "Для импорта изображений нужен поставщик AI. Попросите администратора включить его.",
     "backToRecipes": "Назад к рецептам",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Изображения вместе больше {size} МБ. Удалите изображение или выберите меньшие."
+    "pageDescription": "Active image imports and their results."
   }
 }

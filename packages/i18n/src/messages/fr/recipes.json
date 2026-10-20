@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Importer plusieurs recettes à partir de photos",
-    "description": "Choisissez une image par recette. Norish lit chaque image séparément et crée une recette pour chaque image qui en contient une.",
-    "dropzone": "Déposez des images ici ou choisissez-les dans votre bibliothèque",
-    "formats": "JPG, PNG ou WebP. Jusqu'à {max} images, {size} Mo chacune, {total} Mo au total.",
-    "choose": "Choisir des images",
-    "selectedCount": "{count, plural, one {# image sélectionnée} other {# images sélectionnées}}",
-    "remove": "Retirer {name}",
     "clear": "Effacer",
-    "importButton": "{count, plural, one {Importer # recette} other {Importer # recettes}}",
-    "submitFailed": "Impossible de démarrer l'importation",
     "retryFailed": "Impossible de réessayer l'importation",
-    "invalidTypeDetail": "{name} n'est pas une image JPG, PNG ou WebP.",
-    "tooLargeDetail": "{name} dépasse {size} Mo.",
-    "duplicateDetail": "{name} est déjà dans le lot.",
-    "limitDetail": "Un lot contient au maximum {max} images.",
-    "dismiss": "Fermer",
     "progressTitle": "Progression de l'importation",
     "progressCount": "{done} recettes sur {total} prêtes",
     "progressFailed": "{count, plural, one {# image a échoué} other {# images ont échoué}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Ouvrir la recette",
     "retry": "Réessayer",
-    "retryAll": "Réessayer les images échouées",
-    "allDone": "Toutes les images sont importées.",
     "aiDisabled": "L'importation d'images nécessite un fournisseur d'IA. Demandez à un administrateur d'en activer un.",
     "backToRecipes": "Retour aux recettes",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Les images dépassent {size} Mo au total. Retirez une image ou choisissez des images plus petites."
+    "pageDescription": "Active image imports and their results."
   }
 }

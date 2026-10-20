@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Tuo useita reseptejä kuvista",
-    "description": "Valitse yksi kuva reseptiä kohden. Norish lukee jokaisen kuvan erikseen ja luo reseptin jokaisesta kuvasta, jossa on resepti.",
-    "dropzone": "Pudota kuvat tähän tai valitse ne kirjastostasi",
-    "formats": "JPG, PNG tai WebP. Enintään {max} kuvaa, {size} Mt kukin, yhteensä {total} Mt.",
-    "choose": "Valitse kuvat",
-    "selectedCount": "{count, plural, one {# kuva valittu} other {# kuvaa valittu}}",
-    "remove": "Poista {name}",
     "clear": "Tyhjennä",
-    "importButton": "{count, plural, one {Tuo # resepti} other {Tuo # reseptiä}}",
-    "submitFailed": "Tuontia ei voitu aloittaa",
     "retryFailed": "Uudelleenyritys epäonnistui",
-    "invalidTypeDetail": "{name} ei ole JPG-, PNG- tai WebP-kuva.",
-    "tooLargeDetail": "{name} on suurempi kuin {size} Mt.",
-    "duplicateDetail": "{name} on jo erässä.",
-    "limitDetail": "Erässä on enintään {max} kuvaa.",
-    "dismiss": "Sulje",
     "progressTitle": "Tuonnin edistyminen",
     "progressCount": "{done}/{total} reseptiä valmiina",
     "progressFailed": "{count, plural, one {# kuva epäonnistui} other {# kuvaa epäonnistui}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Avaa resepti",
     "retry": "Yritä uudelleen",
-    "retryAll": "Yritä epäonnistuneita kuvia uudelleen",
-    "allDone": "Kaikki kuvat on tuotu.",
     "aiDisabled": "Kuvien tuonti vaatii AI-palveluntarjoajan. Pyydä ylläpitäjää ottamaan sellainen käyttöön.",
     "backToRecipes": "Takaisin resepteihin",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Kuvat ovat yhteensä yli {size} Mt. Poista kuva tai valitse pienempiä."
+    "pageDescription": "Active image imports and their results."
   }
 }

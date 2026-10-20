@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Importar várias receitas de fotos",
-    "description": "Escolha uma imagem por receita. O Norish lê cada imagem separadamente e cria uma receita para cada imagem que contenha uma.",
-    "dropzone": "Solte imagens aqui ou escolha-as na sua biblioteca",
-    "formats": "JPG, PNG ou WebP. Até {max} imagens, {size} MB cada, {total} MB no total.",
-    "choose": "Escolher imagens",
-    "selectedCount": "{count, plural, one {# imagem selecionada} other {# imagens selecionadas}}",
-    "remove": "Remover {name}",
     "clear": "Limpar",
-    "importButton": "{count, plural, one {Importar # receita} other {Importar # receitas}}",
-    "submitFailed": "Não foi possível iniciar a importação",
     "retryFailed": "Não foi possível tentar a importação novamente",
-    "invalidTypeDetail": "{name} não é uma imagem JPG, PNG ou WebP.",
-    "tooLargeDetail": "{name} é maior que {size} MB.",
-    "duplicateDetail": "{name} já está no lote.",
-    "limitDetail": "Um lote contém no máximo {max} imagens.",
-    "dismiss": "Fechar",
     "progressTitle": "Progresso da importação",
     "progressCount": "{done} de {total} receitas prontas",
     "progressFailed": "{count, plural, one {# imagem falhou} other {# imagens falharam}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Abrir receita",
     "retry": "Tentar novamente",
-    "retryAll": "Tentar novamente as imagens que falharam",
-    "allDone": "Todas as imagens foram importadas.",
     "aiDisabled": "A importação de imagens precisa de um provedor de IA. Peça a um administrador para ativar um.",
     "backToRecipes": "Voltar às receitas",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "As imagens passam de {size} MB no total. Remova uma imagem ou escolha imagens menores."
+    "pageDescription": "Active image imports and their results."
   }
 }

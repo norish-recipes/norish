@@ -427,21 +427,8 @@
   },
   "bulkImport": {
     "title": "Importa più ricette dalle foto",
-    "description": "Scegli un'immagine per ricetta. Norish legge ogni immagine separatamente e crea una ricetta per ogni immagine che ne contiene una.",
-    "dropzone": "Trascina qui le immagini o sceglile dalla tua libreria",
-    "formats": "JPG, PNG o WebP. Fino a {max} immagini, {size} MB ciascuna, {total} MB in totale.",
-    "choose": "Scegli immagini",
-    "selectedCount": "{count, plural, one {# immagine selezionata} other {# immagini selezionate}}",
-    "remove": "Rimuovi {name}",
     "clear": "Svuota",
-    "importButton": "{count, plural, one {Importa # ricetta} other {Importa # ricette}}",
-    "submitFailed": "Impossibile avviare l'importazione",
     "retryFailed": "Impossibile riprovare l'importazione",
-    "invalidTypeDetail": "{name} non è un'immagine JPG, PNG o WebP.",
-    "tooLargeDetail": "{name} supera {size} MB.",
-    "duplicateDetail": "{name} è già nel lotto.",
-    "limitDetail": "Un lotto contiene al massimo {max} immagini.",
-    "dismiss": "Chiudi",
     "progressTitle": "Avanzamento dell'importazione",
     "progressCount": "{done} ricette su {total} pronte",
     "progressFailed": "{count, plural, one {# immagine non riuscita} other {# immagini non riuscite}}",
@@ -460,14 +447,11 @@
     },
     "openRecipe": "Apri ricetta",
     "retry": "Riprova",
-    "retryAll": "Riprova immagini non riuscite",
-    "allDone": "Tutte le immagini sono state importate.",
     "aiDisabled": "L'importazione di immagini richiede un provider AI. Chiedi a un amministratore di attivarne uno.",
     "backToRecipes": "Torna alle ricette",
     "emptyTitle": "No image import is active",
     "emptyHint": "Start one from the Images dialog in the Add menu.",
     "emptyAction": "Back to the dashboard",
-    "pageDescription": "Active image imports and their results.",
-    "totalTooLargeDetail": "Le immagini superano {size} MB in totale. Rimuovi un'immagine o scegline di più piccole."
+    "pageDescription": "Active image imports and their results."
   }
 }

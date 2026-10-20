@@ -25,12 +25,17 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
+import type { ImageImportBatchDTO } from "@norish/shared/contracts";
+
+export type BulkImportRetryTarget = Pick<BulkImportTrackerItem, "itemId">;
+
 export interface BulkImportContextValue {
   activeCount: number;
+  batch: ImageImportBatchDTO | null;
   items: BulkImportTrackerItem[];
   trackBatch: (batchId: string, files: readonly File[]) => void;
   clearBatch: () => void;
-  retry: (items: readonly BulkImportTrackerItem[]) => void;
+  retry: (items: readonly BulkImportRetryTarget[]) => void;
 }
 
 const BulkImportContext = createContext<BulkImportContextValue | null>(null);
@@ -116,14 +121,8 @@ export function BulkImportProvider({ children }: { children: ReactNode }) {
       void queryClient.invalidateQueries({ queryKey: libraryPathKey });
     }
 
-    if (isBulkImportSettled(batch) && !batch.items.some((item) => item.retryable)) {
-      resetTracker();
-
-      return;
-    }
-
     dispatch({ type: "batch-updated", batch });
-  }, [libraryPathKey, queryClient, resetTracker, statusQuery.data]);
+  }, [libraryPathKey, queryClient, statusQuery.data]);
 
   useEffect(() => {
     if (!state.batchId || !statusQuery.isSuccess || statusQuery.data !== null) return;
@@ -177,7 +176,7 @@ export function BulkImportProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const retry = useCallback(
-    (targets: readonly BulkImportTrackerItem[]) => {
+    (targets: readonly BulkImportRetryTarget[]) => {
       if (!state.batchId || targets.length === 0) return;
 
       retryMutation.mutate({
@@ -191,12 +190,13 @@ export function BulkImportProvider({ children }: { children: ReactNode }) {
   const value = useMemo<BulkImportContextValue>(
     () => ({
       activeCount: activeBulkImportCount(state.items),
+      batch: statusQuery.data ?? null,
       items: state.items,
       trackBatch,
       clearBatch: resetTracker,
       retry,
     }),
-    [resetTracker, retry, state.items, trackBatch]
+    [resetTracker, retry, state.items, statusQuery.data, trackBatch]
   );
 
   return <BulkImportContext.Provider value={value}>{children}</BulkImportContext.Provider>;

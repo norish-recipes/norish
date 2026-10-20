@@ -163,8 +163,6 @@ export function readStoredBulkImportTracker(): BulkImportTrackerState | null {
       .filter((item) => item.status !== "done")
       .map((item) => ({ ...item, previewUrl: null }));
 
-    if (items.length === 0) return null;
-
     return { batchId: parsed.batchId, items, restored: false };
   } catch {
     return null;
@@ -175,7 +173,7 @@ export function writeStoredBulkImportTracker(state: BulkImportTrackerState): voi
   if (typeof window === "undefined") return;
 
   try {
-    if (!state.batchId || state.items.length === 0) {
+    if (!state.batchId) {
       window.sessionStorage.removeItem(BULK_IMPORT_STORAGE_KEY);
 
       return;

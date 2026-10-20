@@ -50,9 +50,11 @@ test.beforeEach(async ({ aiStack, page: fixturePage }) => {
   await setAutomaticEnrichment({});
 });
 
-async function openBulkImport(): Promise<void> {
-  await page.goto("/recipes/import");
-  await expect(page).toHaveURL(/\/recipes\/import$/);
+async function openBulkDialog(): Promise<void> {
+  await page.goto("/");
+  await page.getByTestId("add-library-button").click();
+  await page.getByRole("menuitem", { name: "Image" }).click({ timeout: 2_000 });
+  await page.getByRole("button", { name: "Bulk images" }).click();
 }
 
 function uploadInput() {
@@ -61,10 +63,10 @@ function uploadInput() {
 
 async function submitBatch(images: { name: string; mimeType: string; buffer: Buffer }[]) {
   await uploadInput().setInputFiles(images);
-  await page.getByRole("button", { name: /^Import \d+ recipes?$/ }).click();
+  await page.getByRole("button", { name: "Import with AI" }).click();
 }
 
-function statusChip(label: string) {
+function statusText(label: string) {
   return page.getByText(label, { exact: true });
 }
 
@@ -92,20 +94,24 @@ test("each image becomes its own recipe, and a failed one retries from the batch
   ai.control.enqueue({ kind: "success", content: JSON.stringify(FIRST_RECIPE) });
   ai.control.setDefault({ kind: "error", status: 400 });
 
-  await openBulkImport();
+  await openBulkDialog();
   await submitBatch([FIRST_IMAGE, SECOND_IMAGE]);
 
+  await expect(page.getByTestId("bulk-import-count")).toBeVisible();
+  await expect(page.getByTestId("importing-recipe-card").first()).toBeVisible();
+
+  await page.goto("/recipes/import");
+
   await expect(page.getByRole("heading", { name: "Import progress" })).toBeVisible();
-  await expect(statusChip("Recipe created")).toBeVisible({ timeout: 60_000 });
-  await expect(statusChip("Failed")).toBeVisible({ timeout: 60_000 });
+  await expect(statusText("Recipe created")).toBeVisible({ timeout: 60_000 });
+  await expect(statusText("Failed")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "Open recipe" })).toHaveCount(1);
 
   ai.control.enqueue({ kind: "success", content: JSON.stringify(SECOND_RECIPE) });
   await page.getByRole("button", { name: "Retry", exact: true }).click();
 
-  await expect(statusChip("Recipe created")).toHaveCount(2, { timeout: 60_000 });
+  await expect(statusText("Recipe created")).toHaveCount(2, { timeout: 60_000 });
   await expect(page.getByRole("link", { name: "Open recipe" })).toHaveCount(2);
-  await expect(page.getByText("All images are imported.")).toBeVisible();
 
   const hrefs = await page
     .getByRole("link", { name: "Open recipe" })
@@ -135,14 +141,12 @@ test("each image becomes its own recipe, and a failed one retries from the batch
 test("an unsupported image never enters the batch or reaches the provider", async () => {
   const requestsBefore = stack.ai.control.requestCount;
 
-  await openBulkImport();
+  await openBulkDialog();
   await uploadInput().setInputFiles([
     FIRST_IMAGE,
     { name: "shopping-list.txt", mimeType: "text/plain", buffer: Buffer.from("not a recipe") },
   ]);
 
-  await expect(page.getByText("shopping-list.txt is not a JPG, PNG or WebP image.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Import 1 recipe" })).toBeVisible();
-  await expect(page.getByText("1 image selected")).toBeVisible();
+  await expect(page.getByText("shopping-list.txt is not a supported image format")).toBeVisible();
   expect(stack.ai.control.requestCount).toBe(requestsBefore);
 });

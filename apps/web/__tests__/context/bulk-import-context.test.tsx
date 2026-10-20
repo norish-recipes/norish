@@ -59,11 +59,12 @@ vi.mock("next-intl", () => ({
 }));
 
 function Probe() {
-  const { activeCount, items, trackBatch, clearBatch, retry } = useBulkImport();
+  const { activeCount, batch, items, trackBatch, clearBatch, retry } = useBulkImport();
 
   return (
     <div>
       <output data-testid="count">{activeCount}</output>
+      <output data-testid="batch">{batch?.batchId ?? "none"}</output>
       {items.map((item) => (
         <span data-testid={`item-${item.position}`} key={item.itemId}>
           {`${item.filename}|${item.status}|${item.previewUrl ?? "none"}`}
@@ -200,11 +201,61 @@ describe("BulkImportProvider", () => {
     await waitFor(() => expect(screen.queryByTestId("item-0")).not.toBeInTheDocument());
     expect(screen.getByTestId("item-1")).toHaveTextContent("two.png|failed|blob:two.png");
     expect(screen.getByTestId("count")).toHaveTextContent("0");
+    expect(screen.getByTestId("batch")).toHaveTextContent("batch-1");
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["library", "list"] });
 
     fireEvent.click(screen.getByText("retry"));
 
     expect(mocks.mutate).toHaveBeenCalledWith({ batchId: "batch-1", itemIds: ["item-2"] });
+  });
+
+  it("keeps a settled batch and its results until clear", async () => {
+    const view = renderProvider();
+
+    fireEvent.click(screen.getByText("track"));
+    await waitFor(() => expect(screen.getByTestId("count")).toHaveTextContent("2"));
+
+    mocks.data = batchDTO([
+      {
+        itemId: "item-1",
+        position: 0,
+        filename: "one.png",
+        status: "done",
+      },
+      {
+        itemId: "item-2",
+        position: 1,
+        filename: "two.png",
+        status: "failed",
+        errorCode: "extraction-failed",
+      },
+    ]);
+    mocks.isSuccess = true;
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <BulkImportProvider>
+          <Probe />
+        </BulkImportProvider>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId("batch")).toHaveTextContent("batch-1"));
+    expect(screen.getByTestId("count")).toHaveTextContent("0");
+    expect(screen.queryByTestId("item-0")).not.toBeInTheDocument();
+    expect(screen.getByTestId("item-1")).toHaveTextContent("two.png|failed|blob:two.png");
+
+    const stored = JSON.parse(window.sessionStorage.getItem(BULK_IMPORT_STORAGE_KEY) ?? "{}");
+
+    expect(stored.batchId).toBe("batch-1");
+    expect(stored.items).toHaveLength(1);
+
+    mocks.data = undefined;
+    mocks.isSuccess = false;
+
+    fireEvent.click(screen.getByText("clear"));
+
+    expect(screen.getByTestId("batch")).toHaveTextContent("none");
+    expect(window.sessionStorage.getItem(BULK_IMPORT_STORAGE_KEY)).toBeNull();
   });
 
   it("restores a batch from session storage without previews", async () => {
@@ -250,6 +301,7 @@ describe("BulkImportProvider", () => {
     );
 
     await waitFor(() => expect(screen.getByTestId("count")).toHaveTextContent("0"));
+    expect(screen.getByTestId("batch")).toHaveTextContent("none");
     expect(window.sessionStorage.getItem(BULK_IMPORT_STORAGE_KEY)).toBeNull();
   });
 
@@ -262,6 +314,7 @@ describe("BulkImportProvider", () => {
     fireEvent.click(screen.getByText("clear"));
 
     expect(screen.getByTestId("count")).toHaveTextContent("0");
+    expect(screen.getByTestId("batch")).toHaveTextContent("none");
     expect(window.sessionStorage.getItem(BULK_IMPORT_STORAGE_KEY)).toBeNull();
   });
 });
