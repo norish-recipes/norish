@@ -90,15 +90,16 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   const viewPolicy = policy.view;
   const ctx = { userId, householdKey };
 
-  // Emit import started event (shows skeleton)
-  void recipes.publish(
-    "importStarted",
-    {
-      recipeId,
-      url: `[${files.length} image(s)]`,
-    },
-    { viewPolicy: viewPolicy, ...ctx }
-  );
+  if (!batchId) {
+    void recipes.publish(
+      "importStarted",
+      {
+        recipeId,
+        url: `[${files.length} image(s)]`,
+      },
+      { viewPolicy: viewPolicy, ...ctx }
+    );
+  }
 
   const parsedRecipe = await extractRecipeFromImages(recipeId, files);
 

@@ -180,6 +180,30 @@ describe("processImageImportJob", () => {
     ]);
   });
 
+  it("publishes importStarted for a single image import", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob(jobOf());
+
+    expect(publishRecipe).toHaveBeenCalledWith(
+      "importStarted",
+      expect.anything(),
+      expect.anything()
+    );
+  });
+
+  it("does not publish importStarted for a batch item", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob(batchJobOf());
+
+    expect(publishRecipe).not.toHaveBeenCalledWith(
+      "importStarted",
+      expect.anything(),
+      expect.anything()
+    );
+  });
+
   it("stores the Dish Colour extracted from the saved image (vision path)", async () => {
     const { processImageImportJob } = await import("../../src/image-import/worker");
 
