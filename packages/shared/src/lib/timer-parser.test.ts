@@ -6,6 +6,18 @@ import { parseTimerDurations } from "./timer-parser";
 
 describe("parseTimerDurations", () => {
   describe("default keywords", () => {
+    it.each([
+      ["Låt jäsa i 1 timme", "1 timme", 3600],
+      ["Tillaga i 2 timmar", "2 timmar", 7200],
+      ["Vila i 1 tim", "1 tim", 3600],
+      ["Sjud i 15 minuter", "15 minuter", 900],
+      ["Rör i 30 sekunder", "30 sekunder", 30],
+    ])("detects Swedish timers in %s", (text, originalText, durationSeconds) => {
+      expect(parseTimerDurations(text, defaultTimerKeywords)).toEqual([
+        expect.objectContaining({ originalText, durationSeconds }),
+      ]);
+    });
+
     it("detects simple minutes", () => {
       const matches = parseTimerDurations("Bake for 20 minutes");
 
