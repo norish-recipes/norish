@@ -95,9 +95,6 @@ async function main() {
   await initRecipeEnrichmentListener();
   log.info("-".repeat(50));
 
-  await startWorkers();
-  log.info("-".repeat(50));
-
   const { server, hostname, port } = await createServer();
 
   registerShutdownHandlers(
@@ -113,6 +110,8 @@ async function main() {
     log.info(`  ENV:  ${SERVER_CONFIG.NODE_ENV}`);
     log.info("-".repeat(50));
   });
+
+  void startWorkers().catch((err) => log.error({ err }, "Worker startup failed"));
 }
 
 main().catch((err) => {
