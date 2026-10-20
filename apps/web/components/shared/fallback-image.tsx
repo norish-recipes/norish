@@ -17,9 +17,11 @@ function FallbackPlaceholder({ className = "", message, ...props }: FallbackPlac
   return (
     <div
       {...props}
+      aria-label={message || t("noImageAvailable")}
       className={`bg-surface-tertiary flex h-full w-full items-center justify-center ${className}`}
+      role="img"
     >
-      <PhotoIcon aria-label={message || t("noImageAvailable")} className="text-muted h-12 w-12" />
+      <PhotoIcon aria-hidden className="text-muted h-12 w-12" />
     </div>
   );
 }
