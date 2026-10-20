@@ -43,6 +43,19 @@ beforeAll(() => {
     })),
   });
 });
+beforeAll(() => {
+  Object.defineProperty(window, "IntersectionObserver", {
+    configurable: true,
+    writable: true,
+    value: vi.fn(() => ({
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+      takeRecords: vi.fn(() => []),
+    })),
+  });
+});
+
 describe("recipe image labels", () => {
   it("labels a Generated Image and a Source Image and counts the slides", () => {
     const items = buildMediaItems({
