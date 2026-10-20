@@ -60,7 +60,10 @@ export async function submitImageImport(
     if (!(await fileInput.isVisible().catch(() => false))) {
       await page.keyboard.press("Escape");
       await page.getByTestId("add-library-button").click();
-      await page.getByRole("menuitem", { name: "Image" }).click({ timeout: 2_000 });
+      await page.getByRole("menuitem", { name: "Images" }).click({ timeout: 2_000 });
+      await page
+        .getByRole("menuitem", { name: "One recipe from photos" })
+        .click({ timeout: 2_000 });
     }
 
     await fileInput.setInputFiles(image);

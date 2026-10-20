@@ -52,7 +52,9 @@ test.beforeEach(async ({ aiStack, page: fixturePage }) => {
 
 async function openBulkImport(): Promise<void> {
   await page.goto("/");
-  await page.getByTestId("bulk-image-import-button").click();
+  await page.getByTestId("add-library-button").click();
+  await page.getByRole("menuitem", { name: "Images" }).click();
+  await page.getByRole("menuitem", { name: "Bulk images" }).click();
   await expect(page).toHaveURL(/\/recipes\/import$/);
 }
 

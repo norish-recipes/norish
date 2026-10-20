@@ -10,6 +10,8 @@
     "importFromUrl": "URL",
     "importFromPaste": "Wklej",
     "importFromImage": "Obraz",
+    "images": "Images",
+    "oneRecipeFromPhotos": "One recipe from photos",
     "searchFields": {
       "title": "Tytuł",
       "description": "Opis",
@@ -28,7 +30,8 @@
       "recipes": "Przepisy",
       "cookbooks": "Książki kucharskie"
     },
-    "bulkImageImport": "Wiele zdjęć"
+    "bulkImageImport": "Wiele zdjęć",
+    "activeImports": "{count, plural, one {# image importing} other {# images importing}}"
   },
   "back": {
     "all": "Wróć do biblioteki",

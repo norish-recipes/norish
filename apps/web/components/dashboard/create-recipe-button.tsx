@@ -92,15 +92,38 @@ export default function CreateRecipeButton() {
           <Label>{t("importFromPaste")}</Label>
         </Dropdown.Item>
         {isAIEnabled ? (
-          <Dropdown.Item
-            key="image"
-            id="image"
-            textValue={t("importFromImage")}
-            onPress={() => openModal(setShowImageModal)}
-          >
-            {<PhotoIcon className="h-4 w-4" />}
-            <Label>{t("importFromImage")}</Label>
-          </Dropdown.Item>
+          <Dropdown.SubmenuTrigger>
+            <Dropdown.Item key="images" id="images" textValue={t("images")}>
+              {<PhotoIcon className="h-4 w-4" />}
+              <Label>{t("images")}</Label>
+              <Dropdown.SubmenuIndicator />
+            </Dropdown.Item>
+            <Dropdown.Popover className="bg-overlay" placement="end top">
+              <Dropdown.Menu aria-label={t("images")}>
+                <Dropdown.Item
+                  key="image-one"
+                  id="image-one"
+                  textValue={t("oneRecipeFromPhotos")}
+                  onPress={() => openModal(setShowImageModal)}
+                >
+                  {<PhotoIcon className="h-4 w-4" />}
+                  <Label>{t("oneRecipeFromPhotos")}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item
+                  key="image-bulk"
+                  id="image-bulk"
+                  textValue={t("bulkImageImport")}
+                  onPress={() => {
+                    setIsMenuOpen(false);
+                    router.push("/recipes/import");
+                  }}
+                >
+                  {<PhotoIcon className="h-4 w-4" />}
+                  <Label>{t("bulkImageImport")}</Label>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown.SubmenuTrigger>
         ) : null}
         <Dropdown.Item
           key="create"
