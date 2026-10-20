@@ -230,11 +230,15 @@
     "uploading": "Wird hochgeladen...",
     "uploadFailed": "Hochladen fehlgeschlagen",
     "dragToReorder": "Ziehe Bilder, um sie neu zu ordnen",
+    "setAsThumbnail": "Als Vorschaubild festlegen",
     "maxImagesReached": "Maximal {max} Bilder erlaubt",
     "maxVideosReached": "Maximal {max} Videos erlaubt",
     "invalidFileType": "Ungültiger Dateityp"
   },
   "carousel": {
+    "generated": "Generiert",
+    "sourcePhoto": "Quellfoto",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Kein Bild verfügbar",
     "noMediaAvailable": "Keine Medien verfügbar",
     "videoPlayer": {

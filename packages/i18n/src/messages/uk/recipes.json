@@ -230,11 +230,15 @@
     "uploading": "Завантаження...",
     "uploadFailed": "Не вдалося завантажити",
     "dragToReorder": "Перетягніть, щоб змінити порядок",
+    "setAsThumbnail": "Зробити мініатюрою",
     "maxImagesReached": "Можна додати не більше {max} зображень",
     "maxVideosReached": "Можна додати не більше {max} відео",
     "invalidFileType": "Непідтримуваний тип файлу"
   },
   "carousel": {
+    "generated": "Згенеровано",
+    "sourcePhoto": "Вихідне фото",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Зображення немає",
     "noMediaAvailable": "Медіа немає",
     "videoPlayer": {

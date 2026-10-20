@@ -230,11 +230,15 @@
     "uploading": "업로드 중...",
     "uploadFailed": "업로드 실패",
     "dragToReorder": "드래그하여 재정렬하세요.",
+    "setAsThumbnail": "썸네일로 설정",
     "maxImagesReached": "이미지는 최대 {max}개까지 가능합니다.",
     "maxVideosReached": "동영상은 최대 {max}개까지 가능합니다.",
     "invalidFileType": "잘못된 파일 형식"
   },
   "carousel": {
+    "generated": "생성됨",
+    "sourcePhoto": "원본 사진",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "이미지가 없습니다.",
     "noMediaAvailable": "미디어가 없습니다.",
     "videoPlayer": {

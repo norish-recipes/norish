@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { recipeImages } from "@norish/db-schema/schema";
 
+import { countSourceImages, MAX_RECIPE_IMAGES } from "../../lib/recipe-media";
+
 export const RecipeImageSelectSchema = createSelectSchema(recipeImages);
 export const RecipeImageInsertSchema = createInsertSchema(recipeImages).omit({
   id: true,
@@ -13,7 +15,7 @@ export const RecipeImageOutputSchema = z.object({
   id: z.uuid(),
   image: z.string(),
   order: z.coerce.number().default(0),
-  /** A Generated Image, drawn by AI (ADR-0025). Carried for archive export; never rendered. */
+  /** A Generated Image, drawn by AI (ADR-0025). It can lead the gallery; the archive export carries the marking. */
   generated: z.boolean().default(false),
   version: z.number(),
 });
@@ -40,8 +42,36 @@ export const DeleteRecipeImageInputSchema = z.object({
   version: z.number().int().positive(),
 });
 
-// Max 10 images per recipe
-export const MAX_RECIPE_IMAGES = 10;
+export { MAX_RECIPE_IMAGES };
 
-export const RecipeImagesArraySchema = z.array(RecipeImageOutputSchema).max(MAX_RECIPE_IMAGES);
+export const MAX_RECIPE_GALLERY_IMAGES = MAX_RECIPE_IMAGES + 1;
+
+export function refineRecipeGallery(
+  images: readonly { generated?: boolean }[],
+  ctx: z.RefinementCtx
+): void {
+  const sourceImages = countSourceImages(images);
+  const generatedImages = images.length - sourceImages;
+
+  if (sourceImages > MAX_RECIPE_IMAGES) {
+    ctx.addIssue({
+      code: "custom",
+      message: `A recipe can hold at most ${MAX_RECIPE_IMAGES} Source Images`,
+      path: ["images"],
+    });
+  }
+
+  if (generatedImages > 1) {
+    ctx.addIssue({
+      code: "custom",
+      message: "A recipe can hold at most one Generated Image",
+      path: ["images"],
+    });
+  }
+}
+
+export const RecipeImagesArraySchema = z
+  .array(RecipeImageOutputSchema)
+  .max(MAX_RECIPE_GALLERY_IMAGES)
+  .superRefine(refineRecipeGallery);
 export const RecipeImagesInputArraySchema = z.array(RecipeImageInputSchema).max(MAX_RECIPE_IMAGES);

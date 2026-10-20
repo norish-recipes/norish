@@ -17,6 +17,7 @@ import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/lib/recipe-media";
 
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { announceUsableRecipe } from "../enrichment/announce";
@@ -61,26 +62,34 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
     throw new Error("Failed to save imported recipe");
   }
 
-  // Save the first uploaded image as the recipe image
+  // Every uploaded file is its own Source Image, in upload order.
   if (files.length > 0) {
-    const firstFile = files[0];
-
-    if (!firstFile) {
-      return;
-    }
-
     try {
-      const imageBytes = Buffer.from(firstFile.data, "base64");
-      const imagePath = await saveImageBytes(imageBytes, recipeId);
+      const savedImages: { image: string; order: number }[] = [];
 
-      await addRecipeImages(createdId, [{ image: imagePath, order: 0 }]);
-      // Vision imports store their primary image only here, after the
-      // recipe row exists, so the Dish Colour is written the same way.
-      await updateRecipeDishColor(createdId, await dishColorForImageUrl(imagePath));
-      log.debug({ recipeId: createdId }, "Saved first uploaded image as recipe image");
+      for (const [order, file] of files.slice(0, MAX_RECIPE_IMAGES).entries()) {
+        const imageBytes = Buffer.from(file.data, "base64");
+
+        savedImages.push({ image: await saveImageBytes(imageBytes, recipeId), order });
+      }
+
+      await addRecipeImages(createdId, savedImages);
+
+      const primaryImage = savedImages[0];
+
+      if (primaryImage) {
+        // Vision imports store their primary image only here, after the
+        // recipe row exists, so the Dish Colour is written the same way.
+        await updateRecipeDishColor(createdId, await dishColorForImageUrl(primaryImage.image));
+      }
+
+      log.debug(
+        { recipeId: createdId, imageCount: savedImages.length },
+        "Saved uploaded images as recipe images"
+      );
     } catch (imageError) {
       // Log but don't fail the import if image saving fails
-      log.warn({ err: imageError, recipeId: createdId }, "Failed to save uploaded image");
+      log.warn({ err: imageError, recipeId: createdId }, "Failed to save uploaded images");
     }
   }
 

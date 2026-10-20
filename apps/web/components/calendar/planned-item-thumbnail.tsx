@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo } from "react";
+import FallbackImage from "@/components/shared/fallback-image";
 import { PencilSquareIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
@@ -38,17 +39,17 @@ export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
   const t = useTranslations("calendar.timeline");
   const dim = sizeClasses[size];
   const isRecipe = itemType === "recipe";
-  const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const imageSrc = isRecipe && image && image !== failedSrc ? image : null;
 
-  if (imageSrc) {
+  if (isRecipe && image) {
     return (
       <div className={`relative ${dim} shrink-0 overflow-hidden rounded-lg`}>
-        <img
+        <FallbackImage
           alt={alt}
           className="h-full w-full object-cover"
-          src={imageSrc}
-          onError={() => setFailedSrc(imageSrc)}
+          fallbackMessage={t("recipe")}
+          loading="lazy"
+          src={image}
+          variant="hero"
         />
       </div>
     );

@@ -230,11 +230,15 @@
     "uploading": "Przesyłanie...",
     "uploadFailed": "Przesyłanie nie powiodło się",
     "dragToReorder": "Przeciągnij, aby zmienić kolejność",
+    "setAsThumbnail": "Ustaw jako miniaturę",
     "maxImagesReached": "Maksymalnie {max} obrazów",
     "maxVideosReached": "Maksymalnie {max} filmów",
     "invalidFileType": "Nieprawidłowy typ pliku"
   },
   "carousel": {
+    "generated": "Wygenerowane",
+    "sourcePhoto": "Zdjęcie źródłowe",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Brak obrazu",
     "noMediaAvailable": "Brak mediów",
     "videoPlayer": {

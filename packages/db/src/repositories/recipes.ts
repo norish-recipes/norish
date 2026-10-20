@@ -2,6 +2,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   and,
   asc,
+  count,
   desc,
   eq,
   ilike,
@@ -36,8 +37,10 @@ import {
 } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
+import { planScalarRetention } from "@norish/shared/lib/recipe-media";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions } from "./ingredients";
@@ -854,6 +857,23 @@ export async function createRecipeWithRefs(
 
   const payload = parsed.data;
 
+  const galleryImages = [...(payload.images ?? [])];
+  const scalarRetention = planScalarRetention(galleryImages, payload.image, MAX_RECIPE_IMAGES);
+
+  if (scalarRetention.append) {
+    const maxOrder = galleryImages.reduce(
+      (max, image) => Math.max(max, Number(image.order ?? 0)),
+      -1
+    );
+
+    galleryImages.push({
+      image: (payload.image ?? "").trim(),
+      order: maxOrder + 1,
+    });
+  }
+
+  const keptScalar = scalarRetention.kept;
+
   const toInsert = {
     id: recipeId,
     name: stripHtmlTags(payload.name),
@@ -861,9 +881,7 @@ export async function createRecipeWithRefs(
     description: payload.description ? stripHtmlTags(payload.description) : null,
     notes: payload.notes ?? null,
     url: payload.url ?? null,
-    // The deprecated scalar is never written: a payload image lands in the
-    // gallery below.
-    image: null,
+    image: keptScalar,
     dishColor: payload.dishColor ?? null,
     servings: payload.servings ?? 1,
     systemUsed: payload.systemUsed,
@@ -940,23 +958,6 @@ export async function createRecipeWithRefs(
           recipeId: rid,
         }))
       );
-    }
-
-    // Insert gallery images. The gallery is the source of truth for a
-    // recipe's pictures; a legacy scalar in the payload (foreign archive
-    // imports, the public API) is translated into it rather than written to
-    // the deprecated column — appended after the gallery so it never
-    // displaces the primary the payload actually led with.
-    const galleryImages = [...(payload.images ?? [])];
-    const legacyScalar = (payload.image ?? "").trim();
-
-    if (legacyScalar !== "" && !galleryImages.some((img) => img.image === legacyScalar)) {
-      const maxOrder = galleryImages.reduce(
-        (max, img) => Math.max(max, Number(img.order ?? 0)),
-        -1
-      );
-
-      galleryImages.push({ image: legacyScalar, order: maxOrder + 1 });
     }
 
     if (galleryImages.length > 0) {
@@ -1635,6 +1636,26 @@ export async function updateRecipeWithRefs(
   const payload = parsed.data;
 
   return await db.transaction(async (tx) => {
+    const [stored] = await tx
+      .select({ image: recipes.image })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId));
+
+    const storedScalar = (stored?.image ?? "").trim();
+    const payloadScalar = typeof payload.image === "string" ? payload.image.trim() : "";
+    const scalarCandidate =
+      payload.images !== undefined
+        ? payload.image !== undefined
+          ? payloadScalar
+          : storedScalar
+        : "";
+    const scalarRetention =
+      scalarCandidate !== ""
+        ? planScalarRetention(payload.images ?? [], scalarCandidate, MAX_RECIPE_IMAGES)
+        : { append: false, kept: null };
+    const preservedScalar = scalarRetention.append ? scalarCandidate : null;
+    const keepScalar = scalarRetention.kept !== null;
+
     // Update recipe base fields
     const updateData: any = {};
 
@@ -1643,12 +1664,8 @@ export async function updateRecipeWithRefs(
       updateData.description = payload.description ? stripHtmlTags(payload.description) : null;
     if (payload.notes !== undefined) updateData.notes = payload.notes;
     if (payload.url !== undefined) updateData.url = payload.url;
-    // The deprecated scalar is never written with a value again: any update
-    // that touches media clears it, so a stale fallback cannot linger behind
-    // the gallery. An update that says nothing about media leaves legacy
-    // rows alone — stripping their only image is the migration's job, not a
-    // rename's.
-    if (payload.image !== undefined || payload.images !== undefined) updateData.image = null;
+    if (payload.image !== undefined || payload.images !== undefined)
+      updateData.image = keepScalar ? scalarCandidate : null;
     if (payload.dishColor !== undefined) updateData.dishColor = payload.dishColor;
     if (payload.servings !== undefined) updateData.servings = payload.servings;
     if (payload.prepMinutes !== undefined) updateData.prepMinutes = payload.prepMinutes;
@@ -1777,11 +1794,20 @@ export async function updateRecipeWithRefs(
       await syncRecipeImagesTx(tx, recipeId, payload.images);
     }
 
-    // The legacy alias: a payload scalar lands in the gallery whenever the
-    // gallery ends up empty — a scalar-only PATCH, or an overwrite-import of
-    // a gallery-less archive whose hero travels beside `images: []`. With a
-    // gallery present it is dropped: no reader has consulted the scalar past
-    // a gallery row since the thumbnails went gallery-first.
+    if (preservedScalar !== null) {
+      const [maxRow] = await tx
+        .select({ maxOrder: sql<number | null>`max(${recipeImages.order})` })
+        .from(recipeImages)
+        .where(eq(recipeImages.recipeId, recipeId));
+      const nextOrder = maxRow?.maxOrder == null ? 0 : Number(maxRow.maxOrder) + 1;
+
+      await tx.insert(recipeImages).values({
+        recipeId,
+        image: preservedScalar,
+        order: String(nextOrder),
+      });
+    }
+
     const updateScalar = typeof payload.image === "string" ? payload.image.trim() : "";
 
     if (updateScalar !== "") {
@@ -1934,29 +1960,51 @@ export async function addRecipeImages(
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
   if (!images.length) return [];
+  if (images.length > MAX_RECIPE_IMAGES) {
+    throw new Error(`A recipe holds at most ${MAX_RECIPE_IMAGES} Source Images`);
+  }
 
-  const inserted = await db
-    .insert(recipeImages)
-    .values(
-      images.map((img) => ({
-        recipeId,
-        image: img.image,
-        order: String(img.order),
-      }))
-    )
-    .returning({
-      id: recipeImages.id,
-      image: recipeImages.image,
-      order: recipeImages.order,
-      version: recipeImages.version,
-    });
+  return db.transaction(async (tx) => {
+    const [recipe] = await tx
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId))
+      .for("update");
 
-  return inserted.map((row) => ({
-    id: row.id,
-    image: row.image,
-    order: Number(row.order) || 0,
-    version: row.version,
-  }));
+    if (!recipe) throw new Error(`Recipe not found: ${recipeId}`);
+
+    const [counted] = await tx
+      .select({ count: count() })
+      .from(recipeImages)
+      .where(and(eq(recipeImages.recipeId, recipeId), eq(recipeImages.generated, false)));
+
+    if (Number(counted?.count ?? 0) + images.length > MAX_RECIPE_IMAGES) {
+      throw new Error(`A recipe holds at most ${MAX_RECIPE_IMAGES} Source Images`);
+    }
+
+    const inserted = await tx
+      .insert(recipeImages)
+      .values(
+        images.map((img) => ({
+          recipeId,
+          image: img.image,
+          order: String(img.order),
+        }))
+      )
+      .returning({
+        id: recipeImages.id,
+        image: recipeImages.image,
+        order: recipeImages.order,
+        version: recipeImages.version,
+      });
+
+    return inserted.map((row) => ({
+      id: row.id,
+      image: row.image,
+      order: Number(row.order) || 0,
+      version: row.version,
+    }));
+  });
 }
 
 /**
@@ -2041,6 +2089,10 @@ export async function replaceRecipeImages(
   recipeId: string,
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
+  if (images.length > MAX_RECIPE_IMAGES) {
+    throw new Error(`A recipe holds at most ${MAX_RECIPE_IMAGES} Source Images`);
+  }
+
   return db.transaction(async (tx) => {
     // Delete existing images
     await tx.delete(recipeImages).where(eq(recipeImages.recipeId, recipeId));
@@ -2073,16 +2125,94 @@ export async function replaceRecipeImages(
   });
 }
 
-/**
- * Count images for a recipe
- */
-export async function countRecipeImages(recipeId: string): Promise<number> {
-  const [result] = await db
-    .select({ count: sql<number>`count(*)` })
+export async function isImageUrlReferenced(imageUrl: string): Promise<boolean> {
+  const [gallery] = await db
+    .select({ id: recipeImages.id })
     .from(recipeImages)
-    .where(eq(recipeImages.recipeId, recipeId));
+    .where(eq(recipeImages.image, imageUrl))
+    .limit(1);
 
-  return Number(result?.count ?? 0);
+  if (gallery) return true;
+
+  const [scalar] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(eq(recipes.image, imageUrl))
+    .limit(1);
+
+  if (scalar) return true;
+
+  const [video] = await db
+    .select({ id: recipeVideos.id })
+    .from(recipeVideos)
+    .where(eq(recipeVideos.thumbnail, imageUrl))
+    .limit(1);
+
+  if (video) return true;
+
+  const [stepImage] = await db
+    .select({ id: stepImages.id })
+    .from(stepImages)
+    .where(eq(stepImages.image, imageUrl))
+    .limit(1);
+
+  return Boolean(stepImage);
+}
+
+export type GalleryImageAddOutcome =
+  | { status: "added"; image: { id: string; image: string; order: number; version: number } }
+  | { status: "cap-reached" }
+  | { status: "recipe-missing" };
+
+export async function addGalleryImageWithinCap(
+  recipeId: string,
+  image: string,
+  order?: number
+): Promise<GalleryImageAddOutcome> {
+  return await db.transaction(async (tx) => {
+    const [recipe] = await tx
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId))
+      .for("update");
+
+    if (!recipe) return { status: "recipe-missing" };
+
+    const [stats] = await tx
+      .select({
+        sourceImages: sql<number>`count(*) FILTER (WHERE NOT ${recipeImages.generated})`,
+        maxOrder: sql<number | null>`max(${recipeImages.order})`,
+      })
+      .from(recipeImages)
+      .where(eq(recipeImages.recipeId, recipeId));
+
+    if (Number(stats?.sourceImages ?? 0) >= MAX_RECIPE_IMAGES) {
+      return { status: "cap-reached" };
+    }
+
+    const nextOrder = order ?? (stats?.maxOrder == null ? 0 : Number(stats.maxOrder) + 1);
+    const [row] = await tx
+      .insert(recipeImages)
+      .values({ recipeId, image, order: String(nextOrder) })
+      .returning({
+        id: recipeImages.id,
+        image: recipeImages.image,
+        order: recipeImages.order,
+        version: recipeImages.version,
+      });
+
+    if (!row) throw new Error("Failed to add the gallery image");
+
+    return {
+      status: "added",
+      image: {
+        id: row.id,
+        image: row.image,
+        order: Number(row.order) || 0,
+        version: row.version,
+      },
+    };
+  });
 }
 
 // --- Recipe Videos Management ---
@@ -2296,24 +2426,29 @@ export async function replaceRecipeVideos(
 
 /**
  * List all media references stored in the database (recipe cover images,
- * gallery images, and videos). Used by startup media cleanup to detect
- * orphaned files on disk.
+ * gallery images, videos, video thumbnails, and step images). Used by
+ * startup media cleanup to detect orphaned files on disk.
  */
 export async function listAllRecipeMediaReferences(): Promise<{
   recipes: { id: string; image: string | null }[];
   galleryImageUrls: string[];
   videoUrls: string[];
+  videoThumbnailUrls: string[];
+  stepImageUrls: string[];
 }> {
-  const [allRecipes, galleryImages, videos] = await Promise.all([
+  const [allRecipes, galleryImages, videos, stepImagesRows] = await Promise.all([
     db.select({ id: recipes.id, image: recipes.image }).from(recipes),
     db.select({ image: recipeImages.image }).from(recipeImages),
-    db.select({ video: recipeVideos.video }).from(recipeVideos),
+    db.select({ video: recipeVideos.video, thumbnail: recipeVideos.thumbnail }).from(recipeVideos),
+    db.select({ image: stepImages.image }).from(stepImages),
   ]);
 
   return {
     recipes: allRecipes,
     galleryImageUrls: galleryImages.map((row) => row.image),
     videoUrls: videos.map((row) => row.video),
+    videoThumbnailUrls: videos.flatMap((row) => (row.thumbnail ? [row.thumbnail] : [])),
+    stepImageUrls: stepImagesRows.map((row) => row.image),
   };
 }
 

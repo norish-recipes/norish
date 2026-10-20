@@ -230,11 +230,15 @@
     "uploading": "Загрузка...",
     "uploadFailed": "Не удалось загрузить",
     "dragToReorder": "Перетащите для изменения порядка",
+    "setAsThumbnail": "Сделать миниатюрой",
     "maxImagesReached": "Максимум {max} изображений",
     "maxVideosReached": "Максимум {max} видео",
     "invalidFileType": "Недопустимый тип файла"
   },
   "carousel": {
+    "generated": "Сгенерировано",
+    "sourcePhoto": "Исходное фото",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Изображение недоступно",
     "noMediaAvailable": "Медиа недоступны",
     "videoPlayer": {

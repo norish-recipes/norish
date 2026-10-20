@@ -36,6 +36,7 @@ import {
   normalizeNutritionGroup,
   normalizeProvenanceGroup,
 } from "@norish/shared/lib/recipe-enrichment";
+import { planGeneratedImageReplacement } from "@norish/shared/lib/recipe-generated-image";
 
 import { replaceRecipeCuisinesTx } from "./cuisines";
 
@@ -179,39 +180,40 @@ export async function clearRecipeNutritionEstimate(recipeId: string): Promise<bo
   return removed.length > 0;
 }
 
-/** What the Generated Image replacement did, and which files it orphaned. */
+/** What the Generated Image replacement did, and which files it may release. */
 export interface GeneratedImageReplacement {
   /** The stored URL of the Generated Image just written, at order 0. */
   imageUrl: string;
   /**
-   * URLs this recipe no longer references anywhere — not by a surviving
-   * gallery row, not by the legacy scalar, and not as the image just
-   * written. The repository holds no filesystem, so removing the files is
-   * the caller's job.
+   * Candidate URLs this recipe no longer references by a surviving gallery
+   * row, a recovered Source Image, or the image just written. The planner
+   * does not know about video thumbnails or step images; the caller must
+   * check those references before it unlinks a file.
    */
   replacedImageUrls: string[];
 }
 
 /**
- * Write a Generated Image into a recipe's primary slot (ADR-0025).
+ * Write a Generated Image into a recipe's primary slot (ADR-0025, ADR-0040).
  *
- * Deliberately destructive, and the only place a Generated Image is written:
- * the row holding the primary slot — the first by order, whatever number
- * that is — is deleted, the new image is written at order 0 with the marker
- * set, and every other row keeps its contents and its relative order. Any
- * stray marked row is swept in the same transaction, so a recipe holds at
- * most one Generated Image and re-runs replace their own predecessor rather
- * than accumulating toward the gallery cap.
+ * The only place a Generated Image is written. The new image takes order 0
+ * with the marker set; every Source Image — a row a person supplied or an
+ * import carried, `generated = false` — survives, keeps its relative order,
+ * and is renumbered after the new image. A previous Generated Image, wherever
+ * it sits, is removed rather than accumulated, so a recipe holds at most one
+ * and re-runs replace their own predecessor.
  *
- * The deprecated `recipes.image` scalar is cleared in the same transaction:
- * every reader resolves gallery-first, and a stale scalar would keep naming
- * a file this write may just have released.
+ * The deprecated `recipes.image` scalar is a Source Image: a recipe that kept
+ * its only photograph there gets it recovered as the last gallery row instead
+ * of losing it. The column is then cleared because every reader resolves
+ * gallery-first. If the Source Image cap is already full, the column stays as
+ * the record and its file is not released.
  *
- * Eligibility is what keeps automatic runs off stored photographs; by the
- * time this runs, the coordinator has decided the slot may be consumed.
+ * Eligibility still keeps automatic runs off recipes that hold any image; by
+ * the time this runs, the coordinator has decided to generate one.
  *
- * @returns what was written and what was displaced, or null when the recipe
- *   does not exist.
+ * @returns what was written and the candidate URLs it may release, or null
+ *   when the recipe does not exist.
  */
 export async function replaceRecipePrimaryImageWithGenerated(
   recipeId: string,
@@ -232,51 +234,46 @@ export async function replaceRecipePrimaryImageWithGenerated(
         image: recipeImages.image,
         order: recipeImages.order,
         generated: recipeImages.generated,
+        createdAt: recipeImages.createdAt,
       })
       .from(recipeImages)
       .where(eq(recipeImages.recipeId, recipeId));
 
-    rows.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+    const placement = planGeneratedImageReplacement(rows, imageUrl, recipe.image);
 
-    const primary = rows[0];
-    const displaced = rows.filter((row) => row.id === primary?.id || row.generated);
+    if (placement.deleteImageIds.length > 0) {
+      await tx.delete(recipeImages).where(inArray(recipeImages.id, placement.deleteImageIds));
+    }
 
-    if (displaced.length > 0) {
-      await tx.delete(recipeImages).where(
-        inArray(
-          recipeImages.id,
-          displaced.map((row) => row.id)
-        )
-      );
+    for (const { id, order } of placement.reorder) {
+      await tx
+        .update(recipeImages)
+        .set({ order: String(order), version: sql`${recipeImages.version} + 1` })
+        .where(eq(recipeImages.id, id));
     }
 
     await tx
       .insert(recipeImages)
       .values({ recipeId, image: imageUrl, order: "0", generated: true });
 
+    if (placement.sourceFromScalar) {
+      await tx.insert(recipeImages).values({
+        recipeId,
+        image: placement.sourceFromScalar.image,
+        order: String(placement.sourceFromScalar.order),
+      });
+    }
+
     await tx
       .update(recipes)
-      .set({ image: null, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
+      .set({
+        image: placement.keepScalar ? (recipe.image?.trim() ?? null) : null,
+        updatedAt: new Date(),
+        version: sql`${recipes.version} + 1`,
+      })
       .where(eq(recipes.id, recipeId));
 
-    // A file is released only when nothing on this recipe references it any
-    // more: duplicate-content rows share a URL, and the legacy scalar often
-    // names the same file as the displaced primary.
-    const displacedIds = new Set(displaced.map((row) => row.id));
-    const survivingUrls = new Set(
-      rows.filter((row) => !displacedIds.has(row.id)).map((row) => row.image)
-    );
-    const previousScalar = (recipe.image ?? "").trim();
-    const candidates = new Set(displaced.map((row) => row.image));
-
-    if (previousScalar !== "") candidates.add(previousScalar);
-
-    return {
-      imageUrl,
-      replacedImageUrls: [...candidates].filter(
-        (candidate) => candidate !== imageUrl && !survivingUrls.has(candidate)
-      ),
-    };
+    return { imageUrl, replacedImageUrls: placement.replacedImageUrls };
   });
 }
 

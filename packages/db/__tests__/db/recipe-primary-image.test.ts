@@ -17,12 +17,14 @@ import {
 } from "@norish/db/repositories/planned-items";
 import {
   dashboardRecipe,
+  deleteRecipeImageById,
   getRandomRecipeCandidates,
   getRecipeFull,
+  isImageUrlReferenced,
   listRecipes,
   searchRecipesByName,
 } from "@norish/db/repositories/recipes";
-import { recipes as recipesTable } from "@norish/db/schema";
+import { recipes as recipesTable, stepImages } from "@norish/db/schema";
 
 import { createTestUser } from "../helpers/db-test-helpers";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "../helpers/recipe-writes";
@@ -189,6 +191,63 @@ describe("planned items resolve their recipe thumbnail the same way", () => {
   });
 });
 
+describe("choosing the thumbnail", () => {
+  it("changes what every reader resolves as primary when the gallery is reordered", async () => {
+    const recipeId = crypto.randomUUID();
+    const first = `/recipes/${recipeId}/first.jpg`;
+    const second = `/recipes/${recipeId}/second.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Reorder Me",
+      images: [
+        { image: first, order: 0 },
+        { image: second, order: 1 },
+      ],
+    });
+
+    expect((await dashboardRecipe(recipeId))?.image).toBe(first);
+
+    const stored = (await getRecipeFull(recipeId))?.images ?? [];
+    const firstRow = stored.find((image) => image.image === first);
+    const secondRow = stored.find((image) => image.image === second);
+
+    if (!firstRow || !secondRow) throw new Error("seeded gallery rows are missing");
+
+    await updateRecipeWithRefs(recipeId, userId, {
+      images: [
+        { id: secondRow.id, image: secondRow.image, order: 0 },
+        { id: firstRow.id, image: firstRow.image, order: 1 },
+      ],
+    });
+
+    expect((await dashboardRecipe(recipeId))?.image).toBe(second);
+    expect((await getRecipeFull(recipeId))?.images.map((image) => image.image)).toEqual([
+      second,
+      first,
+    ]);
+  });
+});
+
+describe("image URL references", () => {
+  it("sees a gallery row and a scalar, and ignores an unused URL", async () => {
+    const recipeId = crypto.randomUUID();
+    const gallery = `/recipes/${recipeId}/gallery.jpg`;
+    const scalar = `/recipes/${recipeId}/scalar.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Reference Check",
+      images: [{ image: gallery, order: 0 }],
+    });
+    await plantLegacyScalar(recipeId, scalar);
+
+    expect(await isImageUrlReferenced(gallery)).toBe(true);
+    expect(await isImageUrlReferenced(scalar)).toBe(true);
+    expect(await isImageUrlReferenced(`/recipes/${recipeId}/unused.jpg`)).toBe(false);
+  });
+});
+
 /** The raw column, bypassing every resolving reader. */
 async function rawScalar(recipeId: string): Promise<string | null> {
   const [row] = await db
@@ -261,7 +320,7 @@ describe("the write side retires the scalar", () => {
     ]);
   });
 
-  it("clears a legacy scalar when an update replaces the gallery", async () => {
+  it("moves a legacy scalar into the gallery when an update replaces it", async () => {
     const recipeId = crypto.randomUUID();
 
     await createRecipeWithRefs(recipeId, userId, { ...BASE_RECIPE, name: "Gallery Update" });
@@ -271,10 +330,140 @@ describe("the write side retires the scalar", () => {
       images: [{ image: `/recipes/${recipeId}/uploaded.jpg`, order: 0 }],
     });
 
-    // A stale fallback must not linger behind the gallery: deleting the
-    // gallery later would resurrect an image the editor replaced.
     expect(await rawScalar(recipeId)).toBeNull();
+    expect((await getRecipeFull(recipeId))?.images.map((image) => image.image)).toEqual([
+      `/recipes/${recipeId}/uploaded.jpg`,
+      `/recipes/${recipeId}/legacy.jpg`,
+    ]);
     expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/uploaded\.jpg$/);
+  });
+
+  it("keeps a distinct scalar when a create gallery already holds ten Source Images", async () => {
+    // The payload is a valid ten-source gallery plus its Generated Image. The
+    // scalar cannot become a twelfth row, so the column keeps it.
+    const recipeId = crypto.randomUUID();
+    const scalar = `/recipes/${recipeId}/scalar.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Full Gallery With Scalar",
+      image: scalar,
+      images: [
+        { image: `/recipes/${recipeId}/drawn.jpg`, order: 0, generated: true },
+        ...Array.from({ length: 10 }, (_, index) => ({
+          image: `/recipes/${recipeId}/source-${index}.jpg`,
+          order: index + 1,
+        })),
+      ],
+    });
+
+    const full = await getRecipeFull(recipeId);
+
+    expect(full?.images).toHaveLength(11);
+    expect(full?.images.filter((image) => image.generated === false)).toHaveLength(10);
+    expect(full?.image).toBe(scalar);
+    expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/drawn\.jpg$/);
+  });
+
+  it("keeps a distinct scalar from an overwrite import without a twelfth row", async () => {
+    const recipeId = crypto.randomUUID();
+    const scalar = `/recipes/${recipeId}/archive-scalar.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, { ...BASE_RECIPE, name: "Overwrite Import" });
+
+    await updateRecipeWithRefs(recipeId, userId, {
+      image: scalar,
+      images: [
+        { image: `/recipes/${recipeId}/drawn.jpg`, order: 0, generated: true },
+        ...Array.from({ length: 10 }, (_, index) => ({
+          image: `/recipes/${recipeId}/source-${index}.jpg`,
+          order: index + 1,
+        })),
+      ],
+    });
+
+    const full = await getRecipeFull(recipeId);
+
+    expect(full?.image).toBe(scalar);
+    expect(full?.images).toHaveLength(11);
+    expect(full?.images.filter((image) => image.generated === false)).toHaveLength(10);
+    expect(full?.images.some((image) => image.image === scalar)).toBe(false);
+    expect(await isImageUrlReferenced(scalar)).toBe(true);
+    expect((await dashboardRecipe(recipeId))?.image).toMatch(/\/drawn\.jpg$/);
+  });
+
+  it("keeps a shared image that a video thumbnail and a step image still name", async () => {
+    const recipeId = crypto.randomUUID();
+    const shared = `/recipes/${recipeId}/shared.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Shared Video Image",
+      images: [{ image: shared, order: 0 }],
+      videos: [
+        {
+          video: `/recipes/${recipeId}/video.mp4`,
+          thumbnail: shared,
+          duration: 12,
+          order: 0,
+        },
+      ],
+      steps: [
+        {
+          step: "Mix",
+          systemUsed: "metric",
+          order: 0,
+          images: [{ image: shared, order: 0 }],
+          stepIngredients: [],
+        },
+      ],
+    });
+
+    const full = await getRecipeFull(recipeId);
+    const galleryRow = full?.images.find((image) => image.image === shared);
+
+    if (!galleryRow) throw new Error("The gallery row was not stored");
+
+    expect(await isImageUrlReferenced(shared)).toBe(true);
+
+    await deleteRecipeImageById(galleryRow.id);
+
+    expect((await getRecipeFull(recipeId))?.images.some((image) => image.image === shared)).toBe(
+      false
+    );
+    expect(await isImageUrlReferenced(shared)).toBe(true);
+  });
+
+  it("keeps a shared image that a gallery row and a video thumbnail still name after the step row goes", async () => {
+    const recipeId = crypto.randomUUID();
+    const shared = `/recipes/${recipeId}/shared-step.jpg`;
+
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      name: "Shared Step Image",
+      images: [{ image: shared, order: 0 }],
+      videos: [
+        {
+          video: `/recipes/${recipeId}/video.mp4`,
+          thumbnail: shared,
+          duration: 12,
+          order: 0,
+        },
+      ],
+      steps: [
+        {
+          step: "Mix",
+          systemUsed: "metric",
+          order: 0,
+          images: [{ image: shared, order: 0 }],
+          stepIngredients: [],
+        },
+      ],
+    });
+
+    await db.delete(stepImages).where(eq(stepImages.image, shared));
+
+    expect(await isImageUrlReferenced(shared)).toBe(true);
   });
 
   it("translates a scalar-only update into the gallery when the gallery is empty", async () => {

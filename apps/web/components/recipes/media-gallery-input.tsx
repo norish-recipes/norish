@@ -35,6 +35,7 @@ import { useTranslations } from "next-intl";
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod/recipe-videos";
 import { createClientLogger } from "@norish/shared/lib/logger";
+import { promoteImageToThumbnail } from "@norish/shared/lib/recipe-media";
 
 const log = createClientLogger("MediaGalleryInput");
 
@@ -46,6 +47,7 @@ export interface RecipeGalleryMedia {
   duration?: number | null;
   order: number;
   version?: number;
+  generated?: boolean;
 }
 
 export interface MediaGalleryInputProps {
@@ -65,6 +67,7 @@ interface SortableMediaItemProps {
     type: "image" | "video",
     version?: number
   ) => void;
+  onSetThumbnail: (itemId: string) => void;
   isFirstImage: boolean;
 }
 
@@ -79,7 +82,14 @@ function formatDuration(seconds: number | null | undefined): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMediaItemProps) {
+function SortableMediaItem({
+  item,
+  index,
+  onDelete,
+  onSetThumbnail,
+  isFirstImage,
+}: SortableMediaItemProps) {
+  const t = useTranslations("recipes.gallery");
   const itemId = item.id || item.src;
 
   const {
@@ -119,12 +129,22 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
         <Bars2Icon className="h-3.5 w-3.5" />
       </button>
 
-      {/* Primary badge (only for first image) */}
-      {isFirstImage && item.type === "image" && (
-        <div className="bg-warning absolute top-2 left-10 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white shadow">
-          <StarIcon className="h-3.5 w-3.5" />
-        </div>
-      )}
+      {item.type === "image" &&
+        (isFirstImage ? (
+          <div className="bg-warning absolute top-2 left-10 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white shadow">
+            <StarIcon className="h-3.5 w-3.5" />
+          </div>
+        ) : (
+          <button
+            aria-label={t("setAsThumbnail")}
+            className="absolute top-2 left-10 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900/70 text-white shadow transition-colors hover:bg-neutral-900 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+            title={t("setAsThumbnail")}
+            type="button"
+            onClick={() => onSetThumbnail(itemId)}
+          >
+            <StarIcon className="h-3.5 w-3.5" />
+          </button>
+        ))}
 
       {/* Delete button */}
       <button
@@ -200,11 +220,9 @@ export default function MediaGalleryInput({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Count images and videos
-  const imageCount = media.filter((m) => m.type === "image").length;
+  const sourceImageCount = media.filter((m) => m.type === "image" && m.generated !== true).length;
   const videoCount = media.filter((m) => m.type === "video").length;
 
-  // Find index of first image for primary badge
   const firstImageIndex = media.findIndex((m) => m.type === "image");
 
   // Configure sensors
@@ -222,6 +240,14 @@ export default function MediaGalleryInput({
 
   // Get unique IDs for SortableContext
   const itemIds = media.map((m) => m.id || m.src);
+
+  const handleSetThumbnail = (itemId: string) => {
+    const index = media.findIndex((m) => (m.id || m.src) === itemId);
+
+    if (index <= 0 || media[index]?.type !== "image") return;
+
+    onChange(promoteImageToThumbnail(media, index));
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -273,7 +299,7 @@ export default function MediaGalleryInput({
       }
 
       // Check limits
-      if (isImage && imageCount >= maxImages) {
+      if (isImage && sourceImageCount >= maxImages) {
         setUploadError(`Maximum ${maxImages} images allowed`);
         setTimeout(() => setUploadError(null), 3000);
 
@@ -343,7 +369,7 @@ export default function MediaGalleryInput({
     },
     [
       media,
-      imageCount,
+      sourceImageCount,
       videoCount,
       maxImages,
       maxVideos,
@@ -380,7 +406,7 @@ export default function MediaGalleryInput({
   const onDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (imageCount < maxImages || videoCount < maxVideos) setDragActive(true);
+    if (sourceImageCount < maxImages || videoCount < maxVideos) setDragActive(true);
   };
 
   const onDragLeave = (e: React.DragEvent) => {
@@ -392,7 +418,7 @@ export default function MediaGalleryInput({
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (imageCount < maxImages || videoCount < maxVideos) setDragActive(true);
+    if (sourceImageCount < maxImages || videoCount < maxVideos) setDragActive(true);
   };
 
   const onDrop = (e: React.DragEvent) => {
@@ -421,7 +447,7 @@ export default function MediaGalleryInput({
   });
   const onPaste = getOnPasteHandler();
 
-  const canAddMore = imageCount < maxImages || videoCount < maxVideos;
+  const canAddMore = sourceImageCount < maxImages || videoCount < maxVideos;
 
   return (
     <div className="w-full min-w-0 space-y-3">
@@ -440,6 +466,7 @@ export default function MediaGalleryInput({
                   isFirstImage={index === firstImageIndex}
                   item={item}
                   onDelete={handleDelete}
+                  onSetThumbnail={handleSetThumbnail}
                 />
               ))}
 
@@ -497,7 +524,7 @@ export default function MediaGalleryInput({
       <div className="text-muted flex items-center justify-between text-xs">
         <span>{t("dragToReorder")}</span>
         <span>
-          {imageCount}/{maxImages} images, {videoCount}/{maxVideos} videos
+          {sourceImageCount}/{maxImages} images, {videoCount}/{maxVideos} videos
         </span>
       </div>
     </div>

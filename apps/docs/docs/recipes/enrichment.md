@@ -51,6 +51,7 @@ automatic switch is off. This only needs an AI provider.
 A run you start yourself replaces the current categories, nutrition or
 provenance. Step ingredients you linked yourself are kept.
 
-:::warning
-**Generate Picture** replaces the recipe's main image.
+:::note
+**Generate Picture** makes its image the recipe thumbnail. The gallery keeps
+the images you add, so you can select one again at any time.
 :::

@@ -4,6 +4,7 @@ import type { Job } from "bullmq";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/lib/recipe-media";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
@@ -66,6 +67,25 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   deleteRecipeImagesDir: vi.fn(),
   saveImageBytes,
 }));
+
+function jobWithFiles(contents: string[]): Job<ImageImportJobData> {
+  return {
+    id: "job",
+    attemptsMade: 0,
+    opts: {},
+    data: {
+      recipeId: "recipe-123",
+      userId: "user-1",
+      householdKey: "household-1",
+      householdUserIds: null,
+      files: contents.map((content, index) => ({
+        data: Buffer.from(content).toString("base64"),
+        mimeType: "image/jpeg",
+        filename: `recipe-${index}.jpg`,
+      })),
+    },
+  } as unknown as Job<ImageImportJobData>;
+}
 
 describe("processImageImportJob", () => {
   beforeEach(() => {
@@ -167,5 +187,53 @@ describe("processImageImportJob", () => {
 
     expect(dishColorForImageUrl).toHaveBeenCalledWith("/recipes/recipe-123/uploaded.jpg");
     expect(updateRecipeDishColor).toHaveBeenCalledWith("recipe-123", "#5a3c21");
+  });
+
+  it("saves every uploaded file as its own Source Image, in upload order", async () => {
+    saveImageBytes
+      .mockResolvedValueOnce("/recipes/recipe-123/first.jpg")
+      .mockResolvedValueOnce("/recipes/recipe-123/second.jpg")
+      .mockResolvedValueOnce("/recipes/recipe-123/third.jpg");
+
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob(jobWithFiles(["first", "second", "third"]));
+
+    expect(saveImageBytes).toHaveBeenCalledTimes(3);
+    expect(saveImageBytes.mock.calls.map(([bytes]) => String(bytes))).toEqual([
+      "first",
+      "second",
+      "third",
+    ]);
+    expect(addRecipeImages).toHaveBeenCalledWith("recipe-123", [
+      { image: "/recipes/recipe-123/first.jpg", order: 0 },
+      { image: "/recipes/recipe-123/second.jpg", order: 1 },
+      { image: "/recipes/recipe-123/third.jpg", order: 2 },
+    ]);
+    expect(dishColorForImageUrl).toHaveBeenCalledWith("/recipes/recipe-123/first.jpg");
+    expect(updateRecipeDishColor).toHaveBeenCalledWith("recipe-123", "#5a3c21");
+  });
+
+  it("stops at the Source Image cap", async () => {
+    saveImageBytes.mockImplementation(
+      async (bytes: Buffer) => `/recipes/recipe-123/${String(bytes)}.jpg`
+    );
+
+    const contents = Array.from({ length: MAX_RECIPE_IMAGES + 2 }, (_, index) => `img-${index}`);
+
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    await processImageImportJob(jobWithFiles(contents));
+
+    expect(saveImageBytes).toHaveBeenCalledTimes(MAX_RECIPE_IMAGES);
+    expect(addRecipeImages).toHaveBeenCalledTimes(1);
+
+    const [recipeId, images] = addRecipeImages.mock.calls[0]!;
+
+    expect(recipeId).toBe("recipe-123");
+    expect(images).toHaveLength(MAX_RECIPE_IMAGES);
+    expect(images.map((image: { order: number }) => image.order)).toEqual(
+      Array.from({ length: MAX_RECIPE_IMAGES }, (_, index) => index)
+    );
   });
 });

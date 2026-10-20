@@ -230,11 +230,15 @@
     "uploading": "Bezig met uploaden...",
     "uploadFailed": "Upload mislukt",
     "dragToReorder": "Sleep afbeeldingen om te herordenen",
+    "setAsThumbnail": "Als miniatuurafbeelding instellen",
     "maxImagesReached": "Maximaal {max} afbeeldingen toegestaan",
     "maxVideosReached": "Maximaal {max} video's toegestaan",
     "invalidFileType": "Ongeldig bestandstype"
   },
   "carousel": {
+    "generated": "Gegenereerd",
+    "sourcePhoto": "Bronfoto",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Geen afbeelding beschikbaar",
     "noMediaAvailable": "Geen media beschikbaar",
     "videoPlayer": {

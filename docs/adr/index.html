@@ -738,12 +738,12 @@
             >ADR-0025 &mdash; A Generated Image takes the recipe's primary slot</a
           >
           <p>
-            <b>Proposed.</b> A Generated Image is always order 0, and writing one deletes the row
-            and file that held that slot; a recipe holds at most one. Eligibility is the
-            counterweight &mdash; automatic runs and default sweeps skip any recipe that already has
-            an image, so only a manual action or an explicit overwrite sweep can reach stored media.
-            Rejects demoting instead of deleting, sparing supplied photographs, and a confirmation
-            on the manual action.
+            <b>Proposed; the destructive write is superseded by ADR-0040.</b> A Generated Image is
+            written at order 0, and a recipe holds at most one. A person can move it behind another
+            image. Eligibility is the counterweight &mdash; automatic runs and default sweeps skip
+            any recipe that already has an image, so only a manual action or an explicit overwrite
+            sweep can reach stored media. It rejected demoting instead of deleting, sparing supplied
+            photographs, and a confirmation on the manual action; ADR-0040 reverses the first two.
           </p>
         </li>
         <li>
@@ -905,10 +905,10 @@
           >
           <p>
             <b>Accepted; amended by ADR-0039</b> (rung 2 strips units-map phrases, a mint is
-            parented under the alias its text ends with). An Ingredient is one food known by many Ingredient Aliases; a recipe
-            line, a Grocery, a recurring grocery and a Pantry Ingredient keep their text as written
-            and point at the alias it resolved to, and Product Links, Aisle Links and store
-            preferences are keyed by Ingredient. One resolver in
+            parented under the alias its text ends with). An Ingredient is one food known by many
+            Ingredient Aliases; a recipe line, a Grocery, a recurring grocery and a Pantry
+            Ingredient keep their text as written and point at the alias it resolved to, and Product
+            Links, Aisle Links and store preferences are keyed by Ingredient. One resolver in
             <code>@norish/shared-server/ingredients</code> mints, in the order exact, stripped, AI,
             new &mdash; a mint nothing sure vouched for is flagged. Merges move aliases. Supersedes
             ADR-0036 and amends ADR-0031.
@@ -916,20 +916,23 @@
         </li>
         <li>
           <a href="groceries/0038-the-catalogue-is-seeded-from-open-food-facts-under-odbl.md"
-            >ADR-0038 &mdash; The ingredient catalogue is seeded from Open Food Facts under the ODbL</a
+            >ADR-0038 &mdash; The ingredient catalogue is seeded from Open Food Facts under the
+            ODbL</a
           >
           <p>
-            <b>Accepted; amended by ADR-0039</b> (the seed keeps nutrition codes). The Open Food Facts ingredients taxonomy, every entry and language, is
-            fetched nightly and applied as ownerless Ingredients, seeded aliases and parents. A
-            refresh never undoes a person's alias, merge or parent; a failed or malformed fetch
-            leaves the last good seed. The first seed merges existing Ingredients it is sure of,
-            once. The ODbL is accepted: the Ingredients page credits the source and offers the
-            catalogue as JSON.
+            <b>Accepted; amended by ADR-0039</b> (the seed keeps nutrition codes). The Open Food
+            Facts ingredients taxonomy, every entry and language, is fetched nightly and applied as
+            ownerless Ingredients, seeded aliases and parents. A refresh never undoes a person's
+            alias, merge or parent; a failed or malformed fetch leaves the last good seed. The first
+            seed merges existing Ingredients it is sure of, once. The ODbL is accepted: the
+            Ingredients page credits the source and offers the catalogue as JSON.
           </p>
         </li>
         <li>
-          <a href="groceries/0039-ingredient-nutrition-comes-from-vendored-open-datasets-corrected-per-household.md"
-            >ADR-0039 &mdash; Ingredient Nutrition comes from vendored open datasets, corrected per household</a
+          <a
+            href="groceries/0039-ingredient-nutrition-comes-from-vendored-open-datasets-corrected-per-household.md"
+            >ADR-0039 &mdash; Ingredient Nutrition comes from vendored open datasets, corrected per
+            household</a
           >
           <p>
             <b>Accepted.</b> CIQUAL, CALNUT and USDA numbers, joined through the taxonomy's codes
@@ -939,6 +942,20 @@
             form) and a list of parents that never lend their numbers. A correction belongs to a
             household, and a recipe's worked-out nutrition is computed on read for the reader's
             household.
+          </p>
+        </li>
+        <li>
+          <a href="recipes/0040-a-generated-image-keeps-the-source-photo.md"
+            >ADR-0040 &mdash; A Generated Image keeps the source photo</a
+          >
+          <p>
+            <b>Accepted; supersedes the destructive write of ADR-0025.</b> A Generated Image takes
+            order 0 and every Source Image (a row with <code>generated = false</code>, or a
+            deprecated <code>recipes.image</code> value) keeps its row, its file and its relative
+            order behind it. A previous Generated Image is still replaced. The upload cap counts
+            Source Images only, so the AI picture does not consume a person's ten slots. Rejects
+            keeping the deletion, a second image store, an explicit primary flag, and refusing
+            generation on a full gallery.
           </p>
         </li>
       </ul>

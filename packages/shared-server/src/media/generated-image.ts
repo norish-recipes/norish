@@ -2,21 +2,21 @@ import { serverLogger as log } from "@norish/shared-server/logger";
 
 import { deleteImageByUrl, saveGeneratedImageBytes } from "./storage";
 
-/**
- * Store a Generated Image as a recipe's primary image (ADR-0025).
- *
- * The one operation the worker calls: the bytes are cover-cropped to exactly
- * 1280×720 and saved, the repository writes them into the primary slot in one
- * transaction — deleting the row that held it — and the displaced files are
- * removed afterwards. File removal is best-effort, as it is for a gallery
- * delete: a missing file must not fail a write that already committed.
- *
- * A displaced URL equal to the one just written is never deleted: storage is
- * content-hashed, so a re-run over identical bytes replaces its predecessor's
- * row while landing on the very same file.
- *
- * @returns the stored web URL of the Generated Image
- */
+async function removeGeneratedFileIfUnreferenced(imageUrl: string, recipeId: string) {
+  const { isImageUrlReferenced } = await import("@norish/db/repositories/recipes");
+  const referenced = await isImageUrlReferenced(imageUrl).catch((error) => {
+    log.warn({ error, recipeId, imageUrl }, "Could not check image references; keeping the file");
+
+    return true;
+  });
+
+  if (referenced) return;
+
+  await deleteImageByUrl(imageUrl).catch((err) => {
+    log.warn({ err, recipeId, imageUrl }, "Could not remove an unreferenced image file");
+  });
+}
+
 export async function storeGeneratedRecipeImage(recipeId: string, bytes: Buffer): Promise<string> {
   // Loaded lazily for the same reason dish-color.ts loads its repository
   // lazily: the rest of this module is pure media work, and a static import
@@ -25,26 +25,26 @@ export async function storeGeneratedRecipeImage(recipeId: string, bytes: Buffer)
     await import("@norish/db/repositories/recipe-enrichment");
 
   const imageUrl = await saveGeneratedImageBytes(bytes, recipeId);
-  const replacement = await replaceRecipePrimaryImageWithGenerated(recipeId, imageUrl);
+
+  let replacement;
+
+  try {
+    replacement = await replaceRecipePrimaryImageWithGenerated(recipeId, imageUrl);
+  } catch (error) {
+    await removeGeneratedFileIfUnreferenced(imageUrl, recipeId);
+
+    throw error;
+  }
 
   if (!replacement) {
-    // The recipe vanished between the worker's read and this write. Nothing
-    // references the saved file, so remove it rather than orphan it.
-    await deleteImageByUrl(imageUrl).catch((err) => {
-      log.warn({ err, recipeId, imageUrl }, "Could not remove unreferenced Generated Image file");
-    });
+    await removeGeneratedFileIfUnreferenced(imageUrl, recipeId);
     throw new Error(`Recipe not found for Generated Image write: ${recipeId}`);
   }
 
   for (const replacedUrl of replacement.replacedImageUrls) {
     if (replacedUrl === imageUrl) continue;
 
-    await deleteImageByUrl(replacedUrl).catch((err) => {
-      log.warn(
-        { err, recipeId, replacedUrl },
-        "Could not delete the file of a replaced primary image"
-      );
-    });
+    await removeGeneratedFileIfUnreferenced(replacedUrl, recipeId);
   }
 
   return imageUrl;

@@ -3,6 +3,8 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-color";
+
 import { recipesRouter } from "../../src/routers/recipes";
 import { canAccessResource } from "../mocks/permissions";
 import { recipes } from "../mocks/realtime/recipes";
@@ -61,6 +63,7 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mo
 const EXTRACTED_DISH_COLOR = "#a1b2c3";
 
 vi.mock("@norish/shared-server/media/dish-color", () => ({
+  refreshDishColorForRecipe: vi.fn(async () => undefined),
   withDishColor: vi.fn(async (dto: Record<string, unknown>) => ({
     ...dto,
     dishColor: "#a1b2c3",
@@ -806,6 +809,31 @@ describe("recipes procedures", () => {
         ctx.user.id,
         expect.objectContaining({ image: recipeImage, dishColor: EXTRACTED_DISH_COLOR }),
         1
+      );
+      await vi.waitFor(() =>
+        expect(refreshDishColorForRecipe).toHaveBeenCalledWith(
+          "55555555-5555-4555-8555-555555555555"
+        )
+      );
+    });
+
+    it("an empty-gallery edit refreshes the Dish Colour from the stored media", async () => {
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockResolvedValue({ stale: false });
+      getRecipeFull.mockResolvedValue(null);
+
+      await createCaller().update({
+        id: "55555555-5555-4555-8555-555555555555",
+        data: { images: [] },
+        version: 1,
+      });
+
+      await vi.waitFor(() => expect(updateRecipeWithRefs).toHaveBeenCalled());
+      await vi.waitFor(() =>
+        expect(refreshDishColorForRecipe).toHaveBeenCalledWith(
+          "55555555-5555-4555-8555-555555555555"
+        )
       );
     });
 

@@ -230,11 +230,15 @@
     "uploading": "Uploader...",
     "uploadFailed": "Upload mislykkedes",
     "dragToReorder": "Træk for at omarrangere",
+    "setAsThumbnail": "Angiv som miniature",
     "maxImagesReached": "Maksimalt {max} billeder er tilladt",
     "maxVideosReached": "Maksimalt {max} videoer er tilladt",
     "invalidFileType": "Ugyldig filtype"
   },
   "carousel": {
+    "generated": "Genereret",
+    "sourcePhoto": "Kildefoto",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Intet billede tilgængeligt",
     "noMediaAvailable": "Intet medie tilgængeligt",
     "videoPlayer": {

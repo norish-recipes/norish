@@ -5,7 +5,12 @@ import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
 import { primaryRecipeImage } from "../../lib/recipe-media";
 import { CuisineSummarySchema } from "./cuisine";
-import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
+import {
+  MAX_RECIPE_GALLERY_IMAGES,
+  RecipeImagesArraySchema,
+  RecipeImageSchema,
+  refineRecipeGallery,
+} from "./recipe-images";
 import {
   RecipeIngredientInputBaseSchema,
   RecipeIngredientInputSchema,
@@ -134,7 +139,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   nutritionEstimate: RecipeNutritionEstimateSchema.nullable().optional(),
 });
 
-export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
+export const FullRecipeInsertObjectSchema = RecipeInsertBaseSchema.extend({
   id: z.uuid().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
@@ -143,19 +148,27 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
   cuisines: z.array(z.uuid()).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   steps: z.array(StepStepSchema).default([]),
-  images: z.array(RecipeImageSchema).max(10).default([]),
+  images: z.array(RecipeImageSchema).max(MAX_RECIPE_GALLERY_IMAGES).default([]),
   videos: z.array(RecipeVideoSchema).default([]),
 });
 
-export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
+export const FullRecipeInsertSchema = FullRecipeInsertObjectSchema.superRefine((value, ctx) =>
+  refineRecipeGallery(value.images, ctx)
+);
+
+export const FullRecipeUpdateObjectSchema = RecipeUpdateBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientInputBaseSchema.partial()).optional(),
   tags: z.array(TagNameSchema).optional(),
   // Cuisines are picked from the vocabulary rather than typed, so an editor
   // sends ids. Passing an empty array clears them; omitting leaves them alone.
   cuisines: z.array(z.uuid()).optional(),
   steps: z.array(StepStepSchema).optional(),
-  images: z.array(RecipeImageSchema).max(10).optional(),
+  images: z.array(RecipeImageSchema).max(MAX_RECIPE_GALLERY_IMAGES).optional(),
   videos: z.array(RecipeVideoSchema).optional(),
+});
+
+export const FullRecipeUpdateSchema = FullRecipeUpdateObjectSchema.superRefine((value, ctx) => {
+  if (value.images !== undefined) refineRecipeGallery(value.images, ctx);
 });
 
 export const measurementSystems = measurementSystemEnum.enumValues;

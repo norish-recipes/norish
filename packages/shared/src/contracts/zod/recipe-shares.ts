@@ -130,6 +130,7 @@ export const PublicRecipeIngredientSchema = z.object({
 export const PublicRecipeImageSchema = z.object({
   image: z.string(),
   order: z.coerce.number().default(0),
+  generated: z.boolean().default(false),
 });
 
 export const PublicRecipeVideoSchema = z.object({

@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
+import { primaryRecipeImage, promoteImageToThumbnail } from "@norish/shared/lib/recipe-media";
 
 describe("primaryRecipeImage", () => {
   it("leads with the first gallery image by order, whatever the array order", () => {
@@ -43,5 +43,37 @@ describe("primaryRecipeImage", () => {
         ],
       })
     ).toBe("/recipes/r/odd.jpg");
+  });
+});
+
+describe("promoteImageToThumbnail", () => {
+  const gallery = [
+    { image: "/recipes/r/first.jpg", order: 0 },
+    { image: "/recipes/r/second.jpg", order: 1 },
+    { image: "/recipes/r/third.jpg", order: 2 },
+  ];
+
+  it("leads with the chosen image and keeps the rest in their relative order", () => {
+    expect(promoteImageToThumbnail(gallery, 2).map((image) => image.image)).toEqual([
+      "/recipes/r/third.jpg",
+      "/recipes/r/first.jpg",
+      "/recipes/r/second.jpg",
+    ]);
+  });
+
+  it("renumbers every item so the primary rule resolves the chosen image", () => {
+    const promoted = promoteImageToThumbnail(gallery, 1);
+
+    expect(promoted.map((image) => image.order)).toEqual([0, 1, 2]);
+    expect(primaryRecipeImage({ images: promoted })).toBe("/recipes/r/second.jpg");
+  });
+
+  it("leaves a gallery whose first image is already the thumbnail unchanged", () => {
+    expect(promoteImageToThumbnail(gallery, 0).map((image) => image.image)).toEqual(
+      gallery.map((image) => image.image)
+    );
+    expect(promoteImageToThumbnail(gallery, 9).map((image) => image.image)).toEqual(
+      gallery.map((image) => image.image)
+    );
   });
 });

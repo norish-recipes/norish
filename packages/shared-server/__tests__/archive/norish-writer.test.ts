@@ -203,6 +203,7 @@ describe("norish archive writer", () => {
     });
 
     const mediaBytes: Record<string, string> = {
+      "images/hero.jpg": "hero-bytes",
       "images/gallery-1.jpg": "gallery-bytes",
       "steps/step-1.jpg": "step-bytes",
       "videos/video-1.mp4": "video-bytes",
@@ -212,12 +213,15 @@ describe("norish archive writer", () => {
     const { collectRecipeMediaRefs } = await import("@norish/shared-server/archive/norish-writer");
     const refs = collectRecipeMediaRefs(recipe);
 
-    // The hero is the resolved primary — the gallery's first image — so the
-    // legacy scalar's shadowed file is not packed at all.
+    // The scalar is distinct from the gallery, so it travels as a source.
     expect(refs).toEqual([
       {
         webPath: "/recipes/11111111-1111-4111-8111-111111111111/gallery-1.jpg",
         archivePath: "images/gallery-1.jpg",
+      },
+      {
+        webPath: "/recipes/11111111-1111-4111-8111-111111111111/hero.jpg",
+        archivePath: "images/hero.jpg",
       },
       {
         webPath: "/recipes/11111111-1111-4111-8111-111111111111/steps/step-1.jpg",
@@ -256,7 +260,7 @@ describe("norish archive writer", () => {
 
     const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
 
-    expect(recipeJson.image).toBe("images/gallery-1.jpg");
+    expect(recipeJson.image).toBe("images/hero.jpg");
     // The marking travels; a supplied image would carry no field at all.
     expect(recipeJson.images).toEqual([
       { image: "images/gallery-1.jpg", order: 0, generated: true },
@@ -265,6 +269,52 @@ describe("norish archive writer", () => {
     expect(recipeJson.videos).toEqual([
       { video: "videos/video-1.mp4", thumbnail: "videos/thumb-1.jpg", duration: 42, order: 0 },
     ]);
+  });
+
+  it("falls back to the gallery primary when a local scalar file is missing", async () => {
+    const { Readable } = await import("node:stream");
+    const recipe = buildFullRecipe({
+      image: "/recipes/11111111-1111-4111-8111-111111111111/missing-scalar.jpg",
+      images: [
+        {
+          id: "88888888-8888-4888-8888-888888888884",
+          image: "/recipes/11111111-1111-4111-8111-111111111111/present-gallery.jpg",
+          order: 0,
+          version: 1,
+        },
+      ],
+    });
+
+    const { collectRecipeMediaRefs } = await import("@norish/shared-server/archive/norish-writer");
+    const galleryRef = collectRecipeMediaRefs(recipe).find(
+      (ref) => ref.archivePath === "images/present-gallery.jpg"
+    );
+
+    if (!galleryRef) throw new Error("The gallery ref was not collected");
+
+    const zip = await writeArchive({
+      records: [
+        {
+          recipe,
+          media: [
+            {
+              ...galleryRef,
+              source: () => Readable.from(Buffer.from("gallery-bytes")),
+            },
+          ],
+        },
+      ],
+      exporter,
+      exportedAt,
+    });
+
+    const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
+    const galleryFile = zip.file(`${recipe.id}/images/present-gallery.jpg`);
+
+    expect(recipeJson.image).toBe("images/present-gallery.jpg");
+    expect(recipeJson.images).toEqual([{ image: "images/present-gallery.jpg", order: 0 }]);
+    expect(galleryFile).toBeTruthy();
+    expect(await galleryFile!.async("string")).toBe("gallery-bytes");
   });
 
   it("keeps an external primary URL unchanged", async () => {
@@ -280,11 +330,10 @@ describe("norish archive writer", () => {
     expect(recipeJson.image).toBe("https://example.com/external-hero.jpg");
   });
 
-  it("drops references whose files did not make the archive, hero included", async () => {
+  it("drops local references whose files did not make the archive", async () => {
     const recipe = buildFullRecipe({
-      // Shadowed by the gallery: the resolved primary is the local file, and
-      // when that file is missing the hero is dropped rather than falling
-      // back to an image the source recipe never displays.
+      // The external scalar travels unchanged; the missing local gallery
+      // file is dropped rather than exported as a dead reference.
       image: "https://example.com/external-hero.jpg",
       images: [
         {
@@ -301,7 +350,7 @@ describe("norish archive writer", () => {
 
     const recipeJson = await readJson(zip, `${recipe.id}/recipe.json`);
 
-    expect(recipeJson.image).toBeNull();
+    expect(recipeJson.image).toBe("https://example.com/external-hero.jpg");
     expect(recipeJson.images).toEqual([]);
   });
 

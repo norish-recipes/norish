@@ -28,10 +28,11 @@ export const recipes = pgTable(
     /**
      * @deprecated — the primary image lives in `recipe_images`. Readers
      * resolve gallery-first (`primaryRecipeImage` / the repository's
-     * PRIMARY_IMAGE_SQL); writers never store a value here any more (a
-     * payload scalar is translated into the gallery, and media-touching
-     * writes clear this column). Only untouched legacy rows still carry a
-     * value, until a migration retires the column.
+     * PRIMARY_IMAGE_SQL). A write that carries `images` moves a distinct
+     * scalar into the gallery, or keeps it here when the gallery holds ten
+     * Source Images. A scalar-only write fills an empty gallery and clears
+     * this column otherwise. Only that full-gallery case and untouched
+     * legacy rows carry a value, until a migration retires the column.
      */
     image: text("image"),
     url: text("url"),

@@ -214,6 +214,7 @@ describe("norish archive round-trip", () => {
     });
 
     const { parsed } = await roundTrip(recipe, {
+      "images/hero.jpg": "hero-bytes",
       "images/gallery-1.jpg": "gallery-bytes",
       "images/gallery-2.jpg": "gallery-2-bytes",
       "steps/step-1.jpg": "step-bytes",
@@ -221,9 +222,7 @@ describe("norish archive round-trip", () => {
       "videos/thumb-1.jpg": "thumb-bytes",
     });
 
-    // The exact bytes written on export are what the importer re-saves. The
-    // hero is the resolved primary — the first gallery image — so no
-    // separate hero file travels.
+    // The exact bytes written on export are what the importer re-saves.
     expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("gallery-bytes"), MINTED_ID);
     expect(mockSaveStepImageBytes).toHaveBeenCalledWith(Buffer.from("step-bytes"), MINTED_ID);
     expect(mockSaveVideoBytes).toHaveBeenCalledWith(
@@ -249,6 +248,168 @@ describe("norish archive round-trip", () => {
         order: 0,
       },
     ]);
+  });
+
+  it("carries a kept scalar source image through the archive", async () => {
+    const recipeId = "11111111-1111-4111-8111-111111111111";
+    const scalar = `/recipes/${recipeId}/scalar.jpg`;
+    const images = [
+      {
+        id: "88888888-8888-4888-8888-888888888880",
+        image: `/recipes/${recipeId}/drawn.jpg`,
+        order: 0,
+        generated: true,
+        version: 1,
+      },
+      ...Array.from({ length: 10 }, (_, index) => ({
+        id: crypto.randomUUID(),
+        image: `/recipes/${recipeId}/source-${index}.jpg`,
+        order: index + 1,
+        generated: false,
+        version: 1,
+      })),
+    ];
+    const recipe = buildFullRecipe({ image: scalar, images });
+
+    expect(collectRecipeMediaRefs(recipe)).toContainEqual({
+      webPath: scalar,
+      archivePath: "images/scalar.jpg",
+    });
+
+    let saved = 0;
+
+    mockSaveImageBytes.mockImplementation(async () => `/recipes/${MINTED_ID}/saved-${saved++}.jpg`);
+
+    const mediaBytes: Record<string, string> = { "images/scalar.jpg": "scalar-bytes" };
+
+    for (const image of images) {
+      mediaBytes[`images/${image.image.split("/").pop()}`] = image.image;
+    }
+
+    const { entry, parsed } = await roundTrip(recipe, mediaBytes);
+
+    expect(entry.json.image).toBe("images/scalar.jpg");
+    expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("scalar-bytes"), MINTED_ID);
+    expect(parsed.dto.image).toBe(`/recipes/${MINTED_ID}/saved-0.jpg`);
+    expect(parsed.dto.images).toHaveLength(11);
+    expect(parsed.dto.images?.[0]?.generated).toBe(true);
+  });
+
+  it("carries a distinct scalar with nine Source Images through the archive", async () => {
+    const recipeId = "11111111-1111-4111-8111-111111111111";
+    const scalar = `/recipes/${recipeId}/scalar-nine.jpg`;
+    const images = [
+      {
+        id: "88888888-8888-4888-8888-888888888881",
+        image: `/recipes/${recipeId}/drawn-nine.jpg`,
+        order: 0,
+        generated: true,
+        version: 1,
+      },
+      ...Array.from({ length: 9 }, (_, index) => ({
+        id: crypto.randomUUID(),
+        image: `/recipes/${recipeId}/nine-source-${index}.jpg`,
+        order: index + 1,
+        generated: false,
+        version: 1,
+      })),
+    ];
+    const recipe = buildFullRecipe({ image: scalar, images });
+
+    expect(collectRecipeMediaRefs(recipe)).toContainEqual({
+      webPath: scalar,
+      archivePath: "images/scalar-nine.jpg",
+    });
+
+    let saved = 0;
+
+    mockSaveImageBytes.mockImplementation(async () => `/recipes/${MINTED_ID}/saved-${saved++}.jpg`);
+
+    const mediaBytes: Record<string, string> = { "images/scalar-nine.jpg": "scalar-nine-bytes" };
+
+    for (const image of images) {
+      mediaBytes[`images/${image.image.split("/").pop()}`] = image.image;
+    }
+
+    const { entry, parsed } = await roundTrip(recipe, mediaBytes);
+
+    expect(entry.json.image).toBe("images/scalar-nine.jpg");
+    expect(mockSaveImageBytes).toHaveBeenCalledTimes(11);
+    expect(parsed.dto.image).toBe(`/recipes/${MINTED_ID}/saved-0.jpg`);
+    expect(parsed.dto.images).toHaveLength(10);
+    expect(parsed.dto.images?.[0]?.generated).toBe(true);
+    expect(FullRecipeInsertSchema.safeParse(parsed.dto).success).toBe(true);
+  });
+
+  it("carries an external scalar beside a gallery image", async () => {
+    const recipeId = "11111111-1111-4111-8111-111111111111";
+    const external = "https://example.com/external-scalar.jpg";
+    const gallery = `/recipes/${recipeId}/external-gallery.jpg`;
+    const recipe = buildFullRecipe({
+      image: external,
+      images: [
+        {
+          id: "88888888-8888-4888-8888-888888888882",
+          image: gallery,
+          order: 0,
+          generated: false,
+          version: 1,
+        },
+      ],
+    });
+
+    const { entry, parsed } = await roundTrip(recipe, {
+      "images/external-gallery.jpg": "external-gallery-bytes",
+    });
+
+    expect(entry.json.image).toBe(external);
+    expect(parsed.dto.image).toBe(external);
+    expect(parsed.dto.images).toHaveLength(1);
+    expect(mockSaveImageBytes).toHaveBeenCalledTimes(1);
+    expect(mockSaveImageBytes).toHaveBeenCalledWith(
+      Buffer.from("external-gallery-bytes"),
+      MINTED_ID
+    );
+    expect(FullRecipeInsertSchema.safeParse(parsed.dto).success).toBe(true);
+  });
+
+  it("carries a scalar stored under a subdirectory", async () => {
+    const recipeId = "11111111-1111-4111-8111-111111111111";
+    const scalar = `/recipes/${recipeId}/steps/scalar-step.jpg`;
+    const gallery = `/recipes/${recipeId}/subdir-gallery.jpg`;
+    const recipe = buildFullRecipe({
+      image: scalar,
+      images: [
+        {
+          id: "88888888-8888-4888-8888-888888888883",
+          image: gallery,
+          order: 0,
+          generated: false,
+          version: 1,
+        },
+      ],
+    });
+
+    expect(collectRecipeMediaRefs(recipe)).toContainEqual({
+      webPath: scalar,
+      archivePath: "images/scalar-step.jpg",
+    });
+
+    let saved = 0;
+
+    mockSaveImageBytes.mockImplementation(async () => `/recipes/${MINTED_ID}/saved-${saved++}.jpg`);
+
+    const { entry, parsed } = await roundTrip(recipe, {
+      "images/scalar-step.jpg": "scalar-step-bytes",
+      "images/subdir-gallery.jpg": "subdir-gallery-bytes",
+    });
+
+    expect(entry.json.image).toBe("images/scalar-step.jpg");
+    expect(parsed.dto.image).toBe(`/recipes/${MINTED_ID}/saved-0.jpg`);
+    expect(parsed.dto.images).toHaveLength(1);
+    expect(mockSaveImageBytes).toHaveBeenCalledTimes(2);
+    expect(mockSaveImageBytes).toHaveBeenCalledWith(Buffer.from("scalar-step-bytes"), MINTED_ID);
+    expect(FullRecipeInsertSchema.safeParse(parsed.dto).success).toBe(true);
   });
 
   it("round-trips a recipe with no media at all", async () => {

@@ -230,11 +230,15 @@
     "uploading": "Lähetetään...",
     "uploadFailed": "Lähetys epäonnistui",
     "dragToReorder": "Raahaa järjestääksesi",
+    "setAsThumbnail": "Aseta pikkukuvaksi",
     "maxImagesReached": "Enintään {max} kuvaa sallittu",
     "maxVideosReached": "Enintään {max} videota sallittu",
     "invalidFileType": "Virheellinen tiedostotyyppi"
   },
   "carousel": {
+    "generated": "Luotu",
+    "sourcePhoto": "Lähdekuva",
+    "imagePosition": "{current} / {total}",
     "noImageAvailable": "Ei kuvaa saatavilla",
     "noMediaAvailable": "Ei mediaa saatavilla",
     "videoPlayer": {
