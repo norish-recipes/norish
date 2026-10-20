@@ -124,12 +124,13 @@ function imageFile(overrides: Partial<{ data: string; mimeType: string; filename
   };
 }
 
-function batchInput(files: ReturnType<typeof imageFile>[], batchId = "batch-1") {
+function batchInput(files: ReturnType<typeof imageFile>[], batchId = "batch-1", autoEnrich = true) {
   return {
     batchId,
     userId: "user-1",
     householdKey: "household-1",
     householdUserIds: ["user-1"],
+    autoEnrich,
     files,
   };
 }
@@ -166,13 +167,13 @@ describe("createImageImportBatch", () => {
         batchId: "batch-1",
         batchItemId: batch.items[0]!.itemId,
         files: [expect.objectContaining({ filename: "one.png" })],
-        autoEnrich: false,
+        autoEnrich: true,
       }),
       expect.objectContaining({
         batchId: "batch-1",
         batchItemId: batch.items[1]!.itemId,
         files: [expect.objectContaining({ filename: "two.png" })],
-        autoEnrich: false,
+        autoEnrich: true,
       }),
     ]);
   });
@@ -478,8 +479,35 @@ describe("retryImageImportBatchItems", () => {
     expect(retried!.items[0]).toMatchObject({ status: "processing", errorCode: null });
     expect(fake.add).toHaveBeenCalledTimes(3);
     expect(fake.add.mock.calls[2]![1]).toEqual(
-      expect.objectContaining({ recipeId: batch.items[0]!.recipeId, autoEnrich: false })
+      expect.objectContaining({ recipeId: batch.items[0]!.recipeId, autoEnrich: true })
     );
+  });
+
+  it("keeps an off choice on the first attempt and on a retry", async () => {
+    const batch = await createImageImportBatch(
+      fake.queue,
+      batchInput([imageFile()], "batch-1", false),
+      store
+    );
+
+    expect(fake.add.mock.calls[0]![1]).toMatchObject({ autoEnrich: false });
+
+    await settleImageImportBatchItem(
+      fake.queue,
+      {
+        batchId: batch.batchId,
+        itemId: batch.items[0]!.itemId,
+        errorCode: "extraction-failed",
+      },
+      store
+    );
+    await retryImageImportBatchItems(
+      fake.queue,
+      { batchId: batch.batchId, userId: "user-1", itemIds: [batch.items[0]!.itemId] },
+      store
+    );
+
+    expect(fake.add.mock.calls[1]![1]).toMatchObject({ autoEnrich: false });
   });
 
   it("refuses another user's batch", async () => {
@@ -551,6 +579,7 @@ describe("toImageImportBatchDTO", () => {
       userId: "user-1",
       householdKey: "household-1",
       householdUserIds: null,
+      autoEnrich: true,
       createdAt: "2026-01-01T00:00:00.000Z",
       items: [
         {

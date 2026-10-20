@@ -22,6 +22,7 @@ function storedBatch(): StoredImageImportBatch {
     userId: "user-1",
     householdKey: "household-1",
     householdUserIds: ["user-1"],
+    autoEnrich: true,
     createdAt: "2026-01-01T00:00:00.000Z",
     items: [
       {
@@ -85,6 +86,7 @@ describeRedis("RedisImageImportBatchStore", () => {
       userId: "user-1",
       householdKey: "household-1",
       householdUserIds: ["user-1"],
+      autoEnrich: true,
       createdAt: "2026-01-01T00:00:00.000Z",
     });
     expect(batch!.items.map((item) => [item.position, item.filename])).toEqual([

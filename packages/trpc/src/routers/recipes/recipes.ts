@@ -74,7 +74,12 @@ import type { UploadedFile } from "../../form-data";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  assertRecipeAccess,
+  findRecipeForViewer,
+  handleRecipeError,
+  resolveAutoEnrichOnAdd,
+} from "./helpers";
 import {
   randomRecipeInputSchema,
   recipeAutocompleteInputSchema,
@@ -721,6 +726,10 @@ export const importFromImagesBatchProcedure = authedProcedure
       });
     }
 
+    const autoEnrichEntry = input.get("autoEnrich");
+    const requestedAutoEnrich =
+      autoEnrichEntry === "true" ? true : autoEnrichEntry === "false" ? false : undefined;
+
     const uploads: Array<{ index: number; file: UploadedFile }> = [];
 
     input.forEach((value, key) => {
@@ -806,6 +815,7 @@ export const importFromImagesBatchProcedure = authedProcedure
         userId: ctx.user.id,
         householdKey: ctx.householdKey,
         householdUserIds: ctx.householdUserIds,
+        autoEnrich: await resolveAutoEnrichOnAdd(ctx.user.id, requestedAutoEnrich),
         files,
       });
 

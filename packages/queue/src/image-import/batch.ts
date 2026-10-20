@@ -43,6 +43,7 @@ export interface CreateImageImportBatchInput {
   userId: string;
   householdKey: string;
   householdUserIds: string[] | null;
+  autoEnrich: boolean;
   files: ImageImportFile[];
 }
 
@@ -131,6 +132,7 @@ export async function createImageImportBatch(
     userId: input.userId,
     householdKey: input.householdKey,
     householdUserIds: input.householdUserIds,
+    autoEnrich: input.autoEnrich,
     createdAt: new Date().toISOString(),
     items: input.files.map(createBatchItem),
   };
@@ -199,7 +201,7 @@ export async function pumpImageImportBatch(
         householdKey: batch.householdKey,
         householdUserIds: batch.householdUserIds,
         files: [item.file],
-        autoEnrich: false,
+        autoEnrich: batch.autoEnrich,
         batchId,
         batchItemId: item.itemId,
       });

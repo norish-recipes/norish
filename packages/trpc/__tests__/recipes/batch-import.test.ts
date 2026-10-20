@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   retryImageImportBatchItems: vi.fn(),
   toImageImportBatchDTO: vi.fn(),
   checkAIEnabled: vi.fn(),
+  resolveAutoEnrichOnAdd: vi.fn(),
 }));
 
 vi.mock("@norish/queue", () => {
@@ -66,6 +67,12 @@ vi.mock("@norish/shared-server/logger", () => ({
   redactUrl: vi.fn((value: string) => value),
   trpcLogger: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), success: vi.fn() },
 }));
+
+vi.mock("@norish/trpc/routers/recipes/helpers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@norish/trpc/routers/recipes/helpers")>();
+
+  return { ...actual, resolveAutoEnrichOnAdd: mocks.resolveAutoEnrichOnAdd };
+});
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
   transformer: superjson,
@@ -115,6 +122,7 @@ function formDataWith(files: Array<{ name: string; type: string; bytes: number[]
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.checkAIEnabled.mockResolvedValue(true);
+  mocks.resolveAutoEnrichOnAdd.mockResolvedValue(true);
   mocks.toImageImportBatchDTO.mockReturnValue(DTO);
 });
 
@@ -141,6 +149,7 @@ describe("importFromImagesBatchProcedure", () => {
         userId: user.id,
         householdKey: ctx.householdKey,
         householdUserIds: ctx.householdUserIds,
+        autoEnrich: true,
         files: [
           { data: "AQID", mimeType: "image/png", filename: "one.png" },
           { data: "BAU=", mimeType: "image/png", filename: "two.png" },
@@ -150,6 +159,44 @@ describe("importFromImagesBatchProcedure", () => {
     expect(mocks.createImageImportBatch.mock.calls[0]![1].batchId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
     );
+  });
+
+  it("resolves the requested auto-enrich choice for the batch", async () => {
+    const user = createMockUser();
+    const ctx = createMockAuthedContext(user, createMockHousehold());
+
+    mocks.createImageImportBatch.mockResolvedValue(STORED_BATCH);
+    mocks.resolveAutoEnrichOnAdd.mockResolvedValue(false);
+
+    const router = t.router({ importFromImagesBatch: importFromImagesBatchProcedure });
+    const caller = t.createCallerFactory(router)(ctx);
+    const formData = formDataWith([{ name: "one.png", type: "image/png", bytes: [1] }]);
+
+    formData.append("autoEnrich", "false");
+
+    await caller.importFromImagesBatch(formData);
+
+    expect(mocks.resolveAutoEnrichOnAdd).toHaveBeenCalledWith(user.id, false);
+    expect(mocks.createImageImportBatch).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ autoEnrich: false })
+    );
+  });
+
+  it("uses the profile default when the batch request has no choice", async () => {
+    const user = createMockUser();
+    const ctx = createMockAuthedContext(user, createMockHousehold());
+
+    mocks.createImageImportBatch.mockResolvedValue(STORED_BATCH);
+
+    const router = t.router({ importFromImagesBatch: importFromImagesBatchProcedure });
+    const caller = t.createCallerFactory(router)(ctx);
+
+    await caller.importFromImagesBatch(
+      formDataWith([{ name: "one.png", type: "image/png", bytes: [1] }])
+    );
+
+    expect(mocks.resolveAutoEnrichOnAdd).toHaveBeenCalledWith(user.id, undefined);
   });
 
   it("rejects the request when AI is disabled", async () => {

@@ -31,6 +31,7 @@ export interface StoredImageImportBatch {
   userId: string;
   householdKey: string;
   householdUserIds: string[] | null;
+  autoEnrich: boolean;
   createdAt: string;
   items: StoredImageImportBatchItem[];
 }
@@ -40,6 +41,7 @@ interface StoredImageImportBatchMeta {
   userId: string;
   householdKey: string;
   householdUserIds: string[] | null;
+  autoEnrich?: boolean;
   createdAt: string;
   itemIds: string[];
 }
@@ -114,6 +116,7 @@ export class RedisImageImportBatchStore implements ImageImportBatchStore {
       userId: batch.userId,
       householdKey: batch.householdKey,
       householdUserIds: batch.householdUserIds,
+      autoEnrich: batch.autoEnrich,
       createdAt: batch.createdAt,
       itemIds: batch.items.map((item) => item.itemId),
     };
@@ -153,6 +156,7 @@ export class RedisImageImportBatchStore implements ImageImportBatchStore {
         userId: meta.userId,
         householdKey: meta.householdKey,
         householdUserIds: meta.householdUserIds,
+        autoEnrich: meta.autoEnrich ?? false,
         createdAt: meta.createdAt,
         items: [],
       };
@@ -169,6 +173,7 @@ export class RedisImageImportBatchStore implements ImageImportBatchStore {
       userId: meta.userId,
       householdKey: meta.householdKey,
       householdUserIds: meta.householdUserIds,
+      autoEnrich: meta.autoEnrich ?? false,
       createdAt: meta.createdAt,
       items,
     };
