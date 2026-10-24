@@ -26,6 +26,8 @@ the rating. Empty sections are left out.
 - **Nutrition** shows the macros as a ring with the calories in the middle. A
   recipe that stores no nutrition shows values worked out from its ingredients,
   marked as such, see [Nutrition](./nutrition.md).
+- **Rating** takes your stars. Tap the star you gave again to take your rating
+  back.
 
 ![The Cooking time card with an Other Time segment, above the Nutrition ring](/img/screenshots/recipe-page-cards.png)
 
@@ -73,7 +75,7 @@ To turn it off, set **Settings => User => Recipe page color** to
 
 ## Print a recipe or save a PDF
 
-Choose **Print recipe** from the recipe’s three-dot menu to print an A4
+Choose **Print recipe** from the recipe's three-dot menu to print an A4
 recipe card or save it as a PDF to share. The card includes ingredients,
 instructions and nutrition, using your selected servings and measurements.
 You can include the recipe photo and adjust the text size.
