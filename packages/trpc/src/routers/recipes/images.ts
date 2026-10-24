@@ -23,6 +23,7 @@ import type { FormDataInput, UploadedFile } from "../../form-data";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { assertRecipeAccess, mediaRecipeId, recipeIdOfMediaUrl } from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -65,13 +66,16 @@ export async function extractAndValidateImage(
  * Requires recipeId to save to: uploads/recipes/{recipeId}/{hash}.jpg
  */
 const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
-  const recipeId = input.get("recipeId") as string | null;
+  const recipeId = mediaRecipeId(input.get("recipeId"));
 
   log.debug({ userId: ctx.user.id, recipeId }, "Uploading recipe image");
 
   if (!recipeId) {
     return { success: false, error: "Recipe ID is required" };
   }
+
+  // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
+  await assertRecipeAccess(ctx, recipeId, "edit");
 
   const validation = await extractAndValidateImage(input);
 
@@ -103,10 +107,14 @@ const deleteImage = authedProcedure
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, url: input.url }, "Deleting recipe image");
 
-    // Ensure we're only deleting recipe images (not avatars or other files)
-    if (!input.url.startsWith("/recipes/")) {
+    // Only recipe images (not avatars or other files), of a recipe the caller may edit.
+    const recipeId = recipeIdOfMediaUrl(input.url);
+
+    if (!recipeId) {
       return { success: false, error: "Invalid image URL format" };
     }
+
+    await assertRecipeAccess(ctx, recipeId, "edit");
 
     try {
       await deleteImageByUrl(input.url);
@@ -130,13 +138,15 @@ const deleteImage = authedProcedure
 const uploadStepImage = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = input.get("recipeId") as string | null;
+    const recipeId = mediaRecipeId(input.get("recipeId"));
 
     log.debug({ userId: ctx.user.id, recipeId }, "Uploading step image");
 
     if (!recipeId) {
       return { success: false, error: "Recipe ID is required" };
     }
+
+    await assertRecipeAccess(ctx, recipeId, "edit");
 
     const validation = await extractAndValidateImage(input);
 
@@ -164,6 +174,14 @@ const deleteStepImage = authedProcedure
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, url: input.url }, "Deleting step image");
 
+    const recipeId = recipeIdOfMediaUrl(input.url);
+
+    if (!recipeId) {
+      return { success: false, error: "Invalid image URL format" };
+    }
+
+    await assertRecipeAccess(ctx, recipeId, "edit");
+
     try {
       await deleteStepImageByUrl(input.url);
 
@@ -189,7 +207,7 @@ const deleteStepImage = authedProcedure
 const uploadGalleryImage = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = input.get("recipeId") as string | null;
+    const recipeId = mediaRecipeId(input.get("recipeId"));
     const orderStr = input.get("order") as string | null;
 
     log.debug({ userId: ctx.user.id, recipeId }, "Uploading gallery image");
@@ -197,6 +215,8 @@ const uploadGalleryImage = authedProcedure
     if (!recipeId) {
       return { success: false, error: "Recipe ID is required" };
     }
+
+    await assertRecipeAccess(ctx, recipeId, "edit");
 
     // Check max images limit
     const currentCount = await countRecipeImages(recipeId);
@@ -280,14 +300,15 @@ const deleteGalleryImage = authedProcedure
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, imageId: input.imageId }, "Deleting gallery image");
 
+    const imageRecord = await getRecipeImageById(input.imageId);
+
+    if (!imageRecord) {
+      return { success: false, error: "Image not found" };
+    }
+
+    await assertRecipeAccess(ctx, imageRecord.recipeId, "edit");
+
     try {
-      // Get image record to get the URL
-      const imageRecord = await getRecipeImageById(input.imageId);
-
-      if (!imageRecord) {
-        return { success: false, error: "Image not found" };
-      }
-
       // Delete from filesystem
       try {
         await deleteImageByUrl(imageRecord.image);

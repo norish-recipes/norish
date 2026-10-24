@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
@@ -68,6 +69,21 @@ export async function assertRecipeAccess(
       message: "You do not have permission to access this recipe",
     });
   }
+}
+
+/**
+ * A recipe id a media path is built from: a UUID or nothing, since it becomes
+ * a directory name under the uploads folder.
+ */
+export function mediaRecipeId(value: unknown): string | null {
+  const parsed = z.uuid().safeParse(value);
+
+  return parsed.success ? parsed.data : null;
+}
+
+/** The recipe a stored media URL (`/recipes/{id}/…`) belongs to. */
+export function recipeIdOfMediaUrl(url: string): string | null {
+  return mediaRecipeId(/^\/recipes\/([^/]+)\//.exec(url)?.[1]);
 }
 
 export async function findRecipeForViewer(

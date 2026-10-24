@@ -1,0 +1,67 @@
+---
+id: quick-start
+title: Quick start
+slug: /quick-start
+sidebar_position: 2
+description: Run Norish with Docker Compose.
+---
+
+import { DocLinkCard, LinkCardGrid } from "@site/src/components/LinkCard";
+import QuickStartCompose from "@site/src/components/QuickStartCompose";
+
+# Quick start
+
+Save the file below as `docker-compose.yml` and run:
+
+```bash
+docker compose up -d
+```
+
+Then open [http://localhost:3000](http://localhost:3000). The first user to
+sign in becomes the server owner, see [First run](#first-run).
+
+<QuickStartCompose />
+
+:::info Generating the secrets
+The compose above has a random `MASTER_KEY` and `OBSCURA_CDP_TOKEN`, generated
+in your browser when you loaded this page. To make your own, run:
+
+```bash
+openssl rand -base64 32 # MASTER_KEY
+openssl rand -hex 32    # OBSCURA_CDP_TOKEN, the same value on both services
+```
+
+Keep them secret. Norish derives its encryption keys from `MASTER_KEY`, so
+changing it makes previously encrypted data unreadable.
+:::
+
+:::tip Production template
+The repository has a longer, commented template at
+[`docker-compose.example.yml`](https://github.com/norish-recipes/Norish/blob/main/docker/docker-compose.example.yml).
+:::
+
+## What's in the stack
+
+| Service   | What it does                                   |
+| --------- | ---------------------------------------------- |
+| `norish`  | The Norish app server.                         |
+| `db`      | PostgreSQL database.                           |
+| `redis`   | Real-time events and background jobs.          |
+| `obscura` | Headless browser that loads pages for imports. |
+
+## First run
+
+The first user to sign in becomes the server owner and admin. Registration then
+turns off, and server settings live under **Settings => Admin**.
+
+Email and password sign-in works out of the box. You can add OIDC, GitHub or
+Google, see [Authentication](./configuration/authentication.md).
+
+## Next steps
+
+<LinkCardGrid>
+  <DocLinkCard doc="configuration/authentication" />
+  <DocLinkCard doc="configuration/ai-provider" />
+  <DocLinkCard doc="configuration/server-runtime" />
+  <DocLinkCard doc="configuration/admin-settings" />
+</LinkCardGrid>

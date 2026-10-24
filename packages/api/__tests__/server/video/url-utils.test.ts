@@ -20,6 +20,11 @@ describe("URL detection utilities", () => {
       expect(isInstagramUrl("https://facebook.com/video/123")).toBe(false);
     });
 
+    it("returns false for hosts that only contain the domain", () => {
+      expect(isInstagramUrl("https://instagram.com.example.net/p/ABC123/")).toBe(false);
+      expect(isInstagramUrl("https://notinstagram.com/p/ABC123/")).toBe(false);
+    });
+
     it("returns false for invalid URLs", () => {
       expect(isInstagramUrl("not-a-url")).toBe(false);
       expect(isInstagramUrl("")).toBe(false);

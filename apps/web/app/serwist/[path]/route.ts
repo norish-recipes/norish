@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { createSerwistRoute } from "@serwist/turbopack";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 /**
  * The service-worker build, as a Route Handler.
  *
@@ -29,7 +31,7 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     // point at pruned assets.
     manifestTransforms: [
       async (entries) => ({
-        manifest: [...entries, { url: "/~offline", revision: randomUUID(), size: 0 }],
+        manifest: [...entries, { url: addBasePath("/~offline"), revision: randomUUID(), size: 0 }],
         warnings: [],
       }),
     ],

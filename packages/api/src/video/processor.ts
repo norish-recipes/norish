@@ -59,7 +59,7 @@ export async function processVideoRecipe(
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     log.error({ err: error, processor: processor.name }, "Failed to process video");
-    throw new Error(`Failed to process video recipe: ${errorMessage}`);
+    throw new Error(`Failed to process video recipe: ${errorMessage}`, { cause: error });
   }
 }
 

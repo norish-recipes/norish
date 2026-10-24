@@ -4,6 +4,9 @@
   "tasks": {
     "test": {
       "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL"]
+    },
+    "build": {
+      "dependsOn": ["topo"]
     }
   }
 }

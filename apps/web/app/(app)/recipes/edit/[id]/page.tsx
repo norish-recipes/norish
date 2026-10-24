@@ -5,10 +5,6 @@ import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
 
 import RecipeForm from "../components/recipe-form";
 
-interface EditRecipePageProps {
-  params: Promise<{ id: string }>;
-}
-
 function shouldRenderNotFound(error: unknown): boolean {
   if (!error || typeof error !== "object" || !("code" in error)) {
     return false;
@@ -24,7 +20,7 @@ async function getEditableRecipe(id: string) {
   return caller.recipes.getEditable({ id });
 }
 
-export default async function EditRecipePage({ params }: EditRecipePageProps) {
+export default async function EditRecipePage({ params }: PageProps<"/recipes/edit/[id]">) {
   const { id } = await params;
   let recipe: Awaited<ReturnType<typeof getEditableRecipe>>;
 

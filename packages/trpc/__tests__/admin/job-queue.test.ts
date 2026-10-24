@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { QUEUE_NAMES } from "@norish/queue/config";
+import { QUEUE_NAMES } from "@norish/queue/queue-names";
 import { jobQueueProcedures } from "@norish/trpc/routers/admin/job-queue";
 
 import { setConfig } from "../mocks/server-config";
@@ -22,6 +22,12 @@ const { registryMock } = vi.hoisted(() => {
   };
 });
 
+const cancelRunningJob = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/queue/create-worker", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/queue/create-worker")>()),
+  cancelRunningJob,
+}));
 vi.mock("@norish/queue/registry", () => ({
   getQueueByName: registryMock.getQueueByName,
   getAllQueueEntries: registryMock.getAllQueueEntries,
@@ -85,7 +91,6 @@ function createCaller(admin = true) {
 
 describe("admin job queue procedures", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     registryMock.queues.clear();
     isUserServerAdmin.mockImplementation((userId: string) =>
       Promise.resolve(userId === createMockAdminUser().id)
@@ -113,6 +118,26 @@ describe("admin job queue procedures", () => {
       });
       expect(rows[0]).not.toHaveProperty("data");
       expect(rows[0]).not.toHaveProperty("dataJson");
+    });
+
+    it("shows a job an administrator cancelled as cancelled, not failed", async () => {
+      const queue = createMockQueue([
+        createMockJob({ id: "cancelled", failedReason: "Cancelled by an administrator" }),
+        createMockJob({ id: "failed", failedReason: "Parser timed out" }),
+      ]);
+
+      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, queue);
+
+      const rows = await createCaller().list({
+        queue: QUEUE_NAMES.RECIPE_IMPORT,
+        states: ["failed"],
+        limit: 50,
+      });
+
+      expect(rows.map((row) => [row.id, row.state])).toEqual([
+        ["cancelled", "cancelled"],
+        ["failed", "failed"],
+      ]);
     });
 
     it("flags long-running active jobs as hanging", async () => {
@@ -440,34 +465,6 @@ describe("admin job queue procedures", () => {
       ]);
     });
 
-    it("normalizes the legacy flat timeline into a single attempt", async () => {
-      const job = createMockJob({
-        getState: vi.fn().mockResolvedValue("active"),
-        finishedOn: null,
-        processedOn: Date.now() - 1_000,
-        // legacy flat progress shape (pre per-attempt tracking)
-        progress: {
-          step: "ai-request",
-          updatedAt: Date.now(),
-          attempt: 0,
-          timeline: [{ id: "ai-request", startedAt: Date.now() - 1_000 }],
-        },
-      });
-
-      registryMock.queues.set(QUEUE_NAMES.AUTO_TAGGING, createMockQueue([job]));
-
-      const detail = await createCaller().detail({
-        queue: QUEUE_NAMES.AUTO_TAGGING,
-        jobId: "job-1",
-      });
-
-      expect(detail.attempts).toHaveLength(1);
-      expect(detail.attempts[0]?.steps.map((step) => [step.id, step.status])).toEqual([
-        ["ai-request", "running"],
-        ["saving", "pending"],
-      ]);
-    });
-
     it("throws NOT_FOUND for a missing job", async () => {
       registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, createMockQueue([]));
 
@@ -492,6 +489,19 @@ describe("admin job queue procedures", () => {
       expect(result).toEqual({ success: true });
     });
 
+    it("retries a job an administrator cancelled, in case the cancel was a mistake", async () => {
+      const job = createMockJob({
+        failedReason: "Cancelled by an administrator",
+        getState: vi.fn().mockResolvedValue("failed"),
+      });
+
+      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, createMockQueue([job]));
+
+      await createCaller().retry({ queue: QUEUE_NAMES.RECIPE_IMPORT, jobId: "job-1" });
+
+      expect(job.retry).toHaveBeenCalled();
+    });
+
     it("rejects retrying a non-failed job", async () => {
       const job = createMockJob({ getState: vi.fn().mockResolvedValue("completed") });
 
@@ -501,6 +511,28 @@ describe("admin job queue procedures", () => {
         createCaller().retry({ queue: QUEUE_NAMES.RECIPE_IMPORT, jobId: "job-1" })
       ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
       expect(job.retry).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("cancel", () => {
+    it("cancels a job this process is running", async () => {
+      cancelRunningJob.mockReturnValueOnce(true);
+
+      const result = await createCaller().cancel({
+        queue: QUEUE_NAMES.RECIPE_IMPORT,
+        jobId: "job-1",
+      });
+
+      expect(cancelRunningJob).toHaveBeenCalledWith(QUEUE_NAMES.RECIPE_IMPORT, "job-1");
+      expect(result).toEqual({ success: true });
+    });
+
+    it("refuses a job that is not running", async () => {
+      cancelRunningJob.mockReturnValueOnce(false);
+
+      await expect(
+        createCaller().cancel({ queue: QUEUE_NAMES.RECIPE_IMPORT, jobId: "job-1" })
+      ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
     });
   });
 

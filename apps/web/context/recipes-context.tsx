@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
@@ -62,19 +62,17 @@ const sharedRecipesContext = createRecipesContext({
 
     return {
       show: ({ severity, title, description, actionLabel, onActionPress }) => {
-        const variant = severity === "primary" || severity === "secondary" ? "accent" : severity;
-
         if (actionLabel) {
           showActionToast(title, {
             description,
-            variant,
+            variant: severity,
             action: { label: actionLabel, onPress: () => onActionPress?.() },
           });
 
           return;
         }
 
-        toast(title, { description, variant });
+        toast(title, { description, variant: severity });
       },
       translate: createScopedMessageTranslator({
         common: (messageKey) => tCommon(messageKey as Parameters<typeof tCommon>[0]),
@@ -117,11 +115,11 @@ function RecipesContextAdapter({ children }: { children: React.ReactNode }) {
     [base, allergies]
   );
 
-  return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;
+  return <RecipesContext value={value}>{children}</RecipesContext>;
 }
 
 export function useRecipesContext() {
-  const ctx = useContext(RecipesContext);
+  const ctx = use(RecipesContext);
 
   if (!ctx) throw new Error("useRecipesContext must be used within RecipesContextProvider");
 

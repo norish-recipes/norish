@@ -19,19 +19,14 @@ const INDENT_PX = 24;
  * Pressing it opens the Ingredient's panel, where the spellings and every
  * edit the server says the viewer may make live. In the page's tree a food
  * with kinds carries a chevron that folds them out beneath it, set in by
- * `depth`. `reviewing` is the food's turn in a round of Ask AI: the row
- * shows it in place of its flag, and settles as its own change when the
- * answer lands. `drawing` is its turn in a Draw icons round, shown in its
- * icon's place until the icon lands. A row re-renders only when its own item
- * or turn changes, so a page of fifty rows stays out of the way of typing.
+ * `depth`. A row re-renders only when its own item changes, so a page of
+ * fifty rows stays out of the way of typing.
  */
 export const IngredientRow = memo(function IngredientRow({
   item,
   depth = 0,
   expanded = false,
   loadingKinds = false,
-  reviewing = false,
-  drawing = false,
   onOpen,
   onToggleKinds,
 }: {
@@ -39,8 +34,6 @@ export const IngredientRow = memo(function IngredientRow({
   depth?: number;
   expanded?: boolean;
   loadingKinds?: boolean;
-  reviewing?: boolean;
-  drawing?: boolean;
   onOpen: (id: string) => void;
   /** Fold the food's kinds out or back; absent where the list is flat. */
   onToggleKinds?: (id: string) => void;
@@ -98,27 +91,14 @@ export const IngredientRow = memo(function IngredientRow({
         type="button"
         onClick={() => onOpen(item.id)}
       >
-        {iconsHidden ? null : drawing ? (
-          <span
-            className="text-muted flex size-6 shrink-0 items-center justify-center md:size-8"
-            data-testid="ingredient-icon-drawing"
-          >
-            <Spinner color="current" size="sm" />
-            <span className="sr-only">{t("drawIcons.drawing")}</span>
-          </span>
-        ) : (
-          // A food with no icon keeps the slot empty, so every name in the list starts in line.
-          <span className="size-6 shrink-0 md:size-8">
-            <IngredientIcon src={item.icon ?? null} />
-          </span>
-        )}
+        {iconsHidden ? null : <IngredientIcon placeholder src={item.icon ?? null} />}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="min-w-0 truncate font-medium">{displayName}</span>
             {displayName !== item.name ? (
               <span className="text-muted truncate text-sm">{item.name}</span>
             ) : null}
-            <IngredientStatusChip flagged={item.flagged} reviewing={reviewing} />
+            <IngredientStatusChip flagged={item.flagged} />
           </div>
           <span className="text-muted text-sm">
             {item.flagged ? (

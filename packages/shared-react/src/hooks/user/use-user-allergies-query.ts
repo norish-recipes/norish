@@ -4,6 +4,8 @@ import type { CreateUserHooksOptions } from "./types";
 
 export function createUseUserAllergiesQuery({ useTRPC }: CreateUserHooksOptions) {
   return function useUserAllergiesQuery() {
+    "use memo";
+
     const trpc = useTRPC();
     const query = useQuery(trpc.user.getAllergies.queryOptions());
 

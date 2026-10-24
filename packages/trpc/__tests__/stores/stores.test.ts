@@ -59,7 +59,6 @@ describe("stores procedures", () => {
   const ctx = createMockAuthedContext(user, household);
 
   beforeEach(() => {
-    vi.clearAllMocks();
     storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
     assertHouseholdAccess.mockResolvedValue(undefined);
   });

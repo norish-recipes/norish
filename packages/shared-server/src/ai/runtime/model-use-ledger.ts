@@ -12,6 +12,11 @@
  * Outside a ledger — a tRPC handler, the admin Test button, a unit test —
  * recording is a no-op, so no caller has to know whether a job is watching.
  *
+ * The ledger also carries the job's abort signal, for the same reason: every
+ * request a job makes is bound to it, so an administrator's cancel or a
+ * shutdown aborts the call in flight, and refuses the next one, without any
+ * kind passing a signal down.
+ *
  * The ALS instance lives on `globalThis` under a `Symbol.for` key so bundlers
  * that duplicate this module across chunks still share one store.
  */
@@ -35,6 +40,8 @@ export interface ModelUse {
 
 export interface ModelUseLedger {
   readonly uses: ModelUse[];
+  /** The job's abort signal, which every request the job makes is bound to. */
+  readonly signal?: AbortSignal;
 }
 
 const STORE_KEY = Symbol.for("norish:model-use-ledger-store");
@@ -43,9 +50,14 @@ const g = globalThis as { [STORE_KEY]?: AsyncLocalStorage<ModelUseLedger> };
 const ledgerStore: AsyncLocalStorage<ModelUseLedger> =
   g[STORE_KEY] ?? (g[STORE_KEY] = new AsyncLocalStorage<ModelUseLedger>());
 
-/** A fresh, empty ledger for one job. */
-export function createModelUseLedger(): ModelUseLedger {
-  return { uses: [] };
+/**
+ * A fresh, empty ledger for one job, or for a part of one: a ledger opened
+ * inside another keeps the job's abort signal.
+ */
+export function createModelUseLedger(
+  signal: AbortSignal | undefined = ledgerStore.getStore()?.signal
+): ModelUseLedger {
+  return { uses: [], signal };
 }
 
 /** Run `fn` with `ledger` receiving every model use recorded in its call tree. */
@@ -56,4 +68,15 @@ export function runWithModelUseLedger<T>(ledger: ModelUseLedger, fn: () => T): T
 /** Record one request on the active ledger; nothing happens when none is open. */
 export function recordModelUse(use: ModelUse): void {
   ledgerStore.getStore()?.uses.push({ ...use });
+}
+
+/**
+ * The signal for one request: its deadline, and the asking job's abort
+ * signal when a job is asking.
+ */
+export function requestSignal(timeoutMs: number): AbortSignal {
+  const deadline = AbortSignal.timeout(timeoutMs);
+  const job = ledgerStore.getStore()?.signal;
+
+  return job ? AbortSignal.any([deadline, job]) : deadline;
 }

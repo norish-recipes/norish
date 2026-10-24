@@ -4,6 +4,7 @@ import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/sit
 import { getBrowser } from "@norish/api/obscura";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { parserLogger as log } from "@norish/shared-server/logger";
+import { isHostOnDomain } from "@norish/shared/lib/helpers";
 
 /** How long a page that answered with something else is given to become itself. */
 const SETTLE_TIMEOUT_MS = 15_000;
@@ -53,6 +54,52 @@ export interface RenderedPage {
 }
 
 /**
+ * Header tokens go only to hosts on their site, through the `scopeDomain` that Norish's Obscura
+ * (norish-recipes/obscura) adds and echoes. An Obscura that doesn't echo it would send them to every
+ * host the page loads from, so they are cleared again and the import goes without them.
+ */
+async function sendHeadersToTheirSite(
+  context: BrowserContext,
+  page: Page,
+  tokens: SiteAuthTokenDecryptedDto[],
+  targetUrl: string
+): Promise<void> {
+  const scopeDomain = headerScope(new URL(targetUrl).hostname, tokens);
+  const cdp = await context.newCDPSession(page);
+  const scoped = {
+    headers: Object.fromEntries(tokens.map((token) => [token.name, token.value])),
+    scopeDomain,
+  };
+  const reply = await cdp.send("Network.setExtraHTTPHeaders", scoped);
+
+  if (Reflect.get(reply, "scopeDomain") === scopeDomain) return;
+
+  await cdp.send("Network.setExtraHTTPHeaders", { headers: {} });
+  log.warn({ url: targetUrl }, "Obscura cannot keep header tokens to their site, so none are sent");
+}
+
+/** The narrowest token domain, as one the host is on: a bare "instagram" becomes "instagram.com". */
+export function headerScope(hostname: string, tokens: SiteAuthTokenDecryptedDto[]): string {
+  const labels = hostname.split(".");
+  const domains = tokens.map(({ domain }) => {
+    const lowered = domain.toLowerCase();
+
+    if (lowered.includes(".")) return isHostOnDomain(hostname, lowered) ? lowered : hostname;
+    const at = labels.indexOf(lowered);
+
+    return at < 0 ? hostname : labels.slice(at).join(".");
+  });
+
+  return domains.reduce(
+    (narrowest, domain) => (domain.length > narrowest.length ? domain : narrowest),
+    ""
+  );
+}
+
+// `page.evaluate` runs in the page, where `document` exists; this package compiles without DOM types.
+declare const document: { cookie: string };
+
+/**
  * Render a page in Obscura and return its HTML.
  *
  * Obscura owns the browser identity, JavaScript execution, page settling,
@@ -81,6 +128,14 @@ export async function renderPage(
   tokens?: SiteAuthTokenDecryptedDto[],
   isSettled?: (html: string) => boolean
 ): Promise<RenderedPage> {
+  // Only a web page reaches the browser, so a link stored before imports refused other schemes
+  // (file:, gopher:) is never rendered.
+  if (!/^https?:$/.test(URL.parse(targetUrl)?.protocol ?? "")) {
+    log.warn({ url: targetUrl }, "Refused to render a link that is not a web page");
+
+    return { html: "", status: null };
+  }
+
   let context: BrowserContext | undefined;
   let status: number | null = null;
 
@@ -90,37 +145,36 @@ export async function renderPage(
     const headerTokens = tokens?.filter((t) => t.type === "header") ?? [];
     const cookieTokens = tokens?.filter((t) => t.type === "cookie") ?? [];
 
-    // A fresh context per fetch: one importer's tokens can never be seen by
-    // another's page, and closing it below disposes of the whole session.
-    context = await browser.newContext(
-      headerTokens.length > 0
-        ? {
-            extraHTTPHeaders: Object.fromEntries(
-              headerTokens.map((token) => [token.name, token.value])
-            ),
-          }
-        : undefined
-    );
+    // A fresh context per fetch, so one importer's tokens never reach another's page.
+    context = await browser.newContext();
 
+    const page = await context.newPage();
+
+    if (headerTokens.length > 0)
+      await sendHeadersToTheirSite(context, page, headerTokens, targetUrl);
+
+    // Obscura never sends a cookie set over CDP but does send one a page sets, so the tokens are set
+    // from the target's origin, for the token's domain when the target is on it, and stay within it.
     if (cookieTokens.length > 0) {
-      let domain: string;
+      const hostname = new URL(targetUrl).hostname;
 
-      try {
-        domain = new URL(targetUrl).hostname;
-      } catch {
-        domain = targetUrl;
-      }
-      await context.addCookies(
-        cookieTokens.map((token) => ({
-          name: token.name,
-          value: token.value,
-          domain,
-          path: "/",
+      await page.goto(new URL("/robots.txt", targetUrl).href, {
+        waitUntil: "domcontentloaded",
+        timeout: SERVER_CONFIG.OBSCURA_NAVIGATION_TIMEOUT_MS,
+      });
+      await page.evaluate(
+        (cookies) => {
+          for (const { name, value, domain } of cookies) {
+            document.cookie = `${name}=${value}; path=/${domain ? `; domain=${domain}` : ""}`;
+          }
+        },
+        cookieTokens.map(({ name, value, domain }) => ({
+          name,
+          value,
+          domain: isHostOnDomain(hostname, domain.toLowerCase()) ? domain.toLowerCase() : null,
         }))
       );
     }
-
-    const page = await context.newPage();
 
     page.on("response", (response) => {
       if (response.request().isNavigationRequest() && response.frame() === page.mainFrame()) {

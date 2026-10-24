@@ -1,5 +1,6 @@
 "use client";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type { ArchiveDownloadHandoff } from "./archive-download-protocol";
@@ -157,7 +158,7 @@ function claimInHiddenFrame(token: string): () => void {
   frame.hidden = true;
   frame.setAttribute("aria-hidden", "true");
   frame.style.display = "none";
-  frame.src = archiveDownloadUrl(token);
+  frame.src = addBasePath(archiveDownloadUrl(token));
   document.body.appendChild(frame);
 
   return () => frame.remove();

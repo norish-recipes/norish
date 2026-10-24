@@ -1,6 +1,6 @@
 import { differenceInDays, format, parseISO } from "date-fns";
 
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
 
 /**
  * Translation function type for recurrence formatting.
@@ -16,6 +16,8 @@ export type RecurrenceTranslations = {
   weeks: string;
   month: string;
   months: string;
+  year: string;
+  years: string;
   today: string;
   tomorrow: string;
   weekdaysFull: Record<string, string>;
@@ -35,6 +37,8 @@ const DEFAULT_TRANSLATIONS: RecurrenceTranslations = {
   weeks: "weeks",
   month: "month",
   months: "months",
+  year: "year",
+  years: "years",
   today: "today",
   tomorrow: "tomorrow",
   weekdaysFull: {
@@ -48,6 +52,16 @@ const DEFAULT_TRANSLATIONS: RecurrenceTranslations = {
   },
 };
 
+const UNIT_PLURALS = { day: "days", week: "weeks", month: "months", year: "years" } as const;
+
+/** The translation key of the unit word a pattern reads in, singular or plural. */
+export function recurrenceUnitKey({
+  rule,
+  interval,
+}: RecurrencePattern): RecurrenceRule | (typeof UNIT_PLURALS)[RecurrenceRule] {
+  return interval === 1 ? rule : UNIT_PLURALS[rule];
+}
+
 /**
  * Format a recurrence pattern into a human-readable summary.
  * Examples: "Every day", "Every 2 weeks on Monday", "Every month on Thursday"
@@ -59,27 +73,14 @@ export function formatRecurrenceSummary(
   pattern: RecurrencePattern,
   translations: RecurrenceTranslations = DEFAULT_TRANSLATIONS
 ): string {
-  const { rule, interval, weekday } = pattern;
+  const { interval, weekday } = pattern;
   const t = translations;
 
   // Build interval text
   const intervalText =
     interval === 1 ? t.every : interval === 2 ? t.everyOther : `${t.every} ${interval}`;
 
-  // Build unit text
-  let unitText = "";
-
-  switch (rule) {
-    case "day":
-      unitText = interval === 1 ? t.day : t.days;
-      break;
-    case "week":
-      unitText = interval === 1 ? t.week : t.weeks;
-      break;
-    case "month":
-      unitText = interval === 1 ? t.month : t.months;
-      break;
-  }
+  const unitText = t[recurrenceUnitKey(pattern)];
 
   // Build weekday text if applicable
   let weekdayText = "";
@@ -167,7 +168,7 @@ export function formatRecurrenceWithNext(
  * For display purposes, use formatRecurrenceSummary instead.
  */
 export function formatRecurrenceAsText(pattern: RecurrencePattern): string {
-  const { rule, interval, weekday } = pattern;
+  const { interval, weekday } = pattern;
 
   let text = "every";
 
@@ -179,17 +180,7 @@ export function formatRecurrenceAsText(pattern: RecurrencePattern): string {
   }
 
   // Add unit
-  switch (rule) {
-    case "day":
-      text += interval === 1 ? " day" : " days";
-      break;
-    case "week":
-      text += interval === 1 ? " week" : " weeks";
-      break;
-    case "month":
-      text += interval === 1 ? " month" : " months";
-      break;
-  }
+  text += ` ${DEFAULT_TRANSLATIONS[recurrenceUnitKey(pattern)]}`;
 
   // Add weekday if specified
   if (weekday !== undefined) {

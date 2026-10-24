@@ -1,18 +1,5 @@
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  ilike,
-  inArray,
-  isNull,
-  like,
-  lte,
-  notInArray,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, lte, notInArray, or, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
@@ -30,6 +17,7 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-ingredient";
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contracts/store-types";
+import type { LineJoin } from "@norish/shared/lib/line-foods";
 import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
@@ -37,10 +25,12 @@ import {
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
+import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
+import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
-import type { IngredientResolutions } from "./ingredients";
+import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
 import type { MutationOutcome } from "./mutation-outcomes";
 import type { StepInsertWithImages } from "./steps";
 import {
@@ -67,7 +57,9 @@ import { replaceRecipeCuisinesTx } from "./cuisines";
 import {
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
+  insertRecipeLinesTx,
   resolvedRecipeLineValues,
+  writeRecipeLineFoodsTx,
 } from "./ingredients";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
@@ -99,7 +91,7 @@ function nonEmpty(s: string | null | undefined): s is string {
 }
 
 export async function GetTotalRecipeCount(): Promise<number> {
-  const result = await db.select({ count: sql<number>`count(*)` }).from(recipes);
+  const result = await db.select({ count: sql<number>`count(*)::int` }).from(recipes);
 
   return Number(result?.[0]?.count ?? 0);
 }
@@ -175,15 +167,10 @@ export async function recipeExistsByUrlForPolicy(
 
     case "household":
       // Check if URL exists for any household member
-      if (householdUserIds && householdUserIds.length > 0) {
-        const userIds = householdUserIds.includes(userId)
-          ? householdUserIds
-          : [...householdUserIds, userId];
-
-        whereCondition = and(eq(recipes.url, url), inArray(recipes.userId, userIds));
-      } else {
-        whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
-      }
+      whereCondition = and(
+        eq(recipes.url, url),
+        inArray(recipes.userId, viewerAndHouseholdIds({ userId, householdUserIds }))
+      );
       break;
 
     case "owner":
@@ -275,7 +262,7 @@ export async function findExistingRecipe(
 
 export interface RecipeListContext {
   userId: string;
-  householdUserIds: string[] | null;
+  householdUserIds: readonly string[] | null;
   isServerAdmin: boolean;
 }
 
@@ -313,17 +300,7 @@ export async function buildOwnerPolicyCondition(
 
     case "household":
       // Own rows + household members' rows + orphaned rows (null owner)
-      if (ctx.householdUserIds && ctx.householdUserIds.length > 0) {
-        // Ensure user's own ID is included (should always be, but safety check)
-        const userIds = ctx.householdUserIds.includes(ctx.userId)
-          ? ctx.householdUserIds
-          : [...ctx.householdUserIds, ctx.userId];
-
-        return or(inArray(ownerColumn, userIds), sql`${ownerColumn} IS NULL`);
-      }
-
-      // No household = only own rows + orphaned rows
-      return ownOrOrphaned();
+      return or(inArray(ownerColumn, viewerAndHouseholdIds(ctx)), sql`${ownerColumn} IS NULL`);
 
     case "owner":
       // Only own rows + orphaned rows (null owner)
@@ -682,7 +659,7 @@ export async function listRecipes(
     db.query.recipes.findMany({
       columns: DASHBOARD_COLUMNS,
       extras: {
-        // The resolved primary, not the deprecated scalar.
+        // The resolved primary: the first gallery image.
         image: PRIMARY_IMAGE_SQL.as("image"),
       },
       with: DASHBOARD_WITH,
@@ -692,7 +669,7 @@ export async function listRecipes(
       offset,
     }),
     db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(recipes)
       .where(whereClause),
   ]);
@@ -760,7 +737,7 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
     where: eq(recipes.id, id),
     columns: DASHBOARD_COLUMNS,
     extras: {
-      // The resolved primary, not the deprecated scalar.
+      // The resolved primary: the first gallery image.
       image: PRIMARY_IMAGE_SQL.as("image"),
     },
     with: {
@@ -861,9 +838,6 @@ export async function createRecipeWithRefs(
     description: payload.description ? stripHtmlTags(payload.description) : null,
     notes: payload.notes ?? null,
     url: payload.url ?? null,
-    // The deprecated scalar is never written: a payload image lands in the
-    // gallery below.
-    image: null,
     dishColor: payload.dishColor ?? null,
     servings: payload.servings ?? 1,
     systemUsed: payload.systemUsed,
@@ -942,22 +916,8 @@ export async function createRecipeWithRefs(
       );
     }
 
-    // Insert gallery images. The gallery is the source of truth for a
-    // recipe's pictures; a legacy scalar in the payload (foreign archive
-    // imports, the public API) is translated into it rather than written to
-    // the deprecated column — appended after the gallery so it never
-    // displaces the primary the payload actually led with.
-    const galleryImages = [...(payload.images ?? [])];
-    const legacyScalar = (payload.image ?? "").trim();
-
-    if (legacyScalar !== "" && !galleryImages.some((img) => img.image === legacyScalar)) {
-      const maxOrder = galleryImages.reduce(
-        (max, img) => Math.max(max, Number(img.order ?? 0)),
-        -1
-      );
-
-      galleryImages.push({ image: legacyScalar, order: maxOrder + 1 });
-    }
+    // Insert gallery images, which hold a recipe's pictures.
+    const galleryImages = payload.images ?? [];
 
     if (galleryImages.length > 0) {
       await tx.insert(recipeImages).values(
@@ -1066,10 +1026,9 @@ export async function getAllRecipesForEnrichment(): Promise<
  * names the number before it starts. A per-request read, never stored.
  *
  * Mirrors the coordinator's eligibility exactly: a recipe with no ingredient
- * rows is insufficient input for the kind, and "missing" means no image at
- * all — no gallery row, and a null or blank legacy scalar. Do not loosen
- * either side to make the count easier; the default sweep must stay
- * incapable of touching a stored image.
+ * rows is insufficient input for the kind, and "missing" means no gallery
+ * row. Do not loosen either side to make the count easier; the default sweep
+ * must stay incapable of touching a stored image.
  */
 export async function getImageGenerationSweepCounts(): Promise<{
   /** Recipes the overwrite sweep would draw for: everything with ingredients. */
@@ -1082,7 +1041,7 @@ export async function getImageGenerationSweepCounts(): Promise<{
   )`;
   const hasNoImage = sql`NOT EXISTS (
     SELECT 1 FROM ${recipeImages} WHERE ${recipeImages.recipeId} = ${recipes.id}
-  ) AND (${recipes.image} IS NULL OR btrim(${recipes.image}) = '')`;
+  )`;
 
   const [row] = await db
     .select({
@@ -1097,6 +1056,19 @@ export async function getImageGenerationSweepCounts(): Promise<{
   };
 }
 
+/** A stored line's foods, each with its spelling, and how they go together where it names several. */
+function lineFoodsOf(line: {
+  joined: LineJoin | null;
+  foods?: Array<{ alias: { ingredientId: string; text: string } }>;
+}): Pick<RecipeIngredientsDto, "joined" | "foods"> {
+  const foods = (line.foods ?? []).map(({ alias }) => ({
+    ingredientId: alias.ingredientId,
+    name: alias.text,
+  }));
+
+  return { joined: joinOf(foods, line.joined), foods };
+}
+
 export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   const full = await db.query.recipes.findFirst({
     where: eq(recipes.id, id),
@@ -1107,7 +1079,6 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       description: true,
       notes: true,
       url: true,
-      image: true,
       dishColor: true,
       servings: true,
       prepMinutes: true,
@@ -1143,13 +1114,20 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         columns: {
           id: true,
           name: true,
+          joined: true,
           amount: true,
           unit: true,
           systemUsed: true,
           order: true,
           version: true,
         },
-        with: { alias: { columns: { ingredientId: true } } },
+        with: {
+          foods: {
+            columns: {},
+            with: { alias: { columns: { ingredientId: true, text: true } } },
+            orderBy: (foods, { asc }) => [asc(foods.position)],
+          },
+        },
         orderBy: (ingredients, { asc }) => [asc(ingredients.order)],
       },
       steps: {
@@ -1215,7 +1193,6 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     description: full.description ?? null,
     notes: full.notes ?? null,
     url: full.url ?? null,
-    image: full.image ?? null,
     dishColor: full.dishColor ?? null,
     servings: full.servings ?? 1,
     prepMinutes: full.prepMinutes ?? null,
@@ -1272,7 +1249,9 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       })),
     recipeIngredients: (full.ingredients ?? []).map((ri: any) => ({
       id: ri.id,
-      ingredientId: ri.alias?.ingredientId ?? null,
+      // The line's first food is the one the recipe shows.
+      ingredientId: ri.foods?.[0]?.alias?.ingredientId ?? null,
+      ...lineFoodsOf(ri),
       amount: ri.amount ? Number(ri.amount) : null,
       unit: ri.unit ?? null,
       systemUsed: ri.systemUsed,
@@ -1399,22 +1378,26 @@ async function syncRecipeIngredientsTx(
   const existingById = new Map(existing.map((row: { id: string }) => [row.id, row]));
   const units = await getUnitsForNormalization();
   const retainedIds = new Set<string>();
+  const kept: LineFoods[] = [];
+  const added: NewRecipeLine[] = [];
 
   for (const [index, ingredient] of inputs.entries()) {
-    const line = resolvedRecipeLineValues(ingredient.ingredientName, resolutions);
+    const line = resolvedRecipeLineValues(ingredient, resolutions);
 
     if (!line) continue;
 
     const values = {
-      ...line,
-      amount: ingredient.amount ?? null,
+      name: line.name,
+      joined: line.joined,
+      amount: ingredient.amount != null ? Number(ingredient.amount) : null,
       unit: ingredient.unit ? normalizeUnit(ingredient.unit, units) : null,
-      order: ingredient.order ?? index,
+      order: Number(ingredient.order ?? index),
       systemUsed,
     };
 
     if (ingredient.id && existingById.has(ingredient.id)) {
       retainedIds.add(ingredient.id);
+      kept.push({ id: ingredient.id, aliasIds: line.aliasIds });
       await tx
         .update(recipeIngredients)
         .set({ ...values, version: sql`${recipeIngredients.version} + 1` })
@@ -1422,11 +1405,10 @@ async function syncRecipeIngredientsTx(
       continue;
     }
 
-    await tx.insert(recipeIngredients).values({
-      recipeId,
-      ...values,
-    });
+    added.push({ row: { recipeId, ...values }, aliasIds: line.aliasIds });
   }
+  await writeRecipeLineFoodsTx(tx, kept);
+  await insertRecipeLinesTx(tx, added);
 
   const idsToDelete = existing
     .map((row: { id: string }) => row.id)
@@ -1643,12 +1625,6 @@ export async function updateRecipeWithRefs(
       updateData.description = payload.description ? stripHtmlTags(payload.description) : null;
     if (payload.notes !== undefined) updateData.notes = payload.notes;
     if (payload.url !== undefined) updateData.url = payload.url;
-    // The deprecated scalar is never written with a value again: any update
-    // that touches media clears it, so a stale fallback cannot linger behind
-    // the gallery. An update that says nothing about media leaves legacy
-    // rows alone — stripping their only image is the migration's job, not a
-    // rename's.
-    if (payload.image !== undefined || payload.images !== undefined) updateData.image = null;
     if (payload.dishColor !== undefined) updateData.dishColor = payload.dishColor;
     if (payload.servings !== undefined) updateData.servings = payload.servings;
     if (payload.prepMinutes !== undefined) updateData.prepMinutes = payload.prepMinutes;
@@ -1775,25 +1751,6 @@ export async function updateRecipeWithRefs(
     // Replace images if provided
     if (payload.images !== undefined) {
       await syncRecipeImagesTx(tx, recipeId, payload.images);
-    }
-
-    // The legacy alias: a payload scalar lands in the gallery whenever the
-    // gallery ends up empty — a scalar-only PATCH, or an overwrite-import of
-    // a gallery-less archive whose hero travels beside `images: []`. With a
-    // gallery present it is dropped: no reader has consulted the scalar past
-    // a gallery row since the thumbnails went gallery-first.
-    const updateScalar = typeof payload.image === "string" ? payload.image.trim() : "";
-
-    if (updateScalar !== "") {
-      const existingGallery = await tx
-        .select({ id: recipeImages.id })
-        .from(recipeImages)
-        .where(eq(recipeImages.recipeId, recipeId))
-        .limit(1);
-
-      if (existingGallery.length === 0) {
-        await tx.insert(recipeImages).values({ recipeId, image: updateScalar, order: "0" });
-      }
     }
 
     // Replace videos if provided
@@ -2078,7 +2035,7 @@ export async function replaceRecipeImages(
  */
 export async function countRecipeImages(recipeId: string): Promise<number> {
   const [result] = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(recipeImages)
     .where(eq(recipeImages.recipeId, recipeId));
 
@@ -2099,7 +2056,7 @@ export interface RecipeVideoInput {
  */
 export async function countRecipeVideos(recipeId: string): Promise<number> {
   const [result] = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(recipeVideos)
     .where(eq(recipeVideos.recipeId, recipeId));
 
@@ -2295,106 +2252,29 @@ export async function replaceRecipeVideos(
 }
 
 /**
- * List all media references stored in the database (recipe cover images,
- * gallery images, and videos). Used by startup media cleanup to detect
+ * List all media references stored in the database (gallery images and
+ * videos), with every recipe id. Used by startup media cleanup to detect
  * orphaned files on disk.
  */
 export async function listAllRecipeMediaReferences(): Promise<{
-  recipes: { id: string; image: string | null }[];
+  recipeIds: string[];
   galleryImageUrls: string[];
   videoUrls: string[];
 }> {
   const [allRecipes, galleryImages, videos] = await Promise.all([
-    db.select({ id: recipes.id, image: recipes.image }).from(recipes),
+    db.select({ id: recipes.id }).from(recipes),
     db.select({ image: recipeImages.image }).from(recipeImages),
     db.select({ video: recipeVideos.video }).from(recipeVideos),
   ]);
 
   return {
-    recipes: allRecipes,
+    recipeIds: allRecipes.map((row) => row.id),
     galleryImageUrls: galleryImages.map((row) => row.image),
     videoUrls: videos.map((row) => row.video),
   };
 }
 
-/**
- * Legacy image migration helpers. Used only by the startup gallery image
- * migration (`@norish/api/startup/migrate-gallery-images`).
- */
-export async function listRecipeIdsAndImages(): Promise<{ id: string; image: string | null }[]> {
-  return await db.select({ id: recipes.id, image: recipes.image }).from(recipes);
-}
-
-export async function listRecipesWithLegacyImageUrls(
-  urlPrefix: string
-): Promise<{ id: string; image: string | null }[]> {
-  return await db
-    .select({ id: recipes.id, image: recipes.image })
-    .from(recipes)
-    .where(like(recipes.image, `${urlPrefix}%`));
-}
-
-export async function updateRecipeImageUrl(recipeId: string, imageUrl: string): Promise<void> {
-  await db.update(recipes).set({ image: imageUrl }).where(eq(recipes.id, recipeId));
-}
-
-export async function listGalleryImagesWithLegacyUrls(): Promise<
-  { id: string; recipeId: string; image: string }[]
-> {
-  return await db
-    .select({ id: recipeImages.id, recipeId: recipeImages.recipeId, image: recipeImages.image })
-    .from(recipeImages)
-    .where(
-      or(like(recipeImages.image, "/recipes/images/%"), like(recipeImages.image, "%/gallery/%"))
-    );
-}
-
-export async function updateGalleryImageUrl(imageId: string, imageUrl: string): Promise<void> {
-  await db.update(recipeImages).set({ image: imageUrl }).where(eq(recipeImages.id, imageId));
-}
-
-/**
- * Dish Colour helpers (ADR-0023). The listing feeds the startup backfill:
- * rows stored before the colour existed, with whatever media could supply
- * one. Rows whose extraction fails stay null and are simply offered again
- * next startup — null is the defined "no colour" outcome, not an error state.
- */
-export async function listRecipesMissingDishColor(): Promise<
-  { id: string; image: string | null; galleryImages: { image: string; order: number | null }[] }[]
-> {
-  const [missing, galleryImages] = await Promise.all([
-    db
-      .select({ id: recipes.id, image: recipes.image })
-      .from(recipes)
-      .where(isNull(recipes.dishColor)),
-    db
-      .select({
-        recipeId: recipeImages.recipeId,
-        image: recipeImages.image,
-        order: recipeImages.order,
-      })
-      .from(recipeImages),
-  ]);
-
-  const galleryByRecipe = new Map<string, { image: string; order: number | null }[]>();
-
-  for (const galleryImage of galleryImages) {
-    const list = galleryByRecipe.get(galleryImage.recipeId) ?? [];
-
-    // `order` is a numeric column, so the driver hands it back as a string.
-    list.push({
-      image: galleryImage.image,
-      order: galleryImage.order === null ? null : Number(galleryImage.order),
-    });
-    galleryByRecipe.set(galleryImage.recipeId, list);
-  }
-
-  return missing.map((recipe) => ({
-    ...recipe,
-    galleryImages: galleryByRecipe.get(recipe.id) ?? [],
-  }));
-}
-
+/** The Dish Colour (ADR-0023) a recipe leads with; null for none. */
 export async function updateRecipeDishColor(
   recipeId: string,
   dishColor: string | null
@@ -2407,11 +2287,10 @@ export async function updateRecipeDishColor(
  * direct gallery mutation. Null when the recipe does not exist.
  */
 export async function getRecipeMediaForDishColor(recipeId: string): Promise<{
-  image: string | null;
   galleryImages: { image: string; order: number | null }[];
 } | null> {
   const [recipe] = await db
-    .select({ image: recipes.image })
+    .select({ id: recipes.id })
     .from(recipes)
     .where(eq(recipes.id, recipeId))
     .limit(1);
@@ -2421,7 +2300,6 @@ export async function getRecipeMediaForDishColor(recipeId: string): Promise<{
   const galleryImages = await getRecipeImages(recipeId);
 
   return {
-    image: recipe.image,
     galleryImages: galleryImages.map((galleryImage) => ({
       image: galleryImage.image,
       order: galleryImage.order,

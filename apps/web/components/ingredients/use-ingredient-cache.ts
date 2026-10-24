@@ -19,7 +19,7 @@ interface ListPage {
 type ListData = { pages: ListPage[]; pageParams: unknown[] } | ListPage;
 
 /** What a patch does to one row: a new version of it, or null to drop it. */
-export type RowPatch = (item: IngredientItem) => IngredientItem | null;
+type RowPatch = (item: IngredientItem) => IngredientItem | null;
 
 /**
  * The Ingredients page's cache, patched in place so an edit shows the moment
@@ -74,24 +74,13 @@ export function useIngredientCache() {
       dropRow: (ingredientId: string) =>
         patchRows((item) => (item.id === ingredientId ? null : item)),
       /**
-       * Change many foods in one pass over every list, each by its own patch
-       * (null drops it): a thousand answers at once rewrite the lists once,
-       * not a thousand times.
+       * Rewrite the list Changed by AI shows. Generic over its rows, so this
+       * file needn't import the hook that lists them.
        */
-      patchRowsById: (patches: ReadonlyMap<string, RowPatch>) =>
-        patchRows((item) => {
-          const patch = patches.get(item.id);
-
-          return patch ? patch(item) : item;
-        }),
-      /**
-       * Take answered suggestions off the list waiting on a person. Only their
-       * ids are read, so this file needn't import the hook that lists them.
-       */
-      dropSuggestions: (suggestionIds: ReadonlySet<string>) =>
-        queryClient.setQueriesData<Array<{ id: string }>>(
-          { queryKey: trpc.ingredients.suggestions.pathKey() },
-          (list) => (list ? list.filter((it) => !suggestionIds.has(it.id)) : list)
+      patchAIChanges: <T>(patch: (list: T[]) => T[]) =>
+        queryClient.setQueriesData<T[]>(
+          { queryKey: trpc.ingredients.aiChanges.pathKey() },
+          (list) => (list ? patch(list) : list)
         ),
       /** Read everything about Ingredients again: after an edit lands, or when one is refused. */
       rollback: () => queryClient.invalidateQueries({ queryKey: trpc.ingredients.pathKey() }),

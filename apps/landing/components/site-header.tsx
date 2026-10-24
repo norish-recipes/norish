@@ -29,15 +29,15 @@ const KEEP = 140;
  */
 export function SiteHeader() {
   const [hidden, setHidden] = useState(false);
-  const last = useRef(0);
+  const lastRef = useRef(0);
 
   useScrollFrame(() => {
     const y = window.scrollY;
-    const moved = y - last.current;
+    const moved = y - lastRef.current;
 
     if (Math.abs(moved) < NUDGE) return;
 
-    last.current = y;
+    lastRef.current = y;
     setHidden(moved > 0 && y > KEEP);
   });
 

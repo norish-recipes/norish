@@ -9,9 +9,7 @@
   "editNote": {
     "title": "Редагувати нотатку",
     "noteLabel": "Нотатка",
-    "notePlaceholder": "Введіть нотатку...",
-    "date": "Дата",
-    "slot": "Прийом їжі"
+    "notePlaceholder": "Введіть нотатку..."
   },
   "navigation": {
     "previousMonth": "Попередній місяць",

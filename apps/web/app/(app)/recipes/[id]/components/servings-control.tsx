@@ -5,18 +5,13 @@ import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
+
 import { useRecipeContextRequired } from "../context";
 
 type ServingsControlProps = {
   compact?: boolean;
 };
-
-function formatServings(n: number): string {
-  if (Number.isInteger(n)) return String(n);
-
-  // Remove trailing zeros (e.g., 2.50 -> 2.5)
-  return n.toFixed(2).replace(/\.?0+$/, "");
-}
 
 /**
  * Servings, as the same stepper the Nutrition card uses for portions: the two
@@ -76,7 +71,7 @@ export default function ServingsControl({ compact = false }: ServingsControlProp
       {/* Only the figure rolls. Rolling the word beside it would animate
           something that did not change. */}
       <span className="sr-only">{t("servingsCount", { count: servings })}</span>
-      <AnimatedNumber className={valueClassName} value={formatServings(servings)} />
+      <AnimatedNumber className={valueClassName} value={formatAmountAsDecimal(servings)} />
 
       <Button
         isIconOnly

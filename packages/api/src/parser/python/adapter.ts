@@ -203,7 +203,7 @@ export async function adaptRecipeScrapersResponse(
   );
   const steps = parseSteps(collectInstructionSource(recipe), systemUsed);
   const imageSource = recipe.image ?? success.media.images;
-  const { images, primaryImage } = await parseImages(imageSource, recipeId);
+  const { images } = await parseImages(imageSource, recipeId);
   const { videos } = await parseVideos(adaptEmbeddedVideos(success.media.videos), recipeId);
   const nutrition = buildNutrition(recipe);
 
@@ -213,7 +213,6 @@ export async function adaptRecipeScrapersResponse(
     description: normalizeString(recipe.description),
     notes: undefined,
     url: success.canonicalUrl ?? originalUrl,
-    image: primaryImage,
     servings: getServings(recipe.yields),
     prepMinutes: typeof recipe.prep_time === "number" ? recipe.prep_time : undefined,
     cookMinutes: typeof recipe.cook_time === "number" ? recipe.cook_time : undefined,

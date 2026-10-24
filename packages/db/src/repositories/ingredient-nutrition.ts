@@ -5,14 +5,17 @@ import { db } from "@norish/db/drizzle";
 import {
   ingredientAliases,
   ingredientNutritionCorrections,
+  ingredientNutritionEstimates,
   ingredients,
   nutritionFoods,
   nutritionRules,
+  recipeIngredientFoods,
   recipeIngredients,
   recipes,
 } from "@norish/db/schema";
 
 import type { RecipeListContext } from "./recipes";
+import { isFirstLineFood } from "./ingredients";
 import { buildOwnerPolicyCondition } from "./recipes";
 
 /**
@@ -179,10 +182,8 @@ export async function searchNutritionFoods(
 }
 
 /**
- * How many lines name this Ingredient in the recipes the viewer can open,
- * by unit: under the recipe list's view policy, and as each recipe's
- * worked-out total reads its lines (those in its own measurement system,
- * or every line of a recipe that has none in it).
+ * How many lines name this Ingredient by unit, in the recipes the viewer can open, read as each
+ * worked-out total reads them (`nutritionLinesOf`): own measurement system, an "or" line's first.
  */
 export async function countIngredientLinesByUnit(
   viewer: RecipeListContext,
@@ -193,10 +194,15 @@ export async function countIngredientLinesByUnit(
     .select({ unit: recipeIngredients.unit, lines: sql<number>`count(*)::int` })
     .from(recipeIngredients)
     .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
-    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredients.ingredientAliasId))
+    .innerJoin(
+      recipeIngredientFoods,
+      eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
+    )
+    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId))
     .where(
       and(
         eq(ingredientAliases.ingredientId, ingredientId),
+        or(isFirstLineFood(), eq(recipeIngredients.joined, "together")),
         or(
           eq(recipeIngredients.systemUsed, recipes.systemUsed),
           sql`not exists (select 1 from ${recipeIngredients} own
@@ -311,4 +317,71 @@ export async function removeHouseholdCorrections(
     .returning({ id: ingredientNutritionCorrections.id });
 
   return removed.length;
+}
+
+/** Every household's corrections to these Ingredients, whoever made them. */
+export async function findAnyCorrections(
+  ingredientIds: readonly string[]
+): Promise<NutritionCorrectionRow[]> {
+  if (ingredientIds.length === 0) return [];
+
+  return await db
+    .select()
+    .from(ingredientNutritionCorrections)
+    .where(inArray(ingredientNutritionCorrections.ingredientId, [...new Set(ingredientIds)]));
+}
+
+/** AI's estimate of an Ingredient's missing facts, as stored. */
+export type NutritionEstimateRow = typeof ingredientNutritionEstimates.$inferSelect;
+
+/** What one estimate writes: only the facts AI was asked for. */
+export type NutritionEstimateValues = Partial<
+  Pick<
+    NutritionEstimateRow,
+    "kcal" | "fat" | "carbs" | "protein" | "pieceWeight" | "pieceless" | "density"
+  >
+>;
+
+/** AI's estimates for these Ingredients, by id. */
+export async function findNutritionEstimates(
+  ingredientIds: readonly string[]
+): Promise<Map<string, NutritionEstimateRow>> {
+  if (ingredientIds.length === 0) return new Map();
+
+  const rows = await db
+    .select()
+    .from(ingredientNutritionEstimates)
+    .where(inArray(ingredientNutritionEstimates.ingredientId, [...new Set(ingredientIds)]));
+
+  return new Map(rows.map((row) => [row.ingredientId, row]));
+}
+
+/**
+ * Write AI's estimate of an Ingredient's facts, keeping any fact an earlier estimate gave that
+ * this one does not name. False where the Ingredient is gone.
+ */
+export async function saveNutritionEstimate(
+  ingredientId: string,
+  values: NutritionEstimateValues
+): Promise<boolean> {
+  const [exists] = await db
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(eq(ingredients.id, ingredientId));
+
+  if (!exists) return false;
+
+  await db
+    .insert(ingredientNutritionEstimates)
+    .values({ ingredientId, ...values })
+    .onConflictDoUpdate({
+      target: ingredientNutritionEstimates.ingredientId,
+      set: {
+        ...values,
+        updatedAt: new Date(),
+        version: sql`${ingredientNutritionEstimates.version} + 1`,
+      },
+    });
+
+  return true;
 }

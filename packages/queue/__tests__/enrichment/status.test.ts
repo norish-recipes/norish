@@ -21,7 +21,6 @@ function retained(state: string, origin: "automatic" | "manual" = "automatic", r
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   getJob.mockResolvedValue(null);
 });
 

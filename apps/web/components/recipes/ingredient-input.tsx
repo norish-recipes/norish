@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   IngredientIcon,
   IngredientIconsProvider,
@@ -51,6 +51,20 @@ function createItem(
     ...meta,
   };
 }
+// The editor's rows for the given ingredients, plus the empty row to type into.
+function seedItems(ingredients: ParsedIngredient[]): IngredientItem[] {
+  const formatted = ingredients.map((ing) => {
+    const parts: string[] = [];
+    if (ing.amount !== null) parts.push(String(ing.amount));
+    if (ing.unit) parts.push(ing.unit);
+    if (ing.ingredientName) parts.push(ing.ingredientName);
+    return createItem(parts.join(" "), {
+      recipeIngredientId: ing.id,
+      version: ing.version,
+    });
+  });
+  return [...formatted, createItem("")];
+}
 export default function IngredientInput({
   ingredients,
   onChange,
@@ -59,33 +73,28 @@ export default function IngredientInput({
 }: IngredientInputProps) {
   const { units } = useUnitsQuery();
   const t = useTranslations("recipes.ingredientInput");
-  const [items, setItems] = useState<IngredientItem[]>([createItem("")]);
-  const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const [items, setItems] = useState<IngredientItem[]>(() => seedItems(ingredients));
+  const [seededLength, setSeededLength] = useState(ingredients.length);
+  const textareasRef = useRef<(HTMLTextAreaElement | null)[]>([]);
   const dragConstraintsRef = useRef<HTMLUListElement>(null);
 
-  // Initialize from ingredients prop
-  useEffect(() => {
-    if (ingredients.length > 0 && items.length === 1 && items[0].text === "") {
-      const formatted = ingredients.map((ing) => {
-        const parts: string[] = [];
-        if (ing.amount !== null) parts.push(String(ing.amount));
-        if (ing.unit) parts.push(ing.unit);
-        if (ing.ingredientName) parts.push(ing.ingredientName);
-        return createItem(parts.join(" "), {
-          recipeIngredientId: ing.id,
-          version: ing.version,
-        });
-      });
-      setItems([...formatted, createItem("")]);
+  // Seeds the editor once when the ingredients load; a later change to them
+  // must not overwrite what is being typed.
+  if (ingredients.length !== seededLength) {
+    setSeededLength(ingredients.length);
+    const first = items[0];
+
+    if (first && ingredients.length > 0 && items.length === 1 && first.text === "") {
+      setItems(seedItems(ingredients));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingredients.length]);
+  }
   const parseIngredient = useCallback(
     (item: IngredientItem, order: number): ParsedIngredient | null => {
       const trimmed = item.text.trim();
       if (!trimmed) return null;
-      const parsed = parseIngredientWithDefaults(trimmed, units);
-      if (!parsed || parsed.length === 0) {
+      const first = parseIngredientWithDefaults(trimmed, units)?.[0];
+
+      if (!first) {
         // Fallback: treat entire text as ingredient name
         return {
           id: item.recipeIngredientId,
@@ -97,7 +106,6 @@ export default function IngredientInput({
           systemUsed,
         };
       }
-      const first = parsed[0];
       return {
         id: item.recipeIngredientId,
         version: item.version,
@@ -128,9 +136,13 @@ export default function IngredientInput({
   );
   const handleInputChange = useCallback(
     (index: number, value: string) => {
+      const current = items[index];
+
+      if (!current) return;
       const updated = [...items];
+
       updated[index] = {
-        ...updated[index],
+        ...current,
         text: value,
       };
 
@@ -149,21 +161,21 @@ export default function IngredientInput({
         e.preventDefault();
         // Move to next input or create new one
         if (index < items.length - 1) {
-          textareaRefs.current[index + 1]?.focus();
+          textareasRef.current[index + 1]?.focus();
         } else {
           const updated = [...items, createItem("")];
           setItems(updated);
           setTimeout(() => {
-            textareaRefs.current[items.length]?.focus();
+            textareasRef.current[items.length]?.focus();
           }, 0);
         }
-      } else if (e.key === "Backspace" && !items[index].text && index > 0) {
+      } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
         e.preventDefault();
         const updated = items.filter((_, i) => i !== index);
         setItems(updated);
         debouncedParse(updated);
         setTimeout(() => {
-          textareaRefs.current[index - 1]?.focus();
+          textareasRef.current[index - 1]?.focus();
         }, 0);
       }
     },
@@ -172,7 +184,7 @@ export default function IngredientInput({
   const handleBlur = useCallback(
     (index: number) => {
       // Auto-remove empty rows on blur (except the last one)
-      if (!items[index].text.trim() && index < items.length - 1) {
+      if (!items[index]?.text.trim() && index < items.length - 1) {
         const updated = items.filter((_, i) => i !== index);
         if (updated.length === 0) updated.push(createItem(""));
         setItems(updated);
@@ -213,13 +225,12 @@ export default function IngredientInput({
 
   // Calculate ingredient numbers (excluding headings)
   const getIngredientNumber = (index: number): number | null => {
-    let num = 0;
-    for (let i = 0; i <= index; i++) {
-      const isHeading = items[i].text.trim().startsWith("#");
-      if (!isHeading) num++;
-    }
-    const isCurrentHeading = items[index].text.trim().startsWith("#");
-    return isCurrentHeading ? null : num;
+    const isHeading = (item: IngredientItem) => item.text.trim().startsWith("#");
+    const item = items[index];
+
+    if (!item || isHeading(item)) return null;
+
+    return items.slice(0, index + 1).filter((it) => !isHeading(it)).length;
   };
   return (
     <IngredientIconsProvider ids={[...foods.values()]}>
@@ -234,7 +245,7 @@ export default function IngredientInput({
           <IngredientRow
             key={item.id}
             dragConstraintsRef={dragConstraintsRef}
-            foodId={foods.get(foodNames[index]) ?? null}
+            foodId={foods.get(foodNames[index] ?? "") ?? null}
             index={index}
             ingredientNumber={getIngredientNumber(index)}
             ingredientPlaceholder={t("placeholder")}

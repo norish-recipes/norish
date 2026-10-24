@@ -1,132 +1,139 @@
-import { Skeleton } from "@heroui/react";
+import {
+  MOBILE_RECIPE_MEDIA_HEIGHT_STYLE,
+  RECIPE_HERO_CHROME_BUTTON_CLASS,
+  RECIPE_HERO_CHROME_OFFSET_CLASS,
+} from "@/components/recipes/recipe-layout-constants";
+import { useFloatingDock } from "@/hooks/use-floating-dock";
+import { ArrowLeftIcon, HeartIcon } from "@heroicons/react/16/solid";
+import { AdjustmentsHorizontalIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
+import { Card, Skeleton } from "@heroui/react";
+import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 
-/** The page's shape while it loads; {@link RecipeSkeleton} decides which parts. */
+import {
+  cssFloatingDockContentClearance,
+  cssFloatingDockPill,
+} from "@norish/web/config/css-tokens";
+
+import type { RecipeSkeletonParts } from "./recipe-skeleton-parts";
+import {
+  AddToGroceriesPlaceholder,
+  CookButtonPlaceholder,
+  IngredientRowsSkeleton,
+  NutritionCardSkeleton,
+  RatingPlaceholder,
+} from "./recipe-skeleton-parts";
+
+/** The page's floating cook pill, where the page keeps it. */
+function CookPillPlaceholder() {
+  const dock = useFloatingDock({ align: "start", hideWithNav: true });
+
+  return (
+    <motion.div
+      animate={dock.animate}
+      className={`${dock.className} z-50`}
+      style={dock.style}
+      transition={dock.transition}
+    >
+      <CookButtonPlaceholder className={`shadow-xl ${cssFloatingDockPill}`} />
+    </motion.div>
+  );
+}
+
+/**
+ * The phone page while it loads, without its optional cards and header lines;
+ * {@link RecipeSkeleton} decides the parts.
+ */
 export default function RecipeSkeletonMobile({
   showRatings,
   showNutrition,
-}: {
-  showRatings: boolean;
-  showNutrition: boolean;
-}) {
+  showFavorites,
+  inApp,
+}: RecipeSkeletonParts) {
+  const t = useTranslations("recipes.detail");
+
   return (
-    <div className="flex w-full flex-col">
-      {/* Hero Image */}
-      <Skeleton className="h-72 w-full rounded-none" />
-
-      {/* Unified Content Card */}
-      <div className="bg-surface relative z-10 -mt-6 overflow-visible rounded-t-3xl shadow-sm">
-        <div className="space-y-6 px-4 py-5">
-          {/* Back link and Actions */}
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-4 w-32 rounded-md" />
-            <Skeleton className="h-8 w-8 rounded-lg" />
-          </div>
-
-          {/* Title */}
-          <Skeleton className="h-8 w-3/4 rounded-lg" />
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full rounded-md" />
-            <Skeleton className="h-4 w-2/3 rounded-md" />
-          </div>
-
-          {/* Time info */}
-          <div className="flex flex-wrap items-center gap-4">
-            <Skeleton className="h-4 w-24 rounded-md" />
-            <Skeleton className="h-4 w-28 rounded-md" />
-          </div>
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-6 w-14 rounded-full" />
-          </div>
-
-          {/* Separator */}
-          <div className="bg-surface-tertiary h-px w-full" />
-
-          {/* Ingredients Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-6 w-28 rounded-lg" />
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-20 rounded-lg" />
-                <Skeleton className="h-8 w-8 rounded-lg" />
-              </div>
+    <div
+      className="flex w-full flex-col"
+      style={inApp ? { marginTop: "calc(-1.5rem - env(safe-area-inset-top))" } : undefined}
+    >
+      {/* The hero as recipe-page-mobile.tsx draws it: edge to edge, fading into the page. */}
+      <div className="relative w-full" style={{ height: MOBILE_RECIPE_MEDIA_HEIGHT_STYLE }}>
+        <Skeleton className="h-full w-full rounded-none" />
+        {inApp && (
+          <>
+            <div className={`absolute top-4 left-4 ${RECIPE_HERO_CHROME_OFFSET_CLASS}`}>
+              <span className={RECIPE_HERO_CHROME_BUTTON_CLASS}>
+                <ArrowLeftIcon />
+              </span>
             </div>
-            <div className="space-y-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-5 w-full rounded-md" />
-              ))}
+            <div className={`absolute top-4 right-4 flex gap-2 ${RECIPE_HERO_CHROME_OFFSET_CLASS}`}>
+              {showFavorites && (
+                <span className={`${RECIPE_HERO_CHROME_BUTTON_CLASS} text-muted`}>
+                  <HeartIcon />
+                </span>
+              )}
+              <span className={RECIPE_HERO_CHROME_BUTTON_CLASS}>
+                <EllipsisHorizontalIcon className="text-muted" />
+              </span>
             </div>
-            <Skeleton className="h-10 w-full rounded-lg" />
-          </div>
-
-          {/* Separator */}
-          <div className="bg-surface-tertiary h-px w-full" />
-
-          {/* Steps Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-6 w-16 rounded-lg" />
-              <Skeleton className="h-8 w-8 rounded-lg" />
-            </div>
-            <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="h-6 w-6 flex-shrink-0 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-full rounded-md" />
-                    <Skeleton className="h-4 w-3/4 rounded-md" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Rating Section */}
-            {showRatings && (
-              <div
-                className="bg-surface-secondary -mx-1 flex flex-col items-center gap-4 rounded-xl py-6"
-                data-skeleton-part="rating"
-              >
-                <Skeleton className="h-5 w-48 rounded-md" />
-                <div className="flex gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-8 w-8 rounded-md" />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Separator and Nutrition Section */}
-          {showNutrition && (
-            <>
-              <div className="bg-surface-tertiary h-px w-full" />
-
-              {/* Nutrition Section */}
-              <div className="space-y-2" data-skeleton-part="nutrition">
-                <Skeleton className="h-6 w-24 rounded-lg" />
-                <div className="space-y-1">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="flex items-center justify-between py-1.5">
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <Skeleton className="h-4 w-16 rounded-md" />
-                      </div>
-                      <Skeleton className="h-4 w-12 rounded-md" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+          </>
+        )}
+        <div
+          aria-hidden
+          className="from-background via-background/45 pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-20% via-55% to-transparent"
+        />
       </div>
 
-      <div className="pb-5" />
+      <div
+        className={`relative z-10 -mt-24 flex flex-col gap-4 px-4 ${inApp ? "" : "pb-6"}`}
+        style={inApp ? { paddingBottom: cssFloatingDockContentClearance } : undefined}
+      >
+        <div className="flex justify-center py-0.5">
+          <Skeleton className="h-8 w-3/4 rounded-lg" />
+        </div>
+
+        <Card className="rounded-2xl">
+          <Card.Content className="space-y-4 p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold">{t("ingredients")}</h2>
+              <div className="flex shrink-0 items-center gap-1">
+                <Skeleton className="h-8 w-28 rounded-full" />
+                <span className="bg-surface-secondary text-muted flex size-8 items-center justify-center rounded-xl">
+                  <AdjustmentsHorizontalIcon className="size-4" />
+                </span>
+              </div>
+            </div>
+            <IngredientRowsSkeleton />
+            {inApp && <AddToGroceriesPlaceholder />}
+          </Card.Content>
+        </Card>
+
+        <Card className="rounded-2xl">
+          <Card.Content className="space-y-4 p-5">
+            <h2 className="text-lg font-semibold">{t("steps")}</h2>
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="size-6 shrink-0 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full rounded-md" />
+                  <Skeleton className="h-4 w-3/4 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </Card.Content>
+        </Card>
+
+        {showNutrition && <NutritionCardSkeleton />}
+
+        {showRatings && (
+          <Card className="rounded-2xl">
+            <RatingPlaceholder className="flex flex-col items-center gap-4 p-5" />
+          </Card>
+        )}
+      </div>
+
+      {inApp && <CookPillPlaceholder />}
     </div>
   );
 }

@@ -1,15 +1,10 @@
 /**
  * The image a recipe leads with — one definition, everywhere.
  *
- * The gallery (`recipe_images`) is the source of truth: the first image by
- * order is the primary, and the legacy `recipes.image` scalar is only a
- * fallback for rows that predate the gallery. Every reader that shows a
- * recipe's picture resolves through this (the media carousel, the dashboard
- * projections, the realtime echo patch, the Dish Colour), and writers never
- * store a value in the scalar any more — the repository translates a payload
- * scalar into the gallery and clears the column on media-touching writes.
- * Only untouched legacy rows still carry one, which is why the fallback
- * stays until a migration retires the column.
+ * The gallery (`recipe_images`) holds a recipe's pictures, and the first image
+ * by order is the primary. Every reader that shows a recipe's picture resolves
+ * through this (the media carousel, the dashboard projections, the realtime
+ * echo patch, the Dish Colour).
  *
  * The repository's SQL projections mirror this rule as a correlated
  * subquery (`PRIMARY_IMAGE_SQL` in the recipes repository); a change here
@@ -24,8 +19,6 @@
 type GalleryImageLike = { image: string; order?: unknown };
 
 export type PrimaryImageCarrier = {
-  /** @deprecated The legacy scalar — read only as a fallback through this helper. */
-  image?: string | null;
   images?: readonly GalleryImageLike[] | null;
 };
 
@@ -35,9 +28,9 @@ function galleryOrder(galleryImage: GalleryImageLike): number {
   return Number.isFinite(order) ? order : 0;
 }
 
-/** The first gallery image by order, falling back to the legacy scalar. */
+/** The first gallery image by order. */
 export function primaryRecipeImage(carrier: PrimaryImageCarrier): string | null {
   const gallery = [...(carrier.images ?? [])].sort((a, b) => galleryOrder(a) - galleryOrder(b));
 
-  return gallery[0]?.image ?? carrier.image ?? null;
+  return gallery[0]?.image ?? null;
 }

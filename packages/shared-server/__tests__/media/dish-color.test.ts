@@ -37,7 +37,6 @@ vi.mock("@norish/db/repositories/recipes", () => ({
 const {
   dishColorForImageUrl,
   extractDishColor,
-  primaryImageForDishColor,
   refreshDishColorForRecipe,
   withDishColor,
   withDishColorForUpdate,
@@ -143,35 +142,10 @@ describe("dishColorForImageUrl", () => {
   });
 });
 
-describe("primaryImageForDishColor", () => {
-  it("prefers the first gallery image by order, matching the hero the page renders", () => {
-    expect(
-      primaryImageForDishColor({
-        image: "/recipes/x/legacy.jpg",
-        images: [
-          { image: "/recipes/x/second.jpg", order: 2 },
-          { image: "/recipes/x/first.jpg", order: 1 },
-        ],
-      })
-    ).toBe("/recipes/x/first.jpg");
-  });
-
-  it("falls back to the legacy single image when the gallery is empty", () => {
-    expect(primaryImageForDishColor({ image: "/recipes/x/legacy.jpg", images: [] })).toBe(
-      "/recipes/x/legacy.jpg"
-    );
-  });
-
-  it("resolves to nothing when the recipe carries no media", () => {
-    expect(primaryImageForDishColor({})).toBeNull();
-    expect(primaryImageForDishColor({ image: null, images: [] })).toBeNull();
-  });
-});
-
 describe("withDishColor", () => {
   it("overwrites a supplied colour — the Dish Colour is derived, never supplied", async () => {
     const dto = await withDishColor({
-      image: `/recipes/${RECIPE_ID}/stored.jpg`,
+      images: [{ image: `/recipes/${RECIPE_ID}/stored.jpg`, order: 0 }],
       dishColor: "#123456",
     });
 
@@ -180,19 +154,21 @@ describe("withDishColor", () => {
   });
 
   it("yields null for a recipe with no image", async () => {
-    await expect(withDishColor({ image: null })).resolves.toMatchObject({ dishColor: null });
+    await expect(withDishColor({ images: [] })).resolves.toMatchObject({ dishColor: null });
   });
 });
 
 describe("withDishColorForUpdate", () => {
   it("recomputes when the update touches the media", async () => {
-    const dto = await withDishColorForUpdate({ image: `/recipes/${RECIPE_ID}/stored.jpg` });
+    const dto = await withDishColorForUpdate({
+      images: [{ image: `/recipes/${RECIPE_ID}/stored.jpg`, order: 0 }],
+    });
 
     expect(dto.dishColor).toMatch(/^#[0-9a-f]{6}$/);
   });
 
   it("clears the colour when the update removes the image", async () => {
-    await expect(withDishColorForUpdate({ image: null })).resolves.toMatchObject({
+    await expect(withDishColorForUpdate({ images: [] })).resolves.toMatchObject({
       dishColor: null,
     });
   });
@@ -213,7 +189,6 @@ describe("withDishColorForUpdate", () => {
 describe("refreshDishColorForRecipe", () => {
   it("recomputes from the gallery-first hero and stores the result", async () => {
     getRecipeMediaForDishColor.mockResolvedValue({
-      image: null,
       galleryImages: [{ image: `/recipes/${RECIPE_ID}/stored.jpg`, order: 0 }],
     });
 
@@ -226,7 +201,7 @@ describe("refreshDishColorForRecipe", () => {
   });
 
   it("clears the colour when the recipe no longer leads with any image", async () => {
-    getRecipeMediaForDishColor.mockResolvedValue({ image: null, galleryImages: [] });
+    getRecipeMediaForDishColor.mockResolvedValue({ galleryImages: [] });
 
     await refreshDishColorForRecipe(RECIPE_ID);
 

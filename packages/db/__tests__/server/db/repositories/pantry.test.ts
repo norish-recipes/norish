@@ -8,23 +8,20 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  addPantryIngredient,
+  addPantryIngredients,
   deletePantryIngredient,
   findPantryIngredientInHousehold,
   getPantryIngredientOwnerId,
   listPantryIngredientsByUserIds,
   listPantrySuggestions,
 } from "@norish/db/repositories/pantry";
-import {
-  ingredients,
-  pantryIngredients,
-  recipeIngredients,
-  recipes,
-  users,
-} from "@norish/db/schema";
+import { ingredients, pantryIngredients, recipes, users } from "@norish/db/schema";
 
-import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
-import { createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  resolveIngredients,
+  resolveLineFoods,
+} from "../../../../../shared-server/src/ingredients/resolver";
+import { createTestUser, getTestDb, insertTestRecipeLine } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const OLIVE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -33,13 +30,12 @@ const SALT = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 /** Add what a member typed, resolved first as the procedure does. */
 async function add(id: string, input: { userId: string; userIds: string[]; name: string }) {
   const [resolved] = await resolveIngredients([input.name], { userId: input.userId });
+  const [added] = await addPantryIngredients(
+    [{ id, ingredientAliasId: resolved!.aliasId, ingredientId: resolved!.ingredientId }],
+    input
+  );
 
-  return addPantryIngredient(id, {
-    userId: input.userId,
-    userIds: input.userIds,
-    ingredientAliasId: resolved!.aliasId,
-    ingredientId: resolved!.ingredientId,
-  });
+  return added!;
 }
 
 describe("pantry ingredients", () => {
@@ -154,6 +150,21 @@ describe("pantry ingredients", () => {
     await expect(listPantryIngredientsByUserIds(userIds)).resolves.toHaveLength(1);
   });
 
+  it("puts several Ingredients in together, or none", async () => {
+    const [olive] = await resolveIngredients(["olive oil"], { userId });
+
+    await expect(
+      addPantryIngredients(
+        [
+          { id: OLIVE, ingredientAliasId: olive!.aliasId, ingredientId: olive!.ingredientId },
+          { id: SALT, ingredientAliasId: null, ingredientId: crypto.randomUUID() },
+        ],
+        { userId, userIds: [userId] }
+      )
+    ).rejects.toThrow();
+    await expect(listPantryIngredientsByUserIds([userId])).resolves.toEqual([]);
+  });
+
   it("reads the whole household's Pantry in one query, by name", async () => {
     const housemate = await createTestUser();
 
@@ -231,20 +242,18 @@ describe("pantry ingredients", () => {
         .values({ userId: ownerId, name: "Soup" })
         .returning({ id: recipes.id });
       const foods = lines.filter((line) => !line.startsWith("#"));
-      const resolved = await resolveIngredients(
+      const resolved = await resolveLineFoods(
         foods.map((line) => line.replace(/\(id:.*\)$/, "").replace(/[[\]]/g, "")),
         { userId: ownerId }
       );
 
       for (const [order, name] of lines.entries()) {
-        const at = foods.indexOf(name);
+        const line = resolved[foods.indexOf(name)];
 
-        await db.insert(recipeIngredients).values({
-          recipeId: row!.id,
-          name,
-          ingredientAliasId: at >= 0 ? resolved[at]!.aliasId : null,
-          order: String(order),
-        });
+        await insertTestRecipeLine(
+          { recipeId: row!.id, name, order: String(order), joined: line?.joined },
+          line?.foods.map((food) => food.aliasId)
+        );
       }
     }
 
@@ -273,6 +282,16 @@ describe("pantry ingredients", () => {
       expect(await offered([userId, housemate.id])).toEqual([
         ["garlic", 2],
         ["rice", 1],
+      ]);
+    });
+
+    it("counts every food a line names", async () => {
+      await resolveIngredients(["zout", "peper"], { userId });
+      await recipe(userId, ["zout en peper"]);
+
+      expect(await offered([userId])).toEqual([
+        ["peper", 1],
+        ["zout", 1],
       ]);
     });
 

@@ -4,7 +4,7 @@
 import { vi } from "vitest";
 
 export const listRecurringGroceriesByUsers = vi.fn();
-export const createRecurringGrocery = vi.fn();
+export const createRecurringGroceries = vi.fn();
 export const updateRecurringGrocery = vi.fn();
 export const updateRecurringGroceryWithGrocery = vi.fn();
 export const detachRecurringGrocery = vi.fn();
@@ -15,7 +15,7 @@ export const getRecurringGroceryOwnerId = vi.fn();
 
 export function resetRecurringGroceriesMocks() {
   listRecurringGroceriesByUsers.mockReset();
-  createRecurringGrocery.mockReset();
+  createRecurringGroceries.mockReset();
   updateRecurringGrocery.mockReset();
   updateRecurringGroceryWithGrocery.mockReset();
   detachRecurringGrocery.mockReset();

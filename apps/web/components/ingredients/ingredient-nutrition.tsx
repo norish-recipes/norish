@@ -76,7 +76,6 @@ export function IngredientNutritionSection({
       )}
       <Panel
         nested
-        className="contents"
         open={open}
         title={t("section")}
         onOpenChange={(isOpen) => {

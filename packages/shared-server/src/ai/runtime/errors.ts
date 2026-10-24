@@ -79,15 +79,21 @@ function describeAPICallError(error: APICallError): string {
   return error.message;
 }
 
-/** A timeout from `AbortSignal.timeout` or the shared transport. */
+const TIMEOUT_NAMES = new Set(["TimeoutError", "HeadersTimeoutError", "BodyTimeoutError"]);
+
+/** A timeout from `AbortSignal.timeout` or the shared transport, or an aborted request. */
 function isTimeout(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    (error.name === "TimeoutError" ||
-      error.name === "AbortError" ||
-      error.name === "HeadersTimeoutError" ||
-      error.name === "BodyTimeoutError")
-  );
+  return error instanceof Error && (error.name === "AbortError" || TIMEOUT_NAMES.has(error.name));
+}
+
+/**
+ * Whether a request ran out of time, as opposed to a stopped job or any other
+ * failure. Reads through a typed AI error to its cause.
+ */
+export function isTimedOut(error: unknown): boolean {
+  const cause = error instanceof AIError ? error.cause : error;
+
+  return cause instanceof Error && TIMEOUT_NAMES.has(cause.name);
 }
 
 /**

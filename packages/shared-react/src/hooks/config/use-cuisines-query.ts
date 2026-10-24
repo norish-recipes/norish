@@ -11,6 +11,8 @@ import type { CreateConfigHooksOptions } from "./types";
  */
 export function createUseCuisinesQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useCuisinesQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

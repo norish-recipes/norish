@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "next-themes";
 import { flushSync } from "react-dom";
@@ -10,6 +10,8 @@ type DocumentWithViewTransition = Document & {
   startViewTransition?: (update: () => void) => unknown;
 };
 
+const noSubscription = () => () => {};
+
 /**
  * Light/dark switch. Where the View Transition API exists, the new theme
  * sweeps out from this button as a growing circle (see `theme-reveal` in
@@ -18,10 +20,13 @@ type DocumentWithViewTransition = Document & {
  */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => setMounted(true), []);
+  // False on the server and while hydrating, true once in the browser.
+  const mounted = useSyncExternalStore(
+    noSubscription,
+    () => true,
+    () => false
+  );
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const isDark = resolvedTheme === "dark";
   // Before mount, resolvedTheme is unknown — use a neutral label so the server
@@ -33,14 +38,14 @@ export function ThemeToggle() {
     const doc = document as DocumentWithViewTransition;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (!doc.startViewTransition || reduced || !button.current) {
+    if (!doc.startViewTransition || reduced || !buttonRef.current) {
       setTheme(next);
 
       return;
     }
 
     // The circle grows from the button itself, reaching the farthest corner.
-    const { left, top, width, height } = button.current.getBoundingClientRect();
+    const { left, top, width, height } = buttonRef.current.getBoundingClientRect();
     const x = left + width / 2;
     const y = top + height / 2;
     const radius = Math.hypot(
@@ -56,13 +61,14 @@ export function ThemeToggle() {
 
     doc.startViewTransition(() => {
       // The snapshot pair needs the DOM flipped synchronously inside the callback.
+      // eslint-disable-next-line @eslint-react/dom-no-flush-sync
       flushSync(() => setTheme(next));
     });
   };
 
   return (
     <button
-      ref={button}
+      ref={buttonRef}
       aria-label={label}
       className="text-muted hover:text-foreground hover:bg-default grid size-9 place-items-center rounded-full transition-colors"
       type="button"

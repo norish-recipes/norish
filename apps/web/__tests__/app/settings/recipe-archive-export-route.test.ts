@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getSessionMock = vi.hoisted(() => vi.fn());
 const buildArchiveMock = vi.hoisted(() => vi.fn());
 const householdMock = vi.hoisted(() => vi.fn());
+const isUserServerAdminMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/auth/auth", () => ({
   auth: { api: { getSession: getSessionMock } },
@@ -15,6 +16,8 @@ vi.mock("@norish/auth/auth", () => ({
 vi.mock("@norish/shared-server/archive/norish-export", () => ({
   buildNorishArchiveForViewer: buildArchiveMock,
 }));
+
+vi.mock("@norish/db", () => ({ isUserServerAdmin: isUserServerAdminMock }));
 
 vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: householdMock,
@@ -31,6 +34,7 @@ function signedInAs(user: {
   isServerOwner?: boolean;
 }) {
   getSessionMock.mockResolvedValue({ user });
+  isUserServerAdminMock.mockResolvedValue(Boolean(user.isServerAdmin || user.isServerOwner));
 }
 
 function exportRequest(query = ""): Request {
@@ -44,7 +48,6 @@ function requestedContext() {
 
 describe("Recipe Archive export route", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     householdMock.mockResolvedValue(null);
     buildArchiveMock.mockResolvedValue({ stream: Readable.from(["PK"]), recipeCount: 0 });
   });
@@ -113,6 +116,16 @@ describe("Recipe Archive export route", () => {
     await GET(exportRequest());
 
     expect(requestedContext()?.isServerAdmin).toBe(true);
+  });
+
+  it("refuses the instance-wide scope to a demoted admin whose session still says admin", async () => {
+    signedInAs({ id: "admin-1", isServerAdmin: true });
+    isUserServerAdminMock.mockResolvedValue(false);
+
+    const response = await GET(exportRequest("?scope=instance"));
+
+    expect(response.status).toBe(403);
+    expect(buildArchiveMock).not.toHaveBeenCalled();
   });
 
   it("grants the instance-wide scope to the server owner too", async () => {

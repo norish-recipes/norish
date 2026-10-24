@@ -195,3 +195,72 @@ describe("recurrence/parser Ukrainian locale", () => {
     expect(parseRecurrence("Ліки через тиждень", config).recurrence).toBeNull();
   });
 });
+
+describe("recurrence/parser yearly", () => {
+  const config = defaultRecurrenceConfig as RecurrenceConfig;
+
+  it.each([
+    ["waterfilter yearly", "en", 1],
+    ["waterfilter every year", "en", 1],
+    ["waterfilter every 2 years", "en", 2],
+    ["waterfilter jaarlijks", "nl", 1],
+    ["waterfilter elk jaar", "nl", 1],
+    ["waterfilter 매년", "ko", 1],
+    ["waterfilter cada año", "es", 1],
+    ["waterfilter hvert år", "da", 1],
+    ["waterfilter chaque année", "fr", 1],
+    ["waterfilter ogni anno", "it", 1],
+    ["waterfilter щороку", "uk", 1],
+    ["waterfilter кожен рік", "uk", 1],
+  ])("parses %s", (text, locale, interval) => {
+    const result = parseRecurrence(text, config);
+
+    expect(result.recurrence).toMatchObject({ rule: "year", interval });
+    expect(result.matchedLocale).toBe(locale);
+    expect(result.cleanText).toBe("waterfilter");
+  });
+
+  it("has a year's unit words in every locale", () => {
+    for (const locale of Object.values(config.locales)) {
+      expect(locale.unitWords.year.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("recurrence/parser German, Polish, Russian, Finnish, Norwegian, Bulgarian and Portuguese", () => {
+  const config = defaultRecurrenceConfig as RecurrenceConfig;
+
+  it.each([
+    ["melk jeden Tag", "de", { rule: "day", interval: 1 }],
+    ["melk jede Woche am Montag", "de", { rule: "week", interval: 1, weekday: 1 }],
+    ["melk alle 2 Wochen", "de", { rule: "week", interval: 2 }],
+    ["melk täglich", "de", { rule: "day", interval: 1 }],
+    ["melk jedes Jahr", "de", { rule: "year", interval: 1 }],
+    ["melk codziennie", "pl", { rule: "day", interval: 1 }],
+    ["melk co tydzień w poniedziałek", "pl", { rule: "week", interval: 1, weekday: 1 }],
+    ["melk co roku", "pl", { rule: "year", interval: 1 }],
+    ["melk каждый день", "ru", { rule: "day", interval: 1 }],
+    ["melk каждую неделю в понедельник", "ru", { rule: "week", interval: 1, weekday: 1 }],
+    ["melk ежегодно", "ru", { rule: "year", interval: 1 }],
+    ["melk joka päivä", "fi", { rule: "day", interval: 1 }],
+    ["melk joka viikko maanantaina", "fi", { rule: "week", interval: 1, weekday: 1 }],
+    ["melk vuosittain", "fi", { rule: "year", interval: 1 }],
+    ["melk hver uke på mandag", "no", { rule: "week", interval: 1, weekday: 1 }],
+    ["melk daglig", "no", { rule: "day", interval: 1 }],
+    ["melk årlig", "no", { rule: "year", interval: 1 }],
+    ["melk всеки ден", "bg", { rule: "day", interval: 1 }],
+    ["melk всяка седмица в понеделник", "bg", { rule: "week", interval: 1, weekday: 1 }],
+    ["melk всяка година", "bg", { rule: "year", interval: 1 }],
+    ["melk todo dia", "pt", { rule: "day", interval: 1 }],
+    ["melk toda semana na segunda", "pt", { rule: "week", interval: 1, weekday: 1 }],
+    ["melk todos os anos", "pt", { rule: "year", interval: 1 }],
+    // Spanish is read first and knows "a cada" too, so nothing is left behind.
+    ["melk a cada 2 semanas", "es", { rule: "week", interval: 2 }],
+  ])("parses %s", (text, locale, pattern) => {
+    const result = parseRecurrence(text, config);
+
+    expect(result.recurrence).toMatchObject(pattern);
+    expect(result.matchedLocale).toBe(locale);
+    expect(result.cleanText).toBe("melk");
+  });
+});

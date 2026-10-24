@@ -87,7 +87,6 @@ describe("recipe share procedures", () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     isUserServerAdminMock.mockResolvedValue(false);
     getCachedHouseholdForUserMock.mockResolvedValue(household);
     getRecipePermissionPolicyMock.mockResolvedValue({ view: "household" });
@@ -166,7 +165,6 @@ describe("recipe share procedures", () => {
       description: recipe.description,
       notes: recipe.notes ?? null,
       url: recipe.url,
-      image: `/share/valid-token/media/cover.jpg`,
       servings: recipe.servings,
       prepMinutes: recipe.prepMinutes,
       cookMinutes: recipe.cookMinutes,
@@ -189,7 +187,7 @@ describe("recipe share procedures", () => {
       ],
       steps: [{ step: "Mix", systemUsed: "metric", order: 0, images: [] }],
       author: { name: "Test User", image: null },
-      images: [],
+      images: [{ image: "/share/valid-token/media/cover.jpg", order: 0 }],
       videos: [],
     });
 
@@ -204,7 +202,7 @@ describe("recipe share procedures", () => {
       "valid-token",
       expect.any(Function)
     );
-    expect(result.image).toBe("/share/valid-token/media/cover.jpg");
+    expect(result.images).toEqual([{ image: "/share/valid-token/media/cover.jpg", order: 0 }]);
 
     // The lines' icons are read by address, the way every surface reads them.
     expect(getPublicRecipeViewMock.mock.calls[0]![2]).toBe(ingredientIconAddressesMock);

@@ -194,14 +194,22 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
-vi.mock("@/components/Panel/Panel", () => {
+vi.mock("@/hooks/use-is-mobile", () => ({ useIsMobile: () => false }));
+
+vi.mock("@/components/Panel/Panel", async () => {
   const Panel = ({ children, open }: { children: ReactNode; open: boolean }) =>
     open ? <div>{children}</div> : null;
 
   Panel.Body = ({ children }: { children: ReactNode }) => <div>{children}</div>;
   Panel.Footer = ({ children }: { children: ReactNode }) => <div>{children}</div>;
 
-  return { default: Panel, usePanelPortalContainer: () => undefined };
+  return {
+    default: Panel,
+    PanelPortal: ({ children }: { children: React.ReactNode }) => children,
+    PanelComboBoxPopover: (
+      await vi.importActual<typeof import("@/components/Panel/Panel")>("@/components/Panel/Panel")
+    ).PanelComboBoxPopover,
+  };
 });
 
 vi.mock("@/components/Panel/consumers/recurrence-panel", () => ({

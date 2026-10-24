@@ -116,7 +116,9 @@ export function useLocaleCookie() {
     const currentIndex = enabledLocaleCodes.indexOf(validatedLocale);
     const nextIndex = (currentIndex + 1) % enabledLocaleCodes.length;
 
-    changeLocale(enabledLocaleCodes[nextIndex]);
+    const nextLocale = enabledLocaleCodes[nextIndex];
+
+    if (nextLocale) changeLocale(nextLocale);
   }, [validatedLocale, enabledLocaleCodes, changeLocale]);
 
   return {

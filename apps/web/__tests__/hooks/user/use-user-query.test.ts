@@ -36,7 +36,6 @@ describe("useUserSettingsQuery", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
 
     // Default allergies query to empty list

@@ -54,7 +54,7 @@ describe("outbox store", () => {
 
     expect(u1.map((e) => e.id)).toEqual(["a", "c"]);
 
-    await store.park(u1[0].seq, "deterministic");
+    await store.park(u1[0]!.seq, "deterministic");
 
     expect((await store.forOwner("u1", "pending")).map((e) => e.id)).toEqual(["c"]);
     expect((await store.forOwner("u1", "parked")).map((e) => e.id)).toEqual(["a"]);
@@ -67,15 +67,15 @@ describe("outbox store", () => {
 
     const [reloaded] = await store.forOwner("u1", "conflicted");
 
-    expect(reloaded.parkedReason).toBe("conflict");
-    expect(reloaded.status).toBe("conflicted");
+    expect(reloaded!.parkedReason).toBe("conflict");
+    expect(reloaded!.status).toBe("conflicted");
   });
 
   it("updates attempts and removes entries", async () => {
     const e = await store.enqueue(entry());
 
     await store.update(e.seq, { attempts: 2 });
-    expect((await store.forOwner("u1"))[0].attempts).toBe(2);
+    expect((await store.forOwner("u1"))[0]!.attempts).toBe(2);
 
     await store.remove(e.seq);
     expect(await store.size()).toBe(0);
@@ -102,7 +102,7 @@ describe("outbox store", () => {
     const e = await store.enqueue(entry({ id: "d", input: { when }, entityId: null }));
     const [reloaded] = (await store.forOwner("u1")).filter((x) => x.seq === e.seq);
 
-    const restored = (reloaded.input as { when: Date }).when;
+    const restored = (reloaded!.input as { when: Date }).when;
 
     expect(restored).toBeInstanceOf(Date);
     expect(restored.toISOString()).toBe(when.toISOString());

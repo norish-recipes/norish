@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, ReactNode, useContext } from "react";
+import React, { createContext, ReactNode, use } from "react";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 
 interface WakeLockContextValue {
@@ -16,11 +16,11 @@ const WakeLockContext = createContext<WakeLockContextValue | null>(null);
 export function WakeLockProvider({ children }: { children: ReactNode }) {
   const wakeLock = useWakeLock();
 
-  return <WakeLockContext.Provider value={wakeLock}>{children}</WakeLockContext.Provider>;
+  return <WakeLockContext value={wakeLock}>{children}</WakeLockContext>;
 }
 
 export function useWakeLockContext() {
-  const context = useContext(WakeLockContext);
+  const context = use(WakeLockContext);
 
   if (!context) {
     throw new Error("useWakeLockContext must be used within WakeLockProvider");

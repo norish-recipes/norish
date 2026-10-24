@@ -8,11 +8,7 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  getRecipeFull,
-  listRecipesMissingDishColor,
-  updateRecipeDishColor,
-} from "@norish/db/repositories/recipes";
+import { getRecipeFull, updateRecipeDishColor } from "@norish/db/repositories/recipes";
 
 import { createTestUser } from "../helpers/db-test-helpers";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "../helpers/recipe-writes";
@@ -77,28 +73,16 @@ describe("Dish Colour round-trip", () => {
     expect((await getRecipeFull(recipeId))?.dishColor).toBe("#0e6b3a");
   });
 
-  it("lists colourless rows for the backfill and accepts its direct write", async () => {
+  it("accepts a direct write of the colour", async () => {
     const recipeId = crypto.randomUUID();
 
     await createRecipeWithRefs(recipeId, userId, {
       ...BASE_RECIPE,
-      image: `/recipes/${recipeId}/hero.jpg`,
+      images: [{ image: `/recipes/${recipeId}/hero.jpg`, order: 0 }],
     });
-
-    const missing = await listRecipesMissingDishColor();
-    const row = missing.find((candidate) => candidate.id === recipeId);
-
-    // The create translated the payload's legacy scalar into the gallery;
-    // the backfill resolves gallery-first, exactly like every other reader.
-    expect(row?.galleryImages).toEqual([
-      expect.objectContaining({ image: `/recipes/${recipeId}/hero.jpg` }),
-    ]);
 
     await updateRecipeDishColor(recipeId, "#663311");
 
     expect((await getRecipeFull(recipeId))?.dishColor).toBe("#663311");
-    expect(
-      (await listRecipesMissingDishColor()).some((candidate) => candidate.id === recipeId)
-    ).toBe(false);
   });
 });

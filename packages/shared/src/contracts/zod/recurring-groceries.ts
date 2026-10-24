@@ -2,6 +2,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import z from "zod";
 
 import { recurringGroceries } from "@norish/db-schema/schema";
+import { RECURRENCE_RULES } from "@norish/shared/contracts/recurrence";
 
 // A recurring grocery's alias stays on the server: clients read and write its text.
 export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroceries)
@@ -13,6 +14,7 @@ export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroc
   })
   .extend({
     amount: z.coerce.number().nullable(),
+    recurrenceRule: z.enum(RECURRENCE_RULES),
     /**
      * The Ingredient its name resolved to, whose icon it shows. Absent on one
      * added offline until the server has resolved it.
@@ -24,7 +26,7 @@ export const RecurringGroceryInsertBaseSchema = createInsertSchema(recurringGroc
   .omit({ id: true, createdAt: true, updatedAt: true })
   .extend({
     amount: z.coerce.number().nullable(),
-    recurrenceRule: z.enum(["day", "week", "month"]),
+    recurrenceRule: z.enum(RECURRENCE_RULES),
   });
 
 export const RecurringGroceryUpdateBaseSchema = z.object({
@@ -37,7 +39,7 @@ export const RecurringGroceryUpdateBaseSchema = z.object({
   ingredientId: z.uuid().nullable().optional(),
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),
-  recurrenceRule: z.enum(["day", "week", "month"]).optional(),
+  recurrenceRule: z.enum(RECURRENCE_RULES).optional(),
   recurrenceInterval: z.number().optional(),
   recurrenceWeekday: z.number().nullable().optional(),
   nextPlannedFor: z.string().optional(),
@@ -50,7 +52,7 @@ export const RecurringGroceryCreateSchema = z.object({
   name: z.string(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
-  recurrenceRule: z.enum(["day", "week", "month"]),
+  recurrenceRule: z.enum(RECURRENCE_RULES),
   recurrenceInterval: z.number().min(1).default(1),
   recurrenceWeekday: z.number().nullable(),
   nextPlannedFor: z.string(),

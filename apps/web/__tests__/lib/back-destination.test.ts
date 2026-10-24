@@ -24,6 +24,8 @@ describe("safeOrigin", () => {
     // A back link is a way back, never a way out.
     expect(safeOrigin("https://evil.example")).toBeNull();
     expect(safeOrigin("//evil.example")).toBeNull();
+    expect(safeOrigin("/\\evil.example")).toBeNull();
+    expect(safeOrigin("/\t/evil.example")).toBeNull();
     expect(safeOrigin("javascript:alert(1)")).toBeNull();
     expect(safeOrigin(null)).toBeNull();
     expect(safeOrigin("")).toBeNull();

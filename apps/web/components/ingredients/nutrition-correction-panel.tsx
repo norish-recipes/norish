@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import Panel, { usePanelPortalContainer } from "@/components/Panel/Panel";
+import Panel, { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
@@ -342,7 +342,6 @@ export function NutritionCorrectionPanel({
   return (
     <Panel
       nested
-      className="contents"
       open={open}
       title={t("correctTitle", { name })}
       onOpenChange={(isOpen) => {
@@ -511,7 +510,6 @@ function DatasetFoodPicker({
   const format = useFormatter();
   const trpc = useTRPC();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
-  const portalContainer = usePanelPortalContainer();
   const [term, setTerm] = useState(picked?.name ?? "");
   const [search, setSearch] = useState("");
 
@@ -562,13 +560,13 @@ function DatasetFoodPicker({
       inputValue={term}
       items={options}
       menuTrigger="input"
-      selectedKey={picked?.key ?? null}
+      value={picked?.key ?? null}
       variant="secondary"
       onInputChange={(value) => {
         setTerm(value);
         if (picked) onPick(null);
       }}
-      onSelectionChange={(key) => {
+      onChange={(key) => {
         const option = options.find((candidate) => candidate.id === key);
 
         if (!option) return;
@@ -588,7 +586,7 @@ function DatasetFoodPicker({
         placeholder={t("searchFood")}
         variant="secondary"
       />
-      <ComboBox.Popover UNSTABLE_portalContainer={portalContainer}>
+      <PanelComboBoxPopover>
         <ListBox
           renderEmptyState={() => (
             <p className="text-muted px-3 py-2 text-sm">
@@ -610,7 +608,7 @@ function DatasetFoodPicker({
             </ListBox.Item>
           )}
         </ListBox>
-      </ComboBox.Popover>
+      </PanelComboBoxPopover>
     </ComboBox>
   );
 }

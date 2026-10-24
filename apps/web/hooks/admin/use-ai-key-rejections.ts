@@ -26,7 +26,7 @@ export function useAIKeyRejections(enabled = true) {
 
   if (!data || data.length === 0) return null;
 
-  const since = data.map((rejection) => rejection.since).sort()[0]!;
+  const since = data.map((rejection) => rejection.since).sort((a, b) => (a < b ? -1 : 1))[0]!;
 
   return {
     /** Changes when another block is refused, or a block is refused anew after it answered. */

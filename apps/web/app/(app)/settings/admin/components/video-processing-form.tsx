@@ -6,6 +6,7 @@ import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { Note } from "@/components/shared/note";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableTranscriptionModelsQuery, useYtDlpVersionQuery } from "@/hooks/admin";
+import { usePending } from "@/hooks/use-pending";
 import {
   Button,
   ComboBox,
@@ -72,8 +73,11 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   const [transcriptionModel, setTranscriptionModel] = useState(
     videoConfig?.transcriptionModel ?? ""
   );
-  const [saving, setSaving] = useState(false);
-  useEffect(() => {
+  const [saving, whileSaving] = usePending();
+  const [prevVideoConfig, setPrevVideoConfig] = useState(videoConfig);
+
+  if (videoConfig !== prevVideoConfig) {
+    setPrevVideoConfig(videoConfig);
     if (videoConfig) {
       setEnabled(videoConfig.enabled);
       setMaxLengthSeconds(videoConfig.maxLengthSeconds);
@@ -83,7 +87,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       setTranscriptionEndpoint(videoConfig.transcriptionEndpoint ?? "");
       setTranscriptionModel(videoConfig.transcriptionModel);
     }
-  }, [videoConfig]);
+  }
   const transcriptionEnabled = transcriptionProvider !== "disabled";
   const needsTranscriptionEndpoint = transcriptionProviderNeedsEndpoint(transcriptionProvider);
   // API key only required for cloud providers, not for local models (generic-openai, ollama)
@@ -163,18 +167,16 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   }, [availableTranscriptionModels, transcriptionModel]);
 
   // Auto-select first available model if none selected
-  useEffect(() => {
-    if (
-      !transcriptionModel &&
-      availableTranscriptionModels.length > 0 &&
-      !isLoadingTranscriptionModels
-    ) {
-      const firstModel = (availableTranscriptionModels as TranscriptionModel[])[0];
-      if (firstModel) {
-        setTranscriptionModel(firstModel.id);
-      }
+  if (
+    !transcriptionModel &&
+    availableTranscriptionModels.length > 0 &&
+    !isLoadingTranscriptionModels
+  ) {
+    const firstModel = (availableTranscriptionModels as TranscriptionModel[])[0];
+    if (firstModel) {
+      setTranscriptionModel(firstModel.id);
     }
-  }, [availableTranscriptionModels, transcriptionModel, isLoadingTranscriptionModels]);
+  }
 
   // Clear transcription config when provider changes - will auto-select first available model
   const handleTranscriptionProviderChange = (newProvider: TranscriptionProvider) => {
@@ -234,9 +236,8 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   }, [fetchConfigSecret]);
   const handleSave = async () => {
     if (enabled && !hasValidTranscription) return;
-    setSaving(true);
-    try {
-      await updateVideoConfig({
+    await whileSaving(() =>
+      updateVideoConfig({
         enabled,
         maxLengthSeconds,
         maxVideoFileSize: maxVideoFileSizeMB * 1024 * 1024,
@@ -246,24 +247,17 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         transcriptionEndpoint: transcriptionEndpoint || undefined,
         transcriptionApiKey: transcriptionApiKey || undefined,
         transcriptionModel,
-      });
-      // The stored key is what the field now stands for; leaving the typed one
-      // behind is what left this form claiming unsaved changes forever.
-      setTranscriptionApiKey("");
-    } finally {
-      setSaving(false);
-    }
+      })
+        // The stored key is what the field now stands for; leaving the typed one
+        // behind is what left this form claiming unsaved changes forever.
+        .then(() => setTranscriptionApiKey(""))
+    );
   };
   return (
     <div className="flex flex-col gap-4">
       {/* Video Processing Section */}
       <SwitchRow description={t("enableVideoDescription")} title={t("enableVideo")}>
-        <SettingsSwitch
-          color="success"
-          isDisabled={!isAIEnabled}
-          isSelected={enabled}
-          onValueChange={setEnabled}
-        />
+        <SettingsSwitch isDisabled={!isAIEnabled} isSelected={enabled} onValueChange={setEnabled} />
       </SwitchRow>
 
       {showAiDisabledWarning && <Note status="warning">{t("aiDisabledWarning")}</Note>}
@@ -407,7 +401,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
               inputValue={transcriptionModel}
               isDisabled={isVideoUiDisabled || !hasTranscriptionCredentials}
               onInputChange={setTranscriptionModel}
-              onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
+              onChange={(key) => key && setTranscriptionModel(key as string)}
             >
               <Label>{t("transcriptionModel")}</Label>
               <ComboBox.InputGroup>

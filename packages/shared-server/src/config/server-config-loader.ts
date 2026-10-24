@@ -30,12 +30,12 @@ import type {
   UnitsMap,
   VideoConfig,
 } from "@norish/config/zod/server-config";
-import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json" with { type: "json" };
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
-import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
-import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
-import defaultUnits from "@norish/config/units.default.json";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json" with { type: "json" };
+import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json" with { type: "json" };
+import defaultTimerKeywords from "@norish/config/timer-keywords.default.json" with { type: "json" };
+import defaultUnits from "@norish/config/units.default.json" with { type: "json" };
 import {
   AIConfigSchema,
   DecisionConfigSchema,
@@ -51,7 +51,6 @@ import {
   isImageGenerationConfigValid,
   ServerConfigKeys,
   UnitsConfigSchema,
-  UnitsMapSchema,
 } from "@norish/config/zod/server-config";
 import { getConfig } from "@norish/db/repositories/server-config";
 import { DEFAULT_LOCALE } from "@norish/i18n/config";
@@ -92,21 +91,6 @@ export async function getUnits(): Promise<UnitsMap> {
 
   if (wrapped.success) {
     return wrapped.data.units;
-  }
-
-  const legacyWrapped =
-    typeof value === "object" && value !== null && "units" in value && "isOverwritten" in value
-      ? UnitsMapSchema.safeParse((value as { units: unknown }).units)
-      : null;
-
-  if (legacyWrapped?.success) {
-    return legacyWrapped.data;
-  }
-
-  const legacy = UnitsMapSchema.safeParse(value);
-
-  if (legacy.success) {
-    return legacy.data;
   }
 
   return defaultUnits as UnitsMap;
@@ -168,7 +152,7 @@ export async function getTimerKeywords(): Promise<TimerKeywordsConfig> {
 export async function getRecurrenceConfig(): Promise<RecurrenceConfig> {
   const value = await getConfig<RecurrenceConfig>(ServerConfigKeys.RECURRENCE_CONFIG);
 
-  return value ?? (defaultRecurrenceConfig as RecurrenceConfig);
+  return value ?? { locales: defaultRecurrenceConfig.locales, isOverridden: false };
 }
 
 /**
@@ -237,8 +221,8 @@ export async function isImageGenerationConfigured(): Promise<boolean> {
 
 /**
  * Whether the instance can draw: AI on and an Image Generation provider
- * configured. What Generate and Draw icons on the Ingredients page follow,
- * so a button is hidden rather than offered to fail.
+ * configured. What Generate in a food's icon menu and Fill gaps' Icons
+ * follow, so neither is offered to fail.
  */
 export async function canDrawImages(): Promise<boolean> {
   const [enabled, configured] = await Promise.all([isAIEnabled(), isImageGenerationConfigured()]);
@@ -409,17 +393,19 @@ export async function getAutomaticEnrichmentConfig(): Promise<AutomaticEnrichmen
 }
 
 /**
- * What runs on a food just minted by someone's action: its Plain Name, its
- * icon. Both off while AI is off; the icon also needs an image provider.
+ * What AI does to a newly minted food. All off while AI is off; the icon also without an image
+ * provider.
  */
 export async function getAutomaticIngredientsConfig(): Promise<AutomaticIngredientsConfig> {
   const aiConfig = await getAIConfig();
 
   if (!aiConfig?.enabled) return DEFAULT_AUTOMATIC_INGREDIENTS;
+  const { automaticIngredients } = aiConfig;
 
-  const { plainName, icon } = aiConfig.automaticIngredients;
-
-  return { plainName, icon: icon && (await isImageGenerationConfigured()) };
+  return {
+    ...automaticIngredients,
+    icon: automaticIngredients.icon && (await isImageGenerationConfigured()),
+  };
 }
 
 // ============================================================================

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const redis = vi.hoisted(() => {
+const valkey = vi.hoisted(() => {
   const client = {
     publish: vi.fn(async () => 1),
     realtimePublish: undefined as undefined | ReturnType<typeof vi.fn>,
@@ -13,8 +13,8 @@ const redis = vi.hoisted(() => {
   return client;
 });
 
-vi.mock("@norish/shared-server/redis/client", () => ({
-  getPublisherClient: vi.fn(async () => redis),
+vi.mock("@norish/shared-server/valkey/client", () => ({
+  getPublisherClient: vi.fn(async () => valkey),
 }));
 
 // The real domain: households is the first catalogue whose payloads are
@@ -23,8 +23,7 @@ const { households } = await import("@norish/shared-server/realtime/households")
 
 describe("household publishes validate against their zod schemas", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    redis.realtimePublish = undefined;
+    valkey.realtimePublish = undefined;
   });
 
   it("publishes a well-formed event to the household channel's stream", async () => {
@@ -34,8 +33,8 @@ describe("household publishes validate against their zod schemas", () => {
       { householdKey: "h1" }
     );
 
-    expect(redis.realtimePublish).toHaveBeenCalledTimes(1);
-    expect(redis.realtimePublish?.mock.calls[0]?.[1]).toBe(
+    expect(valkey.realtimePublish).toHaveBeenCalledTimes(1);
+    expect(valkey.realtimePublish?.mock.calls[0]?.[1]).toBe(
       "norish:household:household:h1:userJoined"
     );
   });
@@ -45,6 +44,6 @@ describe("household publishes validate against their zod schemas", () => {
       households.publish("userJoined", { user: { id: 1 } } as never, { householdKey: "h1" })
     ).rejects.toThrow(/failed its schema/);
 
-    expect(redis.realtimePublish ?? redis.publish).not.toHaveBeenCalled();
+    expect(valkey.realtimePublish ?? valkey.publish).not.toHaveBeenCalled();
   });
 });

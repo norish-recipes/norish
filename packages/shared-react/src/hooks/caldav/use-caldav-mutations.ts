@@ -31,6 +31,8 @@ export function createUseCaldavMutations({
   useCaldavSummaryQuery,
 }: CreateUseCaldavMutationsOptions) {
   return function useCaldavMutations(): CaldavMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { config, setConfig, invalidate: invalidateConfig } = useCaldavConfigQuery();
     const { invalidate: invalidateSyncStatus } = useCaldavSyncStatusQuery();
@@ -38,15 +40,21 @@ export function createUseCaldavMutations({
     const currentConfigVersion = config?.version;
 
     const saveConfigMutation = useMutation(trpc.caldav.saveConfig.mutationOptions());
+    const { mutateAsync: mutateSaveConfigAsync } = saveConfigMutation;
     const testConnectionMutation = useMutation(trpc.caldav.testConnection.mutationOptions());
+    const { mutateAsync: mutateTestConnectionAsync } = testConnectionMutation;
     const fetchCalendarsMutation = useMutation(trpc.caldav.fetchCalendars.mutationOptions());
+    const { mutateAsync: mutateFetchCalendarsAsync } = fetchCalendarsMutation;
     const deleteConfigMutation = useMutation(trpc.caldav.deleteConfig.mutationOptions());
+    const { mutateAsync: mutateDeleteConfigAsync } = deleteConfigMutation;
     const triggerSyncMutation = useMutation(trpc.caldav.triggerSync.mutationOptions());
+    const { mutateAsync: mutateTriggerSyncAsync } = triggerSyncMutation;
     const syncAllMutation = useMutation(trpc.caldav.syncAll.mutationOptions());
+    const { mutateAsync: mutateSyncAllAsync } = syncAllMutation;
 
     return {
       saveConfig: async (input: SaveCaldavConfigInput) => {
-        const result = await saveConfigMutation.mutateAsync({
+        const result = await mutateSaveConfigAsync({
           ...input,
           version: resolveCaldavConfigVersion(input.version, currentConfigVersion),
         });
@@ -58,23 +66,23 @@ export function createUseCaldavMutations({
         return result;
       },
       testConnection: async (input: TestConnectionInput) => {
-        return testConnectionMutation.mutateAsync(input);
+        return mutateTestConnectionAsync(input);
       },
       fetchCalendars: async (input: FetchCalendarsInput) => {
-        return fetchCalendarsMutation.mutateAsync(input);
+        return mutateFetchCalendarsAsync(input);
       },
       deleteConfig: async (deleteEvents: boolean = false) => {
-        await deleteConfigMutation.mutateAsync({ deleteEvents, version: currentConfigVersion });
+        await mutateDeleteConfigAsync({ deleteEvents, version: currentConfigVersion });
         setConfig(() => null);
         invalidateConfig();
         invalidateSyncStatus();
         invalidateSummary();
       },
       triggerSync: async () => {
-        await triggerSyncMutation.mutateAsync();
+        await mutateTriggerSyncAsync();
       },
       syncAll: async () => {
-        await syncAllMutation.mutateAsync();
+        await mutateSyncAllAsync();
       },
       isSavingConfig: saveConfigMutation.isPending,
       isTestingConnection: testConnectionMutation.isPending,

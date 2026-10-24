@@ -3,7 +3,7 @@
 import type { TRPCClient } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, use, useEffect, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
@@ -57,11 +57,15 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   const TRPCClientContext = createContext<TRPCClient<TRouter> | null>(null);
 
   function useConnectionStatus() {
-    return useContext(ConnectionContext);
+    "use memo";
+
+    return use(ConnectionContext);
   }
 
   function useTRPCClient(): TRPCClient<TRouter> {
-    const client = useContext(TRPCClientContext);
+    "use memo";
+
+    const client = use(TRPCClientContext);
 
     if (!client) {
       throw new Error("useTRPCClient must be used within TRPCProviderWrapper");
@@ -71,6 +75,8 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   }
 
   function TRPCProviderWrapper({ children }: { children: ReactNode }) {
+    "use memo";
+
     const [status, setStatus] = useState<ConnectionStatus>("idle");
     const webSocketClientRef = useRef<{ close: () => Promise<void> } | null>(null);
 
@@ -143,15 +149,15 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
     };
 
     return (
-      <ConnectionContext.Provider value={connectionValue}>
-        <TRPCClientContext.Provider value={trpcClient}>
+      <ConnectionContext value={connectionValue}>
+        <TRPCClientContext value={trpcClient}>
           <QueryClientProvider client={queryClient}>
             <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
               {children}
             </TRPCProvider>
           </QueryClientProvider>
-        </TRPCClientContext.Provider>
-      </ConnectionContext.Provider>
+        </TRPCClientContext>
+      </ConnectionContext>
     );
   }
 

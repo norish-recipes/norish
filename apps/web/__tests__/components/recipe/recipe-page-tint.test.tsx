@@ -5,6 +5,7 @@ import "@testing-library/jest-dom";
 import RecipePageTint from "@/components/recipes/recipe-page-tint";
 
 import type { RecipePageColorMode } from "@norish/shared/contracts/zod/device-preferences";
+import { APP_PAGE_COLUMN_CLASS } from "@norish/web/config/css-tokens";
 
 import { renderWithDevicePreferences } from "../../helpers/device-preferences";
 
@@ -63,9 +64,9 @@ describe("RecipePageTint", () => {
     expect(container.querySelector("[data-dish-tint]")).toBeNull();
   });
 
-  it("stays out of layout — the wrapper is display: contents", () => {
+  it("lays out like the page column around it, as a real box Next can scroll to", () => {
     const { container } = renderTint("#c04020");
 
-    expect((container.firstElementChild as HTMLElement).className).toContain("contents");
+    expect((container.firstElementChild as HTMLElement).className).toBe(APP_PAGE_COLUMN_CLASS);
   });
 });

@@ -9,7 +9,7 @@
  */
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AIConfig, DecisionConfig } from "@norish/config/zod/server-config";
 
@@ -36,9 +36,8 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => logger,
 }));
 
-const { decide, estimateDecisionInputTokens, testDecisionModel } =
-  await import("@norish/shared-server/ai/runtime/runtime");
-const { AIConfigurationError, AIDisabledError, AIProviderError, AIResponseError } =
+const { decide, testDecisionModel } = await import("@norish/shared-server/ai/runtime/runtime");
+const { AIConfigurationError, AIDisabledError, AIProviderError, AIResponseError, isTimedOut } =
   await import("@norish/shared-server/ai/runtime/errors");
 const { createModelUseLedger, runWithModelUseLedger } =
   await import("@norish/shared-server/ai/runtime/model-use-ledger");
@@ -157,10 +156,6 @@ beforeEach(() => {
   reply = answered;
   mockGetAIConfig.mockResolvedValue(aiConfig());
   mockGetDecisionConfig.mockResolvedValue(decisionConfig());
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
 });
 
 describe("decide", () => {
@@ -349,6 +344,19 @@ describe("the job's model ledger", () => {
     ]);
   });
 
+  it("ends a Decision past the feature's own deadline, recorded as a failed use", async () => {
+    holdResponses = true;
+    const ledger = createModelUseLedger();
+    const failure = await runWithModelUseLedger(ledger, () =>
+      decide({ feature: "runtime-test", state, questions, timeoutMs: 200 }).catch(
+        (error: unknown) => error
+      )
+    );
+
+    expect(isTimedOut(failure)).toBe(true);
+    expect(ledger.uses).toEqual([{ provider: "typesafe", model: "jev-latest", outcome: "failed" }]);
+  });
+
   it("records nothing for a refusal that sent no request", async () => {
     const ledger = createModelUseLedger();
 
@@ -356,32 +364,6 @@ describe("the job's model ledger", () => {
     await runWithModelUseLedger(ledger, () => ask().catch(() => undefined));
 
     expect(ledger.uses).toEqual([]);
-  });
-});
-
-describe("an estimate of a Decision", () => {
-  it("counts the state and the questions as JSON, four characters a token, for the configured model, and asks nothing", async () => {
-    const questions = {
-      food: {
-        type: "choice" as const,
-        instructions: "Which food is it?",
-        criteria: { same_1: "Is onion", new: "Is none of these" },
-      },
-    };
-    const small = await estimateDecisionInputTokens({ state: { name: "uien" }, questions });
-    const large = await estimateDecisionInputTokens({
-      state: { name: "u".repeat(4004) },
-      questions,
-    });
-
-    expect(large.tokens - small.tokens).toBe(1000);
-    expect(small).toEqual({
-      provider: "typesafe",
-      model: expect.any(String),
-      tokens: Math.ceil(JSON.stringify({ state: { name: "uien" }, questions }).length / 4),
-    });
-    expect(small.model).not.toBe("");
-    expect(captured).toHaveLength(0);
   });
 });
 

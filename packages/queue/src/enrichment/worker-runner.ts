@@ -20,6 +20,7 @@ import { AIError } from "@norish/shared-server/ai/runtime/errors";
 import { createLogger } from "@norish/shared-server/logger";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
+import { isFinalFailure } from "../create-worker";
 import { reportStep } from "../job-steps";
 import { publishEnrichmentLifecycle, publishEnrichmentRecipeUpdated } from "./announce";
 
@@ -105,25 +106,7 @@ export async function handleEnrichmentJobFailure(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeId, kind, origin } = job.data;
-  const maxAttempts = job.opts.attempts ?? 3;
-  const isFinalFailure = job.attemptsMade >= maxAttempts || error instanceof UnrecoverableError;
-
-  log.error(
-    {
-      jobId: job.id,
-      recipeId,
-      kind,
-      origin,
-      attempt: job.attemptsMade,
-      maxAttempts,
-      isFinalFailure,
-      err: error,
-    },
-    "Recipe Enrichment job failed"
-  );
-
-  if (isFinalFailure) {
+  if (isFinalFailure(job, error)) {
     await publishEnrichmentLifecycle(job.data, "failed");
   }
 }

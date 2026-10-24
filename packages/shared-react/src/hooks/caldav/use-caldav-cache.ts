@@ -10,6 +10,8 @@ import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
 
 export function createUseCaldavCache({ useTRPC }: CreateCaldavHooksOptions) {
   return function useCaldavCacheHelpers(): CaldavCacheHelpers {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const configQueryKey = trpc.caldav.getConfig.queryKey();

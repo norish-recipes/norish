@@ -1,8 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import NextLink from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  NAV_LABEL_KEYS,
+  NAV_TABS,
+  NavTabLink,
+  navTabPosition,
+  SETTINGS_HREF,
+} from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
 import {
@@ -15,13 +21,12 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { cssFloatingDockEndCap, MOBILE_NAV_SHRUNKEN_SCALE } from "@norish/web/config/css-tokens";
-import { siteConfig } from "@norish/web/config/site";
 
-// Map hrefs to translation keys (same as navbar.tsx)
-const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
-  "/": "home",
-  "/groceries": "groceries",
-  "/calendar": "calendar",
+const TAB_ICONS: Record<string, typeof HomeIcon> = {
+  "/": HomeIcon,
+  "/groceries": ClipboardDocumentListIcon,
+  "/calendar": CalendarDaysIcon,
+  [SETTINGS_HREF]: Cog6ToothIcon,
 };
 
 // Both floating pieces share one solid treatment on the chrome tokens — the
@@ -30,10 +35,15 @@ const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
 const barSurfaceClassName =
   "bg-chrome border-chrome-border rounded-full border shadow-[0_8px_28px_-10px_rgba(0,0,0,0.3)]";
 
+// A pill rather than a circle, the same size as the one sliding behind the active tab.
+const tabClassName = "flex items-center justify-center rounded-full px-5 py-2.5";
+const idleTabClassName = "text-chrome-muted hover:text-chrome-foreground hover:bg-chrome-hover";
+
 export const MobileNav = () => {
   const tNav = useTranslations("navbar.nav");
   const tMenu = useTranslations("navbar.userMenu");
   const pathname = usePathname();
+  const activeTab = navTabPosition(pathname);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const { isVisible, show } = useAutoHide({
@@ -77,7 +87,7 @@ export const MobileNav = () => {
           it reads the same scale, so the pair stays aligned at either size. */}
       <motion.div
         animate={{ scale: isVisible ? 1 : MOBILE_NAV_SHRUNKEN_SCALE }}
-        className="fixed inset-x-0 z-[60] px-4 md:hidden"
+        className="fixed inset-x-0 z-[60] px-4 [view-transition-class:app-bar] [view-transition-name:app-mobile-nav] md:hidden"
         initial={false}
         style={{
           bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)",
@@ -88,58 +98,55 @@ export const MobileNav = () => {
         <div className="flex items-center justify-center gap-3">
           {/* Nav items - icon height, full width */}
           <div className={`flex h-12 flex-1 items-center px-3 ${barSurfaceClassName}`}>
-            <ul className="flex w-full items-center justify-around">
-              {siteConfig.navItems.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname?.startsWith(item.href + "/"));
-                const Icon =
-                  item.href === "/"
-                    ? HomeIcon
-                    : item.href.startsWith("/calendar")
-                      ? CalendarDaysIcon
-                      : ClipboardDocumentListIcon;
-                const label = tNav(navLabelKeys[item.href] ?? "home");
+            <div className="relative w-full">
+              {/* One pill slides between the tab columns, on a CSS `translate` transition. */}
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center transition-[translate,opacity] duration-300 ease-(--vt-ease) motion-reduce:transition-none ${
+                  activeTab < 0 ? "opacity-0" : ""
+                }`}
+                style={{
+                  width: `${100 / NAV_TABS.length}%`,
+                  translate: `${Math.max(activeTab, 0) * 100}% 0`,
+                }}
+              >
+                <span className="bg-accent h-10 w-15 rounded-full" />
+              </span>
+              <ul
+                className="relative grid w-full items-center justify-items-center"
+                style={{ gridTemplateColumns: `repeat(${NAV_TABS.length}, minmax(0, 1fr))` }}
+              >
+                {NAV_TABS.map((href, position) => {
+                  const Icon = TAB_ICONS[href] ?? HomeIcon;
+                  const label =
+                    href === SETTINGS_HREF
+                      ? tMenu("settings.title")
+                      : tNav(NAV_LABEL_KEYS[href] ?? "home");
 
-                return (
-                  <li key={item.href}>
-                    <NextLink
-                      aria-label={label}
-                      className={`flex items-center justify-center rounded-full p-2.5 transition-colors ${
-                        isActive
-                          ? "bg-accent text-accent-foreground"
-                          : "text-chrome-muted hover:text-chrome-foreground hover:bg-chrome-hover"
-                      }`}
-                      href={item.href}
-                      title={label}
-                      onClick={(e) => {
-                        if (item.href === "/" && pathname === "/") {
-                          e.preventDefault();
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }
-                      }}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </NextLink>
-                  </li>
-                );
-              })}
-
-              <li>
-                <NextLink
-                  aria-label={tMenu("settings.title")}
-                  className={`flex items-center justify-center rounded-full p-2.5 transition-colors ${
-                    pathname?.startsWith("/settings")
-                      ? "bg-accent text-accent-foreground"
-                      : "text-chrome-muted hover:text-chrome-foreground hover:bg-chrome-hover"
-                  }`}
-                  href="/settings?tab=user"
-                  title={tMenu("settings.title")}
-                >
-                  <Cog6ToothIcon className="h-5 w-5" />
-                </NextLink>
-              </li>
-            </ul>
+                  return (
+                    <li key={href}>
+                      <NavTabLink
+                        aria-label={label}
+                        className={`${tabClassName} transition-colors ${
+                          position === activeTab ? "text-accent-foreground" : idleTabClassName
+                        }`}
+                        href={href}
+                        pathname={pathname}
+                        title={label}
+                        onClick={(e) => {
+                          if (href === "/" && pathname === "/") {
+                            e.preventDefault();
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }
+                        }}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </NavTabLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
 
           {/* User menu - its own circle beside the bar, and the disc the

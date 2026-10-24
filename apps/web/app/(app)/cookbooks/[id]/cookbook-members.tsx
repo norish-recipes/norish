@@ -32,14 +32,17 @@ export default function CookbookMembers({
   variant: RecipeViewMode;
 }) {
   const t = useTranslations("recipes.cookbooks");
-  const { filters } = useRecipesFiltersContext();
+  const { filters, isHydrated } = useRecipesFiltersContext();
   const { isFavorite, toggleFavorite, deleteRecipe, allergies } = useRecipesContext();
   const { setMembership } = useCookbooksMutations();
 
   const queryFilters = useMemo(() => toRecipesQueryFilters(filters), [filters]);
+  // Wait for the stored filters, as the Library does: asking under the defaults first shows members
+  // the reader filters out, then asks again.
   const { recipes, isLoading, isValidating, loadMore, removeMember } = useCookbookRecipesQuery(
     cookbookId,
-    queryFilters
+    queryFilters,
+    { enabled: isHydrated }
   );
 
   const items = useMemo<LibraryGridItem[]>(
@@ -98,7 +101,7 @@ export default function CookbookMembers({
     <LibraryGrid
       emptyState={emptyState}
       isFetchingMore={isValidating && !isLoading}
-      isLoading={isLoading}
+      isLoading={isLoading || !isHydrated}
       items={items}
       loadMore={loadMore}
       renderItem={renderItem}

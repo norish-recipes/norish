@@ -52,6 +52,19 @@ export interface RecipeLineText {
   unit?: string | null;
 }
 
+/** A line's amount as a number, NaN where it has none. */
+export function lineAmount(amount: unknown): number {
+  return amount === null || amount === undefined || amount === "" ? NaN : Number(amount);
+}
+
+/**
+ * Whether a recipe line names no food: its text names none, or it ends with
+ * a colon where no amount stands ("Voor de salade:"), the import's heading rule.
+ */
+export function lineNamesNoFood({ text, amount }: RecipeLineText): boolean {
+  return namesNoFood(text) || (text.trimEnd().endsWith(":") && Number.isNaN(lineAmount(amount)));
+}
+
 /**
  * The text a recipe line's food is resolved from: its text as written, except
  * where an import kept the line's number apart and left its unit in the text
@@ -63,7 +76,7 @@ export interface RecipeLineText {
  * start of a text may be the food's own ("glass noodles").
  */
 export function lineFoodText({ text, amount, unit }: RecipeLineText, units: UnitsMap): string {
-  const count = amount === null || amount === undefined || amount === "" ? NaN : Number(amount);
+  const count = lineAmount(amount);
 
   if (unit || !Number.isFinite(count)) return text;
 

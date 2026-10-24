@@ -55,7 +55,7 @@ export function SortableGroupItem({ group, children }: SortableGroupItemProps) {
       ref={setNodeRef}
       className={ROW_CLASS_NAME}
       style={style}
-      onTouchStart={listeners?.onTouchStart}
+      onTouchStart={(event) => listeners?.onTouchStart?.(event)}
     >
       {/* The actual grouped grocery item content */}
       {children({ dragHandle })}

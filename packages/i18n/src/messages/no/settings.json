@@ -11,6 +11,31 @@
     "ingredients": "Ingredienser"
   },
   "user": {
+    "signInMethods": {
+      "title": "Innloggingsmetoder",
+      "description": "Koble kontoen din til SSO.",
+      "password": "Passord",
+      "addAnother": "Legg til en annen måte å logge inn på",
+      "addProvider": "Koble til {provider}",
+      "added": "Lagt til {date}",
+      "remove": "Koble fra",
+      "unavailable": "Ikke tilgjengelig for øyeblikket",
+      "changePassword": "Endre passord",
+      "currentPassword": "Nåværende passord",
+      "newPassword": "Nytt passord",
+      "confirmPassword": "Bekreft nytt passord",
+      "signOutOthers": "Logg ut andre økter",
+      "passwordChanged": "Passordet er endret.",
+      "errors": {
+        "usedByAnotherAccount": "Denne innloggingen brukes allerede av en annen konto.",
+        "lastMethod": "Du trenger minst én måte å logge inn på.",
+        "signInAgain": "Logg inn på nytt for å fjerne dette.",
+        "addFailed": "Innloggingsmetoden kunne ikke legges til.",
+        "removeFailed": "Innloggingsmetoden kunne ikke fjernes.",
+        "wrongPassword": "Nåværende passord er feil.",
+        "changeFailed": "Kunne ikke endre passordet. Prøv igjen."
+      }
+    },
     "profile": {
       "title": "Profil",
       "nameLabel": "Navn",
@@ -376,67 +401,26 @@
     "flagged": "Markert",
     "flagReasons": {
       "unknown": "Norish var ikke sikker på at dette er en egen ingrediens.",
-      "ai-off": "AI er slått av, så ingenting sjekket om Norish allerede kjenner den.",
       "unknown-food": "Ingen kjent ingrediens deler et ord med dette navnet, så AI ble ikke spurt.",
       "ai-unsure": "AI ble spurt om dette er en kjent ingrediens og var ikke sikker.",
-      "ai-unavailable": "AI svarte ikke i tide da dette navnet ble lagt til.",
-      "ai-key-rejected": "AI-leverandøren avviste API-nøkkelen, så AI kunne ikke sjekke dette navnet.",
       "food-gone": "AI knyttet det til en ingrediens som ble slått sammen før navnet rakk å bli med.",
       "upgrade": "Fant ingen kjent ingrediens som passet.",
-      "seed-ambiguous": "Katalogen kjenner flere ingredienser dette kan være."
+      "seed-ambiguous": "Katalogen kjenner flere ingredienser dette kan være.",
+      "ai-junk": "AI trodde dette ikke er en ingrediens, som et kjøkkenredskap eller en bit av en oppskriftslinje."
     },
     "empty": "Fant ingen ingredienser",
     "emptyFlagged": "Ingenting er markert",
     "rename": "Gi nytt navn",
     "delete": "Slett",
     "deleteTitle": "Slette {name}?",
-    "deleteConfirm": "Oversettelsene følger med, og det husstanden din har lært Norish om den. En ingrediens som en oppskrift, en handlevare eller spiskammeret fortsatt bruker, kan ikke slettes; slå den sammen i stedet.",
+    "deleteConfirm": "Oversettelsene følger med, og det husstanden din har lært Norish om den.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, one {# oppskriftslinje beholder teksten sin, uten ingrediensen} other {# oppskriftslinjer beholder teksten sin, uten ingrediensen}}",
+      "groceries": "{count, plural, one {# handlevare beholder teksten sin, uten ingrediensen} other {# handlevarer beholder teksten sin, uten ingrediensen}}",
+      "pantry": "{count, plural, one {# vare i spiskammeret fjernes} other {# varer i spiskammeret fjernes}}"
+    },
     "markDistinct": "Marker som egen",
     "summary": "{spellings, plural, one {# oversettelse} other {# oversettelser}}{kinds, plural, =0 {} one {, # type} other {, # typer}}{parent, select, none {} other {, overordnet: {parent}}}",
-    "askAI": "Spør AI",
-    "fixCatalogue": "Rett opp katalogen",
-    "askAIRound": {
-      "intro": "AI finner ut hvor merkede ingredienser hører hjemme, og retter opp uensartede navn. Ingenting endres før du bekrefter et forslag.",
-      "scopeLabel": "Hva som skal rettes",
-      "scopes": {
-        "unsuggested": "Sjekk merkede ingredienser",
-        "suggested": "Sjekk forslag på nytt",
-        "name": "Rydd opp i navn"
-      },
-      "hints": {
-        "unsuggested": "Ser etter duplikater, underingredienser eller unike.",
-        "suggested": "Sjekker merkede ingredienser på nytt.",
-        "name": "Renser ingrediensnavn til bare ingrediensen. Merkede ingredienser er med hvis avkrysningsboksen over er huket av."
-      },
-      "scopeSize": "{count, plural, =0 {Ingen ingredienser} one {# ingrediens · omtrent {tokens} tokens} other {# ingredienser · omtrent {tokens} tokens}}",
-      "modelTokens": "omtrent {tokens} tokens",
-      "basisMeasured": "Basert på hva forrige runde brukte."
-    },
-    "roundProgress": "Spør AI · {done, number} av {total, number}",
-    "roundSection": {
-      "title": "Spør AI",
-      "progress": "{done, number} av {total, number}",
-      "waiting": "{count, plural, one {# ingrediens venter} other {# ingredienser venter}}"
-    },
-    "reviewing": "Spør AI…",
-    "aiOutcomes": {
-      "parent": "AI foreslår å plassere {name} som en type {of}.",
-      "distinct": "AI foreslår at {name} er en egen matvare.",
-      "unsure": "AI er fortsatt ikke sikker på hva {name} er.",
-      "notFlagged": "{name} er ikke merket.",
-      "skippedNotFlagged": "{name} var ikke lenger merket.",
-      "skippedForbidden": "{name} kan du ikke endre.",
-      "skippedNotFound": "{name} var borte da AI kom dit.",
-      "failed": "Spørsmålet om {name} mislyktes.",
-      "merge": "AI foreslår å slå sammen {name} med {into}."
-    },
-    "aiTrace": {
-      "readAs": "AI leste det som «{name}».",
-      "compared": "Sammenlignet med: {names}.",
-      "comparedNothing": "Det var ingen kjent matvare å sammenligne med.",
-      "fromWords": "Based on name.",
-      "noFood": "AI fant ingen matvare i dette navnet."
-    },
     "addAlias": "Legg til en oversettelse",
     "removeAlias": "Fjern {alias}",
     "mergeInto": "Slå sammen med…",
@@ -491,7 +475,8 @@
         "name": "{food} · {dataset}, funnet på navnet",
         "householdFood": "{food} · {dataset}, valgt av husstanden din",
         "household": "Husstandens egne verdier",
-        "taxonomy": "Open Food Facts"
+        "taxonomy": "Open Food Facts",
+        "ai": "Anslått av AI"
       },
       "correct": "Rett",
       "correctTitle": "Rett {name}",
@@ -550,8 +535,6 @@
       "name-taken": "En annen ingrediens har allerede dette navnet",
       "spelling-taken": "Denne oversettelsen tilhører allerede en annen ingrediens",
       "last-alias": "En ingrediens beholder minst én oversettelse",
-      "alias-in-use": "Oppskrifter eller innkjøp bruker fortsatt denne oversettelsen",
-      "ingredient-in-use": "Oppskrifter, handlelister eller spiskammeret bruker fortsatt denne ingrediensen",
       "same-ingredient": "En ingrediens kan ikke slås sammen med seg selv",
       "cycle": "En ingrediens kan ikke være en type av seg selv",
       "empty": "Skriv inn et navn",
@@ -569,51 +552,31 @@
       "none": "Ingenting bruker den lenger"
     },
     "keepAlias": "Behold {alias}",
-    "reportOutcomes": {
-      "parent": "Under en forelder",
-      "distinct": "Egen matvare",
-      "unsure": "Ikke sikker",
-      "skipped": "Hoppet over",
-      "failed": "Mislyktes",
-      "merge": "Slå sammen"
-    },
+    "junkTitle": "Merk {alias} som ikke en ingrediens?",
+    "junkBody": "Ingen annen ingrediens har denne oversettelsen. Nye oppskrifter hopper over tekst som er merket som ikke en ingrediens.",
+    "junkRemove": "Bare fjern",
+    "junkMark": "Ikke en ingrediens",
     "expandKinds": "Vis typer av {name}",
     "collapseKinds": "Skjul typer av {name}",
     "layoutSection": "Visning",
     "asTree": "Hierarkisk visning",
     "showOnly": "Vis bare",
     "standaloneOnly": "Uten forelder eller typer",
-    "findParent": "Finn forelder med AI",
-    "findParentsAll": "Finn foreldre med AI",
-    "suggestion": {
-      "merge": "Slå sammen {name} med {into}",
-      "parent": "Plasser {name} under {of}",
-      "distinct": "Behold {name} som egen matvare",
-      "filedFromName": "{name} filed under {of}",
-      "rename": "Endre navn på {name} til {to}"
-    },
-    "suggestionsTitle": "AI-forslag",
-    "suggestionsEmpty": "Ingenting venter på deg.",
-    "suggestionsNone": "Ingen forslag",
-    "suggestionsOpen": "{count, plural, =0 {Forslag} one {# forslag} other {# forslag}}",
-    "suggestionsFailed": "{count, plural, one {# forslag} other {# forslag}} kunne ikke brukes: {reason}",
-    "confirmSuggestion": "Bekreft",
-    "dismissSuggestion": "Avvis",
-    "confirmAll": "Bekreft alle ({count})",
-    "dismissAll": "Avvis alle",
-    "suggestedByAI": "Foreslått av AI",
-    "suggestedFromName": "Based on name",
-    "proposal": {
-      "merge": "Merge into {into}",
-      "parent": "File under {of}",
-      "distinct": "Food of its own",
-      "rename": "Endre navn til {to}"
-    },
-    "skippedReasons": {
-      "notFlagged": "No longer flagged",
-      "forbidden": "Not yours to edit",
-      "notFound": "No longer exists",
-      "settled": "Navnet er allerede fastsatt, eller et forslag venter"
+    "changedByAI": {
+      "title": "Endret av AI",
+      "open": "{count, plural, =0 {Endret av AI} other {Endret av AI · # å sjekke}}",
+      "unsure": "Ikke sikker",
+      "sure": "Endret",
+      "empty": "AI har ikke endret noe den siste måneden.",
+      "keep": "Behold",
+      "undo": "Angre",
+      "merge": "{from} slått sammen hit",
+      "parent": "Plassert under {of}",
+      "parentDropped": "Ikke lenger under {of}",
+      "plainName": "Fikk nytt navn, var {from}",
+      "notAFood": "Slettet, siden det ikke er en ingrediens. Oppskriftslinjene og innkjøpene beholder teksten sin.",
+      "spellingRemoved": "Oversettelsen {from} fjernet",
+      "spellingMoved": "Oversettelsen {from} flyttet til {of}"
     },
     "icon": {
       "change": "Endre ikonet",
@@ -622,20 +585,6 @@
       "failed": "Bildet kunne ikke gjøres om til et ikon.",
       "generate": "Generer med AI",
       "generateFailed": "Ikonet kunne ikke genereres."
-    },
-    "drawIcons": {
-      "open": "Tegn ikoner",
-      "title": "Tegn ikoner",
-      "intro": "Bildeleverandøren tegner et ikon for hver matvare, og det blir straks matvarens eget. Du kan gi en matvare et annet ikon i panelet dens.",
-      "scopeLabel": "Hvilke matvarer",
-      "scopes": {
-        "bare": "Bare matvarer helt uten ikon",
-        "unowned": "Alle matvarer uten eget ikon"
-      },
-      "scopeSize": "{count, plural, =0 {Ingen ikoner} one {# ikon} other {# ikoner}}",
-      "start": "Tegn ikoner",
-      "progress": "Tegner ikoner · {done, number} av {total, number}",
-      "drawing": "Tegner ikon…"
     }
   },
   "admin": {
@@ -927,6 +876,58 @@
         "aiDisabled": "AI er deaktivert på denne serveren. Aktiver AI først.",
         "error": "Kunne ikke starte masseberikelse",
         "imageCount": "{count, plural, =0 {Ingen bilder blir generert.} one {# bilde blir generert.} other {# bilder blir generert.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "Ingredienskatalog",
+        "subtitle": "Hva AI gjør med nye ingredienser",
+        "automatic": "Automatisk for nye ingredienser",
+        "automaticDescription": "Hva AI gjør når en ingrediens legges til i katalogen.",
+        "automaticPlaceholder": "Ingenting kjører automatisk",
+        "kinds": {
+          "cleanUp": "Rydd opp i nye ingredienser",
+          "cleanUpDescription": "Slå sammen stavemåter, angi en forelder og et enkelt navn, fjern det som ikke er mat",
+          "nutrition": "Fyll inn manglende næringsinnhold",
+          "nutritionDescription": "Anslå makroer per 100 g der ingrediensen ikke har noen",
+          "conversions": "Fyll inn manglende omregninger",
+          "conversionsDescription": "Anslå tetthet og stykkvekt der ingrediensen ikke har noen",
+          "icon": "Tegn manglende ikoner",
+          "iconDescription": "Bare for en ingrediens uten ikon, heller ikke forelderens"
+        },
+        "cleanUpCatalogue": {
+          "title": "Rydd opp i katalogen",
+          "description": "Spør AI om ingrediensene som allerede er i katalogen.",
+          "running": "En opprydding pågår. Følg den i jobbkøen.",
+          "button": "Rydd opp i katalogen",
+          "intro": "AI slår sammen stavemåter, setter overordnede og enkle navn og fjerner det som ikke er mat. Hver endring står under Endret av AI, med Angre.",
+          "scopeLabel": "Hvilke ingredienser",
+          "scopes": {
+            "recipe-foods": "Oppskriftsingredienser",
+            "recipe-foods-description": "Ingredienser fra oppskrifter som ingen har tatt stilling til",
+            "whole-catalogue": "Hele katalogen",
+            "whole-catalogue-description": "Alle ingredienser, også de innebygde, uansett hva folk har bestemt eller angret. Innebygde fjernes aldri."
+          },
+          "count": "{count, plural, one {AI spør om # ingrediens.} other {AI spør om # ingredienser.}}",
+          "start": "Rydd opp",
+          "started": "{count, plural, one {Rydder opp i # ingrediens} other {Rydder opp i # ingredienser}}",
+          "error": "Kunne ikke starte oppryddingen"
+        },
+        "fillGaps": {
+          "title": "Fyll hull",
+          "description": "La AI fylle inn det ingrediensene mangler.",
+          "running": "Utfyllingen pågår. Følg den i jobbkøen.",
+          "button": "Fyll hull",
+          "intro": "For hver ingrediens i katalogen fyller AI bare inn det den ikke har selv. Det en ingrediens allerede har, erstattes aldri.",
+          "kindsLabel": "Hva som fylles inn",
+          "kinds": {
+            "nutrition": "Næringsinnhold",
+            "conversions": "Omregninger",
+            "icons": "Ikoner"
+          },
+          "count": "{count, plural, =0 {Ingenting å fylle inn} one {# ingrediens} other {# ingredienser}}",
+          "start": "Fyll hull",
+          "started": "Fyller hull. Følg det i jobbkøen.",
+          "error": "Kunne ikke starte utfyllingen"
+        }
       }
     },
     "aiConfig": {
@@ -982,14 +983,6 @@
         "ingredientLinkingDescription": "Kobler hvert trinn til ingredienslinjene det bruker, for trinn uten koblinger",
         "imageGeneration": "Bildegenerering",
         "imageGenerationDescription": "Tegn et bilde av retten for nye oppskrifter som ikke har noe bilde"
-      },
-      "automaticIngredients": "Automatisk for nye ingredienser",
-      "automaticIngredientsDescription": "Hva som skjer når nye ingredienser legges til i katalogen.",
-      "automaticIngredientsKinds": {
-        "plainName": "Rydd opp i navnet",
-        "plainNameDescription": "Fjern det som ikke er matvaren, som mengder og pakningskoder",
-        "icon": "Tegn et ikon",
-        "iconDescription": "Bare for en matvare uten ikon, heller ikke forelderens"
       },
       "tagStrategy": "Taggstrategi",
       "tagStrategyDescription": "Hvilke tagger automatisk tagging kan bruke, enten den kjører automatisk eller manuelt",
@@ -1135,8 +1128,11 @@
       "ingredientLinkingDescription": "Brukes når hvert trinn kobles til ingredienslinjene det bruker",
       "ingredientLinkingPlaceholder": "Prompt for å koble ingredienser til trinn...",
       "ingredientResolution": "Prompt for gjenkjenning av ingredienser",
-      "ingredientResolutionDescription": "Brukes til å avgjøre om et nytt ingrediensnavn er en matvare Norish allerede kjenner",
+      "ingredientResolutionDescription": "Sendes til språkmodellen når AI leser navnet på en ny ingrediens, med navnet og ingrediensen den hører under nå lagt til etter. Sier om det er én ingrediens, flere eller ingen.",
       "ingredientResolutionPlaceholder": "Prompt for å gjenkjenne ingrediensnavn...",
+      "ingredientMatch": "Prompt for matching av ingredienser",
+      "ingredientMatchDescription": "Sendes til språkmodellen når navnene fra AI finner flere ingredienser i katalogen, eller bare ingredienser stavet en bokstav eller to annerledes, med navnet og de ingrediensene lagt til etter. Sier hvilken av dem navnet er, om noen.",
+      "ingredientMatchPlaceholder": "Prompt for å matche ingrediensnavn mot katalogen...",
       "imageGenerationBrief": "Bildebeskrivelse-prompt",
       "imageGenerationBriefDescription": "Brukes til å gjøre en oppskrift om til en kort visuell beskrivelse før bildet genereres. Oppskriften legges til etter prompten.",
       "imageGenerationBriefPlaceholder": "Prompt for den visuelle beskrivelsen...",
@@ -1148,7 +1144,13 @@
       "ingredientIconStylePlaceholder": "Prompt for stilen på ingrediensikoner...",
       "ingredientPlainName": "Prompt for opprydding i ingrediensnavn",
       "ingredientPlainNameDescription": "Sendes til språkmodellen når AI rydder opp i navnet på en ingrediens, med navnet og de andre skrivemåtene lagt til etter. Sier hva som skal fjernes fra et navn og hva som skal bli.",
-      "ingredientPlainNamePlaceholder": "Prompt for opprydding i ingrediensnavn..."
+      "ingredientPlainNamePlaceholder": "Prompt for opprydding i ingrediensnavn...",
+      "ingredientSpellingCheck": "Prompt for kontroll av oversettelser",
+      "ingredientSpellingCheckDescription": "Sendes til språkmodellen når hele katalogen ryddes opp, for hver ingrediens fra katalogen med oversettelser som personer, importer eller sammenslåinger har lagt til, med ingrediensen, de oversettelsene og en oppskriftslinje for hver lagt til etter. Sier hvilke som navngir ingrediensen, ingen ingrediens eller en annen ingrediens.",
+      "ingredientSpellingCheckPlaceholder": "Prompt for kontroll av oversettelser...",
+      "ingredientNutrition": "Prompt for ingrediensers næringsinnhold",
+      "ingredientNutritionDescription": "Sendes til språkmodellen for en ingrediens uten eget næringsinnhold, tetthet eller stykkvekt, der AI kan fylle dem inn, med ingrediensen og hva den er en type av lagt til etter. Anslår bare det ingrediensen mangler.",
+      "ingredientNutritionPlaceholder": "Prompt for å anslå en ingrediens' næringsinnhold..."
     },
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {
@@ -1171,7 +1173,7 @@
         "delayed": "Delayed",
         "completed": "Completed",
         "failed": "Failed",
-        "paused": "Paused",
+        "cancelled": "Cancelled",
         "prioritized": "Prioritized",
         "unknown": "Unknown",
         "hanging": "Hanging"
@@ -1202,6 +1204,7 @@
         "saving-link": "Save the link",
         "asking-ai": "Ask AI about the food",
         "drawing-icon": "Tegn matvarens ikon",
+        "filling-gaps": "Fyll inn matvarens hull",
         "naming": "Rydd opp i matvarens navn"
       },
       "queues": {
@@ -1220,7 +1223,7 @@
         "store-lookup": "Butikkoppslag",
         "ingredient-review": "Spør AI om ingredienser",
         "ingredient-icons": "Tegn ingrediensikoner",
-        "new-ingredients": "Nye ingredienser"
+        "ingredient-fill": "Fyll inn hull i ingredienser"
       },
       "summary": {
         "failed": "{count} failed"
@@ -1236,6 +1239,7 @@
       "detail": {
         "title": "Job Details",
         "notFound": "Job not found. It may have been cleaned up.",
+        "cancelledNote": "An administrator cancelled this job.",
         "sections": {
           "error": "Error",
           "pipelineSteps": "Pipeline Steps",
@@ -1264,6 +1268,8 @@
       },
       "actions": {
         "retry": "Retry",
+        "cancel": "Cancel job",
+        "cancelling": "Cancelling…",
         "remove": "Remove"
       },
       "removeModal": {

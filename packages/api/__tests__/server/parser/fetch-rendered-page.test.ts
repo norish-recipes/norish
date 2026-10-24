@@ -78,8 +78,6 @@ function makeToken(
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
-
   mockGoto.mockResolvedValue(undefined);
   mockContent.mockResolvedValue("<html>rendered</html>");
   mockClose.mockResolvedValue(undefined);
@@ -94,6 +92,11 @@ beforeEach(() => {
   });
   mockNewContext.mockImplementation(async () => ({
     addCookies: vi.fn(),
+    newCDPSession: vi.fn().mockResolvedValue({
+      send: vi.fn(async (_method: string, params: { scopeDomain?: string }) => ({
+        scopeDomain: params.scopeDomain,
+      })),
+    }),
     newPage: mockNewPage,
     close: mockClose,
   }));
@@ -101,6 +104,15 @@ beforeEach(() => {
 });
 
 describe("fetchRenderedPage – rendered-page contract", () => {
+  it("never hands the browser a link that is not a web page", async () => {
+    mockGetBrowser.mockClear();
+    for (const url of ["file:///etc/passwd", "gopher://127.0.0.1:6379/_x", "not a link"]) {
+      await expect(renderPage(url), url).resolves.toEqual({ html: "", status: null });
+    }
+
+    expect(mockGetBrowser).not.toHaveBeenCalled();
+  });
+
   it("returns the HTML Obscura rendered", async () => {
     await expect(fetchRenderedPage("https://example.com/recipe")).resolves.toBe(
       "<html>rendered</html>"
@@ -135,12 +147,14 @@ describe("fetchRenderedPage – rendered-page contract", () => {
     expect(contextOptions()).toEqual({});
   });
 
-  it("adds no referer, client hints or fetch metadata alongside a user's headers", async () => {
-    await fetchRenderedPage("https://example.com/recipe", [
-      makeToken({ name: "Authorization", value: "Bearer abc123", type: "header" }),
-    ]);
+  it("configures the context with nothing, header tokens included: they go to the page only", async () => {
+    await expect(
+      fetchRenderedPage("https://example.com/recipe", [
+        makeToken({ name: "Authorization", value: "Bearer abc123", type: "header" }),
+      ])
+    ).resolves.toBe("<html>rendered</html>");
 
-    expect(contextOptions()).toEqual({ extraHTTPHeaders: { Authorization: "Bearer abc123" } });
+    expect(contextOptions()).toEqual({});
   });
 
   it("reads the page once when the caller has no reading of its own", async () => {

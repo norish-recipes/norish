@@ -13,6 +13,7 @@ import {
   DevicePhoneMobileIcon,
   EllipsisHorizontalIcon,
   PencilSquareIcon,
+  PrinterIcon,
   ShareIcon,
   ShoppingCartIcon,
   SparklesIcon,
@@ -36,6 +37,7 @@ import { useWakeLockContext } from "./wake-lock-context";
 
 type Props = {
   id: string;
+  onPrint: () => void;
   /** Lets a caller draw the trigger as chrome floating on the recipe photo. */
   buttonClassName?: string;
 };
@@ -52,7 +54,7 @@ type MenuItem = {
   description?: string;
   descriptionClassName?: string;
 };
-export default function ActionsMenu({ id, buttonClassName }: Props) {
+export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [openCalendar, setOpenCalendar] = React.useState(false);
   const [openGroceries, setOpenGroceries] = React.useState(false);
@@ -74,6 +76,7 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
   const { isSupported, isActive, toggle } = useWakeLockContext();
 
   const t = useTranslations("recipes.actions");
+  const tPrint = useTranslations("recipes.print");
   const tEnrichment = useTranslations("recipes.enrichment");
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
@@ -118,6 +121,14 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
         icon: <ShareIcon className="size-4" />,
         onPress: () => setOpenSharePanel(true),
       });
+    }
+    items.push({
+      key: "print",
+      label: tPrint("title"),
+      icon: <PrinterIcon className="size-4" />,
+      onPress: onPrint,
+    });
+    if (canEdit) {
       items.push({
         key: "edit",
         label: t("edit"),
@@ -239,6 +250,8 @@ export default function ActionsMenu({ id, buttonClassName }: Props) {
     isActive,
     toggle,
     t,
+    tPrint,
+    onPrint,
     tEnrichment,
     isAIEnabled,
     allergies,

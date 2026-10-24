@@ -9,14 +9,15 @@
  */
 export const BACK_PARAM = "from";
 
+// Any origin of our own works: only whether a path stays on it matters.
+const HERE = "https://norish.invalid";
+
 /** A `from` names a place in this app, never a URL — anything else is dropped. */
 export function safeOrigin(value: string | null | undefined): string | null {
-  if (!value) return null;
-  // A single leading slash: "//evil.example" is a protocol-relative URL, and a
-  // back link is not a way to leave the site.
-  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  // Resolved the way a browser would: "//evil", "/\\evil" and "/\t/evil" all leave the site.
+  if (!value?.startsWith("/")) return null;
 
-  return value;
+  return URL.parse(value, HERE)?.origin === HERE ? value : null;
 }
 
 /** The address of `href`, remembering that the reader is standing on `origin`. */

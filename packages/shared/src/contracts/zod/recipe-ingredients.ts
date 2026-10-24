@@ -17,20 +17,24 @@ export const RecipeIngredientsInsertBaseSchema = createInsertSchema(recipeIngred
 
 export const RecipeIngredientsUpdateBaseSchema = createUpdateSchema(recipeIngredients);
 
-// A line's as-written text travels as `ingredientName`, and its alias stays on
-// the server: clients read and write the text.
+// A line's as-written text travels as `ingredientName`, and its foods' aliases
+// stay on the server: clients read and write the text, and see the foods.
 export const RecipeIngredientsWithIdSchema = RecipeIngredientsSelectBaseSchema.omit({
   updatedAt: true,
   createdAt: true,
   recipeId: true,
   name: true,
-  ingredientAliasId: true,
-}).extend({
-  ingredientName: z.string(),
-  ingredientId: z.string().nullable(),
-  amount: z.number().nullable(),
-  order: z.coerce.number(),
-});
+})
+  .extend({
+    ingredientName: z.string(),
+    /** The line's first food, which it shows. */
+    ingredientId: z.string().nullable(),
+    /** Each food with its spelling, in order; where there are several, `joined` says how. */
+    foods: z.array(z.object({ ingredientId: z.string(), name: z.string() })).optional(),
+    amount: z.number().nullable(),
+    order: z.coerce.number(),
+  })
+  .partial({ joined: true });
 
 export const RecipeIngredientSelectWithNameSchema = RecipeIngredientsSelectBaseSchema.extend({
   ingredientId: z.string().nullable(),
@@ -41,7 +45,7 @@ export const RecipeIngredientSelectWithNameSchema = RecipeIngredientsSelectBaseS
 
 export const RecipeIngredientInputBaseSchema = RecipeIngredientsInsertBaseSchema.omit({
   name: true,
-  ingredientAliasId: true,
+  joined: true,
 })
   .partial({
     recipeId: true,

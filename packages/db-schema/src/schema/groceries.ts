@@ -34,14 +34,18 @@ export const groceries = pgTable(
     }),
     /** The line's text as written, which is what the list shows. */
     name: text("name"),
-    /** The Ingredient Alias the name resolved to (ADR-0037); null for a line with no name. */
-    ingredientAliasId: uuid("ingredient_alias_id").references(() => ingredientAliases.id),
+    /** The Ingredient Alias the name resolved to (ADR-0037); null where it names no food, or its food was deleted. */
+    ingredientAliasId: uuid("ingredient_alias_id").references(() => ingredientAliases.id, {
+      onDelete: "set null",
+    }),
     /**
      * The alias's Ingredient, kept beside it so every read of the list has
      * the food a price, an aisle and a store preference are keyed by. Written
      * with the alias; a merge re-points both.
      */
-    ingredientId: uuid("ingredient_id").references(() => ingredients.id),
+    ingredientId: uuid("ingredient_id").references(() => ingredients.id, {
+      onDelete: "set null",
+    }),
     unit: text("unit"),
     amount: numeric("amount", { precision: 10, scale: 3 }),
     purchaseAmount: numeric("purchase_amount", { precision: 10, scale: 3 }),

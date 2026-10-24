@@ -14,7 +14,7 @@ import { readSheet } from "../read/xlsx";
 function headerKey(name: string): string {
   return name
     .replace(/\s+/g, " ")
-    .replace(/\s*\/\s*/g, " ")
+    .replace(/ ?\/ ?/g, " ")
     .trim()
     .toLowerCase();
 }

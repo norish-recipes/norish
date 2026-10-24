@@ -30,6 +30,14 @@ describe("formatAmountAsDecimal", () => {
     expect(formatAmountAsDecimal(1.25)).toBe("1.25");
   });
 
+  it("drops the point when no decimal is left, and only trailing zeros", () => {
+    expect(formatAmountAsDecimal(2.001)).toBe("2");
+    expect(formatAmountAsDecimal(100.001)).toBe("100");
+    expect(formatAmountAsDecimal(10.1)).toBe("10.1");
+    expect(formatAmountAsDecimal(100.5)).toBe("100.5");
+    expect(formatAmountAsDecimal(0.001)).toBe("0");
+  });
+
   it("handles string input", () => {
     expect(formatAmountAsDecimal("2.5")).toBe("2.5");
     expect(formatAmountAsDecimal("3")).toBe("3");

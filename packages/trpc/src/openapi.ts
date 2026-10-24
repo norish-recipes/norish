@@ -11,7 +11,7 @@ import {
   listTodayPlannedRecipesProcedure,
   listWeekPlannedRecipesProcedure,
 } from "./routers/calendar/planned-items";
-import { health } from "./routers/config/procedures";
+import { healthLive, healthReady } from "./routers/config/procedures";
 import {
   assignGroceryToStoreProcedure,
   createGroceryProcedure,
@@ -25,17 +25,20 @@ import {
   getProcedure,
   importFromPasteProcedure,
   importFromUrlProcedure,
+  importStatusProcedure,
   listProcedure,
 } from "./routers/recipes/recipes";
 import { createStoreProcedure, listStoresProcedure } from "./routers/stores/stores";
 import { router } from "./trpc";
 
 export const openApiRouter = router({
-  health,
+  healthLive,
+  healthReady,
   recipeGet: getProcedure,
   recipeSearch: listProcedure,
   recipeCreate: createRecipeProcedure,
   recipeImportUrl: importFromUrlProcedure,
+  recipeImportStatus: importStatusProcedure,
   recipeImportPaste: importFromPasteProcedure,
   groceryList: listGroceriesProcedure,
   groceryCreate: createGroceryProcedure,
@@ -84,7 +87,7 @@ export function handleOpenApiRequest(req: Request) {
 
 // The spec is published on the docs site, so the server is a variable each reader
 // fills in with their own instance.
-export function getOpenApiDocument() {
+export function getOpenApiDocument(): ReturnType<typeof generateOpenApiDocument> {
   const serverUrl = "{server}/api/v1";
   const document = generateOpenApiDocument(openApiRouter, {
     title: "Norish Recipe API",

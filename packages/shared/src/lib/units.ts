@@ -12,7 +12,7 @@
  * recipe says, and a unit a household adds to it has no magnitude Norish
  * could price with. A unit this table does not know prices as one pack.
  */
-import unitsMap from "@norish/config/units.default.json";
+import unitsMap from "@norish/config/units.default.json" with { type: "json" };
 
 import { foldUnitWord } from "./unit-localization";
 

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
@@ -47,10 +47,6 @@ describe("calendar planned items household events", () => {
       ...ctx,
       operationId: null,
     } as Parameters<typeof plannedItemsProcedures.createCaller>[0]);
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
 
   it("lists planned items for all household users in the requested range", async () => {
     const item = createPlannedItemRow({ userId: "household-member-id" });

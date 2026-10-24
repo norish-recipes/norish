@@ -112,7 +112,6 @@ function mediaIsAvailable() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mediaIsAvailable();
   boundary.downloadImage.mockResolvedValue("recipes/recipe-1/thumb.jpg");
   // No Decision Model: import triage has no opinion and the length rules stand.

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { getAvatarFallbackStyle } from "@norish/shared/lib/avatar-color";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 /**
  * Fixed size scale (ADR-0021 front-end contract): call sites pick a step
@@ -66,7 +67,7 @@ export default function UserAvatar({ userId, name, email, image, size = "md" }: 
           alt=""
           className="absolute inset-0 size-full rounded-full object-cover"
           draggable={false}
-          src={image ?? undefined}
+          src={image ? addBasePath(image) : undefined}
           onError={() => setFailedSrc(image ?? null)}
         />
       ) : (

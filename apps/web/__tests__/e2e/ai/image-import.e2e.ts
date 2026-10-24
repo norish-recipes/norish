@@ -51,7 +51,7 @@ let page: Page;
 test.beforeEach(async ({ aiStack, page: fixturePage }) => {
   stack = aiStack;
   page = fixturePage;
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 });
 
 test("a browser image import reaches the provider as a vision request and persists the result", async () => {

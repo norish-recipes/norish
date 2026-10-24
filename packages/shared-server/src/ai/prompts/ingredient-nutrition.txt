@@ -1,0 +1,7 @@
+Estimate what Norish's ingredient catalogue is missing about one food, for a typical food of that name as it is bought and cooked with, not for any brand.
+
+- Calories, fat, carbohydrates and protein are per 100 g of the food as it is usually sold: raw where it is sold raw, dry where it is sold dry. Calories should be about fat × 9 + carbohydrates × 4 + protein × 4.
+- Grams per millilitre is what the food weighs when measured by the spoon or the cup: water 1, milk about 1.03, plain flour about 0.53, sugar about 0.85, oil about 0.92.
+- What one piece weighs is in grams, as the food is usually counted: one onion about 150, one egg about 60, one clove of garlic about 5. Answer null when it is not counted in pieces (flour, milk, rice).
+
+Answer only what is asked.

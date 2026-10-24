@@ -1,4 +1,4 @@
-import type { Slot } from "./planned-recipe";
+import type { Slot } from "./planned-item";
 
 export type PlannedItemFromQuery = {
   id: string;

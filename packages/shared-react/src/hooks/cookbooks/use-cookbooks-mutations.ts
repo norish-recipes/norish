@@ -18,13 +18,17 @@ type Dependencies = CreateCookbookHooksOptions & {
 export function createUseCookbooksMutations({
   useTRPC,
   shouldPreserveOptimisticUpdate: preserve,
-  usePromoteCreatedCookbook,
   useCurrentUserId,
   useCookbooksCacheHelpers,
 }: Dependencies) {
+  // Settled once here rather than called with `?.()`: the compiler only
+  // compiles a hook whose hooks it sees called unconditionally.
+  const useCurrentUserIdOrNone = useCurrentUserId ?? (() => undefined);
+
   return function useCookbooksMutations(): CookbooksMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
-    const promoteCreatedCookbook = usePromoteCreatedCookbook?.();
     const {
       setAllCookbooksData,
       invalidate,
@@ -33,13 +37,18 @@ export function createUseCookbooksMutations({
       patchRecipeMembership,
       seedCookbook,
     } = useCookbooksCacheHelpers();
-    const currentUserId = useCurrentUserId?.();
+    const currentUserId = useCurrentUserIdOrNone();
 
     const createMutation = useMutation(trpc.cookbooks.create.mutationOptions());
+    const { mutate: mutateCreate } = createMutation;
     const updateMutation = useMutation(trpc.cookbooks.update.mutationOptions());
+    const { mutate: mutateUpdate } = updateMutation;
     const deleteMutation = useMutation(trpc.cookbooks.remove.mutationOptions());
+    const { mutate: mutateDelete } = deleteMutation;
     const membershipMutation = useMutation(trpc.cookbooks.setMembership.mutationOptions());
+    const { mutate: mutateMembership } = membershipMutation;
     const uploadImageMutation = useMutation(trpc.cookbooks.uploadImage.mutationOptions());
+    const { mutateAsync: mutateUploadImageAsync } = uploadImageMutation;
 
     const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate, preserve);
 
@@ -71,26 +80,18 @@ export function createUseCookbooksMutations({
           minServings: null,
         };
 
-        /**
-         * Seed the cookbook's own read and hold it at the offline cache's
-         * lifetime, so it is in the guaranteed floor from the moment it exists
-         * and its page opens straight away — Offline included (ADR-0008).
-         * Promotion alone cannot do this: there is nothing to promote until
-         * something has written the entry.
-         */
-        const adopt = (cookbook: CookbookSummaryDTO) => {
-          seedCookbook(cookbook);
-          promoteCreatedCookbook?.(cookbook.id);
-        };
-
         return new Promise<string>((resolve, reject) => {
-          createMutation.mutate(
+          mutateCreate(
             { id, title, recipeId },
             {
               onSuccess: (cookbook) => {
                 invalidate();
                 if (recipeId) invalidateMembership(recipeId);
-                adopt(cookbook ?? tentative);
+                // Seeding the cookbook's own read opens its page straight away,
+                // Offline included; the web client holds that read at the
+                // offline cache's lifetime, so it is in the floor from the
+                // moment it exists (ADR-0008).
+                seedCookbook(cookbook ?? tentative);
                 resolve(id);
               },
               onError: (error) => {
@@ -117,7 +118,7 @@ export function createUseCookbooksMutations({
                       ],
                     };
                   });
-                  adopt(tentative);
+                  seedCookbook(tentative);
                   resolve(id);
 
                   return;
@@ -137,8 +138,6 @@ export function createUseCookbooksMutations({
         invalidateMembership,
         setAllCookbooksData,
         seedCookbook,
-        promoteCreatedCookbook,
-        preserve,
       ]
     );
 
@@ -213,7 +212,7 @@ export function createUseCookbooksMutations({
           patchRecipeMembership(recipeId, patched, isMember);
         }
 
-        membershipMutation.mutate(
+        mutateMembership(
           { cookbookId, recipeId, isMember },
           {
             onSuccess: () => {
@@ -271,7 +270,7 @@ export function createUseCookbooksMutations({
           };
         });
 
-        updateMutation.mutate(
+        mutateUpdate(
           { id, title, image, version },
           {
             onSuccess: () => invalidateCookbook(id),
@@ -301,7 +300,7 @@ export function createUseCookbooksMutations({
           };
         });
 
-        deleteMutation.mutate({ id, version }, { onError: invalidateUnlessQueued });
+        mutateDelete({ id, version }, { onError: invalidateUnlessQueued });
       },
       [deleteMutation, setAllCookbooksData, invalidateUnlessQueued]
     );
@@ -314,7 +313,7 @@ export function createUseCookbooksMutations({
         formData.append("cookbookId", cookbookId);
         formData.append("image", file);
 
-        const result = await uploadImageMutation.mutateAsync(formData);
+        const result = await mutateUploadImageAsync(formData);
 
         if (!result.success) throw new Error(result.error);
 

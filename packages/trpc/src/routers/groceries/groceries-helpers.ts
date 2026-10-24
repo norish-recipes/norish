@@ -1,7 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { CreatedGroceries } from "@norish/db";
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
+import type {
+  GroceryIngredientColumns,
+  GroceryName,
+} from "@norish/shared-server/ingredients/groceries";
 import type { GroceryDto, GroceryUpdateDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
@@ -16,15 +22,21 @@ import {
   GroceryToggleSchema,
   GroceryUpdateBaseSchema,
   listGroceriesByUsers,
+  lockGroceryList,
   updateGroceries,
 } from "@norish/db";
+import { withTransaction } from "@norish/db/drizzle";
 import { listRecurringGroceriesByUsers } from "@norish/db/repositories/recurring-groceries";
 import {
   findBestIngredientStorePreference,
   getStoreOwnerId,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
+import {
+  groceryParts,
+  ingredientColumns,
+  resolveGroceryNames,
+} from "@norish/shared-server/ingredients/groceries";
 import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
@@ -67,6 +79,30 @@ type GroceryMergeCandidate = {
   sortOrder: number;
 };
 
+/**
+ * The grocery a rename or detach edits, written first in the transaction that adds its name's other
+ * foods, under its name's food. `write` answers null where the edit is stale; nothing is written.
+ */
+export interface GroceryEdit {
+  name: GroceryName;
+  write: (ingredient: GroceryIngredientColumns, tx: DbTransaction) => Promise<GroceryDto | null>;
+}
+
+/** A split name's other foods, added as typed groceries with the edited line's amount and unit. */
+export function otherFoods(
+  others: ReadonlyArray<{ name: string }>,
+  line: { quantity: number | null; unitOfMeasure: string | null },
+  recipeIngredientId: string | null = null
+): Array<z.infer<typeof GroceryCreateSchema>> {
+  return others.map(({ name }) => ({
+    name,
+    amount: line.quantity,
+    unit: line.unitOfMeasure,
+    isDone: false,
+    recipeIngredientId,
+  }));
+}
+
 /** The key two list lines are merged under; not the Product Link's folding. */
 function normalizeForMerge(name: string | null): string {
   return (name ?? "").toLowerCase().trim();
@@ -106,15 +142,19 @@ export async function listGroceriesData(ctx: GroceryProcedureContext) {
 
 export async function createGroceriesData(
   ctx: GroceryProcedureContext,
-  input: Array<z.infer<typeof GroceryCreateSchema>>
+  input: Array<z.infer<typeof GroceryCreateSchema>>,
+  edit?: GroceryEdit
 ) {
-  const existingGroceries = await listGroceriesByUsers(ctx.userIds, { includeDone: false });
+  // An edit with no other foods has nothing to merge into.
+  const existingGroceries =
+    input.length > 0 ? await listGroceriesByUsers(ctx.userIds, { includeDone: false }) : [];
   const existingByKey = new Map<string, GroceryMergeCandidate>();
 
   for (const grocery of existingGroceries) {
     const normalizedName = normalizeForMerge(grocery.name);
 
-    if (normalizedName && !grocery.isDone) {
+    // The grocery an edit renames is not merged into under the name it is losing.
+    if (normalizedName && !grocery.isDone && grocery.id !== edit?.name.groceryId) {
       const recipeKey = grocery.recipeIngredientId ?? "manual";
       const recurringKey = grocery.recurringGroceryId ?? "none";
       const key = `${normalizedName}|${recipeKey}|${recurringKey}`;
@@ -152,7 +192,8 @@ export async function createGroceriesData(
 
   for (const storeId of named) await assertStoreAccess(ctx, storeId);
 
-  for (const grocery of input) {
+  // A Grocery names one food: a name whose words join foods is a grocery per food, merged alone.
+  for (const grocery of (await groceryParts(input)).flat()) {
     const normalizedName = normalizeForMerge(grocery.name);
     const recipeKey = grocery.recipeIngredientId ?? "manual";
     const recurringKey = grocery.recurringGroceryId ?? "none";
@@ -242,72 +283,92 @@ export async function createGroceriesData(
     }
   };
 
-  let updatedGroceries: GroceryDto[] = [];
+  // One transaction writes the edit, the merges and the new lines, the list locked first.
+  const written = await writeResolved(
+    () =>
+      resolveGroceryNames(
+        [
+          ...groceriesToCreate.map(({ groceries: grocery }) => grocery),
+          ...(edit ? [edit.name] : []),
+        ],
+        { userId: ctx.user.id }
+      ),
+    async (aliases) => {
+      await fileNewLines(aliases);
 
-  if (groceriesToUpdate.length > 0) {
-    updatedGroceries = await updateGroceries(groceriesToUpdate);
-    log.info({ userId: ctx.user.id, count: updatedGroceries.length }, "Groceries merged");
+      return await withTransaction(async (tx) => {
+        await lockGroceryList(tx, ctx.userIds);
 
-    if (updatedGroceries.length > 0) {
-      void groceries.publish(
-        "updated",
-        {
-          changedGroceries: updatedGroceries,
-        },
-        { householdKey: ctx.householdKey }
-      );
+        // The edit's name was resolved last.
+        const edited = edit && (await edit.write(ingredientColumns(aliases.at(-1)), tx));
+        const noneMade: CreatedGroceries = { created: [], shifted: [] };
+
+        // A stale edit wrote nothing, and its other foods are not written either.
+        if (edited === null) return { edited, merged: [], made: noneMade };
+
+        return {
+          edited,
+          merged:
+            groceriesToUpdate.length > 0
+              ? await updateGroceries(groceriesToUpdate, ctx.userIds, tx)
+              : [],
+          made:
+            groceriesToCreate.length > 0
+              ? await createGroceries(groceriesToCreate, ctx.userIds, tx)
+              : noneMade,
+        };
+      });
     }
+  );
+  const { edited, merged, made } = written;
+  const editedRows = edited ? [edited] : [];
+  let updatedGroceries: GroceryDto[] = [...editedRows, ...merged];
+  const createdGroceries: GroceryDto[] = made.created;
+
+  if (merged.length > 0) {
+    log.info({ userId: ctx.user.id, count: merged.length }, "Groceries merged");
   }
 
-  let createdGroceries: GroceryDto[] = [];
-
-  if (groceriesToCreate.length > 0) {
-    const made = await writeResolved(
-      () =>
-        resolveGroceryNames(
-          groceriesToCreate.map(({ groceries: grocery }) => grocery),
-          { userId: ctx.user.id }
-        ),
-      async (aliases) => {
-        await fileNewLines(aliases);
-
-        return await createGroceries(groceriesToCreate, ctx.userIds);
-      }
+  if (updatedGroceries.length > 0) {
+    void groceries.publish(
+      "updated",
+      {
+        changedGroceries: updatedGroceries,
+      },
+      { householdKey: ctx.householdKey }
     );
+  }
 
-    createdGroceries = made.created;
+  if (createdGroceries.length > 0) {
     log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");
+    void groceries.publish(
+      "created",
+      {
+        groceries: createdGroceries,
+      },
+      { householdKey: ctx.householdKey }
+    );
+  }
 
-    if (createdGroceries.length > 0) {
-      void groceries.publish(
-        "created",
-        {
-          groceries: createdGroceries,
-        },
-        { householdKey: ctx.householdKey }
-      );
-    }
+  // Making room at the top moved every active sibling's sort order, and
+  // with it its version. A screen that goes on holding the old version has
+  // its next write on that row refused as stale (ADR-0004), so the shifted
+  // rows ride back on the answer and out to the household as an update; a
+  // row merged and then shifted is reported as the shift left it.
+  if (made.shifted.length > 0) {
+    const shiftedIds = new Set(made.shifted.map((grocery) => grocery.id));
 
-    // Making room at the top moved every active sibling's sort order, and
-    // with it its version. A screen that goes on holding the old version has
-    // its next write on that row refused as stale (ADR-0004), so the shifted
-    // rows ride back on the answer and out to the household as an update; a
-    // row merged and then shifted is reported as the shift left it.
-    if (made.shifted.length > 0) {
-      const shiftedIds = new Set(made.shifted.map((grocery) => grocery.id));
-
-      updatedGroceries = [
-        ...updatedGroceries.filter((grocery) => !shiftedIds.has(grocery.id)),
-        ...made.shifted,
-      ];
-      void groceries.publish(
-        "updated",
-        {
-          changedGroceries: made.shifted,
-        },
-        { householdKey: ctx.householdKey }
-      );
-    }
+    updatedGroceries = [
+      ...updatedGroceries.filter((grocery) => !shiftedIds.has(grocery.id)),
+      ...made.shifted,
+    ];
+    void groceries.publish(
+      "updated",
+      {
+        changedGroceries: made.shifted,
+      },
+      { householdKey: ctx.householdKey }
+    );
   }
 
   const groceriesById = new Map<string, GroceryDto>();
@@ -322,10 +383,11 @@ export async function createGroceriesData(
 
   // A name the Store already knows is priced in this same response, with no
   // outbound request; a name it does not goes to the lookup queue, so adding
-  // six things in a row stays as fast as it was.
-  const prices = await noticeGroceries(ctx, returnedGroceries);
+  // six things in a row stays as fast as it was. An edited name asks anew.
+  const prices = await noticeGroceries(ctx, [...editedRows, ...returnedGroceries]);
 
   return {
+    edited,
     ids: returnIds,
     createdGroceries,
     updatedGroceries,
@@ -372,7 +434,7 @@ export async function toggleGroceriesData(
     throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid data" });
   }
 
-  const updated = await updateGroceries(parsed.data as GroceryUpdateDto[]);
+  const updated = await updateGroceries(parsed.data as GroceryUpdateDto[], ctx.userIds);
 
   if (updated.length !== parsed.data.length) {
     log.info(
@@ -427,7 +489,7 @@ export async function deleteGroceriesData(
     await assertHouseholdAccess(ctx.user.id, ownerId);
   }
 
-  const result = await deleteGroceryByIds(input.groceries);
+  const result = await deleteGroceryByIds(input.groceries, ctx.userIds);
 
   if (result.staleIds.length > 0) {
     log.info(

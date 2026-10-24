@@ -4,6 +4,8 @@ import type { CreateHouseholdHooksOptions, HouseholdData, HouseholdQueryResult }
 
 export function createUseHouseholdQuery({ useTRPC }: CreateHouseholdHooksOptions) {
   return function useHouseholdQuery(): HouseholdQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 

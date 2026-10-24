@@ -4,6 +4,8 @@ import type { CreatePantryHooksOptions, PantryData, PantryQueryResult } from "./
 
 export function createUsePantryQuery({ useTRPC }: CreatePantryHooksOptions) {
   return function usePantryQuery(): PantryQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.pantry.list.queryKey();

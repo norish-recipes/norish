@@ -1,5 +1,6 @@
 import type { PrecacheEntry, SerwistGlobalConfig, StrategyHandler } from "serwist";
 import { REACHABILITY_DEADLINE_MS } from "@/lib/connectivity/reachability";
+import { WORKER_DOCUMENT_HEADER } from "@/lib/document-request";
 import { SW_ARCHIVE_DOWNLOAD_PATH } from "@/lib/export/archive-download-protocol";
 import {
   acceptArchiveDownload,
@@ -9,7 +10,6 @@ import {
   IMAGE_CACHE_MAX_AGE_SECONDS,
   IMAGE_CACHE_MAX_ENTRIES,
   IMAGE_CACHE_NAME,
-  LEGACY_API_CACHE_NAME,
 } from "@/lib/offline/cache-names";
 import { defaultCache, PAGES_CACHE_NAME } from "@serwist/turbopack/worker";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist, Strategy } from "serwist";
@@ -23,6 +23,9 @@ declare global {
 }
 
 declare const self: ServiceWorkerGlobalScope;
+
+// The base path, from the worker's own URL: esbuild does not inline NEXT_PUBLIC_BASE_PATH here.
+const SW_BASE_PATH = self.location.pathname.replace(/\/serwist\/sw\.js$/, "");
 
 // Parity with the ExpirationPlugin cap the defaultCache page strategy carried;
 // the hand-rolled put below must bound the cache itself.
@@ -76,7 +79,12 @@ class ReachabilityDeadlineDocuments extends Strategy {
 
       if (preloaded) return preloaded;
 
-      return fetch(request, { signal: controller.signal });
+      // The browser sends this fetch as `Sec-Fetch-Dest: empty`; the header gets it seeded anyway.
+      const headers = new Headers(request.headers);
+
+      headers.set(WORKER_DOCUMENT_HEADER, "1");
+
+      return fetch(request, { signal: controller.signal, headers });
     })();
 
     const outcome = await Promise.race([
@@ -123,13 +131,14 @@ const serwist = new Serwist({
     // path has no server behind it (see archive-download-protocol.ts).
     {
       matcher: ({ url, sameOrigin }) =>
-        sameOrigin && url.pathname.startsWith(SW_ARCHIVE_DOWNLOAD_PATH),
+        sameOrigin && url.pathname.startsWith(`${SW_BASE_PATH}${SW_ARCHIVE_DOWNLOAD_PATH}`),
       handler: async ({ url }) =>
-        respondWithArchiveDownload(url.pathname) ??
+        respondWithArchiveDownload(url.pathname.slice(SW_BASE_PATH.length)) ??
         new Response("Not an archive download", { status: 404 }),
     },
     {
-      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/export/"),
+      matcher: ({ url, sameOrigin }) =>
+        sameOrigin && url.pathname.startsWith(`${SW_BASE_PATH}/export/`),
       handler: new NetworkOnly(),
     },
     // Documents race the network against the Reachability Deadline; shadows
@@ -138,7 +147,7 @@ const serwist = new Serwist({
       matcher: ({ request, sameOrigin }) => sameOrigin && request.destination === "document",
       handler: new ReachabilityDeadlineDocuments({ cacheName: PAGES_CACHE_NAME.html }),
     },
-    // Same-origin images (recipe photos via /_next/image included), cache-first
+    // Same-origin images (recipe photos included), cache-first
     // like the hand-rolled sw.js this replaces — but bounded. The old worker
     // capped nothing; defaultCache's 64-entry image LRUs are below the Warm Set
     // floor (50 recipes × primary image plus grid thumbnails), so recently-viewed
@@ -168,7 +177,8 @@ const serwist = new Serwist({
     // its `/api/auth/*` rule — which this one now shadows — behaves as before;
     // the health probe bounds itself at 5s and never reaches it.
     {
-      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/api/"),
+      matcher: ({ url, sameOrigin }) =>
+        sameOrigin && url.pathname.startsWith(`${SW_BASE_PATH}/api/`),
       handler: new NetworkOnly({ networkTimeoutSeconds: 10 }),
     },
     // Everything else keeps Serwist's Next.js-aware defaults: runtime page/RSC
@@ -183,22 +193,13 @@ const serwist = new Serwist({
   fallbacks: {
     entries: [
       {
-        url: "/~offline",
+        url: `${SW_BASE_PATH}/~offline`,
         matcher({ request }) {
           return request.destination === "document";
         },
       },
     ],
   },
-});
-
-// An app installed before the rule above has an `apis` cache full of
-// personalized responses that no route reads any more, so nothing expires it
-// and sign-out does not clear it (ADR-0005). Deleting a cache that isn't there
-// is a no-op, so this needs no one-shot guard — it does real work on the
-// activation that replaces such a worker and nothing on every later one.
-self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.delete(LEGACY_API_CACHE_NAME).catch(() => false));
 });
 
 // A page handing over an export response body to be streamed out as a
@@ -220,7 +221,7 @@ self.addEventListener("notificationclick", (event) => {
         }
       }
 
-      return self.clients.openWindow("/");
+      return self.clients.openWindow(SW_BASE_PATH || "/");
     })
   );
 });

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ChipButton } from "@/components/shared/chip-button";
 import {
   ArrowPathIcon,
   ChevronLeftIcon,
@@ -11,9 +11,12 @@ import {
 } from "@heroicons/react/16/solid";
 import { Button, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+
+import { useHydrated } from "@norish/shared-react/hooks";
 
 import { useCalDavSettingsContext } from "../context";
+import { FIRST_SYNC_STATUS_PAGE } from "../first-sync-status-page";
 
 export default function CalDavSyncStatusCard() {
   const t = useTranslations("settings.caldav.syncStatus");
@@ -26,16 +29,10 @@ export default function CalDavSyncStatusCard() {
     syncStatusFilter,
     setSyncStatusFilter,
     triggerManualSync,
+    isTriggeringSync: syncing,
   } = useCalDavSettingsContext();
-  const [syncing, setSyncing] = useState(false);
-  const handleManualSync = async () => {
-    setSyncing(true);
-    try {
-      await triggerManualSync();
-    } finally {
-      setSyncing(false);
-    }
-  };
+  const format = useFormatter();
+  const hydrated = useHydrated();
   const handleFilterClick = (status: "pending" | "synced" | "failed" | "removed") => {
     if (syncStatusFilter === status) {
       // Click same badge again to clear filter
@@ -62,6 +59,9 @@ export default function CalDavSyncStatusCard() {
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "—";
     try {
+      // "3 minutes ago" only once hydrated: the server's clock is not the browser's.
+      if (!hydrated) return format.dateTime(new Date(dateString));
+
       return formatDistanceToNow(new Date(dateString), {
         addSuffix: true,
       });
@@ -69,7 +69,7 @@ export default function CalDavSyncStatusCard() {
       return "—";
     }
   };
-  const pageSize = 20;
+  const { pageSize } = FIRST_SYNC_STATUS_PAGE;
   const totalPages = Math.ceil(syncStatusTotal / pageSize);
   const startIndex = (syncStatusPage - 1) * pageSize + 1;
   const endIndex = Math.min(syncStatusPage * pageSize, syncStatusTotal);
@@ -82,7 +82,7 @@ export default function CalDavSyncStatusCard() {
           isPending={syncing}
           size="sm"
           variant="primary"
-          onPress={handleManualSync}
+          onPress={triggerManualSync}
         >
           {<ArrowPathIcon className="h-4 w-4" />}
           {t("syncNow")}
@@ -94,54 +94,46 @@ export default function CalDavSyncStatusCard() {
       {/* Summary Badges - Clickable Filters */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2">
-          <Chip
+          <ChipButton
             aria-pressed={syncStatusFilter === "synced"}
-            as="button"
             className="cursor-pointer transition-all"
             color="success"
             size="sm"
-            type="button"
             variant={syncStatusFilter === "synced" ? "primary" : "soft"}
             onClick={() => handleFilterClick("synced")}
           >
             {t("statuses.synced")}: {syncStatusSummary.synced}
-          </Chip>
-          <Chip
+          </ChipButton>
+          <ChipButton
             aria-pressed={syncStatusFilter === "pending"}
-            as="button"
             className="cursor-pointer transition-all"
             color="warning"
             size="sm"
-            type="button"
             variant={syncStatusFilter === "pending" ? "primary" : "soft"}
             onClick={() => handleFilterClick("pending")}
           >
             {t("statuses.pending")}: {syncStatusSummary.pending}
-          </Chip>
-          <Chip
+          </ChipButton>
+          <ChipButton
             aria-pressed={syncStatusFilter === "failed"}
-            as="button"
             className="cursor-pointer transition-all"
             color="danger"
             size="sm"
-            type="button"
             variant={syncStatusFilter === "failed" ? "primary" : "soft"}
             onClick={() => handleFilterClick("failed")}
           >
             {t("statuses.failed")}: {syncStatusSummary.failed}
-          </Chip>
-          <Chip
+          </ChipButton>
+          <ChipButton
             aria-pressed={syncStatusFilter === "removed"}
-            as="button"
             className="cursor-pointer transition-all"
             color="default"
             size="sm"
-            type="button"
             variant={syncStatusFilter === "removed" ? "primary" : "soft"}
             onClick={() => handleFilterClick("removed")}
           >
             {t("statuses.removed")}: {syncStatusSummary.removed}
-          </Chip>
+          </ChipButton>
         </div>
 
         {/* Filter Status and Count */}

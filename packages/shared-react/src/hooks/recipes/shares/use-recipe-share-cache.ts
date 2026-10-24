@@ -13,6 +13,8 @@ export type RecipeShareCacheHelpers = {
 
 export function createUseRecipeShareCacheHelpers({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeShareCacheHelpers(): RecipeShareCacheHelpers {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 

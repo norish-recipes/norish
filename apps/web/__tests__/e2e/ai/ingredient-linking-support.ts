@@ -1,72 +1,45 @@
-import { Client } from "pg";
+import type { StepIngredientLink } from "@norish/db/repositories/steps";
+import { attachStepIngredient } from "@norish/db/repositories/steps";
 
-import { databaseUrl } from "./database";
+import type { AIE2EStack } from "./fixture";
+import { readRecipe, recipeIdNamed } from "../harness/recipes";
 
-export async function readStoredStepIngredients(recipeName: string): Promise<
-  {
-    systemUsed: string;
-    stepOrder: number;
-    ingredientOrder: number;
-    share: number;
-  }[]
-> {
-  const database = new Client({ connectionString: databaseUrl() });
+/** Every Step Ingredient of the recipe of that name, as the recipe page reads them, in order. */
+export async function readStoredStepIngredients(
+  stack: AIE2EStack,
+  recipeName: string
+): Promise<StepIngredientLink[]> {
+  const recipe = await readRecipe(
+    stack.baseURL,
+    stack.ownerCookies,
+    await recipeIdNamed(recipeName)
+  );
 
-  await database.connect();
-
-  try {
-    const rows = await database.query<{
-      system_used: string;
-      step_order: string;
-      ingredient_order: string;
-      share: string;
-    }>(
-      `select s.system_used, s."order" as step_order, ri."order" as ingredient_order, si.share
-         from step_ingredients si
-         join steps s on s.id = si.step_id
-         join recipe_ingredients ri on ri.id = si.recipe_ingredient_id
-         join recipes r on r.id = s.recipe_id
-        where r.name = $1
-        order by s.system_used, s."order", si."order"`,
-      [recipeName]
-    );
-
-    return rows.rows.map((row) => ({
-      systemUsed: row.system_used,
-      stepOrder: Number(row.step_order),
-      ingredientOrder: Number(row.ingredient_order),
-      share: Number(row.share),
-    }));
-  } finally {
-    await database.end();
-  }
+  return (recipe?.steps ?? [])
+    .flatMap((step) =>
+      step.stepIngredients.map((link) => ({
+        systemUsed: step.systemUsed,
+        stepOrder: Number(step.order),
+        ingredientOrder: link.ingredientOrder,
+        share: link.share,
+        linkOrder: link.order,
+      }))
+    )
+    .sort(
+      (a, b) =>
+        a.systemUsed.localeCompare(b.systemUsed) ||
+        a.stepOrder - b.stepOrder ||
+        a.linkOrder - b.linkOrder
+    )
+    .map(({ linkOrder: _linkOrder, ...row }) => row);
 }
 
+/** One link added beside what the recipe has, in one system: a repository write, as no form adds one alone. */
 export async function supplyStepIngredient(
   recipeName: string,
-  link: { systemUsed: string; stepOrder: number; ingredientOrder: number; share: number }
+  link: StepIngredientLink
 ): Promise<void> {
-  const database = new Client({ connectionString: databaseUrl() });
-
-  await database.connect();
-
-  try {
-    const inserted = await database.query(
-      `insert into step_ingredients (step_id, recipe_ingredient_id, share, "order")
-       select s.id, ri.id, $4, 0
-         from recipes r
-         join steps s on s.recipe_id = r.id and s.system_used = $2 and s."order" = $3::numeric
-         join recipe_ingredients ri
-           on ri.recipe_id = r.id and ri.system_used = $2 and ri."order" = $5::numeric
-        where r.name = $1
-        returning id`,
-      [recipeName, link.systemUsed, link.stepOrder, String(link.share), link.ingredientOrder]
-    );
-
-    if (inserted.rowCount !== 1) {
-      throw new Error(`Could not attach Step Ingredient on: ${recipeName}`);
-    }
-  } finally {
-    await database.end();
+  if (!(await attachStepIngredient(await recipeIdNamed(recipeName), link))) {
+    throw new Error(`Could not attach Step Ingredient on: ${recipeName}`);
   }
 }

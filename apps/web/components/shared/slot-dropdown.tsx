@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { usePanelPortalContainer } from "@/components/Panel/Panel";
+import { PanelPortal } from "@/components/Panel/Panel";
 import { Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -12,30 +12,31 @@ type SlotDropdownProps = {
 };
 export function SlotDropdown({ children, onSelectSlot, ariaLabel }: SlotDropdownProps) {
   const t = useTranslations("common.slots");
-  const portalContainer = usePanelPortalContainer();
 
   return (
     <Dropdown>
       {children}
-      <Dropdown.Popover UNSTABLE_portalContainer={portalContainer} className="bg-overlay">
-        <Dropdown.Menu
-          aria-label={ariaLabel ?? t("chooseSlot")}
-          onAction={(slot) => onSelectSlot(slot as Slot)}
-        >
-          <Dropdown.Item key="Breakfast" id="Breakfast" textValue="Breakfast">
-            <Label>{t("breakfast")}</Label>
-          </Dropdown.Item>
-          <Dropdown.Item key="Lunch" id="Lunch" textValue="Lunch">
-            <Label>{t("lunch")}</Label>
-          </Dropdown.Item>
-          <Dropdown.Item key="Dinner" id="Dinner" textValue="Dinner">
-            <Label>{t("dinner")}</Label>
-          </Dropdown.Item>
-          <Dropdown.Item key="Snack" id="Snack" textValue="Snack">
-            <Label>{t("snack")}</Label>
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown.Popover>
+      <PanelPortal>
+        <Dropdown.Popover className="bg-overlay">
+          <Dropdown.Menu
+            aria-label={ariaLabel ?? t("chooseSlot")}
+            onAction={(slot) => onSelectSlot(slot as Slot)}
+          >
+            <Dropdown.Item key="Breakfast" id="Breakfast" textValue="Breakfast">
+              <Label>{t("breakfast")}</Label>
+            </Dropdown.Item>
+            <Dropdown.Item key="Lunch" id="Lunch" textValue="Lunch">
+              <Label>{t("lunch")}</Label>
+            </Dropdown.Item>
+            <Dropdown.Item key="Dinner" id="Dinner" textValue="Dinner">
+              <Label>{t("dinner")}</Label>
+            </Dropdown.Item>
+            <Dropdown.Item key="Snack" id="Snack" textValue="Snack">
+              <Label>{t("snack")}</Label>
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </PanelPortal>
     </Dropdown>
   );
 }

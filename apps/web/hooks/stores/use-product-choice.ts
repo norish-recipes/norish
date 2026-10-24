@@ -71,12 +71,10 @@ export function useProductChoice(options: {
   // The name a panel opens on is what it is about, so it is adopted at once;
   // only what is typed after that waits for the typing to stop, because a link
   // is not looked up once per keystroke.
-  useEffect(() => {
-    if (settledName === "" || groceryName === settledName) {
-      setSettledName(groceryName);
+  if (settledName === "" && groceryName !== "") setSettledName(groceryName);
 
-      return;
-    }
+  useEffect(() => {
+    if (groceryName === settledName) return;
     const timer = setTimeout(() => setSettledName(groceryName), LOOKUP_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);

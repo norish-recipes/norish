@@ -67,7 +67,6 @@ describe("chooseProduct", () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
     assertHouseholdAccess.mockResolvedValue(undefined);
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
@@ -405,7 +404,6 @@ describe("searchShop", () => {
   ];
 
   beforeEach(() => {
-    vi.clearAllMocks();
     storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
     storesRepository.getStoreById.mockResolvedValue({
       id: STORE,

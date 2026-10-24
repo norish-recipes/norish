@@ -7,6 +7,8 @@ import { selectIngredientsForSystem } from "./use-recipe-ingredients";
 
 export function createUseLinkedRecipeIngredients({ useTRPC }: CreateRecipeHooksOptions) {
   return function useLinkedRecipeIngredients(recipeIds: string[], preferredSystem?: string | null) {
+    "use memo";
+
     const trpc = useTRPC();
     const queries = useQueries({
       queries: recipeIds.map((id) => trpc.recipes.get.queryOptions({ id })),

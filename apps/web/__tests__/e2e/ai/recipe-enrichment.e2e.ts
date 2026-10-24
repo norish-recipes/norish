@@ -4,7 +4,7 @@
  * Acceptance for this flow crosses recipe creation, the enrichment queues, WebSocket
  * delivery, client cache updates, and visible feedback — no single unit seam
  * covers it. Only the AI provider's HTTP boundary is faked; the real Norish
- * server, database, Redis, BullMQ workers, repositories, authorized mutation
+ * server, database, Valkey, BullMQ workers, repositories, authorized mutation
  * layer, realtime connection, and UI are all exercised.
  */
 import type { BrowserContext, Page } from "@playwright/test";
@@ -65,7 +65,7 @@ test.beforeEach(({ aiStack, context: fixtureContext, page: fixturePage }) => {
 });
 
 test.afterEach(async () => {
-  await setAutomaticEnrichment({}).catch(() => undefined);
+  await setAutomaticEnrichment(stack, {}).catch(() => undefined);
 });
 
 /**
@@ -149,7 +149,7 @@ async function eventuallyOnRecipe(assertion: () => Promise<void>): Promise<void>
 // scenario that enabled two would race for the provider's queued responses;
 // which kind runs is the coordinator's decision and is asserted directly.
 test("an import enrols the enabled automatic kind and renders the result", async () => {
-  await setAutomaticEnrichment({ autoTagging: true });
+  await setAutomaticEnrichment(stack, { autoTagging: true });
 
   await importAndOpen("Automatic Enrichment Stew", [
     bareRecipe("Automatic Enrichment Stew"),
@@ -171,7 +171,7 @@ test("an import enrols the enabled automatic kind and renders the result", async
 });
 
 test("a manual creation enrols the enabled automatic kind", async () => {
-  await setAutomaticEnrichment({ autoTagging: true });
+  await setAutomaticEnrichment(stack, { autoTagging: true });
 
   stack!.ai.control.reset();
   stack!.ai.control.succeedWith({ tags: ["created-manually"] });
@@ -184,7 +184,7 @@ test("a manual creation enrols the enabled automatic kind", async () => {
 });
 
 test("a disabled automatic switch leaves that kind alone", async () => {
-  await setAutomaticEnrichment({ autoTagging: false });
+  await setAutomaticEnrichment(stack, { autoTagging: false });
 
   // Only the extraction directive is queued: an enrolled auto-tagging job would
   // call the provider, and the null default fails the request loudly.
@@ -194,7 +194,7 @@ test("a disabled automatic switch leaves that kind alone", async () => {
 });
 
 test("automatic categorization fills an empty category list", async () => {
-  await setAutomaticEnrichment({ autoCategorization: true });
+  await setAutomaticEnrichment(stack, { autoCategorization: true });
 
   await importAndOpen("Automatic Categories Stew", [
     bareRecipe("Automatic Categories Stew"),
@@ -207,7 +207,7 @@ test("automatic categorization fills an empty category list", async () => {
 });
 
 test("supplied categories and nutrition suppress the automatic replacements", async () => {
-  await setAutomaticEnrichment({ autoCategorization: true, nutritionEstimation: true });
+  await setAutomaticEnrichment(stack, { autoCategorization: true, nutritionEstimation: true });
 
   // Only the extraction directive is queued: if either replacement kind were
   // enrolled it would call the provider, and the null default fails the request.
@@ -224,7 +224,7 @@ test("supplied categories and nutrition suppress the automatic replacements", as
 });
 
 test("a manually requested categorization replaces the supplied categories", async () => {
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 
   await importAndOpen("Manual Refresh Stew", [suppliedRecipe("Manual Refresh Stew")]);
 
@@ -243,7 +243,7 @@ test("a manually requested categorization replaces the supplied categories", asy
 });
 
 test("auto-tagging appends without removing existing tags", async () => {
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 
   await importAndOpen("Append Tags Stew", [
     { ...bareRecipe("Append Tags Stew"), keywords: ["supplied-tag"] },
@@ -263,7 +263,7 @@ test("auto-tagging appends without removing existing tags", async () => {
 });
 
 test("an automatic failure stays quiet and leaves the recipe intact", async () => {
-  await setAutomaticEnrichment({ autoCategorization: true });
+  await setAutomaticEnrichment(stack, { autoCategorization: true });
 
   const ai = stack!.ai;
 
@@ -307,7 +307,7 @@ test("an automatic failure stays quiet and leaves the recipe intact", async () =
 });
 
 test("a manual failure is reported to the requester", async () => {
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 
   await importAndOpen("Manual Failure Stew", [bareRecipe("Manual Failure Stew")]);
 
@@ -320,7 +320,7 @@ test("a manual failure is reported to the requester", async () => {
 });
 
 test("lifecycle state survives a page reload and reconnect", async () => {
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 
   await importAndOpen("Reload Recovery Stew", [bareRecipe("Reload Recovery Stew")]);
 
@@ -359,7 +359,7 @@ test("lifecycle state survives a page reload and reconnect", async () => {
     // terminal events then provably fired while this browser was disconnected,
     // so reconnecting exercises recovery rather than live delivery.
     await expect(async () => {
-      expect(await readStoredCategories("Reload Recovery Stew")).toContain("Dinner");
+      expect(await readStoredCategories(stack, "Reload Recovery Stew")).toContain("Dinner");
     }).toPass({ timeout: 30_000, intervals: [250, 500, 1_000] });
     await context.setOffline(false);
     isOffline = false;

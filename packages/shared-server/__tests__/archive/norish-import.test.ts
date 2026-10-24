@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 // @vitest-environment node
 
@@ -183,10 +183,16 @@ async function buildArchiveBytes(
   return Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 }
 
+let parser: typeof import("@norish/shared-server/archive/parser");
+
+// Loaded once, in a hook: the parser's import graph is heavy, and loaded
+// inside a test it spent that test's 5 s budget on a busy machine.
+beforeAll(async () => {
+  parser = await import("@norish/shared-server/archive/parser");
+});
+
 describe("norish archive rides the shared import loop", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockListCuisines.mockResolvedValue([{ id: FRENCH_CUISINE_ID, name: "French", version: 1 }]);
     mockFindExistingRecipe.mockResolvedValue(null);
     mockCreateRecipeWithRefs.mockImplementation(async (recipeId) => ({
@@ -204,14 +210,11 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const { importArchive, getArchiveInfo, ArchiveFormat } =
-      await import("@norish/shared-server/archive/parser");
+    const info = await parser.getArchiveInfo(await JSZip.loadAsync(zipBytes));
 
-    const info = await getArchiveInfo(await JSZip.loadAsync(zipBytes));
+    expect(info).toEqual({ format: parser.ArchiveFormat.NORISH, count: 1 });
 
-    expect(info).toEqual({ format: ArchiveFormat.NORISH, count: 1 });
-
-    const result = await importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     expect(result.imported).toHaveLength(1);
     expect(result.errors).toHaveLength(0);
@@ -233,9 +236,7 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-
-    await importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     const createdId = mockCreateRecipeWithRefs.mock.calls[0]![0];
 
@@ -255,9 +256,7 @@ describe("norish archive rides the shared import loop", () => {
       },
     ]);
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-
-    await importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     const createdId = mockCreateRecipeWithRefs.mock.calls[0]![0];
 
@@ -270,9 +269,7 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-
-    await importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     const dto = mockCreateRecipeWithRefs.mock.calls[0]![2] as Record<string, unknown>;
 
@@ -287,9 +284,7 @@ describe("norish archive rides the shared import loop", () => {
       },
     ]);
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-
-    const result = await importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     expect(result.errors).toHaveLength(0);
 
@@ -306,8 +301,7 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-    const result = await importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     expect(mockUpdateRecipeWithRefs).toHaveBeenCalledWith(
       "existing-recipe-id",
@@ -325,12 +319,15 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-
     const progressNotes: Array<{ file: string; note: string }> = [];
-    const result = await importArchive("user-1", ["user-1"], zipBytes, (_c, _r, _e, note) => {
-      if (note) progressNotes.push(note);
-    });
+    const result = await parser.importArchive(
+      "user-1",
+      ["user-1"],
+      zipBytes,
+      (_c, _r, _e, note) => {
+        if (note) progressNotes.push(note);
+      }
+    );
 
     expect(result.notes).toEqual([
       { file: "recipe_Archived Soup", note: "Unknown cuisines dropped: Klingon" },
@@ -350,8 +347,7 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-    const result = await importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     expect(result.errors).toHaveLength(1);
     expect(result.notes).toHaveLength(0);
@@ -367,8 +363,7 @@ describe("norish archive rides the shared import loop", () => {
       buildManifest({ recipeCount: 2 })
     );
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-    const result = await importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     expect(result.imported).toHaveLength(1);
     expect(result.errors).toHaveLength(1);
@@ -381,9 +376,9 @@ describe("norish archive rides the shared import loop", () => {
       buildManifest({ formatVersion: 2 })
     );
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-
-    await expect(importArchive("user-1", ["user-1"], zipBytes)).rejects.toThrow(/format version 2/);
+    await expect(parser.importArchive("user-1", ["user-1"], zipBytes)).rejects.toThrow(
+      /format version 2/
+    );
     expect(mockCreateRecipeWithRefs).not.toHaveBeenCalled();
   });
 
@@ -397,8 +392,6 @@ describe("norish archive rides the shared import loop", () => {
     );
     const zip = await JSZip.loadAsync(new Uint8Array(zipBytes));
 
-    const { getArchiveInfo } = await import("@norish/shared-server/archive/parser");
-
-    await expect(getArchiveInfo(zip)).rejects.toThrow(/format version 2/);
+    await expect(parser.getArchiveInfo(zip)).rejects.toThrow(/format version 2/);
   });
 });

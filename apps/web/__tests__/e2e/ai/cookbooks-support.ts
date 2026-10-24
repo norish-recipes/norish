@@ -1,105 +1,101 @@
-import { Client } from "pg";
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
-import { databaseUrl } from "./database";
+import type { AIE2EStack } from "./fixture";
+import { userIdOf } from "../harness/accounts";
+import { recipeIdsNamed, seedRecipe as seedRecipeFor } from "../harness/recipes";
+import { callTrpc, queryTrpc } from "../harness/trpc";
+import { OWNER } from "./fixture";
 
-async function withDatabase<T>(run: (database: Client) => Promise<T>): Promise<T> {
-  const database = new Client({ connectionString: databaseUrl() });
+type Owner = Pick<AIE2EStack, "baseURL" | "ownerCookies">;
 
-  await database.connect();
-
-  try {
-    return await run(database);
-  } finally {
-    await database.end();
-  }
+/** A recipe of the owner's with these amount-less lines, seeded past any AI pass; its id. */
+export async function seedRecipe(name: string, lines: readonly string[] = []): Promise<string> {
+  return seedRecipeFor(await userIdOf(OWNER), name, lines);
 }
 
-/** The instance owner, whose session the browser fixture carries. */
-async function ownerId(database: Client): Promise<string> {
-  const result = await database.query<{ id: string }>(
-    `select id from "user" where "isServerOwner" = true order by "createdAt" limit 1`
+/** A cookbook of the owner's holding these recipes, filed as the membership panel files them. */
+export async function seedCookbook(
+  stack: Owner,
+  title: string,
+  recipeIds: string[]
+): Promise<string> {
+  const { id } = await callTrpc<{ id: string }>(
+    stack.baseURL,
+    stack.ownerCookies,
+    "cookbooks.create",
+    {
+      title,
+    }
   );
-  const owner = result.rows[0];
 
-  if (!owner) throw new Error("The AI fixture owner is missing");
+  for (const recipeId of recipeIds) {
+    await callTrpc(stack.baseURL, stack.ownerCookies, "cookbooks.setMembership", {
+      cookbookId: id,
+      recipeId,
+      isMember: true,
+    });
+  }
 
-  return owner.id;
+  return id;
 }
 
-/** Seed a recipe directly, so the spec spends its time on cookbooks. */
-export function seedRecipe(name: string): Promise<string> {
-  return withDatabase(async (database) => {
-    const owner = await ownerId(database);
-    const result = await database.query<{ id: string }>(
-      `insert into recipes (user_id, name, description, servings)
-       values ($1, $2, 'Seeded for the cookbooks browser scenario.', 4)
-       returning id`,
-      [owner, name]
-    );
+/** Every cookbook, as the owner (a server admin) lists them. */
+async function everyCookbook(stack: Owner): Promise<CookbookSummaryDTO[]> {
+  const { cookbooks } = await queryTrpc<{ cookbooks: CookbookSummaryDTO[] }>(
+    stack.baseURL,
+    stack.ownerCookies,
+    "cookbooks.list",
+    { limit: 200, sortMode: "none" }
+  );
 
-    return result.rows[0]!.id;
-  });
+  return cookbooks;
 }
 
 /** Which recipes a cookbook holds, by title. */
-export function readCookbookMembers(title: string): Promise<string[]> {
-  return withDatabase(async (database) => {
-    const result = await database.query<{ name: string }>(
-      `select r.name
-         from cookbooks c
-         join cookbook_recipes m on m.cookbook_id = c.id
-         join recipes r on r.id = m.recipe_id
-        where c.title = $1
-        order by r.name`,
-      [title]
-    );
+export async function readCookbookMembers(stack: Owner, title: string): Promise<string[]> {
+  const cookbook = (await everyCookbook(stack)).find((candidate) => candidate.title === title);
 
-    return result.rows.map((row) => row.name);
-  });
+  if (!cookbook) return [];
+  const { recipes } = await queryTrpc<{ recipes: Array<{ name: string }> }>(
+    stack.baseURL,
+    stack.ownerCookies,
+    "cookbooks.recipes",
+    { cookbookId: cookbook.id }
+  );
+
+  return recipes.map((recipe) => recipe.name).sort((a, b) => a.localeCompare(b));
 }
 
 /** A cookbook's uploaded cover URL, by title, or null when it has none. */
-export function readCookbookImage(title: string): Promise<string | null> {
-  return withDatabase(async (database) => {
-    const result = await database.query<{ image: string | null }>(
-      `select image from cookbooks where title = $1`,
-      [title]
-    );
-
-    return result.rows[0]?.image ?? null;
-  });
+export async function readCookbookImage(stack: Owner, title: string): Promise<string | null> {
+  return (await everyCookbook(stack)).find((cookbook) => cookbook.title === title)?.image ?? null;
 }
 
 /** Every stored cookbook title. */
-export function readCookbookTitles(): Promise<string[]> {
-  return withDatabase(async (database) => {
-    const result = await database.query<{ title: string }>(
-      `select title from cookbooks order by title`
-    );
-
-    return result.rows.map((row) => row.title);
-  });
+export async function readCookbookTitles(stack: Owner): Promise<string[]> {
+  return (await everyCookbook(stack)).map((cookbook) => cookbook.title);
 }
 
 /** Whether a recipe row still exists, by name. */
-export function recipeExists(name: string): Promise<boolean> {
-  return withDatabase(async (database) => {
-    const result = await database.query(`select 1 from recipes where name = $1`, [name]);
-
-    return result.rowCount !== null && result.rowCount > 0;
-  });
+export async function recipeExists(name: string): Promise<boolean> {
+  return (await recipeIdsNamed(name)).length > 0;
 }
 
-/** Drop one cookbook, so a scenario that made its own can clean up after it. */
-export function deleteCookbookByTitle(title: string): Promise<void> {
-  return withDatabase(async (database) => {
-    await database.query(`delete from cookbooks where title = $1`, [title]);
-  });
+/** Drop the cookbooks of this title, so a scenario that made its own can clean up after it. */
+export async function deleteCookbookByTitle(stack: Owner, title: string): Promise<void> {
+  for (const cookbook of await everyCookbook(stack)) {
+    if (cookbook.title === title) await deleteCookbook(stack, cookbook);
+  }
 }
 
 /** Clear every cookbook, so each scenario starts from a known Library. */
-export function clearCookbooks(): Promise<void> {
-  return withDatabase(async (database) => {
-    await database.query(`delete from cookbooks`);
+export async function clearCookbooks(stack: Owner): Promise<void> {
+  for (const cookbook of await everyCookbook(stack)) await deleteCookbook(stack, cookbook);
+}
+
+async function deleteCookbook(stack: Owner, cookbook: CookbookSummaryDTO): Promise<void> {
+  await callTrpc(stack.baseURL, stack.ownerCookies, "cookbooks.remove", {
+    id: cookbook.id,
+    version: cookbook.version,
   });
 }

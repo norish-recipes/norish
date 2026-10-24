@@ -1,3 +1,4 @@
+import type { NewOutboxEntry } from "@/lib/outbox/outbox-types";
 import { isEncodedFormData } from "@/lib/outbox/input-codec";
 import { createOutboxLink } from "@/lib/outbox/outbox-link";
 import { OUTBOX_REPLAY_HEADER, OUTBOX_REPLAY_HEADER_VALUE } from "@/lib/outbox/replay-client";
@@ -6,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
-const enqueue = vi.hoisted(() => vi.fn(async () => ({})));
+const enqueue = vi.hoisted(() => vi.fn(async (_entry: NewOutboxEntry): Promise<unknown> => ({})));
 const owner = vi.hoisted(() => vi.fn<() => string | null>(() => "u1"));
 
 vi.mock("@/lib/outbox/outbox-store", () => ({ outboxStore: { enqueue } }));
@@ -169,7 +170,7 @@ describe("createOutboxLink", () => {
     );
 
     expect(enqueue).toHaveBeenCalledTimes(1);
-    const stored = enqueue.mock.calls[0]?.[0] as { input: unknown; entityId: string | null };
+    const stored = enqueue.mock.calls[0]![0];
 
     expect(isEncodedFormData(stored.input)).toBe(true);
     expect(stored.entityId).toBe("33333333-3333-4333-8333-333333333333");

@@ -1,45 +1,48 @@
-import type { IngredientResolutions } from "@norish/db/repositories/ingredients";
+import type { RecipeLineAlias } from "@norish/db/repositories/ingredient-aliases";
+import type { LineResolution } from "@norish/db/repositories/ingredients";
 import type { MutationOutcome } from "@norish/db/repositories/mutation-outcomes";
 import type {
   CreateRecipeResult,
   WithIngredientResolutions,
 } from "@norish/db/repositories/recipes";
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
-import { findIngredientNamesByIds } from "@norish/db/repositories/ingredient-aliases";
+import type { LineJoin } from "@norish/shared/lib/line-foods";
+import {
+  findIngredientNamesByIds,
+  findRecipeLineAliases,
+} from "@norish/db/repositories/ingredient-aliases";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
-import { lineFoodText, namesNoFood } from "@norish/shared/lib/ingredient-text";
+import { lineFoodText, lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
+import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
 import type { ResolveActor } from "./resolver";
-import { cleanIngredientText, resolveIngredients, writeResolved } from "./resolver";
+import { cleanIngredientText, resolveLineFoods, resolveParts, writeResolved } from "./resolver";
 
 interface RecipeLineInput {
+  /** The stored line this one saves over, if any. */
+  id?: string;
   ingredientId?: string | null;
   ingredientName?: string;
   amount?: unknown;
   unit?: string | null;
   /**
-   * The text the line's food is resolved from, when an import already knows
-   * which food the line is (Mealie's and Tandoor's own food names). The line
-   * keeps its own text; this is read here and never stored.
+   * The texts to resolve the line's foods from, in order, where an import already knows them
+   * (Mealie's, Tandoor's or an archive's food names); read, never stored.
    */
-  foodText?: string;
+  foodTexts?: readonly string[];
+  /** How several `foodTexts` go together. */
+  joined?: LineJoin | null;
 }
 
 /**
- * Resolve a recipe payload's line texts before the recipe is written, which
- * is the only way a recipe write accepts them. Each line's text is its
- * `ingredientName` as written; a line that names only an Ingredient by id is
- * given that Ingredient's name as its text. A line left with no text is
- * dropped, as the recipe write always skipped it, and one that names no
- * food (a heading, a text with no letter or digit) is written as it is. A
- * line's food is resolved from the `foodText` it names, else from
- * `lineFoodText`; a text written twice is read the first way.
+ * Resolve a payload's lines before the recipe write (by `foodTexts`, else `lineFoodText`): an
+ * id-only line takes its food's name, an empty one is dropped, an unchanged one keeps its food.
  */
 export async function withResolvedIngredients<
   L extends RecipeLineInput,
   P extends { recipeIngredients?: L[] },
->(payload: P, actor: ResolveActor): Promise<WithIngredientResolutions<P>> {
+>(payload: P, actor: ResolveActor, recipeId?: string): Promise<WithIngredientResolutions<P>> {
   const lines = payload.recipeIngredients;
 
   if (!lines?.length) return { ...payload, ingredientResolutions: new Map() };
@@ -60,27 +63,52 @@ export async function withResolvedIngredients<
     return text ? [{ ...line, ingredientName: text }] : [];
   });
   const units = await getUnits();
+  const stored = recipeId
+    ? await findRecipeLineAliases(written.flatMap((line) => (line.id ? [line.id] : [])))
+    : new Map<string, RecipeLineAlias>();
+  const resolved = new Map<string, LineResolution | null>();
   const foodTexts = new Map<string, string>();
 
   for (const line of written) {
-    const text = line.ingredientName;
+    const kept = line.id ? stored.get(line.id) : undefined;
 
-    if (text && !namesNoFood(text) && !foodTexts.has(text)) {
+    if (
+      kept &&
+      kept.recipeId === recipeId &&
+      lineFoodText({ text: kept.name, amount: kept.amount, unit: kept.unit }, units) ===
+        lineFoodText({ text: line.ingredientName, amount: line.amount, unit: line.unit }, units) &&
+      !resolved.has(line.ingredientName)
+    ) {
+      resolved.set(line.ingredientName, kept);
+    }
+  }
+  for (const line of written) {
+    const text = line.ingredientName;
+    const named = (line.foodTexts ?? []).map(cleanIngredientText).filter(Boolean);
+
+    if (
+      lineNamesNoFood({ text, amount: line.amount }) ||
+      resolved.has(text) ||
+      foodTexts.has(text)
+    ) {
+      continue;
+    }
+    // Several texts name a food each; without a join only the first is read, as a line shows it.
+    if (named.length > 1 && line.joined) {
+      const foods = distinctFoods(await resolveParts(named, actor));
+
+      resolved.set(text, { foods, joined: joinOf(foods, line.joined) });
+    } else {
       foodTexts.set(
         text,
-        cleanIngredientText(line.foodText ?? "") ||
-          lineFoodText({ text, amount: line.amount, unit: line.unit }, units)
+        named[0] ?? lineFoodText({ text, amount: line.amount, unit: line.unit }, units)
       );
     }
   }
 
-  const foods = await resolveIngredients([...foodTexts.values()], actor);
-  const resolved: IngredientResolutions = new Map(
-    [...foodTexts.keys()].map((text, index) => [
-      text,
-      { aliasId: foods[index]!.aliasId, ingredientId: foods[index]!.ingredientId },
-    ])
-  );
+  const foods = await resolveLineFoods([...foodTexts.values()], actor);
+
+  [...foodTexts.keys()].forEach((text, index) => resolved.set(text, foods[index] ?? null));
 
   return { ...payload, recipeIngredients: written, ingredientResolutions: resolved };
 }
@@ -110,7 +138,7 @@ export function updateResolvedRecipe(
   version?: number
 ): Promise<MutationOutcome<void>> {
   return writeResolved(
-    () => withResolvedIngredients(payload, actor),
+    () => withResolvedIngredients(payload, actor, recipeId),
     (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version)
   );
 }

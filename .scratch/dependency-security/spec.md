@@ -1,6 +1,8 @@
 # Dependency security: 0.25.0 patches, 0.26.0 sweep
 
-Status: ready-for-agent
+Status: superseded
+
+The 0.25.0 half (tickets 01–04) shipped in PR #617. The 0.26.0 half (05–09) is superseded by `.scratch/dependency-upgrades/` as of 2026-10-13.
 
 ## Problem Statement
 
@@ -21,6 +23,8 @@ Two releases.
 **First SSO sign-in of a password user is refused, on purpose.** Since 1.6.11 Better Auth links an OAuth identity to an existing account only when the local account's email is verified, and `trustedProviders` no longer bypasses that. Norish has no mail channel, so a password account is never verified. Marking emails verified, or setting the deprecated `requireLocalEmailVerified: false`, reopens the takeover: "verified" is the only claim that the account's creator owns the address. So the refusal stays, and the auth-error page says only that the email is already in use (`account_not_linked`). There is no in-app link-a-provider setting; that was left out deliberately.
 
 **The encrypted-email adapter must return the real email.** `createEncryptedEmailAdapter` (`packages/auth/src/auth.ts`) maps email lookups to `emailHmac` but hands Better Auth the encrypted row, so Better Auth's "provider email equals account email" check never matches and an OAuth sign-in never marks a user verified. Decrypting the row it returns fixes that: a user who linked Google is marked verified at their next Google sign-in, after which OIDC auto-links as before.
+
+**0.26 stops auto-linking altogether** (noted 2026-10-15). Better Auth 1.7's `disableImplicitLinking` is on, so no sign-in links accounts, verified or not (`.scratch/dependency-upgrades/` ticket 10). Adding a provider will be linking it from a signed-in session in Settings, a later feature of its own.
 
 **The image stays on Node 22 in 0.25.0.** `node:22-alpine3.24`, `.nvmrc` 22.23.3. Node 26 (LTS from 2026-10-28, supported to April 2029) is 0.26.0's.
 

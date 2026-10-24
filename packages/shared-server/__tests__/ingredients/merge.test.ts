@@ -15,6 +15,7 @@ import {
   listAisleLinksByStoreIds,
   saveStoreAisles,
 } from "@norish/db/repositories/aisles";
+import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { renameCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { resolveProductLink, upsertProductLink } from "@norish/db/repositories/store-products";
@@ -33,12 +34,15 @@ import {
 } from "@norish/shared-server/ingredients/catalogue";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { addToPantry } from "@norish/shared-server/ingredients/pantry";
-import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
   createTestHousehold,
+  createTestRecipe,
   createTestUser,
+  getRecipeIngredients,
   getTestDb,
+  insertTestRecipeLine,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -74,6 +78,14 @@ describe("merging Ingredients and moving aliases", () => {
     const [resolved] = await resolveIngredients([text], { userId: actor.userId });
 
     return resolved!;
+  }
+
+  /** Flag a food as AI unsure of it: a mint is unflagged. */
+  async function flag(ingredientId: string) {
+    await getTestDb()
+      .update(ingredients)
+      .set({ flagged: true, flagReason: "ai-unsure" })
+      .where(eq(ingredients.id, ingredientId));
   }
 
   async function typed(name: string) {
@@ -136,6 +148,9 @@ describe("merging Ingredients and moving aliases", () => {
     it("makes every line behind the source's spellings mean the target", async () => {
       const onion = await mint("onion");
       const uien = await mint("uien");
+      const recipe = await createTestRecipe(actor.userId);
+
+      await insertTestRecipeLine({ recipeId: recipe.id, name: "uien" }, [uien.aliasId]);
       const grocery = await groceryTyped("uien");
       const [recurring] = await getTestDb()
         .insert(recurringGroceries)
@@ -152,8 +167,11 @@ describe("merging Ingredients and moving aliases", () => {
 
       await mergeIngredients(actor, uien.ingredientId, onion.ingredientId);
 
+      await expect(getRecipeIngredients(recipe.id)).resolves.toMatchObject([
+        { name: "uien", ingredientId: onion.ingredientId },
+      ]);
       await expect(groceryFood(grocery)).resolves.toBe(onion.ingredientId);
-      await expect(ingredientFor(uien.aliasId)).resolves.toMatchObject({
+      await expect(findIngredientByAliasId(uien.aliasId)).resolves.toMatchObject({
         id: onion.ingredientId,
       });
 
@@ -245,10 +263,10 @@ describe("merging Ingredients and moving aliases", () => {
       const knaks = await mint("Unox Knaks");
       const frankfurter = await mint("frankfurter");
 
-      await expect(ingredientFor(knaks.aliasId)).resolves.toMatchObject({ flagged: true });
+      await flag(knaks.ingredientId);
       await mergeIngredients(actor, frankfurter.ingredientId, knaks.ingredientId);
 
-      await expect(ingredientFor(knaks.aliasId)).resolves.toMatchObject({
+      await expect(findIngredientByAliasId(knaks.aliasId)).resolves.toMatchObject({
         flagged: false,
         flagReason: null,
       });
@@ -291,7 +309,7 @@ describe("merging Ingredients and moving aliases", () => {
       await expect(
         refusal(mergeIngredients(actor, mine.ingredientId, theirs!.ingredientId))
       ).resolves.toBe("forbidden");
-      await expect(ingredientFor(theirs!.aliasId)).resolves.toMatchObject({
+      await expect(findIngredientByAliasId(theirs!.aliasId)).resolves.toMatchObject({
         id: theirs!.ingredientId,
       });
     });
@@ -331,12 +349,15 @@ describe("merging Ingredients and moving aliases", () => {
     it("leaves the flag of the Ingredient a spelling moves out of alone", async () => {
       const onion = await mint("onion");
 
+      await flag(onion.ingredientId);
       await addAlias(actor, onion.ingredientId, "ui");
       const [ui] = await resolveIngredients(["ui"], { userId: actor.userId });
 
       await moveAlias(actor, ui!.aliasId, null);
 
-      await expect(ingredientFor(onion.aliasId)).resolves.toMatchObject({ flagged: true });
+      await expect(findIngredientByAliasId(onion.aliasId)).resolves.toMatchObject({
+        flagged: true,
+      });
     });
 
     it("mints the new Ingredient unflagged: a person chose it", async () => {
@@ -348,7 +369,7 @@ describe("merging Ingredients and moving aliases", () => {
 
       const moved = await moveAlias(actor, ui!.aliasId, null);
 
-      await expect(ingredientFor(ui!.aliasId)).resolves.toMatchObject({
+      await expect(findIngredientByAliasId(ui!.aliasId)).resolves.toMatchObject({
         id: moved.ingredientId,
         name: "ui",
         flagged: false,
@@ -371,6 +392,16 @@ describe("merging Ingredients and moving aliases", () => {
       const pantry = await listPantryIngredientsByUserIds(userIds);
 
       expect(pantry.map((item) => item.ingredientId)).toEqual([onion.ingredientId]);
+    });
+
+    it("leaves a spelling moved onto its own food where it is", async () => {
+      const onion = await mint("onion");
+
+      await expect(moveAlias(actor, onion.aliasId, onion.ingredientId)).resolves.toEqual({
+        ingredientId: onion.ingredientId,
+        changed: [onion.ingredientId],
+      });
+      await expect(typed("onion")).resolves.toMatchObject({ ingredientId: onion.ingredientId });
     });
 
     it("never moves an Ingredient's last spelling away", async () => {

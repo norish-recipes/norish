@@ -4,7 +4,15 @@
  */
 
 export type AdminJobState =
-  "waiting" | "active" | "delayed" | "completed" | "failed" | "paused" | "prioritized" | "unknown";
+  | "waiting"
+  | "active"
+  | "delayed"
+  | "completed"
+  | "failed"
+  /** Failed for good because an administrator stopped it while it ran. */
+  | "cancelled"
+  | "prioritized"
+  | "unknown";
 
 export type AdminJobStepStatus = "done" | "failed" | "running" | "skipped" | "pending";
 
@@ -91,7 +99,6 @@ export interface AdminQueueCountsDTO {
   delayed: number;
   completed: number;
   failed: number;
-  paused: number;
   prioritized: number;
 }
 

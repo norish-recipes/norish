@@ -18,6 +18,8 @@ export function createUseFavoritesMutation({
   shouldPreserveOptimisticUpdate,
 }: CreateRecipeHooksOptions) {
   return function useFavoritesMutation(): FavoritesMutationResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.favorites.list.queryKey();
@@ -70,12 +72,13 @@ export function createUseFavoritesMutation({
         },
       })
     );
+    const { mutate: mutateToggle } = toggleMutation;
 
     const toggleFavorite = (recipeId: string) => {
       const favorites = queryClient.getQueryData<FavoritesListData>(queryKey);
       const isCurrentlyFavorite = favorites?.favoriteIds.includes(recipeId) ?? false;
 
-      toggleMutation.mutate({
+      mutateToggle({
         recipeId,
         isFavorite: !isCurrentlyFavorite,
         version: favorites?.favoriteVersions[recipeId],

@@ -8,7 +8,7 @@
 import type { ReactNode } from "react";
 import MiniCookbooks from "@/components/Panel/consumers/mini-cookbooks";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const setMembership = vi.fn();
 const createCookbook = vi.fn(() => Promise.resolve("new-id"));
@@ -99,10 +99,6 @@ function renderPanel() {
 }
 
 describe("MiniCookbooks", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("writes nothing until Save", () => {
     renderPanel();
 

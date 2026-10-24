@@ -44,20 +44,36 @@ describe("the shipped allergy-detection prompt", () => {
 });
 
 describe("the shipped ingredient-resolution prompt", () => {
-  it("asks for a verdict about the numbered foods, and for doubt to be said", () => {
+  it("asks whether a name is one food, several or none, and for doubt to be said", () => {
     const prompt = shipped("ingredient-resolution");
+    const oneLine = prompt.replace(/\s+/g, " ");
 
-    expect(prompt).toMatch(/same/);
-    expect(prompt).toMatch(/kind-of/);
-    expect(prompt).toMatch(/new/);
-    expect(prompt).toMatch(/sure/i);
-    // The name and the known foods are appended by the resolver.
+    expect(oneLine).toContain("A name identifies several foods");
+    expect(oneLine).toContain("is not a food");
+    expect(oneLine).toContain(
+      "Give two or three other names a shop might sell the same food under; Norish finds the food by them."
+    );
+    expect(oneLine).toMatch(/"sure" to false/);
+    expect(oneLine).toContain("based on Open Food Facts' ingredient names");
+    // The name and the parent it is filed under are appended by the resolver.
+    expect(prompt).not.toMatch(/\{\{/);
+  });
+});
+
+describe("the shipped ingredient-match prompt", () => {
+  it("asks which listed food the name is exactly, and for none when in doubt", () => {
+    const prompt = shipped("ingredient-match");
+    const oneLine = prompt.replace(/\s+/g, " ");
+
+    expect(oneLine).toContain("exactly the item the name asks for");
+    expect(oneLine).toContain("When in doubt, match none");
+    // The name and the found foods are appended by the resolver.
     expect(prompt).not.toMatch(/\{\{/);
   });
 });
 
 describe("loadDefaultPrompts", () => {
-  it("ships a default for all fourteen administrator-editable prompts", () => {
+  it("ships a default for all seventeen administrator-editable prompts", () => {
     const defaults = loadDefaultPrompts();
 
     expect(Object.keys(defaults).sort()).toEqual(
@@ -70,7 +86,10 @@ describe("loadDefaultPrompts", () => {
         "imageGenerationStyle",
         "ingredientIconStyle",
         "ingredientPlainName",
+        "ingredientSpellingCheck",
+        "ingredientNutrition",
         "ingredientLinking",
+        "ingredientMatch",
         "ingredientResolution",
         "nutritionEstimation",
         "recipeExtraction",

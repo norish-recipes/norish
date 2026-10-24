@@ -7,6 +7,7 @@ import {
   CheckCircleIcon,
   ClockIcon,
   MinusCircleIcon,
+  StopCircleIcon,
   TrashIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -72,6 +73,9 @@ function StepList({ steps, t }: { steps: AdminJobStepDTO[]; t: Translate }) {
         const meta = stepMeta(step);
 
         return (
+          // A step can run twice in one attempt, so its place in the timeline is
+          // what tells the two apart; the timeline only grows.
+          // eslint-disable-next-line @eslint-react/no-array-index-key
           <li key={`${step.id}-${index}`} className="flex gap-3 py-2">
             <div className="mt-0.5 shrink-0">
               <StepIcon status={step.status} />
@@ -189,15 +193,34 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
     jobId: jobId ?? "",
     enabled: isOpen,
   });
-  const { retryJob, removeJob, isRetrying, isRemoving } = useJobQueueMutations();
+  const { retryJob, removeJob, cancelJob, isRetrying, isRemoving } = useJobQueueMutations();
   const tokensUsed = job ? totalTokens(job.models) : null;
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // The run a cancel was asked for, by its start: it reads "Cancelling…" until
+  // that run leaves active, so a retried run offers Cancel again.
+  const [cancelling, setCancelling] = useState<number | null>(null);
+  const isCancelling =
+    cancelling !== null && job?.state === "active" && job.processedOn === cancelling;
 
   const close = () => {
     setConfirmAction(null);
     setActionError(null);
+    setCancelling(null);
     onClose();
+  };
+
+  const handleCancel = async () => {
+    if (!queue || !jobId || !job) return;
+
+    setActionError(null);
+    setCancelling(job.processedOn);
+    const result = await cancelJob(queue, jobId);
+
+    if (!result.success) {
+      setCancelling(null);
+      setActionError(result.error);
+    }
   };
 
   // Retry is instant — no confirmation. Remove is destructive, so it confirms.
@@ -294,6 +317,9 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                         </div>
                       ) : null}
                     </dl>
+                    {job.state === "cancelled" ? (
+                      <p className="text-muted text-sm">{t("detail.cancelledNote")}</p>
+                    ) : null}
 
                     {/* Input payload (moved to top) */}
                     <div className="flex flex-col gap-2">
@@ -374,10 +400,16 @@ export default function JobDetailModal({ queue, jobId, onClose }: Props) {
                   </>
                 ) : (
                   <>
-                    {job?.state === "failed" ? (
+                    {job?.state === "failed" || job?.state === "cancelled" ? (
                       <Button isPending={isRetrying} variant="primary" onPress={handleRetry}>
                         <ArrowPathIcon className="h-4 w-4" />
                         {t("actions.retry")}
+                      </Button>
+                    ) : null}
+                    {job?.state === "active" ? (
+                      <Button isPending={isCancelling} variant="danger-soft" onPress={handleCancel}>
+                        {isCancelling ? null : <StopCircleIcon className="h-4 w-4" />}
+                        {isCancelling ? t("actions.cancelling") : t("actions.cancel")}
                       </Button>
                     ) : null}
                     {job && !job.isRepeat && job.state !== "active" ? (

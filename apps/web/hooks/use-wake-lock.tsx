@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
 
@@ -14,16 +14,18 @@ interface UseWakeLockReturn {
   toggle: () => Promise<void>;
 }
 
+const noSubscription = () => () => {};
+
 export function useWakeLock(): UseWakeLockReturn {
-  const [isSupported, setIsSupported] = useState(false);
+  // False on the server and while hydrating, like the markup the server sent.
+  const isSupported = useSyncExternalStore(
+    noSubscription,
+    () => "wakeLock" in navigator,
+    () => false
+  );
   const [isActive, setIsActive] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const releaseHandlerRef = useRef<(() => void) | null>(null);
-
-  // Check browser support on mount
-  useEffect(() => {
-    setIsSupported("wakeLock" in navigator);
-  }, []);
 
   const enable = useCallback(async () => {
     if (!isSupported) {

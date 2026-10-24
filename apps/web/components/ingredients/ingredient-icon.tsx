@@ -1,11 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useDevicePreference } from "@/context/device-preferences-context";
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { useDebounceValue } from "usehooks-ts";
+
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 /**
  * The sizes an Ingredient Icon is shown at: beside a step's chip, a line or
@@ -48,7 +50,8 @@ export function useIngredientIcons(
   const key = ids.filter(Boolean).join(",");
   const wanted = useMemo(
     // ponytail: a surface past 500 foods shows no icons beyond them; page the read if one ever does.
-    () => [...new Set(key ? key.split(",") : [])].sort().slice(0, MAX_IDS),
+    () =>
+      [...new Set(key ? key.split(",") : [])].sort((a, b) => a.localeCompare(b)).slice(0, MAX_IDS),
     [key]
   );
   const { data } = useQuery({
@@ -99,12 +102,12 @@ export function IngredientIconsProvider({
   const hidden = useDevicePreference("hiddenItems")[0].includes("ingredientIcons");
   const value = useMemo(() => ({ addresses, hidden }), [addresses, hidden]);
 
-  return <IconsContext.Provider value={value}>{children}</IconsContext.Provider>;
+  return <IconsContext value={value}>{children}</IconsContext>;
 }
 
 /** Whether the reader hid Ingredient Icons, as the surface's provider read it; false outside one. */
 export function useIngredientIconsHidden(): boolean {
-  return useContext(IconsContext).hidden;
+  return use(IconsContext).hidden;
 }
 
 /**
@@ -113,8 +116,9 @@ export function useIngredientIconsHidden(): boolean {
  * anywhere shows nothing, nor does a line whose food the server has not
  * resolved yet; only while the surface's read is on its way does it hold an
  * empty slot, so the line does not jump when the icon lands. `placeholder`
- * shows a muted square instead of nothing, for the panel field an icon is set
- * in. A reader who hid icons gets none of these. A heading is not a food and
+ * shows a muted leaf on the icon's tile instead of nothing, for the
+ * Ingredients list and the panel field an icon is set in. A reader who hid
+ * icons gets none of these. A heading is not a food and
  * is given no icon at all. `src` is the address outright, where a surface has
  * it (the share page exposes no ids); otherwise the surface's read is looked
  * up by `ingredientId`.
@@ -132,7 +136,7 @@ export function IngredientIcon({
   placeholder?: boolean;
   className?: string;
 }) {
-  const { addresses, hidden } = useContext(IconsContext);
+  const { addresses, hidden } = use(IconsContext);
 
   if (hidden) return null;
 
@@ -140,15 +144,31 @@ export function IngredientIcon({
   const reading = src === undefined && ingredientId != null && !(ingredientId in addresses);
 
   if (!address) {
-    if (!placeholder && !reading) return null;
+    if (placeholder) {
+      return (
+        <span
+          aria-hidden
+          className={`bg-surface-secondary text-muted flex shrink-0 items-center justify-center rounded-[30%] ${SIZES[size]} ${className}`}
+          data-testid="ingredient-icon-placeholder"
+        >
+          <svg
+            className="size-1/2"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 19C5 10.5 10 5 19 5c0 9-5.5 14-14 14Z" />
+            <path d="M5 19l8-8" />
+          </svg>
+        </span>
+      );
+    }
+    if (!reading) return null;
 
-    return (
-      <span
-        aria-hidden
-        className={`block shrink-0 ${placeholder ? "bg-surface-secondary rounded-[30%] opacity-60" : ""} ${SIZES[size]} ${className}`}
-        data-testid={placeholder ? "ingredient-icon-placeholder" : undefined}
-      />
-    );
+    return <span aria-hidden className={`block shrink-0 ${SIZES[size]} ${className}`} />;
   }
 
   return (
@@ -159,7 +179,7 @@ export function IngredientIcon({
       data-testid="ingredient-icon"
       decoding="async"
       loading="lazy"
-      src={address}
+      src={addBasePath(address)}
     />
   );
 }

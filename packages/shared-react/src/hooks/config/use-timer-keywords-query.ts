@@ -12,6 +12,8 @@ const DEFAULT_TIMER_KEYWORDS = {
 
 export function createUseTimerKeywordsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useTimerKeywordsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

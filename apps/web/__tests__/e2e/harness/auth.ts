@@ -6,10 +6,11 @@ import type { HarnessUser } from "./production-stack";
 export type SessionCookies = Awaited<ReturnType<APIRequestContext["storageState"]>>["cookies"];
 
 export async function signIn(baseURL: string, user: HarnessUser): Promise<SessionCookies> {
-  const api = await request.newContext({ baseURL, extraHTTPHeaders: { origin: baseURL } });
+  // A root-relative path would drop the base path from baseURL, so the request URL is absolute.
+  const api = await request.newContext({ extraHTTPHeaders: { origin: new URL(baseURL).origin } });
 
   try {
-    const response = await api.post("/api/auth/sign-in/email", {
+    const response = await api.post(`${baseURL}/api/auth/sign-in/email`, {
       data: { email: user.email, password: user.password },
     });
 

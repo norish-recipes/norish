@@ -2,7 +2,7 @@
 
 import type { Key } from "react";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
-import Panel, { usePanelPortalContainer } from "@/components/Panel/Panel";
+import Panel, { PanelPortal } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { FieldError, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -72,7 +72,6 @@ export function ProductDetailsPanel({
 }: ProductDetailsPanelProps) {
   const t = useTranslations("groceries.picker");
   const tActions = useTranslations("common.actions");
-  const portalContainer = usePanelPortalContainer();
   const handleUnitChange = (value: Key | null) => {
     const key = value?.toString() ?? NO_UNIT;
 
@@ -80,13 +79,7 @@ export function ProductDetailsPanel({
   };
 
   return (
-    <Panel
-      nested
-      className="contents"
-      open={open}
-      title={t("productDetails")}
-      onOpenChange={onOpenChange}
-    >
+    <Panel nested open={open} title={t("productDetails")} onOpenChange={onOpenChange}>
       <Panel.Body>
         <div className="flex flex-col gap-3">
           <TextField value={name} onChange={onNameChange}>
@@ -167,29 +160,31 @@ export function ProductDetailsPanel({
             <div className="min-w-0 flex-1" data-testid="product-pack-unit">
               <Select
                 fullWidth
-                selectedKey={packUnit === "" ? NO_UNIT : packUnit}
+                value={packUnit === "" ? NO_UNIT : packUnit}
                 variant="secondary"
-                onSelectionChange={handleUnitChange}
+                onChange={handleUnitChange}
               >
                 <Label>{t("packUnit")}</Label>
                 <Select.Trigger className="min-h-12 items-center">
                   <Select.Value className="flex items-center" />
                   <Select.Indicator />
                 </Select.Trigger>
-                <Select.Popover UNSTABLE_portalContainer={portalContainer}>
-                  <ListBox>
-                    <ListBox.Item id={NO_UNIT} textValue="—">
-                      <span className="text-muted">—</span>
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    {UNIT_IDS.map((unit) => (
-                      <ListBox.Item key={unit} id={unit} textValue={unitLabel(unit)}>
-                        <span>{unitLabel(unit)}</span>
+                <PanelPortal>
+                  <Select.Popover>
+                    <ListBox>
+                      <ListBox.Item id={NO_UNIT} textValue="—">
+                        <span className="text-muted">—</span>
                         <ListBox.ItemIndicator />
                       </ListBox.Item>
-                    ))}
-                  </ListBox>
-                </Select.Popover>
+                      {UNIT_IDS.map((unit) => (
+                        <ListBox.Item key={unit} id={unit} textValue={unitLabel(unit)}>
+                          <span>{unitLabel(unit)}</span>
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      ))}
+                    </ListBox>
+                  </Select.Popover>
+                </PanelPortal>
               </Select>
             </div>
           </div>

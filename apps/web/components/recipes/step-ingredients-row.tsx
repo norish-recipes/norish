@@ -8,7 +8,7 @@ import { useLocale } from "next-intl";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { StepIngredientRefLike } from "@norish/shared/lib/step-ingredients";
-import { useUnitFormatter as useSharedUnitFormatter } from "@norish/shared-react/hooks";
+import { createUnitFormatter } from "@norish/shared-react/hooks";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
@@ -103,7 +103,7 @@ function StepIngredientsRowWithConfiguredUnits(
   props: StepIngredientsRowProps & { units: UnitsMap }
 ) {
   const locale = useLocale();
-  const { formatUnitOnly } = useSharedUnitFormatter({ locale, units: props.units });
+  const { formatUnitOnly } = createUnitFormatter({ locale, units: props.units });
 
   return <StepIngredientsRowContent {...props} formatUnitOnly={formatUnitOnly} />;
 }

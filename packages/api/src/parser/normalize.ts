@@ -19,16 +19,12 @@ import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichmen
 
 import {
   extractNutrition,
-  getServings,
   parseImages,
   parseIngredients,
   parseMetadata,
   parseSteps,
   parseVideos,
 } from "./parsers";
-
-// Re-export getServings for backward compatibility (used by mela-parser.ts)
-export { getServings };
 
 const log = parserLogger.child({ module: "normalize" });
 
@@ -178,7 +174,7 @@ export async function normalizeRecipeFromJson(
   const nutrition = extractNutrition(jsonObj);
 
   // --- IMAGES ---
-  const { images, primaryImage } = await parseImages(jsonObj.image, recipeId);
+  const { images } = await parseImages(jsonObj.image, recipeId);
 
   // --- VIDEOS (from VideoObject in JSON-LD) ---
   const { videos } = await parseVideos(jsonObj.video, recipeId);
@@ -203,7 +199,6 @@ export async function normalizeRecipeFromJson(
     description: metadata.description,
     notes: metadata.notes,
     url: getSourceUrl(jsonObj),
-    image: primaryImage,
     servings: metadata.servings,
     prepMinutes: metadata.prepMinutes,
     cookMinutes: metadata.cookMinutes,

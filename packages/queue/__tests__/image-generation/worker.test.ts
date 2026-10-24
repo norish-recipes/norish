@@ -91,7 +91,6 @@ function jobFor(overrides: Partial<RecipeEnrichmentJobData> = {}): Job<RecipeEnr
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocks.getRecipeFull.mockResolvedValue(RECIPE);
   mocks.writeVisualBrief.mockResolvedValue("A thick green pea soup in a bowl.");
   mocks.generateImage.mockResolvedValue({ bytes: IMAGE_BYTES, mediaType: "image/jpeg" });

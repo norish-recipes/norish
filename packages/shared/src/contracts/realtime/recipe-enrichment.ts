@@ -5,7 +5,7 @@
  * Deliberately separate from the permission-scoped client recipe channel: who
  * may *see* a recipe must not decide whether the enrichment coordinator hears
  * about it. `internal` events are not buffered or replayed; a brief process or
- * Redis interruption is an accepted enrollment loss window, and duplicate
+ * Valkey interruption is an accepted enrollment loss window, and duplicate
  * delivery is made harmless by deterministic per-recipe-and-kind job identity.
  */
 

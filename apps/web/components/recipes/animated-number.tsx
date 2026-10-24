@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { RollingText } from "@/components/shared/rolling-text";
-import { useReducedMotion } from "motion/react";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 type AnimatedNumberProps = {
   /** The rendered value. A change to it is what rolls the digits. */
@@ -32,13 +32,14 @@ function magnitude(value: string): number {
  * count going up.
  */
 export function AnimatedNumber({ value, className = "" }: AnimatedNumberProps) {
-  const prefersReducedMotion = useReducedMotion();
-  const previous = useRef(value);
-  const isRising = magnitude(value) >= magnitude(previous.current);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [previous, setPrevious] = useState(value);
+  const [isRising, setIsRising] = useState(true);
 
-  useEffect(() => {
-    previous.current = value;
-  }, [value]);
+  if (value !== previous) {
+    setPrevious(value);
+    setIsRising(magnitude(value) >= magnitude(previous));
+  }
 
   if (prefersReducedMotion) {
     return <span className={`tabular-nums ${className}`}>{value}</span>;

@@ -112,6 +112,11 @@
     "message": "Sie schnüffelt herum, um herauszufinden, wohin du wolltest.",
     "imageAlt": "Nora schaut verwirrt"
   },
+  "errorPage": {
+    "title": "Etwas ist schiefgelaufen.",
+    "message": "Norish ist auf dieser Seite auf einen Fehler gestoßen.",
+    "retry": "Erneut versuchen"
+  },
   "import": {
     "url": {
       "title": "Rezept importieren",
@@ -178,12 +183,15 @@
     "daily": "Täglich",
     "weekly": "Wöchentlich",
     "monthly": "Monatlich",
+    "yearly": "Jährlich",
     "day": "Tag",
     "days": "Tage",
     "week": "Woche",
     "weeks": "Wochen",
     "month": "Monat",
     "months": "Monate",
+    "year": "Jahr",
+    "years": "Jahre",
     "next": "Nächste:",
     "every": "Jeden/Jede",
     "everyOther": "Jeden zweiten/Jede zweite",

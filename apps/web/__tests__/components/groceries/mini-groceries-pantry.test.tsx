@@ -20,6 +20,16 @@ const addPantryIngredient = vi.fn(async () => "kept");
 let pantryLoading = false;
 let pantryUnavailable = false;
 
+let linkedAskedFor: string[][] = [];
+/** More lines of the recipe, after `INGREDIENTS`. */
+let linkedLines: Array<
+  Omit<(typeof INGREDIENTS)[number], "ingredientId"> & {
+    ingredientId: string | null;
+    joined?: "together" | "alternatives";
+    foods?: Array<{ ingredientId: string; name: string }>;
+  }
+> = [];
+
 const INGREDIENTS = [
   {
     id: "i-oil",
@@ -80,11 +90,15 @@ vi.mock("@/components/ingredients/ingredient-icon", () => ({
 }));
 vi.mock("@/hooks/recipes/use-recipe-ingredients", () => ({
   useRecipeIngredients: () => ({
-    ingredients: INGREDIENTS,
+    ingredients: [...INGREDIENTS, ...linkedLines],
     systemUsed: "metric",
     isLoading: false,
   }),
-  useLinkedRecipeIngredients: () => ({ ingredients: [] }),
+  useLinkedRecipeIngredients: (ids: string[]) => {
+    linkedAskedFor.push(ids);
+
+    return { ingredients: [] };
+  },
 }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>
@@ -105,7 +119,7 @@ vi.mock("@/components/Panel/Panel", () => {
   Panel.Body = ({ children }: { children: ReactNode }) => <div>{children}</div>;
   Panel.Footer = ({ children }: { children: ReactNode }) => <div>{children}</div>;
 
-  return { default: Panel, usePanelPortalContainer: () => undefined };
+  return { default: Panel, PanelPortal: ({ children }: { children: React.ReactNode }) => children };
 });
 vi.mock("@/components/shared/action-button", () => ({
   ActionButton: ({ children, onPress, isDisabled, action }: any) => (
@@ -148,7 +162,8 @@ const addedNames = () =>
 
 describe("MiniGroceries with a Pantry", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    linkedAskedFor = [];
+    linkedLines = [];
     pantry = [pantryIngredient("Olive oil", "olive oil"), pantryIngredient("salt", "salt")];
     pantryLoading = false;
     pantryUnavailable = false;
@@ -401,6 +416,23 @@ describe("MiniGroceries with a Pantry", () => {
       expect(onOpenChange).toHaveBeenCalledWith(true);
     });
 
+    it("leaves a line that names no food off the list, such as a tool", async () => {
+      linkedLines = [
+        {
+          ...INGREDIENTS[2]!,
+          id: "l-tin",
+          ingredientId: null,
+          ingredientName: "springvorm (26 cm)",
+        },
+      ];
+
+      await act(async () => {
+        addAtOnce(vi.fn());
+      });
+
+      expect(addedNames()).toEqual(["chicken breast"]);
+    });
+
     it("adds nothing when the Pantry holds every line", async () => {
       pantry = [
         pantryIngredient("olive oil", "olive oil"),
@@ -416,5 +448,83 @@ describe("MiniGroceries with a Pantry", () => {
       expect(createGroceriesFromData).not.toHaveBeenCalled();
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
+  });
+
+  describe("a line naming several foods", () => {
+    const line = (
+      id: string,
+      text: string,
+      joined: "together" | "alternatives",
+      foods: string[]
+    ) => ({
+      ...INGREDIENTS[0]!,
+      id,
+      ingredientId: `i-${foods[0]}`,
+      ingredientName: text,
+      amount: 2,
+      unit: "el",
+      joined,
+      foods: foods.map((name) => ({ ingredientId: `i-${name}`, name })),
+    });
+
+    it("adds each food of an and line at the line's amount, and an or line's first", async () => {
+      pantry = [];
+      linkedLines = [
+        line("l-bake", "boter en suiker", "together", ["boter", "suiker"]),
+        line("l-fry", "boter of olie", "alternatives", ["boter", "olie"]),
+      ];
+      render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("action-add"));
+      });
+
+      expect(createGroceriesFromData.mock.calls[0]?.[0].slice(INGREDIENTS.length)).toEqual([
+        expect.objectContaining({
+          name: "boter",
+          amount: 2,
+          unit: "el",
+          recipeIngredientId: "l-bake",
+        }),
+        expect.objectContaining({
+          name: "suiker",
+          amount: 2,
+          unit: "el",
+          recipeIngredientId: "l-bake",
+        }),
+        expect.objectContaining({ name: "boter", recipeIngredientId: "l-fry" }),
+      ]);
+    });
+
+    it("keeps an or line in the Pantry when any food is kept, and an and line food by food", () => {
+      pantry = [pantryIngredient("olie", "olie"), pantryIngredient("zout", "zout")];
+      linkedLines = [
+        line("l-fry", "boter of olie", "alternatives", ["boter", "olie"]),
+        line("l-season", "zout en peper", "together", ["zout", "peper"]),
+      ];
+      render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+      const kept = screen.getByTestId("pantry-section");
+
+      expect(within(kept).getByRole("checkbox", { name: "boter" })).not.toBeChecked();
+      expect(within(kept).getByRole("checkbox", { name: "zout" })).not.toBeChecked();
+      expect(
+        within(screen.getByTestId("to-buy-section")).getByRole("checkbox", { name: "peper" })
+      ).toBeChecked();
+    });
+  });
+
+  it("asks for the ingredients of each recipe a line links to, once", () => {
+    linkedLines = [
+      { ...INGREDIENTS[2]!, id: "i-sauce", ingredientName: "[Sauce](id:recipe-1)" },
+      {
+        ...INGREDIENTS[2]!,
+        id: "i-two",
+        ingredientName: "[Sauce](id:recipe-1) or [Pesto](id:recipe-2)",
+      },
+    ];
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(linkedAskedFor.at(-1)).toEqual(["recipe-1", "recipe-2"]);
   });
 });

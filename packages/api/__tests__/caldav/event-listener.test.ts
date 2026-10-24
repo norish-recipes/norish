@@ -45,6 +45,7 @@ const db = vi.hoisted(() => ({
 
 const queue = vi.hoisted(() => ({
   addCaldavSyncJob: vi.fn(async () => undefined),
+  isCaldavSyncPending: vi.fn(async () => false),
   caldavSync: { name: "caldav-sync" },
 }));
 
@@ -56,7 +57,10 @@ vi.mock("@norish/db/repositories/caldav-sync-status", () => ({
   getCaldavSyncStatusByItemId: db.getCaldavSyncStatusByItemId,
   getAllCaldavSyncStatusesByItemId: db.getAllCaldavSyncStatusesByItemId,
 }));
-vi.mock("@norish/queue/caldav-sync/producer", () => ({ addCaldavSyncJob: queue.addCaldavSyncJob }));
+vi.mock("@norish/queue/caldav-sync/producer", () => ({
+  addCaldavSyncJob: queue.addCaldavSyncJob,
+  isCaldavSyncPending: queue.isCaldavSyncPending,
+}));
 vi.mock("@norish/queue/registry", () => ({ getQueues: () => ({ caldavSync: queue.caldavSync }) }));
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -105,7 +109,6 @@ async function settle() {
 }
 
 beforeEach(async () => {
-  vi.clearAllMocks();
   hub.handlers.clear();
   await stopCaldavSync();
   db.getCaldavConfigDecrypted.mockResolvedValue({ enabled: true, serverUrl: "https://dav" });
@@ -183,6 +186,62 @@ describe("calendar companions", () => {
       queue.caldavSync,
       expect.objectContaining({ userId: "user-1", itemId: "item-1", operation: "delete" })
     );
+  });
+
+  it("queues an edit to a synced item with its new state", async () => {
+    initCaldavSync();
+
+    hub.emit(
+      companionChannel("itemUpdated"),
+      envelope(companionChannel("itemUpdated"), { item: { ...item, recipeName: "Stew" } })
+    );
+    await settle();
+
+    expect(queue.addCaldavSyncJob).toHaveBeenCalledWith(
+      queue.caldavSync,
+      expect.objectContaining({ itemId: "item-1", operation: "sync", eventTitle: "Stew" })
+    );
+  });
+
+  it("queues an edit to an item whose first sync is still pending, so the calendar gets the edit", async () => {
+    db.getCaldavSyncStatusByItemId.mockResolvedValue(null);
+    queue.isCaldavSyncPending.mockResolvedValueOnce(true);
+    initCaldavSync();
+
+    const moved = companionChannel("itemMoved");
+
+    hub.emit(
+      moved,
+      envelope(moved, {
+        item: { ...item, date: "2026-09-19" },
+        targetSlotItems: [],
+        sourceSlotItems: null,
+        oldDate: "2026-09-18",
+        oldSlot: "Dinner",
+        oldSortOrder: 0,
+      })
+    );
+    await settle();
+
+    expect(queue.isCaldavSyncPending).toHaveBeenCalledWith(
+      queue.caldavSync,
+      "https://dav",
+      "item-1"
+    );
+    expect(queue.addCaldavSyncJob).toHaveBeenCalledWith(
+      queue.caldavSync,
+      expect.objectContaining({ itemId: "item-1", operation: "sync", date: "2026-09-19" })
+    );
+  });
+
+  it("skips an edit to an item the calendar never had", async () => {
+    db.getCaldavSyncStatusByItemId.mockResolvedValue(null);
+    initCaldavSync();
+
+    hub.emit(companionChannel("itemUpdated"), envelope(companionChannel("itemUpdated"), { item }));
+    await settle();
+
+    expect(queue.addCaldavSyncJob).not.toHaveBeenCalled();
   });
 
   it("drops a payload that fails its schema", async () => {

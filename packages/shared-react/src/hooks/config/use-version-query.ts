@@ -30,6 +30,8 @@ type CreateUseVersionQueryOptions = {
 
 export function createUseVersionQuery({ getCurrentVersion }: CreateUseVersionQueryOptions) {
   return function useVersionQuery() {
+    "use memo";
+
     const currentVersion = getCurrentVersion();
 
     const { data: latestVersion, isLoading } = useQuery({

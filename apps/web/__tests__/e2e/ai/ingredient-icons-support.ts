@@ -1,14 +1,16 @@
 /**
- * Ingredient Icons E2E support: the pictures the scenario uploads and the
- * fake image provider draws, and the database seams it seeds a grocery with
- * and reads a food's own icon back through.
+ * Ingredient Icons E2E support: the pictures the scenario uploads and the fake image provider
+ * draws, and the procedures it seeds a grocery with and reads a food's own icon back through.
  */
+import { randomUUID } from "node:crypto";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 
-import { withDatabase } from "./database";
+import type { AIE2EStack } from "./fixture";
+import { callTrpc, queryTrpc } from "../harness/trpc";
+import { ingredientIdOf } from "./grocery-aisles-support";
 
 /**
  * A product shot as a person would upload one: a single coloured food on a
@@ -32,30 +34,24 @@ export async function pictureFile(colour: string): Promise<string> {
   return file;
 }
 
-/** A food's own icon as the database has it: the stored file's name, or null. */
-export function readOwnIcon(name: string): Promise<string | null> {
-  return withDatabase(async (database) => {
-    const rows = await database.query<{ icon: string | null }>(
-      `select icon from ingredients where lower(name) = lower($1)`,
-      [name]
-    );
+/** The address of a food's own icon, as the Ingredients page reads it; null for none of its own. */
+export async function readOwnIcon(stack: AIE2EStack, name: string): Promise<string | null> {
+  const ingredientId = await ingredientIdOf(stack, name);
 
-    return rows.rows[0]?.icon ?? null;
-  });
+  if (!ingredientId) return null;
+  const food = await queryTrpc<{ icon: string | null; ownIcon: boolean } | null>(
+    stack.baseURL,
+    stack.ownerCookies,
+    "ingredients.get",
+    { ingredientId }
+  );
+
+  return food?.ownIcon ? food.icon : null;
 }
 
-/** A grocery on the first account's list, for a food the catalogue knows by that spelling. */
-export function seedGrocery(name: string): Promise<void> {
-  return withDatabase(async (database) => {
-    const owner = (
-      await database.query<{ id: string }>(`select id from "user" order by "createdAt" asc limit 1`)
-    ).rows[0];
-
-    if (!owner) throw new Error("The harness has provisioned no accounts");
-    await database.query(
-      `insert into groceries (user_id, name, ingredient_alias_id, ingredient_id)
-       select $1, $2, a.id, a.ingredient_id from ingredient_aliases a where a.fold = lower($2)`,
-      [owner.id, name]
-    );
-  });
+/** A grocery on the owner's list, added as the list adds one. */
+export async function seedGrocery(stack: AIE2EStack, name: string): Promise<void> {
+  await callTrpc(stack.baseURL, stack.ownerCookies, "groceries.create", [
+    { id: randomUUID(), name, unit: null, amount: null },
+  ]);
 }

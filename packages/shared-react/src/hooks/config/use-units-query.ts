@@ -4,6 +4,8 @@ import type { CreateConfigHooksOptions } from "./types";
 
 export function createUseUnitsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useUnitsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

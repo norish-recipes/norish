@@ -112,6 +112,11 @@
     "message": "Sta annusando in giro per capire dove volevi andare.",
     "imageAlt": "Nora con aria confusa"
   },
+  "errorPage": {
+    "title": "Qualcosa è andato storto.",
+    "message": "Norish ha riscontrato un errore in questa pagina.",
+    "retry": "Riprova"
+  },
   "import": {
     "url": {
       "title": "Importa ricetta",
@@ -178,12 +183,15 @@
     "daily": "Giornaliero",
     "weekly": "Settimanale",
     "monthly": "Mensile",
+    "yearly": "Annuale",
     "day": "giorno",
     "days": "giorni",
     "week": "settimana",
     "weeks": "settimane",
     "month": "mese",
     "months": "mesi",
+    "year": "anno",
+    "years": "anni",
     "next": "Prossimo:",
     "every": "Ogni",
     "everyOther": "Ogni altro",

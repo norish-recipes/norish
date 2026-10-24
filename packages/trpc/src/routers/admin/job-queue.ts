@@ -2,8 +2,8 @@ import type { Job, Queue } from "bullmq";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { QueueName } from "@norish/queue/config";
 import type { JobStepEvent } from "@norish/queue/job-steps";
+import type { QueueName } from "@norish/queue/queue-names";
 import type {
   AdminJobAttemptDTO,
   AdminJobDetailDTO,
@@ -16,8 +16,10 @@ import type {
 } from "@norish/shared/contracts";
 import { JobRetentionConfigSchema, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { setConfig } from "@norish/db/repositories/server-config";
-import { HANGING_THRESHOLD_MS, QUEUE_NAMES } from "@norish/queue/config";
+import { QUEUE_SETTINGS } from "@norish/queue/config";
+import { cancelRunningJob, isCancelled } from "@norish/queue/create-worker";
 import { getJobStep, JOB_PIPELINES, readStepProgress } from "@norish/queue/job-steps";
+import { QUEUE_NAMES } from "@norish/queue/queue-names";
 import { getAllQueueEntries, getQueueByName } from "@norish/queue/registry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
@@ -32,7 +34,6 @@ const LISTABLE_STATES = [
   "delayed",
   "completed",
   "failed",
-  "paused",
   "prioritized",
 ] as const;
 
@@ -206,7 +207,7 @@ function deriveAttempts(input: {
       ? "running"
       : state === "completed"
         ? "done"
-        : state === "failed"
+        : state === "failed" || state === "cancelled"
           ? "failed"
           : "pending";
 
@@ -258,7 +259,7 @@ function groupLogsByAttempt(logs: string[]): Map<number, string[]> {
 
     if (match) current = Number(match[1]);
 
-    const cleaned = line.replace(/\s*\[attempt \d+\]/, "");
+    const cleaned = line.replace(/(?<!\s)\s*\[attempt \d+\]/, "");
     const bucket = byAttempt.get(current) ?? [];
 
     bucket.push(cleaned);
@@ -291,8 +292,9 @@ function deriveModels(progress: unknown): AdminJobModelDTO[] {
   return [...byKey.values()];
 }
 
-function toRowDTO(queueName: QueueName, job: Job, state: AdminJobState): AdminJobRowDTO {
+function toRowDTO(queueName: QueueName, job: Job, bullState: AdminJobState): AdminJobRowDTO {
   const now = Date.now();
+  const state = bullState === "failed" && isCancelled(job) ? "cancelled" : bullState;
   const processedOn = job.processedOn ?? null;
   const finishedOn = job.finishedOn ?? null;
 
@@ -305,7 +307,7 @@ function toRowDTO(queueName: QueueName, job: Job, state: AdminJobState): AdminJo
   const isHanging =
     state === "active" &&
     processedOn !== null &&
-    now - processedOn > HANGING_THRESHOLD_MS[queueName];
+    now - processedOn > QUEUE_SETTINGS[queueName].hangingThresholdMs;
 
   const failedReason = job.failedReason
     ? job.failedReason.slice(0, FAILED_REASON_PREVIEW_LENGTH)
@@ -435,7 +437,7 @@ const detail = adminProcedure
         progress: job.progress,
         stacktrace: job.stacktrace ?? null,
         logs: jobLogs.logs,
-        state,
+        state: row.state,
         attemptsMade: job.attemptsMade,
         finishedOn: row.finishedOn,
       }),
@@ -445,7 +447,7 @@ const detail = adminProcedure
   });
 
 /**
- * Re-run a failed job.
+ * Re-run a failed job, a cancelled one included: BullMQ keeps it as failed.
  */
 const retry = adminProcedure
   .input(z.object({ queue: QueueNameSchema, jobId: z.string().min(1) }))
@@ -463,6 +465,23 @@ const retry = adminProcedure
     }
 
     await job.retry();
+
+    return { success: true };
+  });
+
+/**
+ * Cancel a running job, on any queue. An AI request in flight is aborted at
+ * once; other work finishes its current step. The job then ends Cancelled,
+ * without a retry.
+ */
+const cancel = adminProcedure
+  .input(z.object({ queue: QueueNameSchema, jobId: z.string().min(1) }))
+  .mutation(({ ctx, input }) => {
+    log.info({ userId: ctx.user.id, ...input }, "Admin cancelling job");
+
+    if (!cancelRunningJob(input.queue, input.jobId)) {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The job is not running" });
+    }
 
     return { success: true };
   });
@@ -522,7 +541,9 @@ const summary = adminProcedure.query(async ({ ctx }): Promise<AdminQueueSummaryD
       ]);
 
       const hangingCount = activeJobs.filter(
-        (job) => job?.processedOn != null && now - job.processedOn > HANGING_THRESHOLD_MS[name]
+        (job) =>
+          job?.processedOn != null &&
+          now - job.processedOn > QUEUE_SETTINGS[name].hangingThresholdMs
       ).length;
 
       return {
@@ -533,7 +554,6 @@ const summary = adminProcedure.query(async ({ ctx }): Promise<AdminQueueSummaryD
           delayed: counts.delayed ?? 0,
           completed: counts.completed ?? 0,
           failed: counts.failed ?? 0,
-          paused: counts.paused ?? 0,
           prioritized: counts.prioritized ?? 0,
         },
         hangingCount,
@@ -559,6 +579,7 @@ export const jobQueueProcedures = router({
   list,
   detail,
   retry,
+  cancel,
   remove,
   summary,
   updateRetention,

@@ -6,12 +6,13 @@ description: Run Norish locally for development, in the devcontainer or on your 
 
 # Development setup
 
-You need Node.js at the version in `.nvmrc`, pnpm 10 or later, Docker and Git.
+You need Node.js at the version in `.nvmrc`, pnpm 12, uv 0.13 or later (it installs the recipe
+parser's Python 3.15), Docker and Git.
 
 ## Devcontainer
 
 Open the repository in the devcontainer. It installs the dependencies and
-starts PostgreSQL, Redis and Obscura.
+starts PostgreSQL, Valkey and Obscura.
 
 ```bash
 cp .env.example .env.local
@@ -34,13 +35,13 @@ pnpm install
 
 cp .env.example .env.local
 
-# Starts PostgreSQL, Redis and Obscura
+# Starts PostgreSQL, Valkey and Obscura
 pnpm run docker:up
 
 pnpm run dev
 ```
 
-`.env.local` needs at least `DATABASE_URL`, `REDIS_URL`, `AUTH_URL` and
+`.env.local` needs at least `DATABASE_URL`, `VALKEY_URL`, `AUTH_URL` and
 `MASTER_KEY`, see [Server & runtime](../configuration/server-runtime.md).
 `.env.example` already points `OBSCURA_ENDPOINT` at the local stack.
 

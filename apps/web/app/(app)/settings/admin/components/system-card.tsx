@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SettingRow } from "@/app/(app)/settings/components/setting-row";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { usePending } from "@/hooks/use-pending";
 import { ArrowPathIcon } from "@heroicons/react/16/solid";
 import { WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Separator, TextField, useOverlayState } from "@heroui/react";
@@ -18,23 +19,22 @@ export default function SystemCard() {
   const { schedulerCleanupMonths, updateSchedulerMonths, restartServer } =
     useAdminSettingsContext();
   const [months, setMonths] = useState(schedulerCleanupMonths ?? 3);
-  const [saving, setSaving] = useState(false);
+  const [saving, whileSaving] = usePending();
   const restartModal = useOverlayState();
   const hasSchedulerChanges =
     schedulerCleanupMonths !== undefined && months !== schedulerCleanupMonths;
 
-  useEffect(() => {
+  const [prevSchedulerCleanupMonths, setPrevSchedulerCleanupMonths] =
+    useState(schedulerCleanupMonths);
+
+  if (schedulerCleanupMonths !== prevSchedulerCleanupMonths) {
+    setPrevSchedulerCleanupMonths(schedulerCleanupMonths);
     if (schedulerCleanupMonths !== undefined) {
       setMonths(schedulerCleanupMonths);
     }
-  }, [schedulerCleanupMonths]);
+  }
   const handleSaveScheduler = async () => {
-    setSaving(true);
-    try {
-      await updateSchedulerMonths(months);
-    } finally {
-      setSaving(false);
-    }
+    await whileSaving(() => updateSchedulerMonths(months));
   };
   const handleRestart = async () => {
     await restartServer();

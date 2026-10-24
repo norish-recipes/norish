@@ -9,6 +9,7 @@ import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { saveImageBytes } from "../media/storage";
 import {
+  galleryOf,
   parseHumanDurationToMinutes,
   parseNutritionValue,
   sumMinutes,
@@ -661,7 +662,7 @@ export async function parseMealieRecipeToDTO(
     id: recipeId,
     name: title,
     url: recipe.org_url || undefined,
-    image: image || undefined,
+    images: galleryOf(image),
     description: recipe.description || undefined,
     notes: notes || undefined,
     servings: servings,
@@ -693,7 +694,7 @@ export async function parseMealieRecipeToDTO(
     })),
     tags: uniqueTags,
     systemUsed,
-  } as FullRecipeInsertDTO;
+  };
 
   const parsed = FullRecipeInsertSchema.safeParse(dto);
 

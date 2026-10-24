@@ -22,11 +22,14 @@ export function createUseArchiveMutation({
   useToastAdapter,
 }: CreateUseArchiveMutationOptions) {
   return function useArchiveImportMutation(): ArchiveImportMutationResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { setImportState } = useArchiveImportQuery();
     const toastAdapter = useToastAdapter();
 
     const startMutation = useMutation(trpc.archive.importArchive.mutationOptions());
+    const { mutate: mutateStart } = startMutation;
 
     const startImport = (file: File) => {
       const formData = new FormData();
@@ -35,7 +38,7 @@ export function createUseArchiveMutation({
 
       // The router validates FormData at runtime but exposes a portable
       // structural upload input type for declaration emit.
-      startMutation.mutate(formData as unknown as Parameters<typeof startMutation.mutate>[0], {
+      mutateStart(formData as unknown as Parameters<typeof startMutation.mutate>[0], {
         onSuccess: (result) => {
           if (result.success) {
             setImportState(() => ({

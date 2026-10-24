@@ -18,6 +18,7 @@
  */
 import type { BrowserContext, Page } from "@playwright/test";
 
+import type { SessionCookies } from "../harness/auth";
 import type { NutritionScenario } from "./ingredient-nutrition-support";
 import { signIn } from "../harness/auth";
 import { expect, test, USER_A, USER_B } from "./fixture";
@@ -48,20 +49,23 @@ const CORRECTED_TOTAL = "744";
 const SPOONED_TOTAL = "749";
 
 let scenario: NutritionScenario | null = null;
+let cookiesA: SessionCookies;
 let contexts: BrowserContext[] = [];
 let pageA: Page;
 let pageB: Page;
 
 test.beforeAll(async ({ browser, offlineHarness }) => {
-  scenario = await seedNutritionScenario(offlineHarness.databaseUrl);
+  scenario = await seedNutritionScenario();
 
   const open = async (user: typeof USER_A) => {
     const context = await browser.newContext({
       baseURL: offlineHarness.baseURL,
       reducedMotion: "reduce",
     });
+    const cookies = await signIn(offlineHarness.baseURL, user);
 
-    await context.addCookies(await signIn(offlineHarness.baseURL, user));
+    if (user === USER_A) cookiesA = cookies;
+    await context.addCookies(cookies);
     contexts.push(context);
 
     return await context.newPage();
@@ -74,7 +78,7 @@ test.beforeAll(async ({ browser, offlineHarness }) => {
 test.afterAll(async ({ offlineHarness }) => {
   await Promise.all(contexts.map((context) => context.close()));
   contexts = [];
-  await removeNutritionScenario(offlineHarness.databaseUrl, scenario);
+  await removeNutritionScenario(offlineHarness.baseURL, cookiesA, scenario);
 });
 
 /** The card in the layout on screen: the page renders both the phone's and the desktop's. */
@@ -202,11 +206,16 @@ test("a legacy salt to taste line lands on salt once the resolver's rules change
   offlineHarness,
 }) => {
   expect(
-    await lineIngredient(offlineHarness.databaseUrl, scenario!.recipeId, "salt to taste")
+    await lineIngredient(
+      offlineHarness.baseURL,
+      await pageA.context().cookies(),
+      scenario!.recipeId,
+      "salt to taste"
+    )
   ).toBe(scenario!.legacyId);
 
   // An upgrade that brings new rules is a boot under a newer rung version.
-  await forgetRungVersion(offlineHarness.databaseUrl);
+  await forgetRungVersion();
   await offlineHarness.transition("stopped");
   await offlineHarness.transition("live");
 
@@ -221,6 +230,11 @@ test("a legacy salt to taste line lands on salt once the resolver's rules change
   await expect(rows.first()).toHaveAttribute("data-flagged", "false");
 
   expect(
-    await lineIngredient(offlineHarness.databaseUrl, scenario!.recipeId, "salt to taste")
+    await lineIngredient(
+      offlineHarness.baseURL,
+      await pageA.context().cookies(),
+      scenario!.recipeId,
+      "salt to taste"
+    )
   ).toBe(scenario!.ingredientIds.salt);
 });

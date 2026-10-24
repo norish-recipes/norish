@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
 import { Popover } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -11,6 +12,7 @@ type SmartInputHelpProps = {
 
 export default function SmartInputHelp({ showIngredientMention = false }: SmartInputHelpProps) {
   const t = useTranslations("common.formatting");
+  const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
 
   return (
     <Popover>
@@ -33,26 +35,26 @@ export default function SmartInputHelp({ showIngredientMention = false }: SmartI
                 <code className="bg-surface-secondary text-accent rounded px-1.5 py-0.5 font-mono text-xs">
                   #
                 </code>
-                <span dangerouslySetInnerHTML={{ __html: t.raw("heading") }} />
+                <span>{t.rich("heading", { strong })}</span>
               </li>
               <li className="flex items-start gap-2">
                 <code className="bg-surface-secondary text-accent rounded px-1.5 py-0.5 font-mono text-xs">
                   **
                 </code>
-                <span dangerouslySetInnerHTML={{ __html: t.raw("bold") }} />
+                <span>{t.rich("bold", { strong })}</span>
               </li>
               <li className="flex items-start gap-2">
                 <code className="bg-surface-secondary text-accent rounded px-1.5 py-0.5 font-mono text-xs">
                   /
                 </code>
-                <span dangerouslySetInnerHTML={{ __html: t.raw("recipeLink") }} />
+                <span>{t.rich("recipeLink", { strong })}</span>
               </li>
               {showIngredientMention && (
                 <li className="flex items-start gap-2">
                   <code className="bg-surface-secondary text-accent rounded px-1.5 py-0.5 font-mono text-xs">
                     @
                   </code>
-                  <span dangerouslySetInnerHTML={{ __html: t.raw("ingredientMention") }} />
+                  <span>{t.rich("ingredientMention", { strong })}</span>
                 </li>
               )}
             </ul>

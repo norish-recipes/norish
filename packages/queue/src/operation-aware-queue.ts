@@ -1,7 +1,11 @@
 import type { Queue, QueueOptions } from "bullmq";
 import { Queue as BullQueue } from "bullmq";
 
+import { createLogger } from "@norish/shared-server/logger";
+
 import { withJobOperationContext } from "./queue-operation-context";
+
+const log = createLogger("queue");
 
 type QueueData<TQueue extends Queue<any, any, any>> = Parameters<TQueue["add"]>[1];
 type QueueName<TQueue extends Queue<any, any, any>> = Parameters<TQueue["add"]>[0];
@@ -42,12 +46,26 @@ function addBulkWithOperationContext<TQueue extends Queue<any, any, any>>(
   );
 }
 
+/**
+ * Route a Queue's `error` to the logger. Without a listener BullMQ prints it
+ * with console.error, so a Valkey blip shows up as raw stack traces.
+ */
+export function logQueueErrors<TQueue extends Queue<any, any, any>>(queue: TQueue): TQueue {
+  queue.on("error", (err) => {
+    log.error({ err, queueName: queue.name }, "Queue error");
+  });
+
+  return queue;
+}
+
 export function createOperationAwareQueue<
   DataType extends object,
   DefaultResultType = any,
   DefaultNameType extends string = string,
 >(name: string, opts?: QueueOptions): Queue<DataType, DefaultResultType, DefaultNameType> {
-  const queue = new BullQueue<DataType, DefaultResultType, DefaultNameType>(name, opts);
+  const queue = logQueueErrors(
+    new BullQueue<DataType, DefaultResultType, DefaultNameType>(name, opts)
+  );
 
   return new Proxy(queue, {
     get(target, prop, receiver) {

@@ -23,6 +23,9 @@ Ingredients can have an icon. It shows:
    catalogue.
 3. The parent's icon, so "red onion" shows the onion.
 
+An ingredient with none of these shows a placeholder on the Ingredients page
+and in its panel.
+
 ## Setting an icon
 
 Open the ingredient on the Ingredients page, or anywhere its panel opens, and
@@ -36,12 +39,11 @@ click its icon:
 
 ## Drawing many at once
 
-**Draw icons** at the top of the Ingredients page draws missing icons for:
-
-- **Only foods with no icon at all**, the default. Foods that show their
-  parent's icon are skipped.
-- **Every food without its own icon**, which also draws foods that show a
-  built-in or parent icon.
+An administrator can have AI draw missing icons for new ingredients, or for
+every ingredient at once with **Fill gaps**. See
+[Ingredient catalogue](../configuration/ai-provider.md#ingredient-catalogue).
+Only an ingredient with no icon to show, not even its parent's, gets one.
+Broad groups like "vegetable" stay without.
 
 ## Hiding icons
 

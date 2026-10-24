@@ -112,6 +112,11 @@
     "message": "Ela está farejando por aí para descobrir aonde você queria ir.",
     "imageAlt": "Nora com cara de confusa"
   },
+  "errorPage": {
+    "title": "Algo deu errado.",
+    "message": "O Norish encontrou um erro nesta página.",
+    "retry": "Tentar novamente"
+  },
   "import": {
     "url": {
       "title": "Importar receita",
@@ -178,12 +183,15 @@
     "daily": "Diário",
     "weekly": "Semanal",
     "monthly": "Mensal",
+    "yearly": "Anual",
     "day": "dia",
     "days": "dias",
     "week": "semana",
     "weeks": "semanas",
     "month": "mês",
     "months": "meses",
+    "year": "ano",
+    "years": "anos",
     "next": "Próximo:",
     "every": "A cada",
     "everyOther": "A cada dois",

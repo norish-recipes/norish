@@ -40,6 +40,7 @@ export function createMockUser(overrides: Partial<User> = {}): User {
     email: "test@example.com",
     name: "Test User",
     image: null,
+    version: 1,
     isServerAdmin: false,
     ...overrides,
   };
@@ -68,5 +69,5 @@ export function createMockUserSettingsData(
   apiKeys: ApiKeyMetadataDto[] = [],
   allergies: string[] = []
 ): UserSettingsData {
-  return { user, apiKeys, allergies };
+  return { user, apiKeys, allergies, allergiesVersion: 1 };
 }

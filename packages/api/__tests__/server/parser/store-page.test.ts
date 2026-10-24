@@ -698,6 +698,28 @@ describe("discovery: how a shop says it is searched", () => {
     );
   });
 
+  it("leaves out an optional parameter at the end of an OpenSearch template", () => {
+    const xml = `<?xml version="1.0"?><OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+      <Url type="text/html" method="get" template="/search?page={startPage?}&amp;q={searchTerms}&amp;count={count?}"/>
+      </OpenSearchDescription>`;
+
+    expect(readOpenSearchTemplate(xml, "https://shop.example.kr/opensearch.xml")).toBe(
+      "https://shop.example.kr/search?q={query}"
+    );
+  });
+
+  it("reads an OpenSearch parameter name holding a ? as part of the query", () => {
+    // Everything after the first ? is the query, so `x?y` is one parameter's
+    // name, and an optional one: it goes with its value.
+    const xml = `<?xml version="1.0"?><OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+      <Url type="text/html" method="get" template="/s?q={searchTerms}&amp;x?y={startPage?}"/>
+      </OpenSearchDescription>`;
+
+    expect(readOpenSearchTemplate(xml, "https://shop.example.kr/opensearch.xml")).toBe(
+      "https://shop.example.kr/s?q={query}"
+    );
+  });
+
   it("refuses an OpenSearch template that needs something it cannot fill", () => {
     const xml = `<?xml version="1.0"?><OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
       <Url type="text/html" method="get" template="/search?q={searchTerms}&amp;sid={sessionId}"/>

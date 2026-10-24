@@ -43,7 +43,7 @@ export function SortableGroceryItem({ grocery, children }: SortableGroceryItemPr
       ref={setNodeRef}
       className={ROW_CLASS_NAME}
       style={style}
-      onTouchStart={listeners?.onTouchStart}
+      onTouchStart={(event) => listeners?.onTouchStart?.(event)}
     >
       {/* Drag handle - positioned absolutely on the left */}
       <button

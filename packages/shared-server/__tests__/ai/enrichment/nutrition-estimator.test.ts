@@ -40,7 +40,6 @@ const INGREDIENTS = [
 const ESTIMATE = { calories: 420, fat: 9, carbs: 68, protein: 15 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocked.generateStructured.mockResolvedValue(ESTIMATE);
   mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
     Promise.resolve({ kept: claims, dropped: [], mode: "shadow" })

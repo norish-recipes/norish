@@ -19,7 +19,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 beforeEach(() => {
-  vi.clearAllMocks();
   seed.refreshIngredientCatalogue.mockResolvedValue("applied");
 });
 

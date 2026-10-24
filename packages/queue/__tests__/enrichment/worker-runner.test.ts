@@ -36,7 +36,6 @@ const data: RecipeEnrichmentJobData = {
 
 describe("runEnrichmentJob", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mocks.getRecipeFull.mockResolvedValue({ id: "recipe-1" });
   });
 
@@ -75,10 +74,6 @@ describe("runEnrichmentJob", () => {
 });
 
 describe("handleEnrichmentJobFailure", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("treats an unrecoverable failure as terminal on its first attempt", async () => {
     // BullMQ will not retry it, so waiting for the final attempt would leave
     // the lifecycle stuck in processing forever.

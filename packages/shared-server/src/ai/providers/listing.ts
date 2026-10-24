@@ -425,13 +425,14 @@ export async function listModels(
       return listOpenAICompatibleModels(endpoint, apiKey);
 
     case "perplexity":
-      // Perplexity doesn't have a models list endpoint
+      // Perplexity has no models list endpoint; these are its Agent API
+      // presets, from quickest to most thorough. Images are sent as input_image.
       return [
-        { id: "sonar", name: "Sonar", supportsVision: true },
-        { id: "sonar-pro", name: "Sonar Pro", supportsVision: true },
-        { id: "sonar-reasoning", name: "Sonar Reasoning", supportsVision: true },
-        { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", supportsVision: true },
-        { id: "sonar-deep-research", name: "Sonar Deep Research", supportsVision: true },
+        { id: "fast", name: "Fast", supportsVision: true },
+        { id: "low", name: "Low", supportsVision: true },
+        { id: "medium", name: "Medium", supportsVision: true },
+        { id: "high", name: "High", supportsVision: true },
+        { id: "xhigh", name: "Extra high", supportsVision: true },
       ];
 
     case "azure":

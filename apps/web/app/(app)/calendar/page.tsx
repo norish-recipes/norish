@@ -7,7 +7,7 @@ import { MobileTimeline } from "@/components/calendar/mobile";
 import { EditNotePanel } from "@/components/Panel/consumers/edit-note-panel";
 import { EditPlannedRecipePanel } from "@/components/Panel/consumers/edit-planned-recipe-panel";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
-import { useWindowSize } from "usehooks-ts";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 import type { Slot } from "@norish/shared/contracts";
 
@@ -15,7 +15,7 @@ import { CalendarContextProvider } from "./context";
 
 function CalendarPageContent() {
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [selectedSlot, setSelectedSlot] = useState<Slot | undefined>(undefined);
   const pendingMiniRecipesScrollYRef = useRef<number | null>(null);
   const restoreMiniRecipesScrollTimerRef = useRef<number | null>(null);
@@ -26,9 +26,7 @@ function CalendarPageContent() {
   // Recipe editing state
   const [editingRecipe, setEditingRecipe] = useState<PlannedItemDisplay | null>(null);
 
-  // Responsive: use desktop view for md+ (768px)
-  const { width = 768 } = useWindowSize();
-  const isDesktop = width >= 768;
+  const isDesktop = !useIsMobile();
 
   useEffect(() => {
     return () => {

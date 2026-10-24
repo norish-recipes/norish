@@ -1,6 +1,6 @@
 "use client";
 
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+import { SettingsTabSkeleton } from "@/components/skeleton/settings-skeleton";
 
 import { AdminSettingsProvider, useAdminSettingsContext } from "../context";
 import AIProcessingCard from "./ai-processing-card";
@@ -17,7 +17,7 @@ function AdminSettingsContent() {
   const { isLoading } = useAdminSettingsContext();
 
   if (isLoading) {
-    return <SettingsSkeleton />;
+    return <SettingsTabSkeleton tab="admin" />;
   }
 
   return (

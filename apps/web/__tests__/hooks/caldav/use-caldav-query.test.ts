@@ -65,7 +65,6 @@ describe("CalDAV Query Hooks", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
   });
 

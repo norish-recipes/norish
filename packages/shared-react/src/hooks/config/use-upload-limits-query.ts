@@ -10,6 +10,8 @@ const DEFAULT_UPLOAD_LIMITS = {
 
 export function createUseUploadLimitsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useUploadLimitsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

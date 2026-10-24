@@ -112,6 +112,11 @@
     "message": "Ze snuffelt rond om te vinden waar je naartoe wilde.",
     "imageAlt": "Nora kijkt verward"
   },
+  "errorPage": {
+    "title": "Er ging iets mis.",
+    "message": "Norish liep op deze pagina tegen een fout aan.",
+    "retry": "Opnieuw proberen"
+  },
   "import": {
     "url": {
       "title": "Recept importeren",
@@ -178,12 +183,15 @@
     "daily": "Dagelijks",
     "weekly": "Wekelijks",
     "monthly": "Maandelijks",
+    "yearly": "Jaarlijks",
     "day": "dag",
     "days": "dagen",
     "week": "week",
     "weeks": "weken",
     "month": "maand",
     "months": "maanden",
+    "year": "jaar",
+    "years": "jaar",
     "next": "Volgende:",
     "every": "Elke",
     "everyOther": "Om de",

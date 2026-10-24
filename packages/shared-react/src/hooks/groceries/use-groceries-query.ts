@@ -7,6 +7,8 @@ import type { CreateGroceriesHooksOptions, GroceriesData, GroceriesQueryResult }
 
 export function createUseGroceriesQuery({ useTRPC }: CreateGroceriesHooksOptions) {
   return function useGroceriesQuery(): GroceriesQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
@@ -22,7 +24,16 @@ export function createUseGroceriesQuery({ useTRPC }: CreateGroceriesHooksOptions
     const setGroceriesData = (
       updater: (prev: GroceriesData | undefined) => GroceriesData | undefined
     ) => {
-      queryClient.setQueryData<GroceriesData>(queryKey, updater);
+      // A read already under way answers for the list as it was: it must not
+      // land over this write. The list stays stale, so the next mount or focus
+      // reads it again. Stopping a read puts back what was held when it began,
+      // which misses a list restored since (an offline load), so the write
+      // applies to the list as held now. With nothing held there is nothing
+      // to write over, and stopping the first read would leave it loading.
+      const held = queryClient.getQueryData<GroceriesData>(queryKey);
+
+      if (held) void queryClient.cancelQueries({ queryKey });
+      queryClient.setQueryData<GroceriesData>(queryKey, updater(held));
     };
 
     const invalidate = () => {

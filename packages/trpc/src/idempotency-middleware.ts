@@ -6,12 +6,12 @@
  * path-agnostic middleware makes every authenticated mutation idempotent:
  *
  * - Mutations carrying an `operationId` (from the `x-operation-id` header)
- *   atomically claim that id in Redis (TTL-bounded) and store their serialized
- *   (superjson) response.
+ *   atomically claim that id in Valkey for five minutes and store their
+ *   serialized (superjson) response for seven days.
  * - A repeat with the same id returns the stored response without re-executing
  *   the handler.
  *
- * Redis is already a hard dependency (realtime pub/sub) and every client already
+ * Valkey is already a hard dependency (realtime pub/sub) and every client already
  * sends `x-operation-id` on mutations, so the mobile outbox becomes duplicate-safe
  * with zero client changes. See ADR-0002.
  *
@@ -23,22 +23,28 @@
 import { TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
-import { getPublisherClient } from "@norish/shared-server/redis/client";
+import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 import { middleware } from "./trpc";
 
-/** Redis key prefix for idempotency claims. Scoped per user to avoid cross-user response leakage. */
+/** Valkey key prefix for idempotency claims. Scoped per user to avoid cross-user response leakage. */
 const KEY_PREFIX = "norish:idempotency:";
 
 /**
- * How long a claimed operationId (and its stored response) lives in Redis.
- * Must comfortably exceed realistic offline periods for the supported scenarios;
- * an Outbox entry replayed after this window could still duplicate (ADR-0002).
+ * How long a stored response lives in Valkey. Must comfortably exceed realistic
+ * offline periods for the supported scenarios; an Outbox entry replayed after
+ * this window could still duplicate (ADR-0002).
  */
 export const IDEMPOTENCY_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 /**
- * What we store in Redis under an idempotency key.
+ * How long a claim lives while its owner runs. An owner that dies mid-request
+ * leaves the claim behind, and every retry waits on it until it expires.
+ */
+export const IDEMPOTENCY_CLAIM_TTL_SECONDS = 5 * 60;
+
+/**
+ * What we store in Valkey under an idempotency key.
  *
  * The claim writes `{ done: false }` as a placeholder while the owning request
  * runs; on success the owner overwrites it with `{ done: true, response }` carrying
@@ -58,24 +64,26 @@ const DEFAULT_POLL_INTERVAL_MS = 50;
 const DEFAULT_POLL_MAX_ATTEMPTS = 200;
 
 /**
- * Minimal structural view of the Redis client we depend on. `getPublisherClient`
+ * Minimal structural view of the Valkey client we depend on. `getPublisherClient`
  * (ioredis) satisfies this; tests inject an in-memory fake.
  */
-export interface IdempotencyRedis {
+export interface IdempotencyValkey {
   set(key: string, value: string, ...args: unknown[]): Promise<string | null>;
   get(key: string): Promise<string | null>;
   del(...keys: string[]): Promise<number>;
 }
 
 export interface IdempotencyConfig {
-  getRedis: () => Promise<IdempotencyRedis>;
+  getValkey: () => Promise<IdempotencyValkey>;
+  claimTtlSeconds: number;
   ttlSeconds: number;
   pollIntervalMs: number;
   pollMaxAttempts: number;
 }
 
 const DEFAULT_CONFIG: IdempotencyConfig = {
-  getRedis: getPublisherClient,
+  getValkey: getPublisherClient,
+  claimTtlSeconds: IDEMPOTENCY_CLAIM_TTL_SECONDS,
   ttlSeconds: IDEMPOTENCY_TTL_SECONDS,
   pollIntervalMs: DEFAULT_POLL_INTERVAL_MS,
   pollMaxAttempts: DEFAULT_POLL_MAX_ATTEMPTS,
@@ -85,9 +93,9 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function safeDel(redis: IdempotencyRedis, key: string): Promise<void> {
+async function safeDel(valkey: IdempotencyValkey, key: string): Promise<void> {
   try {
-    await redis.del(key);
+    await valkey.del(key);
   } catch {
     // Best-effort release; the TTL will reclaim the key regardless.
   }
@@ -95,7 +103,7 @@ async function safeDel(redis: IdempotencyRedis, key: string): Promise<void> {
 
 /**
  * Core idempotency logic, decoupled from tRPC so it can be unit-tested with a
- * fake `next` and an in-memory Redis.
+ * fake `next` and an in-memory Valkey.
  *
  * Generic over the middleware result shape `TResult`: the caller supplies how to
  * read ok/data from a result and how to synthesize a cached result. Non-mutations
@@ -121,11 +129,11 @@ export async function runWithIdempotency<TResult>(
   }
 
   const key = `${KEY_PREFIX}${userId ?? "anon"}:${operationId}`;
-  const redis = await config.getRedis();
+  const valkey = await config.getValkey();
 
   for (let attempt = 0; attempt <= config.pollMaxAttempts; attempt++) {
     // Atomically claim the id. NX succeeds only if no one else holds it.
-    const claimed = await redis.set(key, PENDING_RECORD, "EX", config.ttlSeconds, "NX");
+    const claimed = await valkey.set(key, PENDING_RECORD, "EX", config.claimTtlSeconds, "NX");
 
     if (claimed === "OK") {
       let result: TResult;
@@ -134,23 +142,23 @@ export async function runWithIdempotency<TResult>(
         result = await next();
       } catch (err) {
         // Do not memoize failures — release the claim so a replay can retry.
-        await safeDel(redis, key);
+        await safeDel(valkey, key);
         throw err;
       }
 
       if (isOk(result)) {
         const record: IdempotencyRecord = { done: true, response: getData(result) };
 
-        await redis.set(key, superjson.stringify(record), "EX", config.ttlSeconds);
+        await valkey.set(key, superjson.stringify(record), "EX", config.ttlSeconds);
       } else {
-        await safeDel(redis, key);
+        await safeDel(valkey, key);
       }
 
       return result;
     }
 
     // Someone else owns (or owned) this id. Read what they stored.
-    const stored = await redis.get(key);
+    const stored = await valkey.get(key);
 
     if (stored !== null) {
       const record = superjson.parse<IdempotencyRecord>(stored);

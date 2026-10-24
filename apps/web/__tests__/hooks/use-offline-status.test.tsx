@@ -44,7 +44,6 @@ vi.mock("@/hooks/use-warm-set", () => ({
   useWarmSet: () => ({
     topUp: h.warmSetTopUp,
     inspect: h.warmSetInspect,
-    promoteCreatedRecipe: vi.fn(),
   }),
 }));
 
@@ -86,7 +85,6 @@ function setConnectivity(posture: "live" | "offline" | "offline-forced") {
 const originalLocation = window.location;
 
 beforeEach(() => {
-  vi.clearAllMocks();
   setConnectivity("live");
   h.owner = "user-1";
   h.outboxEntries = [];

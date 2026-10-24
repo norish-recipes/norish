@@ -6,6 +6,7 @@ import { useWakeLockContext } from "@/app/(app)/recipes/[id]/components/wake-loc
 import { TimerDock } from "@/components/timer-dock";
 import { useDevicePreference } from "@/context/device-preferences-context";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { dishTintStyle } from "@/lib/dish-tint";
 import { FireIcon } from "@heroicons/react/20/solid";
 import { Button, Modal } from "@heroui/react";
@@ -20,7 +21,6 @@ import { useRecipeContextRequired } from "../../context";
 import { resolveCookingModeSteps } from "./cooking-mode-steps";
 import { DesktopCookingModeDialog } from "./desktop-cooking-mode-dialog";
 import { MobileCookingModeDialog } from "./mobile-cooking-mode-dialog";
-import { useIsDesktopCookingMode } from "./use-is-desktop-cooking-mode";
 import { clampStep } from "./utils";
 
 type SwipePoint = {
@@ -56,7 +56,7 @@ export default function CookingMode({
   const [recipePageColor] = useDevicePreference("recipePageColor");
   const tintStyle = dishTintStyle(recipePageColor === "dish" ? recipe.dishColor : null);
   const tDetail = useTranslations("recipes.detail");
-  const isDesktop = useIsDesktopCookingMode();
+  const isDesktop = !useIsMobile();
   // The cook pill leaves with the nav rather than shrinking with it: a reader
   // scrolling the recipe is reading, and it is one gesture away when they stop.
   const floatingDock = useFloatingDock({ align: "start", hideWithNav: true });
@@ -79,11 +79,9 @@ export default function CookingMode({
     adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
   const currentStep = clampStep(activeStep, steps.length);
 
-  useEffect(() => {
-    if (activeStep !== currentStep) {
-      setActiveStep(currentStep);
-    }
-  }, [activeStep, currentStep]);
+  if (activeStep !== currentStep) {
+    setActiveStep(currentStep);
+  }
 
   useEffect(() => {
     if (!isOpen || !isSupported || isActive || wakeLockOwnedRef.current) {
@@ -168,29 +166,26 @@ export default function CookingMode({
       y: event.clientY,
     };
   }, []);
-  const handlePointerUp = useCallback(
-    (event: ReactPointerEvent) => {
-      const start = swipeStartRef.current;
+  const handlePointerUp = useCallback((event: ReactPointerEvent) => {
+    const start = swipeStartRef.current;
 
-      swipeStartRef.current = null;
+    swipeStartRef.current = null;
 
-      if (!start || event.pointerType === "mouse") {
-        return;
-      }
+    if (!start || event.pointerType === "mouse") {
+      return;
+    }
 
-      const deltaX = event.clientX - start.x;
-      const deltaY = event.clientY - start.y;
-      const absX = Math.abs(deltaX);
-      const absY = Math.abs(deltaY);
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
 
-      if (absX > absY && absX > SWIPE_THRESHOLD) {
-        setActiveView(deltaX < 0 ? "ingredients" : "steps");
+    if (absX > absY && absX > SWIPE_THRESHOLD) {
+      setActiveView(deltaX < 0 ? "ingredients" : "steps");
 
-        return;
-      }
-    },
-    [activeView, steps.length]
-  );
+      return;
+    }
+  }, []);
   const dialogProps = {
     activeStep: currentStep,
     activeView,

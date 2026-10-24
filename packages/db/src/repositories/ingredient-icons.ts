@@ -1,8 +1,8 @@
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 
-import type { DbTransaction } from "@norish/db/drizzle";
+import type { Db } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
-import { ingredientAliases, ingredients, recipeIngredients } from "@norish/db/schema";
+import { ingredientAliases, ingredients, recipeIngredientFoods } from "@norish/db/schema";
 
 /**
  * What Ingredient Icons read and write in the catalogue: the tree of
@@ -54,7 +54,7 @@ export async function findIconLineage(ids: readonly string[]): Promise<Map<strin
   return new Map(result.rows.map((row) => [row.id, toNode(row)]));
 }
 
-/** Every Ingredient as the icon walk reads it: what a Draw icons round's scopes are counted over. */
+/** Every Ingredient as the icon walk reads it: what the icon tool draws its set over. */
 export async function listIconCatalogue(): Promise<Map<string, IconNode>> {
   const rows = await db
     .select({
@@ -94,7 +94,7 @@ function toNode(row: {
  * meanwhile. Whether a row was written.
  */
 export async function setIngredientIcon(
-  tx: DbTransaction | typeof db,
+  tx: Db,
   id: string,
   icon: string | null,
   { unlessSet = false }: { unlessSet?: boolean } = {}
@@ -118,12 +118,12 @@ export async function listIngredientIconFiles(): Promise<Set<string>> {
   return new Set(rows.flatMap((row) => (row.icon ? [row.icon] : [])));
 }
 
-/** How many recipe lines name each Ingredient: which foods a reader meets most. */
+/** How many recipe lines name each Ingredient, among their foods: which foods a reader meets most. */
 export async function countRecipeUses(): Promise<Map<string, number>> {
   const rows = await db
     .select({ id: ingredientAliases.ingredientId, uses: sql<number>`count(*)::int` })
-    .from(recipeIngredients)
-    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredients.ingredientAliasId))
+    .from(recipeIngredientFoods)
+    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId))
     .groupBy(ingredientAliases.ingredientId);
 
   return new Map(rows.map((row) => [row.id, row.uses]));

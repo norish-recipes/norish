@@ -9,9 +9,7 @@
   "editNote": {
     "title": "메모 편집",
     "noteLabel": "메모",
-    "notePlaceholder": "메모 입력...",
-    "date": "날짜",
-    "slot": "시간대"
+    "notePlaceholder": "메모 입력..."
   },
   "navigation": {
     "previousMonth": "이전 달",

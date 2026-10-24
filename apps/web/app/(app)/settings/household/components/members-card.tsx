@@ -33,10 +33,10 @@ export default function MembersCard() {
     ? household.users.find((u) => u.id === currentUserId)
     : null;
   const isAdmin = currentUserData?.isAdmin === true;
-  const handleKickUser = async () => {
+  const handleKickUser = () => {
     if (!userToKick) return;
     try {
-      await kickUser(household.id, userToKick.id);
+      kickUser(household.id, userToKick.id);
     } catch (error) {
       showSafeErrorToast({
         title: t("toasts.kickFailed"),
@@ -45,15 +45,14 @@ export default function MembersCard() {
         error,
         context: "household-members:kick",
       });
-    } finally {
-      setShowKickModal(false);
-      setUserToKick(null);
     }
+    setShowKickModal(false);
+    setUserToKick(null);
   };
-  const handleTransferAdmin = async () => {
+  const handleTransferAdmin = () => {
     if (!userToTransfer) return;
     try {
-      await transferAdmin(household.id, userToTransfer.id);
+      transferAdmin(household.id, userToTransfer.id);
       toast(
         t("toasts.transferSuccess", {
           name: userToTransfer.name,
@@ -70,10 +69,9 @@ export default function MembersCard() {
         error,
         context: "household-members:transfer-admin",
       });
-    } finally {
-      setShowTransferModal(false);
-      setUserToTransfer(null);
     }
+    setShowTransferModal(false);
+    setUserToTransfer(null);
   };
   return (
     <>

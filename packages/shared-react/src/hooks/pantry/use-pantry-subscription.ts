@@ -16,6 +16,8 @@ type Payload<E extends EventName<PantryRealtime>> = PayloadOf<PantryRealtime, E>
  */
 export function createUsePantrySubscription({ useTRPC }: CreatePantryHooksOptions) {
   return function usePantrySubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.pantry.list.queryKey();

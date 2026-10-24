@@ -8,6 +8,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
+import type { LineJoin } from "@norish/shared/lib/line-foods";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
 import { spoonMeasureFor } from "@norish/shared-server/ingredients/nutrition/spoon-measure";
@@ -17,6 +18,8 @@ import {
   createTestRecipe,
   createTestRecipeIngredients,
   createTestUser,
+  firstSpellingId,
+  insertTestRecipeLine,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -128,6 +131,24 @@ describe("the measure a spoon weight is shown in", () => {
     await recipeOf(household.userId, flour.id, [["1", "cup", "us"]]);
 
     await expect(spoonMeasureFor(household, flour.id)).resolves.toBe("cup");
+  });
+
+  it("reads an or line by its first food, and an and line by each of its foods", async () => {
+    const [milk, oil, sugar] = await Promise.all(
+      ["milk", "oil", "sugar"].map(async (name) => (await createTestIngredient({ name }))!)
+    );
+    const recipe = await createTestRecipe(household.userId);
+    const line = async (order: number, unit: string, joined: LineJoin, foods: string[]) =>
+      await insertTestRecipeLine(
+        { recipeId: recipe.id, name: "line", amount: "1", unit, joined, order: String(order) },
+        (await Promise.all(foods.map(firstSpellingId))).map((id) => id!)
+      );
+
+    await line(0, "cup", "alternatives", [oil.id, milk.id]);
+    await line(1, "cup", "alternatives", [oil.id, milk.id]);
+    await line(2, "teaspoon", "together", [sugar.id, milk.id]);
+
+    await expect(spoonMeasureFor(household, milk.id)).resolves.toBe("teaspoon");
   });
 
   it("is none where no recipe measures the food by volume", async () => {

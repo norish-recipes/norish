@@ -6,7 +6,6 @@
  * supplied slot (ADR-0018) — which is why the stored slots ride along into
  * inference as settled facts, and why a replacing run withholds them: a refresh
  * that is told the stored country is settled can only hand it back.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
  *
  * The worker holds no database handle and composes no queries: it calls one
  * repository operation, which is where every provenance write lives.
@@ -23,17 +22,18 @@ import {
   hasSubstantiveProvenance,
 } from "@norish/shared/lib/recipe-enrichment";
 
-import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { createWorker } from "../create-worker";
 import {
   handleEnrichmentJobFailure,
   runEnrichmentJob,
   toRecipeSummary,
 } from "../enrichment/worker-runner";
 import { reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:recipe-provenance");
 
-/** Exported so the job body can be exercised without a Redis-backed worker. */
+/** Exported so the job body can be exercised without a Valkey-backed worker. */
 export async function processRecipeProvenanceJob(job: Job<RecipeEnrichmentJobData>): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
     const mode = enrichmentWriteMode("recipe-provenance", job.data);
@@ -82,11 +82,8 @@ export async function processRecipeProvenanceJob(job: Job<RecipeEnrichmentJobDat
   });
 }
 
-const recipeProvenanceWorker = defineLazyWorker<RecipeEnrichmentJobData>(
-  QUEUE_NAMES.RECIPE_PROVENANCE,
-  processRecipeProvenanceJob,
-  handleEnrichmentJobFailure
-);
-
-export const startRecipeProvenanceWorker = recipeProvenanceWorker.start;
-export const stopRecipeProvenanceWorker = recipeProvenanceWorker.stop;
+export function startRecipeProvenanceWorker(): void {
+  createWorker<RecipeEnrichmentJobData>(QUEUE_NAMES.RECIPE_PROVENANCE, processRecipeProvenanceJob, {
+    onFailed: handleEnrichmentJobFailure,
+  });
+}

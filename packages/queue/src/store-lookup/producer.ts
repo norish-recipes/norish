@@ -34,14 +34,6 @@ function jobId(...parts: string[]): string {
   return parts.join("|");
 }
 
-/**
- * **Never enqueue on this queue with `delay`.** A lazy worker wakes on a
- * `waiting` event and a delayed job is only promoted by a running worker, so a
- * delayed job on a sleeping queue sleeps forever
- * (`packages/queue/src/lazy-worker-manager.ts`). This queue is always-on
- * precisely so the work is predictable; scheduling ahead would put the hazard
- * back for no gain.
- */
 export async function addStoreMatchJob(
   queue: Queue<StoreLookupJobData>,
   data: Extract<StoreLookupJobData, { kind: "match" }>,
@@ -73,7 +65,10 @@ export async function addStoreRefreshJob(
       "refresh",
       data.storeId,
       String(windowOf(now, SHELF_PRICE_MAX_AGE_MS)),
-      data.productIds.slice().sort().join(",")
+      data.productIds
+        .slice()
+        .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+        .join(",")
     ),
     priority: REFRESH_PRIORITY,
   });

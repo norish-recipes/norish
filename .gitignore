@@ -1,6 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 #build
-/dist-server
 
 # dependencies
 /node_modules
@@ -103,3 +102,7 @@ docker-compose.yml
 # Playwright E2E artifacts. This root ignore is also used by the web format gate.
 apps/web/__tests__/e2e/.results/
 apps/web/__tests__/e2e/.runtime/
+
+# Vitest reports and coverage
+.vitest/
+coverage/

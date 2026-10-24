@@ -1,7 +1,7 @@
 // @vitest-environment node
 import fs from "fs/promises";
 import path from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock dependencies
 vi.mock("@norish/config/env-config-server", () => ({
@@ -60,10 +60,6 @@ vi.mock("sharp", () => ({
  */
 
 describe("downloader - image path conventions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("recipe images (thumbnail + gallery)", () => {
     it("uses per-recipe directory structure: /recipes/{recipeId}/{filename}", () => {
       const uploadsDir = "/test/uploads";
@@ -195,10 +191,6 @@ describe("downloader - URL pattern validation", () => {
 });
 
 describe("downloader - file operations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("saveImageBytes", () => {
     it("creates per-recipe directory if it does not exist", async () => {
       const recipeId = "550e8400-e29b-41d4-a716-446655440000";

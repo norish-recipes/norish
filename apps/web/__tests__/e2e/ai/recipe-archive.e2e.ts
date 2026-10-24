@@ -61,7 +61,7 @@ let page: Page;
 test.beforeEach(async ({ aiStack, page: fixturePage }) => {
   stack = aiStack;
   page = fixturePage;
-  await setAutomaticEnrichment({});
+  await setAutomaticEnrichment(stack, {});
 });
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -105,7 +105,7 @@ test("a Recipe Archive exported from settings imports back over the recipe it ca
   let stored: StoredRecipe | undefined;
 
   await expect(async () => {
-    const rows = await readStoredRecipes(ARCHIVE_RECIPE.name);
+    const rows = await readStoredRecipes(stack, ARCHIVE_RECIPE.name);
 
     expect(rows).toHaveLength(1);
     expect(rows[0]!.images.length).toBeGreaterThan(0);
@@ -113,9 +113,8 @@ test("a Recipe Archive exported from settings imports back over the recipe it ca
   }).toPass({ timeout: 90_000, intervals: [1_000, 2_000, 5_000] });
 
   const recipeId = stored!.id;
-  const userId = stored!.userId!;
 
-  await applyMarks(userId, recipeId, EXPORTED_RATING);
+  await applyMarks(stack, recipeId, EXPORTED_RATING);
 
   // Export: the real streamed response of the authenticated route, delivered
   // to the browser as a download.
@@ -137,7 +136,7 @@ test("a Recipe Archive exported from settings imports back over the recipe it ca
     recursive: true,
     force: true,
   });
-  await clearMarks(userId, recipeId);
+  await clearMarks(stack, recipeId);
 
   // Reimport through the normal archive import flow — no new skill needed.
   await openArchiveSettings();
@@ -146,7 +145,7 @@ test("a Recipe Archive exported from settings imports back over the recipe it ca
   await expect(page.getByText(/^Complete: \d+ imported/)).toBeVisible({ timeout: 180_000 });
 
   // Matched and overwritten, never duplicated: one recipe, the same one.
-  const reimported = await readStoredRecipes(ARCHIVE_RECIPE.name);
+  const reimported = await readStoredRecipes(stack, ARCHIVE_RECIPE.name);
 
   expect(reimported).toHaveLength(1);
   expect(reimported[0]!.id).toBe(recipeId);
@@ -162,7 +161,7 @@ test("a Recipe Archive exported from settings imports back over the recipe it ca
   expect(servedMedia.ok()).toBe(true);
 
   // The exporter's marks landed on the recipe that won the match.
-  expect(await readMarks(userId, recipeId)).toEqual({
+  expect(await readMarks(stack, recipeId)).toEqual({
     rating: EXPORTED_RATING,
     favorite: true,
   });

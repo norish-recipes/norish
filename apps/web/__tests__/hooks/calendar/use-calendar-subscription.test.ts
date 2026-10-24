@@ -1,5 +1,4 @@
 import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
-// eslint-disable-next-line import/order
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -110,7 +109,6 @@ describe("useCalendarSubscription", () => {
   const endISO = "2025-01-31";
 
   beforeEach(() => {
-    vi.clearAllMocks();
     subscriptionCallbacks = {};
     queryClient = createTestQueryClient();
   });
@@ -130,7 +128,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), []);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemCreated"];
+      const callback = subscriptionCallbacks["onItemCreated"]!;
 
       expect(callback).toBeDefined();
 
@@ -173,7 +171,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [existingItem]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemCreated"];
+      const callback = subscriptionCallbacks["onItemCreated"]!;
 
       callback(
         trackedEvent({
@@ -217,7 +215,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [item2, item1]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemCreated"];
+      const callback = subscriptionCallbacks["onItemCreated"]!;
 
       callback(
         trackedEvent({
@@ -242,17 +240,17 @@ describe("useCalendarSubscription", () => {
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
       expect(data).toHaveLength(3);
-      expect(data![0].date).toBe("2025-01-14");
-      expect(data![1].date).toBe("2025-01-15");
-      expect(data![1].slot).toBe("Breakfast");
-      expect(data![2].slot).toBe("Lunch");
+      expect(data![0]!.date).toBe("2025-01-14");
+      expect(data![1]!.date).toBe("2025-01-15");
+      expect(data![1]!.slot).toBe("Breakfast");
+      expect(data![2]!.slot).toBe("Lunch");
     });
 
     it("ignores created items outside the subscribed date range", () => {
       queryClient.setQueryData(getQueryKey(), []);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemCreated"];
+      const callback = subscriptionCallbacks["onItemCreated"]!;
 
       callback(
         trackedEvent({
@@ -288,7 +286,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [item1, item2]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemDeleted"];
+      const callback = subscriptionCallbacks["onItemDeleted"]!;
 
       expect(callback).toBeDefined();
 
@@ -297,7 +295,7 @@ describe("useCalendarSubscription", () => {
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
       expect(data).toHaveLength(1);
-      expect(data![0].id).toBe("item-2");
+      expect(data![0]!.id).toBe("item-2");
     });
   });
 
@@ -313,7 +311,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [item]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemMoved"];
+      const callback = subscriptionCallbacks["onItemMoved"]!;
 
       expect(callback).toBeDefined();
 
@@ -362,7 +360,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [item1, item2, item3]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemMoved"];
+      const callback = subscriptionCallbacks["onItemMoved"]!;
 
       callback(
         trackedEvent({
@@ -399,12 +397,12 @@ describe("useCalendarSubscription", () => {
 
       const sorted = [...data!].sort((a, b) => a.sortOrder - b.sortOrder);
 
-      expect(sorted[0].id).toBe("item-3");
-      expect(sorted[0].sortOrder).toBe(0);
-      expect(sorted[1].id).toBe("item-1");
-      expect(sorted[1].sortOrder).toBe(1);
-      expect(sorted[2].id).toBe("item-2");
-      expect(sorted[2].sortOrder).toBe(2);
+      expect(sorted[0]!.id).toBe("item-3");
+      expect(sorted[0]!.sortOrder).toBe(0);
+      expect(sorted[1]!.id).toBe("item-1");
+      expect(sorted[1]!.sortOrder).toBe(1);
+      expect(sorted[2]!.id).toBe("item-2");
+      expect(sorted[2]!.sortOrder).toBe(2);
     });
 
     it("updates sortOrder for items in both source and target slots on cross-slot move", () => {
@@ -415,7 +413,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [breakfast1, breakfast2, lunch1]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemMoved"];
+      const callback = subscriptionCallbacks["onItemMoved"]!;
 
       callback(
         trackedEvent({
@@ -473,7 +471,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [item1, item2]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemMoved"];
+      const callback = subscriptionCallbacks["onItemMoved"]!;
 
       callback(
         trackedEvent({
@@ -506,15 +504,15 @@ describe("useCalendarSubscription", () => {
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
       const sorted = [...data!].sort((a, b) => a.sortOrder - b.sortOrder);
 
-      expect(sorted[0].id).toBe("item-2");
-      expect(sorted[1].id).toBe("item-1");
+      expect(sorted[0]!.id).toBe("item-2");
+      expect(sorted[1]!.id).toBe("item-1");
     });
 
     it("adds items moved into the subscribed date range", () => {
       queryClient.setQueryData(getQueryKey(), []);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemMoved"];
+      const callback = subscriptionCallbacks["onItemMoved"]!;
 
       callback(
         trackedEvent({
@@ -560,7 +558,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [item]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemMoved"];
+      const callback = subscriptionCallbacks["onItemMoved"]!;
 
       callback(
         trackedEvent({
@@ -600,7 +598,7 @@ describe("useCalendarSubscription", () => {
       queryClient.setQueryData(getQueryKey(), [item]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onItemUpdated"];
+      const callback = subscriptionCallbacks["onItemUpdated"]!;
 
       expect(callback).toBeDefined();
 
@@ -642,7 +640,7 @@ describe("useCalendarSubscription", () => {
 
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onFailed"];
+      const callback = subscriptionCallbacks["onFailed"]!;
 
       expect(callback).toBeDefined();
 

@@ -19,6 +19,8 @@ import { useRealtimeSubscription } from "../../realtime/use-realtime-subscriptio
  */
 export function createUseIngredientsSubscription({ useTRPC }: CreateIngredientsHooksOptions) {
   return function useIngredientsSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const derived = [

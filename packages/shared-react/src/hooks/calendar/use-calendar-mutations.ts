@@ -22,6 +22,8 @@ export function createUseCalendarMutations({
   useCalendarCacheHelpers,
 }: CreateUseCalendarMutationsOptions) {
   return function useCalendarMutations(startISO: string, endISO: string): CalendarMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
@@ -48,6 +50,7 @@ export function createUseCalendarMutations({
         onError: invalidateUnlessPreserved(invalidate),
       })
     );
+    const { mutate: mutateCreate } = createMutation;
 
     const deleteMutation = useMutation(
       trpc.calendar.deleteItem.mutationOptions({
@@ -78,6 +81,7 @@ export function createUseCalendarMutations({
         },
       })
     );
+    const { mutate: mutateDelete } = deleteMutation;
 
     const moveMutation = useMutation(
       trpc.calendar.moveItem.mutationOptions({
@@ -154,6 +158,7 @@ export function createUseCalendarMutations({
         },
       })
     );
+    const { mutate: mutateMove } = moveMutation;
 
     const updateMutation = useMutation(
       trpc.calendar.updateItem.mutationOptions({
@@ -184,6 +189,7 @@ export function createUseCalendarMutations({
         },
       })
     );
+    const { mutate: mutateUpdate } = updateMutation;
 
     const createItem = (
       date: string,
@@ -193,11 +199,11 @@ export function createUseCalendarMutations({
       title?: string
     ) => {
       // Client-minted id, honoured on insert (ADR-0003).
-      createMutation.mutate({ id: createClientId(), date, slot, itemType, recipeId, title });
+      mutateCreate({ id: createClientId(), date, slot, itemType, recipeId, title });
     };
 
     const deleteItem = (itemId: string) => {
-      deleteMutation.mutate({ itemId, version: getCurrentItemVersion(itemId) });
+      mutateDelete({ itemId, version: getCurrentItemVersion(itemId) });
     };
 
     const moveItem = (
@@ -206,7 +212,7 @@ export function createUseCalendarMutations({
       targetSlot: Slot,
       targetIndex: number
     ) => {
-      moveMutation.mutate({
+      mutateMove({
         itemId,
         version: getCurrentItemVersion(itemId),
         targetDate,
@@ -216,7 +222,7 @@ export function createUseCalendarMutations({
     };
 
     const updateItem = (itemId: string, title: string) => {
-      updateMutation.mutate({ itemId, version: getCurrentItemVersion(itemId), title });
+      mutateUpdate({ itemId, version: getCurrentItemVersion(itemId), title });
     };
 
     return {

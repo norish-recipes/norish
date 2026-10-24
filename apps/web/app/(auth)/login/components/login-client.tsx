@@ -4,6 +4,7 @@ import { Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
+import { APP_ROOT } from "@norish/shared/lib/base-path";
 
 import { AuthAlert } from "../../components/auth-alert";
 import { AuthCard } from "../../components/auth-card";
@@ -20,7 +21,7 @@ interface LoginClientProps {
 
 export function LoginClient({
   providers,
-  callbackUrl = "/",
+  callbackUrl = APP_ROOT,
   autoRedirect = false,
   registrationEnabled = false,
 }: LoginClientProps) {

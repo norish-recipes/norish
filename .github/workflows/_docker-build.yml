@@ -86,8 +86,8 @@ jobs:
       # No setup-qemu-action: every leg builds for the architecture it runs on.
 
       # Non-push builds log in too, even though they publish nothing: the base
-      # image (`node:22-alpine3.24`) comes from Docker Hub, and anonymous pulls
-      # are rate limited per IP — which GitHub runners share. Guarded on the
+      # image comes from Docker Hub, and anonymous pulls are rate limited per
+      # IP — which GitHub runners share. Guarded on the
       # secret so PRs from forks pull anonymously rather than failing on a login
       # they can never do.
       - name: Login to container registry

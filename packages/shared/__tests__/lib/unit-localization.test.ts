@@ -87,6 +87,15 @@ describe("every word of the default units map names one unit", () => {
   });
 });
 
+describe("foldUnitWord", () => {
+  it("drops the trailing dots and folds the case, except T and t", () => {
+    expect(foldUnitWord(" Tbsp.. ")).toBe("tbsp");
+    expect(foldUnitWord("fl.  oz.")).toBe("fl. oz");
+    expect(foldUnitWord("T.")).toBe("T");
+    expect(foldUnitWord("...")).toBe("");
+  });
+});
+
 describe("Unit Localization", () => {
   describe("normalizeUnit - input => canonical ID", () => {
     it("normalizes German 'EL' to canonical 'tablespoon'", () => {

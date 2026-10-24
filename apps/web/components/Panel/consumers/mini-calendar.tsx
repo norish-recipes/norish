@@ -37,6 +37,10 @@ function MiniCalendarContent({
   onOpenChange: (open: boolean) => void;
   onPlanned: (recipeId: string) => void;
 }) {
+  // TanStack Virtual hands back one mutable instance, so compiled memoisation
+  // would keep its first rows.
+  "use no memo";
+
   const t = useTranslations("calendar.panel");
   const locale = useLocale();
   const today = useMemo(() => new Date(), []);

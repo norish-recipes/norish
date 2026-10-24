@@ -1,19 +1,7 @@
-import jsxA11y from "eslint-plugin-jsx-a11y";
-import reactPlugin from "eslint-plugin-react";
-import reactHooks from "eslint-plugin-react-hooks";
+import eslintReact from "@eslint-react/eslint-plugin";
+import stylistic from "@stylistic/eslint-plugin";
+import jsxA11y from "eslint-plugin-jsx-a11y-x";
 import { defineConfig } from "eslint/config";
-
-type FlatConfigLike = {
-  plugins?: Record<string, unknown>;
-  languageOptions?: Record<string, unknown>;
-  settings?: Record<string, unknown>;
-  rules?: Record<string, unknown>;
-};
-
-const reactRecommended = reactPlugin.configs.flat?.recommended as FlatConfigLike | undefined;
-const reactJsxRuntime = reactPlugin.configs.flat?.["jsx-runtime"] as FlatConfigLike | undefined;
-const jsxA11yRecommended = (jsxA11y as { flatConfigs?: { recommended?: FlatConfigLike } })
-  .flatConfigs?.recommended;
 
 export const reactConfig = defineConfig(
   {
@@ -31,37 +19,60 @@ export const reactConfig = defineConfig(
           message:
             "crypto.randomUUID is undefined outside a secure context. Use createClientId() from @norish/shared/lib/operation-helpers.",
         },
+        // The React Compiler knows a hook only by its name. An alias without the
+        // `use` prefix is compiled as a plain call, which it may memoise into a
+        // conditional one.
+        ...[
+          "VariableDeclarator[id.type='Identifier'][id.name!=/^use[A-Z0-9]/][init.type='MemberExpression'][init.property.name=/^use[A-Z0-9]/]",
+          "VariableDeclarator[id.type='Identifier'][id.name!=/^use[A-Z0-9]/][init.type='Identifier'][init.name=/^use[A-Z0-9]/]",
+          "ObjectPattern > Property[key.name=/^use[A-Z0-9]/][value.type='Identifier'][value.name!=/^use[A-Z0-9]/]",
+        ].map((selector) => ({
+          selector,
+          message: "A hook alias keeps the `use` prefix, so the React Compiler still sees a hook.",
+        })),
+        // The compiler's infer mode compiles top-level components and hooks
+        // only: one a factory builds is skipped unless it opts in.
+        ...[
+          ":function :function[id.name=/^(use[A-Z0-9]|[A-Z])/]:not([body.body.0.directive='use memo'])",
+          ":function VariableDeclarator[id.name=/^(use[A-Z0-9]|[A-Z])/] > :function:not([body.body.0.directive='use memo'])",
+        ].map((selector) => ({
+          selector,
+          message:
+            'A hook or component built inside a function starts with "use memo", or the React Compiler skips it.',
+        })),
+        // React Compiler 1.0 cannot lower a `finally`, and skips the whole
+        // component or hook that has one, event handlers included.
+        ...[
+          ":function[id.name=/^(use[A-Z0-9]|[A-Z])/] TryStatement[finalizer]",
+          "VariableDeclarator[id.name=/^(use[A-Z0-9]|[A-Z])/] > :function TryStatement[finalizer]",
+        ].map((selector) => ({
+          selector,
+          message:
+            "The React Compiler skips a component or hook with a `finally` in it: chain `.finally()` on the promise instead.",
+        })),
       ],
     },
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
+    extends: [eslintReact.configs["recommended-typescript"], jsxA11y.configs.recommended],
     plugins: {
-      ...reactRecommended?.plugins,
-      ...reactJsxRuntime?.plugins,
-      ...jsxA11yRecommended?.plugins,
-    } as never,
+      "@stylistic": stylistic,
+    },
     languageOptions: {
-      ...reactRecommended?.languageOptions,
-      ...reactJsxRuntime?.languageOptions,
-      ...jsxA11yRecommended?.languageOptions,
       globals: {
         React: "writable",
       },
     },
-    settings: {
-      ...reactRecommended?.settings,
-      react: {
-        version: "detect",
-      },
-    },
     rules: {
-      ...reactRecommended?.rules,
-      ...reactJsxRuntime?.rules,
-      ...jsxA11yRecommended?.rules,
-      "react/prop-types": "off",
-      "react/self-closing-comp": "warn",
-      "react/jsx-sort-props": [
+      // What the React Compiler assumes of a component, checked as it is
+      // written: no ref read or written during render, nothing a render
+      // received mutated, and no state set synchronously in an effect.
+      "@eslint-react/refs": "error",
+      "@eslint-react/immutability": "error",
+      "@eslint-react/set-state-in-effect": "error",
+      "@stylistic/jsx-self-closing-comp": "warn",
+      "@stylistic/jsx-sort-props": [
         "warn",
         {
           callbacksLast: true,
@@ -70,20 +81,8 @@ export const reactConfig = defineConfig(
           reservedFirst: true,
         },
       ],
-      "jsx-a11y/click-events-have-key-events": "warn",
-      "jsx-a11y/interactive-supports-focus": "warn",
-    },
-  },
-  reactHooks.configs.flat.recommended,
-  {
-    files: ["**/*.ts", "**/*.tsx"],
-    rules: {
-      "react-hooks/exhaustive-deps": "warn",
-      "react-hooks/refs": "off",
-      "react-hooks/set-state-in-effect": "off",
-      "react-hooks/incompatible-library": "off",
-      "react-hooks/preserve-manual-memoization": "off",
-      "react-hooks/immutability": "off",
+      "jsx-a11y-x/click-events-have-key-events": "warn",
+      "jsx-a11y-x/interactive-supports-focus": "warn",
     },
   }
 );

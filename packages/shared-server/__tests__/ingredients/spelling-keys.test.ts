@@ -30,7 +30,7 @@ describe("spelling keys, online", () => {
   });
 
   it.each(SPELLING_CASES)("a Pantry %j covers a line %j: %s", async (pantry, line, covered) => {
-    const held = await resolveIngredient(pantry, { userId }, { ai: false });
+    const held = await resolveIngredient(pantry, { userId }, "upgrade");
     const found = await findIngredientFor(line);
 
     expect(found?.ingredientId === held!.ingredientId).toBe(covered);

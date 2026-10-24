@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ChipButton } from "@/components/shared/chip-button";
 import DataTable from "@/components/ui/data-table";
 import {
   useAdminConfigsQuery,
@@ -75,10 +76,16 @@ export default function JobQueueCard() {
     DEFAULT_JOB_RETENTION;
   const { keepCompleted, keepFailed, maxAgeDays } = storedRetention;
   const [retention, setRetention] = useState<JobRetentionConfig>(storedRetention);
+  const [prevRetention, setPrevRetention] = useState(storedRetention);
 
-  useEffect(() => {
+  if (
+    keepCompleted !== prevRetention.keepCompleted ||
+    keepFailed !== prevRetention.keepFailed ||
+    maxAgeDays !== prevRetention.maxAgeDays
+  ) {
+    setPrevRetention(storedRetention);
     setRetention({ keepCompleted, keepFailed, maxAgeDays });
-  }, [keepCompleted, keepFailed, maxAgeDays]);
+  }
 
   const hasRetentionChanges =
     retention.keepCompleted !== storedRetention.keepCompleted ||
@@ -136,9 +143,8 @@ export default function JobQueueCard() {
     state: Exclude<StateFilter, null>,
     color: "accent" | "warning" | "danger" | "default"
   ) => (
-    <Chip
+    <ChipButton
       aria-pressed={stateFilter === state}
-      as="button"
       className={
         state === "active"
           ? "chip--info cursor-pointer px-1 py-0.5 transition-all"
@@ -146,12 +152,11 @@ export default function JobQueueCard() {
       }
       color={color}
       size="sm"
-      type="button"
       variant={stateFilter === state ? "primary" : "soft"}
       onClick={() => handleStateFilter(state)}
     >
       {t(`status.${state}`)}: {totals[state]}
-    </Chip>
+    </ChipButton>
   );
 
   return (
@@ -208,10 +213,9 @@ export default function JobQueueCard() {
           <Select
             aria-label={t("filters.queue")}
             className="w-full sm:w-56"
-            selectedKey={queueFilter}
-            size="sm"
+            value={queueFilter}
             variant="secondary"
-            onSelectionChange={(key) => {
+            onChange={(key) => {
               if (typeof key === "string") {
                 setQueueFilter(key);
                 setPage(1);

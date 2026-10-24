@@ -49,7 +49,6 @@ function chose(choice: string, probabilities: Record<string, number>) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
   mocked.decide.mockResolvedValue(chose("p1", { p1: 0.95, p2: 0.03, p3: 0.01, none: 0.01 }));
 });

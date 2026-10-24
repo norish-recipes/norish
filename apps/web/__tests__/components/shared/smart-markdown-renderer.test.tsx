@@ -43,6 +43,16 @@ describe("SmartMarkdownRenderer", () => {
     );
   });
 
+  it("links the recipe a reference names, with a stray [ before it kept as text", () => {
+    render(<SmartMarkdownRenderer text="Serve with [a [Sauce](id:recipe-123)." />);
+
+    expect(screen.getByRole("link", { name: "Sauce" })).toHaveAttribute(
+      "href",
+      "/recipes/recipe-123"
+    );
+    expect(screen.getByText(/Serve with \[a/)).toBeInTheDocument();
+  });
+
   it("still renders timers beside literal legacy tokens", () => {
     render(
       <SmartMarkdownRenderer

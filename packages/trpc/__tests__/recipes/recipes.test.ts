@@ -81,7 +81,6 @@ describe("recipes procedures", () => {
   let ctx: ReturnType<typeof createMockAuthedContext>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
@@ -778,13 +777,16 @@ describe("recipes procedures", () => {
       createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-id" });
       dashboardRecipe.mockResolvedValue(null);
 
-      await createCaller().create({ name: "Uploaded", image: recipeImage });
+      await createCaller().create({ name: "Uploaded", images: [{ image: recipeImage, order: 0 }] });
 
       await vi.waitFor(() => expect(createRecipeWithRefs).toHaveBeenCalled());
       expect(createRecipeWithRefs).toHaveBeenCalledWith(
         expect.any(String),
         ctx.user.id,
-        expect.objectContaining({ image: recipeImage, dishColor: EXTRACTED_DISH_COLOR })
+        expect.objectContaining({
+          images: [{ image: recipeImage, order: 0 }],
+          dishColor: EXTRACTED_DISH_COLOR,
+        })
       );
     });
 
@@ -796,7 +798,7 @@ describe("recipes procedures", () => {
 
       await createCaller().update({
         id: "55555555-5555-4555-8555-555555555555",
-        data: { image: recipeImage },
+        data: { images: [{ image: recipeImage, order: 0 }] },
         version: 1,
       });
 
@@ -804,7 +806,10 @@ describe("recipes procedures", () => {
       expect(updateRecipeWithRefs).toHaveBeenCalledWith(
         "55555555-5555-4555-8555-555555555555",
         ctx.user.id,
-        expect.objectContaining({ image: recipeImage, dishColor: EXTRACTED_DISH_COLOR }),
+        expect.objectContaining({
+          images: [{ image: recipeImage, order: 0 }],
+          dishColor: EXTRACTED_DISH_COLOR,
+        }),
         1
       );
     });

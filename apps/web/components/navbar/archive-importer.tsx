@@ -184,6 +184,8 @@ export default function ArchiveImporter() {
             {showNotes && (
               <ul className="mt-1 list-disc pl-4">
                 {notes.map((entry, i) => (
+                  // An import log: it only appends, and a file can carry the same note twice.
+                  // eslint-disable-next-line @eslint-react/no-array-index-key
                   <li key={i}>
                     {entry.file}: {entry.note}
                   </li>
@@ -196,6 +198,8 @@ export default function ArchiveImporter() {
         {allErrors.length > 0 && (
           <ul className="text-danger list-disc pl-4 text-base">
             {allErrors.map((e, i) => (
+              // An import log: it only appends, and a file can fail the same way twice.
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               <li key={i}>
                 {e.file}: {String(e.error)}
               </li>

@@ -393,7 +393,7 @@ describe("Mealie Legacy Parser", () => {
         imageBuffer
       );
 
-      expect(dto.image).toBe("mocked-image-guid");
+      expect(dto.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
     });
 
     it("handles recipe with no tags or categories", async () => {

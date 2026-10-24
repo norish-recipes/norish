@@ -127,6 +127,26 @@ describe("recurrence/calculator", () => {
       });
     });
 
+    describe("yearly recurrence", () => {
+      it("calculates the next occurrence a year on, or several", () => {
+        expect(
+          calculateNextOccurrence({ rule: "year", interval: 1 }, "2025-01-15", "2025-01-15")
+        ).toBe("2026-01-15");
+        expect(
+          calculateNextOccurrence({ rule: "year", interval: 2 }, "2025-01-15", "2025-01-15")
+        ).toBe("2027-01-15");
+      });
+
+      it("starts a new item today, and moves a missed one past today", () => {
+        expect(calculateNextOccurrence({ rule: "year", interval: 1 }, "2025-01-15")).toBe(
+          "2025-01-15"
+        );
+        expect(calculateNextOccurrence({ rule: "year", interval: 1 }, "2023-03-01")).toBe(
+          "2025-03-01"
+        );
+      });
+    });
+
     describe("edge cases", () => {
       it("handles large intervals", () => {
         const pattern: RecurrencePattern = { rule: "week", interval: 52 };

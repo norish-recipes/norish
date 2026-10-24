@@ -78,7 +78,6 @@ const METADATA = {
 const TRANSCRIPT = "first, boil the water\n\n---\n\nQuick pesto.";
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocked.generateStructured.mockResolvedValue(EXTRACTED);
   mocked.shadowScore.mockResolvedValue(2);
   mocked.normalizeExtractionOutput.mockResolvedValue({ id: "recipe-1", name: "Pesto pasta" });

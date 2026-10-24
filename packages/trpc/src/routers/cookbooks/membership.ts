@@ -19,10 +19,10 @@ import {
   RecipeListResultSchema,
 } from "@norish/shared/contracts/zod";
 
-import { authedProcedure } from "../../middleware";
+import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess } from "../recipes/helpers";
-import { assertCookbookAccess, emitCookbookEvent, listContextFor } from "./helpers";
+import { assertCookbookAccess, emitCookbookEvent } from "./helpers";
 
 /**
  * File a recipe into a cookbook, or take it out again.
@@ -76,7 +76,7 @@ const forRecipe = authedProcedure
   .query(async ({ ctx, input }) => {
     await assertRecipeAccess(ctx, input.recipeId, "view");
 
-    return listCookbooksForRecipe(listContextFor(ctx), input.recipeId);
+    return listCookbooksForRecipe(viewerOf(ctx), input.recipeId);
   });
 
 /**
@@ -89,7 +89,7 @@ const forRecipe = authedProcedure
  */
 const editable = authedProcedure
   .output(z.array(CookbookSummarySchema))
-  .query(async ({ ctx }) => listEditableCookbooks(listContextFor(ctx)));
+  .query(async ({ ctx }) => listEditableCookbooks(viewerOf(ctx)));
 
 /**
  * A cookbook's members, paged through the recipe list itself.
@@ -107,7 +107,7 @@ const recipes = authedProcedure
     await assertCookbookAccess(ctx, input.cookbookId, "view");
 
     const result = await listRecipes(
-      listContextFor(ctx),
+      viewerOf(ctx),
       input.limit,
       input.cursor,
       input.search,

@@ -27,6 +27,8 @@ export function createUseRecipeSubscription(
     recipeId: string | null,
     callbacks: RecipeSubscriptionCallbacks = {}
   ) {
+    "use memo";
+
     const trpc = useTRPC();
     const { setRecipeData, invalidate } = dependencies.useRecipeQuery(recipeId);
 

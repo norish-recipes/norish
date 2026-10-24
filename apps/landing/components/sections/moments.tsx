@@ -67,16 +67,16 @@ const REACH = reachOf(moments.length, GLIDE);
  * yourself, snapping to each step (see `.moments-*` in globals.css).
  */
 export function Moments() {
-  const stage = useRef<HTMLElement>(null);
-  const pin = useRef<HTMLDivElement>(null);
-  const rail = useRef<HTMLOListElement>(null);
-  const steps = useRef<(HTMLLIElement | null)[]>([]);
-  const dots = useRef<(HTMLSpanElement | null)[]>([]);
+  const stageRef = useRef<HTMLElement>(null);
+  const pinRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLOListElement>(null);
+  const stepsRef = useRef<(HTMLLIElement | null)[]>([]);
+  const dotsRef = useRef<(HTMLSpanElement | null)[]>([]);
 
   useScrollFrame(() => {
-    const section = stage.current;
+    const section = stageRef.current;
 
-    if (!section || !rail.current) return;
+    if (!section || !railRef.current) return;
 
     const { top, height } = section.getBoundingClientRect();
     const held = height - window.innerHeight;
@@ -88,12 +88,12 @@ export function Moments() {
     // there when the screen is taken, so it settles on the way in instead.
     const arriving = clamp((window.innerHeight - top) / window.innerHeight);
 
-    rail.current.style.setProperty("--walk", `${walk}`);
+    railRef.current.style.setProperty("--walk", `${walk}`);
     // The pin is held still against the page, so what the drawings in its
     // margins travel against is the section's own progress instead.
-    pin.current?.style.setProperty("--drift", `${progress * 2 - 1}`);
+    pinRef.current?.style.setProperty("--drift", `${progress * 2 - 1}`);
 
-    steps.current.forEach((step, index) => {
+    stepsRef.current.forEach((step, index) => {
       if (!step) return;
 
       const resting = clamp((progress - index * (hold + GLIDE)) / hold);
@@ -116,20 +116,20 @@ export function Moments() {
       step.style.setProperty("--settle", `${resting}`);
     });
 
-    dots.current.forEach((dot, index) => {
+    dotsRef.current.forEach((dot, index) => {
       dot?.style.setProperty("--lit", `${clamp(1 - Math.abs(walk - index))}`);
     });
   });
 
   return (
     <section
-      ref={stage}
+      ref={stageRef}
       className="moments-stage border-border border-t"
       style={{ "--steps": `${moments.length}` } as CSSProperties}
     >
       <SnapPoints at={STOPS} reach={REACH} />
 
-      <div ref={pin} className="moments-pin py-20 sm:py-24">
+      <div ref={pinRef} className="moments-pin py-20 sm:py-24">
         {/* Off the worktop, in the room the steps leave either side of them. */}
         <Mark at="top-[11%] left-[4%] size-10 sm:size-11" depth={1.3} shape="sprig" turn={13} />
         <Mark
@@ -155,12 +155,12 @@ export function Moments() {
         />
 
         <div className="moments-viewport">
-          <ol ref={rail} className="moments-track">
+          <ol ref={railRef} className="moments-track">
             {moments.map(({ title, body, scene: Scene, tint, track, fill }, index) => (
               <li
                 key={title}
                 ref={(node) => {
-                  steps.current[index] = node;
+                  stepsRef.current[index] = node;
                 }}
                 className="moment"
               >
@@ -204,7 +204,7 @@ export function Moments() {
             <span
               key={title}
               ref={(node) => {
-                dots.current[index] = node;
+                dotsRef.current[index] = node;
               }}
               className="progress-dot"
             />

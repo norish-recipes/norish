@@ -63,226 +63,196 @@ export function useUserMutations(): UserMutationsResult {
   const getCurrentUserVersion = () => getUserSettingsData()?.user.version ?? 1;
 
   // Profile mutations
-  const updateNameMutation = useMutation(trpc.user.updateName.mutationOptions());
-  const uploadAvatarMutation = useMutation(trpc.user.uploadAvatar.mutationOptions());
-  const deleteAvatarMutation = useMutation(trpc.user.deleteAvatar.mutationOptions());
-  const deleteAccountMutation = useMutation(trpc.user.deleteAccount.mutationOptions());
+  const { mutateAsync: mutateUpdateNameAsync, isPending: isUpdatingName } = useMutation(
+    trpc.user.updateName.mutationOptions()
+  );
+  const { mutateAsync: mutateUploadAvatarAsync, isPending: isUploadingAvatar } = useMutation(
+    trpc.user.uploadAvatar.mutationOptions()
+  );
+  const { mutateAsync: mutateDeleteAvatarAsync, isPending: isDeletingAvatar } = useMutation(
+    trpc.user.deleteAvatar.mutationOptions()
+  );
+  const { mutateAsync: mutateDeleteAccountAsync, isPending: isDeletingAccount } = useMutation(
+    trpc.user.deleteAccount.mutationOptions()
+  );
 
   // API key mutations
-  const createApiKeyMutation = useMutation(trpc.user.apiKeys.create.mutationOptions());
-  const deleteApiKeyMutation = useMutation(trpc.user.apiKeys.delete.mutationOptions());
-  const toggleApiKeyMutation = useMutation(trpc.user.apiKeys.toggle.mutationOptions());
+  const { mutateAsync: mutateCreateApiKeyAsync, isPending: isCreatingApiKey } = useMutation(
+    trpc.user.apiKeys.create.mutationOptions()
+  );
+  const { mutateAsync: mutateDeleteApiKeyAsync, isPending: isDeletingApiKey } = useMutation(
+    trpc.user.apiKeys.delete.mutationOptions()
+  );
+  const { mutateAsync: mutateToggleApiKeyAsync, isPending: isTogglingApiKey } = useMutation(
+    trpc.user.apiKeys.toggle.mutationOptions()
+  );
 
   // Allergies mutation
-  const setAllergiesMutation = useMutation(trpc.user.setAllergies.mutationOptions());
+  const { mutateAsync: mutateSetAllergiesAsync, isPending: isUpdatingAllergies } = useMutation(
+    trpc.user.setAllergies.mutationOptions()
+  );
 
   // Preferences mutation
-  const updatePreferencesMutation = useMutation(trpc.user.updatePreferences.mutationOptions());
+  const { mutateAsync: mutateUpdatePreferencesAsync, isPending: isUpdatingPreferences } =
+    useMutation(trpc.user.updatePreferences.mutationOptions());
+
+  const failed = (error: unknown) => {
+    invalidate();
+
+    return { success: false, error: String(error) };
+  };
+
+  // A profile change answers with the user as it now is.
+  const settleUser = <T extends { success: boolean; user?: User }>(pending: Promise<T>) =>
+    pending
+      .then((result) => {
+        if (result.success && result.user) mergeUser(result.user);
+
+        return result;
+      })
+      .catch(failed);
 
   return {
     // Profile updates
-    updateName: async (name) => {
-      try {
-        const result = await updateNameMutation.mutateAsync({
-          name,
-          version: getCurrentUserVersion(),
-        });
+    updateName: (name) =>
+      settleUser(mutateUpdateNameAsync({ name, version: getCurrentUserVersion() })),
 
-        if (result.success && result.user) {
-          mergeUser(result.user);
-        }
+    uploadAvatar: (file) => {
+      const formData = new FormData();
 
-        return result;
-      } catch (error) {
-        invalidate();
+      formData.append("file", file);
+      formData.append("version", String(getCurrentUserVersion()));
 
-        return { success: false, error: String(error) };
-      }
+      return settleUser(mutateUploadAvatarAsync(formData));
     },
 
-    uploadAvatar: async (file) => {
-      try {
-        const formData = new FormData();
+    deleteAvatar: () => settleUser(mutateDeleteAvatarAsync({ version: getCurrentUserVersion() })),
 
-        formData.append("file", file);
-        formData.append("version", String(getCurrentUserVersion()));
-
-        const result = await uploadAvatarMutation.mutateAsync(formData);
-
-        if (result.success && result.user) {
-          mergeUser(result.user);
-        }
-
-        return result;
-      } catch (error) {
-        invalidate();
-
-        return { success: false, error: String(error) };
-      }
-    },
-
-    deleteAvatar: async () => {
-      try {
-        const result = await deleteAvatarMutation.mutateAsync({ version: getCurrentUserVersion() });
-
-        if (result.success && result.user) {
-          mergeUser(result.user);
-        }
-
-        return result;
-      } catch (error) {
-        invalidate();
-
-        return { success: false, error: String(error) };
-      }
-    },
-
-    deleteAccount: async () => {
-      try {
-        const result = await deleteAccountMutation.mutateAsync();
-
-        return result;
-      } catch (error) {
-        return { success: false, error: String(error) };
-      }
-    },
+    deleteAccount: () =>
+      mutateDeleteAccountAsync().catch((error: unknown) => ({
+        success: false,
+        error: String(error),
+      })),
 
     // API keys
-    createApiKey: async (name) => {
-      try {
-        const result = await createApiKeyMutation.mutateAsync({ name });
+    createApiKey: (name) =>
+      mutateCreateApiKeyAsync({ name })
+        .then((result) => {
+          if (result.success && result.metadata) {
+            setUserSettingsData((prev) =>
+              prev ? { ...prev, apiKeys: [...prev.apiKeys, result.metadata!] } : prev
+            );
+          }
 
-        if (result.success && result.metadata) {
-          setUserSettingsData((prev) =>
-            prev ? { ...prev, apiKeys: [...prev.apiKeys, result.metadata!] } : prev
-          );
-        }
+          return result;
+        })
+        .catch(failed),
 
-        return result;
-      } catch (error) {
-        invalidate();
+    deleteApiKey: (keyId) =>
+      mutateDeleteApiKeyAsync({ keyId })
+        .then((result) => {
+          if (result.success) {
+            setUserSettingsData((prev) =>
+              prev ? { ...prev, apiKeys: prev.apiKeys.filter((k) => k.id !== keyId) } : prev
+            );
+          }
 
-        return { success: false, error: String(error) };
-      }
-    },
+          return result;
+        })
+        .catch(failed),
 
-    deleteApiKey: async (keyId) => {
-      try {
-        const result = await deleteApiKeyMutation.mutateAsync({ keyId });
+    toggleApiKey: (keyId, enabled) =>
+      mutateToggleApiKeyAsync({ keyId, enabled })
+        .then((result) => {
+          if (result.success) {
+            setUserSettingsData((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    apiKeys: prev.apiKeys.map((k) => (k.id === keyId ? { ...k, enabled } : k)),
+                  }
+                : prev
+            );
+          }
 
-        if (result.success) {
-          setUserSettingsData((prev) =>
-            prev ? { ...prev, apiKeys: prev.apiKeys.filter((k) => k.id !== keyId) } : prev
-          );
-        }
-
-        return result;
-      } catch (error) {
-        invalidate();
-
-        return { success: false, error: String(error) };
-      }
-    },
-
-    toggleApiKey: async (keyId, enabled) => {
-      try {
-        const result = await toggleApiKeyMutation.mutateAsync({ keyId, enabled });
-
-        if (result.success) {
-          setUserSettingsData((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  apiKeys: prev.apiKeys.map((k) => (k.id === keyId ? { ...k, enabled } : k)),
-                }
-              : prev
-          );
-        }
-
-        return result;
-      } catch (error) {
-        invalidate();
-
-        return { success: false, error: String(error) };
-      }
-    },
+          return result;
+        })
+        .catch(failed),
 
     // Allergies
-    setAllergies: async (allergies) => {
-      try {
-        const currentAllergies = getAllergiesData();
-        const result = await setAllergiesMutation.mutateAsync({
-          allergies,
-          version: currentAllergies?.version ?? 0,
-        });
+    setAllergies: (allergies) => {
+      const currentAllergies = getAllergiesData();
 
-        if (result.success) {
-          setAllergiesData(() => ({
-            allergies: result.allergies ?? [],
-            version: result.version ?? currentAllergies?.version ?? 0,
-          }));
-          setUserSettingsData((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  user: {
-                    ...prev.user,
-                    version: result.version ?? prev.user.version,
-                  },
-                }
-              : prev
-          );
-          // Household and calendar updates are handled via WebSocket subscription (onAllergiesUpdated)
-        }
+      return mutateSetAllergiesAsync({
+        allergies,
+        version: currentAllergies?.version ?? 0,
+      })
+        .then((result) => {
+          if (result.success) {
+            setAllergiesData(() => ({
+              allergies: result.allergies ?? [],
+              version: result.version ?? currentAllergies?.version ?? 0,
+            }));
+            setUserSettingsData((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    user: {
+                      ...prev.user,
+                      version: result.version ?? prev.user.version,
+                    },
+                  }
+                : prev
+            );
+            // Household and calendar updates are handled via WebSocket subscription (onAllergiesUpdated)
+          }
 
-        return result;
-      } catch (error) {
-        return { success: false, error: String(error) };
-      }
+          return result;
+        })
+        .catch((error: unknown) => ({ success: false, error: String(error) }));
     },
 
     // Preferences
-    updatePreferences: async (preferences) => {
+    updatePreferences: (preferences) => {
       // Save previous for rollback
       const previous = getUserSettingsData();
 
-      try {
-        // Optimistic update
-        mergeUserPreferences(preferences);
+      // Optimistic update
+      mergeUserPreferences(preferences);
 
-        const result = await updatePreferencesMutation.mutateAsync({
-          preferences,
-          version: previous?.user.version ?? 1,
-        });
+      return mutateUpdatePreferencesAsync({
+        preferences,
+        version: previous?.user.version ?? 1,
+      })
+        .then((result) => {
+          if (!result.success) {
+            // Rollback immediately to previous cached value
+            setUserSettingsData(() => previous);
+            invalidate();
+          } else {
+            if (result.version) mergeUser({ version: result.version });
+            mergeUserPreferences(result.preferences ?? {});
+          }
 
-        if (!result.success) {
-          // Rollback immediately to previous cached value
+          return result;
+        })
+        .catch((error: unknown) => {
+          // Rollback on error
           setUserSettingsData(() => previous);
-          invalidate();
-        } else {
-          if (result.version) mergeUser({ version: result.version });
-          mergeUserPreferences(result.preferences ?? {});
-        }
 
-        return result;
-      } catch (error) {
-        // Rollback on error
-        setUserSettingsData(() => previous);
-        invalidate();
-
-        return { success: false, error: String(error) };
-      }
+          return failed(error);
+        });
     },
 
     // Loading states
-    isUpdatingName: updateNameMutation.isPending,
-    isUploadingAvatar: uploadAvatarMutation.isPending,
-    isDeletingAvatar: deleteAvatarMutation.isPending,
-    isDeletingAccount: deleteAccountMutation.isPending,
-    isCreatingApiKey: createApiKeyMutation.isPending,
-    isDeletingApiKey: deleteApiKeyMutation.isPending,
-    isTogglingApiKey: toggleApiKeyMutation.isPending,
-    isUpdatingAllergies: setAllergiesMutation.isPending,
-    isUpdatingPreferences: updatePreferencesMutation.isPending,
+    isUpdatingName,
+    isUploadingAvatar,
+    isDeletingAvatar,
+    isDeletingAccount,
+    isCreatingApiKey,
+    isDeletingApiKey,
+    isTogglingApiKey,
+    isUpdatingAllergies,
+    isUpdatingPreferences,
   };
 }

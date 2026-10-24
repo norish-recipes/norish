@@ -10,7 +10,7 @@
  */
 
 import type {
-  Experimental_EvaluationModel as EvaluationModel,
+  Experimental_DecisionModel as DecisionModel,
   ImageModel,
   TranscriptionModel,
 } from "ai";
@@ -37,6 +37,7 @@ import {
   normalizeOpenAICompatibleEndpoint,
 } from "./endpoints";
 import { imageModelKey, withoutRefusedImageParameters } from "./image-parameter-fallback";
+import { requestSignal } from "./model-use-ledger";
 import { withTemperatureFallback } from "./temperature-fallback";
 import { createFetchWithTimeout } from "./transport";
 
@@ -421,14 +422,14 @@ export function createImageModelFromConfig(config: {
 // Decision models — the Decision Model's own provider (ADR-0035)
 // ============================================================================
 
-/** An evaluation model plus the name its log lines carry. */
+/** A decision model plus the name its log lines carry. */
 export interface DecisionModelConfig {
-  model: EvaluationModel;
+  model: DecisionModel;
   providerName: string;
 }
 
 /**
- * Build the evaluation model from the Decision block. Only `typesafe` is
+ * Build the decision model from the Decision block. Only `typesafe` is
  * constructible: the config enum keeps `disabled` out, and Vercel's AI
  * Gateway is a second case here and a base URL when it is wanted. The
  * provider's default key comes from an environment variable Norish never
@@ -453,7 +454,7 @@ export function createDecisionModelFromConfig(config: {
           apiKey,
           baseURL: endpoint,
           fetch: createFetchWithTimeout(timeoutMs),
-        }).evaluationModel(model),
+        }).decisionModel(model),
         providerName: "TypeSafe AI",
       };
     }
@@ -558,7 +559,7 @@ export async function requestOllamaTranscription({
       stream: false,
       input_audio: [audio],
     }),
-    signal: AbortSignal.timeout(timeoutMs),
+    signal: requestSignal(timeoutMs),
   });
 
   if (!response.ok) {

@@ -9,9 +9,7 @@
   "editNote": {
     "title": "Notiz bearbeiten",
     "noteLabel": "Notiz",
-    "notePlaceholder": "Notiz eingeben...",
-    "date": "Datum",
-    "slot": "Zeitfenster"
+    "notePlaceholder": "Notiz eingeben..."
   },
   "navigation": {
     "previousMonth": "Vorheriger Monat",

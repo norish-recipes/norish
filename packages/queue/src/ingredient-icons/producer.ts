@@ -1,13 +1,22 @@
-import type { Queue } from "bullmq";
+import { getAutomaticIngredientsConfig } from "@norish/shared-server/config/server-config-loader";
+import { listFoodsShowingNoIcon } from "@norish/shared-server/ingredients/icon-rounds";
 
-import type { IngredientIconsJobData } from "@norish/queue/contracts/job-types";
+import { getQueues } from "../registry";
 
-/** Start a Draw icons round over these foods. Answers the job's id, which the page watches the round by. */
-export async function addIngredientIconsJob(
-  queue: Queue<IngredientIconsJobData>,
-  data: IngredientIconsJobData
-): Promise<string> {
-  const job = await queue.add("draw", data);
+/** Draw each of these foods still there that shows no icon, in one job; answers how many. */
+export async function addIconsJob(
+  ingredientIds: readonly string[],
+  jobName = "draw"
+): Promise<number> {
+  const foods = await listFoodsShowingNoIcon(ingredientIds);
 
-  return job.id ?? "";
+  if (foods.length > 0) await getQueues().ingredientIcons.add(jobName, { ingredients: foods });
+
+  return foods.length;
+}
+
+/** Draw each of these new foods that shows no icon, where Draw missing icons is on. */
+export async function addMissingIconsJob(ingredientIds: readonly string[]): Promise<void> {
+  if (ingredientIds.length === 0 || !(await getAutomaticIngredientsConfig()).icon) return;
+  await addIconsJob(ingredientIds);
 }

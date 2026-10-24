@@ -44,8 +44,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 describe("adaptRecipeScrapersResponse", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockGetUnits.mockResolvedValue({});
     mockParseIngredients.mockReturnValue({
       ingredients: [
@@ -63,7 +61,6 @@ describe("adaptRecipeScrapersResponse", () => {
     mockParseSteps.mockReturnValue([{ step: "Cook it", systemUsed: "metric", order: 1 }]);
     mockParseImages.mockResolvedValue({
       images: [{ image: "/recipes/recipe-1/image.jpg", order: 0 }],
-      primaryImage: "/recipes/recipe-1/image.jpg",
     });
     mockParseVideos.mockResolvedValue({
       videos: [
@@ -131,7 +128,7 @@ describe("adaptRecipeScrapersResponse", () => {
     expect(result).toEqual(
       expect.objectContaining({
         url: "https://example.com/canonical-recipe",
-        image: "/recipes/recipe-1/image.jpg",
+        images: [{ image: "/recipes/recipe-1/image.jpg", order: 0 }],
         videos: expect.arrayContaining([
           expect.objectContaining({
             video: "/recipes/recipe-1/video.mp4",

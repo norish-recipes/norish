@@ -1,4 +1,8 @@
-import type { Slot } from "./planned-recipe";
+import type { z } from "zod";
+
+import type { slotSchema } from "@norish/shared/contracts/zod";
+
+export type Slot = z.infer<typeof slotSchema>;
 
 export type PlannedItemType = "recipe" | "note";
 

@@ -42,7 +42,6 @@ function grocery(name: string, ingredientId = `ingredient:${name.toLowerCase()}`
 
 describe("asking a Store what an Ingredient means", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     storesRepository.listStoresByUserIds.mockResolvedValue([searchable]);
     storeProductsRepository.resolveProductLinks.mockResolvedValue([]);
     storeProductsRepository.markLinkPending.mockResolvedValue(true);

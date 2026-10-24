@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { createContext, use, useCallback, useMemo } from "react";
 
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 
@@ -15,7 +15,7 @@ export interface PermissionsContextValue {
   recipePolicy: RecipePermissionPolicy | null;
   /** Whether AI features are enabled */
   isAIEnabled: boolean;
-  /** Whether AI is on and an image provider can draw: Generate and Draw icons show only then */
+  /** Whether AI is on and an image provider can draw: Generate shows only then */
   canDrawImages: boolean;
   /** Household member user IDs (null if not in a household) */
   householdUserIds: string[] | null;
@@ -45,6 +45,8 @@ export function createPermissionsContext({
   const PermissionsContext = createContext<PermissionsContextValue | null>(null);
 
   function PermissionsProvider({ children }: { children: React.ReactNode }) {
+    "use memo";
+
     const userId = useCurrentUserId();
     const { data, isLoading: isLoadingPermissions } = usePermissionsQuery();
     const normalized = useMemo(() => normalizePermissionsData(data), [data]);
@@ -91,11 +93,13 @@ export function createPermissionsContext({
       [data, isLoadingPermissions, canViewRecipe, canEditRecipe, canDeleteRecipe]
     );
 
-    return <PermissionsContext.Provider value={value}>{children}</PermissionsContext.Provider>;
+    return <PermissionsContext value={value}>{children}</PermissionsContext>;
   }
 
   function usePermissionsContext(): PermissionsContextValue {
-    const context = useContext(PermissionsContext);
+    "use memo";
+
+    const context = use(PermissionsContext);
 
     if (!context) {
       throw new Error("usePermissionsContext must be used within PermissionsProvider");

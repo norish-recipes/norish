@@ -31,6 +31,8 @@ export function createUseRecipeIngredients(
   useRecipeQuery: (id: string | null) => RecipeQueryResult
 ) {
   return function useRecipeIngredients(id: string | null) {
+    "use memo";
+
     const { recipe, isLoading, error } = useRecipeQuery(id);
 
     return {

@@ -1,6 +1,6 @@
 # 06 — Everything else to latest
 
-Status: ready-for-agent
+Status: superseded
 Target version: 0.26.0-beta
 Blocked by: 05
 
@@ -18,3 +18,4 @@ TypeScript 7, ESLint 10 and zod-openapi 6 were held for peer ranges (`typescript
 
 - [ ] `pnpm outdated -r` lists only `apps/mobile` and the held packages named here.
 - [ ] `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build`, `pnpm deps:cycles`, `pnpm format:check` and `pnpm test:e2e` pass.
+- 2026-10-13 — Superseded by `.scratch/dependency-upgrades/` (decided with the maintainer the same day).

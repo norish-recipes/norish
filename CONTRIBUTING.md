@@ -4,9 +4,10 @@ Thank you for your interest in contributing to Norish! This guide will help you 
 
 ## Prerequisites
 
-- **Node.js** 22.22.0 (see `.nvmrc`)
-- **pnpm** 10.x or later
-- **Docker** (for PostgreSQL, Redis, and Obscura)
+- **Node.js** 26 (see `.nvmrc`)
+- **pnpm** 12.x
+- **uv** 0.13 or later (installs the recipe parser's Python 3.15)
+- **Docker** (for PostgreSQL, Valkey, and Obscura)
 - **Git**
 
 ## Getting Started
@@ -33,7 +34,7 @@ cp .env.example .env.local
 Edit `.env.local` with your local configuration. At minimum, you need:
 
 - `DATABASE_URL` - PostgreSQL connection string
-- `REDIS_URL` - Redis connection string
+- `VALKEY_URL` - Valkey connection string
 - `AUTH_URL` - Your local URL (e.g., `http://localhost:3000`)
 - `MASTER_KEY` - Generate with `openssl rand -base64 32`
 
@@ -43,7 +44,7 @@ Edit `.env.local` with your local configuration. At minimum, you need:
 pnpm run docker:up
 ```
 
-That starts PostgreSQL, Redis, and Obscura — the browser that renders pages for
+That starts PostgreSQL, Valkey, and Obscura — the browser that renders pages for
 URL imports — so nothing has to be launched by hand. `pnpm run docker:down`
 stops them again.
 
@@ -55,20 +56,21 @@ pnpm dev
 
 ## Development Commands
 
-| Command              | Description                              |
-| -------------------- | ---------------------------------------- |
-| `pnpm dev`           | Start development server with hot reload |
-| `pnpm dev:mobile`    | Start the parked Expo mobile workspace   |
-| `pnpm build`         | Create production build                  |
-| `pnpm start`         | Run production server                    |
-| `pnpm test`          | Run tests via Turbo (all workspaces)     |
-| `pnpm test:run`      | Alias for `pnpm test`                    |
-| `pnpm test:coverage` | Run tests with coverage report           |
-| `pnpm lint`          | Check for linting errors                 |
-| `pnpm format`        | Check formatting with Prettier           |
-| `pnpm format:check`  | Check formatting without changes         |
-| `pnpm i18n:check`    | Check for missing locale keys            |
-| `pnpm db:push`       | Push schema changes to database          |
+| Command              | Description                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `pnpm dev`           | Start development server with hot reload                                                              |
+| `pnpm dev:mobile`    | Start the parked Expo app (install it first with `pnpm --dir apps/mobile install --ignore-workspace`) |
+| `pnpm build`         | Create production build                                                                               |
+| `pnpm start`         | Run production server                                                                                 |
+| `pnpm test`          | Run tests via Turbo (all workspaces)                                                                  |
+| `pnpm test:run`      | Alias for `pnpm test`                                                                                 |
+| `pnpm test:coverage` | Run tests with coverage report                                                                        |
+| `pnpm lint`          | Check for linting errors                                                                              |
+| `pnpm typecheck`     | Type-check every workspace                                                                            |
+| `pnpm format`        | Format every workspace with Prettier                                                                  |
+| `pnpm format:check`  | Check formatting without changes                                                                      |
+| `pnpm i18n:check`    | Check for missing locale keys                                                                         |
+| `pnpm db:push`       | Push schema changes to database                                                                       |
 
 ## Project Structure
 
@@ -76,7 +78,7 @@ pnpm dev
 norish/
 ├── apps/             # App workspaces
 │   ├── web/          # Next.js app (App Router + server entry)
-│   └── mobile/       # Expo app workspace (@norish/mobile) — parked pending a rewrite; not covered by the gates
+│   └── mobile/       # Expo app (@norish/mobile) — parked pending a rewrite; outside the workspace, not covered by the gates
 ├── packages/         # Shared libraries
 │   ├── api/          # Server API logic (routers, AI, parsing)
 │   ├── auth/         # Auth helpers
@@ -165,6 +167,14 @@ log.info("Something happened");
 const log = createClientLogger("MyComponent");
 ```
 
+### React
+
+The web app compiles with the React Compiler, which memoises components and hooks itself:
+
+- New code doesn't add `useMemo` or `useCallback`. Existing ones stay.
+- Keep a hook's `use` prefix when you alias it (`const useX = hooks.useX`). The compiler knows a hook only by its name.
+- Derive values during render instead of copying them into state from an effect. The lint flags state set in an effect, refs read during render, and mutated props.
+
 ### Database Access
 
 Always use the repository pattern:
@@ -206,6 +216,7 @@ git checkout -b fix/your-bug-fix
 
 ```bash
 pnpm lint
+pnpm typecheck
 pnpm test:run
 pnpm i18n:check
 pnpm build
@@ -250,6 +261,10 @@ pnpm test:e2e
 pnpm --filter @norish/web run test:e2e --project=offline
 pnpm --filter @norish/web run test:e2e --project=ai
 pnpm --filter @norish/web run test:e2e --project=realtime
+
+# A build for a base path runs only the base-path project
+NEXT_PUBLIC_BASE_PATH=/norish pnpm run build --filter=@norish/web...
+pnpm --filter @norish/web run test:e2e
 ```
 
 ## Adding Translations

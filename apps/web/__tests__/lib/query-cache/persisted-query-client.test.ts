@@ -1,6 +1,6 @@
 import type { OfflineIdb } from "@/lib/offline/idb";
 import type { PersistedClient } from "@tanstack/query-persist-client-core";
-import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
+import { IMAGE_CACHE_NAME, PAGE_CACHE_NAMES } from "@/lib/offline/cache-names";
 import { createOfflineIdb, KEYVAL_STORE, OUTBOX_STORE } from "@/lib/offline/idb";
 import { queryCacheKey } from "@/lib/query-cache/cache-identity";
 import { readLastWarmedAt, writeLastWarmedAt } from "@/lib/query-cache/last-warmed";
@@ -8,10 +8,16 @@ import {
   CACHE_BUSTER,
   CACHE_MAX_AGE_MS,
   createCacheManager,
+  markServerCopies,
 } from "@/lib/query-cache/persisted-query-client";
-import { dehydrate, QueryClient } from "@tanstack/react-query";
+import { PAGES_CACHE_NAME } from "@serwist/turbopack/worker";
+import { dehydrate, hydrate, QueryClient, QueryObserver } from "@tanstack/react-query";
+import { createTRPCClient } from "@trpc/client";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { IDBFactory } from "fake-indexeddb";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { AppRouter } from "@norish/trpc/client";
 
 /** Build a valid persisted cache blob holding a single successful query. */
 function seedClient(key: unknown[], value: unknown): PersistedClient {
@@ -37,6 +43,10 @@ describe("createCacheManager", () => {
   beforeEach(() => {
     window.localStorage.clear();
     idb = createOfflineIdb(new IDBFactory());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("does nothing while the online session is still unresolved", async () => {
@@ -194,6 +204,83 @@ describe("createCacheManager", () => {
     expect(query?.gcTime).toBe(CACHE_MAX_AGE_MS);
   });
 
+  it("holds a recipe and a cookbook the reader opened past the default gcTime (ADR-0008)", async () => {
+    vi.useFakeTimers();
+
+    const { queryClient } = createCacheManager(idb);
+    // The app's own keys, so this proves the held paths match what tRPC builds.
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient,
+    });
+    const opened = [
+      trpc.recipes.get.queryKey({ id: "r1" }),
+      trpc.cookbooks.get.queryKey({ id: "c1" }),
+    ];
+    const elsewhere = trpc.groceries.list.queryKey();
+
+    for (const queryKey of [...opened, elsewhere]) {
+      // The page reads it while it is open, then the reader leaves.
+      const page = new QueryObserver(queryClient, { queryKey, queryFn: async () => ({}) });
+      const leave = page.subscribe(() => {});
+
+      await vi.waitFor(() => expect(page.getCurrentResult().isSuccess).toBe(true));
+      leave();
+    }
+
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000 + 1);
+
+    for (const queryKey of opened) {
+      expect(queryClient.getQueryData(queryKey)).toBeDefined();
+    }
+
+    // Any other read goes at the default, so the clock really did pass it.
+    expect(queryClient.getQueryData(elsewhere)).toBeUndefined();
+  });
+
+  it("opens the server's copy as it is until it changes, and refetches any other copy", async () => {
+    const { queryClient } = createCacheManager(idb);
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient,
+    });
+    const fetchesOnOpen = async (queryKey: readonly unknown[]) => {
+      const queryFn = vi.fn(async () => ({ fetched: true }));
+      const leave = new QueryObserver(queryClient, { queryKey, queryFn }).subscribe(() => {});
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      leave();
+
+      return queryFn.mock.calls.length;
+    };
+    // The app's own keys, untagged so the test can seed any data.
+    const seeded = [...trpc.recipes.get.queryKey({ id: "r1" })];
+    const restored = [...trpc.recipes.get.queryKey({ id: "r2" })];
+    const kept = [...trpc.recipes.get.queryKey({ id: "r3" })];
+
+    // What QuerySeed hands over: the server's copy of r1, and of r3 in a document the
+    // service worker kept from ten minutes ago.
+    const server = new QueryClient();
+
+    server.setQueryData(seeded, { id: "r1" });
+    server.setQueryData(kept, { id: "r3" }, { updatedAt: Date.now() - 10 * 60 * 1000 });
+    const state = dehydrate(server);
+
+    markServerCopies(state);
+    hydrate(queryClient, state);
+    // r2 is as fresh, but from the Offline Cache: it may predate a change made elsewhere.
+    queryClient.setQueryData(restored, { id: "r2" });
+
+    expect(await fetchesOnOpen(seeded)).toBe(0);
+    expect(await fetchesOnOpen(restored)).toBe(1);
+    expect(await fetchesOnOpen(kept)).toBe(1);
+
+    // Once the server's copy has changed, it refetches on mount like any other.
+    queryClient.setQueryData(seeded, { id: "r1", edited: true });
+
+    expect(await fetchesOnOpen(seeded)).toBe(1);
+  });
+
   it("resets every personalized read artifact while preserving the Outbox and app shell", async () => {
     const deletedCaches: string[] = [];
 
@@ -221,7 +308,9 @@ describe("createCacheManager", () => {
     expect(manager.queryClient.getQueryData(["memory"])).toBeUndefined();
     expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeUndefined();
     expect(await readLastWarmedAt("u1", idb)).toBeNull();
-    expect(deletedCaches).toEqual([IMAGE_CACHE_NAME]);
+    // A recipe page's document carries its recipe, so the service worker's page caches go too.
+    expect(PAGE_CACHE_NAMES).toEqual(Object.values(PAGES_CACHE_NAME));
+    expect(deletedCaches).toEqual([IMAGE_CACHE_NAME, ...PAGE_CACHE_NAMES]);
     expect(await idb.transaction(OUTBOX_STORE, "readonly", (store) => store.count())).toBe(1);
 
     manager.queryClient.setQueryData(["rewarmed"], "read");

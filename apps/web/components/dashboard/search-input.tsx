@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -18,29 +18,30 @@ export default function SearchInput() {
   const { importRecipe } = useRecipesContext();
   const [inputValue, setInputValue] = useState(filters.rawInput);
   const [debouncedValue] = useDebounceValue(inputValue, 300);
-  const skipNextDebounceRef = useRef(false);
+  const [syncedRawInput, setSyncedRawInput] = useState(filters.rawInput);
 
-  // Sync debounced value to filters (but skip when external sync happens)
-  useEffect(() => {
-    if (skipNextDebounceRef.current) {
-      skipNextDebounceRef.current = false;
+  // Sync external filter changes to input (e.g., from clear button elsewhere).
+  // Only a change to the filter from elsewhere syncs in; typing must not.
+  if (filters.rawInput !== syncedRawInput) {
+    setSyncedRawInput(filters.rawInput);
 
-      return;
-    }
-    // Don't trigger if it's a URL (handled immediately in handleChange)
-    if (!isUrl(debouncedValue.trim())) {
-      setFilters({ rawInput: debouncedValue.trim() });
-    }
-  }, [debouncedValue, setFilters]);
-
-  // Sync external filter changes to input (e.g., from clear button elsewhere)
-  useEffect(() => {
     if (filters.rawInput !== inputValue.trim()) {
-      skipNextDebounceRef.current = true;
       setInputValue(filters.rawInput);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.rawInput]);
+  }
+
+  // Sync debounced value to filters, but never echo back a value the filter
+  // already holds (such as one just synced in from elsewhere)
+  const applyDebouncedValue = useEffectEvent((value: string) => {
+    // Don't trigger if it's a URL (handled immediately in handleChange)
+    if (value !== filters.rawInput && !isUrl(value)) {
+      setFilters({ rawInput: value });
+    }
+  });
+
+  useEffect(() => {
+    applyDebouncedValue(debouncedValue.trim());
+  }, [debouncedValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;

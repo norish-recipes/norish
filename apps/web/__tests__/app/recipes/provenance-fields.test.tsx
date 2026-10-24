@@ -25,11 +25,11 @@ vi.mock("@/hooks/config", () => ({
 vi.mock("@heroui/react", () => {
   const Passthrough = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
 
-  // Mirrors React Aria's real multiple-selection contract: an ordered `value`
-  // array with `onChange`, NOT `selectedKeys`/`onSelectionChange` — those are
-  // the deprecated single-selection props, which a multiple-mode Select
-  // silently ignores. Stubbing the wrong pair here is exactly what let a
-  // permanently-empty control pass its tests.
+  // Mirrors React Aria's real selection contract: `value` with `onChange`, NOT
+  // `selectedKey(s)`/`onSelectionChange` — those are the deprecated
+  // single-selection props, which a multiple-mode Select silently ignores.
+  // Stubbing the wrong pair here is exactly what let a permanently-empty
+  // control pass its tests.
   type ChangeHandler = (keys: string[]) => void;
 
   const selectionContext: {
@@ -39,20 +39,20 @@ vi.mock("@heroui/react", () => {
 
   const ComboBoxRoot = ({
     children,
-    selectedKey,
-    onSelectionChange,
+    value,
+    onChange,
   }: {
     children?: React.ReactNode;
-    selectedKey?: string | null;
-    onSelectionChange?: (key: string | null) => void;
+    value?: string | null;
+    onChange?: (key: string | null) => void;
   }) => {
-    selectionContext.combo = onSelectionChange;
+    selectionContext.combo = onChange;
 
     return (
-      <div data-selected-country={selectedKey ?? ""}>
+      <div data-selected-country={value ?? ""}>
         {children}
         {/* React Aria reports a null key when the popover closes with no choice. */}
-        <button onClick={() => onSelectionChange?.(null)}>dismiss-country</button>
+        <button onClick={() => onChange?.(null)}>dismiss-country</button>
       </div>
     );
   };

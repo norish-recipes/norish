@@ -92,7 +92,6 @@ function jobFor(overrides: Partial<RecipeEnrichmentJobData> = {}): Job<RecipeEnr
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocks.getRecipeFull.mockResolvedValue(RECIPE);
   mocks.replaceRecipeProvenance.mockResolvedValue(true);
   mocks.inferRecipeProvenance.mockResolvedValue(INFERENCE);

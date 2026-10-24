@@ -177,9 +177,8 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
         error,
         context: "import-from-image-modal:import",
       });
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }, [files, importRecipeFromImages, onOpenChange, router, t, tErrors]);
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -211,7 +210,11 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                     <DropZone.Label>{t("dropzone")}</DropZone.Label>
                     <DropZone.Description>{t("formats")}</DropZone.Description>
                     <DropZone.Description className="flex items-center justify-center gap-1.5">
-                      <Kbd keys={["ctrl"]}>V</Kbd> {t("paste")}
+                      <Kbd>
+                        <Kbd.Abbr keyValue="ctrl" />
+                        <Kbd.Content>V</Kbd.Content>
+                      </Kbd>{" "}
+                      {t("paste")}
                     </DropZone.Description>
                     <DropZone.Trigger>{t("library")}</DropZone.Trigger>
                   </DropZone.Area>
@@ -224,7 +227,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                     {files.map(({ id, file, preview }) => (
                       <div key={id} className="group relative">
                         <Image
-                          unoptimized
                           alt={file.name}
                           className="h-20 w-full rounded-lg object-cover"
                           height={80}

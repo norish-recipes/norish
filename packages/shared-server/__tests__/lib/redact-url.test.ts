@@ -8,19 +8,19 @@ describe("redactUrl", () => {
     expect(redactUrl(url)).toBe("postgres://norish:***@localhost/norish");
   });
 
-  it("redacts password from a Redis connection string with password-only auth", () => {
-    const url = "redis://:mypassword@localhost:6379/10";
-    expect(redactUrl(url)).toBe("redis://:***@localhost:6379/10");
+  it("redacts password from a Valkey connection string with password-only auth", () => {
+    const url = "valkey://:mypassword@localhost:6379/10";
+    expect(redactUrl(url)).toBe("valkey://:***@localhost:6379/10");
   });
 
-  it("redacts password from a Redis connection string with user and password", () => {
-    const url = "redis://user:pass@redis.example.com:6379";
-    expect(redactUrl(url)).toBe("redis://user:***@redis.example.com:6379");
+  it("redacts password from a Valkey connection string with user and password", () => {
+    const url = "valkey://user:pass@valkey.example.com:6379";
+    expect(redactUrl(url)).toBe("valkey://user:***@valkey.example.com:6379");
   });
 
   it("leaves a URL without credentials unchanged", () => {
-    const url = "redis://localhost:6379";
-    expect(redactUrl(url)).toBe("redis://localhost:6379");
+    const url = "valkey://localhost:6379";
+    expect(redactUrl(url)).toBe("valkey://localhost:6379");
   });
 
   it("leaves a URL with only a username (no password) unchanged", () => {

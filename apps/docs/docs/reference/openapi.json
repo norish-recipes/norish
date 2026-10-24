@@ -37,17 +37,78 @@
     }
   ],
   "paths": {
-    "/health": {
+    "/health/live": {
       "get": {
-        "operationId": "health",
-        "summary": "Check API health",
-        "description": "Reports API availability and verifies both the database connection and internal parser service are healthy.",
+        "operationId": "healthLive",
+        "summary": "Check whether Norish is alive",
+        "description": "Answers 200 while the server responds and its internal parser answers its own health check. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
         "tags": [
           "Health"
         ],
         "responses": {
           "200": {
-            "description": "The API, database, and parser service are healthy.",
+            "description": "The server and its parser are alive.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "ok"
+                    },
+                    "parser": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string"
+                        },
+                        "statusCode": {
+                          "type": "number"
+                        },
+                        "recipeScrapersVersion": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "parser"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The parser service is unhealthy or unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.SERVICE_UNAVAILABLE"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "healthReady",
+        "summary": "Check whether Norish is ready for traffic",
+        "description": "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "The database and Valkey are healthy.",
             "content": {
               "application/json": {
                 "schema": {
@@ -70,38 +131,16 @@
                       ],
                       "additionalProperties": false
                     },
-                    "versions": {
+                    "valkey": {
                       "type": "object",
                       "properties": {
-                        "root": {
-                          "type": "string"
-                        },
-                        "apps": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "string"
-                          }
-                        },
-                        "packages": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "string"
-                          }
-                        },
-                        "scraper": {
-                          "type": "string"
+                        "status": {
+                          "type": "string",
+                          "const": "ok"
                         }
                       },
                       "required": [
-                        "root",
-                        "apps",
-                        "packages"
+                        "status"
                       ],
                       "additionalProperties": false
                     },
@@ -109,8 +148,10 @@
                       "type": "object",
                       "properties": {
                         "status": {
-                          "type": "string",
-                          "const": "ok"
+                          "type": "string"
+                        },
+                        "statusCode": {
+                          "type": "number"
                         },
                         "recipeScrapersVersion": {
                           "type": "string"
@@ -125,7 +166,7 @@
                   "required": [
                     "status",
                     "db",
-                    "versions",
+                    "valkey",
                     "parser"
                   ],
                   "additionalProperties": false
@@ -134,7 +175,7 @@
             }
           },
           "503": {
-            "description": "The API is up but the database or parser service is unhealthy or unreachable",
+            "description": "The parser service is unhealthy or unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -187,46 +228,24 @@
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                     },
                     "userId": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "name": {
                       "type": "string"
                     },
                     "description": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "image": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "url": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "servings": {
@@ -271,13 +290,9 @@
                       ]
                     },
                     "notes": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "systemUsed": {
@@ -314,83 +329,51 @@
                       ]
                     },
                     "fat": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "carbs": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "protein": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "originCountry": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "originCountryName": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "originRegion": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "provenanceNote": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "dishColor": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "createdAt": {
@@ -427,24 +410,30 @@
                             "format": "uuid",
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
-                          "amount": {
+                          "joined": {
                             "anyOf": [
                               {
-                                "type": "number"
+                                "type": "string",
+                                "enum": [
+                                  "together",
+                                  "alternatives"
+                                ]
                               },
                               {
                                 "type": "null"
                               }
                             ]
                           },
+                          "amount": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
                           "unit": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
                           },
                           "order": {
@@ -466,14 +455,29 @@
                             "type": "string"
                           },
                           "ingredientId": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
+                          },
+                          "foods": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "ingredientId": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "ingredientId",
+                                "name"
+                              ],
+                              "additionalProperties": false
+                            }
                           }
                         },
                         "required": [
@@ -631,23 +635,15 @@
                           "type": "string"
                         },
                         "name": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "null"
                           ]
                         },
                         "image": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "null"
                           ]
                         },
                         "version": {
@@ -714,23 +710,15 @@
                             "type": "string"
                           },
                           "thumbnail": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
                           },
                           "duration": {
-                            "anyOf": [
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "number",
+                              "null"
                             ]
                           },
                           "order": {
@@ -803,7 +791,6 @@
                     "userId",
                     "name",
                     "description",
-                    "image",
                     "url",
                     "servings",
                     "prepMinutes",
@@ -997,46 +984,24 @@
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                           },
                           "userId": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
                           },
                           "name": {
                             "type": "string"
                           },
                           "description": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "image": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
                           },
                           "url": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
                           },
                           "servings": {
@@ -1081,13 +1046,9 @@
                             ]
                           },
                           "notes": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
                           },
                           "calories": {
@@ -1103,13 +1064,9 @@
                             ]
                           },
                           "originCountry": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "null"
                             ]
                           },
                           "createdAt": {
@@ -1135,6 +1092,12 @@
                             "type": "integer",
                             "minimum": -2147483648,
                             "maximum": 2147483647
+                          },
+                          "image": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
                           },
                           "tags": {
                             "default": [],
@@ -1163,23 +1126,15 @@
                                 "type": "string"
                               },
                               "name": {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
+                                "type": [
+                                  "string",
+                                  "null"
                                 ]
                               },
                               "image": {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
+                                "type": [
+                                  "string",
+                                  "null"
                                 ]
                               },
                               "version": {
@@ -1195,13 +1150,9 @@
                             "additionalProperties": false
                           },
                           "averageRating": {
-                            "anyOf": [
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "number",
+                              "null"
                             ]
                           },
                           "ratingCount": {
@@ -1213,7 +1164,6 @@
                           "userId",
                           "name",
                           "description",
-                          "image",
                           "url",
                           "servings",
                           "prepMinutes",
@@ -1226,6 +1176,7 @@
                           "updatedAt",
                           "categories",
                           "version",
+                          "image",
                           "tags"
                         ],
                         "additionalProperties": false
@@ -1300,33 +1251,15 @@
                     "type": "string"
                   },
                   "description": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "image": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "url": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "servings": {
@@ -1371,13 +1304,9 @@
                     ]
                   },
                   "notes": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "systemUsed": {
@@ -1414,83 +1343,51 @@
                     ]
                   },
                   "fat": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "carbs": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "protein": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "originCountry": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "originCountryName": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "originRegion": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "provenanceNote": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "dishColor": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "categories": {
@@ -1528,23 +1425,15 @@
                           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                         },
                         "amount": {
-                          "anyOf": [
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "number",
+                            "null"
                           ]
                         },
                         "unit": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "null"
                           ]
                         },
                         "order": {
@@ -1572,13 +1461,9 @@
                           "minLength": 1
                         },
                         "ingredientId": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "null"
                           ]
                         }
                       },
@@ -1745,23 +1630,15 @@
                           "type": "string"
                         },
                         "thumbnail": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "null"
                           ]
                         },
                         "duration": {
-                          "anyOf": [
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "number",
+                            "null"
                           ]
                         },
                         "order": {
@@ -1881,46 +1758,24 @@
                               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                             },
                             "userId": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "name": {
                               "type": "string"
                             },
                             "description": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            },
-                            "image": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "url": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "servings": {
@@ -1965,13 +1820,9 @@
                               ]
                             },
                             "notes": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "calories": {
@@ -1987,13 +1838,9 @@
                               ]
                             },
                             "originCountry": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "createdAt": {
@@ -2019,6 +1866,12 @@
                               "type": "integer",
                               "minimum": -2147483648,
                               "maximum": 2147483647
+                            },
+                            "image": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
                             },
                             "tags": {
                               "default": [],
@@ -2047,23 +1900,15 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
+                                  "type": [
+                                    "string",
+                                    "null"
                                   ]
                                 },
                                 "image": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
+                                  "type": [
+                                    "string",
+                                    "null"
                                   ]
                                 },
                                 "version": {
@@ -2079,13 +1924,9 @@
                               "additionalProperties": false
                             },
                             "averageRating": {
-                              "anyOf": [
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "number",
+                                "null"
                               ]
                             },
                             "ratingCount": {
@@ -2097,7 +1938,6 @@
                             "userId",
                             "name",
                             "description",
-                            "image",
                             "url",
                             "servings",
                             "prepMinutes",
@@ -2110,6 +1950,7 @@
                             "updatedAt",
                             "categories",
                             "version",
+                            "image",
                             "tags"
                           ],
                           "additionalProperties": false
@@ -2118,6 +1959,10 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "statusUrl": {
+                      "description": "Relative URL to check the status of this import job",
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -2155,6 +2000,333 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/error.PRECONDITION_FAILED"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recipes/import/status/{recipeId}": {
+      "get": {
+        "operationId": "recipeImportStatus",
+        "summary": "Get status of a queued recipe import",
+        "tags": [
+          "Recipe Imports"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recipeId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The recipe ID assigned to the import job"
+            },
+            "required": true,
+            "description": "The recipe ID assigned to the import job"
+          },
+          {
+            "in": "query",
+            "name": "wait",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipeId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "description": "The recipe ID assigned to the import"
+                    },
+                    "url": {
+                      "description": "Source URL of the recipe being imported",
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "waiting",
+                        "active",
+                        "completed",
+                        "failed"
+                      ],
+                      "description": "Current processing status of the import job"
+                    },
+                    "step": {
+                      "description": "Current step being executed (e.g. dedupe-check, parsing, saving)",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "error": {
+                      "description": "Error message if the import failed",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "recipe": {
+                      "description": "Recipe data if import completed",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "userId": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "url": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "servings": {
+                              "type": "integer",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            "prepMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "cookMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "totalMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "notes": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "calories": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "originCountry": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "Breakfast",
+                                  "Lunch",
+                                  "Dinner",
+                                  "Snack"
+                                ]
+                              }
+                            },
+                            "version": {
+                              "type": "integer",
+                              "minimum": -2147483648,
+                              "maximum": 2147483647
+                            },
+                            "image": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "tags": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "version": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "version"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "author": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "image": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "version": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "version"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "averageRating": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "ratingCount": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "userId",
+                            "name",
+                            "description",
+                            "url",
+                            "servings",
+                            "prepMinutes",
+                            "cookMinutes",
+                            "totalMinutes",
+                            "notes",
+                            "calories",
+                            "originCountry",
+                            "createdAt",
+                            "updatedAt",
+                            "categories",
+                            "version",
+                            "image",
+                            "tags"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "recipeId",
+                    "status"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipe not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
                 }
               }
             }
@@ -2293,13 +2465,9 @@
                         ]
                       },
                       "name": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "ingredientId": {
@@ -2315,33 +2483,21 @@
                         ]
                       },
                       "unit": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "amount": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       },
                       "purchaseAmount": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       },
                       "isDone": {
@@ -2415,6 +2571,7 @@
       "post": {
         "operationId": "groceryCreate",
         "summary": "Create a grocery",
+        "description": "Answers with a grocery per food the name names: `zout en peper` is `zout` and `peper`. A name already on the list adds to that grocery.",
         "tags": [
           "Groceries"
         ],
@@ -2435,33 +2592,21 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "unit": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "amount": {
-                    "anyOf": [
-                      {
-                        "type": "number"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "number",
+                      "null"
                     ]
                   },
                   "isDone": {
@@ -2496,128 +2641,115 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "recipeIngredientId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "name": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "ingredientId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "unit": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "amount": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "purchaseAmount": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "isDone": {
+                        "type": "boolean"
+                      },
+                      "sortOrder": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "version": {
+                        "type": "integer",
+                        "minimum": -2147483648,
+                        "maximum": 2147483647
+                      },
+                      "recurringGroceryId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "storeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
                     },
-                    "recipeIngredientId": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "name": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "ingredientId": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "unit": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "amount": {
-                      "anyOf": [
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "purchaseAmount": {
-                      "anyOf": [
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "isDone": {
-                      "type": "boolean"
-                    },
-                    "sortOrder": {
-                      "type": "integer",
-                      "minimum": -9007199254740991,
-                      "maximum": 9007199254740991
-                    },
-                    "version": {
-                      "type": "integer",
-                      "minimum": -2147483648,
-                      "maximum": 2147483647
-                    },
-                    "recurringGroceryId": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "storeId": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "recipeIngredientId",
-                    "name",
-                    "unit",
-                    "amount",
-                    "isDone",
-                    "sortOrder",
-                    "version",
-                    "recurringGroceryId",
-                    "storeId"
-                  ],
-                  "additionalProperties": false
+                    "required": [
+                      "id",
+                      "recipeIngredientId",
+                      "name",
+                      "unit",
+                      "amount",
+                      "isDone",
+                      "sortOrder",
+                      "version",
+                      "recurringGroceryId",
+                      "storeId"
+                    ],
+                    "additionalProperties": false
+                  }
                 }
               }
             }
@@ -2714,13 +2846,9 @@
                               ]
                             },
                             "name": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "ingredientId": {
@@ -2736,33 +2864,21 @@
                               ]
                             },
                             "unit": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "amount": {
-                              "anyOf": [
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "number",
+                                "null"
                               ]
                             },
                             "purchaseAmount": {
-                              "anyOf": [
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "number",
+                                "null"
                               ]
                             },
                             "isDone": {
@@ -2937,13 +3053,9 @@
                               ]
                             },
                             "name": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "ingredientId": {
@@ -2959,33 +3071,21 @@
                               ]
                             },
                             "unit": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "amount": {
-                              "anyOf": [
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "number",
+                                "null"
                               ]
                             },
                             "purchaseAmount": {
-                              "anyOf": [
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "number",
+                                "null"
                               ]
                             },
                             "isDone": {
@@ -3262,13 +3362,9 @@
                               ]
                             },
                             "name": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "ingredientId": {
@@ -3284,33 +3380,21 @@
                               ]
                             },
                             "unit": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "string",
+                                "null"
                               ]
                             },
                             "amount": {
-                              "anyOf": [
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "number",
+                                "null"
                               ]
                             },
                             "purchaseAmount": {
-                              "anyOf": [
-                                {
-                                  "type": "number"
-                                },
-                                {
-                                  "type": "null"
-                                }
+                              "type": [
+                                "number",
+                                "null"
                               ]
                             },
                             "isDone": {
@@ -3446,23 +3530,15 @@
                         "type": "string"
                       },
                       "website": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "searchAddress": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "sortOrder": {
@@ -3602,13 +3678,9 @@
                     ]
                   },
                   "searchAddress": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   }
                 },
@@ -3642,23 +3714,15 @@
                       "type": "string"
                     },
                     "website": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "searchAddress": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "sortOrder": {
@@ -3809,43 +3873,27 @@
                         "maximum": 9007199254740991
                       },
                       "recipeName": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "recipeImage": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "servings": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       },
                       "calories": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       }
                     },
@@ -3939,43 +3987,27 @@
                         "maximum": 9007199254740991
                       },
                       "recipeName": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "recipeImage": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "servings": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       },
                       "calories": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       }
                     },
@@ -4069,43 +4101,27 @@
                         "maximum": 9007199254740991
                       },
                       "recipeName": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "recipeImage": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "null"
                         ]
                       },
                       "servings": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       },
                       "calories": {
-                        "anyOf": [
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "number",
+                          "null"
                         ]
                       }
                     },
@@ -4323,7 +4339,7 @@
           "message": {
             "type": "string",
             "description": "The error message",
-            "example": "The API is up but the database or parser service is unhealthy or unreachable"
+            "example": "The parser service is unhealthy or unreachable"
           },
           "code": {
             "type": "string",
@@ -4353,11 +4369,11 @@
           "code"
         ],
         "additionalProperties": false,
-        "title": "The API is up but the database or parser service is unhealthy or unreachable error (503)",
+        "title": "The parser service is unhealthy or unreachable error (503)",
         "description": "The error information",
         "example": {
           "code": "SERVICE_UNAVAILABLE",
-          "message": "The API is up but the database or parser service is unhealthy or unreachable",
+          "message": "The parser service is unhealthy or unreachable",
           "issues": []
         }
       },

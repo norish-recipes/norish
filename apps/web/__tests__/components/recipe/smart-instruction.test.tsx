@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
@@ -22,8 +22,6 @@ vi.mock("@/components/recipe/timer-chip", () => ({
 }));
 
 describe("SmartInstruction", () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it("does not render timers when timers are disabled", () => {
     render(
       <SmartInstruction recipeId="r1" recipeName="R" stepIndex={0} text={"Bake for 10 minutes"} />

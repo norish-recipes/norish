@@ -7,6 +7,7 @@
  */
 
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { isHostOnDomain } from "@norish/shared/lib/helpers";
 
 /**
  * Filters tokens whose domain matches the given URL's hostname via suffix match.
@@ -31,7 +32,7 @@ export function getMatchingTokens(
     const domain = token.domain.toLowerCase();
 
     // Exact match or suffix match (e.g. "instagram.com" matches "www.instagram.com")
-    if (hostname === domain || hostname.endsWith(`.${domain}`)) return true;
+    if (isHostOnDomain(hostname, domain)) return true;
 
     // Bare word match: token domain has no dot (e.g. "instagram")
     // Match if hostname starts with the word followed by a dot (e.g. "instagram.com")
@@ -136,5 +137,6 @@ export function rotateCredentialSet(sets: CredentialSet[]): CredentialSet | null
   if (sets.length === 0) return null;
   if (sets.length === 1) return sets[0] ?? null;
 
+  // eslint-disable-next-line sonarjs/pseudo-random -- spreads imports over the accounts; nothing depends on the pick being unpredictable
   return sets[Math.floor(Math.random() * sets.length)] ?? null;
 }

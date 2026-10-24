@@ -11,6 +11,31 @@
     "ingredients": "재료"
   },
   "user": {
+    "signInMethods": {
+      "title": "로그인 방법",
+      "description": "SSO로 계정을 연결하세요.",
+      "password": "비밀번호",
+      "addAnother": "다른 로그인 방법 추가",
+      "addProvider": "{provider} 연결",
+      "added": "{date}에 추가됨",
+      "remove": "연결 해제",
+      "unavailable": "현재 사용할 수 없음",
+      "changePassword": "비밀번호 변경",
+      "currentPassword": "현재 비밀번호",
+      "newPassword": "새 비밀번호",
+      "confirmPassword": "새 비밀번호 확인",
+      "signOutOthers": "다른 세션 로그아웃",
+      "passwordChanged": "비밀번호가 변경되었습니다.",
+      "errors": {
+        "usedByAnotherAccount": "이 로그인은 이미 다른 계정에서 사용 중입니다.",
+        "lastMethod": "로그인 방법이 하나 이상 필요합니다.",
+        "signInAgain": "제거하려면 다시 로그인하세요.",
+        "addFailed": "이 로그인 방법을 추가할 수 없습니다.",
+        "removeFailed": "이 로그인 방법을 제거할 수 없습니다.",
+        "wrongPassword": "현재 비밀번호가 올바르지 않습니다.",
+        "changeFailed": "비밀번호를 변경하지 못했습니다. 다시 시도하세요."
+      }
+    },
     "profile": {
       "title": "프로필",
       "nameLabel": "이름",
@@ -376,67 +401,26 @@
     "flagged": "표시됨",
     "flagReasons": {
       "unknown": "Norish가 이것이 별도의 재료인지 확신하지 못했습니다.",
-      "ai-off": "AI가 꺼져 있어 Norish가 이미 아는 재료인지 확인하지 못했습니다.",
       "unknown-food": "이 이름과 단어를 공유하는 알려진 재료가 없어 AI에 묻지 않았습니다.",
       "ai-unsure": "AI에 알려진 재료인지 물었지만 확신하지 못했습니다.",
-      "ai-unavailable": "이 이름을 추가할 때 AI가 제때 응답하지 않았습니다.",
-      "ai-key-rejected": "AI 제공업체가 API 키를 거부해서 AI가 이 이름을 확인하지 못했습니다.",
       "food-gone": "AI가 연결한 재료가 이름이 합류하기 전에 병합되어 사라졌습니다.",
       "upgrade": "일치하는 알려진 재료를 찾지 못했습니다.",
-      "seed-ambiguous": "카탈로그에 이것일 수 있는 재료가 여럿 있습니다."
+      "seed-ambiguous": "카탈로그에 이것일 수 있는 재료가 여럿 있습니다.",
+      "ai-junk": "AI가 이것을 식재료가 아닌 조리 도구나 레시피 줄의 일부로 판단했습니다."
     },
     "empty": "재료를 찾을 수 없습니다",
     "emptyFlagged": "표시된 항목이 없습니다",
     "rename": "이름 바꾸기",
     "delete": "삭제",
     "deleteTitle": "{name}을(를) 삭제할까요?",
-    "deleteConfirm": "이 재료의 번역와 가족이 Norish에 알려준 내용이 함께 사라집니다. 레시피, 장보기 목록 또는 식료품 저장실에서 아직 사용 중인 재료는 삭제할 수 없으니 대신 병합하세요.",
+    "deleteConfirm": "이 재료의 번역과 가족이 Norish에 알려준 내용이 함께 사라집니다.",
+    "deleteTouches": {
+      "recipeLines": "{count, plural, other {레시피 줄 #개는 텍스트를 유지하지만 이 재료와의 연결이 사라집니다}}",
+      "groceries": "{count, plural, other {장보기 항목 #개는 텍스트를 유지하지만 이 재료와의 연결이 사라집니다}}",
+      "pantry": "{count, plural, other {식료품 저장실 항목 #개가 삭제됩니다}}"
+    },
     "markDistinct": "별개로 표시",
     "summary": "번역 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
-    "askAI": "AI에게 묻기",
-    "fixCatalogue": "카탈로그 고치기",
-    "askAIRound": {
-      "intro": "AI가 표시된 재료가 어디에 속하는지 확인하고 일관되지 않은 이름을 고칩니다. 제안을 확인하기 전까지는 아무것도 바뀌지 않습니다.",
-      "scopeLabel": "고칠 대상",
-      "scopes": {
-        "unsuggested": "표시된 재료 확인",
-        "suggested": "제안 다시 확인",
-        "name": "이름 정리"
-      },
-      "hints": {
-        "unsuggested": "중복, 하위 재료 또는 고유한 재료를 찾습니다.",
-        "suggested": "표시된 재료를 다시 확인합니다.",
-        "name": "재료 이름을 재료만 남도록 정리합니다. 위 체크박스를 선택하면 표시된 재료도 포함됩니다."
-      },
-      "scopeSize": "{count, plural, =0 {재료 없음} other {재료 #개 · 약 {tokens} 토큰}}",
-      "modelTokens": "약 {tokens} 토큰",
-      "basisMeasured": "지난 라운드 사용량 기준."
-    },
-    "roundProgress": "AI에게 묻는 중 · {total, number}개 중 {done, number}개",
-    "roundSection": {
-      "title": "AI에게 묻는 중",
-      "progress": "{total, number}개 중 {done, number}개",
-      "waiting": "{count, plural, other {대기 중인 재료 #개}}"
-    },
-    "reviewing": "AI에 묻는 중…",
-    "aiOutcomes": {
-      "parent": "AI가 {name}을(를) {of}의 한 종류로 분류할 것을 제안합니다.",
-      "distinct": "AI가 {name}을(를) 별개의 식재료로 볼 것을 제안합니다.",
-      "unsure": "AI는 여전히 {name}이(가) 무엇인지 확신하지 못합니다.",
-      "notFlagged": "{name}은(는) 플래그되지 않았습니다.",
-      "skippedNotFlagged": "{name}은(는) 더 이상 표시되지 않았습니다.",
-      "skippedForbidden": "{name}은(는) 수정 권한이 없습니다.",
-      "skippedNotFound": "AI가 도달했을 때 {name}은(는) 이미 없었습니다.",
-      "failed": "{name}에 대한 질문이 실패했습니다.",
-      "merge": "AI가 {name}을(를) {into}에 병합할 것을 제안합니다."
-    },
-    "aiTrace": {
-      "readAs": "AI가 “{name}”(으)로 읽었습니다.",
-      "compared": "비교 대상: {names}.",
-      "comparedNothing": "비교할 알려진 식품이 없었습니다.",
-      "fromWords": "Based on name.",
-      "noFood": "AI가 이 이름에서 식품을 찾지 못했습니다."
-    },
     "addAlias": "번역 추가",
     "removeAlias": "{alias} 제거",
     "mergeInto": "다음으로 병합…",
@@ -491,7 +475,8 @@
         "name": "{food} · {dataset}, 이름으로 찾음",
         "householdFood": "{food} · {dataset}, 우리 가구가 선택",
         "household": "우리 가구의 자체 값",
-        "taxonomy": "Open Food Facts"
+        "taxonomy": "Open Food Facts",
+        "ai": "AI 추정"
       },
       "correct": "수정",
       "correctTitle": "{name} 수정",
@@ -550,8 +535,6 @@
       "name-taken": "다른 재료가 이미 이 이름을 사용합니다",
       "spelling-taken": "이 번역는 이미 다른 재료에 속해 있습니다",
       "last-alias": "재료에는 최소 하나의 번역가 남아야 합니다",
-      "alias-in-use": "레시피나 장보기 목록이 아직 이 번역를 사용합니다",
-      "ingredient-in-use": "레시피, 장보기 목록 또는 식료품 저장실에서 아직 이 재료를 사용하고 있습니다",
       "same-ingredient": "재료를 자기 자신과 병합할 수 없습니다",
       "cycle": "재료는 자기 자신의 한 종류가 될 수 없습니다",
       "empty": "이름을 입력하세요",
@@ -569,51 +552,31 @@
       "none": "더 이상 사용하는 곳이 없습니다"
     },
     "keepAlias": "{alias} 유지",
-    "reportOutcomes": {
-      "parent": "상위 항목 아래",
-      "distinct": "독립 식재료",
-      "unsure": "불확실",
-      "skipped": "건너뜀",
-      "failed": "실패",
-      "merge": "병합"
-    },
+    "junkTitle": "{alias}을(를) 식재료가 아님으로 표시할까요?",
+    "junkBody": "이 번역을 가진 다른 식재료가 없습니다. 새 레시피는 식재료가 아님으로 표시된 텍스트를 건너뜁니다.",
+    "junkRemove": "제거만 하기",
+    "junkMark": "식재료 아님",
     "expandKinds": "{name}의 종류 보기",
     "collapseKinds": "{name}의 종류 숨기기",
     "layoutSection": "보기",
     "asTree": "계층 보기",
     "showOnly": "다음만 표시",
     "standaloneOnly": "상위 항목과 종류가 없는 것",
-    "findParent": "AI로 상위 항목 찾기",
-    "findParentsAll": "AI로 상위 항목 찾기",
-    "suggestion": {
-      "merge": "{name}을(를) {into}에 병합",
-      "parent": "{name}을(를) {of} 아래로 분류",
-      "distinct": "{name}을(를) 별개의 식재료로 유지",
-      "filedFromName": "{name} filed under {of}",
-      "rename": "{name}의 이름을 {to}(으)로 변경"
-    },
-    "suggestionsTitle": "AI 제안",
-    "suggestionsEmpty": "대기 중인 항목이 없습니다.",
-    "suggestionsNone": "제안 없음",
-    "suggestionsOpen": "{count, plural, =0 {제안} other {제안 #개}}",
-    "suggestionsFailed": "제안 {count}개를 적용하지 못했습니다: {reason}",
-    "confirmSuggestion": "확인",
-    "dismissSuggestion": "무시",
-    "confirmAll": "모두 확인 ({count})",
-    "dismissAll": "모두 무시",
-    "suggestedByAI": "AI 제안",
-    "suggestedFromName": "Based on name",
-    "proposal": {
-      "merge": "Merge into {into}",
-      "parent": "File under {of}",
-      "distinct": "Food of its own",
-      "rename": "{to}(으)로 이름 변경"
-    },
-    "skippedReasons": {
-      "notFlagged": "No longer flagged",
-      "forbidden": "Not yours to edit",
-      "notFound": "No longer exists",
-      "settled": "이름이 이미 확정되었거나 제안이 대기 중입니다"
+    "changedByAI": {
+      "title": "AI가 변경함",
+      "open": "{count, plural, =0 {AI가 변경함} other {AI가 변경함 · 확인할 항목 #개}}",
+      "unsure": "확실하지 않음",
+      "sure": "변경됨",
+      "empty": "지난 한 달 동안 AI가 변경한 것이 없습니다.",
+      "keep": "유지",
+      "undo": "되돌리기",
+      "merge": "{from}을(를) 여기에 병합함",
+      "parent": "{of} 아래에 분류됨",
+      "parentDropped": "더 이상 {of} 아래에 없음",
+      "plainName": "{from}에서 이름 변경됨",
+      "notAFood": "식재료가 아니어서 삭제했습니다. 레시피 줄과 장보기 항목은 텍스트를 유지합니다.",
+      "spellingRemoved": "번역 {from}을(를) 삭제함",
+      "spellingMoved": "번역 {from}을(를) {of}(으)로 옮김"
     },
     "icon": {
       "change": "아이콘 변경",
@@ -622,20 +585,6 @@
       "failed": "이 사진으로 아이콘을 만들 수 없습니다.",
       "generate": "AI로 생성",
       "generateFailed": "아이콘을 생성할 수 없습니다."
-    },
-    "drawIcons": {
-      "open": "아이콘 그리기",
-      "title": "아이콘 그리기",
-      "intro": "이미지 제공자가 각 식품의 아이콘을 그리며, 그 아이콘은 바로 그 식품의 아이콘이 됩니다. 식품의 패널에서 다른 아이콘을 지정할 수 있습니다.",
-      "scopeLabel": "대상 식품",
-      "scopes": {
-        "bare": "아이콘이 전혀 없는 식품만",
-        "unowned": "자체 아이콘이 없는 모든 식품"
-      },
-      "scopeSize": "{count, plural, =0 {아이콘 없음} other {아이콘 #개}}",
-      "start": "아이콘 그리기",
-      "progress": "아이콘 그리는 중 · {total, number}개 중 {done, number}개",
-      "drawing": "아이콘 그리는 중…"
     }
   },
   "admin": {
@@ -927,6 +876,58 @@
         "aiDisabled": "이 서버에서 AI가 비활성화되어 있습니다. 먼저 AI를 활성화하세요.",
         "error": "대량 보강을 시작하지 못했습니다",
         "imageCount": "{count, plural, =0 {생성되는 이미지가 없습니다.} other {#개의 이미지가 생성됩니다.}}"
+      },
+      "ingredientCatalogue": {
+        "title": "재료 카탈로그",
+        "subtitle": "AI가 새 재료에 하는 일",
+        "automatic": "새 재료에 자동 적용",
+        "automaticDescription": "카탈로그에 재료가 추가될 때 AI가 하는 일입니다.",
+        "automaticPlaceholder": "자동으로 실행되는 항목 없음",
+        "kinds": {
+          "cleanUp": "새 재료 정리",
+          "cleanUpDescription": "표기를 병합하고, 상위 항목과 기본 이름을 정하고, 음식이 아닌 것은 삭제",
+          "nutrition": "누락된 영양 정보 채우기",
+          "nutritionDescription": "재료에 없는 경우 100 g당 매크로 추정",
+          "conversions": "누락된 환산 정보 채우기",
+          "conversionsDescription": "재료에 없는 경우 밀도와 개당 무게 추정",
+          "icon": "누락된 아이콘 그리기",
+          "iconDescription": "상위 항목의 아이콘도 없는 재료에만 그립니다"
+        },
+        "cleanUpCatalogue": {
+          "title": "카탈로그 정리",
+          "description": "카탈로그에 이미 있는 재료에 대해 AI에게 묻습니다.",
+          "running": "정리가 진행 중입니다. 작업 대기열에서 확인하세요.",
+          "button": "카탈로그 정리",
+          "intro": "AI가 표기를 합치고, 상위 재료와 간단한 이름을 정하고, 음식이 아닌 것을 삭제합니다. 모든 변경은 AI가 변경함 목록에 실행 취소와 함께 표시됩니다.",
+          "scopeLabel": "대상 재료",
+          "scopes": {
+            "recipe-foods": "레시피 재료",
+            "recipe-foods-description": "레시피에서 들어왔고 아무도 결정하지 않은 재료",
+            "whole-catalogue": "전체 카탈로그",
+            "whole-catalogue-description": "기본 제공 재료를 포함한 모든 재료로, 사람이 결정하거나 실행 취소한 내용을 무시합니다. 기본 제공 재료는 삭제되지 않습니다."
+          },
+          "count": "{count, plural, other {AI가 재료 #개에 대해 묻습니다.}}",
+          "start": "정리",
+          "started": "{count, plural, other {재료 #개를 정리하는 중}}",
+          "error": "정리를 시작할 수 없습니다"
+        },
+        "fillGaps": {
+          "title": "빈 정보 채우기",
+          "description": "재료에 없는 정보를 AI가 채우게 합니다.",
+          "running": "빈 정보 채우기가 진행 중입니다. 작업 대기열에서 확인하세요.",
+          "button": "빈 정보 채우기",
+          "intro": "AI가 카탈로그의 모든 재료에 대해 자체 정보가 없는 항목만 채웁니다. 재료에 이미 있는 값은 절대 바꾸지 않습니다.",
+          "kindsLabel": "채울 항목",
+          "kinds": {
+            "nutrition": "영양 정보",
+            "conversions": "환산 정보",
+            "icons": "아이콘"
+          },
+          "count": "{count, plural, =0 {채울 항목 없음} other {재료 #개}}",
+          "start": "빈 정보 채우기",
+          "started": "빈 정보를 채우는 중입니다. 작업 대기열에서 확인하세요.",
+          "error": "빈 정보 채우기를 시작할 수 없습니다"
+        }
       }
     },
     "aiConfig": {
@@ -982,14 +983,6 @@
         "ingredientLinkingDescription": "연결이 없는 단계에 한해, 각 단계를 사용하는 재료 줄에 연결합니다",
         "imageGeneration": "이미지 생성",
         "imageGenerationDescription": "이미지가 전혀 없는 새 레시피에 요리 사진을 그려줍니다"
-      },
-      "automaticIngredients": "새 재료에 자동 적용",
-      "automaticIngredientsDescription": "카탈로그에 새 재료가 추가될 때 일어나는 일입니다.",
-      "automaticIngredientsKinds": {
-        "plainName": "이름 정리",
-        "plainNameDescription": "분량, 포장 코드처럼 식품이 아닌 부분을 지웁니다",
-        "icon": "아이콘 그리기",
-        "iconDescription": "상위 항목의 아이콘도 없는 식품에만 그립니다"
       },
       "tagStrategy": "태그 전략",
       "tagStrategyDescription": "자동 또는 수동 실행 여부와 관계없이 자동 태그 지정이 사용할 수 있는 태그",
@@ -1135,8 +1128,11 @@
       "ingredientLinkingDescription": "각 단계를 사용하는 재료 줄에 연결할 때 사용됩니다",
       "ingredientLinkingPlaceholder": "재료를 단계에 연결하기 위한 프롬프트...",
       "ingredientResolution": "재료 인식 프롬프트",
-      "ingredientResolutionDescription": "새 재료 이름이 Norish가 이미 아는 식품인지 판단할 때 사용",
+      "ingredientResolutionDescription": "AI가 새 재료 이름을 읽을 때 언어 모델에 보내며, 그 뒤에 이름과 지금 속한 상위 재료가 붙습니다. 하나의 식재료인지, 여러 개인지, 식재료가 아닌지 정합니다.",
       "ingredientResolutionPlaceholder": "재료 이름을 인식하기 위한 프롬프트...",
+      "ingredientMatch": "재료 매칭 프롬프트",
+      "ingredientMatchDescription": "AI가 준 이름이 카탈로그에서 여러 식재료를 찾거나 한두 글자만 다른 식재료만 찾을 때 언어 모델에 보내며, 그 뒤에 이름과 그 식재료들이 붙습니다. 그중 어느 것이 그 이름인지, 또는 해당하는 것이 없는지 정합니다.",
+      "ingredientMatchPlaceholder": "재료 이름을 카탈로그와 매칭하는 프롬프트...",
       "imageGenerationBrief": "이미지 설명 프롬프트",
       "imageGenerationBriefDescription": "이미지를 생성하기 전에 레시피를 짧은 시각적 설명으로 바꾸는 데 사용됩니다. 레시피는 프롬프트 뒤에 추가됩니다.",
       "imageGenerationBriefPlaceholder": "시각적 설명을 위한 프롬프트...",
@@ -1148,7 +1144,13 @@
       "ingredientIconStylePlaceholder": "재료 아이콘 스타일을 위한 프롬프트...",
       "ingredientPlainName": "재료 이름 정리 프롬프트",
       "ingredientPlainNameDescription": "AI가 재료 이름을 정리할 때 언어 모델에 보내며, 그 뒤에 이름과 다른 표기가 붙습니다. 이름에서 무엇을 지우고 무엇을 남길지 정합니다.",
-      "ingredientPlainNamePlaceholder": "재료 이름 정리 프롬프트..."
+      "ingredientPlainNamePlaceholder": "재료 이름 정리 프롬프트...",
+      "ingredientSpellingCheck": "번역 확인 프롬프트",
+      "ingredientSpellingCheckDescription": "전체 카탈로그를 정리할 때, 사람이나 가져오기, 병합이 추가한 번역이 있는 카탈로그 식재료마다 언어 모델에 보내며, 그 뒤에 식재료와 그 번역, 번역마다 레시피 한 줄이 붙습니다. 어떤 번역이 그 식재료를 가리키는지, 식재료가 아닌지, 다른 식재료인지 정합니다.",
+      "ingredientSpellingCheckPlaceholder": "식재료 번역 확인 프롬프트...",
+      "ingredientNutrition": "식재료 영양 프롬프트",
+      "ingredientNutritionDescription": "AI가 채울 수 있을 때, 자체 영양 정보나 밀도, 개당 무게가 없는 식재료에 대해 언어 모델에 보내며, 그 뒤에 식재료와 그것이 어떤 종류인지가 붙습니다. 식재료에 없는 것만 추정합니다.",
+      "ingredientNutritionPlaceholder": "식재료 영양 추정 프롬프트..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {
@@ -1171,7 +1173,7 @@
         "delayed": "Delayed",
         "completed": "Completed",
         "failed": "Failed",
-        "paused": "Paused",
+        "cancelled": "Cancelled",
         "prioritized": "Prioritized",
         "unknown": "Unknown",
         "hanging": "Hanging"
@@ -1202,6 +1204,7 @@
         "saving-link": "Save the link",
         "asking-ai": "Ask AI about the food",
         "drawing-icon": "식품 아이콘 그리기",
+        "filling-gaps": "식재료의 빈 정보 채우기",
         "naming": "식품 이름 정리"
       },
       "queues": {
@@ -1220,7 +1223,7 @@
         "store-lookup": "매장 조회",
         "ingredient-review": "AI에게 재료 묻기",
         "ingredient-icons": "재료 아이콘 그리기",
-        "new-ingredients": "새 재료"
+        "ingredient-fill": "식재료 빈 정보 채우기"
       },
       "summary": {
         "failed": "{count} failed"
@@ -1236,6 +1239,7 @@
       "detail": {
         "title": "Job Details",
         "notFound": "Job not found. It may have been cleaned up.",
+        "cancelledNote": "An administrator cancelled this job.",
         "sections": {
           "error": "Error",
           "pipelineSteps": "Pipeline Steps",
@@ -1264,6 +1268,8 @@
       },
       "actions": {
         "retry": "Retry",
+        "cancel": "Cancel job",
+        "cancelling": "Cancelling…",
         "remove": "Remove"
       },
       "removeModal": {

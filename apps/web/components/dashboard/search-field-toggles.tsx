@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip } from "@heroui/react";
+import { ChipButton } from "@/components/shared/chip-button";
 import { useTranslations } from "next-intl";
 
 import type { SearchField } from "@norish/shared/contracts";
@@ -35,19 +35,17 @@ export default function SearchFieldToggles({
         const isSelected = value.includes(field);
 
         return (
-          <Chip
+          <ChipButton
             key={field}
             aria-pressed={isSelected}
-            as="button"
             className={`shrink-0 cursor-pointer select-none ${itemClassName}`}
             color={isSelected ? "accent" : "default"}
             size="sm"
-            type="button"
             variant={isSelected ? "primary" : "tertiary"}
             onClick={() => onChange(toggleSearchFieldIn(value, field))}
           >
             {t(`searchFields.${field}`)}
-          </Chip>
+          </ChipButton>
         );
       })}
     </div>

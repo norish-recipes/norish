@@ -2,7 +2,6 @@
  * Recipe Import Worker
  *
  * Processes recipe import jobs from the queue.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { Job } from "bullmq";
@@ -19,19 +18,21 @@ import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 import { credentialSetsForUrl, rotateCredentialSet } from "@norish/shared/lib/site-auth-tokens";
+import { withTimeout } from "@norish/shared/lib/with-timeout";
 
-import { defineLazyWorker, QUEUE_NAMES, RECIPE_IMPORT_PROCESSING_TIMEOUT_MS } from "../config";
+import { RECIPE_IMPORT_PROCESSING_TIMEOUT_MS } from "../config";
+import { createWorker, isFinalFailure } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
-import { withTimeout } from "../helpers";
 import { completeStep, reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:recipe-import");
 
 /**
  * Process a single recipe import job.
- * Called by the worker for each job.
+ * Resolves to the recipe the import ended on, an existing one for a known URL.
  */
-async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
+async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> {
   const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
   const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
 
@@ -75,7 +76,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       );
     }
 
-    return;
+    return existingCheck.existingRecipeId;
   }
 
   // No allergy list is fetched here: extraction reads the source, and allergy
@@ -149,6 +150,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   }
 
   await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+
+  return createdId;
 }
 
 /**
@@ -162,25 +165,11 @@ async function handleJobFailed(
   if (!job) return;
 
   const { url, recipeId, userId, householdKey } = job.data;
-  const maxAttempts = job.opts.attempts ?? 3;
-  const isFinalFailure = job.attemptsMade >= maxAttempts;
-
-  log.error(
-    {
-      jobId: job.id,
-      url,
-      recipeId,
-      attempt: job.attemptsMade,
-      maxAttempts,
-      isFinalFailure,
-      error: error.message,
-    },
-    "Recipe import job failed"
-  );
+  const isFinal = isFinalFailure(job, error);
 
   await deleteRecipeImagesDir(recipeId);
 
-  if (isFinalFailure) {
+  if (isFinal) {
     // Emit failed event to remove skeleton
     const policy = await getRecipePermissionPolicy();
     const ctx = { userId, householdKey };
@@ -197,10 +186,6 @@ async function handleJobFailed(
   }
 }
 
-/**
- * Start the recipe import worker (lazy - starts on demand).
- * Call during server startup.
- */
 // Exported for tests, like the other import workers' processors.
 export const processRecipeImportJob = (job: Job<RecipeImportJobData>) =>
   withTimeout(
@@ -209,11 +194,6 @@ export const processRecipeImportJob = (job: Job<RecipeImportJobData>) =>
     "Recipe import job"
   );
 
-const recipeImportWorker = defineLazyWorker(
-  QUEUE_NAMES.RECIPE_IMPORT,
-  processRecipeImportJob,
-  handleJobFailed
-);
-
-export const startRecipeImportWorker = recipeImportWorker.start;
-export const stopRecipeImportWorker = recipeImportWorker.stop;
+export function startRecipeImportWorker(): void {
+  createWorker(QUEUE_NAMES.RECIPE_IMPORT, processRecipeImportJob, { onFailed: handleJobFailed });
+}

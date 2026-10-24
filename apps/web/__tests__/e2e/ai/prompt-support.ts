@@ -1,8 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { Client } from "pg";
 
-import { databaseUrl } from "./database";
+import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 
 export async function openPromptsPanel(page: Page) {
   await page.goto("/settings?tab=admin");
@@ -40,31 +39,13 @@ export async function editPrompts(page: Page, edits: Record<string, string>): Pr
 }
 
 export async function writePromptsRow(value: Record<string, unknown>): Promise<void> {
-  const database = new Client({ connectionString: databaseUrl() });
-
-  await database.connect();
-
-  try {
-    await database.query(`update server_config set value = $1::jsonb where key = 'prompts'`, [
-      JSON.stringify(value),
-    ]);
-  } finally {
-    await database.end();
-  }
+  await setConfig("prompts", value, null);
 }
 
 export async function readPromptsRow(): Promise<Record<string, unknown>> {
-  const database = new Client({ connectionString: databaseUrl() });
+  const value = await getConfig<Record<string, unknown>>("prompts");
 
-  await database.connect();
+  if (!value) throw new Error("The prompts row is missing");
 
-  try {
-    const result = await database.query<{ value: Record<string, unknown> }>(
-      `select value from server_config where key = 'prompts'`
-    );
-
-    return result.rows[0]!.value;
-  } finally {
-    await database.end();
-  }
+  return value;
 }

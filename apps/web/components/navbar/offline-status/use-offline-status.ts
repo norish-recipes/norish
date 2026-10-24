@@ -68,13 +68,22 @@ export function useOfflineStatus(): OfflineStatus {
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [inventory, setInventory] = useState<WarmSetInventory>(EMPTY_INVENTORY);
+  const [prevOwner, setPrevOwner] = useState(owner);
   const isSyncing = useSyncExternalStore(recovery.subscribe, recovery.isSyncing, () => false);
+
+  // No owner (signed out): nothing cached and no Outbox to show.
+  if (owner !== prevOwner) {
+    setPrevOwner(owner);
+
+    if (!owner) {
+      setEntries([]);
+      setInventory(EMPTY_INVENTORY);
+    }
+  }
 
   // Keep the Outbox list live while open (in-tab and cross-tab).
   useEffect(() => {
     if (!owner) {
-      setEntries([]);
-
       return;
     }
 
@@ -100,8 +109,6 @@ export function useOfflineStatus(): OfflineStatus {
   // Read the Warm Set inventory when the modal opens.
   useEffect(() => {
     if (!owner) {
-      setInventory(EMPTY_INVENTORY);
-
       return;
     }
 

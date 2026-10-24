@@ -1,4 +1,5 @@
 import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
+import { QuerySeed } from "@/components/query-seed";
 import { DevicePreferencesProvider } from "@/context/device-preferences-context";
 import { readDevicePreferencesSeed } from "@/lib/request-profile";
 
@@ -9,10 +10,22 @@ import { readDevicePreferencesSeed } from "@/lib/request-profile";
  * fractions or decimals switch lasts only for the visit. The lines carry
  * their icons' addresses, so the icons' provider here reads nothing.
  */
-export default async function SharedRecipeLayout({ children }: { children: React.ReactNode }) {
+export default async function SharedRecipeLayout({
+  children,
+  params,
+}: LayoutProps<"/share/[token]">) {
+  const { token } = await params;
+
   return (
     <DevicePreferencesProvider seed={await readDevicePreferencesSeed()}>
-      <IngredientIconsProvider>{children}</IngredientIconsProvider>
+      <QuerySeed
+        reads={(trpc, client) => [
+          client.query(trpc.recipes.getShared.queryOptions({ token })),
+          client.query(trpc.recipes.sharePublicConfig.queryOptions({ token })),
+        ]}
+      >
+        <IngredientIconsProvider>{children}</IngredientIconsProvider>
+      </QuerySeed>
     </DevicePreferencesProvider>
   );
 }

@@ -6,6 +6,8 @@ import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 /**
  * `viewer` exports everything the pressing user can see under the view
  * policy; `instance` exports every recipe on the server. Both go through the
@@ -50,18 +52,18 @@ export default function ArchiveExportButton({ label, scope = "viewer" }: Archive
   const t = useTranslations("settings.archiveExport");
   const [exporting, setExporting] = useState(false);
   const [bytes, setBytes] = useState(0);
-  const guardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mounted = useRef(true);
+  const guardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     return () => {
-      mounted.current = false;
-      if (guardTimer.current) clearTimeout(guardTimer.current);
+      mountedRef.current = false;
+      if (guardTimerRef.current) clearTimeout(guardTimerRef.current);
     };
   }, []);
 
   const finish = useCallback(() => {
-    if (!mounted.current) return;
+    if (!mountedRef.current) return;
     setExporting(false);
     setBytes(0);
   }, []);
@@ -73,10 +75,10 @@ export default function ArchiveExportButton({ label, scope = "viewer" }: Archive
     setBytes(0);
 
     const outcome = await startArchiveDownload({
-      url: exportUrl(scope),
+      url: addBasePath(exportUrl(scope)),
       fallbackFileName: FALLBACK_FILE_NAME,
       onProgress: (transferred) => {
-        if (mounted.current) setBytes(transferred);
+        if (mountedRef.current) setBytes(transferred);
       },
     });
 
@@ -102,7 +104,7 @@ export default function ArchiveExportButton({ label, scope = "viewer" }: Archive
 
     if (outcome.status === "handedOff") {
       // Nothing will tell us when this ends, so only guard the second press.
-      guardTimer.current = setTimeout(finish, HANDOFF_GUARD_MS);
+      guardTimerRef.current = setTimeout(finish, HANDOFF_GUARD_MS);
 
       return;
     }

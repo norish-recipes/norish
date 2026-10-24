@@ -1,7 +1,7 @@
 "use client";
 
 // FULLY AI GENERATED - DO NOT EDIT - I HAVE NO IDEA HOW THIS WORKS :D
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
   animate,
   motion,
@@ -116,369 +116,371 @@ type Props = {
   rowHeight?: number;
   disableSwipeOnDesktop?: boolean;
   onOpenChange?: (open: boolean) => void;
+  ref?: React.Ref<SwipeableRowRef>;
 };
 
-const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
-  ({ children, actions, rowHeight, disableSwipeOnDesktop = true, onOpenChange }, ref) => {
-    // Validate actions length
-    if (actions.length < 1 || actions.length > 3) {
-      log.error("actions must contain 1-3 items, got %d", String(actions.length));
-    }
+export default function SwipeableRow({
+  children,
+  actions,
+  rowHeight,
+  disableSwipeOnDesktop = true,
+  onOpenChange,
+  ref,
+}: Props) {
+  // Validate actions length
+  if (actions.length < 1 || actions.length > 3) {
+    log.error("actions must contain 1-3 items, got %d", String(actions.length));
+  }
 
-    const [isOpen, setIsOpen] = useState(false);
-    const [committing, setCommitting] = useState<SwipeAction | null>(null);
-    const [focusedActionIndex, setFocusedActionIndex] = useState<number>(-1);
+  const [isOpen, setIsOpen] = useState(false);
+  const [committing, setCommitting] = useState<SwipeAction | null>(null);
+  const [focusedActionIndex, setFocusedActionIndex] = useState<number>(-1);
 
-    const swipeContainerRef = useRef<HTMLDivElement>(null);
-    const swipeItemRef = useRef<HTMLDivElement>(null);
+  const swipeContainerRef = useRef<HTMLDivElement>(null);
+  const swipeItemRef = useRef<HTMLDivElement>(null);
 
-    const swipeItemWidth = useRef(0);
-    const actionsWidthPx = useRef(0);
-    const buttonSize = useRef(calculateButtonSize(rowHeight));
-    const dragControls = useDragControls();
-    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
-    const [stacked, setStacked] = useState(false);
+  const swipeItemWidthRef = useRef(0);
+  const actionsWidthPxRef = useRef(0);
+  const [actionsWidth, setActionsWidth] = useState(0);
+  const [buttonSize, setButtonSize] = useState(() => calculateButtonSize(rowHeight));
+  const dragControls = useDragControls();
+  const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
+  const [stacked, setStacked] = useState(false);
 
-    // Size the actions to the row as it is now: on mount, and again before opening.
-    const fitToRow = useCallback(() => {
-      const rect = swipeItemRef.current?.getBoundingClientRect();
+  // Size the actions to the row as it is now: on mount, and again before opening.
+  const fitToRow = useCallback(() => {
+    const rect = swipeItemRef.current?.getBoundingClientRect();
 
-      if (!rect?.width) return;
+    if (!rect?.width) return;
 
-      const fit = fitActions(actions.length, rect.width, rect.height, rowHeight);
+    const fit = fitActions(actions.length, rect.width, rect.height, rowHeight);
 
-      swipeItemWidth.current = rect.width;
-      buttonSize.current = fit.buttonSize;
-      actionsWidthPx.current = fit.actionsWidth;
-      setStacked(fit.stacked);
-    }, [actions.length, rowHeight]);
+    swipeItemWidthRef.current = rect.width;
+    actionsWidthPxRef.current = fit.actionsWidth;
+    setActionsWidth(fit.actionsWidth);
+    setButtonSize(fit.buttonSize);
+    setStacked(fit.stacked);
+  }, [actions.length, rowHeight]);
 
-    // Row translate
-    const swipeAmount = useMotionValue(0);
-    const swipeProgress = useTransform(swipeAmount, (value) => {
-      // Calculate progress relative to actions width, not row width
-      // This ensures buttons appear correctly whether swiped manually or opened programmatically
-      const actionsW = actionsWidthPx.current;
+  // Row translate
+  const swipeAmount = useMotionValue(0);
+  const swipeProgress = useTransform(swipeAmount, (value) => {
+    // Calculate progress relative to actions width, not row width
+    // This ensures buttons appear correctly whether swiped manually or opened programmatically
+    const actionsW = actionsWidthPxRef.current;
 
-      return actionsW ? value / actionsW : 0;
-    });
+    return actionsW ? value / actionsW : 0;
+  });
 
-    // Commit overlay width (anchored to right:0)
-    const overlayWidth = useMotionValue(0);
+  // Commit overlay width (anchored to right:0)
+  const overlayWidth = useMotionValue(0);
 
-    // Commit: right-anchored overlay expands, content fades, container fades, then callback
-    const commitDelete = useCallback(
-      async (action: SwipeAction) => {
-        const w = swipeItemWidth.current;
+  // Commit: right-anchored overlay expands, content fades, container fades, then callback
+  const commitDelete = useCallback(
+    async (action: SwipeAction) => {
+      const w = swipeItemWidthRef.current;
 
-        if (!w || !swipeContainerRef.current) return;
+      if (!w || !swipeContainerRef.current) return;
 
-        // Start overlay at one button width
-        const startW = buttonSize.current + CONTAINER_PADDING;
+      // Start overlay at one button width
+      const startW = buttonSize + CONTAINER_PADDING;
 
-        setCommitting(action);
-        overlayWidth.set(startW);
-        await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      setCommitting(action);
+      overlayWidth.jump(startW);
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
 
-        const expand = animate(overlayWidth, w, { duration: 0.22, ease: "easeOut" });
-        const fadeContent = swipeItemRef.current
-          ? animate(swipeItemRef.current, { opacity: 0 }, { duration: 0.18, ease: "easeOut" })
-          : Promise.resolve();
+      const expand = animate(overlayWidth, w, { duration: 0.22, ease: "easeOut" });
+      const fadeContent = swipeItemRef.current
+        ? animate(swipeItemRef.current, { opacity: 0 }, { duration: 0.18, ease: "easeOut" })
+        : Promise.resolve();
 
-        await Promise.all([expand, fadeContent]);
+      await Promise.all([expand, fadeContent]);
 
-        await animate(
-          swipeContainerRef.current,
-          { opacity: 0 },
-          { duration: 0.24, ease: "easeOut" }
-        );
-        action.onPress();
+      await animate(swipeContainerRef.current, { opacity: 0 }, { duration: 0.24, ease: "easeOut" });
+      action.onPress();
 
-        // Reset
-        swipeAmount.jump(0);
-        if (swipeItemRef.current) swipeItemRef.current.style.opacity = "1";
-        if (swipeContainerRef.current) swipeContainerRef.current.style.opacity = "1";
-        overlayWidth.set(0);
-        setCommitting(null);
+      // Reset
+      swipeAmount.jump(0);
+      if (swipeItemRef.current) swipeItemRef.current.style.opacity = "1";
+      if (swipeContainerRef.current) swipeContainerRef.current.style.opacity = "1";
+      overlayWidth.jump(0);
+      setCommitting(null);
+    },
+    [buttonSize, overlayWidth, swipeAmount]
+  );
+
+  // Imperative API
+  useImperativeHandle(
+    ref,
+    () => ({
+      openRow: () => {
+        // Recalculate in case it wasn't ready
+        fitToRow();
+        // Faster duration for fewer actions (shorter distance)
+        // 1 action: 0.15s, 2 actions: 0.175s, 3 actions: 0.2s
+        const duration = 0.125 + actions.length * 0.025;
+
+        return animate(swipeAmount, -actionsWidthPxRef.current, {
+          duration,
+          ease: "easeOut",
+        });
       },
-      [overlayWidth, swipeAmount]
-    );
+      closeRow: () => {
+        const duration = 0.125 + actions.length * 0.025;
 
-    // Imperative API
-    useImperativeHandle(
-      ref,
-      () => ({
-        openRow: () => {
-          // Recalculate in case it wasn't ready
-          fitToRow();
-          // Faster duration for fewer actions (shorter distance)
-          // 1 action: 0.15s, 2 actions: 0.175s, 3 actions: 0.2s
-          const duration = 0.125 + actions.length * 0.025;
+        return animate(swipeAmount, 0, { duration, ease: "easeOut" });
+      },
+      isOpen: () => isOpen,
+      triggerDeleteAnimation: (callback: () => void) => {
+        const dangerAction = actions.find((a) => a.color === "danger");
 
-          return animate(swipeAmount, -actionsWidthPx.current, {
-            duration,
-            ease: "easeOut",
-          });
-        },
-        closeRow: () => {
-          const duration = 0.125 + actions.length * 0.025;
+        if (dangerAction) {
+          commitDelete({ ...dangerAction, onPress: callback });
+        }
+      },
+    }),
+    [isOpen, actions, swipeAmount, commitDelete, fitToRow]
+  );
 
-          return animate(swipeAmount, 0, { duration, ease: "easeOut" });
-        },
-        isOpen: () => isOpen,
-        triggerDeleteAnimation: (callback: () => void) => {
-          const dangerAction = actions.find((a) => a.color === "danger");
+  // Open flag + callback
+  useMotionValueEvent(swipeAmount, "change", (val) => {
+    const next = Math.abs(val) > 5;
 
-          if (dangerAction) {
-            commitDelete({ ...dangerAction, onPress: callback });
-          }
-        },
-      }),
-      [isOpen, actions, swipeAmount, commitDelete, fitToRow]
-    );
+    if (next !== isOpen) {
+      setIsOpen(next);
+      onOpenChange?.(next);
+    }
+  });
 
-    // Open flag + callback
-    useMotionValueEvent(swipeAmount, "change", (val) => {
-      const next = Math.abs(val) > 5;
+  // Update measurements on mount only (resize handled by CSS)
+  useEffect(() => {
+    const el = swipeItemRef.current;
 
-      if (next !== isOpen) {
-        setIsOpen(next);
-        onOpenChange?.(next);
-      }
-    });
+    if (!el) return;
 
-    // Update measurements on mount only (resize handled by CSS)
-    useEffect(() => {
-      const el = swipeItemRef.current;
+    fitToRow();
+
+    const w = swipeItemWidthRef.current;
+
+    if (w) setDragConstraints((prev) => (prev.left === -w ? prev : { left: -w, right: 0 }));
+  }, [fitToRow]);
+
+  // Close on outside click / any scroll
+  useEffect(() => {
+    if (!isOpen || committing) return;
+    const close = () => animate(swipeAmount, 0, { duration: 0.2 });
+
+    const onPointerDown = (e: PointerEvent) => {
+      const el = swipeContainerRef.current;
 
       if (!el) return;
+      if (!el.contains(e.target as Node)) close();
+    };
+    const onScroll = () => close();
 
-      fitToRow();
+    document.addEventListener("pointerdown", onPointerDown, { capture: true });
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
 
-      const w = swipeItemWidth.current;
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, { capture: true });
+      window.removeEventListener("scroll", onScroll, { capture: true });
+      document.removeEventListener("scroll", onScroll, { capture: true });
+    };
+  }, [isOpen, committing, swipeAmount]);
 
-      if (w) setDragConstraints((prev) => (prev.left === -w ? prev : { left: -w, right: 0 }));
-    }, [fitToRow]);
+  const closeRow = () => animate(swipeAmount, 0, { duration: 0.3, ease: "easeOut" });
 
-    // Close on outside click / any scroll
-    useEffect(() => {
-      if (!isOpen || committing) return;
-      const close = () => animate(swipeAmount, 0, { duration: 0.2 });
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disableSwipeOnDesktop) return; // Only on desktop
 
-      const onPointerDown = (e: PointerEvent) => {
-        const el = swipeContainerRef.current;
+    // Open/close with Space or Enter
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      if (isOpen) {
+        closeRow();
+        setFocusedActionIndex(-1);
+      } else {
+        // Recalculate before opening
+        fitToRow();
+        animate(swipeAmount, -actionsWidthPxRef.current, { duration: 0.3, ease: "easeOut" });
+        setFocusedActionIndex(0); // Focus first action
+      }
 
-        if (!el) return;
-        if (!el.contains(e.target as Node)) close();
-      };
-      const onScroll = () => close();
+      return;
+    }
 
-      document.addEventListener("pointerdown", onPointerDown, { capture: true });
-      window.addEventListener("scroll", onScroll, { passive: true, capture: true });
-      document.addEventListener("scroll", onScroll, { passive: true, capture: true });
-
-      return () => {
-        document.removeEventListener("pointerdown", onPointerDown, { capture: true } as any);
-        window.removeEventListener("scroll", onScroll, { capture: true } as any);
-        document.removeEventListener("scroll", onScroll, { capture: true } as any);
-      };
-    }, [isOpen, committing, swipeAmount]);
-
-    const closeRow = () => animate(swipeAmount, 0, { duration: 0.3, ease: "easeOut" });
-
-    // Keyboard navigation
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (disableSwipeOnDesktop) return; // Only on desktop
-
-      // Open/close with Space or Enter
-      if (e.key === " " || e.key === "Enter") {
+    // Navigate actions with arrow keys when open
+    if (isOpen) {
+      if (e.key === "ArrowRight" && focusedActionIndex < actions.length - 1) {
         e.preventDefault();
-        if (isOpen) {
-          closeRow();
-          setFocusedActionIndex(-1);
+        setFocusedActionIndex(focusedActionIndex + 1);
+      } else if (e.key === "ArrowLeft" && focusedActionIndex > 0) {
+        e.preventDefault();
+        setFocusedActionIndex(focusedActionIndex - 1);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeRow();
+        setFocusedActionIndex(-1);
+      } else if (e.key === "Enter" && focusedActionIndex >= 0) {
+        e.preventDefault();
+        const action = actions[focusedActionIndex];
+
+        if (!action) return;
+        if (action.primary) {
+          commitDelete(action);
         } else {
-          // Recalculate before opening
-          fitToRow();
-          animate(swipeAmount, -actionsWidthPx.current, { duration: 0.3, ease: "easeOut" });
-          setFocusedActionIndex(0); // Focus first action
+          action.onPress();
+          closeRow();
         }
+      }
+    }
+  };
+
+  const handleDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      if (committing) return;
+
+      const w = swipeItemWidthRef.current;
+
+      if (!w) return;
+
+      const current = swipeAmount.get();
+      const targetOpen = -actionsWidthPxRef.current;
+      const fullSwipeThreshold = w * FULL_SWIPE_THRESHOLD;
+
+      const duration = 0.125 + actions.length * 0.025;
+
+      // Full-swipe commit only when not already open
+      if (current <= -fullSwipeThreshold && !isOpen) {
+        const primary = actions.find((a) => a.primary);
+
+        if (primary) {
+          // `false` keeps the drag's release animation running.
+          swipeAmount.jump(-w, false);
+          commitDelete(primary);
+
+          return;
+        }
+      }
+
+      // Prefer direction + velocity, then fall back to the closest snap point.
+      // This makes "swipe right to close" feel reliable again.
+      const velocityX = info.velocity.x;
+      const shouldClose = velocityX > 500;
+      const shouldOpen = velocityX < -500;
+
+      if (targetOpen === 0) {
+        animate(swipeAmount, 0, { duration, ease: "easeOut" });
 
         return;
       }
 
-      // Navigate actions with arrow keys when open
-      if (isOpen) {
-        if (e.key === "ArrowRight" && focusedActionIndex < actions.length - 1) {
-          e.preventDefault();
-          setFocusedActionIndex(focusedActionIndex + 1);
-        } else if (e.key === "ArrowLeft" && focusedActionIndex > 0) {
-          e.preventDefault();
-          setFocusedActionIndex(focusedActionIndex - 1);
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          closeRow();
-          setFocusedActionIndex(-1);
-        } else if (e.key === "Enter" && focusedActionIndex >= 0) {
-          e.preventDefault();
-          const action = actions[focusedActionIndex];
+      if (shouldClose) {
+        animate(swipeAmount, 0, { duration, ease: "easeOut" });
 
-          if (action.primary) {
-            commitDelete(action);
-          } else {
-            action.onPress();
-            closeRow();
-          }
-        }
+        return;
       }
-    };
 
-    const handleDragEnd = useCallback(
-      (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        if (committing) return;
+      if (shouldOpen) {
+        animate(swipeAmount, targetOpen, { duration, ease: "easeOut" });
 
-        const w = swipeItemWidth.current;
+        return;
+      }
 
-        if (!w) return;
+      // Closest snap point (open vs closed)
+      const distToClosed = Math.abs(current - 0);
+      const distToOpen = Math.abs(current - targetOpen);
+      const target = distToClosed <= distToOpen ? 0 : targetOpen;
 
-        const current = swipeAmount.get();
-        const targetOpen = -actionsWidthPx.current;
-        const fullSwipeThreshold = w * FULL_SWIPE_THRESHOLD;
+      animate(swipeAmount, target, { duration, ease: "easeOut" });
+    },
+    [actions, committing, commitDelete, isOpen, swipeAmount]
+  );
 
-        const duration = 0.125 + actions.length * 0.025;
+  const shouldStartSwipe = (e: React.PointerEvent) => {
+    if (!disableSwipeOnDesktop) return true;
 
-        // Full-swipe commit only when not already open
-        if (current <= -fullSwipeThreshold && !isOpen) {
-          const primary = actions.find((a) => a.primary);
+    return e.pointerType === "touch" || e.pointerType === "pen";
+  };
 
-          if (primary) {
-            swipeAmount.set(-w);
-            commitDelete(primary);
+  const PrimaryIcon = committing?.icon;
+  const committingColors = committing ? getActionColors(committing) : null;
 
-            return;
-          }
-        }
-
-        // Prefer direction + velocity, then fall back to the closest snap point.
-        // This makes "swipe right to close" feel reliable again.
-        const velocityX = info.velocity.x;
-        const shouldClose = velocityX > 500;
-        const shouldOpen = velocityX < -500;
-
-        if (targetOpen === 0) {
-          animate(swipeAmount, 0, { duration, ease: "easeOut" });
-
-          return;
-        }
-
-        if (shouldClose) {
-          animate(swipeAmount, 0, { duration, ease: "easeOut" });
-
-          return;
-        }
-
-        if (shouldOpen) {
-          animate(swipeAmount, targetOpen, { duration, ease: "easeOut" });
-
-          return;
-        }
-
-        // Closest snap point (open vs closed)
-        const distToClosed = Math.abs(current - 0);
-        const distToOpen = Math.abs(current - targetOpen);
-        const target = distToClosed <= distToOpen ? 0 : targetOpen;
-
-        animate(swipeAmount, target, { duration, ease: "easeOut" });
-      },
-      [actions, committing, commitDelete, isOpen, swipeAmount]
-    );
-
-    const shouldStartSwipe = (e: React.PointerEvent) => {
-      if (!disableSwipeOnDesktop) return true;
-
-      return e.pointerType === "touch" || e.pointerType === "pen";
-    };
-
-    const PrimaryIcon = committing?.icon;
-    const committingColors = committing ? getActionColors(committing) : null;
-
-    return (
-      <div
-        className="cursor-default"
-        role="row"
-        tabIndex={disableSwipeOnDesktop ? -1 : 0}
-        onKeyDown={handleKeyDown}
+  return (
+    <div
+      className="cursor-default"
+      role="row"
+      tabIndex={disableSwipeOnDesktop ? -1 : 0}
+      onKeyDown={handleKeyDown}
+    >
+      <motion.div
+        ref={swipeContainerRef}
+        className="relative w-full overflow-hidden rounded-md"
+        style={{
+          height: rowHeight ? rowHeight : "auto",
+          touchAction: "pan-y",
+        }}
       >
-        <motion.div
-          ref={swipeContainerRef}
-          className="relative w-full overflow-hidden rounded-md"
-          style={{
-            height: rowHeight ? rowHeight : "auto",
-            touchAction: "pan-y",
-          }}
-        >
-          {/* Commit overlay (right-anchored), icon centered */}
-          {committing && committingColors && (
-            <motion.div
-              className={`absolute right-0 z-30 ${committingColors.bg} pointer-events-none flex items-center justify-center rounded-full`}
-              style={{
-                width: overlayWidth,
-                height: buttonSize.current,
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            >
-              {PrimaryIcon ? (
-                <PrimaryIcon className={`h-5 w-5 opacity-90 ${committingColors.text}`} />
-              ) : null}
-            </motion.div>
-          )}
-
-          {/* Actions behind: dynamic width */}
-          <ActionsGroup
-            actions={actions}
-            actionsWidth={actionsWidthPx.current}
-            buttonSize={buttonSize.current}
-            closeRow={closeRow}
-            commitDelete={commitDelete}
-            focusedIndex={focusedActionIndex}
-            isOpen={isOpen}
-            stacked={stacked}
-            swipeAmount={swipeAmount}
-            swipeProgress={swipeProgress}
-          />
-
-          {/* Foreground row content */}
+        {/* Commit overlay (right-anchored), icon centered */}
+        {committing && committingColors && (
           <motion.div
-            ref={swipeItemRef}
-            className="relative z-20 h-full w-full"
-            drag="x"
-            dragConstraints={dragConstraints}
-            dragControls={dragControls}
-            dragDirectionLock={true}
-            dragElastic={0.05}
-            dragListener={false}
-            dragMomentum={false}
-            style={{ x: swipeAmount, touchAction: "pan-y" }}
-            onClick={() => {
-              if (isOpen) closeRow();
-            }}
-            onDragEnd={handleDragEnd}
-            onPointerDown={(e) => {
-              if (!shouldStartSwipe(e) || committing) return;
-              dragControls.start(e);
+            className={`absolute right-0 z-30 ${committingColors.bg} pointer-events-none flex items-center justify-center rounded-full`}
+            style={{
+              width: overlayWidth,
+              height: buttonSize,
+              top: "50%",
+              transform: "translateY(-50%)",
             }}
           >
-            {children}
+            {PrimaryIcon ? (
+              <PrimaryIcon className={`h-5 w-5 opacity-90 ${committingColors.text}`} />
+            ) : null}
           </motion.div>
+        )}
+
+        {/* Actions behind: dynamic width */}
+        <ActionsGroup
+          actions={actions}
+          actionsWidth={actionsWidth}
+          buttonSize={buttonSize}
+          closeRow={closeRow}
+          commitDelete={commitDelete}
+          focusedIndex={focusedActionIndex}
+          isOpen={isOpen}
+          stacked={stacked}
+          swipeAmount={swipeAmount}
+          swipeProgress={swipeProgress}
+        />
+
+        {/* Foreground row content */}
+        <motion.div
+          ref={swipeItemRef}
+          className="relative z-20 h-full w-full"
+          drag="x"
+          dragConstraints={dragConstraints}
+          dragControls={dragControls}
+          dragDirectionLock={true}
+          dragElastic={0.05}
+          dragListener={false}
+          dragMomentum={false}
+          style={{ x: swipeAmount, touchAction: "pan-y" }}
+          onClick={() => {
+            if (isOpen) closeRow();
+          }}
+          onDragEnd={handleDragEnd}
+          onPointerDown={(e) => {
+            if (!shouldStartSwipe(e) || committing) return;
+            dragControls.start(e);
+          }}
+        >
+          {children}
         </motion.div>
-      </div>
-    );
-  }
-);
-
-SwipeableRow.displayName = "SwipeableRow";
-
-export default SwipeableRow;
+      </motion.div>
+    </div>
+  );
+}
 
 // ==== Actions (1-3 buttons) ====
 

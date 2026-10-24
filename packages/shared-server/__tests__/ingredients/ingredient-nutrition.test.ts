@@ -6,14 +6,17 @@
  * the lenders that never lend and the household's own corrections.
  */
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import type { NutritionCodes } from "@norish/db/schema";
 import type { SourceTable } from "@norish/shared-server/ingredients/nutrition/source-table";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getRecipeFull } from "@norish/db";
-import { saveNutritionCorrection } from "@norish/db/repositories/ingredient-nutrition";
+import {
+  saveNutritionCorrection,
+  saveNutritionEstimate,
+} from "@norish/db/repositories/ingredient-nutrition";
 import {
   applyIngredientSeed,
   listSeededIngredientIds,
@@ -22,7 +25,7 @@ import {
   clearRecipeNutritionEstimate,
   saveRecipeNutritionEstimate,
 } from "@norish/db/repositories/recipe-enrichment";
-import { serverConfig } from "@norish/db/schema";
+import { ingredients, serverConfig } from "@norish/db/schema";
 import { setParent } from "@norish/shared-server/ingredients/catalogue";
 import {
   applySourceTable,
@@ -35,6 +38,12 @@ import {
   searchDatasetFoods,
 } from "@norish/shared-server/ingredients/nutrition/corrections";
 import {
+  fillNutritionGaps,
+  listFillGapsFoods,
+  listFoodsWithGaps,
+} from "@norish/shared-server/ingredients/nutrition/fill-gaps";
+import {
+  findNutritionGaps,
   NO_HOUSEHOLD,
   resolveIngredientNutrition,
 } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
@@ -44,6 +53,10 @@ import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { createTestUser, getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
+
+const estimator = vi.hoisted(() => ({ estimateFoodFacts: vi.fn() }));
+
+vi.mock("@norish/shared-server/ai/enrichment/ingredient-nutrition-estimator", () => estimator);
 
 const TABLE: SourceTable = {
   version: "test-1",
@@ -586,6 +599,214 @@ describe("Ingredient Nutrition", () => {
 
       await expect(clearRecipeNutritionEstimate(recipeId)).resolves.toBe(true);
       expect((await getRecipeFull(recipeId))?.nutritionEstimate).toBeNull();
+    });
+  });
+
+  describe("AI's estimate (Fill Gaps)", () => {
+    const NO_CORRECTION = {
+      numbersFood: null,
+      kcal: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      pieceWeightFood: null,
+      pieceWeight: null,
+      densityFood: null,
+      density: null,
+    };
+    const numbers = (kcal: number) => ({ kcal, fat: 1, carbs: 2, protein: 3 });
+
+    beforeEach(() => {
+      estimator.estimateFoodFacts.mockReset();
+    });
+
+    it("ranks below a correction, the fixes and the datasets, and above what a parent lends", async () => {
+      await saveNutritionEstimate(id("en:onion"), { ...numbers(99), pieceWeight: 99, density: 9 });
+      await saveNutritionEstimate(id("en:milk"), numbers(99));
+      await saveNutritionEstimate(id("en:red-onion"), { ...numbers(77), pieceWeight: 120 });
+
+      expect(await read("en:onion")).toMatchObject({
+        numbers: { value: { kcal: 35 }, source: { kind: "code" } },
+        pieceWeight: { value: 150, source: { kind: "taxonomy" } },
+        density: { value: 0.67, source: { kind: "code" } },
+      });
+      expect((await read("en:milk")).numbers).toMatchObject({ source: { kind: "fix" } });
+      expect(await read("en:red-onion")).toMatchObject({
+        numbers: { value: { kcal: 77 }, source: { kind: "ai" }, borrowedFrom: null },
+        pieceWeight: { value: 120, source: { kind: "ai" }, borrowedFrom: null },
+      });
+      // A child borrows it like any fact of the parent's own.
+      expect((await read("en:pickled-red-onion")).numbers).toMatchObject({
+        source: { kind: "ai" },
+        borrowedFrom: { id: id("en:red-onion") },
+      });
+
+      await saveNutritionCorrection(householdA[0]!, id("en:red-onion"), {
+        ...NO_CORRECTION,
+        ...numbers(50),
+      });
+      expect((await read("en:red-onion", householdA)).numbers).toMatchObject({
+        value: { kcal: 50 },
+        source: { kind: "household" },
+      });
+      expect((await read("en:red-onion", householdB)).numbers).toMatchObject({
+        source: { kind: "ai" },
+      });
+    });
+
+    it("leaves a food AI says is not counted in pieces without a piece weight, borrowing none", async () => {
+      await saveNutritionEstimate(id("en:red-onion"), { pieceWeight: null, pieceless: true });
+
+      await expect(read("en:red-onion")).resolves.toMatchObject({ pieceWeight: null });
+    });
+
+    it("makes a recipe's total estimated", async () => {
+      await saveNutritionEstimate(id("en:brandy"), { ...numbers(230), density: 0.95 });
+
+      const worked = await workOutRecipeNutrition(
+        {
+          servings: 1,
+          systemUsed: "metric",
+          calories: null,
+          fat: null,
+          carbs: null,
+          protein: null,
+          recipeIngredients: [
+            {
+              id: "a",
+              ingredientName: "brandy",
+              ingredientId: id("en:brandy"),
+              amount: 50,
+              unit: "milliliter",
+              systemUsed: "metric",
+            },
+          ],
+        },
+        NO_HOUSEHOLD
+      );
+
+      expect(worked).toMatchObject({ estimated: true, credits: [], household: false });
+    });
+
+    it("finds a gap where nothing of the food's own, nor any household's correction, gives the fact", async () => {
+      const gaps = await findNutritionGaps([
+        id("en:onion"),
+        id("en:red-onion"),
+        id("en:lemon-zest"),
+        id("en:brandy"),
+      ]);
+
+      expect(gaps.get(id("en:onion"))).toEqual({
+        numbers: false,
+        pieceWeight: false,
+        density: false,
+      });
+      // What a parent lends is no fact of its own.
+      expect(gaps.get(id("en:red-onion"))).toEqual({
+        numbers: true,
+        pieceWeight: true,
+        density: true,
+      });
+      // Norish's piece fix says a zest is no piece.
+      expect(gaps.get(id("en:lemon-zest"))).toMatchObject({ pieceWeight: false });
+
+      await saveNutritionCorrection(householdB[0]!, id("en:red-onion"), {
+        ...NO_CORRECTION,
+        density: 0.9,
+      });
+      await saveNutritionEstimate(id("en:brandy"), numbers(230));
+
+      const after = await findNutritionGaps([id("en:red-onion"), id("en:brandy")]);
+
+      expect(after.get(id("en:red-onion"))).toMatchObject({ numbers: true, density: false });
+      expect(after.get(id("en:brandy"))).toMatchObject({ numbers: false, density: true });
+    });
+
+    it("never asks AI about a fact a dataset gives", async () => {
+      await expect(
+        fillNutritionGaps(id("en:onion"), { nutrition: true, conversions: true })
+      ).resolves.toEqual({ outcome: "skipped", reason: "no-gaps" });
+      expect(estimator.estimateFoodFacts).not.toHaveBeenCalled();
+    });
+
+    it("asks only for the gaps the options cover, with what the food is a kind of", async () => {
+      estimator.estimateFoodFacts.mockResolvedValueOnce({ numbers: numbers(42) });
+
+      await expect(
+        fillNutritionGaps(id("en:red-onion"), { nutrition: true, conversions: false })
+      ).resolves.toEqual({ outcome: "filled", facts: ["numbers"] });
+      expect(estimator.estimateFoodFacts).toHaveBeenCalledExactlyOnceWith(
+        { name: "red onion", kindOf: ["onion", "vegetable"] },
+        { numbers: true, pieceWeight: false, density: false }
+      );
+      expect(await read("en:red-onion")).toMatchObject({
+        numbers: { value: { kcal: 42 }, source: { kind: "ai" } },
+        pieceWeight: { borrowedFrom: { id: id("en:onion") } },
+      });
+
+      estimator.estimateFoodFacts.mockResolvedValueOnce({ pieceWeight: null, density: 1.1 });
+      await expect(
+        fillNutritionGaps(id("en:red-onion"), { nutrition: true, conversions: true })
+      ).resolves.toEqual({ outcome: "filled", facts: ["pieceWeight", "density"] });
+      expect(estimator.estimateFoodFacts).toHaveBeenLastCalledWith(expect.anything(), {
+        numbers: false,
+        pieceWeight: true,
+        density: true,
+      });
+      expect(await read("en:red-onion")).toMatchObject({
+        numbers: { value: { kcal: 42 } },
+        pieceWeight: null,
+        density: { value: 1.1, source: { kind: "ai" } },
+      });
+      // Nothing is left to ask.
+      await expect(
+        fillNutritionGaps(id("en:red-onion"), { nutrition: true, conversions: true })
+      ).resolves.toEqual({ outcome: "skipped", reason: "no-gaps" });
+    });
+
+    it("lists the listed foods with a gap the options cover, never a grocery food", async () => {
+      const [grocery] = await getTestDb()
+        .insert(ingredients)
+        .values({ name: "tuna in a tin", ownerId: householdA[0]! })
+        .returning({ id: ingredients.id });
+      const ids = [id("en:onion"), id("en:red-onion"), grocery!.id];
+
+      await expect(listFoodsWithGaps(ids, { nutrition: true, conversions: true })).resolves.toEqual(
+        [{ id: id("en:red-onion"), name: "red onion" }]
+      );
+      await expect(
+        listFoodsWithGaps([id("en:lemon-zest")], { nutrition: false, conversions: true })
+      ).resolves.toEqual([{ id: id("en:lemon-zest"), name: "lemon zest" }]);
+      await expect(
+        listFoodsWithGaps(ids, { nutrition: false, conversions: false })
+      ).resolves.toEqual([]);
+    });
+
+    it("counts Fill gaps over every listed food, seeded ones included, never a grocery food", async () => {
+      await getTestDb()
+        .insert(ingredients)
+        .values({ name: "tuna in a tin", ownerId: householdA[0]! });
+      await saveNutritionEstimate(id("en:pickled-red-onion"), numbers(40));
+      const set = {
+        icons: { "en:onion": "0123456789abcdef0123456789abcdef.webp" },
+        none: ["en:vegetable"],
+      };
+      const foods = await listFillGapsFoods(set);
+      const names = (kind: keyof typeof foods) => foods[kind].map((food) => food.name);
+
+      // A dataset's numbers and AI's earlier estimate close the gap; a parent's lending does not.
+      expect(names("nutrition")).toContain("red onion");
+      expect(names("nutrition")).not.toContain("onion");
+      expect(names("nutrition")).not.toContain("pickled red onion");
+      expect(names("conversions")).toContain("lemon zest");
+      expect(names("conversions")).not.toContain("onion");
+      // A red onion shows the onion's icon, and a vague group stays without one.
+      expect(names("icons")).toContain("brandy");
+      expect(names("icons")).not.toContain("red onion");
+      expect(names("icons")).not.toContain("vegetable");
+      for (const kind of ["nutrition", "conversions", "icons"] as const) {
+        expect(names(kind)).not.toContain("tuna in a tin");
+      }
     });
   });
 

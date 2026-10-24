@@ -36,8 +36,10 @@
       "lightly"
     ],
     "joiners": ["and"],
+    "together": ["and", "&"],
+    "alternatives": ["or", "and/or"],
     "connectors": ["of"],
-    "servedWith": ["in", "with"],
+    "endsBefore": ["in", "with", "for", "to", "circa", "ca", "per"],
     "notFoods": [
       "a",
       "an",
@@ -67,6 +69,31 @@
       "~"
     ],
     "sizes": ["large", "medium", "small", "big"],
+    "forms": [
+      "bits",
+      "chunks",
+      "cube",
+      "cubes",
+      "curls",
+      "filet",
+      "filets",
+      "fillet",
+      "fillets",
+      "fries",
+      "loaf",
+      "loins",
+      "mince",
+      "pearls",
+      "pieces",
+      "sheets",
+      "slices",
+      "spears",
+      "stick",
+      "sticks",
+      "strips",
+      "wedges",
+      "zest"
+    ],
     "inflections": [
       ["ies", "y"],
       ["oes", "o"],
@@ -115,11 +142,46 @@
       "dun"
     ],
     "joiners": ["en"],
+    "together": ["en", "&"],
+    "alternatives": ["of", "en/of"],
     "connectors": ["van"],
-    "servedWith": ["in", "met"],
+    "endsBefore": [
+      "in",
+      "met",
+      "voor",
+      "naar",
+      "uit",
+      "om",
+      "circa",
+      "ca",
+      "bijv",
+      "bv",
+      "op",
+      "per"
+    ],
     "notFoods": ["en", "een", "de", "het", "van", "voor", "meer", "wat", "ca", "of"],
     "approximately": ["ongeveer", "ong.", "circa", "ca.", "plm.", "zo'n"],
     "sizes": ["groot", "grote", "middelgroot", "middelgrote", "klein", "kleine"],
+    "forms": [
+      "blokjes",
+      "blokken",
+      "bolletjes",
+      "boontjes",
+      "broodjes",
+      "filet",
+      "filets",
+      "friet",
+      "gehakt",
+      "hapjes",
+      "partjes",
+      "peulen",
+      "plakjes",
+      "reepjes",
+      "roosjes",
+      "stukjes",
+      "stukken",
+      "vellen"
+    ],
     "inflections": [
       ["tjes", ""],
       ["pjes", ""],
@@ -161,8 +223,23 @@
       "dünn"
     ],
     "joiners": ["und"],
+    "together": ["und", "&"],
+    "alternatives": ["oder", "und/oder"],
     "connectors": ["von"],
-    "servedWith": ["in", "mit"],
+    "endsBefore": [
+      "in",
+      "mit",
+      "für",
+      "zum",
+      "zur",
+      "nach",
+      "aus",
+      "ca",
+      "circa",
+      "etwa",
+      "je",
+      "pro"
+    ],
     "notFoods": [
       "und",
       "oder",
@@ -180,6 +257,20 @@
     ],
     "approximately": ["etwa", "ca.", "circa", "ungefähr", "rund"],
     "sizes": ["groß", "große", "mittelgroß", "mittelgroße", "klein", "kleine"],
+    "forms": [
+      "Würfel",
+      "Würfelchen",
+      "Streifen",
+      "Scheiben",
+      "Stücke",
+      "Stückchen",
+      "Filet",
+      "Filets",
+      "Hack",
+      "Spalten",
+      "Röschen",
+      "Stangen"
+    ],
     "inflections": [
       ["chen", ""],
       ["lein", ""],
@@ -245,8 +336,10 @@
       "grossièrement"
     ],
     "joiners": ["et"],
+    "together": ["et", "&"],
+    "alternatives": ["ou", "et/ou"],
     "connectors": ["de", "d", "du", "des"],
-    "servedWith": ["dans", "avec", "au", "aux"],
+    "endsBefore": ["dans", "avec", "au", "aux", "pour", "selon", "environ", "par"],
     "notFoods": [
       "et",
       "ou",
@@ -264,6 +357,16 @@
     ],
     "approximately": ["environ", "env.", "ca."],
     "sizes": ["gros", "grosse", "grand", "grande", "moyen", "moyenne", "petit", "petite"],
+    "forms": [
+      "filet",
+      "filets",
+      "cubes",
+      "lamelles",
+      "tranches",
+      "morceaux",
+      "bâtonnets",
+      "quartiers"
+    ],
     "inflections": [
       ["aux", "al"],
       ["x", ""],
@@ -308,8 +411,10 @@
       "finamente"
     ],
     "joiners": ["y"],
+    "together": ["y", "&"],
+    "alternatives": ["o", "u", "y/o"],
     "connectors": ["de", "del"],
-    "servedWith": ["en", "con"],
+    "endsBefore": ["en", "con", "para", "por", "aprox"],
     "notFoods": [
       "y",
       "o",
@@ -327,6 +432,18 @@
     ],
     "approximately": ["aproximadamente", "aprox.", "unos", "unas", "ca."],
     "sizes": ["grande", "grandes", "mediano", "mediana", "pequeño", "pequeña"],
+    "forms": [
+      "tiras",
+      "dados",
+      "cubos",
+      "filete",
+      "filetes",
+      "rodajas",
+      "trozos",
+      "láminas",
+      "gajos",
+      "bastones"
+    ],
     "inflections": [
       ["ces", "z"],
       ["es", ""],
@@ -368,8 +485,10 @@
       "finemente"
     ],
     "joiners": ["e"],
+    "together": ["e", "ed", "&"],
+    "alternatives": ["o", "oppure", "e/o"],
     "connectors": ["di", "del", "della", "dello", "dei", "degli", "delle"],
-    "servedWith": ["in", "con"],
+    "endsBefore": ["in", "con", "per", "circa"],
     "notFoods": [
       "e",
       "o",
@@ -389,6 +508,20 @@
     ],
     "approximately": ["circa", "ca."],
     "sizes": ["grande", "grandi", "medio", "media", "piccolo", "piccola"],
+    "forms": [
+      "cubetti",
+      "dadini",
+      "fette",
+      "fettine",
+      "filetto",
+      "filetti",
+      "pezzi",
+      "pezzetti",
+      "listarelle",
+      "striscioline",
+      "spicchi",
+      "bastoncini"
+    ],
     "inflections": [
       ["ghi", "go"],
       ["chi", "co"],
@@ -430,11 +563,26 @@
       "finamente"
     ],
     "joiners": ["e"],
+    "together": ["e", "&"],
+    "alternatives": ["ou", "e/ou"],
     "connectors": ["de", "do", "da", "dos", "das"],
-    "servedWith": ["em", "com"],
+    "endsBefore": ["em", "com", "para", "por", "cerca"],
     "notFoods": ["e", "ou", "um", "uma", "o", "a", "os", "as", "de", "do", "da", "para", "com"],
     "approximately": ["aproximadamente", "aprox.", "cerca", "ca."],
     "sizes": ["grande", "grandes", "médio", "média", "pequeno", "pequena"],
+    "forms": [
+      "cubos",
+      "tiras",
+      "fatias",
+      "filé",
+      "filés",
+      "filete",
+      "filetes",
+      "pedaços",
+      "rodelas",
+      "gomos",
+      "palitos"
+    ],
     "inflections": [
       ["ões", "ão"],
       ["ães", "ão"],
@@ -457,11 +605,14 @@
       "fint"
     ],
     "joiners": ["og"],
+    "together": ["og", "&"],
+    "alternatives": ["eller", "og/eller"],
     "connectors": ["af"],
-    "servedWith": ["i", "med"],
+    "endsBefore": ["i", "med", "til", "ca", "pr"],
     "notFoods": ["og", "eller", "en", "et", "til", "med", "mere"],
     "approximately": ["ca.", "cirka", "omkring"],
     "sizes": ["stor", "store", "mellemstor", "mellemstore", "lille", "små"],
+    "forms": ["strimler", "tern", "skiver", "stykker", "filet", "fileter", "stave"],
     "inflections": [
       ["erne", ""],
       ["ene", ""],
@@ -484,11 +635,14 @@
       "fint"
     ],
     "joiners": ["og"],
+    "together": ["og", "&"],
+    "alternatives": ["eller", "og/eller"],
     "connectors": ["av"],
-    "servedWith": ["i", "med"],
+    "endsBefore": ["i", "med", "til", "ca", "pr"],
     "notFoods": ["og", "eller", "en", "et", "til", "med", "mer"],
     "approximately": ["ca.", "cirka", "omtrent"],
     "sizes": ["stor", "store", "middels", "liten", "lite", "små"],
+    "forms": ["strimler", "terninger", "skiver", "biter", "filet", "fileter", "båter", "staver"],
     "inflections": [
       ["ene", ""],
       ["er", ""],
@@ -511,11 +665,14 @@
       "karkeasti"
     ],
     "joiners": ["ja"],
+    "together": ["ja", "&"],
+    "alternatives": ["tai", "ja/tai"],
     "connectors": [],
-    "servedWith": [],
+    "endsBefore": ["noin", "esim"],
     "notFoods": ["ja", "tai"],
     "approximately": ["noin", "n."],
     "sizes": ["iso", "suuri", "keskikokoinen", "pieni"],
+    "forms": ["suikaleet", "kuutiot", "viipaleet", "palat", "filee", "fileet", "lohkot"],
     "inflections": [["t", ""]]
   },
   "pl": {
@@ -545,11 +702,14 @@
       "grubo"
     ],
     "joiners": ["i"],
+    "together": ["i", "oraz", "&"],
+    "alternatives": ["lub", "albo"],
     "connectors": [],
-    "servedWith": ["w", "z"],
+    "endsBefore": ["w", "z", "do", "dla", "około", "ok"],
     "notFoods": ["i", "lub", "z", "na", "do", "w"],
     "approximately": ["około", "ok."],
     "sizes": ["duży", "duża", "duże", "średni", "średnia", "średnie", "mały", "mała", "małe"],
+    "forms": ["kostki", "plastry", "plasterki", "paski", "kawałki", "filet", "filety", "ćwiartki"],
     "inflections": [
       ["ki", "ka"],
       ["e", "a"],
@@ -585,8 +745,10 @@
       "крупно"
     ],
     "joiners": ["и"],
+    "together": ["и", "&"],
+    "alternatives": ["или", "либо"],
     "connectors": [],
-    "servedWith": ["в", "с"],
+    "endsBefore": ["в", "с", "для", "около", "по"],
     "notFoods": ["и", "или", "с", "на", "для", "в"],
     "approximately": ["около", "примерно"],
     "sizes": [
@@ -602,6 +764,7 @@
       "крупный",
       "крупная"
     ],
+    "forms": ["кубики", "ломтики", "полоски", "кусочки", "филе", "дольки", "фарш"],
     "inflections": [
       ["ы", ""],
       ["ы", "а"],
@@ -632,11 +795,14 @@
       "едро"
     ],
     "joiners": ["и"],
+    "together": ["и", "&"],
+    "alternatives": ["или"],
     "connectors": [],
-    "servedWith": ["в", "с"],
+    "endsBefore": ["в", "с", "за", "около", "по"],
     "notFoods": ["и", "или", "с", "за", "в"],
     "approximately": ["около", "приблизително"],
     "sizes": ["голям", "голяма", "голямо", "среден", "средна", "средно", "малък", "малка", "малко"],
+    "forms": ["кубчета", "филе", "филета", "резени", "ленти", "парчета", "кайма"],
     "inflections": [
       ["ове", ""],
       ["и", "а"],
@@ -646,11 +812,14 @@
   "ko": {
     "preparation": ["채썬", "썬", "깐", "녹인", "으깬"],
     "joiners": [],
+    "together": ["및", "&"],
+    "alternatives": ["또는", "혹은"],
     "connectors": [],
-    "servedWith": [],
+    "endsBefore": [],
     "notFoods": [],
     "approximately": ["약"],
     "sizes": ["큰", "중간", "작은"],
+    "forms": ["슬라이스", "큐브", "조각"],
     "inflections": []
   },
   "uk": {
@@ -703,8 +872,10 @@
       "скибочками"
     ],
     "joiners": ["і", "й", "та"],
+    "together": ["і", "й", "та", "&"],
+    "alternatives": ["або", "чи"],
     "connectors": [],
-    "servedWith": ["з", "із", "зі", "в", "у"],
+    "endsBefore": ["з", "із", "зі", "в", "у", "для", "близько", "по"],
     "notFoods": [
       "і",
       "й",
@@ -742,6 +913,7 @@
       "невелике",
       "невеликі"
     ],
+    "forms": ["кубики", "скибочки", "смужки", "шматочки", "філе", "часточки", "фарш"],
     "inflections": [
       ["ці", "ець"],
       ["ки", "ок"],

@@ -51,7 +51,6 @@ describe("CalendarContext", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
   });
 

@@ -1,15 +1,7 @@
-import type { CalendarData } from "@/hooks/calendar/use-calendar-query";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { vi } from "vitest";
-
-import type {
-  CalendarItemViewDto,
-  NoteViewDto,
-  PlannedRecipeViewDto,
-  Slot,
-} from "@norish/shared/contracts";
 
 /**
  * Create a test QueryClient with optimized settings for tests
@@ -117,108 +109,12 @@ export function createTestWrapper(queryClient: QueryClient) {
  */
 export function renderHookWithProviders<TResult>(
   hook: () => TResult,
-  options?: {
-    queryClient?: QueryClient;
-    initialRecipes?: PlannedRecipeViewDto[];
-    initialNotes?: NoteViewDto[];
-  }
+  options?: { queryClient?: QueryClient }
 ) {
   const queryClient = options?.queryClient ?? createTestQueryClient();
-
-  if (options?.initialRecipes) {
-    queryClient.setQueryData(["calendar", "listRecipes"], options.initialRecipes);
-  }
-  if (options?.initialNotes) {
-    queryClient.setQueryData(["calendar", "listNotes"], options.initialNotes);
-  }
 
   return {
     ...renderHook(hook, { wrapper: createTestWrapper(queryClient) }),
     queryClient,
   };
-}
-
-/**
- * Create mock planned recipe for testing
- */
-export function createMockPlannedRecipe(
-  overrides: Partial<PlannedRecipeViewDto> = {}
-): PlannedRecipeViewDto {
-  return {
-    id: `pr-${Math.random().toString(36).slice(2)}`,
-    recipeId: "recipe-123",
-    recipeName: "Test Recipe",
-    recipeImage: null,
-    servings: 1,
-    calories: 100,
-    date: "2025-01-15",
-    slot: "Breakfast" as Slot,
-    ...overrides,
-  };
-}
-
-/**
- * Create mock note for testing
- */
-export function createMockNote(overrides: Partial<NoteViewDto> = {}): NoteViewDto {
-  return {
-    id: `note-${Math.random().toString(36).slice(2)}`,
-    title: "Test Note",
-    date: "2025-01-15",
-    slot: "Lunch" as Slot,
-    recipeId: null,
-    ...overrides,
-  };
-}
-
-/**
- * Create mock calendar item (recipe type)
- */
-export function createMockRecipeItem(
-  overrides: Partial<CalendarItemViewDto & { itemType: "recipe" }> = {}
-): CalendarItemViewDto {
-  return {
-    itemType: "recipe",
-    id: `pr-${Math.random().toString(36).slice(2)}`,
-    recipeId: "recipe-123",
-    recipeName: "Test Recipe",
-    recipeImage: null,
-    servings: 1,
-    calories: 100,
-    date: "2025-01-15",
-    slot: "Breakfast" as Slot,
-    ...overrides,
-  } as CalendarItemViewDto;
-}
-
-/**
- * Create mock calendar item (note type)
- */
-export function createMockNoteItem(
-  overrides: Partial<CalendarItemViewDto & { itemType: "note" }> = {}
-): CalendarItemViewDto {
-  return {
-    itemType: "note",
-    id: `note-${Math.random().toString(36).slice(2)}`,
-    title: "Test Note",
-    date: "2025-01-15",
-    slot: "Lunch" as Slot,
-    recipeId: null,
-    ...overrides,
-  } as CalendarItemViewDto;
-}
-
-/**
- * Create mock calendar data (date-grouped)
- */
-export function createMockCalendarData(
-  items: { date: string; items: CalendarItemViewDto[] }[] = []
-): CalendarData {
-  const data: CalendarData = {};
-
-  for (const { date, items: dateItems } of items) {
-    data[date] = dateItems;
-  }
-
-  return data;
 }

@@ -20,10 +20,10 @@ type DriftProps = {
  * dozen drawings in it still costs a single measurement per frame.
  */
 export function Drift({ children, className }: DriftProps) {
-  const block = useRef<HTMLDivElement>(null);
+  const blockRef = useRef<HTMLDivElement>(null);
 
   useScrollFrame(() => {
-    const node = block.current;
+    const node = blockRef.current;
 
     if (!node) return;
 
@@ -34,7 +34,7 @@ export function Drift({ children, className }: DriftProps) {
   });
 
   return (
-    <div ref={block} className={className}>
+    <div ref={blockRef} className={className}>
       {children}
     </div>
   );

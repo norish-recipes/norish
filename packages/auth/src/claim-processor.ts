@@ -11,52 +11,52 @@ import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/ho
 import { authLogger } from "@norish/shared-server/logger";
 import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
 import { households } from "@norish/shared-server/realtime/households";
-import { getPublisherClient } from "@norish/shared-server/redis/client";
+import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
-// Redis key prefix and TTL for OIDC profiles during auth flow
+// Valkey key prefix and TTL for OIDC profiles during auth flow
 const OIDC_PROFILE_PREFIX = "oidc:profile:";
 const OIDC_PROFILE_TTL = 300; // 5 minutes
 
 /**
- * Store OIDC profile in Redis for claim processing after account creation.
+ * Store OIDC profile in Valkey for claim processing after account creation.
  */
 export async function storeOIDCProfile(
   accountId: string,
   profile: Record<string, unknown>
 ): Promise<void> {
   try {
-    const redis = await getPublisherClient();
+    const valkey = await getPublisherClient();
 
-    await redis.setex(
+    await valkey.setex(
       `${OIDC_PROFILE_PREFIX}${accountId}`,
       OIDC_PROFILE_TTL,
       JSON.stringify(profile)
     );
   } catch (error) {
-    authLogger.error({ error, accountId }, "Failed to store OIDC profile in Redis");
+    authLogger.error({ error, accountId }, "Failed to store OIDC profile in Valkey");
   }
 }
 
 /**
- * Retrieve and delete OIDC profile from Redis.
+ * Retrieve and delete OIDC profile from Valkey.
  */
 export async function getPendingOIDCProfile(
   accountId: string
 ): Promise<Record<string, unknown> | null> {
   try {
-    const redis = await getPublisherClient();
+    const valkey = await getPublisherClient();
     const key = `${OIDC_PROFILE_PREFIX}${accountId}`;
-    const data = await redis.get(key);
+    const data = await valkey.get(key);
 
     if (data) {
-      await redis.del(key); // Clean up after retrieval
+      await valkey.del(key); // Clean up after retrieval
 
       return JSON.parse(data);
     }
 
     return null;
   } catch (error) {
-    authLogger.error({ error, accountId }, "Failed to retrieve OIDC profile from Redis");
+    authLogger.error({ error, accountId }, "Failed to retrieve OIDC profile from Valkey");
 
     return null;
   }
@@ -221,7 +221,7 @@ export function parseOIDCClaims(
     .filter((g) => g.toLowerCase().startsWith(prefixLower))
     .map((g) => g.slice(cfg.householdPrefix.length))
     .filter((name) => name.length > 0)
-    .sort(); // Alphabetical for deterministic "first wins"
+    .sort((a, b) => a.localeCompare(b, "en")); // Alphabetical, case aside, for deterministic "first wins"
 
   const householdName = householdGroups[0] ?? null;
 

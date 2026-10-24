@@ -2,7 +2,7 @@
 
 import type { StepIngredientDraft } from "@/components/recipes/step-ingredient-chips";
 import type { SmartTextInputIngredientSuggestion } from "@/components/shared/smart-text-input";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { StepIngredientChips } from "@/components/recipes/step-ingredient-chips";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import { useRecipeImages } from "@/hooks/recipes";
@@ -12,6 +12,7 @@ import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { MeasurementSystem } from "@norish/shared/contracts";
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 
 export interface StepImage {
@@ -72,6 +73,22 @@ function createStepItem(
     version,
   };
 }
+// The editor's rows for the given steps, plus the empty row to type into.
+function seedStepItems(steps: Step[]): StepItem[] {
+  return [
+    ...steps.map((s) =>
+      createStepItem(
+        s.step,
+        s.images || [],
+        s.version,
+        [...(s.stepIngredients ?? [])]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((ref) => ({ ingredientOrder: ref.ingredientOrder, share: ref.share }))
+      )
+    ),
+    createStepItem("", []),
+  ];
+}
 export default function StepInput({
   steps,
   onChange,
@@ -80,15 +97,16 @@ export default function StepInput({
   ingredients = [],
 }: StepInputProps) {
   const t = useTranslations("recipes.stepInput");
-  const [items, setItems] = useState<StepItem[]>([createStepItem("", [])]);
+  const [items, setItems] = useState<StepItem[]>(() => seedStepItems(steps));
+  const [seededLength, setSeededLength] = useState(steps.length);
   // A freshly mentioned line whose chip should ask for its amount: the row
   // it landed on, and the line's order for the chips to open once rendered.
   const [pendingMentionEntry, setPendingMentionEntry] = useState<{
     index: number;
     order: number;
   } | null>(null);
-  const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const textareasRef = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const fileInputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const dragConstraintsRef = useRef<HTMLUListElement>(null);
   const { uploadStepImage, deleteStepImage } = useRecipeImages();
@@ -110,30 +128,22 @@ export default function StepInput({
     [chipLines]
   );
 
-  // Initialize from steps prop
-  useEffect(() => {
+  // Seeds the editor once when the steps load; a later change to them must not
+  // overwrite what is being typed.
+  if (steps.length !== seededLength) {
+    setSeededLength(steps.length);
+    const first = items[0];
+
     if (
+      first &&
       steps.length > 0 &&
       items.length === 1 &&
-      items[0].text === "" &&
-      items[0].images.length === 0
+      first.text === "" &&
+      first.images.length === 0
     ) {
-      setItems([
-        ...steps.map((s) =>
-          createStepItem(
-            s.step,
-            s.images || [],
-            s.version,
-            [...(s.stepIngredients ?? [])]
-              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-              .map((ref) => ({ ingredientOrder: ref.ingredientOrder, share: ref.share }))
-          )
-        ),
-        createStepItem("", []),
-      ]);
+      setItems(seedStepItems(steps));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [steps.length]);
+  }
   const emitChanges = useCallback(
     (updatedItems: StepItem[]) => {
       const parsed = updatedItems
@@ -157,10 +167,13 @@ export default function StepInput({
   );
   const handleStepIngredientsChange = useCallback(
     (index: number, refs: StepIngredientDraft[]) => {
+      const current = items[index];
+
+      if (!current) return;
       const updated = [...items];
 
       updated[index] = {
-        ...updated[index],
+        ...current,
         stepIngredients: refs,
       };
       setItems(updated);
@@ -172,8 +185,10 @@ export default function StepInput({
     (index: number, suggestion: SmartTextInputIngredientSuggestion, newText: string): boolean => {
       // One update for both halves of the gesture: the plain word lands in
       // the sentence and the chip attaches beneath it, at the full share.
+      const target = items[index];
+
+      if (!target) return false;
       const updated = [...items];
-      const target = updated[index];
       const alreadyAttached = target.stepIngredients.some(
         (ref) => ref.ingredientOrder === suggestion.ingredientOrder
       );
@@ -216,10 +231,13 @@ export default function StepInput({
   );
   const handleInputChange = useCallback(
     (index: number, value: string) => {
+      const current = items[index];
+
+      if (!current) return;
       const updated = [...items];
 
       updated[index] = {
-        ...updated[index],
+        ...current,
         text: value,
       };
 
@@ -237,23 +255,23 @@ export default function StepInput({
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         if (index < items.length - 1) {
-          textareaRefs.current[index + 1]?.focus();
+          textareasRef.current[index + 1]?.focus();
         } else {
           const updated = [...items, createStepItem("", [])];
 
           setItems(updated);
           setTimeout(() => {
-            textareaRefs.current[items.length]?.focus();
+            textareasRef.current[items.length]?.focus();
           }, 0);
         }
-      } else if (e.key === "Backspace" && !items[index].text && index > 0) {
+      } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
         e.preventDefault();
         const updated = items.filter((_, i) => i !== index);
 
         setItems(updated);
         emitChanges(updated);
         setTimeout(() => {
-          textareaRefs.current[index - 1]?.focus();
+          textareasRef.current[index - 1]?.focus();
         }, 0);
       }
     },
@@ -261,12 +279,10 @@ export default function StepInput({
   );
   const handleBlur = useCallback(
     (index: number) => {
+      const item = items[index];
+
       // Auto-remove empty rows on blur (except the last one)
-      if (
-        !items[index].text.trim() &&
-        items[index].images.length === 0 &&
-        index < items.length - 1
-      ) {
+      if (item && !item.text.trim() && item.images.length === 0 && index < items.length - 1) {
         const updated = items.filter((_, i) => i !== index);
 
         if (updated.length === 0) updated.push(createStepItem("", []));
@@ -279,7 +295,7 @@ export default function StepInput({
   const handleRemove = useCallback(
     (index: number) => {
       // Delete all images for this step
-      const stepImages = items[index].images;
+      const stepImages = items[index]?.images ?? [];
 
       stepImages.forEach((img) => {
         deleteStepImage(img.image).catch((err) => {
@@ -299,32 +315,35 @@ export default function StepInput({
     async (index: number, file: File) => {
       if (!recipeId) return;
       setUploadingIndex(index);
-      try {
-        const result = await uploadStepImage(file, recipeId);
+      await uploadStepImage(file, recipeId)
+        .then((result) => {
+          const current = items[index];
 
-        if (result.success && result.url) {
-          const updated = [...items];
-          const newImage: StepImage = {
-            image: result.url,
-            order: updated[index].images.length,
-          };
+          if (result.success && result.url && current) {
+            const updated = [...items];
+            const newImage: StepImage = {
+              image: result.url,
+              order: current.images.length,
+            };
 
-          updated[index] = {
-            ...updated[index],
-            images: [...updated[index].images, newImage],
-          };
-          setItems(updated);
-          emitChanges(updated);
-        }
-      } finally {
-        setUploadingIndex(null);
-      }
+            updated[index] = {
+              ...current,
+              images: [...current.images, newImage],
+            };
+            setItems(updated);
+            emitChanges(updated);
+          }
+        })
+        .finally(() => setUploadingIndex(null));
     },
     [recipeId, items, emitChanges, uploadStepImage]
   );
   const handleRemoveImage = useCallback(
     (stepIndex: number, imageIndex: number) => {
-      const imageUrl = items[stepIndex].images[imageIndex]?.image;
+      const current = items[stepIndex];
+
+      if (!current) return;
+      const imageUrl = current.images[imageIndex]?.image;
 
       if (imageUrl) {
         deleteStepImage(imageUrl).catch((err) => {
@@ -335,8 +354,8 @@ export default function StepInput({
       const updated = [...items];
 
       updated[stepIndex] = {
-        ...updated[stepIndex],
-        images: updated[stepIndex].images
+        ...current,
+        images: current.images
           .filter((_, i) => i !== imageIndex)
           .map((img, i) => ({
             ...img,
@@ -349,7 +368,7 @@ export default function StepInput({
     [items, emitChanges, deleteStepImage]
   );
   const handleFileSelect = (index: number) => {
-    fileInputRefs.current[index]?.click();
+    fileInputsRef.current[index]?.click();
   };
   const handleReorder = useCallback(
     (newOrder: StepItem[]) => {
@@ -364,14 +383,12 @@ export default function StepInput({
 
   // Track step numbers excluding headings
   const getStepNumber = (index: number): number | null => {
-    let stepNum = 0;
+    const isHeading = (item: StepItem) => item.text.trim().startsWith("#");
+    const item = items[index];
 
-    for (let i = 0; i <= index; i++) {
-      if (!items[i].text.trim().startsWith("#")) stepNum++;
-    }
-    const isHeading = items[index].text.trim().startsWith("#");
+    if (!item || isHeading(item)) return null;
 
-    return isHeading ? null : stepNum;
+    return items.slice(0, index + 1).filter((it) => !isHeading(it)).length;
   };
 
   return (
@@ -387,11 +404,11 @@ export default function StepInput({
           key={item.id}
           autoEntryOrder={pendingMentionEntry?.index === index ? pendingMentionEntry.order : null}
           dragConstraintsRef={dragConstraintsRef}
-          fileInputRefs={fileInputRefs}
+          fileInputsRef={fileInputsRef}
           index={index}
           ingredientSuggestions={ingredientSuggestions}
           ingredients={chipLines}
-          textareaRefs={textareaRefs}
+          textareasRef={textareasRef}
           isLast={index === items.length - 1}
           item={item}
           recipeId={recipeId}
@@ -439,8 +456,8 @@ interface StepRowProps {
   showRemove: boolean;
   recipeId?: string;
   uploadingIndex: number | null;
-  fileInputRefs: React.RefObject<(HTMLInputElement | null)[]>;
-  textareaRefs: React.RefObject<(HTMLTextAreaElement | null)[]>;
+  fileInputsRef: React.RefObject<(HTMLInputElement | null)[]>;
+  textareasRef: React.RefObject<(HTMLTextAreaElement | null)[]>;
   dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
   stepPlaceholder: string;
   stepPlaceholderShort: string;
@@ -469,8 +486,8 @@ function StepRow({
   showRemove,
   recipeId,
   uploadingIndex,
-  fileInputRefs,
-  textareaRefs,
+  fileInputsRef,
+  textareasRef,
   dragConstraintsRef,
   stepPlaceholder,
   stepPlaceholderShort,
@@ -530,7 +547,7 @@ function StepRow({
         <div className="flex flex-1 flex-col gap-2">
           <SmartTextInput
             ref={(element) => {
-              textareaRefs.current[index] = element;
+              textareasRef.current[index] = element;
             }}
             ingredientSuggestions={ingredientSuggestions}
             minRows={2}
@@ -549,7 +566,7 @@ function StepRow({
               refs={item.stepIngredients}
               onAutoEntryHandled={onAutoEntryHandled}
               onChange={onStepIngredientsChange}
-              onEntryKeyboardClose={() => textareaRefs.current[index]?.focus()}
+              onEntryKeyboardClose={() => textareasRef.current[index]?.focus()}
             />
           )}
 
@@ -557,11 +574,17 @@ function StepRow({
           {item.images.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {item.images.map((img, imgIndex) => (
-                <div key={imgIndex} className="relative h-18 w-18 md:h-20 md:w-20">
+                <div
+                  // The same picture can sit here twice (uploads are named by content hash), so
+                  // only its place tells the two apart; the list keeps its stored order.
+                  // eslint-disable-next-line @eslint-react/no-array-index-key
+                  key={imgIndex}
+                  className="relative h-18 w-18 md:h-20 md:w-20"
+                >
                   <img
                     alt={`Step ${index + 1}, attachment ${imgIndex + 1}`}
                     className="h-14 w-14 rounded-lg object-cover md:h-16 md:w-16"
-                    src={img.image}
+                    src={addBasePath(img.image)}
                   />
                   <button
                     className="bg-danger hover:bg-danger/90 absolute top-0 right-0 z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-colors"
@@ -583,7 +606,7 @@ function StepRow({
             <>
               <input
                 ref={(el) => {
-                  fileInputRefs.current[index] = el;
+                  fileInputsRef.current[index] = el;
                 }}
                 accept="image/*"
                 className="hidden"

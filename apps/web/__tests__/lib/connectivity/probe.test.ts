@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 type FetchArgs = { url: string; init: RequestInit };
 
 function fakeFetch(response: { ok: boolean } | Error, capture?: FetchArgs[]) {
-  return vi.fn((url: string, init: RequestInit) => {
-    capture?.push({ url, init });
+  return vi.fn((input: RequestInfo | URL, init: RequestInit = {}) => {
+    capture?.push({ url: String(input), init });
 
     if (response instanceof Error) {
       return Promise.reject(response);
@@ -54,9 +54,9 @@ describe("probeBackendReachable", () => {
     vi.useFakeTimers();
 
     const hangingFetch = vi.fn(
-      (_url: string, init: RequestInit) =>
+      (_input: RequestInfo | URL, init?: RequestInit) =>
         new Promise<Response>((_resolve, reject) => {
-          init.signal?.addEventListener("abort", () =>
+          init?.signal?.addEventListener("abort", () =>
             reject(new DOMException("Aborted", "AbortError"))
           );
         })

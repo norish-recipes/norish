@@ -68,7 +68,6 @@ function queued(): RecipeEnrichmentEnrollment[] {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   ctx = createMockAuthedContext(mockUser, mockHousehold);
   isAIEnabled.mockResolvedValue(true);
   canAccessResource.mockResolvedValue(true);
@@ -135,7 +134,7 @@ describe("requestEnrichment", () => {
 
   it("reports an enrollment failure immediately, so the requester knows it did not start", async () => {
     enrichRecipe.mockResolvedValue([
-      { kind: "auto-tagging", status: "failed-to-queue", error: "redis is down" },
+      { kind: "auto-tagging", status: "failed-to-queue", error: "valkey is down" },
     ]);
 
     await expect(

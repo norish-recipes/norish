@@ -13,6 +13,7 @@ import {
   listInheritedAisleLinks,
   saveStoreAisles,
 } from "@norish/db/repositories/aisles";
+import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
 import { resolveProductLink, upsertProductLink } from "@norish/db/repositories/store-products";
@@ -25,7 +26,7 @@ import {
   setParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { addToPantry } from "@norish/shared-server/ingredients/pantry";
-import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
 import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -194,7 +195,7 @@ describe("Parent Ingredients", () => {
 
     await setParent(actor, red.ingredientId, onion.ingredientId);
 
-    await expect(ingredientFor(red.aliasId)).resolves.toMatchObject({ flagged: false });
+    await expect(findIngredientByAliasId(red.aliasId)).resolves.toMatchObject({ flagged: false });
     const page = await listIngredients(actor, { search: "red onion" });
 
     expect(page.items[0]?.parent).toMatchObject({ id: onion.ingredientId, name: "onion" });

@@ -112,6 +112,11 @@
     "message": "Hän nuuskii ympäriinsä löytääkseen, minne halusit mennä.",
     "imageAlt": "Nora näyttää hämmentyneeltä"
   },
+  "errorPage": {
+    "title": "Jokin meni pieleen.",
+    "message": "Norish kohtasi virheen tällä sivulla.",
+    "retry": "Yritä uudelleen"
+  },
   "import": {
     "url": {
       "title": "Tuo resepti",
@@ -178,12 +183,15 @@
     "daily": "Päivittäin",
     "weekly": "Viikoittain",
     "monthly": "Kuukausittain",
+    "yearly": "Vuosittain",
     "day": "päivä",
     "days": "päivää",
     "week": "viikko",
     "weeks": "viikkoa",
     "month": "kuukausi",
     "months": "kuukautta",
+    "year": "vuosi",
+    "years": "vuotta",
     "next": "Seuraava:",
     "every": "Joka",
     "everyOther": "Joka toinen",

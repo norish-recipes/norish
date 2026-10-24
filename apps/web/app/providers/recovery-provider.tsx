@@ -2,7 +2,7 @@
 
 import type { Recovery } from "@/lib/outbox/recovery";
 import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 
 const RecoveryContext = createContext<Recovery | null>(null);
 
@@ -13,11 +13,11 @@ export function RecoveryProvider({
   recovery: Recovery;
   children: ReactNode;
 }) {
-  return <RecoveryContext.Provider value={recovery}>{children}</RecoveryContext.Provider>;
+  return <RecoveryContext value={recovery}>{children}</RecoveryContext>;
 }
 
 export function useRecovery(): Recovery {
-  const recovery = useContext(RecoveryContext);
+  const recovery = use(RecoveryContext);
 
   if (!recovery) {
     throw new Error("useRecovery must be used within RecoveryProvider");

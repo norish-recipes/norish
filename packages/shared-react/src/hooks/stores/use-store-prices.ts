@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ResolvedProductLink, StoreProductDto } from "@norish/shared/contracts";
@@ -63,15 +63,20 @@ interface Sighting {
 
 /**
  * The valve on Pending Links: which of them this screen has watched for too
- * long. Measured from the moment each pending row was first seen here, so a
- * page that loads mid-question waits the full allowance rather than none.
- * The question asked again lands as a row identical to the one that expired,
- * which the query cache hands back as the same object, so a screen that gave
- * up on a name stays quiet until the answer lands — seconds later, as a rule.
+ * long, each as the row that expired. Measured from the moment each pending
+ * row was first seen here, so a page that loads mid-question waits the full
+ * allowance rather than none. The question asked again lands as a row
+ * identical to the one that expired, which the query cache hands back as the
+ * same object, so a screen that gave up on a name stays quiet until the answer
+ * lands — seconds later, as a rule. Any other row under that key is a row of
+ * its own, and is waited on afresh.
  */
-function useExpiredPendingLinks(byKey: Map<string, ResolvedProductLink>): Set<string> {
-  const [expired, setExpired] = useState<Set<string>>(() => new Set());
-  const [seen, setSeen] = useState<Map<string, Sighting>>(() => new Map());
+function useExpiredPendingLinks(
+  byKey: Map<string, ResolvedProductLink>
+): Map<string, ResolvedProductLink> {
+  const [expired, setExpired] = useState<Map<string, ResolvedProductLink>>(() => new Map());
+  // When each pending row was first seen; only the timers below read it.
+  const seenRef = useRef<Map<string, Sighting>>(new Map());
 
   useEffect(() => {
     const now = Date.now();
@@ -80,45 +85,30 @@ function useExpiredPendingLinks(byKey: Map<string, ResolvedProductLink>): Set<st
 
     for (const [key, link] of byKey) {
       if (!isPendingLink(link)) continue;
-      const held = seen.get(key);
+      const held = seenRef.current.get(key);
       const at = held && held.link === link ? held.at : now;
 
       next.set(key, { link, at });
       const left = at + PENDING_LINK_MAX_AGE_MS - now;
 
       if (left <= 0) continue;
-      timers.push(setTimeout(() => setExpired((prev) => new Set(prev).add(key)), left));
+      // One timer per pending link, all cleared in the cleanup through `timers`;
+      // the rule only follows a timer kept in its own variable.
+      // eslint-disable-next-line @eslint-react/web-api-no-leaked-timeout
+      timers.push(setTimeout(() => setExpired((prev) => new Map(prev).set(key, link)), left));
     }
-
-    // Only a change is worth a render: the map is rebuilt from the same rows
-    // on every merge, and an identical one must not run this effect again.
-    const same =
-      next.size === seen.size &&
-      [...next].every(([key, entry]) => {
-        const before = seen.get(key);
-
-        return before?.link === entry.link && before.at === entry.at;
-      });
-
-    if (!same) setSeen(next);
-    setExpired((prev) => {
-      const kept = [...prev].filter((key) => {
-        const entry = next.get(key);
-
-        return entry !== undefined && entry.at + PENDING_LINK_MAX_AGE_MS <= now;
-      });
-
-      return kept.length === prev.size ? prev : new Set(kept);
-    });
+    seenRef.current = next;
 
     return () => timers.forEach(clearTimeout);
-  }, [byKey, seen]);
+  }, [byKey]);
 
   return expired;
 }
 
 export function createUseStorePrices({ useTRPC }: CreateStoresHooksOptions) {
   return function useStorePrices(): StorePricesResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { data, isLoading } = useQuery(trpc.stores.groceryPrices.queryOptions());
     const byKey = useMemo(() => {
@@ -135,7 +125,7 @@ export function createUseStorePrices({ useTRPC }: CreateStoresHooksOptions) {
         const key = priceKey(storeId, ingredientId);
         const link = key ? (byKey.get(key) ?? null) : null;
 
-        if (link && isPendingLink(link) && expired.has(key ?? "")) return null;
+        if (link && isPendingLink(link) && expired.get(key ?? "") === link) return null;
 
         return link;
       },
@@ -160,6 +150,8 @@ export function createUseStorePrices({ useTRPC }: CreateStoresHooksOptions) {
  */
 export function createUseStorePricesSubscription({ useTRPC }: CreateStoresHooksOptions) {
   return function useStorePricesSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.stores.groceryPrices.queryKey();

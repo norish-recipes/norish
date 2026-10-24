@@ -132,10 +132,6 @@ export type TimerKeywordsInput = z.infer<typeof TimerKeywordsInputSchema>;
  * default. Defaults live in the shipped prompt files and are merged in at
  * read time, so a new release's prompts reach every deployment that never
  * customized them.
- *
- * `isOverridden` is the pre-0.20 row-level flag. It froze all prompts after
- * any save; rows still carrying it are pruned to real overrides at boot, and
- * it is never written again.
  */
 export const PromptsConfigSchema = z.object({
   recipeExtraction: z.string().optional(),
@@ -145,6 +141,7 @@ export const PromptsConfigSchema = z.object({
   recipeProvenance: z.string().optional(),
   ingredientLinking: z.string().optional(),
   ingredientResolution: z.string().optional(),
+  ingredientMatch: z.string().optional(),
   imageExtraction: z.string().optional(),
   autoCategorization: z.string().optional(),
   allergyDetection: z.string().optional(),
@@ -152,16 +149,14 @@ export const PromptsConfigSchema = z.object({
   imageGenerationStyle: z.string().optional(),
   ingredientIconStyle: z.string().optional(),
   ingredientPlainName: z.string().optional(),
-  isOverridden: z.boolean().optional(),
+  ingredientSpellingCheck: z.string().optional(),
+  ingredientNutrition: z.string().optional(),
 });
 
 export type PromptsConfig = z.infer<typeof PromptsConfigSchema>;
 
-export const PromptsConfigInputSchema = PromptsConfigSchema.omit({ isOverridden: true });
-export type PromptsConfigInput = z.infer<typeof PromptsConfigInputSchema>;
-
 /** One text per prompt, nothing missing: the shape of shipped defaults and of the merged admin view. */
-export type PromptValues = Required<PromptsConfigInput>;
+export type PromptValues = Required<PromptsConfig>;
 
 // ============================================================================
 // i18n Locale Configuration Schema
@@ -220,16 +215,22 @@ export const IngredientWordsLanguageSchema = z.object({
   preparation: z.array(z.string()).default([]),
   /** The word between two preparations: "peeled and chopped". */
   joiners: z.array(z.string()).default([]),
+  /** The words between foods needed together in one name: "zout en peper". */
+  together: z.array(z.string()).default([]),
+  /** The words between foods any one of which will do: "boter of olie". */
+  alternatives: z.array(z.string()).default([]),
   /** The word between a leading measure and its food: "a pinch of nutmeg". */
   connectors: z.array(z.string()).default([]),
-  /** After these comes what a food is packed or served in or with: "tuna in olive oil". */
-  servedWith: z.array(z.string()).default([]),
+  /** The words a name ends before, which start what it comes in or a note: "greek yogurt for topping". */
+  endsBefore: z.array(z.string()).default([]),
   /** Words that never name a food alone, however another language spells one with them. */
   notFoods: z.array(z.string()).default([]),
   /** Words that say an amount is a guess: "about", "ongeveer". */
   approximately: z.array(z.string()).default([]),
   /** Sizes: "large", "grote". A line's unit that is one counts a piece. */
   sizes: z.array(z.string()).default([]),
+  /** Cuts and forms of a food, after its name: "mango blokjes", "chicken strips". */
+  forms: z.array(z.string()).default([]),
   /** Plural and diminutive endings, each with the ending of the form it stands for. */
   inflections: z.array(z.tuple([z.string(), z.string()])).default([]),
 });
@@ -274,13 +275,22 @@ export const LocaleConfigSchema = z.object({
   otherWords: z.array(z.string()),
   onWords: z.array(z.string()),
   numberWords: z.record(z.string(), z.number().int().positive()),
-  unitWords: z.record(z.string(), z.array(z.string())),
+  unitWords: z.object({
+    day: z.array(z.string()),
+    week: z.array(z.string()),
+    month: z.array(z.string()),
+    year: z.array(z.string()),
+  }),
   weekdayWords: z.record(z.string(), z.number().int().min(0).max(6)),
   intervalHints: z.array(IntervalHintSchema),
 });
 
+export const RecurrenceLocalesSchema = z.record(z.string(), LocaleConfigSchema);
+
+/** The recurrence words as stored, with whether an administrator edited them. */
 export const RecurrenceConfigSchema = z.object({
-  locales: z.record(z.string(), LocaleConfigSchema),
+  locales: RecurrenceLocalesSchema,
+  isOverridden: z.boolean().default(false),
 });
 
 export type RecurrenceConfig = z.infer<typeof RecurrenceConfigSchema>;
@@ -304,19 +314,6 @@ export const AIProviderSchema = z.enum([
 ]);
 
 export type AIProvider = z.infer<typeof AIProviderSchema>;
-
-/**
- * Legacy auto-tagging mode. Superseded by the independent `automaticEnrichment.autoTagging`
- * switch plus `tagStrategy`; still accepted on read so stored config migrates in place.
- */
-export const AutoTaggingModeSchema = z.enum([
-  "disabled",
-  "predefined",
-  "predefined_db",
-  "freeform",
-]);
-
-export type AutoTaggingMode = z.infer<typeof AutoTaggingModeSchema>;
 
 /** How auto-tagging picks tag names. Independent of whether auto-tagging runs automatically. */
 export const TagStrategySchema = z.enum(["predefined", "predefined_db", "freeform"]);
@@ -371,20 +368,22 @@ export const DEFAULT_AUTOMATIC_ENRICHMENT: AutomaticEnrichmentConfig = {
 };
 
 /**
- * What runs on a food just minted by someone's action (ADR-0037, amended
- * 2026-10-10): AI gives it its Plain Name, and the image provider draws it an
- * icon where it would show none. Both cost a request per food, so both are
- * off until an administrator opts in.
+ * What AI does to a newly minted food, each off until an administrator opts in: clean it up
+ * (merge, parent, Plain Name), fill its missing nutrition and conversions, draw its missing icon.
  */
 export const AutomaticIngredientsSchema = z.object({
-  plainName: z.boolean(),
+  cleanUp: z.boolean(),
+  nutrition: z.boolean(),
+  conversions: z.boolean(),
   icon: z.boolean(),
 });
 
 export type AutomaticIngredientsConfig = z.infer<typeof AutomaticIngredientsSchema>;
 
 export const DEFAULT_AUTOMATIC_INGREDIENTS: AutomaticIngredientsConfig = {
-  plainName: false,
+  cleanUp: false,
+  nutrition: false,
+  conversions: false,
   icon: false,
 };
 
@@ -408,45 +407,22 @@ export const AIConfigInputSchema = z.object({
   cuisineStrategy: CuisineStrategySchema.optional(),
   automaticEnrichment: AutomaticEnrichmentSchema.partial().optional(),
   automaticIngredients: AutomaticIngredientsSchema.partial().optional(),
-  /** @deprecated Migrated into `automaticEnrichment.autoTagging` + `tagStrategy`. */
-  autoTaggingMode: AutoTaggingModeSchema.optional(),
-  /** @deprecated Migrated into `automaticEnrichment.allergyDetection`. */
-  autoTagAllergies: z.boolean().optional(),
 });
 
 /**
- * The canonical AI configuration contract. Stored config written before the
- * unified enrichment flow still parses: legacy fields migrate without changing
- * effective enabledness, and canonical values always win over legacy ones.
+ * The canonical AI configuration contract: every setting a stored config
+ * leaves out takes its default.
  */
 export const AIConfigSchema = AIConfigInputSchema.transform(
-  ({
-    autoTaggingMode,
-    autoTagAllergies,
-    tagStrategy,
-    cuisineStrategy,
-    automaticEnrichment,
-    automaticIngredients,
-    ...rest
-  }) => {
-    const legacyAutoTaggingOn =
-      autoTaggingMode === undefined ? undefined : autoTaggingMode !== "disabled";
-    const legacyStrategy =
-      autoTaggingMode === undefined || autoTaggingMode === "disabled" ? undefined : autoTaggingMode;
-
+  ({ tagStrategy, cuisineStrategy, automaticEnrichment, automaticIngredients, ...rest }) => {
     return {
       ...rest,
-      tagStrategy: tagStrategy ?? legacyStrategy ?? DEFAULT_TAG_STRATEGY,
+      tagStrategy: tagStrategy ?? DEFAULT_TAG_STRATEGY,
       cuisineStrategy: cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY,
       automaticEnrichment: {
-        autoTagging:
-          automaticEnrichment?.autoTagging ??
-          legacyAutoTaggingOn ??
-          DEFAULT_AUTOMATIC_ENRICHMENT.autoTagging,
+        autoTagging: automaticEnrichment?.autoTagging ?? DEFAULT_AUTOMATIC_ENRICHMENT.autoTagging,
         allergyDetection:
-          automaticEnrichment?.allergyDetection ??
-          autoTagAllergies ??
-          DEFAULT_AUTOMATIC_ENRICHMENT.allergyDetection,
+          automaticEnrichment?.allergyDetection ?? DEFAULT_AUTOMATIC_ENRICHMENT.allergyDetection,
         autoCategorization:
           automaticEnrichment?.autoCategorization ??
           DEFAULT_AUTOMATIC_ENRICHMENT.autoCategorization,
@@ -881,6 +857,12 @@ export const IngredientSeedStateSchema = z.object({
   rungVersion: z.number().int().default(0),
   /** The version of Ingredient Nutrition's source table last applied (ADR-0039). */
   nutritionVersion: z.string().nullable().default(null),
+  /** The first-start cleanup's `CLEANUP_VERSION` last run (ADR-0037). */
+  cleanupVersion: z.number().int().default(0),
+  /** The seed's `SEED_CORRECTIONS_VERSION` last made on the seeded foods. */
+  correctionsVersion: z.number().int().default(0),
+  /** The junk pile seed's version last put on the pile (`JUNK_SEED`). */
+  junkSeedVersion: z.number().int().default(0),
 });
 
 export type IngredientSeedState = z.infer<typeof IngredientSeedStateSchema>;
@@ -930,37 +912,6 @@ export type UserServerRole = z.infer<typeof UserServerRoleSchema>;
 // ============================================================================
 // Validation helpers
 // ============================================================================
-
-const SERVER_CONFIG_MIGRATIONS: Partial<Record<ServerConfigKey, (value: unknown) => unknown>> = {
-  [ServerConfigKeys.UNITS]: (value) => {
-    const legacyWrapped =
-      typeof value === "object" && value !== null && "units" in value && "isOverwritten" in value
-        ? UnitsMapSchema.safeParse((value as { units: unknown }).units)
-        : null;
-
-    if (legacyWrapped?.success) {
-      return {
-        units: legacyWrapped.data,
-        isOverridden: false,
-      };
-    }
-
-    const legacy = UnitsMapSchema.safeParse(value);
-
-    if (legacy.success) {
-      return {
-        units: legacy.data,
-        isOverridden: false,
-      };
-    }
-
-    return value;
-  },
-};
-
-function migrateConfigValue(key: ServerConfigKey, value: unknown): unknown {
-  return SERVER_CONFIG_MIGRATIONS[key]?.(value) ?? value;
-}
 
 /**
  * Get the appropriate Zod schema for a given config key
@@ -1021,7 +972,7 @@ export function normalizeConfigValue(
 ): { success: true; data: unknown } | { success: false; error: z.ZodError } {
   const schema = getSchemaForConfigKey(key);
 
-  return schema.safeParse(migrateConfigValue(key, value));
+  return schema.safeParse(value);
 }
 
 /**

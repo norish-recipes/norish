@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import TagInput from "@/components/shared/tag-input";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
@@ -12,14 +12,16 @@ import { useUserSettingsContext } from "../context";
 export default function AllergiesCard() {
   const t = useTranslations("settings.user.allergies");
   const { allergies, updateAllergies, isUpdatingAllergies } = useUserSettingsContext();
-  const [localAllergies, setLocalAllergies] = useState<string[]>([]);
+  const [localAllergies, setLocalAllergies] = useState<string[]>(allergies);
+  const [syncedAllergies, setSyncedAllergies] = useState(allergies);
 
   // Sync local state when allergies load
-  useEffect(() => {
+  if (allergies !== syncedAllergies) {
+    setSyncedAllergies(allergies);
     if (allergies) {
       setLocalAllergies(allergies);
     }
-  }, [allergies]);
+  }
   const hasChanges =
     JSON.stringify(localAllergies.slice().sort()) !==
     JSON.stringify((allergies || []).slice().sort());

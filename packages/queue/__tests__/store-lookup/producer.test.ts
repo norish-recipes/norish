@@ -1,9 +1,6 @@
 // @vitest-environment node
 /**
- * What goes onto the store lookup queue, and in particular what never does:
- * a job with a `delay`. A lazy worker wakes on a `waiting` event and a delayed
- * job is only promoted by a running worker, so a delayed job can sleep
- * forever. This queue is always-on precisely so the work is predictable.
+ * What goes onto the store lookup queue.
  */
 import type { Queue } from "bullmq";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -27,27 +24,6 @@ const KAAS = "22222222-2222-4222-8222-222222222222";
 describe("the store lookup producer", () => {
   beforeEach(() => {
     add.mockReset();
-  });
-
-  it("never enqueues a job with a delay", async () => {
-    await addStoreMatchJob(queue, {
-      kind: "match",
-      storeId: STORE,
-      ingredientId: KAAS,
-      name: "kaas",
-      householdKey: HOUSEHOLD,
-    });
-    await addStoreRefreshJob(queue, {
-      kind: "refresh",
-      storeId: STORE,
-      productIds: ["p1"],
-      householdKey: HOUSEHOLD,
-    });
-
-    expect(add).toHaveBeenCalledTimes(2);
-    for (const call of add.mock.calls) {
-      expect(call[2] ?? {}).not.toHaveProperty("delay");
-    }
   });
 
   it("lets a user's new grocery jump a batch of stale prices", async () => {

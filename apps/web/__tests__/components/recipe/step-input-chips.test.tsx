@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -108,10 +109,10 @@ const INGREDIENTS = [
   { ingredientName: "salt", amount: 1, unit: "tsp", systemUsed: "us" as const, order: 0 },
 ];
 
-let onChange: ReturnType<typeof vi.fn>;
+let onChange: Mock<(steps: Step[]) => void>;
 
 beforeEach(() => {
-  onChange = vi.fn();
+  onChange = vi.fn<(steps: Step[]) => void>();
 });
 
 function lastEmitted(): Step[] {

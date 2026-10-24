@@ -13,7 +13,6 @@
  * adds the share of each line still left out for them. A recipe whose every line counts asks
  * the model nothing. The lines are counted from the datasets' numbers, with
  * no household's correction, which is what most readers see.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { Job } from "bullmq";
@@ -32,11 +31,12 @@ import { NO_HOUSEHOLD } from "@norish/shared-server/ingredients/nutrition/ingred
 import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import { createLogger } from "@norish/shared-server/logger";
 import { enrichmentWriteMode } from "@norish/shared/lib/recipe-enrichment";
-import { suppliesNutrition } from "@norish/shared/lib/recipe-nutrition";
+import { nutritionLinesOf, suppliesNutrition } from "@norish/shared/lib/recipe-nutrition";
 
-import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { createWorker } from "../create-worker";
 import { handleEnrichmentJobFailure, runEnrichmentJob } from "../enrichment/worker-runner";
 import { reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:nutrition-estimation");
 
@@ -81,7 +81,8 @@ export async function processNutritionEstimationJob(
       return await clearRecipeNutritionEstimate(recipe.id);
     }
 
-    const lineById = new Map(recipe.recipeIngredients.map((line) => [line.id, line]));
+    // The lines as the total read them: each food of an "and" line is one, with the line's amount.
+    const lineById = new Map(nutritionLinesOf(recipe).map((line) => [line.id, line]));
     const shares = await estimateNutritionGap(
       recipe.name,
       recipe.servings ?? 1,
@@ -112,11 +113,10 @@ export async function processNutritionEstimationJob(
   });
 }
 
-const nutritionEstimationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
-  QUEUE_NAMES.NUTRITION_ESTIMATION,
-  processNutritionEstimationJob,
-  handleEnrichmentJobFailure
-);
-
-export const startNutritionEstimationWorker = nutritionEstimationWorker.start;
-export const stopNutritionEstimationWorker = nutritionEstimationWorker.stop;
+export function startNutritionEstimationWorker(): void {
+  createWorker<RecipeEnrichmentJobData>(
+    QUEUE_NAMES.NUTRITION_ESTIMATION,
+    processNutritionEstimationJob,
+    { onFailed: handleEnrichmentJobFailure }
+  );
+}

@@ -3,7 +3,7 @@ import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { parseIngredientWithDefaults, withoutListMarkers } from "@norish/shared/lib/helpers";
 
 /**
  * Parse human-readable duration strings like "30 min", "1 hr 15 min", "1h30m", "1 hour", "1:30", "1:00h"
@@ -26,11 +26,13 @@ export function parseHumanDurationToMinutes(s?: string | null): number | undefin
     return Number.isFinite(total) && total > 0 ? total : undefined;
   }
 
+  // A number starts where a digit run starts (?<!\d): otherwise a long run of
+  // digits is rescanned from every position, quadratic in an archive's field.
   // Match patterns like "1 hr 30 min", "1h30m", "90 minutes", "1 hour", "2 hours"
   // For hours: allow 'h' to be followed by digits (for compact "1h30m" format)
-  const hourMatch = lower.match(/(\d+)\s*(?:hrs?|hours?|h)(?:\s|\d|$)/i);
+  const hourMatch = lower.match(/(?<!\d)(\d+)\s*(?:hrs?|hours?|h)(?:\s|\d|$)/i);
   // For minutes: require 'm' not to be followed by word characters (to avoid matching words like "medium")
-  const minMatch = lower.match(/(\d+)\s*(?:mins?|minutes?|m)(?!\w)/i);
+  const minMatch = lower.match(/(?<!\d)(\d+)\s*(?:mins?|minutes?|m)(?!\w)/i);
 
   const hours = hourMatch ? parseInt(hourMatch[1]!, 10) : 0;
   const minutes = minMatch ? parseInt(minMatch[1]!, 10) : 0;
@@ -38,6 +40,11 @@ export function parseHumanDurationToMinutes(s?: string | null): number | undefin
   const total = hours * 60 + minutes;
 
   return Number.isFinite(total) && total > 0 ? total : undefined;
+}
+
+/** An archive recipe's one picture as its gallery, or an empty gallery. */
+export function galleryOf(image: string | null | undefined) {
+  return image ? [{ image, order: 0 }] : [];
 }
 
 /** Minutes added up, or undefined when none of them is known. */
@@ -72,7 +79,7 @@ export function parseNutritionValue(value: string | null | undefined): number | 
 
 /**
  * Hand each line the food it resolves from, past the insert schema, which
- * knows nothing of it: the resolver reads it (`foodText` in
+ * knows nothing of it: the resolver reads it (`foodTexts` in
  * `withResolvedIngredients`) and it is never stored.
  */
 export function withLineFoodTexts(
@@ -81,10 +88,11 @@ export function withLineFoodTexts(
 ): FullRecipeInsertDTO {
   return {
     ...dto,
-    recipeIngredients: dto.recipeIngredients?.map((line, i) => ({
-      ...line,
-      foodText: foodTexts[i],
-    })),
+    recipeIngredients: dto.recipeIngredients?.map((line, i) => {
+      const text = foodTexts[i];
+
+      return text ? { ...line, foodTexts: [text] } : line;
+    }),
   };
 }
 
@@ -227,8 +235,8 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
 
   // Parse ingredients - split by newlines first, then parse each line
   const units = await getUnits();
-  const ingredientArray = splitNonEmptyLines(input.ingredientsText).flatMap((text) =>
-    parseIngredientWithDefaults(text, units).map((line) => ({ ...line, text }))
+  const ingredientArray = withoutListMarkers(splitNonEmptyLines(input.ingredientsText)).flatMap(
+    (text) => parseIngredientWithDefaults(text, units).map((line) => ({ ...line, text }))
   );
   const systemUsed = inferSystemUsedFromParsed(ingredientArray);
   const normalizedIngredients = ingredientArray
@@ -242,10 +250,10 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
     })
     .filter((line) => line.description.length > 0);
 
-  // Parse steps
-  const stepLines = splitNonEmptyLines(input.instructionsText).map(
-    (step) => (step.length <= MAX_HEADING_STEP_LENGTH && headingOf(step)) || step
-  );
+  // Parse steps; a separator line ("-", "•") says nothing and is no step.
+  const stepLines = splitNonEmptyLines(input.instructionsText)
+    .filter((step) => /[\p{L}\p{N}]/u.test(step))
+    .map((step) => (step.length <= MAX_HEADING_STEP_LENGTH && headingOf(step)) || step);
 
   // Parse tags from categories
   const tags = (input.categories || [])
@@ -256,7 +264,7 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
   const dto: FullRecipeInsertDTO = {
     name: name.trim(),
     url: url || undefined,
-    image: image || undefined,
+    images: galleryOf(image),
     description: description || undefined,
     servings: servings,
     systemUsed: systemUsed,
@@ -277,7 +285,7 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
       systemUsed: systemUsed,
     })),
     tags: tags,
-  } as FullRecipeInsertDTO;
+  };
 
   // Validate against schema
   const parsed = FullRecipeInsertSchema.safeParse(dto);

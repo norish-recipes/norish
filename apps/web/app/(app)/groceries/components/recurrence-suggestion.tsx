@@ -35,6 +35,7 @@ export function RecurrenceSuggestion({
 
   const mockRecurring = {
     id: type,
+    version: 0,
     userId: "",
     name: itemName || "Item",
     amount: amount ?? null,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { links } from "@/lib/css-tokens";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
 
@@ -22,10 +22,10 @@ function buildCompose(masterKey: string, obscuraToken: string) {
       AUTH_URL: http://localhost:3000
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
       MASTER_KEY: ${masterKey}
-      REDIS_URL: redis://redis:6379
+      VALKEY_URL: valkey://valkey:6379
       OBSCURA_ENDPOINT: ws://obscura:9222
       OBSCURA_CDP_TOKEN: ${obscuraToken}
-    depends_on: [db, redis, obscura]
+    depends_on: [db, valkey, obscura]
 
   db:
     image: postgres:17-alpine
@@ -35,21 +35,21 @@ function buildCompose(masterKey: string, obscuraToken: string) {
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:8.10.1
+  valkey:
+    image: valkey/valkey:9
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
 
   # Renders recipe pages for URL imports
   obscura:
-    image: norishapp/obscura:0.2.4-norish.1
+    image: norishapp/obscura:0.2.4-norish.2
     environment:
       OBSCURA_CDP_TOKEN: ${obscuraToken}
 
 volumes:
   db_data:
   norish_data:
-  redis_data:`;
+  valkey_data:`;
 }
 
 /** Generate a 32-byte random key, base64-encoded — matches `openssl rand -base64 32`. */
@@ -78,15 +78,18 @@ function generateObscuraToken() {
  * Renders the docker-compose snippet with a MASTER_KEY and Obscura token generated
  * locally in the browser, so the copied file is unique and ready to run with no extra steps.
  */
-export function SelfHostCompose() {
-  const [masterKey, setMasterKey] = useState(PLACEHOLDER);
-  const [obscuraToken, setObscuraToken] = useState(TOKEN_PLACEHOLDER);
+let generated: { masterKey: string; obscuraToken: string } | undefined;
+const placeholders = { masterKey: PLACEHOLDER, obscuraToken: TOKEN_PLACEHOLDER };
+const noSubscription = () => () => {};
 
-  // Generated after mount to keep SSR markup stable and the secrets client-only.
-  useEffect(() => {
-    setMasterKey(generateMasterKey());
-    setObscuraToken(generateObscuraToken());
-  }, []);
+export function SelfHostCompose() {
+  // Generated in the browser only, once per page load: the server and the
+  // hydrating render show the placeholders, so the secrets never reach markup.
+  const { masterKey, obscuraToken } = useSyncExternalStore(
+    noSubscription,
+    () => (generated ??= { masterKey: generateMasterKey(), obscuraToken: generateObscuraToken() }),
+    () => placeholders
+  );
 
   const ready = masterKey !== PLACEHOLDER;
 

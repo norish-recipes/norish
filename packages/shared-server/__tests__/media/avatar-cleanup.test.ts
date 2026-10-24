@@ -24,7 +24,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 describe("sweepUserAvatars", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     fsMocks.unlink.mockResolvedValue(undefined);
   });
 

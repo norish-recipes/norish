@@ -2,7 +2,7 @@
 
 import type { EmblaCarouselType, EmblaOptionsType, EmblaPluginType } from "embla-carousel";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, use, useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Button, ScrollShadow } from "@heroui/react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -26,7 +26,7 @@ type CarouselContextValue = {
 const CarouselContext = createContext<CarouselContextValue | null>(null);
 
 export function useCarousel() {
-  const context = useContext(CarouselContext);
+  const context = use(CarouselContext);
 
   if (!context) {
     throw new Error("useCarousel must be used within a <Carousel>");
@@ -44,22 +44,9 @@ export interface CarouselRootProps extends ComponentPropsWithoutRef<"div"> {
 function CarouselRoot({ children, className, opts, plugins, setApi, ...props }: CarouselRootProps) {
   const [emblaRef, api] = useEmblaCarousel(opts, plugins);
   const [viewportWrapper, setViewportWrapper] = useState<HTMLDivElement | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [scrollSnapCount, setScrollSnapCount] = useState(0);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
+  const subscribe = (sync: () => void) => {
+    if (!api) return () => {};
 
-  useEffect(() => {
-    if (!api) return;
-
-    const sync = () => {
-      setSelectedIndex(api.selectedScrollSnap());
-      setScrollSnapCount(api.scrollSnapList().length);
-      setCanScrollPrev(api.canScrollPrev());
-      setCanScrollNext(api.canScrollNext());
-    };
-
-    sync();
     api.on("select", sync);
     api.on("reInit", sync);
 
@@ -67,7 +54,28 @@ function CarouselRoot({ children, className, opts, plugins, setApi, ...props }: 
       api.off("select", sync);
       api.off("reInit", sync);
     };
-  }, [api]);
+  };
+  // Embla is created after mount, so the server and hydration read the empty carousel.
+  const selectedIndex = useSyncExternalStore(
+    subscribe,
+    () => api?.selectedScrollSnap() ?? 0,
+    () => 0
+  );
+  const scrollSnapCount = useSyncExternalStore(
+    subscribe,
+    () => api?.scrollSnapList().length ?? 0,
+    () => 0
+  );
+  const canScrollPrev = useSyncExternalStore(
+    subscribe,
+    () => api?.canScrollPrev() ?? false,
+    () => false
+  );
+  const canScrollNext = useSyncExternalStore(
+    subscribe,
+    () => api?.canScrollNext() ?? false,
+    () => false
+  );
 
   useEffect(() => {
     if (api && setApi) setApi(api);
@@ -91,7 +99,7 @@ function CarouselRoot({ children, className, opts, plugins, setApi, ...props }: 
   );
 
   return (
-    <CarouselContext.Provider
+    <CarouselContext
       value={{
         api,
         canScrollNext,
@@ -116,7 +124,7 @@ function CarouselRoot({ children, className, opts, plugins, setApi, ...props }: 
       >
         {children}
       </div>
-    </CarouselContext.Provider>
+    </CarouselContext>
   );
 }
 
@@ -155,8 +163,12 @@ function CarouselItem({ children, className, ...props }: ComponentPropsWithoutRe
   );
 }
 
-interface CarouselNavProps extends Omit<ComponentPropsWithoutRef<typeof Button>, "children"> {
+interface CarouselNavProps extends Omit<
+  ComponentPropsWithoutRef<typeof Button>,
+  "children" | "className"
+> {
   children?: ReactNode;
+  className?: string;
   icon?: ReactNode;
 }
 

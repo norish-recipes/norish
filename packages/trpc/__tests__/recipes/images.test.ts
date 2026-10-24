@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock logger
 vi.mock("@norish/shared-server/logger", () => ({
@@ -12,10 +12,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 describe("recipes image procedures", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("uploadImage", () => {
     it("accepts FormData with image file", () => {
       const formData = new FormData();

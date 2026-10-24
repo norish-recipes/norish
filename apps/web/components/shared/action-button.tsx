@@ -2,8 +2,8 @@
 
 import type { ButtonProps } from "@heroui/react";
 import type { ComponentType, ReactNode, SVGProps } from "react";
-import { createContext, useContext, useLayoutEffect, useRef, useState } from "react";
-import { usePanelPortalContainer } from "@/components/Panel/Panel";
+import { createContext, use, useLayoutEffect, useRef, useState } from "react";
+import { PanelPortal } from "@/components/Panel/Panel";
 import {
   ArrowPathIcon,
   ArrowRightIcon,
@@ -90,7 +90,7 @@ export function ActionButton({
 }: ActionButtonProps) {
   const config = ACTION_CONFIG[action];
   const Icon = config.icon;
-  const iconOnly = useContext(IconOnlyContext);
+  const iconOnly = use(IconOnlyContext);
 
   return (
     <Button
@@ -128,7 +128,6 @@ export function IconActionButton({
 }: IconActionButtonProps) {
   const config = ACTION_CONFIG[action];
   const Icon = icon ?? config.icon;
-  const portalContainer = usePanelPortalContainer();
 
   return (
     <Tooltip delay={0}>
@@ -141,9 +140,11 @@ export function IconActionButton({
       >
         <Icon className="size-4" />
       </Button>
-      <Tooltip.Content UNSTABLE_portalContainer={portalContainer} placement={tooltipPlacement}>
-        <p>{label}</p>
-      </Tooltip.Content>
+      <PanelPortal>
+        <Tooltip.Content placement={tooltipPlacement}>
+          <p>{label}</p>
+        </Tooltip.Content>
+      </PanelPortal>
     </Tooltip>
   );
 }
@@ -167,7 +168,7 @@ export function ActionButtonGroup({
   const endRef = useRef<HTMLDivElement>(null);
   // The start button's width with its label, measured while it shows one, so the
   // decision to go back to a label is made against the labelled width, not the icon's.
-  const labelledStartWidth = useRef(0);
+  const labelledStartWidthRef = useRef(0);
   const [iconOnly, setIconOnly] = useState(false);
   const hasStart = Boolean(start);
 
@@ -179,10 +180,10 @@ export function ActionButtonGroup({
     if (!row || !startEl || !end) return;
 
     const fit = () => {
-      if (!iconOnly) labelledStartWidth.current = startEl.offsetWidth;
+      if (!iconOnly) labelledStartWidthRef.current = startEl.offsetWidth;
       const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
 
-      setIconOnly(labelledStartWidth.current + gap + end.offsetWidth > row.clientWidth);
+      setIconOnly(labelledStartWidthRef.current + gap + end.offsetWidth > row.clientWidth);
     };
 
     fit();
@@ -202,7 +203,7 @@ export function ActionButtonGroup({
     <div ref={rowRef} className={classNames("flex w-full flex-wrap items-center gap-2", className)}>
       {start ? (
         <div ref={startRef} className="flex">
-          <IconOnlyContext.Provider value={iconOnly}>{start}</IconOnlyContext.Provider>
+          <IconOnlyContext value={iconOnly}>{start}</IconOnlyContext>
         </div>
       ) : null}
       <div ref={endRef} className="ms-auto flex flex-wrap items-center justify-end gap-2">

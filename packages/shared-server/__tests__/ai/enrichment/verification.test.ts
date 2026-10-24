@@ -63,7 +63,6 @@ function answered(probabilities: Record<string, number>) {
 
 describe("verifyClaims", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
     vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
     mocked.decide.mockResolvedValue(answered({ quick: 0.9, vegan: 0.1, "one-pot": 0.5 }));
@@ -270,7 +269,6 @@ describe("shadowScore", () => {
   const rubric = ["Unfaithful", "Mostly faithful", "Faithful"];
 
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
   });
 

@@ -112,6 +112,11 @@
     "message": "She is sniffing around to find where you wanted to go.",
     "imageAlt": "Nora looking confused"
   },
+  "errorPage": {
+    "title": "Something went wrong.",
+    "message": "Norish ran into an error on this page.",
+    "retry": "Try again"
+  },
   "import": {
     "url": {
       "title": "Import recipe",
@@ -178,12 +183,15 @@
     "daily": "Daily",
     "weekly": "Weekly",
     "monthly": "Monthly",
+    "yearly": "Yearly",
     "day": "day",
     "days": "days",
     "week": "week",
     "weeks": "weeks",
     "month": "month",
     "months": "months",
+    "year": "year",
+    "years": "years",
     "next": "Next:",
     "every": "Every",
     "everyOther": "Every other",

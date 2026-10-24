@@ -240,3 +240,43 @@ export async function listAllStepImageUrls(): Promise<string[]> {
 
   return rows.map((row) => row.image);
 }
+
+/** One step's use of one line, both found by order within a measurement system. */
+export interface StepIngredientLink {
+  systemUsed: "metric" | "us";
+  stepOrder: number;
+  ingredientOrder: number;
+  share: number;
+}
+
+/**
+ * Attach one Step Ingredient to the step at `stepOrder`, its line found by order in the same
+ * system, beside any it has; false where the recipe has no such step or line.
+ */
+export async function attachStepIngredient(
+  recipeId: string,
+  link: StepIngredientLink
+): Promise<boolean> {
+  return await db.transaction(async (tx) => {
+    const [step] = await tx
+      .select({ id: steps.id })
+      .from(steps)
+      .where(
+        and(
+          eq(steps.recipeId, recipeId),
+          eq(steps.systemUsed, link.systemUsed),
+          eq(steps.order, String(link.stepOrder))
+        )
+      )
+      .limit(1);
+    const lineIds = await loadIngredientLineIdsByOrderTx(tx, recipeId, link.systemUsed);
+    const recipeIngredientId = lineIds.get(link.ingredientOrder);
+
+    if (!step || !recipeIngredientId) return false;
+    await tx
+      .insert(stepIngredients)
+      .values({ stepId: step.id, recipeIngredientId, share: String(link.share), order: "0" });
+
+    return true;
+  });
+}

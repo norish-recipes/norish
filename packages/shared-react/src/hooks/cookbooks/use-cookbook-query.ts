@@ -17,6 +17,8 @@ export function createUseCookbookQuery({ useTRPC }: CreateCookbookHooksOptions) 
     cookbookId: string,
     { enabled = true }: { enabled?: boolean } = {}
   ): CookbookQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { data, error, isLoading } = useQuery({
       ...trpc.cookbooks.get.queryOptions({ id: cookbookId }),

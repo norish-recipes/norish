@@ -59,7 +59,6 @@ const EXTRACTED = {
 const HTML = "<html><body><main><h1>Pesto pasta</h1><p>200 g spaghetti</p></main></body></html>";
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocked.generateStructured.mockResolvedValue(EXTRACTED);
   mocked.shadowScore.mockResolvedValue(2);
   mocked.extractImageCandidates.mockReturnValue([]);

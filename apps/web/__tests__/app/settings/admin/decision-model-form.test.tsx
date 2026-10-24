@@ -29,8 +29,8 @@ const { default: DecisionModelForm } =
 
 describe("DecisionModelForm endpoint", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     testDecisionEndpoint.mockResolvedValue({ success: true });
+    updateDecisionConfig.mockResolvedValue(undefined);
     context.decisionConfig = { provider: "typesafe", apiKey: "••••", model: "von-1.3.0" };
   });
 

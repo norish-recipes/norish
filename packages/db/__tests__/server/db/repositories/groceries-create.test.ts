@@ -3,11 +3,23 @@
  * A create makes room at the top of its Store by shifting every active
  * sibling down, and a shifted row is a changed row: its version moves. The
  * repository hands those rows back so nobody goes on holding the old version.
+ * Two writes that move one list wait for each other.
  */
-import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eq, sql } from "drizzle-orm";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createGroceries, createGrocery } from "@norish/db/repositories/groceries";
+import type { GroceryDto } from "@norish/shared/contracts/dto/groceries";
+import { withTransaction } from "@norish/db/drizzle";
+import {
+  createGroceries,
+  deleteGroceryByIds,
+  findNewestGroceryNamed,
+  listGroceriesByUsers,
+  lockGroceryList,
+  markAllDoneInStore,
+  reorderGroceriesInStore,
+  updateGroceries,
+} from "@norish/db/repositories/groceries";
 import { createStore } from "@norish/db/repositories/stores";
 import { groceries } from "@norish/db/schema";
 
@@ -35,20 +47,19 @@ describe("what a create shifts", () => {
     await testBase.teardown();
   });
 
-  const insert = (name: string, overrides: Partial<typeof groceries.$inferInsert> = {}) => ({
-    userId,
-    name,
-    unit: null,
-    amount: null,
-    isDone: false,
-    recipeIngredientId: null,
-    recurringGroceryId: null,
-    storeId,
-    ...overrides,
-  });
   const line = (name: string, overrides: Partial<typeof groceries.$inferInsert> = {}) => ({
     id: crypto.randomUUID(),
-    groceries: insert(name, overrides),
+    groceries: {
+      userId,
+      name,
+      unit: null,
+      amount: null,
+      isDone: false,
+      recipeIngredientId: null,
+      recurringGroceryId: null,
+      storeId,
+      ...overrides,
+    },
   });
 
   it("hands back every active sibling in the Store, shifted down and at its new version", async () => {
@@ -83,13 +94,153 @@ describe("what a create shifts", () => {
     ).resolves.toMatchObject([{ version: 1 }]);
   });
 
-  it("does the same for a single create, which is how a repeating grocery arrives", async () => {
-    const first = await createGroceries([line("appel")], [userId]);
-    const made = await createGrocery(crypto.randomUUID(), insert("melk"), [userId]);
+  it("is undone with the caller's transaction, a merge and all", async () => {
+    const [appel] = (await createGroceries([line("appel")], [userId])).created;
 
-    expect(made.created).toMatchObject({ name: "melk", sortOrder: 0 });
-    expect(made.shifted).toEqual([
-      expect.objectContaining({ id: first.created[0]!.id, sortOrder: 1, version: 2 }),
-    ]);
+    await expect(
+      withTransaction(async (tx) => {
+        await updateGroceries([{ id: appel!.id, amount: 2 }], [userId], tx);
+        await createGroceries([line("peer")], [userId], tx);
+        throw new Error("a later write failed");
+      })
+    ).rejects.toThrow("a later write failed");
+
+    await expect(
+      getTestDb().select({ name: groceries.name, version: groceries.version }).from(groceries)
+    ).resolves.toEqual([{ name: "appel", version: 1 }]);
+  });
+
+  // Each writer, unlocked, would hold "appel" while it waits for "kiwi", which the edit holds.
+  const writers: Array<[string, (appel: GroceryDto, kiwi: GroceryDto) => Promise<unknown>]> = [
+    ["a create", () => createGroceries([line("druif")], [userId])],
+    [
+      "an update of several",
+      (appel, kiwi) =>
+        updateGroceries(
+          [
+            { id: appel.id, isDone: true },
+            { id: kiwi.id, isDone: true },
+          ],
+          [userId]
+        ),
+    ],
+    [
+      "a reorder",
+      (appel, kiwi) =>
+        reorderGroceriesInStore(
+          [
+            { id: appel.id, version: appel.version, sortOrder: 5 },
+            { id: kiwi.id, version: kiwi.version, sortOrder: 6 },
+          ],
+          [userId]
+        ),
+    ],
+    [
+      "a delete of several",
+      (appel, kiwi) =>
+        deleteGroceryByIds(
+          [
+            { id: appel.id, version: appel.version },
+            { id: kiwi.id, version: kiwi.version },
+          ],
+          [userId]
+        ),
+    ],
+    ["marking a Store done", () => markAllDoneInStore([userId], storeId)],
+  ];
+
+  it.each(writers)(
+    "makes %s wait for a write holding the list, rather than deadlock on its rows",
+    async (_, write) => {
+      const [appel, , kiwi] = (
+        await createGroceries([line("appel"), line("peer"), line("kiwi")], [userId])
+      ).created;
+      let edited!: () => void;
+      let release!: () => void;
+      const editing = new Promise<void>((resolve) => (edited = resolve));
+      const held = new Promise<void>((resolve) => (release = resolve));
+
+      // Two connections idle first, so the writer below waits on a lock, not on a connection.
+      await Promise.all([listGroceriesByUsers([userId]), listGroceriesByUsers([userId])]);
+
+      // A rename that adds another food: it locks its row, then moves the list.
+      const edit = withTransaction(async (tx) => {
+        await lockGroceryList(tx, [userId]);
+        await updateGroceries([{ id: kiwi!.id, name: "kiwi's" }], [userId], tx);
+        edited();
+        await held;
+
+        return await createGroceries([line("mango")], [userId], tx);
+      });
+
+      await editing;
+
+      const other = write(appel!, kiwi!);
+
+      await vi.waitFor(async () => {
+        const [waiting] = await getTestDb()
+          .execute<{ count: number }>(
+            sql`select count(*)::int as count from pg_stat_activity
+              where datname = current_database() and wait_event_type = 'Lock'`
+          )
+          .then((result) => result.rows);
+
+        expect(waiting?.count).toBe(1);
+      });
+      release();
+
+      await expect(Promise.all([edit, other])).resolves.toHaveLength(2);
+    }
+  );
+});
+
+describe("findNewestGroceryNamed", () => {
+  const testBase = new RepositoryTestBase("test_groceries_newest");
+  let userId: string;
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    userId = (await testBase.beforeEachTest())[0].id;
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  const add = async (name: string, isDone: boolean) => {
+    const id = crypto.randomUUID();
+
+    await createGroceries(
+      [
+        {
+          id,
+          groceries: {
+            userId,
+            name,
+            unit: null,
+            amount: null,
+            isDone,
+            recipeIngredientId: null,
+            recurringGroceryId: null,
+          },
+        },
+      ],
+      [userId]
+    );
+
+    return id;
+  };
+
+  it("answers the grocery last added under the name, ticked or not", async () => {
+    await add("melk", false);
+    const newest = await add("melk", true);
+
+    await add("brood", false);
+
+    expect((await findNewestGroceryNamed("melk"))?.id).toBe(newest);
+    expect(await findNewestGroceryNamed("kaas")).toBeNull();
   });
 });

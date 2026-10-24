@@ -1,9 +1,8 @@
-import type { SessionRoleUser } from "@/lib/auth/server-admin";
-import { hasServerAdminRole } from "@/lib/auth/server-admin";
 import { ARCHIVE_PROBE_PARAM, ARCHIVE_PROBE_VALUE } from "@/lib/export/archive-download-protocol";
 
 import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { isUserServerAdmin } from "@norish/db";
 import { buildNorishArchiveForViewer } from "@norish/shared-server/archive/norish-export";
 import { NORISH_ARCHIVE_EXTENSION } from "@norish/shared-server/archive/norish-format";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
@@ -66,12 +65,10 @@ export async function GET(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const sessionUser = session.user as SessionRoleUser & {
-    id: string;
-    name?: string | null;
-  };
-
-  const isServerAdmin = hasServerAdminRole(sessionUser);
+  const sessionUser = session.user;
+  // Read from the database, not the session: a demoted admin's session still
+  // carries the role it was signed in with.
+  const isServerAdmin = await isUserServerAdmin(sessionUser.id);
   const params = new URL(req.url).searchParams;
   const instanceScope = params.get("scope") === INSTANCE_SCOPE;
 

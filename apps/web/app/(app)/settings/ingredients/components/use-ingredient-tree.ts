@@ -31,7 +31,7 @@ export function useIngredientTree(
   toggle: (id: string) => void;
 } {
   const trpc = useTRPC();
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const open = useMemo(() => (enabled ? [...expanded] : []), [enabled, expanded]);
   const kinds = useQueries({
     queries: open.map((parentId) => trpc.ingredients.kinds.queryOptions({ parentId, locale })),

@@ -20,7 +20,7 @@ export const DateStringSchema = z
 /**
  * URL validation with max length
  */
-export const UrlSchema = z.string().url("Invalid URL format").max(2048, "URL too long");
+export const UrlSchema = z.url("Invalid URL format").max(2048, "URL too long");
 
 // ============================================================================
 // Calendar Schemas

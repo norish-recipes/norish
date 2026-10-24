@@ -107,6 +107,11 @@
     "message": "Está olfateando para encontrar adónde querías ir.",
     "imageAlt": "Nora con cara de confusión"
   },
+  "errorPage": {
+    "title": "Algo salió mal.",
+    "message": "Norish encontró un error en esta página.",
+    "retry": "Reintentar"
+  },
   "import": {
     "url": {
       "title": "Importar receta",
@@ -173,12 +178,15 @@
     "daily": "Diario",
     "weekly": "Semanal",
     "monthly": "Mensual",
+    "yearly": "Anual",
     "day": "día",
     "days": "días",
     "week": "semana",
     "weeks": "semanas",
     "month": "mes",
     "months": "meses",
+    "year": "año",
+    "years": "años",
     "next": "Siguiente:",
     "every": "Cada",
     "everyOther": "Cada dos",

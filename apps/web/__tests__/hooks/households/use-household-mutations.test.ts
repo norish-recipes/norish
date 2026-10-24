@@ -58,7 +58,6 @@ describe("useHouseholdMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockLeaveMutate.mockReset();
     mockKickMutate.mockReset();
     mockRegenerateMutate.mockReset();

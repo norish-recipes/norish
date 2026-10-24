@@ -1,3 +1,5 @@
+import { decode } from "html-entities";
+
 import type { RecipeVerdict } from "@norish/api/parser/import-triage";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
@@ -13,46 +15,21 @@ import type { VideoMetadata, VideoProcessorContext } from "../types";
 import { BaseVideoProcessor } from "../base-processor";
 import { isMediaUnavailable } from "../errors";
 
+/** The page's description meta tag, with either attribute order. */
+const CAPTION_META_PATTERNS = [
+  /<meta\s+(?:name|property)=["'](?:og:description|description)["']\s+content=["']([^"']+)["']/i,
+  /<meta\s+content=["']([^"']+)["']\s+(?:name|property)=["'](?:og:description|description)["']/i,
+];
+
 /**
  * Extract caption/description from Instagram/Facebook page HTML.
  */
 function extractCaptionFromHtml(html: string): string {
-  // Try meta description first
-  const metaMatch = html.match(
-    /<meta\s+(?:name|property)=["'](?:og:description|description)["']\s+content=["']([^"']+)["']/i
-  );
+  for (const pattern of CAPTION_META_PATTERNS) {
+    const content = html.match(pattern)?.[1];
+    const decoded = content ? decode(content) : "";
 
-  if (metaMatch?.[1]) {
-    const decoded = metaMatch[1]
-      .replace(/&quot;/g, '"')
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&#x27;/g, "'")
-      .replace(/&#39;/g, "'");
-
-    if (decoded.length > 50) {
-      return decoded;
-    }
-  }
-
-  // Try alternate meta tag format
-  const altMetaMatch = html.match(
-    /<meta\s+content=["']([^"']+)["']\s+(?:name|property)=["'](?:og:description|description)["']/i
-  );
-
-  if (altMetaMatch?.[1]) {
-    const decoded = altMetaMatch[1]
-      .replace(/&quot;/g, '"')
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&#x27;/g, "'")
-      .replace(/&#39;/g, "'");
-
-    if (decoded.length > 50) {
-      return decoded;
-    }
+    if (decoded.length > 50) return decoded;
   }
 
   return "";
@@ -178,7 +155,9 @@ export class InstagramProcessor extends BaseVideoProcessor {
       recipe = await extractRecipeWithAI(description, recipeId, url);
     } catch (error) {
       log.warn({ url, err: error }, "AI extraction failed for Instagram image post");
-      throw new Error("Instagram image posts are only supported if the caption contains a recipe");
+      throw new Error("Instagram image posts are only supported if the caption contains a recipe", {
+        cause: error,
+      });
     }
 
     // Download thumbnail as recipe image
@@ -186,7 +165,6 @@ export class InstagramProcessor extends BaseVideoProcessor {
       try {
         const imagePath = await downloadImage(metadata.thumbnail, recipeId);
 
-        recipe.image = imagePath;
         recipe.images = [{ image: imagePath, order: 0 }];
       } catch {
         log.debug({ url }, "Failed to download Instagram thumbnail");

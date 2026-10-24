@@ -25,6 +25,7 @@ export function createClientId(): string {
   }
 
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    // eslint-disable-next-line sonarjs/pseudo-random -- fallback where Web Crypto is missing; the id needs to be unique, not unpredictable
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
 

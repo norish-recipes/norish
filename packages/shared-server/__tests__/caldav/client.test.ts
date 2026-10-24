@@ -45,7 +45,6 @@ const EVENT = {
 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mockLogin.mockResolvedValue(undefined);
   mockFetchCalendars.mockResolvedValue([CALENDAR]);
   mockCreateCalendarObject.mockResolvedValue({

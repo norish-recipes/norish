@@ -41,3 +41,32 @@ export function partitionHiddenItems(
     carried: stored.filter((item) => !offeredNames.has(item)),
   };
 }
+
+export type HiddenItemVisibility = {
+  showRatings: boolean;
+  showFavorites: boolean;
+  showConversion: boolean;
+  showProvenance: boolean;
+  showNutrition: boolean;
+  showNotes: boolean;
+  showCookbooks: boolean;
+  showIngredientIcons: boolean;
+};
+
+/** A stored hidden list as visibility flags; the browser and the server's seeds read the same. */
+export function hiddenItemVisibility(hidden: readonly string[]): HiddenItemVisibility {
+  const shows = (item: HiddenItem) => !hidden.includes(item);
+
+  return {
+    showRatings: shows("rating"),
+    showFavorites: shows("favorites"),
+    showConversion: shows("conversion"),
+    showProvenance: shows("provenance"),
+    showNutrition: shows("nutrition"),
+    showNotes: shows("notes"),
+    // The recipe page's cookbooks card only. Hiding it never touches the
+    // Library or its type chips.
+    showCookbooks: shows("cookbooks"),
+    showIngredientIcons: shows("ingredientIcons"),
+  };
+}

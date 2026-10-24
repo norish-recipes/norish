@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { useAvailableModelsQuery } from "@/hooks/admin";
+import { usePending } from "@/hooks/use-pending";
 import {
   Button,
   ComboBox,
@@ -54,15 +55,18 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
   const [model, setModel] = useState(imageGenerationConfig?.model ?? "");
   const [endpoint, setEndpoint] = useState(imageGenerationConfig?.endpoint ?? "");
   const [apiKey, setApiKey] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [saving, whileSaving] = usePending();
 
-  useEffect(() => {
+  const [prevImageGenerationConfig, setPrevImageGenerationConfig] = useState(imageGenerationConfig);
+
+  if (imageGenerationConfig !== prevImageGenerationConfig) {
+    setPrevImageGenerationConfig(imageGenerationConfig);
     if (imageGenerationConfig) {
       setProvider(imageGenerationConfig.provider);
       setModel(imageGenerationConfig.model ?? "");
       setEndpoint(imageGenerationConfig.endpoint ?? "");
     }
-  }, [imageGenerationConfig]);
+  }
 
   const enabled = provider !== "disabled";
   const needsEndpoint = enabled && imageGenerationProviderNeedsEndpoint(provider);
@@ -148,19 +152,15 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateImageGenerationConfig({
+    await whileSaving(() =>
+      updateImageGenerationConfig({
         provider,
         model: model || undefined,
         endpoint: endpoint || undefined,
         // An empty key preserves the stored one on the server.
         apiKey: apiKey || undefined,
-      });
-      setApiKey("");
-    } finally {
-      setSaving(false);
-    }
+      }).then(() => setApiKey(""))
+    );
   };
 
   return (
@@ -241,7 +241,7 @@ export default function ImageGenerationForm({ onDirtyChange }: ImageGenerationFo
           inputValue={model}
           isDisabled={!canFetchModels}
           onInputChange={setModel}
-          onSelectionChange={(key) => key && setModel(key as string)}
+          onChange={(key) => key && setModel(key as string)}
         >
           <Label>{t("model")}</Label>
           <ComboBox.InputGroup>

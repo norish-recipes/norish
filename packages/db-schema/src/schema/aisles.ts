@@ -54,9 +54,9 @@ export const aisleLinks = pgTable(
     storeId: uuid("store_id")
       .notNull()
       .references(() => stores.id, { onDelete: "cascade" }),
-    ingredientId: uuid("ingredient_id").references(() => ingredients.id, { onDelete: "cascade" }),
-    /** The folded name the link was keyed by before ADR-0037; read by nothing. */
-    normalizedName: text("normalized_name"),
+    ingredientId: uuid("ingredient_id")
+      .notNull()
+      .references(() => ingredients.id, { onDelete: "cascade" }),
     aisleId: uuid("aisle_id")
       .notNull()
       .references(() => aisles.id, { onDelete: "cascade" }),

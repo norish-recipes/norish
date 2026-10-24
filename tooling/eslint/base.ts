@@ -1,12 +1,12 @@
 import * as path from "node:path";
-import { includeIgnoreFile } from "@eslint/compat";
 import eslint from "@eslint/js";
-import importPlugin from "eslint-plugin-import";
 import turboPlugin from "eslint-plugin-turbo";
 import unusedImports from "eslint-plugin-unused-imports";
-import { defineConfig } from "eslint/config";
+import { defineConfig, includeIgnoreFile } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+
+import { sonarjsConfig } from "./sonarjs.ts";
 
 const turboRecommendedRules =
   (
@@ -52,7 +52,6 @@ export const baseConfig = defineConfig(
       "**/*.css",
       "**/.changeset",
       "**/dist",
-      "**/dist-server",
       "esm/*",
       "public/*",
       "tests/*",
@@ -80,7 +79,6 @@ export const baseConfig = defineConfig(
   {
     files: ["**/*.js", "**/*.ts", "**/*.tsx"],
     plugins: {
-      import: importPlugin,
       turbo: turboPlugin,
       "unused-imports": unusedImports,
     },
@@ -88,10 +86,6 @@ export const baseConfig = defineConfig(
     languageOptions: {
       globals: {
         ...globals.node,
-      },
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
@@ -123,9 +117,6 @@ export const baseConfig = defineConfig(
           caughtErrorsIgnorePattern: "^_.*?$",
         },
       ],
-      // Import ordering is owned by @ianvs/prettier-plugin-sort-imports (see tooling/prettier);
-      // this rule's grouping is incompatible with it, so every prettier-formatted file warned.
-      "import/order": "off",
       "padding-line-between-statements": [
         "warn",
         {
@@ -146,6 +137,7 @@ export const baseConfig = defineConfig(
       ],
     },
   },
+  sonarjsConfig,
   {
     linterOptions: {
       reportUnusedDisableDirectives: true,

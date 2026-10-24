@@ -1,16 +1,16 @@
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { initRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
 import { applyNutritionSourcesOnBoot } from "@norish/api/startup/apply-nutrition-sources";
-import { backfillDishColors } from "@norish/api/startup/backfill-dish-color";
-import { backfillIngredientAliases } from "@norish/api/startup/backfill-ingredient-aliases";
+import { cleanUpCatalogueOnBoot } from "@norish/api/startup/clean-up-catalogue";
+import { correctSeedOnBoot } from "@norish/api/startup/correct-seed";
 import { createServer } from "@norish/api/startup/http-server";
 import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
-import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
 import { runMigrations } from "@norish/api/startup/migrations";
 import { recheckUndecidedMintsOnBoot } from "@norish/api/startup/recheck-undecided-mints";
 import { registerApiHandlersForQueue } from "@norish/api/startup/register-queue-api-handlers";
 import { seedServerConfig } from "@norish/api/startup/seed-config";
 import { seedIngredientCatalogueOnFirstBoot } from "@norish/api/startup/seed-ingredient-catalogue";
+import { seedJunkPileOnBoot } from "@norish/api/startup/seed-junk-pile";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
 import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -39,26 +39,22 @@ async function main() {
   await seedServerConfig();
   log.info("-".repeat(50));
 
-  await migrateGalleryImages();
-  log.info("-".repeat(50));
-
-  // After the gallery migration, so every image URL it rewrites is already
-  // in the canonical shape the extractor resolves.
-  await backfillDishColors();
-  log.info("-".repeat(50));
-
   // A first boot seeds the catalogue before traffic; later boots leave it to
   // the refresh job, so an unchanged file never holds the server up.
   await seedIngredientCatalogueOnFirstBoot();
-  log.info("-".repeat(50));
-
-  // After the seed, so every existing reference is resolved against the
-  // catalogue's foods, as a new import would be (ADR-0037).
-  await backfillIngredientAliases();
+  // Spellings the seed now gives another food move once, with the foods their words filed there.
+  await correctSeedOnBoot();
   log.info("-".repeat(50));
 
   // Old flagged mints, looked at again whenever the resolver's rules change.
   await recheckUndecidedMintsOnBoot();
+  log.info("-".repeat(50));
+
+  // What earlier versions left in the catalogue, cleaned once per release that changes the cleanup.
+  await cleanUpCatalogueOnBoot();
+  // Texts that name no food, which new lines are read without; after the cleanup, which reads
+  // spellings as earlier releases left them.
+  await seedJunkPileOnBoot();
   log.info("-".repeat(50));
 
   // Ingredient Nutrition's source numbers, when this release carries new ones.
@@ -73,7 +69,7 @@ async function main() {
 
   registerApiHandlersForQueue();
 
-  // The one Redis subscriber connection of this process; every internal
+  // The one Valkey subscriber connection of this process; every internal
   // listener and tRPC subscription registers on it.
   await startRealtimeHub();
   log.info("-".repeat(50));

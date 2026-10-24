@@ -138,7 +138,6 @@ function job(overrides: Partial<RecipeEnrichmentJobData> = {}): Job<RecipeEnrich
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocks.getRecipeFull.mockResolvedValue(RECIPE);
   mocks.estimate.mockResolvedValue(ESTIMATE);
   mocks.estimateGap.mockResolvedValue(SHARES);
@@ -171,6 +170,41 @@ describe("processNutritionEstimationJob", () => {
     expect(mocks.replaceRecipeNutrition).not.toHaveBeenCalled();
     // The share is the recipe's news: open pages are sent the recipe again.
     expect(mocks.publishRecipeUpdated).toHaveBeenCalled();
+  });
+
+  it("gives each food of an and line the line's amount, the second as much as the first", async () => {
+    mocks.getRecipeFull.mockResolvedValue({
+      ...RECIPE,
+      recipeIngredients: [
+        {
+          id: "sandwich",
+          ingredientName: "ham en kaas",
+          ingredientId: "i-ham",
+          joined: "together",
+          foods: [
+            { ingredientId: "i-ham", name: "ham" },
+            { ingredientId: "i-kaas", name: "kaas" },
+          ],
+          amount: 100,
+          unit: "gram",
+          systemUsed: "metric",
+        },
+      ],
+    });
+    mocks.workOut.mockResolvedValue({
+      ...WORKED,
+      leftOut: [{ ...WORKED.leftOut[0]!, lineId: "sandwich:1", name: "kaas", key: "key-kaas" }],
+      counted: [{ ...WORKED.counted[0]!, lineId: "sandwich", name: "ham" }],
+    });
+
+    await processNutritionEstimationJob(job());
+
+    expect(mocks.estimateGap).toHaveBeenCalledWith(
+      "Fried rice",
+      2,
+      [{ key: "key-kaas", ingredientName: "kaas", amount: 100, unit: "gram" }],
+      [expect.objectContaining({ text: "100 gram ham" })]
+    );
   });
 
   it.each([

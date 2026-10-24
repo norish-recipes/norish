@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import SearchFieldToggles from "@/components/dashboard/search-field-toggles";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ChipButton } from "@/components/shared/chip-button";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useTagsQuery } from "@/hooks/config";
@@ -15,7 +16,7 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/16/solid";
-import { Button, Chip, Input } from "@heroui/react";
+import { Button, Input } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
@@ -114,7 +115,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const [workingTags, setWorkingTags] = useState<string[]>(filters.searchTags);
   const [workingCategories, setWorkingCategories] = useState<RecipeCategory[]>(filters.categories);
   const [localFilterMode, setLocalFilterMode] = useState<FilterMode>(filters.filterMode);
-  const [localSortMode, setLocalSortMode] = useState<SortOrder>(
+  const [localSortMode, setLocalSortMode] = useState<SortOrder>(() =>
     normalizeSortMode(filters.sortMode)
   );
   const [localInput, setLocalInput] = useState(filters.rawInput);
@@ -126,9 +127,11 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const [localSearchFields, setLocalSearchFields] = useState<SearchField[]>([
     ...filters.searchFields,
   ]);
+  const [prevFilters, setPrevFilters] = useState(filters);
   const { tags: allTags, isLoading } = useTagsQuery();
 
-  useEffect(() => {
+  if (filters !== prevFilters) {
+    setPrevFilters(filters);
     setWorkingTags(filters.searchTags);
     setWorkingCategories(filters.categories);
     setLocalFilterMode(filters.filterMode);
@@ -138,7 +141,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
     setLocalMinRating(filters.minRating);
     setLocalMaxCookingTime(filters.maxCookingTime ?? null);
     setLocalSearchFields([...filters.searchFields]);
-  }, [filters]);
+  }
   const toggleTag = useCallback((tag: string) => {
     setWorkingTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   }, []);
@@ -389,15 +392,16 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                 const active = workingCategories.includes(category);
 
                 return (
-                  <Chip
+                  <ChipButton
                     key={category}
+                    aria-pressed={active}
                     className="h-7 cursor-pointer px-2 text-[11px]"
                     color={active ? "accent" : "default"}
                     variant={active ? "primary" : "tertiary"}
                     onClick={() => toggleCategory(category)}
                   >
                     {t(`category.${category.toLowerCase()}`)}
-                  </Chip>
+                  </ChipButton>
                 );
               })}
             </div>
@@ -428,15 +432,16 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                     const active = workingTags.includes(tag);
 
                     return (
-                      <Chip
+                      <ChipButton
                         key={tag}
+                        aria-pressed={active}
                         className="h-7 cursor-pointer px-2 text-[11px]"
                         color={active ? "accent" : "default"}
                         variant={active ? "primary" : "tertiary"}
                         onClick={() => toggleTag(tag)}
                       >
                         {tag}
-                      </Chip>
+                      </ChipButton>
                     );
                   })}
               </div>

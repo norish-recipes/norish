@@ -1,6 +1,6 @@
 # 08 — BullMQ 6 and ioredis 6 with no manual steps
 
-Status: ready-for-agent
+Status: superseded
 Target version: 0.26.0-beta
 Blocked by: 06
 
@@ -20,3 +20,7 @@ Spec: `.scratch/dependency-security/spec.md`
 - [ ] Realtime E2E project and import job E2E pass.
 - [ ] Release notes written.
 - [ ] `pnpm lint`, `pnpm test:run`, `pnpm build`, `pnpm deps:cycles`, `pnpm format:check` pass.
+
+## Comments
+
+- 2026-10-13 — Superseded by `.scratch/dependency-upgrades/` (decided with the maintainer the same day).

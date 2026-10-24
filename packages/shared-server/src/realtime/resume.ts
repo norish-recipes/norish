@@ -2,7 +2,7 @@
  * Resume
  *
  * The bounded buffer behind every non-internal publish (ADR-0034): a
- * per-channel Redis Stream written by the same Lua script that publishes, and
+ * per-channel Valkey Stream written by the same Lua script that publishes, and
  * an opaque, identity-bound Cursor the client hands back on reconnect.
  *
  * This module owns the bounds, the stream-id arithmetic, the cursor codec and
@@ -13,7 +13,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type Redis from "ioredis";
+import type Valkey from "ioredis";
 import type { Result } from "ioredis";
 
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
@@ -154,7 +154,7 @@ declare module "ioredis" {
 }
 
 /** Register the script once per client; a second call is a no-op. */
-export function registerRealtimePublish(client: Redis): void {
+export function registerRealtimePublish(client: Valkey): void {
   if (typeof client.realtimePublish === "function") return;
 
   client.defineCommand(REALTIME_PUBLISH_COMMAND, {

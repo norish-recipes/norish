@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, createElement, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, createElement, use, useCallback, useMemo, useState } from "react";
 
 import type {
   ResolvedProductLink,
@@ -73,27 +73,29 @@ type CreateStoresContextOptions = {
   useStoreAislesSubscription?: () => void;
 };
 
-const useNoPrices = (): StorePricesResult => ({
+const noPrices = (): StorePricesResult => ({
   priceFor: () => null,
   linkFor: () => null,
   isLoading: false,
 });
-const useNoPricesSubscription = () => undefined;
-const useNoAisles = (): StoreAislesResult => ({ aisleFor: () => null, isLoading: false });
-const useNoAislesSubscription = () => undefined;
+const noPricesSubscription = () => undefined;
+const noAisles = (): StoreAislesResult => ({ aisleFor: () => null, isLoading: false });
+const noAislesSubscription = () => undefined;
 
 export function createStoresContext({
   useStoresQuery,
   useStoresMutations,
   useStoresSubscription,
-  useStorePrices = useNoPrices,
-  useStorePricesSubscription = useNoPricesSubscription,
-  useStoreAisles = useNoAisles,
-  useStoreAislesSubscription = useNoAislesSubscription,
+  useStorePrices = noPrices,
+  useStorePricesSubscription = noPricesSubscription,
+  useStoreAisles = noAisles,
+  useStoreAislesSubscription = noAislesSubscription,
 }: CreateStoresContextOptions) {
   const StoresContext = createContext<StoresContextValue | null>(null);
 
   function StoresContextProvider({ children }: { children: ReactNode }) {
+    "use memo";
+
     // Data hooks
     const { stores, isLoading } = useStoresQuery();
     const storeMutations = useStoresMutations();
@@ -142,11 +144,13 @@ export function createStoresContext({
       [stores, isLoading, storeMutations, priceFor, linkFor, aisleFor, storeManagerOpen]
     );
 
-    return createElement(StoresContext.Provider, { value }, children);
+    return createElement(StoresContext, { value }, children);
   }
 
   function useStoresContext() {
-    const ctx = useContext(StoresContext);
+    "use memo";
+
+    const ctx = use(StoresContext);
 
     if (!ctx) throw new Error("useStoresContext must be used within StoresContextProvider");
 

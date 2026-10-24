@@ -519,6 +519,69 @@
       "when": 1791620600687,
       "tag": "0073_ingredient_plain_name",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1792044549132,
+      "tag": "0074_recipe_image_into_gallery",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1792060282831,
+      "tag": "0075_links_keyed_by_ingredient",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1792270971924,
+      "tag": "0076_foods_leave_the_catalogue",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1792314211540,
+      "tag": "0077_recipe_line_foods",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1792423694532,
+      "tag": "0078_ai_changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1792440949479,
+      "tag": "0079_ai_deletes",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1792589993944,
+      "tag": "0080_ingredient_words_ends_before",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1792673372827,
+      "tag": "0081_junk_pile",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1792794957107,
+      "tag": "0082_ingredient_nutrition_estimates",
+      "breakpoints": true
     }
   ]
 }

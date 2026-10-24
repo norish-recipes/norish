@@ -8,11 +8,10 @@
 import type { Route } from "@playwright/test";
 
 import { clearDevicePreferences, readProfilePreferences } from "../harness/device-preferences";
-import { databaseUrl } from "./database";
 import { expect, test } from "./fixture";
 
 test.beforeEach(async () => {
-  await clearDevicePreferences(databaseUrl());
+  await clearDevicePreferences();
 });
 
 test("quick Hidden Items changes all land, and none drops out while the next is queued", async ({
@@ -50,7 +49,9 @@ test("quick Hidden Items changes all land, and none drops out while the next is 
     .poll(async () => {
       const stored = await readProfilePreferences(aiStack.baseURL, aiStack.ownerCookies);
 
-      return [...((stored.desktop as { hiddenItems?: string[] })?.hiddenItems ?? [])].sort();
+      return [...((stored.desktop as { hiddenItems?: string[] })?.hiddenItems ?? [])].sort((a, b) =>
+        a.localeCompare(b)
+      );
     })
     .toEqual(["notes", "nutrition", "rating"]);
 });

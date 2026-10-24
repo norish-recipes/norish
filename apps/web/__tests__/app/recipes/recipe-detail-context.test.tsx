@@ -13,7 +13,6 @@ const baseRecipe: FullRecipeDTO = {
   userId: "user-1",
   name: "Test Recipe",
   description: null,
-  image: null,
   url: null,
   servings: 2,
   prepMinutes: null,
@@ -21,13 +20,16 @@ const baseRecipe: FullRecipeDTO = {
   totalMinutes: null,
   notes: null,
   systemUsed: "metric",
+  originalSystem: null,
   calories: null,
   fat: null,
   carbs: null,
   protein: null,
   originCountry: null,
+  originCountryName: null,
   originRegion: null,
   provenanceNote: null,
+  dishColor: null,
   cuisines: [],
   createdAt: new Date("2026-03-31T00:00:00.000Z"),
   updatedAt: new Date("2026-03-31T00:00:00.000Z"),
@@ -52,6 +54,7 @@ const baseRecipe: FullRecipeDTO = {
       order: 0,
       version: 1,
       images: [],
+      stepIngredients: [],
     },
   ],
   tags: [],
@@ -83,6 +86,7 @@ const localConversionRecipe: FullRecipeDTO = {
       order: 0,
       version: 1,
       images: [],
+      stepIngredients: [],
     },
   ],
 };
@@ -136,6 +140,8 @@ describe("RecipeDetailContext", () => {
         "auto-categorization": "idle" as const,
         "nutrition-estimation": "idle" as const,
         "recipe-provenance": "idle" as const,
+        "ingredient-linking": "idle" as const,
+        "image-generation": "idle" as const,
       },
       isBusy: () => false,
       request: vi.fn(),
@@ -143,11 +149,13 @@ describe("RecipeDetailContext", () => {
     }),
     useActiveAllergies: () => ({ allergies: [], allergySet: new Set<string>() }),
     useConvertMutation: (recipeId: string) => {
-      const [error, setError] = React.useState<unknown>(null);
-      const reset = React.useCallback(() => setError(null), []);
-
       const convert = React.useCallback(
-        (targetSystem: "metric" | "us", version: number) => {
+        (
+          targetSystem: "metric" | "us",
+          version: number,
+          _withAI?: boolean,
+          options?: { onError?: (error: unknown) => void }
+        ) => {
           const canSwitchLocally = hasLocalMeasurementSystem(recipeFixture, targetSystem);
           const previousSystem = recipeFixture.systemUsed;
 
@@ -179,12 +187,12 @@ describe("RecipeDetailContext", () => {
             );
           }
 
-          setError(convertError);
+          options?.onError?.(convertError);
         },
         [recipeId]
       );
 
-      return { convertMeasurements: convert, error, reset };
+      return { convertMeasurements: convert };
     },
     useRatingQuery: () => ({ userRating: null }),
     useRatingsMutation: () => ({ rateRecipe: vi.fn() }),
@@ -211,7 +219,6 @@ describe("RecipeDetailContext", () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
     recipeFixture = baseRecipe;
     convertError = null;
     setRecipeData = null;

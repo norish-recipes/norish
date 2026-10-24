@@ -3,12 +3,14 @@ import net from "node:net";
 import path from "node:path";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
-import { Client } from "pg";
 
 import type { SessionCookies } from "../harness/auth";
+import { userIdOf } from "../harness/accounts";
 import { signIn } from "../harness/auth";
 import { hydratingBrowser } from "../harness/hydration";
 import { ProductionStack } from "../harness/production-stack";
+import { seedRecipe } from "../harness/recipes";
+import { callTrpc } from "../harness/trpc";
 
 export const USER_A = {
   email: "offline-a@norish.test",
@@ -27,6 +29,8 @@ export const SEEDED_RECIPE_IMAGE = `/recipes/${SEEDED_RECIPE_ID}/primary.png`;
 export const SEEDED_RECIPE_DISH_COLOR = "#b05a2a";
 export const SEEDED_GROCERY_NAME = "Warm Set Oat Milk";
 export const SEEDED_NOTE_TITLE = "Warm Set Leftovers";
+export const SEEDED_COOKBOOK_ID = "7e300351-13a4-4bfb-8b40-7a1a5a5f8d02";
+export const SEEDED_COOKBOOK_TITLE = "Warm Set Breads";
 /** A food the household keeps, so the Pantry has a row offline. */
 export const SEEDED_PANTRY_FOOD = "warm set honey";
 /** The warmed recipe's one line, a food the household does not keep. */
@@ -37,8 +41,6 @@ type BackendState = "live" | "stopped" | "unresponsive";
 
 export interface OfflineHarness {
   readonly baseURL: string;
-  /** The stack's database, for a spec that seeds what it reads. */
-  readonly databaseUrl: string;
   readonly context: BrowserContext;
   readonly page: Page;
   selectIdentity(identity: "a" | "b"): Promise<void>;
@@ -54,86 +56,34 @@ const PNG_1X1 = Buffer.from(
   "base64"
 );
 
-async function seed(stack: ProductionStack): Promise<void> {
-  const database = new Client({ connectionString: stack.databaseUrl });
+/** What the offline suite reads, written as user A through the app; only the recipe is not. */
+async function seed(stack: ProductionStack, cookiesA: SessionCookies): Promise<void> {
+  const asA = (procedure: string, input: unknown) =>
+    callTrpc(stack.baseURL, cookiesA, procedure, input);
 
-  await database.connect();
-
-  try {
-    const users = await database.query<{ id: string }>(
-      `select id from "user" where "isServerOwner" = true order by "createdAt" limit 1`
-    );
-    const userA = users.rows[0];
-
-    if (!userA) throw new Error("Offline owner missing after sign-up");
-
-    await database.query(`delete from planned_items where user_id = $1`, [userA.id]);
-    await database.query(`delete from groceries where user_id = $1`, [userA.id]);
-    await database.query(`delete from recipes where user_id = $1`, [userA.id]);
-    await database.query(`delete from pantry_ingredients where user_id = $1`, [userA.id]);
-    const food = await database.query<{ id: string }>(
-      `insert into ingredients (name) values ($1)
-       on conflict (lower(name)) do update set name = excluded.name
-       returning id`,
-      [SEEDED_PANTRY_FOOD]
-    );
-    const alias = await database.query<{ id: string }>(
-      `insert into ingredient_aliases (text, fold, ingredient_id) values ($1, $1, $2)
-       on conflict (fold) do update set text = ingredient_aliases.text
-       returning id`,
-      [SEEDED_PANTRY_FOOD, food.rows[0]!.id]
-    );
-
-    await database.query(
-      `insert into pantry_ingredients (user_id, ingredient_id, ingredient_alias_id) values ($1, $2, $3)`,
-      [userA.id, food.rows[0]!.id, alias.rows[0]!.id]
-    );
-    await database.query(
-      `insert into recipes (id, user_id, name, description, image, dish_color, servings)
-       values ($1, $2, $3, 'Seeded for the Offline browser project.', $4, $5, 4)`,
-      [
-        SEEDED_RECIPE_ID,
-        userA.id,
-        SEEDED_RECIPE_NAME,
-        SEEDED_RECIPE_IMAGE,
-        SEEDED_RECIPE_DISH_COLOR,
-      ]
-    );
-    const flour = await database.query<{ id: string }>(
-      `insert into ingredients (name) values ($1)
-       on conflict (lower(name)) do update set name = excluded.name
-       returning id`,
-      [SEEDED_RECIPE_LINE]
-    );
-    const flourAlias = await database.query<{ id: string }>(
-      `insert into ingredient_aliases (text, fold, ingredient_id) values ($1, $1, $2)
-       on conflict (fold) do update set text = ingredient_aliases.text
-       returning id`,
-      [SEEDED_RECIPE_LINE, flour.rows[0]!.id]
-    );
-
-    await database.query(
-      `insert into recipe_ingredients (recipe_id, name, ingredient_alias_id, amount, unit, "order", system_used)
-       values ($1, $2, $3, null, null, 0, 'metric')`,
-      [SEEDED_RECIPE_ID, SEEDED_RECIPE_LINE, flourAlias.rows[0]!.id]
-    );
-    await database.query(
-      `insert into groceries (user_id, name, unit, amount, is_done) values ($1, $2, null, 2, false)`,
-      [userA.id, SEEDED_GROCERY_NAME]
-    );
-    // The browser's date, not the container's: the Postgres container runs
-    // UTC, so `current_date` is yesterday for any run between local midnight
-    // and UTC midnight — and the dashboard's Today shows nothing seeded.
-    const localToday = new Date().toLocaleDateString("en-CA");
-
-    await database.query(
-      `insert into planned_items (user_id, date, slot, item_type, title)
-       values ($1, $2::date, 'Dinner', 'note', $3)`,
-      [userA.id, localToday, SEEDED_NOTE_TITLE]
-    );
-  } finally {
-    await database.end();
-  }
+  await asA("pantry.add", { name: SEEDED_PANTRY_FOOD });
+  // Through the repositories: the create path derives a Dish Colour from the image instead.
+  await seedRecipe(await userIdOf(USER_A), SEEDED_RECIPE_NAME, [SEEDED_RECIPE_LINE], {
+    id: SEEDED_RECIPE_ID,
+    description: "Seeded for the Offline browser project.",
+    dishColor: SEEDED_RECIPE_DISH_COLOR,
+    servings: 4,
+    images: [{ image: SEEDED_RECIPE_IMAGE, order: 0 }],
+  });
+  await asA("cookbooks.create", {
+    id: SEEDED_COOKBOOK_ID,
+    title: SEEDED_COOKBOOK_TITLE,
+    recipeId: SEEDED_RECIPE_ID,
+  });
+  await asA("groceries.create", [{ name: SEEDED_GROCERY_NAME, unit: null, amount: 2 }]);
+  // The browser's date, not the container's: the Postgres container runs UTC,
+  // so its today is yesterday between local and UTC midnight.
+  await asA("calendar.createItem", {
+    date: new Date().toLocaleDateString("en-CA"),
+    slot: "Dinner",
+    itemType: "note",
+    title: SEEDED_NOTE_TITLE,
+  });
 
   const imageDir = path.join(stack.uploadsDir, "recipes", SEEDED_RECIPE_ID);
 
@@ -185,7 +135,6 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
     async ({ browser }, use) => {
       const stack = new ProductionStack({
         project: "offline",
-        port: 3100,
         databaseName: "norish_e2e",
         users: [USER_A, USER_B],
       });
@@ -194,12 +143,12 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
 
       try {
         await stack.start();
-        await seed(stack);
-
         const [cookiesA, cookiesB] = await Promise.all([
           signIn(stack.baseURL, USER_A),
           signIn(stack.baseURL, USER_B),
         ]);
+
+        await seed(stack, cookiesA);
 
         context = await browser.newContext({ baseURL: stack.baseURL, serviceWorkers: "allow" });
         await context.addCookies(cookiesA);
@@ -233,7 +182,6 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
 
         await use({
           baseURL: stack.baseURL,
-          databaseUrl: stack.databaseUrl,
           context,
           page,
           selectIdentity,

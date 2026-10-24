@@ -1,37 +1,20 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { IngredientReviewJobData } from "@norish/queue/contracts/job-types";
-import type { CatalogueActor, CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
-import type {
-  FixPart,
-  IconScopeSummary,
-  NameScopeSummary,
-  ReviewReport,
-  ReviewScopeSummary,
-} from "@norish/shared/contracts/ingredient-catalogue";
+import type { CatalogueRefusal } from "@norish/shared-server/ingredients/catalogue";
 import type {
   IngredientNutrition,
   NutritionFoodSummary,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
-import { assertAIEnabled } from "@norish/auth/permissions";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import {
-  findCatalogueIngredientNames,
-  listIngredientUses,
-} from "@norish/db/repositories/ingredient-catalogue";
-import { addIngredientIconsJob } from "@norish/queue/ingredient-icons/producer";
-import { findRunningIconRound } from "@norish/queue/ingredient-icons/progress";
-import { addIngredientReviewJob } from "@norish/queue/ingredient-review/producer";
-import {
-  findRunningReviewRound,
-  readLatestReviewReport,
-  readReviewReport,
-  readRoundTokens,
-} from "@norish/queue/ingredient-review/progress";
-import { getQueues } from "@norish/queue/registry";
+import { listIngredientUses } from "@norish/db/repositories/ingredient-catalogue";
 import { canDrawImages } from "@norish/shared-server/config/server-config-loader";
+import {
+  keepAIChange as keepCatalogueAIChange,
+  listAIChangesFor,
+  undoAIChange as undoCatalogueAIChange,
+} from "@norish/shared-server/ingredients/ai-changes";
 import {
   addAlias as addCatalogueAlias,
   CatalogueEditError,
@@ -46,12 +29,10 @@ import {
   saveDraft as saveIngredientDraft,
   setParent as setCatalogueParent,
 } from "@norish/shared-server/ingredients/catalogue";
-import { announcingTogether, ingredientChanges } from "@norish/shared-server/ingredients/changes";
 import {
   generateIngredientIcon,
   uploadIngredientIcon,
 } from "@norish/shared-server/ingredients/icon-drafts";
-import { listIconRoundFoods } from "@norish/shared-server/ingredients/icon-rounds";
 import { ingredientIconAddresses } from "@norish/shared-server/ingredients/icons";
 import {
   correctNutrition as correctHouseholdNutrition,
@@ -61,28 +42,10 @@ import {
 } from "@norish/shared-server/ingredients/nutrition/corrections";
 import { resolveIngredientNutrition } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import { spoonMeasureFor } from "@norish/shared-server/ingredients/nutrition/spoon-measure";
-import {
-  estimateCleanTokens,
-  listNameableIngredients,
-} from "@norish/shared-server/ingredients/plain-names";
 import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
-import {
-  estimateReviewTokens,
-  findParentWithAI,
-  listReviewableIngredients,
-  reviewFlaggedWithAI,
-  withoutSettled,
-} from "@norish/shared-server/ingredients/review";
-import {
-  confirmSuggestion,
-  dismissSuggestion,
-  inConfirmOrder,
-  listSuggestions,
-} from "@norish/shared-server/ingredients/suggestions";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ICON_FILE_PATTERN } from "@norish/shared-server/media/ingredient-icon";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
-import { FIX_PARTS, ICON_SCOPES } from "@norish/shared/contracts/ingredient-catalogue";
 import {
   INGREDIENT_SEARCH_FIELDS,
   INGREDIENT_SEARCH_MATCHES,
@@ -90,7 +53,7 @@ import {
 
 import type { AuthedProcedureContext } from "../../middleware";
 import { formDataInputSchema, getFormDataString, getUploadedFile } from "../../form-data";
-import { authedProcedure } from "../../middleware";
+import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
 import { ingredientsSubscriptions } from "./subscriptions";
 
@@ -110,22 +73,12 @@ const find = authedProcedure
     return ingredient ? { ingredientId: ingredient.ingredientId } : null;
   });
 
-function actorOf(ctx: AuthedProcedureContext): CatalogueActor {
-  return {
-    userId: ctx.user.id,
-    householdUserIds: ctx.householdUserIds,
-    isServerAdmin: ctx.isServerAdmin,
-  };
-}
-
 const REFUSAL_CODES: Record<CatalogueRefusal, TRPCError["code"]> = {
   forbidden: "FORBIDDEN",
   "not-found": "NOT_FOUND",
   "name-taken": "CONFLICT",
   "spelling-taken": "CONFLICT",
   "last-alias": "CONFLICT",
-  "alias-in-use": "CONFLICT",
-  "ingredient-in-use": "CONFLICT",
   "same-ingredient": "BAD_REQUEST",
   cycle: "CONFLICT",
   empty: "BAD_REQUEST",
@@ -173,11 +126,14 @@ const list = authedProcedure
       standaloneOnly: z.boolean().optional(),
       /** The viewer's locale: which spellings ride along with each row. */
       locale: z.string().max(20).optional(),
+      /** Only the foods the page lists; the Pantry's search passes false to find hidden ones. */
+      listedOnly: z.boolean().default(true),
       cursor: z.number().int().min(0).nullish(),
     })
   )
   .query(async ({ ctx, input }) => {
-    const page = await listIngredients(actorOf(ctx), {
+    const page = await listIngredients(viewerOf(ctx), {
+      listedOnly: input.listedOnly,
       search: input.search,
       match: input.match,
       fields: input.fields,
@@ -195,8 +151,9 @@ const list = authedProcedure
 const kinds = authedProcedure
   .input(z.object({ parentId: z.uuid(), locale: z.string().max(20).optional() }))
   .query(async ({ ctx, input }) => {
-    const page = await listIngredients(actorOf(ctx), {
+    const page = await listIngredients(viewerOf(ctx), {
       parentId: input.parentId,
+      listedOnly: true,
       locale: input.locale,
     });
 
@@ -211,7 +168,7 @@ const kinds = authedProcedure
 const get = authedProcedure
   .input(z.object({ ingredientId: z.uuid(), locale: z.string().max(20).optional() }))
   .query(async ({ ctx, input }) => {
-    const page = await listIngredients(actorOf(ctx), {
+    const page = await listIngredients(viewerOf(ctx), {
       id: input.ingredientId,
       locale: input.locale,
     });
@@ -222,21 +179,19 @@ const get = authedProcedure
 /** Every spelling of one Ingredient, for a row that asked to see them all. */
 const spellings = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
-  .query(({ ctx, input }) => listSpellings(actorOf(ctx), input.ingredientId));
+  .query(({ ctx, input }) => listSpellings(viewerOf(ctx), input.ingredientId));
 
 /** Where an Ingredient is still used, for the panel a refused delete opens. */
 const uses = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
-  .query(({ ctx, input }) =>
-    listIngredientUses({ ...actorOf(ctx), userIds: ctx.userIds }, input.ingredientId)
-  );
+  .query(({ ctx, input }) => listIngredientUses(viewerOf(ctx), input.ingredientId));
 
 const addAlias = authedProcedure
   .input(z.object({ ingredientId: z.uuid(), text: ingredientName }))
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Adding an alias");
 
-    return asEditResult(() => addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text));
+    return asEditResult(() => addCatalogueAlias(viewerOf(ctx), input.ingredientId, input.text));
   });
 
 const rename = authedProcedure
@@ -244,7 +199,7 @@ const rename = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Renaming an Ingredient");
 
-    return asEditResult(() => renameIngredient(actorOf(ctx), input.ingredientId, input.name));
+    return asEditResult(() => renameIngredient(viewerOf(ctx), input.ingredientId, input.name));
   });
 
 const markDistinct = authedProcedure
@@ -252,7 +207,7 @@ const markDistinct = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Marking distinct");
 
-    return asEditResult(() => markCatalogueDistinct(actorOf(ctx), input.ingredientId));
+    return asEditResult(() => markCatalogueDistinct(viewerOf(ctx), input.ingredientId));
   });
 
 const removeAlias = authedProcedure
@@ -260,258 +215,26 @@ const removeAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, aliasId: input.aliasId }, "Removing an alias");
 
-    return asEditResult(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
+    return asEditResult(() => removeCatalogueAlias(viewerOf(ctx), input.aliasId));
   });
 
-/**
- * Ask AI what a Flagged Ingredient is, and act on a sure answer. Follows
- * `edit` on the Ingredient, and AI being on for the instance, as every AI
- * use does. Answers what came of it, for the page to say.
- */
-const reviewWithAI = authedProcedure
-  .input(z.object({ ingredientId: z.uuid() }))
-  .mutation(async ({ ctx, input }) => {
-    await assertAIEnabled();
-    log.info(
-      { userId: ctx.user.id, ingredientId: input.ingredientId },
-      "Asking AI about a flagged Ingredient"
-    );
+/** Every change Changed by AI lists, each saying whether the viewer may keep or undo it. */
+const aiChanges = authedProcedure.query(({ ctx }) => listAIChangesFor(viewerOf(ctx)));
 
-    return translated(async () => {
-      const outcome = await reviewFlaggedWithAI(actorOf(ctx), input.ingredientId);
+const aiChangeId = z.object({ changeId: z.uuid() });
 
-      // A suggestion recorded, or a flag's reason brought up to date.
-      if (outcome.outcome !== "not-flagged") {
-        await ingredientChanges().changed([input.ingredientId]);
-      }
+/** Keep an unsure AI Change: the viewer's own decision about its food. Follows `edit` on the food. */
+const keepAIChange = authedProcedure.input(aiChangeId).mutation(({ ctx, input }) => {
+  log.info({ userId: ctx.user.id, changeId: input.changeId }, "Keeping an AI Change");
 
-      return outcome;
-    });
-  });
-
-/**
- * Ask AI what food an Ingredient is a kind of, and file it there on a sure
- * answer. Follows `edit` on the Ingredient. Answers what came of it.
- */
-const findParentWithAI_ = authedProcedure
-  .input(z.object({ ingredientId: z.uuid() }))
-  .mutation(async ({ ctx, input }) => {
-    await assertAIEnabled();
-    log.info(
-      { userId: ctx.user.id, ingredientId: input.ingredientId },
-      "Asking AI what an Ingredient is a kind of"
-    );
-
-    return translated(async () => {
-      const outcome = await findParentWithAI(actorOf(ctx), input.ingredientId);
-
-      // A suggestion recorded or cleared.
-      await ingredientChanges().changed([input.ingredientId]);
-
-      return outcome;
-    });
-  });
-
-/** The foods each part of Fix catalogue holds for the actor, flagged ones first, with the question each is asked. */
-async function fixFoods(
-  actor: CatalogueActor,
-  parts: readonly FixPart[]
-): Promise<IngredientReviewJobData["ingredients"]> {
-  const flagged =
-    parts.includes("unsuggested") || parts.includes("suggested")
-      ? await listReviewableIngredients(actor)
-      : [];
-  const names = parts.includes("name") ? await listNameableIngredients(actor) : [];
-
-  return [
-    ...flagged
-      .filter((food) => parts.includes(food.suggested ? "suggested" : "unsuggested"))
-      .map(({ id, name }) => ({ id, name, mode: "review" as const })),
-    ...names.map(({ id, name }) => ({ id, name, mode: "name" as const })),
-  ];
-}
-
-/** These Ingredients by id and by name, so the job monitor's input reads as foods, not ids. */
-async function namedFoods(ids: readonly string[]): Promise<{ id: string; name: string }[]> {
-  const names = await findCatalogueIngredientNames(ids);
-
-  return ids.map((id) => ({ id, name: names.get(id) ?? id }));
-}
-
-/**
- * Fix catalogue (`mode: "fix"`): ask AI about the parts of the catalogue the
- * asker picked, any of them together, which the server fills however many
- * foods they hold: the flagged Ingredients the asker may edit that no
- * suggestion waits on, those that have one, asked again, and the Plain Name
- * of every unflagged food whose name is not settled. Or what food each
- * Ingredient on the page is a kind of (`mode: "parent"`). No food is in two
- * parts; a flagged food AI calls its own is asked its Plain Name next. One job, a step per food, that keeps
- * going after the tab is closed. Each food's edit follows `edit` on that food, checked again
- * by the round as it reaches it, so a food the asker may no longer edit is
- * passed over rather than refused here. Answers the job the page watches the
- * round by, over `onReview`, and the foods it waits on.
- */
-const reviewAllWithAI = authedProcedure
-  .input(
-    z.discriminatedUnion("mode", [
-      z.object({ mode: z.literal("fix"), parts: z.array(z.enum(FIX_PARTS)).min(1) }),
-      z.object({ mode: z.literal("parent"), ingredientIds: z.array(z.uuid()).min(1) }),
-    ])
-  )
-  .mutation(async ({ ctx, input }) => {
-    await assertAIEnabled();
-
-    const foods =
-      input.mode === "fix"
-        ? await fixFoods(actorOf(ctx), input.parts)
-        : (await namedFoods(input.ingredientIds)).map((food) => ({
-            ...food,
-            mode: "parent" as const,
-          }));
-
-    log.info(
-      {
-        userId: ctx.user.id,
-        count: foods.length,
-        mode: input.mode,
-        ...(input.mode === "fix" ? { parts: input.parts } : {}),
-      },
-      "Starting a round of Ask AI over Ingredients"
-    );
-    if (foods.length === 0) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Nothing to ask AI about" });
-    }
-
-    const jobId = await addIngredientReviewJob(getQueues().ingredientReview, {
-      ingredients: foods,
-      actor: {
-        userId: ctx.user.id,
-        householdUserIds: ctx.householdUserIds ? [...ctx.householdUserIds] : null,
-        isServerAdmin: ctx.isServerAdmin,
-      },
-    });
-
-    return { jobId, total: foods.length, pending: foods.map((food) => food.id) };
-  });
-
-/**
- * What a round of Fix catalogue would ask about the flagged Ingredients, for
- * the asker: how many each part holds, and about how many tokens a food's
- * question takes. Measured over the latest finished round where the queue
- * still holds one that recorded its tokens; counted from the prompt
- * otherwise.
- */
-const reviewScope = authedProcedure.query(async ({ ctx }): Promise<ReviewScopeSummary> => {
-  await assertAIEnabled();
-
-  const foods = await listReviewableIngredients(actorOf(ctx));
-  const measured = await readRoundTokens(getQueues().ingredientReview);
-
-  const suggested = foods.filter((food) => food.suggested).length;
-
-  return {
-    unsuggested: foods.length - suggested,
-    suggested,
-    tokens: measured
-      ? { basis: "measured", ...measured }
-      : { basis: "prompt", models: await estimateReviewTokens(foods.map((food) => food.name)) },
-  };
+  return asEditResult(() => keepCatalogueAIChange(viewerOf(ctx), input.changeId));
 });
 
-/**
- * What a round of Clean names would ask about, for the asker: how many foods
- * whose names are not settled they may edit, and about how many tokens a
- * food's question takes, measured or counted from the prompt as for Ask AI.
- */
-const nameScope = authedProcedure.query(async ({ ctx }): Promise<NameScopeSummary> => {
-  await assertAIEnabled();
+/** Undo an AI Change, which AI then never makes again. Follows `edit` on the food. */
+const undoAIChange = authedProcedure.input(aiChangeId).mutation(({ ctx, input }) => {
+  log.info({ userId: ctx.user.id, changeId: input.changeId }, "Undoing an AI Change");
 
-  const foods = await listNameableIngredients(actorOf(ctx));
-  const measured = await readRoundTokens(getQueues().ingredientReview, "name");
-
-  return {
-    foods: foods.length,
-    tokens: measured
-      ? { basis: "measured", ...measured }
-      : { basis: "prompt", models: await estimateCleanTokens(foods.map((food) => food.name)) },
-  };
-});
-
-/** The round of Ask AI running on the instance, for a page that opens mid-round. */
-const reviewRound = authedProcedure.query(() =>
-  findRunningReviewRound(getQueues().ingredientReview)
-);
-
-/**
- * A round of Ask AI read back: what it did to each food and how, for the
- * summary the page offers once the round is over. Without a job, the latest
- * round to have ended, so the page finds what it could not suggest after a
- * reload. A food it got no suggestion for and that has been settled since
- * drops out. Null once the queue has let the job go.
- */
-const reviewReport = authedProcedure
-  .input(z.object({ jobId: z.string().min(1).max(100).optional() }))
-  .query(async ({ input }): Promise<ReviewReport | null> => {
-    const queue = getQueues().ingredientReview;
-    const report = input.jobId
-      ? await readReviewReport(queue, input.jobId)
-      : await readLatestReviewReport(queue);
-
-    return report ? await withoutSettled(report) : null;
-  });
-
-/** The suggestions waiting on the viewer: only those about foods they may edit. */
-const suggestions = authedProcedure.query(({ ctx }) => listSuggestions(actorOf(ctx)));
-
-// As many as there are: Confirm all answers every suggestion a round over the catalogue left.
-const suggestionIds = z.object({ suggestionIds: z.array(z.uuid()).min(1) });
-
-/**
- * Answer suggestions one by one, confirming (the edit each proposes is made
- * as the viewer's own) or dismissing them, and announce what they changed
- * once, together. One that is refused does not stop the rest; the answer
- * counts them and names the first refusal, for the page to say why. One
- * already gone by its turn was settled another way, by an earlier answer in
- * the same go (two foods suggested into each other) or by someone else, and
- * is neither done nor refused.
- */
-async function answerSuggestions(
-  ctx: AuthedProcedureContext,
-  ids: readonly string[],
-  answer: typeof confirmSuggestion
-): Promise<{ done: number; failed: number; refusal: CatalogueRefusal | null }> {
-  return announcingTogether(async () => {
-    let done = 0;
-    let failed = 0;
-    let refusal: CatalogueRefusal | null = null;
-
-    for (const id of ids) {
-      try {
-        await answer(actorOf(ctx), id);
-        done += 1;
-      } catch (error) {
-        if (!(error instanceof CatalogueEditError)) throw error;
-        if (error.refusal === "not-found") continue;
-        failed += 1;
-        refusal ??= error.refusal;
-      }
-    }
-
-    return { done, failed, refusal };
-  });
-}
-
-const confirmSuggestions = authedProcedure.input(suggestionIds).mutation(async ({ ctx, input }) => {
-  log.info({ userId: ctx.user.id, count: input.suggestionIds.length }, "Confirming AI suggestions");
-
-  // A merge first would take away the food a merge into it names.
-  return answerSuggestions(ctx, await inConfirmOrder(input.suggestionIds), confirmSuggestion);
-});
-
-const dismissSuggestions = authedProcedure.input(suggestionIds).mutation(({ ctx, input }) => {
-  log.info({ userId: ctx.user.id, count: input.suggestionIds.length }, "Dismissing AI suggestions");
-
-  return answerSuggestions(ctx, input.suggestionIds, dismissSuggestion);
+  return asEditResult(() => undoCatalogueAIChange(viewerOf(ctx), input.changeId));
 });
 
 /**
@@ -549,7 +272,7 @@ const uploadIcon = authedProcedure.input(formDataInputSchema).mutation(async ({ 
   );
   const bytes = Buffer.from(await picture.arrayBuffer());
 
-  return translated(() => uploadIngredientIcon(actorOf(ctx), ingredientId.data, bytes));
+  return translated(() => uploadIngredientIcon(viewerOf(ctx), ingredientId.data, bytes));
 });
 
 /**
@@ -566,7 +289,7 @@ const generateIcon = authedProcedure
       "Generating an Ingredient Icon"
     );
 
-    return translated(() => generateIngredientIcon(actorOf(ctx), input.ingredientId));
+    return translated(() => generateIngredientIcon(viewerOf(ctx), input.ingredientId));
   });
 
 /** Refuse unless the instance can draw: AI on and an image provider configured. */
@@ -577,59 +300,8 @@ async function assertCanDraw(): Promise<void> {
 }
 
 /**
- * How many icons each scope of a Draw icons round would draw for the asker,
- * over the whole catalogue: only the foods they may edit, and never a vague
- * group the shipped set leaves without one. No price: image pricing differs
- * by provider and model.
- */
-const iconScope = authedProcedure.query(async ({ ctx }): Promise<IconScopeSummary> => {
-  await assertCanDraw();
-  const scopes = await listIconRoundFoods(actorOf(ctx));
-
-  return { bare: scopes.bare.length, unowned: scopes.unowned.length };
-});
-
-/**
- * Draw the icons of every food in `scope` the asker may edit, which the
- * server picks, however many: one job, a step per food, that outlives the
- * tab. Each icon is set as the food's own, with no review, under `edit` on
- * that food, checked again as the round reaches it. Answers the job the page
- * watches the round by, over `onIcons`, and the foods it is to draw.
- */
-const drawIcons = authedProcedure
-  .input(z.object({ scope: z.enum(ICON_SCOPES) }))
-  .mutation(async ({ ctx, input }) => {
-    await assertCanDraw();
-    const foods = (await listIconRoundFoods(actorOf(ctx)))[input.scope];
-
-    log.info(
-      { userId: ctx.user.id, count: foods.length, scope: input.scope },
-      "Starting a Draw icons round"
-    );
-    if (foods.length === 0) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "No icons to draw" });
-    }
-
-    const jobId = await addIngredientIconsJob(getQueues().ingredientIcons, {
-      ingredients: foods,
-      actor: {
-        userId: ctx.user.id,
-        householdUserIds: ctx.householdUserIds ? [...ctx.householdUserIds] : null,
-        isServerAdmin: ctx.isServerAdmin,
-      },
-    });
-
-    return { jobId, total: foods.length, pending: foods.map((food) => food.id) };
-  });
-
-/** The Draw icons round running on the instance, for a page that opens mid-round. */
-const iconRound = authedProcedure.query(() => findRunningIconRound(getQueues().ingredientIcons));
-
-/**
- * Save an Ingredient's draft from its panel as one edit: a new name, a new
- * parent (null clears it), spellings removed and added, and its icon (a
- * stored file, or null to remove its own), each under its own rule. A
- * refusal anywhere changes nothing, and says why.
+ * Save an Ingredient panel's draft as one edit (`saveDraft`); a refusal anywhere changes nothing,
+ * and says why.
  */
 const saveDraft = authedProcedure
   .input(
@@ -639,6 +311,8 @@ const saveDraft = authedProcedure
       parentId: z.uuid().nullable().optional(),
       add: z.array(ingredientName).max(100),
       remove: z.array(z.uuid()).max(100),
+      /** Of `remove`, those the person says name no food, for the junk pile. */
+      junk: z.array(z.uuid()).max(100).default([]),
       icon: z.string().regex(ICON_FILE_PATTERN).nullable().optional(),
     })
   )
@@ -646,16 +320,16 @@ const saveDraft = authedProcedure
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Saving an Ingredient");
     const { ingredientId, ...draft } = input;
 
-    return asEditResult(() => saveIngredientDraft(actorOf(ctx), ingredientId, draft));
+    return asEditResult(() => saveIngredientDraft(viewerOf(ctx), ingredientId, draft));
   });
 
-/** Delete an Ingredient nothing uses. Follows `edit` on the Ingredient. */
+/** Delete an Ingredient; its lines and Groceries keep their text. Follows `edit` on the Ingredient. */
 const remove = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Deleting an Ingredient");
 
-    return asEditResult(() => deleteIngredient(actorOf(ctx), input.ingredientId));
+    return asEditResult(() => deleteIngredient(viewerOf(ctx), input.ingredientId));
   });
 
 /** Merge one Ingredient into another. Needs `edit` on both. */
@@ -664,7 +338,7 @@ const merge = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Merging Ingredients");
 
-    return asEditResult(() => mergeIngredients(actorOf(ctx), input.sourceId, input.targetId));
+    return asEditResult(() => mergeIngredients(viewerOf(ctx), input.sourceId, input.targetId));
   });
 
 /** Move a spelling to another Ingredient, or to a new one (`targetId` null): the unmerge. */
@@ -673,7 +347,7 @@ const moveAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Moving an alias");
 
-    return asEditResult(() => moveCatalogueAlias(actorOf(ctx), input.aliasId, input.targetId));
+    return asEditResult(() => moveCatalogueAlias(viewerOf(ctx), input.aliasId, input.targetId));
   });
 
 /** Set or clear an Ingredient's Parent Ingredient. Follows `edit` on the Ingredient. */
@@ -682,7 +356,9 @@ const setParent = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Setting a Parent Ingredient");
 
-    return asEditResult(() => setCatalogueParent(actorOf(ctx), input.ingredientId, input.parentId));
+    return asEditResult(() =>
+      setCatalogueParent(viewerOf(ctx), input.ingredientId, input.parentId)
+    );
   });
 
 /**
@@ -723,14 +399,7 @@ const nutritionFor = authedProcedure
 const spoonMeasure = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(({ ctx, input }): Promise<SpoonMeasure | null> =>
-    spoonMeasureFor(
-      {
-        userId: ctx.user.id,
-        householdUserIds: ctx.householdUserIds,
-        isServerAdmin: ctx.isServerAdmin,
-      },
-      input.ingredientId
-    )
+    spoonMeasureFor(viewerOf(ctx), input.ingredientId)
   );
 
 /** A dataset food, as a correction names it. */
@@ -740,7 +409,7 @@ const datasetFood = z.object({
     .regex(/^[a-z0-9-]+:[^\s]+$/)
     .max(100),
 });
-const amount = z.number().finite().nonnegative().max(100_000);
+const amount = z.number().nonnegative().max(100_000);
 
 /**
  * Correct an Ingredient's nutrition for the viewer's household: any member,
@@ -819,21 +488,11 @@ export const ingredientsRouter = router({
   icons,
   uploadIcon,
   generateIcon,
-  iconScope,
-  drawIcons,
-  iconRound,
   saveDraft,
   remove,
-  reviewWithAI,
-  findParentWithAI: findParentWithAI_,
-  reviewAllWithAI,
-  reviewScope,
-  nameScope,
-  reviewRound,
-  reviewReport,
-  suggestions,
-  confirmSuggestions,
-  dismissSuggestions,
+  aiChanges,
+  keepAIChange,
+  undoAIChange,
   merge,
   moveAlias,
   setParent,

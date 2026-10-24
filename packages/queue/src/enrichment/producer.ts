@@ -16,8 +16,9 @@ import type {
 } from "@norish/shared/lib/recipe-enrichment";
 import { createLogger } from "@norish/shared-server/logger";
 
-import type { RecipeEnrichmentJobData } from "../contracts/job-types";
+import type { RecipeEnrichmentJobData, RecipeEnrichmentJobInput } from "../contracts/job-types";
 import { removeRetainedTerminalJob } from "../helpers";
+import { getBullClient } from "../valkey/bullmq";
 import { publishEnrichmentLifecycle } from "./announce";
 import { ENRICHMENT_JOB_NAMES, enrichmentJobId, findActiveEnrichmentJobId } from "./identity";
 
@@ -28,10 +29,15 @@ const log = createLogger("queue:enrichment");
  *
  * A retained terminal job for the same recipe and kind is removed first, so
  * history retention never blocks a rerun while an in-flight job still does.
+ *
+ * Unlike the imports and CalDAV sync, enrichment keeps deterministic job ids
+ * and no BullMQ deduplication: its status read finds a finished run by that
+ * id, and an automatic enrollment merges into a run that already completed,
+ * which needs the kept job to hold the id.
  */
 export async function addEnrichmentJob(
   queue: Queue<RecipeEnrichmentJobData>,
-  data: RecipeEnrichmentJobData
+  data: RecipeEnrichmentJobInput
 ): Promise<RecipeEnrichmentEnrollment> {
   const { kind, recipeId } = data;
   const jobId = enrichmentJobId(kind, recipeId);
@@ -60,13 +66,12 @@ export async function addEnrichmentJob(
     return { kind, status: "duplicate", existingJobId: jobId };
   }
 
-  const redis = await queue.client;
-  const runSequence = await redis.incr(queue.toKey("enrichment-run-sequence"));
-  const runData = { ...data, runId: data.runId ?? randomUUID(), runSequence };
+  const runSequence = await getBullClient().incr(queue.toKey("enrichment-run-sequence"));
+  const runData: RecipeEnrichmentJobData = { ...data, runId: randomUUID(), runSequence };
   const job = await queue.add(ENRICHMENT_JOB_NAMES[kind], runData, { jobId });
   const storedRun = await queue.getJob(jobId);
 
-  if (storedRun?.data?.runId && storedRun.data.runId !== runData.runId) {
+  if (storedRun && storedRun.data.runId !== runData.runId) {
     // Another producer won the deterministic-id race between our preflight
     // read and BullMQ's atomic add. That run is real; ours is not, so do not
     // publish a phantom run identity or tell a manual caller it started.

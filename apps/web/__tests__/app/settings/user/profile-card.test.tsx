@@ -56,7 +56,6 @@ class MockFileReader {
 
 describe("ProfileCard", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.stubGlobal("FileReader", MockFileReader);
     mockUser = { name: "Alice", email: "alice@example.com", image: null };
   });

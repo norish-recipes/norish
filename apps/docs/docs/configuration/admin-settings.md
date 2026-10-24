@@ -33,8 +33,14 @@ it matches an ingredient name to a food. The list is per locale:
   nutmeg"
 - `joiners`: words between two preparations, like "and" in "peeled and
   chopped"
-- `servedWith`: what the food comes in, like "in" in "tuna in olive oil", which
-  is tuna
+- `together` and `alternatives`: words between two foods, like "en" in "zout
+  en peper" and "of" in "boter of olie". A recipe line is split there only when
+  each part is a known food, and never where Norish knows the whole name ("mac
+  and cheese")
+- `endsBefore`: where a name ends, like "in" in "tuna in olive oil", which is
+  tuna, or "for" in "greek yogurt for topping"
+- `forms`: cuts and forms after a food's name, like "blokjes" in "mango
+  blokjes". A new ingredient named so is filed under the food
 - `notFoods`: words that are never a food on their own, like "and" or "with"
 - `inflections`: plural and diminutive endings, so "onions" becomes "onion" and
   "cherries" becomes "cherry"
@@ -57,7 +63,13 @@ Merging two ingredients needs permission on both. Anyone can add a translation.
 ## Job queues
 
 Imports, enrichment and other long tasks run as background jobs.
-**Settings => Admin => Job queues** lists them as waiting, running, finished or
-failed. Open a job to see further details about the task.
+**Settings => Admin => Job queues** lists them as waiting, running, finished,
+failed or cancelled. Open a job to see further details about the task.
 
 ![Job details with the models a job asked](/img/screenshots/admin-job-details.png)
+
+### Cancelling a job
+
+![A cancelled job in the job monitor](/img/screenshots/admin-job-cancelled.png)
+
+A running job can be stopped from its details with **Cancel job**. An AI request the job is waiting on stops at once; other work finishes its current step first, and the button reads **Cancelling…** until then. The job then shows as **Cancelled** and is not retried on its own; **Retry** runs it again if it was cancelled by mistake.

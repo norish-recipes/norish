@@ -23,6 +23,10 @@ const columns = [
 ];
 
 export function Footer() {
+  // A server component, rendered once per build.
+  // eslint-disable-next-line @eslint-react/purity
+  const year = new Date().getFullYear();
+
   return (
     <footer className="border-border border-t px-5 py-14 sm:px-8">
       <div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-2 lg:grid-cols-[1fr_auto_auto] lg:gap-20">
@@ -66,7 +70,7 @@ export function Footer() {
 
       <div className="border-border mx-auto mt-12 flex max-w-5xl flex-col gap-2 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted/70 text-xs">
-          © {new Date().getFullYear()} Norish is released under the AGPL-3.0 License.
+          © {year} Norish is released under the AGPL-3.0 License.
         </p>
         <p className="text-muted/70 text-xs">Built for people who love to cook.</p>
       </div>

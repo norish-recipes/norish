@@ -26,7 +26,9 @@ from [`MASTER_KEY`](./server-runtime.md).
 
 **Domain** covers subdomains, so `instagram.com` also matches
 `www.instagram.com`. A bare `instagram` works too. A token is only sent to its
-own domain.
+own domain, with one exception: a video import sends a header token with every
+request yt-dlp makes for that video, including to the servers the site keeps
+its videos on.
 
 ### Finding a cookie
 

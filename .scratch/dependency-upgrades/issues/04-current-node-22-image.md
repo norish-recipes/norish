@@ -1,6 +1,6 @@
 # 04 — The image runs a current Node 22
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: None — can start immediately
 Target release: 0.25.0-beta (safe fixes only; open question 1 in the spec)
 
@@ -66,3 +66,4 @@ Hence the full image smoke test below.
   - the Docker Hub tags API for `library/node`;
   - `versions.json` from nodejs/docker-node;
   - `index.json` from nodejs.org/dist.
+- 2026-10-13 — Shipped in 0.25.0 (8bf13f1e) as the floating `node:22-alpine3.24`, not the exact pin. The exact pin moves to ticket 16; `CONTRIBUTING.md`'s Node version and the libvips record move to ticket 15.

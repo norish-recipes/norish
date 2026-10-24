@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 // @vitest-environment node
 
@@ -146,18 +146,21 @@ async function* itemsOf(items: unknown[]) {
   }
 }
 
-describe("archive import loop favourite extra", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+let parser: typeof import("@norish/shared-server/archive/parser");
 
+// Loaded once, in a hook: the parser's import graph is heavy, and loaded
+// inside a test it spent that test's 5 s budget on a busy machine.
+beforeAll(async () => {
+  parser = await import("@norish/shared-server/archive/parser");
+});
+
+describe("archive import loop favourite extra", () => {
   it("applies the favourite to a freshly created recipe for the importing user", async () => {
     mockFindExistingRecipe.mockResolvedValue(null);
     mockCreateRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-recipe-id" });
     mockDashboardRecipe.mockResolvedValue({ id: "new-recipe-id", name: "Marked Soup" });
 
-    const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-    const result = await importRecipeItems(
+    const result = await parser.importRecipeItems(
       itemsOf([
         {
           dto: buildDto("new-recipe-id"),
@@ -180,8 +183,7 @@ describe("archive import loop favourite extra", () => {
     mockFindExistingRecipe.mockResolvedValue("existing-recipe-id");
     mockDashboardRecipe.mockResolvedValue({ id: "existing-recipe-id", name: "Marked Soup" });
 
-    const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-    const result = await importRecipeItems(
+    const result = await parser.importRecipeItems(
       itemsOf([
         { dto: buildDto("archive-recipe-id"), fileName: "recipe_1", importedFavorite: true },
       ]),
@@ -200,9 +202,7 @@ describe("archive import loop favourite extra", () => {
     mockCreateRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-recipe-id" });
     mockDashboardRecipe.mockResolvedValue({ id: "new-recipe-id", name: "Marked Soup" });
 
-    const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-
-    await importRecipeItems(
+    await parser.importRecipeItems(
       itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedRating: 3 }]),
       "user-1",
       ["user-1"]
@@ -216,9 +216,7 @@ describe("archive import loop favourite extra", () => {
     mockCreateRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-recipe-id" });
     mockDashboardRecipe.mockResolvedValue({ id: "new-recipe-id", name: "Marked Soup" });
 
-    const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-
-    await importRecipeItems(
+    await parser.importRecipeItems(
       itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true }]),
       undefined,
       ["user-1"]
@@ -233,8 +231,7 @@ describe("archive import loop favourite extra", () => {
     mockDashboardRecipe.mockResolvedValue({ id: "new-recipe-id", name: "Marked Soup" });
     mockAddFavorite.mockRejectedValue(new Error("favorites table unavailable"));
 
-    const { importRecipeItems } = await import("@norish/shared-server/archive/parser");
-    const result = await importRecipeItems(
+    const result = await parser.importRecipeItems(
       itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true }]),
       "user-1",
       ["user-1"]
@@ -260,9 +257,7 @@ describe("archive import loop favourite extra", () => {
     zip.file("recipe.melarecipe", "{}");
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    const { importArchive } = await import("@norish/shared-server/archive/parser");
-
-    await importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive("user-1", ["user-1"], zipBytes);
 
     expect(mockAddFavorite).toHaveBeenCalledTimes(1);
   });

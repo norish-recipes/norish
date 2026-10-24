@@ -7,7 +7,7 @@ import { auth } from "./auth";
 /**
  * What the request claims to be, before the claim has been checked.
  *
- * Sessions live in Redis, keyed by their token, and hold a copy of the user row
+ * Sessions live in Valkey, keyed by their token, and hold a copy of the user row
  * as it looked at sign-in. Reading one proves a token was issued once — nothing
  * more. It does not prove the user still exists, nor that the privileges baked
  * into the copy are still the ones the database grants.
@@ -39,7 +39,7 @@ export async function readSessionPrincipal(headers: Headers): Promise<SessionPri
  * Resolve a principal against the database, revoking the session if the user
  * behind it is gone.
  *
- * Revoking matters as much as rejecting: it drops the Redis entry, so every
+ * Revoking matters as much as rejecting: it drops the Valkey entry, so every
  * later request carrying that cookie fails on the cache lookup and never
  * reaches the database at all.
  */

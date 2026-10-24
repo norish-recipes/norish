@@ -96,7 +96,6 @@ function sentRequest(): CapturedRequest {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   vi.mocked(getCuisineStrategy).mockResolvedValue("existing");
   vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
   vi.mocked(listCuisines).mockResolvedValue(VOCABULARY);

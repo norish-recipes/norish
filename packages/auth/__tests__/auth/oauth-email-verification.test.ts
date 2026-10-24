@@ -6,13 +6,13 @@ import { auth } from "@norish/auth/auth";
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
 
 // The real auth config, with Better Auth's memory adapter standing in for Postgres
-// and a Map for Redis, so the encrypted-email adapter and the hooks run as shipped.
-const { store, redis } = vi.hoisted(() => ({
+// and a Map for Valkey, so the encrypted-email adapter and the hooks run as shipped.
+const { store, valkey } = vi.hoisted(() => ({
   store: { user: [], session: [], account: [], verification: [], apikey: [] } as Record<
     string,
     unknown[]
   >,
-  redis: new Map<string, string>(),
+  valkey: new Map<string, string>(),
 }));
 
 vi.mock("better-auth/adapters/drizzle", async () => {
@@ -37,12 +37,12 @@ vi.mock("@norish/auth/claim-processor", () => ({
 vi.mock("@norish/shared-server/logger", () => ({
   authLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-vi.mock("@norish/shared-server/redis/client", () => ({
+vi.mock("@norish/shared-server/valkey/client", () => ({
   getPublisherClient: async () => ({
-    get: async (key: string) => redis.get(key) ?? null,
-    set: async (key: string, value: string) => redis.set(key, value),
-    setex: async (key: string, _ttl: number, value: string) => redis.set(key, value),
-    del: async (key: string) => redis.delete(key),
+    get: async (key: string) => valkey.get(key) ?? null,
+    set: async (key: string, value: string) => valkey.set(key, value),
+    setex: async (key: string, _ttl: number, value: string) => valkey.set(key, value),
+    del: async (key: string) => valkey.delete(key),
   }),
 }));
 
@@ -83,7 +83,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   for (const rows of Object.values(store)) rows.length = 0;
-  redis.clear();
+  valkey.clear();
 });
 
 describe("OAuth sign-in over encrypted emails", () => {
@@ -101,20 +101,39 @@ describe("OAuth sign-in over encrypted emails", () => {
     expect((await findUser(user.id))?.emailVerified).toBe(true);
   });
 
-  it("auto-links another trusted provider once the email is verified", async () => {
+  it.each([
+    ["github", "google"],
+    ["google", "github"],
+    ["oidc", "google"],
+  ])(
+    "never links a %s sign-in to a verified %s user with the same email",
+    async (providerId, existingProvider) => {
+      const { user } = await (
+        await context()
+      ).internalAdapter.createOAuthUser(
+        { email: EMAIL, name: "Ada", emailVerified: true },
+        { providerId: existingProvider, accountId: `${existingProvider}-1` }
+      );
+
+      const result = await signInWith(providerId, `${providerId}-1`);
+
+      expect(result.error).toBe("account not linked");
+      expect(await providersOf(user.id)).toEqual([existingProvider]);
+    }
+  );
+
+  it("still signs in a provider that is already linked", async () => {
     const { user } = await (
       await context()
     ).internalAdapter.createOAuthUser(
-      { email: EMAIL, name: "Ada", emailVerified: false },
-      { providerId: "google", accountId: "google-1" }
+      { email: EMAIL, name: "Ada", emailVerified: true },
+      { providerId: "github", accountId: "github-1" }
     );
 
-    await signInWith("google", "google-1");
     const result = await signInWith("github", "github-1");
 
     expect(result.error).toBeNull();
     expect(result.data?.user.id).toBe(user.id);
-    expect(await providersOf(user.id)).toEqual(["github", "google"]);
   });
 
   it("refuses to link a provider to a password account, whose email nobody verified", async () => {

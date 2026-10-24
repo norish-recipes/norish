@@ -112,6 +112,11 @@
     "message": "Węszy dookoła, żeby znaleźć stronę, której szukasz.",
     "imageAlt": "Zdezorientowana Nora"
   },
+  "errorPage": {
+    "title": "Coś poszło nie tak.",
+    "message": "Norish napotkał błąd na tej stronie.",
+    "retry": "Spróbuj ponownie"
+  },
   "import": {
     "url": {
       "title": "Importuj przepis",
@@ -178,12 +183,15 @@
     "daily": "Codziennie",
     "weekly": "Co tydzień",
     "monthly": "Co miesiąc",
+    "yearly": "Co rok",
     "day": "dzień",
     "days": "dni",
     "week": "tydzień",
     "weeks": "tygodnie",
     "month": "miesiąc",
     "months": "miesiące",
+    "year": "rok",
+    "years": "lata",
     "next": "Następny:",
     "every": "Co",
     "everyOther": "Co drugi",

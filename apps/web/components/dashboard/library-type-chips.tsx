@@ -1,8 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
+import { ChipButton } from "@/components/shared/chip-button";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
@@ -37,10 +37,9 @@ export default function LibraryTypeChips() {
         const isSelected = filters.libraryType === type;
 
         return (
-          <Chip
+          <ChipButton
             key={type}
             aria-pressed={isSelected}
-            as="button"
             className={`chip--on-ground h-9 shrink-0 cursor-pointer rounded-full border px-4 transition-colors select-none ${
               isSelected
                 ? "border-accent shadow-surface"
@@ -49,14 +48,13 @@ export default function LibraryTypeChips() {
             color={isSelected ? "accent" : "default"}
             data-library-type={type}
             size="lg"
-            type="button"
             // Switching the lens re-queries and re-sorts the whole Library.
             // That is not work the tap should wait on.
             variant={isSelected ? "primary" : "secondary"}
             onClick={() => startTransition(() => setFilters({ libraryType: type }))}
           >
             {t(`libraryType.${type}`)}
-          </Chip>
+          </ChipButton>
         );
       })}
     </div>

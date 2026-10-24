@@ -7,13 +7,10 @@
  * cannot prove a delete deleted anything, so this runs against the real
  * database beside the dish-colour round-trip.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { db } from "@norish/db/drizzle";
 import { replaceRecipePrimaryImageWithGenerated } from "@norish/db/repositories/recipe-enrichment";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
-import { recipes as recipesTable } from "@norish/db/schema";
 
 import { createTestUser } from "../helpers/db-test-helpers";
 import { createRecipeWithRefs } from "../helpers/recipe-writes";
@@ -43,11 +40,6 @@ const BASE_RECIPE = {
   images: [],
   videos: [],
 };
-
-/** Plant a legacy-shaped row: scalar set the way pre-deprecation releases wrote it. */
-async function plantLegacyScalar(recipeId: string, image: string): Promise<void> {
-  await db.update(recipesTable).set({ image }).where(eq(recipesTable.id, recipeId));
-}
 
 function url(recipeId: string, name: string): string {
   return `/recipes/${recipeId}/${name}.jpg`;
@@ -188,80 +180,28 @@ describe("replaceRecipePrimaryImageWithGenerated", () => {
     expect(await replaceRecipePrimaryImageWithGenerated(missing, url(missing, "drawn"))).toBeNull();
   });
 
-  // The deprecated scalar is never written with a value; the replacement
-  // clears any legacy one so a stale fallback cannot linger behind the
-  // gallery, and releases its file when the recipe no longer references it.
-  describe("the legacy thumbnail scalar", () => {
-    it("is cleared, with the shared old file released once", async () => {
-      // The URL-import-era shape: the same file once recorded in both. The
-      // scalar is planted raw, the way a pre-deprecation release wrote it.
-      const recipeId = crypto.randomUUID();
-      const photo = url(recipeId, "photo");
+  it("never hands back a file a surviving gallery row still references", async () => {
+    // Duplicate-content rows share a URL; displacing one copy must not
+    // orphan the other's file.
+    const recipeId = crypto.randomUUID();
+    const shared = url(recipeId, "shared");
 
-      await createRecipeWithRefs(recipeId, userId, {
-        ...BASE_RECIPE,
-        images: [{ image: photo, order: 0 }],
-      });
-      await plantLegacyScalar(recipeId, photo);
-
-      const result = await replaceRecipePrimaryImageWithGenerated(recipeId, url(recipeId, "drawn"));
-
-      expect((await getRecipeFull(recipeId))?.image).toBeNull();
-      expect(result?.replacedImageUrls).toEqual([photo]);
+    await createRecipeWithRefs(recipeId, userId, {
+      ...BASE_RECIPE,
+      images: [
+        { image: shared, order: 0 },
+        { image: shared, order: 1 },
+      ],
     });
 
-    it("is cleared on a legacy-only recipe, its photograph moved out and released", async () => {
-      const recipeId = crypto.randomUUID();
-      const legacy = url(recipeId, "legacy-hero");
+    const result = await replaceRecipePrimaryImageWithGenerated(recipeId, url(recipeId, "drawn"));
 
-      await createRecipeWithRefs(recipeId, userId, { ...BASE_RECIPE, images: [] });
-      await plantLegacyScalar(recipeId, legacy);
-
-      const result = await replaceRecipePrimaryImageWithGenerated(recipeId, url(recipeId, "drawn"));
-
-      const full = await getRecipeFull(recipeId);
-
-      expect(full?.image).toBeNull();
-      expect(full?.images).toEqual([
-        expect.objectContaining({ image: url(recipeId, "drawn"), order: 0, generated: true }),
-      ]);
-      // The photograph does not survive a deliberate replacement (ADR-0025),
-      // wherever it was recorded.
-      expect(result?.replacedImageUrls).toEqual([legacy]);
-    });
-
-    it("stays null for a recipe that had no image anywhere", async () => {
-      const recipeId = await createRecipeWithImages([]);
-
-      await replaceRecipePrimaryImageWithGenerated(recipeId, url(recipeId, "drawn"));
-
-      expect((await getRecipeFull(recipeId))?.image).toBeNull();
-    });
-
-    it("never hands back a file a surviving gallery row still references", async () => {
-      // Duplicate-content rows share a URL; displacing one copy must not
-      // orphan the other's file.
-      const recipeId = crypto.randomUUID();
-      const shared = url(recipeId, "shared");
-
-      await createRecipeWithRefs(recipeId, userId, {
-        ...BASE_RECIPE,
-        images: [
-          { image: shared, order: 0 },
-          { image: shared, order: 1 },
-        ],
-      });
-      await plantLegacyScalar(recipeId, shared);
-
-      const result = await replaceRecipePrimaryImageWithGenerated(recipeId, url(recipeId, "drawn"));
-
-      // Row at order 1 survives and still references the file.
-      expect(result?.replacedImageUrls).toEqual([]);
-      expect((await getRecipeFull(recipeId))?.images.map((img) => img.image)).toEqual([
-        url(recipeId, "drawn"),
-        shared,
-      ]);
-    });
+    // Row at order 1 survives and still references the file.
+    expect(result?.replacedImageUrls).toEqual([]);
+    expect((await getRecipeFull(recipeId))?.images.map((img) => img.image)).toEqual([
+      url(recipeId, "drawn"),
+      shared,
+    ]);
   });
 });
 
@@ -285,7 +225,6 @@ describe("getImageGenerationSweepCounts", () => {
 
     const gapRecipe = crypto.randomUUID();
     const galleryRecipe = crypto.randomUUID();
-    const legacyRecipe = crypto.randomUUID();
     const bareRecipe = crypto.randomUUID();
 
     await createRecipeWithRefs(gapRecipe, userId, { ...withIngredients, name: "Gap" });
@@ -294,17 +233,12 @@ describe("getImageGenerationSweepCounts", () => {
       name: "Gallery",
       images: [{ image: url(galleryRecipe, "photo"), order: 0 }],
     });
-    await createRecipeWithRefs(legacyRecipe, userId, {
-      ...withIngredients,
-      name: "Legacy",
-      image: url(legacyRecipe, "hero"),
-    });
     // No ingredients: insufficient input for the kind, so in neither count.
     await createRecipeWithRefs(bareRecipe, userId, { ...BASE_RECIPE, name: "Bare" });
 
     const counts = await getImageGenerationSweepCounts();
 
     // The beforeEach test recipe has no ingredients either and stays out.
-    expect(counts).toEqual({ eligible: 3, missingImage: 1 });
+    expect(counts).toEqual({ eligible: 2, missingImage: 1 });
   });
 });

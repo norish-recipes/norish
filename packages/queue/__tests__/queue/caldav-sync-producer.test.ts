@@ -1,147 +1,199 @@
-/**
- * CalDAV Sync Producer Tests
- *
- * The job id is deterministic per (calendar, item), so every later edit to a
- * planned item competes with whatever still holds that id.
- */
-
 // @vitest-environment node
-
-import type { Job, Queue } from "bullmq";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+/**
+ * The CalDAV sync producer against a real Valkey, with an always-on worker
+ * recording what it syncs: a burst of edits to one planned item is one sync,
+ * an edit during a running sync is synced right after it, and no edit is lost.
+ */
+import type { StartedValkeyContainer } from "@testcontainers/valkey";
+import type { Job } from "bullmq";
+import { ValkeyContainer } from "@testcontainers/valkey";
+import { Queue } from "bullmq";
+import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 
-import { addCaldavSyncJob } from "../../src/caldav-sync/producer";
-import { sanitizeUrlForJobId } from "../../src/helpers";
+import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { addCaldavSyncJob, isCaldavSyncPending } from "../../src/caldav-sync/producer";
+import { closeWorkers, createWorker } from "../../src/create-worker";
+import { QUEUE_NAMES } from "../../src/queue-names";
+import { closeBullConnection, getBullClient } from "../../src/valkey/bullmq";
 
-const add = vi.fn();
-const getJob = vi.fn();
-const remove = vi.fn();
+const config = vi.hoisted(() => ({ url: "" }));
 
-const queue = { add, getJob } as unknown as Queue<CaldavSyncJobData>;
+vi.mock("@norish/config/env-config-server", () => ({
+  SERVER_CONFIG: {
+    get VALKEY_URL() {
+      return config.url;
+    },
+  },
+}));
 
-const SERVER_URL = "https://radicale.example/dav/";
-const ITEM_ID = "item-1";
-const JOB_ID = `caldav_${sanitizeUrlForJobId(SERVER_URL)}_${ITEM_ID}`;
+let container: StartedValkeyContainer;
+let queue: Queue<CaldavSyncJobData>;
+/** What the worker synced, in order: item and title. */
+let synced: string[] = [];
+/** A sync the worker holds until the test calls `release()`. */
+let hold: { itemId: string; started: () => void; released: Promise<void> } | null = null;
+let release = () => {};
 
-function jobData(overrides: Partial<CaldavSyncJobData> = {}): CaldavSyncJobData {
+beforeAll(async () => {
+  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  config.url = valkeyUrl(container);
+  queue = new Queue(QUEUE_NAMES.CALDAV_SYNC, { connection: getBullClient() });
+});
+
+afterEach(async () => {
+  release();
+  hold = null;
+  synced = [];
+  await closeWorkers(0);
+  await queue.obliterate({ force: true });
+});
+
+afterAll(async () => {
+  await queue?.close();
+  await closeBullConnection();
+  await container?.stop();
+});
+
+function startWorker() {
+  createWorker(QUEUE_NAMES.CALDAV_SYNC, async (job: Job<CaldavSyncJobData>) => {
+    if (hold?.itemId === job.data.itemId) {
+      const { started, released } = hold;
+
+      hold = null;
+      started();
+      await released;
+    }
+    synced.push(`${job.data.itemId}:${job.data.eventTitle}`);
+  });
+}
+
+/** Resolves once the next sync of this item has started; it then waits for `release()`. */
+function holdNextSyncOf(itemId: string): Promise<void> {
+  const released = new Promise<void>((resolve) => (release = resolve));
+
+  return new Promise<void>((started) => (hold = { itemId, started, released }));
+}
+
+function sync(itemId: string, eventTitle: string): CaldavSyncJobData {
   return {
     userId: "user-1",
-    itemId: ITEM_ID,
+    itemId,
     itemType: "recipe",
-    plannedItemId: ITEM_ID,
-    eventTitle: "Lasagne",
-    date: "2026-08-21",
+    plannedItemId: itemId,
+    eventTitle,
+    date: "2026-10-14",
     slot: "Dinner",
     operation: "sync",
-    caldavServerUrl: SERVER_URL,
-    ...overrides,
+    caldavServerUrl: "https://radicale.example/dav/",
   };
 }
 
-/** A job occupying the id in the given BullMQ state. */
-function occupying(state: string, data: CaldavSyncJobData) {
-  return { id: JOB_ID, data, getState: vi.fn().mockResolvedValue(state), remove };
+async function settled() {
+  await expect
+    .poll(
+      async () =>
+        Object.values(await queue.getJobCounts("delayed", "waiting", "active")).reduce(
+          (sum, count) => sum + count,
+          0
+        ),
+      { timeout: 15_000 }
+    )
+    .toBe(0);
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  remove.mockResolvedValue(undefined);
-  add.mockImplementation((_name: string, data: CaldavSyncJobData, opts: { jobId: string }) =>
-    Promise.resolve({ id: opts.jobId, data } as Job<CaldavSyncJobData>)
-  );
-});
+it("syncs a burst of edits within the delay once, with the last state", async () => {
+  startWorker();
 
-describe("addCaldavSyncJob", () => {
-  it("enqueues under the deterministic id when it is free", async () => {
-    getJob.mockResolvedValueOnce(null);
-    const data = jobData();
+  for (const title of ["one", "two", "three", "four", "five"]) {
+    await addCaldavSyncJob(queue, sync("lasagne", title));
+  }
 
-    getJob.mockResolvedValueOnce(occupying("waiting", data));
+  await settled();
+  expect(synced).toEqual(["lasagne:five"]);
+}, 30_000);
 
-    const job = await addCaldavSyncJob(queue, data);
+it("syncs an edit made during a running sync right after it, once", async () => {
+  startWorker();
+  const running = holdNextSyncOf("lasagne");
 
-    expect(job.id).toBe(JOB_ID);
-    expect(add).toHaveBeenCalledTimes(1);
-    expect(add).toHaveBeenCalledWith("sync", data, { jobId: JOB_ID });
+  await addCaldavSyncJob(queue, sync("lasagne", "first"));
+  await running;
+
+  await addCaldavSyncJob(queue, sync("lasagne", "second"));
+  await addCaldavSyncJob(queue, sync("lasagne", "third"));
+  release();
+
+  await expect.poll(() => synced, { timeout: 15_000 }).toHaveLength(2);
+  await settled();
+  expect(synced).toEqual(["lasagne:first", "lasagne:third"]);
+}, 30_000);
+
+it("syncs the newer state of a job already waiting behind another item's sync", async () => {
+  startWorker();
+  const running = holdNextSyncOf("soup");
+
+  await addCaldavSyncJob(queue, sync("soup", "soup"));
+  await addCaldavSyncJob(queue, sync("lasagne", "moved once"));
+  await running;
+  // The lasagne's sync has to wait for the worker, past the point BullMQ
+  // replaces it. Added a moment after the soup's, it can still be short of its
+  // delay when the worker takes the soup, so it is promoted rather than timed.
+  await queue.promoteJobs();
+  expect(await queue.getWaitingCount()).toBe(1);
+
+  await addCaldavSyncJob(queue, sync("lasagne", "moved twice"));
+  release();
+
+  await settled();
+  expect(synced).toEqual(["soup:soup", "lasagne:moved twice"]);
+}, 30_000);
+
+it("keeps the newer state when the worker takes the waiting job before it is handed over", async () => {
+  startWorker();
+  const soupRunning = holdNextSyncOf("soup");
+
+  await addCaldavSyncJob(queue, sync("soup", "soup"));
+  await addCaldavSyncJob(queue, sync("lasagne", "moved once"));
+  await soupRunning;
+  await queue.promoteJobs();
+  expect(await queue.getWaitingCount()).toBe(1);
+
+  // The race: between the add and the hand-over, the worker takes the
+  // waiting lasagne job, with the older state.
+  const releaseSoup = release;
+  const lasagneRunning = holdNextSyncOf("lasagne");
+  const getJob = queue.getJob.bind(queue);
+
+  vi.spyOn(queue, "getJob").mockImplementationOnce(async (id) => {
+    releaseSoup();
+    await lasagneRunning;
+
+    return getJob(id);
   });
 
-  it("supersedes a queued job that has not been picked up", async () => {
-    const stale = occupying("waiting", jobData({ date: "2026-08-20" }));
-    const data = jobData();
+  await addCaldavSyncJob(queue, sync("lasagne", "moved twice"));
+  release();
 
-    getJob.mockResolvedValueOnce(stale);
-    getJob.mockResolvedValueOnce(null); // removeRetainedTerminalJob: id now free
-    getJob.mockResolvedValueOnce(occupying("waiting", data));
+  await settled();
+  expect(synced).toEqual(["soup:soup", "lasagne:moved once", "lasagne:moved twice"]);
+}, 30_000);
 
-    await addCaldavSyncJob(queue, data);
+it("counts an item's sync as pending while delayed or running, and not once it has run", async () => {
+  const pending = () => isCaldavSyncPending(queue, "https://radicale.example/dav/", "lasagne");
 
-    expect(remove).toHaveBeenCalledTimes(1);
-    expect(add).toHaveBeenCalledWith("sync", data, { jobId: JOB_ID });
-  });
+  await addCaldavSyncJob(queue, sync("lasagne", "created"));
+  expect(await pending()).toBe(true);
 
-  // The reported bug: after an item's first sync completes, the retained job
-  // keeps the id and BullMQ ignores every later add for the same item.
-  it.each(["completed", "failed"])(
-    "frees the id held by a retained %s job so the move reaches the server",
-    async (state) => {
-      const firstSync = occupying(state, jobData());
-      const moved = jobData({ date: "2026-08-25" });
+  startWorker();
+  const running = holdNextSyncOf("lasagne");
 
-      getJob.mockResolvedValueOnce(firstSync); // supersede check: terminal, left alone
-      getJob.mockResolvedValueOnce(firstSync); // removeRetainedTerminalJob
-      getJob.mockResolvedValueOnce(occupying(state, moved));
+  await queue.promoteJobs();
+  await running;
+  expect(await pending()).toBe(true);
 
-      const job = await addCaldavSyncJob(queue, moved);
-
-      expect(remove).toHaveBeenCalledTimes(1);
-      expect(job.id).toBe(JOB_ID);
-      expect(add).toHaveBeenCalledWith("sync", moved, { jobId: JOB_ID });
-    }
-  );
-
-  it("queues a follow-up when a running job still holds the id", async () => {
-    const running = occupying("active", jobData());
-    const moved = jobData({ date: "2026-08-25" });
-
-    getJob.mockResolvedValueOnce(running); // supersede check: active, left alone
-    getJob.mockResolvedValueOnce(running); // removeRetainedTerminalJob: not terminal
-    getJob.mockResolvedValueOnce(running); // add was ignored, old state still stored
-
-    const job = await addCaldavSyncJob(queue, moved);
-
-    expect(remove).not.toHaveBeenCalled();
-    expect(add).toHaveBeenCalledTimes(2);
-    expect(job.id).toMatch(new RegExp(`^${JOB_ID}_`));
-    expect(add).toHaveBeenLastCalledWith("sync", moved, { jobId: job.id });
-  });
-
-  it("does not queue a follow-up when the holding job carries the same state", async () => {
-    const data = jobData();
-    const running = occupying("active", jobData());
-
-    getJob.mockResolvedValueOnce(running);
-    getJob.mockResolvedValueOnce(running);
-    getJob.mockResolvedValueOnce(running);
-
-    const job = await addCaldavSyncJob(queue, data);
-
-    expect(add).toHaveBeenCalledTimes(1);
-    expect(job.id).toBe(JOB_ID);
-  });
-
-  it("re-enqueues a delete that collides with the item's retained sync", async () => {
-    const synced = occupying("completed", jobData());
-    const deletion = jobData({ operation: "delete", eventTitle: "", date: "", slot: "" });
-
-    getJob.mockResolvedValueOnce(synced);
-    getJob.mockResolvedValueOnce(synced);
-    getJob.mockResolvedValueOnce(occupying("waiting", deletion));
-
-    await addCaldavSyncJob(queue, deletion);
-
-    expect(remove).toHaveBeenCalledTimes(1);
-    expect(add).toHaveBeenCalledWith("sync", deletion, { jobId: JOB_ID });
-  });
-});
+  release();
+  await settled();
+  expect(await pending()).toBe(false);
+}, 30_000);

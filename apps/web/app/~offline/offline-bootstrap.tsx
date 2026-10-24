@@ -10,10 +10,12 @@ import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { cacheManager } from "@/lib/query-cache";
 
+import { addBasePath, stripBasePath } from "@norish/shared/lib/base-path";
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function offlineSurface(pathname: string) {
-  const path = pathname.replace(/\/+$/, "") || "/";
+  const path = pathname.replace(/(?<!\/)\/+$/, "") || "/";
 
   if (path === "/") return <Dashboard />;
   if (path === "/groceries" || path === "/groceries/pantry") return <GroceriesScreen />;
@@ -55,7 +57,7 @@ export function OfflineBootstrap() {
   useEffect(() => {
     void cacheManager
       .reconcileIdentity({ sessionUserId: null, isOffline: true })
-      .then(() => setPathname(window.location.pathname));
+      .then(() => setPathname(stripBasePath(window.location.pathname)));
   }, []);
 
   if (pathname === null) {
@@ -67,7 +69,7 @@ export function OfflineBootstrap() {
           aria-hidden
           alt=""
           className="size-12 animate-pulse opacity-80"
-          src="/logo-small.svg"
+          src={addBasePath("/logo-small.svg")}
         />
       </main>
     );

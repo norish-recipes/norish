@@ -113,7 +113,8 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 }));
 
 // Mock useSubscription
-vi.mock("@trpc/tanstack-react-query", () => ({
+vi.mock("@trpc/tanstack-react-query", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@trpc/tanstack-react-query")>()),
   useSubscription: vi.fn((options) => {
     // Call subscriptionOptions to register callbacks
     if (typeof options === "function") {
@@ -145,7 +146,6 @@ describe("useHouseholdSubscription", () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
     // Clear subscription callbacks
     Object.keys(subscriptionCallbacks).forEach((key) => {
       delete subscriptionCallbacks[key];

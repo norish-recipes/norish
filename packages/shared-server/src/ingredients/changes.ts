@@ -1,11 +1,6 @@
 /**
- * Where an edit to the catalogue says which Ingredients it changed — what
- * they are (a merge, an alias move, a rename, a new parent, a deletion) or how
- * the page shows them (a spelling added or removed, a flag cleared, a
- * suggestion answered) — so every client refetches what it derived from them.
- * The edits announce through this port themselves, so no caller has to know
- * which Ingredients an edit touched. Production announces over realtime;
- * tests swap in an in-memory publisher with `publishIngredientChangesTo`.
+ * Where catalogue edits announce the Ingredients they changed, so every client refetches: realtime
+ * in production, a publisher tests swap in by `publishIngredientChangesTo`.
  */
 import { AsyncLocalStorage } from "node:async_hooks";
 
@@ -37,9 +32,8 @@ export const realtimeIngredientChanges: IngredientChangePublisher = {
 let publisher: IngredientChangePublisher = realtimeIngredientChanges;
 
 /**
- * The changes a run of edits holds back, per async call tree. On `globalThis`
- * under a `Symbol.for` key, as the model-use ledger is, so a bundler that
- * copies this module into two chunks still holds them in one place.
+ * The changes held back per async call tree, on `globalThis` under a `Symbol.for` key so two
+ * bundled copies of this module share them.
  */
 const HELD_KEY = Symbol.for("norish:ingredient-changes-held");
 const g = globalThis as { [HELD_KEY]?: AsyncLocalStorage<Set<string>> };
@@ -60,10 +54,8 @@ export function ingredientChanges(): IngredientChangePublisher {
 }
 
 /**
- * Run many edits as one: what each announces is held back and announced
- * once, together, when they are all done, so a thousand suggestions
- * confirmed at once are one refetch on every client rather than a thousand.
- * Other requests meanwhile announce as ever.
+ * Run many edits as one: what each announces is held and announced once at the end, so an AI round
+ * over a thousand foods is one refetch. Other requests announce as ever.
  */
 export async function announcingTogether<T>(run: () => Promise<T>): Promise<T> {
   const batch = new Set<string>();

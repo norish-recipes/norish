@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { usePending } from "@/hooks/use-pending";
 import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
@@ -12,7 +13,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Button, Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import NewFeatureChip from "../../components/new-feature-chip";
 import { useUserSettingsContext } from "../context";
@@ -20,23 +21,22 @@ import { useUserSettingsContext } from "../context";
 export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
   const { apiKeys, generateApiKey, deleteApiKey, toggleApiKey } = useUserSettingsContext();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
-  const [generatingKey, setGeneratingKey] = useState(false);
+  const [generatingKey, whileGeneratingKey] = usePending();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState("");
   const handleGenerateKey = async () => {
-    setGeneratingKey(true);
-    try {
-      const { key } = await generateApiKey(newKeyName || undefined);
-      setGeneratedKey(key);
-      setShowTokenModal(true);
-      setNewKeyName("");
-    } finally {
-      setGeneratingKey(false);
-    }
+    await whileGeneratingKey(() =>
+      generateApiKey(newKeyName || undefined).then(({ key }) => {
+        setGeneratedKey(key);
+        setShowTokenModal(true);
+        setNewKeyName("");
+      })
+    );
   };
   const handleCopyKey = () => {
     if (generatedKey) {
@@ -107,7 +107,7 @@ export default function ApiKeyCard() {
                             {key.start || "***"}...
                           </code>
                         </Table.Cell>
-                        <Table.Cell>{new Date(key.createdAt).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>{format.dateTime(new Date(key.createdAt))}</Table.Cell>
                         <Table.Cell>
                           <Chip color={key.enabled ? "success" : "danger"} size="sm" variant="soft">
                             {key.enabled ? t("active") : t("disabled")}
@@ -117,8 +117,8 @@ export default function ApiKeyCard() {
                           <div className="flex gap-1">
                             <Button
                               isIconOnly
+                              aria-label={key.enabled ? t("disableKey") : t("enableKey")}
                               size="sm"
-                              title={key.enabled ? t("disableKey") : t("enableKey")}
                               onPress={() => toggleApiKey(key.id, !key.enabled)}
                               variant="tertiary"
                             >
@@ -130,8 +130,8 @@ export default function ApiKeyCard() {
                             </Button>
                             <Button
                               isIconOnly
+                              aria-label={t("deleteKey")}
                               size="sm"
-                              title={t("deleteKey")}
                               onPress={() => {
                                 setKeyToDelete(key.id);
                                 setShowDeleteModal(true);
@@ -171,7 +171,7 @@ export default function ApiKeyCard() {
                   <div className="flex gap-2">
                     <Input
                       variant="secondary"
-                      isReadOnly
+                      readOnly
                       className="font-mono text-xs"
                       value={generatedKey || ""}
                     />

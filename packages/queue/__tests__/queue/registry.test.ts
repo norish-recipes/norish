@@ -16,27 +16,33 @@
 
 // @vitest-environment node
 
+import type { QueueOptions } from "bullmq";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("bullmq", () => ({
   Queue: class MockQueue {
-    constructor(public name: string) {}
+    constructor(
+      public name: string,
+      public opts: Record<string, unknown>
+    ) {}
 
     add = vi.fn();
     addBulk = vi.fn();
+    on = vi.fn();
     close = vi.fn();
+    trimEvents = vi.fn(async () => 0);
   },
   Worker: class MockWorker {},
   Job: class MockJob {},
 }));
 
-vi.mock("@norish/queue/redis/bullmq", () => ({
+vi.mock("@norish/queue/valkey/bullmq", () => ({
   getBullClient: () => ({}),
 }));
 
-vi.mock("@norish/db/repositories/server-config", () => ({
-  getConfig: vi.fn().mockResolvedValue(null),
-}));
+const getConfig = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/db/repositories/server-config", () => ({ getConfig }));
 
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -52,6 +58,7 @@ async function loadRegistryInstance(): Promise<RegistryModule> {
 }
 
 beforeEach(() => {
+  getConfig.mockResolvedValue(null);
   const globalForRegistry = globalThis as unknown as Record<string, unknown>;
 
   delete globalForRegistry.queueRegistry;
@@ -92,7 +99,7 @@ describe("queue registry", () => {
 
     const [a, b] = await Promise.all([first.initializeQueues(), second.initializeQueues()]);
 
-    // Two live sets would mean two Redis connections and two dedup namespaces.
+    // Two live sets would mean two Valkey connections and two dedup namespaces.
     expect(a).toBe(b);
   });
 
@@ -104,5 +111,25 @@ describe("queue registry", () => {
     await initializer.closeAllQueues();
 
     expect(() => consumer.getQueues()).toThrow(/not initialized/);
+  });
+});
+
+describe("each queue's retention", () => {
+  it("is the administrator's, on every queue, CalDAV included", async () => {
+    getConfig.mockResolvedValue({ keepCompleted: 42, keepFailed: 17, maxAgeDays: 3 });
+    const registry = await loadRegistryInstance();
+
+    await registry.initializeQueues();
+
+    const age = 3 * 86_400;
+
+    for (const { name, queue } of registry.getAllQueueEntries()) {
+      const { defaultJobOptions, streams } = (queue as unknown as { opts: QueueOptions }).opts;
+
+      expect(defaultJobOptions?.removeOnComplete, name).toEqual({ count: 42, age });
+      expect(defaultJobOptions?.removeOnFail, name).toEqual({ count: 17, age });
+      expect(streams?.events?.maxLen, name).toBe(1_000);
+    }
+    expect(registry.getAllQueueEntries().map(({ name }) => name)).toContain("caldav-sync");
   });
 });

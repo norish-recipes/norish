@@ -48,9 +48,6 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
     },
   }),
 }));
-vi.mock("@/app/(app)/recipes/[id]/components/cookingmode/use-is-desktop-cooking-mode", () => ({
-  useIsDesktopCookingMode: () => false,
-}));
 
 // The dialog reports the session facts the page cannot see for itself, offers
 // the close the header would, and wires the swipe handlers onto two regions:

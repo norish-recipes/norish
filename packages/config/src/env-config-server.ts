@@ -81,7 +81,20 @@ const isBuild =
   process.env.NEXT_PHASE === "phase-production-build" ||
   process.env.NEXT_PHASE === "phase-export";
 
-const ServerConfigSchema = z.object({
+const commaSeparatedList = z
+  .string()
+  .optional()
+  .transform((val) =>
+    val
+      ? val
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : []
+  )
+  .pipe(z.array(z.string()));
+
+const ServerConfigFields = z.object({
   NODE_ENV: z.enum(["development", "production"]),
 
   // Local server binding
@@ -89,19 +102,13 @@ const ServerConfigSchema = z.object({
   PORT: z.coerce.number().default(3000),
   // Public URL for auth callbacks etc.
   AUTH_URL: z.url().default("http://localhost:3000"),
+  // The URL prefix the web app was built for; AUTH_URL must carry the same path.
+  NEXT_PUBLIC_BASE_PATH: z.string().default(""),
   // Additional trusted origins (comma-separated URLs) for multi-domain access
-  TRUSTED_ORIGINS: z
-    .string()
-    .optional()
-    .transform((val) =>
-      val
-        ? val
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : []
-    )
-    .pipe(z.array(z.string())),
+  TRUSTED_ORIGINS: commaSeparatedList,
+  // Reverse proxies (IPs or CIDR ranges, comma-separated) whose hops are
+  // skipped in X-Forwarded-For, so the client behind several proxies is found
+  TRUSTED_PROXIES: commaSeparatedList,
   UPLOADS_DIR: z.string().default(defaultUploadsDir),
 
   // Auth endpoint rate limiting. Defaults are the production values; they are
@@ -133,6 +140,13 @@ const ServerConfigSchema = z.object({
     .pipe(z.boolean())
     .default(false),
 
+  // Unset: on when no OAuth provider is configured in the environment.
+  PASSWORD_AUTH_ENABLED: z
+    .string()
+    .transform((val) => val === "true" || val === "1")
+    .pipe(z.boolean())
+    .optional(),
+
   OIDC_NAME: z.string().default("Nora ID"),
   OIDC_ISSUER: z.string().optional(),
   OIDC_CLIENT_ID: z.string().optional(),
@@ -144,18 +158,7 @@ const ServerConfigSchema = z.object({
     .transform((val) => val === "true" || val === "1")
     .pipe(z.boolean())
     .default(false),
-  OIDC_SCOPES: z
-    .string()
-    .optional()
-    .transform((val) =>
-      val
-        ? val
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : []
-    )
-    .pipe(z.array(z.string())),
+  OIDC_SCOPES: commaSeparatedList,
   OIDC_GROUPS_CLAIM: z.string().default("groups"),
   OIDC_ADMIN_GROUP: z.string().default("norish_admin"),
   OIDC_HOUSEHOLD_GROUP_PREFIX: z.string().default("norish_household_"),
@@ -221,6 +224,7 @@ const ServerConfigSchema = z.object({
   OBSCURA_ENDPOINT: z
     .string()
     .min(1, "OBSCURA_ENDPOINT is required for web scraping")
+    // eslint-disable-next-line sonarjs/no-clear-text-protocols -- the shipped obscura service answers on the private compose network, without TLS
     .default("ws://obscura:9222"),
   // Sent as a bearer token. Obscura refuses to listen beyond loopback without
   // one, so the shipped `obscura` service sets the same value.
@@ -238,27 +242,27 @@ const ServerConfigSchema = z.object({
   MAX_IMAGE_FILE_SIZE: z.coerce.number().default(10 * 1024 * 1024), // 10MB
   MAX_VIDEO_FILE_SIZE: z.coerce.number().default(100 * 1024 * 1024), // 100MB
 
-  // Redis Configuration
-  REDIS_URL: z.string().url().default("redis://localhost:6379"),
+  // Valkey connection (valkey:// or valkeys://). Required at runtime, like DATABASE_URL
+  VALKEY_URL: isBuild ? z.url().default("valkey://localhost:6379") : z.url(),
 
   // Internationalization
   // If invalid locale is specified, falls back to 'en'
   DEFAULT_LOCALE: z.string().default("en"),
   // If not set, all available locales are enabled
   // Can be overridden by admin UI settings stored in database
-  ENABLED_LOCALES: z
-    .string()
-    .optional()
-    .transform((val) =>
-      val
-        ? val
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : []
-    )
-    .pipe(z.array(z.string())),
+  ENABLED_LOCALES: commaSeparatedList,
 });
+
+// A build has no AUTH_URL of its own, only the default, so the check waits for the server.
+const ServerConfigSchema = ServerConfigFields.refine(
+  ({ AUTH_URL, NEXT_PUBLIC_BASE_PATH }) =>
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    new URL(AUTH_URL).pathname.replace(/\/$/, "") === NEXT_PUBLIC_BASE_PATH,
+  {
+    path: ["AUTH_URL"],
+    message: "AUTH_URL's path must equal NEXT_PUBLIC_BASE_PATH, the prefix the app was built for",
+  }
+);
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;
 export const INTERNAL_PARSER_API_HOST = "127.0.0.1";

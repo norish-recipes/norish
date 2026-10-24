@@ -13,10 +13,10 @@ import { useEffect, useRef } from "react";
  * section can write exactly the numbers it needs onto its own markup.
  */
 export function useScrollFrame(onFrame: () => void) {
-  const latest = useRef(onFrame);
+  const latestRef = useRef(onFrame);
 
   useEffect(() => {
-    latest.current = onFrame;
+    latestRef.current = onFrame;
   });
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function useScrollFrame(onFrame: () => void) {
 
     const run = () => {
       frame = 0;
-      latest.current();
+      latestRef.current();
     };
 
     const schedule = () => {

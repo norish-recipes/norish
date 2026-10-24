@@ -8,7 +8,7 @@ import type {
   DecisionConfig,
   ImageGenerationConfig,
   IngredientPermissionPolicy,
-  PromptsConfigInput,
+  PromptsConfig,
   RecipePermissionPolicy,
   ServerConfigKey,
   TimerKeywordsInput,
@@ -45,7 +45,7 @@ export type AdminMutationsResult = {
   updateUnits: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateIngredientWords: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
-  updatePrompts: (config: PromptsConfigInput) => Promise<{ success: boolean; error?: string }>;
+  updatePrompts: (config: PromptsConfig) => Promise<{ success: boolean; error?: string }>;
   updateTimerKeywords: (
     config: TimerKeywordsInput
   ) => Promise<{ success: boolean; error?: string }>;
@@ -82,55 +82,89 @@ export function createUseAdminMutations({
   useAdminConfigsQuery,
 }: CreateUseAdminMutationsOptions) {
   return function useAdminMutations(): AdminMutationsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const { invalidate } = useAdminConfigsQuery();
 
-    const updateRegistrationMutation = useMutation(trpc.admin.updateRegistration.mutationOptions());
-    const updatePasswordAuthMutation = useMutation(trpc.admin.updatePasswordAuth.mutationOptions());
-    const updateLocaleConfigMutation = useMutation(trpc.admin.updateLocaleConfig.mutationOptions());
-    const updateOIDCMutation = useMutation(trpc.admin.auth.updateOIDC.mutationOptions());
-    const updateGitHubMutation = useMutation(trpc.admin.auth.updateGitHub.mutationOptions());
-    const updateGoogleMutation = useMutation(trpc.admin.auth.updateGoogle.mutationOptions());
-    const deleteProviderMutation = useMutation(trpc.admin.auth.deleteProvider.mutationOptions());
-    const testProviderMutation = useMutation(trpc.admin.auth.testProvider.mutationOptions());
-    const updateContentIndicatorsMutation = useMutation(
+    const { mutateAsync: mutateUpdateRegistrationAsync } = useMutation(
+      trpc.admin.updateRegistration.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdatePasswordAuthAsync } = useMutation(
+      trpc.admin.updatePasswordAuth.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateLocaleConfigAsync } = useMutation(
+      trpc.admin.updateLocaleConfig.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateOIDCAsync } = useMutation(
+      trpc.admin.auth.updateOIDC.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateGitHubAsync } = useMutation(
+      trpc.admin.auth.updateGitHub.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateGoogleAsync } = useMutation(
+      trpc.admin.auth.updateGoogle.mutationOptions()
+    );
+    const { mutateAsync: mutateDeleteProviderAsync } = useMutation(
+      trpc.admin.auth.deleteProvider.mutationOptions()
+    );
+    const { mutateAsync: mutateTestProviderAsync } = useMutation(
+      trpc.admin.auth.testProvider.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateContentIndicatorsAsync } = useMutation(
       trpc.admin.content.updateContentIndicators.mutationOptions()
     );
-    const updateUnitsMutation = useMutation(trpc.admin.content.updateUnits.mutationOptions());
-    const updateIngredientWordsMutation = useMutation(
+    const { mutateAsync: mutateUpdateUnitsAsync } = useMutation(
+      trpc.admin.content.updateUnits.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateIngredientWordsAsync } = useMutation(
       trpc.admin.content.updateIngredientWords.mutationOptions()
     );
-    const updateRecurrenceConfigMutation = useMutation(
+    const { mutateAsync: mutateUpdateRecurrenceConfigAsync } = useMutation(
       trpc.admin.content.updateRecurrenceConfig.mutationOptions()
     );
-    const updatePromptsMutation = useMutation(trpc.admin.content.updatePrompts.mutationOptions());
-    const updateTimerKeywordsMutation = useMutation(
+    const { mutateAsync: mutateUpdatePromptsAsync } = useMutation(
+      trpc.admin.content.updatePrompts.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateTimerKeywordsAsync } = useMutation(
       trpc.admin.content.updateTimerKeywords.mutationOptions()
     );
-    const updateAIConfigMutation = useMutation(trpc.admin.updateAIConfig.mutationOptions());
-    const updateVideoConfigMutation = useMutation(trpc.admin.updateVideoConfig.mutationOptions());
+    const { mutateAsync: mutateUpdateAIConfigAsync } = useMutation(
+      trpc.admin.updateAIConfig.mutationOptions()
+    );
+    const { mutateAsync: mutateUpdateVideoConfigAsync } = useMutation(
+      trpc.admin.updateVideoConfig.mutationOptions()
+    );
     const updateImageGenerationConfigMutation = useMutation(
       trpc.admin.updateImageGenerationConfig.mutationOptions()
     );
-    const updateDecisionConfigMutation = useMutation(
+    const { mutateAsync: mutateUpdateImageGenerationConfigAsync } =
+      updateImageGenerationConfigMutation;
+    const { mutateAsync: mutateUpdateDecisionConfigAsync } = useMutation(
       trpc.admin.updateDecisionConfig.mutationOptions()
     );
-    const testAIEndpointMutation = useMutation(trpc.admin.testAIEndpoint.mutationOptions());
-    const testDecisionEndpointMutation = useMutation(
+    const { mutateAsync: mutateTestAIEndpointAsync } = useMutation(
+      trpc.admin.testAIEndpoint.mutationOptions()
+    );
+    const { mutateAsync: mutateTestDecisionEndpointAsync } = useMutation(
       trpc.admin.testDecisionEndpoint.mutationOptions()
     );
-    const updatePermissionPolicyMutation = useMutation(
+    const { mutateAsync: mutateUpdatePermissionPolicyAsync } = useMutation(
       trpc.admin.updateRecipePermissionPolicy.mutationOptions()
     );
-    const updateIngredientPolicyMutation = useMutation(
+    const { mutateAsync: mutateUpdateIngredientPolicyAsync } = useMutation(
       trpc.admin.updateIngredientPermissionPolicy.mutationOptions()
     );
-    const updateSchedulerMonthsMutation = useMutation(
+    const { mutateAsync: mutateUpdateSchedulerMonthsAsync } = useMutation(
       trpc.admin.updateSchedulerMonths.mutationOptions()
     );
-    const restoreDefaultMutation = useMutation(trpc.admin.restoreDefault.mutationOptions());
-    const restartServerMutation = useMutation(trpc.admin.restartServer.mutationOptions());
+    const { mutateAsync: mutateRestoreDefaultAsync } = useMutation(
+      trpc.admin.restoreDefault.mutationOptions()
+    );
+    const { mutateAsync: mutateRestartServerAsync } = useMutation(
+      trpc.admin.restartServer.mutationOptions()
+    );
 
     const withInvalidate = async <T extends { success: boolean }>(
       promise: Promise<T>
@@ -146,31 +180,31 @@ export function createUseAdminMutations({
 
     return {
       updateRegistration: async (enabled) => {
-        return withInvalidate(updateRegistrationMutation.mutateAsync(enabled));
+        return withInvalidate(mutateUpdateRegistrationAsync(enabled));
       },
       updatePasswordAuth: async (enabled) => {
-        return withInvalidate(updatePasswordAuthMutation.mutateAsync(enabled));
+        return withInvalidate(mutateUpdatePasswordAuthAsync(enabled));
       },
       updateLocaleConfig: async (config) => {
-        return withInvalidate(updateLocaleConfigMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateLocaleConfigAsync(config));
       },
       updateAuthProviderOIDC: async (config) => {
-        return withInvalidate(updateOIDCMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateOIDCAsync(config));
       },
       updateAuthProviderGitHub: async (config) => {
-        return withInvalidate(updateGitHubMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateGitHubAsync(config));
       },
       updateAuthProviderGoogle: async (config) => {
-        return withInvalidate(updateGoogleMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateGoogleAsync(config));
       },
       deleteAuthProvider: async (type) => {
-        return withInvalidate(deleteProviderMutation.mutateAsync(type));
+        return withInvalidate(mutateDeleteProviderAsync(type));
       },
       testAuthProvider: async (type, config) => {
-        return testProviderMutation.mutateAsync({ type, config });
+        return mutateTestProviderAsync({ type, config });
       },
       updateContentIndicators: async (json) => {
-        const result = await withInvalidate(updateContentIndicatorsMutation.mutateAsync(json));
+        const result = await withInvalidate(mutateUpdateContentIndicatorsAsync(json));
 
         if (result.success) {
           queryClient.invalidateQueries({ queryKey: trpc.config.timersEnabled.queryKey() });
@@ -179,7 +213,7 @@ export function createUseAdminMutations({
         return result;
       },
       updateUnits: async (json) => {
-        const result = await withInvalidate(updateUnitsMutation.mutateAsync(json));
+        const result = await withInvalidate(mutateUpdateUnitsAsync(json));
 
         // Every page that reads a name reads it by the units map too.
         if (result.success) {
@@ -189,7 +223,7 @@ export function createUseAdminMutations({
         return result;
       },
       updateIngredientWords: async (json) => {
-        const result = await withInvalidate(updateIngredientWordsMutation.mutateAsync(json));
+        const result = await withInvalidate(mutateUpdateIngredientWordsAsync(json));
 
         if (result.success) {
           queryClient.invalidateQueries({ queryKey: trpc.config.ingredientWords.queryKey() });
@@ -198,13 +232,13 @@ export function createUseAdminMutations({
         return result;
       },
       updateRecurrenceConfig: async (json) => {
-        return withInvalidate(updateRecurrenceConfigMutation.mutateAsync(json));
+        return withInvalidate(mutateUpdateRecurrenceConfigAsync(json));
       },
       updatePrompts: async (config) => {
-        return withInvalidate(updatePromptsMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdatePromptsAsync(config));
       },
       updateTimerKeywords: async (config) => {
-        const result = await withInvalidate(updateTimerKeywordsMutation.mutateAsync(config));
+        const result = await withInvalidate(mutateUpdateTimerKeywordsAsync(config));
 
         if (result.success) {
           queryClient.invalidateQueries({ queryKey: trpc.config.timerKeywords.queryKey() });
@@ -214,34 +248,34 @@ export function createUseAdminMutations({
         return result;
       },
       updateAIConfig: async (config) => {
-        return withInvalidate(updateAIConfigMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateAIConfigAsync(config));
       },
       updateVideoConfig: async (config) => {
-        return withInvalidate(updateVideoConfigMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateVideoConfigAsync(config));
       },
       updateImageGenerationConfig: async (config) => {
-        return withInvalidate(updateImageGenerationConfigMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateImageGenerationConfigAsync(config));
       },
       updateDecisionConfig: async (config) => {
-        return withInvalidate(updateDecisionConfigMutation.mutateAsync(config));
+        return withInvalidate(mutateUpdateDecisionConfigAsync(config));
       },
       testAIEndpoint: async (config) => {
-        return testAIEndpointMutation.mutateAsync(config);
+        return mutateTestAIEndpointAsync(config);
       },
       testDecisionEndpoint: async (config) => {
-        return testDecisionEndpointMutation.mutateAsync(config);
+        return mutateTestDecisionEndpointAsync(config);
       },
       updateRecipePermissionPolicy: async (policy) => {
-        return withInvalidate(updatePermissionPolicyMutation.mutateAsync(policy));
+        return withInvalidate(mutateUpdatePermissionPolicyAsync(policy));
       },
       updateIngredientPermissionPolicy: async (policy) => {
-        return withInvalidate(updateIngredientPolicyMutation.mutateAsync(policy));
+        return withInvalidate(mutateUpdateIngredientPolicyAsync(policy));
       },
       updateSchedulerMonths: async (months) => {
-        return withInvalidate(updateSchedulerMonthsMutation.mutateAsync(months));
+        return withInvalidate(mutateUpdateSchedulerMonthsAsync(months));
       },
       restoreDefault: async (key) => {
-        const result = await withInvalidate(restoreDefaultMutation.mutateAsync(key));
+        const result = await withInvalidate(mutateRestoreDefaultAsync(key));
 
         if (result.success && key === ServerConfigKeys.UNITS) {
           queryClient.invalidateQueries({ queryKey: trpc.config.units.queryKey() });
@@ -253,10 +287,10 @@ export function createUseAdminMutations({
         return result;
       },
       restartServer: async () => {
-        return restartServerMutation.mutateAsync();
+        return mutateRestartServerAsync();
       },
       fetchConfigSecret: async (key, field) => {
-        const result = await queryClient.fetchQuery(
+        const result = await queryClient.query(
           trpc.admin.getSecretField.queryOptions({ key, field })
         );
 

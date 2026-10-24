@@ -18,6 +18,7 @@ export function AuthMarks() {
     // client-side navigation re-renders that script without executing it, so
     // set the gate here too. Idempotent either way.
     document.documentElement.classList.add("js");
+    // eslint-disable-next-line @eslint-react/set-state-in-effect -- the stroke transition needs the undrawn frame committed first; the second render is the draw
     setShown(true);
   }, []);
 

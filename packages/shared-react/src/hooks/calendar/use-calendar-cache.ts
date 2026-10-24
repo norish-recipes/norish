@@ -9,6 +9,8 @@ import { calendarRangeOfQueryKey, upsertItemInRange } from "./calendar-cache-mer
 
 export function createUseCalendarCache({ useTRPC }: CreateCalendarHooksOptions) {
   return function useCalendarCacheHelpers(startISO: string, endISO: string): CalendarCacheHelpers {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });

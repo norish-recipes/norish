@@ -135,8 +135,8 @@ export function buildItemsState(
   // Sort each container by sortOrder
   const order = new Map(groceries.map((g) => [g.id, g.sortOrder ?? 0]));
 
-  for (const containerId of Object.keys(items)) {
-    items[containerId].sort((aId, bId) => (order.get(aId) ?? 0) - (order.get(bId) ?? 0));
+  for (const ids of Object.values(items)) {
+    ids.sort((aId, bId) => (order.get(aId) ?? 0) - (order.get(bId) ?? 0));
   }
 
   return items;

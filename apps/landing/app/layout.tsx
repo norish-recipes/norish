@@ -67,6 +67,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html suppressHydrationWarning lang="en">
       <head>
+        {/* A constant, and React escapes a script's text children, so it goes in as raw HTML. */}
+        {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml */}
         <script dangerouslySetInnerHTML={{ __html: markScripted }} />
       </head>
       <body className="bg-background text-foreground min-h-dvh font-sans antialiased">

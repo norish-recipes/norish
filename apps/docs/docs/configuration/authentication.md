@@ -18,15 +18,42 @@ turns off.
 When you register an OAuth or OIDC application, use these callback URLs with
 your `AUTH_URL` as the host:
 
-| Provider | Callback URL                                                      |
-| -------- | ----------------------------------------------------------------- |
-| OIDC     | `https://example.norish-domain.com/api/auth/oauth2/callback/oidc` |
-| GitHub   | `https://example.norish-domain.com/api/auth/callback/github`      |
-| Google   | `https://example.norish-domain.com/api/auth/callback/google`      |
+| Provider | Callback URL                                                 |
+| -------- | ------------------------------------------------------------ |
+| OIDC     | `https://example.norish-domain.com/api/auth/callback/oidc`   |
+| GitHub   | `https://example.norish-domain.com/api/auth/callback/github` |
+| Google   | `https://example.norish-domain.com/api/auth/callback/google` |
+
+## Linking accounts
+
+Norish never links accounts on its own. Signing in with a provider whose email already belongs to
+another account is refused with "This email is already in use."
+
+When the server offers more than one sign-in method, you can connect another under **Settings =>
+User => Sign-in methods**. Press **Connect** with the provider's name and sign in there with the
+account you want to connect; the provider asks even when you are already signed in to it. You come
+back to Settings with the method listed, and from then on either one signs you in to the same
+account. The provider's email doesn't have to match the one Norish has. Connecting OIDC applies its
+claims at once, as your next OIDC sign-in would.
+
+**Disconnect** takes a method off again. The last method the server offers can't be disconnected,
+and a password counts only while password sign-in is on. A method the server no longer offers stays
+listed as not currently available.
+
+**Change password** on the Password row asks for your current password and a new one of at least 8
+characters. **Sign out other sessions** is on by default: your other devices have to sign in again,
+this one stays signed in. The Password row shows whenever you have a password, even on a server that
+offers no other method.
+
+![The Change password dialog](/img/screenshots/settings-change-password.png)
+
+![The Sign-in methods card in user settings](/img/screenshots/settings-sign-in-methods.png)
 
 ## Password
 
-Email and password sign-in is on when no other provider is set up.
+Email and password sign-in is on when no other provider is set up. Set `PASSWORD_AUTH_ENABLED` to
+turn it on or off yourself: Norish applies it at every start, over the setting in the admin settings.
+If no other way to sign in is left at start, Norish turns password sign-in back on.
 
 | Variable                | Description                     | Default |
 | ----------------------- | ------------------------------- | ------- |
@@ -35,6 +62,8 @@ Email and password sign-in is on when no other provider is set up.
 ## OIDC
 
 Works with any OpenID Connect provider, like Authentik, Pocket ID or Keycloak.
+Norish checks ID tokens against the provider's published signing keys, so the provider must sign
+them with an RS or ES key; HS256 is not supported.
 
 ```yaml title="docker-compose.yml (environment)"
 OIDC_NAME: NoraId

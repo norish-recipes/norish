@@ -3,9 +3,9 @@
  *
  * Records every publish — `{ event, payload, target, channel }` — with the
  * channel derived through the real codec, so a test can assert the exact
- * channel a mutation announced on without any Redis behind it. It never
+ * channel a mutation announced on without any Valkey behind it. It never
  * touches the real domain module, so a test may stub the logger, the config
- * or the Redis client however it likes.
+ * or the Valkey client however it likes.
  *
  * Mock a domain module with it from a test:
  *

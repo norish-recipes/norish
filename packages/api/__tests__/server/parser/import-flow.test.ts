@@ -121,7 +121,6 @@ describe("parseRecipeFromUrl import flow", () => {
 
   beforeEach(() => {
     vi.resetModules();
-    vi.clearAllMocks();
 
     mockIsVideoUrl.mockReturnValue(false);
     mockRenderStatus.mockReturnValue(200);

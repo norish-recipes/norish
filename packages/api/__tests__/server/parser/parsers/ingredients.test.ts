@@ -45,6 +45,37 @@ describe("parseIngredients", () => {
 
       expect(result.ingredients).toHaveLength(1);
     });
+
+    it("reads an object entry by its text, else its name, and drops any other entry", () => {
+      const json = {
+        recipeIngredient: [
+          { "@type": "HowToSupply", name: "2 el sojasaus" },
+          { text: "1 komkommer" },
+          "5 bosuitjes",
+          { "@type": "HowToSupply" },
+          { name: { value: "zout" } },
+          42,
+        ],
+      };
+
+      const units = {
+        tablespoon: {
+          short: [{ locale: "nl", name: "el" }],
+          plural: [{ locale: "nl", name: "el" }],
+          alternates: ["el"],
+        },
+      };
+
+      const result = parseIngredients(json, units);
+
+      expect(
+        result.ingredients.map(({ ingredientName, amount, unit }) => [ingredientName, amount, unit])
+      ).toEqual([
+        ["sojasaus", 2, "tablespoon"],
+        ["komkommer", 1, ""],
+        ["bosuitjes", 5, ""],
+      ]);
+    });
   });
 
   describe("grammatically correct unit forms", () => {

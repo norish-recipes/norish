@@ -1,4 +1,23 @@
-import { Client } from "pg";
+import { randomUUID } from "node:crypto";
+import { expect } from "@playwright/test";
+
+import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
+import type { NutritionCodes } from "@norish/db/schema";
+import {
+  findIngredientAliasesByFolds,
+  mintIngredientWithAliases,
+} from "@norish/db/repositories/ingredient-aliases";
+import { applyIngredientSeed } from "@norish/db/repositories/ingredient-seed";
+import { createRecipeWithRefs } from "@norish/db/repositories/recipes";
+import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
+
+import type { SessionCookies } from "../harness/auth";
+import { userIdOf } from "../harness/accounts";
+import { readRecipe } from "../harness/recipes";
+import { deleteIngredients } from "../harness/reset";
+import { callTrpc } from "../harness/trpc";
+import { USER_A } from "./fixture";
 
 /**
  * Seeding for the Ingredient Nutrition browser spec. The stack applies the
@@ -21,8 +40,8 @@ export interface NutritionScenario {
 interface Food {
   key: keyof NutritionScenario["ingredientIds"];
   name: string;
-  offId: string | null;
-  codes: Record<string, unknown> | null;
+  offId: string;
+  codes: NutritionCodes | null;
   parent?: keyof NutritionScenario["ingredientIds"];
 }
 
@@ -88,128 +107,100 @@ const LINES: Array<
   ["salt to taste", null, null, "legacy"],
 ];
 
-async function connected<T>(databaseUrl: string, run: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: databaseUrl });
+/** Seed the Ingredients, the legacy mint and user A's recipe, and answer their ids. */
+export async function seedNutritionScenario(): Promise<NutritionScenario> {
+  const owner = await userIdOf(USER_A);
+  const offIds = new Map(FOODS.map((food) => [food.key, food.offId]));
+  const folds = new Map(FOODS.map((food) => [food.key, ingredientAliasFold(food.name)]));
 
-  await client.connect();
-  try {
-    return await run(client);
-  } finally {
-    await client.end();
-  }
-}
-
-/** User A: the first user signed up, so the server's owner (the offline seed reads it alike). */
-async function ownerId(client: Client): Promise<string> {
-  const { rows } = await client.query<{ id: string }>(
-    `select id from "user" where "isServerOwner" = true order by "createdAt" limit 1`
+  await applyIngredientSeed(
+    FOODS.map((food) => ({
+      offId: food.offId,
+      name: food.name,
+      nameFold: folds.get(food.key)!,
+      parentOffId: food.parent ? offIds.get(food.parent)! : null,
+      aliases: [{ text: food.name, fold: folds.get(food.key)!, locale: "en" }],
+      nutrition: food.codes,
+    }))
   );
 
-  if (!rows[0]) throw new Error("The offline owner is missing");
-
-  return rows[0].id;
-}
-
-/** Seed the Ingredients, the legacy mint and user A's recipe, and answer their ids. */
-export async function seedNutritionScenario(databaseUrl: string): Promise<NutritionScenario> {
-  return await connected(databaseUrl, async (client) => {
-    const owner = await ownerId(client);
-    const ingredientIds = {} as NutritionScenario["ingredientIds"];
-    const aliasIds = {} as Record<string, string>;
-
-    for (const food of FOODS) {
-      const { rows } = await client.query<{ id: string }>(
-        `insert into ingredients (name, off_id, nutrition_codes, parent_id)
-         values ($1, $2, $3::jsonb, $4) returning id`,
-        [
-          food.name,
-          food.offId,
-          food.codes ? JSON.stringify(food.codes) : null,
-          food.parent ? ingredientIds[food.parent] : null,
-        ]
-      );
-
-      ingredientIds[food.key] = rows[0]!.id;
-
-      const alias = await client.query<{ id: string }>(
-        `insert into ingredient_aliases (text, fold, locale, ingredient_id, seeded)
-         values ($1, $1, 'en', $2, true) returning id`,
-        [food.name, rows[0]!.id]
-      );
-
-      aliasIds[food.key] = alias.rows[0]!.id;
-    }
-
-    const legacy = await client.query<{ id: string }>(
-      `insert into ingredients (name, owner_id, flagged, flag_reason)
-       values ('salt to taste', $1, true, 'upgrade') returning id`,
-      [owner]
-    );
-    const legacyAlias = await client.query<{ id: string }>(
-      `insert into ingredient_aliases (text, fold, ingredient_id, owner_id)
-       values ('salt to taste', 'salt to taste', $1, $2) returning id`,
-      [legacy.rows[0]!.id, owner]
-    );
-
-    aliasIds.legacy = legacyAlias.rows[0]!.id;
-
-    const recipe = await client.query<{ id: string }>(
-      `insert into recipes (user_id, name, servings) values ($1, $2, 2) returning id`,
-      [owner, RECIPE_NAME]
-    );
-    const recipeId = recipe.rows[0]!.id;
-
-    for (const [index, [text, amount, unit, food]] of LINES.entries()) {
-      await client.query(
-        `insert into recipe_ingredients (recipe_id, name, ingredient_alias_id, amount, unit, "order", system_used)
-         values ($1, $2, $3, $4, $5, $6, 'metric')`,
-        [recipeId, text, aliasIds[food], amount, unit, index]
-      );
-    }
-
-    return { recipeId, ingredientIds, legacyId: legacy.rows[0]!.id };
+  const [legacy] = await mintIngredientWithAliases({
+    name: "salt to taste",
+    aliases: [{ text: "salt to taste", fold: ingredientAliasFold("salt to taste") }],
+    ownerId: owner,
+    locale: null,
+    flagged: true,
+    flagReason: "upgrade",
   });
+  const aliases = await findIngredientAliasesByFolds([...folds.values()]);
+  const refs = new Map<string, IngredientRef>(
+    FOODS.map((food) => [food.key, aliases.find((row) => row.fold === folds.get(food.key))!])
+  );
+
+  refs.set("legacy", legacy!);
+
+  const recipeId = randomUUID();
+
+  await createRecipeWithRefs(recipeId, owner, {
+    name: RECIPE_NAME,
+    servings: 2,
+    systemUsed: "metric",
+    recipeIngredients: LINES.map(([ingredientName, amount, unit], order) => ({
+      ingredientName,
+      ingredientId: null,
+      amount,
+      unit,
+      order,
+    })),
+    ingredientResolutions: new Map(
+      LINES.map(([text, , , food]) => [text, { foods: [refs.get(food)!], joined: null }])
+    ),
+  });
+
+  return {
+    recipeId,
+    ingredientIds: Object.fromEntries(
+      FOODS.map((food) => [food.key, refs.get(food.key)!.ingredientId])
+    ) as NutritionScenario["ingredientIds"],
+    legacyId: legacy!.ingredientId,
+  };
 }
 
 /** Have the next boot look at old flagged mints again, as an upgrade to new rules would. */
-export async function forgetRungVersion(databaseUrl: string): Promise<void> {
-  await connected(databaseUrl, async (client) => {
-    await client.query(
-      `update server_config set value = jsonb_set(value, '{rungVersion}', '0'::jsonb)
-       where key = 'ingredient_seed_state'`
-    );
-  });
+export async function forgetRungVersion(): Promise<void> {
+  const state = await getConfig<Record<string, unknown>>("ingredient_seed_state");
+
+  await setConfig("ingredient_seed_state", { ...state, rungVersion: 0 }, null, false);
 }
 
-/** Which Ingredient a recipe line's alias points at now. */
+/** Which Ingredient a recipe line points at now, as the reader's recipe has it. */
 export async function lineIngredient(
-  databaseUrl: string,
+  baseURL: string,
+  cookies: SessionCookies,
   recipeId: string,
   text: string
 ): Promise<string | null> {
-  return await connected(databaseUrl, async (client) => {
-    const { rows } = await client.query<{ ingredient_id: string }>(
-      `select a.ingredient_id from recipe_ingredients r
-       join ingredient_aliases a on a.id = r.ingredient_alias_id
-       where r.recipe_id = $1 and r.name = $2`,
-      [recipeId, text]
-    );
+  const recipe = await readRecipe(baseURL, cookies, recipeId);
 
-    return rows[0]?.ingredient_id ?? null;
-  });
+  return (
+    recipe?.recipeIngredients.find((line) => line.ingredientName === text)?.ingredientId ?? null
+  );
 }
 
 /** Take the scenario away again, so the offline suite after it finds what it seeded. */
 export async function removeNutritionScenario(
-  databaseUrl: string,
+  baseURL: string,
+  cookiesA: SessionCookies,
   scenario: NutritionScenario | null
 ): Promise<void> {
   if (!scenario) return;
 
-  await connected(databaseUrl, async (client) => {
-    await client.query(`delete from recipes where id = $1`, [scenario.recipeId]);
-    await client.query(`delete from ingredients where id = any($1::uuid[])`, [
-      [...Object.values(scenario.ingredientIds), scenario.legacyId],
-    ]);
-  });
+  const recipe = await readRecipe(baseURL, cookiesA, scenario.recipeId);
+
+  // The delete lands after the mutation answers.
+  if (recipe) {
+    await callTrpc(baseURL, cookiesA, "recipes.delete", { id: recipe.id, version: recipe.version });
+    await expect.poll(() => readRecipe(baseURL, cookiesA, recipe.id)).toBeNull();
+  }
+  await deleteIngredients([...Object.values(scenario.ingredientIds), scenario.legacyId]);
 }

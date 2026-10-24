@@ -19,6 +19,8 @@ export function createUseStoresSubscription({
   useStoresCacheHelpers,
 }: CreateUseStoresSubscriptionOptions) {
   return function useStoresSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const { setStoresData, invalidate } = useStoresCacheHelpers();
     const queryClient = useQueryClient();

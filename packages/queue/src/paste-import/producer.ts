@@ -5,6 +5,7 @@
  * Accepts a queue instance - does not manage lifecycle.
  */
 
+import { randomUUID } from "node:crypto";
 import type { Queue } from "bullmq";
 
 import type {
@@ -14,44 +15,38 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue, removeRetainedTerminalJob } from "../helpers";
-
 const log = createLogger("queue:paste-import");
 
-function generatePasteJobId(batchId: string): string {
-  return `paste-import_${batchId}`;
-}
-
 /**
- * Add a paste import job to the queue.
- * Returns conflict status if a duplicate job already exists.
+ * Add a paste import job to the queue. Its batch is BullMQ's deduplication
+ * id, freed once the import finishes: an add for a batch whose import is
+ * still in flight is answered as a duplicate.
  */
 export async function addPasteImportJob(
   queue: Queue<PasteImportJobData, PasteImportJobResult>,
   data: PasteImportJobData
 ): Promise<AddPasteImportJobResult> {
-  const jobId = generatePasteJobId(data.batchId);
+  const jobId = randomUUID();
 
   log.debug(
     { batchId: data.batchId, recipeIds: data.recipeIds, jobId, textLength: data.text.length },
     "Adding paste import job"
   );
 
-  if (await isJobInQueue(queue, jobId)) {
-    log.warn({ batchId: data.batchId, jobId }, "Duplicate paste import job rejected");
+  const job = await queue.add("paste-import", data, {
+    jobId,
+    deduplication: { id: `paste-import_${data.batchId}` },
+  });
 
-    return { status: "duplicate", existingJobId: jobId };
+  // BullMQ answers a deduplicated add with the job already holding the id.
+  if (job.id && job.id !== jobId) {
+    log.warn(
+      { batchId: data.batchId, existingJobId: job.id },
+      "Duplicate paste import job rejected"
+    );
+
+    return { status: "duplicate", existingJobId: job.id };
   }
-
-  // A retained terminal job under the same id would make the add below a
-  // silent BullMQ no-op.
-  const removed = await removeRetainedTerminalJob(queue, jobId);
-
-  if (removed) {
-    log.debug({ batchId: data.batchId, jobId }, "Removed retained terminal job to free job id");
-  }
-
-  const job = await queue.add("paste-import", data, { jobId });
 
   log.info({ jobId: job.id, batchId: data.batchId }, "Paste import job added to queue");
 

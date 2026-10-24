@@ -13,7 +13,8 @@
  *   5. its own USDA codes;
  *   6. its other CIQUAL-keyed codes;
  *   7. its name match;
- *   8. the nearest Parent Ingredient with the fact of its own, along
+ *   8. AI's estimate, where an administrator lets AI fill gaps (Fill Gaps);
+ *   9. the nearest Parent Ingredient with the fact of its own, along
  *      Norish's tree at any distance, so a parent a person chose lends too;
  *      a lender that never lends ends the walk.
  * The piece weight takes the taxonomy's own before USDA's portions, and the
@@ -37,6 +38,7 @@
  */
 import type {
   NutritionCorrectionRow,
+  NutritionEstimateRow,
   NutritionFoodRow,
   NutritionNode,
 } from "@norish/db/repositories/ingredient-nutrition";
@@ -47,7 +49,9 @@ import type {
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import {
+  findAnyCorrections,
   findHouseholdCorrections,
+  findNutritionEstimates,
   findNutritionFoods,
   findNutritionLineage,
   findNutritionRules,
@@ -94,12 +98,13 @@ function first<T>(offers: ReadonlyArray<Offer<T>>): { value: T; source: Nutritio
   return found ? { value: found.value!, source: found.source } : null;
 }
 
-/** The corrections, foods and rules every node of a lineage needs, read in four queries. */
+/** The corrections, estimates, foods and rules every node of a lineage needs, in five queries. */
 async function readSources(nodes: readonly NutritionNode[], reader: NutritionReader) {
   const corrections = await findHouseholdCorrections(
     nodes.map((node) => node.id),
     reader.householdUserIds
   );
+  const estimates = await findNutritionEstimates(nodes.map((node) => node.id));
   const rules = await findNutritionRules(nodes.flatMap((node) => (node.offId ? [node.offId] : [])));
   const fixes = new Map<string, string>();
   const densityFixes = new Map<string, string>();
@@ -149,7 +154,17 @@ async function readSources(nodes: readonly NutritionNode[], reader: NutritionRea
 
   for (const food of foods) if (food.ndb && !byNdb.has(food.ndb)) byNdb.set(food.ndb, food);
 
-  return { corrections, fixes, densityFixes, pieceFixes, names, neverLend, byKey, byNdb };
+  return {
+    corrections,
+    estimates,
+    fixes,
+    densityFixes,
+    pieceFixes,
+    names,
+    neverLend,
+    byKey,
+    byNdb,
+  };
 }
 
 type Sources = Awaited<ReturnType<typeof readSources>>;
@@ -217,9 +232,26 @@ function correctionOffers(
   };
 }
 
+/** AI's estimate, fact by fact, offered after every source. */
+function estimateOffers(estimate: NutritionEstimateRow | undefined) {
+  const offer = <T>(value: T | null | undefined): Array<Offer<T>> =>
+    value === null || value === undefined ? [] : [{ source: { kind: "ai" }, value }];
+  const { kcal, fat, carbs, protein } = estimate ?? {};
+
+  return {
+    numbers: offer(
+      kcal != null && fat != null && carbs != null && protein != null
+        ? { kcal, fat, carbs, protein }
+        : null
+    ),
+    pieceWeight: offer(estimate?.pieceWeight),
+    density: offer(estimate?.density),
+  };
+}
+
 /**
  * An Ingredient's own facts, before any borrowing: its household's
- * correction, then the sources. The numbers come from the first step with a
+ * correction, then the sources, then AI's estimate. The numbers come from the first step with a
  * food. The piece weight takes its piece fix and nothing else where it has
  * one, else the taxonomy's own after a fix and before any code's portion;
  * the density takes its density fix first, then the codes' portions before
@@ -239,11 +271,13 @@ function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
   const densityFix = densityFixKey ? sources.byKey.get(densityFixKey) : undefined;
   const pieceFixKey = node.offId ? sources.pieceFixes.get(node.offId) : undefined;
   const pieceFix = pieceFixKey ? sources.byKey.get(pieceFixKey) : undefined;
+  const estimated = estimateOffers(sources.estimates.get(node.id));
 
   return {
     numbers: first([
       ...corrected.numbers,
       ...steps.map((it) => ({ source: it.source, value: per100g(it.food) })),
+      ...estimated.numbers,
     ]),
     pieceWeight: first([
       ...corrected.pieceWeight,
@@ -261,6 +295,7 @@ function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
             ...taxonomy(node.nutritionCodes?.pieceWeight),
             ...kind("code").map(offer("pieceWeight")),
             ...kind("name").map(offer("pieceWeight")),
+            ...estimated.pieceWeight,
           ]),
     ]),
     density: first([
@@ -272,8 +307,17 @@ function ownFacts(node: NutritionNode, sources: Sources): OwnFacts {
       ...kind("code").map(offer("density")),
       ...taxonomy(node.nutritionCodes?.density),
       ...kind("name").map(offer("density")),
+      ...estimated.density,
     ]),
   };
+}
+
+/** Whether Norish's piece fix or AI's estimate says what one piece weighs, none included. */
+function isPieceless(node: NutritionNode, sources: Sources): boolean {
+  return (
+    (node.offId !== null && sources.pieceFixes.has(node.offId)) ||
+    sources.estimates.get(node.id)?.pieceless === true
+  );
 }
 
 /**
@@ -296,8 +340,8 @@ export async function resolveIngredientNutrition(
     const mine = own.get(node.id)?.[fact];
 
     if (mine) return { ...mine, borrowedFrom: null } as IngredientNutrition[K];
-    // A piece fix is the last word on what one piece of it weighs, none included.
-    if (fact === "pieceWeight" && node.offId && sources.pieceFixes.has(node.offId)) {
+    // A piece fix, or AI's "no pieces", is the last word on what one piece of it weighs.
+    if (fact === "pieceWeight" && isPieceless(node, sources)) {
       return null as IngredientNutrition[K];
     }
 
@@ -338,4 +382,52 @@ export async function resolveIngredientNutrition(
   }
 
   return answer;
+}
+
+/** Which of a food's facts it has none of its own for, so AI may fill them (true = missing). */
+export interface NutritionGaps {
+  numbers: boolean;
+  pieceWeight: boolean;
+  density: boolean;
+}
+
+/**
+ * The gaps of each of these Ingredients: no source, earlier estimate or household's correction,
+ * any household's, gives the fact; what a parent would lend does not count. A piece fix, or AI's
+ * "no pieces", answers the piece weight. An id that names no Ingredient answers nothing.
+ */
+export async function findNutritionGaps(
+  ingredientIds: readonly string[]
+): Promise<Map<string, NutritionGaps>> {
+  const lineage = await findNutritionLineage(ingredientIds);
+  const nodes = [...new Set(ingredientIds)].flatMap((id) => lineage.get(id) ?? []);
+  const sources = await readSources(nodes, NO_HOUSEHOLD);
+  const corrected = new Map<string, NutritionGaps>();
+
+  for (const row of await findAnyCorrections(ingredientIds)) {
+    const was = corrected.get(row.ingredientId);
+    const typed = [row.kcal, row.fat, row.carbs, row.protein].every((value) => value !== null);
+
+    corrected.set(row.ingredientId, {
+      numbers: !!was?.numbers || row.numbersFood !== null || typed,
+      pieceWeight: !!was?.pieceWeight || row.pieceWeightFood !== null || row.pieceWeight !== null,
+      density: !!was?.density || row.densityFood !== null || row.density !== null,
+    });
+  }
+
+  return new Map(
+    nodes.map((node) => {
+      const own = ownFacts(node, sources);
+      const fixed = corrected.get(node.id);
+
+      return [
+        node.id,
+        {
+          numbers: !own.numbers && !fixed?.numbers,
+          pieceWeight: !own.pieceWeight && !fixed?.pieceWeight && !isPieceless(node, sources),
+          density: !own.density && !fixed?.density,
+        },
+      ];
+    })
+  );
 }

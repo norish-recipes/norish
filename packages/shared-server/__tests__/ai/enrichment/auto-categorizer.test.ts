@@ -66,7 +66,6 @@ function decided(
 
 describe("categorizeRecipe", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(isDecisionUseEnabled).mockResolvedValue(true);
     mocked.decide.mockResolvedValue(decided({ Breakfast: 0.95 }));
     mocked.generateStructured.mockResolvedValue({ categories: ["Dinner"] });

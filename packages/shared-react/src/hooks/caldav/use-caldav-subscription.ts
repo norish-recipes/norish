@@ -49,6 +49,8 @@ export function createUseCaldavSubscription({
   useToastAdapter,
 }: CreateUseCaldavSubscriptionOptions) {
   function useCaldavSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const { setConfig, setStatuses, invalidateSyncStatus, invalidateSummary } =
       useCaldavCacheHelpers();

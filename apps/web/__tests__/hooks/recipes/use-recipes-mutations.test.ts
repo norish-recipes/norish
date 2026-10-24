@@ -12,7 +12,6 @@ const mockCreateMutationOptions = vi.fn((options?: unknown) => options);
 const mockImportFromUrlMutationOptions = vi.fn((options?: unknown) => options);
 const mockImportFromPasteMutationOptions = vi.fn((options?: unknown) => options);
 const mockUpdateMutationOptions = vi.fn((options?: unknown) => options);
-const promoteCreatedRecipe = vi.hoisted(() => vi.fn());
 
 vi.mock("@tanstack/react-query", async () => {
   const actual = await vi.importActual("@tanstack/react-query");
@@ -97,14 +96,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   }),
 }));
 
-vi.mock("@/hooks/use-warm-set", () => ({
-  useWarmSet: () => ({
-    topUp: vi.fn(),
-    inspect: vi.fn(),
-    promoteCreatedRecipe,
-  }),
-}));
-
 // Mock client logger
 vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => ({
@@ -119,7 +110,6 @@ describe("useRecipesMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockMutate.mockReset();
     mockCreateMutationOptions.mockClear();
     mockImportFromUrlMutationOptions.mockClear();
@@ -201,7 +191,7 @@ describe("useRecipesMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const mutationOpts = mockImportFromUrlMutationOptions.mock.calls[0][0] as {
+      const mutationOpts = mockImportFromUrlMutationOptions.mock.calls[0]![0] as {
         onMutate: () => { optimisticPendingId: string };
         onError: (
           error: unknown,
@@ -247,7 +237,7 @@ describe("useRecipesMutations", () => {
 
       renderHook(() => useRecipesMutations(), { wrapper: createTestWrapper(queryClient) });
 
-      return mockImportFromUrlMutationOptions.mock.calls[0][0] as ImportMutationOpts;
+      return mockImportFromUrlMutationOptions.mock.calls[0]![0] as ImportMutationOpts;
     }
 
     it("toasts the queued-offline message, not an error, when the import was captured", async () => {
@@ -343,7 +333,7 @@ describe("useRecipesMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const mutationOpts = mockCreateMutationOptions.mock.calls[0][0] as {
+      const mutationOpts = mockCreateMutationOptions.mock.calls[0]![0] as {
         onMutate: (input: {
           id: string;
           name: string;
@@ -397,7 +387,6 @@ describe("useRecipesMutations", () => {
           systemUsed: "metric",
         })
       );
-      expect(promoteCreatedRecipe).toHaveBeenCalledWith("11111111-1111-4111-8111-111111111111");
 
       const cachedList =
         queryClient.getQueryData<ReturnType<typeof createMockInfiniteData>>(listQueryKey);
@@ -406,6 +395,48 @@ describe("useRecipesMutations", () => {
         expect.objectContaining({
           id: "11111111-1111-4111-8111-111111111111",
           name: "Metric recipe",
+        })
+      );
+    });
+
+    it("gives the optimistic card the gallery's first image", async () => {
+      const listQueryKey = [["recipes", "list"], { input: {}, type: "infinite" }];
+
+      queryClient.setQueryData(listQueryKey, createMockInfiniteData());
+      queryClient.setQueryData(["recipes", "pending"], []);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+
+      renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const mutationOpts = mockCreateMutationOptions.mock.calls[0]![0] as {
+        onMutate: (input: unknown) => Promise<unknown>;
+      };
+
+      await act(async () => {
+        await mutationOpts.onMutate({
+          id: "22222222-2222-4222-8222-222222222222",
+          name: "Gallery recipe",
+          systemUsed: "metric",
+          recipeIngredients: [],
+          steps: [],
+          tags: [],
+          images: [
+            { image: "/recipes/22222222/second.jpg", order: 1 },
+            { image: "/recipes/22222222/first.jpg", order: 0 },
+          ],
+        });
+      });
+
+      const cachedList =
+        queryClient.getQueryData<ReturnType<typeof createMockInfiniteData>>(listQueryKey);
+
+      expect(cachedList?.pages[0]?.recipes[0]).toEqual(
+        expect.objectContaining({
+          id: "22222222-2222-4222-8222-222222222222",
+          image: "/recipes/22222222/first.jpg",
         })
       );
     });
@@ -433,7 +464,7 @@ describe("useRecipesMutations", () => {
           wrapper: createTestWrapper(queryClient),
         });
 
-        const mutationOpts = mockCreateMutationOptions.mock.calls[0][0] as {
+        const mutationOpts = mockCreateMutationOptions.mock.calls[0]![0] as {
           onMutate: (input: {
             id: string;
             name: string;
@@ -479,7 +510,7 @@ describe("useRecipesMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const pasteMutationOptions = mockImportFromPasteMutationOptions.mock.calls[0][0] as {
+      const pasteMutationOptions = mockImportFromPasteMutationOptions.mock.calls[0]![0] as {
         onMutate: () => { optimisticPendingId: string };
         onSuccess: (
           result: { recipeIds: string[] },
@@ -520,7 +551,7 @@ describe("useRecipesMutations", () => {
 
       renderHook(() => useRecipesMutations(), { wrapper: createTestWrapper(queryClient) });
 
-      const options = mockImportFromUrlMutationOptions.mock.calls[0][0] as {
+      const options = mockImportFromUrlMutationOptions.mock.calls[0]![0] as {
         onMutate: () => { optimisticPendingId: string };
         onSuccess: (
           result: { recipeId: string; status: "queued" | "exists" },
@@ -571,65 +602,93 @@ describe("useRecipesMutations", () => {
       expect(() => result.current.updateRecipe).not.toThrow();
     });
 
-    it("optimistically updates the detail cache for measurement system changes", async () => {
+    const detailKey = [["recipes", "get"], { input: { id: "recipe-1" }, type: "query" }];
+
+    function seedDetail(overrides: Partial<FullRecipeDTO> = {}) {
       queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
       queryClient.setQueryData(["recipes", "pending"], []);
-      queryClient.setQueryData<FullRecipeDTO>(
-        [["recipes", "get"], { input: { id: "recipe-1" }, type: "query" }],
-        {
-          id: "recipe-1",
-          userId: "user-1",
-          name: "Original recipe",
-          description: null,
-          notes: null,
-          url: null,
-          image: null,
-          originCountry: null,
-          originRegion: null,
-          provenanceNote: null,
-          cuisines: [],
-          servings: 1,
-          prepMinutes: null,
-          cookMinutes: null,
-          totalMinutes: null,
-          calories: null,
-          fat: null,
-          carbs: null,
-          protein: null,
-          systemUsed: "us",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          recipeIngredients: [],
-          steps: [],
-          tags: [],
-          categories: [],
-          author: { id: "user-1", name: "User", image: null, version: 1 },
-          images: [],
-          videos: [],
-          version: 1,
-        }
-      );
+      queryClient.setQueryData<FullRecipeDTO>(detailKey, {
+        id: "recipe-1",
+        userId: "user-1",
+        name: "Original recipe",
+        description: null,
+        notes: null,
+        url: null,
+        originCountry: null,
+        originCountryName: null,
+        originRegion: null,
+        provenanceNote: null,
+        cuisines: [],
+        originalSystem: null,
+        dishColor: null,
+        servings: 1,
+        prepMinutes: null,
+        cookMinutes: null,
+        totalMinutes: null,
+        calories: null,
+        fat: null,
+        carbs: null,
+        protein: null,
+        systemUsed: "us",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        recipeIngredients: [],
+        steps: [],
+        tags: [],
+        categories: [],
+        author: { id: "user-1", name: "User", image: null, version: 1 },
+        images: [],
+        videos: [],
+        version: 1,
+        ...overrides,
+      });
+    }
 
+    async function runUpdate(data: Record<string, unknown>) {
       const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
 
       renderHook(() => useRecipesMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const mutationOpts = mockUpdateMutationOptions.mock.calls[0][0] as {
-        onMutate: (variables: { id: string; data: { systemUsed: "metric" } }) => Promise<unknown>;
+      const mutationOpts = mockUpdateMutationOptions.mock.calls[0]![0] as {
+        onMutate: (variables: { id: string; data: Record<string, unknown> }) => Promise<unknown>;
       };
 
       await act(async () => {
-        await mutationOpts.onMutate({
-          id: "recipe-1",
-          data: { systemUsed: "metric" },
-        });
+        await mutationOpts.onMutate({ id: "recipe-1", data });
       });
 
-      expect(
-        queryClient.getQueryData([["recipes", "get"], { input: { id: "recipe-1" }, type: "query" }])
-      ).toEqual(expect.objectContaining({ systemUsed: "metric" }));
+      return queryClient.getQueryData<FullRecipeDTO>(detailKey);
+    }
+
+    it("optimistically updates the detail cache for measurement system changes", async () => {
+      seedDetail();
+
+      expect(await runUpdate({ systemUsed: "metric" })).toEqual(
+        expect.objectContaining({ systemUsed: "metric" })
+      );
+    });
+
+    it("keeps the optimistic detail whole when an edit adds rows and changes cuisines", async () => {
+      const italian = { id: "11111111-1111-4111-8111-111111111111", name: "Italian", version: 1 };
+
+      seedDetail({ cuisines: [italian], tags: [{ name: "pasta", version: 3 }] });
+
+      const detail = await runUpdate({
+        recipeIngredients: [{ ingredientName: "Basil", amount: "2", order: 0 }],
+        cuisines: [],
+        tags: [{ name: "pasta" }, { name: "quick" }],
+      });
+
+      expect(detail?.recipeIngredients).toEqual([
+        expect.objectContaining({ id: expect.any(String), ingredientName: "Basil", amount: 2 }),
+      ]);
+      expect(detail?.cuisines).toEqual([]);
+      expect(detail?.tags).toEqual([
+        { name: "pasta", version: 3 },
+        { name: "quick", version: 1 },
+      ]);
     });
   });
 
@@ -672,7 +731,7 @@ describe("useRecipesMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const mutationOpts = mockImportFromUrlMutationOptions.mock.calls[0][0] as {
+      const mutationOpts = mockImportFromUrlMutationOptions.mock.calls[0]![0] as {
         onError: (error: unknown, variables: { url: string }, context?: unknown) => void;
       };
 

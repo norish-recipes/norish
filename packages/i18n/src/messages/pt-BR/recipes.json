@@ -423,5 +423,13 @@
     "removeImage": "Remover imagem",
     "imageUploadFailed": "Não foi possível enviar a imagem.",
     "imageNeedsConnection": "Você pode trocar imagens quando estiver online de novo."
+  },
+  "print": {
+    "title": "Imprimir receita",
+    "includePhoto": "Incluir foto",
+    "textSize": "Tamanho do texto",
+    "print": "Imprimir / Salvar PDF",
+    "continued": "continuação",
+    "perServing": "Por porção"
   }
 }

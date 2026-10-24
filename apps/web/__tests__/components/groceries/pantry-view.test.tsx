@@ -103,7 +103,6 @@ const rowNames = () =>
 
 describe("PantryView", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     viewerLocale = "en";
     offline = false;
     pantry = { isLoading: false, isUnavailable: false };

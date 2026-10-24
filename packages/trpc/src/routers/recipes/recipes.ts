@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
+import { setTimeout as sleep } from "node:timers/promises";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { RecipeListContext } from "@norish/db";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
@@ -18,6 +18,8 @@ import {
   RecipeGetInputSchema,
   RecipeImportInputSchema,
   RecipeImportResultSchema,
+  RecipeImportStatusInputSchema,
+  RecipeImportStatusSchema,
   RecipeListInputSchema,
   RecipeUpdateInputSchema,
   searchRecipesByName,
@@ -34,6 +36,7 @@ import {
 } from "@norish/queue";
 import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
 import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
+import { readStepProgress } from "@norish/queue/job-steps";
 import { getQueues } from "@norish/queue/registry";
 import {
   getRecipePermissionPolicy,
@@ -53,11 +56,12 @@ import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measure
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
-import { authedProcedure } from "../../middleware";
+import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
 import {
@@ -102,11 +106,7 @@ export const listProcedure = authedProcedure
 
     log.debug({ userId: ctx.user.id, cursor, limit }, "Listing recipes");
 
-    const listCtx: RecipeListContext = {
-      userId: ctx.user.id,
-      householdUserIds: ctx.householdUserIds,
-      isServerAdmin: ctx.isServerAdmin,
-    };
+    const listCtx = viewerOf(ctx);
 
     const result = await listRecipes(
       listCtx,
@@ -432,8 +432,111 @@ export const importFromUrlProcedure = authedProcedure
       });
     }
 
-    return { recipeId, status: "queued" as const };
+    return {
+      recipeId,
+      status: "queued" as const,
+      statusUrl: addBasePath(`/api/v1/recipes/import/status/${recipeId}`),
+    };
   });
+
+export const importStatusProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/recipes/import/status/{recipeId}",
+      protect: true,
+      tags: ["Recipe Imports"],
+      summary: "Get status of a queued recipe import",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        404: "Import job or recipe not found",
+      },
+    },
+  })
+  .input(RecipeImportStatusInputSchema)
+  .output(RecipeImportStatusSchema)
+  .query(async ({ ctx, input }) => {
+    const queue = getQueues().recipeImport;
+    let job = await queue.getJob(input.recipeId);
+    const canView =
+      job &&
+      (await canAccessResource(
+        "view",
+        ctx.user.id,
+        job.data.userId,
+        ctx.householdUserIds,
+        ctx.isServerAdmin
+      ));
+
+    if (job && canView) {
+      let state = await job.getState();
+      const deadline = Date.now() + (input.wait ?? 0) * 1000;
+
+      // The job is re-read each tick: its progress, failure and result are a snapshot.
+      while (job && !isSettled(state) && Date.now() < deadline) {
+        await sleep(Math.min(deadline - Date.now(), 500));
+        job = await queue.getJob(input.recipeId);
+        state = job ? await job.getState() : "unknown";
+      }
+
+      if (job && state !== "unknown") {
+        const status = {
+          recipeId: input.recipeId,
+          url: job.data.url,
+          step: readStepProgress(job.progress)?.step ?? null,
+          error: null,
+          recipe: null,
+        };
+
+        if (state === "failed") {
+          return {
+            ...status,
+            status: "failed" as const,
+            error: job.failedReason || "Recipe import failed",
+          };
+        }
+
+        if (state === "completed") {
+          // A URL already in the library ends the import on that recipe.
+          const importedId = typeof job.returnvalue === "string" ? job.returnvalue : input.recipeId;
+
+          return {
+            ...status,
+            status: "completed" as const,
+            recipe: await dashboardRecipe(importedId),
+          };
+        }
+
+        return {
+          ...status,
+          status: state === "active" ? ("active" as const) : ("waiting" as const),
+        };
+      }
+    }
+
+    // Jobs leave the queue's history, so a finished import is read from its recipe.
+    const accessibleRecipe = await findRecipeForViewer(ctx, input.recipeId);
+
+    if (accessibleRecipe) {
+      return {
+        recipeId: input.recipeId,
+        url: accessibleRecipe.url ?? undefined,
+        status: "completed" as const,
+        step: null,
+        error: null,
+        recipe: await dashboardRecipe(input.recipeId),
+      };
+    }
+
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Import job or recipe not found",
+    });
+  });
+
+function isSettled(state: string): boolean {
+  return state === "completed" || state === "failed" || state === "unknown";
+}
 
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)
@@ -600,11 +703,7 @@ const autocomplete = authedProcedure
   .query(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, query: input.query }, "Searching recipes for autocomplete");
 
-    const listCtx: RecipeListContext = {
-      userId: ctx.user.id,
-      householdUserIds: ctx.householdUserIds,
-      isServerAdmin: ctx.isServerAdmin,
-    };
+    const listCtx = viewerOf(ctx);
 
     const results = await searchRecipesByName(listCtx, input.query, 10);
 
@@ -614,11 +713,7 @@ const autocomplete = authedProcedure
 const getRandomRecipe = authedProcedure
   .input(randomRecipeInputSchema)
   .query(async ({ ctx, input }) => {
-    const listCtx: RecipeListContext = {
-      userId: ctx.user.id,
-      householdUserIds: ctx.householdUserIds,
-      isServerAdmin: ctx.isServerAdmin,
-    };
+    const listCtx = viewerOf(ctx);
 
     let candidates = await getRandomRecipeCandidates(listCtx, input.category);
 
@@ -836,6 +931,7 @@ export const recipesProcedures = router({
   update,
   delete: deleteProcedure,
   importFromUrl: importFromUrlProcedure,
+  importStatus: importStatusProcedure,
   importFromImages: importFromImagesProcedure,
   importFromPaste: importFromPasteProcedure,
   convertMeasurements,

@@ -9,6 +9,8 @@ import type { CreatePantryHooksOptions, PantrySuggestionsResult } from "./types"
  */
 export function createUsePantrySuggestions({ useTRPC }: CreatePantryHooksOptions) {
   return function usePantrySuggestions(enabled = true): PantrySuggestionsResult {
+    "use memo";
+
     const trpc = useTRPC();
     const { data } = useQuery({ ...trpc.pantry.suggestions.queryOptions(), enabled });
 

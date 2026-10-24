@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import UserAvatar from "@/components/shared/user-avatar";
+import { usePending } from "@/hooks/use-pending";
 import { TrashIcon } from "@heroicons/react/16/solid";
 import { PencilIcon } from "@heroicons/react/20/solid";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
@@ -14,26 +15,27 @@ import { useUserSettingsContext } from "../context";
 export default function ProfileCard() {
   const t = useTranslations("settings.user.profile");
   const { user, updateName, updateImage, deleteImage, isDeletingAvatar } = useUserSettingsContext();
-  const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [name, setName] = useState(user?.name || "");
+  const [syncedName, setSyncedName] = useState(user?.name);
+  const [saving, whileSaving] = usePending();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update name when user data loads
-  useEffect(() => {
+  if (user?.name !== syncedName) {
+    setSyncedName(user?.name);
     if (user?.name) {
       setName(user.name);
     }
-  }, [user?.name]);
+  }
   const handleSaveProfile = async () => {
     const hasNameChanges = name !== user?.name;
     const hasImageChanges = pendingImageFile !== null;
     if (!hasNameChanges && !hasImageChanges) {
       return;
     }
-    setSaving(true);
-    try {
+    const save = async () => {
       if (hasNameChanges) {
         await updateName(name);
       }
@@ -42,9 +44,9 @@ export default function ProfileCard() {
         setImagePreview(null);
         setPendingImageFile(null);
       }
-    } finally {
-      setSaving(false);
-    }
+    };
+
+    await whileSaving(() => save());
   };
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

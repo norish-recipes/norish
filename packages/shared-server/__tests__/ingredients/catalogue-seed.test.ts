@@ -8,31 +8,59 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
+import {
+  findIngredientByAliasId,
+  findRecipeLineAliases,
+} from "@norish/db/repositories/ingredient-aliases";
+import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
 import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
-import { groceries, ingredients, serverConfig } from "@norish/db/schema";
+import { groceries, ingredientAliases, ingredients, serverConfig } from "@norish/db/schema";
+import { mergeByAI, parentByAI } from "@norish/shared-server/ingredients/ai-changes";
 import {
   addAlias,
   listIngredients,
   mergeIngredients,
+  moveAlias,
   setParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import { addToPantry } from "@norish/shared-server/ingredients/pantry";
-import { ingredientFor, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import {
-  applySeedFile,
+  applySeedEntries,
+  readIngredientSeedState,
   refreshIngredientCatalogue,
+  SEED_CORRECTIONS_VERSION,
+  seedEntriesOf,
+  updateIngredientSeedState,
 } from "@norish/shared-server/ingredients/seed/catalogue-seed";
+import { correctSeedOnce } from "@norish/shared-server/ingredients/seed/correct-seed";
+import {
+  JUNK_SEED,
+  JUNK_SEED_CONCEPTS,
+  JUNK_SEED_VERSION,
+  seedJunkPileOnce,
+} from "@norish/shared-server/ingredients/seed/junk-pile";
+import { CATALOGUE_LANGUAGES } from "@norish/shared/lib/ingredient-names";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  getSpellingTexts,
+  getTestDb,
+  nameInATestRecipe,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const excerpt = readFileSync(join(__dirname, "fixtures", "ingredients-taxonomy.txt"), "utf8");
+
+/** A taxonomy file applied as the refresh applies it, without the fetch. */
+const applySeedFile = async (file: string) => await applySeedEntries(seedEntriesOf(file));
 
 /** The excerpt without one entry, as a later version of the file might be. */
 function without(entryFirstLine: string, file = excerpt): string {
@@ -40,6 +68,21 @@ function without(entryFirstLine: string, file = excerpt): string {
     .split(/\n\s*\n/)
     .filter((block) => !block.split("\n").some((line) => line === entryFirstLine))
     .join("\n\n");
+}
+
+/** A server for the file that answers 304 to a request for the `etag` it has. */
+function serving(file: string, etag: string) {
+  const asked: Array<Record<string, string>> = [];
+  const fetchImpl = (async (_url: string, init?: RequestInit) => {
+    const headers = (init?.headers ?? {}) as Record<string, string>;
+
+    asked.push(headers);
+    if (headers["If-None-Match"] === etag) return new Response(null, { status: 304 });
+
+    return new Response(file, { status: 200, headers: { etag } });
+  }) as typeof fetch;
+
+  return { fetchImpl, asked };
 }
 
 describe("the ingredient catalogue seed", () => {
@@ -68,7 +111,7 @@ describe("the ingredient catalogue seed", () => {
   });
 
   async function resolve(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId: actor.userId }, { ai: false });
+    const [resolved] = await resolveIngredients([text], { userId: actor.userId }, "upgrade");
 
     return resolved!;
   }
@@ -97,11 +140,32 @@ describe("the ingredient catalogue seed", () => {
       await expect(resolve("oignons")).resolves.toMatchObject({
         ingredientId: onion.ingredientId,
       });
-      await expect(ingredientFor(onion.aliasId)).resolves.toMatchObject({
+      await expect(findIngredientByAliasId(onion.aliasId)).resolves.toMatchObject({
         name: "onion",
         ownerId: null,
         flagged: false,
       });
+    });
+
+    it("cleans its spellings of stray marks and keeps the brackets that tell foods apart", async () => {
+      await applySeedFile(
+        `${excerpt}\n\nen: bell pepper\nnl: paprika (vrucht)\n\nen: paprika\nnl: paprika\n\n` +
+          `en: honey\nak: 3wu)\n\nen: amaranth\nhi: |चौलाई}}\n`
+      );
+
+      const bellPepper = await resolve("bell pepper");
+      const honey = await resolve("honey");
+      const amaranth = await resolve("amaranth");
+
+      await expect(resolve("paprika (vrucht)")).resolves.toMatchObject({
+        ingredientId: bellPepper.ingredientId,
+      });
+      expect((await resolve("paprika")).ingredientId).not.toBe(bellPepper.ingredientId);
+      await expect(getSpellingTexts(bellPepper.ingredientId)).resolves.toContain(
+        "paprika (vrucht)"
+      );
+      await expect(getSpellingTexts(honey.ingredientId)).resolves.toEqual(["3wu", "honey"]);
+      await expect(getSpellingTexts(amaranth.ingredientId)).resolves.toEqual(["amaranth", "चौलाई"]);
     });
 
     it("places each food under the first food it is a kind of", async () => {
@@ -174,6 +238,21 @@ describe("the ingredient catalogue seed", () => {
         ownerId: actor.userId,
         flagged: false,
       });
+    });
+
+    it("vouches for an adopted Ingredient's unsure AI merges too: no flag, each sure, still to undo", async () => {
+      const mine = await resolve("Onion");
+      const rings = await resolve("uienringen");
+
+      await nameInATestRecipe(actor.userId, rings.aliasId, "uienringen");
+      await mergeByAI(rings.ingredientId, mine.ingredientId, false);
+      await applySeedFile(excerpt);
+
+      await expect(findIngredientByAliasId(rings.aliasId)).resolves.toMatchObject({
+        id: mine.ingredientId,
+        flagged: false,
+      });
+      expect(await listAIChanges()).toMatchObject([{ sure: true, kept: false }]);
     });
 
     it("keeps an adopted Ingredient's own name where another Ingredient holds the entry's", async () => {
@@ -252,6 +331,240 @@ describe("the ingredient catalogue seed", () => {
     });
   });
 
+  describe("spellings the file gives the wrong food", () => {
+    /**
+     * Open Food Facts' coating, which holds seasoning's names too, an entry before mixed spices that
+     * also lists one, and the mixed spices they belong to.
+     */
+    const spices =
+      `${excerpt}\n\nen: coating, seasoning\nes: sazonador\nfr: enrobage\n\n` +
+      `en: herb salt, seasoning\n\nen: mixed spices\nnl: gemengde specerijen\n`;
+
+    function parentOf(ingredientId: string) {
+      return findIngredientAncestors([ingredientId]).then(
+        (all) => all.get(ingredientId)?.[0] ?? null
+      );
+    }
+
+    async function seasoningAlias() {
+      const [row] = await getTestDb()
+        .select({ id: ingredientAliases.id })
+        .from(ingredientAliases)
+        .where(eq(ingredientAliases.fold, "seasoning"));
+
+      return row!.id;
+    }
+
+    it("gives seasoning to mixed spices, every time the file is applied, and files a seasoning there quietly", async () => {
+      await applySeedFile(spices);
+      await applySeedFile(spices);
+
+      const mixed = await resolve("mixed spices");
+      const coating = await resolve("coating");
+
+      await expect(resolve("seasoning")).resolves.toMatchObject({
+        ingredientId: mixed.ingredientId,
+      });
+      await expect(resolve("sazonador")).resolves.toMatchObject({
+        ingredientId: mixed.ingredientId,
+      });
+      await expect(getSpellingTexts(coating.ingredientId)).resolves.toEqual([
+        "coating",
+        "enrobage",
+      ]);
+      await expect(parentOf((await resolve("taco seasoning")).ingredientId)).resolves.toBe(
+        mixed.ingredientId
+      );
+      await expect(listAIChanges()).resolves.toEqual([]);
+    });
+
+    it("gives jam to the food jam, though yam's Croatian spelling comes first in the file", async () => {
+      await applySeedFile(`${excerpt}\n\nen: yam\nhr: jam\n\nen: jam, confiture\n`);
+
+      await expect(resolve("jam")).resolves.toMatchObject({
+        ingredientId: (await ingredientNamed("jam"))!.id,
+      });
+    });
+
+    it("gives steak to beef steak, and takes chicken drumstick off chicken thigh, when the file is applied", async () => {
+      await applySeedFile(
+        `${excerpt}\n\nen: patty, patties\nfr: steak\n\nen: beef steak\n\n` +
+          `en: chicken thigh, chicken drumstick\n`
+      );
+
+      await expect(resolve("steak")).resolves.toMatchObject({
+        ingredientId: (await ingredientNamed("beef steak"))!.id,
+      });
+      await expect(getSpellingTexts((await ingredientNamed("chicken thigh"))!.id)).resolves.toEqual(
+        ["chicken thigh"]
+      );
+    });
+
+    it("takes chicken drumstick off chicken thigh once on an instance seeded before, its lines read again", async () => {
+      await applySeedFile(`${excerpt}\n\nen: chicken thigh\n`);
+      const thigh = (await ingredientNamed("chicken thigh"))!.id;
+      // As a seed from before the correction left it.
+      const [drumstick] = await getTestDb()
+        .insert(ingredientAliases)
+        .values({
+          ingredientId: thigh,
+          text: "chicken drumstick",
+          fold: ingredientAliasFold("chicken drumstick"),
+          locale: "en",
+          seeded: true,
+        })
+        .returning({ id: ingredientAliases.id });
+      const line = await nameInATestRecipe(actor.userId, drumstick!.id, "chicken drumstick");
+
+      await updateIngredientSeedState({ correctionsVersion: SEED_CORRECTIONS_VERSION - 1 });
+      await expect(correctSeedOnce()).resolves.toEqual({ moved: 1, refiled: 0 });
+
+      await expect(getSpellingTexts(thigh)).resolves.toEqual(["chicken thigh"]);
+      const own = await ingredientNamed("chicken drumstick");
+
+      expect(own).toMatchObject({ offId: null });
+      expect((await findRecipeLineAliases([line.id])).get(line.id)?.foods).toEqual([
+        expect.objectContaining({ ingredientId: own!.id }),
+      ]);
+    });
+
+    it("files a spelling an entry's languages share under the one Norish reads, also on an instance seeded before", async () => {
+      // Open Food Facts lists Afrikaans before Dutch, and the first claim kept the spelling.
+      const file = `${excerpt}\n\nen: cheese\naf: Kaas\nnl: kaas\n`;
+      const cheese = async () => (await ingredientNamed("cheese"))!.id;
+      const kaasIn = (locale: string) =>
+        getTestDb()
+          .update(ingredientAliases)
+          .set({ locale })
+          .where(eq(ingredientAliases.fold, "kaas"));
+
+      await refreshIngredientCatalogue(serving(file, '"v1"').fetchImpl);
+      await expect(parentOf((await resolve("belegen kaas")).ingredientId)).resolves.toBe(
+        await cheese()
+      );
+      // A first seed is made with every correction: nothing to read again.
+      await expect(correctSeedOnce()).resolves.toBeNull();
+
+      // As a seed from before the correction left it.
+      await kaasIn("af");
+      await updateIngredientSeedState({ correctionsVersion: 2 });
+      await expect(parentOf((await resolve("jonge kaas")).ingredientId)).resolves.toBeNull();
+
+      // The boot downloads nothing: it forgets the file's validators, so the nightly refresh applies it.
+      const offline = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
+
+      try {
+        await expect(correctSeedOnce()).resolves.toEqual({ moved: 0, refiled: 0 });
+      } finally {
+        offline.mockRestore();
+      }
+      expect(offline).not.toHaveBeenCalled();
+      await expect(readIngredientSeedState()).resolves.toMatchObject({
+        etag: null,
+        lastModified: null,
+        correctionsVersion: SEED_CORRECTIONS_VERSION,
+      });
+      await refreshIngredientCatalogue(serving(file, '"v1"').fetchImpl);
+
+      await expect(parentOf((await resolve("oude kaas")).ingredientId)).resolves.toBe(
+        await cheese()
+      );
+    });
+
+    it("moves seasoning off coating once on an instance seeded before, with the foods its words filed there", async () => {
+      await applySeedFile(spices);
+      const mixed = await resolve("mixed spices");
+      const coating = await resolve("coating");
+
+      // As a seed from before the correction left it.
+      await moveAlias(admin, await seasoningAlias(), coating.ingredientId);
+      const cajun = await resolve("cajun seasoning");
+      const chicken = await resolve("chicken seasoning");
+      const ranch = await resolve("ranch seasoning");
+      // Only a grocery names it: a hidden food keeps its parent, and so its aisle.
+      const bbq = await resolve("bbq seasoning");
+
+      await nameInATestRecipe(actor.userId, chicken.aliasId, "chicken seasoning");
+      await getTestDb().insert(groceries).values({
+        userId: actor.userId,
+        name: "bbq seasoning",
+        ingredientAliasId: bbq.aliasId,
+        ingredientId: bbq.ingredientId,
+      });
+      await setParent(admin, ranch.ingredientId, coating.ingredientId);
+      // AI's open unsure answer names coating, though the words are sure of it.
+      await nameInATestRecipe(actor.userId, cajun.aliasId, "cajun seasoning");
+      await parentByAI(cajun.ingredientId, null, false);
+      await parentByAI(cajun.ingredientId, coating.ingredientId, false);
+      await expect(ingredientNamed("cajun seasoning")).resolves.toMatchObject({ flagged: true });
+
+      await expect(correctSeedOnce()).resolves.toMatchObject({ moved: 1, refiled: 2 });
+
+      await expect(resolve("seasoning")).resolves.toMatchObject({
+        ingredientId: mixed.ingredientId,
+      });
+      await expect(parentOf(cajun.ingredientId)).resolves.toBe(mixed.ingredientId);
+      await expect(parentOf(chicken.ingredientId)).resolves.toBe(mixed.ingredientId);
+      // A parent a person chose stays.
+      await expect(parentOf(ranch.ingredientId)).resolves.toBe(coating.ingredientId);
+      await expect(parentOf(bbq.ingredientId)).resolves.toBe(coating.ingredientId);
+      // AI's stale answer went with the old parent.
+      await expect(listAIChanges()).resolves.toEqual([]);
+      await expect(ingredientNamed("cajun seasoning")).resolves.toMatchObject({ flagged: false });
+
+      // The nightly refresh leaves it there.
+      await applySeedFile(spices);
+      await expect(resolve("seasoning")).resolves.toMatchObject({
+        ingredientId: mixed.ingredientId,
+      });
+
+      // Once: a person who moves it back is not overruled at the next boot.
+      await moveAlias(admin, await seasoningAlias(), coating.ingredientId);
+      await expect(correctSeedOnce()).resolves.toBeNull();
+      await expect(resolve("seasoning")).resolves.toMatchObject({
+        ingredientId: coating.ingredientId,
+      });
+    });
+  });
+
+  describe("the junk pile seed", () => {
+    it("has every concept in every language Norish reads", () => {
+      for (const [concept, { texts }] of Object.entries(JUNK_SEED_CONCEPTS)) {
+        expect([concept, Object.keys(texts).sort()]).toEqual([
+          concept,
+          [...CATALOGUE_LANGUAGES].sort(),
+        ]);
+      }
+    });
+
+    it("puts its texts on the pile once per version, never again one a person took off", async () => {
+      const outcome = await seedJunkPileOnce();
+
+      expect(outcome).toEqual({ added: 211 });
+      expect((await listJunkFolds()).sort()).toEqual(
+        JUNK_SEED.map((entry) => ingredientAliasFold(entry.text)).sort()
+      );
+      await expect(resolveIngredients(["boneless"], { userId: actor.userId })).resolves.toEqual([
+        null,
+      ]);
+
+      // A person says "boneless" names a food: it leaves the pile, and stays off.
+      const chicken = await resolve("chicken breast");
+
+      await addAlias(actor, chicken.ingredientId, "boneless");
+      await expect(seedJunkPileOnce()).resolves.toBeNull();
+      expect(await listJunkFolds()).not.toContain("boneless");
+
+      // A later version adds only its own entries.
+      const later = [...JUNK_SEED, { text: "afgemeten", version: JUNK_SEED_VERSION + 1 }];
+
+      await expect(seedJunkPileOnce(later)).resolves.toEqual({ added: 1 });
+      expect(await listJunkFolds()).toContain("afgemeten");
+      expect(await listJunkFolds()).not.toContain("boneless");
+      await expect(seedJunkPileOnce(later)).resolves.toBeNull();
+    });
+  });
+
   describe("an entry the file no longer lists", () => {
     it("is kept while a grocery uses it, and removed when nothing does", async () => {
       await applySeedFile(excerpt);
@@ -273,20 +586,6 @@ describe("the ingredient catalogue seed", () => {
   });
 
   describe("the nightly refresh", () => {
-    function serving(file: string, etag: string) {
-      const asked: Array<Record<string, string>> = [];
-      const fetchImpl = (async (_url: string, init?: RequestInit) => {
-        const headers = (init?.headers ?? {}) as Record<string, string>;
-
-        asked.push(headers);
-        if (headers["If-None-Match"] === etag) return new Response(null, { status: 304 });
-
-        return new Response(file, { status: 200, headers: { etag } });
-      }) as typeof fetch;
-
-      return { fetchImpl, asked };
-    }
-
     it("merges an existing Ingredient the seed knows into its entry, once", async () => {
       const onions = await resolve("onions");
       const sjalot = serving(excerpt, '"v1"');
@@ -297,7 +596,7 @@ describe("the ingredient catalogue seed", () => {
 
       expect(onion.ingredientId).not.toBe(onions.ingredientId);
       // Merged: the old spelling now names the seeded food.
-      await expect(ingredientFor(onions.aliasId)).resolves.toMatchObject({
+      await expect(findIngredientByAliasId(onions.aliasId)).resolves.toMatchObject({
         id: onion.ingredientId,
       });
 

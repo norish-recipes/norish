@@ -3,6 +3,7 @@ import {
   normalizeOllamaEndpoint,
   normalizeOpenAICompatibleEndpoint,
 } from "@norish/shared-server/ai/runtime/endpoints";
+import { testPerplexityKey } from "@norish/shared-server/ai/runtime/runtime";
 import { aiLogger } from "@norish/shared-server/logger";
 
 export async function testOIDCProvider(config: {
@@ -69,51 +70,6 @@ export async function testGoogleProvider(config: {
   }
 
   return { success: true };
-}
-
-async function testPerplexityConnection(
-  apiKey?: string
-): Promise<{ success: boolean; error?: string }> {
-  if (!apiKey) {
-    return { success: false, error: "API key is required for Perplexity" };
-  }
-
-  try {
-    // Perplexity doesn't have a /models endpoint, so we use a minimal chat completion request
-    const response = await fetch("https://api.perplexity.ai/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "sonar",
-        messages: [{ role: "user", content: "Hi" }],
-        max_tokens: 1,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
-
-      if (response.status === 401) {
-        return { success: false, error: "Invalid API key" };
-      }
-
-      return {
-        success: false,
-        error: `Failed to connect: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}`,
-      };
-    }
-
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to connect to Perplexity",
-    };
-  }
 }
 
 /**
@@ -204,8 +160,12 @@ export async function testAIEndpoint(config: {
       testUrl = `${normalizeOpenAICompatibleEndpoint(config.endpoint)}/models`;
       break;
     case "perplexity":
-      // Perplexity doesn't have a /models endpoint, use chat completions with minimal request
-      return testPerplexityConnection(config.apiKey);
+      // Perplexity has no /models endpoint, so the runtime asks it one tiny question instead
+      if (!config.apiKey) {
+        return { success: false, error: "API key is required for Perplexity" };
+      }
+
+      return testPerplexityKey(config.apiKey);
     default:
       return { success: false, error: `Unknown provider: ${config.provider}` };
   }

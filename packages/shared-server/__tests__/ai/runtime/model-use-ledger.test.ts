@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import {
   createModelUseLedger,
   recordModelUse,
+  requestSignal,
   runWithModelUseLedger,
 } from "@norish/shared-server/ai/runtime/model-use-ledger";
 
@@ -58,5 +59,17 @@ describe("model-use ledger", () => {
     use.model = "something-else";
 
     expect(ledger.uses[0]?.model).toBe("jev-2026-09-01");
+  });
+
+  it("binds a request to the job's signal, through a ledger opened for part of the job", () => {
+    const job = new AbortController();
+    const signal = runWithModelUseLedger(createModelUseLedger(job.signal), () =>
+      runWithModelUseLedger(createModelUseLedger(), () => requestSignal(60_000))
+    );
+
+    expect(signal.aborted).toBe(false);
+    job.abort("Norish is shutting down");
+    expect(signal.aborted).toBe(true);
+    expect(requestSignal(60_000).aborted).toBe(false);
   });
 });

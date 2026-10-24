@@ -34,10 +34,13 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
+    "playwright": "^1.64.0",
     "postcss": "catalog:",
     "prettier": "catalog:",
+    "sharp": "^0.35.5",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "4.150.0"
   },
   "prettier": "@norish/prettier-config"
 }

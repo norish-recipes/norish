@@ -2,16 +2,13 @@ import type { SQL } from "drizzle-orm";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
-import type { DbTransaction } from "@norish/db/drizzle";
+import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
-import { db } from "@norish/db/drizzle";
+import { db, holdLock } from "@norish/db/drizzle";
 import { ingredients, pantryIngredients } from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
 import { findLocaleNames } from "./ingredient-aliases";
-
-/** The connection a caller is already inside, or the shared one. */
-type Db = typeof db | DbTransaction;
 
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
@@ -111,55 +108,54 @@ export async function findPantryIngredientInHousehold(
   );
 }
 
+/** Lock an Ingredient's Pantry rows until the transaction ends: another add or merge of it waits. */
+export async function lockPantryFood(tx: DbTransaction, ingredientId: string): Promise<void> {
+  await holdLock(tx, `pantry:${ingredientId}`);
+}
+
+/** A Pantry Ingredient put in, and whether it is new or the one the household already had. */
+export interface PantryAdded {
+  item: PantryIngredientDto;
+  created: boolean;
+}
+
 /**
- * Put an Ingredient in the Pantry, or answer with the item the household
- * already has of it — `created` says which, and only a create is worth
- * announcing. The rule that an Ingredient is in a Pantry once lives here and
- * only here, and it holds under concurrency: the check and the write are one
- * transaction under an advisory lock on the Ingredient, so two members adding
- * spellings of one food at the same moment get one row between them, the
- * second waiting for the first and then finding what it wrote. Nothing else
- * takes that lock, and it goes with the transaction.
- *
- * The alias is what the ingredient resolver made of the text the member
- * typed, and the Ingredient is the alias's; nothing is minted here. The id is
- * the client's (ADR-0003).
+ * Put Ingredients in the Pantry, all or none; one the household has answers `created: false`.
+ * Each Ingredient is locked (`lockPantryFood`) in one order, so concurrent adds wait, not deadlock.
  */
-export async function addPantryIngredient(
-  id: string,
-  input: {
-    userId: string;
-    userIds: string[];
-    ingredientAliasId: string | null;
-    ingredientId: string;
-  }
-): Promise<{ item: PantryIngredientDto; created: boolean }> {
+export async function addPantryIngredients(
+  items: Array<{ id: string; ingredientAliasId: string | null; ingredientId: string }>,
+  owner: { userId: string; userIds: string[] }
+): Promise<PantryAdded[]> {
   return await db.transaction(async (tx) => {
-    await tx.execute(
-      sql`select pg_advisory_xact_lock(hashtext(${`pantry:${input.ingredientId}`}::text))`
-    );
+    const foods = [...new Set(items.map((item) => item.ingredientId))];
 
-    const held = await findPantryIngredientInHousehold(input.userIds, input.ingredientId, tx);
+    for (const ingredientId of foods.sort((a, b) => a.localeCompare(b))) {
+      await lockPantryFood(tx, ingredientId);
+    }
 
-    if (held) return { item: held, created: false };
+    const added: PantryAdded[] = [];
 
-    const [row] = await tx
-      .insert(pantryIngredients)
-      .values({
-        id,
-        userId: input.userId,
-        ingredientId: input.ingredientId,
-        ingredientAliasId: input.ingredientAliasId,
-      })
-      .returning({ id: pantryIngredients.id });
+    for (const { id, ingredientAliasId, ingredientId } of items) {
+      const held = await findPantryIngredientInHousehold(owner.userIds, ingredientId, tx);
 
-    if (!row) throw new Error("Failed to create pantry ingredient");
+      if (held) {
+        added.push({ item: held, created: false });
+        continue;
+      }
 
-    const item = await findPantryIngredient(row.id, tx);
+      const [row] = await tx
+        .insert(pantryIngredients)
+        .values({ id, userId: owner.userId, ingredientId, ingredientAliasId })
+        .returning({ id: pantryIngredients.id });
+      const item = row && (await findPantryIngredient(row.id, tx));
 
-    if (!item) throw new Error("Failed to create pantry ingredient");
+      if (!item) throw new Error("Failed to create pantry ingredient");
 
-    return { item, created: true };
+      added.push({ item, created: true });
+    }
+
+    return added;
   });
 }
 
@@ -253,7 +249,8 @@ export async function listPantrySuggestions(userIds: string[]): Promise<PantrySu
       select a.ingredient_id, count(distinct r.id)::int as recipe_count
       from recipes r
       join recipe_ingredients ri on ri.recipe_id = r.id
-      join ingredient_aliases a on a.id = ri.ingredient_alias_id
+      join recipe_ingredient_foods on recipe_ingredient_foods.recipe_ingredient_id = ri.id
+      join ingredient_aliases a on a.id = recipe_ingredient_foods.ingredient_alias_id
       where r.user_id in (${members})
         and ltrim(ri.name) not like '#%'
         and position('(id:' in ri.name) = 0

@@ -72,8 +72,8 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ComboBox
-          selectedKey={value.originCountry}
-          onSelectionChange={(key) => {
+          value={value.originCountry}
+          onChange={(key) => {
             // A dismissed popover reports a null key; both it and the
             // "no country" row mean the same thing — leave it unset.
             const code = key === null || key === NO_COUNTRY_KEY ? null : String(key);

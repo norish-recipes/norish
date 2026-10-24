@@ -7,7 +7,6 @@
 import type { Queue } from "bullmq";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
-import { OperationTimeoutError } from "@norish/shared/lib/error-extensions";
 import { normalizeUrl } from "@norish/shared/lib/helpers";
 
 export function sanitizeUrlForJobId(url: string): string {
@@ -17,14 +16,11 @@ export function sanitizeUrlForJobId(url: string): string {
 }
 
 /**
- * Generate a unique job ID based on the view policy.
- * Note: BullMQ doesn't allow colons in job IDs, so we use underscores as delimiters.
- *
- * - "everyone": `import_${sanitizedUrl}` - globally unique
- * - "household": `import_${householdKey}_${sanitizedUrl}` - unique per household
- * - "owner": `import_${userId}_${sanitizedUrl}` - unique per user
+ * The deduplication id of a URL import, scoped by the view policy: one import
+ * of a URL in flight at a time, for everyone, per household or per user.
+ * BullMQ allows no colons in it, so the parts are joined with underscores.
  */
-export function generateJobId(
+export function recipeImportDeduplicationId(
   url: string,
   userId: string,
   householdKey: string,
@@ -42,20 +38,6 @@ export function generateJobId(
     default:
       return `import_${sanitized}`;
   }
-}
-
-/**
- * Check if a job with the given ID is currently in the queue
- * (waiting, active, or delayed - not completed or failed)
- */
-export async function isJobInQueue<T>(queue: Queue<T>, jobId: string): Promise<boolean> {
-  const job = await queue.getJob(jobId);
-
-  if (!job) return false;
-
-  const state = await job.getState();
-
-  return state === "waiting" || state === "active" || state === "delayed";
 }
 
 /**
@@ -89,24 +71,17 @@ export async function removeRetainedTerminalJob<T>(
   }
 }
 
-export async function withTimeout<T>(
-  operation: () => Promise<T>,
-  timeoutMs: number,
-  operationName: string
-): Promise<T> {
-  let timeoutId: NodeJS.Timeout | null = null;
+/** An error's message, with the cause a wrapper hides: a failed query names the database's complaint. */
+export function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const cause = error.cause instanceof Error ? error.cause.message : null;
 
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new OperationTimeoutError(operationName, timeoutMs));
-    }, timeoutMs);
-  });
+  return cause ? `${error.message}: ${cause}` : error.message;
+}
 
-  try {
-    return await Promise.race([operation(), timeoutPromise]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
+/** Whether a job by this name is waiting or running on the queue. */
+export async function hasQueuedJobNamed(queue: Queue, name: string): Promise<boolean> {
+  const jobs = await queue.getJobs(["active", "waiting", "prioritized", "delayed"], 0, -1);
+
+  return jobs.some((job) => job.name === name);
 }

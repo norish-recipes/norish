@@ -1,6 +1,6 @@
 {
   "name": "@norish/ingredient-icons-tool",
-  "version": "0.25.1-beta",
+  "version": "0.26.0-beta",
   "private": true,
   "type": "module",
   "description": "Draws the Ingredient Icons Norish ships for its seeded foods, through an instance's image provider.",
@@ -24,7 +24,7 @@
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "tsx": "4.23.12",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   },
   "prettier": "@norish/prettier-config"

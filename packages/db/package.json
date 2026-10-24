@@ -1,6 +1,6 @@
 {
   "name": "@norish/db",
-  "version": "0.25.1-beta",
+  "version": "0.26.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,6 +19,7 @@
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "typecheck": "pnpm exec tsc --noEmit",
+    "test": "vitest run --config ./vitest.config.ts",
     "clean": "git clean -xdf .cache .turbo node_modules dist"
   },
   "dependencies": {
@@ -28,7 +29,7 @@
     "drizzle-orm": "catalog:",
     "fuse.js": "catalog:",
     "pg": "catalog:",
-    "pino": "^10.3.1",
+    "pino": "^10.4.0",
     "superjson": "catalog:",
     "zod": "catalog:"
   },
@@ -37,10 +38,13 @@
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
     "@testcontainers/postgresql": "catalog:",
+    "@types/node": "catalog:",
     "@types/pg": "8.23.1",
-    "drizzle-kit": "0.31.10",
+    "drizzle-kit": "0.31.11",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"

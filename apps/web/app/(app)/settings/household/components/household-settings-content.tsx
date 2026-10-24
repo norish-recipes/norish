@@ -1,6 +1,6 @@
 "use client";
 
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+import { SettingsTabSkeleton } from "@/components/skeleton/settings-skeleton";
 
 import { HouseholdSettingsProvider, useHouseholdSettingsContext } from "../context";
 import HouseholdView from "./household-view";
@@ -10,7 +10,7 @@ function HouseholdSettingsContent() {
   const { household, isLoading } = useHouseholdSettingsContext();
 
   if (isLoading) {
-    return <SettingsSkeleton />;
+    return <SettingsTabSkeleton tab="household" />;
   }
 
   return household ? <HouseholdView /> : <NoHouseholdView />;

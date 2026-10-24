@@ -112,6 +112,11 @@
     "message": "노라가 여기저기 킁킁대며 가려던 곳을 찾고 있어요.",
     "imageAlt": "어리둥절한 노라"
   },
+  "errorPage": {
+    "title": "문제가 발생했어요.",
+    "message": "이 페이지에서 Norish에 오류가 발생했어요.",
+    "retry": "다시 시도"
+  },
   "import": {
     "url": {
       "title": "레시피 가져오기",
@@ -178,12 +183,15 @@
     "daily": "매일",
     "weekly": "매주",
     "monthly": "매월",
+    "yearly": "매년",
     "day": "일",
     "days": "일",
     "week": "주",
     "weeks": "주",
     "month": "월",
     "months": "개월",
+    "year": "년",
+    "years": "년",
     "next": "다음:",
     "every": "매",
     "everyOther": "격",

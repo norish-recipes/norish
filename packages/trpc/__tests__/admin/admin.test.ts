@@ -76,7 +76,6 @@ describe("admin procedures", () => {
   const mockAdmin = createMockAdminUser();
 
   beforeEach(() => {
-    vi.clearAllMocks();
     // Default: admin check returns true for admin users
     isUserServerAdmin.mockImplementation((userId: string) => {
       return Promise.resolve(userId === mockAdmin.id);
@@ -170,7 +169,7 @@ describe("admin procedures", () => {
           ingredientLinking: false,
           imageGeneration: false,
         },
-        automaticIngredients: { plainName: false, icon: false },
+        automaticIngredients: { cleanUp: false, nutrition: false, conversions: false, icon: false },
       };
 
       // Current config has enabled: false

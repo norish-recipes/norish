@@ -1,6 +1,6 @@
 # 01 — Next.js 16.3.8, sharp 0.35.5, and the unused image optimizer switched off
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: None — can start immediately
 Target release: 0.25.0-beta (safe fixes only)
 
@@ -82,3 +82,4 @@ None of these touches Norish's usage.
 - Sources:
   - the next 16.3.2, 16.3.3, 16.3.8 and 16.4.0 tarballs (`server/config-shared.js`, `image-optimizer.js`, `next-server.js`);
   - the npm bulk advisory endpoint.
+- 2026-10-13 — Next.js 16.3.8 and sharp 0.35.5 shipped in 0.25.0 (c7627004, PR #617). The optimizer switch-off and the `sw.ts` comment did not; they moved to ticket 26.

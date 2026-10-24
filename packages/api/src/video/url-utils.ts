@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isOnDomain } from "@norish/shared/lib/helpers";
+
 import type { VideoPlatform } from "./types";
 
 const urlSchema = z.url();
@@ -8,39 +10,21 @@ const urlSchema = z.url();
  * Check if URL is from Instagram.
  */
 export function isInstagramUrl(url: string): boolean {
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-
-    return hostname.includes("instagram.com");
-  } catch {
-    return false;
-  }
+  return isOnDomain(url, "instagram.com");
 }
 
 /**
  * Check if URL is from Facebook.
  */
 export function isFacebookUrl(url: string): boolean {
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-
-    return hostname.includes("facebook.com") || hostname.includes("fb.watch");
-  } catch {
-    return false;
-  }
+  return isOnDomain(url, "facebook.com", "fb.watch");
 }
 
 /**
  * Check if URL is from YouTube.
  */
 export function isYouTubeUrl(url: string): boolean {
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-
-    return hostname.includes("youtube.com") || hostname.includes("youtu.be");
-  } catch {
-    return false;
-  }
+  return isOnDomain(url, "youtube.com", "youtu.be");
 }
 
 /**

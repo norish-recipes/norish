@@ -12,9 +12,17 @@ export interface RatingStats {
 export async function rateRecipe(
   userId: string,
   recipeId: string,
-  rating: number,
+  rating: number | null,
   version?: number
-): Promise<{ rating: number; isNew: boolean; stale?: boolean }> {
+): Promise<{ rating: number | null; isNew: boolean; stale?: boolean }> {
+  if (rating === null) {
+    if (!(await removeRating(userId, recipeId, version)) && version) {
+      return { rating: null, isNew: false, stale: true };
+    }
+
+    return { rating: null, isNew: false };
+  }
+
   const existing = await db
     .select({ id: recipeRatings.id })
     .from(recipeRatings)
@@ -22,19 +30,10 @@ export async function rateRecipe(
     .limit(1);
 
   if (existing.length > 0) {
-    const whereConditions = [
-      eq(recipeRatings.userId, userId),
-      eq(recipeRatings.recipeId, recipeId),
-    ];
-
-    if (version) {
-      whereConditions.push(eq(recipeRatings.version, version));
-    }
-
     const result = await db
       .update(recipeRatings)
       .set({ rating, updatedAt: new Date(), version: sql`${recipeRatings.version} + 1` })
-      .where(and(...whereConditions));
+      .where(ownRating(userId, recipeId, version));
 
     if (result.rowCount === 0 && version) {
       // Version mismatch — stale write, safe no-op
@@ -47,6 +46,26 @@ export async function rateRecipe(
   await db.insert(recipeRatings).values({ userId, recipeId, rating });
 
   return { rating, isNew: true };
+}
+
+/** Take back one user's rating of a recipe; false when there was none at that version. */
+export async function removeRating(
+  userId: string,
+  recipeId: string,
+  version?: number
+): Promise<boolean> {
+  const result = await db.delete(recipeRatings).where(ownRating(userId, recipeId, version));
+
+  return (result.rowCount ?? 0) > 0;
+}
+
+/** One user's rating row, held to the version the caller last saw when it names one. */
+function ownRating(userId: string, recipeId: string, version?: number) {
+  return and(
+    eq(recipeRatings.userId, userId),
+    eq(recipeRatings.recipeId, recipeId),
+    version ? eq(recipeRatings.version, version) : undefined
+  );
 }
 
 export async function getUserRating(userId: string, recipeId: string): Promise<number | null> {

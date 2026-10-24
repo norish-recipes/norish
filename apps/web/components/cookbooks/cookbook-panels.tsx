@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { ALLOWED_IMAGE_MIME_TYPES } from "@norish/shared/contracts";
+import { addBasePath } from "@norish/shared/lib/base-path";
 
 /**
  * How tall these panels open.
@@ -38,10 +39,12 @@ export function CookbookTitlePanel({
   const t = useTranslations("recipes.cookbooks");
   const tActions = useTranslations("common.actions");
   const [title, setTitle] = useState("");
+  const [wasOpen, setWasOpen] = useState(open);
 
-  useEffect(() => {
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) setTitle("");
-  }, [open]);
+  }
 
   const trimmed = title.trim();
   const submit = () => {
@@ -127,11 +130,12 @@ export function CookbookEditPanel({
   const [removed, setRemoved] = useState<string[]>([]);
   // The cover is staged like the rest: a picked file is only uploaded by Save,
   // and clearing goes back to the member mosaic.
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [picked, setPicked] = useState<{ file: File; preview: string } | null>(null);
+  const file = picked?.file ?? null;
+  const preview = picked?.preview ?? null;
   const [clearImage, setClearImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const picker = useRef<HTMLInputElement>(null);
+  const pickerRef = useRef<HTMLInputElement>(null);
   const { isOffline } = useConnectivity();
   // Every staged edit commits through the same seam: routing only the rename
   // back out through a prop would give one panel two ways to write.
@@ -142,28 +146,23 @@ export function CookbookEditPanel({
     { enabled: open }
   );
 
-  useEffect(() => {
+  const [seededFrom, setSeededFrom] = useState({ open, initialTitle });
+
+  if (seededFrom.open !== open || seededFrom.initialTitle !== initialTitle) {
+    setSeededFrom({ open, initialTitle });
     if (open) {
       setTitle(initialTitle);
       setRemoved([]);
-      setFile(null);
+      setPicked(null);
       setClearImage(false);
     }
-  }, [open, initialTitle]);
+  }
 
   useEffect(() => {
-    if (!file) {
-      setPreview(null);
+    if (!preview) return;
 
-      return;
-    }
-
-    const url = URL.createObjectURL(file);
-
-    setPreview(url);
-
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
 
   const toggleRemoved = useCallback((recipeId: string) => {
     setRemoved((previous) =>
@@ -246,7 +245,7 @@ export function CookbookEditPanel({
                   isDisabled={isOffline}
                   size="sm"
                   variant="secondary"
-                  onPress={() => picker.current?.click()}
+                  onPress={() => pickerRef.current?.click()}
                 >
                   <PhotoIcon className="size-4" />
                   {shownImage ? t("changeImage") : t("chooseImage")}
@@ -256,7 +255,7 @@ export function CookbookEditPanel({
                     size="sm"
                     variant="tertiary"
                     onPress={() => {
-                      setFile(null);
+                      setPicked(null);
                       setClearImage(true);
                     }}
                   >
@@ -268,17 +267,17 @@ export function CookbookEditPanel({
               {isOffline ? <p className="text-muted text-sm">{t("imageNeedsConnection")}</p> : null}
             </div>
             <input
-              ref={picker}
+              ref={pickerRef}
               accept={ALLOWED_IMAGE_MIME_TYPES.join(",")}
               className="hidden"
               data-testid="cookbook-image-file"
               type="file"
               onChange={(event) => {
-                const picked = event.target.files?.[0];
+                const pickedFile = event.target.files?.[0];
 
                 event.target.value = "";
-                if (picked) {
-                  setFile(picked);
+                if (pickedFile) {
+                  setPicked({ file: pickedFile, preview: URL.createObjectURL(pickedFile) });
                   setClearImage(false);
                 }
               }}
@@ -333,7 +332,7 @@ export function CookbookEditPanel({
                           alt=""
                           className="h-full w-full object-cover"
                           loading="lazy"
-                          src={recipe.image}
+                          src={addBasePath(recipe.image)}
                         />
                       ) : (
                         <PhotoIcon aria-hidden className="h-5 w-5 opacity-70" />

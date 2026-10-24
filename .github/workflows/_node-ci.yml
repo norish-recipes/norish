@@ -29,6 +29,18 @@ jobs:
     name: Build, test & lint
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The unit tests whose code publishes realtime events need a live Valkey, as the dev stack gives
+    # them locally; without one each publish waits out the client's 5 s command timeout.
+    services:
+      valkey:
+        image: valkey/valkey:9
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -62,6 +74,21 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: pnpm run lint
 
+      - name: Type check
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm run typecheck
+
+      # The parser's own tests run under uv, as the E2E job installs it.
+      - name: Install uv
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          cache-dependency-glob: apps/parser-api/uv.lock
+
+      - name: Install the embedded parser runtime
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm --filter @norish/parser-api run install:deps
+
       # Unit tests need NODE_ENV=test: under the workflow-wide "production"
       # Vite resolves Node builtins as browser externals, and every jsdom suite
       # that reaches one dies with "No such built-in module: node:" before a
@@ -76,20 +103,27 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: pnpm run build
 
+      # The landing deploy runs this wrangler from the lockfile; a broken install
+      # shows here instead of on the next deploy.
+      - name: Wrangler
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm --filter @norish/landing exec wrangler --version
+
   # One Playwright worker per shard (see the E2E config): a worker is a whole
   # stack, and a second one on a 4-vCPU runner slows both into timing reds.
   # Shards split at file granularity while `fullyParallel` is off, so a
   # serial spec stays whole, and are balanced by test count, not duration:
   # when one runs well past the main job, add a shard rather than reordering.
   e2e:
-    name: Browser E2E (${{ matrix.shard }}/${{ strategy.job-total }})
+    name: Browser E2E (${{ matrix.shard == 'base-path' && 'base path' || format('{0}/4', matrix.shard) }})
     runs-on: ubuntu-latest
     # On 2026-10-05 the unsharded suite hit 30 minutes at test 130 of 147.
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        # A build for a base path runs only the base-path project (see the E2E config).
+        shard: [1, 2, 3, 4, base-path]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -97,10 +131,12 @@ jobs:
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
 
-      # The suites boot dist-server/index.mjs (the harness at
+      # The suites boot the server's source with the built .next (the harness at
       # apps/web/__tests__/e2e/harness/production-stack.ts), so the web app and
       # what it depends on is all a shard builds.
       - name: Build
+        env:
+          NEXT_PUBLIC_BASE_PATH: ${{ matrix.shard == 'base-path' && '/norish' || '' }}
         run: pnpm run build --filter=@norish/web...
 
       - name: Install Playwright browsers
@@ -109,6 +145,10 @@ jobs:
       # setup-uv stopped publishing floating major tags with v8; pin exactly.
       - name: Install uv
         uses: astral-sh/setup-uv@v10.0.1
+        # Its default cache key globs the whole checkout, following pnpm 12's workspace symlinks in
+        # node_modules back into the repo until the job times out.
+        with:
+          cache-dependency-glob: apps/parser-api/uv.lock
 
       # The production server boots the embedded parser and refuses to run
       # without its runtime; the shared setup skips it for everything else.
@@ -116,7 +156,7 @@ jobs:
         run: pnpm --filter @norish/parser-api run install:deps
 
       - name: Browser E2E
-        run: pnpm --filter @norish/web run test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: pnpm --filter @norish/web run test:e2e ${{ matrix.shard != 'base-path' && format('--shard={0}/4', matrix.shard) || '' }}
 
       - name: Upload traces and results on failure
         if: failure()

@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getOpenApiDocument, handleOpenApiRequest } from "../../src/openapi";
@@ -11,6 +10,7 @@ const dbExecuteMock = vi.hoisted(() => vi.fn());
 const dbInsertValuesMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 const dbInsertMock = vi.hoisted(() => vi.fn().mockReturnValue({ values: dbInsertValuesMock }));
 const getDatabaseHealthMock = vi.hoisted(() => vi.fn());
+const getValkeyHealthMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/auth/providers", () => ({
   getAvailableProviders: vi.fn().mockResolvedValue([]),
@@ -55,6 +55,11 @@ vi.mock("@norish/config/env-config-server", async (importOriginal) => {
   };
 });
 
+vi.mock("@norish/shared-server/valkey/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-server/valkey/client")>()),
+  getValkeyHealth: getValkeyHealthMock,
+}));
+
 const getSessionMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/auth/auth", () => ({
@@ -66,147 +71,17 @@ vi.mock("@norish/auth/auth", () => ({
 }));
 
 describe("openapi health endpoint", () => {
-  beforeEach(() => {
-    process.env.NORISH_VERSION_REPORT_JSON = JSON.stringify({
-      root: "1.2.3",
-      apps: {
-        mobile: "7.8.9",
-        "parser-api": "8.9.10",
-        web: "4.5.6",
-      },
-      packages: {
-        api: "1.0.0",
-        auth: "1.0.0",
-        config: "1.0.0",
-        db: "1.0.0",
-        i18n: "1.0.0",
-        queue: "1.0.0",
-        shared: "1.0.0",
-        "shared-react": "1.0.0",
-        "shared-server": "1.0.0",
-        trpc: "1.0.0",
-        ui: "1.0.0",
-      },
-    });
-    getSessionMock.mockReset();
-    dbExecuteMock.mockReset();
-    dbExecuteMock.mockResolvedValue([]);
-    getDatabaseHealthMock.mockReset();
-    getDatabaseHealthMock.mockImplementation(async () => {
-      try {
-        await dbExecuteMock();
-
-        return {
-          status: "ok",
-        } as const;
-      } catch {
-        return {
-          status: "error",
-        } as const;
-      }
-    });
-    dbInsertMock.mockClear();
-    dbInsertValuesMock.mockClear();
-  });
-
   afterEach(() => {
-    vi.unstubAllGlobals();
-    delete process.env.NORISH_VERSION_REPORT_JSON;
     vi.restoreAllMocks();
-    vi.clearAllMocks();
   });
 
-  it("returns ok for anonymous callers when the parser is healthy", async () => {
+  it("no longer answers the removed /health", async () => {
     getSessionMock.mockResolvedValue(null);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ status: "ok", recipeScrapersVersion: "15.10.0" }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        })
-      )
-    );
-
-    const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
-    const responseJson = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(responseJson).toEqual({
-      status: "ok",
-      db: {
-        status: "ok",
-      },
-      versions: {
-        root: "1.2.3",
-        apps: {
-          mobile: "7.8.9",
-          "parser-api": "8.9.10",
-          web: "4.5.6",
-        },
-        packages: {
-          api: "1.0.0",
-          auth: "1.0.0",
-          config: "1.0.0",
-          db: "1.0.0",
-          i18n: "1.0.0",
-          queue: "1.0.0",
-          shared: "1.0.0",
-          "shared-react": "1.0.0",
-          "shared-server": "1.0.0",
-          trpc: "1.0.0",
-          ui: "1.0.0",
-        },
-        scraper: "15.10.0",
-      },
-      parser: {
-        status: "ok",
-        recipeScrapersVersion: "15.10.0",
-      },
-    });
-    expect(fetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8001/health",
-      expect.objectContaining({ signal: expect.any(AbortSignal) })
-    );
-  });
-
-  it("returns 503 for anonymous callers when the parser is unhealthy", async () => {
-    getSessionMock.mockResolvedValue(null);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 503 })));
 
     const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
 
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toEqual(
-      expect.objectContaining({
-        code: "SERVICE_UNAVAILABLE",
-        message: "Parser service is error",
-      })
-    );
-  });
-
-  it("returns 503 for anonymous callers when the database is unhealthy", async () => {
-    getSessionMock.mockResolvedValue(null);
-    dbExecuteMock.mockRejectedValueOnce(new Error("db down"));
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ status: "ok", recipeScrapersVersion: "15.10.0" }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        })
-      )
-    );
-
-    const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
-
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toEqual(
-      expect.objectContaining({
-        code: "SERVICE_UNAVAILABLE",
-        message: "Database is error",
-      })
-    );
+    expect(response.status).toBe(404);
+    expect(getOpenApiDocument().paths["/health"]).toBeUndefined();
   });
 
   it("rejects anonymous requests to protected openapi endpoints", async () => {
@@ -229,15 +104,9 @@ describe("openapi health endpoint", () => {
     );
   });
 
-  it("documents health as public while protected endpoints require security", async () => {
+  it("documents the protected endpoints as requiring security", () => {
     const document = getOpenApiDocument();
 
-    expect(document.paths["/health"]?.get).toEqual(
-      expect.objectContaining({
-        tags: ["Health"],
-      })
-    );
-    expect(document.paths["/health"]?.get?.security).toBeUndefined();
     expect(document.paths["/recipes/search"]?.post?.security).toEqual([
       { ApiKeyAuth: [] },
       { BearerAuth: [] },
@@ -246,5 +115,141 @@ describe("openapi health endpoint", () => {
       { ApiKeyAuth: [] },
       { BearerAuth: [] },
     ]);
+  });
+});
+
+function parserAnswers(status: number) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      status === 200
+        ? new Response(JSON.stringify({ status: "ok", recipeScrapersVersion: "15.10.0" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        : new Response(null, { status })
+    )
+  );
+}
+
+describe("openapi liveness and readiness endpoints", () => {
+  beforeEach(() => {
+    getSessionMock.mockResolvedValue(null);
+    getDatabaseHealthMock.mockReset();
+    getDatabaseHealthMock.mockResolvedValue({ status: "ok" });
+    getValkeyHealthMock.mockReset();
+    getValkeyHealthMock.mockResolvedValue({ status: "ok" });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const get = (path: string) => handleOpenApiRequest(new Request(`http://localhost/api/v1${path}`));
+
+  describe("/health/live", () => {
+    it("answers 200 while the parser answers, Postgres and Valkey down or not", async () => {
+      parserAnswers(200);
+      getDatabaseHealthMock.mockResolvedValue({ status: "error" });
+      getValkeyHealthMock.mockResolvedValue({ status: "error" });
+
+      const response = await get("/health/live");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        status: "ok",
+        parser: { status: "ok", recipeScrapersVersion: "15.10.0" },
+      });
+      expect(getDatabaseHealthMock).not.toHaveBeenCalled();
+      expect(getValkeyHealthMock).not.toHaveBeenCalled();
+    });
+
+    it("answers 503 when the parser does not answer", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("connect ECONNREFUSED")));
+
+      const response = await get("/health/live");
+
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ message: "Parser service is unreachable" })
+      );
+    });
+  });
+
+  describe("/health/ready", () => {
+    it("answers 200 with the parser down, reporting it", async () => {
+      parserAnswers(503);
+
+      const response = await get("/health/ready");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        status: "ok",
+        db: { status: "ok" },
+        valkey: { status: "ok" },
+        parser: { status: "error", statusCode: 503 },
+      });
+    });
+
+    it("waits on a parser that never answers no longer than on Valkey's ping", async () => {
+      const timeout = vi
+        .spyOn(AbortSignal, "timeout")
+        .mockImplementation(() => AbortSignal.abort(new DOMException("timed out", "TimeoutError")));
+
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          (_url: string, init: RequestInit) =>
+            new Promise((_resolve, reject) => {
+              const signal = init.signal as AbortSignal;
+
+              if (signal.aborted) reject(signal.reason);
+              signal.addEventListener("abort", () => reject(signal.reason));
+            })
+        )
+      );
+
+      const response = await get("/health/ready");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ parser: { status: "unreachable" } })
+      );
+      expect(timeout).toHaveBeenCalledWith(2_000);
+      timeout.mockRestore();
+    });
+
+    it("answers 503 when Postgres is down", async () => {
+      parserAnswers(200);
+      getDatabaseHealthMock.mockResolvedValue({ status: "error" });
+
+      const response = await get("/health/ready");
+
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ message: "Database is error" })
+      );
+    });
+
+    it("answers 503 when Valkey does not answer its ping", async () => {
+      parserAnswers(200);
+      getValkeyHealthMock.mockResolvedValue({ status: "error" });
+
+      const response = await get("/health/ready");
+
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ message: "Valkey is error" })
+      );
+    });
+  });
+
+  it("are both documented as public", () => {
+    const { paths } = getOpenApiDocument();
+
+    for (const path of ["/health/live", "/health/ready"]) {
+      expect(paths[path]?.get?.tags, path).toEqual(["Health"]);
+      expect(paths[path]?.get?.security, path).toBeUndefined();
+    }
   });
 });

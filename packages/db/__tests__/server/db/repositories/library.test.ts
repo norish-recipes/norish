@@ -79,10 +79,29 @@ describe("the Library union", () => {
     // rows are the whole library and the expected orders are exact.
     await deleteRecipeById(baseRecipeId);
 
-    const alphaRecipe = await createTestRecipe(ownerId, { name: "Aubergine bake" });
+    // Every row's time is set here: recipes would take this machine's clock and cookbooks the
+    // database's, and a skew between the two reorders the date sorts.
+    const minute = (n: number) => new Date(Date.UTC(2026, 0, 1, 12, n));
+    const alphaRecipe = await createTestRecipe(ownerId, {
+      name: "Aubergine bake",
+      createdAt: minute(0),
+    });
     const bravoCookbook = await createCookbook({ userId: ownerId, title: "Brunch" });
-    const charlieRecipe = await createTestRecipe(ownerId, { name: "Carrot soup" });
+    const charlieRecipe = await createTestRecipe(ownerId, {
+      name: "Carrot soup",
+      createdAt: minute(2),
+    });
     const deltaCookbook = await createCookbook({ userId: ownerId, title: "Dinner party" });
+
+    for (const [cookbook, at] of [
+      [bravoCookbook, minute(1)],
+      [deltaCookbook, minute(3)],
+    ] as const) {
+      await getTestDb()
+        .update(cookbooksTable)
+        .set({ createdAt: at })
+        .where(eq(cookbooksTable.id, cookbook.id));
+    }
 
     return { alphaRecipe, bravoCookbook, charlieRecipe, deltaCookbook };
   }

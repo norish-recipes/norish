@@ -14,6 +14,13 @@
 /** An Ingredient's best spelling in each catalogue language it has one in. */
 export type LocaleNames = Record<string, string>;
 
+/** A food as a list names it: its name and its translations. */
+export interface NamedFood {
+  id: string;
+  name: string;
+  localeNames: LocaleNames;
+}
+
 /**
  * The catalogue languages each Norish locale reads names in, most specific
  * first. A locale missing here reads its base language.
@@ -48,6 +55,16 @@ export const CATALOGUE_LANGUAGES: readonly string[] = [
 
 export function catalogueLanguagesFor(locale: string): readonly string[] {
   return LANGUAGES_BY_LOCALE[locale] ?? [locale.split("-")[0]!.toLowerCase()];
+}
+
+/**
+ * Whether Norish reads a spelling's language: a catalogue language or Norish locale some locale
+ * reads, or none (a spelling in every language).
+ */
+export function norishReads(locale: string | null): boolean {
+  return (
+    locale === null || catalogueLanguagesFor(locale).some((l) => CATALOGUE_LANGUAGES.includes(l))
+  );
 }
 
 /** The name to show for an Ingredient to a viewer reading `locale`. */

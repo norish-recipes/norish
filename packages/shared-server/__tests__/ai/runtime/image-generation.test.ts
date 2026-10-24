@@ -9,7 +9,7 @@
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import sharp from "sharp";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AIConfig, ImageGenerationConfig } from "@norish/config/zod/server-config";
 
@@ -127,10 +127,6 @@ beforeEach(() => {
   mockGetAIConfig.mockResolvedValue(aiConfig());
   mockGetImageGenerationConfig.mockResolvedValue(imageConfig());
   mockGetPrompts.mockResolvedValue({});
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
 });
 
 describe("generateImage", () => {

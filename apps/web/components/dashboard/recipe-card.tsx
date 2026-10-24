@@ -29,6 +29,7 @@ import { useTranslations } from "next-intl";
 
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
+import { addBasePath } from "@norish/shared/lib/base-path";
 import {
   formatMinutesHM,
   isAllergenTag,
@@ -181,7 +182,7 @@ function RecipeCardComponent({
   const description = recipe.description?.trim() || "";
 
   // The resolved primary image: the list projection serves the first gallery
-  // image, with the deprecated legacy scalar only as a fallback.
+  // image.
   const thumbnailImage = recipe.image;
   const showImage = thumbnailImage && failedImage !== thumbnailImage;
 
@@ -287,7 +288,7 @@ function RecipeCardComponent({
         alt={recipe.name}
         className={`pointer-events-none h-full w-full object-cover transition-transform duration-300 ease-in-out ${open ? "scale-100" : hoverScaleClass} `}
         loading="lazy"
-        src={thumbnailImage}
+        src={addBasePath(thumbnailImage)}
         onError={() => setFailedImage(thumbnailImage)}
       />
     ) : (

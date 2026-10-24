@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/groceries/grocery-field";
 import { Bars3Icon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, FieldError, Input, TextField } from "@heroui/react";
@@ -38,9 +38,12 @@ export function StoreAislesEditor({ aisles, onChange, open }: StoreAislesEditorP
   const t = useTranslations("groceries.storeManager");
   const [draft, setDraft] = useState("");
 
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(open);
+
+  if (wasOpen !== open) {
+    setWasOpen(open);
     if (!open) setDraft("");
-  }, [open]);
+  }
 
   const draftFolded = foldAisleName(draft);
   const draftDuplicate =

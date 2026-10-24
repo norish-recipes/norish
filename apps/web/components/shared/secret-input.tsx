@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { usePending } from "@/hooks/use-pending";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { Description, InputGroup, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -55,16 +56,19 @@ export default function SecretInput({
   const t = useTranslations("common.secret");
   const [storedSecret, setStoredSecret] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, whileLoading] = usePending();
+  const [wasConfigured, setWasConfigured] = useState(isConfigured);
 
   // A secret that was deleted, or a provider that changed under the form, is no
   // longer the one on screen.
-  useEffect(() => {
+  if (isConfigured !== wasConfigured) {
+    setWasConfigured(isConfigured);
+
     if (!isConfigured) {
       setStoredSecret(null);
       setIsVisible(false);
     }
-  }, [isConfigured]);
+  }
 
   // What is typed wins over what is stored; with neither, the field is empty
   // and its placeholder says a value is already saved.
@@ -90,15 +94,10 @@ export default function SecretInput({
     }
 
     if (!hasTypedValue && isConfigured && storedSecret === null) {
-      setIsLoading(true);
-      try {
-        setStoredSecret(await onReveal());
-      } finally {
-        setIsLoading(false);
-      }
+      await whileLoading(() => onReveal().then(setStoredSecret));
     }
     setIsVisible(true);
-  }, [hasTypedValue, isConfigured, isVisible, onReveal, storedSecret]);
+  }, [hasTypedValue, isConfigured, isVisible, onReveal, storedSecret, whileLoading]);
 
   // Two sentences that have to read as two: a caller's description written
   // without a full stop otherwise runs straight into the hint after it.

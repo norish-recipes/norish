@@ -41,20 +41,16 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
   const checkConnection = useCallback(async () => {
     if (!config) return;
     setConnectionStatus("checking");
-    try {
-      const result = await checkConnectionStatus();
-      setConnectionStatus(result.success ? "connected" : "disconnected");
-      setLastCheck(new Date());
+    const result = await checkConnectionStatus().catch(() => null);
 
-      // Reset interval to 60s on success, use exponential backoff on failure
-      if (result.success) {
-        setPollingInterval(60000);
-      } else {
-        setPollingInterval((prev) => Math.min(prev * 2, 300000)); // Max 5 minutes
-      }
-    } catch (_error) {
-      setConnectionStatus("disconnected");
-      setPollingInterval((prev) => Math.min(prev * 2, 300000));
+    setConnectionStatus(result?.success ? "connected" : "disconnected");
+    if (result) setLastCheck(new Date());
+
+    // Reset interval to 60s on success, use exponential backoff on failure
+    if (result?.success) {
+      setPollingInterval(60000);
+    } else {
+      setPollingInterval((prev) => Math.min(prev * 2, 300000)); // Max 5 minutes
     }
   }, [config, checkConnectionStatus]);
 

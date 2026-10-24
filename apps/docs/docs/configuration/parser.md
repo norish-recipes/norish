@@ -38,7 +38,7 @@ Obscura only starts on a network address when its `OBSCURA_CDP_TOKEN` is at
 least 32 characters, and Norish has to send the same token. Generate one with
 `openssl rand -hex 32`.
 
-The compose files pin an exact Obscura image, like `0.2.4-norish.1`. For a
+The compose files pin an exact Obscura image, like `0.2.4-norish.2`. For a
 rolling release, use `norishapp/obscura:latest` instead.
 
 A page counts as loaded once its images and scripts have finished too. If slow

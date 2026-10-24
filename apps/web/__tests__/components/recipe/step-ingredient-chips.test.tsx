@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -62,12 +63,12 @@ const LINES = [
   { ingredientName: "eggs", order: 3, amount: 5, unit: null },
 ];
 
-let onChange: ReturnType<typeof vi.fn>;
-let onEntryKeyboardClose: ReturnType<typeof vi.fn>;
+let onChange: Mock<(refs: StepIngredientDraft[]) => void>;
+let onEntryKeyboardClose: Mock<() => void>;
 
 beforeEach(() => {
-  onChange = vi.fn();
-  onEntryKeyboardClose = vi.fn();
+  onChange = vi.fn<(refs: StepIngredientDraft[]) => void>();
+  onEntryKeyboardClose = vi.fn<() => void>();
 });
 
 function renderChips(refs: StepIngredientDraft[], autoEntryOrder: number | null = null) {

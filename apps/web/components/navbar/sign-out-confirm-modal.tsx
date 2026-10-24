@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { usePending } from "@/hooks/use-pending";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -26,16 +26,10 @@ export function SignOutConfirmModal({
 }: SignOutConfirmModalProps) {
   const t = useTranslations("navbar.userMenu");
   const tCommon = useTranslations("common");
-  const [busy, setBusy] = useState(false);
+  const [busy, whileBusy] = usePending();
 
   const confirm = async () => {
-    setBusy(true);
-
-    try {
-      await onConfirm();
-    } finally {
-      setBusy(false);
-    }
+    await whileBusy(() => onConfirm());
   };
 
   return (

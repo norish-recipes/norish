@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
 import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { Button, Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
@@ -15,14 +15,14 @@ export default function NoHouseholdView() {
   const [joinCode, setJoinCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const handleCreateHousehold = async (e: FormEvent) => {
+  const handleCreateHousehold = async (e: SubmitEvent) => {
     e.preventDefault();
     setIsCreating(true);
     createHousehold(householdName);
     setHouseholdName("");
     setIsCreating(false);
   };
-  const handleJoinHousehold = async (e: FormEvent) => {
+  const handleJoinHousehold = async (e: SubmitEvent) => {
     e.preventDefault();
     setIsJoining(true);
     joinHousehold(joinCode);
@@ -74,6 +74,8 @@ export default function NoHouseholdView() {
                         against the white card. */}
                   {Array.from({ length: 6 }).map((_, index) => (
                     <InputOTP.Slot
+                      // A code slot is its position.
+                      // eslint-disable-next-line @eslint-react/no-array-index-key
                       key={index}
                       className="border-field-border bg-default text-foreground hover:bg-default data-[active=true]:bg-default data-[filled=true]:bg-default h-12 w-10 flex-none shadow-none"
                       index={index}

@@ -6,8 +6,11 @@ browser that speaks the Chrome DevTools Protocol, running as its own container
 beside the application. The Norish server connects to it over
 `OBSCURA_ENDPOINT`; it is the only rendered-page engine, with no Chrome fallback.
 
-This directory repackages upstream's release into the image the shipped Compose
-examples use.
+This directory repackages a release into the image the shipped Compose examples
+use. The release comes from Norish's fork,
+[norish-recipes/obscura](https://github.com/norish-recipes/obscura): upstream's
+release built with the patches in its `patches/`, which send header tokens only
+to their own site. The fork builds each new upstream release on its own.
 
 ## Why not just pull upstream's image
 
@@ -73,8 +76,9 @@ that already exists unless told to.
 
 To move to a newer Obscura:
 
-1. Update `OBSCURA_VERSION` and `OBSCURA_IMAGE_TAG` in `pin.env`, and the
-   matching `ARG` defaults in `Dockerfile`.
+1. Take the newest release of the fork, set `OBSCURA_VERSION` to it and bump
+   `OBSCURA_IMAGE_TAG` in `pin.env`, and the matching `ARG` defaults in
+   `Dockerfile`.
 2. Push. The rc branch publishes the tag, and the merge to `main` moves
    `latest`.
 3. Update the image tag in every Compose surface the repository ships — the

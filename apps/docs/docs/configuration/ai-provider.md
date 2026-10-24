@@ -16,6 +16,8 @@ Most of Norish works without AI. With an AI provider you also get:
 - [recipe enrichment](../recipes/enrichment.md): tags, allergies, categories,
   nutrition, provenance, step ingredients and pictures
 - metric and US conversion by AI, next to the built-in one
+- a tidy [ingredient catalogue](#ingredient-catalogue), with missing nutrition,
+  conversions and icons filled in
 
 ## Enable AI
 
@@ -68,17 +70,40 @@ leaves alone is listed under
 | **Ingredient linking**   | Links ingredients to steps that have none                             | Off     |
 | **Image generation**     | Draws a picture for new recipes without any image                     | Off     |
 
-### New ingredients
+### Ingredient catalogue
 
-**Automatic for new ingredients** runs on every ingredient a recipe, grocery or
-pantry item adds to the catalogue. Both options are off by default.
+AI changes nothing in the [ingredient catalogue](../groceries/ingredients.md)
+until you choose what it does under
+**Settings => Admin => AI & processing => Ingredient catalogue**.
 
-![Automatic for new ingredients](/img/screenshots/admin-automatic-ingredients.png)
+![The Ingredient catalogue section](/img/screenshots/admin-ingredient-catalogue.png)
 
-| Option             | What it does                                                                                                   |
-| ------------------ | -------------------------------------------------------------------------------------------------------------- |
-| **Clean the name** | [Cleans the name](../groceries/ingredients.md#cleaning-names) right away                                       |
-| **Draw an icon**   | Draws an icon when neither the ingredient nor its parent has one. Needs an [image provider](#image-generation) |
+**Automatic for new ingredients** runs moments after a recipe, grocery or
+pantry item adds an ingredient. All options are off by default:
+
+| Option                       | What it does                                                                                    |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Clean up new ingredients** | Merges it into the food it is, sets a parent and a clean name, deletes it when it is not a food |
+| **Fill missing nutrition**   | Estimates calories, fat, carbs and protein per 100 g when no dataset has them                   |
+| **Fill missing conversions** | Estimates what a spoonful and one piece weigh                                                   |
+| **Draw missing icons**       | Draws an icon when it has none to show. Needs an [image provider](#image-generation)            |
+
+**Clean up catalogue** asks AI about the ingredients already in the catalogue.
+Choose **Recipe foods** for the ones recipes brought in that nobody decided
+about, or **Whole catalogue** for every ingredient, built-in ones too. A
+whole-catalogue run ignores what people decided or undid, and never deletes a
+built-in ingredient. The dialog shows how many ingredients AI will ask about.
+
+![Clean up catalogue](/img/screenshots/admin-clean-up-catalogue.png)
+
+**Fill gaps** fills missing **Nutrition**, **Conversions** or **Icons** for
+every ingredient at once. It never replaces what an ingredient has. Each box
+shows how many ingredients it would fill.
+
+![Fill gaps](/img/screenshots/admin-fill-gaps.png)
+
+Both runs show in the [job queues](./admin-settings.md#job-queues), where you
+can cancel them.
 
 ### Tag strategy
 

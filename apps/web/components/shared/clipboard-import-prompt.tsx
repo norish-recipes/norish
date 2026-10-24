@@ -75,30 +75,33 @@ export default function ClipboardImportPrompt() {
       if (isReadingRef.current || !document.hasFocus()) return;
       isReadingRef.current = true;
 
-      try {
-        const url = await readClipboardUrl();
+      await readClipboardUrl()
+        .then((url) => {
+          if (isCancelled || !url || isOwnLink(url) || readOffered() === url) return;
 
-        if (isCancelled || !url || isOwnLink(url) || readOffered() === url) return;
+          rememberOffered(url);
+          const { t, tActions } = latestRef.current;
 
-        rememberOffered(url);
-        const { t, tActions } = latestRef.current;
+          showActionToast(t("title"), {
+            description: <span className="line-clamp-2 break-all">{url}</span>,
+            timeout: PROMPT_TIMEOUT_MS,
+            action: {
+              label: tActions("import"),
+              onPress: () => {
+                const { importRecipe, tPaste } = latestRef.current;
 
-        showActionToast(t("title"), {
-          description: <span className="line-clamp-2 break-all">{url}</span>,
-          timeout: PROMPT_TIMEOUT_MS,
-          action: {
-            label: tActions("import"),
-            onPress: () => {
-              const { importRecipe, tPaste } = latestRef.current;
-
-              importRecipe(url);
-              toast(tPaste("importing"), { description: tPaste("inProgress"), variant: "default" });
+                importRecipe(url);
+                toast(tPaste("importing"), {
+                  description: tPaste("inProgress"),
+                  variant: "default",
+                });
+              },
             },
-          },
+          });
+        })
+        .finally(() => {
+          isReadingRef.current = false;
         });
-      } finally {
-        isReadingRef.current = false;
-      }
     }
 
     void offerClipboardLink();

@@ -1,7 +1,7 @@
 # 14 — tsdown 0.23
 
-Status: ready-for-agent
-Blocked by: None — can start immediately
+Status: resolved
+Blocked by: 11
 Target release: 0.26.0-beta
 
 Spec: `.scratch/dependency-upgrades/spec.md`
@@ -29,3 +29,4 @@ Move `tsdown` from 0.22.14 to **0.23.1** in apps/web, where it builds the custom
 
 - Filed 2026-10-12 with the spec.
 - Sources: the tsdown 0.22.14 and 0.23.1 tarballs, and their type definitions and defaults.
+- 2026-10-13 — Done on tsdown 0.23.1: `noExternal` → `deps.alwaysBundle`, `external` → `deps.neverBundle`, `inlineOnly: false` → `deps.onlyBundle: false`. `pnpm build:server` prints no warnings; the bundle's import list is identical before and after (91 specifiers) and has no `next/` imports, so the new `resolveDepSubpath: false` default changes nothing. E2E against `dist-server` waits on the Chrome for Testing download (see ticket 11).

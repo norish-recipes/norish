@@ -6,6 +6,8 @@ import NextImage, { ImageProps as NextImageProps } from "next/image";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 interface FallbackPlaceholderProps extends ComponentProps<"div"> {
   className?: string;
   message?: string;
@@ -55,25 +57,40 @@ export default function FallbackImage(props: FallbackImageProps) {
       fallbackClassName: _fallbackClassName,
       fallbackMessage: _fallbackMessage,
       alt,
+      src,
       ...imageProps
     } = props;
 
-    return <img alt={alt ?? ""} {...imageProps} onError={() => setHasError(true)} />;
+    return (
+      <img
+        alt={alt ?? ""}
+        {...imageProps}
+        src={typeof src === "string" ? addBasePath(src) : src}
+        onError={() => setHasError(true)}
+      />
+    );
   }
 
   const {
     variant: _variant,
     fallbackClassName: _fallbackClassName,
     fallbackMessage: _fallbackMessage,
+    src,
     ...imageProps
   } = props as NextFallbackImageProps;
 
-  return <NextImage {...imageProps} onError={() => setHasError(true)} />;
+  return (
+    <NextImage
+      {...imageProps}
+      src={typeof src === "string" ? addBasePath(src) : src}
+      onError={() => setHasError(true)}
+    />
+  );
 }
 
 // For components that track errors across multiple images (carousels)
 export function useImageErrors() {
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [imageErrors, setImageErrors] = useState<Set<string>>(() => new Set());
 
   const handleImageError = (src: string) => {
     setImageErrors((prev) => new Set(prev).add(src));

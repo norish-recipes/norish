@@ -14,6 +14,8 @@ export type FavoritesQueryResult = {
 
 export function createUseFavoritesQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useFavoritesQuery(): FavoritesQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.favorites.list.queryKey();

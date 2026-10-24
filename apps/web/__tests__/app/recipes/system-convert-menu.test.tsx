@@ -54,7 +54,6 @@ vi.mock("@heroicons/react/20/solid", () => ({
 
 describe("SystemConvertMenu", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     recipeState.recipe = { id: "r1", systemUsed: "metric", recipeIngredients: [] };
   });
 

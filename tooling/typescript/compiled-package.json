@@ -6,7 +6,6 @@
     "declarationMap": true,
     "emitDeclarationOnly": true,
     "noEmit": false,
-    "preserveSymlinks": true,
     "outDir": "${configDir}/dist"
   }
 }

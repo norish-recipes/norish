@@ -237,8 +237,6 @@ describe("CalDAV tRPC Procedures", () => {
   const testCtx = createMockAuthedContext(testUser);
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // Reset mock implementations
     (getCaldavConfigWithoutPassword as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     (getCaldavConfigDecrypted as ReturnType<typeof vi.fn>).mockResolvedValue(null);

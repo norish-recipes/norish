@@ -1,5 +1,6 @@
+import { getAllUserIds, updateUserPreferences } from "@norish/db/repositories/users";
+
 import type { SessionCookies } from "./auth";
-import { withDatabase } from "./database";
 import { callTrpc } from "./trpc";
 
 /** Safari on an iPhone: its `Mobi` token makes the request a phone. */
@@ -37,8 +38,8 @@ export async function readProfilePreferences(
 }
 
 /** Forget every reader's Device Preferences, so a scenario starts from the defaults. */
-export async function clearDevicePreferences(databaseUrl: string): Promise<void> {
-  await withDatabase(databaseUrl, (database) =>
-    database.query(`update "user" set preferences = preferences - 'phone' - 'desktop'`)
-  );
+export async function clearDevicePreferences(): Promise<void> {
+  for (const userId of await getAllUserIds()) {
+    await updateUserPreferences(userId, { phone: {}, desktop: {} });
+  }
 }

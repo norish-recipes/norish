@@ -31,9 +31,9 @@ export function PermissionLevelSelect({
       className="w-full"
       isDisabled={isDisabled}
       placeholder={ariaLabel}
-      selectedKey={value}
+      value={value}
       variant="secondary"
-      onSelectionChange={(key) => {
+      onChange={(key) => {
         if (typeof key === "string") onChange(key as PermissionLevel);
       }}
     >

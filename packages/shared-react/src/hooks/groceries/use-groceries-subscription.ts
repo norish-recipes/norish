@@ -51,6 +51,8 @@ export function createUseGroceriesSubscription({
   useErrorAdapter,
 }: CreateUseGroceriesSubscriptionOptions) {
   return function useGroceriesSubscription() {
+    "use memo";
+
     const trpc = useTRPC();
     const { setGroceriesData, invalidate } = useGroceriesCacheHelpers();
     const errorAdapter = useErrorAdapter();
@@ -65,14 +67,24 @@ export function createUseGroceriesSubscription({
           if (!prev) return prev;
 
           const existing = prev.groceries ?? [];
-          const incoming = payload.groceries;
-          const newGroceries = incoming.filter((g) => !existing.some((eg) => eg.id === g.id));
+          const incoming = new Map(payload.groceries.map((g) => [g.id, g]));
+          // A held row no newer than the server's is the server's: an offline add whose name split.
+          const held = existing.map((g) => {
+            const server = incoming.get(g.id);
 
-          if (newGroceries.length === 0) return prev;
+            return server && server.version >= g.version ? server : g;
+          });
+          const newGroceries = payload.groceries.filter(
+            (g) => !existing.some((eg) => eg.id === g.id)
+          );
+
+          if (newGroceries.length === 0 && held.every((g, index) => g === existing[index])) {
+            return prev;
+          }
 
           return {
             ...prev,
-            groceries: applyCreatedGroceriesToCache(existing, newGroceries),
+            groceries: applyCreatedGroceriesToCache(held, newGroceries),
           };
         });
       },

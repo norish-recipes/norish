@@ -74,7 +74,6 @@ export function StoreEditorPanel({
   return (
     <Panel
       nested
-      className="contents"
       open={open && editing !== null}
       title={editing?.id ? t("editStore") : t("addStore")}
       onOpenChange={(isOpen) => {
@@ -85,7 +84,7 @@ export function StoreEditorPanel({
         {editing && (
           <div className="flex flex-col gap-4">
             <TextField
-              // eslint-disable-next-line jsx-a11y/no-autofocus
+              // eslint-disable-next-line jsx-a11y-x/no-autofocus
               autoFocus
               value={editing.name}
               onChange={(value) => onChange({ ...editing, name: value })}

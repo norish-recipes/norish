@@ -34,6 +34,8 @@ export type AdminRecipeSharesQueryResult = ShareInventoryQueryResult<AdminRecipe
 
 export function createUseRecipeSharesQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeSharesQuery(recipeId: string | null): RecipeSharesQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.recipes.shareList.queryKey({ recipeId: recipeId ?? "" });
@@ -68,6 +70,8 @@ export function createUseRecipeSharesQuery({ useTRPC }: CreateRecipeHooksOptions
 
 export function createUseMyRecipeSharesQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.recipes.shareListMine.queryKey();
@@ -89,6 +93,8 @@ export function createUseMyRecipeSharesQuery({ useTRPC }: CreateRecipeHooksOptio
 
 export function createUseAdminRecipeSharesQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useAdminRecipeSharesQuery(): AdminRecipeSharesQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.recipes.shareListAdmin.queryKey();

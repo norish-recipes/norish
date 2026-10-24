@@ -1,11 +1,13 @@
 "use client";
 
+import type { Transition } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
 import { StepIngredientsRow } from "@/components/recipes/step-ingredients-row";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { BookOpenIcon } from "@heroicons/react/20/solid";
 import { Chip, ScrollShadow, Surface } from "@heroui/react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
@@ -21,7 +23,7 @@ type CookingStepViewProps = Pick<
 };
 
 const REDUCED_MOTION_TRANSITION = { duration: 0.15, ease: "linear" };
-const PAGE_TRANSITION = { duration: 0.5, ease: [0.22, 1, 0.36, 1] };
+const PAGE_TRANSITION: Transition = { duration: 0.5, ease: [0.22, 1, 0.36, 1] };
 
 export function CookingStepView({
   activeStep,
@@ -31,10 +33,10 @@ export function CookingStepView({
   onStepChange,
 }: CookingStepViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
   const [wrapperY, setWrapperY] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
   const [enableTransitions, setEnableTransitions] = useState(false);
@@ -45,12 +47,12 @@ export function CookingStepView({
   }, []);
 
   const measureAndCenter = useCallback(() => {
-    if (!containerRef.current || !stepRefs.current[activeStep]) return;
+    if (!containerRef.current || !stepsRef.current[activeStep]) return;
 
     const currentHeight = containerRef.current.clientHeight;
     setContainerHeight(currentHeight);
 
-    const activeCard = stepRefs.current[activeStep]!;
+    const activeCard = stepsRef.current[activeStep]!;
 
     // offsetTop is relative to the offsetParent (will be the relative wrapper)
     const activeOffsetTop = activeCard.offsetTop;
@@ -68,7 +70,7 @@ export function CookingStepView({
 
   // Handle content size changes
   useEffect(() => {
-    const activeCard = stepRefs.current[activeStep];
+    const activeCard = stepsRef.current[activeStep];
     const container = containerRef.current;
     if (!activeCard || !container) return;
 
@@ -128,7 +130,9 @@ export function CookingStepView({
   } | null>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+
+    if (e.touches.length !== 1 || !touch) return;
 
     let isAtTop = true;
     let isAtBottom = true;
@@ -140,7 +144,7 @@ export function CookingStepView({
       isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
     }
 
-    touchStartRef.current = { y: e.touches[0].clientY, isAtTop, isAtBottom };
+    touchStartRef.current = { y: touch.clientY, isAtTop, isAtBottom };
   }, []);
 
   const handleTouchEnd = useCallback(
@@ -210,7 +214,7 @@ export function CookingStepView({
             <div
               key={i}
               ref={(el) => {
-                stepRefs.current[i] = el;
+                stepsRef.current[i] = el;
               }}
               className="flex w-full shrink-0 flex-col"
               style={{

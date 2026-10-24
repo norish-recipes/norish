@@ -1,6 +1,6 @@
 {
   "name": "@norish/nutrition-sources",
-  "version": "0.25.1-beta",
+  "version": "0.26.0-beta",
   "private": true,
   "type": "module",
   "description": "Builds Ingredient Nutrition's committed source table from CIQUAL, CALNUT, USDA FoodData Central and CoFID (ADR-0039).",
@@ -23,8 +23,9 @@
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "tsx": "4.23.12",
+    "tsx": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"

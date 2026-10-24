@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import RecipeCard from "@/components/dashboard/recipe-card";
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
@@ -96,6 +96,10 @@ vi.mock("@heroui/react", () => {
   };
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 function makeRecipe(tagNames: string[]): RecipeDashboardDTO {
   return {
     id: "recipe-1",
@@ -147,7 +151,7 @@ function tagTooltip() {
 
   expect(withChips).toHaveLength(1);
 
-  return withChips[0];
+  return withChips[0]!;
 }
 
 describe("RecipeCard list view allergy tags", () => {
@@ -194,5 +198,28 @@ describe("RecipeCard list view allergy tags", () => {
     expect(tooltipChips.map((c) => c.textContent)).toEqual(["Lactose", "Noten", "Gluten", "pasta"]);
     expect(tooltipChips[2]).toHaveAttribute("data-color", "warning");
     expect(tooltipChips[3]).toHaveAttribute("data-color", "");
+  });
+
+  it("prefixes the recipe image when the app is served under a base path", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/norish");
+    vi.resetModules();
+    const { default: BasedRecipeCard } = await import("@/components/dashboard/recipe-card");
+    const recipe = { ...makeRecipe([]), image: "/recipes/recipe-1/image.jpg" };
+
+    render(
+      <BasedRecipeCard
+        allergies={[]}
+        isFavorite={false}
+        recipe={recipe}
+        variant="list"
+        onDelete={vi.fn()}
+        onToggleFavorite={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("img", { name: recipe.name })).toHaveAttribute(
+      "src",
+      `/norish${recipe.image}`
+    );
   });
 });

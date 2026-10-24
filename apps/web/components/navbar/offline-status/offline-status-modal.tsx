@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { usePending } from "@/hooks/use-pending";
 import { OFFLINE_FORCED_AVAILABLE } from "@/lib/connectivity";
 import {
   ArrowPathIcon,
@@ -100,16 +101,10 @@ function ConfirmInline({
   onCancel,
   onConfirm,
 }: ConfirmInlineProps) {
-  const [busy, setBusy] = useState(false);
+  const [busy, whileBusy] = usePending();
 
   const confirm = async () => {
-    setBusy(true);
-
-    try {
-      await onConfirm();
-    } finally {
-      setBusy(false);
-    }
+    await whileBusy(() => onConfirm());
   };
 
   return (

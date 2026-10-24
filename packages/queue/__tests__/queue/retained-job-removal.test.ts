@@ -14,7 +14,6 @@ function retained(state: string) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   remove.mockResolvedValue(undefined);
 });
 

@@ -43,7 +43,6 @@ describe("calendar planned items stale handling", () => {
   const ctx = createMockAuthedContext(createMockUser(), createMockHousehold());
 
   beforeEach(() => {
-    vi.clearAllMocks();
     getPlannedItemById.mockResolvedValue(createPlannedItem());
     assertHouseholdAccess.mockResolvedValue(undefined);
   });

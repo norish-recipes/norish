@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import {
@@ -30,10 +30,6 @@ describe("planned items repository", () => {
   const userIds = ["user-1", "user-2"];
   const date = "2025-01-10";
   const slot = "Dinner" as const;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
 
   describe("listPlannedItemsByUserAndDateRange", () => {
     it("returns items sorted by date, slot, sortOrder", async () => {

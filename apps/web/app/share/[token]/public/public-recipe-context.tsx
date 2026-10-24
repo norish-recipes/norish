@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
 
 import type { PublicRecipeContextValue, SharedRecipe } from "./types";
@@ -31,11 +31,11 @@ export function PublicRecipeProvider({
     [token, recipe, units, state]
   );
 
-  return <PublicRecipeContext.Provider value={value}>{children}</PublicRecipeContext.Provider>;
+  return <PublicRecipeContext value={value}>{children}</PublicRecipeContext>;
 }
 
 export function usePublicRecipeContext() {
-  const context = useContext(PublicRecipeContext);
+  const context = use(PublicRecipeContext);
 
   if (!context) {
     throw new Error("usePublicRecipeContext must be used within PublicRecipeProvider");

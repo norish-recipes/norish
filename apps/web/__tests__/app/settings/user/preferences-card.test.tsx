@@ -151,7 +151,6 @@ vi.mock("@heroui/react", () => ({
 
 describe("PreferencesCard", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     permissionsMock.isAIEnabled = false;
     hiddenItemsMock.hidden = [];
     mockContext.user = { preferences: {} } as any;

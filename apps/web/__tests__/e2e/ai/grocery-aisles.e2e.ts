@@ -8,11 +8,12 @@
  * by dragging back to the top; renames and removes an aisle and sees the rows
  * come back unfiled; ticks a row and watches it fold into the Store's done
  * row; drops a row on a Store that is nothing but a heading. The real Norish
- * server, database, Redis, tRPC and realtime are all in the path; nothing
+ * server, database, Valkey, tRPC and realtime are all in the path; nothing
  * outbound is, because a plain Store needs no shop.
  */
 import type { Page } from "@playwright/test";
 
+import type { AIE2EStack } from "./fixture";
 import { expect, test } from "./fixture";
 import { createPlainStore, readAisleFiling, readStoreAisles } from "./grocery-aisles-support";
 import { dragRowTo as dragRow } from "./grocery-dnd-support";
@@ -22,9 +23,11 @@ test.describe.configure({ mode: "serial" });
 const STORE = "Markt";
 
 let page: Page;
+let stack: AIE2EStack;
 
 test.beforeAll(async ({ browser, aiStack }) => {
-  await createPlainStore(STORE);
+  stack = aiStack;
+  await createPlainStore(stack, STORE);
 
   const context = await browser.newContext({
     baseURL: aiStack.baseURL,
@@ -56,7 +59,9 @@ async function addGrocery(
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText(shown).first()).toBeVisible();
   await page.getByRole("button", { name: "Close panel" }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
+  // None left, rather than one hidden: the Store picker's popover can still be
+  // leaving while the panel is, and then two dialogs are on the page at once.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
 /** The Store's block on the list, whichever view is showing. */
@@ -68,7 +73,7 @@ function storeBlock(storeName: string = STORE) {
 }
 
 /** The same rows regardless of order: new rows land at the top, and order is not what these are about. */
-const sorted = (names: readonly string[]) => [...names].sort();
+const sorted = (names: readonly string[]) => [...names].sort((a, b) => a.localeCompare(b));
 
 /** Every grocery row of the Store's block, top to bottom. */
 async function rowsOf(storeName: string = STORE): Promise<string[]> {
@@ -138,7 +143,7 @@ async function fileFromPanel(name: string, aisleName: string): Promise<void> {
   await field.getByRole("button").click();
   await page.getByRole("option", { name: aisleName, exact: true }).click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
 /** Switch the grouped list on or off from the view menu; the page says which it shows. */
@@ -147,9 +152,16 @@ async function setGrouped(on: boolean): Promise<void> {
   const current = await shown.getAttribute("data-grocery-grouping");
 
   if ((current === "grouped") === on) return;
+  // The choice is a device preference written to the profile: a navigation
+  // straight after would abort the write and reload the old choice.
+  const saved = page.waitForResponse(
+    (response) => response.url().includes("user.setDevicePreferences") && response.ok()
+  );
+
   await page.getByRole("button", { name: "View Mode" }).click();
   await page.getByRole("menuitem", { name: /Group ingredients/ }).click();
   await expect(shown).toHaveAttribute("data-grocery-grouping", on ? "grouped" : "flat");
+  await saved;
 }
 
 /** Open the Store in the store editor. */
@@ -176,7 +188,7 @@ async function closeStoreManager(): Promise<void> {
     .getByRole("dialog", { name: "Manage Stores" })
     .getByRole("button", { name: "Close panel" })
     .click();
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
 test("a Store given two aisles shows both headings, with the list unchanged above them", async () => {
@@ -204,12 +216,12 @@ test("a Store given two aisles shows both headings, with the list unchanged abov
   await page.getByTestId("aisle-name").fill("");
 
   // Nothing is written until the editor's own Save.
-  expect(await readStoreAisles(STORE)).toEqual([]);
+  expect(await readStoreAisles(stack, STORE)).toEqual([]);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
   await closeStoreManager();
 
-  await expect.poll(() => readStoreAisles(STORE)).toEqual(["Groente", "Zuivel"]);
+  await expect.poll(() => readStoreAisles(stack, STORE)).toEqual(["Groente", "Zuivel"]);
   // Every aisle is a heading, in the Store's order, empty ones quieter; and
   // nothing has been filed, so every row still sits at the top, as it was.
   await expect.poll(() => aisleNamesOf()).toEqual(["Groente", "Zuivel"]);
@@ -243,7 +255,7 @@ test("filing a name from the panel moves the row and its same-named sibling, her
 
   await fileFromPanel("halfvolle melk", "Zuivel");
 
-  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBe("Zuivel");
+  await expect.poll(() => readAisleFiling(stack, STORE, "halfvolle melk")).toBe("Zuivel");
   expect(await rowsIn("Zuivel")).toEqual(["halfvolle melk", "halfvolle melk"]);
   expect(sorted(await unfiledRows())).toEqual(["komkommer", "kwark"]);
   await expect(aisleBlock("Zuivel").getByTestId("aisle-heading")).toHaveAttribute(
@@ -264,14 +276,14 @@ test("filing a name from the panel moves the row and its same-named sibling, her
   await page.getByText("komkommer", { exact: true }).first().click();
   await expect(page.getByTestId("aisle-selector").getByRole("button")).toContainText("No aisle");
   await page.getByRole("button", { name: "Close panel" }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await fileFromPanel("kwark", "Zuivel");
-  await expect.poll(() => readAisleFiling(STORE, "kwark")).toBe("Zuivel");
+  await expect.poll(() => readAisleFiling(stack, STORE, "kwark")).toBe("Zuivel");
   expect(sorted(await rowsIn("Zuivel"))).toEqual(["halfvolle melk", "halfvolle melk", "kwark"]);
 
   await fileFromPanel("kwark", "No aisle");
-  await expect.poll(() => readAisleFiling(STORE, "kwark")).toBeNull();
+  await expect.poll(() => readAisleFiling(stack, STORE, "kwark")).toBeNull();
   expect(sorted(await unfiledRows())).toEqual(["komkommer", "kwark"]);
 });
 
@@ -284,7 +296,7 @@ test("renaming an aisle keeps what is filed under it; removing it returns the ro
 
   await expect.poll(() => aisleNamesOf()).toEqual(["Groente", "Zuivel en kaas"]);
   expect(await rowsIn("Zuivel en kaas")).toEqual(["halfvolle melk", "halfvolle melk"]);
-  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBe("Zuivel en kaas");
+  await expect.poll(() => readAisleFiling(stack, STORE, "halfvolle melk")).toBe("Zuivel en kaas");
 
   // Removing the aisle needs no confirmation; what was under it is simply unfiled.
   await openStoreEditor();
@@ -294,7 +306,7 @@ test("renaming an aisle keeps what is filed under it; removing it returns the ro
   await closeStoreManager();
 
   await expect.poll(() => aisleNamesOf()).toEqual(["Groente"]);
-  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBeNull();
+  await expect.poll(() => readAisleFiling(stack, STORE, "halfvolle melk")).toBeNull();
   await page.reload();
   await expect.poll(() => aisleNamesOf()).toEqual(["Groente"]);
   await expect(storeBlock().locator("[data-grocery-name]")).toHaveCount(4);
@@ -327,9 +339,9 @@ test("kip and kip (diepvries) are one food: filing one files both, and they stay
   await expect(page.getByRole("dialog", { name: "Edit Store" })).toBeHidden();
   await closeStoreManager();
   await fileFromPanel("kip (diepvries)", "Zuivel");
-  await expect.poll(() => readAisleFiling(STORE, "kip")).toBe("Zuivel");
+  await expect.poll(() => readAisleFiling(stack, STORE, "kip")).toBe("Zuivel");
   await fileFromPanel("kip", "Groente");
-  await expect.poll(() => readAisleFiling(STORE, "kip")).toBe("Groente");
+  await expect.poll(() => readAisleFiling(stack, STORE, "kip")).toBe("Groente");
 
   await setGrouped(true);
   await expect(storeBlock().locator("[data-grocery-name='kip']")).toHaveCount(1);
@@ -360,7 +372,7 @@ test("dragging a row into an aisle files its name, and the same-named row follow
 
   await dragRowTo("halfvolle melk", aisleTarget("Zuivel"));
 
-  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBe("Zuivel");
+  await expect.poll(() => readAisleFiling(stack, STORE, "halfvolle melk")).toBe("Zuivel");
   // Filing one filed both: an Aisle Link is a fact about the name (ADR-0031).
   expect((await rowsIn("Zuivel")).filter((name) => name === "halfvolle melk")).toHaveLength(2);
   expect(await unfiledRows()).not.toContain("halfvolle melk");
@@ -369,7 +381,7 @@ test("dragging a row into an aisle files its name, and the same-named row follow
 test("dragging a row back to the top of its Store unfiles the name, both rows with it", async () => {
   await dragRowTo("halfvolle melk", storeTarget());
 
-  await expect.poll(() => readAisleFiling(STORE, "halfvolle melk")).toBeNull();
+  await expect.poll(() => readAisleFiling(stack, STORE, "halfvolle melk")).toBeNull();
   expect(await rowsIn("Zuivel")).not.toContain("halfvolle melk");
   expect((await unfiledRows()).filter((name) => name === "halfvolle melk")).toHaveLength(2);
 });
@@ -377,7 +389,7 @@ test("dragging a row back to the top of its Store unfiles the name, both rows wi
 test("dragging a row into another Store's aisle moves it there and files it there", async () => {
   const bakker = "Bakker";
 
-  await createPlainStore(bakker);
+  await createPlainStore(stack, bakker);
   await page.goto("/groceries");
   await openStoreEditor(bakker);
   await page.getByTestId("aisle-name").fill("Brood");
@@ -390,10 +402,10 @@ test("dragging a row into another Store's aisle moves it there and files it ther
 
   // Assigned to the Bakker, then filed there — and Markt's memory of the name
   // is not carried along, nor touched.
-  await expect.poll(() => readAisleFiling(bakker, "kwark")).toBe("Brood");
+  await expect.poll(() => readAisleFiling(stack, bakker, "kwark")).toBe("Brood");
   expect(await rowsIn("Brood", bakker)).toEqual(["kwark"]);
   expect(await rowsOf(STORE)).not.toContain("kwark");
-  expect(await readAisleFiling(STORE, "kwark")).toBeNull();
+  expect(await readAisleFiling(stack, STORE, "kwark")).toBeNull();
 });
 
 test("a ticked grocery folds into the Store's done row; unticked from there, it returns to its aisle", async () => {
@@ -432,7 +444,7 @@ test("a ticked grocery folds into the Store's done row; unticked from there, it 
 test("an empty Store is its heading alone, takes a dropped row, and reads All done once that is ticked", async () => {
   const slager = "Slager";
 
-  await createPlainStore(slager);
+  await createPlainStore(stack, slager);
   await page.goto("/groceries");
 
   // A heading bar — the dot, the name, what is left — and no rows under it.

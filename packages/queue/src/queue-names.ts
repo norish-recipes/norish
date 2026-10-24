@@ -1,9 +1,8 @@
 /**
- * The queues, by name. A leaf on purpose: `config.ts` builds workers on top of
- * these and `job-steps.ts` declares each queue's pipeline against them, and
- * the worker manager wraps every processor with the step reporting's model
- * ledger, so neither of those may import the other. `config.ts` re-exports
- * both names so every existing `@norish/queue/config` import still holds.
+ * The queues, by name. A leaf on purpose: `job-steps.ts` declares each
+ * queue's pipeline against them, and `create-worker.ts` wraps every processor
+ * with the step reporting's model ledger, so neither may reach the other
+ * through this module.
  */
 export const QUEUE_NAMES = {
   RECIPE_IMPORT: "recipe-import",
@@ -21,7 +20,7 @@ export const QUEUE_NAMES = {
   STORE_LOOKUP: "store-lookup",
   INGREDIENT_REVIEW: "ingredient-review",
   INGREDIENT_ICONS: "ingredient-icons",
-  NEW_INGREDIENTS: "new-ingredients",
+  INGREDIENT_FILL: "ingredient-fill",
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];

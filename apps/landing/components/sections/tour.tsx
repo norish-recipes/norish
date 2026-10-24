@@ -183,18 +183,18 @@ function Capture({ screen }: { screen: Screenful }) {
  * both themes, registered in `components/shot.tsx`.
  */
 export function Tour() {
-  const stage = useRef<HTMLElement>(null);
-  const blocks = useRef<(HTMLLIElement | null)[]>([]);
-  const layers = useRef<(HTMLDivElement | null)[]>([]);
-  const dots = useRef<(HTMLSpanElement | null)[]>([]);
+  const stageRef = useRef<HTMLElement>(null);
+  const blocksRef = useRef<(HTMLLIElement | null)[]>([]);
+  const layersRef = useRef<(HTMLDivElement | null)[]>([]);
+  const dotsRef = useRef<(HTMLSpanElement | null)[]>([]);
 
   useScrollFrame(() => {
-    const section = stage.current;
+    const section = stageRef.current;
 
     if (!section) return;
 
     const wide = asking(WIDE);
-    const at = wide ? reading(blocks.current) : held(section);
+    const at = wide ? reading(blocksRef.current) : held(section);
     // Which screen is up is committed rather than scrubbed: it changes over at
     // the halfway point between two blocks and the swap then plays itself out
     // (see `.screen-layer` in globals.css). Scrubbing it means every position
@@ -204,7 +204,7 @@ export function Tour() {
 
     // Where a screen sits relative to the one being shown: behind it once it
     // has been read, ahead of it while it is still to come.
-    layers.current.forEach((layer, index) => {
+    layersRef.current.forEach((layer, index) => {
       layer?.style.setProperty("--lit", `${Number(index === showing)}`);
       layer?.style.setProperty("--push", `${Math.sign(showing - index)}`);
     });
@@ -213,7 +213,7 @@ export function Tour() {
     // until the next one takes over, which is a reading position rather than a
     // picture and stays scrubbed. Stacked over the capture there is only room
     // for one, so it commits along with the screen it belongs to.
-    blocks.current.forEach((block, index) => {
+    blocksRef.current.forEach((block, index) => {
       const lit = wide
         ? Math.min(clamp((at - index + INK) / INK), clamp((index + 1 - at) / INK))
         : Number(index === showing);
@@ -232,14 +232,14 @@ export function Tour() {
       );
     });
 
-    dots.current.forEach((dot, index) => {
+    dotsRef.current.forEach((dot, index) => {
       dot?.style.setProperty("--lit", `${Number(index === showing)}`);
     });
   });
 
   return (
     <section
-      ref={stage}
+      ref={stageRef}
       className="tour-stage border-border border-t"
       style={{ "--screens": `${screens.length}` } as CSSProperties}
     >
@@ -256,7 +256,7 @@ export function Tour() {
               <li
                 key={screen.title}
                 ref={(node) => {
-                  blocks.current[index] = node;
+                  blocksRef.current[index] = node;
                 }}
                 className="tour-step"
               >
@@ -279,7 +279,7 @@ export function Tour() {
                 <div
                   key={screen.title}
                   ref={(node) => {
-                    layers.current[index] = node;
+                    layersRef.current[index] = node;
                   }}
                   className="screen-layer"
                 >
@@ -293,7 +293,7 @@ export function Tour() {
                 <span
                   key={screen.title}
                   ref={(node) => {
-                    dots.current[index] = node;
+                    dotsRef.current[index] = node;
                   }}
                   className="progress-dot"
                 />

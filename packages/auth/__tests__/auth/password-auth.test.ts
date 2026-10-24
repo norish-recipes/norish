@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
@@ -21,10 +21,6 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 describe("Password Authentication Configuration", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   afterEach(() => {
     vi.resetModules();
   });

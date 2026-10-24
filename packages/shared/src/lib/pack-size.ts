@@ -25,11 +25,11 @@ function readNumber(value: string | undefined): number | null {
 
 /** `per kg`, `per 100 gram`, `/ kg`, `Per stuk`: a unit of sale, with the quantity it is sold by. */
 const PER_UNIT =
-  /^(?:per|\/|pro|par|por|al|za|à|pr\.?)\s*(\d+(?:[.,]\d+)?)?\s*(\p{L}[\p{L}. ]*?)\.?$/iu;
+  /^(?:per|\/|pro|par|por|al|za|à|pr\.?)\s*(?:(\d+(?:[.,]\d+)?)\s*)?(\p{L}[\p{L}. ]*?)\.?$/iu;
 
 /** `(ca.)? N (x M)? unit`, with a parenthetical the shop adds after it left alone. */
 const MEASURE =
-  /^(?:ca\.?|approx\.?|circa|±|~)?\s*(\d+(?:[.,]\d+)?)\s*(?:[x×*]\s*(\d+(?:[.,]\d+)?)\s*)?(\p{L}[\p{L}. ]*?)\.?(?:\s*\([^)]*\))?$/iu;
+  /^(?:ca\.?|approx\.?|circa|±|~)?\s*(\d+(?:[.,]\d+)?)\s*(?:[x×*]\s*(\d+(?:[.,]\d+)?)\s*)?(\p{L}[\p{L}. ]*?)\.?(?:(?<! )\s*\([^)]*\))?$/iu;
 
 function collapse(words: string): string {
   return words.replace(/\s+/g, " ").trim();

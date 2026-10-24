@@ -40,7 +40,9 @@ export function useWorkedOutNutrition(
   );
   const ingredientIds = useMemo(
     () =>
-      [...new Set(lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : [])))].sort(),
+      [...new Set(lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : [])))].sort(
+        (a, b) => a.localeCompare(b)
+      ),
     [lines]
   );
   const { data } = useQuery({

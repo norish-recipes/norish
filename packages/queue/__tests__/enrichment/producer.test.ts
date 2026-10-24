@@ -1,16 +1,23 @@
 import type { Queue } from "bullmq";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
+import type {
+  RecipeEnrichmentJobData,
+  RecipeEnrichmentJobInput,
+} from "@norish/queue/contracts/job-types";
 
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
-const mocks = vi.hoisted(() => ({ publishLifecycle: vi.fn() }));
+const mocks = vi.hoisted(() => ({ publishLifecycle: vi.fn(), incr: vi.fn() }));
 
 vi.mock("../../src/enrichment/announce", () => ({
   publishEnrichmentLifecycle: mocks.publishLifecycle,
+}));
+
+vi.mock("../../src/valkey/bullmq", () => ({
+  getBullClient: () => ({ incr: mocks.incr }),
 }));
 
 const { addEnrichmentJob } = await import("../../src/enrichment/producer");
@@ -20,17 +27,16 @@ const { ENRICHMENT_JOB_NAMES, ENRICHMENT_QUEUE_NAMES, enrichmentJobId } =
 const add = vi.fn();
 const getJob = vi.fn();
 const remove = vi.fn();
-const incr = vi.fn();
+const incr = mocks.incr;
 const toKey = vi.fn((suffix: string) => `norish:${suffix}`);
 
 const queue = {
   add,
   getJob,
-  client: Promise.resolve({ incr }),
   toKey,
 } as unknown as Queue<RecipeEnrichmentJobData>;
 
-function job(data: Partial<RecipeEnrichmentJobData> = {}): RecipeEnrichmentJobData {
+function job(data: Partial<RecipeEnrichmentJobInput> = {}): RecipeEnrichmentJobInput {
   return {
     recipeId: "recipe-1",
     kind: "auto-tagging",
@@ -48,7 +54,6 @@ function retained(state: string) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocks.publishLifecycle.mockResolvedValue(undefined);
   incr.mockResolvedValue(1);
   getJob.mockResolvedValue(null);
@@ -144,7 +149,7 @@ describe("addEnrichmentJob", () => {
     expect(mocks.publishLifecycle).not.toHaveBeenCalled();
   });
 
-  it("allocates a monotonic sequence from Redis for each attempted run", async () => {
+  it("allocates a monotonic sequence from Valkey for each attempted run", async () => {
     incr.mockResolvedValueOnce(42);
 
     await addEnrichmentJob(queue, job());
@@ -177,7 +182,8 @@ describe("addEnrichmentJob", () => {
   it.each(["completed", "failed"])(
     "lets a manual rerun replace a retained %s job, so history cannot block it",
     async (state) => {
-      getJob.mockResolvedValue(retained(state));
+      // Read before the add, then removed: the read after the add finds no other run.
+      getJob.mockResolvedValueOnce(retained(state)).mockResolvedValueOnce(retained(state));
 
       const result = await addEnrichmentJob(queue, job({ origin: "manual" }));
 
@@ -206,7 +212,7 @@ describe("addEnrichmentJob", () => {
     async (state) => {
       // Without this the sweep would be swallowed as a duplicate for exactly
       // the recipes that ran recently enough to still have a retained job.
-      getJob.mockResolvedValue(retained(state));
+      getJob.mockResolvedValueOnce(retained(state)).mockResolvedValueOnce(retained(state));
 
       const result = await addEnrichmentJob(
         queue,

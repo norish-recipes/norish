@@ -4,6 +4,8 @@ import type { CreateStoresHooksOptions, StoresData, StoresQueryResult } from "./
 
 export function createUseStoresQuery({ useTRPC }: CreateStoresHooksOptions) {
   return function useStoresQuery(): StoresQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.stores.list.queryKey();

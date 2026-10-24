@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AisleSelector } from "@/components/groceries/aisle-selector";
 import { GroceryProductField } from "@/components/groceries/grocery-product-field";
 import { GroceryRecurrenceControl } from "@/components/groceries/grocery-recurrence-control";
@@ -46,6 +46,7 @@ export default function AddGroceryPanel({
   // One per grocery added, so the panel that stays open for the next one is
   // not still showing the last one's product.
   const [added, setAdded] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
   const {
     itemName,
     setItemName,
@@ -61,14 +62,15 @@ export default function AddGroceryPanel({
   });
 
   // Reset form when panel closes
-  useEffect(() => {
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (!open) {
       reset();
       setPurchaseAmount(null);
       setSelectedStoreId(null);
       setProductValid(true);
     }
-  }, [open, reset]);
+  }
   const price = useProductChoice({
     itemName,
     stores,

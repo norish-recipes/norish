@@ -1,12 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { deleteUserAccount } from "@norish/auth/account-deletion";
 import {
   getUserRoleFlags,
   listUsersForAdmin,
   setUserAdminStatus,
 } from "@norish/db/repositories/users";
-import { deleteUserAccount } from "@norish/shared-server/accounts/deletion";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";

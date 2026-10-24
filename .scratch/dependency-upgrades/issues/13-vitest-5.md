@@ -1,7 +1,7 @@
 # 13 — Vitest 5
 
-Status: ready-for-agent
-Blocked by: None (independent of 12)
+Status: resolved
+Blocked by: 11
 Target release: 0.26.0-beta
 
 Spec: `.scratch/dependency-upgrades/spec.md`
@@ -22,7 +22,7 @@ Changes that touch Norish, from the v5.0.4 migration guide:
 - **Unawaited `.resolves` / `.rejects` now fail the test.**
 - **`test.each` titles** are formatted with pretty-format.
 - **Reports go to `.vitest/`.** Add it to `.gitignore`.
-- **jest-dom typings break in editors only.** 7.0.1 still extends `jest.Matchers` / `Assertion<T>`, while Vitest 5 uses `Assertion<R, T>`. The runtime is fine, and no gate type-checks the tests.
+- **jest-dom typings break.** 7.0.1 still extends `jest.Matchers` / `Assertion<T>`, while Vitest 5 uses `Assertion<R, T>`. The runtime is fine, but since ticket 25 apps/web's `typecheck` includes `__tests__`, so this now fails the gate. Take a jest-dom release that supports Vitest 5 if one exists; otherwise add a local declaration that augments Vitest 5's `Assertion` with jest-dom's matchers.
 
 **Later:**
 
@@ -35,7 +35,7 @@ Changes that touch Norish, from the v5.0.4 migration guide:
 - [ ] **Same test counts.** Each package runs the same number of tests before and after, under `NODE_ENV=test pnpm test:run` as CI runs it.
 - [ ] **Behaviour-neutral.** No test was weakened to make it pass. Any `clearMocks` changes are deliberate and listed in the comments.
 - [ ] **Coverage.** `pnpm test:coverage` runs.
-- [ ] **Gates.** `pnpm lint`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build` pass.
+- [ ] **Gates.** `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check` and `pnpm build` pass.
 
 ## Comments
 
@@ -44,3 +44,5 @@ Changes that touch Norish, from the v5.0.4 migration guide:
   - the vitest 5.0.4 tarball;
   - `docs/guide/migration/index.md` and `docs/blog/vitest-5.md` at v5.0.4;
   - @testing-library/jest-dom 7.0.1.
+- 2026-10-13 — jest-dom typings are now a gate failure, not an editor nuisance, because ticket 25 type-checks apps/web's tests.
+- 2026-10-13 — Done on Vitest 5.0.4. `vite` is declared next to `vitest` in every tested workspace, `@vitest/coverage-v8` is installed in apps/web, and `clearMocks: false` keeps every config behaviour-neutral (adopting the new default is a follow-up). `password-auth-cache.test.ts`'s mocks and their state moved to module level (Vitest hoisted them there anyway). jest-dom 7.0.1 is still the latest and augments the old `Assertion<T>`, so `apps/web/__tests__/jest-dom-vitest.d.ts` augments `Matchers<R, T>` instead (723 type errors otherwise). Per-package test counts are identical to Vitest 4 (api 509, auth 82, config 805, nutrition 36, queue 355, shared-react 99, shared-server 1041, shared 859, trpc 601, web 1233). `pnpm test:coverage` runs; `.vitest/` and `coverage/` are gitignored. `@types/node` is declared where tests run, since vite's optional peer otherwise auto-installs the newest.

@@ -9,16 +9,18 @@ Use this file for lightweight repo context.
 
 ## Stack
 
-- Node.js 22 + TypeScript
+- Node.js 26 + TypeScript
 - pnpm workspaces + Turborepo
-- `apps/web`: Next.js 16 App Router, React 19, HeroUI v3 (`@heroui/react`), Tailwind CSS v4, Motion, TanStack Query, custom Node server bundle via tsdown
-- `apps/mobile`: Expo SDK 55, Expo Router, React Native 0.83, React 19, HeroUI Native v1 RC3 (`heroui-native`), Uniwind, Tailwind CSS v4 theme tokens, TanStack Query
-- tRPC, PostgreSQL + Drizzle, Redis + BullMQ, Better Auth
+- `apps/web`: Next.js 16 App Router, React 19, HeroUI v3 (`@heroui/react`), Tailwind CSS v4, Motion, TanStack Query, custom Node server run from source through tsx
+- `apps/mobile`: Expo SDK 56, Expo Router, React Native 0.85, React 19, HeroUI Native v1 (`heroui-native`), Uniwind, Tailwind CSS v4 theme tokens, TanStack Query
+- tRPC, PostgreSQL + Drizzle, Valkey + BullMQ, Better Auth
+
+This Next.js has breaking changes from your training data: read the relevant guide in `apps/web/node_modules/next/dist/docs/` before writing Next code. Landing sets `agentRules: false`, so `next dev` writes no app-level AGENTS.md.
 
 ## Repo Shape
 
-- `apps/web` - web app and server bundle entry
-- `apps/mobile` - Expo app, **parked pending a rewrite**: it still starts with `pnpm dev:mobile`, but it defines no `lint`, `typecheck` or `test` script, so none of the root gates reach it, and it is expected to break at compile and runtime against the current release
+- `apps/web` - web app and its custom server, run from source through tsx
+- `apps/mobile` - Expo app, **parked pending a rewrite** and outside the pnpm workspace: install it on its own with `pnpm --dir apps/mobile install --ignore-workspace`, then `pnpm dev:mobile` starts it. No root gate reaches it, and it is expected to break at compile and runtime against the current release
 - `packages/api` - server domain logic
 - `packages/trpc` - tRPC routers and API surface
 - `packages/db` - schema and repositories
@@ -49,7 +51,7 @@ sections (never passing a finished prompt string — ADR-0016).
 - Use the existing logger patterns instead of `console.log`.
 - Avoid `as any`, `@ts-ignore`, and `@ts-expect-error`.
 - Route database access through repositories instead of direct router-level queries.
-- Definition of done: the `CONTRIBUTING.md` gates — `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build` — plus tests for new functionality. User-visible workflows whose acceptance criteria depend on browser behavior also require passing E2E coverage and follow `docs/agents/feature-docs.md`.
+- Definition of done: the `CONTRIBUTING.md` gates — `pnpm lint`, `pnpm typecheck`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build` — plus tests for new functionality. User-visible workflows whose acceptance criteria depend on browser behavior also require passing E2E coverage and follow `docs/agents/feature-docs.md`.
 - Keep repo guidance concise; prefer practical conventions over long project narratives.
 
 ## Agent skills
@@ -69,3 +71,14 @@ One glossary at root `CONTEXT.md` (a `###` section per feature area); ADRs in pe
 ### Feature docs & release notes
 
 Every feature PR updates the Target Version's release notes and the docs in `apps/docs` (pages with screenshots; env vars land in `.env.example`, a configuration page, and Upgrade notes). See `docs/agents/feature-docs.md`.
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->

@@ -14,6 +14,8 @@ import { cookbookIdOf } from "./use-cookbook-recipes-query";
 
 export function createUseCookbooksCache({ useTRPC }: CreateCookbookHooksOptions) {
   return function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 

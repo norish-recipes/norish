@@ -108,6 +108,8 @@ export default function NutritionCard() {
             <Skeleton className="size-32 shrink-0 rounded-full" />
             <div className="flex-1 space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
+                // Placeholder rows: no identity, and they never reorder.
+                // eslint-disable-next-line @eslint-react/no-array-index-key
                 <div key={i} className="flex items-center justify-between">
                   <Skeleton className="h-4 w-16 rounded-md" />
                   <Skeleton className="h-4 w-12 rounded-md" />

@@ -3,17 +3,16 @@ import type {
   AuthProviderGitHub,
   AuthProviderGoogle,
   AuthProviderOIDC,
-  PromptsConfig,
   ServerConfigKey,
   TimerKeywordsConfig,
 } from "@norish/db/zodSchemas/server-config";
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
-import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json" with { type: "json" };
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
-import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
-import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
-import defaultUnits from "@norish/config/units.default.json";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json" with { type: "json" };
+import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json" with { type: "json" };
+import defaultTimerKeywords from "@norish/config/timer-keywords.default.json" with { type: "json" };
+import defaultUnits from "@norish/config/units.default.json" with { type: "json" };
 import {
   configExists,
   deleteConfig,
@@ -25,17 +24,11 @@ import {
   DEFAULT_INGREDIENT_PERMISSION_POLICY,
   DEFAULT_JOB_RETENTION,
   DEFAULT_RECIPE_PERMISSION_POLICY,
-  IngredientWordsConfigSchema,
   IngredientWordsMapSchema,
+  RecurrenceLocalesSchema,
   ServerConfigKeys,
   UnitsConfigSchema,
-  UnitsMapSchema,
 } from "@norish/db/zodSchemas/server-config";
-import {
-  loadDefaultPrompts,
-  loadRetiredDefaultPrompts,
-} from "@norish/shared-server/ai/prompts/loader";
-import { pruneToOverrides } from "@norish/shared-server/ai/prompts/overrides";
 import {
   buildLocaleConfigFromEnv,
   DEFAULT_LOCALE_CONFIG,
@@ -98,7 +91,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
   },
   {
     key: ServerConfigKeys.RECURRENCE_CONFIG,
-    getDefaultValue: () => defaultRecurrenceConfig,
+    getDefaultValue: () => ({ ...defaultRecurrenceConfig, isOverridden: false }),
     sensitive: false,
     description: `Recurrence config (${Object.keys(defaultRecurrenceConfig.locales).length} locales)`,
   },
@@ -195,10 +188,18 @@ export async function seedServerConfig(): Promise<void> {
   await normalizeExistingConfigs();
   await importEnvAuthProvidersIfMissing();
   await syncUnits();
-  await syncPrompts();
   await syncLocales();
   await syncTimerKeywords();
-  await syncIngredientWords();
+  await syncShippedWords(
+    ServerConfigKeys.INGREDIENT_WORDS,
+    "words",
+    IngredientWordsMapSchema.parse(defaultIngredientWords)
+  );
+  await syncShippedWords(
+    ServerConfigKeys.RECURRENCE_CONFIG,
+    "locales",
+    RecurrenceLocalesSchema.parse(defaultRecurrenceConfig.locales)
+  );
 
   if (seededCount === 0) {
     serverLogger.info("All server configuration keys present");
@@ -220,9 +221,16 @@ async function loadAuthProvidersIntoCache(): Promise<void> {
   const github = await getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true);
   const google = await getConfig<AuthProviderGoogle>(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, true);
   const oidc = await getConfig<AuthProviderOIDC>(ServerConfigKeys.AUTH_PROVIDER_OIDC, true);
-  const passwordEnabled = await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
+  let passwordEnabled = (await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED)) ?? false;
 
-  setAuthProviderCache({ github, google, oidc, passwordEnabled: passwordEnabled ?? false });
+  // The environment can take away the last provider; boot never leaves no way to sign in.
+  if (!github && !google && !oidc && !passwordEnabled) {
+    await setConfig(ServerConfigKeys.PASSWORD_AUTH_ENABLED, true, null, false);
+    passwordEnabled = true;
+    serverLogger.warn("No sign-in method was left, so password sign-in is on again");
+  }
+
+  setAuthProviderCache({ github, google, oidc, passwordEnabled });
 
   const configured = [
     github && "GitHub",
@@ -231,11 +239,7 @@ async function loadAuthProvidersIntoCache(): Promise<void> {
     passwordEnabled && "Password",
   ].filter(Boolean);
 
-  if (configured.length > 0) {
-    serverLogger.info({ providers: configured }, "Auth providers loaded");
-  } else {
-    serverLogger.warn("No auth providers configured - users will not be able to log in");
-  }
+  serverLogger.info({ providers: configured }, "Auth providers loaded");
 }
 
 /**
@@ -279,6 +283,18 @@ async function importEnvAuthProvidersIfMissing(): Promise<void> {
   await syncOIDCProvider();
   await syncGitHubProvider();
   await syncGoogleProvider();
+  await syncPasswordAuth();
+}
+
+/** PASSWORD_AUTH_ENABLED, when set, decides password sign-in at every boot. */
+async function syncPasswordAuth(): Promise<void> {
+  const env = SERVER_CONFIG.PASSWORD_AUTH_ENABLED;
+
+  if (env === undefined) return;
+  if ((await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED)) === env) return;
+
+  await setConfig(ServerConfigKeys.PASSWORD_AUTH_ENABLED, env, null, false);
+  serverLogger.info({ enabled: env }, "Password sign-in set from PASSWORD_AUTH_ENABLED");
 }
 
 /**
@@ -485,41 +501,6 @@ async function syncGoogleProvider(): Promise<void> {
 }
 
 /**
- * Reduce the stored prompts row to genuine administrator overrides.
- *
- * Rows written before 0.20 carried full copies of the then-current default
- * texts (plus a row-level isOverridden flag that froze all of them after any
- * save). Dropping every field that matches a shipped default — current or
- * retired — releases those copies, so the release's prompts reach the admin
- * surface and the model, while texts an administrator actually wrote are
- * exactly the fields that survive.
- */
-async function syncPrompts(): Promise<void> {
-  const existing = await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
-
-  if (!existing) {
-    serverLogger.warn("Prompts config not found in DB, will be seeded");
-
-    return;
-  }
-
-  const { overrides, changed } = pruneToOverrides(
-    existing,
-    loadDefaultPrompts(),
-    loadRetiredDefaultPrompts()
-  );
-
-  if (changed) {
-    await setConfig(ServerConfigKeys.PROMPTS, overrides, null, false);
-
-    serverLogger.info(
-      { overriddenFields: Object.keys(overrides) },
-      "Pruned stored prompts to administrator overrides"
-    );
-  }
-}
-
-/**
  * Sync timer keywords from default config file
  * Updates DB if file changes and user hasn't overridden
  */
@@ -575,35 +556,28 @@ function sortedJson(value: unknown): string {
 }
 
 /**
- * Seed the ingredient words (ADR-0037), and carry the words Norish ships into
- * a row the administrator has not edited, as the units and timer keywords
- * are; an edited row is left alone.
+ * Seed words Norish ships, such as the ingredient words (ADR-0037) and the recurrence words, and
+ * carry them into a row the administrator has not edited; an edited row is left alone.
  */
-async function syncIngredientWords(): Promise<void> {
-  const stored = IngredientWordsConfigSchema.safeParse(
-    await getConfig<unknown>(ServerConfigKeys.INGREDIENT_WORDS)
-  );
+async function syncShippedWords(
+  key: ServerConfigKey,
+  field: "words" | "locales",
+  shipped: unknown
+): Promise<void> {
+  const stored = await getConfig<Record<string, unknown>>(key);
 
-  if (stored.success && stored.data.isOverridden) {
-    serverLogger.debug("Ingredient words are overridden by admin, skipping file sync");
+  if (stored?.isOverridden === true) {
+    serverLogger.debug({ key }, "Words are overridden by admin, skipping file sync");
 
     return;
   }
 
-  const shipped = IngredientWordsMapSchema.parse(defaultIngredientWords);
+  if (stored && sortedJson(stored[field]) === sortedJson(shipped)) return;
 
-  if (stored.success && sortedJson(stored.data.words) === sortedJson(shipped)) return;
-
-  await setConfig(
-    ServerConfigKeys.INGREDIENT_WORDS,
-    { words: shipped, isOverridden: false },
-    null,
-    false
-  );
+  await setConfig(key, { [field]: shipped, isOverridden: false }, null, false);
   serverLogger.info(
-    stored.success
-      ? "Updated ingredient words from default file (content changed)"
-      : "Seeded ingredient words from default config file"
+    { key },
+    stored ? "Updated words from default file (content changed)" : "Seeded words from default file"
   );
 }
 
@@ -642,40 +616,6 @@ async function syncUnits(): Promise<void> {
       );
       serverLogger.info("Updated units from default file (content changed)");
     }
-
-    return;
-  }
-
-  const legacyWrapped =
-    typeof existing === "object" &&
-    existing !== null &&
-    "units" in existing &&
-    "isOverwritten" in existing
-      ? UnitsMapSchema.safeParse((existing as { units: unknown }).units)
-      : null;
-
-  if (legacyWrapped?.success) {
-    await setConfig(
-      ServerConfigKeys.UNITS,
-      { units: legacyWrapped.data, isOverridden: false },
-      null,
-      false
-    );
-    serverLogger.info("Migrated units config flag from isOverwritten to isOverridden");
-
-    return;
-  }
-
-  const legacy = UnitsMapSchema.safeParse(existing);
-
-  if (legacy.success) {
-    await setConfig(
-      ServerConfigKeys.UNITS,
-      { units: legacy.data, isOverridden: false },
-      null,
-      false
-    );
-    serverLogger.info("Migrated units config to wrapped schema format");
 
     return;
   }

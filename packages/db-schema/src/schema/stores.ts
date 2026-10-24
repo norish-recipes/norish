@@ -36,9 +36,9 @@ export const ingredientStorePreferences = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    ingredientId: uuid("ingredient_id").references(() => ingredients.id, { onDelete: "cascade" }),
-    /** The name the preference was keyed by before ADR-0037; read by nothing. */
-    normalizedName: text("normalized_name"),
+    ingredientId: uuid("ingredient_id")
+      .notNull()
+      .references(() => ingredients.id, { onDelete: "cascade" }),
     storeId: uuid("store_id")
       .notNull()
       .references(() => stores.id, { onDelete: "cascade" }),

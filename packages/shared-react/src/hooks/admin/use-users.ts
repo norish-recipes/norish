@@ -6,6 +6,8 @@ const LIST_REFETCH_INTERVAL_MS = 30_000;
 
 export function createUseUsers({ useTRPC }: CreateAdminHooksOptions) {
   function useUsersListQuery({ enabled = true }: { enabled?: boolean } = {}) {
+    "use memo";
+
     const trpc = useTRPC();
     const { data, error, isLoading, refetch } = useQuery({
       ...trpc.admin.users.list.queryOptions(),
@@ -17,6 +19,8 @@ export function createUseUsers({ useTRPC }: CreateAdminHooksOptions) {
   }
 
   function useUserMutations() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
@@ -27,14 +31,16 @@ export function createUseUsers({ useTRPC }: CreateAdminHooksOptions) {
     const setAdminStatusMutation = useMutation(
       trpc.admin.users.setAdminStatus.mutationOptions({ onSuccess: invalidateUsers })
     );
+    const { mutateAsync: mutateSetAdminStatusAsync } = setAdminStatusMutation;
     const removeMutation = useMutation(
       trpc.admin.users.remove.mutationOptions({ onSuccess: invalidateUsers })
     );
+    const { mutateAsync: mutateRemoveAsync } = removeMutation;
 
     return {
       setAdminStatus: async (userId: string, isAdmin: boolean) => {
         try {
-          await setAdminStatusMutation.mutateAsync({ userId, isAdmin });
+          await mutateSetAdminStatusAsync({ userId, isAdmin });
 
           return { success: true as const };
         } catch (error) {
@@ -46,7 +52,7 @@ export function createUseUsers({ useTRPC }: CreateAdminHooksOptions) {
       },
       deleteUser: async (userId: string) => {
         try {
-          await removeMutation.mutateAsync({ userId });
+          await mutateRemoveAsync({ userId });
 
           return { success: true as const };
         } catch (error) {

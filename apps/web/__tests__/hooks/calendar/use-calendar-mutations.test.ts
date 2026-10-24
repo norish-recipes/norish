@@ -88,7 +88,6 @@ describe("useCalendarMutations", () => {
   const endISO = "2025-01-31";
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
   });
 
@@ -110,7 +109,7 @@ describe("useCalendarMutations", () => {
 
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
-        expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+        expect(mockCreateItemMutate.mock.calls[0]![0]).toEqual({
           // Client-minted id (ADR-0003).
           id: expect.any(String),
           date: "2025-01-15",
@@ -135,7 +134,7 @@ describe("useCalendarMutations", () => {
 
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
-        expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+        expect(mockCreateItemMutate.mock.calls[0]![0]).toEqual({
           // Client-minted id (ADR-0003).
           id: expect.any(String),
           date: "2025-01-15",
@@ -169,11 +168,11 @@ describe("useCalendarMutations", () => {
         const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
         expect(data).toHaveLength(1);
-        expect(data![0].id).toBe("item-2");
+        expect(data![0]!.id).toBe("item-2");
       });
 
       expect(mockDeleteItemMutate).toHaveBeenCalled();
-      expect(mockDeleteItemMutate.mock.calls[0][0]).toEqual({ itemId: "item-1", version: 1 });
+      expect(mockDeleteItemMutate.mock.calls[0]![0]).toEqual({ itemId: "item-1", version: 1 });
     });
 
     it("reverts optimistic update on error", async () => {
@@ -195,7 +194,7 @@ describe("useCalendarMutations", () => {
         const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
         expect(data).toHaveLength(1);
-        expect(data![0].id).toBe("item-1");
+        expect(data![0]!.id).toBe("item-1");
       });
     });
   });
@@ -225,7 +224,7 @@ describe("useCalendarMutations", () => {
       });
 
       expect(mockMoveItemMutate).toHaveBeenCalled();
-      expect(mockMoveItemMutate.mock.calls[0][0]).toEqual({
+      expect(mockMoveItemMutate.mock.calls[0]![0]).toEqual({
         itemId: "item-2",
         version: 1,
         targetDate: "2025-01-15",

@@ -2,6 +2,7 @@ import type {
   RecurrenceConfig,
   RecurrenceLocaleConfig,
   RecurrencePattern,
+  RecurrenceRule,
 } from "@norish/shared/contracts/recurrence";
 
 export type ParseResult = {
@@ -133,9 +134,11 @@ function parseWithLocale(
     .join("|");
 
   // Build unit patterns
-  const dayPattern = buildTokenPattern(config.unitWords.day);
-  const weekPattern = buildTokenPattern(config.unitWords.week);
-  const monthPattern = buildTokenPattern(config.unitWords.month);
+  const units = unitWordsOf(config);
+  const unitPattern = units
+    .filter(([, words]) => words.length > 0)
+    .map(([, words]) => buildTokenPattern(words))
+    .join("|");
 
   // Build number pattern (digits or number words)
   const numberWordsPattern = buildTokenPattern(Object.keys(config.numberWords));
@@ -147,7 +150,7 @@ function parseWithLocale(
       `(?:\\s+(${otherPattern}))?` + // optional "other"
       `\\s*` +
       `(?:(\\d+|${numberWordsPattern})\\s*)?` + // optional number
-      `(${dayPattern}|${weekPattern}|${monthPattern})` + // required unit
+      `(${unitPattern})` + // required unit
       `(?:\\s+(?:(?:${onPattern})\\s*)?(${weekdayPattern}))?` + // optional "on weekday"
       `${TOKEN_BOUNDARY_SUFFIX}`,
     "i"
@@ -283,53 +286,29 @@ function parseWithLocale(
     // 4. Check for standalone frequency words as fallback (daily, weekly, monthly, dagelijks, wekelijks, maandelijks)
     // This is checked AFTER the main pattern and "every weekday" to avoid matching "weekly" when "every week on friday" is intended
     // Use negative lookahead to avoid matching when "on [weekday]" follows
-    const standaloneDailyPattern = config.unitWords.day
-      .filter(
-        (w) =>
-          w.endsWith("ly") || w.endsWith("lijks") || config.everyWords.some((e) => w.startsWith(e))
+    const standalonePatterns = units
+      .map(([, words]) =>
+        words
+          .filter(
+            (w) =>
+              w.endsWith("ly") ||
+              w.endsWith("lijks") ||
+              config.everyWords.some((e) => w.startsWith(e))
+          )
+          .join("|")
       )
-      .join("|");
-    const standaloneWeeklyPattern = config.unitWords.week
-      .filter(
-        (w) =>
-          w.endsWith("ly") || w.endsWith("lijks") || config.everyWords.some((e) => w.startsWith(e))
-      )
-      .join("|");
-    const standaloneMonthlyPattern = config.unitWords.month
-      .filter(
-        (w) =>
-          w.endsWith("ly") || w.endsWith("lijks") || config.everyWords.some((e) => w.startsWith(e))
-      )
-      .join("|");
+      .filter(Boolean);
 
-    if (standaloneDailyPattern || standaloneWeeklyPattern || standaloneMonthlyPattern) {
+    if (standalonePatterns.length > 0) {
       const standalonePattern = new RegExp(
-        `${TOKEN_BOUNDARY_PREFIX}(${[standaloneDailyPattern, standaloneWeeklyPattern, standaloneMonthlyPattern].filter(Boolean).join("|")})${TOKEN_BOUNDARY_SUFFIX}` +
+        `${TOKEN_BOUNDARY_PREFIX}(${standalonePatterns.join("|")})${TOKEN_BOUNDARY_SUFFIX}` +
           `(?!\\s+(?:${onPattern})\\s+(?:${weekdayPattern}))`, // negative lookahead: don't match if "on weekday" follows
         "i"
       );
       const standaloneMatch = lowerText.match(standalonePattern);
 
       if (standaloneMatch) {
-        const matchedWord = standaloneMatch[1]?.toLowerCase() ?? "";
-        let rule: "day" | "week" | "month" = "day";
-
-        if (
-          standaloneDailyPattern &&
-          config.unitWords.day.some((d: string) => d.toLowerCase() === matchedWord)
-        ) {
-          rule = "day";
-        } else if (
-          standaloneWeeklyPattern &&
-          config.unitWords.week.some((w: string) => w.toLowerCase() === matchedWord)
-        ) {
-          rule = "week";
-        } else if (
-          standaloneMonthlyPattern &&
-          config.unitWords.month.some((m: string) => m.toLowerCase() === matchedWord)
-        ) {
-          rule = "month";
-        }
+        const rule = ruleOf(standaloneMatch[1] ?? "", units);
 
         const cleanText = text
           .replace(new RegExp(escapeRegex(standaloneMatch[0]), "i"), "")
@@ -383,18 +362,7 @@ function parseWithLocale(
     }
   }
 
-  // Determine rule (day/week/month)
-  let rule: "day" | "week" | "month" = "day";
-
-  if (config.unitWords.day.some((d: string) => d.toLowerCase() === unitStr.toLowerCase())) {
-    rule = "day";
-  } else if (config.unitWords.week.some((w: string) => w.toLowerCase() === unitStr.toLowerCase())) {
-    rule = "week";
-  } else if (
-    config.unitWords.month.some((m: string) => m.toLowerCase() === unitStr.toLowerCase())
-  ) {
-    rule = "month";
-  }
+  const rule = ruleOf(unitStr, units);
 
   // Determine weekday (if specified)
   let weekday: number | undefined;
@@ -423,6 +391,23 @@ function parseWithLocale(
     matchedPhrase,
     matchedLocale: localeKey,
   };
+}
+
+/** Each rule's unit words; a set edited before years were known has none for a year. */
+function unitWordsOf(config: RecurrenceLocaleConfig): Array<[RecurrenceRule, string[]]> {
+  return [
+    ["day", config.unitWords.day],
+    ["week", config.unitWords.week],
+    ["month", config.unitWords.month],
+    ["year", config.unitWords.year],
+  ];
+}
+
+/** The rule a unit word names, the first that lists it; "day" for none. */
+function ruleOf(word: string, units: Array<[RecurrenceRule, string[]]>): RecurrenceRule {
+  const lower = word.toLowerCase();
+
+  return units.find(([, words]) => words.some((w) => w.toLowerCase() === lower))?.[0] ?? "day";
 }
 
 function escapeRegex(str: string): string {

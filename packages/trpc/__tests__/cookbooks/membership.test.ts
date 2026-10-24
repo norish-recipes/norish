@@ -86,7 +86,6 @@ function expectNoRecipeWrites() {
 
 describe("cookbook membership", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     getCookbookRow.mockResolvedValue(cookbookRow());
     recipesRepository.getRecipeOwnerId.mockResolvedValue("recipe-owner");
   });

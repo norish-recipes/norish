@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import UiSwitch from "@/app/(app)/settings/components/settings-switch";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
@@ -108,11 +108,13 @@ export function IngredientFiltersPanel({
   const tFilters = useTranslations("common.filters");
   const tActions = useTranslations("common.actions");
   const [working, setWorking] = useState<IngredientFilters>(value);
+  const [seededFor, setSeededFor] = useState({ open, value });
 
   // Opening starts from what is applied, so a change abandoned with Close is gone.
-  useEffect(() => {
+  if (seededFor.open !== open || seededFor.value !== value) {
+    setSeededFor({ open, value });
     if (open) setWorking(value);
-  }, [open, value]);
+  }
 
   const close = () => onOpenChange(false);
   const apply = (filters: IngredientFilters) => {

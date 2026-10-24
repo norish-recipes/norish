@@ -18,6 +18,8 @@ export function createUseRatingsMutation({
   shouldPreserveOptimisticUpdate,
 }: CreateRatingsHooksOptions) {
   return function useRatingsMutation() {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
@@ -74,13 +76,14 @@ export function createUseRatingsMutation({
         },
       })
     );
+    const { mutate: mutateRate } = rateMutation;
 
     return {
-      rateRecipe: (recipeId: string, rating: number) => {
+      rateRecipe: (recipeId: string, rating: number | null) => {
         const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
         const previousUserRating = queryClient.getQueryData<UserRatingData>(userRatingQueryKey);
 
-        rateMutation.mutate({
+        mutateRate({
           recipeId,
           rating,
           version: previousUserRating?.version ?? undefined,

@@ -36,7 +36,7 @@ const datasetFoodKey = z.custom<DatasetFoodKey>(
     value.split(":")[1] !== ""
 );
 
-const amount = z.number().finite().nonnegative();
+const amount = z.number().nonnegative();
 
 /**
  * A food as the file stores it: [dataset, code, name, kcal, fat,
@@ -157,7 +157,7 @@ export function serializeSourceTable(table: SourceTable): string {
   const line = (value: unknown) => JSON.stringify(value);
   const entries = (record: Record<string, string | null>) =>
     Object.keys(record)
-      .sort()
+      .sort((a, b) => (a < b ? -1 : 1))
       .map((key) => `    ${line(key)}: ${line(record[key])}`)
       .join(",\n");
   const foods = [...table.foods]
@@ -176,7 +176,7 @@ export function serializeSourceTable(table: SourceTable): string {
     `  "densityFixes": {\n${entries(table.densityFixes)}\n  },`,
     `  "pieceFixes": {\n${entries(table.pieceFixes)}\n  },`,
     `  "neverLend": [\n${[...table.neverLend]
-      .sort()
+      .sort((a, b) => (a < b ? -1 : 1))
       .map((id) => `    ${line(id)}`)
       .join(",\n")}\n  ],`,
     `  "names": {\n${entries(table.names)}\n  },`,

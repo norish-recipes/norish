@@ -99,7 +99,6 @@ describe("convertToMp4", () => {
   const normalizePath = (value: string) => value.replaceAll("\\", "/");
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockState.spawnCalls.length = 0;
     mockState.fsStatMock.mockResolvedValue({ size: 1234 });
     mockState.fsUnlinkMock.mockResolvedValue(undefined);

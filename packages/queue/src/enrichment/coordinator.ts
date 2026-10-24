@@ -33,7 +33,7 @@ import {
   hasSubstantiveNutrition,
 } from "@norish/shared/lib/recipe-enrichment";
 
-import type { RecipeEnrichmentJobData } from "../contracts/job-types";
+import type { RecipeEnrichmentJobData, RecipeEnrichmentJobInput } from "../contracts/job-types";
 import { ENRICHMENT_QUEUE_NAMES } from "./identity";
 import { addEnrichmentJob } from "./producer";
 
@@ -114,7 +114,7 @@ export async function enrichRecipe(
       return { kind, status: "skipped", reason: eligibility.reason };
     }
 
-    const data: RecipeEnrichmentJobData = {
+    const data: RecipeEnrichmentJobInput = {
       recipeId: recipe.id,
       kind,
       userId: context.userId,
@@ -167,9 +167,9 @@ interface EvaluationInput {
   imageProviderConfigured: boolean;
 }
 
-/** Any stored image at all: a gallery row, or the legacy scalar. */
+/** Any stored image at all: a gallery row. */
 function hasAnyImage(recipe: FullRecipeDTO): boolean {
-  return recipe.images.length > 0 || (recipe.image ?? "").trim() !== "";
+  return recipe.images.length > 0;
 }
 
 function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibility {
@@ -250,9 +250,8 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
       // origin, manual included — the action is unavailable, never broken.
       if (!imageProviderConfigured) return ineligible("no-image-provider");
 
-      // The strictest gap-filler in the product: any stored image at all —
-      // a gallery row or the legacy scalar — suppresses an ordinary
-      // automatic run, so background work never destroys a photograph
+      // The strictest gap-filler in the product: any stored image at all
+      // suppresses an ordinary automatic run, so background work never destroys a photograph
       // (ADR-0025). A manual request and an administrator's refresh are the
       // two deliberate destructive paths, and they run regardless.
       return defersToSuppliedData && hasAnyImage(recipe)

@@ -1,4 +1,5 @@
 import {
+  boolean,
   doublePrecision,
   index,
   pgTable,
@@ -92,3 +93,22 @@ export const ingredientNutritionCorrections = pgTable(
     index("idx_ingredient_nutrition_corrections_ingredient_id").on(t.ingredientId),
   ]
 );
+
+/**
+ * AI's estimate of a food's missing facts (Fill Gaps), for the whole instance: the four numbers
+ * per 100 g, all or none, the piece weight and the density, each asked only where the food had
+ * none of its own. `pieceless` says AI answered that it is not counted in pieces.
+ */
+export const ingredientNutritionEstimates = pgTable("ingredient_nutrition_estimates", {
+  ingredientId: uuid("ingredient_id")
+    .primaryKey()
+    .references(() => ingredients.id, { onDelete: "cascade" }),
+  kcal: doublePrecision("kcal"),
+  fat: doublePrecision("fat"),
+  carbs: doublePrecision("carbs"),
+  protein: doublePrecision("protein"),
+  pieceWeight: doublePrecision("piece_weight"),
+  pieceless: boolean("pieceless").notNull().default(false),
+  density: doublePrecision("density"),
+  ...mutableRowColumns,
+});

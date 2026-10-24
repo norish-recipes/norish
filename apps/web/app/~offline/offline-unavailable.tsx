@@ -6,6 +6,8 @@ import { NoraCard } from "@/components/shared/nora-card";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { APP_ROOT } from "@norish/shared/lib/base-path";
+
 const AUTO_RELOAD_GUARD_PREFIX = "norish.offline-unavailable.reloaded:";
 
 const guardKey = () => `${AUTO_RELOAD_GUARD_PREFIX}${window.location.pathname}`;
@@ -75,7 +77,7 @@ export function OfflineUnavailable() {
             onPress={() => {
               // A full navigation, not a client-side route push: offline it
               // lands on the bootstrap dashboard; Live it loads the real page.
-              window.location.href = "/";
+              window.location.href = APP_ROOT;
             }}
           >
             {t("home")}

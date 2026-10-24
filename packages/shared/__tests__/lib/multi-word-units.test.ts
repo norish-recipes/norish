@@ -62,8 +62,12 @@ describe("multi-word units", () => {
     expect(parsed.description).toBe("Zucker");
   });
 
-  it("reads a unit named without a quantity, as single-word units already were", () => {
-    expect(parse("cuillères à soupe de miel").unitOfMeasureID).toBe("tablespoon");
+  it("reads a vague amount named without a quantity, and keeps a measure as written", () => {
+    expect(parse("pincée de sel").unitOfMeasureID).toBe("pinch");
+    expect(parse("cuillères à soupe de miel")).toMatchObject({
+      unitOfMeasureID: null,
+      description: "cuillères à soupe de miel",
+    });
   });
 
   it("leaves a line that is only a unit as its own description", () => {

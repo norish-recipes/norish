@@ -25,15 +25,6 @@ export const recipes = pgTable(
     }),
     name: text("name").notNull(),
     description: text("description"),
-    /**
-     * @deprecated — the primary image lives in `recipe_images`. Readers
-     * resolve gallery-first (`primaryRecipeImage` / the repository's
-     * PRIMARY_IMAGE_SQL); writers never store a value here any more (a
-     * payload scalar is translated into the gallery, and media-touching
-     * writes clear this column). Only untouched legacy rows still carry a
-     * value, until a migration retires the column.
-     */
-    image: text("image"),
     url: text("url"),
     servings: integer("servings").notNull().default(1),
     prepMinutes: integer("prep_minutes"),

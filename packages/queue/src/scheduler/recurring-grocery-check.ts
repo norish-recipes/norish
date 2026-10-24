@@ -6,6 +6,7 @@ import {
 } from "@norish/db/repositories/recurring-groceries";
 import { schedulerLogger } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
+import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 import { calculateNextOccurrence } from "@norish/shared/lib/recurrence/calculator";
 
 /**
@@ -38,11 +39,7 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
         await uncheckGrocery(item.grocery.id);
 
         // Calculate next occurrence
-        const pattern = {
-          rule: item.recurringGrocery.recurrenceRule as "day" | "week" | "month",
-          interval: item.recurringGrocery.recurrenceInterval,
-          weekday: item.recurringGrocery.recurrenceWeekday ?? undefined,
-        };
+        const pattern = recurrencePatternOf(item.recurringGrocery);
 
         const nextDate = calculateNextOccurrence(
           pattern,

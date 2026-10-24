@@ -423,5 +423,13 @@
     "removeImage": "Fjern bilde",
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
     "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
+  },
+  "print": {
+    "title": "Skriv ut oppskrift",
+    "includePhoto": "Ta med bilde",
+    "textSize": "Tekststørrelse",
+    "print": "Skriv ut / Lagre PDF",
+    "continued": "fortsetter",
+    "perServing": "Per porsjon"
   }
 }

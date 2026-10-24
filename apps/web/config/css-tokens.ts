@@ -5,6 +5,9 @@
 
 export const APP_MAIN_HORIZONTAL_PADDING_CLASS = "px-4 md:px-6";
 
+/** A box that lays out like the main column it sits in, so wrapping a page in it moves nothing. */
+export const APP_PAGE_COLUMN_CLASS = "flex min-h-0 flex-1 flex-col";
+
 /**
  * What the app shell keeps clear at the foot of every page: on a phone, the
  * nav pill's own height and offset plus a gap; on desktop, an ordinary margin.

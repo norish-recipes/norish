@@ -1,6 +1,6 @@
 {
   "name": "@norish/shared",
-  "version": "0.25.1-beta",
+  "version": "0.26.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -23,23 +23,23 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
+    "@better-auth/api-key": "catalog:",
+    "@better-auth/core": "catalog:",
+    "@better-auth/utils": "catalog:",
     "@norish/config": "workspace:*",
     "@norish/db-schema": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
-    "@better-auth/api-key": "catalog:",
-    "@better-auth/core": "catalog:",
-    "@better-auth/utils": "catalog:",
     "better-auth": "catalog:",
     "date-fns": "catalog:",
     "drizzle-zod": "0.8.3",
-    "fuse.js": "catalog:",
     "fraction.js": "^5.3.4",
+    "fuse.js": "catalog:",
     "html-entities": "catalog:",
     "jsonrepair": "3.15.0",
-    "parse-ingredient": "2.2.0",
+    "parse-ingredient": "3.0.0",
     "react": "catalog:",
     "superjson": "catalog:",
     "zod": "catalog:"
@@ -48,11 +48,13 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
+    "eslint": "catalog:",
     "jsdom": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"

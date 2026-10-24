@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { refuseWithoutSession } from "@/lib/auth/media-session";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
@@ -9,7 +10,11 @@ export const runtime = "nodejs";
 const AVATARS_DISK_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
 const VALID_FILENAME_PATTERN = /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/;
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: RouteContext<"/avatars/[id]">) {
+  const refused = await refuseWithoutSession(req);
+
+  if (refused) return refused;
+
   const { id } = await params;
 
   // Validate filename format to prevent path traversal
@@ -36,21 +41,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const file = await fs.readFile(filePath);
     const ext = path.extname(filePath).toLowerCase();
-    const type =
-      ext === ".png"
-        ? "image/png"
-        : ext === ".webp"
-          ? "image/webp"
-          : ext === ".jpg" || ext === ".jpeg"
-            ? "image/jpeg"
-            : "image/jpeg";
+    const type = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
 
     return new Response(new Uint8Array(file), {
       headers: {
         "Content-Type": type,
         // ADR-0021: every upload mints a new filename, so the content behind a
-        // given URL never changes. `private` keeps shared caches out — the
-        // route sits behind the auth proxy.
+        // given URL never changes. `private` keeps shared caches out, since
+        // only a signed-in reader is served.
         "Cache-Control": "private, max-age=31536000, immutable",
       },
     });

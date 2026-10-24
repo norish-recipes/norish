@@ -70,7 +70,6 @@ function createCaller(signedIn = true) {
 
 describe("user preference procedures", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockDb.getUserPreferences.mockResolvedValue({
       locale: "en",
       phone: { groceryViewMode: "recipe" },

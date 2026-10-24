@@ -23,6 +23,8 @@ export function createUseRecipesSubscription(
   }
 ) {
   return function useRecipesSubscription(callbacks: RecipesSubscriptionCallbacks = {}) {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 

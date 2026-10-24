@@ -88,7 +88,6 @@ function openConfirmation() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   sweepCounts.current = undefined;
   mockUseTRPC.mockReturnValue({
     admin: {

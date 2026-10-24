@@ -35,18 +35,16 @@ export default function UsersCard() {
   const handleToggleAdmin = async (row: AdminUserRowDTO) => {
     setPendingRoleChangeId(row.id);
 
-    try {
-      const result = await setAdminStatus(row.id, !row.isServerAdmin);
-
-      if (!result.success) {
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: result.error,
-        });
-      }
-    } finally {
-      setPendingRoleChangeId(null);
-    }
+    await setAdminStatus(row.id, !row.isServerAdmin)
+      .then((result) => {
+        if (!result.success) {
+          showSafeErrorToast({
+            title: tErrors("operationFailed"),
+            description: result.error,
+          });
+        }
+      })
+      .finally(() => setPendingRoleChangeId(null));
   };
 
   const handleConfirmDelete = async () => {

@@ -9,27 +9,20 @@ export const IMAGE_CACHE_NAME = "norish-images";
 export const IMAGE_CACHE_MAX_ENTRIES = 512;
 export const IMAGE_CACHE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
-/**
- * `defaultCache`'s name for the same-origin `/api/` route the worker no longer
- * has. On an app installed before that change the cache is orphaned — still
- * holding personalized API responses (ADR-0005) that nothing expires and
- * sign-out does not clear — so `app/sw.ts` deletes it on activate.
- */
-export const LEGACY_API_CACHE_NAME = "apis";
+/** Serwist's runtime caches of visited pages' documents and RSC payloads (its PAGES_CACHE_NAME). */
+export const PAGE_CACHE_NAMES = ["pages-rsc-prefetch", "pages-rsc", "pages"];
 
 /**
- * Drop the whole runtime image cache. Cached images are personalized
- * household data (ADR-0005), so account transitions clear them alongside the
- * read cache; entries carry no owner tag, so the unit is the whole cache.
+ * Drop the image and page caches (a recipe page carries its recipe): personal data that account
+ * transitions clear with the read cache (ADR-0005). Entries carry no owner, so whole caches go.
  */
-export async function deleteImageCache(): Promise<void> {
+export async function deletePersonalCaches(): Promise<void> {
   if (typeof caches === "undefined") {
     return;
   }
 
-  try {
-    await caches.delete(IMAGE_CACHE_NAME);
-  } catch {
-    // Cache Storage unavailable — nothing personalized is retrievable anyway.
-  }
+  // Cache Storage unavailable: nothing personalized is retrievable anyway.
+  await Promise.allSettled(
+    [IMAGE_CACHE_NAME, ...PAGE_CACHE_NAMES].map(async (name) => caches.delete(name))
+  );
 }

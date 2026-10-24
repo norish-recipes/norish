@@ -59,6 +59,8 @@ export function createUseRecipesQuery(
     filters: RecipeFilters = {},
     { enabled = true }: { enabled?: boolean } = {}
   ): RecipesQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
@@ -104,11 +106,12 @@ export function createUseRecipesQuery(
       enabled,
     });
 
+    const pages = data?.pages;
     const recipes = useMemo(() => {
-      if (!data?.pages) return [];
+      if (!pages) return [];
 
-      return data.pages.flatMap((page) => page.recipes);
-    }, [data?.pages]);
+      return pages.flatMap((page) => page.recipes);
+    }, [pages]);
 
     const total = data?.pages?.[0]?.total ?? 0;
     const hasMore = hasNextPage ?? false;

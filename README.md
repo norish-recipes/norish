@@ -43,14 +43,14 @@ services:
       MASTER_KEY: <32-byte-base64-key> # openssl rand -base64 32
       OBSCURA_ENDPOINT: ws://obscura:9222
       OBSCURA_CDP_TOKEN: <random-token> # openssl rand -hex 32, same value on obscura
-      REDIS_URL: redis://redis:6379
+      VALKEY_URL: valkey://valkey:6379
       UPLOADS_DIR: /app/uploads
       
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          'node -e "require(''http'').get(''http://localhost:3000/api/v1/health'', r => process.exit(r.statusCode===200?0:1))"',
+          'node -e "require(''http'').get(''http://localhost:3000'' + (process.env.NEXT_PUBLIC_BASE_PATH || '''') + ''/api/v1/health/live'', r => process.exit(r.statusCode===200?0:1))"',
         ]
       interval: 1m
       timeout: 15s
@@ -58,7 +58,7 @@ services:
       start_period: 1m
     depends_on:
       - db
-      - redis
+      - valkey
 
   db:
     image: postgres:17-alpine
@@ -73,23 +73,23 @@ services:
 
   # Renders recipe pages for URL imports
   obscura:
-    image: norishapp/obscura:0.2.4-norish.1
+    image: norishapp/obscura:0.2.4-norish.2
     container_name: norish-obscura
     restart: unless-stopped
     environment:
       OBSCURA_CDP_TOKEN: <random-token>
 
-  redis:
-    image: redis:8.4.0
-    container_name: norish-redis
+  valkey:
+    image: valkey/valkey:9
+    container_name: norish-valkey
     restart: unless-stopped
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
 
 volumes:
   db_data:
   norish_data:
-  redis_data:
+  valkey_data:
 ```
 
 ## Contributing

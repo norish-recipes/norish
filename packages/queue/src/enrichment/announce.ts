@@ -16,7 +16,6 @@ import { recipeEnrichment } from "@norish/shared-server/realtime/recipe-enrichme
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
-import { enrichmentRunId, enrichmentRunSequence } from "./identity";
 
 const log = createLogger("queue:enrichment-announce");
 
@@ -29,7 +28,7 @@ const log = createLogger("queue:enrichment-announce");
  *
  * Creation and import success are already terminal by the time this runs, so
  * a failed publish must not surface as a creation failure: the domain logs and
- * drops a Redis failure, and a payload failing its schema only throws outside
+ * drops a Valkey failure, and a payload failing its schema only throws outside
  * production. Losing the event costs that recipe's automatic enrichment, which
  * the manual actions recover.
  */
@@ -54,8 +53,8 @@ export async function publishEnrichmentLifecycle(
     "enrichment",
     {
       recipeId: data.recipeId,
-      runId: enrichmentRunId(data),
-      runSequence: enrichmentRunSequence(data),
+      runId: data.runId,
+      runSequence: data.runSequence,
       kind: data.kind,
       state,
       origin: data.origin,

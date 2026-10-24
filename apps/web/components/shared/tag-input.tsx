@@ -130,7 +130,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
 
     if (!trimmed) return [];
 
-    return trimmed.split(/\s+/).filter((w) => w.length >= 2);
+    return [...new Set(trimmed.split(/\s+/).filter((w) => w.length >= 2))];
   }, [rawInput]);
 
   // Get the current word being typed (last word)
@@ -140,7 +140,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
     if (!trimmed) return "";
     const words = trimmed.split(/\s+/);
 
-    return words[words.length - 1];
+    return words[words.length - 1] ?? "";
   }, [rawInput]);
 
   // Find exact match for current word (for auto-select on space)
@@ -249,9 +249,12 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
           e.preventDefault();
           handleAddTag(currentWord.trim(), false);
         }
-      } else if (e.key === "Backspace" && !rawInput && value.length > 0) {
+      } else if (e.key === "Backspace" && !rawInput) {
+        const last = value.at(-1);
+
+        if (!last) return;
         e.preventDefault();
-        handleRemoveTag(value[value.length - 1]);
+        handleRemoveTag(last);
       }
     },
     [exactMatch, handleAddTag, rawInput, value, handleRemoveTag, currentWord]
@@ -306,7 +309,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
         <div className="mt-3 flex flex-wrap gap-2">
           <AnimatePresence mode="popLayout">
             {/* Non-matching typed words (potential new tags) */}
-            {typedWords.map((word, idx) => {
+            {typedWords.map((word) => {
               const lower = word.toLowerCase();
               // Only hide if it's an EXACT match with a suggestion (avoid true duplicates)
               const isExactMatch = suggestions.some((s) => s.toLowerCase() === lower);
@@ -316,7 +319,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
 
               return (
                 <motion.button
-                  key={`new-tag-${word}-${idx}`}
+                  key={`new-tag-${word}`}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   className="bg-surface text-muted border-border inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
                   exit={{ opacity: 0, scale: 0.9, x: -10 }}

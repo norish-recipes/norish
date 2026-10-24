@@ -78,7 +78,7 @@ export const trpcLogger = createLogger("trpc");
 export const schedulerLogger = createLogger("scheduler");
 export const videoLogger = createLogger("video");
 export const parserLogger = createLogger("parser");
-export const redisLogger = createLogger("redis");
+export const valkeyLogger = createLogger("valkey");
 
 export function redactUrl(raw: string): string {
   try {
@@ -90,6 +90,7 @@ export function redactUrl(raw: string): string {
 
     return url.toString();
   } catch {
+    // eslint-disable-next-line sonarjs/super-linear-regex -- reads a configured connection URL, not outside input; a password may hold a "/" this must still hide
     return raw.replace(/(\/\/)([^@]+)@/, "$1***@");
   }
 }

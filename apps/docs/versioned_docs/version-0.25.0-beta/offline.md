@@ -47,5 +47,5 @@ If the automatic sync does not work the **Sync now** button in modal forces the 
 ## Accounts and shared devices
 
 The Offline Cache and Outbox are scoped to the signed-in account on the specific
-browser. Signing out with unsynced discards the queued changes and clears the 
+browser. Signing out with unsynced discards the queued changes and clears the
 offline cache from the device.

@@ -1,15 +1,15 @@
 /**
- * The `realtimePublish` Lua script against a real Redis.
- *
- * Skipped unless `REDIS_URL` is set: everything else in this package runs
- * against fakes, but a Lua script can only be proven by Redis itself.
+ * The `realtimePublish` Lua script against compose's Valkey, connected with the
+ * production options: a Lua script can only be proven by Valkey itself.
  */
 
 // @vitest-environment node
 
-import Redis from "ioredis";
+import type { StartedValkeyContainer } from "@testcontainers/valkey";
+import { ValkeyContainer } from "@testcontainers/valkey";
+import Valkey from "ioredis";
 import superjson from "superjson";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 
@@ -19,9 +19,10 @@ import {
   RESUME_MAXLEN,
   RESUME_TTL_SECONDS,
 } from "../../src/realtime/resume";
-import { parseRedisUrl } from "../../src/redis/url";
+import { getValkeyConnectionOptions } from "../../src/valkey/client";
+import { VALKEY_IMAGE, valkeyUrl } from "../helpers/valkey";
 
-const REDIS_URL = process.env.REDIS_URL;
+vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: { VALKEY_URL: "" } }));
 
 const CHANNEL = `norish:test:household:${process.pid}:published`;
 const STREAM = `norish:stream:test:household:${process.pid}:published`;
@@ -41,21 +42,23 @@ function envelope(payload: unknown): RealtimeEventEnvelope {
   };
 }
 
-describe.skipIf(!REDIS_URL)("realtimePublish against Redis", () => {
-  let publisher: Redis;
-  let subscriber: Redis;
+describe("realtimePublish against Valkey", () => {
+  let container: StartedValkeyContainer;
+  let publisher: Valkey;
+  let subscriber: Valkey;
 
   beforeAll(async () => {
-    publisher = new Redis(parseRedisUrl(REDIS_URL!));
+    container = await new ValkeyContainer(VALKEY_IMAGE).start();
+    publisher = new Valkey(getValkeyConnectionOptions(valkeyUrl(container)));
     subscriber = publisher.duplicate();
     registerRealtimePublish(publisher);
     await subscriber.subscribe(CHANNEL);
   });
 
   afterAll(async () => {
-    await publisher.del(STREAM);
-    await subscriber.quit();
-    await publisher.quit();
+    await subscriber?.quit();
+    await publisher?.quit();
+    await container?.stop();
   });
 
   it("publishes the envelope with the stream entry id in place of the placeholder", async () => {

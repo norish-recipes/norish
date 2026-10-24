@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
+
 type BrandLogoProps = {
   width?: number;
   height?: number;
@@ -25,7 +27,7 @@ export function BrandLogo({
       className={classes}
       height={height}
       priority={priority}
-      src="/logo.svg"
+      src={addBasePath("/logo.svg")}
       width={width}
     />
   );

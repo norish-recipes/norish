@@ -75,7 +75,6 @@ async function settle() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   hub.handlers.clear();
   hub.state.started = true;
   enrichRecipe.mockResolvedValue([]);

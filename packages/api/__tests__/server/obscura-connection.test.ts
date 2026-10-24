@@ -5,7 +5,7 @@
  * connection Obscura dropped is replaced on the next call, and that a failure
  * reads as an Obscura problem. Everything past `connectOverCDP` is Obscura's.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const { mockConnectOverCDP } = vi.hoisted(() => ({ mockConnectOverCDP: vi.fn() }));
 
@@ -42,7 +42,6 @@ function connectedBrowser() {
 
 describe("getBrowser – the Obscura connection", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     SERVER_CONFIG.OBSCURA_CDP_TOKEN = undefined;
   });
 
@@ -143,10 +142,6 @@ describe("getBrowser – the Obscura connection", () => {
 });
 
 describe("closeBrowser – process shutdown", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("closes the cached connection and forgets it", async () => {
     const browser = connectedBrowser();
 

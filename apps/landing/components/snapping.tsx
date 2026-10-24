@@ -1,25 +1,29 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { useLenis } from "lenis/react";
 import Snap from "lenis/snap";
 
-/** Whether a media query holds, as state, so a change of layout re-renders. */
+/** Whether a media query holds, so a change of layout re-renders; false on the server. */
 function useMedia(query: string | undefined) {
-  const [matches, setMatches] = useState(false);
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      if (!query) return () => {};
 
-  useEffect(() => {
-    if (!query) return;
+      const media = window.matchMedia(query);
 
-    const media = window.matchMedia(query);
-    const sync = () => setMatches(media.matches);
+      media.addEventListener("change", onChange);
 
-    sync();
-    media.addEventListener("change", sync);
-
-    return () => media.removeEventListener("change", sync);
-  }, [query]);
+      return () => media.removeEventListener("change", onChange);
+    },
+    [query]
+  );
+  const matches = useSyncExternalStore(
+    subscribe,
+    () => (query ? window.matchMedia(query).matches : true),
+    () => false
+  );
 
   return query ? matches : true;
 }
@@ -58,13 +62,13 @@ export function SnapPoints({
   when?: string;
 }) {
   const lenis = useLenis();
-  const marks = useRef<(HTMLSpanElement | null)[]>([]);
+  const marksRef = useRef<(HTMLSpanElement | null)[]>([]);
   const held = useMedia(when);
 
   useEffect(() => {
     if (!lenis || !held) return;
 
-    const nodes = marks.current.filter((node) => node !== null);
+    const nodes = marksRef.current.filter((node) => node !== null);
 
     if (!nodes.length) return;
 
@@ -84,7 +88,7 @@ export function SnapPoints({
         <span
           key={stop}
           ref={(node) => {
-            marks.current[index] = node;
+            marksRef.current[index] = node;
           }}
           aria-hidden
           className="snap-point"

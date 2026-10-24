@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { APIRequestContext, APIResponse, Page } from "@playwright/test";
 import { request } from "@playwright/test";
 
 import type { SessionCookies } from "./auth";
@@ -48,21 +48,51 @@ export async function callTrpc<T>(
   procedure: string,
   ...input: [] | [unknown]
 ): Promise<T> {
+  return await overHttp(baseURL, cookies, procedure, (api, path) =>
+    input.length ? api.post(path, { data: { json: input[0] } }) : api.get(path)
+  );
+}
+
+/** One tRPC query that takes input, over HTTP as the reader the cookies sign in. */
+export async function queryTrpc<T>(
+  baseURL: string,
+  cookies: SessionCookies,
+  procedure: string,
+  input: unknown
+): Promise<T> {
+  return await overHttp(baseURL, cookies, procedure, (api, path) =>
+    api.get(path, { params: { input: JSON.stringify({ json: input }) } })
+  );
+}
+
+/** A procedure answered with a non-OK status; `status` says which. */
+export class TrpcHttpError extends Error {
+  constructor(
+    procedure: string,
+    readonly status: number
+  ) {
+    super(`${procedure} failed: ${status}`);
+  }
+}
+
+async function overHttp<T>(
+  baseURL: string,
+  cookies: SessionCookies,
+  procedure: string,
+  send: (api: APIRequestContext, path: string) => Promise<APIResponse>
+): Promise<T> {
   const api = await request.newContext({
     baseURL,
     extraHTTPHeaders: {
-      origin: baseURL,
+      origin: new URL(baseURL).origin,
       cookie: cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; "),
     },
   });
 
   try {
-    const path = `/api/trpc/${procedure}`;
-    const response = input.length
-      ? await api.post(path, { data: { json: input[0] } })
-      : await api.get(path);
+    const response = await send(api, `${baseURL}/api/trpc/${procedure}`);
 
-    if (!response.ok()) throw new Error(`${procedure} failed: ${response.status()}`);
+    if (!response.ok()) throw new TrpcHttpError(procedure, response.status());
 
     return ((await response.json()) as { result: { data: { json: T } } }).result.data.json;
   } finally {

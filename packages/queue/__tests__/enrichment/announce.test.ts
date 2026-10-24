@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
@@ -37,8 +37,6 @@ const data: RecipeEnrichmentJobData = {
 };
 
 describe("publishEnrichmentLifecycle", () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it("includes requester identity only on a manual terminal failure", async () => {
     await publishEnrichmentLifecycle(data, "queued");
     await publishEnrichmentLifecycle(data, "failed");
@@ -64,8 +62,6 @@ describe("publishEnrichmentLifecycle", () => {
 });
 
 describe("publishEnrichmentRecipeUpdated", () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it("marks the canonical update as enrichment-originated", async () => {
     const recipe = { id: "recipe-1" } as FullRecipeDTO;
 
@@ -80,8 +76,6 @@ describe("publishEnrichmentRecipeUpdated", () => {
 });
 
 describe("announceUsableRecipe", () => {
-  beforeEach(() => vi.clearAllMocks());
-
   const context = { userId: "user-1", householdKey: "household-1", householdUserIds: ["user-1"] };
 
   it("announces a genuinely new recipe on the internal channel", async () => {

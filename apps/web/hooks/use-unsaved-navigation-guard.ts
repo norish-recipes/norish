@@ -50,7 +50,6 @@ export function useUnsavedNavigationGuard({
       if (allowNavigationRef.current) return;
 
       event.preventDefault();
-      event.returnValue = "";
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);

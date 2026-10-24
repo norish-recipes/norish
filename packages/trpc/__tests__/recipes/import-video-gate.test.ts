@@ -51,7 +51,6 @@ const VIDEO_URL = "https://www.youtube.com/watch?v=abc123";
 const PAGE_URL = "https://example.com/recipe";
 
 beforeEach(() => {
-  vi.clearAllMocks();
   ctx = createMockAuthedContext(mockUser, mockHousehold);
   isAIEnabled.mockResolvedValue(true);
   isVideoParsingEnabled.mockResolvedValue(true);

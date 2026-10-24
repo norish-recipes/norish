@@ -1,26 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePending } from "@/hooks/use-pending";
+import { safeOrigin } from "@/lib/back-destination";
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Button, Description, FieldError, InputGroup, Label, Link, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { signUp } from "@norish/shared/lib/auth/client";
+import { APP_ROOT } from "@norish/shared/lib/base-path";
 
 import { AuthAlert } from "../../components/auth-alert";
 
 interface SignupFormProps {
   callbackUrl?: string;
 }
-export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
+export function SignupForm({ callbackUrl = APP_ROOT }: SignupFormProps) {
   const t = useTranslations("auth.signup");
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, whileLoading] = usePending();
+  // Set once the account exists, so the button stays busy while the app loads.
+  const [isLeaving, setIsLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const passwordsMatch = password === confirmPassword;
   // Field-level rules live on their fields; the alert is for the server's answer.
@@ -34,28 +37,28 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
     passwordsMatch &&
     !passwordTooShort &&
     !passwordTooLong;
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
-    try {
-      const result = await signUp.email({
-        name,
-        email,
-        password,
-        callbackURL: callbackUrl,
-      });
-
-      if (result.error) {
-        setError(result.error.message || t("errors.createFailed"));
-      } else {
-        router.push(callbackUrl);
-      }
-    } catch {
-      setError(t("errors.generic"));
-    } finally {
-      setIsLoading(false);
-    }
+    await whileLoading(() =>
+      signUp
+        .email({
+          name,
+          email,
+          password,
+          callbackURL: callbackUrl,
+        })
+        .then((result) => {
+          if (result.error) {
+            setError(result.error.message || t("errors.createFailed"));
+          } else {
+            // A full page load, like sign-in's redirect, so app/layout.tsx types it `sign-in`.
+            setIsLeaving(true);
+            location.assign(safeOrigin(callbackUrl) ?? APP_ROOT);
+          }
+        })
+        .catch(() => setError(t("errors.generic")))
+    );
   };
 
   return (
@@ -161,7 +164,7 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       <Button
         className="mt-2"
         isDisabled={!isFormValid}
-        isPending={isLoading}
+        isPending={isLoading || isLeaving}
         type="submit"
         variant="primary"
       >
@@ -172,7 +175,7 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
         {t("hasAccount")}{" "}
         <Link
           className="text-sm"
-          href={`/login${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+          href={`/login${callbackUrl !== APP_ROOT ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
         >
           {t("signIn")}
         </Link>

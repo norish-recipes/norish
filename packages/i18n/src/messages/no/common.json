@@ -112,6 +112,11 @@
     "message": "Hun snuser rundt for å finne ut hvor du skulle.",
     "imageAlt": "Nora ser forvirret ut"
   },
+  "errorPage": {
+    "title": "Noe gikk galt.",
+    "message": "Norish støtte på en feil på denne siden.",
+    "retry": "Prøv igjen"
+  },
   "import": {
     "url": {
       "title": "Importer oppskrift",
@@ -178,12 +183,15 @@
     "daily": "Daglig",
     "weekly": "Ukentlig",
     "monthly": "Månedlig",
+    "yearly": "Årlig",
     "day": "dag",
     "days": "dager",
     "week": "uke",
     "weeks": "uker",
     "month": "måned",
     "months": "måneder",
+    "year": "år",
+    "years": "år",
     "next": "Neste:",
     "every": "Hver",
     "everyOther": "Annenhver",

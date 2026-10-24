@@ -9,6 +9,8 @@ import type { CreateConfigHooksOptions } from "./types";
  */
 export function createUseIngredientWordsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useIngredientWordsQuery() {
+    "use memo";
+
     const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({

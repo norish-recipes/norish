@@ -56,7 +56,7 @@ async function writeManifest(manifest: Manifest): Promise<void> {
   const icons = Object.fromEntries(
     Object.entries(manifest.icons).sort(([a], [b]) => (a < b ? -1 : 1))
   );
-  const none = [...manifest.none].sort();
+  const none = [...manifest.none].sort((a, b) => (a < b ? -1 : 1));
 
   await writeFile(
     join(iconSetDir(), "manifest.json"),

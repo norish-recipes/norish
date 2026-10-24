@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ChipButton } from "@/components/shared/chip-button";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
 import { useTimerStore } from "@/stores/timers";
 import { ArrowPathIcon, ClockIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
@@ -52,17 +53,15 @@ export function TimerChip({
 
   if (!timer) {
     return (
-      <Chip
-        as="button"
+      <ChipButton
         className="mx-1 translate-y-[1px] rounded-full pr-1.5 pl-2.5 align-baseline text-base"
         color="default"
-        type="button"
         variant="secondary"
         onClick={handleClick}
       >
         <ClockIcon className="h-4 w-4" />
         <Chip.Label>{originalText}</Chip.Label>
-      </Chip>
+      </ChipButton>
     );
   }
 
@@ -79,17 +78,15 @@ export function TimerChip({
   );
 
   return (
-    <Chip
-      as="button"
+    <ChipButton
       className="mx-1 translate-y-[1px] rounded-full pr-1.5 pl-2.5 align-baseline text-base"
       color={isCompleted ? "danger" : isRunning ? "accent" : "warning"}
       size="md"
-      type="button"
       variant="secondary"
       onClick={handleClick}
     >
       {icon}
       <Chip.Label>{formatTimerMs(timer.remainingMs)}</Chip.Label>
-    </Chip>
+    </ChipButton>
   );
 }

@@ -47,7 +47,6 @@ export function AuthProvidersCard() {
     >
       <SwitchRow description={t("passwordAuth.description")} title={t("passwordAuth.title")}>
         <SettingsSwitch
-          color="success"
           isDisabled={isLoading}
           isSelected={passwordAuthEnabled ?? false}
           onValueChange={updatePasswordAuth}

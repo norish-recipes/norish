@@ -14,6 +14,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { FullRecipeDTO, User } from "@norish/shared/contracts";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
+import { attachStepIngredient } from "@norish/db/repositories/steps";
 import * as schema from "@norish/db/schema";
 import { deriveStepIngredientAmount } from "@norish/shared/lib/step-ingredients";
 
@@ -180,6 +181,47 @@ describe("Step Ingredients", () => {
       const metricSteps = recipe!.steps.filter((step) => step.systemUsed === "metric");
 
       expect(metricSteps[0]?.stepIngredients).toEqual([]);
+    });
+  });
+
+  describe("attachStepIngredient", () => {
+    it("links a step to a line in one system only", async () => {
+      const created = await createRecipeWithRefs(randomUUID(), user.id, dualSystemInsert());
+      const recipeId = created!.recipeId;
+
+      expect(
+        await attachStepIngredient(recipeId, {
+          systemUsed: "us",
+          stepOrder: 0,
+          ingredientOrder: 1,
+          share: 1,
+        })
+      ).toBe(true);
+
+      const recipe = await getRecipeFull(recipeId);
+      const firstStep = (system: string) =>
+        recipe!.steps.find((step) => step.systemUsed === system && Number(step.order) === 0);
+
+      expect(firstStep("us")?.stepIngredients).toContainEqual({
+        ingredientOrder: 1,
+        share: 1,
+        order: 0,
+      });
+      expect(firstStep("metric")?.stepIngredients).toEqual([
+        { ingredientOrder: 0, share: 0.5, order: 0 },
+      ]);
+    });
+
+    it("answers false for a step or line the recipe does not have", async () => {
+      const created = await createRecipeWithRefs(randomUUID(), user.id, dualSystemInsert());
+      const link = { systemUsed: "metric" as const, stepOrder: 0, ingredientOrder: 0, share: 1 };
+      const refsBefore = await countStoredRefs();
+
+      expect(await attachStepIngredient(created!.recipeId, { ...link, stepOrder: 9 })).toBe(false);
+      expect(await attachStepIngredient(created!.recipeId, { ...link, ingredientOrder: 9 })).toBe(
+        false
+      );
+      expect(await countStoredRefs()).toBe(refsBefore);
     });
   });
 

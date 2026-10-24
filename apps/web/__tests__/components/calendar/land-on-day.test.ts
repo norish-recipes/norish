@@ -6,7 +6,7 @@ function timeline() {
     isScrolling: false,
     scrollToIndex: vi.fn(),
     shouldAdjustScrollPositionOnItemSizeChange: undefined as
-      undefined | ((...args: never[]) => boolean),
+      undefined | ((...args: unknown[]) => boolean),
   };
 }
 

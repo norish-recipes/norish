@@ -7,6 +7,7 @@ import ImageLightbox from "@/components/shared/image-lightbox";
 import { Carousel } from "@/components/ui/carousel";
 import { Button } from "@heroui/react";
 
+import { addBasePath } from "@norish/shared/lib/base-path";
 import { cssMediaControl } from "@norish/web/config/css-tokens";
 
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
@@ -45,11 +46,10 @@ export function StepImages({ className = "", step }: StepImagesProps) {
             <Image
               fill
               priority
-              unoptimized
               alt={`Step ${step.stepNumber} image 1`}
               className="object-cover"
               sizes="(min-width: 768px) 520px, 92vw"
-              src={primaryImage.image}
+              src={addBasePath(primaryImage.image)}
               onError={() => handleImageError(primaryImage.image)}
             />
           )}
@@ -69,18 +69,22 @@ export function StepImages({ className = "", step }: StepImagesProps) {
           <Carousel className="[--carousel-gap:0px]" opts={{ loop: true }}>
             <Carousel.Content>
               {step.images.map((image, index) => (
-                <Carousel.Item key={`${image.image}-${index}`}>
+                <Carousel.Item
+                  // The same picture can sit here twice (uploads are named by content hash), so
+                  // only its place tells the two apart; the list keeps its stored order.
+                  // eslint-disable-next-line @eslint-react/no-array-index-key
+                  key={`${image.image}-${index}`}
+                >
                   <div className="bg-surface-secondary relative aspect-video overflow-hidden rounded-xl">
                     {hasError(image.image) ? (
                       <FallbackPlaceholder className="h-full w-full rounded-xl" />
                     ) : (
                       <Image
                         fill
-                        unoptimized
                         alt={`Step ${step.stepNumber} image ${index + 1}`}
                         className="object-cover"
                         sizes="(min-width: 768px) 384px, 92vw"
-                        src={image.image}
+                        src={addBasePath(image.image)}
                         onError={() => handleImageError(image.image)}
                       />
                     )}

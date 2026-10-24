@@ -127,3 +127,9 @@ export function createMockEmitter() {
     emitToUser: vi.fn(),
   };
 }
+
+/**
+ * Mutations that return before their DB work runs: yield a macrotask so the fire-and-forget
+ * promise chain settles.
+ */
+export const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 0));

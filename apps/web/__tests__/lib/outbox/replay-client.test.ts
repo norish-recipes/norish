@@ -31,13 +31,13 @@ function clientWith(mutate: (input: unknown, opts: unknown) => Promise<unknown>)
 
 describe("replayOutboxEntry", () => {
   it("resends through the path with the preserved operationId and a replay marker", async () => {
-    const mutate = vi.fn(async () => ({ success: true }));
+    const mutate = vi.fn(async (_input: unknown, _opts: unknown) => ({ success: true }));
 
     const outcome = await replayOutboxEntry(clientWith(mutate), entry());
 
     expect(outcome).toEqual({ kind: "success" });
 
-    const [input, opts] = mutate.mock.calls[0];
+    const [input, opts] = mutate.mock.calls[0]!;
 
     expect(input).toEqual({ id: "g1" });
     expect(opts).toMatchObject({
@@ -57,11 +57,11 @@ describe("replayOutboxEntry", () => {
     formData.append("tag", "one");
     formData.append("tag", "two");
 
-    const mutate = vi.fn(async () => ({ success: true }));
+    const mutate = vi.fn(async (_input: unknown, _opts: unknown) => ({ success: true }));
 
     await replayOutboxEntry(clientWith(mutate), entry({ input: encodeOutboxInput(formData) }));
 
-    const [input] = mutate.mock.calls[0];
+    const [input] = mutate.mock.calls[0]!;
 
     expect(input).toBeInstanceOf(FormData);
     const entries = [...(input as FormData).entries()];

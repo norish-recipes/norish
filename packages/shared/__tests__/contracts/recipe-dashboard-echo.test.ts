@@ -17,16 +17,13 @@ const echoableKeys = RECIPE_DASHBOARD_KEYS.filter((key) => key in FullRecipeSche
 const dashboardOnlyKeys = RECIPE_DASHBOARD_KEYS.filter((key) => !(key in FullRecipeSchema.shape));
 
 describe("patchDashboardRecipeFromFull", () => {
-  it("resolves the thumbnail from the gallery, not the legacy scalar", () => {
-    // The dashboard's `image` is the resolved primary. An echo whose gallery
-    // leads with a different file than the legacy scalar must patch the card
-    // to the gallery's primary — a raw scalar copy would regress a
-    // gallery-only recipe's thumbnail to nothing.
+  it("resolves the thumbnail from the echo's gallery", () => {
+    // The dashboard's `image` is the resolved primary: the first gallery image
+    // by order, whatever order the echo lists them in.
     const stale = Object.fromEntries(
       RECIPE_DASHBOARD_KEYS.map((key) => [key, `stale-${key}`])
     ) as unknown as DashboardRecipe;
     const echo = {
-      image: null,
       images: [
         {
           id: "11111111-1111-4111-8111-111111111111",

@@ -6,19 +6,16 @@
  * it, adds a catalogue food and a typed one; puts a kept food on the list,
  * sees it marked, and ticks it off in the shop; stops keeping a food from its
  * Ingredient panel; and, adding a recipe, teaches the Pantry a staple with
- * We keep this. The real Norish server, database, Redis, tRPC and realtime
+ * We keep this. The real Norish server, database, Valkey, tRPC and realtime
  * are all in the path; nothing outbound is.
  */
 import type { Locator, Page } from "@playwright/test";
 
+import type { AIE2EStack } from "./fixture";
+import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
-import {
-  readGroceries,
-  readPantryNames,
-  resetPantryScenario,
-  seedRecipeWithIngredients,
-  seedStorePreference,
-} from "./pantry-support";
+import { resetCatalogueScenario } from "./ingredient-catalogue-support";
+import { readGroceries, readPantryNames, seedStorePreference } from "./pantry-support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -28,12 +25,14 @@ const STORE = "Pantry Shop";
 let page: Page;
 let recipeId: string;
 let storeId: string;
+let stack: AIE2EStack;
 
 test.beforeAll(async ({ browser, aiStack }) => {
-  await resetPantryScenario();
-  recipeId = await seedRecipeWithIngredients(RECIPE, ["olive oil", "chicken breast"]);
-  await seedRecipeWithIngredients("Pantry pasta", ["olive oil", "garlic", "# For the sauce"]);
-  storeId = await seedStorePreference(STORE, "olive oil");
+  stack = aiStack;
+  await resetCatalogueScenario();
+  recipeId = await seedRecipe(RECIPE, ["olive oil", "chicken breast"]);
+  await seedRecipe("Pantry pasta", ["olive oil", "garlic", "# For the sauce"]);
+  storeId = await seedStorePreference(stack, STORE, "olive oil");
 
   const context = await browser.newContext({
     baseURL: aiStack.baseURL,
@@ -95,7 +94,7 @@ test("a suggestion added is kept, and leaves the suggestions", async () => {
 
   await expect(keptRow("olive oil")).toBeVisible();
   await expect(suggestion("olive oil")).toHaveCount(0);
-  await expect.poll(readPantryNames).toEqual(["olive oil"]);
+  await expect.poll(() => readPantryNames(stack)).toEqual(["olive oil"]);
 });
 
 test("the field narrows the kept foods, adds a catalogue food as picked, and adds typed text", async () => {
@@ -119,13 +118,13 @@ test("the field narrows the kept foods, adds a catalogue food as picked, and add
   await field.fill("saffron");
   await field.press("Enter");
   await expect(keptRow("saffron")).toBeVisible();
-  await expect.poll(readPantryNames).toEqual(["garlic", "olive oil", "saffron"]);
+  await expect.poll(() => readPantryNames(stack)).toEqual(["garlic", "olive oil", "saffron"]);
 
   // A food already kept is simply what the field narrows to; Enter adds nothing.
   await field.fill("Garlic");
   await field.press("Enter");
   await expect(keptRow("garlic")).toBeVisible();
-  await expect.poll(readPantryNames).toEqual(["garlic", "olive oil", "saffron"]);
+  await expect.poll(() => readPantryNames(stack)).toEqual(["garlic", "olive oil", "saffron"]);
   await field.fill("");
 });
 
@@ -133,7 +132,9 @@ test("Put on the list files a grocery under its Store, and ticking it off is the
   await keptRow("olive oil").getByRole("button", { name: "Add to groceries" }).click();
 
   await expect(keptRow("olive oil").getByTestId("on-the-list")).toBeVisible();
-  await expect.poll(readGroceries).toEqual([{ name: "olive oil", storeId, isDone: false }]);
+  await expect
+    .poll(() => readGroceries(stack))
+    .toEqual([{ name: "olive oil", storeId, isDone: false }]);
 
   await page.getByRole("tab", { name: "List" }).click();
   await expect(page).toHaveURL(/\/groceries$/);
@@ -143,7 +144,9 @@ test("Put on the list files a grocery under its Store, and ticking it off is the
     .locator('[data-slot="checkbox"]')
     .first()
     .click();
-  await expect.poll(readGroceries).toEqual([{ name: "olive oil", storeId, isDone: true }]);
+  await expect
+    .poll(() => readGroceries(stack))
+    .toEqual([{ name: "olive oil", storeId, isDone: true }]);
 
   await page.getByRole("tab", { name: "Pantry" }).click();
   await expect(
@@ -162,9 +165,9 @@ test("a kept food's Ingredient panel takes it out of the Pantry with Save", asyn
   await panel.getByText("In your pantry", { exact: true }).click();
   await expect(kept).not.toBeChecked();
   // The switch is part of the panel's draft: nothing changes until Save.
-  await expect.poll(readPantryNames).toEqual(["garlic", "olive oil", "saffron"]);
+  await expect.poll(() => readPantryNames(stack)).toEqual(["garlic", "olive oil", "saffron"]);
   await panel.getByTestId("ingredient-save").click();
-  await expect.poll(readPantryNames).toEqual(["garlic", "olive oil"]);
+  await expect.poll(() => readPantryNames(stack)).toEqual(["garlic", "olive oil"]);
   await page.getByRole("button", { name: "Close panel" }).click();
   await expect(keptRow("saffron")).toHaveCount(0);
 });
@@ -182,5 +185,7 @@ test("adding a recipe teaches the Pantry a staple, and a kept line on the list s
   await panel.getByRole("button", { name: "We keep this", exact: true }).click();
   await expect(held.getByRole("checkbox", { name: "chicken breast" })).not.toBeChecked();
   await expect(panel.getByTestId("to-buy-section")).toHaveCount(0);
-  await expect.poll(readPantryNames).toEqual(["chicken breast", "garlic", "olive oil"]);
+  await expect
+    .poll(() => readPantryNames(stack))
+    .toEqual(["chicken breast", "garlic", "olive oil"]);
 });

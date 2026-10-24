@@ -8,7 +8,7 @@
  * no Step Ingredients receive links, so a person's own links are never
  * replaced. An administrator's bulk refresh is the exception, and it clears
  * the recipe's links before writing. An empty claim is an unchanged success,
- * not a failure, and never clears anything. Uses lazy worker pattern.
+ * not a failure, and never clears anything.
  *
  * The worker holds no database handle and composes no queries: it calls one
  * repository operation, which is where the gap-filling write lives.
@@ -24,9 +24,10 @@ import { createLogger } from "@norish/shared-server/logger";
 import { enrichmentWriteMode } from "@norish/shared/lib/recipe-enrichment";
 import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 
-import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { createWorker } from "../create-worker";
 import { handleEnrichmentJobFailure, runEnrichmentJob } from "../enrichment/worker-runner";
 import { reportStep } from "../job-steps";
+import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:ingredient-linking");
 
@@ -65,7 +66,7 @@ export function toLinkableRecipe(recipe: RecipeForLinking): RecipeForIngredientL
   };
 }
 
-/** Exported so the job body can be exercised without a Redis-backed worker. */
+/** Exported so the job body can be exercised without a Valkey-backed worker. */
 export async function processIngredientLinkingJob(
   job: Job<RecipeEnrichmentJobData>
 ): Promise<void> {
@@ -112,11 +113,10 @@ export async function processIngredientLinkingJob(
   });
 }
 
-const ingredientLinkingWorker = defineLazyWorker<RecipeEnrichmentJobData>(
-  QUEUE_NAMES.INGREDIENT_LINKING,
-  processIngredientLinkingJob,
-  handleEnrichmentJobFailure
-);
-
-export const startIngredientLinkingWorker = ingredientLinkingWorker.start;
-export const stopIngredientLinkingWorker = ingredientLinkingWorker.stop;
+export function startIngredientLinkingWorker(): void {
+  createWorker<RecipeEnrichmentJobData>(
+    QUEUE_NAMES.INGREDIENT_LINKING,
+    processIngredientLinkingJob,
+    { onFailed: handleEnrichmentJobFailure }
+  );
+}

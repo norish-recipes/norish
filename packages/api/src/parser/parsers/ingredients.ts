@@ -26,20 +26,30 @@ export interface IngredientParseResult {
   systemUsed: MeasurementSystem;
 }
 
+function ingredientEntryText(entry: unknown): string {
+  if (typeof entry === "string") return entry;
+  if (!entry || typeof entry !== "object") return "";
+  const { text, name } = entry as Record<string, unknown>;
+
+  if (typeof text === "string") return text;
+
+  return typeof name === "string" ? name : "";
+}
+
 /**
  * Normalize raw ingredient source to array of strings.
  *
  * Handles:
- * - Arrays of strings
+ * - Arrays of strings, or objects read by their `text`, else their `name`
  * - Single string (splits by newlines if needed)
- * - Null/undefined values filtered out
+ * - Any other entry dropped
  *
  * @param ingSource - Raw recipeIngredient from JSON-LD
  * @returns Array of decoded ingredient strings
  */
 function normalizeIngredientSource(ingSource: unknown): string[] {
   if (Array.isArray(ingSource)) {
-    return ingSource.map((v) => (v != null ? decode(v.toString()) : "")).filter(Boolean);
+    return ingSource.map((v) => decode(ingredientEntryText(v))).filter(Boolean);
   }
 
   if (typeof ingSource === "string") {

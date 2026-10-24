@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 
 import type {
@@ -16,6 +17,7 @@ import {
   HouseholdUserSelectBaseSchema,
   HouseholdWithUsersNamesSchema,
 } from "@norish/shared/contracts/zod/household";
+import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
@@ -131,9 +133,11 @@ export async function getHouseholdForUser(
  */
 export async function getHouseholdMemberIds(userId: string): Promise<string[]> {
   const household = await getHouseholdForUser(userId);
-  const memberIds = Array.from(new Set([userId, ...(household?.users.map((u) => u.id) ?? [])]));
 
-  return memberIds;
+  return viewerAndHouseholdIds({
+    userId,
+    householdUserIds: household?.users.map((u) => u.id) ?? null,
+  });
 }
 
 export async function addUserToHousehold(input: HouseholdUserInsertDto): Promise<HouseholdUserDto> {
@@ -201,7 +205,7 @@ export async function removeUserFromHousehold(
     }
 
     const rows = await tx
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(householdUsers)
       .where(eq(householdUsers.householdId, householdId));
 
@@ -410,9 +414,7 @@ export async function findOrCreateHouseholdByName(
 
 async function generateUniqueJoinCode(): Promise<string> {
   while (true) {
-    const code = Math.floor(Math.random() * 1_000_000)
-      .toString()
-      .padStart(6, "0");
+    const code = randomInt(1_000_000).toString().padStart(6, "0");
 
     const existing = await db
       .select({ id: households.id })

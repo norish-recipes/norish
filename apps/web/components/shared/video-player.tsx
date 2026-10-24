@@ -64,15 +64,13 @@ export default function VideoPlayer({
   const [showControls, setShowControls] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenSupported, setFullscreenSupported] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
 
-  // Check if fullscreen is supported
+  // Check if fullscreen is supported, and pick up a duration the video learned
+  // before hydration attached its listeners
   useEffect(() => {
-    if (typeof document === "undefined") {
-      setFullscreenSupported(false);
-
-      return;
-    }
     setFullscreenSupported(isFullscreenControlSupported(document, videoRef.current));
+    setVideoDuration(videoRef.current?.duration ?? 0);
   }, []);
 
   // Handle fullscreen change events (user exits via native controls or Escape)
@@ -125,7 +123,7 @@ export default function VideoPlayer({
     const container = containerRef.current;
 
     if (!container) return;
-    try {
+    const request = async () => {
       if (hasDocumentFullscreenApi(document)) {
         if (container.requestFullscreen) {
           await container.requestFullscreen();
@@ -151,9 +149,10 @@ export default function VideoPlayer({
       if (hasNativeVideoFullscreen(videoRef.current)) {
         video?.webkitEnterFullscreen?.();
       }
-    } catch (_err) {
-      // Fullscreen request failed, ignore
-    }
+    };
+
+    // A refused fullscreen request is ignored.
+    await request().catch(() => {});
   }, []);
   const exitFullscreen = useCallback(async () => {
     try {
@@ -367,6 +366,7 @@ export default function VideoPlayer({
         muted={isMuted}
         poster={poster}
         src={src}
+        onDurationChange={(e) => setVideoDuration(e.currentTarget.duration)}
         onLoadedData={handleLoadedData}
         onPlaying={() => setIsLoading(false)}
         onTimeUpdate={handleTimeUpdate}
@@ -446,7 +446,7 @@ export default function VideoPlayer({
                   <span>{formatTime(currentTime)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span>{formatTime(duration || videoRef.current?.duration || 0)}</span>
+                  <span>{formatTime(duration || videoDuration || 0)}</span>
                   {fullscreenSupported && (
                     <Button
                       isIconOnly
@@ -489,7 +489,7 @@ export default function VideoPlayer({
                   if (!videoRef.current) return;
                   const total = videoRef.current.duration || duration || 0;
                   const current = videoRef.current.currentTime;
-                  let newTime = current;
+                  let newTime: number;
 
                   if (e.key === "ArrowRight") {
                     newTime = Math.min(total, current + 5);

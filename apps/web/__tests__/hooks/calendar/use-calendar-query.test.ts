@@ -60,7 +60,6 @@ describe("useCalendarQuery", () => {
   const endISO = "2025-01-31";
 
   beforeEach(() => {
-    vi.clearAllMocks();
     queryClient = createTestQueryClient();
   });
 
@@ -127,11 +126,11 @@ describe("useCalendarQuery", () => {
       expect(Object.keys(result.current.calendarData)).toContain("2025-01-15");
       expect(Object.keys(result.current.calendarData)).toContain("2025-01-16");
 
-      const jan15Items = result.current.calendarData["2025-01-15"];
+      const jan15Items = result.current.calendarData["2025-01-15"]!;
 
       expect(jan15Items.length).toBe(2);
 
-      const jan16Items = result.current.calendarData["2025-01-16"];
+      const jan16Items = result.current.calendarData["2025-01-16"]!;
 
       expect(jan16Items.length).toBe(1);
     });
@@ -171,8 +170,8 @@ describe("useCalendarQuery", () => {
       });
 
       expect(result.current.items).toHaveLength(2);
-      expect(result.current.items[0].id).toBe("item-1");
-      expect(result.current.items[1].id).toBe("item-2");
+      expect(result.current.items[0]!.id).toBe("item-1");
+      expect(result.current.items[1]!.id).toBe("item-2");
     });
   });
 

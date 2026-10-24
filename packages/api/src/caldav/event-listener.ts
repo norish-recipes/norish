@@ -6,7 +6,6 @@
  * payload (`publishCalendarItemEvent`).
  */
 
-import type { Slot } from "@norish/shared/contracts";
 import type {
   CalendarItemEvent,
   CalendarRealtime,
@@ -15,7 +14,7 @@ import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
-import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
+import { addCaldavSyncJob, isCaldavSyncPending } from "@norish/queue/caldav-sync/producer";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
 import { calendar } from "@norish/shared-server/realtime/calendar";
@@ -68,33 +67,42 @@ async function getCaldavServerUrl(userId: string): Promise<string | null> {
   return config.serverUrl;
 }
 
-async function queueSyncJob(
-  userId: string,
-  itemId: string,
-  itemType: "recipe" | "note",
-  plannedItemId: string,
-  eventTitle: string,
-  date: string,
-  slot: Slot,
-  recipeId?: string
-): Promise<void> {
-  const caldavServerUrl = await getCaldavServerUrl(userId);
+/**
+ * Queue a sync of a planned item's state. An edit syncs only an item the
+ * calendar has or is about to have: one with a sync row, or one whose first
+ * sync is still pending, which the edit then joins with its newer state.
+ */
+async function queueSyncJob(item: PlannedItem, { edit }: { edit: boolean }): Promise<void> {
+  const caldavServerUrl = await getCaldavServerUrl(item.userId);
 
   if (!caldavServerUrl) {
-    log.debug({ userId, itemId }, "CalDAV not configured, skipping sync");
+    log.debug({ userId: item.userId, itemId: item.id }, "CalDAV not configured, skipping sync");
 
     return;
   }
 
-  await addCaldavSyncJob(getQueues().caldavSync, {
-    userId,
-    itemId,
-    itemType,
-    plannedItemId,
-    eventTitle,
-    date,
-    slot,
-    recipeId,
+  const queue = getQueues().caldavSync;
+
+  // Pending first: a first sync that finishes in between has written the row by then.
+  if (
+    edit &&
+    !(await isCaldavSyncPending(queue, caldavServerUrl, item.id)) &&
+    !(await getCaldavSyncStatusByItemId(item.userId, item.id))
+  ) {
+    log.debug({ id: item.id, userId: item.userId }, "Item not synced to CalDAV, skipping edit");
+
+    return;
+  }
+
+  await addCaldavSyncJob(queue, {
+    userId: item.userId,
+    itemId: item.id,
+    itemType: item.itemType,
+    plannedItemId: item.id,
+    eventTitle: item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note"),
+    date: item.date,
+    slot: item.slot,
+    recipeId: item.recipeId ?? undefined,
     operation: "sync",
     caldavServerUrl,
   });
@@ -139,6 +147,7 @@ function startCalendarSubscriptions(): Array<() => void> {
 }
 
 type CalendarPayload<E extends CalendarItemEvent> = PayloadOf<CalendarRealtime, E>;
+type PlannedItem = CalendarPayload<"itemCreated">["item"];
 
 function parsePayload<E extends CalendarItemEvent>(
   event: E,
@@ -169,24 +178,8 @@ export async function handleCalendarEvent(
 
         if (!payload) return;
 
-        const { item } = payload;
-        const title =
-          item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
-
-        log.debug(
-          { id: item.id, itemType: item.itemType, userId: item.userId },
-          "Item created - queuing CalDAV sync"
-        );
-        await queueSyncJob(
-          item.userId,
-          item.id,
-          item.itemType,
-          item.id,
-          title,
-          item.date,
-          item.slot,
-          item.recipeId ?? undefined
-        );
+        log.debug({ id: payload.item.id }, "Item created - queuing CalDAV sync");
+        await queueSyncJob(payload.item, { edit: false });
         break;
       }
 
@@ -202,76 +195,14 @@ export async function handleCalendarEvent(
         break;
       }
 
-      case "itemMoved": {
-        const payload = parsePayload("itemMoved", envelope);
-
-        if (!payload) return;
-
-        const { item } = payload;
-        const title =
-          item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
-
-        log.debug(
-          { id: item.id, userId: item.userId, date: item.date },
-          "Item moved - queuing CalDAV sync"
-        );
-
-        const movedSyncStatus = await getCaldavSyncStatusByItemId(item.userId, item.id);
-
-        if (!movedSyncStatus) {
-          log.debug(
-            { id: item.id, userId: item.userId },
-            "Item not synced to CalDAV, skipping move update"
-          );
-
-          return;
-        }
-
-        await queueSyncJob(
-          item.userId,
-          item.id,
-          item.itemType,
-          item.id,
-          title,
-          item.date,
-          item.slot,
-          item.recipeId ?? undefined
-        );
-        break;
-      }
-
+      case "itemMoved":
       case "itemUpdated": {
-        const payload = parsePayload("itemUpdated", envelope);
+        const payload = parsePayload(eventName, envelope);
 
         if (!payload) return;
 
-        const { item } = payload;
-        const title =
-          item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
-
-        log.debug({ id: item.id, userId: item.userId }, "Item updated - queuing CalDAV sync");
-
-        const updatedSyncStatus = await getCaldavSyncStatusByItemId(item.userId, item.id);
-
-        if (!updatedSyncStatus) {
-          log.debug(
-            { id: item.id, userId: item.userId },
-            "Item not synced to CalDAV, skipping update"
-          );
-
-          return;
-        }
-
-        await queueSyncJob(
-          item.userId,
-          item.id,
-          item.itemType,
-          item.id,
-          title,
-          item.date,
-          item.slot,
-          item.recipeId ?? undefined
-        );
+        log.debug({ id: payload.item.id, eventName }, "Item edited - queuing CalDAV sync");
+        await queueSyncJob(payload.item, { edit: true });
         break;
       }
     }

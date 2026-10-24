@@ -1,14 +1,11 @@
 import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import z from "zod";
 
-import type { DbTransaction } from "@norish/db/drizzle";
+import type { Db } from "@norish/db/drizzle";
 import type { AisleDto, AisleFiled, AisleInput, AisleLinkDto } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
 import { aisleLinks, aisles } from "@norish/db/schema";
 import { AisleLinkSelectSchema, AisleSelectSchema } from "@norish/shared/contracts/zod";
-
-/** The connection a caller is already inside, or the shared one. */
-type Db = typeof db | DbTransaction;
 
 const AislesSchema = z.array(AisleSelectSchema);
 const AisleLinksSchema = z.array(AisleLinkSelectSchema);

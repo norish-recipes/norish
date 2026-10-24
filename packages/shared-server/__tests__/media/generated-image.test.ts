@@ -11,7 +11,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const uploadsDir = mkdtempSync(path.join(os.tmpdir(), "generated-image-test-"));
 
@@ -62,10 +62,6 @@ async function fileExists(url: string): Promise<boolean> {
     .then(() => true)
     .catch(() => false);
 }
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
 
 afterEach(async () => {
   await fs.rm(path.join(uploadsDir, "recipes"), { recursive: true, force: true });

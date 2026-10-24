@@ -1,14 +1,26 @@
 "use client";
 
 import type { LibraryGridItem } from "@/lib/library-items";
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { usePathname } from "next/navigation";
+import { useDeviceKind } from "@/context/device-preferences-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
+import { DEVICE_KIND_WINDOW, useViewport } from "@/hooks/use-viewport";
+import { lastScrollTop, rememberedListRows, rememberListRows } from "@/lib/scroll-memory";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { useScrollRestoration } from "@norish/shared-react/hooks";
+import { useHydrated } from "@norish/shared-react/hooks";
 
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
 
@@ -53,7 +65,11 @@ export default function LibraryGrid({
   emptyState,
   renderItem,
 }: LibraryGridProps) {
-  const { saveScrollState, getScrollState } = useScrollRestoration(scrollKey);
+  // TanStack Virtual hands back one mutable instance, so compiled memoisation
+  // would keep its first rows.
+  "use no memo";
+
+  const pathname = usePathname();
 
   // Seeded from `isLoading` so the skeleton is part of the very first paint —
   // server render included. Starting at `false` and flipping in the effect
@@ -75,39 +91,49 @@ export default function LibraryGrid({
     viewMode === "list" ? LIST_LOAD_MORE_ROW_THRESHOLD : GRID_LOAD_MORE_ROW_THRESHOLD;
 
   // Track window size to recalculate scrollMargin on resize
-  const { height: _windowHeight, width: windowWidth = 1024 } = useWindowSize();
-  const gridRowHeight =
-    windowWidth < 640 ? ESTIMATED_PHONE_GRID_ROW_HEIGHT : ESTIMATED_GRID_ROW_HEIGHT;
+  const { height: _windowHeight } = useWindowSize();
+  const gridRowHeight = useViewport((width) =>
+    width < 640 ? ESTIMATED_PHONE_GRID_ROW_HEIGHT : ESTIMATED_GRID_ROW_HEIGHT
+  );
 
-  // Calculate scrollMargin from container position
-  const scrollMargin = useMemo(() => {
-    if (!containerRef.current) return 0;
-    const rect = containerRef.current.getBoundingClientRect();
+  // Calculate scrollMargin from container position. The container's offset is
+  // read, not tracked: a resize is what moves it, so it is measured on one and
+  // the grid counts from the top of the page until then.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  const measuredHeightRef = useRef(_windowHeight);
 
-    return rect.top + window.scrollY;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [_windowHeight]); // Recalculate when window resizes
+  useLayoutEffect(() => {
+    if (_windowHeight === measuredHeightRef.current) return;
+    measuredHeightRef.current = _windowHeight;
+    setScrollMargin(
+      containerRef.current ? containerRef.current.getBoundingClientRect().top + window.scrollY : 0
+    );
+  }, [_windowHeight]);
 
   const rowCount = useMemo(
     () => Math.ceil(items.length / effectiveColumnCount),
     [items.length, effectiveColumnCount]
   );
 
-  // Get saved scroll state for initialization
-  const savedState = getScrollState();
+  // A revisit lays out its remembered rows at the remembered scroll, before the first paint.
+  const savedRows = rememberedListRows(scrollKey);
+
+  // The server has no window: it and the hydrating render lay out rows for the Device Kind's usual
+  // window (initialRect), and the browser measures the real one after.
+  const kind = useDeviceKind();
+  const hydrated = useHydrated();
 
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
+    initialRect: DEVICE_KIND_WINDOW[kind],
     estimateSize: () => (viewMode === "list" ? ESTIMATED_LIST_ROW_HEIGHT : gridRowHeight),
     overscan: rowOverscan,
     scrollMargin,
-    initialOffset: savedState?.scrollOffset,
-    initialMeasurementsCache: savedState?.measurementsCache,
+    initialOffset: savedRows ? lastScrollTop(pathname) : undefined,
+    initialMeasurementsCache: savedRows,
     onChange: (instance) => {
-      // Save state when not scrolling (after scroll settles)
-      if (!instance.isScrolling) {
-        saveScrollState(instance.scrollOffset ?? 0, instance.measurementsCache);
-      }
+      // Saved while scrolling too: a reader can open a card before a flick has settled.
+      rememberListRows(scrollKey, instance.measurementsCache);
     },
   });
 
@@ -138,21 +164,14 @@ export default function LibraryGrid({
     }
   }, [virtualRows, rowCount, loadMoreRowThreshold, isFetchingMore, loadMore]);
 
-  // Show skeleton loading state logic
+  // Show skeleton loading state logic: the first load shows it from the start
+  // (seeded above), a finished load hides it at once, a reload only after a beat.
+  if (!isLoading && (showSkeleton || !isLoadedOnce)) {
+    setIsLoadedOnce(true);
+    setShowSkeleton(false);
+  }
+
   useEffect(() => {
-    if (!isLoadedOnce && isLoading) {
-      setShowSkeleton(true);
-
-      return;
-    }
-
-    if (!isLoading) {
-      setIsLoadedOnce(true);
-      setShowSkeleton(false);
-
-      return;
-    }
-
     if (isLoadedOnce && isLoading) {
       // Swapping a loaded library for a grid of skeletons is the single most
       // expensive render on this page, and it fires from a timer while the
@@ -190,7 +209,9 @@ export default function LibraryGrid({
         <>
           <div
             style={{
-              height: `${virtualizer.getTotalSize()}px`,
+              // Until hydrated, only as tall as the rows the server drew, so an early scroll
+              // never reaches blank space.
+              height: `${hydrated ? virtualizer.getTotalSize() : (virtualRows.at(-1)?.end ?? 0)}px`,
               width: "100%",
               position: "relative",
             }}

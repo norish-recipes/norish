@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
     root: resolve(configDirectory, "../.."),
   },
   devIndicators: false,
+  // The root AGENTS.md carries the Next guidance for the whole repo.
+  agentRules: false,
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },

@@ -34,7 +34,6 @@ const admin = () =>
   permissionsProcedures.createCaller(createMockCallerContext(createMockAdminContext()));
 
 beforeEach(() => {
-  vi.clearAllMocks();
   ingredientsRealtime.reset();
   permissionsRealtime.reset();
   setConfig.mockResolvedValue(undefined);

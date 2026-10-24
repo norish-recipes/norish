@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ExclamationTriangleIcon, ShieldExclamationIcon } from "@heroicons/react/16/solid";
-import { Button } from "@heroui/react";
+import { Button, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -35,6 +35,18 @@ type ErrorCode = (typeof ERROR_CODES)[number];
 function isKnownErrorCode(code: string): code is ErrorCode {
   return ERROR_CODES.includes(code as ErrorCode);
 }
+function BackToLogin() {
+  const t = useTranslations("auth.errors");
+
+  return (
+    <Link href="/login?logout=true">
+      <Button className="rounded-lg px-6" variant="primary">
+        {t("backToLogin")}
+      </Button>
+    </Link>
+  );
+}
+
 function AuthErrorContent() {
   const t = useTranslations("auth.errors");
   const searchParams = useSearchParams();
@@ -87,23 +99,25 @@ function AuthErrorContent() {
         </p>
       )}
 
-      <Link href="/login?logout=true">
-        <Button className="rounded-lg px-6" variant="primary">
-          {t("backToLogin")}
-        </Button>
-      </Link>
+      <BackToLogin />
     </AuthFrame>
   );
 }
+
+/** The page before its search params are read: the frame, a grey alert and the real way back. */
+function AuthErrorSkeleton() {
+  return (
+    <AuthFrame contentClassName="items-center">
+      <Skeleton className="h-20 w-full rounded-xl" />
+      <BackToLogin />
+    </AuthFrame>
+  );
+}
+
+// The page is prerendered, and the error only arrives with the search params.
 export default function AuthErrorPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-full items-center justify-center">
-          <div className="border-accent h-8 w-8 animate-spin rounded-full border-b-2" />
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthErrorSkeleton />}>
       <AuthErrorContent />
     </Suspense>
   );

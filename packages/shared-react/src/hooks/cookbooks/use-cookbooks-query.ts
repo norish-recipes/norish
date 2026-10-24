@@ -8,6 +8,8 @@ export function createUseCookbooksQuery({ useTRPC }: CreateCookbookHooksOptions)
     filters: CookbookFilters = {},
     { enabled = true }: { enabled?: boolean } = {}
   ): CookbooksQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const { limit = 50, search, sortMode = "dateDesc" } = filters;

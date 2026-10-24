@@ -33,6 +33,8 @@ export function sourceText(t: NutritionT, source: NutritionSource): string {
       return t("source.household");
     case "taxonomy":
       return t("source.taxonomy");
+    case "ai":
+      return t("source.ai");
     case "household-food":
       return t("source.householdFood", {
         food: source.food.name,

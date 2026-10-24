@@ -1,6 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+import { AnimatePresence, motion } from "motion/react";
 
 /** The roll, slow enough to read as one thing moving rather than as a flicker. */
 export const ROLL_TRANSITION = { duration: 0.42, ease: [0.22, 0.61, 0.36, 1] } as const;
@@ -81,7 +82,7 @@ export function RollingText({
   srValue,
   className = "",
 }: RollingTextProps) {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   if (prefersReducedMotion) {
     return <span className={className}>{value}</span>;
@@ -99,6 +100,9 @@ export function RollingText({
 
       {characters.map((character, index) => (
         <span
+          // A slot is its place in the row, counted from the side the value grows on,
+          // so a changing character rolls in place rather than the row re-mounting.
+          // eslint-disable-next-line @eslint-react/no-array-index-key
           key={keyFrom === "right" ? characters.length - index : index}
           aria-hidden={hideSlots || undefined}
           className="relative inline-flex overflow-hidden"

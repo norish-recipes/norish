@@ -238,7 +238,7 @@ const testAIEndpoint = adminProcedure
   .input(
     z.object({
       provider: AIConfigInputSchema.shape.provider,
-      endpoint: z.string().url().optional(),
+      endpoint: z.url().optional(),
       apiKey: z.string().optional(),
     })
   )
@@ -348,7 +348,9 @@ const listAvailableTranscriptionModels = adminProcedure
  * would turn "enrich what is missing" into "overwrite what the source said".
  */
 const enrichAllRecipes = adminProcedure
-  .input(z.object({ replaceExisting: z.boolean().default(false) }).default({}))
+  .input(
+    z.object({ replaceExisting: z.boolean().default(false) }).default({ replaceExisting: false })
+  )
   .mutation(async ({ input, ctx }) => {
     log.info(
       { userId: ctx.user.id, replaceExisting: input.replaceExisting },

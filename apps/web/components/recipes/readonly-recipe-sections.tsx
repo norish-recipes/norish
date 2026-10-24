@@ -168,17 +168,21 @@ export function ReadonlyRecipeMedia({
       </div>
     ) : null;
 
+  const carousel = (
+    <MediaCarousel
+      aspectRatio={aspectRatio}
+      className={`h-full w-full ${mediaClassName}`}
+      items={mediaItems}
+      rounded={rounded}
+      onActiveVideoFullscreenChange={
+        expandControlSlot ? handleActiveVideoFullscreenChange : undefined
+      }
+    />
+  );
+
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className}`}>
-      <MediaCarousel
-        aspectRatio={aspectRatio}
-        className={`h-full w-full ${mediaClassName}`}
-        items={mediaItems}
-        rounded={rounded}
-        onActiveVideoFullscreenChange={
-          expandControlSlot ? handleActiveVideoFullscreenChange : undefined
-        }
-      />
+      {carousel}
 
       {topLeftRow}
       {(topRightContent || rightExpandControl) && (
@@ -213,11 +217,11 @@ export function ReadonlyRecipeSummary({
             {recipe.name}
             {recipe.url && (
               <Link
+                aria-label={t("viewOriginal")}
                 className="ml-2 inline-block align-middle"
                 href={recipe.url}
                 rel="noopener noreferrer"
                 target="_blank"
-                title={t("viewOriginal")}
               >
                 <ArrowTopRightOnSquareIcon className="text-muted hover:text-accent inline h-4 w-4" />
               </Link>

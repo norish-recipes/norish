@@ -53,7 +53,6 @@ export function OIDCClaimMapping({ values, onChange, isDirty = false }: OIDCClai
         }
       >
         <SettingsSwitch
-          color="success"
           isSelected={values.enabled}
           onValueChange={(enabled) => updateField("enabled", enabled)}
         />

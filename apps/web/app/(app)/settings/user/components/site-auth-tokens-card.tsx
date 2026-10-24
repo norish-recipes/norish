@@ -18,12 +18,13 @@ import {
   TextField,
 } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
   const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
+  const format = useFormatter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -49,56 +50,59 @@ export default function SiteAuthTokensCard() {
   const handleCreate = async () => {
     if (!domain.trim() || !name.trim() || !value.trim()) return;
     setIsCreating(true);
-    try {
-      const newToken = await createMutation.mutateAsync({
+    await createMutation
+      .mutateAsync({
         domain,
         account,
         name,
         value,
         type,
-      });
-      queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
-        prev ? [...prev, newToken] : [newToken]
+      })
+      .then((newToken) => {
+        queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
+          prev ? [...prev, newToken] : [newToken]
+        );
+        setDomain("");
+        setAccount("");
+        setName("");
+        setValue("");
+        setType("header");
+      })
+      .catch((error: unknown) =>
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          color: "danger",
+          error,
+          context: "site-auth-tokens:create",
+        })
       );
-      setDomain("");
-      setAccount("");
-      setName("");
-      setValue("");
-      setType("header");
-    } catch (error) {
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: tErrors("technicalDetails"),
-        color: "danger",
-        error,
-        context: "site-auth-tokens:create",
-      });
-    } finally {
-      setIsCreating(false);
-    }
+    setIsCreating(false);
   };
   const handleDelete = async (tokenId: string) => {
-    try {
-      const tokenVersion = tokens.find((token) => token.id === tokenId)?.version ?? 1;
-      await removeMutation.mutateAsync({
+    const tokenVersion = tokens.find((token) => token.id === tokenId)?.version ?? 1;
+
+    await removeMutation
+      .mutateAsync({
         id: tokenId,
         version: tokenVersion,
-      });
-      queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
-        prev ? prev.filter((t) => t.id !== tokenId) : prev
+      })
+      .then(() =>
+        queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
+          prev ? prev.filter((t) => t.id !== tokenId) : prev
+        )
+      )
+      .catch((error: unknown) =>
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          color: "danger",
+          error,
+          context: "site-auth-tokens:delete",
+        })
       );
-    } catch (error) {
-      showSafeErrorToast({
-        title: tErrors("operationFailed"),
-        description: tErrors("technicalDetails"),
-        color: "danger",
-        error,
-        context: "site-auth-tokens:delete",
-      });
-    } finally {
-      setShowDeleteModal(false);
-      setTokenToDelete(null);
-    }
+    setShowDeleteModal(false);
+    setTokenToDelete(null);
   };
   const isFormValid = domain.trim() && name.trim() && value.trim();
 
@@ -216,12 +220,12 @@ export default function SiteAuthTokensCard() {
                             {token.type === "header" ? t("typeHeader") : t("typeCookie")}
                           </Chip>
                         </Table.Cell>
-                        <Table.Cell>{new Date(token.createdAt).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>{format.dateTime(new Date(token.createdAt))}</Table.Cell>
                         <Table.Cell>
                           <Button
                             isIconOnly
+                            aria-label={t("deleteModal.confirmButton")}
                             size="sm"
-                            title={t("deleteModal.confirmButton")}
                             onPress={() => {
                               setTokenToDelete(token.id);
                               setShowDeleteModal(true);

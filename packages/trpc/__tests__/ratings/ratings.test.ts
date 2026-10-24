@@ -34,7 +34,6 @@ describe("ratings procedures", () => {
   let ctx: ReturnType<typeof createMockAuthedContext>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
@@ -184,29 +183,30 @@ describe("ratings procedures", () => {
       );
     });
 
-    it("validates rating is between 1 and 5", async () => {
-      const testRouter = t.router({
-        rate: t.procedure
-          .input((v) => {
-            const input = v as { recipeId: string; rating: number };
+    it("removes rating when rating is null", async () => {
+      const recipeId = crypto.randomUUID();
+      rateRecipe.mockResolvedValue({ rating: null, isNew: false });
+      getAverageRating.mockResolvedValue({ averageRating: null, ratingCount: 0 });
 
-            if (input.rating < 1 || input.rating > 5) {
-              throw new Error("Rating must be between 1 and 5");
-            }
+      const caller = ratingsProcedures.createCaller(ctx as any);
+      const result = await caller.rate({ recipeId, rating: null, version: 3 });
 
-            return input;
-          })
-          .mutation(async ({ input }) => {
-            await rateRecipe(ctx.user.id, input.recipeId, input.rating);
+      await Promise.resolve();
 
-            return { success: true };
-          }),
-      });
+      expect(result).toEqual({ success: true });
+      expect(rateRecipe).toHaveBeenCalledWith(ctx.user.id, recipeId, null, 3);
+      expect(trpcLogger.info).toHaveBeenCalledWith(
+        { userId: ctx.user.id, recipeId, rating: null, isNew: false },
+        "Recipe rating removed"
+      );
+    });
 
-      const caller = t.createCallerFactory(testRouter)(ctx);
+    it("validates rating is between 1 and 5, or null", async () => {
+      const caller = ratingsProcedures.createCaller(ctx as any);
+      const validRecipeId = crypto.randomUUID();
 
-      await expect(caller.rate({ recipeId: "recipe-1", rating: 0 })).rejects.toThrow();
-      await expect(caller.rate({ recipeId: "recipe-1", rating: 6 })).rejects.toThrow();
+      await expect(caller.rate({ recipeId: validRecipeId, rating: 0 })).rejects.toThrow();
+      await expect(caller.rate({ recipeId: validRecipeId, rating: 6 })).rejects.toThrow();
     });
   });
 });

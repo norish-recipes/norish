@@ -61,7 +61,6 @@ function respondWith(output: unknown) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
   // No Decision Model for validation unless a test says otherwise: every
   // claim is kept unjudged.
   vi.mocked(isDecisionModelConfigured).mockResolvedValue(false);

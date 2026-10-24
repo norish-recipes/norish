@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 
@@ -13,10 +13,6 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 }));
 
 describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("ingredient HTML entity decoding", () => {
     it("decodes en dash (&#8211;) in ingredient array and keeps comments", async () => {
       const json = {
@@ -338,10 +334,6 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 });
 
 describe("normalizeRecipeFromJson - Source URL", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("preserves a valid recipe url from JSON-LD", async () => {
     const result = await normalizeRecipeFromJson(
       {
@@ -374,10 +366,6 @@ describe("normalizeRecipeFromJson - Source URL", () => {
 });
 
 describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("section name extraction", () => {
     it("extracts HowToSection name as heading with # prefix", async () => {
       const json = {
@@ -743,10 +731,6 @@ describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
 });
 
 describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe("step name + text combination", () => {
     it("combines name and text as **Name:** Text format", async () => {
       const json = {
@@ -1044,10 +1028,6 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
 });
 
 describe("normalizeRecipeFromJson - Notes", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("extracts recipeNotes into notes", async () => {
     const json = {
       name: "Notes Recipe",

@@ -43,7 +43,10 @@ Norish uses the first of these that has numbers:
 3. The food that the ingredient's [Open Food Facts](https://world.openfoodfacts.org)
    entry points to.
 4. A dataset food with the same name. Marked **matched by name**.
-5. A more general food: "red onion" uses "onion". Marked **from onion**. Filing
+5. AI's estimate, where an administrator lets AI
+   [fill missing nutrition](../configuration/ai-provider.md#ingredient-catalogue).
+   Marked **Estimated by AI**.
+6. A more general food: "red onion" uses "onion". Marked **from onion**. Filing
    an ingredient under a [parent](../groceries/ingredients.md#catalogue-source)
    gives it the parent's values. Sauces, pure alcohol and fruit don't pass
    their values on, because their kinds differ too much.

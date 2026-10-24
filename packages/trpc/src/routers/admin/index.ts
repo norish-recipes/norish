@@ -5,6 +5,7 @@ import { adminConfigProcedures } from "./config";
 import { contentConfigProcedures } from "./content-config";
 import { cuisinesProcedures } from "./cuisines";
 import { generalProcedures } from "./general";
+import { ingredientCatalogueProcedures } from "./ingredient-catalogue";
 import { jobQueueProcedures } from "./job-queue";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
@@ -29,6 +30,9 @@ export const adminRouter = router({
 
   // Job queue monitoring
   jobs: jobQueueProcedures,
+
+  // Clean up catalogue
+  ingredientCatalogue: ingredientCatalogueProcedures,
 
   // AI and video
   ...aiConfigProcedures._def.procedures,

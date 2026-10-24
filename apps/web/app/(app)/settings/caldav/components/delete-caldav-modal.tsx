@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import { usePending } from "@/hooks/use-pending";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -14,16 +15,14 @@ export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: Delete
   const t = useTranslations("settings.caldav.deleteModal");
   const tActions = useTranslations("common.actions");
   const [deleteEvents, setDeleteEvents] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [deleting, whileDeleting] = usePending();
   const handleConfirm = async () => {
-    setDeleting(true);
-    try {
-      await onConfirm(deleteEvents);
-      setDeleteEvents(false);
-      onClose();
-    } finally {
-      setDeleting(false);
-    }
+    await whileDeleting(() =>
+      onConfirm(deleteEvents).then(() => {
+        setDeleteEvents(false);
+        onClose();
+      })
+    );
   };
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>

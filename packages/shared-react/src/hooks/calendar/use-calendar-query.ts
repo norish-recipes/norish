@@ -21,6 +21,8 @@ function groupItemsByDate(items: PlannedItemFromQuery[]): CalendarData {
 
 export function createUseCalendarQuery({ useTRPC }: CreateCalendarHooksOptions) {
   return function useCalendarQuery(startISO: string, endISO: string): CalendarQueryResult {
+    "use memo";
+
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
