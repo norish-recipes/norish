@@ -117,13 +117,13 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
 
   // Dashboard.
   await page.goto("/");
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText(SEEDED_NOTE_TITLE).first()).toBeVisible();
 
   // Warmed recipe detail, with its primary image served from Cache Storage.
   await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
-  const image = page.locator(`img[src*="${SEEDED_RECIPE_ID}"]`).first();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
+  const image = page.locator(`img[src*="${SEEDED_RECIPE_ID}"]`).filter({ visible: true }).first();
 
   await expect(image).toBeVisible();
   await expect
@@ -143,7 +143,7 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
   // A cookbook, with the members it held under the page's default filters.
   await page.goto(`/cookbooks/${SEEDED_COOKBOOK_ID}`);
   await expect(page.getByRole("heading", { name: SEEDED_COOKBOOK_TITLE })).toBeVisible();
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
 
   // Unwarmed recipe id and unsupported route: the explicit unavailable state.
   await page.goto(`/recipes/${UNWARMED_RECIPE_ID}`);
@@ -155,7 +155,7 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
   // restores Live, that component intentionally reloads its own URL and can
   // race the next scenario's navigation. Park on a cached Warm Set surface.
   await page.goto("/");
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
 });
 
 test("the Dish Colour tint is present while Offline (ADR-0023)", async () => {
@@ -163,7 +163,7 @@ test("the Dish Colour tint is present while Offline (ADR-0023)", async () => {
   // with the warmed recipe data, so the page tints before — and without —
   // any network.
   await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
 
   const scope = page.locator("[data-dish-tint]");
 
@@ -205,7 +205,7 @@ test("a reader who declined the tint never renders a tinted frame offline", asyn
     recipePageColor: "theme",
   });
   await page.goto("/");
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
   await expect
     .poll(() => persistedReadsHold(page, '"recipePageColor":"theme"'), { timeout: 15_000 })
     .toBe(true);
@@ -231,7 +231,7 @@ test("a reader who declined the tint never renders a tinted frame offline", asyn
   });
 
   await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
   await expect(page.locator("[data-dish-tint]")).toHaveCount(0);
   expect(
     await page.evaluate(() => (window as unknown as { __dishTintSeen: boolean }).__dishTintSeen)
@@ -239,9 +239,9 @@ test("a reader who declined the tint never renders a tinted frame offline", asyn
 
   // A second document load through the bootstrap surface behaves the same.
   await page.goto("/");
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
   await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
   await expect(page.locator("[data-dish-tint]")).toHaveCount(0);
   expect(
     await page.evaluate(() => (window as unknown as { __dishTintSeen: boolean }).__dishTintSeen)
@@ -249,7 +249,7 @@ test("a reader who declined the tint never renders a tinted frame offline", asyn
 
   // Hand the next scenario a cached surface to start from.
   await page.goto("/");
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
 });
 
 test("a hanging network observes the Reachability Deadline (ADR-0013)", async () => {
@@ -461,7 +461,7 @@ test("a recipe page the service worker kept is gone once another account signs i
     );
 
   await page.goto(`/recipes/${SEEDED_RECIPE_ID}`);
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
   await expect.poll(keptRecipePage).toBe(true);
 
   await offline.selectIdentity("b");
@@ -668,7 +668,7 @@ test("Offline start-up on a page it never saved draws the stored view from the f
     groceryViewMode: "store",
   });
   await page.goto("/");
-  await expect(page.getByText(SEEDED_RECIPE_NAME).first()).toBeVisible();
+  await expect(page.getByText(SEEDED_RECIPE_NAME).filter({ visible: true }).first()).toBeVisible();
 });
 
 /**
