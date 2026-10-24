@@ -66,3 +66,13 @@ pick one:
 - **From a label**: type the numbers from the pack.
 
 ![Correcting what a teaspoon of cumin weighs, from a label](/img/screenshots/ingredients-nutrition-correction.png)
+
+## Reading nutrition from the API
+
+Apps that read recipes through the [REST API](../reference/api.mdx), like a
+calorie tracker, get the same numbers per serving from
+`GET /api/v1/recipes/{id}/nutrition`. The answer says where the numbers come
+from: `supplied` when the recipe states them, `worked-out` when Norish works
+them out from the ingredients for your household, or `none`. A worked-out
+answer also lists the lines it left out and why, and says when it is
+estimated.

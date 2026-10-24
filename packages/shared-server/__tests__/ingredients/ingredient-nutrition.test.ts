@@ -38,7 +38,10 @@ import {
   NO_HOUSEHOLD,
   resolveIngredientNutrition,
 } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
-import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
+import {
+  readRecipeNutrition,
+  workOutRecipeNutrition,
+} from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
@@ -571,6 +574,46 @@ describe("Ingredient Nutrition", () => {
 
     it("works nothing out for a recipe that supplies its own", async () => {
       await expect(workOutRecipeNutrition(recipe(320), NO_HOUSEHOLD)).resolves.toBeNull();
+    });
+
+    it("answers an API reader with the recipe's own numbers where it supplies them", async () => {
+      await expect(readRecipeNutrition(recipe(320), NO_HOUSEHOLD)).resolves.toEqual({
+        source: "supplied",
+        perServing: { calories: 320, fat: null, carbs: null, protein: null },
+        estimated: false,
+        leftOut: [],
+        credits: [],
+      });
+    });
+
+    it("answers an API reader with the worked-out total and the model's share, as the page shows it", async () => {
+      const key = (await workOutRecipeNutrition(recipe(), NO_HOUSEHOLD))!.leftOut[0]!.key;
+      const share = { key, calories: 60, fat: 0, carbs: 1, protein: 0 };
+      const answer = await readRecipeNutrition(
+        { ...recipe(), nutritionEstimate: { lines: [share] } },
+        NO_HOUSEHOLD
+      );
+
+      expect(answer.source).toBe("worked-out");
+      // Two onions are 300 g at 35 kcal per 100 g, over two servings, plus the brandy's share.
+      expect(answer.perServing?.calories).toBeCloseTo(112.5);
+      expect(answer.estimated).toBe(true);
+      expect(answer.leftOut).toEqual([
+        { name: "brandy", reason: "no-numbers", estimatedByAI: true },
+      ]);
+      expect(answer.credits).toContain("ciqual");
+    });
+
+    it("answers none, naming the lines, where nothing counts", async () => {
+      const brandyOnly = { ...recipe(), recipeIngredients: recipe().recipeIngredients.slice(1) };
+
+      await expect(readRecipeNutrition(brandyOnly, NO_HOUSEHOLD)).resolves.toEqual({
+        source: "none",
+        perServing: null,
+        estimated: false,
+        leftOut: [{ name: "brandy", reason: "no-numbers", estimatedByAI: false }],
+        credits: [],
+      });
     });
 
     it("carries the language model's stored shares on the recipe, until they are dropped", async () => {
