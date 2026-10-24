@@ -38,6 +38,17 @@ describe("removeRating", () => {
   });
 
   it("is a no-op when there is no rating", async () => {
-    await expect(removeRating(user.id, recipe.id)).resolves.toBeUndefined();
+    await expect(removeRating(user.id, recipe.id)).resolves.toBe(false);
+  });
+
+  it("leaves a rating that changed since the version the caller saw", async () => {
+    await rateRecipe(user.id, recipe.id, 4);
+    await rateRecipe(user.id, recipe.id, 5, 1);
+
+    await expect(rateRecipe(user.id, recipe.id, null, 1)).resolves.toMatchObject({ stale: true });
+    expect(await getUserRating(user.id, recipe.id)).toBe(5);
+
+    await rateRecipe(user.id, recipe.id, null, 2);
+    expect(await getUserRating(user.id, recipe.id)).toBeNull();
   });
 });
