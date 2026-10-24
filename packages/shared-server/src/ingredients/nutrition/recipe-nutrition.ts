@@ -9,6 +9,7 @@
  * none worked out.
  */
 import type { NutritionCredit } from "@norish/shared/contracts/ingredient-nutrition";
+import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
 import type {
   LeftOutReason,
   NutritionGapEstimate,
@@ -16,6 +17,7 @@ import type {
   WorkedOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
 import { getIngredientWords, getUnits } from "@norish/shared-server/config/server-config-loader";
+import { knownExtras } from "@norish/shared/contracts/nutrients";
 import {
   nutritionLinesOf,
   seasoningPhrases,
@@ -27,13 +29,18 @@ import { spellingRules } from "@norish/shared/lib/spelling-keys";
 import type { NutritionReader } from "./ingredient-nutrition";
 import { resolveIngredientNutrition } from "./ingredient-nutrition";
 
-/** The recipe's worked-out nutrition for the reader's household, or null where it supplies its own. */
+/**
+ * The recipe's worked-out nutrition for the reader's household, or null where
+ * it supplies its own; `evenIfSupplied` works it out regardless, for the
+ * nutrients beyond the four that a recipe's own Nutrition Information lacks.
+ */
 export async function workOutRecipeNutrition(
   recipe: RecipeForNutrition,
   reader: NutritionReader,
-  estimate: NutritionGapEstimate | null = null
+  estimate: NutritionGapEstimate | null = null,
+  { evenIfSupplied = false }: { evenIfSupplied?: boolean } = {}
 ): Promise<WorkedOutNutrition | null> {
-  if (suppliesNutrition(recipe)) return null;
+  if (suppliesNutrition(recipe) && !evenIfSupplied) return null;
 
   const lines = nutritionLinesOf(recipe);
   const nutrition = await resolveIngredientNutrition(
@@ -53,12 +60,13 @@ export async function workOutRecipeNutrition(
   });
 }
 
-/** Calories and macros per serving, each null where the recipe does not say. */
+/** Calories and macros per serving, each null where the recipe does not say, and the other nutrients known. */
 export interface ReadNutritionPerServing {
   calories: number | null;
   fat: number | null;
   carbs: number | null;
   protein: number | null;
+  extras: ExtraNutrients;
 }
 
 /**
@@ -77,6 +85,11 @@ export interface RecipeNutritionAnswer {
   leftOut: { name: string; reason: LeftOutReason; estimatedByAI: boolean }[];
   /** The datasets a worked-out total took a fact from. */
   credits: NutritionCredit[];
+  /**
+   * For each extra nutrient, the share of the counted lines' grams whose food
+   * knew it (1 where the recipe states it): below 1 the value is low.
+   */
+  extrasCoverage: Partial<Record<ExtraNutrient, number>>;
 }
 
 function storedNumber(value: number | string | null): number | null {
@@ -91,7 +104,24 @@ export async function readRecipeNutrition(
   recipe: RecipeForNutrition,
   reader: NutritionReader
 ): Promise<RecipeNutritionAnswer> {
-  if (suppliesNutrition(recipe)) {
+  const supplied = suppliesNutrition(recipe);
+  const worked = await workOutRecipeNutrition(recipe, reader, recipe.nutritionEstimate ?? null, {
+    evenIfSupplied: true,
+  });
+  // Each extra the recipe states wins; the others come from its lines.
+  const stated = knownExtras(recipe.nutritionExtras);
+  const extras = { ...worked?.perServing?.extras, ...stated };
+  const extrasCoverage = {
+    ...worked?.extrasCoverage,
+    ...Object.fromEntries(Object.keys(stated).map((key) => [key, 1])),
+  };
+  const leftOut = (worked?.leftOut ?? []).map(({ name, reason, estimatedByAI }) => ({
+    name,
+    reason,
+    estimatedByAI,
+  }));
+
+  if (supplied) {
     return {
       source: "supplied",
       perServing: {
@@ -99,29 +129,33 @@ export async function readRecipeNutrition(
         fat: storedNumber(recipe.fat),
         carbs: storedNumber(recipe.carbs),
         protein: storedNumber(recipe.protein),
+        extras,
       },
       estimated: false,
       leftOut: [],
-      credits: [],
+      credits:
+        Object.keys(extras).length > Object.keys(stated).length ? (worked?.credits ?? []) : [],
+      extrasCoverage,
     };
   }
 
-  const worked = await workOutRecipeNutrition(recipe, reader, recipe.nutritionEstimate ?? null);
-  const leftOut = (worked?.leftOut ?? []).map(({ name, reason, estimatedByAI }) => ({
-    name,
-    reason,
-    estimatedByAI,
-  }));
-
   if (!worked?.perServing) {
-    return { source: "none", perServing: null, estimated: false, leftOut, credits: [] };
+    return {
+      source: "none",
+      perServing: null,
+      estimated: false,
+      leftOut,
+      credits: [],
+      extrasCoverage: {},
+    };
   }
 
   return {
     source: "worked-out",
-    perServing: worked.perServing,
+    perServing: { ...worked.perServing, extras },
     estimated: worked.estimated,
     leftOut,
     credits: worked.credits,
+    extrasCoverage,
   };
 }

@@ -145,8 +145,28 @@ describe("estimateNutritionGap", () => {
   ];
   const ANSWER = {
     lines: [
-      { line: 2, calories: 50, fat: 5, carbs: 1, protein: 0 },
-      { line: 1, calories: 60, fat: 0, carbs: 15, protein: 0 },
+      {
+        line: 2,
+        calories: 50,
+        fat: 5,
+        carbs: 1,
+        protein: 0,
+        saturatedFat: 3,
+        sugars: 1,
+        fiber: 0,
+        sodium: 5,
+      },
+      {
+        line: 1,
+        calories: 60,
+        fat: 0,
+        carbs: 15,
+        protein: 0,
+        saturatedFat: 0,
+        sugars: 15,
+        fiber: 0,
+        sodium: 1,
+      },
     ],
   };
 
@@ -179,8 +199,22 @@ describe("estimateNutritionGap", () => {
     await expect(
       estimateNutritionGap("Overnight oats", 2, [HONEY, CREAM], COUNTED)
     ).resolves.toEqual([
-      { key: "key-cream", calories: 50, fat: 5, carbs: 1, protein: 0 },
-      { key: "key-honey", calories: 60, fat: 0, carbs: 15, protein: 0 },
+      {
+        key: "key-cream",
+        calories: 50,
+        fat: 5,
+        carbs: 1,
+        protein: 0,
+        extras: { saturatedFat: 3, sugars: 1, fiber: 0, sodium: 5 },
+      },
+      {
+        key: "key-honey",
+        calories: 60,
+        fat: 0,
+        carbs: 15,
+        protein: 0,
+        extras: { saturatedFat: 0, sugars: 15, fiber: 0, sodium: 1 },
+      },
     ]);
   });
 

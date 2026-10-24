@@ -15,7 +15,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 
+import type { ExtraNutrients } from "@norish/shared/contracts/nutrients";
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
+import { ExtraNutrientsSchema } from "@norish/shared/contracts/nutrients";
 
 /**
  * The datasets a number can come from. `ciqual-2020` holds only the codes
@@ -40,7 +42,8 @@ const amount = z.number().finite().nonnegative();
 
 /**
  * A food as the file stores it: [dataset, code, name, kcal, fat,
- * carbohydrate, protein, piece weight in g, density in g/ml, NDB number].
+ * carbohydrate, protein, piece weight in g, density in g/ml, NDB number,
+ * and the other nutrients the dataset measured, per 100 g, where it has any].
  */
 const FoodRowSchema = z.tuple([
   z.enum(NUTRITION_DATASETS),
@@ -53,6 +56,7 @@ const FoodRowSchema = z.tuple([
   amount.positive().nullable(),
   amount.positive().nullable(),
   z.string().nullable(),
+  ExtraNutrientsSchema.optional(),
 ]);
 
 export type FoodRow = z.infer<typeof FoodRowSchema>;
@@ -104,16 +108,31 @@ export interface DatasetFood {
   pieceWeight: number | null;
   density: number | null;
   ndb: string | null;
+  extras: ExtraNutrients | null;
 }
 
 export function foodOf(row: FoodRow): DatasetFood {
-  const [dataset, code, name, kcal, fat, carbs, protein, pieceWeight, density, ndb] = row;
+  const [dataset, code, name, kcal, fat, carbs, protein, pieceWeight, density, ndb, extras] = row;
+  const known = extras && Object.keys(extras).length > 0 ? extras : null;
 
-  return { dataset, code, name, kcal, fat, carbs, protein, pieceWeight, density, ndb };
+  return {
+    dataset,
+    code,
+    name,
+    kcal,
+    fat,
+    carbs,
+    protein,
+    pieceWeight,
+    density,
+    ndb,
+    extras: known,
+  };
 }
 
 export function rowOf(food: DatasetFood): FoodRow {
-  return [
+  const extras = food.extras && Object.keys(food.extras).length > 0 ? food.extras : undefined;
+  const row: FoodRow = [
     food.dataset,
     food.code,
     food.name,
@@ -124,7 +143,11 @@ export function rowOf(food: DatasetFood): FoodRow {
     food.pieceWeight,
     food.density,
     food.ndb,
+    extras,
   ];
+
+  // A food with no other nutrients keeps its ten fields, so the table only grows where it knows more.
+  return extras ? row : (row.slice(0, 10) as FoodRow);
 }
 
 export function foodKeyOf(food: Pick<DatasetFood, "dataset" | "code">): DatasetFoodKey {

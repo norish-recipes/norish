@@ -14,7 +14,7 @@ import type {
   NutritionSource,
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
-import type { NutritionLine } from "@norish/shared/lib/recipe-nutrition";
+import type { NutritionGapEstimate, NutritionLine } from "@norish/shared/lib/recipe-nutrition";
 import defaultUnits from "@norish/config/units.default.json";
 import {
   bracketedGrams,
@@ -383,7 +383,7 @@ describe("workOutNutrition", () => {
           seasoning: phrases,
           estimate: { lines: [share(oil, 100, 10)] },
         }).perServing
-      ).toEqual({ calories: 100, fat: 10, carbs: 1, protein: 0 });
+      ).toEqual({ calories: 100, fat: 10, carbs: 1, protein: 0, extras: {} });
     });
 
     it("keeps the other lines' shares once a household's correction counts one of them", () => {
@@ -514,5 +514,57 @@ describe("bracketedGrams", () => {
     expect(bracketedGrams("coconut milk (15 fl oz)")).toBeNull();
     expect(bracketedGrams("(4) zoete aardappelen")).toBeNull();
     expect(bracketedGrams("onions (red)")).toBeNull();
+  });
+});
+
+describe("workOutNutrition's other nutrients", () => {
+  const lentils = line(300, "gram", "lentils");
+  const rice = line(100, "gram", "rice");
+  const mystery = line(1, "piece", "mystery");
+  const nutrition = new Map<string, IngredientNutrition>([
+    [
+      "lentils",
+      {
+        numbers: fact(
+          { ...per100g(116, 0.4, 20, 9), extras: { fiber: 8, sodium: 2 } },
+          ciqual("Lentils, boiled")
+        ),
+        pieceWeight: null,
+        density: null,
+      },
+    ],
+    ["rice", NUTRITION.get("rice")!],
+  ]);
+  const work = (lines: NutritionLine[], estimate: NutritionGapEstimate | null = null) =>
+    workOutNutrition({ lines, servings: 2, nutrition, seasoning: phrases, estimate });
+
+  it("sums each nutrient the lines' foods know, per serving, with the share of the weight that knew it", () => {
+    const result = work([lentils, rice]);
+
+    expect(result.perServing?.extras).toEqual({ fiber: 12, sodium: 3 });
+    // The rice knows neither, so a quarter of the counted weight is missing from both.
+    expect(result.extrasCoverage).toEqual({ fiber: 0.75, sodium: 0.75 });
+  });
+
+  it("adds the model's share of a line left out to the nutrients it estimated", () => {
+    const share = {
+      key: lineKey(mystery),
+      calories: 20,
+      fat: 0,
+      carbs: 4,
+      protein: 0,
+      extras: { fiber: 1.5 },
+    };
+    const result = work([lentils, mystery], { lines: [share] });
+
+    expect(result.perServing?.extras).toEqual({ fiber: 13.5, sodium: 3 });
+    expect(result.extrasCoverage).toEqual({ fiber: 1, sodium: 1 });
+  });
+
+  it("says nothing of a nutrient no line knows: unknown, not zero", () => {
+    const result = work([rice]);
+
+    expect(result.perServing?.extras).toEqual({});
+    expect(result.extrasCoverage).toEqual({});
   });
 });

@@ -32,6 +32,8 @@ export interface NutritionFoodRow {
   fat: number;
   carbs: number;
   protein: number;
+  /** The other nutrients per 100 g, only those the dataset gives. */
+  extras: Partial<Record<string, number>> | null;
   pieceWeight: number | null;
   density: number | null;
   ndb: string | null;
@@ -220,6 +222,8 @@ export interface NutritionCorrectionValues {
   fat: number | null;
   carbs: number | null;
   protein: number | null;
+  /** Other nutrients typed from the label beside the four, per 100 g. */
+  extras?: Partial<Record<string, number>> | null;
   pieceWeightFood: string | null;
   pieceWeight: number | null;
   densityFood: string | null;

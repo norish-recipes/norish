@@ -1,6 +1,6 @@
 import type { SourceFood } from "./types";
 import { parseRecords } from "../read/csv";
-import { compositionValue, macros } from "../read/values";
+import { compositionValue, extrasOf, macros, vitaminA } from "../read/values";
 import { readSheet } from "../read/xlsx";
 
 /**
@@ -30,6 +30,25 @@ const COLUMNS = {
 
 type Column = keyof typeof COLUMNS;
 
+/** The other nutrients, read where an edition has the column: CIQUAL measures no trans fat. */
+const EXTRA_COLUMNS = {
+  saturatedFat: (key: string) => key.startsWith("fa saturated (g"),
+  monounsaturatedFat: (key: string) => key.startsWith("fa mono (g"),
+  polyunsaturatedFat: (key: string) => key.startsWith("fa poly (g"),
+  sugars: (key: string) => key.startsWith("sugars (g"),
+  fiber: (key: string) => key.startsWith("fibres (g"),
+  cholesterol: (key: string) => key.startsWith("cholesterol (mg"),
+  sodium: (key: string) => key.startsWith("sodium (mg"),
+  potassium: (key: string) => key.startsWith("potassium (mg"),
+  calcium: (key: string) => key.startsWith("calcium (mg"),
+  iron: (key: string) => key.startsWith("iron (mg"),
+  vitaminC: (key: string) => key.startsWith("vitamin c (mg"),
+  retinol: (key: string) => /^retinol \((µg|mcg)/.test(key),
+  betaCarotene: (key: string) => /^beta-carotene \((µg|mcg)/.test(key),
+};
+
+type ExtraColumn = keyof typeof EXTRA_COLUMNS;
+
 /** A CIQUAL edition: its foods with all four numbers, and every row's English name by code. */
 export interface CiqualTable {
   foods: SourceFood[];
@@ -51,6 +70,15 @@ function foodsFrom(rows: ReadonlyArray<Record<string, string>>): CiqualTable {
       return [wanted, header.get(found)!];
     })
   ) as Record<Column, string>;
+  const extra = Object.fromEntries(
+    (Object.keys(EXTRA_COLUMNS) as ExtraColumn[]).flatMap((wanted) => {
+      const found = [...header.keys()].find(EXTRA_COLUMNS[wanted]);
+
+      return found ? [[wanted, header.get(found)!]] : [];
+    })
+  ) as Partial<Record<ExtraColumn, string>>;
+  const value = (row: Record<string, string>, wanted: ExtraColumn) =>
+    extra[wanted] === undefined ? null : compositionValue(row[extra[wanted]]);
 
   const names = new Map<string, string>();
   const foods = rows.flatMap((row) => {
@@ -66,7 +94,22 @@ function foodsFrom(rows: ReadonlyArray<Record<string, string>>): CiqualTable {
       protein: compositionValue(row[column.protein]),
     });
 
-    return code && name && numbers ? [{ code, name, ...numbers }] : [];
+    const extras = extrasOf({
+      saturatedFat: value(row, "saturatedFat"),
+      monounsaturatedFat: value(row, "monounsaturatedFat"),
+      polyunsaturatedFat: value(row, "polyunsaturatedFat"),
+      sugars: value(row, "sugars"),
+      fiber: value(row, "fiber"),
+      cholesterol: value(row, "cholesterol"),
+      sodium: value(row, "sodium"),
+      potassium: value(row, "potassium"),
+      calcium: value(row, "calcium"),
+      iron: value(row, "iron"),
+      vitaminC: value(row, "vitaminC"),
+      vitaminA: vitaminA(value(row, "retinol"), value(row, "betaCarotene")),
+    });
+
+    return code && name && numbers ? [{ code, name, ...numbers, extras }] : [];
   });
 
   return { foods, names };

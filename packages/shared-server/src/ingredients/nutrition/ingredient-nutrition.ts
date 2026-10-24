@@ -52,6 +52,7 @@ import {
   findNutritionLineage,
   findNutritionRules,
 } from "@norish/db/repositories/ingredient-nutrition";
+import { knownExtras } from "@norish/shared/contracts/nutrients";
 
 /** Whose corrections count: a household's members, or nobody's (the catalogue export). */
 export interface NutritionReader {
@@ -84,7 +85,17 @@ function refOf(food: NutritionFoodRow): NutritionFoodRef {
 }
 
 function per100g(food: NutritionFoodRow): Per100g {
-  return { kcal: food.kcal, fat: food.fat, carbs: food.carbs, protein: food.protein };
+  return withExtras(
+    { kcal: food.kcal, fat: food.fat, carbs: food.carbs, protein: food.protein },
+    food.extras
+  );
+}
+
+/** The four numbers, with whichever other nutrients the same source gives. */
+function withExtras(numbers: Per100g, stored: Partial<Record<string, number>> | null): Per100g {
+  const extras = knownExtras(stored);
+
+  return Object.keys(extras).length > 0 ? { ...numbers, extras } : numbers;
 }
 
 /** The first offer that has a value. */
@@ -208,7 +219,12 @@ function correctionOffers(
     numbers: numbersFood
       ? [{ source: source(numbersFood), value: per100g(numbersFood) }]
       : typed
-        ? [{ source: source(null), value: { kcal, fat, carbs, protein } }]
+        ? [
+            {
+              source: source(null),
+              value: withExtras({ kcal, fat, carbs, protein }, correction.extras),
+            },
+          ]
         : [],
     pieceWeight: [
       { source: source(pieceFood), value: pieceFood?.pieceWeight ?? correction.pieceWeight },

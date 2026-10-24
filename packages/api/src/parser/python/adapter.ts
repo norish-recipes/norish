@@ -158,6 +158,8 @@ function buildNutrition(recipe: ScraperRecipe) {
 
   return extractNutrition({
     nutrition: {
+      // The scraper names the other nutrients as schema.org does (sugarContent, sodiumContent).
+      ...nutrition,
       calories:
         (nutrition as Record<string, unknown>).calories ??
         (nutrition as Record<string, unknown>).calorieContent,

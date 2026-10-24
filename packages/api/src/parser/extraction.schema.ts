@@ -22,6 +22,24 @@ export const sourceNutritionSchema = z
       .number()
       .nullable()
       .describe("Protein per serving in grams stated by the source, else null"),
+    saturatedFat: z
+      .number()
+      .nullable()
+      .describe("Saturated fat per serving in grams stated by the source, else null"),
+    sugars: z
+      .number()
+      .nullable()
+      .describe("Sugars per serving in grams stated by the source, else null"),
+    fiber: z
+      .number()
+      .nullable()
+      .describe("Fiber per serving in grams stated by the source, else null"),
+    sodium: z
+      .number()
+      .nullable()
+      .describe(
+        "Sodium per serving in milligrams stated by the source, else null. Where only salt is stated, sodium is salt in grams × 400."
+      ),
   })
   .strict();
 

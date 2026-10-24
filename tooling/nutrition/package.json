@@ -13,6 +13,7 @@
     "clean": "git clean -xdf .cache .turbo node_modules"
   },
   "dependencies": {
+    "@norish/shared": "workspace:*",
     "@norish/shared-server": "workspace:*",
     "jszip": "catalog:"
   },

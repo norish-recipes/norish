@@ -192,7 +192,14 @@ describe("NutritionCard", () => {
       estimatedByAI = false
     ): LeftOutLine => ({ lineId, name, ingredientId, key: lineId, reason, estimatedByAI });
     const workedOut: WorkedOutNutrition = {
-      perServing: { calories: 420, fat: 12, carbs: 50, protein: 20 },
+      perServing: {
+        calories: 420,
+        fat: 12,
+        carbs: 50,
+        protein: 20,
+        extras: { fiber: 8, sugars: 6 },
+      },
+      extrasCoverage: { fiber: 0.8, sugars: 1 },
       leftOut: [
         left("line-1", "olive oil for frying", "olive-oil", "no-amount"),
         left("line-2", "1 tl komijn", "cumin", "no-spoon-weight"),
@@ -214,7 +221,15 @@ describe("NutritionCard", () => {
       render(<NutritionCard />);
 
       expect(screen.getByTestId("nutrition-body")).toBeInTheDocument();
-      expect(mocks.shown).toEqual({ calories: 420, fat: 12, carbs: 50, protein: 20 });
+      expect(mocks.shown).toEqual({
+        calories: 420,
+        fat: 12,
+        carbs: 50,
+        protein: 20,
+        // The other nutrients reach the body with how much of the weight knew them.
+        nutritionExtras: { fiber: 8, sugars: 6 },
+        extrasCoverage: { fiber: 0.8, sugars: 1 },
+      });
     });
 
     it("says it is estimated, and credits what it used", () => {
