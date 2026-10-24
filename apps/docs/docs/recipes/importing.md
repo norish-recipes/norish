@@ -43,9 +43,8 @@ whole, see [Recipe Archive](./recipe-archive.md#importing-an-archive).
 
 ## Through the API
 
-To import recipes from scripts or external tools, queue the
-import with `POST /api/v1/recipes/import/url` and monitor its progress with
-`GET /api/v1/recipes/import/status/{recipeId}`. The status endpoint supports
-long-polling (`?wait=30`) to receive the completed recipe or failure reason in
-a single request without tight polling loops. See the
-[API reference](../reference/api.mdx).
+Scripts and other tools import a link with `POST /api/v1/recipes/import/url`,
+which answers with a `statusUrl`. `GET /api/v1/recipes/import/status/{recipeId}`
+says whether the import is waiting, running, done or failed, with the recipe or
+the reason. Add `?wait=30` to hold the request until the import ends, for up to
+60 seconds. See the [API reference](../reference/api.mdx).
