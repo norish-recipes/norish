@@ -806,6 +806,31 @@
                                   },
                                   "protein": {
                                     "type": "number"
+                                  },
+                                  "extras": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string",
+                                      "enum": [
+                                        "saturatedFat",
+                                        "monounsaturatedFat",
+                                        "polyunsaturatedFat",
+                                        "transFat",
+                                        "sugars",
+                                        "fiber",
+                                        "cholesterol",
+                                        "sodium",
+                                        "potassium",
+                                        "calcium",
+                                        "iron",
+                                        "vitaminC",
+                                        "vitaminA"
+                                      ]
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    }
                                   }
                                 },
                                 "required": [
