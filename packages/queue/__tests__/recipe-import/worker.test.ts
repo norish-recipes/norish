@@ -112,6 +112,28 @@ describe("processImportJob", () => {
     );
   });
 
+  it("ends on the existing recipe when the URL is already in the library", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    recipeExistsByUrlForPolicy.mockResolvedValue({ exists: true, existingRecipeId: "recipe-12" });
+
+    await expect(
+      processRecipeImportJob({
+        id: "job-2",
+        attemptsMade: 0,
+        opts: {},
+        data: {
+          url: "https://example.com/stew",
+          recipeId: "recipe-78",
+          userId: "user-1",
+          householdKey: "household-1",
+          householdUserIds: null,
+        },
+      } as unknown as Job<RecipeImportJobData>)
+    ).resolves.toBe("recipe-12");
+    expect(createRecipeWithRefs).not.toHaveBeenCalled();
+  });
+
   it("leaves what the parser saw on the parsing step when the parse fails", async () => {
     const pythonParser = { recipe: { title: "" }, parser: { scraper: "SchemaScraper" } };
 

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { setTimeout as sleep } from "node:timers/promises";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -26,7 +27,6 @@ import {
   updateRecipeCategories,
   writeConvertedCopy,
 } from "@norish/db";
-import type { JobStepProgress } from "@norish/queue";
 import {
   addImageImportJob,
   addImportJob,
@@ -36,6 +36,7 @@ import {
 } from "@norish/queue";
 import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
 import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
+import { readStepProgress } from "@norish/queue/job-steps";
 import { getQueues } from "@norish/queue/registry";
 import {
   getRecipePermissionPolicy,
@@ -447,7 +448,6 @@ export const importStatusProcedure = authedProcedure
       summary: "Get status of a queued recipe import",
       errorResponses: {
         401: "Missing or invalid API credentials",
-        403: "You do not have access to this import job",
         404: "Import job or recipe not found",
       },
     },
@@ -455,96 +455,75 @@ export const importStatusProcedure = authedProcedure
   .input(RecipeImportStatusInputSchema)
   .output(RecipeImportStatusSchema)
   .query(async ({ ctx, input }) => {
-    const queues = getQueues();
-    const job = await queues.recipeImport.getJob(input.recipeId);
+    const queue = getQueues().recipeImport;
+    let job = await queue.getJob(input.recipeId);
+    const canView =
+      job &&
+      (await canAccessResource(
+        "view",
+        ctx.user.id,
+        job.data.userId,
+        ctx.householdUserIds,
+        ctx.isServerAdmin
+      ));
 
-    if (job) {
-      const jobData = job.data;
-      const policy = await getRecipePermissionPolicy();
-      const isAllowed =
-        policy.view === "everyone" ||
-        (policy.view === "household" && jobData.householdKey === ctx.householdKey) ||
-        (policy.view === "owner" && jobData.userId === ctx.user.id);
-
-      if (!isAllowed) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You do not have access to this import job",
-        });
-      }
-
+    if (job && canView) {
       let state = await job.getState();
+      const deadline = Date.now() + (input.wait ?? 0) * 1000;
 
-      const waitSeconds = Math.min(Math.max(input.wait ?? 0, 0), 60);
-
-      if (
-        waitSeconds > 0 &&
-        (state === "waiting" || state === "active" || state === "delayed" || state === "prioritized")
-      ) {
-        const deadline = Date.now() + waitSeconds * 1000;
-
-        while (
-          (state === "waiting" || state === "active" || state === "delayed" || state === "prioritized") &&
-          Date.now() < deadline
-        ) {
-          const remaining = deadline - Date.now();
-
-          if (remaining <= 0) break;
-
-          await new Promise((resolve) => setTimeout(resolve, Math.min(remaining, 500)));
-          state = await job.getState();
-        }
+      // The job is re-read each tick: its progress, failure and result are a snapshot.
+      while (job && !isSettled(state) && Date.now() < deadline) {
+        await sleep(Math.min(deadline - Date.now(), 500));
+        job = await queue.getJob(input.recipeId);
+        state = job ? await job.getState() : "unknown";
       }
 
-      const step = (job.progress as JobStepProgress | undefined)?.step ?? null;
-
-      if (state === "completed") {
-        const recipe = await dashboardRecipe(input.recipeId);
-
-        return {
+      if (job && state !== "unknown") {
+        const status = {
           recipeId: input.recipeId,
-          url: jobData.url,
-          status: "completed" as const,
-          step,
+          url: job.data.url,
+          step: readStepProgress(job.progress)?.step ?? null,
           error: null,
-          recipe: recipe ?? null,
-        };
-      }
-
-      if (state === "failed") {
-        return {
-          recipeId: input.recipeId,
-          url: jobData.url,
-          status: "failed" as const,
-          step,
-          error: job.failedReason ?? "Recipe import failed",
           recipe: null,
         };
-      }
 
-      return {
-        recipeId: input.recipeId,
-        url: jobData.url,
-        status: state === "active" ? ("active" as const) : ("waiting" as const),
-        step,
-        error: null,
-        recipe: null,
-      };
+        if (state === "failed") {
+          return {
+            ...status,
+            status: "failed" as const,
+            error: job.failedReason || "Recipe import failed",
+          };
+        }
+
+        if (state === "completed") {
+          // A URL already in the library ends the import on that recipe.
+          const importedId = typeof job.returnvalue === "string" ? job.returnvalue : input.recipeId;
+
+          return {
+            ...status,
+            status: "completed" as const,
+            recipe: await dashboardRecipe(importedId),
+          };
+        }
+
+        return {
+          ...status,
+          status: state === "active" ? ("active" as const) : ("waiting" as const),
+        };
+      }
     }
 
-    // Job is not in the queue; check if the recipe exists in the database
+    // Jobs leave the queue's history, so a finished import is read from its recipe.
     const accessibleRecipe = await findRecipeForViewer(ctx, input.recipeId);
 
     if (accessibleRecipe) {
-      const recipe = await dashboardRecipe(input.recipeId);
-
       return {
         recipeId: input.recipeId,
         url: accessibleRecipe.url ?? undefined,
         status: "completed" as const,
         step: null,
         error: null,
-        recipe: recipe ?? null,
+        recipe: await dashboardRecipe(input.recipeId),
       };
     }
 
@@ -553,6 +532,10 @@ export const importStatusProcedure = authedProcedure
       message: "Import job or recipe not found",
     });
   });
+
+function isSettled(state: string): boolean {
+  return state === "completed" || state === "failed" || state === "unknown";
+}
 
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)

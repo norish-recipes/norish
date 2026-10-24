@@ -2061,8 +2061,7 @@
                     },
                     "url": {
                       "description": "Source URL of the recipe being imported",
-                      "type": "string",
-                      "format": "uri"
+                      "type": "string"
                     },
                     "status": {
                       "type": "string",
@@ -2070,8 +2069,7 @@
                         "waiting",
                         "active",
                         "completed",
-                        "failed",
-                        "not_found"
+                        "failed"
                       ],
                       "description": "Current processing status of the import job"
                     },
@@ -2319,16 +2317,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/error.UNAUTHORIZED"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "You do not have access to this import job",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error.FORBIDDEN"
                 }
               }
             }
@@ -4562,50 +4550,6 @@
         "example": {
           "code": "PRECONDITION_FAILED",
           "message": "The URL is a video and AI or video parsing is not enabled",
-          "issues": []
-        }
-      },
-      "error.FORBIDDEN": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "description": "The error message",
-            "example": "You do not have access to this import job"
-          },
-          "code": {
-            "type": "string",
-            "description": "The error code",
-            "example": "FORBIDDEN"
-          },
-          "issues": {
-            "description": "An array of issues that were responsible for the error",
-            "example": [],
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "message"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "message",
-          "code"
-        ],
-        "additionalProperties": false,
-        "title": "You do not have access to this import job error (403)",
-        "description": "The error information",
-        "example": {
-          "code": "FORBIDDEN",
-          "message": "You do not have access to this import job",
           "issues": []
         }
       }

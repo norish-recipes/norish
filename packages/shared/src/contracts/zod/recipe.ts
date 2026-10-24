@@ -267,25 +267,12 @@ export const RecipeImportResultSchema = z.object({
   recipeId: z.uuid(),
   status: z.enum(["queued", "exists"]),
   recipe: RecipeDashboardSchema.nullable().optional(),
-  statusUrl: z
-    .string()
-    .optional()
-    .describe("Relative URL to check the status of this import job"),
+  statusUrl: z.string().optional().describe("Relative URL to check the status of this import job"),
 });
-
-export const RecipeImportJobStateSchema = z.enum([
-  "waiting",
-  "active",
-  "completed",
-  "failed",
-  "not_found",
-]);
-export type RecipeImportJobState = z.infer<typeof RecipeImportJobStateSchema>;
 
 export const RecipeImportStatusInputSchema = z.object({
   recipeId: z.uuid().describe("The recipe ID assigned to the import job"),
-  wait: z
-    .coerce
+  wait: z.coerce
     .number()
     .int()
     .min(0)
@@ -293,22 +280,18 @@ export const RecipeImportStatusInputSchema = z.object({
     .optional()
     .describe("Optional seconds to wait (long-polling) for the job to complete or fail (max 60)"),
 });
-export type RecipeImportStatusInput = z.infer<typeof RecipeImportStatusInputSchema>;
 
 export const RecipeImportStatusSchema = z.object({
   recipeId: z.uuid().describe("The recipe ID assigned to the import"),
-  url: z.url().optional().describe("Source URL of the recipe being imported"),
-  status: RecipeImportJobStateSchema.describe("Current processing status of the import job"),
+  url: z.string().optional().describe("Source URL of the recipe being imported"),
+  status: z
+    .enum(["waiting", "active", "completed", "failed"])
+    .describe("Current processing status of the import job"),
   step: z
     .string()
     .nullable()
     .optional()
     .describe("Current step being executed (e.g. dedupe-check, parsing, saving)"),
-  error: z
-    .string()
-    .nullable()
-    .optional()
-    .describe("Error message if the import failed"),
+  error: z.string().nullable().optional().describe("Error message if the import failed"),
   recipe: RecipeDashboardSchema.nullable().optional().describe("Recipe data if import completed"),
 });
-export type RecipeImportStatusDTO = z.infer<typeof RecipeImportStatusSchema>;

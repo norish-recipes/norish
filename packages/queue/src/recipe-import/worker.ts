@@ -30,9 +30,9 @@ const log = createLogger("worker:recipe-import");
 
 /**
  * Process a single recipe import job.
- * Called by the worker for each job.
+ * Resolves to the recipe the import ended on, an existing one for a known URL.
  */
-async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
+async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> {
   const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
   const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
 
@@ -76,7 +76,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       );
     }
 
-    return;
+    return existingCheck.existingRecipeId;
   }
 
   // No allergy list is fetched here: extraction reads the source, and allergy
@@ -150,6 +150,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   }
 
   await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+
+  return createdId;
 }
 
 /**

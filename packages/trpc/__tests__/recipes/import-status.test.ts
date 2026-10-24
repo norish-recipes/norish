@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { importStatusProcedure } from "@norish/trpc/routers/recipes/recipes";
 
+import { canAccessResource } from "../mocks/permissions";
 import {
   createMockAuthedContext,
   createMockHousehold,
@@ -27,6 +28,8 @@ vi.mock("@norish/queue/registry", () => ({
     },
   })),
 }));
+
+vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: mocks.getRecipePermissionPolicy,
@@ -72,11 +75,13 @@ describe("importStatusProcedure", () => {
   const mockHousehold = createMockHousehold();
   let ctx: ReturnType<typeof createMockAuthedContext>;
   const RECIPE_ID = "123e4567-e89b-42d3-a456-426614174000";
+  const EXISTING_ID = "223e4567-e89b-42d3-a456-426614174000";
 
   beforeEach(() => {
     vi.clearAllMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
     mocks.getRecipePermissionPolicy.mockResolvedValue({ view: "household", edit: "household" });
+    canAccessResource.mockResolvedValue(true);
   });
 
   function caller() {
@@ -189,7 +194,8 @@ describe("importStatusProcedure", () => {
     });
   });
 
-  it("throws FORBIDDEN when user does not have access under policy", async () => {
+  it("answers not found for a job the viewer may not see", async () => {
+    canAccessResource.mockResolvedValue(false);
     mocks.getJob.mockResolvedValue({
       id: RECIPE_ID,
       data: {
@@ -200,10 +206,36 @@ describe("importStatusProcedure", () => {
       },
       getState: vi.fn().mockResolvedValue("active"),
     });
+    mocks.findRecipeForViewer.mockResolvedValue(null);
 
     await expect(caller().importStatus({ recipeId: RECIPE_ID })).rejects.toThrow(
-      "You do not have access to this import job"
+      "Import job or recipe not found"
     );
+    expect(canAccessResource).toHaveBeenCalledWith(
+      "view",
+      ctx.user.id,
+      "other-user",
+      ctx.householdUserIds,
+      ctx.isServerAdmin
+    );
+  });
+
+  it("answers with the existing recipe when the URL was already imported", async () => {
+    const existing = createMockRecipeDashboard({ id: EXISTING_ID, name: "Already here" });
+
+    mocks.getJob.mockResolvedValue({
+      id: RECIPE_ID,
+      data: { recipeId: RECIPE_ID, url: "https://example.com/recipe", userId: mockUser.id },
+      getState: vi.fn().mockResolvedValue("completed"),
+      returnvalue: EXISTING_ID,
+      progress: { step: "dedupe-check" },
+    });
+    mocks.dashboardRecipe.mockResolvedValue(existing);
+
+    const result = await caller().importStatus({ recipeId: RECIPE_ID });
+
+    expect(mocks.dashboardRecipe).toHaveBeenCalledWith(EXISTING_ID);
+    expect(result.recipe).toEqual(existing);
   });
 
   it("falls back to database when job has already been purged from queue", async () => {
@@ -216,7 +248,10 @@ describe("importStatusProcedure", () => {
     });
 
     mocks.getJob.mockResolvedValue(null);
-    mocks.findRecipeForViewer.mockResolvedValue({ id: RECIPE_ID, url: "https://example.com/recipe" });
+    mocks.findRecipeForViewer.mockResolvedValue({
+      id: RECIPE_ID,
+      url: "https://example.com/recipe",
+    });
     mocks.dashboardRecipe.mockResolvedValue(mockRecipe);
 
     const result = await caller().importStatus({ recipeId: RECIPE_ID });
@@ -256,11 +291,53 @@ describe("importStatusProcedure", () => {
       }),
       progress: { step: "saving" },
     });
-    mocks.dashboardRecipe.mockResolvedValue(createMockRecipeDashboard({ id: RECIPE_ID, name: "Ready" }));
+    mocks.dashboardRecipe.mockResolvedValue(
+      createMockRecipeDashboard({ id: RECIPE_ID, name: "Ready" })
+    );
 
     const result = await caller().importStatus({ recipeId: RECIPE_ID, wait: 2 });
 
     expect(result.status).toBe("completed");
     expect(callCount).toBeGreaterThanOrEqual(2);
+  });
+
+  it("reports the failure reason of a job that fails while waiting", async () => {
+    const job = {
+      id: RECIPE_ID,
+      data: { recipeId: RECIPE_ID, url: "https://example.com/recipe", userId: mockUser.id },
+      progress: { step: "parsing" },
+    };
+
+    mocks.getJob
+      .mockResolvedValueOnce({ ...job, getState: vi.fn().mockResolvedValue("active") })
+      .mockResolvedValue({
+        ...job,
+        getState: vi.fn().mockResolvedValue("failed"),
+        failedReason: "Failed to parse recipe from URL",
+      });
+
+    const result = await caller().importStatus({ recipeId: RECIPE_ID, wait: 2 });
+
+    expect(result.status).toBe("failed");
+    expect(result.error).toBe("Failed to parse recipe from URL");
+  });
+
+  it("reads the recipe when the job leaves the queue while waiting", async () => {
+    mocks.getJob
+      .mockResolvedValueOnce({
+        id: RECIPE_ID,
+        data: { recipeId: RECIPE_ID, url: "https://example.com/recipe", userId: mockUser.id },
+        getState: vi.fn().mockResolvedValue("active"),
+      })
+      .mockResolvedValue(undefined);
+    mocks.findRecipeForViewer.mockResolvedValue({
+      id: RECIPE_ID,
+      url: "https://example.com/recipe",
+    });
+    mocks.dashboardRecipe.mockResolvedValue(createMockRecipeDashboard({ id: RECIPE_ID }));
+
+    const result = await caller().importStatus({ recipeId: RECIPE_ID, wait: 2 });
+
+    expect(result.status).toBe("completed");
   });
 });

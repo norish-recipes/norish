@@ -55,6 +55,3 @@ export type {
 
 // Types from scheduled-tasks
 export type { ScheduledTaskJobData, ScheduledTaskType } from "./scheduled-tasks/tasks";
-
-// Job progress & steps
-export type { JobStepProgress } from "./job-steps";
