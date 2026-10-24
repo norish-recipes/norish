@@ -191,7 +191,7 @@ describe("recipe page servings", () => {
     stubRecipe.servings = 0;
 
     try {
-      render(<RecipePageDesktop />);
+      render(<RecipePageDesktop onPrint={() => {}} />);
 
       expect(screen.queryByText("servings-control")).not.toBeInTheDocument();
       expect(screen.queryByText("0")).not.toBeInTheDocument();
